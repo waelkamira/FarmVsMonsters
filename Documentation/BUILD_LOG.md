@@ -268,3 +268,12 @@
 - Extended `PlantCombatController` to configure slow strength/duration per plant.
 - The generated Ice Bloom now slows surviving monsters to 55% movement speed for 2.5 seconds per hit; other plants keep normal projectile behavior.
 - This is a simple refreshable slow effect without stacking below the strongest active slow. It still needs in-game balance and visual feedback.
+
+## 2026-11-13 — Farm hub and connected battle navigation
+- Added `Assets/Editor/FarmHubSceneGenerator.cs` with **Farm Vs Monsters → Generate Farm Hub Scene**. It creates a first-pass 3D farm hub with barns, windmill, nine crop-bed placeholders, lighting, camera, and a uGUI Enter Battle button.
+- Added reusable `UI/SceneNavigationButton.cs` for safe scene navigation with a Build Settings check.
+- Extended the generated battle result panel with **RETURN TO FARM**, targeting FarmHub; the existing retry action remains available.
+- Updated both Editor generators to append/enable generated scenes in Build Settings without replacing or deleting unrelated scenes, and to skip scene paths whose assets do not exist yet.
+- Expanded the prototype validator to check the battle return button and, when FarmHub exists, its camera, canvas, EventSystem, Enter Battle button, target scene, and Build Settings registration.
+- Updated README and Unity bootstrap instructions: generate Farm Hub first, then Prototype Battle, then run the validator.
+- The farm hub is currently a navigable greybox shell; crops, animal pens, storage, market, production, and upgrades still need scene-level prefab/catalogue wiring. Unity Editor execution and Play Mode navigation tests remain outstanding.
