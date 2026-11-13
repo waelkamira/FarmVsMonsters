@@ -2,6 +2,7 @@ using System;
 using FarmVsMonsters.Combat;
 using FarmVsMonsters.Economy;
 using FarmVsMonsters.Enemies;
+using FarmVsMonsters.Progression;
 using UnityEngine;
 
 namespace FarmVsMonsters.Battle
@@ -23,6 +24,7 @@ namespace FarmVsMonsters.Battle
         [SerializeField] private Health protectedTargetHealth;
         [SerializeField] private EnergyWallet rewardWallet;
         [SerializeField, Min(0)] private int victoryEnergyReward = 100;
+        [SerializeField, Min(1)] private int nextStageToUnlock = 2;
         [SerializeField] private bool beginWavesOnStart = true;
 
         public BattleOutcome Outcome { get; private set; }
@@ -74,6 +76,7 @@ namespace FarmVsMonsters.Battle
             if (outcome == BattleOutcome.Victory && rewardWallet != null && victoryEnergyReward > 0)
                 rewardWallet.Add(victoryEnergyReward);
 
+            ProgressSaveService.RecordBattle(outcome == BattleOutcome.Victory, nextStageToUnlock);
             BattleFinished?.Invoke(Outcome);
         }
 
