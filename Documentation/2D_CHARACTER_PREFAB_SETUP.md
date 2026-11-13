@@ -84,3 +84,9 @@ Inspector setup:
 - The protected target should be positioned at the farm-side end of the board. EnemyMovement2D currently approaches the target along X and attacks when within attackRange.
 - WaveManager exposes StartDelayRemaining; BattleHudController2D displays the initial countdown before Wave 1.
 - Configure at least one non-null wave, one spawn point, and enemy prefabs with Health and EnemyMovement2D. Missing wave/spawn configuration produces a warning and does not silently start.
+## Per-wave difficulty tuning
+Each Wave entry in WaveManager can independently tune the spawned 2D monsters:
+- enemyHealthMultiplier scales both maximum and current health while preserving the current health ratio.
+- enemySpeedMultiplier scales horizontal movement speed.
+- enemyDamageMultiplier scales melee damage against the protected target.
+Keep early waves close to 1.0 and increase values gradually. These are per-wave multipliers, not automatic wave-index scaling; tune each wave deliberately in the Inspector. Values are clamped at runtime to avoid zero or extreme combat stats.
