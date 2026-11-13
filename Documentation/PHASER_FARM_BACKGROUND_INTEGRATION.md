@@ -4,13 +4,13 @@
 Prepare the 2D Phaser battlefield to receive the generated farm background without baking gameplay objects into the artwork.
 
 ## Approved background location
-`web/public/assets/backgrounds/farm-battlefield.png`
+`web/public/assets/backgrounds/farm-battlefield.jpeg`
 
 The public URL used by Phaser will be:
-`/assets/backgrounds/farm-battlefield.png`
+`/assets/backgrounds/farm-battlefield.jpeg`
 
 ## Art requirements
-- 2560 × 1440 PNG recommended (16:9).
+- 2560 × 1440 JPEG recommended (16:9).
 - Strict side-view 2D composition.
 - Farmhouse/protected objective at the left.
 - Monster gate at the right.
