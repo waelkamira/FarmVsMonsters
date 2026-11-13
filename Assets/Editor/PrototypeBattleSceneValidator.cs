@@ -73,6 +73,8 @@ namespace FarmVsMonsters.EditorTools
                     "WaveManager must contain at least three configured waves.", errors);
                 Require(spawnArray != null && spawnArray.arraySize >= 1,
                     "WaveManager has no enemy spawn points.", errors);
+                Require(so.FindProperty("energyWallet").objectReferenceValue != null,
+                    "WaveManager has no EnergyWallet for enemy energy drops.", errors);
                 Require(so.FindProperty("enemyTarget").objectReferenceValue != null,
                     "WaveManager has no protected target transform.", errors);
                 Require(so.FindProperty("enemyTargetHealth").objectReferenceValue != null,
