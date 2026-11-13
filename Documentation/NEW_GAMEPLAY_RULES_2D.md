@@ -42,3 +42,7 @@ These rules supersede conflicting earlier gameplay descriptions and must be appl
 - Monster: Idle, slow Walk, Attack/Eat, Hurt, Death, optional Special.
 - Caveman: Idle, Walk, Plant/Interact, Club Attack, Hurt, Death.
 - Never stretch one universal animation sheet across every entity type.
+
+
+## Current prototype interaction scope (2026-11-14)
+The first web gameplay slice uses one defender only: the Radish. The player controls the caveman directly. Clicking the Radish card selects it; clicking a valid empty soil cell sends the caveman to that cell, where he performs the planting action. Do not implement instant remote planting from the HUD. The radish remains rooted and attacks independently after planting.
