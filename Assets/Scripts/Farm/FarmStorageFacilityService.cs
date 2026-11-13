@@ -206,7 +206,7 @@ namespace FarmVsMonsters.Farm
 
         private void Save()
         {
-            var data = new SaveData { facilities = new List<FacilityLevel>() };
+            var data = new SaveData { facilities = Array.Empty<FacilityLevel>() };
             foreach (KeyValuePair<string, int> item in levels)
                 data.facilities = Append(data.facilities, new FacilityLevel
                 {
