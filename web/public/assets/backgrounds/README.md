@@ -2,10 +2,10 @@
 
 Place the generated, approved battlefield image in this folder using this exact filename:
 
-`farm-battlefield.png`
+`farm-battlefield.jpeg`
 
 ## Required image contract
-- PNG, preferably 2560 × 1440 (16:9), opaque background.
+- JPEG, preferably 2560 × 1440 (16:9), opaque background.
 - Strict side-view 2D artwork; no isometric or 3D perspective.
 - House/protected area on the LEFT; monster entrance on the RIGHT.
 - Five horizontal lanes and eight planting columns (40 positions) in the central field.
