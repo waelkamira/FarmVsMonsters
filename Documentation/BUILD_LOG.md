@@ -78,3 +78,12 @@
 - Unity Inspector setup remains required: create ScriptableObject assets, assign slot IDs to matching building definitions, connect shop buttons/services, configure the upgrade list and battle runtime applier references.
 - Important limitation: building positions are restored from predefined slots, not arbitrary free placement. Upgrade bonus values are authored per level and must be balanced in the Inspector.
 - Verification: source updates were committed to `main` and are being read back. Unity compilation, migration runtime checks, purchase flows, and scene tests have not yet been run.
+
+## 2026-11-13 — Farm progression integration and source corrections
+- Completed the v2 save clone/migration path so owned building IDs and upgrade records are preserved when data is copied and saved.
+- Corrected farm building restoration/purchase to consistently resolve the configured `SlotId`, separate from the persistent `BuildingId`.
+- Added persistent farm-coin rewards on battle victory.
+- Added runtime application of permanent bonuses to farmer movement, farm health, energy capacity/starting energy, and plant combat. Newly placed plants also receive their saved damage/attack-speed bonuses through `PlantPlacementService`.
+- Hardened farm shop UI against unassigned optional button references.
+- Source review caught and corrected malformed escaped newline insertions before finalizing the affected scripts. The affected files were rewritten/read back from GitHub.
+- Verification remains source-level only: no Unity Editor/compiler is available in this session, so compile and gameplay tests are still pending.
