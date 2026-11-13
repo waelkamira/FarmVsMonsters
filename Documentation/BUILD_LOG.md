@@ -697,3 +697,12 @@
 - Cell hit-testing and plant placement share the same bilinear coordinate transform.
 - Planting targets the bilinear midpoint of each cell, i.e. the quadrilateral's center.
 - Browser screenshot/pixel-diff validation has not yet been performed; the corner coordinates remain a visual calibration pending runtime confirmation.
+
+
+## 2026-11-14 — Visually recalibrate the planting board
+
+- Reopened the uploaded JPEG and inspected the actual painted soil-board boundary.
+- Corrected the rear and front board corners to match the image's wider front edge and narrower rear edge.
+- Kept the perspective 8 × 5 quadrilateral overlay and shared pointer mapping.
+- Changed plant placement to the polygon centroid of each selected trapezoid, both when the caveman starts walking and when the plant is created.
+- Validation: direct image inspection and source verification only; no browser screenshot, pointer test, or local build was run.
