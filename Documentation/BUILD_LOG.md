@@ -678,3 +678,13 @@
 - Updated cell geometry and inverse pointer mapping, while preserving the shared projected lane coordinates for planting, monster movement, collision, and targeting.
 - The phrase “counter-clockwise” applies to an in-plane rotation, not an X-axis tilt; this implementation follows the explicitly corrected X-axis request.
 - Browser runtime rendering remains unverified.
+
+
+## 2026-11-14 — Match gameplay to the painted perspective grid
+
+- Inspected the uploaded `farm-battlefield.jpeg`: its lawn already contains a visible perspective 5 × 8 planting grid.
+- Removed the assumption that the playable board is a flat, axis-aligned rectangle or an X-axis-compressed board.
+- Preserved the background's native 1.875 aspect ratio and mapped the board using four calibrated corners with a shared bilinear transform.
+- Plant placement, pointer hit-testing, lane positions, monster movement/blocking, and caveman lane lookup now share that perspective mapping.
+- Updated the integration guide and asset README so future work treats the painted grid as authoritative.
+- Validation limitation: code and documentation were committed, but no browser runtime/pointer test or local build was run in this step. The four corner coordinates are an initial visual calibration and may need small adjustments after the user views the running game.
