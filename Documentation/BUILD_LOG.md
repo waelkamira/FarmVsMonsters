@@ -245,3 +245,11 @@
 - Specialized storage facility UI refreshes when inventory/capacity changes, including capacity changes originating from the general warehouse.
 - Storage facility purchases now require a configured building prefab, and duplicate scene slot IDs are rejected instead of selecting an arbitrary anchor.
 - These are source-level fixes; UI event behavior and prefab instantiation remain to be tested in Unity.
+
+
+## 2026-11-13 — Prototype dependency validation and final source review pass
+- Expanded the scene validator to inspect the generated grunt/brute prefabs, health/movement/marker/death-drop components, energy pickup trigger/Rigidbody, projectile prefab, all five plant assets, and each plant's combat or energy-generation component.
+- Added the missing Visuals namespace import to the Editor scene generator.
+- Added a default Sunflower selection in the battle HUD and a visible "Get Ready!" state during the pre-wave preparation countdown.
+- Storage UI now refreshes as resources change, including the water capacity line; ambiguous duplicate storage scene slots are rejected.
+- The source review confirmed balanced braces/parentheses in the changed Editor and economy scripts. This is not a C# compile. The repository still needs to be opened in the pinned Unity Editor to resolve packages, compile scripts, run the generator/validator, and play the scene.
