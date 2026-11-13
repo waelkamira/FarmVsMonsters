@@ -1,4 +1,5 @@
 using FarmVsMonsters.Combat;
+using FarmVsMonsters.Farm;
 using FarmVsMonsters.Visuals;
 using UnityEngine;
 
@@ -13,6 +14,9 @@ namespace FarmVsMonsters.Enemies
         [SerializeField, Min(0f)] private float moveSpeed = 0.8f;
         [SerializeField, Min(0.05f)] private float attackRange = 0.65f;
         [SerializeField, Min(0f)] private float attackDamage = 8f;
+        [SerializeField, Min(0.1f)] private float targetScanRadius = 1.8f;
+        [SerializeField, Min(1)] private int maxFarmTargetsPerScan = 24;
+        [SerializeField] private LayerMask farmTargetLayers = ~0;
         [SerializeField, Min(0.1f)] private float attackInterval = 1.2f;
         [SerializeField] private SpriteRenderer spriteRenderer;
         [SerializeField] private bool constrainToSpawnLane = true;
@@ -25,7 +29,7 @@ namespace FarmVsMonsters.Enemies
         private float slowRemaining;
         private float baseMoveSpeed;
         private float baseAttackDamage;
-        private float laneY;
+        private Collider2D[] farmTargetResults;\n        private FarmDefenseTarget2D currentFarmTarget;\n        private float laneY;
         private bool laneConfigured;
 
         private void Awake()
@@ -36,7 +40,7 @@ namespace FarmVsMonsters.Enemies
             laneY = transform.position.y;
             laneConfigured = true;
             animationDriver = GetComponent<CharacterAnimationDriver2D>();
-            if (spriteRenderer == null) spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+            if (spriteRenderer == null) spriteRenderer = GetComponentInChildren<SpriteRenderer>();\n            farmTargetResults = new Collider2D[Mathf.Max(1, maxFarmTargetsPerScan)];
         }
 
         public void ApplyDifficulty(float speedMultiplier, float damageMultiplier)
@@ -89,11 +93,21 @@ namespace FarmVsMonsters.Enemies
                 return;
             }
 
-            float deltaX = target.position.x - transform.position.x;
+            currentFarmTarget = FindFarmTargetInReach();
+            Health attackHealth = currentFarmTarget != null
+                ? currentFarmTarget.Health
+                : targetHealth;
+            Transform attackTransform = currentFarmTarget != null
+                ? currentFarmTarget.transform
+                : target;
+
+            float deltaX = attackTransform.position.x - transform.position.x;
             if (spriteRenderer != null && Mathf.Abs(deltaX) > 0.02f)
                 spriteRenderer.flipX = deltaX < 0f;
 
-            if (Mathf.Abs(deltaX) > attackRange)
+            bool targetBlocks = currentFarmTarget == null ||
+                currentFarmTarget.BlocksMonsterMovement;
+            if (!targetBlocks || Mathf.Abs(deltaX) > attackRange)
             {
                 if (animationDriver != null) animationDriver.SetMoving(true);
                 transform.position += Vector3.right *
@@ -105,7 +119,8 @@ namespace FarmVsMonsters.Enemies
             attackTimer -= Time.deltaTime;
             if (attackTimer <= 0f)
             {
-                targetHealth.ApplyDamage(attackDamage);
+                if (attackHealth != null && !attackHealth.IsDead)
+                    attackHealth.ApplyDamage(attackDamage);
                 if (animationDriver != null) animationDriver.PlayAttack();
                 attackTimer = attackInterval;
             }
