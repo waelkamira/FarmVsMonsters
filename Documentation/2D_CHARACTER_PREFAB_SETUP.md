@@ -221,3 +221,10 @@ Before the first Play Mode run, select the GameObject that contains `WaveManager
 6. The generator does not create the farmhouse, princess, plants, crops, or scene itself. Set the WaveManager fallback target and monster Farm Target Layers separately, then run the battle wave validator.
 
 The grid coordinate helpers and runtime grid-line renderer now use the grid Transform for cell corners, so translation and scale are reflected consistently. The active enemy lane movement still expects horizontal world-space lanes; keep the grid unrotated until lane movement is generalized.
+
+
+## Explicit plant-to-lane binding
+- When `PlantPlacementService2D` creates a defender, it passes the selected grid row and that row's world-space center Y to both `PlantCombatController2D` and a child `FarmDefenseTarget2D` whose kind is Plant.
+- Plant projectile scans compare against the monster's authoritative `EnemyMovement2D.LaneWorldY` when available, rather than relying on a potentially offset child Health transform. Monsters without that movement component fall back to the Health transform Y.
+- The plant's monster-target marker is forced to lane-bound mode at placement, so monsters in other rows do not select that defender as an edible target. Set the plant marker's lane tolerance to a small value suitable for the lane spacing.
+- The current side-view movement model still uses horizontal world-space rows. Keep BattleGrid2D unrotated; translation and scale are supported by its coordinate helpers, but rotated lanes are not.
