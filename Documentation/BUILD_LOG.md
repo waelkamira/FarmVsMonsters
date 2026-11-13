@@ -441,3 +441,8 @@
 - Moved definition-based animal health initialization to Start so it runs after all component Awake methods, avoiding execution-order overwrites by Health.Awake.
 - Animal interactions now only reconfigure/refill health when the selected animal definition actually changes; pressing F repeatedly cannot heal an animal for free.
 - Normalized Health.SetMaxHealth source indentation after readback.
+
+
+## 2026-11-13 — Ignore inactive empty crop plots in monster scans
+- Enemy farm-target selection now checks `isActiveAndEnabled` before considering a `FarmDefenseTarget2D`. This is required because empty plots keep their Collider2D for player interaction while their monster-target component is disabled.
+- Prevents monsters from treating an empty plot as an edible crop.
