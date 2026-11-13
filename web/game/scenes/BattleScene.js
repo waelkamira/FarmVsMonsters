@@ -34,6 +34,7 @@ export default class BattleScene extends Phaser.Scene {
     this.projectiles = [];
     this.laneYs = Array.from({ length: LANES }, (_, row) => GRID_TOP + row * CELL_H + CELL_H / 2);
     this.emergencyMode = false;
+    this.hasPlantedDefender = false;
     this.facing = 1;
 
     this.drawField();
@@ -223,6 +224,7 @@ export default class BattleScene extends Phaser.Scene {
     }
 
     this.energy -= type.cost;
+    this.hasPlantedDefender = true;
     const x = GRID_LEFT + col * CELL_W + CELL_W / 2;
     const y = this.laneYs[row];
     const plant = {
@@ -452,7 +454,7 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   updateEmergencyMode() {
-    const active = this.livingPlantCount() === 0;
+    const active = this.hasPlantedDefender && this.livingPlantCount() === 0;
     if (active && !this.emergencyMode) {
       this.emergencyMode = true;
       this.setMessage("EMERGENCY! The last plant has fallen. Move the caveman and press SPACE to swing his club!");
@@ -463,7 +465,7 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   clubAttack() {
-    if (this.livingPlantCount() > 0) return;
+    if (!this.emergencyMode || this.livingPlantCount() > 0) return;
     const target = this.monsters
       .filter((monster) => monster.alive && monster.row === this.nearestLane(this.caveman.y) &&
         Math.abs(monster.x - this.caveman.x) <= 112)
