@@ -7,6 +7,7 @@ namespace FarmVsMonsters.Farm
         Wool = 2,
         Eggs = 3,
         Meat = 4,
-        Seeds = 5
+        Seeds = 5,
+        Water = 6
     }
 }
