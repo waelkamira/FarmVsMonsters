@@ -27,8 +27,13 @@ namespace FarmVsMonsters.Combat
 public void SetMaxHealth(float newMaxHealth, bool refill = true)
         {
             maxHealth = Mathf.Max(1f, newMaxHealth);
-            if (refill && !IsDead) CurrentHealth = maxHealth;
-            else CurrentHealth = Mathf.Clamp(CurrentHealth, 0f, maxHealth);
+            if (refill)
+            {
+                IsDead = false;
+                CurrentHealth = maxHealth;
+            }
+            else
+                CurrentHealth = Mathf.Clamp(CurrentHealth, 0f, maxHealth);
             HealthChanged?.Invoke(CurrentHealth, maxHealth);
         }
 
