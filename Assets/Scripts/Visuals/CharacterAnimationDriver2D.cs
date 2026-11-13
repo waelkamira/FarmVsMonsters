@@ -49,7 +49,8 @@ namespace FarmVsMonsters.Visuals
             if (animator == null || health == null || health.IsDead) return;
             if ((animator.CurrentState == SpriteAnimation2D.AnimationState.Attack ||
                  animator.CurrentState == SpriteAnimation2D.AnimationState.Hurt ||
-                 animator.CurrentState == SpriteAnimation2D.AnimationState.Block) &&
+                 animator.CurrentState == SpriteAnimation2D.AnimationState.Block ||
+                 animator.CurrentState == SpriteAnimation2D.AnimationState.Special) &&
                 animator.IsCurrentAnimationFinished)
                 ApplyLocomotionState();
         }
@@ -61,6 +62,7 @@ namespace FarmVsMonsters.Visuals
             if (animator.CurrentState == SpriteAnimation2D.AnimationState.Attack ||
                 animator.CurrentState == SpriteAnimation2D.AnimationState.Hurt ||
                 animator.CurrentState == SpriteAnimation2D.AnimationState.Block ||
+                animator.CurrentState == SpriteAnimation2D.AnimationState.Special ||
                 animator.CurrentState == SpriteAnimation2D.AnimationState.Victory)
                 return;
             ApplyLocomotionState();
