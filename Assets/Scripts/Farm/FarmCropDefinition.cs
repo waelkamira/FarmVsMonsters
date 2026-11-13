@@ -13,7 +13,9 @@ namespace FarmVsMonsters.Farm
         [SerializeField, Min(1)] private int seedCost = 1;
         [SerializeField, Min(1)] private int harvestAmount = 3;
         [SerializeField, Min(10f)] private float growthDurationSeconds = 180f;
-        [SerializeField, Min(1)] private int requiredStage = 1;\n        [SerializeField, Min(1f)] private float wateringGrowthBoostSeconds = 30f;\n        [SerializeField, Min(1f)] private float wateringCooldownSeconds = 60f;
+        [SerializeField, Min(1)] private int requiredStage = 1;
+        [SerializeField, Min(1f)] private float wateringGrowthBoostSeconds = 30f;
+        [SerializeField, Min(1f)] private float wateringCooldownSeconds = 60f;
 
         public string CropId => cropId;
         public string DisplayName => displayName;
@@ -23,7 +25,9 @@ namespace FarmVsMonsters.Farm
         public int SeedCost => seedCost;
         public int HarvestAmount => harvestAmount;
         public float GrowthDurationSeconds => growthDurationSeconds;
-        public int RequiredStage => requiredStage;\n        public float WateringGrowthBoostSeconds => wateringGrowthBoostSeconds;\n        public float WateringCooldownSeconds => wateringCooldownSeconds;
+        public int RequiredStage => requiredStage;
+        public float WateringGrowthBoostSeconds => wateringGrowthBoostSeconds;
+        public float WateringCooldownSeconds => wateringCooldownSeconds;
 
         private void OnValidate()
         {
@@ -32,7 +36,9 @@ namespace FarmVsMonsters.Farm
             seedCost = Mathf.Max(1, seedCost);
             harvestAmount = Mathf.Max(1, harvestAmount);
             growthDurationSeconds = Mathf.Max(10f, growthDurationSeconds);
-            requiredStage = Mathf.Max(1, requiredStage);\n            wateringGrowthBoostSeconds = Mathf.Max(1f, wateringGrowthBoostSeconds);\n            wateringCooldownSeconds = Mathf.Max(1f, wateringCooldownSeconds);
+            requiredStage = Mathf.Max(1, requiredStage);
+            wateringGrowthBoostSeconds = Mathf.Max(1f, wateringGrowthBoostSeconds);
+            wateringCooldownSeconds = Mathf.Max(1f, wateringCooldownSeconds);
         }
     }
 }
