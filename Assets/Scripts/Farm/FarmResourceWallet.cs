@@ -31,7 +31,7 @@ namespace FarmVsMonsters.Farm
             return IsValidIndex(index) ? amounts[index] : 0;
         }
 
-        public int Add(FarmResourceType type, int amount)
+        public bool CanAdd(FarmResourceType type, int amount)\n        {\n            int index = (int)type;\n            return IsValidIndex(index) && amount > 0 && amount <= capacityPerResource - amounts[index];\n        }\n\n        public int Add(FarmResourceType type, int amount)
         {
             int index = (int)type;
             if (!IsValidIndex(index) || amount <= 0)
