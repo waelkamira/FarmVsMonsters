@@ -28,6 +28,7 @@ namespace FarmVsMonsters.Farm
         public event Action UpgradeRejected;
 
         public int Level => level;
+        public int MaximumLevel => Mathf.Max(0, maximumLevel);
         public int CapacityPerResource => CalculateCapacity(level);
         public int NextUpgradeCost => CalculateCost(level);
 
