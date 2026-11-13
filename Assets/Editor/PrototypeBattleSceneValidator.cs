@@ -43,6 +43,7 @@ namespace FarmVsMonsters.EditorTools
             DesktopBattleInput desktop = FindComponent<DesktopBattleInput>(scene);
             BattleHudController hud = FindComponent<BattleHudController>(scene);
             EventSystem eventSystem = FindComponent<EventSystem>(scene);
+            SceneNavigationButton returnToFarm = FindComponent<SceneNavigationButton>(scene);
 
             Require(grid != null, "BattleGrid component is missing.", errors);
             Require(wallet != null, "EnergyWallet component is missing.", errors);
@@ -52,6 +53,15 @@ namespace FarmVsMonsters.EditorTools
             Require(desktop != null, "DesktopBattleInput component is missing.", errors);
             Require(hud != null, "BattleHudController component is missing.", errors);
             Require(eventSystem != null, "EventSystem is missing; HUD buttons will not receive input.", errors);
+            Require(returnToFarm != null, "Battle result panel has no return-to-farm navigation button.", errors);
+            if (returnToFarm != null)
+            {
+                SerializedObject navigationSo = new SerializedObject(returnToFarm);
+                Require(navigationSo.FindProperty("button").objectReferenceValue != null,
+                    "Return-to-farm navigation has no Button reference.", errors);
+                Require(navigationSo.FindProperty("targetScene").stringValue == "FarmHub",
+                    "Return-to-farm button must target the FarmHub scene.", errors);
+            }
 
             if (placement != null)
             {
@@ -118,9 +128,13 @@ namespace FarmVsMonsters.EditorTools
                 if (buildScene.enabled && buildScene.path == ScenePath)
                     inBuildSettings = true;
             Require(inBuildSettings, "PrototypeBattle is not enabled in Build Settings.", errors);
+            bool farmHubExists = AssetDatabase.LoadAssetAtPath<SceneAsset>("Assets/Scenes/FarmHub.unity") != null;
+            if (!farmHubExists)
+                warnings.Add("FarmHub.unity has not been generated yet. Run Generate Farm Hub Scene to enable the return flow.");
 
             if (grid != null && wallet != null && placement != null && waves != null &&
-                outcome != null && desktop != null && hud != null && eventSystem != null)
+                outcome != null && desktop != null && hud != null && eventSystem != null &&
+                returnToFarm != null)
                 warnings.Add("Scene references passed structural checks. This does not replace a Unity compile or Play Mode test.");
 
             EditorSceneManager.CloseScene(scene, true);
