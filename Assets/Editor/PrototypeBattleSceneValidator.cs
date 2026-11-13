@@ -128,9 +128,38 @@ namespace FarmVsMonsters.EditorTools
                 if (buildScene.enabled && buildScene.path == ScenePath)
                     inBuildSettings = true;
             Require(inBuildSettings, "PrototypeBattle is not enabled in Build Settings.", errors);
-            bool farmHubExists = AssetDatabase.LoadAssetAtPath<SceneAsset>("Assets/Scenes/FarmHub.unity") != null;
+            const string farmHubPath = "Assets/Scenes/FarmHub.unity";
+            bool farmHubExists = AssetDatabase.LoadAssetAtPath<SceneAsset>(farmHubPath) != null;
             if (!farmHubExists)
+            {
                 warnings.Add("FarmHub.unity has not been generated yet. Run Generate Farm Hub Scene to enable the return flow.");
+            }
+            else
+            {
+                Scene farmScene = EditorSceneManager.OpenScene(farmHubPath, OpenSceneMode.Additive);
+                Camera farmCamera = FindComponent<Camera>(farmScene);
+                Canvas farmCanvas = FindComponent<Canvas>(farmScene);
+                EventSystem farmEventSystem = FindComponent<EventSystem>(farmScene);
+                SceneNavigationButton enterBattle = FindComponent<SceneNavigationButton>(farmScene);
+                Require(farmCamera != null, "FarmHub has no camera.", errors);
+                Require(farmCanvas != null, "FarmHub has no UI Canvas.", errors);
+                Require(farmEventSystem != null, "FarmHub has no EventSystem.", errors);
+                Require(enterBattle != null, "FarmHub has no Enter Battle navigation.", errors);
+                if (enterBattle != null)
+                {
+                    SerializedObject enterSo = new SerializedObject(enterBattle);
+                    Require(enterSo.FindProperty("button").objectReferenceValue != null,
+                        "FarmHub Enter Battle navigation has no Button reference.", errors);
+                    Require(enterSo.FindProperty("targetScene").stringValue == "PrototypeBattle",
+                        "FarmHub Enter Battle button must target PrototypeBattle.", errors);
+                }
+                bool farmInBuildSettings = false;
+                foreach (EditorBuildSettingsScene buildScene in EditorBuildSettings.scenes)
+                    if (buildScene.enabled && buildScene.path == farmHubPath)
+                        farmInBuildSettings = true;
+                Require(farmInBuildSettings, "FarmHub is not enabled in Build Settings.", errors);
+                EditorSceneManager.CloseScene(farmScene, true);
+            }
 
             if (grid != null && wallet != null && placement != null && waves != null &&
                 outcome != null && desktop != null && hud != null && eventSystem != null &&
