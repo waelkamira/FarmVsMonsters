@@ -13,13 +13,13 @@ namespace FarmVsMonsters.UI
         [SerializeField] private FarmCropPlot[] plots;
         [SerializeField] private Button[] cropButtons;
         [SerializeField] private Text[] cropLabels;
-        [SerializeField] private Button[] harvestButtons;
+        [SerializeField] private Button[] harvestButtons;\n        [SerializeField] private Button[] waterButtons;
         [SerializeField] private Text[] plotLabels;
         [SerializeField] private Text seedCountText;
         [SerializeField] private FarmResourceWallet resourceWallet;
 
         private UnityAction[] cropActions;
-        private UnityAction[] harvestActions;
+        private UnityAction[] harvestActions;\n        private UnityAction[] waterActions;
 
         private void OnEnable()
         {
@@ -64,7 +64,7 @@ namespace FarmVsMonsters.UI
             Refresh();
         }
 
-        public void HarvestCrop(int plotIndex)
+        public void WaterCrop(int plotIndex)\n        {\n            if (cropService == null || plots == null || plotIndex < 0 || plotIndex >= plots.Length)\n                return;\n\n            cropService.TryWater(plots[plotIndex]);\n            Refresh();\n        }\n\n        public void HarvestCrop(int plotIndex)
         {
             if (cropService == null || plots == null || plotIndex < 0 || plotIndex >= plots.Length)
                 return;
@@ -149,7 +149,7 @@ namespace FarmVsMonsters.UI
             }
         }
 
-        private void PlantFirstAvailablePlot(int cropIndex)
+        private void BindWaterButtons()\n        {\n            if (waterButtons == null)\n                return;\n\n            waterActions = new UnityAction[waterButtons.Length];\n            for (int i = 0; i < waterButtons.Length; i++)\n            {\n                if (waterButtons[i] == null)\n                    continue;\n\n                int plotIndex = i;\n                waterActions[i] = () => WaterCrop(plotIndex);\n                waterButtons[i].onClick.AddListener(waterActions[i]);\n            }\n        }\n\n        private void PlantFirstAvailablePlot(int cropIndex)
         {
             if (plots == null || cropService == null || crops == null ||
                 cropIndex < 0 || cropIndex >= crops.Length)
