@@ -359,9 +359,12 @@ namespace FarmVsMonsters.EditorTools
         private static GameObject CreateEnemyPrefab(string name, Material material,
             float healthValue, float speed, float damage, GameObject energyPickupPrefab)
         {
-            GameObject root = GameObject.CreatePrimitive(PrimitiveType.Capsule);
-            root.name = name;
-            root.GetComponent<Renderer>().sharedMaterial = material;
+            GameObject root = new GameObject(name);
+            CapsuleCollider bodyCollider = root.AddComponent<CapsuleCollider>();
+            bodyCollider.height = 2f;
+            bodyCollider.radius = 0.48f;
+            bodyCollider.center = Vector3.zero;
+
             Health health = root.AddComponent<Health>();
             SetFloat(health, "maxHealth", healthValue);
             EnemyMovement movement = root.AddComponent<EnemyMovement>();
@@ -375,10 +378,14 @@ namespace FarmVsMonsters.EditorTools
             SetObject(energyDrop, "pickupPrefab", energyPickupPrefab);
             SetInt(energyDrop, "energyAmount", name.Contains("Brute") ? 30 : 12);
 
-            GameObject eyeLeft = CreateVisualPrimitive(PrimitiveType.Sphere, root.transform,
+            GameObject visuals = new GameObject("Visuals");
+            visuals.transform.SetParent(root.transform, false);
+            CreateVisualPrimitive(PrimitiveType.Capsule, visuals.transform, "MonsterBody",
+                Vector3.zero, Vector3.one, material);
+            GameObject eyeLeft = CreateVisualPrimitive(PrimitiveType.Sphere, visuals.transform,
                 "Eye_Left", new Vector3(-0.18f, 0.35f, 0.36f), Vector3.one * 0.13f,
                 CreateMaterial("MonsterEye", Color.white));
-            GameObject eyeRight = CreateVisualPrimitive(PrimitiveType.Sphere, root.transform,
+            GameObject eyeRight = CreateVisualPrimitive(PrimitiveType.Sphere, visuals.transform,
                 "Eye_Right", new Vector3(0.18f, 0.35f, 0.36f), Vector3.one * 0.13f,
                 CreateMaterial("MonsterEye", Color.white));
             CreateVisualPrimitive(PrimitiveType.Sphere, eyeLeft.transform, "Pupil",
@@ -387,6 +394,10 @@ namespace FarmVsMonsters.EditorTools
             CreateVisualPrimitive(PrimitiveType.Sphere, eyeRight.transform, "Pupil",
                 new Vector3(0f, 0f, 0.08f), Vector3.one * 0.06f,
                 CreateMaterial("MonsterPupil", Color.black));
+            ProceduralIdleMotion idle = visuals.AddComponent<ProceduralIdleMotion>();
+            SetFloat(idle, "bobAmplitude", 0.045f);
+            SetFloat(idle, "bobFrequency", 3.2f);
+            SetFloat(idle, "swayAngle", 5f);
 
             string path = PrefabFolder + "/" + name + ".prefab";
             PrefabUtility.SaveAsPrefabAsset(root, path);
@@ -398,25 +409,27 @@ namespace FarmVsMonsters.EditorTools
             GameObject projectilePrefab, float damage, float interval, bool energyPlant, int style)
         {
             GameObject root = new GameObject("Plant_" + id);
-            CreateVisualPrimitive(PrimitiveType.Cylinder, root.transform, "Stem",
+            GameObject visuals = new GameObject("Visuals");
+            visuals.transform.SetParent(root.transform, false);
+            CreateVisualPrimitive(PrimitiveType.Cylinder, visuals.transform, "Stem",
                 new Vector3(0f, 0.48f, 0f), new Vector3(0.25f, 0.5f, 0.25f),
                 CreateMaterial(id + "_Stem", new Color(0.18f, 0.48f, 0.16f)));
 
             if (style == 3)
             {
-                CreateVisualPrimitive(PrimitiveType.Sphere, root.transform, "GuardBody",
+                CreateVisualPrimitive(PrimitiveType.Sphere, visuals.transform, "GuardBody",
                     new Vector3(0f, 0.72f, 0f), new Vector3(1.05f, 1.0f, 0.85f), material);
             }
             else
             {
-                CreateVisualPrimitive(PrimitiveType.Sphere, root.transform, "PlantHead",
+                CreateVisualPrimitive(PrimitiveType.Sphere, visuals.transform, "PlantHead",
                     new Vector3(0f, 1.25f, 0f), new Vector3(0.78f, 0.78f, 0.78f), material);
             }
 
-            CreateVisualPrimitive(PrimitiveType.Sphere, root.transform, "Leaf_Left",
+            CreateVisualPrimitive(PrimitiveType.Sphere, visuals.transform, "Leaf_Left",
                 new Vector3(-0.38f, 0.65f, 0.05f), new Vector3(0.5f, 0.18f, 0.28f),
                 CreateMaterial(id + "_Leaf", new Color(0.2f, 0.62f, 0.18f)));
-            CreateVisualPrimitive(PrimitiveType.Sphere, root.transform, "Leaf_Right",
+            CreateVisualPrimitive(PrimitiveType.Sphere, visuals.transform, "Leaf_Right",
                 new Vector3(0.38f, 0.65f, 0.05f), new Vector3(0.5f, 0.18f, 0.28f),
                 CreateMaterial(id + "_Leaf", new Color(0.2f, 0.62f, 0.18f)));
 
@@ -425,11 +438,11 @@ namespace FarmVsMonsters.EditorTools
                 for (int i = 0; i < 8; i++)
                 {
                     float angle = i * Mathf.PI * 2f / 8f;
-                    CreateVisualPrimitive(PrimitiveType.Sphere, root.transform, "Petal_" + i,
+                    CreateVisualPrimitive(PrimitiveType.Sphere, visuals.transform, "Petal_" + i,
                         new Vector3(Mathf.Cos(angle) * 0.48f, 1.28f + Mathf.Sin(angle) * 0.48f, 0f),
                         new Vector3(0.34f, 0.34f, 0.22f), material);
                 }
-                CreateVisualPrimitive(PrimitiveType.Sphere, root.transform, "FlowerCenter",
+                CreateVisualPrimitive(PrimitiveType.Sphere, visuals.transform, "FlowerCenter",
                     new Vector3(0f, 1.28f, 0.2f), Vector3.one * 0.36f,
                     CreateMaterial("SunflowerCenter", new Color(0.48f, 0.22f, 0.05f)));
             }
@@ -437,7 +450,7 @@ namespace FarmVsMonsters.EditorTools
             Transform muzzle = null;
             if (!energyPlant)
             {
-                GameObject barrel = CreateVisualPrimitive(PrimitiveType.Sphere, root.transform,
+                GameObject barrel = CreateVisualPrimitive(PrimitiveType.Sphere, visuals.transform,
                     "Muzzle", new Vector3(0f, 1.28f, 0.48f),
                     new Vector3(0.42f, 0.32f, 0.48f), material);
                 muzzle = barrel.transform;
@@ -455,6 +468,12 @@ namespace FarmVsMonsters.EditorTools
                 SetFloat(generator, "intervalSeconds", 7f);
                 SetBool(generator, "generateImmediately", false);
             }
+
+            ProceduralIdleMotion idle = visuals.AddComponent<ProceduralIdleMotion>();
+            SetFloat(idle, "bobAmplitude", 0.025f);
+            SetFloat(idle, "bobFrequency", 2.1f);
+            SetFloat(idle, "swayAngle", 4f);
+            SetFloat(idle, "phaseOffset", style * 0.55f);
 
             string path = PrefabFolder + "/Plant_" + id + ".prefab";
             PrefabUtility.SaveAsPrefabAsset(root, path);
