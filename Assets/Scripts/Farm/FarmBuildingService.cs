@@ -31,7 +31,7 @@ namespace FarmVsMonsters.Farm
                 !ProgressSaveService.IsStageUnlocked(definition.RequiredStage))
                 return false;
 
-            return FindSlot(definition.BuildingId) != null &&
+            return FindSlot(definition.SlotId) != null &&
                    ProgressSaveService.Load().farmCoins >= definition.CoinCost;
         }
 
