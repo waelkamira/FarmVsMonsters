@@ -11,6 +11,7 @@ namespace FarmVsMonsters.Plants
         [SerializeField] private Transform muzzle;
         [SerializeField] private Projectile2D projectilePrefab;
         [SerializeField, Min(0.1f)] private float attackRange = 9f;
+        [SerializeField, Min(0f)] private float laneTolerance = 0.45f;
         [SerializeField, Min(0.05f)] private float attackInterval = 1.15f;
         [SerializeField, Min(0f)] private float damage = 12f;
         [SerializeField, Range(0.1f, 1f)] private float slowMultiplier = 1f;
@@ -68,6 +69,9 @@ namespace FarmVsMonsters.Plants
 
                 float distance = ((Vector2)health.transform.position -
                     (Vector2)transform.position).sqrMagnitude;
+                if (Mathf.Abs(health.transform.position.y - transform.position.y) > laneTolerance)
+                    continue;
+
                 if (distance < nearestDistance)
                 {
                     nearestDistance = distance;
