@@ -41,7 +41,7 @@ namespace FarmVsMonsters.UI
             if (capacityText != null)
                 capacityText.text = "Capacity per resource: " + warehouse.CapacityPerResource;
             if (costText != null)
-                costText.text = warehouse.Level >= 10
+                costText.text = warehouse.Level >= warehouse.MaximumLevel
                     ? "Maximum level reached"
                     : "Next upgrade: " + warehouse.NextUpgradeCost + " farm coins";
             if (upgradeButton != null)
