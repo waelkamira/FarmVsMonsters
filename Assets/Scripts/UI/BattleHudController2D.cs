@@ -73,8 +73,13 @@ namespace FarmVsMonsters.UI
 
         private void Update()
         {
-            if (waveManager != null && enemiesText != null)
-                enemiesText.text = "Monsters: " + waveManager.LivingEnemyCount;
+            if (waveManager != null)
+            {
+                if (enemiesText != null)
+                    enemiesText.text = "Monsters: " + waveManager.LivingEnemyCount;
+                if (waveText != null && waveManager.CurrentWave == 0 && waveManager.StartDelayRemaining > 0f)
+                    waveText.text = "Incoming wave in " + Mathf.CeilToInt(waveManager.StartDelayRemaining);
+            }
         }
 
         public void SelectPlant(int index)
@@ -129,7 +134,12 @@ namespace FarmVsMonsters.UI
             if (energyWallet != null) HandleEnergyChanged(energyWallet.Balance, energyWallet.Capacity);
             if (protectedTargetHealth != null)
                 HandleHealthChanged(protectedTargetHealth.CurrentHealth, protectedTargetHealth.MaxHealth);
-            if (waveManager != null) HandleWaveStarted(waveManager.CurrentWave);
+            if (waveManager != null)
+            {
+                HandleWaveStarted(waveManager.CurrentWave);
+                if (waveText != null && waveManager.CurrentWave == 0 && waveManager.StartDelayRemaining > 0f)
+                    waveText.text = "Incoming wave in " + Mathf.CeilToInt(waveManager.StartDelayRemaining);
+            }
             RefreshPlantButtons();
         }
 
