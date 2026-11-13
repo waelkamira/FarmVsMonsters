@@ -27,7 +27,7 @@ namespace FarmVsMonsters.Plants
         public int CurrentLevel { get; private set; } = 1;
         public int MaximumLevel => Mathf.Max(1, maximumLevel);
         public int NextUpgradeCost => CurrentLevel >= MaximumLevel
-            ? -1 : GetValue(energyCosts, CurrentLevel - 1, 0);
+            ? -1 : GetValue(energyCosts, CurrentLevel - 1, -1);
 
         public event Action<int, int> LevelChanged;
 
