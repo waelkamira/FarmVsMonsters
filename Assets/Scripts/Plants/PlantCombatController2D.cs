@@ -1,5 +1,6 @@
 using FarmVsMonsters.Combat;
 using FarmVsMonsters.Enemies;
+using FarmVsMonsters.Visuals;
 using UnityEngine;
 
 namespace FarmVsMonsters.Plants
@@ -18,11 +19,13 @@ namespace FarmVsMonsters.Plants
         [SerializeField, Min(1)] private int maxTargetsPerScan = 32;
 
         private Collider2D[] results;
+        private CharacterAnimationDriver2D animationDriver;
         private float attackTimer;
 
         private void Awake()
         {
             results = new Collider2D[Mathf.Max(1, maxTargetsPerScan)];
+            animationDriver = GetComponent<CharacterAnimationDriver2D>();
             if (muzzle == null) muzzle = transform;
         }
 
@@ -37,6 +40,7 @@ namespace FarmVsMonsters.Plants
 
             Projectile2D projectile = Instantiate(projectilePrefab, muzzle.position, Quaternion.identity);
             projectile.Initialize(target, damage, slowMultiplier, slowDuration);
+            if (animationDriver != null) animationDriver.PlayAttack();
             attackTimer = attackInterval;
         }
 
