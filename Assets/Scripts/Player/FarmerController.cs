@@ -33,6 +33,11 @@ namespace FarmVsMonsters.Player
             moveInput = Vector2.ClampMagnitude(input, 1f);
         }
 
+public void SetMoveSpeed(float newSpeed)
+        {
+            moveSpeed = Mathf.Max(0f, newSpeed);
+        }
+
         public void StopMoving()
         {
             moveInput = Vector2.zero;
