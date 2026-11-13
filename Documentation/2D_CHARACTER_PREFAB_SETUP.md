@@ -240,3 +240,16 @@ Each plant prefab keeps its own `PlantCombatController2D` and its own `Projectil
 - **Stationary defender:** keep the plant transform fixed in its assigned grid cell. Use the plant's own animation sheet and muzzle transform; for the cactus, place the muzzle at the mouth so thorn sprites originate there.
 
 For a Lobbed projectile, its sprite's local right axis should point toward the projectile nose because `Projectile2D` rotates `transform.right` along its travel direction. The arc is a visual trajectory, not a physics Rigidbody2D ballistic simulation.
+
+
+## Burst attacks and independent special shots
+Configure `PlantCombatController2D` per plant prefab:
+- **Shots Per Burst** controls how many normal projectiles are fired in one attack sequence. Keep it at 1 for a single thorn/seed; use 3–5 for a rapid volley.
+- **Burst Shot Interval** controls the delay between shots inside that volley. This is separate from Attack Interval.
+- **Attack Interval** is the recovery delay after the complete volley, not after every individual projectile.
+- **Special Projectile Prefab** is optional. Assign a distinct projectile prefab for a plant's signature attack (for example, a large thorn, explosive fruit, or piercing-looking visual with its own configured impact).
+- **Special Cooldown** is an independent timer. When ready and a valid monster is in range, the special projectile is fired instead of starting a normal volley.
+- **Special Damage Multiplier** scales the plant's base damage for that special shot. Its projectile prefab controls flight and impact mode; the controller's slow settings are also passed to it.
+- A burst rechecks its lane-valid target before each subsequent shot. If no valid monster remains, the unfinished burst is cancelled rather than firing blindly.
+
+Suggested identities: cactus = 3 quick direct thorns; pea/seed shooter = 1 steady homing seed; fruit lobber = 1 lobbed shot; bomb plant = special lobbed Splash projectile on a long cooldown; rapid-fire flower = 4 low-damage shots per burst. Tune damage and intervals together to keep each plant's total damage balanced.
