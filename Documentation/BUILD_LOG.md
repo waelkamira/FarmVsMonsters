@@ -688,3 +688,12 @@
 - Plant placement, pointer hit-testing, lane positions, monster movement/blocking, and caveman lane lookup now share that perspective mapping.
 - Updated the integration guide and asset README so future work treats the painted grid as authoritative.
 - Validation limitation: code and documentation were committed, but no browser runtime/pointer test or local build was run in this step. The four corner coordinates are an initial visual calibration and may need small adjustments after the user views the running game.
+
+
+## 2026-11-14 — Trace the background's perspective planting cells
+
+- Recalibrated the four outer board corners against the visible grid in the uploaded artwork.
+- Added nine perspective column lines and six perspective lane lines, forming 40 quadrilateral cells rather than axis-aligned rectangles.
+- Cell hit-testing and plant placement share the same bilinear coordinate transform.
+- Planting targets the bilinear midpoint of each cell, i.e. the quadrilateral's center.
+- Browser screenshot/pixel-diff validation has not yet been performed; the corner coordinates remain a visual calibration pending runtime confirmation.
