@@ -146,4 +146,4 @@ Every plant is rooted in its assigned grid cell. Do not add a movement controlle
 3. Create a `FarmCropDefinition2D` asset via **Assets → Create → Farm Vs Monsters → 2D → Crop Definition**. Assign its growing and ready sprites, seed cost, growth duration, harvest yield and crop health.
 4. Add `FarmResourceWallet2D` to the battle scene and assign it plus the crop definition to a `FarmPlotInteractor2D` on the caveman. Add a Collider2D to each plot on a layer included in Plot Layers.
 5. Move next to a plot and press E: empty = plant, growing = water once (accelerates growth), ready = harvest into Produce. Starting seed/produce amounts and capacity are configurable on the wallet.
-6. Assign `FarmCropPlot2D.cropHealth` through the Health component's Max Health; this first pass uses the shared Health maximum configured in the Inspector.
+6. The crop definition's Crop Health value is applied to the plot Health component each time a new crop is planted. Put the plot collider on a layer included in both Plot Layers (player interaction) and Farm Target Layers (monster detection).
