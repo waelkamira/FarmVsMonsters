@@ -41,11 +41,11 @@ The uploaded JPEG was fetched from the repository and visually inspected. It is 
 
 The image is 16:9 and is displayed at 1120 × 630 inside the 1120 × 680 Phaser viewport, centered vertically (25 px top/bottom offset). The interactive planting grid has been moved off the old oversized placeholder coordinates and onto the open lawn:
 
-- Grid origin: x=260, y=310
+- Grid origin: x=260, y=402 (moved down by two cell heights)
 - Cell size: 75 × 46
 - Columns: 8 (right edge x=860)
-- Lanes: 5 (bottom edge y=540)
-- Lane centers: y=333, 379, 425, 471, 517
+- Lanes: 5 (bottom edge y=632)
+- Lane centers: y=425, 471, 517, 563, 609
 - Protected farmhouse threshold: x=238
 - Monster spawn: x=1045
 
