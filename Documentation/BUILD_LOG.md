@@ -106,3 +106,10 @@
 - Added seed-pack purchasing with farm coins, capacity validation, and UI controls for planting, watering, harvesting, and displaying seed/water stock.
 - UI uses uGUI Button/Text references and needs plot/crop arrays wired in the Inspector. Each crop definition needs one or more stage prefabs, and each plot needs a unique ID.
 - Verification: changes were committed to `main` and source files read back. Unity compilation, clock/offline progression, UI wiring, and scene gameplay tests remain pending.
+
+## 2026-11-13 — Crop system source review and compatibility fixes
+- Completed the crop UI listener lifecycle for crop selection, watering, harvesting, and seed-pack purchase controls; refresh now reflects empty/occupied plots, growth percentage, harvest readiness, water cooldown, and available resources.
+- Added a visual-stage cache so crop prefabs are only replaced when the crop advances to another configured growth stage, rather than being recreated every refresh tick.
+- Added backward-compatible resource inventory migration: saves created before Seeds and Water existed receive the configured starter quantities when those inventory slots are first introduced; migrated arrays are saved in the expanded format.
+- Corrected escaped source line breaks discovered during read-back and rewrote the crop UI controller to ensure valid C# source text.
+- Verification remains repository read-back/source inspection only. No Unity compiler or runtime tests have been executed.
