@@ -168,3 +168,13 @@
 - Hardened the contract UI to refresh delivery progress when the resource wallet changes, so harvesting/production immediately updates the displayed amount.
 - Important setup constraints: assign the same ScriptableObject definitions to the storage service and UI, provide unique storage IDs and slot IDs, add a FarmStorageSlot for every facility, and connect the FarmResourceWallet. No actual warehouse meshes/prefabs have been authored yet.
 - Verification: source changes were committed to `main` and read back from GitHub. No Unity compilation, prefab restoration, purchase flow, or gameplay test has been performed.
+
+
+## 2026-11-13 — Offline animal production and inventory initialization
+- Reworked `FarmAnimalService.cs` to persist each owned animal's next production UTC timestamp in save schema v2 while migrating existing schema-v1 ownership saves.
+- On farm load, owned animals calculate missed production cycles and deposit the goods they can fit in the appropriate resource capacity. If storage is full, unproduced cycles remain pending and can be collected after the player makes room; no partial cycle is consumed.
+- Live production now uses realtime waits and the same timestamp-based catch-up path, so pausing gameplay does not pause farm production clocks.
+- Added duplicate animal-ID rejection and safer pen occupancy checks.
+- Fixed new inventory initialization: a fresh `FarmResourceWallet` now actually seeds the configured starting Seeds and Water values and saves them, instead of returning with an empty inventory.
+- Limitations: animal ownership and production timestamps remain local PlayerPrefs data; device clock changes can affect offline progress. No feeding, happiness, animal health, or server-authoritative anti-cheat exists yet.
+- Verification: modified files were committed and read back from GitHub. No Unity compilation or runtime/offline clock simulation has been run.
