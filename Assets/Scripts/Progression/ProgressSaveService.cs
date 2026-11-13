@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace FarmVsMonsters.Progression
@@ -51,8 +52,6 @@ namespace FarmVsMonsters.Progression
                 if (loaded == null || loaded.schemaVersion < 1 || loaded.schemaVersion > CurrentSchemaVersion)
                     loaded = CreateNewProgress();
 
-                // Version 1 had battle stats and stage unlocks only. Keep those values
-                // and initialize the new farm economy/upgrade fields with safe defaults.
                 if (loaded.schemaVersion == 1)
                 {
                     loaded.farmCoins = 250;
@@ -109,7 +108,6 @@ namespace FarmVsMonsters.Progression
         {
             PlayerProgressData progress = Load();
             progress.completedBattles++;
-
             if (victory)
             {
                 progress.totalVictories++;
@@ -120,7 +118,6 @@ namespace FarmVsMonsters.Progression
             {
                 progress.totalDefeats++;
             }
-
             Save(progress);
         }
 
@@ -129,8 +126,7 @@ namespace FarmVsMonsters.Progression
             if (string.IsNullOrWhiteSpace(upgradeId))
                 return 0;
 
-            PlayerProgressData progress = Load();
-            UpgradeLevelRecord record = FindUpgrade(progress, upgradeId);
+            UpgradeLevelRecord record = FindUpgrade(Load(), upgradeId);
             return record != null ? Mathf.Max(0, record.level) : 0;
         }
 
@@ -148,7 +144,7 @@ namespace FarmVsMonsters.Progression
             if (record == null)
             {
                 record = new UpgradeLevelRecord { upgradeId = upgradeId, level = 0 };
-                var records = new System.Collections.Generic.List<UpgradeLevelRecord>(progress.upgrades ?? Array.Empty<UpgradeLevelRecord>());
+                var records = new List<UpgradeLevelRecord>(progress.upgrades);
                 records.Add(record);
                 progress.upgrades = records.ToArray();
             }
@@ -166,15 +162,11 @@ namespace FarmVsMonsters.Progression
                 return false;
 
             PlayerProgressData progress = Load();
-            if (progress.ownedBuildingIds == null)
-                return false;
-
             foreach (string ownedId in progress.ownedBuildingIds)
             {
                 if (string.Equals(ownedId, buildingId, StringComparison.Ordinal))
                     return true;
             }
-
             return false;
         }
 
@@ -187,7 +179,7 @@ namespace FarmVsMonsters.Progression
             if (progress.farmCoins < cost)
                 return false;
 
-            var owned = new System.Collections.Generic.List<string>(progress.ownedBuildingIds ?? Array.Empty<string>());
+            var owned = new List<string>(progress.ownedBuildingIds);
             owned.Add(buildingId);
             progress.ownedBuildingIds = owned.ToArray();
             progress.farmCoins -= cost;
@@ -238,7 +230,6 @@ namespace FarmVsMonsters.Progression
                 if (record != null && string.Equals(record.upgradeId, upgradeId, StringComparison.Ordinal))
                     return record;
             }
-
             return null;
         }
 
@@ -252,11 +243,11 @@ namespace FarmVsMonsters.Progression
             if (source == null)
                 return CreateNewProgress();
 
-            UpgradeLevelRecord[] upgrades = source.upgrades ?? Array.Empty<UpgradeLevelRecord>();
-            var copiedUpgrades = new UpgradeLevelRecord[upgrades.Length];
-            for (int i = 0; i < upgrades.Length; i++)
+            UpgradeLevelRecord[] sourceUpgrades = source.upgrades ?? Array.Empty<UpgradeLevelRecord>();
+            var copiedUpgrades = new UpgradeLevelRecord[sourceUpgrades.Length];
+            for (int i = 0; i < sourceUpgrades.Length; i++)
             {
-                UpgradeLevelRecord record = upgrades[i];
+                UpgradeLevelRecord record = sourceUpgrades[i];
                 copiedUpgrades[i] = record == null ? null : new UpgradeLevelRecord
                 {
                     upgradeId = record.upgradeId,
@@ -272,7 +263,10 @@ namespace FarmVsMonsters.Progression
                 totalVictories = source.totalVictories,
                 totalDefeats = source.totalDefeats,
                 farmCoins = source.farmCoins,
-                upgrades = copiedUpgrades
+                upgrades = copiedUpgrades,
+                ownedBuildingIds = source.ownedBuildingIds == null
+                    ? Array.Empty<string>()
+                    : (string[])source.ownedBuildingIds.Clone()
             };
         }
 
@@ -284,14 +278,18 @@ namespace FarmVsMonsters.Progression
             progress.totalVictories = Mathf.Max(0, progress.totalVictories);
             progress.totalDefeats = Mathf.Max(0, progress.totalDefeats);
             progress.farmCoins = Mathf.Max(0, progress.farmCoins);
-            progress.upgrades ??= Array.Empty<UpgradeLevelRecord>();\n            progress.ownedBuildingIds ??= Array.Empty<string>();
+            if (progress.upgrades == null)
+                progress.upgrades = Array.Empty<UpgradeLevelRecord>();
+            if (progress.ownedBuildingIds == null)
+                progress.ownedBuildingIds = Array.Empty<string>();
 
             foreach (UpgradeLevelRecord record in progress.upgrades)
             {
                 if (record == null)
                     continue;
                 record.level = Mathf.Max(0, record.level);
-                record.upgradeId ??= string.Empty;
+                if (record.upgradeId == null)
+                    record.upgradeId = string.Empty;
             }
         }
     }
