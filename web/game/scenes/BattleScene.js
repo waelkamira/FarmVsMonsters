@@ -63,18 +63,30 @@ export default class BattleScene extends Scene {
   }
 
   drawField() {
+    // Fallback art only. When the uploaded background loads it is rendered above this layer.
     const g = this.add.graphics().setDepth(-10);
     g.fillGradientStyle(0xb9d98a, 0xb9d98a, 0x8dbb69, 0x8dbb69, 1);
     g.fillRect(0, 0, 1120, 680);
     g.fillStyle(0x8a603b, 1); g.fillRoundedRect(185, 115, 690, 500, 24);
     g.fillStyle(0x9c7047, 1); g.fillRoundedRect(195, 125, 670, 480, 18);
+
+    // Draw the fallback board with the same perspective corners as the real artwork.
+    const point = (u, v) => {
+      const { tl, tr, br, bl } = GRID_CORNERS;
+      return {
+        x: (1-u)*(1-v)*tl.x + u*(1-v)*tr.x + u*v*br.x + (1-u)*v*bl.x,
+        y: (1-u)*(1-v)*tl.y + u*(1-v)*tr.y + u*v*br.y + (1-u)*v*bl.y,
+      };
+    };
     for (let row = 0; row < LANES; row += 1) {
-      const y = GRID_TOP + row * CELL_H;
-      g.fillStyle(row % 2 === 0 ? 0xb88b5b : 0xad8050, 1);
-      g.fillRoundedRect(GRID_LEFT - 8, y, COLUMNS * CELL_W, CELL_H - 5, 8);
       for (let col = 0; col < COLUMNS; col += 1) {
+        const u0 = col / COLUMNS, u1 = (col + 1) / COLUMNS;
+        const v0 = row / LANES, v1 = (row + 1) / LANES;
+        const cell = [point(u0, v0), point(u1, v0), point(u1, v1), point(u0, v1)];
+        g.fillStyle(row % 2 === 0 ? 0xb88b5b : 0xad8050, 0.9);
+        g.fillPoints(cell, true);
         g.lineStyle(2, 0xe4c18b, 0.65);
-        g.strokeRoundedRect(GRID_LEFT + col * CELL_W, y, CELL_W - 3, CELL_H - 7, 7);
+        g.strokePoints(cell, true);
       }
     }
     g.fillStyle(0xe8d5a8, 1); g.fillRoundedRect(28, 385, 132, 150, 12);
