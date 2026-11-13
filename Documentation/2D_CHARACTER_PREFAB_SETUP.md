@@ -293,3 +293,31 @@ Create a small 2D sprite prefab and add `EnemyProjectile2D`. Its speed, lifetime
 
 ### Suggested wave composition
 Introduce one archetype at a time: normal scouts first, then an armored defender, then a ranged thrower, followed by a brute or jumper. Mix them in later waves rather than raising every enemy's stats equally. The wave system already spawns configured prefab groups; create separate prefabs for each archetype and assign those prefabs to the desired wave groups.
+
+## Boss monster prefab and phase setup
+A boss is still a lane-based monster. Start from a working 2D monster prefab and add `BossPhaseController2D` beside `Health` and `EnemyMovement2D`.
+
+### Three health phases
+- Phase 1 is active above the Phase 2 health threshold.
+- Phase 2 begins at the configured health fraction (default 66%). It increases movement speed and attack damage.
+- Phase 3 begins at the configured lower threshold (default 33%). It increases both again.
+- Phase changes only move forward during a fight. The component raises `PhaseChanged` so UI, audio, and VFX adapters can react.
+
+The phase multipliers are combined with the wave's existing difficulty multipliers. Tune the boss's base Health, speed, damage and attack interval on its own prefab.
+
+### Special attacks
+- **Ground pulse:** periodically damages active `FarmDefenseTarget2D` objects inside the configured radius and on the boss's lane. Damage and interval become more dangerous in later phases.
+- **Minion summon:** periodically instantiates one or more configured minion prefabs. Each minion is placed beside the boss and assigned to its lane. Assign the current `WaveManager` so summoned minions are registered as living enemies; the wave will not clear until the boss and all its summoned minions are defeated.
+- Assign `Protected Target` and `Protected Target Health` so summoned minions inherit the same destination as the main wave. If those fields are left empty, the minion prefab's own target setup is retained.
+
+Every minion prefab must contain Health. Add EnemyMovement2D for lane movement and attacks. Use ordinary enemy prefabs for minions rather than another boss prefab to avoid recursive boss summoning.
+
+### Boss health bar
+1. Create a dedicated HUD panel under the battle Canvas. Add an Image for the background and a child Image for the fill; set the fill Image Type to **Filled** and Fill Method to **Horizontal**.
+2. Add optional uGUI Text elements for the numeric health and phase/name labels.
+3. Add `BossHealthBar2D` to a separate HUD object (not the object assigned as Visible Root).
+4. Assign the boss Health and BossPhaseController2D references, the fill Image, labels, and the panel root.
+5. Set a clear boss name. The panel hides when the boss dies.
+
+### Suggested boss encounter
+Spawn normal monsters first, then the boss as the final enemy in a wave. Give the boss a distinct silhouette and large sprite scale, a dedicated health bar, and unique Idle/Walk/Attack/Hurt/Death artwork. Add separate visual/audio feedback for the ground pulse and phase transitions using the exposed events. The current controller supplies gameplay logic; it does not generate those art or audio assets automatically.
