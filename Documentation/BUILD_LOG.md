@@ -505,3 +505,12 @@
 - Updated `DesktopBattleInput2D` with an optional sprite preview: green for a currently valid cell and red for an invalid location. Keyboard selection and mouse placement remain compatible with the existing PlantDefinition quick-select array.
 - Added Inspector wiring instructions, including the requirement that the preview object has a SpriteRenderer only and that Blocking Layers exclude the board floor.
 - Verification: all changed source/documentation files were committed to `main` and read back from GitHub. No Unity compilation, Inspector setup, Play Mode, or physics-layer test has been run. Confirm the project's Unity version supports the used Physics2D NonAlloc overload before treating this as runtime-verified.
+
+
+## 2026-11-13 — Explicit planted-defender lane ownership
+- Added explicit row assignment to `PlantCombatController2D`; its target scan now uses the assigned lane center instead of assuming the plant's transform Y is the only lane source.
+- Added authoritative `EnemyMovement2D.LaneWorldY` and use it during plant targeting, avoiding false lane mismatches caused by child Health transforms or sprite pivots.
+- Added row assignment to `FarmDefenseTarget2D`. When a planted plant prefab includes a Plant target marker, placement binds that marker to the same grid row and forces lane-bound targeting.
+- Updated `PlantPlacementService2D` to pass the selected cell row and grid lane-center coordinate to both combat and monster-target components.
+- Documented the row-binding behavior and the current unrotated, world-horizontal lane limitation.
+- Verification: changed files were committed to `main` and read back from GitHub. Static brace/parenthesis checks are performed; Unity compile, Play Mode, physics layer setup, and cross-lane combat behavior remain untested.
