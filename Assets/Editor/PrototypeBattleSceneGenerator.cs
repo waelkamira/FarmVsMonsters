@@ -115,7 +115,7 @@ namespace FarmVsMonsters.EditorTools
             farmerVisual.transform.SetParent(farmer.transform, false);
             farmerVisual.transform.localPosition = Vector3.up;
             farmerVisual.GetComponent<Renderer>().sharedMaterial = farmerMaterial;
-            DestroyImmediate(farmerVisual.GetComponent<Collider>());
+            UnityEngine.Object.DestroyImmediate(farmerVisual.GetComponent<Collider>());
 
             GameObject farmCore = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
             farmCore.name = "ProtectedFarmCore";
@@ -269,13 +269,13 @@ namespace FarmVsMonsters.EditorTools
             root.name = "Projectile_Pea";
             root.transform.localScale = Vector3.one * 0.28f;
             root.GetComponent<Renderer>().sharedMaterial = material;
-            DestroyImmediate(root.GetComponent<Collider>());
+            UnityEngine.Object.DestroyImmediate(root.GetComponent<Collider>());
             Projectile projectile = root.AddComponent<Projectile>();
             SetFloat(projectile, "speed", 11f);
             SetFloat(projectile, "lifetime", 4f);
             string path = PrefabFolder + "/Projectile_Pea.prefab";
             PrefabUtility.SaveAsPrefabAsset(root, path);
-            DestroyImmediate(root);
+            UnityEngine.Object.DestroyImmediate(root);
             return AssetDatabase.LoadAssetAtPath<GameObject>(path);
         }
 
@@ -310,7 +310,7 @@ namespace FarmVsMonsters.EditorTools
 
             string path = PrefabFolder + "/" + name + ".prefab";
             PrefabUtility.SaveAsPrefabAsset(root, path);
-            DestroyImmediate(root);
+            UnityEngine.Object.DestroyImmediate(root);
             return AssetDatabase.LoadAssetAtPath<GameObject>(path);
         }
 
@@ -378,7 +378,7 @@ namespace FarmVsMonsters.EditorTools
 
             string path = PrefabFolder + "/Plant_" + id + ".prefab";
             PrefabUtility.SaveAsPrefabAsset(root, path);
-            DestroyImmediate(root);
+            UnityEngine.Object.DestroyImmediate(root);
             return AssetDatabase.LoadAssetAtPath<GameObject>(path);
         }
 
@@ -562,7 +562,7 @@ namespace FarmVsMonsters.EditorTools
             Renderer renderer = visual.GetComponent<Renderer>();
             if (renderer != null) renderer.sharedMaterial = material;
             Collider collider = visual.GetComponent<Collider>();
-            if (collider != null) DestroyImmediate(collider);
+            if (collider != null) UnityEngine.Object.DestroyImmediate(collider);
             return visual;
         }
 
