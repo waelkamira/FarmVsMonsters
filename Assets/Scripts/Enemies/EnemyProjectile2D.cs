@@ -53,9 +53,18 @@ namespace FarmVsMonsters.Enemies
             }
 
             Vector2 direction = toTarget.normalized;
-            transform.position += (Vector3)(direction * speed * Time.deltaTime);
+            Vector2 nextPosition = Vector2.MoveTowards(
+                transform.position, target.transform.position, speed * Time.deltaTime);
+            transform.position = nextPosition;
             if (rotateAlongTravel && direction.sqrMagnitude > 0.001f)
                 transform.right = direction;
+
+            if (((Vector2)target.transform.position - nextPosition).sqrMagnitude <=
+                hitDistance * hitDistance)
+            {
+                target.ApplyDamage(damage);
+                Destroy(gameObject);
+            }
         }
 
         private void OnValidate()
