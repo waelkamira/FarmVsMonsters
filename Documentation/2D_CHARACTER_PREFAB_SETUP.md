@@ -193,3 +193,6 @@ The crop and animal interaction components now check the caveman's Health when o
 
 ## Caveman prefab validation
 After assembling the caveman root, select its prefab or scene root in the Project/Hierarchy window and run **Tools → Farm Vs Monsters → Validate Selected Caveman Prefab**. The validator checks for Rigidbody2D, Health, SpriteAnimation2D, CharacterAnimationDriver2D, CavemanFarmerController2D, FarmPlotInteractor2D, and FarmAnimalCareController2D; it also checks basic Rigidbody2D settings, a Collider2D, and a SpriteRenderer. A passing report does not replace manual assignment of the shared wallet, attack origin, sprite clips, movement bounds, and collision masks.
+
+## 2D follow camera
+Add `CameraFollow2D` to the orthographic gameplay camera and assign the caveman Transform as Target. Keep the camera offset Z negative (normally -10). Enable Clamp To Bounds only after entering the farm's world-space minimum and maximum corners. Bounds describe the farm area, not the player movement rectangle; the script automatically accounts for the orthographic camera's visible half-width and half-height. If the farm is smaller than the camera view, the camera centers on that axis.
