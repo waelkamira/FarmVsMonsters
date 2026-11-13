@@ -164,21 +164,9 @@ export default class BattleScene extends Scene {
   }
 
   drawPlantingGrid() {
-    // Draw subtle hit regions exactly over the painted cells; no second rectangular grid.
-    const grid = this.add.graphics().setDepth(2);
-    for (let row = 0; row < LANES; row += 1) {
-      for (let col = 0; col < COLUMNS; col += 1) {
-        const a = this.gridToWorld(col, row, 2, 2);
-        const b = this.gridToWorld(col, row, CELL_W - 5, 2);
-        const c = this.gridToWorld(col, row, CELL_W - 5, CELL_H - 5);
-        const d = this.gridToWorld(col, row, 2, CELL_H - 5);
-        grid.fillStyle(0xf7e8bd, 0.045);
-        grid.fillPoints([a, b, c, d], true);
-        grid.lineStyle(2, 0xffedc4, 0.48);
-        grid.strokePoints([a, b, c, d], true);
-      }
-    }
-    this.plantingGrid = grid;
+    // The cell grid is already painted into the background. Do not draw a duplicate.
+    // Pointer hit-testing uses boardCoordinates() against these same four corners.
+    this.plantingGrid = null;
   }
 
   createHud() {
