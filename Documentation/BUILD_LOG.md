@@ -453,3 +453,10 @@
 - Added `BattleOutcomeController.ReportDefeat()` as the narrow integration point for the protection relay; existing one-shot outcome handling prevents duplicate defeat events.
 - Documented Canvas label wiring, shared-wallet assignment, farmhouse/princess target setup, and WaveManager fallback target configuration.
 - Verification: source changes committed to `main` and read back. Unity compilation, Inspector wiring, UI rendering, collision-layer behavior, and Play Mode tests remain pending.
+
+## 2026-11-13 — Plant projectile impact variety
+- Extended `Projectile2D` with configurable Direct and Splash impact modes so individual plant projectile prefabs can deliver distinct combat behavior as well as distinct sprite art.
+- Splash mode damages only nearby colliders carrying `EnemyMarker` and `Health`, applies configured slow effects to affected living monsters, and uses a bounded non-allocating overlap buffer. It falls back to the tracked primary target if the splash layer mask is misconfigured.
+- Added direction-based projectile rotation and a selected-object splash-radius gizmo for prefab tuning.
+- Documented per-plant projectile setup and splash layer configuration.
+- Verification: source was committed and read back from GitHub; Unity compiler, collision layers, projectile visuals, and combat balance remain untested.
