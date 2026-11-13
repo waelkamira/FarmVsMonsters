@@ -20,8 +20,9 @@
 1. ثبّت Unity Editor بالإصدار المحدد في `ProjectSettings/ProjectVersion.txt`.
 2. افتح المشروع من Unity Hub وانتظر اكتمال Package Manager والاستيراد.
 3. من القائمة اختر **Farm Vs Monsters → Generate Prototype Battle Scene**.
-4. افتح `Assets/Scenes/PrototypeBattle.unity` واضغط Play.
-5. اضبط **Active Input Handling = Both** في Player Settings إذا لم يكن مضبوطاً.
+4. شغّل **Farm Vs Monsters → Validate Prototype Battle Scene** لمراجعة المراجع والربط البنيوي.
+5. افتح `Assets/Scenes/PrototypeBattle.unity` واضغط Play.
+6. اضبط **Active Input Handling = Both** في Player Settings إذا لم يكن مضبوطاً.
 
 راجع:
 - `Documentation/UNITY_PROJECT_BOOTSTRAP.md` لتثبيت وفتح المشروع.
