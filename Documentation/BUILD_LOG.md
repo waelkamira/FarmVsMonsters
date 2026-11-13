@@ -343,3 +343,12 @@
 - The 2D HUD now includes the configured wave display name alongside its number.
 - Updated the prefab setup guide with tuning guidance and clarified that difficulty is configured per wave rather than silently auto-scaled.
 - Verification: GitHub readback and source delimiter checks performed after commits. Unity compilation and gameplay balancing remain pending.
+
+## 2026-11-13 — Wave composition, lane selection, and clear rewards
+- Added WaveManager.EnemyGroup entries with prefab/count composition while preserving the existing legacy enemyPrefabs list for compatibility.
+- Added RoundRobin and Random spawn selection modes. Random mode avoids selecting the same spawn point consecutively when more than one lane is configured.
+- Added per-wave interWaveDelay and energyRewardOnClear. The manager grants the configured energy only after all tracked enemies in that wave are defeated.
+- Exposed InterWaveDelayRemaining and updated BattleHudController2D to show the countdown between waves.
+- Added a required-Health validation gate: spawned prefabs without Health are logged and destroyed instead of silently allowing a wave to clear.
+- Updated the 2D setup guide with composition, lane, reward, and prefab requirements.
+- Verification: source files were read back from GitHub and delimiter checks are performed after this commit. Unity compilation, inspector serialization, and gameplay balance still require a Unity editor run.
