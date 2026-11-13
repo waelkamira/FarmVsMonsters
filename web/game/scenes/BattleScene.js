@@ -60,7 +60,7 @@ export default class BattleScene extends Scene {
     this.plants = [];
     this.monsters = [];
     this.projectiles = [];
-    this.laneYs = Array.from({ length: LANES }, (_, row) => this.gridToWorld(0, row).y);
+    this.laneYs = Array.from({ length: LANES }, (_, row) => this.gridCellCenter(0, row).y);
     this.emergencyMode = false;
     this.hasPlantedDefender = false;
     this.facing = 1;
@@ -138,8 +138,20 @@ export default class BattleScene extends Scene {
   // Every cell is mapped independently, so measured intersections need not form
   // one mathematically perfect quadrilateral.
   boardPoint(u, v) {
-    const safeU = PhaserMath.Clamp(u, 0, 1 - Number.EPSILON);
-    const safeV = PhaserMath.Clamp(v, 0, 1 - Number.EPSILON);
+    // Keep the mesh exact inside the board, but extrapolate beyond its outer
+    // perimeter so monsters can enter from the right and approach the house.
+    if (u < 0 || u > 1 || v < 0 || v > 1) {
+      const tl = GRID_NODES[0][0];
+      const tr = GRID_NODES[0][COLUMNS];
+      const br = GRID_NODES[LANES][COLUMNS];
+      const bl = GRID_NODES[LANES][0];
+      return {
+        x: (1-u)*(1-v)*tl.x + u*(1-v)*tr.x + u*v*br.x + (1-u)*v*bl.x,
+        y: (1-u)*(1-v)*tl.y + u*(1-v)*tr.y + u*v*br.y + (1-u)*v*bl.y,
+      };
+    }
+    const safeU = Math.min(u, 1 - Number.EPSILON);
+    const safeV = Math.min(v, 1 - Number.EPSILON);
     const col = Math.min(COLUMNS - 1, Math.floor(safeU * COLUMNS));
     const row = Math.min(LANES - 1, Math.floor(safeV * LANES));
     const localU = safeU * COLUMNS - col;
