@@ -3,12 +3,15 @@ using UnityEngine;
 
 namespace FarmVsMonsters.Input
 {
-    /// <summary>Keyboard plant selection and mouse placement for the 2D lane battle.</summary>
+    /// <summary>Keyboard plant selection, snapped mouse placement, and optional validity preview.</summary>
     public sealed class DesktopBattleInput2D : MonoBehaviour
     {
         [SerializeField] private PlantPlacementService2D placementService;
         [SerializeField] private Camera gameplayCamera;
         [SerializeField] private PlantDefinition[] quickSelectPlants = new PlantDefinition[5];
+        [SerializeField] private SpriteRenderer placementPreview;
+        [SerializeField] private Color validPreviewColor = new Color(0.25f, 1f, 0.35f, 0.5f);
+        [SerializeField] private Color invalidPreviewColor = new Color(1f, 0.2f, 0.2f, 0.5f);
 
         public PlantDefinition SelectedPlant { get; private set; }
 
@@ -16,11 +19,13 @@ namespace FarmVsMonsters.Input
         {
             if (SelectedPlant == null && quickSelectPlants != null && quickSelectPlants.Length > 0)
                 SelectedPlant = quickSelectPlants[0];
+            UpdatePlacementPreview();
         }
 
         private void Update()
         {
             HandlePlantSelection();
+            UpdatePlacementPreview();
             if (UnityEngine.Input.GetMouseButtonDown(0))
                 TryPlaceAtPointer();
         }
@@ -39,20 +44,72 @@ namespace FarmVsMonsters.Input
             }
         }
 
-        private void TryPlaceAtPointer()
+        private bool TryGetPointerWorld(out Vector2 world)
         {
-            if (placementService == null || gameplayCamera == null || SelectedPlant == null)
-                return;
+            world = default;
+            if (gameplayCamera == null) return false;
 
             Vector3 screen = UnityEngine.Input.mousePosition;
             screen.z = Mathf.Abs(gameplayCamera.transform.position.z);
-            Vector3 world = gameplayCamera.ScreenToWorldPoint(screen);
+            world = gameplayCamera.ScreenToWorldPoint(screen);
+            return true;
+        }
+
+        private void TryPlaceAtPointer()
+        {
+            if (placementService == null || SelectedPlant == null ||
+                !TryGetPointerWorld(out Vector2 world))
+                return;
+
             placementService.TryPlace(SelectedPlant, world, out _);
+        }
+
+        private void UpdatePlacementPreview()
+        {
+            if (placementPreview == null) return;
+            if (placementService == null || SelectedPlant == null ||
+                SelectedPlant.Prefab == null || !TryGetPointerWorld(out Vector2 world))
+            {
+                placementPreview.enabled = false;
+                return;
+            }
+
+            SpriteRenderer source = SelectedPlant.Prefab.GetComponentInChildren<SpriteRenderer>();
+            if (source == null || source.sprite == null ||
+                !placementService.CanPlace(SelectedPlant, world, out _,
+                    out Vector2 snappedPosition, out _))
+            {
+                if (source == null || source.sprite == null)
+                {
+                    placementPreview.enabled = false;
+                    return;
+                }
+
+                placementPreview.sprite = source.sprite;
+                placementPreview.transform.position = placementService != null &&
+                    placementService.CanPlace(SelectedPlant, world, out _, out snappedPosition, out _)
+                    ? snappedPosition
+                    : world;
+                placementPreview.color = invalidPreviewColor;
+                placementPreview.enabled = true;
+                return;
+            }
+
+            placementPreview.sprite = source.sprite;
+            placementPreview.transform.position = snappedPosition;
+            placementPreview.color = validPreviewColor;
+            placementPreview.enabled = true;
         }
 
         public void SelectPlant(PlantDefinition definition)
         {
             if (definition != null) SelectedPlant = definition;
+            UpdatePlacementPreview();
+        }
+
+        private void OnDisable()
+        {
+            if (placementPreview != null) placementPreview.enabled = false;
         }
     }
 }
