@@ -7,21 +7,17 @@ namespace FarmVsMonsters.EditorTools
 {
     /// <summary>
     /// Slices the project's standard 6x6 character atlas into consistently named sprites.
-    /// Select a PNG in the Project window, then use Tools/Farm Vs Monsters/Slice Character Sheet (6x6).
+    /// Select a PNG in the Project window, then use Tools/Farm Vs Monsters/Slice Plant Character Sheet (6x6).
     /// </summary>
     public static class CharacterSpriteSheetSlicer
     {
         private const int Columns = 6;
         private const int Rows = 6;
 
+        // Stationary plant defenders do not need a Walk animation row.
         private static readonly string[] RowNames =
         {
-            "Idle", "Walk", "Attack", "Block", "Hurt", "Death"
-        };
-
-        private static readonly string[] VictoryFrameNames =
-        {
-            "Death_01", "Death_02", "Death_03", "Death_04", "Death_05", "Victory_01"
+            "Idle", "Attack", "Hurt", "Block", "Death", "Special"
         };
 
         [MenuItem("Tools/Farm Vs Monsters/Slice Character Sheet (6x6)", true)]
@@ -71,9 +67,7 @@ namespace FarmVsMonsters.EditorTools
                 {
                     int frameNumber = column + 1;
                     string rowName = RowNames[row];
-                    string spriteName = row == 5
-                        ? VictoryFrameNames[column]
-                        : rowName + "_" + frameNumber.ToString("00");
+                    string spriteName = rowName + "_" + frameNumber.ToString("00");
 
                     var spriteRect = new SpriteRect
                     {
