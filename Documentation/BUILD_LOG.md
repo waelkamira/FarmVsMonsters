@@ -232,3 +232,9 @@
 - Added `Visuals/ProceduralIdleMotion.cs` and attached it to generated plant/enemy visual roots for subtle bobbing and sway. This is temporary procedural motion, not final rigged animation.
 - The generator now creates the enemy energy-orb prefab and wires monster death drops into the battle wallet. The first battle resource loop includes timed Sunflower generation, board pickups, and monster drops.
 - The greybox generator and validator source were read back from GitHub and checked for balanced braces/parentheses and expected configuration references. These are source inspections only; Unity compilation and Play Mode physics remain unverified.
+
+
+## 2026-11-13 — Battle preparation and default plant selection
+- Battle HUD now selects the first configured plant on enable, keeping the visible selection text aligned with desktop/touch input defaults.
+- Added a configurable initial wave delay to `WaveManager`; the generated battle grants a five-second preparation window before the first monster spawns.
+- Source changes were committed to `main`; timing and HUD interaction still require Play Mode validation.
