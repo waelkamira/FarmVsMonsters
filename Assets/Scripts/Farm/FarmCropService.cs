@@ -15,7 +15,7 @@ namespace FarmVsMonsters.Farm
         {
             public string plotId;
             public string cropId;
-            public long plantedAtUtcTicks;
+            public long plantedAtUtcTicks;\n            public long lastWateredUtcTicks;\n            public float growthBonusSeconds;
         }
 
         [Serializable]
@@ -68,7 +68,7 @@ namespace FarmVsMonsters.Farm
             if (definition == null)
                 return 0f;
 
-            double elapsed = Math.Max(0d, (DateTime.UtcNow.Ticks - data.plantedAtUtcTicks) / (double)TimeSpan.TicksPerSecond);
+            double elapsed = Math.Max(0d, (DateTime.UtcNow.Ticks - data.plantedAtUtcTicks) / (double)TimeSpan.TicksPerSecond) + Math.Max(0f, data.growthBonusSeconds);
             return Mathf.Clamp01((float)(elapsed / definition.GrowthDurationSeconds));
         }
 
@@ -107,7 +107,7 @@ namespace FarmVsMonsters.Farm
             return true;
         }
 
-        public bool TryHarvest(FarmCropPlot plot)
+        public bool CanWater(FarmCropPlot plot)\n        {\n            if (plot == null || !planted.TryGetValue(plot.PlotId, out CropPlotSave data) ||\n                resourceWallet == null || resourceWallet.GetAmount(FarmResourceType.Water) < 1)\n                return false;\n\n            FarmCropDefinition definition = FindDefinition(data.cropId);\n            if (definition == null || GetGrowthProgress(plot) >= 1f)\n                return false;\n\n            double sinceWater = (DateTime.UtcNow.Ticks - data.lastWateredUtcTicks) / (double)TimeSpan.TicksPerSecond;\n            return data.lastWateredUtcTicks <= 0 || sinceWater >= definition.WateringCooldownSeconds;\n        }\n\n        public bool TryWater(FarmCropPlot plot)\n        {\n            if (!CanWater(plot) || !planted.TryGetValue(plot.PlotId, out CropPlotSave data) ||\n                !resourceWallet.TrySpend(FarmResourceType.Water, 1))\n                return false;\n\n            FarmCropDefinition definition = FindDefinition(data.cropId);\n            if (definition == null)\n                return false;\n\n            data.lastWateredUtcTicks = DateTime.UtcNow.Ticks;\n            data.growthBonusSeconds += definition.WateringGrowthBoostSeconds;\n            Save();\n            RefreshVisual(plot, definition);\n            CropChanged?.Invoke(plot, definition);\n            return true;\n        }\n\n        public bool TryHarvest(FarmCropPlot plot)
         {
             if (!IsReadyToHarvest(plot) ||
                 !planted.TryGetValue(plot.PlotId, out CropPlotSave data))
