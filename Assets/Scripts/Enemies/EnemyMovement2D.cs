@@ -23,16 +23,26 @@ namespace FarmVsMonsters.Enemies
         private float attackTimer;
         private float slowMultiplier = 1f;
         private float slowRemaining;
+        private float baseMoveSpeed;
+        private float baseAttackDamage;
         private float laneY;
         private bool laneConfigured;
 
         private void Awake()
         {
             ownHealth = GetComponent<Health>();
+            baseMoveSpeed = moveSpeed;
+            baseAttackDamage = attackDamage;
             laneY = transform.position.y;
             laneConfigured = true;
             animationDriver = GetComponent<CharacterAnimationDriver2D>();
             if (spriteRenderer == null) spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+        }
+
+        public void ApplyDifficulty(float speedMultiplier, float damageMultiplier)
+        {
+            moveSpeed = baseMoveSpeed * Mathf.Clamp(speedMultiplier, 0.1f, 5f);
+            attackDamage = baseAttackDamage * Mathf.Clamp(damageMultiplier, 0.1f, 10f);
         }
 
         public void SetLane(float worldY)
