@@ -16,6 +16,9 @@ namespace FarmVsMonsters.Enemies
             public string displayName = "Wave";
             public GameObject[] enemyPrefabs;
             [Min(0f)] public float spawnInterval = 1f;
+            [Min(0.1f)] public float enemyHealthMultiplier = 1f;
+            [Min(0.1f)] public float enemySpeedMultiplier = 1f;
+            [Min(0.1f)] public float enemyDamageMultiplier = 1f;
         }
 
         [SerializeField] private Wave[] waves;
@@ -98,6 +101,10 @@ namespace FarmVsMonsters.Enemies
                         nextSpawnPoint++;
                         GameObject instance = Instantiate(prefab, spawn.position, spawn.rotation);
 
+                        Health health = instance.GetComponent<Health>();
+                        if (health != null && wave != null)
+                            health.ApplyMaxHealthMultiplier(wave.enemyHealthMultiplier);
+
                         EnergyDropOnDeath energyDrop = instance.GetComponent<EnergyDropOnDeath>();
                         if (energyDrop != null)
                             energyDrop.SetWallet(energyWallet);
@@ -111,11 +118,12 @@ namespace FarmVsMonsters.Enemies
                         if (movement2D != null)
                         {
                             movement2D.SetLane(spawn.position.y);
+                            if (wave != null)
+                                movement2D.ApplyDifficulty(wave.enemySpeedMultiplier, wave.enemyDamageMultiplier);
                             if (enemyTarget != null && enemyTargetHealth != null)
                                 movement2D.SetTarget(enemyTarget, enemyTargetHealth);
                         }
 
-                        Health health = instance.GetComponent<Health>();
                         if (health != null && !health.IsDead)
                         {
                             livingEnemies.Add(health);
