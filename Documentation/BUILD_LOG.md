@@ -615,3 +615,12 @@
 - Updated the game-page control hint to explain the new flow.
 - The battlefield still uses temporary Phaser vector art. This is a gameplay prototype, not final character art.
 - Verification: source was committed to `main` and the scene/page/log were read back for content checks. No npm install, Next.js build, browser play test, or input-device test has been run.
+
+
+## 2026-11-14 — Farm background asset pipeline preparation
+- Prepared `web/public/assets/backgrounds/` and documented the exact target filename `farm-battlefield.png`.
+- Specified a 2560 × 1440 (16:9) transparent-free background image contract: strict 2D side view, farmhouse on the left, monster gate on the right, empty 5 × 8 planting field, and no gameplay characters/UI baked into the art.
+- Prepared `web/public/assets/sprites/` with subject-based organization guidance for the caveman, radish, monsters, princess, and effects.
+- Added `Documentation/PHASER_FARM_BACKGROUND_INTEGRATION.md` describing the Phaser rendering layers and the calibration steps required after the generated image is uploaded.
+- Important: the generated background has not yet been received. The current vector battlefield remains active; no image has been wired or coordinate calibration claimed.
+- Verification: the three new documentation files were committed to `main`. No Next.js build or browser runtime test was run.
