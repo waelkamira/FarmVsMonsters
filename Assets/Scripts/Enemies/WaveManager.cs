@@ -120,44 +120,39 @@ namespace FarmVsMonsters.Enemies
                     Transform spawn = GetNextSpawnPoint();
                     if (spawn == null)
                         continue;
-                        GameObject instance = Instantiate(prefab, spawn.position, spawn.rotation);
+                    GameObject instance = Instantiate(prefab, spawn.position, spawn.rotation);
 
-                        Health health = instance.GetComponent<Health>();
-                        if (health == null)
-                        {
-                            Debug.LogError("Spawned enemy prefab is missing the required Health component: " + prefab.name, prefab);
-                            Destroy(instance);
-                            continue;
-                        }
-                        if (health != null && wave != null)
-                            health.ApplyMaxHealthMultiplier(wave.enemyHealthMultiplier);
+                    Health health = instance.GetComponent<Health>();
+                    if (health == null)
+                    {
+                        Debug.LogError("Spawned enemy prefab is missing the required Health component: " + prefab.name, prefab);
+                        Destroy(instance);
+                        continue;
+                    }
+                    health.ApplyMaxHealthMultiplier(wave.enemyHealthMultiplier);
 
-                        EnergyDropOnDeath energyDrop = instance.GetComponent<EnergyDropOnDeath>();
-                        if (energyDrop != null)
-                            energyDrop.SetWallet(energyWallet);
+                    EnergyDropOnDeath energyDrop = instance.GetComponent<EnergyDropOnDeath>();
+                    if (energyDrop != null)
+                        energyDrop.SetWallet(energyWallet);
 
-                        EnemyMovement movement = instance.GetComponent<EnemyMovement>();
-                        if (movement != null && enemyTarget != null && enemyTargetHealth != null)
-                            movement.SetTarget(enemyTarget, enemyTargetHealth);
+                    EnemyMovement movement = instance.GetComponent<EnemyMovement>();
+                    if (movement != null && enemyTarget != null && enemyTargetHealth != null)
+                        movement.SetTarget(enemyTarget, enemyTargetHealth);
 
-                        // The same wave scheduler supports the approved 2D side-view combat.
-                        EnemyMovement2D movement2D = instance.GetComponent<EnemyMovement2D>();
-                        if (movement2D != null)
-                        {
-                            movement2D.SetLane(spawn.position.y);
-                            if (wave != null)
-                                movement2D.ApplyDifficulty(wave.enemySpeedMultiplier, wave.enemyDamageMultiplier);
-                            if (enemyTarget != null && enemyTargetHealth != null)
-                                movement2D.SetTarget(enemyTarget, enemyTargetHealth);
-                        }
+                    // The same wave scheduler supports the approved 2D side-view combat.
+                    EnemyMovement2D movement2D = instance.GetComponent<EnemyMovement2D>();
+                    if (movement2D != null)
+                    {
+                        movement2D.SetLane(spawn.position.y);
+                        movement2D.ApplyDifficulty(wave.enemySpeedMultiplier, wave.enemyDamageMultiplier);
+                        if (enemyTarget != null && enemyTargetHealth != null)
+                            movement2D.SetTarget(enemyTarget, enemyTargetHealth);
+                    }
 
-                        if (health != null && !health.IsDead)
-                        {
-                            livingEnemies.Add(health);
-                            Action handler = () => HandleEnemyDied(health);
-                            deathHandlers[health] = handler;
-                            health.Died += handler;
-                        }
+                    livingEnemies.Add(health);
+                    Action handler = () => HandleEnemyDied(health);
+                    deathHandlers[health] = handler;
+                    health.Died += handler;
 
                     if (wave.spawnInterval > 0f)
                         yield return new WaitForSeconds(wave.spawnInterval);
