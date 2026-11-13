@@ -60,6 +60,10 @@ namespace FarmVsMonsters.Enemies
         private float jumpStartX;
         private float jumpEndX;
         private bool isJumping;
+        private float difficultySpeedMultiplier = 1f;
+        private float difficultyDamageMultiplier = 1f;
+        private float bossSpeedMultiplier = 1f;
+        private float bossDamageMultiplier = 1f;
 
         public float LaneWorldY => laneY;
 
@@ -87,8 +91,22 @@ namespace FarmVsMonsters.Enemies
 
         public void ApplyDifficulty(float speedMultiplier, float damageMultiplier)
         {
-            moveSpeed = baseMoveSpeed * Mathf.Clamp(speedMultiplier, 0.1f, 5f);
-            attackDamage = baseAttackDamage * Mathf.Clamp(damageMultiplier, 0.1f, 10f);
+            difficultySpeedMultiplier = Mathf.Clamp(speedMultiplier, 0.1f, 5f);
+            difficultyDamageMultiplier = Mathf.Clamp(damageMultiplier, 0.1f, 10f);
+            RecalculateCombatStats();
+        }
+
+        public void SetBossPhaseMultipliers(float speedMultiplier, float damageMultiplier)
+        {
+            bossSpeedMultiplier = Mathf.Clamp(speedMultiplier, 0.1f, 5f);
+            bossDamageMultiplier = Mathf.Clamp(damageMultiplier, 0.1f, 10f);
+            RecalculateCombatStats();
+        }
+
+        private void RecalculateCombatStats()
+        {
+            moveSpeed = baseMoveSpeed * difficultySpeedMultiplier * bossSpeedMultiplier;
+            attackDamage = baseAttackDamage * difficultyDamageMultiplier * bossDamageMultiplier;
         }
 
         public void SetLane(float worldY)
