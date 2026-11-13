@@ -9,9 +9,20 @@ namespace FarmVsMonsters.Enemies
     [RequireComponent(typeof(Health))]
     public sealed class EnemyMovement2D : MonoBehaviour
     {
+        public enum Archetype { Normal = 0, Armored = 1, Ranged = 2, Brute = 3 }
+
         [Header("Fallback destination")]
         [SerializeField] private Transform target;
         [SerializeField] private Health targetHealth;
+
+        [Header("Archetype")]
+        [SerializeField] private Archetype archetype = Archetype.Normal;
+        [SerializeField, Range(0.1f, 1f)] private float armoredDamageTakenMultiplier = 0.45f;
+        [SerializeField, Min(0.1f)] private float rangedAttackRange = 3.5f;
+        [SerializeField] private EnemyProjectile2D rangedProjectilePrefab;
+        [SerializeField, Min(0.1f)] private float rangedProjectileSpeed = 5f;
+        [SerializeField, Min(0f)] private float bruteDamageMultiplier = 2f;
+        [SerializeField, Range(0.1f, 1f)] private float bruteSpeedMultiplier = 0.65f;
 
         [Header("Movement and attack")]
         [SerializeField, Min(0f)] private float moveSpeed = 0.8f;
@@ -47,6 +58,15 @@ namespace FarmVsMonsters.Enemies
             ownHealth = GetComponent<Health>();
             baseMoveSpeed = moveSpeed;
             baseAttackDamage = attackDamage;
+            if (archetype == Archetype.Armored && ownHealth != null)
+                ownHealth.SetDamageTakenMultiplier(armoredDamageTakenMultiplier);
+            if (archetype == Archetype.Brute)
+            {
+                moveSpeed *= bruteSpeedMultiplier;
+                attackDamage *= bruteDamageMultiplier;
+                baseMoveSpeed = moveSpeed;
+                baseAttackDamage = attackDamage;
+            }
             laneY = transform.position.y;
             laneConfigured = true;
             animationDriver = GetComponent<CharacterAnimationDriver2D>();
@@ -115,10 +135,12 @@ namespace FarmVsMonsters.Enemies
             Health destinationHealth = farmTarget != null ? farmTarget.Health : targetHealth;
 
             float deltaX = destination.position.x - transform.position.x;
+            float effectiveAttackRange = archetype == Archetype.Ranged
+                ? Mathf.Max(attackRange, rangedAttackRange) : attackRange;
             if (spriteRenderer != null && Mathf.Abs(deltaX) > 0.02f)
                 spriteRenderer.flipX = deltaX < 0f;
 
-            if (Mathf.Abs(deltaX) > attackRange)
+            if (Mathf.Abs(deltaX) > effectiveAttackRange)
             {
                 if (animationDriver != null)
                     animationDriver.SetMoving(true);
@@ -135,7 +157,16 @@ namespace FarmVsMonsters.Enemies
             if (attackTimer <= 0f)
             {
                 if (destinationHealth != null && !destinationHealth.IsDead)
-                    destinationHealth.ApplyDamage(attackDamage);
+                {
+                    if (archetype == Archetype.Ranged && rangedProjectilePrefab != null)
+                    {
+                        EnemyProjectile2D shot = Instantiate(
+                            rangedProjectilePrefab, transform.position, Quaternion.identity);
+                        shot.Initialize(destinationHealth, attackDamage, rangedProjectileSpeed);
+                    }
+                    else
+                        destinationHealth.ApplyDamage(attackDamage);
+                }
 
                 if (animationDriver != null)
                 {
