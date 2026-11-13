@@ -14,7 +14,7 @@ export default class BattleScene extends Scene {
   constructor() { super("BattleScene"); }
 
   preload() {
-    this.load.image("farm-battlefield", "/assets/backgrounds/farm-battlefield.png");
+    this.load.image("farm-battlefield", "/assets/backgrounds/farm-battlefield.jpeg");
     this.load.on("loaderror", (file) => {
       if (file.key === "farm-battlefield") this.backgroundAssetFailed = true;
     });
@@ -48,7 +48,7 @@ export default class BattleScene extends Scene {
     this.refreshHud();
     this.setMessage(this.textures.exists("farm-battlefield")
       ? "Choose the radish icon, then click an empty soil cell."
-      : "Temporary farm art active. Add farm-battlefield.png when your background is ready.");
+      : "Temporary farm art active. Add farm-battlefield.jpeg when your background is ready.");
   }
 
   drawField() {
