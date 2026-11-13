@@ -132,7 +132,7 @@ namespace FarmVsMonsters.Farm
         {
             while (definition != null && resourceWallet != null)
             {
-                yield return new WaitForSeconds(Mathf.Max(1f, definition.ProductionIntervalSeconds));
+                yield return new WaitForSecondsRealtime(Mathf.Max(1f, definition.ProductionIntervalSeconds));
                 ProcessProduction(definition, DateTime.UtcNow.Ticks);
             }
         }
