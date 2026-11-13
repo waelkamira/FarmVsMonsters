@@ -1,39 +1,15 @@
 import { Scene, Input, Math as PhaserMath } from "phaser";
+import gridCalibration from "../data/farm-grid-calibration.json";
 
-const LANES = 5;
-const COLUMNS = 8;
-// The generated background already contains a perspective 8 × 5 planting board.
- // These four corners follow the visible outer seams in the uploaded 1080 × 576 art,
- // mapped to the aspect-preserving 1120 × 597.33 background inside the 1120 × 680 view.
-const GRID_CORNERS = {
-  // Calibrated from the visible outer soil-grid seams in the source artwork,
-  // then transformed into the 1120 × 597.33 image drawn at (560, 340).
-  tl: { x: 395, y: 365 },
-  tr: { x: 806, y: 365 },
-  br: { x: 970, y: 568 },
-  bl: { x: 261, y: 568 },
-};
-const GRID_WIDTH = 411;
-const GRID_HEIGHT = 203;
-const GRID_CENTER_X = 615.5;
-const GRID_CENTER_Y = 466.5;
+const LANES = gridCalibration.grid.rows;
+const COLUMNS = gridCalibration.grid.columns;
+const GRID_NODES = gridCalibration.grid.controlPoints;
+const GRID_WIDTH = GRID_NODES[0][COLUMNS].x - GRID_NODES[0][0].x;
+const GRID_HEIGHT = GRID_NODES[LANES][0].y - GRID_NODES[0][0].y;
+const GRID_CENTER_X = (GRID_NODES[0][0].x + GRID_NODES[LANES][COLUMNS].x) / 2;
+const GRID_CENTER_Y = (GRID_NODES[0][0].y + GRID_NODES[LANES][0].y) / 2;
 const CELL_W = GRID_WIDTH / COLUMNS;
 const CELL_H = GRID_HEIGHT / LANES;
-
-// 9 × 6 control nodes are the authoritative representation of the painted board.
-// The current nodes are generated from the four measured outer corners as a bootstrap.
-// Replace individual entries with pixel-measured artwork intersections during final calibration.
-const GRID_NODES = Array.from({ length: LANES + 1 }, (_, row) =>
-  Array.from({ length: COLUMNS + 1 }, (_, col) => {
-    const u = col / COLUMNS;
-    const v = row / LANES;
-    const { tl, tr, br, bl } = GRID_CORNERS;
-    return {
-      x: (1-u)*(1-v)*tl.x + u*(1-v)*tr.x + u*v*br.x + (1-u)*v*bl.x,
-      y: (1-u)*(1-v)*tl.y + u*(1-v)*tr.y + u*v*br.y + (1-u)*v*bl.y,
-    };
-  }),
-);
 const HOME_LOCAL_X = -300;
 const SPAWN_LOCAL_X = 330;
 const RADISH = { label: "Radish", cost: 35, hp: 110, cooldown: 1450, range: 360 };
@@ -343,7 +319,7 @@ export default class BattleScene extends Scene {
           backgroundColor: "#172b36", padding: { x: 2, y: 1 }
         }).setDepth(50);
       }));
-      this.add.text(560, 105, "GRID CALIBRATION VIEW · 9 × 6 CONTROL NODES", {
+      this.add.text(560, 105, "GRID CALIBRATION VIEW · 8 × 5 CELLS · 9 × 6 NODES", {
         fontFamily: "Arial", fontSize: "15px", color: "#ffffff",
         backgroundColor: "#172b36", padding: { x: 8, y: 5 }
       }).setOrigin(0.5).setDepth(50);
