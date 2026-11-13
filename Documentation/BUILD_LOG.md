@@ -208,3 +208,10 @@
 - Updated the repository README to reflect the actual implementation state, pinned Unity version, first-scene generation steps, platform priority, and the distinction between source completion and verified gameplay.
 - Corrected the earlier warehouse log wording: existing stock is preserved if capacity is changed; deposits are blocked while inventory is above the current cap.
 - Fixed the Editor generator's primitive cleanup calls and documented its temporary greybox art status. The generator has not been executed in Unity yet.
+
+
+## 2026-11-13 — Prototype scene structural validator
+- Added `Assets/Editor/PrototypeBattleSceneValidator.cs` with **Farm Vs Monsters → Validate Prototype Battle Scene**.
+- The validator checks required scene components, core serialized references, minimum wave/spawn configuration, five plant/button entries, EventSystem presence, missing MonoBehaviour scripts, and Build Settings inclusion.
+- Updated the Unity bootstrap guide and README to run validation after scene generation.
+- The validator reports structural wiring only; it cannot replace Editor compilation, actual physics/gameplay checks, or a Windows build.
