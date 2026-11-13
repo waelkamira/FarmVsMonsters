@@ -81,8 +81,6 @@ namespace FarmVsMonsters.UI
                     waveText.text = "Incoming wave in " + Mathf.CeilToInt(waveManager.StartDelayRemaining);
                 else if (waveText != null && waveManager.InterWaveDelayRemaining > 0f)
                     waveText.text = "Next wave in " + Mathf.CeilToInt(waveManager.InterWaveDelayRemaining);
-                else if (waveText != null && waveManager.InterWaveDelayRemaining > 0f)
-                    waveText.text = "Next wave in " + Mathf.CeilToInt(waveManager.InterWaveDelayRemaining);
             }
         }
 
