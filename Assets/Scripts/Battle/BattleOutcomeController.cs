@@ -79,6 +79,12 @@ namespace FarmVsMonsters.Battle
             BattleFinished?.Invoke(Outcome);
         }
 
+        /// <summary>Allows the farmhouse/princess protection relay to end the battle.</summary>
+        public void ReportDefeat()
+        {
+            Finish(BattleOutcome.Defeat);
+        }
+
         public void ResetOutcome()
         {
             Outcome = BattleOutcome.None;
