@@ -321,3 +321,19 @@ Every minion prefab must contain Health. Add EnemyMovement2D for lane movement a
 
 ### Suggested boss encounter
 Spawn normal monsters first, then the boss as the final enemy in a wave. Give the boss a distinct silhouette and large sprite scale, a dedicated health bar, and unique Idle/Walk/Attack/Hurt/Death artwork. Add separate visual/audio feedback for the ground pulse and phase transitions using the exposed events. The current controller supplies gameplay logic; it does not generate those art or audio assets automatically.
+
+
+## Destructible farm obstacles and environmental hazards
+
+### Destructible obstacle
+- Add `Health`, `Collider2D`, and `FarmDefenseTarget2D` to the obstacle root.
+- Set **Target Kind** to `Obstacle`, **Blocks Monster Movement** on, and **Lane Bound** on when the obstacle belongs to one lane. Set a useful **Monster Priority** so monsters choose it in the intended order relative to crops and plants.
+- Place its collider on a layer included in `EnemyMovement2D.Farm Target Layers`. The monster stops at its attack range and damages the obstacle's Health until it is destroyed. Its existing death/cleanup setup should remove or disable the obstacle object.
+- Keep obstacle colliders and target components on the same root or children of that root so `GetComponentInParent<FarmDefenseTarget2D>` can resolve them.
+
+### Environmental hazard zone
+- Add `EnvironmentalHazard2D` to an empty scene object and position it over a fire patch, thorn field, poison puddle, trap, or other dangerous area.
+- Configure **Radius**, **Monster Layers**, **Damage Per Tick**, and **Tick Interval**. The area uses a bounded `OverlapCircleNonAlloc` query and only affects colliders whose parent has `EnemyMarker` and `Health`.
+- Optional **Slow Multiplier** and **Slow Duration** apply the existing enemy slow effect. Set the multiplier to 1 to disable slowing.
+- The hazard deduplicates multiple colliders belonging to the same monster during one tick. It does not damage the caveman, princess, plants, crops, or animals.
+- A selected gizmo circle shows the configured radius. Add a separate SpriteRenderer/animation/VFX object for the visual appearance; the gameplay component does not create artwork.
