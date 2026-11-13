@@ -16,9 +16,17 @@ namespace FarmVsMonsters.Combat
             Splash = 1
         }
 
+        public enum FlightMode
+        {
+            Homing = 0,
+            Lobbed = 1
+        }
+
         [SerializeField, Min(0.1f)] private float speed = 7f;
         [SerializeField, Min(0.1f)] private float lifetime = 4f;
         [SerializeField] private ImpactMode impactMode = ImpactMode.Direct;
+        [SerializeField] private FlightMode flightMode = FlightMode.Homing;
+        [SerializeField, Min(0f)] private float arcHeight = 2f;
         [SerializeField, Min(0f)] private float splashRadius = 1.25f;
         [SerializeField] private LayerMask splashLayers = ~0;
         [SerializeField, Min(1)] private int maxSplashTargets = 24;
@@ -29,6 +37,9 @@ namespace FarmVsMonsters.Combat
         private float slowDuration;
         private float age;
         private Collider2D[] splashResults;
+        private Vector2 launchPosition;
+        private float flightElapsed;
+        private float flightDuration = 0.1f;
 
         private void Awake()
         {
@@ -39,6 +50,11 @@ namespace FarmVsMonsters.Combat
             float hitSlowMultiplier = 1f, float hitSlowDuration = 0f)
         {
             target = targetHealth;
+            launchPosition = transform.position;
+            flightElapsed = 0f;
+            flightDuration = targetHealth != null
+                ? Mathf.Max(0.1f, Vector2.Distance(launchPosition, targetHealth.transform.position) / Mathf.Max(0.1f, speed))
+                : 0.1f;
             damage = Mathf.Max(0f, hitDamage);
             slowMultiplier = Mathf.Clamp(hitSlowMultiplier, 0.1f, 1f);
             slowDuration = Mathf.Max(0f, hitSlowDuration);
@@ -54,6 +70,26 @@ namespace FarmVsMonsters.Combat
             }
 
             Vector2 destination = target.transform.position;
+            if (flightMode == FlightMode.Lobbed)
+            {
+                flightElapsed += Time.deltaTime;
+                float progress = Mathf.Clamp01(flightElapsed / flightDuration);
+                Vector2 previousPosition = transform.position;
+                Vector2 basePosition = Vector2.Lerp(launchPosition, destination, progress);
+                float arc = 4f * arcHeight * progress * (1f - progress);
+                Vector2 nextPosition = basePosition + Vector2.up * arc;
+                Vector2 direction = nextPosition - previousPosition;
+                transform.position = nextPosition;
+                if (direction.sqrMagnitude > 0.001f)
+                    transform.right = direction.normalized;
+                if (progress >= 1f)
+                {
+                    ApplyImpact();
+                    Destroy(gameObject);
+                }
+                return;
+            }
+
             Vector2 offset = destination - (Vector2)transform.position;
             float step = speed * Time.deltaTime;
             if (offset.sqrMagnitude <= step * step || offset.sqrMagnitude <= 0.01f)
@@ -63,10 +99,10 @@ namespace FarmVsMonsters.Combat
                 return;
             }
 
-            Vector2 direction = offset.normalized;
-            transform.position += (Vector3)(direction * step);
-            if (direction.sqrMagnitude > 0.001f)
-                transform.right = direction;
+            Vector2 homingDirection = offset.normalized;
+            transform.position += (Vector3)(homingDirection * step);
+            if (homingDirection.sqrMagnitude > 0.001f)
+                transform.right = homingDirection;
         }
 
         private void ApplyImpact()
