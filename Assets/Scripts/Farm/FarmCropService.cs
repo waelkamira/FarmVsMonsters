@@ -15,7 +15,9 @@ namespace FarmVsMonsters.Farm
         {
             public string plotId;
             public string cropId;
-            public long plantedAtUtcTicks;\n            public long lastWateredUtcTicks;\n            public float growthBonusSeconds;
+            public long plantedAtUtcTicks;
+            public long lastWateredUtcTicks;
+            public float growthBonusSeconds;
         }
 
         [Serializable]
@@ -31,7 +33,9 @@ namespace FarmVsMonsters.Farm
         [SerializeField] private FarmResourceWallet resourceWallet;
 
         private readonly Dictionary<string, CropPlotSave> planted = new Dictionary<string, CropPlotSave>(StringComparer.Ordinal);
-        private readonly Dictionary<string, GameObject> visuals = new Dictionary<string, GameObject>(StringComparer.Ordinal);\n        private readonly Dictionary<string, int> visualStages = new Dictionary<string, int>(StringComparer.Ordinal);\n        private float nextVisualRefresh;
+        private readonly Dictionary<string, GameObject> visuals = new Dictionary<string, GameObject>(StringComparer.Ordinal);
+        private readonly Dictionary<string, int> visualStages = new Dictionary<string, int>(StringComparer.Ordinal);
+        private float nextVisualRefresh;
 
         public event Action<FarmCropPlot, FarmCropDefinition> CropPlanted;
         public event Action<FarmCropPlot, FarmCropDefinition, int> CropHarvested;
@@ -47,7 +51,16 @@ namespace FarmVsMonsters.Farm
             RefreshAllVisuals();
         }
 
-        private void Update()\n        {\n            if (Time.time < nextVisualRefresh)\n                return;\n\n            nextVisualRefresh = Time.time + 1f;\n            RefreshGrowthVisuals();\n        }\n\n        public FarmCropDefinition GetCrop(FarmCropPlot plot)
+        private void Update()
+        {
+            if (Time.time < nextVisualRefresh)
+                return;
+
+            nextVisualRefresh = Time.time + 1f;
+            RefreshGrowthVisuals();
+        }
+
+        public FarmCropDefinition GetCrop(FarmCropPlot plot)
         {
             if (plot == null || !planted.TryGetValue(plot.PlotId, out CropPlotSave data))
                 return null;
@@ -107,7 +120,39 @@ namespace FarmVsMonsters.Farm
             return true;
         }
 
-        public bool CanWater(FarmCropPlot plot)\n        {\n            if (plot == null || !planted.TryGetValue(plot.PlotId, out CropPlotSave data) ||\n                resourceWallet == null || resourceWallet.GetAmount(FarmResourceType.Water) < 1)\n                return false;\n\n            FarmCropDefinition definition = FindDefinition(data.cropId);\n            if (definition == null || GetGrowthProgress(plot) >= 1f)\n                return false;\n\n            double sinceWater = (DateTime.UtcNow.Ticks - data.lastWateredUtcTicks) / (double)TimeSpan.TicksPerSecond;\n            return data.lastWateredUtcTicks <= 0 || sinceWater >= definition.WateringCooldownSeconds;\n        }\n\n        public bool TryWater(FarmCropPlot plot)\n        {\n            if (!CanWater(plot) || !planted.TryGetValue(plot.PlotId, out CropPlotSave data) ||\n                !resourceWallet.TrySpend(FarmResourceType.Water, 1))\n                return false;\n\n            FarmCropDefinition definition = FindDefinition(data.cropId);\n            if (definition == null)\n                return false;\n\n            data.lastWateredUtcTicks = DateTime.UtcNow.Ticks;\n            data.growthBonusSeconds += definition.WateringGrowthBoostSeconds;\n            Save();\n            RefreshVisual(plot, definition);\n            CropChanged?.Invoke(plot, definition);\n            return true;\n        }\n\n        public bool TryHarvest(FarmCropPlot plot)
+        public bool CanWater(FarmCropPlot plot)
+        {
+            if (plot == null || !planted.TryGetValue(plot.PlotId, out CropPlotSave data) ||
+                resourceWallet == null || resourceWallet.GetAmount(FarmResourceType.Water) < 1)
+                return false;
+
+            FarmCropDefinition definition = FindDefinition(data.cropId);
+            if (definition == null || GetGrowthProgress(plot) >= 1f)
+                return false;
+
+            double sinceWater = (DateTime.UtcNow.Ticks - data.lastWateredUtcTicks) / (double)TimeSpan.TicksPerSecond;
+            return data.lastWateredUtcTicks <= 0 || sinceWater >= definition.WateringCooldownSeconds;
+        }
+
+        public bool TryWater(FarmCropPlot plot)
+        {
+            if (!CanWater(plot) || !planted.TryGetValue(plot.PlotId, out CropPlotSave data) ||
+                !resourceWallet.TrySpend(FarmResourceType.Water, 1))
+                return false;
+
+            FarmCropDefinition definition = FindDefinition(data.cropId);
+            if (definition == null)
+                return false;
+
+            data.lastWateredUtcTicks = DateTime.UtcNow.Ticks;
+            data.growthBonusSeconds += definition.WateringGrowthBoostSeconds;
+            Save();
+            RefreshVisual(plot, definition);
+            CropChanged?.Invoke(plot, definition);
+            return true;
+        }
+
+        public bool TryHarvest(FarmCropPlot plot)
         {
             if (!IsReadyToHarvest(plot) ||
                 !planted.TryGetValue(plot.PlotId, out CropPlotSave data))
@@ -144,7 +189,20 @@ namespace FarmVsMonsters.Farm
             }
         }
 
-        private void RefreshGrowthVisuals()\n        {\n            if (plots == null)\n                return;\n\n            foreach (FarmCropPlot plot in plots)\n            {\n                FarmCropDefinition definition = GetCrop(plot);\n                if (plot != null && definition != null)\n                    RefreshVisual(plot, definition);\n            }\n        }\n\n        private void RefreshVisual(FarmCropPlot plot, FarmCropDefinition definition)
+        private void RefreshGrowthVisuals()
+        {
+            if (plots == null)
+                return;
+
+            foreach (FarmCropPlot plot in plots)
+            {
+                FarmCropDefinition definition = GetCrop(plot);
+                if (plot != null && definition != null)
+                    RefreshVisual(plot, definition);
+            }
+        }
+
+        private void RefreshVisual(FarmCropPlot plot, FarmCropDefinition definition)
         {
             if (plot == null || definition == null || definition.GrowthStagePrefabs == null ||
                 definition.GrowthStagePrefabs.Length == 0)
