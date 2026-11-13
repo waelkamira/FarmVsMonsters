@@ -261,3 +261,10 @@
 - Hardened production claims so an active job is not left claimable after a partial output deposit, preventing repeated partial claims from duplicating goods.
 - Ran a source scan over the crop, animal, market, production, storage, and contract scripts for malformed backslash-newline sequences outside string literals; none remained in the scanned files.
 - These are source inspections and safeguards only. Unity compilation and runtime inventory edge-case tests remain pending.
+
+
+## 2026-11-13 — Ice Bloom crowd-control mechanic
+- Added timed slow effects to `EnemyMovement` and optional slow-on-hit parameters to `Projectile`.
+- Extended `PlantCombatController` to configure slow strength/duration per plant.
+- The generated Ice Bloom now slows surviving monsters to 55% movement speed for 2.5 seconds per hit; other plants keep normal projectile behavior.
+- This is a simple refreshable slow effect without stacking below the strongest active slow. It still needs in-game balance and visual feedback.
