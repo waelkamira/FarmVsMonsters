@@ -49,6 +49,10 @@ namespace FarmVsMonsters.Plants
                 return false;
             }
 
+            TimedEnergyGenerator energyGenerator = instance.GetComponentInChildren<TimedEnergyGenerator>();
+            if (energyGenerator != null)
+                energyGenerator.SetWallet(energyWallet);
+
             ApplyPermanentPlantUpgrades(instance);
             occupiedCells.Add(cell);
             nextPlacementTime = Time.time + definition.PlacementCooldown;
