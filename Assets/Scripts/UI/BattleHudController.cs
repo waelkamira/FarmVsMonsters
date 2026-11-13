@@ -197,7 +197,9 @@ namespace FarmVsMonsters.UI
             if (waveText == null || waveManager == null)
                 return;
 
-            waveText.text = "Wave: " + waveNumber + " / " + waveManager.TotalWaves;
+            waveText.text = waveNumber <= 0
+                ? "Get Ready!"
+                : "Wave: " + waveNumber + " / " + waveManager.TotalWaves;
         }
 
         private void HandleWaveCleared(int waveNumber)
