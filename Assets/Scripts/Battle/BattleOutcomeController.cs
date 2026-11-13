@@ -23,7 +23,7 @@ namespace FarmVsMonsters.Battle
         [SerializeField] private WaveManager waveManager;
         [SerializeField] private Health protectedTargetHealth;
         [SerializeField] private EnergyWallet rewardWallet;
-        [SerializeField, Min(0)] private int victoryEnergyReward = 100;
+        [SerializeField, Min(0)] private int victoryEnergyReward = 100;\n        [SerializeField, Min(0)] private int victoryFarmCoinReward = 50;
         [SerializeField, Min(1)] private int nextStageToUnlock = 2;
         [SerializeField] private bool beginWavesOnStart = true;
 
