@@ -125,8 +125,61 @@ namespace FarmVsMonsters.EditorTools
             Text subtitle = CreateText(canvas.transform, "FarmSubtitle",
                 "Grow crops • Raise animals • Prepare your defenses",
                 new Vector2(0f, -112f), new Vector2(900f, 50f), new Vector2(0.5f, 1f), 22);
-            Button battleButton = CreateButton(canvas.transform, "EnterBattleButton",
-                "ENTER BATTLE", new Vector2(0f, 42f), new Vector2(300f, 76f));
+            Text seedText = CreateText(canvas.transform, "SeedCount", "Seeds: 12",
+                new Vector2(24f, -170f), new Vector2(220f, 36f), new Vector2(0f, 1f), 20);
+            Text waterText = CreateText(canvas.transform, "WaterCount", "Water: 20",
+                new Vector2(24f, -210f), new Vector2(220f, 36f), new Vector2(0f, 1f), 20);
+            Button seedPackButton = CreateButtonAt(canvas.transform, "BuySeedsButton",
+                "BUY 10 SEEDS", new Vector2(180f, 122f), new Vector2(250f, 58f),
+                new Vector2(0f, 0f));
+            Button plantWheatButton = CreateButtonAt(canvas.transform, "PlantWheatButton",
+                "PLANT WHEAT", new Vector2(180f, 48f), new Vector2(250f, 58f),
+                new Vector2(0f, 0f));
+
+            Button[] harvestButtons = new Button[9];
+            Button[] waterButtons = new Button[9];
+            Text[] plotLabels = new Text[9];
+            for (int i = 0; i < 9; i++)
+            {
+                float y = -205f - i * 43f;
+                plotLabels[i] = CreateText(canvas.transform, "PlotStatus_" + i,
+                    "Empty plot", new Vector2(-330f, y), new Vector2(180f, 34f),
+                    new Vector2(1f, 1f), 16);
+                waterButtons[i] = CreateButtonAt(canvas.transform, "WaterPlot_" + i,
+                    "WATER", new Vector2(-142f, y), new Vector2(68f, 32f),
+                    new Vector2(1f, 1f));
+                harvestButtons[i] = CreateButtonAt(canvas.transform, "HarvestPlot_" + i,
+                    "HARVEST", new Vector2(-66f, y), new Vector2(76f, 32f),
+                    new Vector2(1f, 1f));
+            }
+
+            Button[] cropButtons = { plantWheatButton };
+            Text[] cropLabels = { CreateText(canvas.transform, "WheatSeedCost",
+                "Wheat • 1 seed", new Vector2(180f, 18f), new Vector2(250f, 28f),
+                new Vector2(0f, 0f), 15) };
+
+            FarmCropManagementController cropController =
+                canvasObject.AddComponent<FarmCropManagementController>();
+            SerializedObject cropUiSo = new SerializedObject(cropController);
+            cropUiSo.FindProperty("cropService").objectReferenceValue = cropService;
+            SetObjectArray(cropUiSo, "crops", new UnityEngine.Object[] { wheat });
+            SetObjectArray(cropUiSo, "plots", cropPlots);
+            SetObjectArray(cropUiSo, "cropButtons", cropButtons);
+            SetObjectArray(cropUiSo, "cropLabels", cropLabels);
+            SetObjectArray(cropUiSo, "harvestButtons", harvestButtons);
+            SetObjectArray(cropUiSo, "waterButtons", waterButtons);
+            SetObjectArray(cropUiSo, "plotLabels", plotLabels);
+            cropUiSo.FindProperty("seedCountText").objectReferenceValue = seedText;
+            cropUiSo.FindProperty("waterCountText").objectReferenceValue = waterText;
+            cropUiSo.FindProperty("seedPackPurchaseButton").objectReferenceValue = seedPackButton;
+            cropUiSo.FindProperty("resourceWallet").objectReferenceValue = resourceWallet;
+            cropUiSo.FindProperty("seedPackAmount").intValue = 10;
+            cropUiSo.FindProperty("seedPackCoinCost").intValue = 25;
+            cropUiSo.ApplyModifiedPropertiesWithoutUndo();
+
+            Button battleButton = CreateButtonAt(canvas.transform, "EnterBattleButton",
+                "ENTER BATTLE", new Vector2(350f, 48f), new Vector2(300f, 76f),
+                new Vector2(0.5f, 0f));
             SceneNavigationButton navigation = battleButton.gameObject.AddComponent<SceneNavigationButton>();
             SerializedObject navigationSo = new SerializedObject(navigation);
             navigationSo.FindProperty("button").objectReferenceValue = battleButton;
@@ -220,6 +273,104 @@ namespace FarmVsMonsters.EditorTools
             Text label = CreateText(go.transform, "Label", value, Vector2.zero, size, new Vector2(0.5f, 0.5f), 26);
             label.raycastTarget = false;
             return button;
+        }
+
+        private static Button CreateButtonAt(Transform parent, string objectName, string value,
+            Vector2 position, Vector2 size, Vector2 anchor)
+        {
+            GameObject go = new GameObject(objectName, typeof(RectTransform), typeof(Image), typeof(Button));
+            go.transform.SetParent(parent, false);
+            RectTransform rect = go.GetComponent<RectTransform>();
+            rect.anchorMin = rect.anchorMax = anchor;
+            rect.anchoredPosition = position;
+            rect.sizeDelta = size;
+            Image image = go.GetComponent<Image>();
+            image.color = objectName.StartsWith("Water")
+                ? new Color(0.15f, 0.42f, 0.68f, 0.96f)
+                : objectName.StartsWith("Harvest")
+                    ? new Color(0.68f, 0.43f, 0.12f, 0.96f)
+                    : new Color(0.20f, 0.43f, 0.25f, 0.96f);
+            Button button = go.GetComponent<Button>();
+            button.targetGraphic = image;
+            Text label = CreateText(go.transform, "Label", value, Vector2.zero,
+                size, new Vector2(0.5f, 0.5f), size.y < 40f ? 13 : 20);
+            label.raycastTarget = false;
+            return button;
+        }
+
+        private static void SetObjectArray(SerializedObject serializedObject, string propertyName,
+            UnityEngine.Object[] values)
+        {
+            SerializedProperty property = serializedObject.FindProperty(propertyName);
+            property.arraySize = values != null ? values.Length : 0;
+            for (int i = 0; i < property.arraySize; i++)
+                property.GetArrayElementAtIndex(i).objectReferenceValue = values[i];
+        }
+
+        private static void SetObjectArray(SerializedObject serializedObject, string propertyName,
+            FarmCropPlot[] values)
+        {
+            UnityEngine.Object[] objects = new UnityEngine.Object[values.Length];
+            for (int i = 0; i < values.Length; i++) objects[i] = values[i];
+            SetObjectArray(serializedObject, propertyName, objects);
+        }
+
+        private static GameObject CreateCropStagePrefab(string prefabName, Material leaf, float scale)
+        {
+            GameObject root = new GameObject(prefabName);
+            GameObject stem = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            stem.name = "Stem";
+            stem.transform.SetParent(root.transform, false);
+            stem.transform.localPosition = Vector3.up * (0.35f * scale);
+            stem.transform.localScale = new Vector3(0.16f, 0.35f, 0.16f) * scale;
+            stem.GetComponent<Renderer>().sharedMaterial = leaf;
+            Object.DestroyImmediate(stem.GetComponent<Collider>());
+
+            for (int i = 0; i < 3; i++)
+            {
+                GameObject leafPart = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                leafPart.name = "Leaf_" + i;
+                leafPart.transform.SetParent(root.transform, false);
+                leafPart.transform.localPosition = new Vector3(
+                    Mathf.Cos(i * Mathf.PI * 2f / 3f) * 0.28f * scale,
+                    0.55f * scale,
+                    Mathf.Sin(i * Mathf.PI * 2f / 3f) * 0.28f * scale);
+                leafPart.transform.localScale = new Vector3(0.48f, 0.18f, 0.28f) * scale;
+                leafPart.GetComponent<Renderer>().sharedMaterial = leaf;
+                Object.DestroyImmediate(leafPart.GetComponent<Collider>());
+            }
+
+            string assetPath = "Assets/Prefabs/FarmCrops/" + prefabName + ".prefab";
+            PrefabUtility.SaveAsPrefabAsset(root, assetPath);
+            Object.DestroyImmediate(root);
+            return AssetDatabase.LoadAssetAtPath<GameObject>(assetPath);
+        }
+
+        private static FarmCropDefinition CreateWheatDefinition(GameObject seedling, GameObject mature)
+        {
+            const string assetPath = "Assets/ScriptableObjects/FarmCrops/Crop_Wheat.asset";
+            FarmCropDefinition definition = AssetDatabase.LoadAssetAtPath<FarmCropDefinition>(assetPath);
+            bool isNew = definition == null;
+            if (isNew) definition = ScriptableObject.CreateInstance<FarmCropDefinition>();
+            SerializedObject so = new SerializedObject(definition);
+            so.FindProperty("cropId").stringValue = "crop.wheat";
+            so.FindProperty("displayName").stringValue = "Wheat";
+            so.FindProperty("description").stringValue = "A reliable starter crop.";
+            so.FindProperty("harvestResource").enumValueIndex = (int)FarmResourceType.Wheat;
+            so.FindProperty("seedCost").intValue = 1;
+            so.FindProperty("harvestAmount").intValue = 3;
+            so.FindProperty("growthDurationSeconds").floatValue = 90f;
+            so.FindProperty("requiredStage").intValue = 1;
+            so.FindProperty("wateringGrowthBoostSeconds").floatValue = 20f;
+            so.FindProperty("wateringCooldownSeconds").floatValue = 30f;
+            SerializedProperty stages = so.FindProperty("growthStagePrefabs");
+            stages.arraySize = 2;
+            stages.GetArrayElementAtIndex(0).objectReferenceValue = seedling;
+            stages.GetArrayElementAtIndex(1).objectReferenceValue = mature;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            if (isNew) AssetDatabase.CreateAsset(definition, assetPath);
+            EditorUtility.SetDirty(definition);
+            return definition;
         }
 
         private static void CreateEventSystem()
