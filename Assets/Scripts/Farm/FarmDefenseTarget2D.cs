@@ -31,6 +31,18 @@ namespace FarmVsMonsters.Farm
         public bool LaneBound => laneBound;
         public float LaneTolerance => laneTolerance;
         public bool BlocksMonsterMovement => blocksMonsterMovement;
+        public int LaneRow { get; private set; } = -1;
+        private float assignedLaneWorldY;
+        private bool hasAssignedLane;
+
+        /// <summary>Forces this planted target to belong to its actual board row.</summary>
+        public void AssignLane(int row, float laneWorldY)
+        {
+            LaneRow = Mathf.Max(0, row);
+            assignedLaneWorldY = laneWorldY;
+            hasAssignedLane = true;
+            laneBound = true;
+        }
 
         private void Awake()
         {
@@ -39,7 +51,9 @@ namespace FarmVsMonsters.Farm
 
         public bool CanBeTargetedFromLane(float laneY)
         {
-            return !laneBound || Mathf.Abs(transform.position.y - laneY) <= laneTolerance;
+            if (!laneBound) return true;
+            float targetLaneY = hasAssignedLane ? assignedLaneWorldY : transform.position.y;
+            return Mathf.Abs(targetLaneY - laneY) <= laneTolerance;
         }
     }
 }
