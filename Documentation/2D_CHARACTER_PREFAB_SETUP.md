@@ -267,3 +267,14 @@ Add `PlantUpgradeController2D` to each plant prefab that should be upgradeable. 
 The placement service automatically supplies the shared battle `EnergyWallet` to the upgrade controller when it spawns a plant. Add `PlantUpgradeInteractor2D` to the caveman player prefab; while standing within Interaction Range of a plant, press **U** to attempt its next upgrade. The interaction component raises `UpgradeAttempted` so a future HUD can show success, insufficient energy, and current level. Only the nearest eligible plant is selected.
 
 Default progression is level 1–5, with a signature attack unlocked at level 3. These are starter balance values, not final game balance. Plant levels currently belong to the spawned plant instance and reset when that instance is destroyed or a new battle starts; persistent account/collection progression is a separate future system.
+
+## Plant selection cards and cooldown HUD
+The battle HUD already contains the plant-button array. Extend each card with optional icon, cooldown, and selection visuals:
+- Add one Button per plant and assign the same ordered PlantDefinition array to the HUD. Keep the array order aligned with DesktopBattleInput2D's Quick Select Plants so the number keys and on-screen cards select the same plant.
+- Each PlantDefinition now has an optional **Icon** sprite and **Description** text. Assign a clean square portrait/icon and a short gameplay description for each plant.
+- Assign matching entries in **Plant Button Icons** to the icon Images, **Plant Cooldown Fills** to radial/filled Images configured with Image Type = Filled, and **Plant Cooldown Labels** to small countdown Text elements.
+- Assign **Plant Selection Frames** to highlight GameObjects that are enabled only for the currently selected card. These arrays must use the same index order as Plants and Plant Buttons.
+- Assign the new **Placement Service** reference on BattleHudController2D. Cooldown overlays display the remaining placement cooldown and the button stays selectable so the player can inspect/select a plant even while it is cooling down or currently unaffordable.
+- The selected-plant text displays the name, energy cost, and description. Energy changes refresh card state. Number keys 1–9 and clicking a card publish the same selection event, keeping the HUD highlight synchronized.
+- Mouse placement remains on the board: left-click attempts placement, while the ghost sprite shows green for a valid cell and red for an invalid cell. The UI card itself only selects; it does not spend energy or place a plant.
+The HUD uses Unity uGUI `Text`, `Button`, and `Image`. TMP users need equivalent TMP fields/adapters; do not assign TMP components to legacy Text slots.
