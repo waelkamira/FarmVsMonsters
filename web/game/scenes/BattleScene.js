@@ -6,11 +6,10 @@ const GRID_LEFT = 260;
 const GRID_TOP = 402;
 const CELL_W = 75;
 const CELL_H = 46;
-const GRID_CENTER_X = 560;
-const GRID_CENTER_Y = 390;
-const GRID_ANGLE = -Math.PI / 6; // 30 degrees counter-clockwise on screen
-const GRID_COS = Math.cos(GRID_ANGLE);
-const GRID_SIN = Math.sin(GRID_ANGLE);
+const GRID_CENTER_X = GRID_LEFT + (COLUMNS * CELL_W) / 2;
+const GRID_CENTER_Y = GRID_TOP + (LANES * CELL_H) / 2;
+const GRID_X_TILT = Math.PI / 6; // 30 degrees around the horizontal X axis
+const GRID_Y_SCALE = Math.cos(GRID_X_TILT);
 const HOME_LOCAL_X = -300;
 const SPAWN_LOCAL_X = 330;
 const RADISH = { label: "Radish", cost: 35, hp: 110, cooldown: 1450, range: 360 };
@@ -99,37 +98,35 @@ export default class BattleScene extends Scene {
       .forEach((child) => child.destroy());
   }
 
+  // Orthographic projection of a flat board tilted 30° around its X axis.
+  // X stays horizontal; the vertical (Y) dimension is foreshortened by cos(30°).
   gridToWorld(col, row, offsetX = 0, offsetY = 0) {
     const localX = -COLUMNS * CELL_W / 2 + col * CELL_W + offsetX;
     const localY = -LANES * CELL_H / 2 + row * CELL_H + offsetY;
     return {
-      x: GRID_CENTER_X + localX * GRID_COS - localY * GRID_SIN,
-      y: GRID_CENTER_Y + localX * GRID_SIN + localY * GRID_COS,
+      x: GRID_CENTER_X + localX,
+      y: GRID_CENTER_Y + localY * GRID_Y_SCALE,
     };
   }
 
   worldToGrid(x, y) {
-    const dx = x - GRID_CENTER_X;
-    const dy = y - GRID_CENTER_Y;
-    const localX = dx * GRID_COS + dy * GRID_SIN + COLUMNS * CELL_W / 2;
-    const localY = -dx * GRID_SIN + dy * GRID_COS + LANES * CELL_H / 2;
+    const localX = x - GRID_CENTER_X + COLUMNS * CELL_W / 2;
+    const localY = (y - GRID_CENTER_Y) / GRID_Y_SCALE + LANES * CELL_H / 2;
     return { col: Math.floor(localX / CELL_W), row: Math.floor(localY / CELL_H) };
   }
 
   lanePoint(localX, row) {
     const localY = -LANES * CELL_H / 2 + row * CELL_H + CELL_H / 2;
     return {
-      x: GRID_CENTER_X + localX * GRID_COS - localY * GRID_SIN,
-      y: GRID_CENTER_Y + localX * GRID_SIN + localY * GRID_COS,
+      x: GRID_CENTER_X + localX,
+      y: GRID_CENTER_Y + localY * GRID_Y_SCALE,
     };
   }
 
   worldToLane(point) {
-    const dx = point.x - GRID_CENTER_X;
-    const dy = point.y - GRID_CENTER_Y;
     return {
-      localX: dx * GRID_COS + dy * GRID_SIN,
-      localY: -dx * GRID_SIN + dy * GRID_COS,
+      localX: point.x - GRID_CENTER_X,
+      localY: (point.y - GRID_CENTER_Y) / GRID_Y_SCALE,
     };
   }
 
