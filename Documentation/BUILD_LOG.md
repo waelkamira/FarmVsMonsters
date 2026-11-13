@@ -215,3 +215,12 @@
 - The validator checks required scene components, core serialized references, minimum wave/spawn configuration, five plant/button entries, EventSystem presence, missing MonoBehaviour scripts, and Build Settings inclusion.
 - Updated the Unity bootstrap guide and README to run validation after scene generation.
 - The validator reports structural wiring only; it cannot replace Editor compilation, actual physics/gameplay checks, or a Windows build.
+
+
+## 2026-11-13 — Enemy energy drops
+- Added `Combat/EnergyDropOnDeath.cs` to spawn a collectible energy orb when a monster dies.
+- Extended `EnergyPickup.cs` with safe runtime wallet/amount configuration, and extended `WaveManager.cs` to inject the active battle EnergyWallet into each spawned monster's drop component.
+- Updated the Editor generator to create a trigger/Rigidbody energy pickup prefab, attach drop behavior to grunt and brute prefabs, and configure the scene WaveManager wallet.
+- Structural validation now checks the WaveManager energy wallet reference as well.
+- This closes the battle resource loop: place Sunflower for timed energy, defeat monsters for collectible energy drops, and collect board pickups.
+- Verification remains source-level only; physics trigger behavior and pickup collection must be tested in Unity Play Mode.
