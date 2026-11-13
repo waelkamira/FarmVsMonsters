@@ -1,4 +1,5 @@
 using System;
+using FarmVsMonsters.Combat;
 using FarmVsMonsters.Plants;
 using UnityEngine;
 
@@ -13,9 +14,17 @@ namespace FarmVsMonsters.Input
 
         public event Action<PlantUpgradeController2D, bool> UpgradeAttempted;
 
+        private Health playerHealth;
+
+        private void Awake()
+        {
+            playerHealth = GetComponent<Health>();
+        }
+
         private void Update()
         {
-            if (!UnityEngine.Input.GetKeyDown(upgradeKey))
+            if ((playerHealth != null && playerHealth.IsDead) ||
+                !UnityEngine.Input.GetKeyDown(upgradeKey))
                 return;
 
             PlantUpgradeController2D target = FindNearestUpgradeablePlant();
