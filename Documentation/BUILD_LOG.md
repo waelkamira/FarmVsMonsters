@@ -138,7 +138,7 @@
 
 ## 2026-11-13 — Warehouse storage and capacity upgrades
 - Added `FarmWarehouseService.cs` with a persistent warehouse level, configurable capacity growth, escalating upgrade prices, and farm-coin purchases.
-- Added a capacity setter to `FarmResourceWallet.cs`; expanding the warehouse updates the cap for every resource while preserving existing inventory. If a future configuration lowers capacity, stored values are safely clamped rather than becoming invalid.
+- Added a capacity setter to `FarmResourceWallet.cs`; expanding the warehouse updates the cap for every resource while preserving existing inventory. Changing the configured capacity does not delete or clamp existing inventory; excess stock simply blocks additional deposits until capacity is raised or goods are sold.
 - Added `UI/FarmWarehouseController.cs` to show warehouse level, per-resource capacity, stock quantities, next upgrade cost, and the upgrade action.
 - Warehouse levels persist independently in a versioned PlayerPrefs record. Default tuning is 9,999 base capacity plus 2,500 per level, up to 10 levels; values can be adjusted in the Inspector.
 - Unity setup required: assign one FarmResourceWallet to FarmWarehouseService and the UI controller, then connect the level/capacity/stock/cost/status Text fields and upgrade Button.
@@ -202,3 +202,9 @@
 - Desktop and touch placement inputs now ignore taps/clicks over UI controls, preventing UI interaction from accidentally placing plants on the board.
 - The generated visuals are primitive 3D greybox models intended only to make the first scene playable/testable; final stylized 3D models, rigging, animation, VFX, and sound remain separate art tasks.
 - Added instructions to the Unity bootstrap guide. The generator has not been run in a Unity Editor in this environment, so its output and C# compilation still require local validation.
+
+
+## 2026-11-13 — README and prototype workflow update
+- Updated the repository README to reflect the actual implementation state, pinned Unity version, first-scene generation steps, platform priority, and the distinction between source completion and verified gameplay.
+- Corrected the earlier warehouse log wording: existing stock is preserved if capacity is changed; deposits are blocked while inventory is above the current cap.
+- Fixed the Editor generator's primitive cleanup calls and documented its temporary greybox art status. The generator has not been executed in Unity yet.
