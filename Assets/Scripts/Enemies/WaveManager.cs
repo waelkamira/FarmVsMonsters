@@ -28,6 +28,8 @@ namespace FarmVsMonsters.Enemies
         private int nextSpawnPoint;
 
         public int CurrentWave { get; private set; }
+        public int TotalWaves => waves != null ? waves.Length : 0;
+        public string CurrentWaveName { get; private set; } = string.Empty;
         public int LivingEnemyCount => livingEnemies.Count;
         public bool IsRunning { get; private set; }
 
@@ -57,6 +59,9 @@ namespace FarmVsMonsters.Enemies
             {
                 CurrentWave = waveIndex + 1;
                 Wave wave = waves[waveIndex];
+                CurrentWaveName = wave != null && !string.IsNullOrWhiteSpace(wave.displayName)
+                    ? wave.displayName
+                    : "Wave " + CurrentWave;
                 WaveStarted?.Invoke(CurrentWave);
 
                 if (wave != null && wave.enemyPrefabs != null)
