@@ -604,3 +604,14 @@
 - Added ESLint flat configuration and web-specific ignores for generated files and dependencies.
 - Re-fetched each changed file from GitHub and confirmed the resulting content SHA.
 - Still pending: install dependencies, run ESLint/Next production build, test the scene in a real browser, and validate keyboard/touch behavior.
+
+
+## 2026-11-14 — First playable planting loop: one radish, caveman-led
+- Reduced the new Phaser prototype to a single selectable defender: the Radish. Removed the multi-plant selection flow from the active web battle scene.
+- Added a clickable Radish card with a simple temporary icon and a 35-energy cost.
+- Planting is now an action performed by the caveman: select Radish, click a valid empty grid cell, and the caveman automatically walks to that cell before planting. Energy is deducted only when planting completes successfully.
+- Added an occupied-cell check, a pending-destination guard, a planting gesture cue, and a short planting response. The radish stays rooted and performs its own ranged thorn attack.
+- Kept the existing emergency rule: the caveman cannot use his club while any planted radish is alive; emergency combat is enabled only after the last planted defender falls.
+- Updated the game-page control hint to explain the new flow.
+- The battlefield still uses temporary Phaser vector art. This is a gameplay prototype, not final character art.
+- Verification: source was committed to `main` and the scene/page/log were read back for content checks. No npm install, Next.js build, browser play test, or input-device test has been run.
