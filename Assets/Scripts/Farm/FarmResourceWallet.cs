@@ -20,9 +20,26 @@ namespace FarmVsMonsters.Farm
         }
 
         private int[] amounts = new int[ResourceCount];
+        private readonly int[] additionalCapacity = new int[ResourceCount];
         public event Action<FarmResourceType, int> ResourceChanged;
 
         public int CapacityPerResource => Mathf.Max(1, capacityPerResource);
+
+        public int GetCapacity(FarmResourceType type)
+        {
+            int index = (int)type;
+            if (!IsValidIndex(index)) return 0;
+            long total = (long)CapacityPerResource + additionalCapacity[index];
+            return total >= int.MaxValue ? int.MaxValue : (int)total;
+        }
+
+        public void SetAdditionalCapacity(FarmResourceType type, int bonus)
+        {
+            int index = (int)type;
+            if (!IsValidIndex(index)) return;
+            additionalCapacity[index] = Mathf.Max(0, bonus);
+            ResourceChanged?.Invoke(type, amounts[index]);
+        }
 
         public void SetCapacityPerResource(int newCapacity)
         {
@@ -47,7 +64,7 @@ namespace FarmVsMonsters.Farm
         public bool CanAdd(FarmResourceType type, int amount)
         {
             int index = (int)type;
-            return IsValidIndex(index) && amount > 0 && amount <= capacityPerResource - amounts[index];
+            return IsValidIndex(index) && amount > 0 && amount <= GetCapacity(type) - amounts[index];
         }
 
         public int Add(FarmResourceType type, int amount)
@@ -56,7 +73,7 @@ namespace FarmVsMonsters.Farm
             if (!IsValidIndex(index) || amount <= 0)
                 return 0;
 
-            int accepted = Mathf.Min(amount, Mathf.Max(0, capacityPerResource - amounts[index]));
+            int accepted = Mathf.Min(amount, Mathf.Max(0, GetCapacity(type) - amounts[index]));
             if (accepted <= 0)
                 return 0;
 
