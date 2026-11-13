@@ -43,7 +43,7 @@ namespace FarmVsMonsters.Farm
                 return false;
             }
 
-            FarmBuildingSlot slot = FindSlot(definition.BuildingId);
+            FarmBuildingSlot slot = FindSlot(definition.SlotId);
             if (slot == null || !ProgressSaveService.TryPurchaseBuilding(definition.BuildingId, definition.CoinCost))
             {
                 PurchaseRejected?.Invoke(definition);
