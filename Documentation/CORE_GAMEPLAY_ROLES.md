@@ -22,3 +22,14 @@ The player is a caveman farmer who cultivates crops and raises animals around a 
 - Monster atlas: must include a Walk cycle and Attack/Eat, Hurt, Death, plus any special action.
 - Caveman atlas: must include Idle, Walk/Run, Club Attack, Hurt, Death, and interactions.
 - Do not force every entity into one universal sprite-sheet row mapping; use entity-specific atlas layouts when required.
+
+
+## Target priority convention
+`FarmDefenseTarget2D` exposes a configurable monster priority. Suggested starting values to tune in the Inspector:
+- Crop: 5
+- Plant: 10
+- Animal: 15
+- Farmhouse: 30
+- Princess: 40
+
+Targets can be lane-bound (plants/crops) or shared across lanes (large animals/farmhouse). Monsters only consider targets in their current travel direction and within their configured scan radius.
