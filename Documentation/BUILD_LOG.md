@@ -277,3 +277,10 @@
 - Expanded the prototype validator to check the battle return button and, when FarmHub exists, its camera, canvas, EventSystem, Enter Battle button, target scene, and Build Settings registration.
 - Updated README and Unity bootstrap instructions: generate Farm Hub first, then Prototype Battle, then run the validator.
 - The farm hub is currently a navigable greybox shell; crops, animal pens, storage, market, production, and upgrades still need scene-level prefab/catalogue wiring. Unity Editor execution and Play Mode navigation tests remain outstanding.
+
+## 2026-11-13 — Farm hub player controls
+- Added `Player/FarmHubPlayerController.cs` with CharacterController-based WASD/arrow-key movement and a smoothed follow camera.
+- Updated the Farm Hub generator to create a proper player root with a CharacterController and a separate collider-free visual capsule, then bind the camera to the movement controller.
+- Extended the structural validator to require the Farm Hub player controller and CharacterController.
+- Updated the quick-start documentation with separate Farm Hub and battle controls.
+- The hub now supports basic movement and scene navigation, but its farm systems are not yet connected to visible interactable plots/buildings. Runtime movement and camera feel still require Unity Play Mode verification.
