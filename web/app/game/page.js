@@ -9,7 +9,7 @@ export default function GamePage() {
     <main className="game-shell">
       <header className="game-header">
         <a href="/" className="wordmark">Farm <span>Vs</span> Monsters</a>
-        <div className="control-hint">1–3: choose plant · Click: plant · WASD / arrows: move · Space: club (only after all plants fall)</div>
+        <div className="control-hint">Click RADISH, then click soil: the caveman walks there and plants it · WASD / arrows: move · Space: club only in emergency</div>
       </header>
       <section className="game-panel">
         <PhaserGame />
