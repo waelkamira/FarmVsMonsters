@@ -547,3 +547,13 @@
 - Expanded BattleHudController2D with per-card icons, selection-frame objects, cooldown fill images/countdown labels, selected-plant description, and live cooldown refresh.
 - Kept cards selectable when the player cannot currently afford a plant or its placement cooldown is active; the placement service remains authoritative and prevents invalid spending/placement.
 - Documented the Inspector wiring and matching array order. Verification: changed source/docs files were read back and checked for balanced delimiters. Unity compilation and actual uGUI prefab wiring remain untested.
+
+## 2026-11-13 — Enemy archetypes and ranged attacks
+- Added configurable enemy archetypes to EnemyMovement2D: Normal, Armored, Ranged, Brute, and Jumper.
+- Added damage-taken scaling to Health and used it for armored monsters, so every damage source follows the same resistance rule.
+- Added EnemyProjectile2D, a homing projectile that deals damage on impact and expires safely when its target dies or the projectile lifetime ends.
+- Ranged enemies can attack from a larger distance and launch their configured projectile prefab; an explicit direct-damage fallback remains when no projectile prefab is assigned.
+- Brutes trade movement speed for higher attack damage.
+- Jumpers leap over a defender plant, preserve their assigned lane, and remember the specific plant they skipped so they do not immediately turn back to attack it.
+- Added Inspector validation and documented archetype setup, projectile orientation, and wave composition examples.
+- Verification: all changed files were read back from main and checked for balanced braces/parentheses. Unity compilation, prefab setup, physics interactions, and play-mode balance remain untested.
