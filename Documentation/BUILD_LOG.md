@@ -656,3 +656,9 @@
 - Repositioned the 5 × 8 planting grid to the open lawn: origin (260, 310), cell size 75 × 46, lane centers 333/379/425/471/517; moved the protected-house threshold to x=238 and monster spawn to x=1045.
 - Removed temporary farmhouse/princess/gate text labels when the real background texture is present, so placeholder labels do not float over the uploaded art.
 - Verification: asset bytes were retrieved from GitHub and visually inspected; source and documentation were read back after commit. The connected local browser tab was readable, but the available browser connection does not provide reload/screenshot controls, so actual in-browser rendering and pointer-placement calibration are not yet runtime-verified. The grid coordinates are an initial visual fit and may need a final small adjustment after the user reloads the local app.
+
+
+## 2026-11-14 — Move planting grid down by two cells
+- Moved the complete 5 × 8 planting grid down by exactly two row heights: 2 × 46 = 92 px (GRID_TOP 310 → 402).
+- Lane centers now sit at y=425, 471, 517, 563, and 609; player planting hit-testing and plant/monster lane positions follow the same shared coordinate constant.
+- Updated the background integration guide. Runtime visual alignment has not been rechecked in the browser.
