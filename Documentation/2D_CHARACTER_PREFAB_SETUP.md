@@ -138,3 +138,12 @@ The caveman is the mobile player-controlled defender; planted units never use mo
 
 ## Stationary plant projectile prefabs
 Every plant is rooted in its assigned grid cell. Do not add a movement controller or a Walk clip to plant prefabs. Configure each plant's `PlantCombatController2D` with its own projectile prefab and muzzle Transform. For a cactus, place the muzzle at the mouth and use a thorn projectile sprite/prefab. Different plants may use seeds, spores, sap, fruit, or other distinct projectiles, each with its own speed, damage, range, cooldown, and status effect. Ensure the projectile prefab has `Projectile2D` and a visible SpriteRenderer.
+
+
+## 2D crop plot setup
+1. Create a plot root with a Collider2D, `Health`, `FarmDefenseTarget2D`, and `FarmCropPlot2D`. Add a child SpriteRenderer for the crop visual.
+2. Set the target kind to Crop, lane-bound to match the plot row, and priority to the desired monster preference. Disable `FarmDefenseTarget2D` initially for empty plots; the plot script enables it when planted and disables it when harvested.
+3. Create a `FarmCropDefinition2D` asset via **Assets → Create → Farm Vs Monsters → 2D → Crop Definition**. Assign its growing and ready sprites, seed cost, growth duration, harvest yield and crop health.
+4. Add `FarmResourceWallet2D` to the battle scene and assign it plus the crop definition to a `FarmPlotInteractor2D` on the caveman. Add a Collider2D to each plot on a layer included in Plot Layers.
+5. Move next to a plot and press E: empty = plant, growing = water once (accelerates growth), ready = harvest into Produce. Starting seed/produce amounts and capacity are configurable on the wallet.
+6. Assign `FarmCropPlot2D.cropHealth` through the Health component's Max Health; this first pass uses the shared Health maximum configured in the Inspector.
