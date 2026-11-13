@@ -79,6 +79,10 @@ namespace FarmVsMonsters.UI
                     enemiesText.text = "Monsters: " + waveManager.LivingEnemyCount;
                 if (waveText != null && waveManager.CurrentWave == 0 && waveManager.StartDelayRemaining > 0f)
                     waveText.text = "Incoming wave in " + Mathf.CeilToInt(waveManager.StartDelayRemaining);
+                else if (waveText != null && waveManager.InterWaveDelayRemaining > 0f)
+                    waveText.text = "Next wave in " + Mathf.CeilToInt(waveManager.InterWaveDelayRemaining);
+                else if (waveText != null && waveManager.InterWaveDelayRemaining > 0f)
+                    waveText.text = "Next wave in " + Mathf.CeilToInt(waveManager.InterWaveDelayRemaining);
             }
         }
 
