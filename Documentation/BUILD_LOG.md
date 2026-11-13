@@ -178,3 +178,9 @@
 - Fixed new inventory initialization: a fresh `FarmResourceWallet` now actually seeds the configured starting Seeds and Water values and saves them, instead of returning with an empty inventory.
 - Limitations: animal ownership and production timestamps remain local PlayerPrefs data; device clock changes can affect offline progress. No feeding, happiness, animal health, or server-authoritative anti-cheat exists yet.
 - Verification: modified files were committed and read back from GitHub. No Unity compilation or runtime/offline clock simulation has been run.
+
+
+## 2026-11-13 — Farm economy setup documentation and storage validation
+- Added `Documentation/FARM_ECONOMY_AND_STORAGE_SETUP.md` with the scene-object graph, shared-wallet rule, specialized storage catalog, ScriptableObject authoring steps, UI wiring checklist, animal offline-production behavior, and local-save limitations.
+- Added duplicate storage identity/slot validation so two configured facilities cannot silently share a persistent ID or spawn into the same named anchor.
+- Read-back verification completed for the new setup guide and storage-service update. Unity Editor validation remains outstanding.
