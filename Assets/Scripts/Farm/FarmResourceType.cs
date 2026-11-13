@@ -8,6 +8,8 @@ namespace FarmVsMonsters.Farm
         Eggs = 3,
         Meat = 4,
         Seeds = 5,
-        Water = 6
+        Water = 6,
+        Flour = 7,
+        Bread = 8
     }
 }
