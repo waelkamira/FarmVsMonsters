@@ -142,6 +142,7 @@ namespace FarmVsMonsters.Farm
                     continue;
 
                 bool occupied = false;
+                if (availableAnimals != null)
                 foreach (FarmAnimalDefinition definition in availableAnimals)
                 {
                     if (definition != null && spawnedAnimals.ContainsKey(definition.AnimalId))
