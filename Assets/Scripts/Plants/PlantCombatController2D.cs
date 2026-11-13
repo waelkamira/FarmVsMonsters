@@ -22,12 +22,25 @@ namespace FarmVsMonsters.Plants
         private Collider2D[] results;
         private CharacterAnimationDriver2D animationDriver;
         private float attackTimer;
+        private float assignedLaneWorldY;
+        private bool hasAssignedLane;
+
+        public int LaneRow { get; private set; } = -1;
+
+        /// <summary>Locks this planted defender's target scan to the row where it was placed.</summary>
+        public void AssignLane(int row, float laneWorldY)
+        {
+            LaneRow = Mathf.Max(0, row);
+            assignedLaneWorldY = laneWorldY;
+            hasAssignedLane = true;
+        }
 
         private void Awake()
         {
             results = new Collider2D[Mathf.Max(1, maxTargetsPerScan)];
             animationDriver = GetComponent<CharacterAnimationDriver2D>();
             if (muzzle == null) muzzle = transform;
+            assignedLaneWorldY = transform.position.y;
         }
 
         private void Update()
@@ -69,7 +82,8 @@ namespace FarmVsMonsters.Plants
 
                 float distance = ((Vector2)health.transform.position -
                     (Vector2)transform.position).sqrMagnitude;
-                if (Mathf.Abs(health.transform.position.y - transform.position.y) > laneTolerance)
+                float targetLaneY = hasAssignedLane ? assignedLaneWorldY : transform.position.y;
+                if (Mathf.Abs(health.transform.position.y - targetLaneY) > laneTolerance)
                     continue;
 
                 if (distance < nearestDistance)
