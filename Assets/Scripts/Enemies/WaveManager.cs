@@ -23,6 +23,7 @@ namespace FarmVsMonsters.Enemies
         [SerializeField] private Health enemyTargetHealth;
 
         private readonly HashSet<Health> livingEnemies = new HashSet<Health>();
+        private readonly Dictionary<Health, Action> deathHandlers = new Dictionary<Health, Action>();
         private Coroutine routine;
         private int nextSpawnPoint;
 
@@ -77,7 +78,9 @@ namespace FarmVsMonsters.Enemies
                         if (health != null && !health.IsDead)
                         {
                             livingEnemies.Add(health);
-                            health.Died += () => HandleEnemyDied(health);
+                            Action handler = () => HandleEnemyDied(health);
+                            deathHandlers[health] = handler;
+                            health.Died += handler;
                         }
 
                         if (wave.spawnInterval > 0f)
@@ -101,17 +104,25 @@ namespace FarmVsMonsters.Enemies
             if (enemy == null)
                 return;
 
-            enemy.Died -= () => HandleEnemyDied(enemy);
+            if (deathHandlers.TryGetValue(enemy, out Action handler))
+            {
+                enemy.Died -= handler;
+                deathHandlers.Remove(enemy);
+            }
+
             livingEnemies.Remove(enemy);
         }
 
         private void OnDestroy()
         {
-            foreach (Health enemy in livingEnemies)
+            foreach (KeyValuePair<Health, Action> pair in deathHandlers)
             {
-                if (enemy != null)
-                    enemy.Died = null;
+                if (pair.Key != null)
+                    pair.Key.Died -= pair.Value;
             }
+
+            deathHandlers.Clear();
+            livingEnemies.Clear();
         }
     }
 }
