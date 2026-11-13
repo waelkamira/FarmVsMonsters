@@ -17,6 +17,7 @@ namespace FarmVsMonsters.Plants
             new Dictionary<Vector2Int, GameObject>();
         private readonly Dictionary<string, float> nextPlacementTimeByPlant =
             new Dictionary<string, float>();
+        private readonly Collider2D[] blockerResults = new Collider2D[24];
 
         public bool CanPlace(
             PlantDefinition definition,
@@ -61,14 +62,15 @@ namespace FarmVsMonsters.Plants
                 return false;
             }
 
-            Collider2D[] blockers = Physics2D.OverlapBoxAll(
+            int blockerCount = Physics2D.OverlapBoxNonAlloc(
                 snappedPosition,
                 new Vector2(battleGrid.CellWidth * 0.72f, battleGrid.CellHeight * 0.72f),
+                blockerResults,
                 0f,
                 blockingLayers);
-            for (int i = 0; i < blockers.Length; i++)
+            for (int i = 0; i < blockerCount; i++)
             {
-                Collider2D blocker = blockers[i];
+                Collider2D blocker = blockerResults[i];
                 if (blocker == null) continue;
                 if (blocker.GetComponentInParent<PlantCombatController2D>() != null ||
                     blocker.GetComponentInParent<FarmDefenseTarget2D>() != null)
