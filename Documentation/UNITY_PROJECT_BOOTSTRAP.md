@@ -31,7 +31,7 @@ iOS player builds require a macOS/Xcode build environment; keep iOS as a later p
 
 ## Generate the first battle scene
 
-After the project finishes importing, use **Farm Vs Monsters > Generate Prototype Battle Scene**. The Editor tool creates a playable greybox battle scene, five plant definition assets, primitive 3D test prefabs, enemy waves, energy pickups, and a basic HUD. It also adds the scene to Build Settings. Open `Assets/Scenes/PrototypeBattle.unity` and press Play.
+After the project finishes importing, use **Farm Vs Monsters > Generate Prototype Battle Scene**. The Editor tool creates a playable greybox battle scene, five plant definition assets, primitive 3D test prefabs, enemy waves, energy pickups, and a basic HUD. It also adds the scene to Build Settings. Then run **Farm Vs Monsters > Validate Prototype Battle Scene** to check the scene's structural references. Open `Assets/Scenes/PrototypeBattle.unity` and press Play.
 
 The generated primitives are temporary test art, not the final stylized character models. The editor generator itself has not been executed in this environment; inspect the Unity Console after running it and report any compile/import errors before treating the scene as verified.
 
