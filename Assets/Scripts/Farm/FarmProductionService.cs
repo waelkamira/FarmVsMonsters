@@ -155,8 +155,13 @@ namespace FarmVsMonsters.Farm
                 !TryGetJob(station, out JobSave job, out FarmProductionRecipe recipe))
                 return false;
 
-            if (resourceWallet.Add(recipe.OutputResource, recipe.OutputAmount) != recipe.OutputAmount)
+            int accepted = resourceWallet.Add(recipe.OutputResource, recipe.OutputAmount);
+            if (accepted != recipe.OutputAmount)
+            {
+                if (accepted > 0)
+                    resourceWallet.TrySpend(recipe.OutputResource, accepted);
                 return false;
+            }
 
             activeJobs.Remove(job.stationId);
             Save();
