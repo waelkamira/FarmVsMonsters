@@ -29,8 +29,6 @@ namespace FarmVsMonsters.Farm
             health = GetComponent<Health>();
             if (animalRenderer == null) animalRenderer = GetComponentInChildren<SpriteRenderer>();
             if (monsterTarget == null) monsterTarget = GetComponent<FarmDefenseTarget2D>();
-            if (definition != null && health != null)
-                health.SetMaxHealth(definition.AnimalHealth, true);
             RefreshVisual();
         }
 
