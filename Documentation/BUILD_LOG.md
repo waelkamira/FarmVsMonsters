@@ -514,3 +514,11 @@
 - Updated `PlantPlacementService2D` to pass the selected cell row and grid lane-center coordinate to both combat and monster-target components.
 - Documented the row-binding behavior and the current unrotated, world-horizontal lane limitation.
 - Verification: changed files were committed to `main` and read back from GitHub. Static brace/parenthesis checks are performed; Unity compile, Play Mode, physics layer setup, and cross-lane combat behavior remain untested.
+
+
+## 2026-11-13 — Lobbed projectile flight for plant variety
+- Added a configurable `Projectile2D.FlightMode` with the existing Homing behavior preserved as the default and a new Lobbed mode.
+- Lobbed shots travel from their muzzle toward the target along a tunable world-up arc, then use the projectile's configured Direct or Splash impact behavior.
+- The arc uses a deterministic timed path rather than Rigidbody2D physics; speed determines the flight duration and Arc Height controls the visible lift.
+- Expanded prefab documentation with practical presets for fast thorns, lobbed fruit/rocks, area bombs, slowing shots, and energy-producing plants using the existing `TimedEnergyGenerator`.
+- Verification: source and documentation were committed to `main` and read back from GitHub. Static delimiter checks only; Unity compilation, sprite orientation, scene layer configuration, and runtime trajectory/impact behavior remain untested.
