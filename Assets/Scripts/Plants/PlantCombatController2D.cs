@@ -10,9 +10,14 @@ namespace FarmVsMonsters.Plants
     {
         [SerializeField] private Transform muzzle;
         [SerializeField] private Projectile2D projectilePrefab;
+        [SerializeField] private Projectile2D specialProjectilePrefab;
         [SerializeField, Min(0.1f)] private float attackRange = 9f;
         [SerializeField, Min(0f)] private float laneTolerance = 0.45f;
         [SerializeField, Min(0.05f)] private float attackInterval = 1.15f;
+        [SerializeField, Min(1)] private int shotsPerBurst = 1;
+        [SerializeField, Min(0.02f)] private float burstShotInterval = 0.12f;
+        [SerializeField, Min(0f)] private float specialCooldown = 12f;
+        [SerializeField, Min(0f)] private float specialDamageMultiplier = 2f;
         [SerializeField, Min(0f)] private float damage = 12f;
         [SerializeField, Range(0.1f, 1f)] private float slowMultiplier = 1f;
         [SerializeField, Min(0f)] private float slowDuration;
@@ -22,6 +27,9 @@ namespace FarmVsMonsters.Plants
         private Collider2D[] results;
         private CharacterAnimationDriver2D animationDriver;
         private float attackTimer;
+        private float burstShotTimer;
+        private float specialCooldownTimer;
+        private int burstShotsRemaining;
         private float assignedLaneWorldY;
         private bool hasAssignedLane;
 
@@ -45,17 +53,62 @@ namespace FarmVsMonsters.Plants
 
         private void Update()
         {
-            if (projectilePrefab == null) return;
-            attackTimer -= Time.deltaTime;
+            if (specialCooldownTimer > 0f)
+                specialCooldownTimer -= Time.deltaTime;
+
+            if (burstShotsRemaining > 0)
+            {
+                burstShotTimer -= Time.deltaTime;
+                if (burstShotTimer > 0f) return;
+
+                Health burstTarget = FindNearestMonster();
+                if (burstTarget == null)
+                {
+                    burstShotsRemaining = 0;
+                    return;
+                }
+
+                FireProjectile(projectilePrefab, burstTarget, damage);
+                burstShotsRemaining--;
+                if (burstShotsRemaining > 0)
+                    burstShotTimer = Mathf.Max(0.02f, burstShotInterval);
+                else
+                    attackTimer = attackInterval;
+                return;
+            }
+
+            if (attackTimer > 0f)
+                attackTimer -= Time.deltaTime;
             if (attackTimer > 0f) return;
 
             Health target = FindNearestMonster();
             if (target == null) return;
 
-            Projectile2D projectile = Instantiate(projectilePrefab, muzzle.position, Quaternion.identity);
-            projectile.Initialize(target, damage, slowMultiplier, slowDuration);
+            // A configured special shot has its own cooldown and does not consume the normal burst.
+            if (specialProjectilePrefab != null && specialCooldownTimer <= 0f)
+            {
+                FireProjectile(specialProjectilePrefab, target,
+                    damage * Mathf.Max(0f, specialDamageMultiplier));
+                specialCooldownTimer = Mathf.Max(0f, specialCooldown);
+                attackTimer = attackInterval;
+                return;
+            }
+
+            if (projectilePrefab == null) return;
+            FireProjectile(projectilePrefab, target, damage);
+            burstShotsRemaining = Mathf.Max(1, shotsPerBurst) - 1;
+            if (burstShotsRemaining > 0)
+                burstShotTimer = Mathf.Max(0.02f, burstShotInterval);
+            else
+                attackTimer = attackInterval;
+        }
+
+        private void FireProjectile(Projectile2D prefab, Health target, float hitDamage)
+        {
+            if (prefab == null || target == null || target.IsDead) return;
+            Projectile2D projectile = Instantiate(prefab, muzzle.position, Quaternion.identity);
+            projectile.Initialize(target, hitDamage, slowMultiplier, slowDuration);
             if (animationDriver != null) animationDriver.PlayAttack();
-            attackTimer = attackInterval;
         }
 
         public void ApplyPermanentBonuses(float bonusDamage, float bonusAttackSpeed)
