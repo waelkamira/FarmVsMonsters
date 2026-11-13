@@ -377,3 +377,10 @@
 - Added `CavemanFarmerController2D`: top-down movement inside configurable farm bounds and a directional club swing that damages the nearest valid monster in front of the player.
 - Added the core gameplay roles document describing monsters advancing toward the farmhouse, eating crops/attacking animals, the caveman as mobile defender, and the princess as a protected story character at the farmhouse end.
 - Verification: GitHub writes and source readback only; Unity compilation, Rigidbody2D setup, input bindings, collisions, and actual combat behavior remain untested.
+
+
+## 2026-11-13 — Plant atlas and projectile contract correction
+- Added a Special animation state and CharacterAnimationDriver2D.PlaySpecial hook to match the stationary plant atlas row.
+- Corrected the plant sheet slicer menu label to explicitly identify it as a plant sheet utility.
+- Corrected prefab documentation: every planted defender uses its own projectile prefab and visual identity; the cactus example fires thorn projectiles from its mouth. The experimental melee plant controller is no longer recommended for standard plants.
+- Corrected the plant animation atlas to Idle, Attack, Hurt, Block, Death, Special with no Walk row.
