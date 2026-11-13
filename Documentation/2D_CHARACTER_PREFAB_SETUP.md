@@ -200,3 +200,14 @@ Add `CameraFollow2D` to the orthographic gameplay camera and assign the caveman 
 
 ## Battle wave setup validation
 Before the first Play Mode run, select the GameObject that contains `WaveManager` and run **Tools → Farm Vs Monsters → Validate Selected Battle Wave Manager**. The validator checks that spawn-point references are assigned, warns when the scene does not use the expected five distinct lane heights, verifies the farmhouse fallback Transform/Health pair, and checks every configured enemy prefab for `Health`, `EnemyMovement2D`, `Collider2D`, and `EnemyMarker`. It inspects both the legacy prefab list and grouped wave entries. Fix all reported errors before testing; five-lane warnings may be accepted only when the level intentionally uses a different layout. The validator does not create or reposition scene objects and does not replace checking each monster's Farm Target Layers and each spawn point's world-space Y position.
+
+
+## Generate five lane spawn points from the battle grid
+1. Keep the battle grid's local X axis horizontal and local Y axis vertical for the current side-view monster movement system. Do not rotate the grid; monster lane locking currently uses world-space Y.
+2. Select the GameObject that contains `BattleGrid2D`.
+3. Run **Tools → Farm Vs Monsters → Generate Monster Spawn Points → Right Edge** if monsters enter from the right, or choose **Left Edge** if they enter from the left.
+4. Confirm the replacement dialog. The tool replaces only its own previously generated child objects, creates one spawn point at the center of each grid row just outside the selected edge, and assigns them to the sole `WaveManager` in the active scene when exactly one exists.
+5. Spawn points are ordered bottom-to-top. If the scene has multiple WaveManagers, assign the generated transforms manually to the intended manager.
+6. The generator does not create the farmhouse, princess, plants, crops, or scene itself. Set the WaveManager fallback target and monster Farm Target Layers separately, then run the battle wave validator.
+
+The grid coordinate helpers and runtime grid-line renderer now use the grid Transform for cell corners, so translation and scale are reflected consistently. The active enemy lane movement still expects horizontal world-space lanes; keep the grid unrotated until lane movement is generalized.
