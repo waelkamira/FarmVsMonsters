@@ -7,7 +7,7 @@ namespace FarmVsMonsters.Farm
     public sealed class FarmResourceWallet : MonoBehaviour
     {
         private const string SaveKey = "farm_vs_monsters.resources.v1";
-        private const int ResourceCount = 7;
+        private const int ResourceCount = 9;
         [SerializeField, Min(1)] private int capacityPerResource = 9999;
         [SerializeField, Min(0)] private int startingSeeds = 12;
         [SerializeField, Min(0)] private int startingWater = 20;
