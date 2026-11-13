@@ -192,3 +192,13 @@
 - Added `Documentation/UNITY_PROJECT_BOOTSTRAP.md` with Unity Hub modules, first-open steps, Input Manager compatibility, URP setup, and the current project limitations.
 - Version choice is based on Unity's published Unity 6.3 LTS support guidance and the 6000.3.27f2 security-patched Editor release.
 - Verification: configuration files were committed and read back from GitHub. Package resolution and Unity Editor import have not yet been run on a local machine.
+
+
+## 2026-11-13 — Prototype battle scene generator
+- Added `Assets/Editor/PrototypeBattleSceneGenerator.cs`, an Editor menu tool at **Farm Vs Monsters → Generate Prototype Battle Scene**.
+- The generator creates a 3D battle board, player/farm target, isometric camera, energy wallet, grid placement, five plant ScriptableObject definitions and primitive 3D plant prefabs, projectile prefab, grunt/brute enemy prefabs, three waves, energy pickups, and a uGUI battle HUD with plant selection and retry.
+- Added `Combat/DestroyOnDeath.cs` so defeated monsters are removed from the scene after their death event, and `Battle/BattleRetryButton.cs` to bind the result-panel retry action.
+- Connected placed energy-producing plants to the active battle EnergyWallet through PlantPlacementService.
+- Desktop and touch placement inputs now ignore taps/clicks over UI controls, preventing UI interaction from accidentally placing plants on the board.
+- The generated visuals are primitive 3D greybox models intended only to make the first scene playable/testable; final stylized 3D models, rigging, animation, VFX, and sound remain separate art tasks.
+- Added instructions to the Unity bootstrap guide. The generator has not been run in a Unity Editor in this environment, so its output and C# compilation still require local validation.
