@@ -595,3 +595,12 @@
 - Added `Documentation/NEW_GAMEPLAY_RULES_2D.md` as the authoritative gameplay contract.
 - Verification performed: fetched the newly committed files back from GitHub and confirmed their content and blob SHAs.
 - Not yet verified: `npm install`, Next.js build, browser runtime, responsive touch controls, and full art integration. No claim of a tested or release-ready build is made.
+
+
+## 2026-11-13 — Web rebuild follow-up fixes
+- Changed Phaser loading to dynamic client-side imports so the engine is not initialized during Next.js server rendering.
+- Added an explicit `hasPlantedDefender` guard: the caveman cannot club monsters merely because the match begins with zero plants; emergency combat begins only after the last planted defender is lost.
+- Added a temporary princess silhouette and label at the protected farmhouse end.
+- Added ESLint flat configuration and web-specific ignores for generated files and dependencies.
+- Re-fetched each changed file from GitHub and confirmed the resulting content SHA.
+- Still pending: install dependencies, run ESLint/Next production build, test the scene in a real browser, and validate keyboard/touch behavior.
