@@ -90,3 +90,11 @@ Each Wave entry in WaveManager can independently tune the spawned 2D monsters:
 - enemySpeedMultiplier scales horizontal movement speed.
 - enemyDamageMultiplier scales melee damage against the protected target.
 Keep early waves close to 1.0 and increase values gradually. These are per-wave multipliers, not automatic wave-index scaling; tune each wave deliberately in the Inspector. Values are clamped at runtime to avoid zero or extreme combat stats.
+
+## Wave composition, spawn selection, and rewards
+- A wave can use the legacy Enemy Prefabs list (each entry spawns once), the new Enemy Groups list (set a prefab and count), or both. Group counts are clamped to 1–500 at runtime.
+- WaveManager supports RoundRobin spawn selection to distribute monsters evenly across configured row spawn points, or Random selection to vary the lane. Random selection avoids choosing the same spawn point twice in a row when multiple points exist.
+- Configure spawn points at the center Y of each of the five lanes. EnemyMovement2D locks each spawned monster to that row.
+- Set Inter Wave Delay to create a readable pause between cleared waves. The HUD displays the remaining seconds.
+- Set Energy Reward On Clear to grant energy only after all tracked enemies in that wave are defeated. The configured EnergyWallet must be assigned to WaveManager.
+- Every spawned enemy prefab must have a Health component. Prefabs missing it are logged as errors and destroyed rather than being counted as cleared enemies.
