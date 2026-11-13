@@ -238,3 +238,10 @@
 - Battle HUD now selects the first configured plant on enable, keeping the visible selection text aligned with desktop/touch input defaults.
 - Added a configurable initial wave delay to `WaveManager`; the generated battle grants a five-second preparation window before the first monster spawns.
 - Source changes were committed to `main`; timing and HUD interaction still require Play Mode validation.
+
+
+## 2026-11-13 — Farm storage UI refresh and slot safety
+- Warehouse stock displays now refresh when the shared resource wallet changes.
+- Specialized storage facility UI refreshes when inventory/capacity changes, including capacity changes originating from the general warehouse.
+- Storage facility purchases now require a configured building prefab, and duplicate scene slot IDs are rejected instead of selecting an arbitrary anchor.
+- These are source-level fixes; UI event behavior and prefab instantiation remain to be tested in Unity.
