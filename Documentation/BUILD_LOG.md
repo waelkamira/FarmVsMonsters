@@ -539,3 +539,11 @@
 - Added `PlantUpgradeInteractor2D`: the caveman can approach a plant and press U to upgrade the nearest eligible defender. The interaction exposes an event for future HUD feedback.
 - Documented prefab setup, upgrade array ordering, controls, and the current per-battle (non-persistent) progression scope.
 - Verification: source and documentation files were committed to `main` and read back. Static delimiter checks only; Unity compilation, prefab wiring, collision layers, and in-game economy balance remain untested.
+
+## 2026-11-13 — Plant selection cards and cooldown HUD
+- Extended PlantDefinition with optional card icon and short description metadata.
+- Added a public remaining-placement-cooldown query to PlantPlacementService2D for each plant definition.
+- DesktopBattleInput2D now publishes selection changes for both keyboard quick-select and UI selection, allowing the HUD to stay synchronized.
+- Expanded BattleHudController2D with per-card icons, selection-frame objects, cooldown fill images/countdown labels, selected-plant description, and live cooldown refresh.
+- Kept cards selectable when the player cannot currently afford a plant or its placement cooldown is active; the placement service remains authoritative and prevents invalid spending/placement.
+- Documented the Inspector wiring and matching array order. Verification: changed source/docs files were read back and checked for balanced delimiters. Unity compilation and actual uGUI prefab wiring remain untested.
