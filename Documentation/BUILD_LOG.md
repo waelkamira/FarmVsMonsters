@@ -419,3 +419,11 @@
 - Added `FarmPlotInteractor2D`; the player can press E near a plot to plant an empty plot, water a growing crop, or harvest a ready crop.
 - Plots can carry `Health` and `FarmDefenseTarget2D` so monsters can destroy growing/ready crops. Disable the target while the plot is empty.
 - This is a source-level gameplay system. Scene/prefab generation, Unity compilation, physics interaction and Play Mode verification are still pending.
+
+
+## 2026-11-13 — Crop destruction and harvest transaction hardening
+- Added `Health.SetMaxHealth` so each crop definition can set the health of its planted crop instance at planting time.
+- Empty crop plots now disable their monster-target component; planting enables it, while harvest or monster destruction clears the crop and disables the target.
+- Crop plots subscribe to Health.Died and immediately return to Empty when a monster destroys the crop.
+- Replaced partial produce deposits with an all-or-nothing `TryAddProduce` operation. A ready crop remains harvestable if the wallet lacks capacity for the complete yield, preventing silent partial harvest loss.
+- Source-level changes only; Unity compile and Play Mode tests remain outstanding.
