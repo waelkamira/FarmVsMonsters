@@ -1,5 +1,6 @@
 using FarmVsMonsters.Combat;
 using FarmVsMonsters.Core;
+using FarmVsMonsters.Enemies;
 using UnityEngine;
 
 namespace FarmVsMonsters.Plants
