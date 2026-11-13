@@ -16,6 +16,7 @@ using FarmVsMonsters.Input;
 using FarmVsMonsters.Plants;
 using FarmVsMonsters.Player;
 using FarmVsMonsters.UI;
+using FarmVsMonsters.Visuals;
 
 namespace FarmVsMonsters.EditorTools
 {
