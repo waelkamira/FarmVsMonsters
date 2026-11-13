@@ -61,6 +61,8 @@ namespace FarmVsMonsters.UI
                 outcomeController.BattleFinished += HandleBattleFinished;
 
             ConfigurePlantButtons();
+            if (selectedPlantIndex < 0 && plants != null && plants.Length > 0)
+                SelectPlant(0);
             RefreshAll();
             if (resultPanel != null)
                 resultPanel.SetActive(outcomeController != null && outcomeController.IsFinished);
