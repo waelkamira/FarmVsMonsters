@@ -150,10 +150,19 @@ namespace FarmVsMonsters.Farm
         private FarmStorageSlot FindSlot(string id)
         {
             if (slots == null) return null;
+            FarmStorageSlot found = null;
             foreach (FarmStorageSlot slot in slots)
-                if (slot != null && string.Equals(slot.SlotId, id, StringComparison.Ordinal))
-                    return slot;
-            return null;
+            {
+                if (slot == null || !string.Equals(slot.SlotId, id, StringComparison.Ordinal))
+                    continue;
+                if (found != null)
+                {
+                    Debug.LogWarning("Duplicate FarmStorageSlot ID: " + id);
+                    return null;
+                }
+                found = slot;
+            }
+            return found;
         }
 
         private bool HasUniqueIdentityAndSlot(FarmStorageFacilityDefinition target)
