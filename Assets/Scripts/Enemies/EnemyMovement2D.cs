@@ -9,7 +9,7 @@ namespace FarmVsMonsters.Enemies
     [RequireComponent(typeof(Health))]
     public sealed class EnemyMovement2D : MonoBehaviour
     {
-        public enum Archetype { Normal = 0, Armored = 1, Ranged = 2, Brute = 3 }
+        public enum Archetype { Normal = 0, Armored = 1, Ranged = 2, Brute = 3, Jumper = 4 }
 
         [Header("Fallback destination")]
         [SerializeField] private Transform target;
@@ -23,6 +23,11 @@ namespace FarmVsMonsters.Enemies
         [SerializeField, Min(0.1f)] private float rangedProjectileSpeed = 5f;
         [SerializeField, Min(0f)] private float bruteDamageMultiplier = 2f;
         [SerializeField, Range(0.1f, 1f)] private float bruteSpeedMultiplier = 0.65f;
+        [SerializeField] private bool jumperCanSkipPlants = true;
+        [SerializeField, Min(0.1f)] private float jumpTriggerDistance = 1.5f;
+        [SerializeField, Min(0.2f)] private float jumpDistance = 2.2f;
+        [SerializeField, Min(0f)] private float jumpHeight = 1.1f;
+        [SerializeField, Min(0.1f)] private float jumpDuration = 0.65f;
 
         [Header("Movement and attack")]
         [SerializeField, Min(0f)] private float moveSpeed = 0.8f;
@@ -50,6 +55,11 @@ namespace FarmVsMonsters.Enemies
         private float baseAttackDamage;
         private float laneY;
         private bool laneConfigured;
+        private FarmDefenseTarget2D ignoredJumpTarget;
+        private float jumpElapsed;
+        private float jumpStartX;
+        private float jumpEndX;
+        private bool isJumping;
 
         public float LaneWorldY => laneY;
 
@@ -107,6 +117,12 @@ namespace FarmVsMonsters.Enemies
 
         private void Update()
         {
+            if (isJumping)
+            {
+                UpdateJump();
+                return;
+            }
+
             if (constrainToSpawnLane && laneConfigured)
             {
                 Vector3 position = transform.position;
@@ -131,6 +147,14 @@ namespace FarmVsMonsters.Enemies
             }
 
             FarmDefenseTarget2D farmTarget = FindFarmTargetInReach();
+            if (archetype == Archetype.Jumper && jumperCanSkipPlants && farmTarget != null &&
+                farmTarget.Kind == FarmDefenseTarget2D.TargetKind.Plant &&
+                Mathf.Abs(farmTarget.transform.position.x - transform.position.x) <= jumpTriggerDistance)
+            {
+                BeginJump(farmTarget);
+                return;
+            }
+
             Transform destination = farmTarget != null ? farmTarget.transform : target;
             Health destinationHealth = farmTarget != null ? farmTarget.Health : targetHealth;
 
@@ -183,6 +207,37 @@ namespace FarmVsMonsters.Enemies
             }
         }
 
+        private void BeginJump(FarmDefenseTarget2D plant)
+        {
+            ignoredJumpTarget = plant;
+            jumpElapsed = 0f;
+            jumpStartX = transform.position.x;
+            float direction = target != null
+                ? Mathf.Sign(target.position.x - transform.position.x) : -1f;
+            if (Mathf.Approximately(direction, 0f)) direction = -1f;
+            jumpEndX = jumpStartX + direction * jumpDistance;
+            isJumping = true;
+            if (spriteRenderer != null) spriteRenderer.flipX = direction < 0f;
+            if (animationDriver != null) animationDriver.PlayAttack();
+        }
+
+        private void UpdateJump()
+        {
+            jumpElapsed += Time.deltaTime;
+            float progress = Mathf.Clamp01(jumpElapsed / jumpDuration);
+            Vector3 position = transform.position;
+            position.x = Mathf.Lerp(jumpStartX, jumpEndX, progress);
+            position.y = laneY + Mathf.Sin(progress * Mathf.PI) * jumpHeight;
+            transform.position = position;
+
+            if (progress >= 1f)
+            {
+                isJumping = false;
+                position.y = laneY;
+                transform.position = position;
+            }
+        }
+
         private FarmDefenseTarget2D FindFarmTargetInReach()
         {
             Vector2 center = transform.position;
@@ -206,7 +261,7 @@ namespace FarmVsMonsters.Enemies
                 FarmDefenseTarget2D farmTarget =
                     candidate.GetComponentInParent<FarmDefenseTarget2D>();
 
-                if (farmTarget == null || !farmTarget.isActiveAndEnabled ||
+                if (farmTarget == ignoredJumpTarget || farmTarget == null || !farmTarget.isActiveAndEnabled ||
                     farmTarget.Health == null || farmTarget.Health.IsDead ||
                     !farmTarget.BlocksMonsterMovement ||
                     !farmTarget.CanBeTargetedFromLane(laneY))
