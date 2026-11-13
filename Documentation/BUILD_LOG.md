@@ -398,3 +398,9 @@
 - Monsters now scan nearby marked farm objects, filter targets by travel direction and lane, choose the highest priority (then nearest), stop to attack blocking targets in range, and resume movement toward their fallback destination after the target is destroyed.
 - Documented required Health/Collider2D/FarmDefenseTarget2D setup and suggested target priorities.
 - Verification: GitHub write and source readback; Unity compilation and Play Mode physics tests are still required.
+
+
+## 2026-11-13 — Target and animation edge-case fixes
+- Monster target scanning now ignores farm objects explicitly configured as non-blocking, preventing monsters from stopping at decorative/non-blocking targets.
+- CharacterAnimationDriver2D now preserves the Special animation until its non-looping clip completes instead of allowing locomotion updates to interrupt it.
+- Added explicit prefab guidance that plant defenders remain stationary and each plant uses its own projectile prefab and muzzle position (cactus thorns originate at the mouth).
