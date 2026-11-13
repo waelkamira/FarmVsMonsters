@@ -530,3 +530,12 @@
 - Burst sequences re-acquire a valid monster on the plant's assigned lane before each follow-up shot and cancel safely when no valid target remains.
 - Updated the prefab guide with cactus volley, steady seed shooter, lobber, bomb special, and rapid-fire plant tuning examples.
 - Verification: changed C# and documentation files were committed to `main` and read back. Static brace/parenthesis checks only; Unity compilation, animation timing, prefab Inspector setup, and in-game damage balance remain untested.
+
+
+## 2026-11-13 — Per-plant upgrade progression
+- Added `PlantUpgradeController2D` with configurable level caps, energy costs, per-level damage and attack-speed bonuses, health multipliers, optional level-specific sprites, and a signature-attack unlock level.
+- Added runtime control to `PlantCombatController2D` so a plant's special projectile can remain locked until its configured upgrade level.
+- Connected the placement service's shared `EnergyWallet` to every spawned plant upgrade controller. Upgrade costs are charged only after the upgrade prerequisites are checked; missing cost entries fail closed instead of granting free levels.
+- Added `PlantUpgradeInteractor2D`: the caveman can approach a plant and press U to upgrade the nearest eligible defender. The interaction exposes an event for future HUD feedback.
+- Documented prefab setup, upgrade array ordering, controls, and the current per-battle (non-persistent) progression scope.
+- Verification: source and documentation files were committed to `main` and read back. Static delimiter checks only; Unity compilation, prefab wiring, collision layers, and in-game economy balance remain untested.
