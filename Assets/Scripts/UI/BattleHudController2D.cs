@@ -218,7 +218,6 @@ namespace FarmVsMonsters.UI
         private void RefreshPlantButtons()
         {
             if (plantButtons == null) return;
-            int balance = energyWallet != null ? energyWallet.Balance : 0;
             for (int i = 0; i < plantButtons.Length; i++)
             {
                 if (plantButtons[i] == null) continue;
