@@ -64,13 +64,7 @@ export default class BattleScene extends Scene {
     g.fillStyle(0x9c7047, 1); g.fillRoundedRect(195, 125, 670, 480, 18);
 
     // Draw the fallback board with the same perspective corners as the real artwork.
-    const point = (u, v) => {
-      const { tl, tr, br, bl } = GRID_CORNERS;
-      return {
-        x: (1-u)*(1-v)*tl.x + u*(1-v)*tr.x + u*v*br.x + (1-u)*v*bl.x,
-        y: (1-u)*(1-v)*tl.y + u*(1-v)*tr.y + u*v*br.y + (1-u)*v*bl.y,
-      };
-    };
+    const point = (u, v) => this.boardPoint(u, v);
     for (let row = 0; row < LANES; row += 1) {
       for (let col = 0; col < COLUMNS; col += 1) {
         const u0 = col / COLUMNS, u1 = (col + 1) / COLUMNS;
