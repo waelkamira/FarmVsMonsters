@@ -40,6 +40,8 @@ namespace FarmVsMonsters.Enemies
         private float laneY;
         private bool laneConfigured;
 
+        public float LaneWorldY => laneY;
+
         private void Awake()
         {
             ownHealth = GetComponent<Health>();
