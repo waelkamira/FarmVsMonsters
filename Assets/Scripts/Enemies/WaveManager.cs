@@ -120,7 +120,10 @@ namespace FarmVsMonsters.Enemies
                 return;
 
             foreach (Health enemy in missing)
+            {
                 livingEnemies.Remove(enemy);
+                deathHandlers.Remove(enemy);
+            }
         }
 
         private void HandleEnemyDied(Health enemy)
