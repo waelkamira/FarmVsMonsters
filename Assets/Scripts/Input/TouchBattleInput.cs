@@ -1,6 +1,7 @@
 using FarmVsMonsters.Plants;
 using FarmVsMonsters.Player;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace FarmVsMonsters.Input
 {
@@ -35,7 +36,11 @@ namespace FarmVsMonsters.Input
 
             Touch touch = UnityEngine.Input.GetTouch(0);
             if (touch.phase == TouchPhase.Began)
+            {
+                if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject(touch.fingerId))
+                    return;
                 TryPlaceAtScreenPosition(touch.position);
+            }
         }
 
         private void TryPlaceAtScreenPosition(Vector2 screenPosition)
