@@ -156,3 +156,15 @@
 - Unity setup required: create contract definition assets, assign the same assets to the contract service and UI offer list, connect the resource wallet, and wire uGUI buttons/text.
 - Limitations: one active delivery contract is supported; no rotating daily board, reputation, NPC route simulation, or remote/server validation yet. Saves remain local PlayerPrefs.
 - Verification: all changed/new source files were committed to `main` and read back. No Unity compiler/editor or runtime tests have been run.
+
+
+## 2026-11-13 — Specialized storage facilities
+- Extended `FarmResourceWallet.cs` with per-resource additional capacity bonuses while preserving the existing shared base capacity and existing inventory save format.
+- Added `FarmStorageFacilityDefinition.cs` ScriptableObjects to configure dedicated resource groups, building prefabs, named slots, capacity bonus per level, upgrade pricing, stage gates, and maximum levels.
+- Added `FarmStorageSlot.cs` anchors and `FarmStorageFacilityService.cs` to persist each facility level, restore owned building prefabs, aggregate storage bonuses by resource, and purchase upgrades with farm coins.
+- Added `UI/FarmStorageFacilityController.cs` for facility level/bonus displays, per-resource effective capacity, and upgrade actions.
+- Suggested facility catalog to author in Unity: Grain Store (Wheat + Seeds), Animal Products Store (Milk + Wool + Eggs + Meat), Processed Goods Store (Flour + Bread), and Water Tank (Water). Each needs its own prefab and unique slot ID.
+- The general warehouse remains the shared base capacity; specialized buildings add capacity only to their configured resources. Their bonus save is separate from the base warehouse save, so the two systems do not overwrite each other's capacity values.
+- Hardened the contract UI to refresh delivery progress when the resource wallet changes, so harvesting/production immediately updates the displayed amount.
+- Important setup constraints: assign the same ScriptableObject definitions to the storage service and UI, provide unique storage IDs and slot IDs, add a FarmStorageSlot for every facility, and connect the FarmResourceWallet. No actual warehouse meshes/prefabs have been authored yet.
+- Verification: source changes were committed to `main` and read back from GitHub. No Unity compilation, prefab restoration, purchase flow, or gameplay test has been performed.
