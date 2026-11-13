@@ -40,6 +40,9 @@ namespace FarmVsMonsters.Enemies
         [SerializeField, Min(1)] private int maxFarmTargetsPerScan = 24;
         [SerializeField] private LayerMask farmTargetLayers = ~0;
 
+        [Header("Environment (optional)")]
+        [SerializeField] private FarmEnvironmentCycle2D environmentCycle;
+
         [Header("Lane and visuals")]
         [SerializeField] private SpriteRenderer spriteRenderer;
         [SerializeField] private bool constrainToSpawnLane = true;
@@ -188,7 +191,8 @@ namespace FarmVsMonsters.Enemies
                     animationDriver.SetMoving(true);
 
                 transform.position += Vector3.right *
-                    (Mathf.Sign(deltaX) * moveSpeed * slowMultiplier * Time.deltaTime);
+                    (Mathf.Sign(deltaX) * moveSpeed * slowMultiplier *
+                     (environmentCycle != null ? environmentCycle.MonsterSpeedMultiplier : 1f) * Time.deltaTime);
                 return;
             }
 
