@@ -76,7 +76,6 @@ namespace FarmVsMonsters.EditorTools
             }
 
             Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
-            scene.name = "PrototypeBattle";
 
             GameObject floor = GameObject.CreatePrimitive(PrimitiveType.Plane);
             floor.name = "BattleBoard";
@@ -437,6 +436,9 @@ namespace FarmVsMonsters.EditorTools
             pickup.GetComponent<Renderer>().sharedMaterial = material;
             SphereCollider collider = pickup.GetComponent<SphereCollider>();
             collider.isTrigger = true;
+            Rigidbody body = pickup.AddComponent<Rigidbody>();
+            body.isKinematic = true;
+            body.useGravity = false;
             EnergyPickup component = pickup.AddComponent<EnergyPickup>();
             SetInt(component, "energyAmount", amount);
             SetObject(component, "targetWallet", wallet);
@@ -572,6 +574,7 @@ namespace FarmVsMonsters.EditorTools
             {
                 Shader shader = Shader.Find("Universal Render Pipeline/Lit");
                 if (shader == null) shader = Shader.Find("Standard");
+                if (shader == null) shader = Shader.Find("Unlit/Color");
                 material = new Material(shader);
                 AssetDatabase.CreateAsset(material, path);
             }
