@@ -6,13 +6,14 @@ const COLUMNS = 8;
  // These four corners follow the visible outer seams in the uploaded 1080 × 576 art,
  // mapped to the aspect-preserving 1120 × 597.33 background inside the 1120 × 680 view.
 const GRID_CORNERS = {
-  tl: { x: 388, y: 360 },
-  tr: { x: 824, y: 362 },
-  br: { x: 887, y: 578 },
-  bl: { x: 259, y: 579 },
+  // Outer planting-board seams measured against the 1120 × 597.33 rendered artwork.
+  tl: { x: 383, y: 370 },
+  tr: { x: 771, y: 370 },
+  br: { x: 932, y: 579 },
+  bl: { x: 261, y: 579 },
 };
-const GRID_WIDTH = 600;
-const GRID_HEIGHT = 230;
+const GRID_WIDTH = 388;
+const GRID_HEIGHT = 209;
 const GRID_CENTER_X = 560;
 const GRID_CENTER_Y = 469.5;
 const CELL_W = GRID_WIDTH / COLUMNS;
@@ -176,9 +177,50 @@ export default class BattleScene extends Scene {
   }
 
   drawPlantingGrid() {
-    // The cell grid is already painted into the background. Do not draw a duplicate.
-    // Pointer hit-testing uses boardCoordinates() against these same four corners.
-    this.plantingGrid = null;
+    // Trace the perspective cell seams over the seams already painted in the artwork.
+    // Every cell is a quadrilateral; plant placement uses its exact bilinear center.
+    const grid = this.add.graphics().setDepth(2);
+    const point = (u, v) => this.boardPoint(u, v);
+
+    // Very light cell tint makes the playable area legible without hiding the artwork.
+    for (let row = 0; row < LANES; row += 1) {
+      for (let col = 0; col < COLUMNS; col += 1) {
+        const u0 = col / COLUMNS;
+        const u1 = (col + 1) / COLUMNS;
+        const v0 = row / LANES;
+        const v1 = (row + 1) / LANES;
+        const corners = [
+          point(u0, v0),
+          point(u1, v0),
+          point(u1, v1),
+          point(u0, v1),
+        ];
+        grid.fillStyle(0xfff2c8, 0.035);
+        grid.fillPoints(corners, true);
+      }
+    }
+
+    // Draw the 9 column boundaries and 6 lane boundaries as perspective lines.
+    grid.lineStyle(1.5, 0x665238, 0.58);
+    for (let col = 0; col <= COLUMNS; col += 1) {
+      const u = col / COLUMNS;
+      const top = point(u, 0);
+      const bottom = point(u, 1);
+      grid.beginPath();
+      grid.moveTo(top.x, top.y);
+      grid.lineTo(bottom.x, bottom.y);
+      grid.strokePath();
+    }
+    for (let row = 0; row <= LANES; row += 1) {
+      const v = row / LANES;
+      const left = point(0, v);
+      const right = point(1, v);
+      grid.beginPath();
+      grid.moveTo(left.x, left.y);
+      grid.lineTo(right.x, right.y);
+      grid.strokePath();
+    }
+    this.plantingGrid = grid;
   }
 
   createHud() {
