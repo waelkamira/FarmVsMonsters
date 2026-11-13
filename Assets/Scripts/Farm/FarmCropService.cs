@@ -212,6 +212,12 @@ namespace FarmVsMonsters.Farm
             int stageIndex = Mathf.Clamp(
                 Mathf.FloorToInt(progress * definition.GrowthStagePrefabs.Length),
                 0, definition.GrowthStagePrefabs.Length - 1);
+            if (visualStages.TryGetValue(plot.PlotId, out int currentStage) &&
+                currentStage == stageIndex &&
+                visuals.TryGetValue(plot.PlotId, out GameObject currentVisual) &&
+                currentVisual != null)
+                return;
+
             GameObject prefab = definition.GrowthStagePrefabs[stageIndex];
             if (prefab == null)
                 return;
@@ -219,6 +225,7 @@ namespace FarmVsMonsters.Farm
             RemoveVisual(plot.PlotId);
             GameObject instance = Instantiate(prefab, plot.transform.position, plot.transform.rotation, cropVisualRoot);
             visuals[plot.PlotId] = instance;
+            visualStages[plot.PlotId] = stageIndex;
             CropChanged?.Invoke(plot, definition);
         }
 
@@ -228,6 +235,7 @@ namespace FarmVsMonsters.Farm
                 return;
 
             visuals.Remove(plotId);
+            visualStages.Remove(plotId);
             if (instance != null)
                 Destroy(instance);
         }
