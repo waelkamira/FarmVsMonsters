@@ -16,6 +16,7 @@ namespace FarmVsMonsters.Farm
 
         private Health health;
         private float productionRemaining;
+        private FarmAnimalDefinition2D configuredDefinition;
 
         public AnimalState State { get; private set; } = AnimalState.Hungry;
         public string AnimalName => definition != null ? definition.DisplayName : string.Empty;
@@ -31,6 +32,13 @@ namespace FarmVsMonsters.Farm
             if (definition != null && health != null)
                 health.SetMaxHealth(definition.AnimalHealth, true);
             RefreshVisual();
+        }
+
+        private void Start()
+        {
+            if (definition != null && health != null)
+                health.SetMaxHealth(definition.AnimalHealth, true);
+            configuredDefinition = definition;
         }
 
         private void Update()
@@ -49,8 +57,11 @@ namespace FarmVsMonsters.Farm
         {
             wallet = resourceWallet;
             definition = animalDefinition;
-            if (health != null && definition != null)
+            if (health != null && definition != null && configuredDefinition != definition)
+            {
                 health.SetMaxHealth(definition.AnimalHealth, true);
+                configuredDefinition = definition;
+            }
             RefreshVisual();
         }
 
