@@ -85,7 +85,13 @@ namespace FarmVsMonsters.Player
 
         private void FixedUpdate()
         {
-            if (health == null || health.IsDead || moveInput.sqrMagnitude <= 0.001f)
+            if (health == null || health.IsDead)
+            {
+                body.velocity = Vector2.zero;
+                return;
+            }
+
+            if (moveInput.sqrMagnitude <= 0.001f)
                 return;
 
             Vector2 next = body.position + moveInput * (moveSpeed * Time.fixedDeltaTime);
@@ -113,9 +119,7 @@ namespace FarmVsMonsters.Player
             if (animationDriver != null)
                 animationDriver.PlayAttack();
 
-            Vector2 origin = clubAttackOrigin != null
-                ? (Vector2)clubAttackOrigin.position
-                : body.position + facing * 0.45f;
+            Vector2 origin = GetDirectionalAttackOrigin();
 
             int count = Physics2D.OverlapCircleNonAlloc(
                 origin, clubRange, hitResults, monsterLayers);
@@ -148,11 +152,20 @@ namespace FarmVsMonsters.Player
                 nearest.ApplyDamage(clubDamage);
         }
 
+        private Vector2 GetDirectionalAttackOrigin()
+        {
+            float distance = clubAttackOrigin != null
+                ? Mathf.Max(0.05f, clubAttackOrigin.localPosition.magnitude)
+                : 0.45f;
+            return body.position + facing.normalized * distance;
+        }
+
         private void OnDrawGizmosSelected()
         {
-            Vector3 origin = clubAttackOrigin != null
-                ? clubAttackOrigin.position
-                : transform.position + (Vector3)(facing * 0.45f);
+            float distance = clubAttackOrigin != null
+                ? Mathf.Max(0.05f, clubAttackOrigin.localPosition.magnitude)
+                : 0.45f;
+            Vector3 origin = transform.position + (Vector3)(facing.normalized * distance);
             Gizmos.DrawWireSphere(origin, clubRange);
         }
     }
