@@ -30,7 +30,19 @@ namespace FarmVsMonsters.Farm
             cropHealth = GetComponent<Health>();
             if (cropRenderer == null) cropRenderer = GetComponentInChildren<SpriteRenderer>();
             if (monsterTarget == null) monsterTarget = GetComponent<FarmDefenseTarget2D>();
+            if (monsterTarget != null) monsterTarget.enabled = false;
+            if (cropHealth != null) cropHealth.Died += HandleCropDestroyed;
             RefreshVisual();
+        }
+
+        private void OnDestroy()
+        {
+            if (cropHealth != null) cropHealth.Died -= HandleCropDestroyed;
+        }
+
+        private void HandleCropDestroyed()
+        {
+            ClearCrop();
         }
 
         private void Update()
@@ -60,7 +72,7 @@ namespace FarmVsMonsters.Farm
             growthRemaining = crop.GrowthSeconds;
             watered = false;
             State = PlotState.Growing;
-            if (cropHealth != null) cropHealth.ResetHealth();
+            if (cropHealth != null) cropHealth.SetMaxHealth(crop.CropHealth, true);
             if (monsterTarget != null) monsterTarget.enabled = true;
             RefreshVisual();
             return true;
@@ -82,8 +94,7 @@ namespace FarmVsMonsters.Farm
         public bool TryHarvest()
         {
             if (State != PlotState.Ready || crop == null || wallet == null) return false;
-            int accepted = wallet.AddProduce(crop.HarvestYield);
-            if (accepted <= 0) return false;
+            if (!wallet.TryAddProduce(crop.HarvestYield)) return false;
             ClearCrop();
             return true;
         }
