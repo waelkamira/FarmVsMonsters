@@ -7,6 +7,7 @@ using FarmVsMonsters.Enemies;
 using FarmVsMonsters.Farm;
 using FarmVsMonsters.Input;
 using FarmVsMonsters.Plants;
+using FarmVsMonsters.Player;
 using FarmVsMonsters.UI;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -141,10 +142,15 @@ namespace FarmVsMonsters.EditorTools
                 Canvas farmCanvas = FindComponent<Canvas>(farmScene);
                 EventSystem farmEventSystem = FindComponent<EventSystem>(farmScene);
                 SceneNavigationButton enterBattle = FindComponent<SceneNavigationButton>(farmScene);
+                FarmHubPlayerController farmPlayer = FindComponent<FarmHubPlayerController>(farmScene);
                 Require(farmCamera != null, "FarmHub has no camera.", errors);
                 Require(farmCanvas != null, "FarmHub has no UI Canvas.", errors);
                 Require(farmEventSystem != null, "FarmHub has no EventSystem.", errors);
                 Require(enterBattle != null, "FarmHub has no Enter Battle navigation.", errors);
+                Require(farmPlayer != null, "FarmHub has no controllable player.", errors);
+                if (farmPlayer != null)
+                    Require(farmPlayer.GetComponent<CharacterController>() != null,
+                        "FarmHub player requires a CharacterController.", errors);
                 if (enterBattle != null)
                 {
                     SerializedObject enterSo = new SerializedObject(enterBattle);
