@@ -13,6 +13,8 @@ namespace FarmVsMonsters.Plants
         [SerializeField, Min(0.1f)] private float attackRange = 7f;
         [SerializeField, Min(0.05f)] private float attackInterval = 1f;
         [SerializeField, Min(0f)] private float damage = 12f;
+        [SerializeField, Range(0.1f, 1f)] private float slowMultiplier = 1f;
+        [SerializeField, Min(0f)] private float slowDuration = 0f;
         [SerializeField] private LayerMask targetLayers = ~0;
         [SerializeField, Min(1)] private int maxTargetsPerScan = 32;
 
@@ -40,7 +42,8 @@ namespace FarmVsMonsters.Plants
                 return;
 
             Projectile projectile = Instantiate(projectilePrefab, muzzle.position, muzzle.rotation);
-            projectile.Initialize(target, TeamId.Monsters, TeamId.Player, damage);
+            projectile.Initialize(target, TeamId.Monsters, TeamId.Player,
+                damage, slowMultiplier, slowDuration);
             attackTimer = attackInterval;
         }
 
