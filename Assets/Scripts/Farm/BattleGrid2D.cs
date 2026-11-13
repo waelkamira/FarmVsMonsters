@@ -37,6 +37,13 @@ namespace FarmVsMonsters.Farm
             return transform.TransformPoint(localCenter);
         }
 
+        /// <summary>Converts grid-line coordinates to world space, respecting the grid transform.</summary>
+        public Vector3 GridPointToWorld(float columnLine, float rowLine)
+        {
+            Vector2 local = origin + new Vector2(columnLine * cellWidth, rowLine * cellHeight);
+            return transform.TransformPoint(local);
+        }
+
         /// <summary>Returns the world-space center of a lane row, respecting grid rotation and scale.</summary>
         public Vector3 GetLaneCenterWorld(int row)
         {
