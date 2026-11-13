@@ -10,10 +10,12 @@ namespace FarmVsMonsters.Combat
     public sealed class Health : MonoBehaviour
     {
         [SerializeField, Min(1f)] private float maxHealth = 100f;
+        [SerializeField, Range(0.05f, 5f)] private float damageTakenMultiplier = 1f;
 
         public float MaxHealth => maxHealth;
         public float CurrentHealth { get; private set; }
         public bool IsDead { get; private set; }
+        public float DamageTakenMultiplier => damageTakenMultiplier;
 
         public event Action<float, float> HealthChanged;
         public event Action Died;
@@ -60,12 +62,17 @@ namespace FarmVsMonsters.Combat
             HealthChanged?.Invoke(CurrentHealth, maxHealth);
         }
 
+        public void SetDamageTakenMultiplier(float multiplier)
+        {
+            damageTakenMultiplier = Mathf.Clamp(multiplier, 0.05f, 5f);
+        }
+
         public bool ApplyDamage(float amount)
         {
             if (IsDead || amount <= 0f)
                 return false;
 
-            CurrentHealth = Mathf.Max(0f, CurrentHealth - amount);
+            CurrentHealth = Mathf.Max(0f, CurrentHealth - amount * damageTakenMultiplier);
             HealthChanged?.Invoke(CurrentHealth, maxHealth);
 
             if (CurrentHealth <= 0f)
