@@ -318,8 +318,9 @@ export default class BattleScene extends Scene {
       if (!plant.alive) continue;
       plant.cooldown -= delta;
       if (plant.cooldown > 0) continue;
-      const target = this.monsters.filter((m) => m.alive && m.row === plant.row && m.x > plant.x && m.x - plant.x <= RADISH.range)
-        .sort((a, b) => a.x - b.x)[0];
+      const plantLaneX = this.worldToLane(plant).localX;
+      const target = this.monsters.filter((m) => m.alive && m.row === plant.row && m.localX > plantLaneX && m.localX - plantLaneX <= RADISH.range)
+        .sort((a, b) => a.localX - b.localX)[0];
       if (!target) continue;
       this.fireThorn(plant, target);
       plant.cooldown = RADISH.cooldown;
