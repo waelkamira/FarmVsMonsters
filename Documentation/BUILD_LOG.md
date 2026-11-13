@@ -113,3 +113,14 @@
 - Added backward-compatible resource inventory migration: saves created before Seeds and Water existed receive the configured starter quantities when those inventory slots are first introduced; migrated arrays are saved in the expanded format.
 - Corrected escaped source line breaks discovered during read-back and rewrote the crop UI controller to ensure valid C# source text.
 - Verification remains repository read-back/source inspection only. No Unity compiler or runtime tests have been executed.
+
+
+## 2026-11-13 — Persistent farm processing and crafting
+- Added `FarmProductionRecipe.cs` ScriptableObjects for configurable input resources, output goods, processing duration, and stage requirements.
+- Added `FarmProductionStation.cs` scene anchors with stable station IDs.
+- Added `FarmProductionService.cs` with one active job per station, ingredient validation/consumption, persistent job timestamps, offline processing progress, and capacity-checked output claiming.
+- Expanded farm resources with Flour and Bread. Existing resource saves remain compatible because the inventory loader copies old array entries into the larger inventory and initializes newly introduced Seeds/Water only when those slots were absent.
+- Example recipes can be authored in Unity (e.g. Wheat → Flour; Flour + Eggs + Milk → Bread) without hardcoding production rules in the service.
+- Scene setup required: create recipe assets, assign the recipe catalogue and station anchors to the service, and connect UI controls to TryStart/TryClaim.
+- Important limitation: jobs are completed when claimed, not automatically deposited; if output storage is full, the completed job remains claimable and no output is lost. This is local PlayerPrefs persistence and UTC-clock based, not server-authoritative.
+- Verification: GitHub commits were created on `main`; Unity compilation, editor wiring, and runtime production tests have not been run.
