@@ -641,3 +641,10 @@
 - Updated the client-side Phaser bootstrap to read `Game`, `AUTO`, and `Scale` from the dynamic module namespace instead of `phaserModule.default`.
 - Re-fetched both source files from GitHub and confirmed that neither retains a default Phaser import.
 - Not yet verified: a local Next.js production build or browser runtime. Run `cd web && npm run build` to confirm the original error is resolved and reveal any subsequent build issues.
+
+
+## 2026-11-14 — Connect the uploaded farm background
+- Confirmed the user's uploaded asset is present on `main` at `web/public/assets/backgrounds/farm-battlefield.jpeg` (commit `9000167277cb2bb69bbe18a945a502e61bcd32f4`).
+- Fixed the Phaser preload URL and background key reference to use the actual `.jpeg` filename; the previous `.png` path could not load this asset.
+- Updated the background folder README and Phaser integration guide to document the uploaded JPEG name and format.
+- Verification: the image's repository path and upload commit were confirmed, and the source/documentation updates were committed. Browser rendering and visual grid calibration still require a local runtime check; no claim of successful in-browser display is made yet.
