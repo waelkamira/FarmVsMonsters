@@ -67,7 +67,7 @@ namespace FarmVsMonsters.Farm
         public bool CanUpgrade(FarmStorageFacilityDefinition definition)
         {
             if (definition == null || !definition.IsValid || resourceWallet == null ||
-                !ContainsConfigured(definition) ||
+                !ContainsConfigured(definition) || !HasUniqueIdentityAndSlot(definition) ||
                 !ProgressSaveService.IsStageUnlocked(definition.RequiredStage) ||
                 GetLevel(definition) >= definition.MaximumLevel ||
                 FindSlot(definition.SlotId) == null)
@@ -109,7 +109,7 @@ namespace FarmVsMonsters.Farm
             foreach (FarmStorageFacilityDefinition definition in facilities)
                 if (definition != null && definition.IsValid &&
                     ProgressSaveService.IsStageUnlocked(definition.RequiredStage) &&
-                    ids.Add(definition.StorageId))
+                    HasUniqueIdentityAndSlot(definition) && ids.Add(definition.StorageId))
                     result.Add(definition);
             return result.ToArray();
         }
@@ -154,6 +154,20 @@ namespace FarmVsMonsters.Farm
                 if (slot != null && string.Equals(slot.SlotId, id, StringComparison.Ordinal))
                     return slot;
             return null;
+        }
+
+        private bool HasUniqueIdentityAndSlot(FarmStorageFacilityDefinition target)
+        {
+            if (facilities == null || target == null) return false;
+            int sameId = 0;
+            int sameSlot = 0;
+            foreach (FarmStorageFacilityDefinition item in facilities)
+            {
+                if (item == null || !item.IsValid) continue;
+                if (string.Equals(item.StorageId, target.StorageId, StringComparison.Ordinal)) sameId++;
+                if (string.Equals(item.SlotId, target.SlotId, StringComparison.Ordinal)) sameSlot++;
+            }
+            return sameId == 1 && sameSlot == 1;
         }
 
         private bool ContainsConfigured(FarmStorageFacilityDefinition target)
