@@ -228,3 +228,15 @@ The grid coordinate helpers and runtime grid-line renderer now use the grid Tran
 - Plant projectile scans compare against the monster's authoritative `EnemyMovement2D.LaneWorldY` when available, rather than relying on a potentially offset child Health transform. Monsters without that movement component fall back to the Health transform Y.
 - The plant's monster-target marker is forced to lane-bound mode at placement, so monsters in other rows do not select that defender as an edible target. Set the plant marker's lane tolerance to a small value suitable for the lane spacing.
 - The current side-view movement model still uses horizontal world-space rows. Keep BattleGrid2D unrotated; translation and scale are supported by its coordinate helpers, but rotated lanes are not.
+
+
+## Plant-specific projectile behavior presets
+Each plant prefab keeps its own `PlantCombatController2D` and its own `Projectile2D` prefab. Do not share one projectile prefab across every plant if their art or attack behavior differs.
+- **Fast thorn / seed shooter:** set Flight Mode to Homing, Impact Mode to Direct, use a small fast sprite, short lifetime, and tune speed/damage per plant.
+- **Fruit or rock lobber:** set Flight Mode to Lobbed, choose an Arc Height that clears the board visually, and set speed/lifetime for the desired travel time. The projectile follows a visible world-up arc and resolves its configured impact at the end of the flight.
+- **Area bomb:** use Lobbed or Homing flight with Impact Mode Splash, assign the Monster layer in Splash Layers, then tune Splash Radius and Max Splash Targets. Splash damage is restricted to colliders with both an EnemyMarker and Health; the tracked primary target is still hit if the layer mask misses it.
+- **Slowing projectile:** configure Slow Multiplier below 1 and Slow Duration above 0 on the plant's combat controller. The effect is applied only when the projectile successfully damages a living monster with EnemyMovement2D.
+- **Energy-producing plant:** add `TimedEnergyGenerator` to the plant prefab, assign the battle's shared `EnergyWallet`, then tune Energy Per Tick, Interval Seconds, and Generate Immediately. This plant produces energy; it does not need to fire a projectile unless its design also has an attack.
+- **Stationary defender:** keep the plant transform fixed in its assigned grid cell. Use the plant's own animation sheet and muzzle transform; for the cactus, place the muzzle at the mouth so thorn sprites originate there.
+
+For a Lobbed projectile, its sprite's local right axis should point toward the projectile nose because `Projectile2D` rotates `transform.right` along its travel direction. The arc is a visual trajectory, not a physics Rigidbody2D ballistic simulation.
