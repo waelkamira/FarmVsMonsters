@@ -136,7 +136,15 @@ namespace FarmVsMonsters.Enemies
                     destinationHealth.ApplyDamage(attackDamage);
 
                 if (animationDriver != null)
-                    animationDriver.PlayAttack();
+                {
+                    if (farmTarget != null &&
+                        (farmTarget.Kind == FarmDefenseTarget2D.TargetKind.Crop ||
+                         farmTarget.Kind == FarmDefenseTarget2D.TargetKind.Plant ||
+                         farmTarget.Kind == FarmDefenseTarget2D.TargetKind.Animal))
+                        animationDriver.PlayEat();
+                    else
+                        animationDriver.PlayAttack();
+                }
 
                 attackTimer = attackInterval;
             }
