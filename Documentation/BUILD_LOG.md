@@ -284,3 +284,10 @@
 - Extended the structural validator to require the Farm Hub player controller and CharacterController.
 - Updated the quick-start documentation with separate Farm Hub and battle controls.
 - The hub now supports basic movement and scene navigation, but its farm systems are not yet connected to visible interactable plots/buildings. Runtime movement and camera feel still require Unity Play Mode verification.
+
+## 2026-11-13 — Farm hub crop gameplay integration
+- The Farm Hub generator now creates nine uniquely identified `FarmCropPlot` components and a shared `FarmResourceWallet`/`FarmCropService` pair.
+- Added generated Wheat crop assets with two 3D growth-stage prefabs, configurable seed cost/harvest yield/growth time/watering bonus, and persistent crop state using the existing UTC-based farm crop service.
+- Added a generated crop-management UI wired to the existing `FarmCropManagementController`: plant Wheat, buy seed packs, view Seeds/Water stock, water individual plots, harvest ready plots, and inspect per-plot growth progress.
+- Expanded Farm Hub structural validation to verify the crop service, shared inventory wallet, Wheat growth prefabs, nine plot references, nine sets of water/harvest/status controls, and unique plot IDs.
+- Limitation: the current farm hub exposes one starter crop (Wheat) and placeholder plot meshes; animal pens, production stations, storage, contracts, and market still need their own scene-level setup and UI integration. Runtime growth/offline save behavior remains untested in Unity.
