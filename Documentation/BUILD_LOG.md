@@ -460,3 +460,9 @@
 - Added direction-based projectile rotation and a selected-object splash-radius gizmo for prefab tuning.
 - Documented per-plant projectile setup and splash layer configuration.
 - Verification: source was committed and read back from GitHub; Unity compiler, collision layers, projectile visuals, and combat balance remain untested.
+
+## 2026-11-13 — Moving character sheet slicing and player interaction safety
+- Added `Editor/MovingCharacterSpriteSheetSlicer.cs`, a dedicated 6×6 atlas slicer for monsters and the caveman with Idle, Walk, Attack, Eat, Hurt, and Death rows. It remains separate from the stationary plant atlas layout.
+- Updated crop and animal interaction controllers to ignore E/F interactions after the caveman's Health reports death.
+- Documented both sheet layouts, import/slicing steps, animation clip assignment, and player interaction requirements.
+- Verification: committed source was read back from GitHub and delimiter balance checked. Unity Editor API compatibility and actual sprite slicing remain untested.
