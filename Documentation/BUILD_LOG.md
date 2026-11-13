@@ -323,3 +323,9 @@
 - Added Documentation/2D_CHARACTER_PREFAB_SETUP.md covering shared sprite setup, monster and plant prefab components, projectile configuration, battle board wiring, and a focused Unity smoke-test sequence.
 - Documented component co-location constraints for CharacterAnimationDriver2D, Health, SpriteAnimation2D and SpriteRenderer to reduce Inspector wiring mistakes.
 - Verification: documentation was committed to main. The smoke-test steps remain pending until the Unity Editor is installed and the project is opened.
+## 2026-11-13 — 2D battle HUD, placement cooldowns, and board visuals
+- Added BattleHudController2D, a dedicated uGUI presenter wired to DesktopBattleInput2D rather than the legacy 3D/older input adapters. It supports energy, protected-farm health, wave/enemy counts, plant selection, retry, and battle result UI.
+- Updated PlantPlacementService2D to enforce each PlantDefinition.PlacementCooldown by stable plant ID and to prune destroyed plant entries before validating a new placement.
+- Added BattleGridVisual2D to draw runtime cell boundaries using 2D-compatible line rendering, with configurable color, width and sorting.
+- Updated the prefab/scene setup guide to include runtime board visuals.
+- Verification: new and updated files were committed to main and are being read back. Unity compile, render pipeline shader availability, UI layout, and Play Mode behavior remain unverified.
