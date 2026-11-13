@@ -196,3 +196,7 @@ After assembling the caveman root, select its prefab or scene root in the Projec
 
 ## 2D follow camera
 Add `CameraFollow2D` to the orthographic gameplay camera and assign the caveman Transform as Target. Keep the camera offset Z negative (normally -10). Enable Clamp To Bounds only after entering the farm's world-space minimum and maximum corners. Bounds describe the farm area, not the player movement rectangle; the script automatically accounts for the orthographic camera's visible half-width and half-height. If the farm is smaller than the camera view, the camera centers on that axis.
+
+
+## Battle wave setup validation
+Before the first Play Mode run, select the GameObject that contains `WaveManager` and run **Tools → Farm Vs Monsters → Validate Selected Battle Wave Manager**. The validator checks that spawn-point references are assigned, warns when the scene does not use the expected five distinct lane heights, verifies the farmhouse fallback Transform/Health pair, and checks every configured enemy prefab for `Health`, `EnemyMovement2D`, `Collider2D`, and `EnemyMarker`. It inspects both the legacy prefab list and grouped wave entries. Fix all reported errors before testing; five-lane warnings may be accepted only when the level intentionally uses a different layout. The validator does not create or reposition scene objects and does not replace checking each monster's Farm Target Layers and each spawn point's world-space Y position.
