@@ -1,4 +1,5 @@
 using FarmVsMonsters.Combat;
+using FarmVsMonsters.Visuals;
 using UnityEngine;
 
 namespace FarmVsMonsters.Enemies
@@ -16,6 +17,7 @@ namespace FarmVsMonsters.Enemies
         [SerializeField] private SpriteRenderer spriteRenderer;
 
         private Health ownHealth;
+        private CharacterAnimationDriver2D animationDriver;
         private float attackTimer;
         private float slowMultiplier = 1f;
         private float slowRemaining;
@@ -23,6 +25,7 @@ namespace FarmVsMonsters.Enemies
         private void Awake()
         {
             ownHealth = GetComponent<Health>();
+            animationDriver = GetComponent<CharacterAnimationDriver2D>();
             if (spriteRenderer == null) spriteRenderer = GetComponentInChildren<SpriteRenderer>();
         }
 
@@ -48,7 +51,11 @@ namespace FarmVsMonsters.Enemies
             }
 
             if (ownHealth == null || ownHealth.IsDead || target == null ||
-                targetHealth == null || targetHealth.IsDead) return;
+                targetHealth == null || targetHealth.IsDead)
+            {
+                if (animationDriver != null) animationDriver.SetMoving(false);
+                return;
+            }
 
             float deltaX = target.position.x - transform.position.x;
             if (spriteRenderer != null && Mathf.Abs(deltaX) > 0.02f)
@@ -56,15 +63,18 @@ namespace FarmVsMonsters.Enemies
 
             if (Mathf.Abs(deltaX) > attackRange)
             {
+                if (animationDriver != null) animationDriver.SetMoving(true);
                 transform.position += Vector3.right *
                     (Mathf.Sign(deltaX) * moveSpeed * slowMultiplier * Time.deltaTime);
                 return;
             }
 
+            if (animationDriver != null) animationDriver.SetMoving(false);
             attackTimer -= Time.deltaTime;
             if (attackTimer <= 0f)
             {
                 targetHealth.ApplyDamage(attackDamage);
+                if (animationDriver != null) animationDriver.PlayAttack();
                 attackTimer = attackInterval;
             }
         }
