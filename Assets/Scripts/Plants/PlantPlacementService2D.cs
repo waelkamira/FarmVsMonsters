@@ -111,8 +111,12 @@ namespace FarmVsMonsters.Plants
 
             placedPlants[cell] = instance;
             PlantCombatController2D plantCombat = instance.GetComponentInChildren<PlantCombatController2D>();
+            float laneWorldY = battleGrid.GetLaneCenterWorld(cell.y).y;
             if (plantCombat != null)
-                plantCombat.AssignLane(cell.y, battleGrid.GetLaneCenterWorld(cell.y).y);
+                plantCombat.AssignLane(cell.y, laneWorldY);
+            FarmDefenseTarget2D farmTarget = instance.GetComponentInChildren<FarmDefenseTarget2D>();
+            if (farmTarget != null && farmTarget.Kind == FarmDefenseTarget2D.TargetKind.Plant)
+                farmTarget.AssignLane(cell.y, laneWorldY);
 
             nextPlacementTimeByPlant[GetPlantId(definition)] =
                 Time.time + definition.PlacementCooldown;
