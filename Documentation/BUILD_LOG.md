@@ -58,3 +58,12 @@
 - Desktop input uses Unity's built-in legacy Input Manager axes; set Active Input Handling to Input Manager or Both. The touch adapter is a basic prototype adapter; mobile UI joystick/buttons still need to be built and wired.
 - Placement raycasts require the board surface to have a collider and its layer to be included in `placementMask`. The selected plant definitions must reference configured plant prefabs.
 - Verification: commits were written to `main`; source files were read back in the repository. No Unity compile, scene test, or device test has been run yet.
+
+## 2026-11-13 — Battle HUD and stage selection
+- Added `UI/BattleHudController.cs`: presents energy, protected-farm health, wave/enemy counts, plant selection buttons, and victory/defeat panel. Includes retry and configurable main-menu scene navigation methods.
+- Added `UI/StageSelectionController.cs`: displays configured stages, checks locally saved unlock progression, disables locked/missing-scene entries, and loads the selected stage scene.
+- Extended `WaveManager` with total-wave and current-wave display metadata for HUD presentation.
+- Fixed HUD button listener lifecycle by retaining and removing the exact UnityAction delegates on disable.
+- UI components use Unity UI (uGUI) Text, Slider, and Button references; Canvas layout, fonts, icons, responsive scaling, and scene button wiring must be created in Unity.
+- Build settings must include every scene referenced by name, or use valid scene paths where supported by the project setup.
+- Verification: code committed to `main` and read back. No Unity compile, UI rendering, scene transition, or runtime test has been performed.
