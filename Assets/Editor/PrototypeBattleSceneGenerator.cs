@@ -153,6 +153,7 @@ namespace FarmVsMonsters.EditorTools
             SetObject(waveManager, "enemyTarget", farmCore.transform);
             SetObject(waveManager, "enemyTargetHealth", farmHealth);
             SetObject(waveManager, "energyWallet", wallet);
+            SetFloat(waveManager, "initialStartDelay", 5f);
             ConfigureWaves(waveManager, enemyPrefab, bossPrefab);
 
             GameObject outcomeObject = new GameObject("BattleOutcomeController");
