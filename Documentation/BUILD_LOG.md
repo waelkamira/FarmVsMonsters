@@ -662,3 +662,11 @@
 - Moved the complete 5 × 8 planting grid down by exactly two row heights: 2 × 46 = 92 px (GRID_TOP 310 → 402).
 - Lane centers now sit at y=425, 471, 517, 563, and 609; player planting hit-testing and plant/monster lane positions follow the same shared coordinate constant.
 - Updated the background integration guide. Runtime visual alignment has not been rechecked in the browser.
+
+
+## 2026-11-14 — Rotate planting grid 30° counter-clockwise
+- Interpreted the request as a 2D in-plane rotation (the screen plane); a pure 3D X-axis rotation is not available in this 2D Phaser scene.
+- Replaced axis-aligned cell rectangles with rotated quadrilateral cells at 30° counter-clockwise around (560, 390).
+- Added forward/inverse coordinate transforms so clicking the rotated cells still selects the correct row and column.
+- Updated planting coordinates, monster spawn/movement along the rotated lanes, plant blocking, and thorn targeting to use lane-local coordinates.
+- Runtime gameplay and visual placement have not yet been verified in the browser.
