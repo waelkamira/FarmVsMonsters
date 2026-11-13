@@ -65,8 +65,8 @@ namespace FarmVsMonsters.Plants
             int blockerCount = Physics2D.OverlapBoxNonAlloc(
                 snappedPosition,
                 new Vector2(battleGrid.CellWidth * 0.72f, battleGrid.CellHeight * 0.72f),
-                blockerResults,
                 0f,
+                blockerResults,
                 blockingLayers);
             for (int i = 0; i < blockerCount; i++)
             {
