@@ -425,22 +425,17 @@ export default class BattleScene extends Scene {
   }
 
   drawRadish(x, y) {
-    // Keep the radish container anchored directly to the approved gold
-    // planting-centroid coordinate. Do not apply an estimated visual offset.
-    const c = this.add.container(x, y);
-    const g = this.add.graphics();
-    g.fillStyle(0x4b8c45, 1); g.fillEllipse(0, -39, 27, 30);
-    g.fillStyle(0x3e783b, 1);
-    g.fillTriangle(-9, -51, -18, -72, -2, -57);
-    g.fillTriangle(0, -52, 10, -74, 13, -51);
-    g.fillStyle(0xc83e45, 1); g.fillTriangle(-24, -34, 24, -34, 0, 24);
-    g.fillStyle(0xf5d8b6, 1); g.fillEllipse(0, -30, 29, 17);
-    g.fillStyle(0x2a3026, 1); g.fillCircle(-8, -31, 3); g.fillCircle(8, -31, 3);
-    g.lineStyle(2, 0x63332f, 1); g.beginPath(); g.arc(0, -24, 7, 0.2, Math.PI - 0.2); g.strokePath();
-    g.fillStyle(0x3f7f3c, 1); g.fillEllipse(-22, -8, 18, 9); g.fillEllipse(22, -8, 18, 9);
-    c.add(g); c.setDepth(10);
-    this.tweens.add({ targets: c, scaleY: 1.035, duration: 1350, ease: "Sine.easeInOut", yoyo: true, repeat: -1 });
-    return c;
+    // Temporary calibration visual: the marker's exact center is positioned
+    // at the same polygon centroid used by the gold debug crosshairs.
+    const marker = this.add.graphics().setPosition(x, y).setDepth(10);
+    marker.lineStyle(2, 0x172b36, 1);
+    marker.strokeCircle(0, 0, 8);
+    marker.fillStyle(0xffd54a, 1);
+    marker.fillCircle(0, 0, 5);
+    marker.lineStyle(2, 0xffd54a, 1);
+    marker.lineBetween(-11, 0, 11, 0);
+    marker.lineBetween(0, -11, 0, 11);
+    return marker;
   }
 
   updatePlants(delta) {
