@@ -11,6 +11,7 @@ namespace FarmVsMonsters.Farm
 
         [SerializeField] private FarmCropDefinition2D crop;
         [SerializeField] private FarmResourceWallet2D wallet;
+        [SerializeField] private FarmEnvironmentCycle2D environmentCycle;
         [SerializeField] private SpriteRenderer cropRenderer;
         [SerializeField] private FarmDefenseTarget2D monsterTarget;
         [SerializeField, Min(0.1f)] private float waterGrowthMultiplier = 2f;
@@ -48,7 +49,8 @@ namespace FarmVsMonsters.Farm
         private void Update()
         {
             if (State != PlotState.Growing) return;
-            growthRemaining -= Time.deltaTime * (watered ? waterGrowthMultiplier : 1f);
+            float environmentMultiplier = environmentCycle != null ? environmentCycle.CropGrowthMultiplier : 1f;
+            growthRemaining -= Time.deltaTime * (watered ? waterGrowthMultiplier : 1f) * environmentMultiplier;
             if (growthRemaining <= 0f)
             {
                 growthRemaining = 0f;
