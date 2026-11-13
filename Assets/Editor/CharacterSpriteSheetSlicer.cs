@@ -20,13 +20,13 @@ namespace FarmVsMonsters.EditorTools
             "Idle", "Attack", "Hurt", "Block", "Death", "Special"
         };
 
-        [MenuItem("Tools/Farm Vs Monsters/Slice Character Sheet (6x6)", true)]
+        [MenuItem("Tools/Farm Vs Monsters/Slice Plant Character Sheet (6x6)", true)]
         private static bool ValidateSliceSelected()
         {
             return Selection.activeObject is Texture2D;
         }
 
-        [MenuItem("Tools/Farm Vs Monsters/Slice Character Sheet (6x6)")]
+        [MenuItem("Tools/Farm Vs Monsters/Slice Plant Character Sheet (6x6)")]
         private static void SliceSelected()
         {
             Texture2D texture = Selection.activeObject as Texture2D;
