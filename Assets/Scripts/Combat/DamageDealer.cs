@@ -12,6 +12,11 @@ namespace FarmVsMonsters.Combat
         public TeamId Team => team;
         public float Damage => damage;
 
+public void SetDamage(float newDamage)
+        {
+            damage = Mathf.Max(0f, newDamage);
+        }
+
         public bool TryDamage(Health target, TeamId targetTeam)
         {
             if (target == null || target.IsDead || damage <= 0f)
