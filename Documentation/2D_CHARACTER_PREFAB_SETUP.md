@@ -121,3 +121,13 @@ For the yellow plant warrior or any stationary plant that attacks nearby monster
 4. Make sure monster colliders are on a layer included in Target Layers and each monster root has both `Health` and `EnemyMarker`.
 5. Keep `CharacterAnimationDriver2D` on the same root as `Health` and `SpriteAnimation2D`; a successful melee hit requests the Attack animation.
 6. The melee controller uses a bounded non-allocating Physics2D overlap query and damages only live objects marked as monsters. It does not instantiate a projectile.
+
+
+## Caveman farmer player prefab
+The caveman is the mobile player-controlled defender; planted units never use movement input.
+1. Create a player root with `Rigidbody2D` (gravity scale 0, freeze rotation), `Health`, `SpriteRenderer`, `SpriteAnimation2D`, `CharacterAnimationDriver2D`, and `CavemanFarmerController2D`.
+2. Set the Rigidbody2D body type to Dynamic and configure collision constraints/layers for the battle arena.
+3. Assign the caveman sprite renderer, club attack origin (a child transform near the club head), monster layer mask, movement bounds, club range, damage, and cooldown.
+4. The prototype reads Horizontal/Vertical axes and Space through the legacy Input Manager. WASD/arrow keys move; Space swings the club.
+5. The caveman animation clip set should include Idle, Walk, Attack (club swing), Hurt, and Death. Do not reuse the plant atlas layout for the caveman.
+6. Monsters must have `EnemyMarker`, `Health`, and colliders on a layer included in Monster Layers. A swing damages the nearest monster in front of the caveman within club range.
