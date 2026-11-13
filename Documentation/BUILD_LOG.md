@@ -360,3 +360,11 @@
 - Standard row mapping: Idle, Walk, Attack, Block, Hurt, then five Death frames plus one Victory frame. This matches the planned first plant-warrior sheet layout.
 - Added the Unity setup instructions for slicing, naming, assigning frames, loop settings, and atlas limitations.
 - Verification: source files were committed and read back from GitHub. Unity Editor API compatibility, sprite slicing output, C# compilation, and Play Mode behavior have not been tested in this environment.
+
+
+## 2026-11-13 — Spear melee combat for defensive plants
+- Added `MeleePlantCombatController2D` for stationary spear-wielding plants such as the first yellow plant warrior.
+- The controller scans a configurable short range using a bounded non-allocating Physics2D query, filters targets by EnemyMarker and Health, applies direct melee damage, and requests the Attack animation.
+- Added permanent damage and attack-speed bonus hooks to match the existing plant combat upgrade pipeline.
+- Documented prefab setup and target-layer requirements.
+- Verification: source was committed and read back through GitHub. Unity compilation, collider/layer behavior, and in-game combat timing remain untested.
