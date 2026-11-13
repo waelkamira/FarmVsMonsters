@@ -92,6 +92,8 @@ namespace FarmVsMonsters.EditorTools
                     "BattleOutcomeController has no EnergyWallet reward reference.", errors);
             }
 
+            ValidateGeneratedPrefabs(errors);
+
             if (hud != null)
             {
                 SerializedObject so = new SerializedObject(hud);
@@ -127,6 +129,70 @@ namespace FarmVsMonsters.EditorTools
                 : "Found " + errors.Count + " issue(s):\n\n- " + string.Join("\n- ", errors);
             Debug.Log("[Farm Vs Monsters] Prototype validation\n" + report);
             EditorUtility.DisplayDialog("Prototype validation", report, "OK");
+        }
+
+        private static void ValidateGeneratedPrefabs(List<string> errors)
+        {
+            GameObject grunt = AssetDatabase.LoadAssetAtPath<GameObject>(
+                "Assets/Prefabs/Generated/Monster_Grunt.prefab");
+            GameObject brute = AssetDatabase.LoadAssetAtPath<GameObject>(
+                "Assets/Prefabs/Generated/Monster_Brute.prefab");
+            GameObject energyPickup = AssetDatabase.LoadAssetAtPath<GameObject>(
+                "Assets/Prefabs/Generated/EnergyPickup.prefab");
+            GameObject projectile = AssetDatabase.LoadAssetAtPath<GameObject>(
+                "Assets/Prefabs/Generated/Projectile_Pea.prefab");
+
+            ValidateMonsterPrefab(grunt, "Monster_Grunt", errors);
+            ValidateMonsterPrefab(brute, "Monster_Brute", errors);
+            Require(energyPickup != null && energyPickup.GetComponent<EnergyPickup>() != null,
+                "EnergyPickup prefab is missing.", errors);
+            if (energyPickup != null)
+            {
+                Collider pickupCollider = energyPickup.GetComponent<Collider>();
+                Require(pickupCollider != null && pickupCollider.isTrigger,
+                    "EnergyPickup prefab needs a trigger collider.", errors);
+                Require(energyPickup.GetComponent<Rigidbody>() != null,
+                    "EnergyPickup prefab needs a Rigidbody for trigger callbacks.", errors);
+            }
+            Require(projectile != null && projectile.GetComponent<Projectile>() != null,
+                "Projectile prefab is missing or has no Projectile component.", errors);
+
+            string[] ids = { "sunflower", "pea_shooter", "ice_bloom", "pumpkin_guard", "fire_pepper" };
+            foreach (string id in ids)
+            {
+                PlantDefinition definition = AssetDatabase.LoadAssetAtPath<PlantDefinition>(
+                    "Assets/ScriptableObjects/Plants/Plant_" + id + ".asset");
+                Require(definition != null && definition.Prefab != null,
+                    "Plant definition/prefab is missing: " + id, errors);
+                if (definition == null || definition.Prefab == null) continue;
+
+                if (id == "sunflower")
+                    Require(definition.Prefab.GetComponent<TimedEnergyGenerator>() != null,
+                        "Sunflower prefab is missing TimedEnergyGenerator.", errors);
+                else
+                {
+                    PlantCombatController combat =
+                        definition.Prefab.GetComponent<PlantCombatController>();
+                    Require(combat != null, "Plant combat component is missing: " + id, errors);
+                    if (combat != null)
+                    {
+                        SerializedObject combatSo = new SerializedObject(combat);
+                        Require(combatSo.FindProperty("projectilePrefab").objectReferenceValue != null,
+                            "Plant projectile reference is missing: " + id, errors);
+                    }
+                }
+            }
+        }
+
+        private static void ValidateMonsterPrefab(GameObject prefab, string label, List<string> errors)
+        {
+            Require(prefab != null, label + " prefab is missing.", errors);
+            if (prefab == null) return;
+            Require(prefab.GetComponent<Health>() != null, label + " has no Health.", errors);
+            Require(prefab.GetComponent<EnemyMovement>() != null, label + " has no EnemyMovement.", errors);
+            Require(prefab.GetComponent<EnemyMarker>() != null, label + " has no EnemyMarker.", errors);
+            Require(prefab.GetComponent<DestroyOnDeath>() != null, label + " has no DestroyOnDeath.", errors);
+            Require(prefab.GetComponent<EnergyDropOnDeath>() != null, label + " has no EnergyDropOnDeath.", errors);
         }
 
         private static T FindComponent<T>(Scene scene) where T : Component
