@@ -1,4 +1,4 @@
-using UnityEngine;
+using FarmVsMonsters.Combat;\nusing UnityEngine;
 
 namespace FarmVsMonsters.Farm
 {
@@ -11,16 +11,16 @@ namespace FarmVsMonsters.Farm
         [SerializeField, Min(1)] private int maxAnimalsPerScan = 12;
         [SerializeField] private LayerMask animalLayers = ~0;
 
-        private Collider2D[] results;
+        private Collider2D[] results;\n        private Health playerHealth;
 
         private void Awake()
         {
-            results = new Collider2D[Mathf.Max(1, maxAnimalsPerScan)];
+            results = new Collider2D[Mathf.Max(1, maxAnimalsPerScan)];\n            playerHealth = GetComponent<Health>();
         }
 
         private void Update()
         {
-            if (!Input.GetKeyDown(KeyCode.F)) return;
+            if ((playerHealth != null && playerHealth.IsDead) || !Input.GetKeyDown(KeyCode.F)) return;
             FarmAnimal2D animal = FindNearestAnimal();
             if (animal == null) return;
             animal.Configure(wallet, selectedAnimal);
