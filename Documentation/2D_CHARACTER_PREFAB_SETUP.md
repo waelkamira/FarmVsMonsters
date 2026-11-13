@@ -125,3 +125,12 @@ The caveman is the mobile player-controlled defender; planted units never use mo
 4. The prototype reads Horizontal/Vertical axes and Space through the legacy Input Manager. WASD/arrow keys move; Space swings the club.
 5. The caveman animation clip set should include Idle, Walk, Attack (club swing), Hurt, and Death. Do not reuse the plant atlas layout for the caveman.
 6. Monsters must have `EnemyMarker`, `Health`, and colliders on a layer included in Monster Layers. A swing damages the nearest monster in front of the caveman within club range.
+
+
+## Monster farm-target setup (crops, plants, animals, farmhouse)
+1. Add `Health`, a Collider2D, and `FarmDefenseTarget2D` to each object monsters may eat or attack.
+2. Set Target Kind to Crop, Plant, Animal, Farmhouse, or Princess.
+3. Set Monster Priority (higher numbers are preferred); use lane-bound for crops/plants and disable lane-bound for shared targets such as a farmhouse.
+4. Put the target collider on a layer included by the monster's Farm Target Layers mask.
+5. Keep the monster's fallback Target and Target Health assigned to the final farm objective through `WaveManager`. Nearby marked targets are attacked first; after they are destroyed, monsters resume advancing toward the fallback target.
+6. Each monster needs `EnemyMarker`, `Health`, `EnemyMovement2D`, and a Collider2D. Set its spawn point to the intended lane.
