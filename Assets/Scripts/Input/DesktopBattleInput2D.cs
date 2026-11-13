@@ -75,29 +75,19 @@ namespace FarmVsMonsters.Input
             }
 
             SpriteRenderer source = SelectedPlant.Prefab.GetComponentInChildren<SpriteRenderer>();
-            if (source == null || source.sprite == null ||
-                !placementService.CanPlace(SelectedPlant, world, out _,
-                    out Vector2 snappedPosition, out _))
+            if (source == null || source.sprite == null)
             {
-                if (source == null || source.sprite == null)
-                {
-                    placementPreview.enabled = false;
-                    return;
-                }
-
-                placementPreview.sprite = source.sprite;
-                placementPreview.transform.position = placementService != null &&
-                    placementService.CanPlace(SelectedPlant, world, out _, out snappedPosition, out _)
-                    ? snappedPosition
-                    : world;
-                placementPreview.color = invalidPreviewColor;
-                placementPreview.enabled = true;
+                placementPreview.enabled = false;
                 return;
             }
 
+            bool canPlace = placementService.CanPlace(SelectedPlant, world,
+                out _, out Vector2 snappedPosition, out _);
             placementPreview.sprite = source.sprite;
-            placementPreview.transform.position = snappedPosition;
-            placementPreview.color = validPreviewColor;
+            placementPreview.transform.position = canPlace || snappedPosition != world
+                ? snappedPosition
+                : world;
+            placementPreview.color = canPlace ? validPreviewColor : invalidPreviewColor;
             placementPreview.enabled = true;
         }
 
