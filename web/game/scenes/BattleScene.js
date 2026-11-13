@@ -2,14 +2,21 @@ import { Scene, Input, Math as PhaserMath } from "phaser";
 
 const LANES = 5;
 const COLUMNS = 8;
-const GRID_LEFT = 260;
-const GRID_TOP = 402;
-const CELL_W = 75;
-const CELL_H = 46;
-const GRID_CENTER_X = GRID_LEFT + (COLUMNS * CELL_W) / 2;
-const GRID_CENTER_Y = GRID_TOP + (LANES * CELL_H) / 2;
-const GRID_X_TILT = Math.PI / 6; // 30 degrees around the horizontal X axis
-const GRID_Y_SCALE = Math.cos(GRID_X_TILT);
+// The generated background already contains a perspective 8 × 5 planting board.
+ // These four corners follow the visible outer seams in the uploaded 1080 × 576 art,
+ // mapped to the aspect-preserving 1120 × 597.33 background inside the 1120 × 680 view.
+const GRID_CORNERS = {
+  tl: { x: 388, y: 360 },
+  tr: { x: 824, y: 362 },
+  br: { x: 887, y: 578 },
+  bl: { x: 259, y: 579 },
+};
+const GRID_WIDTH = 600;
+const GRID_HEIGHT = 230;
+const GRID_CENTER_X = 560;
+const GRID_CENTER_Y = 469.5;
+const CELL_W = GRID_WIDTH / COLUMNS;
+const CELL_H = GRID_HEIGHT / LANES;
 const HOME_LOCAL_X = -300;
 const SPAWN_LOCAL_X = 330;
 const RADISH = { label: "Radish", cost: 35, hp: 110, cooldown: 1450, range: 360 };
@@ -88,7 +95,7 @@ export default class BattleScene extends Scene {
     // Keep environment artwork separate from interactive gameplay objects.
     // Fit the 16:9 image inside the current viewport without stretching it.
     this.farmBackground = this.add.image(560, 340, "farm-battlefield")
-      .setDisplaySize(1120, 630)
+      .setDisplaySize(1120, 597.33).setPosition(560, 340)
       .setDepth(-5);
 
     // The uploaded artwork already contains the farmhouse and garden props.
@@ -98,40 +105,66 @@ export default class BattleScene extends Scene {
       .forEach((child) => child.destroy());
   }
 
-  // Orthographic projection of a flat board tilted 30° around its X axis.
-  // X stays horizontal; the vertical (Y) dimension is foreshortened by cos(30°).
-  gridToWorld(col, row, offsetX = 0, offsetY = 0) {
-    const localX = -COLUMNS * CELL_W / 2 + col * CELL_W + offsetX;
-    const localY = -LANES * CELL_H / 2 + row * CELL_H + offsetY;
+  // Bilinear mapping onto the actual perspective board painted into the background.
+  // u and v are normalized board coordinates: 0..1 across columns and lanes.
+  boardPoint(u, v) {
+    const { tl, tr, br, bl } = GRID_CORNERS;
     return {
-      x: GRID_CENTER_X + localX,
-      y: GRID_CENTER_Y + localY * GRID_Y_SCALE,
+      x: (1-u)*(1-v)*tl.x + u*(1-v)*tr.x + u*v*br.x + (1-u)*v*bl.x,
+      y: (1-u)*(1-v)*tl.y + u*(1-v)*tr.y + u*v*br.y + (1-u)*v*bl.y,
     };
+  }
+
+  boardCoordinates(x, y) {
+    // Newton iteration inverts the bilinear mapping, including its perspective skew.
+    let u = PhaserMath.Clamp((x - GRID_CORNERS.bl.x) / GRID_WIDTH, 0, 1);
+    let v = PhaserMath.Clamp((y - GRID_CORNERS.tl.y) / GRID_HEIGHT, 0, 1);
+    for (let i = 0; i < 8; i += 1) {
+      const p = this.boardPoint(u, v);
+      const du = this.boardPoint(u + 0.001, v);
+      const dv = this.boardPoint(u, v + 0.001);
+      const ax = (du.x - p.x) / 0.001;
+      const ay = (du.y - p.y) / 0.001;
+      const bx = (dv.x - p.x) / 0.001;
+      const by = (dv.y - p.y) / 0.001;
+      const ex = x - p.x;
+      const ey = y - p.y;
+      const det = ax * by - bx * ay;
+      if (Math.abs(det) < 0.0001) break;
+      u = PhaserMath.Clamp(u + (ex * by - ey * bx) / det, -0.2, 1.2);
+      v = PhaserMath.Clamp(v + (ey * ax - ex * ay) / det, -0.2, 1.2);
+    }
+    return { u, v };
+  }
+
+  gridToWorld(col, row, offsetX = 0, offsetY = 0) {
+    return this.boardPoint(
+      (col + offsetX / CELL_W) / COLUMNS,
+      (row + offsetY / CELL_H) / LANES,
+    );
   }
 
   worldToGrid(x, y) {
-    const localX = x - GRID_CENTER_X + COLUMNS * CELL_W / 2;
-    const localY = (y - GRID_CENTER_Y) / GRID_Y_SCALE + LANES * CELL_H / 2;
-    return { col: Math.floor(localX / CELL_W), row: Math.floor(localY / CELL_H) };
+    const { u, v } = this.boardCoordinates(x, y);
+    return { col: Math.floor(u * COLUMNS), row: Math.floor(v * LANES) };
   }
 
   lanePoint(localX, row) {
-    const localY = -LANES * CELL_H / 2 + row * CELL_H + CELL_H / 2;
-    return {
-      x: GRID_CENTER_X + localX,
-      y: GRID_CENTER_Y + localY * GRID_Y_SCALE,
-    };
+    const u = (localX + GRID_WIDTH / 2) / GRID_WIDTH;
+    const v = (row + 0.5) / LANES;
+    return this.boardPoint(u, v);
   }
 
   worldToLane(point) {
+    const { u, v } = this.boardCoordinates(point.x, point.y);
     return {
-      localX: point.x - GRID_CENTER_X,
-      localY: (point.y - GRID_CENTER_Y) / GRID_Y_SCALE,
+      localX: u * GRID_WIDTH - GRID_WIDTH / 2,
+      localY: v * GRID_HEIGHT - GRID_HEIGHT / 2,
     };
   }
 
   drawPlantingGrid() {
-    // Each cell is drawn as a rotated quadrilateral; hit-testing uses the inverse transform.
+    // Draw subtle hit regions exactly over the painted cells; no second rectangular grid.
     const grid = this.add.graphics().setDepth(2);
     for (let row = 0; row < LANES; row += 1) {
       for (let col = 0; col < COLUMNS; col += 1) {
