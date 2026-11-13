@@ -111,3 +111,13 @@ The project includes an Editor utility at `Assets/Editor/CharacterSpriteSheetSli
 6. Drag the resulting Sprite sub-assets into the matching `SpriteAnimation2D.AnimationClip.frames` arrays in playback order. Configure Idle/Walk as looping; Attack/Block/Hurt/Death/Victory as non-looping unless a design specifically requires otherwise.
 
 **Important:** the slicer expects a tightly packed, exact 6x6 atlas with equal-sized cells and no gutters. If the image generator adds borders, uneven cell spacing, or decorative margins, crop/normalize the atlas first rather than accepting misaligned slices. A visually transparent checkerboard is not real alpha transparency.
+
+
+## Spear/melee plant prefab
+For the yellow plant warrior or any stationary plant that attacks nearby monsters with a physical weapon:
+1. Add `MeleePlantCombatController2D` instead of `PlantCombatController2D`.
+2. Optionally create a child Transform named `AttackOrigin` at the spear tip and assign it to Attack Origin.
+3. Set Attack Range to cover the adjacent lane area the spear can reach, then tune Attack Interval and Damage.
+4. Make sure monster colliders are on a layer included in Target Layers and each monster root has both `Health` and `EnemyMarker`.
+5. Keep `CharacterAnimationDriver2D` on the same root as `Health` and `SpriteAnimation2D`; a successful melee hit requests the Attack animation.
+6. The melee controller uses a bounded non-allocating Physics2D overlap query and damages only live objects marked as monsters. It does not instantiate a projectile.
