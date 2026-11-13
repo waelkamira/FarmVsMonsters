@@ -162,9 +162,16 @@ namespace FarmVsMonsters.Farm
             if (definition == null || resourceWallet == null)
                 return false;
 
-            int accepted = resourceWallet.Add(definition.HarvestResource, definition.HarvestAmount);
-            if (accepted <= 0)
+            if (!resourceWallet.CanAdd(definition.HarvestResource, definition.HarvestAmount))
                 return false;
+
+            int accepted = resourceWallet.Add(definition.HarvestResource, definition.HarvestAmount);
+            if (accepted != definition.HarvestAmount)
+            {
+                if (accepted > 0)
+                    resourceWallet.TrySpend(definition.HarvestResource, accepted);
+                return false;
+            }
 
             planted.Remove(plot.PlotId);
             Save();
