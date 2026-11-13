@@ -633,3 +633,11 @@
 - Kept the current game logic coordinates unchanged until the actual generated artwork can be inspected; no guessed background alignment has been committed.
 - Corrected fallback messaging so it is only shown after the HUD message object has been initialized.
 - Verification: source was updated on `main` and read back from GitHub. No npm install, Next.js build, or browser runtime test was run.
+
+
+## 2026-11-14 — Phaser ESM import compatibility with Next.js 16
+- Fixed the build blocker caused by importing a nonexistent default export from Phaser 3.90's ESM bundle.
+- Updated the battle scene to use Phaser's documented named exports: `Scene`, `Input`, and `Math` (aliased as `PhaserMath`).
+- Updated the client-side Phaser bootstrap to read `Game`, `AUTO`, and `Scale` from the dynamic module namespace instead of `phaserModule.default`.
+- Re-fetched both source files from GitHub and confirmed that neither retains a default Phaser import.
+- Not yet verified: a local Next.js production build or browser runtime. Run `cd web && npm run build` to confirm the original error is resolved and reveal any subsequent build issues.
