@@ -291,3 +291,17 @@
 - Added a generated crop-management UI wired to the existing `FarmCropManagementController`: plant Wheat, buy seed packs, view Seeds/Water stock, water individual plots, harvest ready plots, and inspect per-plot growth progress.
 - Expanded Farm Hub structural validation to verify the crop service, shared inventory wallet, Wheat growth prefabs, nine plot references, nine sets of water/harvest/status controls, and unique plot IDs.
 - Limitation: the current farm hub exposes one starter crop (Wheat) and placeholder plot meshes; animal pens, production stations, storage, contracts, and market still need their own scene-level setup and UI integration. Runtime growth/offline save behavior remains untested in Unity.
+
+
+## 2026-11-13 — اعتماد الاتجاه الفني 2D وبداية تحويل القتال
+- اعتمد المشروع أسلوب **2D Hand-Drawn Cartoon** مستوحى من اللغة البصرية العامة لألعاب الدفاع الكرتونية الكلاسيكية، مع تصميم نباتات ووحوش أصلية وعدم نسخ أصول محمية.
+- أضيف `Documentation/ART_DIRECTION_2D.md` لتثبيت معايير تصميم الشخصيات والألوان والتحريك والكاميرا.
+- أضيف `Farm/BattleGrid2D.cs` لتحويل إحداثيات العالم إلى خلايا ثنائية الأبعاد.
+- أضيف `Plants/PlantPlacementService2D.cs` للتحقق من حدود اللوحة والخلايا المشغولة والطاقة قبل وضع النبات.
+- أضيف `Input/DesktopBattleInput2D.cs` لاختيار النباتات بمفاتيح الأرقام ووضعها بالنقر.
+- أضيف `Enemies/EnemyMovement2D.cs` لحركة الوحوش أفقياً وهجومها على هدف المزرعة.
+- أضيف `Plants/PlantCombatController2D.cs` و`Combat/Projectile2D.cs` لاستهداف الوحوش وإطلاق المقذوفات مع دعم الإبطاء.
+- أضيف `Visuals/SpriteAnimation2D.cs` لتشغيل إطارات Idle/Walk/Attack/Hurt/Death من مجموعات Sprite قابلة للضبط.
+- تم تحديث `WaveManager` لتعيين هدف الوحوش التي تستخدم حركة 2D، مع الحفاظ على مسار الحركة القديم مؤقتاً.
+- هذه نواة تحويل برمجية وليست مشهداً مكتملاً: لم تُنشأ بعد Sprite sheets أو شخصيات فنية نهائية، ولم يُنشأ مولّد مشهد 2D يربط المكونات.
+- التحقق الحالي قراءة ملفات المصدر من GitHub ومراجعة بنيوية أولية فقط؛ لم يتم تشغيل Unity أو C# compiler أو Play Mode.
