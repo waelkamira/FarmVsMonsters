@@ -116,8 +116,7 @@ namespace FarmVsMonsters.Enemies
             if (spriteRenderer != null && Mathf.Abs(deltaX) > 0.02f)
                 spriteRenderer.flipX = deltaX < 0f;
 
-            bool targetBlocks = farmTarget == null || farmTarget.BlocksMonsterMovement;
-            if (!targetBlocks || Mathf.Abs(deltaX) > attackRange)
+            if (Mathf.Abs(deltaX) > attackRange)
             {
                 if (animationDriver != null)
                     animationDriver.SetMoving(true);
@@ -167,7 +166,7 @@ namespace FarmVsMonsters.Enemies
                     candidate.GetComponentInParent<FarmDefenseTarget2D>();
 
                 if (farmTarget == null || farmTarget.Health == null ||
-                    farmTarget.Health.IsDead ||
+                    farmTarget.Health.IsDead || !farmTarget.BlocksMonsterMovement ||
                     !farmTarget.CanBeTargetedFromLane(laneY))
                     continue;
 
