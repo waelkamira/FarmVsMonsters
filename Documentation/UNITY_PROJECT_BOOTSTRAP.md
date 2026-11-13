@@ -27,7 +27,7 @@ iOS player builds require a macOS/Xcode build environment; keep iOS as a later p
 4. Allow Package Manager to resolve `Packages/manifest.json`.
 5. Open the project and wait for the first script compilation/import to finish.
 6. In **Edit > Project Settings > Player > Other Settings**, set **Active Input Handling** to **Both**. The current desktop adapter uses Unity's classic Input Manager, while the Input System package is installed for the upcoming unified desktop/mobile input implementation.
-7. Confirm the project uses the Universal Render Pipeline. If the Graphics/Quality pipeline fields are empty on first open, create a URP Pipeline Asset via **Assets > Create > Rendering > URP Pipeline Asset** and assign it in **Project Settings > Graphics** and **Quality**.
+7. Confirm the project uses the Universal Render Pipeline. If the Graphics/Quality pipeline fields are empty on first open, create a URP Pipeline Asset via **Assets > Create > Rendering > URP Asset (with Universal Renderer)** and assign it in **Project Settings > Graphics** and **Quality**.
 
 ## Generate the first battle scene
 
