@@ -62,6 +62,16 @@ Inspector setup:
 - Place the protected target at the monster approach end and configure the wave manager's target reference.
 - Ensure plant placement, monster movement, projectile layers and Physics2D collision settings agree.
 
+
+## Grid-snapped plant placement and cursor preview
+1. Add `PlantPlacementService2D` to the battle scene and assign the scene's `BattleGrid2D`, `EnergyWallet`, and optional plant root.
+2. Configure Blocking Layers to include planted defenders and farm objects that must reserve a cell. Their colliders should have `PlantCombatController2D` or `FarmDefenseTarget2D` on the same object or a parent.
+3. Add a separate preview GameObject with a `SpriteRenderer` only (no collider, Health, or combat scripts). Place it on a sorting layer/order above the board and assign it to `DesktopBattleInput2D.placementPreview`.
+4. Assign the same placement service and gameplay camera to DesktopBattleInput2D. Fill the quick-select PlantDefinition slots; number keys select them.
+5. The preview copies the selected plant's first child SpriteRenderer sprite. Green means the cell passes bounds, occupancy, cooldown and energy checks; red means placement is currently invalid. Clicking still revalidates before spending energy.
+6. Plant positions snap to BattleGrid2D cell centers. The service uses a bounded non-allocating overlap query during preview checks; ensure the Blocking Layers mask excludes the board floor collider and other non-blocking scenery.
+7. Each placed plant remains stationary in its cell. Its own PlantCombatController2D and unique projectile prefab determine its attack; the placement preview is only a visual guide.
+
 ## Required smoke test in Unity
 1. Open the project with the pinned Unity 6.3 LTS editor version.
 2. Wait for import, then resolve all Console compile errors before testing.
