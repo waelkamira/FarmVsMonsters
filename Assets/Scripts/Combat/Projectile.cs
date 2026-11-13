@@ -11,18 +11,23 @@ namespace FarmVsMonsters.Combat
         [SerializeField, Min(0f)] private float damage = 10f;
         [SerializeField] private TeamId team = TeamId.Player;
         [SerializeField] private bool destroyOnInvalidTarget = true;
+        [SerializeField, Range(0.1f, 1f)] private float slowMultiplier = 1f;
+        [SerializeField, Min(0f)] private float slowDuration = 0f;
 
         private Health target;
         private TeamId targetTeam;
         private float age;
         private bool initialized;
 
-        public void Initialize(Health newTarget, TeamId newTargetTeam, TeamId ownerTeam, float hitDamage)
+        public void Initialize(Health newTarget, TeamId newTargetTeam, TeamId ownerTeam,
+            float hitDamage, float hitSlowMultiplier = 1f, float hitSlowDuration = 0f)
         {
             target = newTarget;
             targetTeam = newTargetTeam;
             team = ownerTeam;
             damage = Mathf.Max(0f, hitDamage);
+            slowMultiplier = Mathf.Clamp(hitSlowMultiplier, 0.1f, 1f);
+            slowDuration = Mathf.Max(0f, hitSlowDuration);
             initialized = true;
         }
 
@@ -49,7 +54,15 @@ namespace FarmVsMonsters.Combat
             if (offset.sqrMagnitude <= step * step || offset.sqrMagnitude <= 0.01f)
             {
                 if (team != TeamId.Neutral && team != targetTeam)
-                    target.ApplyDamage(damage);
+                {
+                    bool applied = target.ApplyDamage(damage);
+                    if (applied && !target.IsDead && slowDuration > 0f && slowMultiplier < 1f)
+                    {
+                        Enemies.EnemyMovement movement = target.GetComponent<Enemies.EnemyMovement>();
+                        if (movement != null)
+                            movement.ApplySlow(slowMultiplier, slowDuration);
+                    }
+                }
                 Destroy(gameObject);
                 return;
             }
