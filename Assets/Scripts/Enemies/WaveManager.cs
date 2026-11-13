@@ -53,6 +53,7 @@ namespace FarmVsMonsters.Enemies
         private int previousRandomSpawnPoint = -1;
         private bool startRequested;
         private float startDelayRemaining;
+        private float interWaveDelayRemaining;
 
         public int CurrentWave { get; private set; }
         public int TotalWaves => waves != null ? waves.Length : 0;
@@ -60,6 +61,7 @@ namespace FarmVsMonsters.Enemies
         public int LivingEnemyCount => livingEnemies.Count;
         public bool IsRunning { get; private set; }
         public float StartDelayRemaining => startDelayRemaining;
+        public float InterWaveDelayRemaining => interWaveDelayRemaining;
 
         public event Action<int> WaveStarted;
         public event Action<int> WaveCleared;
@@ -121,6 +123,12 @@ namespace FarmVsMonsters.Enemies
                         GameObject instance = Instantiate(prefab, spawn.position, spawn.rotation);
 
                         Health health = instance.GetComponent<Health>();
+                        if (health == null)
+                        {
+                            Debug.LogError("Spawned enemy prefab is missing the required Health component: " + prefab.name, prefab);
+                            Destroy(instance);
+                            continue;
+                        }
                         if (health != null && wave != null)
                             health.ApplyMaxHealthMultiplier(wave.enemyHealthMultiplier);
 
@@ -167,12 +175,20 @@ namespace FarmVsMonsters.Enemies
 
                 WaveCleared?.Invoke(CurrentWave);
                 if (wave != null && wave.interWaveDelay > 0f && waveIndex < waves.Length - 1)
-                    yield return new WaitForSeconds(wave.interWaveDelay);
+                {
+                    interWaveDelayRemaining = wave.interWaveDelay;
+                    while (interWaveDelayRemaining > 0f)
+                    {
+                        interWaveDelayRemaining = Mathf.Max(0f, interWaveDelayRemaining - Time.deltaTime);
+                        yield return null;
+                    }
+                }
             }
 
             IsRunning = false;
             startRequested = false;
             startDelayRemaining = 0f;
+            interWaveDelayRemaining = 0f;
             routine = null;
             AllWavesCleared?.Invoke();
         }
@@ -271,6 +287,7 @@ namespace FarmVsMonsters.Enemies
             IsRunning = false;
             startRequested = false;
             startDelayRemaining = 0f;
+            interWaveDelayRemaining = 0f;
             foreach (KeyValuePair<Health, Action> pair in deathHandlers)
                 if (pair.Key != null) pair.Key.Died -= pair.Value;
             deathHandlers.Clear();
