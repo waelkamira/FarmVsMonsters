@@ -582,3 +582,16 @@
 - Added optional night/weather SpriteRenderer overlays for visual tinting without introducing a hard dependency on a specific render pipeline package.
 - Documented scene setup, overlay sorting, gameplay multipliers, and event hooks.
 - Verification: all changed and created files were read back from GitHub. Source-level insertion checks passed; Unity compilation, inspector wiring, rendering, and Play Mode tests remain pending.
+
+
+## 2026-11-13 — Definitive gameplay rules and Next.js/Phaser rebuild started
+- Confirmed the project is permanently 2D; no 3D or low-poly direction remains.
+- Recorded definitive plant rules: rooted in place, subtle breathing, plant-specific mouth/hand/projectile attacks, no locomotion.
+- Recorded definitive monster rules: slow, heavy zombie-like walk in opening waves; speed scales gradually later.
+- Recorded definitive caveman rules: plants and farm interactions are his primary role; club damage is disabled while any living defensive plant remains; the final plant's death enables emergency club combat; planting a new defender disables it again.
+- Added a new Next.js + React + JavaScript + Phaser 3 web implementation under `web/`, leaving the Unity source intact as legacy reference.
+- Added a first playable-systems scene with a five-lane field, three plant archetypes (cactus projectile, stationary punch plant, energy sunflower), slow advancing monsters, plant damage, farmhouse health, waves, caveman movement, and emergency-only club combat.
+- The scene currently uses temporary vector shapes, not final character art. Original sprites and animation sheets remain to be integrated.
+- Added `Documentation/NEW_GAMEPLAY_RULES_2D.md` as the authoritative gameplay contract.
+- Verification performed: fetched the newly committed files back from GitHub and confirmed their content and blob SHAs.
+- Not yet verified: `npm install`, Next.js build, browser runtime, responsive touch controls, and full art integration. No claim of a tested or release-ready build is made.
