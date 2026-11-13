@@ -313,7 +313,22 @@ export default class BattleScene extends Scene {
           backgroundColor: "#172b36", padding: { x: 2, y: 1 }
         }).setDepth(50);
       }));
-      this.add.text(560, 105, "GRID CALIBRATION VIEW · 8 × 5 CELLS · 9 × 6 NODES", {
+
+      // Gold markers show the exact polygon-area centroid used for planting.
+      // They are debug-only and never appear during normal gameplay.
+      for (let row = 0; row < LANES; row += 1) {
+        for (let col = 0; col < COLUMNS; col += 1) {
+          const center = this.gridCellCenter(col, row);
+          grid.lineStyle(2, 0x172b36, 0.95);
+          grid.strokeCircle(center.x, center.y, 7);
+          grid.lineStyle(2, 0xffd54a, 1);
+          grid.strokeCircle(center.x, center.y, 5);
+          grid.lineBetween(center.x - 3, center.y, center.x + 3, center.y);
+          grid.lineBetween(center.x, center.y - 3, center.x, center.y + 3);
+        }
+      }
+
+      this.add.text(560, 105, "GRID CALIBRATION VIEW · 8 × 5 CELLS · 9 × 6 NODES · GOLD = PLANT CENTERS", {
         fontFamily: "Arial", fontSize: "15px", color: "#ffffff",
         backgroundColor: "#172b36", padding: { x: 8, y: 5 }
       }).setOrigin(0.5).setDepth(50);
