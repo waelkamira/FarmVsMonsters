@@ -46,7 +46,9 @@ export default class BattleScene extends Phaser.Scene {
     this.createCaveman();
     this.bindInput();
     this.refreshHud();
-    this.setMessage("Choose the radish icon, then click an empty soil cell.");
+    this.setMessage(this.textures.exists("farm-battlefield")
+      ? "Choose the radish icon, then click an empty soil cell."
+      : "Temporary farm art active. Add farm-battlefield.png when your background is ready.");
   }
 
   drawField() {
@@ -77,10 +79,7 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   createFarmBackground() {
-    if (!this.textures.exists("farm-battlefield")) {
-      this.setMessage("Using the temporary farm scene. Add farm-battlefield.png to public/assets/backgrounds when ready.");
-      return;
-    }
+    if (!this.textures.exists("farm-battlefield")) return;
 
     // Keep environment artwork separate from interactive gameplay objects.
     // Fit the 16:9 image inside the current viewport without stretching it.
