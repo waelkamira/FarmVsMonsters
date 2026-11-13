@@ -180,12 +180,16 @@ namespace FarmVsMonsters.EditorTools
                     "FarmHub Wheat crop asset must have two growth-stage prefabs.", errors);
 
                 var plotIds = new HashSet<string>();
-                foreach (FarmCropPlot plot in farmScene.GetRootGameObjects()[0]
-                    .GetComponentsInChildren<FarmCropPlot>(true))
+                foreach (GameObject root in farmScene.GetRootGameObjects())
                 {
-                    if (plot != null && !plotIds.Add(plot.PlotId))
-                        errors.Add("FarmHub has duplicate crop plot ID: " + plot.PlotId);
+                    foreach (FarmCropPlot plot in root.GetComponentsInChildren<FarmCropPlot>(true))
+                    {
+                        if (plot != null && !plotIds.Add(plot.PlotId))
+                            errors.Add("FarmHub has duplicate crop plot ID: " + plot.PlotId);
+                    }
                 }
+                Require(plotIds.Count == 9,
+                    "FarmHub must contain nine uniquely identified crop plot components.", errors);
                 SceneNavigationButton enterBattle = FindComponent<SceneNavigationButton>(farmScene);
                 FarmHubPlayerController farmPlayer = FindComponent<FarmHubPlayerController>(farmScene);
                 Require(farmCamera != null, "FarmHub has no camera.", errors);
