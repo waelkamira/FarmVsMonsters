@@ -496,3 +496,12 @@
 - Added `Editor/BattleLaneSpawnPointGenerator.cs` with left-edge and right-edge menu actions. It creates one spawn point per row, places each at the lane center just outside the grid, replaces only its own previously generated points, and assigns them automatically when exactly one active-scene WaveManager exists.
 - Documented the generation workflow and the current limitation: monster lane locking remains world-horizontal and therefore the battle grid should not be rotated.
 - Verification: all changed files were read back from GitHub; source delimiter checks remain a static check only. Unity compilation, Undo behavior, scene serialization, and Play Mode are not yet tested.
+
+
+## 2026-11-13 — Grid-snapped plant placement and live preview
+- Refactored `PlantPlacementService2D` to expose `CanPlace`, a non-consuming validation path that checks the selected definition/prefab, grid bounds, occupied-cell registry, configured farm/plant blockers, per-plant cooldown, and available energy.
+- `TryPlace` now reuses that validation and instantiates at the exact `BattleGrid2D.CellToWorld` cell center, spending energy only after validation succeeds.
+- Added a bounded `OverlapBoxNonAlloc` buffer so the per-frame preview check does not allocate a new collider array.
+- Updated `DesktopBattleInput2D` with an optional sprite preview: green for a currently valid cell and red for an invalid location. Keyboard selection and mouse placement remain compatible with the existing PlantDefinition quick-select array.
+- Added Inspector wiring instructions, including the requirement that the preview object has a SpriteRenderer only and that Blocking Layers exclude the board floor.
+- Verification: all changed source/documentation files were committed to `main` and read back from GitHub. No Unity compilation, Inspector setup, Play Mode, or physics-layer test has been run. Confirm the project's Unity version supports the used Physics2D NonAlloc overload before treating this as runtime-verified.
