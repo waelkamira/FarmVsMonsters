@@ -72,8 +72,25 @@ namespace FarmVsMonsters.Farm
                 return false;
 
             for (int i = 0; i < recipe.InputResources.Length; i++)
-                if (resourceWallet.GetAmount(recipe.InputResources[i]) < recipe.InputAmounts[i])
+            {
+                FarmResourceType resource = recipe.InputResources[i];
+                bool alreadyChecked = false;
+                for (int previous = 0; previous < i; previous++)
+                    if (recipe.InputResources[previous] == resource)
+                    {
+                        alreadyChecked = true;
+                        break;
+                    }
+                if (alreadyChecked) continue;
+
+                long required = 0;
+                for (int j = i; j < recipe.InputResources.Length; j++)
+                    if (recipe.InputResources[j] == resource)
+                        required += recipe.InputAmounts[j];
+
+                if (required > int.MaxValue || resourceWallet.GetAmount(resource) < required)
                     return false;
+            }
 
             return true;
         }
@@ -86,11 +103,27 @@ namespace FarmVsMonsters.Farm
                 return false;
             }
 
-            // All inputs are checked before spending; execution is single-threaded on Unity's main thread.
+            // Aggregate repeated resource entries so a recipe cannot partially consume duplicate inputs.
             for (int i = 0; i < recipe.InputResources.Length; i++)
             {
-                if (!resourceWallet.TrySpend(recipe.InputResources[i], recipe.InputAmounts[i]))
+                FarmResourceType resource = recipe.InputResources[i];
+                bool alreadySpent = false;
+                for (int previous = 0; previous < i; previous++)
+                    if (recipe.InputResources[previous] == resource)
+                    {
+                        alreadySpent = true;
+                        break;
+                    }
+                if (alreadySpent) continue;
+
+                int total = 0;
+                for (int j = i; j < recipe.InputResources.Length; j++)
+                    if (recipe.InputResources[j] == resource)
+                        total = checked(total + recipe.InputAmounts[j]);
+
+                if (!resourceWallet.TrySpend(resource, total))
                 {
+                    Debug.LogError("Production input validation changed before consumption; no job was started.");
                     JobRejected?.Invoke(station, recipe);
                     return false;
                 }
