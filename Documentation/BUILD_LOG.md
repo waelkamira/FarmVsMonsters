@@ -522,3 +522,11 @@
 - The arc uses a deterministic timed path rather than Rigidbody2D physics; speed determines the flight duration and Arc Height controls the visible lift.
 - Expanded prefab documentation with practical presets for fast thorns, lobbed fruit/rocks, area bombs, slowing shots, and energy-producing plants using the existing `TimedEnergyGenerator`.
 - Verification: source and documentation were committed to `main` and read back from GitHub. Static delimiter checks only; Unity compilation, sprite orientation, scene layer configuration, and runtime trajectory/impact behavior remain untested.
+
+
+## 2026-11-13 — Plant burst attacks and signature specials
+- Extended `PlantCombatController2D` with configurable multi-shot bursts, a separate interval between shots, and the normal attack recovery interval after the volley completes.
+- Added an optional special projectile prefab with its own cooldown and damage multiplier. The special shot uses its own Projectile2D prefab configuration, so plants can have unique flight and impact behavior.
+- Burst sequences re-acquire a valid monster on the plant's assigned lane before each follow-up shot and cancel safely when no valid target remains.
+- Updated the prefab guide with cactus volley, steady seed shooter, lobber, bomb special, and rapid-fire plant tuning examples.
+- Verification: changed C# and documentation files were committed to `main` and read back. Static brace/parenthesis checks only; Unity compilation, animation timing, prefab Inspector setup, and in-game damage balance remain untested.
