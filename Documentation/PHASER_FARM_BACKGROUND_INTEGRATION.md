@@ -41,12 +41,10 @@ The uploaded JPEG was fetched from the repository and visually inspected. It is 
 
 The image is 16:9 and is displayed at 1120 × 630 inside the 1120 × 680 Phaser viewport, centered vertically (25 px top/bottom offset). The interactive planting grid has been moved off the old oversized placeholder coordinates and onto the open lawn:
 
-- Grid origin: x=260, y=402 (moved down by two cell heights)
-- Cell size: 75 × 46
-- Columns: 8 (right edge x=860)
-- Lanes: 5 (bottom edge y=632)
-- Lane centers: y=425, 471, 517, 563, 609
-- Protected farmhouse threshold: x=238
-- Monster spawn: x=1045
+- Grid footprint before rotation: 600 × 230 px (8 columns × 5 lanes).
+- Rotation: 30° counter-clockwise in the 2D screen plane, around center (560, 390).
+- Cells are rendered as rotated quadrilaterals; pointer input is converted through the inverse rotation before selecting a cell.
+- Monster movement, planting positions, and lane collision/targeting use the same rotated coordinate system.
+- Monsters enter from the rotated right edge; the protected-house threshold is the rotated left edge.
 
 These are an initial visual alignment based on the uploaded artwork, not pixel-perfect perspective calibration. The artwork's lawn has perspective and painted paving seams, while the game uses straight horizontal lanes; validate placement in the running browser and adjust the cell bounds if needed.
