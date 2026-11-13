@@ -50,3 +50,11 @@
 - Connected `BattleOutcomeController` to record every terminal battle result and unlock the configured next stage on victory.
 - Save data is local prototype storage only; it is not encrypted, backed up, or synchronized between devices.
 - Verification: source files were committed to `main`. Unity compilation and save/load runtime tests remain pending.
+
+## 2026-11-13 — Desktop/mobile input and wave resilience
+- Added `Input/DesktopBattleInput.cs`: WASD/arrow movement, number-key plant selection (1–5), and mouse-click plant placement by camera raycast.
+- Added `Input/TouchBattleInput.cs`: tap-to-place adapter and a public movement-input method for a future on-screen joystick.
+- Updated `Enemies/WaveManager.cs` to discard destroyed/missing enemy references while waiting for a wave to clear, avoiding a permanent wait if an enemy is removed without raising its death event.
+- Desktop input uses Unity's built-in legacy Input Manager axes; set Active Input Handling to Input Manager or Both. The touch adapter is a basic prototype adapter; mobile UI joystick/buttons still need to be built and wired.
+- Placement raycasts require the board surface to have a collider and its layer to be included in `placementMask`. The selected plant definitions must reference configured plant prefabs.
+- Verification: commits were written to `main`; source files were read back in the repository. No Unity compile, scene test, or device test has been run yet.
