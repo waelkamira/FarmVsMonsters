@@ -72,8 +72,18 @@ export default class BattleScene extends Phaser.Scene {
     g.fillTriangle(18, 390, 94, 320, 170, 390);
     g.fillStyle(0x65452f, 1);
     g.fillRect(78, 465, 34, 70);
-    g.fillStyle(0xf5d86c, 1);
-    g.fillCircle(145, 354, 15);
+    // Temporary princess silhouette; replace with the approved princess sprite later.
+    g.fillStyle(0xf3c96d, 1);
+    g.fillCircle(145, 345, 12);
+    g.fillStyle(0xf0d6a5, 1);
+    g.fillTriangle(145, 354, 130, 380, 160, 380);
+    g.fillStyle(0x9b4d58, 1);
+    g.fillCircle(145, 342, 15);
+    g.fillStyle(0xf3c96d, 1);
+    g.fillCircle(145, 346, 9);
+    this.add.text(145, 386, "PRINCESS", {
+      fontFamily: "Arial", fontSize: "10px", color: "#fff4d4", fontStyle: "bold"
+    }).setOrigin(0.5);
     this.add.text(94, 555, "FARMHOUSE", {
       fontFamily: "Arial", fontSize: "13px", color: "#fff3d4", fontStyle: "bold"
     }).setOrigin(0.5);
