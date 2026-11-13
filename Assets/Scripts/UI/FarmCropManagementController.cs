@@ -1,0 +1,196 @@
+using FarmVsMonsters.Farm;
+using UnityEngine;
+using UnityEngine.Events;
+using UnityEngine.UI;
+
+namespace FarmVsMonsters.UI
+{
+    /// <summary>uGUI bridge for selecting crops, planting into plots, and harvesting ready crops.</summary>
+    public sealed class FarmCropManagementController : MonoBehaviour
+    {
+        [SerializeField] private FarmCropService cropService;
+        [SerializeField] private FarmCropDefinition[] crops;
+        [SerializeField] private FarmCropPlot[] plots;
+        [SerializeField] private Button[] cropButtons;
+        [SerializeField] private Text[] cropLabels;
+        [SerializeField] private Button[] harvestButtons;
+        [SerializeField] private Text[] plotLabels;
+        [SerializeField] private Text seedCountText;
+        [SerializeField] private FarmResourceWallet resourceWallet;
+
+        private UnityAction[] cropActions;
+        private UnityAction[] harvestActions;
+
+        private void OnEnable()
+        {
+            if (cropService != null)
+            {
+                cropService.CropPlanted += HandleCropChanged;
+                cropService.CropHarvested += HandleCropHarvested;
+                cropService.CropChanged += HandleCropChanged;
+            }
+            if (resourceWallet != null)
+                resourceWallet.ResourceChanged += HandleResourceChanged;
+
+            BindCropButtons();
+            BindHarvestButtons();
+            Refresh();
+        }
+
+        private void OnDisable()
+        {
+            if (cropService != null)
+            {
+                cropService.CropPlanted -= HandleCropChanged;
+                cropService.CropHarvested -= HandleCropHarvested;
+                cropService.CropChanged -= HandleCropChanged;
+            }
+            if (resourceWallet != null)
+                resourceWallet.ResourceChanged -= HandleResourceChanged;
+
+            RemoveListeners(cropButtons, cropActions);
+            RemoveListeners(harvestButtons, harvestActions);
+            cropActions = null;
+            harvestActions = null;
+        }
+
+        public void PlantCrop(int cropIndex, int plotIndex)
+        {
+            if (cropService == null || crops == null || plots == null ||
+                cropIndex < 0 || cropIndex >= crops.Length || plotIndex < 0 || plotIndex >= plots.Length)
+                return;
+
+            cropService.TryPlant(plots[plotIndex], crops[cropIndex]);
+            Refresh();
+        }
+
+        public void HarvestCrop(int plotIndex)
+        {
+            if (cropService == null || plots == null || plotIndex < 0 || plotIndex >= plots.Length)
+                return;
+
+            cropService.TryHarvest(plots[plotIndex]);
+            Refresh();
+        }
+
+        public void Refresh()
+        {
+            if (seedCountText != null)
+                seedCountText.text = "Seeds: " + (resourceWallet != null ? resourceWallet.GetAmount(FarmResourceType.Seeds) : 0);
+
+            if (cropButtons != null)
+            {
+                for (int i = 0; i < cropButtons.Length; i++)
+                {
+                    if (cropButtons[i] == null)
+                        continue;
+
+                    FarmCropDefinition crop = crops != null && i < crops.Length ? crops[i] : null;
+                    cropButtons[i].interactable = crop != null && resourceWallet != null &&
+                        resourceWallet.GetAmount(FarmResourceType.Seeds) >= crop.SeedCost;
+
+                    if (cropLabels != null && i < cropLabels.Length && cropLabels[i] != null)
+                        cropLabels[i].text = crop == null ? "Unavailable" :
+                            crop.DisplayName + "\n" + crop.SeedCost + " seeds";
+                }
+            }
+
+            if (plots != null)
+            {
+                for (int i = 0; i < plots.Length; i++)
+                {
+                    FarmCropPlot plot = plots[i];
+                    FarmCropDefinition crop = cropService != null ? cropService.GetCrop(plot) : null;
+                    float progress = cropService != null ? cropService.GetGrowthProgress(plot) : 0f;
+                    bool ready = cropService != null && cropService.IsReadyToHarvest(plot);
+
+                    if (plotLabels != null && i < plotLabels.Length && plotLabels[i] != null)
+                    {
+                        plotLabels[i].text = crop == null ? "Empty plot" :
+                            crop.DisplayName + " • " + Mathf.RoundToInt(progress * 100f) + "%";
+                    }
+                    if (harvestButtons != null && i < harvestButtons.Length && harvestButtons[i] != null)
+                        harvestButtons[i].interactable = ready;
+                }
+            }
+        }
+
+        private void BindCropButtons()
+        {
+            if (cropButtons == null)
+                return;
+
+            cropActions = new UnityAction[cropButtons.Length];
+            for (int i = 0; i < cropButtons.Length; i++)
+            {
+                if (cropButtons[i] == null)
+                    continue;
+
+                int cropIndex = i;
+                cropActions[i] = () => PlantFirstAvailablePlot(cropIndex);
+                cropButtons[i].onClick.AddListener(cropActions[i]);
+            }
+        }
+
+        private void BindHarvestButtons()
+        {
+            if (harvestButtons == null)
+                return;
+
+            harvestActions = new UnityAction[harvestButtons.Length];
+            for (int i = 0; i < harvestButtons.Length; i++)
+            {
+                if (harvestButtons[i] == null)
+                    continue;
+
+                int plotIndex = i;
+                harvestActions[i] = () => HarvestCrop(plotIndex);
+                harvestButtons[i].onClick.AddListener(harvestActions[i]);
+            }
+        }
+
+        private void PlantFirstAvailablePlot(int cropIndex)
+        {
+            if (plots == null || cropService == null || crops == null ||
+                cropIndex < 0 || cropIndex >= crops.Length)
+                return;
+
+            foreach (FarmCropPlot plot in plots)
+            {
+                if (plot != null && !cropService.IsPlanted(plot) && cropService.TryPlant(plot, crops[cropIndex]))
+                {
+                    Refresh();
+                    return;
+                }
+            }
+            Refresh();
+        }
+
+        private void HandleCropChanged(FarmCropPlot plot, FarmCropDefinition definition)
+        {
+            Refresh();
+        }
+
+        private void HandleCropHarvested(FarmCropPlot plot, FarmCropDefinition definition, int amount)
+        {
+            Refresh();
+        }
+
+        private void HandleResourceChanged(FarmResourceType type, int amount)
+        {
+            Refresh();
+        }
+
+        private static void RemoveListeners(Button[] buttons, UnityAction[] actions)
+        {
+            if (buttons == null || actions == null)
+                return;
+
+            for (int i = 0; i < buttons.Length && i < actions.Length; i++)
+            {
+                if (buttons[i] != null && actions[i] != null)
+                    buttons[i].onClick.RemoveListener(actions[i]);
+            }
+        }
+    }
+}
