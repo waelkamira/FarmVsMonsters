@@ -25,3 +25,12 @@
 - Added `Plants/PlantPlacementService.cs` for bounds/occupancy/energy validation and prefab placement.
 - Corrected grid conversion to respect the grid transform and scale; hardened energy addition against integer overflow.
 - Verification: committed files were read back from `main`. No Unity Editor/compiler is available through this GitHub operation, so a Unity build and in-scene validation remain pending.
+
+## 2026-11-13 — Combat loop foundation
+- Added Combat/Projectile.cs for homing projectiles with lifetime, target validation, and team-aware impact damage.
+- Added Enemies/EnemyMarker.cs so plant targeting explicitly identifies monster combatants instead of damaging arbitrary colliders.
+- Added Enemies/EnemyMovement.cs for target approach and timed melee attacks.
+- Added Enemies/WaveManager.cs for sequential wave spawning; a wave clears only after all spawned enemies have died. Death-event subscriptions are retained and cleaned up safely.
+- Added Plants/PlantCombatController.cs for nearest-monster acquisition and projectile firing with a bounded non-allocating physics query.
+- These components require scene/prefab wiring: assign spawn points and target health, add EnemyMarker + Health + colliders to monster prefabs, and assign projectile prefabs/muzzles to plant prefabs.
+- Verification: new files and fixes were committed to main and read back through GitHub. Unity compilation, physics setup, and runtime playtesting have not yet been performed.
