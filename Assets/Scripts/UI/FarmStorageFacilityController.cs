@@ -8,6 +8,7 @@ namespace FarmVsMonsters.UI
     public sealed class FarmStorageFacilityController : MonoBehaviour
     {
         [SerializeField] private FarmStorageFacilityService storageService;
+        [SerializeField] private FarmResourceWallet resourceWallet;
         [SerializeField] private FarmStorageFacilityDefinition[] displayedFacilities;
         [SerializeField] private Button[] upgradeButtons;
         [SerializeField] private Text[] facilityTexts;
@@ -20,6 +21,8 @@ namespace FarmVsMonsters.UI
         {
             if (storageService != null)
                 storageService.FacilityUpgraded += HandleUpgraded;
+            if (resourceWallet != null)
+                resourceWallet.ResourceChanged += HandleResourceChanged;
             BindButtons();
             Refresh();
         }
@@ -28,6 +31,8 @@ namespace FarmVsMonsters.UI
         {
             if (storageService != null)
                 storageService.FacilityUpgraded -= HandleUpgraded;
+            if (resourceWallet != null)
+                resourceWallet.ResourceChanged -= HandleResourceChanged;
             UnbindButtons();
         }
 
@@ -96,6 +101,11 @@ namespace FarmVsMonsters.UI
             bool success = storageService.TryUpgrade(displayedFacilities[index]);
             if (statusText != null)
                 statusText.text = success ? "Storage facility upgraded." : "Upgrade unavailable.";
+            Refresh();
+        }
+
+        private void HandleResourceChanged(FarmResourceType resource, int amount)
+        {
             Refresh();
         }
 
