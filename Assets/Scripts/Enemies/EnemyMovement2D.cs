@@ -173,8 +173,9 @@ namespace FarmVsMonsters.Enemies
                 FarmDefenseTarget2D farmTarget =
                     candidate.GetComponentInParent<FarmDefenseTarget2D>();
 
-                if (farmTarget == null || farmTarget.Health == null ||
-                    farmTarget.Health.IsDead || !farmTarget.BlocksMonsterMovement ||
+                if (farmTarget == null || !farmTarget.isActiveAndEnabled ||
+                    farmTarget.Health == null || farmTarget.Health.IsDead ||
+                    !farmTarget.BlocksMonsterMovement ||
                     !farmTarget.CanBeTargetedFromLane(laneY))
                     continue;
 
