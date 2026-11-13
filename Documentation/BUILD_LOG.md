@@ -144,3 +144,15 @@
 - Unity setup required: assign one FarmResourceWallet to FarmWarehouseService and the UI controller, then connect the level/capacity/stock/cost/status Text fields and upgrade Button.
 - Limitation: capacity is currently a per-resource cap, not a single shared volume/weight pool. Storage categories, spoilage, separate warehouses, and production routing are future work.
 - Verification: code was committed to `main` and read back from GitHub. Unity compilation, Inspector wiring, and purchase/save runtime tests remain pending.
+
+
+## 2026-11-13 — Trade contracts and inventory preservation
+- Added `FarmTradeContractDefinition.cs` ScriptableObjects for configurable delivery requests, resource quantities, coin rewards, stage gates, and optional UTC deadlines.
+- Added `FarmTradeContractService.cs` with one active contract at a time, persistent acceptance/deadline state, expiry handling, inventory-backed delivery, and farm-coin rewards.
+- Added `UI/FarmTradeContractController.cs` for accepting configured offers, viewing delivery progress, delivering goods, cancelling an active order, and showing status/balance.
+- Hardened inventory preservation: changing warehouse capacity no longer clamps or deletes existing resource quantities; loading older inventory values no longer truncates stock to the wallet's serialized base capacity.
+- Fixed warehouse initialization order: capacity is applied in `Start`, after all scene objects have completed `Awake`, ensuring the resource wallet loads its saved inventory before the warehouse writes updated capacity settings.
+- Warehouse UI now reads its configured maximum level instead of assuming the default value of 10.
+- Unity setup required: create contract definition assets, assign the same assets to the contract service and UI offer list, connect the resource wallet, and wire uGUI buttons/text.
+- Limitations: one active delivery contract is supported; no rotating daily board, reputation, NPC route simulation, or remote/server validation yet. Saves remain local PlayerPrefs.
+- Verification: all changed/new source files were committed to `main` and read back. No Unity compiler/editor or runtime tests have been run.
