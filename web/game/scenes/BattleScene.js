@@ -3,7 +3,7 @@ import { Scene, Input, Math as PhaserMath } from "phaser";
 const LANES = 5;
 const COLUMNS = 8;
 const GRID_LEFT = 260;
-const GRID_TOP = 310;
+const GRID_TOP = 402;
 const CELL_W = 75;
 const CELL_H = 46;
 const HOME_X = 238;
