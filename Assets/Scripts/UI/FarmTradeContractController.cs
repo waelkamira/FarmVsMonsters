@@ -8,6 +8,7 @@ namespace FarmVsMonsters.UI
     public sealed class FarmTradeContractController : MonoBehaviour
     {
         [SerializeField] private FarmTradeContractService contractService;
+        [SerializeField] private FarmResourceWallet resourceWallet;
         [SerializeField] private FarmTradeContractDefinition[] displayedContracts;
         [SerializeField] private Button[] acceptButtons;
         [SerializeField] private Button deliverButton;
@@ -21,6 +22,8 @@ namespace FarmVsMonsters.UI
 
         private void OnEnable()
         {
+            if (resourceWallet != null)
+                resourceWallet.ResourceChanged += HandleResourceChanged;
             if (contractService != null)
             {
                 contractService.ContractAccepted += HandleAccepted;
@@ -35,6 +38,8 @@ namespace FarmVsMonsters.UI
 
         private void OnDisable()
         {
+            if (resourceWallet != null)
+                resourceWallet.ResourceChanged -= HandleResourceChanged;
             if (contractService != null)
             {
                 contractService.ContractAccepted -= HandleAccepted;
@@ -120,6 +125,11 @@ namespace FarmVsMonsters.UI
             if (contractService == null) return;
             bool success = contractService.CancelActive();
             SetStatus(success ? "Active contract cancelled." : "No active contract.");
+            Refresh();
+        }
+
+        private void HandleResourceChanged(FarmResourceType resource, int amount)
+        {
             Refresh();
         }
 
