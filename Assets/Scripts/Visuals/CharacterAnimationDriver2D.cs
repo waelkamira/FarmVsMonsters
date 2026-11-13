@@ -83,6 +83,11 @@ namespace FarmVsMonsters.Visuals
                 animator.Play(SpriteAnimation2D.AnimationState.Victory, true);
         }
 
+        public void PlaySpecial()
+        {
+            PlayTransient(SpriteAnimation2D.AnimationState.Special);
+        }
+
         private void HandleHealthChanged(float current, float maximum)
         {
             if (current < previousHealth && current > 0f)
