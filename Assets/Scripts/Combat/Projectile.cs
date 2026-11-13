@@ -1,4 +1,5 @@
 using FarmVsMonsters.Core;
+using FarmVsMonsters.Enemies;
 using UnityEngine;
 
 namespace FarmVsMonsters.Combat
@@ -58,7 +59,7 @@ namespace FarmVsMonsters.Combat
                     bool applied = target.ApplyDamage(damage);
                     if (applied && !target.IsDead && slowDuration > 0f && slowMultiplier < 1f)
                     {
-                        Enemies.EnemyMovement movement = target.GetComponent<Enemies.EnemyMovement>();
+                        EnemyMovement movement = target.GetComponent<EnemyMovement>();
                         if (movement != null)
                             movement.ApplySlow(slowMultiplier, slowDuration);
                     }
