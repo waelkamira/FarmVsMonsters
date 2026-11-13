@@ -6,7 +6,7 @@ namespace FarmVsMonsters.Visuals
     [RequireComponent(typeof(SpriteRenderer))]
     public sealed class SpriteAnimation2D : MonoBehaviour
     {
-        public enum AnimationState { Idle, Walk, Attack, Block, Hurt, Death, Victory }
+        public enum AnimationState { Idle, Walk, Attack, Block, Hurt, Death, Victory, Special }
 
         [System.Serializable]
         public sealed class AnimationClip
