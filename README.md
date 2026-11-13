@@ -19,7 +19,7 @@
 
 1. ثبّت Unity Editor بالإصدار المحدد في `ProjectSettings/ProjectVersion.txt`.
 2. افتح المشروع من Unity Hub وانتظر اكتمال Package Manager والاستيراد.
-3. من القائمة اختر **Farm Vs Monsters → Generate Prototype Battle Scene**.
+3. من القائمة اختر **Farm Vs Monsters → Generate Farm Hub Scene** ثم **Generate Prototype Battle Scene**.
 4. شغّل **Farm Vs Monsters → Validate Prototype Battle Scene** لمراجعة المراجع والربط البنيوي.
 5. افتح `Assets/Scenes/PrototypeBattle.unity` واضغط Play.
 6. التحكم: `WASD` أو الأسهم للحركة، الأرقام `1–5` لاختيار النبات، وزر الفأرة الأيسر لزراعته على الشبكة. تحرّك فوق كرات الطاقة لجمعها.
