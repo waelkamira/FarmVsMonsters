@@ -446,3 +446,10 @@
 ## 2026-11-13 — Ignore inactive empty crop plots in monster scans
 - Enemy farm-target selection now checks `isActiveAndEnabled` before considering a `FarmDefenseTarget2D`. This is required because empty plots keep their Collider2D for player interaction while their monster-target component is disabled.
 - Prevents monsters from treating an empty plot as an edible crop.
+
+## 2026-11-13 — 2D resource HUD and final objective protection
+- Added `UI/FarmResourceHud2D.cs`, a uGUI presenter for Seeds, Feed, and Produce. It subscribes to the wallet's full-resource event, refreshes on enable, supports wallet reassignment, and removes event handlers on disable.
+- Added `Farm/FarmHomeProtection2D.cs` to observe only targets explicitly typed as Farmhouse and Princess, and report defeat through the battle outcome controller. Side crops, plants, and animals do not directly trigger defeat.
+- Added `BattleOutcomeController.ReportDefeat()` as the narrow integration point for the protection relay; existing one-shot outcome handling prevents duplicate defeat events.
+- Documented Canvas label wiring, shared-wallet assignment, farmhouse/princess target setup, and WaveManager fallback target configuration.
+- Verification: source changes committed to `main` and read back. Unity compilation, Inspector wiring, UI rendering, collision-layer behavior, and Play Mode tests remain pending.
