@@ -26,9 +26,8 @@ namespace FarmVsMonsters.Farm
 
         public void SetCapacityPerResource(int newCapacity)
         {
+            // Capacity changes must never destroy already-owned resources.
             capacityPerResource = Mathf.Max(1, newCapacity);
-            for (int i = 0; i < amounts.Length; i++)
-                amounts[i] = Mathf.Clamp(amounts[i], 0, capacityPerResource);
             Save();
             for (int i = 0; i < amounts.Length; i++)
                 ResourceChanged?.Invoke((FarmResourceType)i, amounts[i]);
@@ -101,12 +100,12 @@ namespace FarmVsMonsters.Farm
                     return;
 
                 for (int i = 0; i < amounts.Length && i < data.amounts.Length; i++)
-                    amounts[i] = Mathf.Clamp(data.amounts[i], 0, Mathf.Max(1, capacityPerResource));
+                    amounts[i] = Mathf.Max(0, data.amounts[i]);
 
                 if (data.amounts.Length <= (int)FarmResourceType.Seeds)
-                    amounts[(int)FarmResourceType.Seeds] = Mathf.Clamp(startingSeeds, 0, capacityPerResource);
+                    amounts[(int)FarmResourceType.Seeds] = Mathf.Max(0, startingSeeds);
                 if (data.amounts.Length <= (int)FarmResourceType.Water)
-                    amounts[(int)FarmResourceType.Water] = Mathf.Clamp(startingWater, 0, capacityPerResource);
+                    amounts[(int)FarmResourceType.Water] = Mathf.Max(0, startingWater);
 
                 Save();
             }
