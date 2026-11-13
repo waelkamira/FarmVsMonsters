@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 namespace FarmVsMonsters.UI
 {
-    /// <summary>uGUI bridge for selecting crops, planting into plots, and harvesting ready crops.</summary>
+    /// <summary>uGUI bridge for crop planting, watering, harvesting, and seed purchases.</summary>
     public sealed class FarmCropManagementController : MonoBehaviour
     {
         [SerializeField] private FarmCropService cropService;
@@ -22,12 +22,12 @@ namespace FarmVsMonsters.UI
         [SerializeField] private Button seedPackPurchaseButton;
         [SerializeField, Min(1)] private int seedPackAmount = 10;
         [SerializeField, Min(0)] private int seedPackCoinCost = 25;
-        private UnityAction seedPackAction;
         [SerializeField] private FarmResourceWallet resourceWallet;
 
         private UnityAction[] cropActions;
         private UnityAction[] harvestActions;
         private UnityAction[] waterActions;
+        private UnityAction seedPackAction;
 
         private void OnEnable()
         {
@@ -42,6 +42,8 @@ namespace FarmVsMonsters.UI
 
             BindCropButtons();
             BindHarvestButtons();
+            BindWaterButtons();
+            BindSeedPackButton();
             Refresh();
         }
 
@@ -58,8 +60,14 @@ namespace FarmVsMonsters.UI
 
             RemoveListeners(cropButtons, cropActions);
             RemoveListeners(harvestButtons, harvestActions);
+            RemoveListeners(waterButtons, waterActions);
+            if (seedPackPurchaseButton != null && seedPackAction != null)
+                seedPackPurchaseButton.onClick.RemoveListener(seedPackAction);
+
             cropActions = null;
             harvestActions = null;
+            waterActions = null;
+            seedPackAction = null;
         }
 
         public bool PurchaseSeedPack()
@@ -79,7 +87,8 @@ namespace FarmVsMonsters.UI
         public void PlantCrop(int cropIndex, int plotIndex)
         {
             if (cropService == null || crops == null || plots == null ||
-                cropIndex < 0 || cropIndex >= crops.Length || plotIndex < 0 || plotIndex >= plots.Length)
+                cropIndex < 0 || cropIndex >= crops.Length ||
+                plotIndex < 0 || plotIndex >= plots.Length)
                 return;
 
             cropService.TryPlant(plots[plotIndex], crops[cropIndex]);
@@ -106,8 +115,18 @@ namespace FarmVsMonsters.UI
 
         public void Refresh()
         {
+            int seeds = resourceWallet != null ? resourceWallet.GetAmount(FarmResourceType.Seeds) : 0;
+            int water = resourceWallet != null ? resourceWallet.GetAmount(FarmResourceType.Water) : 0;
+
             if (seedCountText != null)
-                seedCountText.text = "Seeds: " + (resourceWallet != null ? resourceWallet.GetAmount(FarmResourceType.Seeds) : 0);
+                seedCountText.text = "Seeds: " + seeds;
+            if (waterCountText != null)
+                waterCountText.text = "Water: " + water;
+
+            if (seedPackPurchaseButton != null)
+                seedPackPurchaseButton.interactable = resourceWallet != null &&
+                    resourceWallet.CanAdd(FarmResourceType.Seeds, seedPackAmount) &&
+                    ProgressSaveService.Load().farmCoins >= seedPackCoinCost;
 
             if (cropButtons != null)
             {
@@ -118,33 +137,49 @@ namespace FarmVsMonsters.UI
 
                     FarmCropDefinition crop = crops != null && i < crops.Length ? crops[i] : null;
                     cropButtons[i].interactable = crop != null && resourceWallet != null &&
-                        resourceWallet.GetAmount(FarmResourceType.Seeds) >= crop.SeedCost;
+                        seeds >= crop.SeedCost && ProgressSaveService.IsStageUnlocked(crop.RequiredStage) &&
+                        HasEmptyPlot();
 
                     if (cropLabels != null && i < cropLabels.Length && cropLabels[i] != null)
                         cropLabels[i].text = crop == null ? "Unavailable" :
-                            crop.DisplayName + "
-" + crop.SeedCost + " seeds";
+                            crop.DisplayName + "\n" + crop.SeedCost + " seeds";
                 }
             }
 
-            if (plots != null)
+            if (plots == null)
+                return;
+
+            for (int i = 0; i < plots.Length; i++)
             {
-                for (int i = 0; i < plots.Length; i++)
-                {
-                    FarmCropPlot plot = plots[i];
-                    FarmCropDefinition crop = cropService != null ? cropService.GetCrop(plot) : null;
-                    float progress = cropService != null ? cropService.GetGrowthProgress(plot) : 0f;
-                    bool ready = cropService != null && cropService.IsReadyToHarvest(plot);
+                FarmCropPlot plot = plots[i];
+                FarmCropDefinition crop = cropService != null ? cropService.GetCrop(plot) : null;
+                float progress = cropService != null ? cropService.GetGrowthProgress(plot) : 0f;
+                bool ready = cropService != null && cropService.IsReadyToHarvest(plot);
+                bool canWater = cropService != null && cropService.CanWater(plot);
 
-                    if (plotLabels != null && i < plotLabels.Length && plotLabels[i] != null)
-                    {
-                        plotLabels[i].text = crop == null ? "Empty plot" :
-                            crop.DisplayName + " • " + Mathf.RoundToInt(progress * 100f) + "%";
-                    }
-                    if (harvestButtons != null && i < harvestButtons.Length && harvestButtons[i] != null)
-                        harvestButtons[i].interactable = ready;
+                if (plotLabels != null && i < plotLabels.Length && plotLabels[i] != null)
+                {
+                    plotLabels[i].text = crop == null ? "Empty plot" :
+                        crop.DisplayName + " • " + Mathf.RoundToInt(progress * 100f) + "%";
                 }
+                if (harvestButtons != null && i < harvestButtons.Length && harvestButtons[i] != null)
+                    harvestButtons[i].interactable = ready;
+                if (waterButtons != null && i < waterButtons.Length && waterButtons[i] != null)
+                    waterButtons[i].interactable = canWater;
             }
+        }
+
+        private bool HasEmptyPlot()
+        {
+            if (plots == null || cropService == null)
+                return false;
+
+            foreach (FarmCropPlot plot in plots)
+            {
+                if (plot != null && !cropService.IsPlanted(plot))
+                    return true;
+            }
+            return false;
         }
 
         private void BindCropButtons()
@@ -181,15 +216,6 @@ namespace FarmVsMonsters.UI
             }
         }
 
-        private void BindSeedPackButton()
-        {
-            if (seedPackPurchaseButton == null)
-                return;
-
-            seedPackAction = () => { PurchaseSeedPack(); };
-            seedPackPurchaseButton.onClick.AddListener(seedPackAction);
-        }
-
         private void BindWaterButtons()
         {
             if (waterButtons == null)
@@ -207,6 +233,15 @@ namespace FarmVsMonsters.UI
             }
         }
 
+        private void BindSeedPackButton()
+        {
+            if (seedPackPurchaseButton == null)
+                return;
+
+            seedPackAction = () => { PurchaseSeedPack(); };
+            seedPackPurchaseButton.onClick.AddListener(seedPackAction);
+        }
+
         private void PlantFirstAvailablePlot(int cropIndex)
         {
             if (plots == null || cropService == null || crops == null ||
@@ -215,7 +250,8 @@ namespace FarmVsMonsters.UI
 
             foreach (FarmCropPlot plot in plots)
             {
-                if (plot != null && !cropService.IsPlanted(plot) && cropService.TryPlant(plot, crops[cropIndex]))
+                if (plot != null && !cropService.IsPlanted(plot) &&
+                    cropService.TryPlant(plot, crops[cropIndex]))
                 {
                     Refresh();
                     return;
