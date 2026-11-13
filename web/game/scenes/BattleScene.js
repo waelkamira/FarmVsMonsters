@@ -425,12 +425,9 @@ export default class BattleScene extends Scene {
   }
 
   drawRadish(x, y) {
-    // The artwork spans y=-74..24 around its local origin, so its visual
-    // bounding-box center is 25px above that origin. Offset the art downward
-    // to center the visible radish over the cell centroid while keeping the
-    // plant's logical x/y at the exact polygon centroid for gameplay.
-    const RADISH_ART_CENTER_OFFSET_Y = 25;
-    const c = this.add.container(x, y + RADISH_ART_CENTER_OFFSET_Y);
+    // Keep the radish container anchored directly to the approved gold
+    // planting-centroid coordinate. Do not apply an estimated visual offset.
+    const c = this.add.container(x, y);
     const g = this.add.graphics();
     g.fillStyle(0x4b8c45, 1); g.fillEllipse(0, -39, 27, 30);
     g.fillStyle(0x3e783b, 1);
