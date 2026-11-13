@@ -466,3 +466,10 @@
 - Updated crop and animal interaction controllers to ignore E/F interactions after the caveman's Health reports death.
 - Documented both sheet layouts, import/slicing steps, animation clip assignment, and player interaction requirements.
 - Verification: committed source was read back from GitHub and delimiter balance checked. Unity Editor API compatibility and actual sprite slicing remain untested.
+
+## 2026-11-13 — Defeat flow hardening and caveman prefab validation
+- Added `WaveManager.StopWaves(bool)` to cancel pending wave spawning, clear timers, unsubscribe tracked monster death handlers, and optionally remove living monsters.
+- Connected `BattleOutcomeController` to stop the wave manager immediately on defeat. Victory flow remains unchanged after the final wave is cleared.
+- Added `Editor/CavemanPrefabValidator.cs` and a Tools menu command to check required player components, Rigidbody2D top-down settings, Collider2D, and SpriteRenderer.
+- Documented the validator and its manual-reference limitations.
+- Verification: source readback and delimiter checks performed after commit. Unity compilation, Editor menu execution, prefab inspection, and Play Mode remain untested.
