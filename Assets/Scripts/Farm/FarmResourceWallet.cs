@@ -90,6 +90,13 @@ namespace FarmVsMonsters.Farm
 
                 for (int i = 0; i < amounts.Length && i < data.amounts.Length; i++)
                     amounts[i] = Mathf.Clamp(data.amounts[i], 0, Mathf.Max(1, capacityPerResource));
+
+                if (data.amounts.Length <= (int)FarmResourceType.Seeds)
+                    amounts[(int)FarmResourceType.Seeds] = Mathf.Clamp(startingSeeds, 0, capacityPerResource);
+                if (data.amounts.Length <= (int)FarmResourceType.Water)
+                    amounts[(int)FarmResourceType.Water] = Mathf.Clamp(startingWater, 0, capacityPerResource);
+
+                Save();
             }
             catch (Exception exception)
             {
