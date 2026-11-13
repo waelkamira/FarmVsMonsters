@@ -66,7 +66,7 @@ namespace FarmVsMonsters.Farm
 
         public bool CanUpgrade(FarmStorageFacilityDefinition definition)
         {
-            if (definition == null || !definition.IsValid || resourceWallet == null ||
+            if (definition == null || !definition.IsValid || definition.BuildingPrefab == null || resourceWallet == null ||
                 !ContainsConfigured(definition) || !HasUniqueIdentityAndSlot(definition) ||
                 !ProgressSaveService.IsStageUnlocked(definition.RequiredStage) ||
                 GetLevel(definition) >= definition.MaximumLevel ||
