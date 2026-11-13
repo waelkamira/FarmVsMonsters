@@ -574,3 +574,11 @@
 - Added `EnvironmentalHazard2D`: configurable circular damage zones that periodically affect only marked monsters, deduplicate multiple colliders per monster per tick, and optionally apply the existing slow effect.
 - Documented obstacle prefab wiring, lane/priority settings, hazard layers, damage cadence, and visual-art separation.
 - Verification: source files were read back from GitHub after committing. No Unity compilation, physics-layer validation, scene wiring, or Play Mode test has been performed.
+
+
+## 2026-11-13 — Day/night and weather gameplay cycle
+- Added `FarmEnvironmentCycle2D` with Dawn/Day/Dusk/Night phases, configurable cycle length, periodic random Clear/Rain/Fog/Storm weather, manual time/weather controls, and change events.
+- Connected rain to faster crop growth and night/storm conditions to increased monster movement speed through optional scene references; scenes without the environment component retain existing behavior.
+- Added optional night/weather SpriteRenderer overlays for visual tinting without introducing a hard dependency on a specific render pipeline package.
+- Documented scene setup, overlay sorting, gameplay multipliers, and event hooks.
+- Verification: all changed and created files were read back from GitHub. Source-level insertion checks passed; Unity compilation, inspector wiring, rendering, and Play Mode tests remain pending.
