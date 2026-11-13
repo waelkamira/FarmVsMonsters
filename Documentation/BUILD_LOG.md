@@ -435,3 +435,9 @@
 - Extended `FarmResourceWallet2D` with a bounded Feed resource and feed spending/addition.
 - Added `FarmAnimalCareController2D`; the caveman presses F near an animal to feed it or collect completed production.
 - Animal production is scene-time only in this pass; offline progression, animal animation and Unity runtime validation remain pending.
+
+
+## 2026-11-13 — Animal initialization ordering and health safety
+- Moved definition-based animal health initialization to Start so it runs after all component Awake methods, avoiding execution-order overwrites by Health.Awake.
+- Animal interactions now only reconfigure/refill health when the selected animal definition actually changes; pressing F repeatedly cannot heal an animal for free.
+- Normalized Health.SetMaxHealth source indentation after readback.
