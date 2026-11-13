@@ -7,6 +7,7 @@ using FarmVsMonsters.Plants;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using UnityEngine.Events;
 
 namespace FarmVsMonsters.UI
 {
@@ -43,6 +44,7 @@ namespace FarmVsMonsters.UI
         [SerializeField] private Text resultDescription;
 
         private int selectedPlantIndex = -1;
+        private UnityAction[] plantButtonActions;
 
         private void OnEnable()
         {
@@ -124,6 +126,7 @@ namespace FarmVsMonsters.UI
             if (plantButtons == null)
                 return;
 
+            plantButtonActions = new UnityAction[plantButtons.Length];
             for (int i = 0; i < plantButtons.Length; i++)
             {
                 int index = i;
@@ -131,8 +134,8 @@ namespace FarmVsMonsters.UI
                 if (button == null)
                     continue;
 
-                button.onClick.RemoveListener(() => SelectPlant(index));
-                button.onClick.AddListener(() => SelectPlant(index));
+                plantButtonActions[i] = () => SelectPlant(index);
+                button.onClick.AddListener(plantButtonActions[i]);
 
                 if (plantButtonLabels != null && i < plantButtonLabels.Length &&
                     plantButtonLabels[i] != null && plants != null && i < plants.Length &&
@@ -151,10 +154,11 @@ namespace FarmVsMonsters.UI
 
             for (int i = 0; i < plantButtons.Length; i++)
             {
-                int index = i;
-                if (plantButtons[i] != null)
-                    plantButtons[i].onClick.RemoveListener(() => SelectPlant(index));
+                if (plantButtons[i] != null && plantButtonActions != null &&
+                    i < plantButtonActions.Length && plantButtonActions[i] != null)
+                    plantButtons[i].onClick.RemoveListener(plantButtonActions[i]);
             }
+            plantButtonActions = null;
         }
 
         private void RefreshAll()
