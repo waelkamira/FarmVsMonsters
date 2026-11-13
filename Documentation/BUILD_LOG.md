@@ -706,3 +706,13 @@
 - Kept the perspective 8 × 5 quadrilateral overlay and shared pointer mapping.
 - Changed plant placement to the polygon centroid of each selected trapezoid, both when the caveman starts walking and when the plant is created.
 - Validation: direct image inspection and source verification only; no browser screenshot, pointer test, or local build was run.
+
+## 2026-11-14 — Refactor planting grid for per-cell calibration
+
+- Replaced the single global four-corner board transform with a 9 × 6 control-node mesh API, representing all 54 intersections of the 8 × 5 board.
+- Each of the 40 cells now has its own quadrilateral interpolation and polygon hit-area. This supports hand-measured interior seams that are not perfectly described by one trapezoid.
+- Cell selection now rejects clicks outside the actual board polygons.
+- Caveman planting movement and radish creation both use the polygon area centroid for the selected cell.
+- Lane lookup now derives its row from the same mesh coordinates; lane spawn paths retain controlled extrapolation beyond the board boundary.
+- Added a calibration view at `/game?gridDebug=1` with red mesh lines, cyan node markers, and node labels.
+- **Calibration is not yet 100% pixel-verified:** the 54 control nodes currently bootstrap from the existing four outer-corner estimates. Exact alignment requires measuring all 54 intersections against the source art and checking the result in a live Phaser screenshot. The available connected browser view exposed page text but not screenshot/reload controls, so no runtime screenshot or build was claimed.
