@@ -39,13 +39,12 @@ namespace FarmVsMonsters.Farm
             return accepted;
         }
 
-        public int AddProduce(int amount)
+        public bool TryAddProduce(int amount)
         {
-            if (amount <= 0) return 0;
-            int accepted = Mathf.Min(amount, maxProduce - Produce);
-            Produce += accepted;
+            if (amount <= 0 || amount > maxProduce - Produce) return false;
+            Produce += amount;
             Notify();
-            return accepted;
+            return true;
         }
 
         private void Notify()
