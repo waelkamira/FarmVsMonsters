@@ -1,0 +1,24 @@
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; background: #17271d; color: #fff7df; font-family: Arial, Helvetica, sans-serif; }
+a { color: inherit; text-decoration: none; }
+.home-shell { min-height: 100vh; display: grid; place-items: center; padding: 28px; background: radial-gradient(circle at 20% 15%, #486b43, #17271d 60%); }
+.home-card { width: min(760px, 100%); padding: clamp(28px, 6vw, 64px); border: 1px solid #829b69; border-radius: 28px; background: rgba(35, 58, 40, .92); box-shadow: 0 24px 70px #07130d88; }
+.eyebrow { letter-spacing: .2em; font-size: 12px; color: #e6c96e; font-weight: 700; }
+h1 { margin: 14px 0; font-size: clamp(42px, 8vw, 78px); line-height: .98; }
+h1 span, .wordmark span { color: #f0b45f; }
+.home-copy { max-width: 570px; color: #d9e1c8; font-size: 18px; line-height: 1.7; }
+.primary-link { display: inline-flex; margin-top: 20px; padding: 15px 24px; border-radius: 14px; background: #e5b85e; color: #2c351e; font-weight: 800; }
+.home-note, .prototype-note { color: #b8c5ac; font-size: 13px; line-height: 1.6; }
+.game-shell { min-height: 100vh; padding: 18px; background: linear-gradient(160deg, #243c2a, #142219); }
+.game-header { max-width: 1200px; margin: 0 auto 14px; display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+.wordmark { font-weight: 900; font-size: 22px; }
+.control-hint { color: #d5dfca; font-size: 12px; }
+.game-panel { width: min(1200px, 100%); margin: 0 auto; padding: 10px; border: 1px solid #718b5d; border-radius: 18px; background: #263c2b; box-shadow: 0 18px 55px #07130d88; overflow: hidden; }
+.phaser-host { width: 100%; min-height: 280px; aspect-ratio: 1120 / 680; display: flex; justify-content: center; align-items: center; }
+.phaser-host canvas { display: block; max-width: 100%; max-height: 100%; border-radius: 10px; }
+.prototype-note { max-width: 1180px; margin: 12px auto; }
+@media (max-width: 700px) {
+  .game-shell { padding: 8px; }
+  .game-panel { padding: 4px; }
+  .control-hint { line-height: 1.5; }
+}
