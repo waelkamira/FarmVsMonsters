@@ -624,3 +624,12 @@
 - Added `Documentation/PHASER_FARM_BACKGROUND_INTEGRATION.md` describing the Phaser rendering layers and the calibration steps required after the generated image is uploaded.
 - Important: the generated background has not yet been received. The current vector battlefield remains active; no image has been wired or coordinate calibration claimed.
 - Verification: the three new documentation files were committed to `main`. No Next.js build or browser runtime test was run.
+
+
+## 2026-11-14 — Phaser background loading and planting-grid overlay
+- Added a Phaser preload entry for `/assets/backgrounds/farm-battlefield.png`.
+- Added optional background rendering: when the approved image exists, it is displayed as a 16:9 image fitted inside the current 1120 × 680 viewport without stretching; when absent, the temporary vector field remains available.
+- Separated the 5 × 8 planting-cell overlay from the environment artwork so the grid remains interactive and can be calibrated independently after the final image is supplied.
+- Kept the current game logic coordinates unchanged until the actual generated artwork can be inspected; no guessed background alignment has been committed.
+- Corrected fallback messaging so it is only shown after the HUD message object has been initialized.
+- Verification: source was updated on `main` and read back from GitHub. No npm install, Next.js build, or browser runtime test was run.
