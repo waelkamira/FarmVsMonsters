@@ -18,6 +18,8 @@ namespace FarmVsMonsters.Enemies
 
         private Health ownHealth;
         private float attackTimer;
+        private float activeSlowMultiplier = 1f;
+        private float slowRemaining;
 
         private void Awake()
         {
@@ -31,8 +33,22 @@ namespace FarmVsMonsters.Enemies
             targetTeam = newTargetTeam;
         }
 
+        public void ApplySlow(float multiplier, float duration)
+        {
+            if (duration <= 0f || multiplier >= 1f) return;
+            activeSlowMultiplier = Mathf.Min(activeSlowMultiplier, Mathf.Clamp(multiplier, 0.1f, 1f));
+            slowRemaining = Mathf.Max(slowRemaining, duration);
+        }
+
         private void Update()
         {
+            if (slowRemaining > 0f)
+            {
+                slowRemaining -= Time.deltaTime;
+                if (slowRemaining <= 0f)
+                    activeSlowMultiplier = 1f;
+            }
+
             if (ownHealth == null || ownHealth.IsDead || target == null || targetHealth == null || targetHealth.IsDead)
                 return;
 
@@ -43,7 +59,7 @@ namespace FarmVsMonsters.Enemies
             if (distance > attackRange)
             {
                 Vector3 direction = offset / Mathf.Max(distance, 0.001f);
-                transform.position += direction * (moveSpeed * Time.deltaTime);
+                transform.position += direction * (moveSpeed * activeSlowMultiplier * Time.deltaTime);
                 if (direction.sqrMagnitude > 0.001f)
                     transform.rotation = Quaternion.LookRotation(direction, Vector3.up);
                 return;
