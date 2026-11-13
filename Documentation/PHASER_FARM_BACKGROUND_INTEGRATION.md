@@ -58,3 +58,17 @@ The playable board is now traced as 8 columns × 5 rows over the board painted i
 Each cell is a quadrilateral. Plant placement targets the bilinear point at (u=(column+0.5)/8, v=(row+0.5)/5), which is the exact center of that quadrilateral under this mapping. The overlay is intentionally subtle so the original painted seams remain visible.
 
 These are image-coordinate measurements from visual inspection, not a browser pixel-diff calibration. A running-game screenshot is still required to make any final sub-pixel adjustments.
+
+
+## Visual recalibration against the uploaded background (2026-11-14)
+
+The background asset was reopened and inspected at its native 1080 × 576 resolution. The previous calibration was visibly too narrow and its rear-right corner was too far left. The corrected outer soil-board corners are expressed in Phaser viewport coordinates after the image is drawn at 1120 × 597.33 and centered at (560, 340):
+
+- Rear-left: (395, 365)
+- Rear-right: (806, 365)
+- Front-right: (970, 568)
+- Front-left: (261, 568)
+
+The overlay's 8 × 5 quadrilateral cells and pointer inverse mapping share these corners. Planting now uses the polygon area centroid of the selected quadrilateral rather than the parametric midpoint, so the plant's ground anchor is at the geometric center of each trapezoid.
+
+This calibration is based on direct visual inspection of the source image. A live browser screenshot is still required to validate final alignment against Phaser's actual scaling and viewport behavior; no pixel-difference test or browser interaction test has been run.
