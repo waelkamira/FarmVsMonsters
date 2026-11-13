@@ -238,6 +238,19 @@ namespace FarmVsMonsters.Enemies
             }
         }
 
+        private void OnValidate()
+        {
+            armoredDamageTakenMultiplier = Mathf.Clamp(armoredDamageTakenMultiplier, 0.1f, 1f);
+            rangedAttackRange = Mathf.Max(attackRange, rangedAttackRange);
+            rangedProjectileSpeed = Mathf.Max(0.1f, rangedProjectileSpeed);
+            bruteDamageMultiplier = Mathf.Max(0f, bruteDamageMultiplier);
+            bruteSpeedMultiplier = Mathf.Clamp(bruteSpeedMultiplier, 0.1f, 1f);
+            jumpTriggerDistance = Mathf.Max(0.1f, jumpTriggerDistance);
+            jumpDistance = Mathf.Max(0.2f, jumpDistance);
+            jumpHeight = Mathf.Max(0f, jumpHeight);
+            jumpDuration = Mathf.Max(0.1f, jumpDuration);
+        }
+
         private FarmDefenseTarget2D FindFarmTargetInReach()
         {
             Vector2 center = transform.position;
