@@ -473,3 +473,10 @@
 - Added `Editor/CavemanPrefabValidator.cs` and a Tools menu command to check required player components, Rigidbody2D top-down settings, Collider2D, and SpriteRenderer.
 - Documented the validator and its manual-reference limitations.
 - Verification: source readback and delimiter checks performed after commit. Unity compilation, Editor menu execution, prefab inspection, and Play Mode remain untested.
+
+## 2026-11-13 — Directional caveman attack and 2D follow camera
+- Caveman club hit detection now derives its attack origin from the current facing vector, using the optional attack-origin transform's local distance as the reach offset. This makes attack scans move to the front when the player turns, including vertical facing.
+- Stopped residual Rigidbody2D velocity when the caveman is dead so physics cannot drift the corpse after input is disabled.
+- Added CameraFollow2D for an orthographic gameplay camera, with smooth LateUpdate tracking and optional world-space bounds that account for the visible camera dimensions.
+- Documented camera setup and bounds configuration.
+- Verification: GitHub readback and delimiter checks only. Unity compilation, camera framing, Rigidbody2D behavior, and combat feel remain untested.
