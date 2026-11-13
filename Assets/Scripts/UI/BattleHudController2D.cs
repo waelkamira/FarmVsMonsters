@@ -225,7 +225,7 @@ namespace FarmVsMonsters.UI
                 bool valid = plants != null && i < plants.Length && plants[i] != null && plants[i].Prefab != null;
                 float cooldown = valid && placementService != null
                     ? placementService.GetPlacementCooldownRemaining(plants[i]) : 0f;
-                plantButtons[i].interactable = valid && balance >= plants[i].EnergyCost && cooldown <= 0f;
+                plantButtons[i].interactable = valid;
 
                 if (plantCooldownFills != null && i < plantCooldownFills.Length && plantCooldownFills[i] != null)
                 {
