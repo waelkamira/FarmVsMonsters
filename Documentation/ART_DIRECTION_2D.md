@@ -40,3 +40,10 @@ This is an original game. Use the reference for broad visual qualities only; do 
 - New battle presentation code should use Physics2D, SpriteRenderer, and 2D-specific grid/placement/combat components.
 - Do not call the project visually complete until original sprite assets, animation frames, backgrounds, UI art, and effects have been created and reviewed.
 - Unity Editor compilation and Play Mode verification are required before calling the 2D prototype playable.
+
+
+## Definitive motion constraints
+- Plants remain anchored to their exact planting cell. Their idle loop is slow breathing with subtle leaf/body motion; only the mouth, arms, or other attack anatomy moves during attacks.
+- Monsters use a slow, heavy, awkward walk in early stages: alternating footfalls, slight torso/head sway, and loose arm swing. Increase speed gradually over successive waves; do not make the baseline monsters sprint.
+- The caveman is a planter/farm caretaker first. His club attack animation and damage are enabled only after the last living defensive plant has died. Replanting a defender disables club combat immediately.
+- These constraints are gameplay rules as well as animation requirements and must be preserved when replacing placeholder graphics with sprite sheets.
