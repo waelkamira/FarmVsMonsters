@@ -480,3 +480,11 @@
 - Added CameraFollow2D for an orthographic gameplay camera, with smooth LateUpdate tracking and optional world-space bounds that account for the visible camera dimensions.
 - Documented camera setup and bounds configuration.
 - Verification: GitHub readback and delimiter checks only. Unity compilation, camera framing, Rigidbody2D behavior, and combat feel remain untested.
+
+
+## 2026-11-13 — Battle wave scene validation
+- Added `Editor/BattleWaveSetupValidator.cs` with a Tools menu command for the selected `WaveManager`.
+- The validator checks spawn-point assignments and distinct lane heights, the farmhouse fallback target/Health reference, and both legacy and grouped wave enemy prefab entries.
+- Enemy prefabs are checked for the required 2D movement, health, collider, and enemy marker components before Play Mode.
+- Added setup instructions and clarified that validation reports configuration problems but does not auto-create or move scene objects.
+- Verification: source committed to `main` and read back. Unity Editor compilation and execution remain pending.
