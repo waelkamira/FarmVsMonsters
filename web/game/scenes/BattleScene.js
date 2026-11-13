@@ -6,8 +6,13 @@ const GRID_LEFT = 260;
 const GRID_TOP = 402;
 const CELL_W = 75;
 const CELL_H = 46;
-const HOME_X = 238;
-const SPAWN_X = 1045;
+const GRID_CENTER_X = 560;
+const GRID_CENTER_Y = 390;
+const GRID_ANGLE = -Math.PI / 6; // 30 degrees counter-clockwise on screen
+const GRID_COS = Math.cos(GRID_ANGLE);
+const GRID_SIN = Math.sin(GRID_ANGLE);
+const HOME_LOCAL_X = -300;
+const SPAWN_LOCAL_X = 330;
 const RADISH = { label: "Radish", cost: 35, hp: 110, cooldown: 1450, range: 360 };
 
 export default class BattleScene extends Scene {
@@ -32,7 +37,7 @@ export default class BattleScene extends Scene {
     this.plants = [];
     this.monsters = [];
     this.projectiles = [];
-    this.laneYs = Array.from({ length: LANES }, (_, row) => GRID_TOP + row * CELL_H + CELL_H / 2);
+    this.laneYs = Array.from({ length: LANES }, (_, row) => this.gridToWorld(0, row).y);
     this.emergencyMode = false;
     this.hasPlantedDefender = false;
     this.facing = 1;
@@ -94,17 +99,53 @@ export default class BattleScene extends Scene {
       .forEach((child) => child.destroy());
   }
 
+  gridToWorld(col, row, offsetX = 0, offsetY = 0) {
+    const localX = -COLUMNS * CELL_W / 2 + col * CELL_W + offsetX;
+    const localY = -LANES * CELL_H / 2 + row * CELL_H + offsetY;
+    return {
+      x: GRID_CENTER_X + localX * GRID_COS - localY * GRID_SIN,
+      y: GRID_CENTER_Y + localX * GRID_SIN + localY * GRID_COS,
+    };
+  }
+
+  worldToGrid(x, y) {
+    const dx = x - GRID_CENTER_X;
+    const dy = y - GRID_CENTER_Y;
+    const localX = dx * GRID_COS + dy * GRID_SIN + COLUMNS * CELL_W / 2;
+    const localY = -dx * GRID_SIN + dy * GRID_COS + LANES * CELL_H / 2;
+    return { col: Math.floor(localX / CELL_W), row: Math.floor(localY / CELL_H) };
+  }
+
+  lanePoint(localX, row) {
+    const localY = -LANES * CELL_H / 2 + row * CELL_H + CELL_H / 2;
+    return {
+      x: GRID_CENTER_X + localX * GRID_COS - localY * GRID_SIN,
+      y: GRID_CENTER_Y + localX * GRID_SIN + localY * GRID_COS,
+    };
+  }
+
+  worldToLane(point) {
+    const dx = point.x - GRID_CENTER_X;
+    const dy = point.y - GRID_CENTER_Y;
+    return {
+      localX: dx * GRID_COS + dy * GRID_SIN,
+      localY: -dx * GRID_SIN + dy * GRID_COS,
+    };
+  }
+
   drawPlantingGrid() {
-    // Planting cells are rendered by Phaser, never baked into the background art.
+    // Each cell is drawn as a rotated quadrilateral; hit-testing uses the inverse transform.
     const grid = this.add.graphics().setDepth(2);
     for (let row = 0; row < LANES; row += 1) {
-      const y = GRID_TOP + row * CELL_H;
       for (let col = 0; col < COLUMNS; col += 1) {
-        const x = GRID_LEFT + col * CELL_W;
+        const a = this.gridToWorld(col, row, 2, 2);
+        const b = this.gridToWorld(col, row, CELL_W - 5, 2);
+        const c = this.gridToWorld(col, row, CELL_W - 5, CELL_H - 5);
+        const d = this.gridToWorld(col, row, 2, CELL_H - 5);
         grid.fillStyle(0xf7e8bd, 0.045);
-        grid.fillRoundedRect(x + 2, y + 2, CELL_W - 7, CELL_H - 12, 7);
-        grid.lineStyle(2, 0xffedc4, 0.42);
-        grid.strokeRoundedRect(x + 2, y + 2, CELL_W - 7, CELL_H - 12, 7);
+        grid.fillPoints([a, b, c, d], true);
+        grid.lineStyle(2, 0xffedc4, 0.48);
+        grid.strokePoints([a, b, c, d], true);
       }
     }
     this.plantingGrid = grid;
@@ -164,9 +205,8 @@ export default class BattleScene extends Scene {
       space: Input.Keyboard.KeyCodes.SPACE
     });
     this.input.on("pointerdown", (pointer) => {
-      if (this.gameOver || pointer.y < GRID_TOP - 8 || pointer.x < GRID_LEFT - 8) return;
-      const col = Math.floor((pointer.x - GRID_LEFT) / CELL_W);
-      const row = Math.floor((pointer.y - GRID_TOP) / CELL_H);
+      if (this.gameOver) return;
+      const { col, row } = this.worldToGrid(pointer.x, pointer.y);
       if (row >= 0 && row < LANES && col >= 0 && col < COLUMNS) this.requestPlant(col, row);
     });
   }
@@ -215,8 +255,7 @@ export default class BattleScene extends Scene {
     if (this.plantingTarget) { this.setMessage("The caveman is already on his way to a planting spot."); return; }
     if (this.plants.some((p) => p.alive && p.col === col && p.row === row)) { this.setMessage("That soil cell is occupied."); return; }
     if (this.energy < RADISH.cost) { this.setMessage("Not enough energy to plant a radish."); return; }
-    const x = GRID_LEFT + col * CELL_W + CELL_W / 2;
-    const y = this.laneYs[row];
+    const { x, y } = this.gridToWorld(col, row, CELL_W / 2, CELL_H / 2);
     this.plantingTarget = { col, row, x, y };
     this.facing = x >= this.caveman.x ? 1 : -1;
     this.caveman.scaleX = this.facing;
@@ -247,8 +286,7 @@ export default class BattleScene extends Scene {
     }
     this.energy -= RADISH.cost;
     this.hasPlantedDefender = true;
-    const x = GRID_LEFT + col * CELL_W + CELL_W / 2;
-    const y = this.laneYs[row];
+    const { x, y } = this.gridToWorld(col, row, CELL_W / 2, CELL_H / 2);
     this.plants.push({
       type: "radish", col, row, x, y, hp: RADISH.hp, alive: true,
       cooldown: PhaserMath.Between(250, 650), view: this.drawRadish(x, y)
@@ -297,7 +335,8 @@ export default class BattleScene extends Scene {
   spawnMonster() {
     const row = PhaserMath.Between(0, LANES - 1);
     const hp = 65 + Math.floor(this.wave * 4);
-    const view = this.add.container(SPAWN_X, this.laneYs[row]);
+    const spawn = this.lanePoint(SPAWN_LOCAL_X, row);
+    const view = this.add.container(spawn.x, spawn.y);
     const g = this.add.graphics();
     g.fillStyle(0x7b9872, 1); g.fillEllipse(0, 16, 42, 58);
     g.fillStyle(0x9cae88, 1); g.fillCircle(0, -22, 25);
@@ -306,16 +345,18 @@ export default class BattleScene extends Scene {
     g.lineStyle(7, 0x7b9872, 1); g.lineBetween(-18, 0, -33, 15); g.lineBetween(18, 0, 33, 15);
     g.lineStyle(8, 0x51422e, 1); g.lineBetween(-10, 39, -18, 55); g.lineBetween(10, 39, 18, 55);
     view.add(g); view.setDepth(8);
-    this.tweens.add({ targets: view, angle: { from: -2.5, to: 2.5 }, y: this.laneYs[row] + 2, duration: 520, ease: "Sine.easeInOut", yoyo: true, repeat: -1 });
-    this.monsters.push({ row, x: SPAWN_X, y: this.laneYs[row], hp, speed: Math.min(45, 14 + (this.wave - 1) * 1.8), attackCooldown: 0, alive: true, view });
+    this.tweens.add({ targets: view, angle: { from: -2.5, to: 2.5 }, duration: 520, ease: "Sine.easeInOut", yoyo: true, repeat: -1 });
+    this.monsters.push({ row, x: spawn.x, y: spawn.y, localX: SPAWN_LOCAL_X, hp, speed: Math.min(45, 14 + (this.wave - 1) * 1.8), attackCooldown: 0, alive: true, view });
   }
 
   updateMonsters(dt, delta) {
     for (const monster of this.monsters) {
       if (!monster.alive) continue;
       monster.attackCooldown -= delta;
-      const blocker = this.plants.filter((p) => p.alive && p.row === monster.row && p.x < monster.x).sort((a, b) => b.x - a.x)[0];
-      if (blocker && monster.x - blocker.x <= 43) {
+      const blocker = this.plants.filter((p) => p.alive && p.row === monster.row && this.worldToLane(p).localX < monster.localX)
+        .sort((a, b) => this.worldToLane(b).localX - this.worldToLane(a).localX)[0];
+      const blockerLocalX = blocker ? this.worldToLane(blocker).localX : -Infinity;
+      if (blocker && monster.localX - blockerLocalX <= 43) {
         if (monster.attackCooldown <= 0) {
           blocker.hp -= 16; monster.attackCooldown = 1150;
           this.tweens.add({ targets: monster.view, x: monster.view.x - 4, duration: 90, yoyo: true });
@@ -323,14 +364,17 @@ export default class BattleScene extends Scene {
         }
         continue;
       }
-      if (!blocker && monster.x <= HOME_X + 34) {
+      if (!blocker && monster.localX <= HOME_LOCAL_X + 34) {
         if (monster.attackCooldown <= 0) {
           this.houseHealth = Math.max(0, this.houseHealth - 8); monster.attackCooldown = 1250;
           if (this.houseHealth <= 0) this.endGame(false);
         }
         continue;
       }
-      monster.x -= monster.speed * dt; monster.view.x = monster.x;
+      monster.localX -= monster.speed * dt;
+      const position = this.lanePoint(monster.localX, monster.row);
+      monster.x = position.x; monster.y = position.y;
+      monster.view.setPosition(position.x, position.y);
     }
     this.monsters = this.monsters.filter((m) => m.alive);
   }
@@ -386,9 +430,8 @@ export default class BattleScene extends Scene {
   }
 
   nearestLane(y) {
-    let best = 0; let distance = Infinity;
-    this.laneYs.forEach((laneY, index) => { const d = Math.abs(laneY - y); if (d < distance) { best = index; distance = d; } });
-    return best;
+    const local = this.worldToLane({ x: this.caveman.x, y });
+    return PhaserMath.Clamp(Math.floor((local.localY + LANES * CELL_H / 2) / CELL_H), 0, LANES - 1);
   }
 
   checkWaveProgress() {
