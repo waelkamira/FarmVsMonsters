@@ -352,3 +352,11 @@
 - Added a required-Health validation gate: spawned prefabs without Health are logged and destroyed instead of silently allowing a wave to clear.
 - Updated the 2D setup guide with composition, lane, reward, and prefab requirements.
 - Verification: source files were read back from GitHub and delimiter checks are performed after this commit. Unity compilation, inspector serialization, and gameplay balance still require a Unity editor run.
+
+
+## 2026-11-13 — Character sheet production pipeline
+- Extended the shared 2D animation state model with Block and Victory states, and exposed matching methods on CharacterAnimationDriver2D so gameplay/UI events can request those reactions.
+- Added an Editor-only 6x6 character atlas slicer. It validates evenly divisible dimensions, creates 36 named sprites in top-to-bottom animation-row order, and applies consistent bottom-center pivots and transparent-sprite import settings.
+- Standard row mapping: Idle, Walk, Attack, Block, Hurt, then five Death frames plus one Victory frame. This matches the planned first plant-warrior sheet layout.
+- Added the Unity setup instructions for slicing, naming, assigning frames, loop settings, and atlas limitations.
+- Verification: source files were committed and read back from GitHub. Unity Editor API compatibility, sprite slicing output, C# compilation, and Play Mode behavior have not been tested in this environment.
