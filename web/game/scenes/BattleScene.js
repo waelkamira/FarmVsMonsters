@@ -1,4 +1,4 @@
-import Phaser from "phaser";
+import { Scene, Input, Math as PhaserMath } from "phaser";
 
 const LANES = 5;
 const COLUMNS = 8;
@@ -10,7 +10,7 @@ const HOME_X = 118;
 const SPAWN_X = 1090;
 const RADISH = { label: "Radish", cost: 35, hp: 110, cooldown: 1450, range: 360 };
 
-export default class BattleScene extends Phaser.Scene {
+export default class BattleScene extends Scene {
   constructor() { super("BattleScene"); }
 
   preload() {
@@ -151,11 +151,11 @@ export default class BattleScene extends Phaser.Scene {
 
   bindInput() {
     this.keys = this.input.keyboard.addKeys({
-      w: Phaser.Input.Keyboard.KeyCodes.W, a: Phaser.Input.Keyboard.KeyCodes.A,
-      s: Phaser.Input.Keyboard.KeyCodes.S, d: Phaser.Input.Keyboard.KeyCodes.D,
-      up: Phaser.Input.Keyboard.KeyCodes.UP, down: Phaser.Input.Keyboard.KeyCodes.DOWN,
-      left: Phaser.Input.Keyboard.KeyCodes.LEFT, right: Phaser.Input.Keyboard.KeyCodes.RIGHT,
-      space: Phaser.Input.Keyboard.KeyCodes.SPACE
+      w: Input.Keyboard.KeyCodes.W, a: Input.Keyboard.KeyCodes.A,
+      s: Input.Keyboard.KeyCodes.S, d: Input.Keyboard.KeyCodes.D,
+      up: Input.Keyboard.KeyCodes.UP, down: Input.Keyboard.KeyCodes.DOWN,
+      left: Input.Keyboard.KeyCodes.LEFT, right: Input.Keyboard.KeyCodes.RIGHT,
+      space: Input.Keyboard.KeyCodes.SPACE
     });
     this.input.on("pointerdown", (pointer) => {
       if (this.gameOver || pointer.y < GRID_TOP - 8 || pointer.x < GRID_LEFT - 8) return;
@@ -191,13 +191,13 @@ export default class BattleScene extends Phaser.Scene {
     if (this.keys.w.isDown || this.keys.up.isDown) dy -= 1;
     if (this.keys.s.isDown || this.keys.down.isDown) dy += 1;
     if (!this.plantingTarget && (dx !== 0 || dy !== 0)) {
-      this.caveman.x = Phaser.Math.Clamp(this.caveman.x + dx * 170 * dt, 105, 300);
-      this.caveman.y = Phaser.Math.Clamp(this.caveman.y + dy * 170 * dt, 140, 570);
+      this.caveman.x = PhaserMath.Clamp(this.caveman.x + dx * 170 * dt, 105, 300);
+      this.caveman.y = PhaserMath.Clamp(this.caveman.y + dy * 170 * dt, 140, 570);
       if (dx !== 0) this.facing = Math.sign(dx);
       this.caveman.scaleX = this.facing;
     }
     this.updatePlantingMovement(dt);
-    if (Phaser.Input.Keyboard.JustDown(this.keys.space)) {
+    if (Input.Keyboard.JustDown(this.keys.space)) {
       if (this.livingPlantCount() > 0) this.setMessage("The radishes are alive and defending. The caveman cannot fight yet.");
       else if (this.hasPlantedDefender) this.clubAttack();
       else this.setMessage("Plant a radish first. The caveman's club is an emergency defense only.");
@@ -245,7 +245,7 @@ export default class BattleScene extends Phaser.Scene {
     const y = this.laneYs[row];
     this.plants.push({
       type: "radish", col, row, x, y, hp: RADISH.hp, alive: true,
-      cooldown: Phaser.Math.Between(250, 650), view: this.drawRadish(x, y)
+      cooldown: PhaserMath.Between(250, 650), view: this.drawRadish(x, y)
     });
     this.updateEmergencyMode();
     this.tweens.add({ targets: this.caveman, scaleY: 0.82, duration: 120, yoyo: true });
@@ -289,7 +289,7 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   spawnMonster() {
-    const row = Phaser.Math.Between(0, LANES - 1);
+    const row = PhaserMath.Between(0, LANES - 1);
     const hp = 65 + Math.floor(this.wave * 4);
     const view = this.add.container(SPAWN_X, this.laneYs[row]);
     const g = this.add.graphics();
