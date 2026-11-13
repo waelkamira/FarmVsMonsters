@@ -107,7 +107,12 @@ namespace FarmVsMonsters.Farm
         private void Load()
         {
             if (!PlayerPrefs.HasKey(SaveKey))
+            {
+                amounts[(int)FarmResourceType.Seeds] = Mathf.Max(0, startingSeeds);
+                amounts[(int)FarmResourceType.Water] = Mathf.Max(0, startingWater);
+                Save();
                 return;
+            }
 
             try
             {
