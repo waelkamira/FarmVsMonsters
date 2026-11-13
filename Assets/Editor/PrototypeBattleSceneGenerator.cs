@@ -466,6 +466,8 @@ namespace FarmVsMonsters.EditorTools
                 SetFloat(combat, "attackRange", style == 3 ? 4.5f : 8f);
                 SetFloat(combat, "attackInterval", interval);
                 SetFloat(combat, "damage", damage);
+                SetFloat(combat, "slowMultiplier", style == 2 ? 0.55f : 1f);
+                SetFloat(combat, "slowDuration", style == 2 ? 2.5f : 0f);
             }
             else
             {
