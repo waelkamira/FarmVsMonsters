@@ -68,7 +68,7 @@ namespace FarmVsMonsters.Farm
             long expiry = 0;
             if (contract.TimeLimitHours > 0f)
             {
-                double ticks = contract.TimeLimitHours * TimeSpan.TicksPerHour;
+                double ticks = (double)contract.TimeLimitHours * TimeSpan.TicksPerHour;
                 expiry = ticks >= long.MaxValue - now.Ticks
                     ? long.MaxValue
                     : now.Ticks + (long)ticks;
