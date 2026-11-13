@@ -89,7 +89,11 @@ namespace FarmVsMonsters.Enemies
                 }
 
                 while (livingEnemies.Count > 0)
-                    yield return null;
+                {
+                    RemoveDestroyedEnemies();
+                    if (livingEnemies.Count > 0)
+                        yield return null;
+                }
 
                 WaveCleared?.Invoke(CurrentWave);
             }
@@ -97,6 +101,26 @@ namespace FarmVsMonsters.Enemies
             IsRunning = false;
             routine = null;
             AllWavesCleared?.Invoke();
+        }
+
+        private void RemoveDestroyedEnemies()
+        {
+            List<Health> missing = null;
+            foreach (Health enemy in livingEnemies)
+            {
+                if (enemy != null)
+                    continue;
+
+                if (missing == null)
+                    missing = new List<Health>();
+                missing.Add(enemy);
+            }
+
+            if (missing == null)
+                return;
+
+            foreach (Health enemy in missing)
+                livingEnemies.Remove(enemy);
         }
 
         private void HandleEnemyDied(Health enemy)
