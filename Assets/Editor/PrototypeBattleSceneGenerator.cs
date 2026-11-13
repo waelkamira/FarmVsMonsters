@@ -231,8 +231,16 @@ namespace FarmVsMonsters.EditorTools
                 "The farm is safe.", new Vector2(0f, -118f), new Vector2(540f, 70f),
                 new Vector2(0.5f, 1f), 22, TextAnchor.MiddleCenter);
             Button retryButton = CreateButton(resultPanel.transform, "RetryButton", "PLAY AGAIN",
-                new Vector2(0f, 34f), new Vector2(220f, 60f), new Vector2(0.5f, 0f));
+                new Vector2(-125f, 34f), new Vector2(210f, 60f), new Vector2(0.5f, 0f));
             BattleRetryButton retryBinding = retryButton.gameObject.AddComponent<BattleRetryButton>();
+            Button returnButton = CreateButton(resultPanel.transform, "ReturnToFarmButton", "RETURN TO FARM",
+                new Vector2(125f, 34f), new Vector2(210f, 60f), new Vector2(0.5f, 0f));
+            SceneNavigationButton returnNavigation =
+                returnButton.gameObject.AddComponent<SceneNavigationButton>();
+            SerializedObject returnNavigationSo = new SerializedObject(returnNavigation);
+            returnNavigationSo.FindProperty("button").objectReferenceValue = returnButton;
+            returnNavigationSo.FindProperty("targetScene").stringValue = "FarmHub";
+            returnNavigationSo.ApplyModifiedPropertiesWithoutUndo();
 
             BattleHudController hud = canvasObject.AddComponent<BattleHudController>();
             SetObject(hud, "energyWallet", wallet);
@@ -260,10 +268,8 @@ namespace FarmVsMonsters.EditorTools
             CreateEventSystem();
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene, ScenePath);
-            EditorBuildSettings.scenes = new[]
-            {
-                new EditorBuildSettingsScene(ScenePath, true)
-            };
+            AddBuildScene("Assets/Scenes/FarmHub.unity");
+            AddBuildScene(ScenePath);
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
@@ -271,6 +277,24 @@ namespace FarmVsMonsters.EditorTools
                 "Generated the PrototypeBattle greybox scene, 3D test prefabs, and plant definitions. " +
                 "Open the scene and press Play. Replace primitive visuals with final art later.",
                 "OK");
+        }
+
+        private static void AddBuildScene(string path)
+        {
+            var scenes = new System.Collections.Generic.List<EditorBuildSettingsScene>(
+                EditorBuildSettings.scenes ?? new EditorBuildSettingsScene[0]);
+            for (int i = 0; i < scenes.Count; i++)
+            {
+                if (scenes[i].path == path)
+                {
+                    if (!scenes[i].enabled)
+                        scenes[i] = new EditorBuildSettingsScene(path, true);
+                    EditorBuildSettings.scenes = scenes.ToArray();
+                    return;
+                }
+            }
+            scenes.Add(new EditorBuildSettingsScene(path, true));
+            EditorBuildSettings.scenes = scenes.ToArray();
         }
 
         private static void CreateBattleBoardDetails(Material soil, Material grass)
