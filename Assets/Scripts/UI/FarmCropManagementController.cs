@@ -1,4 +1,4 @@
-using FarmVsMonsters.Farm;
+using FarmVsMonsters.Farm;\nusing FarmVsMonsters.Progression;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -15,7 +15,7 @@ namespace FarmVsMonsters.UI
         [SerializeField] private Text[] cropLabels;
         [SerializeField] private Button[] harvestButtons;\n        [SerializeField] private Button[] waterButtons;
         [SerializeField] private Text[] plotLabels;
-        [SerializeField] private Text seedCountText;
+        [SerializeField] private Text seedCountText;\n        [SerializeField] private Text waterCountText;\n        [SerializeField] private Button seedPackPurchaseButton;\n        [SerializeField, Min(1)] private int seedPackAmount = 10;\n        [SerializeField, Min(0)] private int seedPackCoinCost = 25;\n        private UnityAction seedPackAction;
         [SerializeField] private FarmResourceWallet resourceWallet;
 
         private UnityAction[] cropActions;
@@ -54,7 +54,7 @@ namespace FarmVsMonsters.UI
             harvestActions = null;
         }
 
-        public void PlantCrop(int cropIndex, int plotIndex)
+        public bool PurchaseSeedPack()\n        {\n            if (resourceWallet == null || seedPackAmount < 1 || seedPackCoinCost < 0 ||\n                !resourceWallet.CanAdd(FarmResourceType.Seeds, seedPackAmount))\n                return false;\n\n            if (!ProgressSaveService.TrySpendFarmCoins(seedPackCoinCost))\n                return false;\n\n            resourceWallet.Add(FarmResourceType.Seeds, seedPackAmount);\n            Refresh();\n            return true;\n        }\n\n        public void PlantCrop(int cropIndex, int plotIndex)
         {
             if (cropService == null || crops == null || plots == null ||
                 cropIndex < 0 || cropIndex >= crops.Length || plotIndex < 0 || plotIndex >= plots.Length)
@@ -149,7 +149,7 @@ namespace FarmVsMonsters.UI
             }
         }
 
-        private void BindWaterButtons()\n        {\n            if (waterButtons == null)\n                return;\n\n            waterActions = new UnityAction[waterButtons.Length];\n            for (int i = 0; i < waterButtons.Length; i++)\n            {\n                if (waterButtons[i] == null)\n                    continue;\n\n                int plotIndex = i;\n                waterActions[i] = () => WaterCrop(plotIndex);\n                waterButtons[i].onClick.AddListener(waterActions[i]);\n            }\n        }\n\n        private void PlantFirstAvailablePlot(int cropIndex)
+        private void BindSeedPackButton()\n        {\n            if (seedPackPurchaseButton == null)\n                return;\n\n            seedPackAction = PurchaseSeedPack;\n            seedPackPurchaseButton.onClick.AddListener(seedPackAction);\n        }\n\n        private void BindWaterButtons()\n        {\n            if (waterButtons == null)\n                return;\n\n            waterActions = new UnityAction[waterButtons.Length];\n            for (int i = 0; i < waterButtons.Length; i++)\n            {\n                if (waterButtons[i] == null)\n                    continue;\n\n                int plotIndex = i;\n                waterActions[i] = () => WaterCrop(plotIndex);\n                waterButtons[i].onClick.AddListener(waterActions[i]);\n            }\n        }\n\n        private void PlantFirstAvailablePlot(int cropIndex)
         {
             if (plots == null || cropService == null || crops == null ||
                 cropIndex < 0 || cropIndex >= crops.Length)
