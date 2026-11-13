@@ -22,6 +22,18 @@ namespace FarmVsMonsters.Farm
         private int[] amounts = new int[ResourceCount];
         public event Action<FarmResourceType, int> ResourceChanged;
 
+        public int CapacityPerResource => Mathf.Max(1, capacityPerResource);
+
+        public void SetCapacityPerResource(int newCapacity)
+        {
+            capacityPerResource = Mathf.Max(1, newCapacity);
+            for (int i = 0; i < amounts.Length; i++)
+                amounts[i] = Mathf.Clamp(amounts[i], 0, capacityPerResource);
+            Save();
+            for (int i = 0; i < amounts.Length; i++)
+                ResourceChanged?.Invoke((FarmResourceType)i, amounts[i]);
+        }
+
         private void Awake()
         {
             Load();
