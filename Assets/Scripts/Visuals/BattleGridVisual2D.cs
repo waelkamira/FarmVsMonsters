@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace FarmVsMonsters.Visuals
 {
-    /// <summary>Builds lightweight runtime lane/cell guide lines for the 2D battle board.</summary>
+    /// <summary>Builds lightweight runtime cell guide lines for the 2D battle board.</summary>
     [RequireComponent(typeof(BattleGrid2D))]
     public sealed class BattleGridVisual2D : MonoBehaviour
     {
@@ -34,23 +34,17 @@ namespace FarmVsMonsters.Visuals
             }
             runtimeMaterial = new Material(shader) { color = lineColor };
 
-            Vector2 firstCenter = grid.CellToWorld(Vector2Int.zero);
-            Vector2 left = firstCenter - Vector2.right * (grid.CellWidth * 0.5f);
-            Vector2 bottom = firstCenter - Vector2.up * (grid.CellHeight * 0.5f);
-            float width = grid.Columns * grid.CellWidth;
-            float height = grid.Rows * grid.CellHeight;
-
             for (int x = 0; x <= grid.Columns; x++)
             {
-                float xPosition = left.x + x * grid.CellWidth;
-                CreateLine(new Vector3(xPosition, bottom.y, 0f),
-                    new Vector3(xPosition, bottom.y + height, 0f), "Grid Vertical " + x);
+                Vector3 start = grid.GridPointToWorld(x, 0);
+                Vector3 end = grid.GridPointToWorld(x, grid.Rows);
+                CreateLine(start, end, "Grid Vertical " + x);
             }
             for (int y = 0; y <= grid.Rows; y++)
             {
-                float yPosition = bottom.y + y * grid.CellHeight;
-                CreateLine(new Vector3(left.x, yPosition, 0f),
-                    new Vector3(left.x + width, yPosition, 0f), "Grid Horizontal " + y);
+                Vector3 start = grid.GridPointToWorld(0, y);
+                Vector3 end = grid.GridPointToWorld(grid.Columns, y);
+                CreateLine(start, end, "Grid Horizontal " + y);
             }
         }
 
