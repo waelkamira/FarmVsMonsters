@@ -39,7 +39,9 @@ namespace FarmVsMonsters.Economy
                 return 0;
 
             int previous = Balance;
-            SetBalance(Mathf.Min(capacity, Balance + amount));
+            int availableSpace = capacity - Balance;
+            int accepted = Mathf.Min(amount, availableSpace);
+            SetBalance(Balance + accepted);
             return Balance - previous;
         }
 
