@@ -78,6 +78,37 @@ namespace FarmVsMonsters.Enemies
             energyWallet = wallet;
         }
 
+        /// <summary>
+        /// Stops future spawns and optionally removes every living monster.
+        /// Used when a protected objective is destroyed before the waves finish.
+        /// </summary>
+        public void StopWaves(bool destroyLivingEnemies = true)
+        {
+            if (routine != null)
+            {
+                StopCoroutine(routine);
+                routine = null;
+            }
+
+            startRequested = false;
+            IsRunning = false;
+            startDelayRemaining = 0f;
+            interWaveDelayRemaining = 0f;
+
+            foreach (KeyValuePair<Health, Action> pair in deathHandlers)
+            {
+                if (pair.Key != null)
+                {
+                    pair.Key.Died -= pair.Value;
+                    if (destroyLivingEnemies)
+                        Destroy(pair.Key.gameObject);
+                }
+            }
+
+            deathHandlers.Clear();
+            livingEnemies.Clear();
+        }
+
         public void Begin()
         {
             if (IsRunning || startRequested)
