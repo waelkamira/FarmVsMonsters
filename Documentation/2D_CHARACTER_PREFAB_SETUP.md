@@ -147,3 +147,12 @@ Every plant is rooted in its assigned grid cell. Do not add a movement controlle
 4. Add `FarmResourceWallet2D` to the battle scene and assign it plus the crop definition to a `FarmPlotInteractor2D` on the caveman. Add a Collider2D to each plot on a layer included in Plot Layers.
 5. Move next to a plot and press E: empty = plant, growing = water once (accelerates growth), ready = harvest into Produce. Starting seed/produce amounts and capacity are configurable on the wallet.
 6. The crop definition's Crop Health value is applied to the plot Health component each time a new crop is planted. Put the plot collider on a layer included in both Plot Layers (player interaction) and Farm Target Layers (monster detection).
+
+
+## 2D animal pen setup
+1. Create an animal root with a Collider2D, `Health`, `FarmDefenseTarget2D`, and `FarmAnimal2D`; add a SpriteRenderer for its art.
+2. Set the target kind to Animal, choose its lane behavior and monster priority, and include its collider layer in the monster's Farm Target Layers.
+3. Create an `FarmAnimalDefinition2D` asset via **Assets → Create → Farm Vs Monsters → 2D → Animal Definition**. Assign idle/ready sprites, feed cost, production duration, produce yield, and health.
+4. Add `FarmAnimalCareController2D` to the caveman and assign the shared `FarmResourceWallet2D`, selected animal definition, and animal collider layer.
+5. Press F near a hungry animal to spend Feed and start production. Wait for Ready, then press F again to collect Produce. Monsters can attack and kill the animal while it is in the pen.
+6. Configure starting Feed on `FarmResourceWallet2D`; Feed and Produce are bounded resources. Animal production currently advances only while the scene is running (no offline production yet).
