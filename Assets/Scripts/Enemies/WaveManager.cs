@@ -93,6 +93,11 @@ namespace FarmVsMonsters.Enemies
                         if (movement != null && enemyTarget != null && enemyTargetHealth != null)
                             movement.SetTarget(enemyTarget, enemyTargetHealth);
 
+                        // The same wave scheduler supports the approved 2D side-view combat.
+                        EnemyMovement2D movement2D = instance.GetComponent<EnemyMovement2D>();
+                        if (movement2D != null && enemyTarget != null && enemyTargetHealth != null)
+                            movement2D.SetTarget(enemyTarget, enemyTargetHealth);
+
                         Health health = instance.GetComponent<Health>();
                         if (health != null && !health.IsDead)
                         {
