@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using FarmVsMonsters.UI;
 using FarmVsMonsters.Player;
+using FarmVsMonsters.Farm;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -22,6 +23,10 @@ namespace FarmVsMonsters.EditorTools
             EnsureFolder("Assets", "Scenes");
             EnsureFolder("Assets", "Materials");
             EnsureFolder("Assets/Materials", "Generated");
+            EnsureFolder("Assets", "Prefabs");
+            EnsureFolder("Assets/Prefabs", "FarmCrops");
+            EnsureFolder("Assets", "ScriptableObjects");
+            EnsureFolder("Assets/ScriptableObjects", "FarmCrops");
             Material grass = MaterialFor("FarmHub_Grass", new Color(0.31f, 0.57f, 0.25f));
             Material wood = MaterialFor("FarmHub_Wood", new Color(0.43f, 0.25f, 0.13f));
             Material roof = MaterialFor("FarmHub_Roof", new Color(0.65f, 0.22f, 0.13f));
@@ -38,6 +43,8 @@ namespace FarmVsMonsters.EditorTools
             BuildBarn(new Vector3(5f, 0f, 2f), wood, roof);
             BuildWindmill(new Vector3(7f, 0f, 7f), wood, roof);
 
+            FarmCropPlot[] cropPlots = new FarmCropPlot[9];
+            int plotIndex = 0;
             for (int x = -1; x <= 1; x++)
             {
                 for (int z = -1; z <= 1; z++)
@@ -47,14 +54,28 @@ namespace FarmVsMonsters.EditorTools
                     plot.transform.position = new Vector3(x * 2.2f, 0.08f, z * 2.2f);
                     plot.transform.localScale = new Vector3(1.8f, 0.16f, 1.8f);
                     plot.GetComponent<Renderer>().sharedMaterial = soil;
-                    GameObject crop = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                    crop.name = "CropPlaceholder";
-                    crop.transform.position = plot.transform.position + Vector3.up * 0.72f;
-                    crop.transform.localScale = new Vector3(0.55f, 1.1f, 0.55f);
-                    crop.GetComponent<Renderer>().sharedMaterial = leaf;
-                    Object.DestroyImmediate(crop.GetComponent<Collider>());
+                    cropPlots[plotIndex] = plot.AddComponent<FarmCropPlot>();
+                    SerializedObject plotSo = new SerializedObject(cropPlots[plotIndex]);
+                    plotSo.FindProperty("plotId").stringValue = "farmhub.plot." + (plotIndex + 1).ToString("00");
+                    plotSo.ApplyModifiedPropertiesWithoutUndo();
+                    plotIndex++;
                 }
             }
+
+            GameObject stageOne = CreateCropStagePrefab("Wheat_Stage_Seedling", leaf, 0.65f);
+            GameObject stageTwo = CreateCropStagePrefab("Wheat_Stage_Mature", leaf, 1.15f);
+            FarmCropDefinition wheat = CreateWheatDefinition(stageOne, stageTwo);
+
+            GameObject cropVisualRoot = new GameObject("CropVisuals");
+            GameObject farmEconomy = new GameObject("FarmEconomy");
+            FarmResourceWallet resourceWallet = farmEconomy.AddComponent<FarmResourceWallet>();
+            FarmCropService cropService = farmEconomy.AddComponent<FarmCropService>();
+            SerializedObject cropServiceSo = new SerializedObject(cropService);
+            SetObjectArray(cropServiceSo, "plots", cropPlots);
+            SetObjectArray(cropServiceSo, "cropCatalogue", new UnityEngine.Object[] { wheat });
+            cropServiceSo.FindProperty("cropVisualRoot").objectReferenceValue = cropVisualRoot.transform;
+            cropServiceSo.FindProperty("resourceWallet").objectReferenceValue = resourceWallet;
+            cropServiceSo.ApplyModifiedPropertiesWithoutUndo();
 
             GameObject farmer = new GameObject("FarmHubPlayer");
             farmer.transform.position = new Vector3(0f, 0f, -5f);
