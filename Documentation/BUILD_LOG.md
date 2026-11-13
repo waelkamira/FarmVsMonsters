@@ -391,3 +391,10 @@
 - Updated `EnemyMovement2D` to scan nearby farm targets, prefer the highest configured priority (then nearest), stop and attack a blocking target in reach, and continue toward its configured fallback target when no farm target is nearby.
 - Farm targets require Health and a Collider2D; assign their layers in the monster's Farm Target Layers mask. Use lane-bound targets for plants/crops and optionally lane-independent targets for larger animals or the farmhouse.
 - Verification: source writes and GitHub readback only; Unity compilation, physics overlap behavior, and gameplay balance remain untested.
+
+
+## 2026-11-13 — Stabilize monster farm-target selection
+- Rewrote `EnemyMovement2D` cleanly after detecting literal escaped newline sequences in the previous generated source. The replacement contains the complete target scan method and normal source line breaks.
+- Monsters now scan nearby marked farm objects, filter targets by travel direction and lane, choose the highest priority (then nearest), stop to attack blocking targets in range, and resume movement toward their fallback destination after the target is destroyed.
+- Documented required Health/Collider2D/FarmDefenseTarget2D setup and suggested target priorities.
+- Verification: GitHub write and source readback; Unity compilation and Play Mode physics tests are still required.
