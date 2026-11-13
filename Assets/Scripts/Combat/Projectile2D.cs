@@ -89,6 +89,19 @@ namespace FarmVsMonsters.Combat
                 if (health == null || health.IsDead ||
                     candidate.GetComponentInParent<EnemyMarker>() == null) continue;
 
+                bool alreadyProcessed = false;
+                for (int previous = 0; previous < i; previous++)
+                {
+                    Collider2D previousCollider = splashResults[previous];
+                    if (previousCollider == null) continue;
+                    if (previousCollider.GetComponentInParent<Health>() == health)
+                    {
+                        alreadyProcessed = true;
+                        break;
+                    }
+                }
+                if (alreadyProcessed) continue;
+
                 if (health == target) primaryHitApplied = true;
                 ApplyToMonster(health);
             }
