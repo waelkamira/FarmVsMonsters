@@ -312,3 +312,10 @@
 - Added Documentation/AI_ART_ASSET_PIPELINE.md with the art folder contract, naming rules, generation handoff, sprite-sheet slicing checklist, animation states, and acceptance review gate.
 - The importer is scoped only to Assets/Art/Characters/Individual/ and Assets/Art/Characters/SpriteSheets/; it does not modify unrelated textures.
 - Verification: files were committed to main. Unity compilation/import behavior has not been tested because the Unity Editor is not installed/configured in this workflow.
+## 2026-11-13 — Combat-driven 2D character animation
+- Extended SpriteAnimation2D with HasClip so gameplay animation drivers can safely detect optional states.
+- Added CharacterAnimationDriver2D to map Health damage/death events to Hurt/Death, movement intent to Walk/Idle, and combat actions to Attack. Missing transient clips fall back to locomotion instead of trapping the character in a state.
+- Connected EnemyMovement2D movement and melee attacks to the animation driver, and connected PlantCombatController2D firing to the Attack state.
+- The driver initializes its health baseline in Start, after component Awake initialization, to avoid depending on unspecified Awake ordering between components.
+- Prefab wiring: add SpriteAnimation2D and CharacterAnimationDriver2D to the same root as Health; assign clips in the Inspector. EnemyMovement2D and PlantCombatController2D discover the driver on their own GameObject.
+- Verification: source changes were committed and are being read back from main. No Unity compile or Play Mode test has been run.
