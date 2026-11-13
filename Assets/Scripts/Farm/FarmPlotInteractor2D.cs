@@ -1,4 +1,4 @@
-using UnityEngine;
+using FarmVsMonsters.Combat;\nusing UnityEngine;
 
 namespace FarmVsMonsters.Farm
 {
@@ -12,16 +12,16 @@ namespace FarmVsMonsters.Farm
         [SerializeField, Min(1)] private int maxPlotsPerScan = 12;
         [SerializeField] private LayerMask plotLayers = ~0;
 
-        private Collider2D[] results;
+        private Collider2D[] results;\n        private Health playerHealth;
 
         private void Awake()
         {
-            results = new Collider2D[Mathf.Max(1, maxPlotsPerScan)];
+            results = new Collider2D[Mathf.Max(1, maxPlotsPerScan)];\n            playerHealth = GetComponent<Health>();
         }
 
         private void Update()
         {
-            if (!Input.GetKeyDown(KeyCode.E)) return;
+            if ((playerHealth != null && playerHealth.IsDead) || !Input.GetKeyDown(KeyCode.E)) return;
             FarmCropPlot2D plot = FindNearestPlot();
             if (plot == null) return;
 
