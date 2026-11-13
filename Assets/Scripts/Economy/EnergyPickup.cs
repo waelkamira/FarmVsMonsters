@@ -18,6 +18,16 @@ namespace FarmVsMonsters.Economy
         private Collider pickupCollider;
         private AudioSource audioSource;
 
+        public void SetTargetWallet(EnergyWallet wallet)
+        {
+            targetWallet = wallet;
+        }
+
+        public void SetEnergyAmount(int amount)
+        {
+            energyAmount = Mathf.Max(1, amount);
+        }
+
         private void Awake()
         {
             pickupCollider = GetComponent<Collider>();
