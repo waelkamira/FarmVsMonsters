@@ -13,6 +13,13 @@ const RADISH = { label: "Radish", cost: 35, hp: 110, cooldown: 1450, range: 360 
 export default class BattleScene extends Phaser.Scene {
   constructor() { super("BattleScene"); }
 
+  preload() {
+    this.load.image("farm-battlefield", "/assets/backgrounds/farm-battlefield.png");
+    this.load.on("loaderror", (file) => {
+      if (file.key === "farm-battlefield") this.backgroundAssetFailed = true;
+    });
+  }
+
   create() {
     this.energy = 150;
     this.houseHealth = 100;
@@ -33,6 +40,8 @@ export default class BattleScene extends Phaser.Scene {
     this.gameOver = false;
 
     this.drawField();
+    this.createFarmBackground();
+    this.drawPlantingGrid();
     this.createHud();
     this.createCaveman();
     this.bindInput();
@@ -41,7 +50,7 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   drawField() {
-    const g = this.add.graphics();
+    const g = this.add.graphics().setDepth(-10);
     g.fillGradientStyle(0xb9d98a, 0xb9d98a, 0x8dbb69, 0x8dbb69, 1);
     g.fillRect(0, 0, 1120, 680);
     g.fillStyle(0x8a603b, 1); g.fillRoundedRect(185, 115, 690, 500, 24);
@@ -65,6 +74,35 @@ export default class BattleScene extends Phaser.Scene {
     this.add.text(145, 386, "PRINCESS", { fontFamily: "Arial", fontSize: "10px", color: "#fff4d4", fontStyle: "bold" }).setOrigin(0.5);
     this.add.text(94, 555, "FARMHOUSE", { fontFamily: "Arial", fontSize: "13px", color: "#fff3d4", fontStyle: "bold" }).setOrigin(0.5);
     this.add.text(1000, 95, "MONSTER GATE", { fontFamily: "Arial", fontSize: "13px", color: "#563c2c", fontStyle: "bold" }).setOrigin(0.5);
+  }
+
+  createFarmBackground() {
+    if (!this.textures.exists("farm-battlefield")) {
+      this.setMessage("Using the temporary farm scene. Add farm-battlefield.png to public/assets/backgrounds when ready.");
+      return;
+    }
+
+    // Keep environment artwork separate from interactive gameplay objects.
+    // Fit the 16:9 image inside the current viewport without stretching it.
+    this.farmBackground = this.add.image(560, 340, "farm-battlefield")
+      .setDisplaySize(1120, 630)
+      .setDepth(-5);
+  }
+
+  drawPlantingGrid() {
+    // Planting cells are rendered by Phaser, never baked into the background art.
+    const grid = this.add.graphics().setDepth(2);
+    for (let row = 0; row < LANES; row += 1) {
+      const y = GRID_TOP + row * CELL_H;
+      for (let col = 0; col < COLUMNS; col += 1) {
+        const x = GRID_LEFT + col * CELL_W;
+        grid.fillStyle(0xf7e8bd, 0.045);
+        grid.fillRoundedRect(x + 2, y + 2, CELL_W - 7, CELL_H - 12, 7);
+        grid.lineStyle(2, 0xffedc4, 0.42);
+        grid.strokeRoundedRect(x + 2, y + 2, CELL_W - 7, CELL_H - 12, 7);
+      }
+    }
+    this.plantingGrid = grid;
   }
 
   createHud() {
