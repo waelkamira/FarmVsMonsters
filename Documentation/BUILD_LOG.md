@@ -488,3 +488,11 @@
 - Enemy prefabs are checked for the required 2D movement, health, collider, and enemy marker components before Play Mode.
 - Added setup instructions and clarified that validation reports configuration problems but does not auto-create or move scene objects.
 - Verification: source committed to `main` and read back. Unity Editor compilation and execution remain pending.
+
+
+## 2026-11-13 — Grid-driven monster spawn setup
+- Extended `BattleGrid2D` with transformed grid-line and lane spawn coordinate helpers, plus dimension validation.
+- Updated `BattleGridVisual2D` to draw lines from the grid's transformed local corners instead of assuming an untransformed world-axis-aligned board.
+- Added `Editor/BattleLaneSpawnPointGenerator.cs` with left-edge and right-edge menu actions. It creates one spawn point per row, places each at the lane center just outside the grid, replaces only its own previously generated points, and assigns them automatically when exactly one active-scene WaveManager exists.
+- Documented the generation workflow and the current limitation: monster lane locking remains world-horizontal and therefore the battle grid should not be rotated.
+- Verification: all changed files were read back from GitHub; source delimiter checks remain a static check only. Unity compilation, Undo behavior, scene serialization, and Play Mode are not yet tested.
