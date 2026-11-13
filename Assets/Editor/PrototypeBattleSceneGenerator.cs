@@ -83,8 +83,10 @@ namespace FarmVsMonsters.EditorTools
             floor.transform.position = Vector3.zero;
             floor.transform.localScale = new Vector3(1.35f, 1f, 0.75f);
             floor.GetComponent<Renderer>().sharedMaterial = grass;
+            CreateBattleBoardDetails(soil, grass);
 
             GameObject gridObject = new GameObject("BattleGrid");
+            gridObject.transform.position = new Vector3(0f, 0.05f, 0f);
             BattleGrid grid = gridObject.AddComponent<BattleGrid>();
             SetInt(grid, "columns", 9);
             SetInt(grid, "rows", 5);
@@ -263,6 +265,61 @@ namespace FarmVsMonsters.EditorTools
                 "Generated the PrototypeBattle greybox scene, 3D test prefabs, and plant definitions. " +
                 "Open the scene and press Play. Replace primitive visuals with final art later.",
                 "OK");
+        }
+
+        private static void CreateBattleBoardDetails(Material soil, Material grass)
+        {
+            // Individual collider-free soil beds make the 9 x 5 placement grid readable.
+            for (int x = 0; x < 9; x++)
+            {
+                for (int z = 0; z < 5; z++)
+                {
+                    GameObject bed = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    bed.name = "SoilBed_" + x + "_" + z;
+                    bed.transform.position = new Vector3(
+                        -6.75f + (x + 0.5f) * 1.5f, 0.025f,
+                        -3.75f + (z + 0.5f) * 1.5f);
+                    bed.transform.localScale = new Vector3(1.42f, 0.05f, 1.42f);
+                    bed.GetComponent<Renderer>().sharedMaterial = soil;
+                    UnityEngine.Object.DestroyImmediate(bed.GetComponent<Collider>());
+                }
+            }
+
+            Material fence = CreateMaterial("FenceWood", new Color(0.32f, 0.18f, 0.08f));
+            for (int side = -1; side <= 1; side += 2)
+            {
+                float x = side * 6.95f;
+                CreateVisualPrimitive(PrimitiveType.Cube, null, "FenceSideLower",
+                    new Vector3(x, 0.42f, 0f), new Vector3(0.16f, 0.16f, 8.1f), fence);
+                CreateVisualPrimitive(PrimitiveType.Cube, null, "FenceSideUpper",
+                    new Vector3(x, 0.92f, 0f), new Vector3(0.16f, 0.16f, 8.1f), fence);
+                for (int z = -4; z <= 4; z += 2)
+                    CreateVisualPrimitive(PrimitiveType.Cube, null, "FencePost",
+                        new Vector3(x, 0.65f, z), new Vector3(0.22f, 1.3f, 0.22f), fence);
+            }
+
+            // A split front fence leaves a visible entrance in front of the farm core.
+            foreach (float x in new[] { -4.25f, 4.25f })
+            {
+                CreateVisualPrimitive(PrimitiveType.Cube, null, "FrontFence",
+                    new Vector3(x, 0.42f, -4.05f), new Vector3(5.3f, 0.16f, 0.16f), fence);
+                CreateVisualPrimitive(PrimitiveType.Cube, null, "FrontFenceTop",
+                    new Vector3(x, 0.92f, -4.05f), new Vector3(5.3f, 0.16f, 0.16f), fence);
+            }
+
+            GameObject lightObject = new GameObject("SunLight");
+            lightObject.transform.rotation = Quaternion.Euler(52f, -32f, 0f);
+            Light sun = lightObject.AddComponent<Light>();
+            sun.type = LightType.Directional;
+            sun.intensity = 1.25f;
+            sun.color = new Color(1f, 0.92f, 0.78f);
+            RenderSettings.ambientLight = new Color(0.58f, 0.62f, 0.55f);
+
+            GameObject grassBackdrop = GameObject.CreatePrimitive(PrimitiveType.Plane);
+            grassBackdrop.name = "FarmBackdrop";
+            grassBackdrop.transform.position = new Vector3(0f, -0.22f, 0f);
+            grassBackdrop.transform.localScale = new Vector3(5f, 1f, 5f);
+            grassBackdrop.GetComponent<Renderer>().sharedMaterial = grass;
         }
 
         private static GameObject CreateProjectilePrefab(Material material)
