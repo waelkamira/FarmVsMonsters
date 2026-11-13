@@ -27,13 +27,17 @@ namespace FarmVsMonsters.Player
             characterController = GetComponent<CharacterController>();
         }
 
-        /// <summary>Called by the active input adapter. Values are clamped to a unit circle.</summary>
         public void SetMoveInput(Vector2 input)
         {
             moveInput = Vector2.ClampMagnitude(input, 1f);
         }
 
-public void SetMoveSpeed(float newSpeed)
+        public void AddMoveSpeed(float bonus)
+        {
+            moveSpeed = Mathf.Max(0f, moveSpeed + bonus);
+        }
+
+        public void SetMoveSpeed(float newSpeed)
         {
             moveSpeed = Mathf.Max(0f, newSpeed);
         }
