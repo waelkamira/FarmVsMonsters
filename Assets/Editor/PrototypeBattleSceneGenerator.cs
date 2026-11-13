@@ -58,8 +58,9 @@ namespace FarmVsMonsters.EditorTools
             };
 
             GameObject projectilePrefab = CreateProjectilePrefab(projectileMaterial);
-            GameObject enemyPrefab = CreateEnemyPrefab("Monster_Grunt", monsterMaterial, 75f, 1.45f, 9f);
-            GameObject bossPrefab = CreateEnemyPrefab("Monster_Brute", bossMaterial, 230f, 0.85f, 22f);
+            GameObject energyPickupPrefab = CreateEnergyPickupPrefab(gold);
+            GameObject enemyPrefab = CreateEnemyPrefab("Monster_Grunt", monsterMaterial, 75f, 1.45f, 9f, energyPickupPrefab);
+            GameObject bossPrefab = CreateEnemyPrefab("Monster_Brute", bossMaterial, 230f, 0.85f, 22f, energyPickupPrefab);
 
             string[] plantIds = { "sunflower", "pea_shooter", "ice_bloom", "pumpkin_guard", "fire_pepper" };
             string[] plantNames = { "Sunflower", "Pea Shooter", "Ice Bloom", "Pumpkin Guard", "Fire Pepper" };
@@ -149,6 +150,7 @@ namespace FarmVsMonsters.EditorTools
             SetObjectArray(waveManager, "spawnPoints", spawnPoints);
             SetObject(waveManager, "enemyTarget", farmCore.transform);
             SetObject(waveManager, "enemyTargetHealth", farmHealth);
+            SetObject(waveManager, "energyWallet", wallet);
             ConfigureWaves(waveManager, enemyPrefab, bossPrefab);
 
             GameObject outcomeObject = new GameObject("BattleOutcomeController");
@@ -279,8 +281,26 @@ namespace FarmVsMonsters.EditorTools
             return AssetDatabase.LoadAssetAtPath<GameObject>(path);
         }
 
+        private static GameObject CreateEnergyPickupPrefab(Material material)
+        {
+            GameObject pickup = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            pickup.name = "EnergyPickup_Prefab";
+            pickup.transform.localScale = Vector3.one * 0.42f;
+            pickup.GetComponent<Renderer>().sharedMaterial = material;
+            SphereCollider collider = pickup.GetComponent<SphereCollider>();
+            collider.isTrigger = true;
+            Rigidbody body = pickup.AddComponent<Rigidbody>();
+            body.isKinematic = true;
+            body.useGravity = false;
+            pickup.AddComponent<EnergyPickup>();
+            string path = PrefabFolder + "/EnergyPickup.prefab";
+            PrefabUtility.SaveAsPrefabAsset(pickup, path);
+            UnityEngine.Object.DestroyImmediate(pickup);
+            return AssetDatabase.LoadAssetAtPath<GameObject>(path);
+        }
+
         private static GameObject CreateEnemyPrefab(string name, Material material,
-            float healthValue, float speed, float damage)
+            float healthValue, float speed, float damage, GameObject energyPickupPrefab)
         {
             GameObject root = GameObject.CreatePrimitive(PrimitiveType.Capsule);
             root.name = name;
@@ -294,6 +314,9 @@ namespace FarmVsMonsters.EditorTools
             SetFloat(movement, "attackInterval", 1.2f);
             root.AddComponent<EnemyMarker>();
             root.AddComponent<DestroyOnDeath>();
+            EnergyDropOnDeath energyDrop = root.AddComponent<EnergyDropOnDeath>();
+            SetObject(energyDrop, "pickupPrefab", energyPickupPrefab);
+            SetInt(energyDrop, "energyAmount", name.Contains("Brute") ? 30 : 12);
 
             GameObject eyeLeft = CreateVisualPrimitive(PrimitiveType.Sphere, root.transform,
                 "Eye_Left", new Vector3(-0.18f, 0.35f, 0.36f), Vector3.one * 0.13f,
