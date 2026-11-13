@@ -337,3 +337,12 @@ Spawn normal monsters first, then the boss as the final enemy in a wave. Give th
 - Optional **Slow Multiplier** and **Slow Duration** apply the existing enemy slow effect. Set the multiplier to 1 to disable slowing.
 - The hazard deduplicates multiple colliders belonging to the same monster during one tick. It does not damage the caveman, princess, plants, crops, or animals.
 - A selected gizmo circle shows the configured radius. Add a separate SpriteRenderer/animation/VFX object for the visual appearance; the gameplay component does not create artwork.
+
+
+## Day/night and weather cycle
+- Add one `FarmEnvironmentCycle2D` to the farm/battle scene. Its full-day duration and weather-change interval are configurable; the default day lasts 15 minutes and weather changes every 3 minutes.
+- The cycle advances through Dawn, Day, Dusk, and Night. Night increases monster movement speed; rain accelerates crop growth; storms increase monster speed further.
+- Optional `Night Overlay` and `Weather Overlay` SpriteRenderers tint the playfield. Use large transparent sprites that cover the camera view, place them on a sorting layer above the world and below the HUD, and assign them to the component.
+- Assign the same environment component to each `FarmCropPlot2D` and `EnemyMovement2D` that should receive its gameplay effects. Leaving the reference empty preserves the original crop growth and monster speed.
+- Weather is selected at random when its timer expires. Call `SetWeather` to control it from scripted events or testing; call `SetTimeNormalized(0..1)` to jump to a time of day.
+- The component exposes `TimeOfDayChanged` and `WeatherChanged` events for future HUD, audio, lighting, and VFX systems. It does not create rain particles, thunder audio, or sky artwork.
