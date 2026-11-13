@@ -20,6 +20,7 @@ namespace FarmVsMonsters.Progression
         public int totalDefeats;
         public int farmCoins = 250;
         public UpgradeLevelRecord[] upgrades = Array.Empty<UpgradeLevelRecord>();
+        public string[] ownedBuildingIds = Array.Empty<string>();
     }
 
     /// <summary>Versioned device-local JSON persistence for campaign and farm progression.</summary>
@@ -56,6 +57,7 @@ namespace FarmVsMonsters.Progression
                 {
                     loaded.farmCoins = 250;
                     loaded.upgrades = Array.Empty<UpgradeLevelRecord>();
+                    loaded.ownedBuildingIds = Array.Empty<string>();
                     loaded.schemaVersion = CurrentSchemaVersion;
                 }
 
@@ -158,6 +160,41 @@ namespace FarmVsMonsters.Progression
             return true;
         }
 
+        public static bool OwnsBuilding(string buildingId)
+        {
+            if (string.IsNullOrWhiteSpace(buildingId))
+                return false;
+
+            PlayerProgressData progress = Load();
+            if (progress.ownedBuildingIds == null)
+                return false;
+
+            foreach (string ownedId in progress.ownedBuildingIds)
+            {
+                if (string.Equals(ownedId, buildingId, StringComparison.Ordinal))
+                    return true;
+            }
+
+            return false;
+        }
+
+        public static bool TryPurchaseBuilding(string buildingId, int cost)
+        {
+            if (string.IsNullOrWhiteSpace(buildingId) || cost < 0 || OwnsBuilding(buildingId))
+                return false;
+
+            PlayerProgressData progress = Load();
+            if (progress.farmCoins < cost)
+                return false;
+
+            var owned = new System.Collections.Generic.List<string>(progress.ownedBuildingIds ?? Array.Empty<string>());
+            owned.Add(buildingId);
+            progress.ownedBuildingIds = owned.ToArray();
+            progress.farmCoins -= cost;
+            Save(progress);
+            return true;
+        }
+
         public static int AddFarmCoins(int amount)
         {
             if (amount <= 0)
@@ -247,7 +284,7 @@ namespace FarmVsMonsters.Progression
             progress.totalVictories = Mathf.Max(0, progress.totalVictories);
             progress.totalDefeats = Mathf.Max(0, progress.totalDefeats);
             progress.farmCoins = Mathf.Max(0, progress.farmCoins);
-            progress.upgrades ??= Array.Empty<UpgradeLevelRecord>();
+            progress.upgrades ??= Array.Empty<UpgradeLevelRecord>();\n            progress.ownedBuildingIds ??= Array.Empty<string>();
 
             foreach (UpgradeLevelRecord record in progress.upgrades)
             {
