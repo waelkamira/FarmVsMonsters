@@ -20,6 +20,7 @@ namespace FarmVsMonsters.UI
         [SerializeField] private WaveManager waveManager;
         [SerializeField] private BattleOutcomeController outcomeController;
         [SerializeField] private DesktopBattleInput2D desktopInput;
+        [SerializeField] private PlantPlacementService2D placementService;
 
         [Header("Status UI")]
         [SerializeField] private Text energyText;
@@ -32,6 +33,10 @@ namespace FarmVsMonsters.UI
         [SerializeField] private PlantDefinition[] plants;
         [SerializeField] private Button[] plantButtons;
         [SerializeField] private Text[] plantButtonLabels;
+        [SerializeField] private Image[] plantButtonIcons;
+        [SerializeField] private Image[] plantCooldownFills;
+        [SerializeField] private Text[] plantCooldownLabels;
+        [SerializeField] private GameObject[] plantSelectionFrames;
         [SerializeField] private Text selectedPlantText;
 
         [Header("Result UI")]
@@ -52,6 +57,7 @@ namespace FarmVsMonsters.UI
                 waveManager.WaveCleared += HandleWaveCleared;
             }
             if (outcomeController != null) outcomeController.BattleFinished += HandleBattleFinished;
+            if (desktopInput != null) desktopInput.SelectedPlantChanged += HandleInputPlantSelected;
             ConfigureButtons();
             if (selectedIndex < 0 && plants != null && plants.Length > 0) SelectPlant(0);
             RefreshAll();
@@ -68,11 +74,13 @@ namespace FarmVsMonsters.UI
                 waveManager.WaveCleared -= HandleWaveCleared;
             }
             if (outcomeController != null) outcomeController.BattleFinished -= HandleBattleFinished;
+            if (desktopInput != null) desktopInput.SelectedPlantChanged -= HandleInputPlantSelected;
             RemoveButtonListeners();
         }
 
         private void Update()
         {
+            RefreshPlantButtons();
             if (waveManager != null)
             {
                 if (enemiesText != null)
@@ -91,7 +99,7 @@ namespace FarmVsMonsters.UI
             PlantDefinition definition = plants[index];
             if (desktopInput != null) desktopInput.SelectPlant(definition);
             if (selectedPlantText != null)
-                selectedPlantText.text = definition.DisplayName + "  •  " + definition.EnergyCost + " energy";
+                selectedPlantText.text = definition.DisplayName + "  •  " + definition.EnergyCost + " energy\n" + definition.Description;
             RefreshPlantButtons();
         }
 
@@ -116,9 +124,17 @@ namespace FarmVsMonsters.UI
                 if (plantButtons[i] == null) continue;
                 buttonActions[i] = () => SelectPlant(index);
                 plantButtons[i].onClick.AddListener(buttonActions[i]);
-                if (plantButtonLabels != null && i < plantButtonLabels.Length && plantButtonLabels[i] != null &&
-                    plants != null && i < plants.Length && plants[i] != null)
-                    plantButtonLabels[i].text = plants[i].DisplayName + "\n" + plants[i].EnergyCost;
+                if (plants != null && i < plants.Length && plants[i] != null)
+                {
+                    if (plantButtonLabels != null && i < plantButtonLabels.Length && plantButtonLabels[i] != null)
+                        plantButtonLabels[i].text = plants[i].DisplayName + "\n" + plants[i].EnergyCost + " energy";
+                    if (plantButtonIcons != null && i < plantButtonIcons.Length && plantButtonIcons[i] != null)
+                    {
+                        plantButtonIcons[i].sprite = plants[i].Icon;
+                        plantButtonIcons[i].enabled = plants[i].Icon != null;
+                        plantButtonIcons[i].preserveAspect = true;
+                    }
+                }
             }
         }
 
@@ -143,6 +159,21 @@ namespace FarmVsMonsters.UI
                     waveText.text = "Incoming wave in " + Mathf.CeilToInt(waveManager.StartDelayRemaining);
             }
             RefreshPlantButtons();
+        }
+
+        private void HandleInputPlantSelected(PlantDefinition definition)
+        {
+            if (plants == null || definition == null) return;
+            for (int i = 0; i < plants.Length; i++)
+            {
+                if (plants[i] != definition) continue;
+                selectedIndex = i;
+                if (selectedPlantText != null)
+                    selectedPlantText.text = definition.DisplayName + "  •  " +
+                        definition.EnergyCost + " energy\n" + definition.Description;
+                RefreshPlantButtons();
+                return;
+            }
         }
 
         private void HandleEnergyChanged(int current, int capacity)
@@ -192,7 +223,24 @@ namespace FarmVsMonsters.UI
             {
                 if (plantButtons[i] == null) continue;
                 bool valid = plants != null && i < plants.Length && plants[i] != null && plants[i].Prefab != null;
-                plantButtons[i].interactable = valid && balance >= plants[i].EnergyCost;
+                float cooldown = valid && placementService != null
+                    ? placementService.GetPlacementCooldownRemaining(plants[i]) : 0f;
+                plantButtons[i].interactable = valid && balance >= plants[i].EnergyCost && cooldown <= 0f;
+
+                if (plantCooldownFills != null && i < plantCooldownFills.Length && plantCooldownFills[i] != null)
+                {
+                    Image fill = plantCooldownFills[i];
+                    fill.fillAmount = valid && plants[i].PlacementCooldown > 0f
+                        ? Mathf.Clamp01(cooldown / plants[i].PlacementCooldown) : 0f;
+                    fill.enabled = cooldown > 0f;
+                }
+                if (plantCooldownLabels != null && i < plantCooldownLabels.Length && plantCooldownLabels[i] != null)
+                {
+                    plantCooldownLabels[i].text = cooldown > 0f ? Mathf.CeilToInt(cooldown).ToString() : string.Empty;
+                    plantCooldownLabels[i].enabled = cooldown > 0f;
+                }
+                if (plantSelectionFrames != null && i < plantSelectionFrames.Length && plantSelectionFrames[i] != null)
+                    plantSelectionFrames[i].SetActive(i == selectedIndex);
             }
         }
     }
