@@ -281,6 +281,8 @@ namespace FarmVsMonsters.EditorTools
 
         private static void AddBuildScene(string path)
         {
+            if (AssetDatabase.LoadAssetAtPath<SceneAsset>(path) == null)
+                return;
             var scenes = new System.Collections.Generic.List<EditorBuildSettingsScene>(
                 EditorBuildSettings.scenes ?? new EditorBuildSettingsScene[0]);
             for (int i = 0; i < scenes.Count; i++)
