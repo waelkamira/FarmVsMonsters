@@ -170,3 +170,9 @@ Every plant is rooted in its assigned grid cell. Do not add a movement controlle
 4. Assign the farmhouse Transform and Health as the fallback target on `WaveManager`, so monsters continue toward the home after destroying nearby crops, plants, or animals. Include both farmhouse and princess layers in the monster Farm Target Layers mask.
 5. The protection relay listens only to the two explicitly typed final objectives. Destruction of a crop, plant, or animal does not directly end the battle. Keep `BattleOutcomeController`'s Protected Target Health assigned to the farmhouse Health if you want the existing direct farmhouse fallback as an additional safety path; the outcome controller ignores duplicate defeat reports after the first result.
 6. Ensure the princess is not accidentally assigned Target Kind = Crop/Plant/Animal, and keep the home/princess colliders reachable by the monster target scan.
+
+## Distinct plant projectile behavior
+Every planted defender keeps its own `Projectile2D` prefab, SpriteRenderer art, muzzle position, speed, lifetime, damage, and optional slow settings. The projectile now supports two impact modes:
+- **Direct** — damages only the monster it tracked. Use for cactus thorns, single seeds, darts, and focused shots.
+- **Splash** — damages every marked monster inside the configured Splash Radius at impact. Set Splash Layers to the monster layers only; non-monster colliders are ignored by the component. Use for explosive fruit, seed clusters, or spore bursts.
+The splash query uses a bounded non-allocating collider buffer. If its target layer mask is accidentally missing the tracked monster, the projectile still applies its primary hit. Tune each plant's projectile prefab independently; do not make all plants share one generic projectile asset.
