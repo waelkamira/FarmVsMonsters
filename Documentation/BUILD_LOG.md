@@ -329,3 +329,10 @@
 - Added BattleGridVisual2D to draw runtime cell boundaries using 2D-compatible line rendering, with configurable color, width and sorting.
 - Updated the prefab/scene setup guide to include runtime board visuals.
 - Verification: new and updated files were committed to main and are being read back. Unity compile, render pipeline shader availability, UI layout, and Play Mode behavior remain unverified.
+## 2026-11-13 — Five-lane enemy movement and wave countdown
+- EnemyMovement2D now captures a lane Y coordinate and constrains each monster to its assigned horizontal lane, correcting small vertical drift without allowing lane changes.
+- WaveManager assigns the spawn Transform's world Y to each spawned 2D monster, exposes StartDelayRemaining, prevents duplicate Begin requests, and warns when waves or spawn points are missing.
+- The initial wave delay now counts down using frame time, and BattleHudController2D displays the remaining seconds before the first wave.
+- WaveManager clears its active coroutine and death subscriptions when disabled; normal scene teardown remains safe.
+- Updated Documentation/2D_CHARACTER_PREFAB_SETUP.md with five-lane spawn point ordering and configuration requirements.
+- Verification: changed C# and documentation files were committed to main and are being read back. Unity compile and Play Mode validation remain pending.
