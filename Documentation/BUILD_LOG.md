@@ -670,3 +670,11 @@
 - Added forward/inverse coordinate transforms so clicking the rotated cells still selects the correct row and column.
 - Updated planting coordinates, monster spawn/movement along the rotated lanes, plant blocking, and thorn targeting to use lane-local coordinates.
 - Runtime gameplay and visual placement have not yet been verified in the browser.
+
+
+## 2026-11-14 — Correct grid transform to X-axis tilt
+- Corrected the prior implementation: it rotated the board in the screen plane (Z-axis rotation), not around X.
+- The grid is now tilted 30° around the horizontal X axis using an orthographic projection: horizontal coordinates remain unchanged and vertical coordinates are scaled by cos(30°).
+- Updated cell geometry and inverse pointer mapping, while preserving the shared projected lane coordinates for planting, monster movement, collision, and targeting.
+- The phrase “counter-clockwise” applies to an in-plane rotation, not an X-axis tilt; this implementation follows the explicitly corrected X-axis request.
+- Browser runtime rendering remains unverified.
