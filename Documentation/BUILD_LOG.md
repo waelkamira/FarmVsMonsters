@@ -567,3 +567,10 @@
 - Updated EnemyMovement2D so boss phase multipliers combine with the existing wave difficulty multipliers rather than overwriting them.
 - Documented boss prefab wiring, special attack tuning, minion requirements, and health-bar setup.
 - Verification: changed files were read back from main and delimiter balances checked. Unity compilation, scene wiring, visual effects, and play-mode encounter testing remain pending.
+
+
+## 2026-11-13 — Destructible obstacles and environmental hazard zones
+- Added `FarmDefenseTarget2D.TargetKind.Obstacle` so obstacles can be identified explicitly in scene setup while reusing the existing lane-aware monster target and Health damage flow.
+- Added `EnvironmentalHazard2D`: configurable circular damage zones that periodically affect only marked monsters, deduplicate multiple colliders per monster per tick, and optionally apply the existing slow effect.
+- Documented obstacle prefab wiring, lane/priority settings, hazard layers, damage cadence, and visual-art separation.
+- Verification: source files were read back from GitHub after committing. No Unity compilation, physics-layer validation, scene wiring, or Play Mode test has been performed.
