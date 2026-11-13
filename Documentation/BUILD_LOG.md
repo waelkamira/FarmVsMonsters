@@ -224,3 +224,11 @@
 - Structural validation now checks the WaveManager energy wallet reference as well.
 - This closes the battle resource loop: place Sunflower for timed energy, defeat monsters for collectible energy drops, and collect board pickups.
 - Verification remains source-level only; physics trigger behavior and pickup collection must be tested in Unity Play Mode.
+
+
+## 2026-11-13 — Greybox battlefield visual pass
+- Improved the generated battlefield with 45 collider-free soil beds aligned to the 9×5 placement grid, wooden side/front fence sections, a clear entrance, a grass backdrop, directional sunlight, and ambient lighting.
+- Refactored generated enemy prefabs so gameplay colliders/health stay on the root while the rendered capsule/eyes live under a separate visual root.
+- Added `Visuals/ProceduralIdleMotion.cs` and attached it to generated plant/enemy visual roots for subtle bobbing and sway. This is temporary procedural motion, not final rigged animation.
+- The generator now creates the enemy energy-orb prefab and wires monster death drops into the battle wallet. The first battle resource loop includes timed Sunflower generation, board pickups, and monster drops.
+- The greybox generator and validator source were read back from GitHub and checked for balanced braces/parentheses and expected configuration references. These are source inspections only; Unity compilation and Play Mode physics remain unverified.
