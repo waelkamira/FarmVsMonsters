@@ -67,6 +67,7 @@ namespace FarmVsMonsters.UI
                     "Wool: " + storageService.GetEffectiveCapacity(FarmResourceType.Wool) + "\n" +
                     "Eggs: " + storageService.GetEffectiveCapacity(FarmResourceType.Eggs) + "\n" +
                     "Meat: " + storageService.GetEffectiveCapacity(FarmResourceType.Meat) + "\n" +
+                    "Water: " + storageService.GetEffectiveCapacity(FarmResourceType.Water) + "\n" +
                     "Flour: " + storageService.GetEffectiveCapacity(FarmResourceType.Flour) + "\n" +
                     "Bread: " + storageService.GetEffectiveCapacity(FarmResourceType.Bread);
             }
