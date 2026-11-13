@@ -16,7 +16,8 @@ namespace FarmVsMonsters.Farm
             Plant = 1,
             Animal = 2,
             Farmhouse = 3,
-            Princess = 4
+            Princess = 4,
+            Obstacle = 5
         }
 
         [SerializeField] private TargetKind targetKind = TargetKind.Plant;
