@@ -84,5 +84,15 @@ namespace FarmVsMonsters.Visuals
         }
 
         public bool IsCurrentAnimationFinished => finished;
+
+        public bool HasClip(AnimationState state)
+        {
+            if (clips == null) return false;
+            for (int i = 0; i < clips.Length; i++)
+                if (clips[i] != null && clips[i].state == state &&
+                    clips[i].frames != null && clips[i].frames.Length > 0)
+                    return true;
+            return false;
+        }
     }
 }
