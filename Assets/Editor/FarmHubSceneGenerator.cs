@@ -19,6 +19,8 @@ namespace FarmVsMonsters.EditorTools
         public static void Generate()
         {
             EnsureFolder("Assets", "Scenes");
+            EnsureFolder("Assets", "Materials");
+            EnsureFolder("Assets/Materials", "Generated");
             Material grass = MaterialFor("FarmHub_Grass", new Color(0.31f, 0.57f, 0.25f));
             Material wood = MaterialFor("FarmHub_Wood", new Color(0.43f, 0.25f, 0.13f));
             Material roof = MaterialFor("FarmHub_Roof", new Color(0.65f, 0.22f, 0.13f));
@@ -46,8 +48,7 @@ namespace FarmVsMonsters.EditorTools
                     plot.GetComponent<Renderer>().sharedMaterial = soil;
                     GameObject crop = GameObject.CreatePrimitive(PrimitiveType.Sphere);
                     crop.name = "CropPlaceholder";
-                    crop.transform.SetParent(plot.transform, false);
-                    crop.transform.localPosition = new Vector3(0f, 1.2f, 0f);
+                    crop.transform.position = plot.transform.position + Vector3.up * 0.72f;
                     crop.transform.localScale = new Vector3(0.55f, 1.1f, 0.55f);
                     crop.GetComponent<Renderer>().sharedMaterial = leaf;
                     Object.DestroyImmediate(crop.GetComponent<Collider>());
@@ -214,6 +215,8 @@ namespace FarmVsMonsters.EditorTools
 
         private static void AddBuildScene(string path)
         {
+            if (AssetDatabase.LoadAssetAtPath<SceneAsset>(path) == null)
+                return;
             List<EditorBuildSettingsScene> scenes = new List<EditorBuildSettingsScene>(
                 EditorBuildSettings.scenes ?? new EditorBuildSettingsScene[0]);
             for (int i = 0; i < scenes.Count; i++)
