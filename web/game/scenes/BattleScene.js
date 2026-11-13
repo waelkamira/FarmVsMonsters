@@ -385,7 +385,7 @@ export default class BattleScene extends Scene {
     }
     this.energy -= RADISH.cost;
     this.hasPlantedDefender = true;
-    const { x, y } = this.gridToWorld(col, row, CELL_W / 2, CELL_H / 2);
+    const { x, y } = this.gridCellCenter(col, row);
     this.plants.push({
       type: "radish", col, row, x, y, hp: RADISH.hp, alive: true,
       cooldown: PhaserMath.Between(250, 650), view: this.drawRadish(x, y)
