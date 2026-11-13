@@ -127,6 +127,14 @@ namespace FarmVsMonsters.Plants
             return true;
         }
 
+        public float GetPlacementCooldownRemaining(PlantDefinition definition)
+        {
+            if (definition == null) return 0f;
+            if (!nextPlacementTimeByPlant.TryGetValue(GetPlantId(definition), out float nextTime))
+                return 0f;
+            return Mathf.Max(0f, nextTime - Time.time);
+        }
+
         private static string GetPlantId(PlantDefinition definition)
         {
             return string.IsNullOrWhiteSpace(definition.PlantId)
