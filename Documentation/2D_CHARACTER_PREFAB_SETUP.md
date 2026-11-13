@@ -190,3 +190,6 @@ Each row contains six frames ordered left-to-right. The sheet must be an exact, 
 
 ## Player interaction safety
 The crop and animal interaction components now check the caveman's Health when one is present. If the player is dead, E/F interactions are ignored. Keep both components on the same caveman root that owns its Health component and share the scene's single FarmResourceWallet2D.
+
+## Caveman prefab validation
+After assembling the caveman root, select its prefab or scene root in the Project/Hierarchy window and run **Tools → Farm Vs Monsters → Validate Selected Caveman Prefab**. The validator checks for Rigidbody2D, Health, SpriteAnimation2D, CharacterAnimationDriver2D, CavemanFarmerController2D, FarmPlotInteractor2D, and FarmAnimalCareController2D; it also checks basic Rigidbody2D settings, a Collider2D, and a SpriteRenderer. A passing report does not replace manual assignment of the shared wallet, attack origin, sprite clips, movement bounds, and collision masks.
