@@ -21,9 +21,11 @@ This is an original game. Use the reference for broad visual qualities only; do 
 - Keep gameplay backgrounds lower in contrast than foreground units.
 
 ## Animation
-- Use sprite sheets / frame-based animation for Idle, Walk, Attack, Hurt, and Death.
-- Plants should communicate attack wind-up and recoil clearly.
-- Monsters should have readable walk cycles, hit reactions, and defeat animations.
+- Plants are planted defensive units: they never use locomotion or Walk cycles. Their sprite sheets focus on Idle, Attack, Hurt, Block/impact, Death, and plant-specific Special frames.
+- Every plant attacks according to its own biology and weapon identity through a distinct projectile prefab/sprite (for example, a cactus launches thorns from its mouth). Do not give every plant the same generic projectile.
+- Monsters are the advancing lane units and need readable Walk, Attack/eating, Hurt, and Death animations.
+- The playable caveman farmer is the mobile human defender; he moves around the farm and attacks monsters with his club.
+- The princess is a protected story character positioned at the far end near the farmhouse, behind the defensive field.
 - Effects (projectiles, impact, dust, reward pickups) should be illustrated 2D sprites.
 
 ## Camera and gameplay readability
