@@ -427,3 +427,11 @@
 - Crop plots subscribe to Health.Died and immediately return to Empty when a monster destroys the crop.
 - Replaced partial produce deposits with an all-or-nothing `TryAddProduce` operation. A ready crop remains harvestable if the wallet lacks capacity for the complete yield, preventing silent partial harvest loss.
 - Source-level changes only; Unity compile and Play Mode tests remain outstanding.
+
+
+## 2026-11-13 — 2D animal care, production and vulnerability
+- Added `FarmAnimalDefinition2D` assets for animal feed cost, production time, yield, health and idle/ready art.
+- Added `FarmAnimal2D` with Hungry/Producing/Ready states, timed production, feed consumption, safe output collection, health and monster vulnerability through `FarmDefenseTarget2D`.
+- Extended `FarmResourceWallet2D` with a bounded Feed resource and feed spending/addition.
+- Added `FarmAnimalCareController2D`; the caveman presses F near an animal to feed it or collect completed production.
+- Animal production is scene-time only in this pass; offline progression, animal animation and Unity runtime validation remain pending.
