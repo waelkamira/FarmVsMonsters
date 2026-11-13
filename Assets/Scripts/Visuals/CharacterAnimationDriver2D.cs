@@ -18,7 +18,11 @@ namespace FarmVsMonsters.Visuals
         {
             if (animator == null) animator = GetComponent<SpriteAnimation2D>();
             if (health == null) health = GetComponent<Health>();
-            previousHealth = health != null ? health.CurrentHealth : 0f;
+        }
+
+        private void Start()
+        {
+            if (health != null) previousHealth = health.CurrentHealth;
         }
 
         private void OnEnable()
