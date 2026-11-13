@@ -33,6 +33,7 @@ namespace FarmVsMonsters.Battle
         {
             if (waveManager != null)
                 waveManager.AllWavesCleared += HandleAllWavesCleared;
+            BattleFinished += HandleBattleFinished;
             if (protectedTargetHealth != null)
                 protectedTargetHealth.Died += HandleProtectedTargetDied;
         }
@@ -47,6 +48,7 @@ namespace FarmVsMonsters.Battle
         {
             if (waveManager != null)
                 waveManager.AllWavesCleared -= HandleAllWavesCleared;
+            BattleFinished -= HandleBattleFinished;
             if (protectedTargetHealth != null)
                 protectedTargetHealth.Died -= HandleProtectedTargetDied;
         }
@@ -59,6 +61,12 @@ namespace FarmVsMonsters.Battle
         private void HandleProtectedTargetDied()
         {
             Finish(BattleOutcome.Defeat);
+        }
+
+        private void HandleBattleFinished(BattleOutcome outcome)
+        {
+            if (outcome == BattleOutcome.Defeat && waveManager != null)
+                waveManager.StopWaves(true);
         }
 
         private void Finish(BattleOutcome outcome)
