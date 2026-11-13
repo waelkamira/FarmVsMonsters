@@ -132,6 +132,10 @@ namespace FarmVsMonsters.EditorTools
             GameObject cameraObject = new GameObject("Main Camera");
             cameraObject.tag = "MainCamera";
             Camera camera = cameraObject.AddComponent<Camera>();
+            camera.orthographic = true;
+            camera.orthographicSize = 10.5f;
+            camera.nearClipPlane = 0.1f;
+            camera.farClipPlane = 100f;
             cameraObject.AddComponent<AudioListener>();
             cameraObject.transform.position = new Vector3(0f, 13f, -19f);
             IsometricCameraFollow cameraFollow = cameraObject.AddComponent<IsometricCameraFollow>();
