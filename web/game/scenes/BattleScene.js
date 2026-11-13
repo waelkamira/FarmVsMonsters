@@ -19,6 +19,21 @@ const GRID_CENTER_X = 615.5;
 const GRID_CENTER_Y = 466.5;
 const CELL_W = GRID_WIDTH / COLUMNS;
 const CELL_H = GRID_HEIGHT / LANES;
+
+// 9 × 6 control nodes are the authoritative representation of the painted board.
+// The current nodes are generated from the four measured outer corners as a bootstrap.
+// Replace individual entries with pixel-measured artwork intersections during final calibration.
+const GRID_NODES = Array.from({ length: LANES + 1 }, (_, row) =>
+  Array.from({ length: COLUMNS + 1 }, (_, col) => {
+    const u = col / COLUMNS;
+    const v = row / LANES;
+    const { tl, tr, br, bl } = GRID_CORNERS;
+    return {
+      x: (1-u)*(1-v)*tl.x + u*(1-v)*tr.x + u*v*br.x + (1-u)*v*bl.x,
+      y: (1-u)*(1-v)*tl.y + u*(1-v)*tr.y + u*v*br.y + (1-u)*v*bl.y,
+    };
+  }),
+);
 const HOME_LOCAL_X = -300;
 const SPAWN_LOCAL_X = 330;
 const RADISH = { label: "Radish", cost: 35, hp: 110, cooldown: 1450, range: 360 };
@@ -119,56 +134,121 @@ export default class BattleScene extends Scene {
       .forEach((child) => child.destroy());
   }
 
-  // Bilinear mapping onto the actual perspective board painted into the background.
-  // u and v are normalized board coordinates: 0..1 across columns and lanes.
+  // Piecewise-bilinear mapping over the 9 × 6 artwork control-node mesh.
+  // Every cell is mapped independently, so measured intersections need not form
+  // one mathematically perfect quadrilateral.
   boardPoint(u, v) {
-    const { tl, tr, br, bl } = GRID_CORNERS;
+    const safeU = PhaserMath.Clamp(u, 0, 1 - Number.EPSILON);
+    const safeV = PhaserMath.Clamp(v, 0, 1 - Number.EPSILON);
+    const col = Math.min(COLUMNS - 1, Math.floor(safeU * COLUMNS));
+    const row = Math.min(LANES - 1, Math.floor(safeV * LANES));
+    const localU = safeU * COLUMNS - col;
+    const localV = safeV * LANES - row;
+    return this.interpolateCell(col, row, localU, localV);
+  }
+
+  interpolateCell(col, row, u, v) {
+    const tl = GRID_NODES[row][col];
+    const tr = GRID_NODES[row][col + 1];
+    const br = GRID_NODES[row + 1][col + 1];
+    const bl = GRID_NODES[row + 1][col];
     return {
       x: (1-u)*(1-v)*tl.x + u*(1-v)*tr.x + u*v*br.x + (1-u)*v*bl.x,
       y: (1-u)*(1-v)*tl.y + u*(1-v)*tr.y + u*v*br.y + (1-u)*v*bl.y,
     };
   }
 
+  cellPolygon(col, row) {
+    return [
+      GRID_NODES[row][col],
+      GRID_NODES[row][col + 1],
+      GRID_NODES[row + 1][col + 1],
+      GRID_NODES[row + 1][col],
+    ];
+  }
+
+  pointInPolygon(x, y, polygon) {
+    let inside = false;
+    for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i, i += 1) {
+      const a = polygon[i];
+      const b = polygon[j];
+      const crosses = ((a.y > y) !== (b.y > y)) &&
+        (x < ((b.x - a.x) * (y - a.y)) / ((b.y - a.y) || 0.000001) + a.x);
+      if (crosses) inside = !inside;
+    }
+    return inside;
+  }
+
   boardCoordinates(x, y) {
-    // Newton iteration inverts the bilinear mapping, including its perspective skew.
-    let u = PhaserMath.Clamp((x - GRID_CORNERS.bl.x) / GRID_WIDTH, 0, 1);
-    let v = PhaserMath.Clamp((y - GRID_CORNERS.tl.y) / GRID_HEIGHT, 0, 1);
-    for (let i = 0; i < 8; i += 1) {
-      const p = this.boardPoint(u, v);
-      const du = this.boardPoint(u + 0.001, v);
-      const dv = this.boardPoint(u, v + 0.001);
-      const ax = (du.x - p.x) / 0.001;
-      const ay = (du.y - p.y) / 0.001;
-      const bx = (dv.x - p.x) / 0.001;
-      const by = (dv.y - p.y) / 0.001;
-      const ex = x - p.x;
-      const ey = y - p.y;
+    // Find the actual cell first, then invert only that cell's bilinear transform.
+    for (let row = 0; row < LANES; row += 1) {
+      for (let col = 0; col < COLUMNS; col += 1) {
+        const polygon = this.cellPolygon(col, row);
+        if (!this.pointInPolygon(x, y, polygon)) continue;
+        let u = 0.5;
+        let v = 0.5;
+        for (let i = 0; i < 10; i += 1) {
+          const p = this.interpolateCell(col, row, u, v);
+          const pu = this.interpolateCell(col, row, u + 0.001, v);
+          const pv = this.interpolateCell(col, row, u, v + 0.001);
+          const ax = (pu.x - p.x) / 0.001;
+          const ay = (pu.y - p.y) / 0.001;
+          const bx = (pv.x - p.x) / 0.001;
+          const by = (pv.y - p.y) / 0.001;
+          const ex = x - p.x;
+          const ey = y - p.y;
+          const det = ax * by - bx * ay;
+          if (Math.abs(det) < 0.0001) break;
+          u += (ex * by - ey * bx) / det;
+          v += (ey * ax - ex * ay) / det;
+        }
+        return { u: (col + u) / COLUMNS, v: (row + v) / LANES, inside: true };
+      }
+    }
+
+    // Outside-board coordinates are still needed for monster approach/departure.
+    // Use the outer mesh boundary as a stable extrapolation for lane movement only.
+    const tl = GRID_NODES[0][0];
+    const tr = GRID_NODES[0][COLUMNS];
+    const br = GRID_NODES[LANES][COLUMNS];
+    const bl = GRID_NODES[LANES][0];
+    let u = (x - bl.x) / (br.x - bl.x || 1);
+    let v = (y - tl.y) / (bl.y - tl.y || 1);
+    for (let i = 0; i < 10; i += 1) {
+      const p = {
+        x: (1-u)*(1-v)*tl.x + u*(1-v)*tr.x + u*v*br.x + (1-u)*v*bl.x,
+        y: (1-u)*(1-v)*tl.y + u*(1-v)*tr.y + u*v*br.y + (1-u)*v*bl.y,
+      };
+      const pu = {
+        x: (1-(u+0.001))*(1-v)*tl.x + (u+0.001)*(1-v)*tr.x + (u+0.001)*v*br.x + (1-(u+0.001))*v*bl.x,
+        y: (1-(u+0.001))*(1-v)*tl.y + (u+0.001)*(1-v)*tr.y + (u+0.001)*v*br.y + (1-(u+0.001))*v*bl.y,
+      };
+      const pv = {
+        x: (1-u)*(1-(v+0.001))*tl.x + u*(1-(v+0.001))*tr.x + u*(v+0.001)*br.x + (1-u)*(v+0.001)*bl.x,
+        y: (1-u)*(1-(v+0.001))*tl.y + u*(1-(v+0.001))*tr.y + u*(v+0.001)*br.y + (1-u)*(v+0.001)*bl.y,
+      };
+      const ax = (pu.x - p.x) / 0.001, ay = (pu.y - p.y) / 0.001;
+      const bx = (pv.x - p.x) / 0.001, by = (pv.y - p.y) / 0.001;
+      const ex = x - p.x, ey = y - p.y;
       const det = ax * by - bx * ay;
       if (Math.abs(det) < 0.0001) break;
-      u = PhaserMath.Clamp(u + (ex * by - ey * bx) / det, -0.2, 1.2);
-      v = PhaserMath.Clamp(v + (ey * ax - ex * ay) / det, -0.2, 1.2);
+      u += (ex * by - ey * bx) / det;
+      v += (ey * ax - ex * ay) / det;
     }
-    return { u, v };
+    return { u, v, inside: false };
   }
 
   gridToWorld(col, row, offsetX = 0, offsetY = 0) {
-    return this.boardPoint(
-      (col + offsetX / CELL_W) / COLUMNS,
-      (row + offsetY / CELL_H) / LANES,
+    return this.interpolateCell(
+      col,
+      row,
+      PhaserMath.Clamp(offsetX / CELL_W, 0, 1),
+      PhaserMath.Clamp(offsetY / CELL_H, 0, 1),
     );
   }
 
   gridCellCenter(col, row) {
-    const u0 = col / COLUMNS;
-    const u1 = (col + 1) / COLUMNS;
-    const v0 = row / LANES;
-    const v1 = (row + 1) / LANES;
-    const polygon = [
-      this.boardPoint(u0, v0),
-      this.boardPoint(u1, v0),
-      this.boardPoint(u1, v1),
-      this.boardPoint(u0, v1),
-    ];
+    const polygon = this.cellPolygon(col, row);
     let twiceArea = 0;
     let cx = 0;
     let cy = 0;
@@ -180,13 +260,20 @@ export default class BattleScene extends Scene {
       cx += (current.x + next.x) * cross;
       cy += (current.y + next.y) * cross;
     }
+    if (Math.abs(twiceArea) < 0.0001) {
+      return this.interpolateCell(col, row, 0.5, 0.5);
+    }
     const areaFactor = 1 / (3 * twiceArea);
     return { x: cx * areaFactor, y: cy * areaFactor };
   }
 
   worldToGrid(x, y) {
-    const { u, v } = this.boardCoordinates(x, y);
-    return { col: Math.floor(u * COLUMNS), row: Math.floor(v * LANES) };
+    for (let row = 0; row < LANES; row += 1) {
+      for (let col = 0; col < COLUMNS; col += 1) {
+        if (this.pointInPolygon(x, y, this.cellPolygon(col, row))) return { col, row };
+      }
+    }
+    return { col: -1, row: -1 };
   }
 
   lanePoint(localX, row) {
@@ -204,48 +291,50 @@ export default class BattleScene extends Scene {
   }
 
   drawPlantingGrid() {
-    // Trace the perspective cell seams over the seams already painted in the artwork.
-    // Every cell is a quadrilateral; plant placement uses its exact bilinear center.
     const grid = this.add.graphics().setDepth(2);
-    const point = (u, v) => this.boardPoint(u, v);
+    const debug = typeof window !== "undefined" &&
+      new URLSearchParams(window.location.search).has("gridDebug");
 
-    // Very light cell tint makes the playable area legible without hiding the artwork.
+    // Cell tint is deliberately minimal in normal play.
     for (let row = 0; row < LANES; row += 1) {
       for (let col = 0; col < COLUMNS; col += 1) {
-        const u0 = col / COLUMNS;
-        const u1 = (col + 1) / COLUMNS;
-        const v0 = row / LANES;
-        const v1 = (row + 1) / LANES;
-        const corners = [
-          point(u0, v0),
-          point(u1, v0),
-          point(u1, v1),
-          point(u0, v1),
-        ];
-        grid.fillStyle(0xfff2c8, 0.035);
-        grid.fillPoints(corners, true);
+        grid.fillStyle(0xfff2c8, debug ? 0.07 : 0.025);
+        grid.fillPoints(this.cellPolygon(col, row), true);
       }
     }
 
-    // Draw the 9 column boundaries and 6 lane boundaries as perspective lines.
-    grid.lineStyle(1.5, 0x665238, 0.58);
-    for (let col = 0; col <= COLUMNS; col += 1) {
-      const u = col / COLUMNS;
-      const top = point(u, 0);
-      const bottom = point(u, 1);
-      grid.beginPath();
-      grid.moveTo(top.x, top.y);
-      grid.lineTo(bottom.x, bottom.y);
-      grid.strokePath();
-    }
+    // Draw each measured mesh edge independently; never infer interior lines
+    // from only the four outer corners at render time.
     for (let row = 0; row <= LANES; row += 1) {
-      const v = row / LANES;
-      const left = point(0, v);
-      const right = point(1, v);
-      grid.beginPath();
-      grid.moveTo(left.x, left.y);
-      grid.lineTo(right.x, right.y);
-      grid.strokePath();
+      for (let col = 0; col < COLUMNS; col += 1) {
+        const a = GRID_NODES[row][col];
+        const b = GRID_NODES[row][col + 1];
+        grid.lineStyle(debug ? 2.5 : 1.25, debug ? 0xff2458 : 0x665238, debug ? 0.95 : 0.5);
+        grid.lineBetween(a.x, a.y, b.x, b.y);
+      }
+    }
+    for (let col = 0; col <= COLUMNS; col += 1) {
+      for (let row = 0; row < LANES; row += 1) {
+        const a = GRID_NODES[row][col];
+        const b = GRID_NODES[row + 1][col];
+        grid.lineStyle(debug ? 2.5 : 1.25, debug ? 0xff2458 : 0x665238, debug ? 0.95 : 0.5);
+        grid.lineBetween(a.x, a.y, b.x, b.y);
+      }
+    }
+
+    if (debug) {
+      GRID_NODES.forEach((line, row) => line.forEach((node, col) => {
+        grid.fillStyle(0x00e5ff, 1);
+        grid.fillCircle(node.x, node.y, 4);
+        this.add.text(node.x + 5, node.y - 15, `${col},${row}`, {
+          fontFamily: "Arial", fontSize: "10px", color: "#ffffff",
+          backgroundColor: "#172b36", padding: { x: 2, y: 1 }
+        }).setDepth(50);
+      }));
+      this.add.text(560, 105, "GRID CALIBRATION VIEW · 9 × 6 CONTROL NODES", {
+        fontFamily: "Arial", fontSize: "15px", color: "#ffffff",
+        backgroundColor: "#172b36", padding: { x: 8, y: 5 }
+      }).setOrigin(0.5).setDepth(50);
     }
     this.plantingGrid = grid;
   }
@@ -530,8 +619,8 @@ export default class BattleScene extends Scene {
   }
 
   nearestLane(y) {
-    const local = this.worldToLane({ x: this.caveman.x, y });
-    return PhaserMath.Clamp(Math.floor((local.localY + LANES * CELL_H / 2) / CELL_H), 0, LANES - 1);
+    const local = this.boardCoordinates(this.caveman.x, y);
+    return PhaserMath.Clamp(Math.floor(local.v * LANES), 0, LANES - 1);
   }
 
   checkWaveProgress() {
