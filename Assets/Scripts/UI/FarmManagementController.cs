@@ -125,6 +125,9 @@ namespace FarmVsMonsters.UI
 
             for (int i = 0; i < upgradeButtons.Length; i++)
             {
+                if (upgradeButtons[i] == null)
+                    continue;
+
                 FarmUpgradeDefinition definition = upgrades != null && i < upgrades.Length ? upgrades[i] : null;
                 if (definition == null)
                 {
@@ -153,6 +156,9 @@ namespace FarmVsMonsters.UI
 
             for (int i = 0; i < buildingButtons.Length; i++)
             {
+                if (buildingButtons[i] == null)
+                    continue;
+
                 FarmBuildingDefinition definition = buildings != null && i < buildings.Length ? buildings[i] : null;
                 if (definition == null)
                 {
