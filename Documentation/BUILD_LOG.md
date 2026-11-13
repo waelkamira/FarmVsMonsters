@@ -319,3 +319,7 @@
 - The driver initializes its health baseline in Start, after component Awake initialization, to avoid depending on unspecified Awake ordering between components.
 - Prefab wiring: add SpriteAnimation2D and CharacterAnimationDriver2D to the same root as Health; assign clips in the Inspector. EnemyMovement2D and PlantCombatController2D discover the driver on their own GameObject.
 - Verification: source changes were committed and are being read back from main. No Unity compile or Play Mode test has been run.
+## 2026-11-13 — 2D character prefab integration guide
+- Added Documentation/2D_CHARACTER_PREFAB_SETUP.md covering shared sprite setup, monster and plant prefab components, projectile configuration, battle board wiring, and a focused Unity smoke-test sequence.
+- Documented component co-location constraints for CharacterAnimationDriver2D, Health, SpriteAnimation2D and SpriteRenderer to reduce Inspector wiring mistakes.
+- Verification: documentation was committed to main. The smoke-test steps remain pending until the Unity Editor is installed and the project is opened.
