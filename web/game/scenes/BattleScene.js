@@ -425,17 +425,64 @@ export default class BattleScene extends Scene {
   }
 
   drawRadish(x, y) {
-    // Temporary calibration visual: the marker's exact center is positioned
-    // at the same polygon centroid used by the gold debug crosshairs.
-    const marker = this.add.graphics().setPosition(x, y).setDepth(10);
-    marker.lineStyle(2, 0x172b36, 1);
-    marker.strokeCircle(0, 0, 8);
-    marker.fillStyle(0xffd54a, 1);
-    marker.fillCircle(0, 0, 5);
-    marker.lineStyle(2, 0xffd54a, 1);
-    marker.lineBetween(-11, 0, 11, 0);
-    marker.lineBetween(0, -11, 0, 11);
-    return marker;
+    // The gold target is the plant's soil/root anchor. The complete radish
+    // grows upward from that exact point; no gameplay coordinate is offset.
+    const anchor = this.add.graphics().setPosition(x, y).setDepth(10);
+    anchor.lineStyle(2, 0x172b36, 1);
+    anchor.strokeCircle(0, 0, 8);
+    anchor.fillStyle(0xffd54a, 1);
+    anchor.fillCircle(0, 0, 4);
+    anchor.lineStyle(2, 0xffd54a, 1);
+    anchor.lineBetween(-11, 0, 11, 0);
+    anchor.lineBetween(0, -11, 0, 11);
+
+    const plant = this.add.container(x, y).setDepth(11);
+    const g = this.add.graphics();
+
+    // Rounded radish body: broad shoulders tapering to a root tip at y=0.
+    g.fillStyle(0x9f2937, 1);
+    g.fillEllipse(0, -25, 31, 34);
+    g.fillStyle(0xd94b52, 1);
+    g.fillTriangle(-14, -37, 14, -37, 0, -1);
+    g.fillStyle(0xf4a0a0, 0.9);
+    g.fillEllipse(-7, -28, 7, 15);
+    g.fillStyle(0x6f2630, 1);
+    g.fillTriangle(-3, -5, 3, -5, 0, 0);
+
+    // Leaves and short stem rise from the shoulders, away from the soil.
+    g.lineStyle(4, 0x477b38, 1);
+    g.lineBetween(0, -38, 0, -48);
+    g.fillStyle(0x4f963f, 1);
+    g.fillEllipse(-10, -48, 18, 9);
+    g.fillEllipse(1, -54, 12, 18);
+    g.fillEllipse(11, -47, 17, 9);
+    g.lineStyle(1.5, 0x2f682e, 1);
+    g.lineBetween(-17, -48, -4, -48);
+    g.lineBetween(0, -61, 2, -47);
+    g.lineBetween(4, -47, 18, -47);
+
+    // Simple friendly face, positioned on the upper half of the root.
+    g.fillStyle(0xffeadc, 1);
+    g.fillEllipse(-6, -25, 5, 8);
+    g.fillEllipse(6, -25, 5, 8);
+    g.fillStyle(0x302b29, 1);
+    g.fillCircle(-6, -25, 2);
+    g.fillCircle(6, -25, 2);
+    g.lineStyle(2, 0x71333a, 1);
+    g.beginPath();
+    g.arc(0, -18, 5, 0.2, Math.PI - 0.2);
+    g.strokePath();
+
+    plant.add(g);
+    this.tweens.add({
+      targets: plant,
+      scaleY: 1.025,
+      duration: 1450,
+      ease: "Sine.easeInOut",
+      yoyo: true,
+      repeat: -1
+    });
+    return plant;
   }
 
   updatePlants(delta) {
