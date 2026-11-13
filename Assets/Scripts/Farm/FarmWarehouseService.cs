@@ -35,6 +35,11 @@ namespace FarmVsMonsters.Farm
         private void Awake()
         {
             Load();
+        }
+
+        private void Start()
+        {
+            // Start runs after every scene object's Awake, so the wallet has loaded its save first.
             ApplyCapacity();
         }
 
