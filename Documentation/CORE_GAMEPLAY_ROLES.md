@@ -1,47 +1,35 @@
 # Core gameplay roles and battle rules
 
-## Farm defense fantasy
-The player is a caveman farmer who cultivates crops and raises animals around a beautiful rural farmhouse. The princess sits safely at the far end of the farm, near the farmhouse. Monsters approach from the opposite side and try to reach the farm, eating planted crops and attacking animals and other vulnerable farm targets.
+These are the definitive gameplay rules. They supersede older descriptions that allowed the caveman to fight while plants remained alive.
 
-## Unit roles
-- **Plants:** stationary defenders placed in grid cells. They never walk. Each plant has its own attack identity and fires its own projectile type or performs a specialized stationary attack. Examples: a cactus spits/launches thorns from its mouth; other plants use their own seed, fruit, sap, spores, or elemental shots. Each plant prefab assigns its own projectile prefab, sprite, damage, speed, cadence, range, and optional status effect.
-- **Monsters:** mobile enemies that advance along lanes toward the farm and attack/eat plants, animals, and the protected farm target. Their animation set includes Walk, Attack/Eat, Hurt, and Death.
-- **Caveman farmer (main playable hero):** the only regular player-controlled mobile defender. He moves around the farm battlefield and strikes monsters with his club. His animation set includes Idle, Walk/Run, Club Attack, Hurt, and Death.
-- **Princess:** a non-combat protected story character located near the farmhouse at the far end of the battlefield. She is not a plant and does not move between defensive grid cells.
+## Plants — stationary defenders
+- Plants are rooted to their selected cells and never walk, chase, dodge, or relocate themselves.
+- Idle motion is limited to gentle breathing, leaf movement, blinking, and expression changes.
+- Each plant attacks from its fixed position using its own anatomy: mouth-fired thorns/seeds, arm/fist punches, spores, fruit, sap, or another distinctive attack.
+- Only the required body parts animate during an attack. Plants take damage and die in place.
+- Plant animation sheets must not include a Walk cycle.
 
-## Battle field and win/loss
-- Monsters enter from the side opposite the farmhouse and move toward the protected farm area.
-- Planted defenders occupy fixed cells and attack monsters in their own lane/range; they do not chase enemies.
-- Monsters can stop to eat/attack a plant or animal in reach, then continue advancing when the target is destroyed.
-- The caveman can move to intercept monsters and protect vulnerable targets.
-- The farmhouse/princess protection objective is the final loss condition. Exact target selection and whether animals/crops have individual health are to be implemented as separate target types, not hard-coded as plants.
-- Victory occurs when the planned monster waves are defeated; defeat occurs when the protected farm objective is destroyed or the defense condition fails.
+## Monsters — advancing attackers
+- Monsters enter from the side opposite the farmhouse and move through lanes toward the protected end.
+- Opening-stage movement is deliberately slow and heavy, with alternating steps, body/head sway, and loose arm movement, evoking the broad feel of classic cartoon zombie walking without copying protected art or animation.
+- Monster speed increases gradually across waves. Fast archetypes are introduced as special later-stage threats.
+- Monsters stop to attack/eat valid targets in their lane, then continue when those targets are destroyed.
 
-## Animation-sheet rules
-- Plant atlas: 6x6 = Idle, Attack, Hurt, Block/Impact, Death, Special. No Walk row.
-- Monster atlas: must include a Walk cycle and Attack/Eat, Hurt, Death, plus any special action.
-- Caveman atlas: must include Idle, Walk/Run, Club Attack, Hurt, Death, and interactions.
-- Do not force every entity into one universal sprite-sheet row mapping; use entity-specific atlas layouts when required.
+## Caveman farmer — planter and last line of defense
+- The caveman plants defensive plants and performs farm interactions.
+- While at least one living defensive plant remains, the caveman cannot damage monsters. No auto-attacks, club hits, or combat targeting are allowed.
+- When the final living defensive plant dies, emergency mode enables direct club combat.
+- The caveman's emergency weapon is a physical club swing only.
+- Successfully planting a new defensive plant immediately exits emergency mode and disables caveman combat again.
+- The caveman may move and perform farm interactions while plants are alive; movement does not grant permission to attack.
 
+## Protected objective
+- The farmhouse and princess stay at the protected end of the field.
+- Monsters enter from the opposite end.
+- The farmhouse protection objective is the final defeat condition; clearing the planned waves is victory.
 
-## Target priority convention
-`FarmDefenseTarget2D` exposes a configurable monster priority. Suggested starting values to tune in the Inspector:
-- Crop: 5
-- Plant: 10
-- Animal: 15
-- Farmhouse: 30
-- Princess: 40
-
-Targets can be lane-bound (plants/crops) or shared across lanes (large animals/farmhouse). Monsters only consider targets in their current travel direction and within their configured scan radius.
-
-
-## 2D farming interaction loop
-- The caveman can approach a fixed crop plot and press E to plant, water once during growth, or harvest when ready.
-- Seeds are consumed at planting; harvested produce is added to a bounded resource wallet.
-- A planted crop becomes a monster target and can be destroyed before harvest. Empty plots are not valid monster targets.
-
-
-## Animal care and production
-- Farm animals remain in their pens and do not move as player-controlled units.
-- The caveman presses F near a hungry animal to spend Feed and start its production timer, then presses F again when it is ready to collect Produce.
-- Animals have Health and a FarmDefenseTarget2D marker, so monsters can attack them. Animal production pauses if the animal is killed.
+## Animation sheet contracts
+- Plant: Idle/Breathing, Attack, Hurt, Death, optional Special. No Walk.
+- Monster: Idle, slow Walk, Attack/Eat, Hurt, Death, optional Special.
+- Caveman: Idle, Walk, Plant/Interact, Club Attack, Hurt, Death.
+- Use entity-specific sheet layouts; do not force every character into one universal atlas.
