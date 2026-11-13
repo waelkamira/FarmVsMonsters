@@ -253,3 +253,17 @@ Configure `PlantCombatController2D` per plant prefab:
 - A burst rechecks its lane-valid target before each subsequent shot. If no valid monster remains, the unfinished burst is cancelled rather than firing blindly.
 
 Suggested identities: cactus = 3 quick direct thorns; pea/seed shooter = 1 steady homing seed; fruit lobber = 1 lobbed shot; bomb plant = special lobbed Splash projectile on a long cooldown; rapid-fire flower = 4 low-damage shots per burst. Tune damage and intervals together to keep each plant's total damage balanced.
+
+
+## In-battle plant upgrades
+Add `PlantUpgradeController2D` to each plant prefab that should be upgradeable. Assign its Health and the plant's main SpriteRenderer if they are not found automatically. Configure the progression arrays in matching order for each upgrade from level 1 upward:
+- **Energy Costs:** energy required to buy each next level. Every configured tier must have a non-negative cost; a missing cost entry disables that upgrade instead of making it free.
+- **Damage Bonuses:** flat damage added at each level.
+- **Attack Speed Bonuses:** fractional speed bonus applied to the plant's attack interval.
+- **Max Health Multipliers:** scales the plant's maximum and current health while preserving its current health percentage.
+- **Level Sprites:** optional appearance for levels 1 through the configured maximum. Create original, progressively upgraded artwork for each plant rather than applying one generic sprite to every species.
+- **Special Attack Unlock Level:** the level at which the plant's separately configured Special Projectile Prefab becomes available.
+
+The placement service automatically supplies the shared battle `EnergyWallet` to the upgrade controller when it spawns a plant. Add `PlantUpgradeInteractor2D` to the caveman player prefab; while standing within Interaction Range of a plant, press **U** to attempt its next upgrade. The interaction component raises `UpgradeAttempted` so a future HUD can show success, insufficient energy, and current level. Only the nearest eligible plant is selected.
+
+Default progression is level 1–5, with a signature attack unlocked at level 3. These are starter balance values, not final game balance. Plant levels currently belong to the spawned plant instance and reset when that instance is destroyed or a new battle starts; persistent account/collection progression is a separate future system.
