@@ -30,7 +30,7 @@ namespace FarmVsMonsters.Input
             if (quickSelectPlants == null) return;
             for (int i = 0; i < Mathf.Min(9, quickSelectPlants.Length); i++)
             {
-                if (UnityEngine.Input.GetKeyDown(KeyCode.Alpha1 + i) &&
+                if (UnityEngine.Input.GetKeyDown((KeyCode)((int)KeyCode.Alpha1 + i)) &&
                     quickSelectPlants[i] != null)
                 {
                     SelectedPlant = quickSelectPlants[i];
