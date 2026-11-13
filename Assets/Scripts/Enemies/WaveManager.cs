@@ -10,12 +10,29 @@ namespace FarmVsMonsters.Enemies
     /// <summary>Spawns configured waves and completes only after every spawned enemy dies.</summary>
     public sealed class WaveManager : MonoBehaviour
     {
+        public enum SpawnSelectionMode
+        {
+            RoundRobin = 0,
+            Random = 1
+        }
+
+        [Serializable]
+        public sealed class EnemyGroup
+        {
+            public GameObject enemyPrefab;
+            [Min(1)] public int count = 1;
+        }
+
         [Serializable]
         public sealed class Wave
         {
             public string displayName = "Wave";
+            [Tooltip("Legacy list: each non-null prefab is spawned once. Enemy Groups can be used for larger compositions.")]
             public GameObject[] enemyPrefabs;
+            public EnemyGroup[] enemyGroups;
             [Min(0f)] public float spawnInterval = 1f;
+            [Min(0f)] public float interWaveDelay = 2f;
+            [Min(0)] public int energyRewardOnClear = 0;
             [Min(0.1f)] public float enemyHealthMultiplier = 1f;
             [Min(0.1f)] public float enemySpeedMultiplier = 1f;
             [Min(0.1f)] public float enemyDamageMultiplier = 1f;
@@ -23,6 +40,7 @@ namespace FarmVsMonsters.Enemies
 
         [SerializeField] private Wave[] waves;
         [SerializeField] private Transform[] spawnPoints;
+        [SerializeField] private SpawnSelectionMode spawnSelectionMode = SpawnSelectionMode.RoundRobin;
         [SerializeField] private Transform enemyTarget;
         [SerializeField] private Health enemyTargetHealth;
         [SerializeField] private EnergyWallet energyWallet;
@@ -32,6 +50,7 @@ namespace FarmVsMonsters.Enemies
         private readonly Dictionary<Health, Action> deathHandlers = new Dictionary<Health, Action>();
         private Coroutine routine;
         private int nextSpawnPoint;
+        private int previousRandomSpawnPoint = -1;
         private bool startRequested;
         private float startDelayRemaining;
 
@@ -90,15 +109,15 @@ namespace FarmVsMonsters.Enemies
                     : "Wave " + CurrentWave;
                 WaveStarted?.Invoke(CurrentWave);
 
-                if (wave != null && wave.enemyPrefabs != null)
+                List<GameObject> composition = BuildComposition(wave);
+                foreach (GameObject prefab in composition)
                 {
-                    foreach (GameObject prefab in wave.enemyPrefabs)
-                    {
-                        if (prefab == null)
-                            continue;
+                    if (prefab == null)
+                        continue;
 
-                        Transform spawn = spawnPoints[nextSpawnPoint % spawnPoints.Length];
-                        nextSpawnPoint++;
+                    Transform spawn = GetNextSpawnPoint();
+                    if (spawn == null)
+                        continue;
                         GameObject instance = Instantiate(prefab, spawn.position, spawn.rotation);
 
                         Health health = instance.GetComponent<Health>();
@@ -132,9 +151,8 @@ namespace FarmVsMonsters.Enemies
                             health.Died += handler;
                         }
 
-                        if (wave.spawnInterval > 0f)
-                            yield return new WaitForSeconds(wave.spawnInterval);
-                    }
+                    if (wave.spawnInterval > 0f)
+                        yield return new WaitForSeconds(wave.spawnInterval);
                 }
 
                 while (livingEnemies.Count > 0)
@@ -144,7 +162,12 @@ namespace FarmVsMonsters.Enemies
                         yield return null;
                 }
 
+                if (wave != null && energyWallet != null && wave.energyRewardOnClear > 0)
+                    energyWallet.Add(wave.energyRewardOnClear);
+
                 WaveCleared?.Invoke(CurrentWave);
+                if (wave != null && wave.interWaveDelay > 0f && waveIndex < waves.Length - 1)
+                    yield return new WaitForSeconds(wave.interWaveDelay);
             }
 
             IsRunning = false;
@@ -152,6 +175,53 @@ namespace FarmVsMonsters.Enemies
             startDelayRemaining = 0f;
             routine = null;
             AllWavesCleared?.Invoke();
+        }
+
+        private List<GameObject> BuildComposition(Wave wave)
+        {
+            var result = new List<GameObject>();
+            if (wave == null)
+                return result;
+
+            if (wave.enemyPrefabs != null)
+            {
+                foreach (GameObject prefab in wave.enemyPrefabs)
+                    if (prefab != null) result.Add(prefab);
+            }
+
+            if (wave.enemyGroups != null)
+            {
+                foreach (EnemyGroup group in wave.enemyGroups)
+                {
+                    if (group == null || group.enemyPrefab == null)
+                        continue;
+
+                    int count = Mathf.Clamp(group.count, 1, 500);
+                    for (int i = 0; i < count; i++)
+                        result.Add(group.enemyPrefab);
+                }
+            }
+
+            return result;
+        }
+
+        private Transform GetNextSpawnPoint()
+        {
+            if (spawnPoints == null || spawnPoints.Length == 0)
+                return null;
+
+            if (spawnSelectionMode == SpawnSelectionMode.RoundRobin || spawnPoints.Length == 1)
+            {
+                Transform selected = spawnPoints[nextSpawnPoint % spawnPoints.Length];
+                nextSpawnPoint++;
+                return selected;
+            }
+
+            int index = UnityEngine.Random.Range(0, spawnPoints.Length);
+            if (spawnPoints.Length > 1 && index == previousRandomSpawnPoint)
+                index = (index + UnityEngine.Random.Range(1, spawnPoints.Length)) % spawnPoints.Length;
+            previousRandomSpawnPoint = index;
+            return spawnPoints[index];
         }
 
         private void RemoveDestroyedEnemies()
