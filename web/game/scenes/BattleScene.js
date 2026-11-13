@@ -273,67 +273,10 @@ export default class BattleScene extends Scene {
   }
 
   drawPlantingGrid() {
-    const grid = this.add.graphics().setDepth(2);
-    const debug = typeof window !== "undefined" &&
-      new URLSearchParams(window.location.search).has("gridDebug");
-
-    // Cell tint is deliberately minimal in normal play.
-    for (let row = 0; row < LANES; row += 1) {
-      for (let col = 0; col < COLUMNS; col += 1) {
-        grid.fillStyle(0xfff2c8, debug ? 0.07 : 0.025);
-        grid.fillPoints(this.cellPolygon(col, row), true);
-      }
-    }
-
-    // Draw each measured mesh edge independently; never infer interior lines
-    // from only the four outer corners at render time.
-    for (let row = 0; row <= LANES; row += 1) {
-      for (let col = 0; col < COLUMNS; col += 1) {
-        const a = GRID_NODES[row][col];
-        const b = GRID_NODES[row][col + 1];
-        grid.lineStyle(debug ? 2.5 : 1.25, debug ? 0xff2458 : 0x665238, debug ? 0.95 : 0.5);
-        grid.lineBetween(a.x, a.y, b.x, b.y);
-      }
-    }
-    for (let col = 0; col <= COLUMNS; col += 1) {
-      for (let row = 0; row < LANES; row += 1) {
-        const a = GRID_NODES[row][col];
-        const b = GRID_NODES[row + 1][col];
-        grid.lineStyle(debug ? 2.5 : 1.25, debug ? 0xff2458 : 0x665238, debug ? 0.95 : 0.5);
-        grid.lineBetween(a.x, a.y, b.x, b.y);
-      }
-    }
-
-    if (debug) {
-      GRID_NODES.forEach((line, row) => line.forEach((node, col) => {
-        grid.fillStyle(0x00e5ff, 1);
-        grid.fillCircle(node.x, node.y, 4);
-        this.add.text(node.x + 5, node.y - 15, `${col},${row}`, {
-          fontFamily: "Arial", fontSize: "10px", color: "#ffffff",
-          backgroundColor: "#172b36", padding: { x: 2, y: 1 }
-        }).setDepth(50);
-      }));
-
-      // Gold markers show the exact polygon-area centroid used for planting.
-      // They are debug-only and never appear during normal gameplay.
-      for (let row = 0; row < LANES; row += 1) {
-        for (let col = 0; col < COLUMNS; col += 1) {
-          const center = this.gridCellCenter(col, row);
-          grid.lineStyle(2, 0x172b36, 0.95);
-          grid.strokeCircle(center.x, center.y, 7);
-          grid.lineStyle(2, 0xffd54a, 1);
-          grid.strokeCircle(center.x, center.y, 5);
-          grid.lineBetween(center.x - 3, center.y, center.x + 3, center.y);
-          grid.lineBetween(center.x, center.y - 3, center.x, center.y + 3);
-        }
-      }
-
-      this.add.text(560, 105, "GRID CALIBRATION VIEW · 8 × 5 CELLS · 9 × 6 NODES · GOLD = PLANT CENTERS", {
-        fontFamily: "Arial", fontSize: "15px", color: "#ffffff",
-        backgroundColor: "#172b36", padding: { x: 8, y: 5 }
-      }).setOrigin(0.5).setDepth(50);
-    }
-    this.plantingGrid = grid;
+    // The planting mesh is a logical interaction surface only.
+    // The background artwork already contains the visible soil grid,
+    // so never draw a second grid, tint, debug node, or centroid marker.
+    this.plantingGrid = null;
   }
 
   createHud() {
@@ -482,7 +425,12 @@ export default class BattleScene extends Scene {
   }
 
   drawRadish(x, y) {
-    const c = this.add.container(x, y);
+    // The artwork spans y=-74..24 around its local origin, so its visual
+    // bounding-box center is 25px above that origin. Offset the art downward
+    // to center the visible radish over the cell centroid while keeping the
+    // plant's logical x/y at the exact polygon centroid for gameplay.
+    const RADISH_ART_CENTER_OFFSET_Y = 25;
+    const c = this.add.container(x, y + RADISH_ART_CENTER_OFFSET_Y);
     const g = this.add.graphics();
     g.fillStyle(0x4b8c45, 1); g.fillEllipse(0, -39, 27, 30);
     g.fillStyle(0x3e783b, 1);
