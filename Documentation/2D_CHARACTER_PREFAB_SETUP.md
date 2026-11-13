@@ -134,3 +134,7 @@ The caveman is the mobile player-controlled defender; planted units never use mo
 4. Put the target collider on a layer included by the monster's Farm Target Layers mask.
 5. Keep the monster's fallback Target and Target Health assigned to the final farm objective through `WaveManager`. Nearby marked targets are attacked first; after they are destroyed, monsters resume advancing toward the fallback target.
 6. Each monster needs `EnemyMarker`, `Health`, `EnemyMovement2D`, and a Collider2D. Set its spawn point to the intended lane.
+
+
+## Stationary plant projectile prefabs
+Every plant is rooted in its assigned grid cell. Do not add a movement controller or a Walk clip to plant prefabs. Configure each plant's `PlantCombatController2D` with its own projectile prefab and muzzle Transform. For a cactus, place the muzzle at the mouth and use a thorn projectile sprite/prefab. Different plants may use seeds, spores, sap, fruit, or other distinct projectiles, each with its own speed, damage, range, cooldown, and status effect. Ensure the projectile prefab has `Projectile2D` and a visible SpriteRenderer.
