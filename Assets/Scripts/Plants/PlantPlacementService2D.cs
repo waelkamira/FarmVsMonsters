@@ -15,10 +15,13 @@ namespace FarmVsMonsters.Plants
 
         private readonly Dictionary<Vector2Int, GameObject> placedPlants =
             new Dictionary<Vector2Int, GameObject>();
+        private readonly Dictionary<string, float> nextPlacementTimeByPlant =
+            new Dictionary<string, float>();
 
         public bool TryPlace(PlantDefinition definition, Vector2 worldPosition, out string reason)
         {
             reason = string.Empty;
+            ClearDestroyedEntries();
             if (definition == null || definition.Prefab == null)
             {
                 reason = "Plant definition or 2D prefab is missing.";
@@ -37,6 +40,13 @@ namespace FarmVsMonsters.Plants
             if (placedPlants.TryGetValue(cell, out GameObject existing) && existing != null)
             {
                 reason = "This cell is already occupied.";
+                return false;
+            }
+
+            string plantId = string.IsNullOrWhiteSpace(definition.PlantId) ? definition.name : definition.PlantId;
+            if (nextPlacementTimeByPlant.TryGetValue(plantId, out float nextTime) && Time.time < nextTime)
+            {
+                reason = "This plant is recharging.";
                 return false;
             }
 
@@ -60,6 +70,7 @@ namespace FarmVsMonsters.Plants
             GameObject instance = Instantiate(definition.Prefab, center, Quaternion.identity,
                 plantRoot != null ? plantRoot : transform);
             placedPlants[cell] = instance;
+            nextPlacementTimeByPlant[plantId] = Time.time + definition.PlacementCooldown;
             return true;
         }
 
