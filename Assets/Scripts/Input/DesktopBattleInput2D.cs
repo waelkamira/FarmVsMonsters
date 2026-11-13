@@ -1,3 +1,4 @@
+using System;
 using FarmVsMonsters.Plants;
 using UnityEngine;
 
@@ -14,11 +15,13 @@ namespace FarmVsMonsters.Input
         [SerializeField] private Color invalidPreviewColor = new Color(1f, 0.2f, 0.2f, 0.5f);
 
         public PlantDefinition SelectedPlant { get; private set; }
+        public event Action<PlantDefinition> SelectedPlantChanged;
 
         private void Start()
         {
             if (SelectedPlant == null && quickSelectPlants != null && quickSelectPlants.Length > 0)
                 SelectedPlant = quickSelectPlants[0];
+            if (SelectedPlant != null) SelectedPlantChanged?.Invoke(SelectedPlant);
             UpdatePlacementPreview();
         }
 
@@ -38,7 +41,7 @@ namespace FarmVsMonsters.Input
                 if (UnityEngine.Input.GetKeyDown((KeyCode)((int)KeyCode.Alpha1 + i)) &&
                     quickSelectPlants[i] != null)
                 {
-                    SelectedPlant = quickSelectPlants[i];
+                    SelectPlant(quickSelectPlants[i]);
                     return;
                 }
             }
@@ -93,7 +96,11 @@ namespace FarmVsMonsters.Input
 
         public void SelectPlant(PlantDefinition definition)
         {
-            if (definition != null) SelectedPlant = definition;
+            if (definition != null && SelectedPlant != definition)
+            {
+                SelectedPlant = definition;
+                SelectedPlantChanged?.Invoke(SelectedPlant);
+            }
             UpdatePlacementPreview();
         }
 
