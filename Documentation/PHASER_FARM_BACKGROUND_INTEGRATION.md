@@ -72,3 +72,13 @@ The background asset was reopened and inspected at its native 1080 × 576 resolu
 The overlay's 8 × 5 quadrilateral cells and pointer inverse mapping share these corners. Planting now uses the polygon area centroid of the selected quadrilateral rather than the parametric midpoint, so the plant's ground anchor is at the geometric center of each trapezoid.
 
 This calibration is based on direct visual inspection of the source image. A live browser screenshot is still required to validate final alignment against Phaser's actual scaling and viewport behavior; no pixel-difference test or browser interaction test has been run.
+
+## Per-cell calibration mesh refactor (2026-11-14)
+
+The runtime no longer assumes that all 40 planting cells can be represented by one global four-corner transform. It now has an explicit 9 × 6 control-node mesh. Each cell is interpolated independently from its own four nodes; hit-testing checks the actual quadrilateral polygons; plant placement uses each polygon's area centroid; and the caveman, lane mapping, and plant placement share the same mesh.
+
+Important calibration status: the current 54 nodes are still bootstrapped from the four outer-corner estimates. This is a structural refactor, **not proof of 100% pixel alignment**. To finish the requested exact match, each of the 54 node positions must be measured against the actual painted seam intersections in the source JPEG, or calibrated against a live Phaser screenshot after the exact runtime scale is confirmed.
+
+Open `/game?gridDebug=1` to display the current mesh in bright red with cyan node markers and row/column labels. This is a calibration view, not a final art setting. The normal view keeps the overlay subtle.
+
+Pointer selection now returns no cell outside the actual board polygons instead of allowing a near-edge click to be clamped into a valid cell. Lane movement outside the board uses a separate outer-boundary extrapolation so monster spawn/approach paths remain possible.
