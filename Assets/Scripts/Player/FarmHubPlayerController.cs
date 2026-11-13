@@ -13,7 +13,6 @@ namespace FarmVsMonsters.Player
         [SerializeField, Min(0.1f)] private float cameraSmooth = 8f;
 
         private CharacterController characterController;
-        private Vector3 lastMoveDirection;
 
         private void Awake()
         {
@@ -30,7 +29,6 @@ namespace FarmVsMonsters.Player
 
             if (direction.sqrMagnitude > 0.001f)
             {
-                lastMoveDirection = direction;
                 Quaternion targetRotation = Quaternion.LookRotation(direction, Vector3.up);
                 transform.rotation = Quaternion.RotateTowards(
                     transform.rotation, targetRotation, turnSpeed * Time.deltaTime);
