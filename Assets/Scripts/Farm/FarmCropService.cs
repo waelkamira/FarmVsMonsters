@@ -31,7 +31,7 @@ namespace FarmVsMonsters.Farm
         [SerializeField] private FarmResourceWallet resourceWallet;
 
         private readonly Dictionary<string, CropPlotSave> planted = new Dictionary<string, CropPlotSave>(StringComparer.Ordinal);
-        private readonly Dictionary<string, GameObject> visuals = new Dictionary<string, GameObject>(StringComparer.Ordinal);
+        private readonly Dictionary<string, GameObject> visuals = new Dictionary<string, GameObject>(StringComparer.Ordinal);\n        private readonly Dictionary<string, int> visualStages = new Dictionary<string, int>(StringComparer.Ordinal);\n        private float nextVisualRefresh;
 
         public event Action<FarmCropPlot, FarmCropDefinition> CropPlanted;
         public event Action<FarmCropPlot, FarmCropDefinition, int> CropHarvested;
@@ -47,7 +47,7 @@ namespace FarmVsMonsters.Farm
             RefreshAllVisuals();
         }
 
-        public FarmCropDefinition GetCrop(FarmCropPlot plot)
+        private void Update()\n        {\n            if (Time.time < nextVisualRefresh)\n                return;\n\n            nextVisualRefresh = Time.time + 1f;\n            RefreshGrowthVisuals();\n        }\n\n        public FarmCropDefinition GetCrop(FarmCropPlot plot)
         {
             if (plot == null || !planted.TryGetValue(plot.PlotId, out CropPlotSave data))
                 return null;
@@ -144,7 +144,7 @@ namespace FarmVsMonsters.Farm
             }
         }
 
-        private void RefreshVisual(FarmCropPlot plot, FarmCropDefinition definition)
+        private void RefreshGrowthVisuals()\n        {\n            if (plots == null)\n                return;\n\n            foreach (FarmCropPlot plot in plots)\n            {\n                FarmCropDefinition definition = GetCrop(plot);\n                if (plot != null && definition != null)\n                    RefreshVisual(plot, definition);\n            }\n        }\n\n        private void RefreshVisual(FarmCropPlot plot, FarmCropDefinition definition)
         {
             if (plot == null || definition == null || definition.GrowthStagePrefabs == null ||
                 definition.GrowthStagePrefabs.Length == 0)
