@@ -58,7 +58,7 @@ namespace FarmVsMonsters.Farm
                     continue;
 
                 EnemyMarker marker = hit.GetComponentInParent<EnemyMarker>();
-                Health health = marker != null ? marker.GetComponent<Health>() : null;
+                Health health = marker != null ? marker.GetComponentInParent<Health>() : null;
                 if (health == null || health.IsDead || !damagedThisTick.Add(health))
                     continue;
 
@@ -66,7 +66,7 @@ namespace FarmVsMonsters.Farm
 
                 if (slowMultiplier < 1f && slowDuration > 0f)
                 {
-                    EnemyMovement2D movement = marker.GetComponent<EnemyMovement2D>();
+                    EnemyMovement2D movement = marker.GetComponentInParent<EnemyMovement2D>();
                     if (movement != null)
                         movement.ApplySlow(slowMultiplier, slowDuration);
                 }
