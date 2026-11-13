@@ -180,10 +180,7 @@ namespace FarmVsMonsters.Enemies
                             movement2D.SetTarget(enemyTarget, enemyTargetHealth);
                     }
 
-                    livingEnemies.Add(health);
-                    Action handler = () => HandleEnemyDied(health);
-                    deathHandlers[health] = handler;
-                    health.Died += handler;
+                    RegisterSpawnedEnemy(health);
 
                     if (wave.spawnInterval > 0f)
                         yield return new WaitForSeconds(wave.spawnInterval);
@@ -217,6 +214,19 @@ namespace FarmVsMonsters.Enemies
             interWaveDelayRemaining = 0f;
             routine = null;
             AllWavesCleared?.Invoke();
+        }
+
+        /// <summary>Registers a summoned monster so the current wave waits for its defeat too.</summary>
+        public bool RegisterSpawnedEnemy(Health health)
+        {
+            if (health == null || health.IsDead || livingEnemies.Contains(health))
+                return false;
+
+            livingEnemies.Add(health);
+            Action handler = () => HandleEnemyDied(health);
+            deathHandlers[health] = handler;
+            health.Died += handler;
+            return true;
         }
 
         private List<GameObject> BuildComposition(Wave wave)
