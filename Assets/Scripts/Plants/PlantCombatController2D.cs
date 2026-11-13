@@ -32,6 +32,7 @@ namespace FarmVsMonsters.Plants
         private int burstShotsRemaining;
         private float assignedLaneWorldY;
         private bool hasAssignedLane;
+        private bool specialAttackUnlocked = true;
 
         public int LaneRow { get; private set; } = -1;
 
@@ -85,7 +86,7 @@ namespace FarmVsMonsters.Plants
             if (target == null) return;
 
             // A configured special shot has its own cooldown and does not consume the normal burst.
-            if (specialProjectilePrefab != null && specialCooldownTimer <= 0f)
+            if (specialAttackUnlocked && specialProjectilePrefab != null && specialCooldownTimer <= 0f)
             {
                 FireProjectile(specialProjectilePrefab, target,
                     damage * Mathf.Max(0f, specialDamageMultiplier));
@@ -109,6 +110,11 @@ namespace FarmVsMonsters.Plants
             Projectile2D projectile = Instantiate(prefab, muzzle.position, Quaternion.identity);
             projectile.Initialize(target, hitDamage, slowMultiplier, slowDuration);
             if (animationDriver != null) animationDriver.PlayAttack();
+        }
+
+        public void SetSpecialAttackUnlocked(bool unlocked)
+        {
+            specialAttackUnlocked = unlocked;
         }
 
         public void ApplyPermanentBonuses(float bonusDamage, float bonusAttackSpeed)
