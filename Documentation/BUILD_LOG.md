@@ -368,3 +368,12 @@
 - Added permanent damage and attack-speed bonus hooks to match the existing plant combat upgrade pipeline.
 - Documented prefab setup and target-layer requirements.
 - Verification: source was committed and read back through GitHub. Unity compilation, collider/layer behavior, and in-game combat timing remain untested.
+
+
+## 2026-11-13 — Corrected plant roles and added caveman player controller
+- Confirmed the core design rule: plants are stationary grid defenders and do not walk. Their attacks are plant-specific projectiles; the cactus example launches thorns from its mouth.
+- Plant projectile targeting now checks lane alignment so a planted defender does not automatically select a monster in a different row.
+- Changed the plant 6x6 sheet slicer row order to Idle, Attack, Hurt, Block, Death, Special. Monster and caveman sheets require separate layouts with locomotion.
+- Added `CavemanFarmerController2D`: top-down movement inside configurable farm bounds and a directional club swing that damages the nearest valid monster in front of the player.
+- Added the core gameplay roles document describing monsters advancing toward the farmhouse, eating crops/attacking animals, the caveman as mobile defender, and the princess as a protected story character at the farmhouse end.
+- Verification: GitHub writes and source readback only; Unity compilation, Rigidbody2D setup, input bindings, collisions, and actual combat behavior remain untested.
