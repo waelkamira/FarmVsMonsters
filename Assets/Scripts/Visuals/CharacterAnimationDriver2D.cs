@@ -48,7 +48,8 @@ namespace FarmVsMonsters.Visuals
         {
             if (animator == null || health == null || health.IsDead) return;
             if ((animator.CurrentState == SpriteAnimation2D.AnimationState.Attack ||
-                 animator.CurrentState == SpriteAnimation2D.AnimationState.Hurt) &&
+                 animator.CurrentState == SpriteAnimation2D.AnimationState.Hurt ||
+                 animator.CurrentState == SpriteAnimation2D.AnimationState.Block) &&
                 animator.IsCurrentAnimationFinished)
                 ApplyLocomotionState();
         }
@@ -58,7 +59,8 @@ namespace FarmVsMonsters.Visuals
             wantsToMove = moving;
             if (animator == null || health == null || health.IsDead) return;
             if (animator.CurrentState == SpriteAnimation2D.AnimationState.Attack ||
-                animator.CurrentState == SpriteAnimation2D.AnimationState.Hurt)
+                animator.CurrentState == SpriteAnimation2D.AnimationState.Hurt ||
+                animator.CurrentState == SpriteAnimation2D.AnimationState.Block)
                 return;
             ApplyLocomotionState();
         }
@@ -66,6 +68,18 @@ namespace FarmVsMonsters.Visuals
         public void PlayAttack()
         {
             PlayTransient(SpriteAnimation2D.AnimationState.Attack);
+        }
+
+        public void PlayBlock()
+        {
+            PlayTransient(SpriteAnimation2D.AnimationState.Block);
+        }
+
+        public void PlayVictory()
+        {
+            if (animator != null && health != null && !health.IsDead &&
+                animator.HasClip(SpriteAnimation2D.AnimationState.Victory))
+                animator.Play(SpriteAnimation2D.AnimationState.Victory, true);
         }
 
         private void HandleHealthChanged(float current, float maximum)
