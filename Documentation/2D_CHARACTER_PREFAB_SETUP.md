@@ -54,6 +54,7 @@ Inspector setup:
 4. Assign the prefab to PlantCombatController2D. Do not add unnecessary 3D physics components.
 
 ## Battle board
+- Add BattleGrid2D to the board root and add BattleGridVisual2D to the same object to render runtime cell guides. Tune line color, width, sorting layer and sorting order in the Inspector.
 - Use an orthographic camera.
 - Place BattleGrid2D on the board root and configure the intended columns, rows, cell size and origin.
 - Keep the current prototype defaults at 9 columns × 5 rows unless the scene design requires a deliberate change.
