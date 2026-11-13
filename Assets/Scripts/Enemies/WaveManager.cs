@@ -29,12 +29,15 @@ namespace FarmVsMonsters.Enemies
         private readonly Dictionary<Health, Action> deathHandlers = new Dictionary<Health, Action>();
         private Coroutine routine;
         private int nextSpawnPoint;
+        private bool startRequested;
+        private float startDelayRemaining;
 
         public int CurrentWave { get; private set; }
         public int TotalWaves => waves != null ? waves.Length : 0;
         public string CurrentWaveName { get; private set; } = string.Empty;
         public int LivingEnemyCount => livingEnemies.Count;
         public bool IsRunning { get; private set; }
+        public float StartDelayRemaining => startDelayRemaining;
 
         public event Action<int> WaveStarted;
         public event Action<int> WaveCleared;
@@ -53,17 +56,27 @@ namespace FarmVsMonsters.Enemies
 
         public void Begin()
         {
-            if (IsRunning || waves == null || waves.Length == 0 || spawnPoints == null || spawnPoints.Length == 0)
+            if (IsRunning || startRequested)
                 return;
+            if (waves == null || waves.Length == 0 || spawnPoints == null || spawnPoints.Length == 0)
+            {
+                Debug.LogWarning("WaveManager cannot begin: configure at least one wave and one spawn point.", this);
+                return;
+            }
 
+            startRequested = true;
             routine = StartCoroutine(RunWaves());
         }
 
         private IEnumerator RunWaves()
         {
             IsRunning = true;
-            if (initialStartDelay > 0f)
-                yield return new WaitForSeconds(initialStartDelay);
+            startDelayRemaining = Mathf.Max(0f, initialStartDelay);
+            while (startDelayRemaining > 0f)
+            {
+                startDelayRemaining = Mathf.Max(0f, startDelayRemaining - Time.deltaTime);
+                yield return null;
+            }
 
             for (int waveIndex = 0; waveIndex < waves.Length; waveIndex++)
             {
@@ -95,8 +108,12 @@ namespace FarmVsMonsters.Enemies
 
                         // The same wave scheduler supports the approved 2D side-view combat.
                         EnemyMovement2D movement2D = instance.GetComponent<EnemyMovement2D>();
-                        if (movement2D != null && enemyTarget != null && enemyTargetHealth != null)
-                            movement2D.SetTarget(enemyTarget, enemyTargetHealth);
+                        if (movement2D != null)
+                        {
+                            movement2D.SetLane(spawn.position.y);
+                            if (enemyTarget != null && enemyTargetHealth != null)
+                                movement2D.SetTarget(enemyTarget, enemyTargetHealth);
+                        }
 
                         Health health = instance.GetComponent<Health>();
                         if (health != null && !health.IsDead)
@@ -123,6 +140,8 @@ namespace FarmVsMonsters.Enemies
             }
 
             IsRunning = false;
+            startRequested = false;
+            startDelayRemaining = 0f;
             routine = null;
             AllWavesCleared?.Invoke();
         }
@@ -162,6 +181,22 @@ namespace FarmVsMonsters.Enemies
             }
 
             livingEnemies.Remove(enemy);
+        }
+
+        private void OnDisable()
+        {
+            if (routine != null)
+            {
+                StopCoroutine(routine);
+                routine = null;
+            }
+            IsRunning = false;
+            startRequested = false;
+            startDelayRemaining = 0f;
+            foreach (KeyValuePair<Health, Action> pair in deathHandlers)
+                if (pair.Key != null) pair.Key.Died -= pair.Value;
+            deathHandlers.Clear();
+            livingEnemies.Clear();
         }
 
         private void OnDestroy()
