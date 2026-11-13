@@ -60,6 +60,7 @@ namespace FarmVsMonsters.Visuals
             wantsToMove = moving;
             if (animator == null || health == null || health.IsDead) return;
             if (animator.CurrentState == SpriteAnimation2D.AnimationState.Attack ||
+                animator.CurrentState == SpriteAnimation2D.AnimationState.Eat ||
                 animator.CurrentState == SpriteAnimation2D.AnimationState.Hurt ||
                 animator.CurrentState == SpriteAnimation2D.AnimationState.Block ||
                 animator.CurrentState == SpriteAnimation2D.AnimationState.Special ||
@@ -76,6 +77,11 @@ namespace FarmVsMonsters.Visuals
         public void PlayBlock()
         {
             PlayTransient(SpriteAnimation2D.AnimationState.Block);
+        }
+
+        public void PlayEat()
+        {
+            PlayTransient(SpriteAnimation2D.AnimationState.Eat);
         }
 
         public void PlayVictory()
