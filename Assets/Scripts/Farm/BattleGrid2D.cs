@@ -37,19 +37,50 @@ namespace FarmVsMonsters.Farm
             return transform.TransformPoint(localCenter);
         }
 
+        /// <summary>Returns the world-space center of a lane row, respecting grid rotation and scale.</summary>
+        public Vector3 GetLaneCenterWorld(int row)
+        {
+            row = Mathf.Clamp(row, 0, rows - 1);
+            Vector2 localCenter = origin + new Vector2(
+                columns * cellWidth * 0.5f,
+                (row + 0.5f) * cellHeight);
+            return transform.TransformPoint(localCenter);
+        }
+
+        /// <summary>Returns a point just outside the selected horizontal edge of a lane.</summary>
+        public Vector3 GetLaneSpawnWorld(int row, bool rightEdge, float outsideDistance)
+        {
+            row = Mathf.Clamp(row, 0, rows - 1);
+            float localX = rightEdge
+                ? origin.x + columns * cellWidth + Mathf.Max(0f, outsideDistance)
+                : origin.x - Mathf.Max(0f, outsideDistance);
+            Vector2 local = new Vector2(localX,
+                origin.y + (row + 0.5f) * cellHeight);
+            return transform.TransformPoint(local);
+        }
+
+        private void OnValidate()
+        {
+            columns = Mathf.Max(1, columns);
+            rows = Mathf.Max(1, rows);
+            cellWidth = Mathf.Max(0.1f, cellWidth);
+            cellHeight = Mathf.Max(0.1f, cellHeight);
+        }
+
         private void OnDrawGizmosSelected()
         {
             Gizmos.color = new Color(0.25f, 0.85f, 0.55f, 0.8f);
-            Vector3 bottomLeft = transform.TransformPoint(origin);
             for (int x = 0; x <= columns; x++)
             {
-                Vector3 a = bottomLeft + transform.right * (x * cellWidth);
-                Gizmos.DrawLine(a, a + transform.up * (rows * cellHeight));
+                Vector3 a = transform.TransformPoint(origin + new Vector2(x * cellWidth, 0f));
+                Vector3 b = transform.TransformPoint(origin + new Vector2(x * cellWidth, rows * cellHeight));
+                Gizmos.DrawLine(a, b);
             }
             for (int y = 0; y <= rows; y++)
             {
-                Vector3 a = bottomLeft + transform.up * (y * cellHeight);
-                Gizmos.DrawLine(a, a + transform.right * (columns * cellWidth));
+                Vector3 a = transform.TransformPoint(origin + new Vector2(0f, y * cellHeight));
+                Vector3 b = transform.TransformPoint(origin + new Vector2(columns * cellWidth, y * cellHeight));
+                Gizmos.DrawLine(a, b);
             }
         }
     }
