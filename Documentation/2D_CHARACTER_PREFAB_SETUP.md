@@ -100,14 +100,14 @@ Keep early waves close to 1.0 and increase values gradually. These are per-wave 
 - Every spawned enemy prefab must have a Health component. Prefabs missing it are logged as errors and destroyed rather than being counted as cleared enemies.
 
 
-## Standard 6x6 character sheet slicing
+## Standard 6x6 planted-defender sheet slicing
 The project includes an Editor utility at `Assets/Editor/CharacterSpriteSheetSlicer.cs`.
 
 1. Import the generated PNG anywhere under `Assets/`.
 2. Select the texture asset in the Unity Project window.
 3. Run **Tools → Farm Vs Monsters → Slice Character Sheet (6x6)**.
 4. The utility validates that the image dimensions divide evenly into six columns and six rows, then creates 36 named Sprite sub-assets with bottom-center pivots.
-5. The first five rows are named `Idle_01..06`, `Walk_01..06`, `Attack_01..06`, `Block_01..06`, and `Hurt_01..06`. The final row is named `Death_01..05` and `Victory_01`.
+5. For planted defenders, the six rows are named `Idle_01..06`, `Attack_01..06`, `Hurt_01..06`, `Block_01..06`, `Death_01..06`, and `Special_01..06`. Plants are stationary and must not be given a Walk cycle. Monster and caveman sheets need a separate locomotion-oriented layout.
 6. Drag the resulting Sprite sub-assets into the matching `SpriteAnimation2D.AnimationClip.frames` arrays in playback order. Configure Idle/Walk as looping; Attack/Block/Hurt/Death/Victory as non-looping unless a design specifically requires otherwise.
 
 **Important:** the slicer expects a tightly packed, exact 6x6 atlas with equal-sized cells and no gutters. If the image generator adds borders, uneven cell spacing, or decorative margins, crop/normalize the atlas first rather than accepting misaligned slices. A visually transparent checkerboard is not real alpha transparency.
