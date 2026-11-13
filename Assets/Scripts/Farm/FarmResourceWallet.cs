@@ -8,7 +8,9 @@ namespace FarmVsMonsters.Farm
     {
         private const string SaveKey = "farm_vs_monsters.resources.v1";
         private const int ResourceCount = 7;
-        [SerializeField, Min(1)] private int capacityPerResource = 9999;\n        [SerializeField, Min(0)] private int startingSeeds = 12;\n        [SerializeField, Min(0)] private int startingWater = 20;
+        [SerializeField, Min(1)] private int capacityPerResource = 9999;
+        [SerializeField, Min(0)] private int startingSeeds = 12;
+        [SerializeField, Min(0)] private int startingWater = 20;
 
         [Serializable]
         private sealed class InventorySave
@@ -31,7 +33,13 @@ namespace FarmVsMonsters.Farm
             return IsValidIndex(index) ? amounts[index] : 0;
         }
 
-        public bool CanAdd(FarmResourceType type, int amount)\n        {\n            int index = (int)type;\n            return IsValidIndex(index) && amount > 0 && amount <= capacityPerResource - amounts[index];\n        }\n\n        public int Add(FarmResourceType type, int amount)
+        public bool CanAdd(FarmResourceType type, int amount)
+        {
+            int index = (int)type;
+            return IsValidIndex(index) && amount > 0 && amount <= capacityPerResource - amounts[index];
+        }
+
+        public int Add(FarmResourceType type, int amount)
         {
             int index = (int)type;
             if (!IsValidIndex(index) || amount <= 0)
