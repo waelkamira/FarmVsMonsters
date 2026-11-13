@@ -156,3 +156,17 @@ Every plant is rooted in its assigned grid cell. Do not add a movement controlle
 4. Add `FarmAnimalCareController2D` to the caveman and assign the shared `FarmResourceWallet2D`, selected animal definition, and animal collider layer.
 5. Press F near a hungry animal to spend Feed and start production. Wait for Ready, then press F again to collect Produce. Monsters can attack and kill the animal while it is in the pen.
 6. Configure starting Feed on `FarmResourceWallet2D`; Feed and Produce are bounded resources. Animal production currently advances only while the scene is running (no offline production yet).
+
+## Live resource HUD
+1. Add a uGUI Canvas to the battle scene and create three Text labels (or TextMeshPro labels with a small adapter) for Seeds, Feed, and Produce.
+2. Add `FarmResourceHud2D` to a HUD object, assign the scene's shared `FarmResourceWallet2D`, and connect the three uGUI Text fields.
+3. The HUD subscribes to `FullResourcesChanged`, refreshes immediately when enabled, and unsubscribes when disabled. Keep the same wallet assigned to the caveman's `FarmPlotInteractor2D` and `FarmAnimalCareController2D`.
+4. This controller currently targets legacy uGUI `Text`; if the project UI uses TextMeshPro, either use uGUI Text for these three labels or add a TMP-specific presentation adapter. Do not attach two resource wallets for the same battle.
+
+## Final farmhouse and princess protection
+1. Add `Health`, Collider2D, and `FarmDefenseTarget2D` to the farmhouse root. Set Target Kind = Farmhouse, Lane Bound = off, and Blocks Monster Movement = on.
+2. Add the same components to the princess root. Set Target Kind = Princess, Lane Bound = off, and Blocks Monster Movement = on. Position her beside the farmhouse at the protected end of the farm.
+3. Add `FarmHomeProtection2D` to the battle manager (or another persistent scene object). Assign the farmhouse target, princess target, and the scene's `BattleOutcomeController`.
+4. Assign the farmhouse Transform and Health as the fallback target on `WaveManager`, so monsters continue toward the home after destroying nearby crops, plants, or animals. Include both farmhouse and princess layers in the monster Farm Target Layers mask.
+5. The protection relay listens only to the two explicitly typed final objectives. Destruction of a crop, plant, or animal does not directly end the battle. Keep `BattleOutcomeController`'s Protected Target Health assigned to the farmhouse Health if you want the existing direct farmhouse fallback as an additional safety path; the outcome controller ignores duplicate defeat reports after the first result.
+6. Ensure the princess is not accidentally assigned Target Kind = Crop/Plant/Animal, and keep the home/princess colliders reachable by the monster target scan.
