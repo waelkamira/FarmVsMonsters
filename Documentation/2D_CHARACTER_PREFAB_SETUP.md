@@ -77,3 +77,10 @@ Inspector setup:
 - EnemyMovement2D and PlantCombatController2D look for CharacterAnimationDriver2D on their own GameObject.
 - SpriteAnimation2D frame arrays are assigned in the Inspector after slicing. The code does not slice images automatically.
 - No Unity compile, prefab validation, physics validation or Play Mode test has yet been performed.
+## Five-lane monster spawning
+- Create one spawn Transform per battle row and assign them to WaveManager.spawnPoints in top-to-bottom or bottom-to-top order. The same order should be used consistently for the board and spawn configuration.
+- Each 2D monster receives the world Y coordinate of the spawn Transform through EnemyMovement2D.SetLane and is constrained to that lane while moving horizontally.
+- Keep spawn transforms at the intended row center. Do not place them above/below the row center and expect the grid to correct the position automatically.
+- The protected target should be positioned at the farm-side end of the board. EnemyMovement2D currently approaches the target along X and attacks when within attackRange.
+- WaveManager exposes StartDelayRemaining; BattleHudController2D displays the initial countdown before Wave 1.
+- Configure at least one non-null wave, one spawn point, and enemy prefabs with Health and EnemyMovement2D. Missing wave/spawn configuration produces a warning and does not silently start.
