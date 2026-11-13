@@ -258,5 +258,12 @@
     ]
   },
   "mapping": "Reference frame coordinates are normalized independently to the aspect-preserving Phaser background display rectangle.",
-  "note": "Initial measured node coordinates traced from the supplied raster reference. Recheck against the native-resolution AutoCAD export/DXF before claiming sub-pixel calibration."
+  "note": "Control-point coordinates are traced from the supplied raster reference and visually accepted by the user based on the resulting 40 planting-centroid markers. This is a visual gameplay calibration, not a claim of independently verified sub-pixel CAD/DXF measurement.",
+  "visualValidation": {
+    "status": "user-approved",
+    "approvedForGameplay": true,
+    "basis": "The user visually confirmed that all 40 gold polygon-centroid markers are correctly distributed at the centers of their corresponding soil cells in the grid debug view.",
+    "approvedCellCount": 40,
+    "approvedAtCommit": "c9daf4f1fa5a9af4a73cf2d071ddba90f18b9d99"
+  }
 }
