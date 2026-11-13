@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using FarmVsMonsters.Economy;
 using FarmVsMonsters.Farm;
+using FarmVsMonsters.Progression;
 using UnityEngine;
 
 namespace FarmVsMonsters.Plants
@@ -11,6 +12,7 @@ namespace FarmVsMonsters.Plants
         [SerializeField] private BattleGrid battleGrid;
         [SerializeField] private EnergyWallet energyWallet;
         [SerializeField] private Transform plantRoot;
+        [SerializeField] private FarmUpgradeDefinition[] permanentUpgrades;
 
         private readonly HashSet<Vector2Int> occupiedCells = new HashSet<Vector2Int>();
         private float nextPlacementTime;
@@ -47,9 +49,37 @@ namespace FarmVsMonsters.Plants
                 return false;
             }
 
+            ApplyPermanentPlantUpgrades(instance);
             occupiedCells.Add(cell);
             nextPlacementTime = Time.time + definition.PlacementCooldown;
             return true;
+        }
+
+        private void ApplyPermanentPlantUpgrades(GameObject plantObject)
+        {
+            if (plantObject == null || permanentUpgrades == null)
+                return;
+
+            PlantCombatController combat = plantObject.GetComponentInChildren<PlantCombatController>();
+            if (combat == null)
+                return;
+
+            float damageBonus = 0f;
+            float attackSpeedBonus = 0f;
+            foreach (FarmUpgradeDefinition upgrade in permanentUpgrades)
+            {
+                if (upgrade == null)
+                    continue;
+
+                int level = ProgressSaveService.GetUpgradeLevel(upgrade.UpgradeId);
+                float bonus = level * upgrade.ValuePerLevel;
+                if (upgrade.UpgradeType == FarmUpgradeType.PlantDamage)
+                    damageBonus += bonus;
+                else if (upgrade.UpgradeType == FarmUpgradeType.PlantAttackSpeed)
+                    attackSpeedBonus += bonus;
+            }
+
+            combat.ApplyPermanentBonuses(damageBonus, attackSpeedBonus);
         }
 
         public bool ReleaseCell(Vector3 worldPosition)
