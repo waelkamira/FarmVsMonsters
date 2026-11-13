@@ -124,3 +124,13 @@
 - Scene setup required: create recipe assets, assign the recipe catalogue and station anchors to the service, and connect UI controls to TryStart/TryClaim.
 - Important limitation: jobs are completed when claimed, not automatically deposited; if output storage is full, the completed job remains claimable and no output is lost. This is local PlayerPrefs persistence and UTC-clock based, not server-authoritative.
 - Verification: GitHub commits were created on `main`; Unity compilation, editor wiring, and runtime production tests have not been run.
+
+
+## 2026-11-13 — Farm market and resource sales
+- Added `FarmMarketListing.cs` ScriptableObjects for per-resource prices, minimum sale quantities, display names, and stage unlock requirements.
+- Added `FarmMarketService.cs` to list unlocked goods, calculate sellable stock, validate quantity and currency overflow, remove inventory, and credit permanent farm coins.
+- Added `UI/FarmMarketController.cs` as a uGUI adapter for balance, sellable inventory, fixed-quantity sale buttons, and sale feedback.
+- Sale quantities are bounded by both available inventory and remaining farm-coin integer capacity. The service validates both sides before committing and includes defensive inventory compensation if the currency credit unexpectedly differs.
+- Unity setup required: create listing assets, configure prices and unlock stages, assign the market service/resource wallet, and wire the UI Text/Button references.
+- Limitation: this is a local single-player NPC market with fixed configured prices. Dynamic supply/demand, market orders, player trading, and a durable transaction ledger are not implemented.
+- Verification: source files were committed to `main` and read back from GitHub. Unity compilation and runtime transaction tests remain pending.
