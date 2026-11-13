@@ -6,16 +6,17 @@ const COLUMNS = 8;
  // These four corners follow the visible outer seams in the uploaded 1080 × 576 art,
  // mapped to the aspect-preserving 1120 × 597.33 background inside the 1120 × 680 view.
 const GRID_CORNERS = {
-  // Outer planting-board seams measured against the 1120 × 597.33 rendered artwork.
-  tl: { x: 383, y: 370 },
-  tr: { x: 771, y: 370 },
-  br: { x: 932, y: 579 },
-  bl: { x: 261, y: 579 },
+  // Calibrated from the visible outer soil-grid seams in the source artwork,
+  // then transformed into the 1120 × 597.33 image drawn at (560, 340).
+  tl: { x: 395, y: 365 },
+  tr: { x: 806, y: 365 },
+  br: { x: 970, y: 568 },
+  bl: { x: 261, y: 568 },
 };
-const GRID_WIDTH = 388;
-const GRID_HEIGHT = 209;
-const GRID_CENTER_X = 560;
-const GRID_CENTER_Y = 469.5;
+const GRID_WIDTH = 411;
+const GRID_HEIGHT = 203;
+const GRID_CENTER_X = 615.5;
+const GRID_CENTER_Y = 466.5;
 const CELL_W = GRID_WIDTH / COLUMNS;
 const CELL_H = GRID_HEIGHT / LANES;
 const HOME_LOCAL_X = -300;
@@ -155,6 +156,32 @@ export default class BattleScene extends Scene {
       (col + offsetX / CELL_W) / COLUMNS,
       (row + offsetY / CELL_H) / LANES,
     );
+  }
+
+  gridCellCenter(col, row) {
+    const u0 = col / COLUMNS;
+    const u1 = (col + 1) / COLUMNS;
+    const v0 = row / LANES;
+    const v1 = (row + 1) / LANES;
+    const polygon = [
+      this.boardPoint(u0, v0),
+      this.boardPoint(u1, v0),
+      this.boardPoint(u1, v1),
+      this.boardPoint(u0, v1),
+    ];
+    let twiceArea = 0;
+    let cx = 0;
+    let cy = 0;
+    for (let i = 0; i < polygon.length; i += 1) {
+      const current = polygon[i];
+      const next = polygon[(i + 1) % polygon.length];
+      const cross = current.x * next.y - next.x * current.y;
+      twiceArea += cross;
+      cx += (current.x + next.x) * cross;
+      cy += (current.y + next.y) * cross;
+    }
+    const areaFactor = 1 / (3 * twiceArea);
+    return { x: cx * areaFactor, y: cy * areaFactor };
   }
 
   worldToGrid(x, y) {
@@ -327,7 +354,7 @@ export default class BattleScene extends Scene {
     if (this.plantingTarget) { this.setMessage("The caveman is already on his way to a planting spot."); return; }
     if (this.plants.some((p) => p.alive && p.col === col && p.row === row)) { this.setMessage("That soil cell is occupied."); return; }
     if (this.energy < RADISH.cost) { this.setMessage("Not enough energy to plant a radish."); return; }
-    const { x, y } = this.gridToWorld(col, row, CELL_W / 2, CELL_H / 2);
+    const { x, y } = this.gridCellCenter(col, row);
     this.plantingTarget = { col, row, x, y };
     this.facing = x >= this.caveman.x ? 1 : -1;
     this.caveman.scaleX = this.facing;
