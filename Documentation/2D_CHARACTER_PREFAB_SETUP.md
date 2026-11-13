@@ -105,7 +105,7 @@ The project includes an Editor utility at `Assets/Editor/CharacterSpriteSheetSli
 
 1. Import the generated PNG anywhere under `Assets/`.
 2. Select the texture asset in the Unity Project window.
-3. Run **Tools → Farm Vs Monsters → Slice Character Sheet (6x6)**.
+3. Run **Tools → Farm Vs Monsters → Slice Plant Character Sheet (6x6)**.
 4. The utility validates that the image dimensions divide evenly into six columns and six rows, then creates 36 named Sprite sub-assets with bottom-center pivots.
 5. For planted defenders, the six rows are named `Idle_01..06`, `Attack_01..06`, `Hurt_01..06`, `Block_01..06`, `Death_01..06`, and `Special_01..06`. Plants are stationary and must not be given a Walk cycle. Monster and caveman sheets need a separate locomotion-oriented layout.
 6. Drag the resulting Sprite sub-assets into the matching `SpriteAnimation2D.AnimationClip.frames` arrays in playback order. Configure Idle/Walk as looping; Attack/Block/Hurt/Death/Victory as non-looping unless a design specifically requires otherwise.
@@ -113,14 +113,8 @@ The project includes an Editor utility at `Assets/Editor/CharacterSpriteSheetSli
 **Important:** the slicer expects a tightly packed, exact 6x6 atlas with equal-sized cells and no gutters. If the image generator adds borders, uneven cell spacing, or decorative margins, crop/normalize the atlas first rather than accepting misaligned slices. A visually transparent checkerboard is not real alpha transparency.
 
 
-## Spear/melee plant prefab
-For the yellow plant warrior or any stationary plant that attacks nearby monsters with a physical weapon:
-1. Add `MeleePlantCombatController2D` instead of `PlantCombatController2D`.
-2. Optionally create a child Transform named `AttackOrigin` at the spear tip and assign it to Attack Origin.
-3. Set Attack Range to cover the adjacent lane area the spear can reach, then tune Attack Interval and Damage.
-4. Make sure monster colliders are on a layer included in Target Layers and each monster root has both `Health` and `EnemyMarker`.
-5. Keep `CharacterAnimationDriver2D` on the same root as `Health` and `SpriteAnimation2D`; a successful melee hit requests the Attack animation.
-6. The melee controller uses a bounded non-allocating Physics2D overlap query and damages only live objects marked as monsters. It does not instantiate a projectile.
+## Plant-specific projectile rule
+Use `PlantCombatController2D` for planted defenders. Assign a distinct projectile prefab to each plant type; the prefab's SpriteRenderer supplies that plant's projectile appearance (for example, thorn sprites launched from a cactus mouth). Tune projectile speed, lifetime, damage, range, firing interval, and optional slow effect per plant. Do not attach the caveman's melee controller to a plant. `MeleePlantCombatController2D` is retained as an experimental/legacy component and is not part of the standard planted-defender setup.
 
 
 ## Caveman farmer player prefab
