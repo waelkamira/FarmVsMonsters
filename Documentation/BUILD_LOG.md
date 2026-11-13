@@ -410,3 +410,12 @@
 - Added a dedicated Eat animation state and CharacterAnimationDriver2D.PlayEat trigger.
 - Monsters now request the Eat clip when damaging crops, planted defenders, or animals, while retaining the normal Attack clip for the final farmhouse/princess objective.
 - Added Eat to transient animation protection so movement updates do not interrupt the eating sequence.
+
+
+## 2026-11-13 — 2D crop planting, growth, watering and harvest loop
+- Added `FarmCropDefinition2D` ScriptableObject for crop identity, seed cost, growth duration, harvest yield, crop health and growing/ready sprites.
+- Added `FarmResourceWallet2D` with bounded seed and produce balances and change notifications.
+- Added `FarmCropPlot2D` with Empty/Growing/Ready states, seed spending, timed growth, one-time watering acceleration, harvest output, visual changes, and crop reset when destroyed by monsters.
+- Added `FarmPlotInteractor2D`; the player can press E near a plot to plant an empty plot, water a growing crop, or harvest a ready crop.
+- Plots can carry `Health` and `FarmDefenseTarget2D` so monsters can destroy growing/ready crops. Disable the target while the plot is empty.
+- This is a source-level gameplay system. Scene/prefab generation, Unity compilation, physics interaction and Play Mode verification are still pending.
