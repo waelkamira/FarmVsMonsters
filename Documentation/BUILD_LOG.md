@@ -336,3 +336,10 @@
 - WaveManager clears its active coroutine and death subscriptions when disabled; normal scene teardown remains safe.
 - Updated Documentation/2D_CHARACTER_PREFAB_SETUP.md with five-lane spawn point ordering and configuration requirements.
 - Verification: changed C# and documentation files were committed to main and are being read back. Unity compile and Play Mode validation remain pending.
+## 2026-11-13 — Wave difficulty controls
+- Added Health.ApplyMaxHealthMultiplier, scaling current and maximum health together while preserving the current health ratio and notifying health UI listeners.
+- Added EnemyMovement2D.ApplyDifficulty for configurable movement speed and melee damage multipliers.
+- Each Wave now exposes enemyHealthMultiplier, enemySpeedMultiplier, and enemyDamageMultiplier; WaveManager applies these values to spawned enemies.
+- The 2D HUD now includes the configured wave display name alongside its number.
+- Updated the prefab setup guide with tuning guidance and clarified that difficulty is configured per wave rather than silently auto-scaled.
+- Verification: GitHub readback and source delimiter checks performed after commits. Unity compilation and gameplay balancing remain pending.
