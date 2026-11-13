@@ -43,3 +43,10 @@
 - Added `Battle/BattleOutcomeController.cs`: listens for all waves cleared or protected-target death, emits one terminal outcome, and grants a configurable victory energy reward.
 - Scene wiring still required: add a CharacterController to the farmer; assign camera target; set pickup trigger colliders; assign the wallet to energy generators; connect WaveManager and protected-target Health to BattleOutcomeController.
 - Verification: commits were written to `main`. Unity compilation and runtime behavior have not been tested because the Unity project/editor is not yet installed/configured. Input adapters, HUD, save/load, scenes, prefabs, and 3D assets remain outstanding.
+
+## 2026-11-13 — Local progression persistence
+- Added `Progression/ProgressSaveService.cs` with versioned JSON save data stored in PlayerPrefs: highest unlocked stage, completed battles, victories, and defeats.
+- Added safe defaults and basic malformed/unsupported-save recovery. Exposed stage unlock, battle recording, progress load, and reset operations.
+- Connected `BattleOutcomeController` to record every terminal battle result and unlock the configured next stage on victory.
+- Save data is local prototype storage only; it is not encrypted, backed up, or synchronized between devices.
+- Verification: source files were committed to `main`. Unity compilation and save/load runtime tests remain pending.
