@@ -14,16 +14,16 @@ export default function PhaserGame() {
       import("./scenes/BattleScene")
     ]).then(([phaserModule, sceneModule]) => {
       if (cancelled || !hostRef.current) return;
-      const Phaser = phaserModule.default;
-      game = new Phaser.Game({
-        type: Phaser.AUTO,
+      const { Game, AUTO, Scale } = phaserModule;
+      game = new Game({
+        type: AUTO,
         parent: hostRef.current,
         width: 1120,
         height: 680,
         backgroundColor: "#a8c978",
         scale: {
-          mode: Phaser.Scale.FIT,
-          autoCenter: Phaser.Scale.CENTER_BOTH
+          mode: Scale.FIT,
+          autoCenter: Scale.CENTER_BOTH
         },
         render: {
           antialias: true,
