@@ -1,6 +1,7 @@
 using FarmVsMonsters.Plants;
 using FarmVsMonsters.Player;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace FarmVsMonsters.Input
 {
@@ -62,6 +63,8 @@ namespace FarmVsMonsters.Input
 
         private void TryPlaceAtPointer()
         {
+            if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
+                return;
             if (placementService == null || SelectedPlant == null)
                 return;
 
