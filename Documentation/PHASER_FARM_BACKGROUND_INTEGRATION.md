@@ -35,5 +35,18 @@ The background must never contain interactive hit targets. The 5 × 8 grid remai
 - [ ] Test mouse/touch cell selection against the calibrated grid.
 - [ ] Keep a vector fallback if the image fails to load.
 
-## Current prototype coordinates
-The current placeholder scene uses a 1120 × 680 viewport and a 5 × 8 grid. The background must be calibrated to the generated image; do not assume the current placeholder coordinates match the final artwork exactly.
+## Uploaded artwork inspection and current grid calibration
+
+The uploaded JPEG was fetched from the repository and visually inspected. It is a colorful farm scene with a farmhouse on the left, an open lawn in the center, and a wooden fence/tree boundary on the right. It does **not** contain a distinct monster gate; monsters currently enter from the right-hand fence edge.
+
+The image is 16:9 and is displayed at 1120 × 630 inside the 1120 × 680 Phaser viewport, centered vertically (25 px top/bottom offset). The interactive planting grid has been moved off the old oversized placeholder coordinates and onto the open lawn:
+
+- Grid origin: x=260, y=310
+- Cell size: 75 × 46
+- Columns: 8 (right edge x=860)
+- Lanes: 5 (bottom edge y=540)
+- Lane centers: y=333, 379, 425, 471, 517
+- Protected farmhouse threshold: x=238
+- Monster spawn: x=1045
+
+These are an initial visual alignment based on the uploaded artwork, not pixel-perfect perspective calibration. The artwork's lawn has perspective and painted paving seams, while the game uses straight horizontal lanes; validate placement in the running browser and adjust the cell bounds if needed.
