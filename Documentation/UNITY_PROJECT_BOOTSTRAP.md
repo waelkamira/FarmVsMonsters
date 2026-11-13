@@ -29,9 +29,15 @@ iOS player builds require a macOS/Xcode build environment; keep iOS as a later p
 6. In **Edit > Project Settings > Player > Other Settings**, set **Active Input Handling** to **Both**. The current desktop adapter uses Unity's classic Input Manager, while the Input System package is installed for the upcoming unified desktop/mobile input implementation.
 7. Confirm the project uses the Universal Render Pipeline. If the Graphics/Quality pipeline fields are empty on first open, create a URP Pipeline Asset via **Assets > Create > Rendering > URP Pipeline Asset** and assign it in **Project Settings > Graphics** and **Quality**.
 
+## Generate the first battle scene
+
+After the project finishes importing, use **Farm Vs Monsters > Generate Prototype Battle Scene**. The Editor tool creates a playable greybox battle scene, five plant definition assets, primitive 3D test prefabs, enemy waves, energy pickups, and a basic HUD. It also adds the scene to Build Settings. Open `Assets/Scenes/PrototypeBattle.unity` and press Play.
+
+The generated primitives are temporary test art, not the final stylized character models. The editor generator itself has not been executed in this environment; inspect the Unity Console after running it and report any compile/import errors before treating the scene as verified.
+
 ## Current repository state
 
-The C# gameplay, battle, farm economy, storage, production, and contract systems are source foundations. This repository does not yet contain authored Unity scenes, configured prefabs, final 3D character art, or a successful Unity build. Opening the project is the first step toward generating and wiring those assets; do not treat a successful import as proof that the game is playable.
+The repository now contains the Unity version/package baseline, gameplay source, farm economy, storage, production, contracts, and an Editor scene generator. The generator is intended to create the first test scene and placeholder 3D prefabs locally. No successful Unity compilation or in-engine playtest has yet been recorded.
 
 ## Why this Editor version
 
