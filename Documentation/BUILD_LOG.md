@@ -18,3 +18,10 @@
 - Added `Combat/DamageDealer.cs` with team-aware friendly-fire prevention.
 - Added `Economy/EnergyWallet.cs` with capped balance, atomic spend checks, and change events.
 - Verification: files were committed to `main` and are being checked through GitHub file reads. Unity compilation has not yet been run.
+
+## 2026-11-13 — Grid and plant placement foundation
+- Added `Farm/BattleGrid.cs` for bounded world-to-cell conversion, cell centers, and editor grid gizmos.
+- Added `Plants/PlantDefinition.cs` as a ScriptableObject for plant ID, display name, energy cost, cooldown, and prefab.
+- Added `Plants/PlantPlacementService.cs` for bounds/occupancy/energy validation and prefab placement.
+- Corrected grid conversion to respect the grid transform and scale; hardened energy addition against integer overflow.
+- Verification: committed files were read back from `main`. No Unity Editor/compiler is available through this GitHub operation, so a Unity build and in-scene validation remain pending.
