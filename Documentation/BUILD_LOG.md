@@ -253,3 +253,11 @@
 - Added a default Sunflower selection in the battle HUD and a visible "Get Ready!" state during the pre-wave preparation countdown.
 - Storage UI now refreshes as resources change, including the water capacity line; ambiguous duplicate storage scene slots are rejected.
 - The source review confirmed balanced braces/parentheses in the changed Editor and economy scripts. This is not a C# compile. The repository still needs to be opened in the pinned Unity Editor to resolve packages, compile scripts, run the generator/validator, and play the scene.
+
+
+## 2026-11-13 — Crop/production inventory safety review
+- Repaired literal escaped newline characters in `FarmCropDefinition.cs` that would have prevented C# compilation.
+- Hardened crop harvest so a crop is not removed unless the full configured harvest quantity fits in inventory; unexpected partial deposits are rolled back.
+- Hardened production claims so an active job is not left claimable after a partial output deposit, preventing repeated partial claims from duplicating goods.
+- Ran a source scan over the crop, animal, market, production, storage, and contract scripts for malformed backslash-newline sequences outside string literals; none remained in the scanned files.
+- These are source inspections and safeguards only. Unity compilation and runtime inventory edge-case tests remain pending.
