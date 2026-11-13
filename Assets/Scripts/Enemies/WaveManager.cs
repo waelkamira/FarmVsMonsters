@@ -23,6 +23,7 @@ namespace FarmVsMonsters.Enemies
         [SerializeField] private Transform enemyTarget;
         [SerializeField] private Health enemyTargetHealth;
         [SerializeField] private EnergyWallet energyWallet;
+        [SerializeField, Min(0f)] private float initialStartDelay = 4f;
 
         private readonly HashSet<Health> livingEnemies = new HashSet<Health>();
         private readonly Dictionary<Health, Action> deathHandlers = new Dictionary<Health, Action>();
@@ -61,6 +62,8 @@ namespace FarmVsMonsters.Enemies
         private IEnumerator RunWaves()
         {
             IsRunning = true;
+            if (initialStartDelay > 0f)
+                yield return new WaitForSeconds(initialStartDelay);
 
             for (int waveIndex = 0; waveIndex < waves.Length; waveIndex++)
             {
