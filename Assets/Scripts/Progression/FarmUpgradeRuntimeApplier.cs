@@ -50,7 +50,7 @@ namespace FarmVsMonsters.Progression
             }
 
             if (farmer != null && moveSpeedBonus > 0f)
-                farmer.SetMoveSpeed(5f + moveSpeedBonus);
+                farmer.AddMoveSpeed(moveSpeedBonus);
 
             if (protectedFarmHealth != null && farmHealthBonus > 0f)
                 protectedFarmHealth.IncreaseMaxHealth(farmHealthBonus);
