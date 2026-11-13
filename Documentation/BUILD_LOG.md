@@ -404,3 +404,9 @@
 - Monster target scanning now ignores farm objects explicitly configured as non-blocking, preventing monsters from stopping at decorative/non-blocking targets.
 - CharacterAnimationDriver2D now preserves the Special animation until its non-looping clip completes instead of allowing locomotion updates to interrupt it.
 - Added explicit prefab guidance that plant defenders remain stationary and each plant uses its own projectile prefab and muzzle position (cactus thorns originate at the mouth).
+
+
+## 2026-11-13 — Monster eating animation state
+- Added a dedicated Eat animation state and CharacterAnimationDriver2D.PlayEat trigger.
+- Monsters now request the Eat clip when damaging crops, planted defenders, or animals, while retaining the normal Attack clip for the final farmhouse/princess objective.
+- Added Eat to transient animation protection so movement updates do not interrupt the eating sequence.
