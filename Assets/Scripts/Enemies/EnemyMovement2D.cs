@@ -15,18 +15,33 @@ namespace FarmVsMonsters.Enemies
         [SerializeField, Min(0f)] private float attackDamage = 8f;
         [SerializeField, Min(0.1f)] private float attackInterval = 1.2f;
         [SerializeField] private SpriteRenderer spriteRenderer;
+        [SerializeField] private bool constrainToSpawnLane = true;
+        [SerializeField, Min(0f)] private float laneVerticalCorrectionSpeed = 20f;
 
         private Health ownHealth;
         private CharacterAnimationDriver2D animationDriver;
         private float attackTimer;
         private float slowMultiplier = 1f;
         private float slowRemaining;
+        private float laneY;
+        private bool laneConfigured;
 
         private void Awake()
         {
             ownHealth = GetComponent<Health>();
+            laneY = transform.position.y;
+            laneConfigured = true;
             animationDriver = GetComponent<CharacterAnimationDriver2D>();
             if (spriteRenderer == null) spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+        }
+
+        public void SetLane(float worldY)
+        {
+            laneY = worldY;
+            laneConfigured = true;
+            Vector3 position = transform.position;
+            position.y = laneY;
+            transform.position = position;
         }
 
         public void SetTarget(Transform newTarget, Health newTargetHealth)
@@ -44,6 +59,13 @@ namespace FarmVsMonsters.Enemies
 
         private void Update()
         {
+            if (constrainToSpawnLane && laneConfigured)
+            {
+                Vector3 position = transform.position;
+                position.y = Mathf.MoveTowards(position.y, laneY, laneVerticalCorrectionSpeed * Time.deltaTime);
+                transform.position = position;
+            }
+
             if (slowRemaining > 0f)
             {
                 slowRemaining -= Time.deltaTime;
