@@ -33,3 +33,9 @@ The player is a caveman farmer who cultivates crops and raises animals around a 
 - Princess: 40
 
 Targets can be lane-bound (plants/crops) or shared across lanes (large animals/farmhouse). Monsters only consider targets in their current travel direction and within their configured scan radius.
+
+
+## 2D farming interaction loop
+- The caveman can approach a fixed crop plot and press E to plant, water once during growth, or harvest when ready.
+- Seeds are consumed at planting; harvested produce is added to a bounded resource wallet.
+- A planted crop becomes a monster target and can be destroyed before harvest. Empty plots are not valid monster targets.
