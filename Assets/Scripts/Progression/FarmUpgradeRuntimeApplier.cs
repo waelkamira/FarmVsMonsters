@@ -27,19 +27,12 @@ namespace FarmVsMonsters.Progression
             if (applied)
                 return;
 
-            FarmUpgradeService service = GetComponent<FarmUpgradeService>();
-            if (service == null)
-                service = FindObjectOfType<FarmUpgradeService>();
-
-            if (service == null)
-                return;
-
-            float capacityBonus = service.GetUpgradeBonus(FarmUpgradeType.EnergyCapacity, upgradeDefinitions);
-            float startingEnergyBonus = service.GetUpgradeBonus(FarmUpgradeType.StartingBattleEnergy, upgradeDefinitions);
-            float moveSpeedBonus = service.GetUpgradeBonus(FarmUpgradeType.FarmerMoveSpeed, upgradeDefinitions);
-            float plantDamageBonus = service.GetUpgradeBonus(FarmUpgradeType.PlantDamage, upgradeDefinitions);
-            float plantAttackSpeedBonus = service.GetUpgradeBonus(FarmUpgradeType.PlantAttackSpeed, upgradeDefinitions);
-            float farmHealthBonus = service.GetUpgradeBonus(FarmUpgradeType.FarmHealth, upgradeDefinitions);
+            float capacityBonus = GetUpgradeBonus(FarmUpgradeType.EnergyCapacity);
+            float startingEnergyBonus = GetUpgradeBonus(FarmUpgradeType.StartingBattleEnergy);
+            float moveSpeedBonus = GetUpgradeBonus(FarmUpgradeType.FarmerMoveSpeed);
+            float plantDamageBonus = GetUpgradeBonus(FarmUpgradeType.PlantDamage);
+            float plantAttackSpeedBonus = GetUpgradeBonus(FarmUpgradeType.PlantAttackSpeed);
+            float farmHealthBonus = GetUpgradeBonus(FarmUpgradeType.FarmHealth);
 
             if (energyWallet != null)
             {
@@ -65,6 +58,23 @@ namespace FarmVsMonsters.Progression
             }
 
             applied = true;
+        }
+
+        private float GetUpgradeBonus(FarmUpgradeType type)
+        {
+            if (upgradeDefinitions == null)
+                return 0f;
+
+            float total = 0f;
+            foreach (FarmUpgradeDefinition definition in upgradeDefinitions)
+            {
+                if (definition == null || definition.UpgradeType != type)
+                    continue;
+
+                total += ProgressSaveService.GetUpgradeLevel(definition.UpgradeId) * definition.ValuePerLevel;
+            }
+
+            return total;
         }
 
         private static int SafeAdd(int current, float bonus)
