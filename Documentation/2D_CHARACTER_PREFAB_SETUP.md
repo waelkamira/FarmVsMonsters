@@ -48,10 +48,10 @@ Inspector setup:
 5. If the plant can be damaged, add Health and CharacterAnimationDriver2D, then assign Hurt and Death clips.
 
 ## Projectile prefab
-1. Add SpriteRenderer and a 2D collider configured as a trigger if required by the projectile implementation.
-2. Add Projectile2D and configure its speed, lifetime and hit behavior in the Inspector.
-3. Ensure the collider/layer setup is compatible with the project's Physics2D collision matrix.
-4. Assign the prefab to PlantCombatController2D. Do not add a 3D Rigidbody or 3D collider to this projectile.
+1. Add a SpriteRenderer and assign the projectile sprite.
+2. Add Projectile2D and configure its speed and lifetime in the Inspector.
+3. The current Projectile2D homes directly toward its assigned Health target and applies damage on arrival; it does not currently depend on a collider or Rigidbody.
+4. Assign the prefab to PlantCombatController2D. Do not add unnecessary 3D physics components.
 
 ## Battle board
 - Use an orthographic camera.
