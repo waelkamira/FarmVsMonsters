@@ -141,6 +141,51 @@ namespace FarmVsMonsters.EditorTools
                 Camera farmCamera = FindComponent<Camera>(farmScene);
                 Canvas farmCanvas = FindComponent<Canvas>(farmScene);
                 EventSystem farmEventSystem = FindComponent<EventSystem>(farmScene);
+                FarmCropService cropService = FindComponent<FarmCropService>(farmScene);
+                FarmResourceWallet farmWallet = FindComponent<FarmResourceWallet>(farmScene);
+                FarmCropManagementController cropUi = FindComponent<FarmCropManagementController>(farmScene);
+                Require(cropService != null, "FarmHub has no FarmCropService.", errors);
+                Require(farmWallet != null, "FarmHub has no FarmResourceWallet.", errors);
+                Require(cropUi != null, "FarmHub has no crop management UI.", errors);
+                if (cropService != null)
+                {
+                    SerializedObject cropSo = new SerializedObject(cropService);
+                    SerializedProperty plotArray = cropSo.FindProperty("plots");
+                    SerializedProperty cropArray = cropSo.FindProperty("cropCatalogue");
+                    Require(plotArray != null && plotArray.arraySize == 9,
+                        "FarmHub crop service must reference nine crop plots.", errors);
+                    Require(cropArray != null && cropArray.arraySize >= 1,
+                        "FarmHub crop service has no crop catalogue.", errors);
+                    Require(cropSo.FindProperty("resourceWallet").objectReferenceValue == farmWallet,
+                        "FarmHub crop service must use the shared farm resource wallet.", errors);
+                }
+                if (cropUi != null)
+                {
+                    SerializedObject uiSo = new SerializedObject(cropUi);
+                    Require(uiSo.FindProperty("cropService").objectReferenceValue == cropService,
+                        "FarmHub crop UI is not connected to FarmCropService.", errors);
+                    Require(uiSo.FindProperty("resourceWallet").objectReferenceValue == farmWallet,
+                        "FarmHub crop UI is not connected to the shared resource wallet.", errors);
+                    Require(uiSo.FindProperty("harvestButtons").arraySize == 9 &&
+                        uiSo.FindProperty("waterButtons").arraySize == 9 &&
+                        uiSo.FindProperty("plotLabels").arraySize == 9,
+                        "FarmHub crop UI must expose harvest/water/status controls for all nine plots.", errors);
+                }
+
+                FarmCropDefinition wheat = AssetDatabase.LoadAssetAtPath<FarmCropDefinition>(
+                    "Assets/ScriptableObjects/FarmCrops/Crop_Wheat.asset");
+                Require(wheat != null && wheat.GrowthStagePrefabs != null &&
+                    wheat.GrowthStagePrefabs.Length >= 2 &&
+                    wheat.GrowthStagePrefabs[0] != null && wheat.GrowthStagePrefabs[1] != null,
+                    "FarmHub Wheat crop asset must have two growth-stage prefabs.", errors);
+
+                var plotIds = new HashSet<string>();
+                foreach (FarmCropPlot plot in farmScene.GetRootGameObjects()[0]
+                    .GetComponentsInChildren<FarmCropPlot>(true))
+                {
+                    if (plot != null && !plotIds.Add(plot.PlotId))
+                        errors.Add("FarmHub has duplicate crop plot ID: " + plot.PlotId);
+                }
                 SceneNavigationButton enterBattle = FindComponent<SceneNavigationButton>(farmScene);
                 FarmHubPlayerController farmPlayer = FindComponent<FarmHubPlayerController>(farmScene);
                 Require(farmCamera != null, "FarmHub has no camera.", errors);
