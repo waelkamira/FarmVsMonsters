@@ -4,7 +4,6 @@ using UnityEngine;
 namespace FarmVsMonsters.Enemies
 {
     /// <summary>Simple homing projectile used by ranged farm monsters.</summary>
-    [RequireComponent(typeof(Collider2D))]
     public sealed class EnemyProjectile2D : MonoBehaviour
     {
         [SerializeField, Min(0.1f)] private float defaultSpeed = 5f;
