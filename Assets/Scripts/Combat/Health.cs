@@ -35,6 +35,18 @@ public void IncreaseMaxHealth(float amount, bool healBySameAmount = true)
             HealthChanged?.Invoke(CurrentHealth, maxHealth);
         }
 
+        /// <summary>Scales maximum and current health together while preserving the current health ratio.</summary>
+        public void ApplyMaxHealthMultiplier(float multiplier)
+        {
+            if (multiplier <= 0f || Mathf.Approximately(multiplier, 1f))
+                return;
+
+            float healthRatio = maxHealth > 0f ? CurrentHealth / maxHealth : 1f;
+            maxHealth = Mathf.Max(1f, maxHealth * multiplier);
+            CurrentHealth = IsDead ? 0f : Mathf.Clamp(maxHealth * healthRatio, 0f, maxHealth);
+            HealthChanged?.Invoke(CurrentHealth, maxHealth);
+        }
+
         public bool ApplyDamage(float amount)
         {
             if (IsDead || amount <= 0f)
