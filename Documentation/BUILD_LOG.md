@@ -184,3 +184,11 @@
 - Added `Documentation/FARM_ECONOMY_AND_STORAGE_SETUP.md` with the scene-object graph, shared-wallet rule, specialized storage catalog, ScriptableObject authoring steps, UI wiring checklist, animal offline-production behavior, and local-save limitations.
 - Added duplicate storage identity/slot validation so two configured facilities cannot silently share a persistent ID or spawn into the same named anchor.
 - Read-back verification completed for the new setup guide and storage-service update. Unity Editor validation remains outstanding.
+
+
+## 2026-11-13 — Unity project baseline pinned
+- Pinned the repository to Unity 6.3 LTS Editor `6000.3.27f2` using the official Editor revision.
+- Added `Packages/manifest.json` with the Unity 6.3-compatible Input System 1.20.1, URP 17.3.0, and uGUI 2.0.0 dependencies.
+- Added `Documentation/UNITY_PROJECT_BOOTSTRAP.md` with Unity Hub modules, first-open steps, Input Manager compatibility, URP setup, and the current project limitations.
+- Version choice is based on Unity's published Unity 6.3 LTS support guidance and the 6000.3.27f2 security-patched Editor release.
+- Verification: configuration files were committed and read back from GitHub. Package resolution and Unity Editor import have not yet been run on a local machine.
