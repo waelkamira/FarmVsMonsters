@@ -278,3 +278,18 @@ The battle HUD already contains the plant-button array. Extend each card with op
 - The selected-plant text displays the name, energy cost, and description. Energy changes refresh card state. Number keys 1–9 and clicking a card publish the same selection event, keeping the HUD highlight synchronized.
 - Mouse placement remains on the board: left-click attempts placement, while the ghost sprite shows green for a valid cell and red for an invalid cell. The UI card itself only selects; it does not spend energy or place a plant.
 The HUD uses Unity uGUI `Text`, `Button`, and `Image`. TMP users need equivalent TMP fields/adapters; do not assign TMP components to legacy Text slots.
+
+## Enemy archetypes: armored, ranged, brute, and jumper
+Every 2D enemy prefab uses the same `EnemyMovement2D` controller. Select its **Archetype** in the Inspector; wave difficulty multipliers still apply to the archetype's resulting base speed and damage.
+
+- **Normal:** standard lane walker and close-range attacker.
+- **Armored:** set `Armored Damage Taken Multiplier` below 1. A value of 0.45 means it receives 45% of incoming damage. This resistance is applied by its Health component, so plant projectiles and caveman attacks both respect the armor.
+- **Ranged:** set `Ranged Attack Range` and assign an `EnemyProjectile2D` prefab to `Ranged Projectile Prefab`. The projectile homes toward the chosen target and deals damage on reaching it. Tune projectile speed and the enemy's normal attack interval. If no projectile prefab is assigned, the ranged archetype deliberately falls back to direct damage; assign the prefab for the intended visible ranged attack.
+- **Brute:** slower movement and a configurable attack-damage multiplier. Use a large sprite, high Health, and a heavy attack animation to communicate its role.
+- **Jumper:** can leap over a defender plant when it enters the configured trigger distance. Set jump distance, height, and duration. The jumped-over plant is ignored by that individual monster afterwards; other plants and farm targets remain eligible. The jump follows the monster's assigned lane and returns to its lane height at landing.
+
+### Ranged projectile prefab
+Create a small 2D sprite prefab and add `EnemyProjectile2D`. Its speed, lifetime, and hit distance can be tuned on the prefab; the enemy controller supplies target, damage, and speed at launch. The projectile tracks the target's current position and destroys itself if the target dies or its lifetime expires. Its local right axis is rotated toward travel direction, so orient the projectile artwork with its nose pointing right.
+
+### Suggested wave composition
+Introduce one archetype at a time: normal scouts first, then an armored defender, then a ranged thrower, followed by a brute or jumper. Mix them in later waves rather than raising every enemy's stats equally. The wave system already spawns configured prefab groups; create separate prefabs for each archetype and assign those prefabs to the desired wave groups.
