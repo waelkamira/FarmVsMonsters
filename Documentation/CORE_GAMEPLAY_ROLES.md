@@ -39,3 +39,9 @@ Targets can be lane-bound (plants/crops) or shared across lanes (large animals/f
 - The caveman can approach a fixed crop plot and press E to plant, water once during growth, or harvest when ready.
 - Seeds are consumed at planting; harvested produce is added to a bounded resource wallet.
 - A planted crop becomes a monster target and can be destroyed before harvest. Empty plots are not valid monster targets.
+
+
+## Animal care and production
+- Farm animals remain in their pens and do not move as player-controlled units.
+- The caveman presses F near a hungry animal to spend Feed and start its production timer, then presses F again when it is ready to collect Produce.
+- Animals have Health and a FarmDefenseTarget2D marker, so monsters can attack them. Animal production pauses if the animal is killed.
