@@ -65,7 +65,7 @@ namespace FarmVsMonsters.Farm
                 if (definition == null || !ProgressSaveService.OwnsBuilding(definition.BuildingId))
                     continue;
 
-                FarmBuildingSlot slot = FindSlot(definition.BuildingId);
+                FarmBuildingSlot slot = FindSlot(definition.SlotId);
                 if (slot != null)
                     SpawnBuilding(definition, slot);
             }
