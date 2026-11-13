@@ -305,3 +305,10 @@
 - تم تحديث `WaveManager` لتعيين هدف الوحوش التي تستخدم حركة 2D، مع الحفاظ على مسار الحركة القديم مؤقتاً.
 - هذه نواة تحويل برمجية وليست مشهداً مكتملاً: لم تُنشأ بعد Sprite sheets أو شخصيات فنية نهائية، ولم يُنشأ مولّد مشهد 2D يربط المكونات.
 - التحقق الحالي قراءة ملفات المصدر من GitHub ومراجعة بنيوية أولية فقط؛ لم يتم تشغيل Unity أو C# compiler أو Play Mode.
+
+## 2026-11-13 — AI-generated 2D art asset pipeline
+- Added Assets/Editor/CharacterSpriteImportSettings.cs to apply consistent Unity Sprite import defaults to generated character images and animation sheets.
+- Individual character PNGs are imported as single sprites with a bottom-center pivot; animation sheets are imported as Multiple while leaving frame slicing under explicit editor control.
+- Added Documentation/AI_ART_ASSET_PIPELINE.md with the art folder contract, naming rules, generation handoff, sprite-sheet slicing checklist, animation states, and acceptance review gate.
+- The importer is scoped only to Assets/Art/Characters/Individual/ and Assets/Art/Characters/SpriteSheets/; it does not modify unrelated textures.
+- Verification: files were committed to main. Unity compilation/import behavior has not been tested because the Unity Editor is not installed/configured in this workflow.
