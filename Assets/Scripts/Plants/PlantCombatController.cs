@@ -44,6 +44,13 @@ namespace FarmVsMonsters.Plants
             attackTimer = attackInterval;
         }
 
+public void ApplyPermanentBonuses(float bonusDamage, float bonusAttackSpeed)
+        {
+            damage = Mathf.Max(0f, damage + bonusDamage);
+            if (bonusAttackSpeed > 0f)
+                attackInterval = Mathf.Max(0.05f, attackInterval / (1f + bonusAttackSpeed));
+        }
+
         private Health FindNearestMonster()
         {
             int count = Physics.OverlapSphereNonAlloc(
