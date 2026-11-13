@@ -176,3 +176,17 @@ Every planted defender keeps its own `Projectile2D` prefab, SpriteRenderer art, 
 - **Direct** — damages only the monster it tracked. Use for cactus thorns, single seeds, darts, and focused shots.
 - **Splash** — damages every marked monster inside the configured Splash Radius at impact. Set Splash Layers to the monster layers only; non-monster colliders are ignored by the component. Use for explosive fruit, seed clusters, or spore bursts.
 The splash query uses a bounded non-allocating collider buffer. If its target layer mask is accidentally missing the tracked monster, the projectile still applies its primary hit. Tune each plant's projectile prefab independently; do not make all plants share one generic projectile asset.
+
+## Moving character sprite sheets (monsters and caveman)
+A separate Editor utility is provided for characters that walk. Select the imported PNG and run **Tools → Farm Vs Monsters → Slice Moving Character Sheet (6x6)**. The six rows, top-to-bottom, are:
+1. Idle
+2. Walk
+3. Attack
+4. Eat
+5. Hurt
+6. Death
+
+Each row contains six frames ordered left-to-right. The sheet must be an exact, tightly packed 6×6 grid with equal cells and no gutters or outer margins. The tool creates 36 named Sprite sub-assets with bottom-center pivots. Assign each row to the matching `SpriteAnimation2D.AnimationClip.frames` array; loop Idle and Walk, and normally keep the other states non-looping. Use this layout for moving monsters and the caveman, not for stationary plants. The plant-specific 6×6 layout remains Idle, Attack, Hurt, Block, Death, Special.
+
+## Player interaction safety
+The crop and animal interaction components now check the caveman's Health when one is present. If the player is dead, E/F interactions are ignored. Keep both components on the same caveman root that owns its Health component and share the scene's single FarmResourceWallet2D.
