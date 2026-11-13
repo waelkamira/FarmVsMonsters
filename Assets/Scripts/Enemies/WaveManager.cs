@@ -1,0 +1,117 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using FarmVsMonsters.Combat;
+using UnityEngine;
+
+namespace FarmVsMonsters.Enemies
+{
+    /// <summary>Spawns configured waves and completes only after every spawned enemy dies.</summary>
+    public sealed class WaveManager : MonoBehaviour
+    {
+        [Serializable]
+        public sealed class Wave
+        {
+            public string displayName = "Wave";
+            public GameObject[] enemyPrefabs;
+            [Min(0f)] public float spawnInterval = 1f;
+        }
+
+        [SerializeField] private Wave[] waves;
+        [SerializeField] private Transform[] spawnPoints;
+        [SerializeField] private Transform enemyTarget;
+        [SerializeField] private Health enemyTargetHealth;
+
+        private readonly HashSet<Health> livingEnemies = new HashSet<Health>();
+        private Coroutine routine;
+        private int nextSpawnPoint;
+
+        public int CurrentWave { get; private set; }
+        public int LivingEnemyCount => livingEnemies.Count;
+        public bool IsRunning { get; private set; }
+
+        public event Action<int> WaveStarted;
+        public event Action<int> WaveCleared;
+        public event Action AllWavesCleared;
+
+        public void ConfigureTarget(Transform target, Health health)
+        {
+            enemyTarget = target;
+            enemyTargetHealth = health;
+        }
+
+        public void Begin()
+        {
+            if (IsRunning || waves == null || waves.Length == 0 || spawnPoints == null || spawnPoints.Length == 0)
+                return;
+
+            routine = StartCoroutine(RunWaves());
+        }
+
+        private IEnumerator RunWaves()
+        {
+            IsRunning = true;
+
+            for (int waveIndex = 0; waveIndex < waves.Length; waveIndex++)
+            {
+                CurrentWave = waveIndex + 1;
+                Wave wave = waves[waveIndex];
+                WaveStarted?.Invoke(CurrentWave);
+
+                if (wave != null && wave.enemyPrefabs != null)
+                {
+                    foreach (GameObject prefab in wave.enemyPrefabs)
+                    {
+                        if (prefab == null)
+                            continue;
+
+                        Transform spawn = spawnPoints[nextSpawnPoint % spawnPoints.Length];
+                        nextSpawnPoint++;
+                        GameObject instance = Instantiate(prefab, spawn.position, spawn.rotation);
+
+                        EnemyMovement movement = instance.GetComponent<EnemyMovement>();
+                        if (movement != null && enemyTarget != null && enemyTargetHealth != null)
+                            movement.SetTarget(enemyTarget, enemyTargetHealth);
+
+                        Health health = instance.GetComponent<Health>();
+                        if (health != null && !health.IsDead)
+                        {
+                            livingEnemies.Add(health);
+                            health.Died += () => HandleEnemyDied(health);
+                        }
+
+                        if (wave.spawnInterval > 0f)
+                            yield return new WaitForSeconds(wave.spawnInterval);
+                    }
+                }
+
+                while (livingEnemies.Count > 0)
+                    yield return null;
+
+                WaveCleared?.Invoke(CurrentWave);
+            }
+
+            IsRunning = false;
+            routine = null;
+            AllWavesCleared?.Invoke();
+        }
+
+        private void HandleEnemyDied(Health enemy)
+        {
+            if (enemy == null)
+                return;
+
+            enemy.Died -= () => HandleEnemyDied(enemy);
+            livingEnemies.Remove(enemy);
+        }
+
+        private void OnDestroy()
+        {
+            foreach (Health enemy in livingEnemies)
+            {
+                if (enemy != null)
+                    enemy.Died = null;
+            }
+        }
+    }
+}
