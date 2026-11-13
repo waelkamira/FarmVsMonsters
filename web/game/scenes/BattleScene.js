@@ -2,12 +2,12 @@ import { Scene, Input, Math as PhaserMath } from "phaser";
 
 const LANES = 5;
 const COLUMNS = 8;
-const GRID_LEFT = 225;
-const GRID_TOP = 150;
-const CELL_W = 82;
-const CELL_H = 94;
-const HOME_X = 118;
-const SPAWN_X = 1090;
+const GRID_LEFT = 260;
+const GRID_TOP = 310;
+const CELL_W = 75;
+const CELL_H = 46;
+const HOME_X = 238;
+const SPAWN_X = 1045;
 const RADISH = { label: "Radish", cost: 35, hp: 110, cooldown: 1450, range: 360 };
 
 export default class BattleScene extends Scene {
@@ -86,6 +86,12 @@ export default class BattleScene extends Scene {
     this.farmBackground = this.add.image(560, 340, "farm-battlefield")
       .setDisplaySize(1120, 630)
       .setDepth(-5);
+
+    // The uploaded artwork already contains the farmhouse and garden props.
+    // Remove temporary vector labels so they do not float over the real art.
+    this.children.list
+      .filter((child) => child.type === "Text" && ["PRINCESS", "FARMHOUSE", "MONSTER GATE"].includes(child.text))
+      .forEach((child) => child.destroy());
   }
 
   drawPlantingGrid() {
@@ -134,7 +140,7 @@ export default class BattleScene extends Scene {
   }
 
   createCaveman() {
-    this.caveman = this.add.container(145, this.laneYs[2]);
+    this.caveman = this.add.container(220, this.laneYs[2]);
     const body = this.add.graphics();
     body.fillStyle(0x7a4c2c, 1); body.fillEllipse(0, 16, 38, 52);
     body.fillStyle(0xe7ad75, 1); body.fillCircle(0, -17, 21);
@@ -144,7 +150,7 @@ export default class BattleScene extends Scene {
     body.lineStyle(7, 0x80512e, 1); body.lineBetween(15, 0, 35, -25);
     body.lineStyle(10, 0x68452a, 1); body.lineBetween(32, -29, 48, -40);
     this.caveman.add(body); this.caveman.setDepth(20);
-    this.cavemanLabel = this.add.text(145, this.laneYs[2] + 47, "CAVEMAN", {
+    this.cavemanLabel = this.add.text(220, this.laneYs[2] + 32, "CAVEMAN", {
       fontFamily: "Arial", fontSize: "10px", color: "#fff4d4", fontStyle: "bold"
     }).setOrigin(0.5);
   }
@@ -180,7 +186,7 @@ export default class BattleScene extends Scene {
     this.updateMonsters(dt, delta);
     this.updateProjectiles(dt);
     this.checkWaveProgress();
-    this.cavemanLabel.setPosition(this.caveman.x, this.caveman.y + 47);
+    this.cavemanLabel.setPosition(this.caveman.x, this.caveman.y + 32);
     this.refreshHud();
   }
 
@@ -191,8 +197,8 @@ export default class BattleScene extends Scene {
     if (this.keys.w.isDown || this.keys.up.isDown) dy -= 1;
     if (this.keys.s.isDown || this.keys.down.isDown) dy += 1;
     if (!this.plantingTarget && (dx !== 0 || dy !== 0)) {
-      this.caveman.x = PhaserMath.Clamp(this.caveman.x + dx * 170 * dt, 105, 300);
-      this.caveman.y = PhaserMath.Clamp(this.caveman.y + dy * 170 * dt, 140, 570);
+      this.caveman.x = PhaserMath.Clamp(this.caveman.x + dx * 170 * dt, 105, 1010);
+      this.caveman.y = PhaserMath.Clamp(this.caveman.y + dy * 170 * dt, this.laneYs[0] - 22, this.laneYs[LANES - 1] + 22);
       if (dx !== 0) this.facing = Math.sign(dx);
       this.caveman.scaleX = this.facing;
     }
