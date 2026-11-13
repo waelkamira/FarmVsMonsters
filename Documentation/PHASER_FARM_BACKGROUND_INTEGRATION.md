@@ -42,8 +42,8 @@ The uploaded JPEG was fetched from the repository and visually inspected. It is 
 The image is 16:9 and is displayed at 1120 × 630 inside the 1120 × 680 Phaser viewport, centered vertically (25 px top/bottom offset). The interactive planting grid has been moved off the old oversized placeholder coordinates and onto the open lawn:
 
 - Grid footprint before rotation: 600 × 230 px (8 columns × 5 lanes).
-- Rotation: 30° counter-clockwise in the 2D screen plane, around center (560, 390).
-- Cells are rendered as rotated quadrilaterals; pointer input is converted through the inverse rotation before selecting a cell.
+- Tilt: 30° around the horizontal X axis, using orthographic projection around center (560, 517). The horizontal width stays unchanged; the vertical cell dimension is foreshortened by cos(30°).
+- Cells are rendered with the vertically compressed shape produced by the X-axis tilt; pointer input uses the inverse projection to select the correct cell.
 - Monster movement, planting positions, and lane collision/targeting use the same rotated coordinate system.
 - Monsters enter from the rotated right edge; the protected-house threshold is the rotated left edge.
 
