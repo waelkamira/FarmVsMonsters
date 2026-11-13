@@ -19,7 +19,7 @@ namespace FarmVsMonsters.Farm
 
         public bool TryWorldToCell(Vector3 worldPosition, out Vector2Int cell)
         {
-            Vector3 local = worldPosition - transform.TransformPoint(origin);
+            Vector3 local = transform.InverseTransformPoint(worldPosition) - origin;
             cell = new Vector2Int(
                 Mathf.FloorToInt(local.x / cellSize),
                 Mathf.FloorToInt(local.z / cellSize));
