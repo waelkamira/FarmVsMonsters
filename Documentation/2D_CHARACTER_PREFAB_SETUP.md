@@ -25,7 +25,7 @@ Inspector setup:
 1. Set Health maximum health for the monster type.
 2. Set EnemyMovement2D move speed, attack range, damage and attack interval.
 3. Assign the root SpriteRenderer to EnemyMovement2D, or allow it to discover a child SpriteRenderer.
-4. Assign Idle, Walk, Attack, Hurt and Death clips as they become available.
+4. Assign Idle, Walk, Attack, Eat, Hurt and Death clips as they become available. The Eat clip is used when the monster damages a crop, plant or animal.
 5. Ensure the enemy's 2D collider is on a layer included in plant targetLayers.
 6. WaveManager must spawn this prefab and call its 2D target setup so EnemyMovement2D receives the protected target and target Health.
 
