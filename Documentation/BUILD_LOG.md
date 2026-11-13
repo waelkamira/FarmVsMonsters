@@ -648,3 +648,11 @@
 - Fixed the Phaser preload URL and background key reference to use the actual `.jpeg` filename; the previous `.png` path could not load this asset.
 - Updated the background folder README and Phaser integration guide to document the uploaded JPEG name and format.
 - Verification: the image's repository path and upload commit were confirmed, and the source/documentation updates were committed. Browser rendering and visual grid calibration still require a local runtime check; no claim of successful in-browser display is made yet.
+
+
+## 2026-11-14 — Inspect uploaded background and recalibrate planting grid
+- Retrieved and visually inspected the committed JPEG asset. Confirmed it shows a farmhouse on the left, open central lawn, and a right-side fence/tree boundary; there is no separately drawn monster gate.
+- Confirmed the 16:9 image is fitted to 1120 × 630 and centered in the 1120 × 680 Phaser viewport.
+- Repositioned the 5 × 8 planting grid to the open lawn: origin (260, 310), cell size 75 × 46, lane centers 333/379/425/471/517; moved the protected-house threshold to x=238 and monster spawn to x=1045.
+- Removed temporary farmhouse/princess/gate text labels when the real background texture is present, so placeholder labels do not float over the uploaded art.
+- Verification: asset bytes were retrieved from GitHub and visually inspected; source and documentation were read back after commit. The connected local browser tab was readable, but the available browser connection does not provide reload/screenshot controls, so actual in-browser rendering and pointer-placement calibration are not yet runtime-verified. The grid coordinates are an initial visual fit and may need a final small adjustment after the user reloads the local app.
