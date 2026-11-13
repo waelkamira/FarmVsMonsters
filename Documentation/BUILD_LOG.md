@@ -384,3 +384,10 @@
 - Corrected the plant sheet slicer menu label to explicitly identify it as a plant sheet utility.
 - Corrected prefab documentation: every planted defender uses its own projectile prefab and visual identity; the cactus example fires thorn projectiles from its mouth. The experimental melee plant controller is no longer recommended for standard plants.
 - Corrected the plant animation atlas to Idle, Attack, Hurt, Block, Death, Special with no Walk row.
+
+
+## 2026-11-13 — Monster farm-target selection and eating/attacking
+- Added `FarmDefenseTarget2D` to mark crops, planted defenders, animals, farmhouse, or princess as explicit monster targets with configurable priority and lane tolerance.
+- Updated `EnemyMovement2D` to scan nearby farm targets, prefer the highest configured priority (then nearest), stop and attack a blocking target in reach, and continue toward its configured fallback target when no farm target is nearby.
+- Farm targets require Health and a Collider2D; assign their layers in the monster's Farm Target Layers mask. Use lane-bound targets for plants/crops and optionally lane-independent targets for larger animals or the farmhouse.
+- Verification: source writes and GitHub readback only; Unity compilation, physics overlap behavior, and gameplay balance remain untested.
