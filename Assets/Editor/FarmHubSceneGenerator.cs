@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using System.Collections.Generic;
 using FarmVsMonsters.UI;
+using FarmVsMonsters.Player;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -55,11 +56,20 @@ namespace FarmVsMonsters.EditorTools
                 }
             }
 
-            GameObject farmer = GameObject.CreatePrimitive(PrimitiveType.Capsule);
-            farmer.name = "FarmHubFarmerPlaceholder";
-            farmer.transform.position = new Vector3(0f, 1f, -5f);
-            farmer.GetComponent<Renderer>().sharedMaterial =
+            GameObject farmer = new GameObject("FarmHubPlayer");
+            farmer.transform.position = new Vector3(0f, 0f, -5f);
+            CharacterController character = farmer.AddComponent<CharacterController>();
+            character.height = 1.8f;
+            character.radius = 0.38f;
+            character.center = new Vector3(0f, 0.9f, 0f);
+            GameObject farmerVisual = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+            farmerVisual.name = "FarmerVisual";
+            farmerVisual.transform.SetParent(farmer.transform, false);
+            farmerVisual.transform.localPosition = Vector3.up * 0.9f;
+            farmerVisual.GetComponent<Renderer>().sharedMaterial =
                 MaterialFor("FarmHub_Farmer", new Color(0.25f, 0.48f, 0.88f));
+            Object.DestroyImmediate(farmerVisual.GetComponent<Collider>());
+            FarmHubPlayerController playerController = farmer.AddComponent<FarmHubPlayerController>();
 
             GameObject lightObject = new GameObject("FarmSun");
             lightObject.transform.rotation = Quaternion.Euler(50f, -30f, 0f);
@@ -76,6 +86,9 @@ namespace FarmVsMonsters.EditorTools
             cameraObject.AddComponent<AudioListener>();
             cameraObject.transform.position = new Vector3(0f, 18f, -20f);
             cameraObject.transform.rotation = Quaternion.Euler(48f, 0f, 0f);
+            SerializedObject playerSo = new SerializedObject(playerController);
+            playerSo.FindProperty("followCamera").objectReferenceValue = cameraObject.transform;
+            playerSo.ApplyModifiedPropertiesWithoutUndo();
 
             GameObject canvasObject = new GameObject("FarmHubHUD",
                 typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
