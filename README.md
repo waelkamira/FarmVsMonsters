@@ -22,7 +22,8 @@
 3. من القائمة اختر **Farm Vs Monsters → Generate Prototype Battle Scene**.
 4. شغّل **Farm Vs Monsters → Validate Prototype Battle Scene** لمراجعة المراجع والربط البنيوي.
 5. افتح `Assets/Scenes/PrototypeBattle.unity` واضغط Play.
-6. اضبط **Active Input Handling = Both** في Player Settings إذا لم يكن مضبوطاً.
+6. التحكم: `WASD` أو الأسهم للحركة، الأرقام `1–5` لاختيار النبات، وزر الفأرة الأيسر لزراعته على الشبكة. تحرّك فوق كرات الطاقة لجمعها.
+7. اضبط **Active Input Handling = Both** في Player Settings إذا لم يكن مضبوطاً.
 
 راجع:
 - `Documentation/UNITY_PROJECT_BOOTSTRAP.md` لتثبيت وفتح المشروع.
