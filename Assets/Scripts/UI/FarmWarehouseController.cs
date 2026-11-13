@@ -20,6 +20,8 @@ namespace FarmVsMonsters.UI
         {
             if (warehouse != null)
                 warehouse.WarehouseUpgraded += HandleUpgrade;
+            if (resources != null)
+                resources.ResourceChanged += HandleResourceChanged;
             if (upgradeButton != null)
                 upgradeButton.onClick.AddListener(Upgrade);
             Refresh();
@@ -29,6 +31,8 @@ namespace FarmVsMonsters.UI
         {
             if (warehouse != null)
                 warehouse.WarehouseUpgraded -= HandleUpgrade;
+            if (resources != null)
+                resources.ResourceChanged -= HandleResourceChanged;
             if (upgradeButton != null)
                 upgradeButton.onClick.RemoveListener(Upgrade);
         }
@@ -68,6 +72,11 @@ namespace FarmVsMonsters.UI
             bool success = warehouse.TryUpgrade();
             if (statusText != null)
                 statusText.text = success ? "Warehouse capacity upgraded." : "Upgrade unavailable.";
+            Refresh();
+        }
+
+        private void HandleResourceChanged(FarmResourceType resource, int amount)
+        {
             Refresh();
         }
 
