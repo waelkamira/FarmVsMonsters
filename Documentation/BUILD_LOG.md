@@ -557,3 +557,13 @@
 - Jumpers leap over a defender plant, preserve their assigned lane, and remember the specific plant they skipped so they do not immediately turn back to attack it.
 - Added Inspector validation and documented archetype setup, projectile orientation, and wave composition examples.
 - Verification: all changed files were read back from main and checked for balanced braces/parentheses. Unity compilation, prefab setup, physics interactions, and play-mode balance remain untested.
+
+## 2026-11-13 — Phased boss encounter foundation
+- Added BossPhaseController2D with three health phases and configurable speed/damage escalation.
+- Added a lane-aware ground-pulse attack that damages farm defense targets within its radius.
+- Added periodic minion summoning with lane assignment and inherited protected-target references.
+- Added WaveManager.RegisterSpawnedEnemy so summoned monsters are counted in the active wave and must be defeated before it clears.
+- Added BossHealthBar2D to bind boss Health and phase events to a uGUI fill bar and labels.
+- Updated EnemyMovement2D so boss phase multipliers combine with the existing wave difficulty multipliers rather than overwriting them.
+- Documented boss prefab wiring, special attack tuning, minion requirements, and health-bar setup.
+- Verification: changed files were read back from main and delimiter balances checked. Unity compilation, scene wiring, visual effects, and play-mode encounter testing remain pending.
