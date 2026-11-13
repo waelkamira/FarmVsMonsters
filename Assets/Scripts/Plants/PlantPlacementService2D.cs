@@ -110,6 +110,9 @@ namespace FarmVsMonsters.Plants
             }
 
             placedPlants[cell] = instance;
+            PlantUpgradeController2D upgradeController = instance.GetComponentInChildren<PlantUpgradeController2D>();
+            if (upgradeController != null)
+                upgradeController.SetWallet(energyWallet);
             PlantCombatController2D plantCombat = instance.GetComponentInChildren<PlantCombatController2D>();
             float laneWorldY = battleGrid.GetLaneCenterWorld(cell.y).y;
             if (plantCombat != null)
