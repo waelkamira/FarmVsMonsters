@@ -82,8 +82,12 @@ namespace FarmVsMonsters.Plants
 
                 float distance = ((Vector2)health.transform.position -
                     (Vector2)transform.position).sqrMagnitude;
+                EnemyMovement2D enemyMovement = candidate.GetComponentInParent<EnemyMovement2D>();
+                float monsterLaneY = enemyMovement != null
+                    ? enemyMovement.LaneWorldY
+                    : health.transform.position.y;
                 float targetLaneY = hasAssignedLane ? assignedLaneWorldY : transform.position.y;
-                if (Mathf.Abs(health.transform.position.y - targetLaneY) > laneTolerance)
+                if (Mathf.Abs(monsterLaneY - targetLaneY) > laneTolerance)
                     continue;
 
                 if (distance < nearestDistance)
