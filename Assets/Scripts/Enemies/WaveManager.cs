@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using FarmVsMonsters.Combat;
+using FarmVsMonsters.Economy;
 using UnityEngine;
 
 namespace FarmVsMonsters.Enemies
@@ -21,6 +22,7 @@ namespace FarmVsMonsters.Enemies
         [SerializeField] private Transform[] spawnPoints;
         [SerializeField] private Transform enemyTarget;
         [SerializeField] private Health enemyTargetHealth;
+        [SerializeField] private EnergyWallet energyWallet;
 
         private readonly HashSet<Health> livingEnemies = new HashSet<Health>();
         private readonly Dictionary<Health, Action> deathHandlers = new Dictionary<Health, Action>();
@@ -41,6 +43,11 @@ namespace FarmVsMonsters.Enemies
         {
             enemyTarget = target;
             enemyTargetHealth = health;
+        }
+
+        public void ConfigureEnergyWallet(EnergyWallet wallet)
+        {
+            energyWallet = wallet;
         }
 
         public void Begin()
@@ -74,6 +81,10 @@ namespace FarmVsMonsters.Enemies
                         Transform spawn = spawnPoints[nextSpawnPoint % spawnPoints.Length];
                         nextSpawnPoint++;
                         GameObject instance = Instantiate(prefab, spawn.position, spawn.rotation);
+
+                        EnergyDropOnDeath energyDrop = instance.GetComponent<EnergyDropOnDeath>();
+                        if (energyDrop != null)
+                            energyDrop.SetWallet(energyWallet);
 
                         EnemyMovement movement = instance.GetComponent<EnemyMovement>();
                         if (movement != null && enemyTarget != null && enemyTargetHealth != null)
