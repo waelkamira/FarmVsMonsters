@@ -1084,17 +1084,87 @@ export default class BattleScene extends Scene {
 
   fireThorn(plant, _target) {
     // Monsters and thorns share the exact same perspective lane.
-    // Thorns travel forward along localX and never home in on a moving target.
+    // The projectile keeps the original lane, speed and collision behavior,
+    // but now has a layered golden glow and a short launch flash.
     const lane = this.worldToLane(plant);
     const localX = lane.localX + 22;
     const row = plant.row;
     const position = this.lanePoint(localX, row);
-    const view = this.add.triangle(position.x, position.y - 22, -7, 5, 7, 0, -7, -5, 0xf0e2ad);
-    view.setStrokeStyle(2, 0x456b35);
+    const view = this.add.container(position.x, position.y - 22).setDepth(16);
+
+    const halo = this.add.circle(0, 0, 17, 0xffa52f, 0.16);
+    const outerGlow = this.add.circle(0, 0, 11, 0xffc247, 0.34);
+    const innerGlow = this.add.circle(0, 0, 6.5, 0xfff0a0, 0.9);
+    const thorn = this.add.triangle(0, 0, -10, 6, 12, 0, -10, -6, 0xfff8cf)
+      .setStrokeStyle(1.5, 0xffa52f, 1);
+    const highlight = this.add.triangle(-1, -1, -7, 2, 7, 0, -7, -2, 0xffffff);
+    view.add([halo, outerGlow, innerGlow, thorn, highlight]);
+
+    this.tweens.add({
+      targets: [halo, outerGlow],
+      alpha: { from: 0.2, to: 0.62 },
+      scale: { from: 0.82, to: 1.22 },
+      duration: 180,
+      ease: "Sine.easeInOut",
+      yoyo: true,
+      repeat: -1
+    });
+    this.tweens.add({
+      targets: innerGlow,
+      alpha: { from: 0.72, to: 1 },
+      scale: { from: 0.9, to: 1.18 },
+      duration: 125,
+      yoyo: true,
+      repeat: -1
+    });
+
+    const muzzleFlash = this.add.circle(position.x, position.y - 22, 13, 0xffe28a, 0.8).setDepth(15);
+    this.tweens.add({
+      targets: muzzleFlash,
+      alpha: 0,
+      scale: 2.1,
+      duration: 135,
+      onComplete: () => muzzleFlash.destroy()
+    });
+
     this.projectiles.push({
-      view, localX, row, speed: 320, damage: 25, alive: true
+      view, localX, row, speed: 320, damage: 25, alive: true, trailTimer: 0
     });
     this.playThornSound();
+  }
+
+  createProjectileImpact(x, y) {
+    const burst = this.add.container(x, y).setDepth(24);
+    const flash = this.add.circle(0, 0, 10, 0xfff4b0, 0.95);
+    const sparks = [];
+    for (let i = 0; i < 6; i += 1) {
+      const angle = (Math.PI * 2 * i) / 6;
+      const spark = this.add.circle(Math.cos(angle) * 5, Math.sin(angle) * 5, 3, 0xffc247, 1);
+      sparks.push(spark);
+    }
+    burst.add([flash, ...sparks]);
+    this.tweens.add({
+      targets: burst,
+      alpha: 0,
+      scale: 2.15,
+      duration: 190,
+      ease: "Cubic.easeOut",
+      onComplete: () => burst.destroy()
+    });
+  }
+
+  createProjectileTrail(x, y) {
+    const spark = this.add.circle(x, y, PhaserMath.Between(2, 4), 0xffc247, 0.72).setDepth(14);
+    this.tweens.add({
+      targets: spark,
+      x: x - PhaserMath.Between(5, 12),
+      y: y + PhaserMath.Between(-5, 5),
+      alpha: 0,
+      scale: 0.15,
+      duration: 210,
+      ease: "Sine.easeOut",
+      onComplete: () => spark.destroy()
+    });
   }
 
   spawnMonster() {
@@ -1157,6 +1227,13 @@ export default class BattleScene extends Scene {
       const position = this.lanePoint(shot.localX, shot.row);
       shot.view.setPosition(position.x, position.y - 22);
 
+      // Leave small fading embers behind the glowing thorn as it travels.
+      shot.trailTimer -= dt * 1000;
+      if (shot.trailTimer <= 0) {
+        this.createProjectileTrail(position.x - 5, position.y - 22);
+        shot.trailTimer = 48;
+      }
+
       // Collision is checked only against monsters occupying this same lane.
       const hit = this.monsters.find((monster) =>
         monster.alive &&
@@ -1164,6 +1241,7 @@ export default class BattleScene extends Scene {
         Math.abs(monster.localX - shot.localX) <= 24
       );
       if (hit) {
+        this.createProjectileImpact(position.x, position.y - 22);
         hit.hp -= shot.damage;
         this.damageMonsterIfNeeded(hit);
         shot.alive = false;
