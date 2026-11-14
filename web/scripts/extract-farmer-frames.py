@@ -62,10 +62,17 @@ def detect_frames(image: Image.Image, alpha_threshold: int = ALPHA_THRESHOLD):
     return rgba, boxes, rows, columns
 
 
-def normalize_frames(image: Image.Image, boxes, canvas=CANVAS, padding=PADDING):
+def normalize_frames(image: Image.Image, boxes, canvas=CANVAS, padding=PADDING,
+                     shared_scale: float | None = None):
     usable = canvas - 2 * padding
     max_dimension = max(max(x2 - x1, y2 - y1) for x1, y1, x2, y2 in boxes)
-    scale = usable / max_dimension
+    scale = shared_scale if shared_scale is not None else usable / max_dimension
+    if scale <= 0:
+        raise ValueError("Scale must be a positive number.")
+    if max_dimension * scale > usable:
+        raise ValueError(
+            f"Scale {scale} makes the largest frame exceed the {usable}px usable area."
+        )
     frames = []
     metadata = []
     for index, (x1, y1, x2, y2) in enumerate(boxes, start=1):
@@ -94,6 +101,10 @@ def main():
     parser.add_argument("input", type=Path)
     parser.add_argument("--output-dir", type=Path, default=None)
     parser.add_argument("--alpha-threshold", type=int, default=ALPHA_THRESHOLD)
+    parser.add_argument(
+        "--scale", type=float, default=None,
+        help="Reuse the exact scale reported for the idle sheet to keep all action sheets the same visual size.",
+    )
     args = parser.parse_args()
 
     if not args.input.is_file():
@@ -105,7 +116,9 @@ def main():
         rgba, boxes, row_runs, column_runs = detect_frames(
             source, args.alpha_threshold
         )
-        frames, metadata, scale = normalize_frames(rgba, boxes)
+        frames, metadata, scale = normalize_frames(
+            rgba, boxes, shared_scale=args.scale
+        )
 
     for index, frame in enumerate(frames, start=1):
         frame.save(output_dir / f"frame-{index:02d}.png")
@@ -142,6 +155,8 @@ def main():
     )
     print(f"Extracted {len(frames)} frames to {output_dir}")
     print(f"Detected grid: {rows} row(s) x {columns} column(s)")
+    print(f"Shared scale: {scale:.8f}")
+    print("Pass this exact --scale value to every other action sheet.")
     print("Review contact-sheet.jpg before integrating frames into the game.")
 
 
