@@ -970,6 +970,9 @@ export default class BattleScene extends Scene {
     for (const monster of this.monsters) {
       if (!monster.alive || !monster.view || !monster.view.active) continue;
       monster.view.setDepth(depthForY(monster.y));
+      if (monster.healthBar && monster.healthBar.active) {
+        monster.healthBar.setDepth(depthForY(monster.y) + 0.01);
+      }
     }
     if (this.caveman && this.caveman.active) {
       this.caveman.setDepth(depthForY(this.caveman.y + 40));
@@ -1517,6 +1520,20 @@ export default class BattleScene extends Scene {
       0x21170f, 0.32
     ).setDepth(7);
 
+    // A compact health indicator follows the creature without covering its body.
+    const healthBarWidth = PhaserMath.Clamp(laneGap * 0.86, 25, 54);
+    const healthBarOffsetY = 60 * monsterScale * profile.heightScale + 9;
+    const healthBar = this.add.container(
+      spawn.x, spawn.y - healthBarOffsetY
+    ).setDepth(10 + spawn.y / 1000 + 0.01);
+    const healthBack = this.add.rectangle(0, 0, healthBarWidth, 7, 0x241810, 0.9);
+    const healthFill = this.add.rectangle(
+      -healthBarWidth / 2 + 1.5, 0, healthBarWidth - 3, 4, 0x78c95c, 1
+    ).setOrigin(0, 0.5);
+    const healthBorder = this.add.rectangle(0, 0, healthBarWidth, 7, 0x000000, 0)
+      .setStrokeStyle(1, 0xf1dfbd, 0.95);
+    healthBar.add([healthBack, healthFill, healthBorder]);
+
     this.tweens.add({
       targets: view, angle: { from: -2.5, to: 2.5 },
       duration: profile.wobbleDuration, ease: "Sine.easeInOut",
@@ -1541,6 +1558,8 @@ export default class BattleScene extends Scene {
       burstRemaining: 0,
       braced: false,
       braceCue,
+      maxHp: hp,
+      healthBar, healthFill, healthBarOffsetY,
       attackCooldown: 0, alive: true, view, shadow, dustTimer: 0
     });
   }
@@ -1596,6 +1615,9 @@ export default class BattleScene extends Scene {
       const position = this.monsterLanePoint(monster.localX, monster.row);
       monster.x = position.x; monster.y = position.y;
       monster.view.setPosition(position.x, position.y);
+      if (monster.healthBar && monster.healthBar.active) {
+        monster.healthBar.setPosition(position.x, position.y - monster.healthBarOffsetY);
+      }
       if (monster.shadow && monster.shadow.active) {
         monster.shadow.setPosition(position.x, position.y + 2);
       }
@@ -1630,7 +1652,9 @@ export default class BattleScene extends Scene {
       );
       if (hit) {
         this.createProjectileImpact(position.x, position.y - 22);
-        hit.hp -= shot.damage * this.incomingMonsterDamageMultiplier(hit);
+        this.applyMonsterDamage(
+          hit, shot.damage * this.incomingMonsterDamageMultiplier(hit)
+        );
         if (hit.view && hit.view.active) {
           this.tweens.killTweensOf(hit.view);
           this.tweens.add({
@@ -1660,10 +1684,39 @@ export default class BattleScene extends Scene {
     return monster.braced ? armorMultiplier * 0.55 : armorMultiplier;
   }
 
+  updateMonsterHealthBar(monster) {
+    if (!monster || !monster.healthFill || !monster.healthFill.active) return;
+    const fraction = PhaserMath.Clamp(monster.hp / monster.maxHp, 0, 1);
+    monster.healthFill.scaleX = fraction;
+    const color = fraction > 0.6 ? 0x78c95c : fraction > 0.3 ? 0xf1bd4e : 0xe65b45;
+    monster.healthFill.setFillStyle(color, 1);
+    if (monster.healthBar && monster.healthBar.active) {
+      this.tweens.killTweensOf(monster.healthFill);
+      this.tweens.add({
+        targets: monster.healthFill, alpha: { from: 0.55, to: 1 },
+        duration: 90, ease: "Sine.easeOut"
+      });
+    }
+  }
+
+  applyMonsterDamage(monster, amount) {
+    if (!monster || !monster.alive || amount <= 0) return;
+    monster.hp = Math.max(0, monster.hp - amount);
+    this.updateMonsterHealthBar(monster);
+    this.damageMonsterIfNeeded(monster);
+  }
+
   damageMonsterIfNeeded(monster) {
     if (monster.hp > 0 || !monster.alive) return;
     monster.alive = false;
     if (monster.shadow && monster.shadow.active) monster.shadow.destroy();
+    if (monster.healthBar && monster.healthBar.active) {
+      this.tweens.add({
+        targets: monster.healthBar, alpha: 0, y: monster.healthBar.y - 8,
+        duration: 180, ease: "Cubic.easeOut",
+        onComplete: () => monster.healthBar.destroy()
+      });
+    }
     this.createMonsterDefeatBurst(monster.x, monster.y, monster.view.scaleY);
     this.tweens.add({
       targets: monster.view, alpha: 0,
@@ -1713,8 +1766,9 @@ export default class BattleScene extends Scene {
       .sort((a, b) => Math.abs(a.x - this.caveman.x) - Math.abs(b.x - this.caveman.x))[0];
     this.tweens.add({ targets: this.caveman, angle: this.facing * 22, duration: 100, yoyo: true });
     if (target) {
-      target.hp -= 42 * this.incomingMonsterDamageMultiplier(target);
-      this.damageMonsterIfNeeded(target);
+      this.applyMonsterDamage(
+        target, 42 * this.incomingMonsterDamageMultiplier(target)
+      );
       this.setMessage("Club hit!");
     }
     else this.setMessage("No monster is close enough for the club.");
