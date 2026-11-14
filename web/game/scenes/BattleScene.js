@@ -13,8 +13,8 @@ const CELL_H = GRID_HEIGHT / LANES;
 const HOME_LOCAL_X = -300;
 const CAVEMAN_RETURN_SPEED = 420;
 const SPAWN_LOCAL_X = GRID_WIDTH / 2 + 28;
-const RADISH = { label: "Radish", cost: 35, hp: 110, cooldown: 1450, range: 360 };
-const MUSHROOM = { label: "Energy Mushroom", cost: 50, hp: 85, energy: 25, productionInterval: 8000 };
+const RADISH = { label: "Radish", cost: 35, hp: 160, cooldown: 1450, range: 360 };
+const MUSHROOM = { label: "Energy Mushroom", cost: 50, hp: 85, energy: 15, productionInterval: 12000 };
 const PHASE_ONE_WAVE_SIZES = [10, 15, 20, 25, 30];
 const PHASE_ONE_TOTAL_MONSTERS = PHASE_ONE_WAVE_SIZES.reduce((total, count) => total + count, 0);
 
