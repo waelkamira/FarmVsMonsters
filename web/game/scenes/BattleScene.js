@@ -1472,6 +1472,21 @@ export default class BattleScene extends Scene {
     }
 
     view.add(g);
+
+    // Stonehide raises a clearly visible shale ring while it braces over prey.
+    let braceCue = null;
+    if (archetype === "stonehide") {
+      braceCue = this.add.graphics();
+      braceCue.lineStyle(4, 0xd8d0b5, 0.92);
+      braceCue.strokeCircle(0, 6, 45);
+      braceCue.lineStyle(2, 0xa9a18b, 0.9);
+      braceCue.beginPath();
+      braceCue.arc(0, 6, 52, Math.PI * 1.08, Math.PI * 1.92, false);
+      braceCue.strokePath();
+      braceCue.setVisible(false);
+      view.add(braceCue);
+    }
+
     view.setDepth(8);
     const shadow = this.add.ellipse(
       spawn.x, spawn.y + 2,
@@ -1499,6 +1514,11 @@ export default class BattleScene extends Scene {
       plantDamage: profile.plantDamage,
       attackInterval: profile.attackInterval,
       incomingDamageMultiplier: profile.incomingDamage,
+      // The skitter alternates normal movement with short, readable bursts.
+      burstCooldown: archetype === "dust-skitter" ? PhaserMath.Between(1500, 2300) : 0,
+      burstRemaining: 0,
+      braced: false,
+      braceCue,
       attackCooldown: 0, alive: true, view, shadow, dustTimer: 0
     });
   }
@@ -1510,7 +1530,18 @@ export default class BattleScene extends Scene {
       const blocker = this.plants.filter((p) => p.alive && p.row === monster.row && this.worldToLane(p).localX < monster.localX)
         .sort((a, b) => this.worldToLane(b).localX - this.worldToLane(a).localX)[0];
       const blockerLocalX = blocker ? this.worldToLane(blocker).localX : -Infinity;
-      if (blocker && monster.localX - blockerLocalX <= 43) {
+      const withinBiteRange = Boolean(blocker && monster.localX - blockerLocalX <= 43);
+
+      // A Stonehide locks its shale plates into place while chewing a plant.
+      // This state also changes how much damage incoming hits can inflict.
+      if (monster.kind === "stonehide") {
+        monster.braced = withinBiteRange;
+        if (monster.braceCue && monster.braceCue.visible !== monster.braced) {
+          monster.braceCue.setVisible(monster.braced);
+        }
+      }
+
+      if (withinBiteRange) {
         if (monster.attackCooldown <= 0) {
           blocker.hp -= monster.plantDamage; monster.attackCooldown = monster.attackInterval;
           this.playMonsterBiteSound();
@@ -1523,7 +1554,23 @@ export default class BattleScene extends Scene {
         this.endGame(false);
         return;
       }
-      monster.localX -= monster.speed * dt;
+
+      let movementSpeed = monster.speed;
+      if (monster.kind === "dust-skitter") {
+        monster.burstCooldown -= delta;
+        if (monster.burstCooldown <= 0 && monster.burstRemaining <= 0) {
+          monster.burstRemaining = 420;
+          monster.burstCooldown = PhaserMath.Between(3000, 3900);
+          this.createFootstepDust(monster.x - 10, monster.y + 3, monster.view.scaleY * 1.15);
+          this.createFootstepDust(monster.x + 4, monster.y + 1, monster.view.scaleY);
+        }
+        if (monster.burstRemaining > 0) {
+          monster.burstRemaining = Math.max(0, monster.burstRemaining - delta);
+          movementSpeed *= 1.65;
+        }
+      }
+
+      monster.localX -= movementSpeed * dt;
       const position = this.monsterLanePoint(monster.localX, monster.row);
       monster.x = position.x; monster.y = position.y;
       monster.view.setPosition(position.x, position.y);
@@ -1533,7 +1580,7 @@ export default class BattleScene extends Scene {
       monster.dustTimer -= dt * 1000;
       if (monster.dustTimer <= 0) {
         this.createFootstepDust(position.x - 9, position.y + 2, monster.view.scaleY);
-        monster.dustTimer = 155;
+        monster.dustTimer = monster.kind === "dust-skitter" && monster.burstRemaining > 0 ? 62 : 155;
       }
     }
     this.monsters = this.monsters.filter((m) => m.alive);
@@ -1561,7 +1608,7 @@ export default class BattleScene extends Scene {
       );
       if (hit) {
         this.createProjectileImpact(position.x, position.y - 22);
-        hit.hp -= shot.damage * (hit.incomingDamageMultiplier || 1);
+        hit.hp -= shot.damage * this.incomingMonsterDamageMultiplier(hit);
         if (hit.view && hit.view.active) {
           this.tweens.killTweensOf(hit.view);
           this.tweens.add({
@@ -1582,6 +1629,13 @@ export default class BattleScene extends Scene {
       }
     }
     this.projectiles = this.projectiles.filter((shot) => shot.alive);
+  }
+
+  incomingMonsterDamageMultiplier(monster) {
+    const armorMultiplier = monster.incomingDamageMultiplier || 1;
+    // Bracing cuts a further 45% from incoming hits, but only while the
+    // Stonehide is stationary and actively biting a plant.
+    return monster.braced ? armorMultiplier * 0.55 : armorMultiplier;
   }
 
   damageMonsterIfNeeded(monster) {
@@ -1637,7 +1691,7 @@ export default class BattleScene extends Scene {
       .sort((a, b) => Math.abs(a.x - this.caveman.x) - Math.abs(b.x - this.caveman.x))[0];
     this.tweens.add({ targets: this.caveman, angle: this.facing * 22, duration: 100, yoyo: true });
     if (target) {
-      target.hp -= 42 * (target.incomingDamageMultiplier || 1);
+      target.hp -= 42 * this.incomingMonsterDamageMultiplier(target);
       this.damageMonsterIfNeeded(target);
       this.setMessage("Club hit!");
     }
