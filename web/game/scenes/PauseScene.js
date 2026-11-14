@@ -1,0 +1,67 @@
+import { Scene, Input } from "phaser";
+
+export default class PauseScene extends Scene {
+  constructor() {
+    super("PauseScene");
+  }
+
+  create() {
+    this.cameras.main.setBackgroundColor("rgba(18, 12, 7, 0.72)");
+    const panel = this.add.rectangle(560, 340, 450, 420, 0x79502e, 1)
+      .setStrokeStyle(7, 0x3b2517);
+    const inset = this.add.rectangle(560, 340, 430, 400, 0xb88950, 1)
+      .setStrokeStyle(2, 0xe5c68e);
+    const title = this.add.text(560, 195, "BATTLE PAUSED", {
+      fontFamily: "Georgia", fontSize: "31px", color: "#fff0c8",
+      fontStyle: "bold", stroke: "#392417", strokeThickness: 4
+    }).setOrigin(0.5);
+    this.add.existing(panel);
+    this.add.existing(inset);
+    this.add.existing(title);
+
+    this.addMenuButton(270, "RESUME", 0x9bc66e, () => this.resumeBattle());
+    this.addMenuButton(345, "RESTART", 0xe5c27d, () => this.restartBattle());
+    this.addMenuButton(420, "SETTINGS", 0xe5c27d, () => {
+      if (typeof window !== "undefined") window.location.assign("/settings");
+    });
+    this.addMenuButton(495, "MAIN MENU", 0xe6a17d, () => {
+      if (typeof window !== "undefined") window.location.assign("/");
+    });
+
+    this.input.keyboard.addKeys({
+      escape: Input.Keyboard.KeyCodes.ESC,
+      p: Input.Keyboard.KeyCodes.P
+    });
+    this.input.keyboard.on("keydown-ESC", this.resumeBattle, this);
+    this.input.keyboard.on("keydown-P", this.resumeBattle, this);
+    this.events.once("shutdown", () => {
+      this.input.keyboard.off("keydown-ESC", this.resumeBattle, this);
+      this.input.keyboard.off("keydown-P", this.resumeBattle, this);
+    });
+  }
+
+  addMenuButton(y, label, color, action) {
+    const bg = this.add.rectangle(560, y, 250, 52, 0x4b301e, 1)
+      .setStrokeStyle(3, 0x392417).setInteractive({ useHandCursor: true });
+    this.add.rectangle(560, y, 240, 44, color, 1).setStrokeStyle(1, 0xf4dfb3);
+    this.add.text(560, y, label, {
+      fontFamily: "Georgia", fontSize: "16px", color: "#392719", fontStyle: "bold"
+    }).setOrigin(0.5);
+    bg.on("pointerover", () => bg.setScale(1.04));
+    bg.on("pointerout", () => bg.setScale(1));
+    bg.on("pointerdown", action);
+  }
+
+  resumeBattle() {
+    const battle = this.scene.get("BattleScene");
+    this.scene.stop();
+    this.scene.resume("BattleScene");
+    battle.resumeFromPause();
+  }
+
+  restartBattle() {
+    this.scene.stop("BattleScene");
+    this.scene.stop();
+    this.scene.start("BattleScene");
+  }
+}
