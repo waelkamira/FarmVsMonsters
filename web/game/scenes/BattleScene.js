@@ -2154,7 +2154,7 @@ export default class BattleScene extends Scene {
       this.playVictoryMusic();
       return;
     }
-    const title = this.add.text(560, 300, "GAME OVER", {
+    const title = this.add.text(560, 255, "FARM LOST", {
       fontFamily: "Arial", fontSize: "68px", color: "#ffdf72", fontStyle: "bold",
       stroke: "#54221f", strokeThickness: 10, shadow: { offsetX: 0, offsetY: 5, color: "#000000", blur: 12, fill: true }
     }).setOrigin(0.5).setScale(0.18).setDepth(62);
@@ -2169,9 +2169,23 @@ export default class BattleScene extends Scene {
       onComplete: () => title.setScale(1.18)
     });
 
+    const elapsedSeconds = Math.floor(this.elapsedBattleMs / 1000);
+    const minutes = Math.floor(elapsedSeconds / 60);
+    const seconds = String(elapsedSeconds % 60).padStart(2, "0");
+    const summary = [
+      "Reached wave " + Math.min(this.wave, this.totalWaves) + " of " + this.totalWaves,
+      this.totalDefeatedMonsters + " monsters defeated",
+      this.totalPlantsPlanted + " plants planted",
+      "Time survived: " + minutes + ":" + seconds
+    ].join("\\n");
+    this.add.text(560, 355, summary, {
+      fontFamily: "Georgia", fontSize: "18px", color: "#fff0c8",
+      align: "center", lineSpacing: 7, fontStyle: "bold"
+    }).setOrigin(0.5).setDepth(62);
+
     this.stopBackgroundMusic();
-    this.createGameOverButton(455, 405, "PLAY AGAIN", 0x9bc66e, () => this.scene.restart());
-    this.createGameOverButton(665, 405, "HOME", 0xe5c27d, () => {
+    this.createGameOverButton(455, 465, "RETRY", 0x9bc66e, () => this.scene.restart());
+    this.createGameOverButton(665, 465, "HOME", 0xe5c27d, () => {
       if (typeof window !== "undefined") window.location.assign("/");
     });
     this.playDefeatMusic();
