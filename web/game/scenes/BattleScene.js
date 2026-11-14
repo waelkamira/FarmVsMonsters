@@ -442,7 +442,7 @@ export default class BattleScene extends Scene {
       fontFamily: "Georgia", fontSize: "13px", color: "#fff0c8", fontStyle: "bold",
       stroke: "#382317", strokeThickness: 2
     }).setOrigin(0, 0.5).setDepth(41);
-    this.coinHudIcon = this.add.image(205, 27, "gold-coin", 0)
+    this.coinHudIcon = this.add.image(230, 27, "gold-coin", 0)
       .setDisplaySize(20, 20).setDepth(42);
     this.waveText = this.add.text(950, 27, "", {
       fontFamily: "Georgia", fontSize: "14px", color: "#ffe2a0", fontStyle: "bold",
