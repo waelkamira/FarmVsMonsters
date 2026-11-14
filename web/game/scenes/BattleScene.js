@@ -53,6 +53,7 @@ export default class BattleScene extends Scene {
   }
 
   create() {
+    this.isPaused = false;
     this.energy = 150;
     this.houseHealth = 100;
     this.wave = 1;
