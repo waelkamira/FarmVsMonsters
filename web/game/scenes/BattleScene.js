@@ -620,6 +620,26 @@ export default class BattleScene extends Scene {
         if (!this.textures.exists(texture)) {
           throw new Error("Missing farmer animation texture: " + texture);
         }
+
+        // Validate the real Phaser texture frames before building an animation.
+        // This catches a changed/mis-sliced PNG instead of silently requesting
+        // frame indices that do not exist and leaving the farmer stuck.
+        const textureData = this.textures.get(texture);
+        const availableFrameNames = Object.keys(textureData.frames)
+          .filter((frameName) => frameName !== "__BASE");
+        const missingFrames = Array.from(
+          { length: frameCount },
+          (_, index) => String(index)
+        ).filter((frameName) => !textureData.frames[frameName]);
+
+        if (missingFrames.length > 0 || availableFrameNames.length < frameCount) {
+          throw new Error(
+            "Invalid farmer sheet " + texture +
+            ": expected " + frameCount + " frames, found " + availableFrameNames.length +
+            (missingFrames.length ? "; missing frame IDs " + missingFrames.join(", ") : "")
+          );
+        }
+
         if (this.anims.exists(key)) this.anims.remove(key);
         this.anims.create({
           key,
