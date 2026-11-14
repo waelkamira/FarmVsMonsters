@@ -11,6 +11,7 @@ const GRID_CENTER_Y = (GRID_NODES[0][0].y + GRID_NODES[LANES][0].y) / 2;
 const CELL_W = GRID_WIDTH / COLUMNS;
 const CELL_H = GRID_HEIGHT / LANES;
 const HOME_LOCAL_X = -300;
+const CAVEMAN_RETURN_SPEED = 2000;
 const SPAWN_LOCAL_X = GRID_WIDTH / 2 + 28;
 const RADISH = { label: "Radish", cost: 35, hp: 110, cooldown: 1450, range: 360 };
 const MUSHROOM = { label: "Energy Mushroom", cost: 50, hp: 85, energy: 25, productionInterval: 8000 };
@@ -839,7 +840,7 @@ export default class BattleScene extends Scene {
       this.setMessage("The caveman is back behind the final defense line.");
       return;
     }
-    const step = Math.min(distance, 1050 * dt);
+    const step = Math.min(distance, CAVEMAN_RETURN_SPEED * dt);
     this.caveman.x += (dx / distance) * step;
     this.caveman.y += (dy / distance) * step;
     if (dx !== 0) {
