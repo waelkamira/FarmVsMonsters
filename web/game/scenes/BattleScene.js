@@ -13,6 +13,7 @@ const CELL_H = GRID_HEIGHT / LANES;
 const HOME_LOCAL_X = -300;
 const SPAWN_LOCAL_X = GRID_WIDTH / 2 + 28;
 const RADISH = { label: "Radish", cost: 35, hp: 110, cooldown: 1450, range: 360 };
+const MUSHROOM = { label: "Energy Mushroom", cost: 50, hp: 85, energy: 25, productionInterval: 8000 };
 
 export default class BattleScene extends Scene {
   constructor() { super("BattleScene"); }
@@ -31,8 +32,7 @@ export default class BattleScene extends Scene {
     this.spawnedThisWave = 0;
     this.waveSize = 5;
     this.spawnTimer = 1800;
-    this.energyTimer = 0;
-    this.selectedPlant = false;
+    this.selectedPlant = null;
     this.plants = [];
     this.monsters = [];
     this.projectiles = [];
@@ -328,24 +328,39 @@ export default class BattleScene extends Scene {
       backgroundColor: "#263c2b", padding: { x: 14, y: 7 }, align: "center"
     }).setOrigin(0.5, 1);
 
-    const card = this.add.container(92, 78).setDepth(40);
-    const panel = this.add.rectangle(0, 0, 132, 58, 0xf4dfb3, 1).setStrokeStyle(3, 0x65452f).setInteractive({ useHandCursor: true });
+    this.radishCard = this.createPlantCard(92, "RADISH", "35 energy", "radish", (g) => {
+      g.fillStyle(0xc83e45, 1); g.fillEllipse(-43, 0, 22, 28);
+      g.fillStyle(0x4b8c45, 1); g.fillTriangle(-48, -12, -40, -28, -34, -12);
+      g.fillTriangle(-43, -13, -27, -23, -34, -8);
+    });
+    this.mushroomCard = this.createPlantCard(242, "MUSHROOM", "50 energy", "mushroom", (g) => {
+      g.fillStyle(0x8b5bba, 1); g.fillEllipse(-43, -5, 28, 23);
+      g.fillStyle(0xf2d9a4, 1); g.fillRoundedRect(-49, 4, 12, 16, 4);
+      g.fillRoundedRect(-39, 4, 12, 16, 4);
+      g.fillStyle(0xfff1d1, 1); g.fillCircle(-49, -8, 3); g.fillCircle(-38, -8, 3);
+    });
+  }
+
+  createPlantCard(x, title, costLabel, type, drawIcon) {
+    const card = this.add.container(x, 78).setDepth(40);
+    const panel = this.add.rectangle(0, 0, 138, 58, 0xf4dfb3, 1)
+      .setStrokeStyle(3, 0x65452f).setInteractive({ useHandCursor: true });
     const icon = this.add.graphics();
-    icon.fillStyle(0xc83e45, 1); icon.fillEllipse(-35, 0, 24, 29);
-    icon.fillStyle(0x4b8c45, 1); icon.fillTriangle(-39, -14, -31, -29, -25, -13);
-    icon.fillTriangle(-36, -15, -18, -24, -26, -9);
+    drawIcon(icon);
     card.add([panel, icon,
-      this.add.text(-13, -10, "RADISH", { fontFamily: "Arial", fontSize: "14px", color: "#563a25", fontStyle: "bold" }),
-      this.add.text(-13, 9, "35 energy", { fontFamily: "Arial", fontSize: "11px", color: "#72583c" })
+      this.add.text(-25, -10, title, { fontFamily: "Arial", fontSize: "12px", color: "#563a25", fontStyle: "bold" }),
+      this.add.text(-25, 9, costLabel, { fontFamily: "Arial", fontSize: "11px", color: "#72583c" })
     ]);
     panel.on("pointerdown", () => {
       if (this.gameOver) return;
-      this.selectedPlant = true;
-      panel.setFillStyle(0xd9efbd, 1);
-      this.setMessage("Radish selected. Click an empty soil cell; the caveman will walk there and plant it.");
+      this.selectedPlant = type;
+      this.radishCard.setFillStyle(type === "radish" ? 0xd9efbd : 0xf4dfb3, 1);
+      this.mushroomCard.setFillStyle(type === "mushroom" ? 0xd9efbd : 0xf4dfb3, 1);
+      const label = type === "radish" ? "Radish" : "Energy mushroom";
+      this.setMessage(label + " selected. Click an empty soil cell to plant it.");
       this.refreshHud();
     });
-    this.radishCard = panel;
+    return panel;
   }
 
   createCaveman() {
@@ -702,8 +717,6 @@ export default class BattleScene extends Scene {
     if (this.gameOver) return;
     const dt = delta / 1000;
     this.handleControls(dt);
-    this.energyTimer += delta;
-    if (this.energyTimer >= 1000) { this.energyTimer -= 1000; this.energy = Math.min(300, this.energy + 2); }
     this.spawnTimer -= delta;
     if (this.spawnTimer <= 0 && this.spawnedThisWave < this.waveSize) {
       this.spawnMonster(); this.spawnedThisWave += 1;
@@ -745,10 +758,11 @@ export default class BattleScene extends Scene {
       this.uprootPlant(existingPlant);
       return;
     }
-    if (!this.selectedPlant) { this.setMessage("Choose the radish icon first."); return; }
-    if (this.energy < RADISH.cost) { this.setMessage("Not enough energy to plant a radish."); return; }
+    if (!this.selectedPlant) { this.setMessage("Choose a plant card first."); return; }
+    const plantConfig = this.selectedPlant === "mushroom" ? MUSHROOM : RADISH;
+    if (this.energy < plantConfig.cost) { this.setMessage("Not enough mushrooms energy to plant this."); return; }
     const { x, y } = this.plantingCellCenter(col, row);
-    this.plantingTarget = { col, row, x, y };
+    this.plantingTarget = { col, row, x, y, type: this.selectedPlant };
     this.facing = x >= this.caveman.x ? 1 : -1;
     this.caveman.scaleX = this.facing;
     this.setMessage("The caveman is walking to the selected soil cell...");
@@ -769,7 +783,7 @@ export default class BattleScene extends Scene {
     }
     this.caveman.setPosition(target.x, target.y);
     this.plantingTarget = null;
-    this.plantRadish(target.col, target.row);
+    this.plantSelected(target.col, target.row, target.type);
   }
 
   updateReturnMovement(dt) {
@@ -793,23 +807,51 @@ export default class BattleScene extends Scene {
     }
   }
 
-  plantRadish(col, row) {
-    if (this.energy < RADISH.cost || this.plants.some((p) => p.alive && p.col === col && p.row === row)) {
+  plantSelected(col, row, type) {
+    const config = type === "mushroom" ? MUSHROOM : RADISH;
+    if (this.energy < config.cost || this.plants.some((p) => p.alive && p.col === col && p.row === row)) {
       this.setMessage("Planting cancelled: this cell is no longer available."); return;
     }
-    this.energy -= RADISH.cost;
-    this.hasPlantedDefender = true;
+    this.energy -= config.cost;
     const { x, y } = this.plantingCellCenter(col, row);
-    this.plants.push({
-      type: "radish", col, row, x, y, hp: RADISH.hp, alive: true,
-      cooldown: PhaserMath.Between(250, 650), view: this.drawRadish(x, y)
-    });
+    const plant = {
+      type, col, row, x, y, hp: config.hp, alive: true,
+      cooldown: type === "radish" ? PhaserMath.Between(250, 650) : 0,
+      productionTimer: type === "mushroom" ? MUSHROOM.productionInterval : 0,
+      view: type === "mushroom" ? this.drawEnergyMushroom(x, y) : this.drawRadish(x, y)
+    };
+    this.plants.push(plant);
+    if (type === "radish") this.hasPlantedDefender = true;
     this.playPlantSound();
     this.updateEmergencyMode();
     this.tweens.add({ targets: this.caveman, scaleY: 0.82, duration: 120, yoyo: true });
     const safePosition = this.lanePoint(HOME_LOCAL_X - 38, row);
     this.returnTarget = { x: safePosition.x, y: safePosition.y };
-    this.setMessage("Radish planted! The caveman is sprinting back behind the final line.");
+    this.setMessage(type === "mushroom"
+      ? "Energy mushroom planted! It will produce mushrooms for planting more defenders."
+      : "Radish planted! The caveman is sprinting back behind the final line.");
+  }
+
+  drawEnergyMushroom(x, y) {
+    const plant = this.add.container(x, y).setDepth(11);
+    const g = this.add.graphics();
+    g.fillStyle(0xf0d7a2, 1);
+    g.fillRoundedRect(-9, -28, 18, 29, 7);
+    g.fillStyle(0x8a58b6, 1);
+    g.fillEllipse(0, -31, 43, 31);
+    g.fillStyle(0xb887d6, 1);
+    g.fillEllipse(-8, -36, 16, 9);
+    g.fillStyle(0xfff0d2, 1);
+    g.fillEllipse(-7, -22, 5, 7);
+    g.fillEllipse(7, -22, 5, 7);
+    g.fillStyle(0x382b35, 1);
+    g.fillCircle(-7, -22, 2);
+    g.fillCircle(7, -22, 2);
+    g.lineStyle(2, 0x65406f, 1);
+    g.beginPath(); g.arc(0, -15, 5, 0.2, Math.PI - 0.2); g.strokePath();
+    plant.add(g);
+    this.tweens.add({ targets: plant, scaleY: 1.04, duration: 1250, ease: "Sine.easeInOut", yoyo: true, repeat: -1 });
+    return plant;
   }
 
   drawRadish(x, y) {
@@ -865,6 +907,14 @@ export default class BattleScene extends Scene {
   updatePlants(delta) {
     for (const plant of this.plants) {
       if (!plant.alive) continue;
+      if (plant.type === "mushroom") {
+        plant.productionTimer -= delta;
+        if (plant.productionTimer <= 0) {
+          plant.productionTimer += MUSHROOM.productionInterval;
+          this.spawnMushroomEnergy(plant);
+        }
+        continue;
+      }
       plant.cooldown -= delta;
       if (plant.cooldown > 0) continue;
       const plantLaneX = this.worldToLane(plant).localX;
@@ -874,6 +924,25 @@ export default class BattleScene extends Scene {
       this.fireThorn(plant, target);
       plant.cooldown = RADISH.cooldown;
     }
+  }
+
+  spawnMushroomEnergy(plant) {
+    const amount = Math.min(MUSHROOM.energy, 300 - this.energy);
+    if (amount <= 0) return;
+    this.energy += amount;
+    const token = this.add.container(plant.x, plant.y - 58).setDepth(35);
+    const cap = this.add.ellipse(0, 0, 28, 22, 0x9b6ac4, 1).setStrokeStyle(2, 0x563a72);
+    const stem = this.add.roundRectangle(0, 8, 9, 13, 4, 0xf4dfb3, 1);
+    const value = this.add.text(20, -8, "+" + amount, {
+      fontFamily: "Arial", fontSize: "15px", color: "#fff7df", fontStyle: "bold",
+      stroke: "#493052", strokeThickness: 3
+    }).setOrigin(0, 0.5);
+    token.add([cap, stem, value]);
+    this.tweens.add({
+      targets: token, y: token.y - 48, alpha: 0, duration: 1050, ease: "Cubic.easeOut",
+      onComplete: () => token.destroy()
+    });
+    this.refreshHud();
   }
 
   fireThorn(plant, _target) {
@@ -982,7 +1051,7 @@ export default class BattleScene extends Scene {
     plant.alive = false;
     plant.view.destroy();
     this.playUprootSound();
-    this.setMessage("Radish uprooted. Select the radish card and plant it in any empty soil cell.");
+    this.setMessage("Plant uprooted. Select a plant card and choose an empty soil cell.");
     this.updateEmergencyMode();
     this.refreshHud();
   }
@@ -990,11 +1059,11 @@ export default class BattleScene extends Scene {
   destroyPlant(plant) {
     if (!plant.alive) return;
     plant.alive = false; plant.view.destroy();
-    this.setMessage("A radish defender has fallen!");
+    this.setMessage(plant.type === "mushroom" ? "An energy mushroom has been eaten!" : "A radish defender has fallen!");
     this.updateEmergencyMode();
   }
 
-  livingPlantCount() { return this.plants.filter((p) => p.alive).length; }
+  livingPlantCount() { return this.plants.filter((p) => p.alive && p.type === "radish").length; }
 
   updateEmergencyMode() {
     const active = this.hasPlantedDefender && this.livingPlantCount() === 0;
@@ -1112,7 +1181,7 @@ export default class BattleScene extends Scene {
   setMessage(message) { this.messageText.setText(message); }
 
   refreshHud() {
-    this.hudText.setText("ENERGY  " + this.energy + "     HOUSE  " + this.houseHealth + "%     RADISHES  " + this.livingPlantCount());
+    this.hudText.setText("MUSHROOMS  " + this.energy + "     HOUSE  " + this.houseHealth + "%     RADISHES  " + this.livingPlantCount());
     this.waveText.setText("WAVE " + this.wave + (this.emergencyMode ? "  ·  EMERGENCY" : ""));
   }
 }
