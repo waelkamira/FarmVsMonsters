@@ -1272,7 +1272,7 @@ export default class BattleScene extends Scene {
       return;
     }
     const plantConfig = RADISH;
-    if (this.energy < plantConfig.cost) { this.setMessage("Not enough mushrooms energy to plant this."); return; }
+    if (this.energy < plantConfig.cost) { this.setMessage("Not enough energy to plant a Radish."); return; }
     const { x, y } = this.plantingCellCenter(col, row);
     // Store the route in board coordinates, not as a straight screen-space
     // diagonal. The board is perspective-warped, so screen-space lerping makes
