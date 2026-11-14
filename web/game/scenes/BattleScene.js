@@ -16,6 +16,7 @@ const SPAWN_LOCAL_X = GRID_WIDTH / 2 + 28;
 const RADISH = { label: "Radish", cost: 35, hp: 110, cooldown: 1450, range: 360 };
 const MUSHROOM = { label: "Energy Mushroom", cost: 50, hp: 85, energy: 25, productionInterval: 8000 };
 const PHASE_ONE_WAVE_SIZES = [10, 15, 20, 25, 30];
+const PHASE_ONE_TOTAL_MONSTERS = PHASE_ONE_WAVE_SIZES.reduce((total, count) => total + count, 0);
 
 // Central combat balance table. Monster durability is expressed in standard radish hits when possible.
 const COMBAT_BALANCE = {
@@ -59,6 +60,7 @@ export default class BattleScene extends Scene {
     this.wave = 1;
     this.totalWaves = PHASE_ONE_WAVE_SIZES.length;
     this.spawnedThisWave = 0;
+    this.waveDefeatedMonsters = 0;
     this.waveSize = PHASE_ONE_WAVE_SIZES[0];
     this.totalSpawnedMonsters = 0;
     this.totalDefeatedMonsters = 0;
@@ -2074,6 +2076,7 @@ export default class BattleScene extends Scene {
     }
     this.energy = Math.min(300, this.energy + 8);
     this.totalDefeatedMonsters += 1;
+    this.waveDefeatedMonsters += 1;
   }
 
   uprootPlant(plant) {
@@ -2141,6 +2144,7 @@ export default class BattleScene extends Scene {
 
     this.wave += 1;
     this.spawnedThisWave = 0;
+    this.waveDefeatedMonsters = 0;
     this.waveSize = PHASE_ONE_WAVE_SIZES[this.wave - 1];
     this.spawnTimer = 3200;
     this.setMessage(
@@ -2297,9 +2301,13 @@ export default class BattleScene extends Scene {
   setMessage(message) { this.messageText.setText(message); }
 
   refreshHud() {
-    this.hudText.setText("ENERGY  " + this.energy + "     HOME  " + this.houseHealth + "%     RADISHES  " + this.livingPlantCount());
+    this.hudText.setText(
+      "ENERGY  " + this.energy + "     HOME  " + this.houseHealth + "%     RADISHES  " +
+      this.livingPlantCount() + "     KILLS  " + this.totalDefeatedMonsters + "/" + PHASE_ONE_TOTAL_MONSTERS
+    );
     this.waveText.setText(
       "WAVE " + Math.min(this.wave, this.totalWaves) + "/" + this.totalWaves +
+      "  ·  " + this.waveDefeatedMonsters + "/" + this.waveSize + " DOWN" +
       (this.emergencyMode ? "  ·  LAST STAND" : "")
     );
   }
