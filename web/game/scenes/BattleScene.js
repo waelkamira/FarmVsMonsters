@@ -464,10 +464,6 @@ export default class BattleScene extends Scene {
 
     this.cavemanShadow = this.add.ellipse(220, this.laneYs[2] + 34, 48, 13, 0x21170f, 0.3)
       .setDepth(19);
-    this.cavemanLabel = this.add.text(220, this.laneYs[2] + 49, "TRIBE GUARD", {
-      fontFamily: "Georgia", fontSize: "9px", color: "#f5dfb2", fontStyle: "bold",
-      stroke: "#382317", strokeThickness: 3, letterSpacing: 1
-    }).setOrigin(0.5).setDepth(21);
   }
 
   readAudioPreference(key, fallback) {
@@ -918,7 +914,6 @@ export default class BattleScene extends Scene {
     this.updateDepthSorting();
     this.updateProjectiles(dt);
     this.checkWaveProgress();
-    this.cavemanLabel.setPosition(this.caveman.x, this.caveman.y + 49);
     if (this.cavemanShadow) this.cavemanShadow.setPosition(this.caveman.x, this.caveman.y + 34);
     this.refreshHud();
   }
@@ -1330,10 +1325,9 @@ export default class BattleScene extends Scene {
       : this.laneYs[row] - this.laneYs[row - 1];
     const monsterScale = PhaserMath.Clamp(laneGap / 108, 0.28, 0.62);
     view.setScale(monsterScale);
-    // `spawn.y` is the centerline of the soil cell. The monster artwork's
-    // local ground/foot anchor is y=57, so lift its container by that amount
-    // to place its feet (not its torso origin) exactly on the lane center.
-    view.setPosition(spawn.x, spawn.y - 57 * monsterScale);
+    // Center the monster artwork inside its assigned soil cell. Its visual
+    // body center, not its feet, now follows the cell-centroid path.
+    view.setPosition(spawn.x, spawn.y);
 
     const g = this.add.graphics();
     // A wild cave brute wearing a rough hide, stone ornaments and bone tusks.
@@ -1406,7 +1400,7 @@ export default class BattleScene extends Scene {
       monster.localX -= monster.speed * dt;
       const position = this.lanePoint(monster.localX, monster.row);
       monster.x = position.x; monster.y = position.y;
-      monster.view.setPosition(position.x, position.y - 57 * monster.view.scaleY);
+      monster.view.setPosition(position.x, position.y);
       if (monster.shadow && monster.shadow.active) {
         monster.shadow.setPosition(position.x, position.y + 2);
       }
