@@ -577,6 +577,13 @@ export default class BattleScene extends Scene {
 
   setFarmerAnimation(key) {
     if (!this.cavemanVisual || !this.cavemanVisual.active) return;
+    if (key === "farmer-idle" && this.farmerForceIdleFrame) {
+      this.cavemanVisual.stop();
+      this.cavemanVisual.setTexture("farmer-idle", 0);
+      this.cavemanVisual.setOrigin(0.5, 1);
+      this.cavemanVisual.setScale(0.42);
+      return;
+    }
     const currentKey = this.cavemanVisual.anims.currentAnim?.key;
     const actionAnimations = [
       "farmer-plant", "farmer-uproot", "farmer-attack",
@@ -589,6 +596,7 @@ export default class BattleScene extends Scene {
 
   playFarmerAction(key) {
     if (!this.cavemanVisual || !this.cavemanVisual.active) return;
+    this.farmerForceIdleFrame = false;
     this.setFarmerAnimation(key);
     this.cavemanVisual.once("animationcomplete", () => {
       if (!this.cavemanVisual || !this.cavemanVisual.active) return;
@@ -1121,6 +1129,7 @@ export default class BattleScene extends Scene {
   }
 
   requestPlant(col, row) {
+    this.farmerForceIdleFrame = false;
     if (this.plantingTarget) { this.setMessage("The caveman is already on his way to a planting spot."); return; }
     const existingPlant = this.plants.find((plant) => plant.alive && plant.col === col && plant.row === row);
     if (existingPlant) {
@@ -1185,6 +1194,7 @@ export default class BattleScene extends Scene {
     if (distance <= 5) {
       this.caveman.setPosition(target.x, target.y);
       this.returnTarget = null;
+      this.farmerForceIdleFrame = true;
       // Finish on the exact original idle frame, not the final frame of the planting/run sheets.
       if (this.cavemanVisual && this.cavemanVisual.active) {
         this.cavemanVisual.stop();
