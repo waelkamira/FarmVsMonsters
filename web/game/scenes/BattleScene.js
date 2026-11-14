@@ -1141,16 +1141,25 @@ export default class BattleScene extends Scene {
 
   pauseGame() {
     if (this.gameOver || this.isPaused || !this.scene.isActive()) return;
+    if (this.scene.isActive("PauseScene")) return;
+
     this.isPaused = true;
     this.stopBackgroundMusic();
+    this.pauseGameAudio();
     this.scene.launch("PauseScene");
     this.scene.pause();
   }
 
+  pauseGameAudio() {
+    const audioContext = this.sound && this.sound.context;
+    if (!audioContext || audioContext.state !== "running" || typeof audioContext.suspend !== "function") return;
+    audioContext.suspend().catch(() => {});
+  }
+
   resumeFromPause() {
+    if (!this.isPaused || this.gameOver) return;
     this.isPaused = false;
     this.resumeGameAudio();
-    if (this.musicEnabled) this.startBackgroundMusic();
   }
 
   bindInput() {
