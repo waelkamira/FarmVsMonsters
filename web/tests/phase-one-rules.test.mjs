@@ -203,7 +203,7 @@ test("monster defeat is guarded against duplicate rewards", () => {
   assert.match(scene, /monster\.alive = false/);
   assert.match(scene, /this\.totalDefeatedMonsters \+= 1/);
   assert.match(scene, /this\.coins \+= MONSTER_KILL_COIN_REWARD/);
-  assert.match(scene, /this\\.registry\\.set\\(["']coins["'], this\\.coins\\)/);
+  assert.match(scene, /this\.registry\.set\(["']coins["'], this\.coins\)/);
 });
 
 test("a wave clears only after all scheduled monsters spawn and all living monsters die", () => {
