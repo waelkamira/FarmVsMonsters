@@ -78,6 +78,30 @@ test("coin progression rejects malformed, outdated, and inaccessible storage", (
   assert.equal(saveCoins(null, 8), false);
 });
 
+
+test("plant purchase deducts the exact approved price and unlocks once", () => {
+  const result = purchasePlant({ coins: 80, plantId: "pea-shooter", price: 60, unlockedPlantIds: ["radish", "mushroom"] });
+  assert.deepEqual(result, {
+    ok: true,
+    reason: "purchased",
+    coins: 20,
+    unlockedPlantIds: ["radish", "mushroom", "pea-shooter"]
+  });
+});
+
+test("plant purchase rejects missing prices, invalid values, duplicates, and insufficient funds without charging", () => {
+  const base = { coins: 40, plantId: "ice-bloom", unlockedPlantIds: ["radish"] };
+  assert.equal(purchasePlant(base).reason, "invalid-price");
+  assert.equal(purchasePlant({ ...base, price: 0 }).reason, "invalid-price");
+  assert.equal(purchasePlant({ ...base, price: 1.5 }).reason, "invalid-price");
+  assert.equal(purchasePlant({ ...base, price: 50 }).reason, "insufficient-coins");
+  assert.equal(purchasePlant({ ...base, price: 20, unlockedPlantIds: ["radish", "ice-bloom"] }).reason, "already-unlocked");
+  assert.equal(purchasePlant({ ...base, plantId: "  ", price: 20 }).reason, "invalid-plant");
+  const unchanged = purchasePlant({ ...base, price: 50 });
+  assert.equal(unchanged.coins, 40);
+  assert.deepEqual(unchanged.unlockedPlantIds, ["radish"]);
+});
+
 test("energy collection never exceeds 300 and never grants negative energy", () => {
   assert.deepEqual(collectEnergy(100, 15), { energy: 115, collected: 15 });
   assert.deepEqual(collectEnergy(299, 15), { energy: 300, collected: 1 });
