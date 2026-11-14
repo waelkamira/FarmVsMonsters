@@ -87,3 +87,22 @@ This keeps the same source-pixel-to-output-pixel scale across idle, walk, run,
 plant, uproot, attack, collect, hurt, jump, and death. The tool refuses a scale
 that would clip a frame; it never silently shrinks one action independently.
 Use the same scale for all sheets created from the same-resolution art export.
+
+### Phaser-ready output
+
+In addition to the individual PNG frames and contact sheet, extraction now
+writes `farmer-animation-strip.png`: a horizontal strip of 512x512 cells with
+no gutters. The accompanying `frames.json` records the exact Phaser settings:
+
+```js
+this.load.spritesheet("farmer-plant-review", "/path/farmer-animation-strip.png", {
+  frameWidth: 512,
+  frameHeight: 512,
+  margin: 0,
+  spacing: 0,
+});
+```
+
+Keep the generated strip as a review artifact first. Do not replace the live
+`farmer-plant.png` until the contact sheet confirms the frame order, crop,
+and pose timing.
