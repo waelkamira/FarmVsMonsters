@@ -36,6 +36,7 @@ test("CC0 Kenney sound assets are bundled locally and mapped to gameplay events"
   assert.equal(soundAssets.license, "CC0-1.0");
   assert.equal(soundAssets.creator, "Kenney");
   assert.ok(soundAssets.assets.length >= 10);
+  assert.equal(soundAssets.assets.find((asset) => asset.key === "sfx-monster-jump").sourcePack, "512 Sound Effects (8-bit style)");
   for (const asset of soundAssets.assets) {
     assert.ok(asset.key.startsWith("sfx-"));
     assert.ok(asset.path.startsWith("/assets/audio/sfx/"));
@@ -46,6 +47,7 @@ test("CC0 Kenney sound assets are bundled locally and mapped to gameplay events"
   assert.match(scene, /this\.sound\.play\(key, \{ volume: PhaserMath\.Clamp\(volume \/ 100, 0, 1\) \}\)/);
   assert.match(scene, /playFarmerFootsteps\(dt\)/);
   assert.match(scene, /playMonsterJumpSound\(\)/);
+  assert.match(scene, /playSfx\("sfx-monster-jump"/);
   assert.match(scene, /playMonsterLandSound\(\)/);
   assert.match(scene, /playMonsterBiteSound\(\)/);
   assert.match(scene, /playMonsterHitSound\(\)/);
