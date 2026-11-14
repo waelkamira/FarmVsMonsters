@@ -8,7 +8,7 @@
 ## Project rules
 
 1. A feature is not complete because code was committed. It is complete only after it runs and passes its acceptance checks.
-2. Do not expand the plant roster before the single-radish gameplay loop is enjoyable and stable.
+2. Keep the Radish as the only defensive plant until its gameplay loop is stable; the Energy Mushroom is a resource producer and does not expand the defensive roster.
 3. Plants stay rooted in their cells. Monsters move through lanes. The caveman plants and tends the farm.
 4. The caveman cannot attack monsters while any living defensive plant remains. When the last defensive plant dies, emergency club combat becomes available. Planting a new defender immediately ends emergency combat.
 5. Keep art assets, animation, gameplay rules, UI, and persistence separated. Never hide a gameplay bug with a visual workaround.
@@ -84,7 +84,8 @@ BATTLE
 ### Phase 1 acceptance gate — every item required
 - [ ] A clean browser load reaches the Main Menu without console/runtime errors.
 - [ ] New Game opens a fresh battle and the 5×8 grid aligns with the art.
-- [ ] Radish selection and empty-cell validation work; occupied cells cannot be planted.
+- [ ] Radish and Energy Mushroom selection and empty-cell validation work; occupied cells cannot be planted.
+- [ ] Mushroom energy pickups expire after 12 seconds, collect no more than the available energy capacity, and are counted accurately in the result summary.
 - [ ] The caveman physically travels to the chosen cell, plants there, and returns to the exact saved position and facing.
 - [ ] Planting animation bends and recovers; no squash, shrink, jump, foot sliding, or wrong depth.
 - [ ] Radish remains rooted and attacks automatically with correct targeting and projectile behavior.
@@ -181,7 +182,7 @@ BATTLE
 ## Work order from here
 
 1. Finish farmer asset/frame audit and verify the farmer planting/return sequence in browser.
-2. Verify Radish-only battle loop and monster/objective damage.
+2. Verify Radish defense, Mushroom production/collection, and monster/objective damage.
 3. Implement and test wave 1–5 completion and exact victory/defeat conditions.
 4. Verify Pause/Resume audio suspension, then test Main Menu, How to Play, Settings persistence, and reliable restart/menu transitions.
 5. Verify the loading, ready, asset-fallback, and initialization-error states in a real browser.
