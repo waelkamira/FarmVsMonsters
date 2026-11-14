@@ -61,6 +61,13 @@ test("mushroom is resource-only and its pickups expire after 12 seconds", () => 
   assert.match(scene, /this\.time\.delayedCall\(MUSHROOM_PICKUP_TTL_MS/);
 });
 
+test("Mushroom production always creates a full collectible; the energy cap is applied at pickup", () => {
+  const production = scene.slice(scene.indexOf("spawnMushroomEnergy(plant) {"), scene.indexOf("fireThorn(plant"));
+  assert.match(production, /const amount = MUSHROOM_CONFIG\.energy;/);
+  assert.doesNotMatch(production, /Math\.min\(MUSHROOM_CONFIG\.energy, MAX_ENERGY - this\.energy\)/);
+  assert.match(production, /collectEnergy\(this\.energy, amount\)/);
+});
+
 test("monster archetype composition introduces threats in measured waves", () => {
   for (let i = 0; i < 10; i += 1) {
     assert.equal(monsterArchetypeFor(1, i), "cave-brute");
