@@ -1136,19 +1136,9 @@ export default class BattleScene extends Scene {
       // its original proportions and the cell-centred planting position.
       const displayHeight = 88 * (2 / 3);
       const displayWidth = displayHeight * (frame.realWidth / frame.realHeight);
-      const characterY = -displayHeight / 2 + 2;
-      const character = this.add.image(0, characterY, "radish-character")
+      const character = this.add.image(0, -displayHeight / 2 + 2, "radish-character")
         .setDisplaySize(displayWidth, displayHeight);
       plant.add(character);
-
-      // A cropped duplicate isolates the upper foliage so it can react to
-      // each thorn launch without shaking the radish body.
-      const upperLeaves = this.add.image(0, characterY, "radish-character")
-        .setDisplaySize(displayWidth, displayHeight)
-        .setOrigin(0.5, 0.82)
-        .setCrop(0, 0, frame.realWidth, Math.round(frame.realHeight * 0.43));
-      plant.add(upperLeaves);
-      plant.upperLeaves = upperLeaves;
     } else {
       // Keep a lightweight fallback if the uploaded character image cannot load.
       const g = this.add.graphics();
@@ -1195,24 +1185,6 @@ export default class BattleScene extends Scene {
         .sort((a, b) => a.localX - b.localX)[0];
       if (!target) continue;
       this.fireThorn(plant, target);
-      if (plant.upperLeaves && plant.upperLeaves.active) {
-        this.tweens.killTweensOf(plant.upperLeaves);
-        plant.upperLeaves.setAngle(PhaserMath.Between(-3, 3));
-        this.tweens.add({
-          targets: plant.upperLeaves,
-          angle: { from: plant.upperLeaves.angle, to: plant.upperLeaves.angle + PhaserMath.Between(11, 16) },
-          scaleX: { from: 1, to: 1.055 },
-          duration: 115,
-          ease: "Sine.easeOut",
-          yoyo: true,
-          hold: 35,
-          onComplete: () => {
-            if (plant.upperLeaves && plant.upperLeaves.active) {
-              plant.upperLeaves.setAngle(0).setScale(1);
-            }
-          }
-        });
-      }
       plant.cooldown = RADISH.cooldown;
     }
   }
