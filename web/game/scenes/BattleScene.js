@@ -4,9 +4,10 @@ import {
   PHASE_ONE_WAVE_SIZES,
   PHASE_ONE_TOTAL_MONSTERS,
   INITIAL_ENERGY,
-  MAX_ENERGY,
-  MONSTER_KILL_ENERGY_REWARD,
+  MONSTER_KILL_COIN_REWARD,
   MUSHROOM_PICKUP_TTL_MS,
+  loadSavedCoins,
+  saveCoins,
   RADISH_CONFIG,
   MUSHROOM_CONFIG,
   collectEnergy,
@@ -71,6 +72,14 @@ export default class BattleScene extends Scene {
   create() {
     this.isPaused = false;
     this.energy = INITIAL_ENERGY;
+    let savedCoins = 0;
+    try {
+      savedCoins = loadSavedCoins(window.localStorage);
+    } catch {
+      // The battle remains playable when browser storage is unavailable.
+    }
+    this.coins = savedCoins;
+    this.registry.set("coins", this.coins);
     this.houseHealth = 100;
     this.wave = 1;
     this.totalWaves = PHASE_ONE_WAVE_SIZES.length;
@@ -2120,7 +2129,13 @@ export default class BattleScene extends Scene {
       this.tweens.killTweensOf(monster.view);
       monster.view.destroy(true);
     }
-    this.energy = Math.min(MAX_ENERGY, this.energy + MONSTER_KILL_ENERGY_REWARD);
+    this.coins += MONSTER_KILL_COIN_REWARD;
+    this.registry.set("coins", this.coins);
+    try {
+      saveCoins(window.localStorage, this.coins);
+    } catch {
+      // A blocked storage API must never interrupt combat or reward handling.
+    }
     this.totalDefeatedMonsters += 1;
     this.waveDefeatedMonsters += 1;
   }
@@ -2285,7 +2300,8 @@ export default class BattleScene extends Scene {
         this.totalPlantsPlanted + " plants planted",
         "Time: " + minutes + ":" + seconds,
         "Energy collected: " + this.energyCollected,
-        "Energy remaining: " + this.energy
+        "Energy remaining: " + this.energy,
+        "Coins: " + this.coins
       ].join("\n");
       this.add.text(560, 330, summary, {
         fontFamily: "Georgia", fontSize: "19px", color: "#fff0c8",
@@ -2321,6 +2337,7 @@ export default class BattleScene extends Scene {
       this.totalDefeatedMonsters + " monsters defeated",
       this.totalPlantsPlanted + " plants planted",
       "Energy collected: " + this.energyCollected,
+      "Coins: " + this.coins,
       "Time survived: " + minutes + ":" + seconds
     ].join("\n");
     this.add.text(560, 355, summary, {
@@ -2358,7 +2375,7 @@ export default class BattleScene extends Scene {
 
   refreshHud() {
     this.hudText.setText(
-      "ENERGY  " + this.energy + "     HOME  " + this.houseHealth + "%     RADISHES  " +
+      "ENERGY  " + this.energy + "     COINS  " + this.coins + "     HOME  " + this.houseHealth + "%     RADISHES  " +
       this.livingPlantCount() + "     KILLS  " + this.totalDefeatedMonsters + "/" + PHASE_ONE_TOTAL_MONSTERS
     );
     this.waveText.setText(

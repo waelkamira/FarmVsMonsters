@@ -8,8 +8,12 @@ import {
   PHASE_ONE_TOTAL_MONSTERS,
   INITIAL_ENERGY,
   MAX_ENERGY,
-  MONSTER_KILL_ENERGY_REWARD,
+  MONSTER_KILL_COIN_REWARD,
   MUSHROOM_PICKUP_TTL_MS,
+  PROGRESSION_STORAGE_KEY,
+  normalizeCoins,
+  loadSavedCoins,
+  saveCoins,
   RADISH_CONFIG,
   MUSHROOM_CONFIG,
   collectEnergy,
@@ -23,6 +27,7 @@ const scene = readFileSync(resolve(here, "../game/scenes/BattleScene.js"), "utf8
 const pauseScene = readFileSync(resolve(here, "../game/scenes/PauseScene.js"), "utf8");
 const guide = readFileSync(resolve(here, "../app/how-to-play/page.js"), "utf8");
 const gamePage = readFileSync(resolve(here, "../app/game/page.js"), "utf8");
+const homePage = readFileSync(resolve(here, "../app/page.js"), "utf8");
 const roadmap = readFileSync(resolve(here, "../../Documentation/GAME_DEVELOPMENT_ROADMAP.md"), "utf8");
 
 test("five Phase 1 waves are strictly increasing and total exactly 100", () => {
@@ -34,7 +39,7 @@ test("five Phase 1 waves are strictly increasing and total exactly 100", () => {
 test("initial energy, plant costs, HP and mushroom production are centralized", () => {
   assert.equal(INITIAL_ENERGY, 150);
   assert.equal(MAX_ENERGY, 300);
-  assert.equal(MONSTER_KILL_ENERGY_REWARD, 8);
+  assert.equal(MONSTER_KILL_COIN_REWARD, 8);
   assert.deepEqual(
     { cost: RADISH_CONFIG.cost, hp: RADISH_CONFIG.hp },
     { cost: 35, hp: 160 }
@@ -44,6 +49,58 @@ test("initial energy, plant costs, HP and mushroom production are centralized", 
     { cost: 50, hp: 85, energy: 15, interval: 12_000 }
   );
   assert.equal(MUSHROOM_PICKUP_TTL_MS, 12_000);
+});
+
+
+test("coin progression persists safely across browser sessions", () => {
+  const values = new Map();
+  const storage = {
+    getItem(key) { return values.has(key) ? values.get(key) : null; },
+    setItem(key, value) { values.set(key, value); }
+  };
+  assert.equal(loadSavedCoins(storage), 0);
+  assert.equal(saveCoins(storage, 24), true);
+  assert.equal(values.has(PROGRESSION_STORAGE_KEY), true);
+  assert.equal(loadSavedCoins(storage), 24);
+  assert.equal(normalizeCoins(-1), 0);
+  assert.equal(normalizeCoins(1.5), 0);
+  assert.equal(normalizeCoins(Number.MAX_SAFE_INTEGER + 1), 0);
+});
+
+test("coin progression rejects malformed, outdated, and inaccessible storage", () => {
+  const malformed = { getItem() { return "{not-json"; } };
+  const outdated = { getItem() { return JSON.stringify({ version: 0, coins: 900 }); } };
+  const inaccessible = { getItem() { throw new Error("blocked"); }, setItem() { throw new Error("blocked"); } };
+  assert.equal(loadSavedCoins(malformed), 0);
+  assert.equal(loadSavedCoins(outdated), 0);
+  assert.equal(loadSavedCoins(inaccessible), 0);
+  assert.equal(saveCoins(inaccessible, 8), false);
+  assert.equal(saveCoins(null, 8), false);
+});
+
+
+test("plant purchase deducts the exact approved price and unlocks once", () => {
+  const result = purchasePlant({ coins: 80, plantId: "pea-shooter", price: 60, unlockedPlantIds: ["radish", "mushroom"] });
+  assert.deepEqual(result, {
+    ok: true,
+    reason: "purchased",
+    coins: 20,
+    unlockedPlantIds: ["radish", "mushroom", "pea-shooter"]
+  });
+});
+
+test("plant purchase rejects missing prices, invalid values, duplicates, and insufficient funds without charging", () => {
+  const base = { coins: 40, plantId: "ice-bloom", unlockedPlantIds: ["radish"] };
+  assert.equal(purchasePlant(base).reason, "invalid-price");
+  assert.equal(purchasePlant({ ...base, price: 0 }).reason, "invalid-price");
+  assert.equal(purchasePlant({ ...base, price: 1.5 }).reason, "invalid-price");
+  assert.equal(purchasePlant({ ...base, price: 50 }).reason, "insufficient-coins");
+  assert.equal(purchasePlant({ ...base, price: 20, unlockedPlantIds: ["radish", "ice-bloom"] }).reason, "already-unlocked");
+  assert.equal(purchasePlant({ ...base, plantId: "  ", price: 20 }).reason, "invalid-plant");
+  assert.equal(purchasePlant({ ...base, unlockedPlantIds: null, price: 20 }).reason, "invalid-unlocks");
+  const unchanged = purchasePlant({ ...base, price: 50 });
+  assert.equal(unchanged.coins, 40);
+  assert.deepEqual(unchanged.unlockedPlantIds, ["radish"]);
 });
 
 test("energy collection never exceeds 300 and never grants negative energy", () => {
@@ -132,7 +189,8 @@ test("monster defeat is guarded against duplicate rewards", () => {
   assert.match(scene, /if \(monster\.hp > 0 \|\| !monster\.alive\) return/);
   assert.match(scene, /monster\.alive = false/);
   assert.match(scene, /this\.totalDefeatedMonsters \+= 1/);
-  assert.match(scene, /this\.energy = Math\.min\(MAX_ENERGY, this\.energy \+ MONSTER_KILL_ENERGY_REWARD\)/);
+  assert.match(scene, /this\.coins \+= MONSTER_KILL_COIN_REWARD/);
+  assert.match(scene, /this\.registry\.set\('coins', this\.coins\)/);
 });
 
 test("a wave clears only after all scheduled monsters spawn and all living monsters die", () => {
@@ -170,6 +228,11 @@ test("pause scene resumes, restarts and removes its keyboard listeners safely", 
   assert.match(pauseScene, /this\.input\.keyboard\.off\("keydown-ESC", this\.resumeBattle, this\)/);
   assert.match(pauseScene, /this\.input\.keyboard\.off\("keydown-P", this\.resumeBattle, this\)/);
   assert.match(scene, /this\.events\.once\("shutdown", \(\) => this\.input\.keyboard\.off\("keydown-P", this\.pauseGame, this\)\)/);
+});
+
+test("home menu reads the saved coin wallet", () => {
+  assert.match(homePage, /loadSavedCoins\(window\.localStorage\)/);
+  assert.match(homePage, /Saved player balance/);
 });
 
 test("player guidance and roadmap match the current Phase 1 balance", () => {
