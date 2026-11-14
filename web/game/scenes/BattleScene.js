@@ -395,10 +395,14 @@ export default class BattleScene extends Scene {
     // live in one compact popover anchored to this button.
     this.audioMenuBounds = { left: 860, right: 1120, top: 66, bottom: 258 };
     this.audioMenuOpen = false;
+    this.audioMenuDismissedOnPointerDown = false;
 
     this.audioMenu = this.add.container(990, 162).setDepth(70).setVisible(false);
+    // Make the menu surface consume clicks so its empty areas never behave
+    // like clicks on the battlefield underneath it.
     const panel = this.add.rectangle(0, 0, 250, 184, 0xf4dfb3, 0.98)
-      .setStrokeStyle(3, 0x65452f);
+      .setStrokeStyle(3, 0x65452f)
+      .setInteractive();
     const heading = this.add.text(0, -72, "AUDIO SETTINGS", {
       fontFamily: "Arial", fontSize: "14px", color: "#563a25", fontStyle: "bold"
     }).setOrigin(0.5);
@@ -457,7 +461,12 @@ export default class BattleScene extends Scene {
         pointer.y <= this.audioMenuBounds.bottom;
       const inButton = pointer.x >= 1015 && pointer.x <= 1065 &&
         pointer.y >= 9 && pointer.y <= 59;
-      if (!inMenu && !inButton) this.closeAudioMenu();
+      if (!inMenu && !inButton) {
+        // The same outside click must only dismiss the menu; it must not
+        // also trigger planting or another battlefield action.
+        this.audioMenuDismissedOnPointerDown = true;
+        this.closeAudioMenu();
+      }
     });
 
     if (this.musicEnabled) this.startBackgroundMusic();
@@ -679,6 +688,10 @@ export default class BattleScene extends Scene {
     });
     this.input.on("pointerdown", (pointer) => {
       this.resumeGameAudio();
+      if (this.audioMenuOpen || this.audioMenuDismissedOnPointerDown) {
+        this.audioMenuDismissedOnPointerDown = false;
+        return;
+      }
       if (this.gameOver) return;
       const { col, row } = this.worldToGrid(pointer.x, pointer.y);
       if (row >= 0 && row < LANES && col >= 0 && col < COLUMNS) this.requestPlant(col, row);
