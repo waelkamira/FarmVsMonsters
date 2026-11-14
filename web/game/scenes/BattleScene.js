@@ -33,6 +33,7 @@ export default class BattleScene extends Scene {
     this.load.image("farm-battlefield", "/assets/backgrounds/farm-battlefield.jpeg");
     this.load.image("radish-character", "/assets/plants/radish.png");
     this.load.image("mushroom-character", "/assets/plants/mushroom.png");
+    this.load.image("farmer-sheet-source", "/assets/characters/farmer/farmer-sprite-sheet.png");
     this.load.on("loaderror", (file) => {
       if (file.key === "farm-battlefield") this.backgroundAssetFailed = true;
       if (file.key === "radish-character") this.radishAssetFailed = true;
@@ -450,6 +451,15 @@ export default class BattleScene extends Scene {
 
   createCaveman() {
     this.caveman = this.add.container(220, this.laneYs[2]).setDepth(10 + this.laneYs[2] / 1000);
+
+    if (this.textures.exists("farmer-sheet-source")) {
+      this.createFarmerAnimations();
+      this.cavemanVisual = this.add.sprite(0, 0, "farmer-character", "idle")
+        .setOrigin(0.5, 0.82)
+        .setScale(0.34);
+      this.caveman.add(this.cavemanVisual);
+      this.cavemanVisual.play("farmer-idle");
+    } else {
     const body = this.add.graphics();
 
     // A recognizable stone-age villager: shaggy hide tunic, bone details,
@@ -495,9 +505,82 @@ export default class BattleScene extends Scene {
     body.lineStyle(2, 0x4a493d, 1);
     body.lineBetween(40, -35, 49, -31);
     this.caveman.add(body);
+    }
 
     this.cavemanShadow = this.add.ellipse(220, this.laneYs[2] + 34, 48, 13, 0x21170f, 0.3)
       .setDepth(19);
+  }
+
+  createFarmerAnimations() {
+    if (this.textures.exists("farmer-character")) return;
+    const source = this.textures.get("farmer-sheet-source").getSourceImage();
+    const canvasTexture = this.textures.createCanvas("farmer-character", 750, 1000);
+    const context = canvasTexture.context;
+    context.drawImage(source, 0, 0, 750, 1000);
+
+    // Remove the near-white paper background while retaining the dark ink
+    // outlines and the soft antialiasing around the farmer.
+    const pixels = context.getImageData(0, 0, 750, 1000);
+    const data = pixels.data;
+    for (let i = 0; i < data.length; i += 4) {
+      const r = data[i], g = data[i + 1], b = data[i + 2];
+      const minimum = Math.min(r, g, b);
+      const spread = Math.max(r, g, b) - minimum;
+      if (minimum > 246 && spread < 12) data[i + 3] = 0;
+      else if (minimum > 224 && spread < 18) {
+        data[i + 3] = Math.round(data[i + 3] * (246 - minimum) / 22);
+      }
+    }
+    context.putImageData(pixels, 0, 0);
+    canvasTexture.refresh();
+
+    // Individual hand-fitted regions: the artwork is arranged in three
+    // visual rows, but its character silhouettes are not equal-sized cells.
+    const regions = {
+      "run-0": [0, 0, 270, 330],
+      "run-1": [275, 0, 245, 330],
+      "run-2": [520, 0, 230, 330],
+      "run-3": [0, 330, 275, 335],
+      "run-4": [275, 330, 245, 335],
+      "run-5": [520, 330, 230, 335],
+      attack: [0, 665, 275, 335],
+      idle: [270, 650, 255, 350],
+      hit: [475, 665, 275, 335]
+    };
+    Object.entries(regions).forEach(([name, [x, y, width, height]]) => {
+      canvasTexture.add(name, 0, x, y, width, height);
+    });
+
+    this.anims.create({
+      key: "farmer-run",
+      frames: Array.from({ length: 6 }, (_, index) => ({ key: "farmer-character", frame: "run-" + index })),
+      frameRate: 9,
+      repeat: -1
+    });
+    this.anims.create({
+      key: "farmer-idle",
+      frames: [{ key: "farmer-character", frame: "idle" }],
+      frameRate: 1,
+      repeat: -1
+    });
+    this.anims.create({
+      key: "farmer-attack",
+      frames: [{ key: "farmer-character", frame: "attack" }],
+      frameRate: 1,
+      repeat: 0
+    });
+    this.anims.create({
+      key: "farmer-hit",
+      frames: [{ key: "farmer-character", frame: "hit" }],
+      frameRate: 1,
+      repeat: 0
+    });
+  }
+
+  setFarmerAnimation(key) {
+    if (!this.cavemanVisual || !this.cavemanVisual.active) return;
+    if (this.cavemanVisual.anims.currentAnim?.key === key && this.cavemanVisual.anims.isPlaying) return;
+    this.cavemanVisual.play(key);
   }
 
   readAudioPreference(key, fallback) {
@@ -1001,6 +1084,7 @@ export default class BattleScene extends Scene {
     }
     this.updatePlantingMovement(dt);
     this.updateReturnMovement(dt);
+    this.setFarmerAnimation(this.plantingTarget || this.returnTarget || dx !== 0 || dy !== 0 ? "farmer-run" : "farmer-idle");
     if (Input.Keyboard.JustDown(this.keys.space)) {
       if (this.livingPlantCount() > 0) this.setMessage("The radishes are alive and defending. The caveman cannot fight yet.");
       else if (this.hasPlantedDefender) this.clubAttack();
@@ -1765,6 +1849,8 @@ export default class BattleScene extends Scene {
     if (!this.emergencyMode || this.livingPlantCount() > 0) return;
     const target = this.monsters.filter((m) => m.alive && m.row === this.nearestLane(this.caveman.y) && Math.abs(m.x - this.caveman.x) <= 112)
       .sort((a, b) => Math.abs(a.x - this.caveman.x) - Math.abs(b.x - this.caveman.x))[0];
+    this.setFarmerAnimation("farmer-attack");
+    if (this.cavemanVisual) this.cavemanVisual.once("animationcomplete", () => this.setFarmerAnimation("farmer-idle"));
     this.tweens.add({ targets: this.caveman, angle: this.facing * 22, duration: 100, yoyo: true });
     if (target) {
       this.applyMonsterDamage(
