@@ -64,7 +64,11 @@ BATTLE
 
 - **Player coin wallet:** monster kills award 8 Coins. The browser build stores the validated wallet in versioned local storage (`farmVsMonsters.progression.v1`) so it survives page reloads and browser restarts. If storage is blocked or corrupt, battle remains playable and the wallet safely falls back to zero. This is local-device progress only; cloud/account synchronization is not implemented.
 
-### Currency transaction groundwork\n\n- A pure `purchasePlant` rule now validates a plant identifier and an explicitly supplied positive integer price, rejects duplicate unlocks and insufficient balances, and returns the exact new balance/unlock list without mutating its inputs. No plant prices or additional roster entries are assumed. The shop UI and persistent unlock inventory remain pending the approved plant roster and prices.\n\n## Phase 1 — Complete playable vertical slice
+### Currency transaction groundwork\n\n- A pure `purchasePlant` rule now validates a plant identifier and an explicitly supplied positive integer price, rejects duplicate unlocks and insufficient balances, and returns the exact new balance/unlock list without mutating its inputs. No plant prices or additional roster entries are assumed. The shop UI and persistent unlock inventory remain pending the approved plant roster and prices.\n\n### Farmer sprite-sheet processing
+- A gutter-aware extraction utility is available at `web/scripts/extract-farmer-frames.py`. It detects separated frames, writes individual 512×512 transparent PNGs, aligns the foot baseline, and produces a contact sheet plus JSON metadata without modifying the source.
+- The utility and its regression tests are committed, but the revised source sheets have not yet been processed or visually approved. Do not replace runtime assets until each contact sheet has been reviewed.
+
+## Phase 1 — Complete playable vertical slice
 
 **Purpose:** prove one satisfying, complete game loop with one defender: the Radish, supported by the resource-only Energy Mushroom. Do not add a second defensive plant in this phase.
 
