@@ -49,7 +49,12 @@ export default class BattleScene extends Scene {
     this.load.spritesheet("farmer-walk", "/assets/characters/farmer/farmer-walk.png", { frameWidth: 270, frameHeight: 360 });
     this.load.spritesheet("farmer-jump", "/assets/characters/farmer/farmer-jump.png", { frameWidth: 216, frameHeight: 720 });
     this.load.spritesheet("farmer-idle", "/assets/characters/farmer/farmer-idle.png", { frameWidth: 540, frameHeight: 360 });
-    this.load.spritesheet("farmer-plant", "/assets/characters/farmer/farmer-plant.png", { frameWidth: 180, frameHeight: 360 });
+    this.load.spritesheet("farmer-plant", "/assets/characters/farmer/farmer-plant.png", {
+      frameWidth: 180,
+      frameHeight: 360,
+      margin: 0,
+      spacing: 0
+    });
     this.load.spritesheet("farmer-collect", "/assets/characters/farmer/farmer-collect.png", { frameWidth: 180, frameHeight: 360 });
     this.load.spritesheet("farmer-uproot", "/assets/characters/farmer/farmer-uproot.png", { frameWidth: 180, frameHeight: 360 });
     this.load.spritesheet("farmer-attack", "/assets/characters/farmer/farmer-attack.png", { frameWidth: 180, frameHeight: 360 });
