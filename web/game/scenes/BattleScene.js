@@ -1985,6 +1985,9 @@ export default class BattleScene extends Scene {
         // A skitter must land before it can stop to bite a defensive plant.
         monster.isJumping = false;
         monster.jumpElapsed = 0;
+        // If the skitter reaches a plant mid-hop, settle it onto the lane
+        // before entering its stationary bite state.
+        monster.view.setPosition(monster.x, monster.y);
         if (monster.attackCooldown <= 0) {
           blocker.hp -= monster.plantDamage; monster.attackCooldown = monster.attackInterval;
           this.playMonsterBiteSound();
