@@ -413,11 +413,9 @@ export default class BattleScene extends Scene {
       stroke: "#24170f", strokeThickness: 2
     }).setOrigin(0.5, 1).setDepth(42);
 
-    // Compact seed tokens sit just below the status strip, not over the field.
+    // Phase 1 deliberately exposes only the Radish defender.
+    // The energy-producing Mushroom is reserved for Phase 2.
     this.radishCard = this.createPlantCard(112, "RADISH", "35", "radish", null, "radish-character");
-    this.mushroomCard = this.createPlantCard(
-      254, "MUSHROOM", "50", "mushroom", null, "mushroom-character"
-    );
   }
 
   createPlantCard(x, title, costLabel, type, drawIcon, imageKey = null) {
@@ -457,11 +455,10 @@ export default class BattleScene extends Scene {
     });
     panel.on("pointerdown", () => {
       if (this.gameOver) return;
-      this.selectedPlant = type;
-      this.radishCard.setAlpha(type === "radish" ? 1 : 0.82);
-      this.mushroomCard.setAlpha(type === "mushroom" ? 1 : 0.82);
-      const label = type === "radish" ? "Radish" : "Energy mushroom";
-      this.setMessage(label + " chosen. Select an empty soil plot to plant.");
+      if (type !== "radish") return;
+      this.selectedPlant = "radish";
+      this.radishCard.setAlpha(1);
+      this.setMessage("Radish chosen. Select an empty soil plot to plant.");
       this.refreshHud();
     });
     return panel;
@@ -1270,7 +1267,11 @@ export default class BattleScene extends Scene {
       return;
     }
     if (!this.selectedPlant) { this.setMessage("Choose a plant card first."); return; }
-    const plantConfig = this.selectedPlant === "mushroom" ? MUSHROOM : RADISH;
+    if (this.selectedPlant !== "radish") {
+      this.setMessage("Only the Radish defender is available in this phase.");
+      return;
+    }
+    const plantConfig = RADISH;
     if (this.energy < plantConfig.cost) { this.setMessage("Not enough mushrooms energy to plant this."); return; }
     const { x, y } = this.plantingCellCenter(col, row);
     // Store the route in board coordinates, not as a straight screen-space
@@ -1352,7 +1353,11 @@ export default class BattleScene extends Scene {
   }
 
   plantSelected(col, row, type, returnPosition = null) {
-    const config = type === "mushroom" ? MUSHROOM : RADISH;
+    if (type !== "radish") {
+      this.setMessage("Only the Radish defender is available in this phase.");
+      return;
+    }
+    const config = RADISH;
     if (this.energy < config.cost || this.plants.some((p) => p.alive && p.col === col && p.row === row)) {
       this.setMessage("Planting cancelled: this cell is no longer available."); return;
     }
@@ -1360,10 +1365,9 @@ export default class BattleScene extends Scene {
     this.playFarmerAction("farmer-plant");
     const { x, y } = this.plantingCellCenter(col, row);
     const plant = {
-      type, col, row, x, y, hp: config.hp, alive: true,
-      cooldown: type === "radish" ? PhaserMath.Between(250, 650) : 0,
-      productionTimer: type === "mushroom" ? MUSHROOM.productionInterval : 0,
-      view: type === "mushroom" ? this.drawEnergyMushroom(x, y, row) : this.drawRadish(x, y)
+      type: "radish", col, row, x, y, hp: config.hp, alive: true,
+      cooldown: PhaserMath.Between(250, 650),
+      view: this.drawRadish(x, y)
     };
     this.plants.push(plant);
     this.totalPlantsPlanted += 1;
@@ -1388,9 +1392,7 @@ export default class BattleScene extends Scene {
       this.setFarmerAnimation("farmer-run");
     });
 
-    this.setMessage(type === "mushroom"
-      ? "Energy mushroom planted! It will produce mushrooms for planting more defenders."
-      : "Radish planted! The caveman is sprinting back behind the final line.");
+    this.setMessage("Radish planted! The caveman is sprinting back behind the final line.");
   }
 
   drawEnergyMushroom(x, y, row = 2) {
