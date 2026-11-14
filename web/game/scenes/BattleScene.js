@@ -464,12 +464,26 @@ export default class BattleScene extends Scene {
     this.caveman = this.add.container(220, this.laneYs[2]).setDepth(10 + this.laneYs[2] / 1000);
 
     if (this.textures.exists("farmer-idle") && this.createFarmerAnimations()) {
-      // Keep one consistent sprite scale across every farmer state. The previous
-      // per-animation values made the idle pose visibly larger than locomotion
-      // and action poses, causing a size pop whenever the animation changed.
+      // Normalize each sheet against its own frame height so the farmer keeps
+      // the same on-screen body height even though the source sheets differ.
       this.cavemanVisual = this.add.sprite(0, 0, "farmer-idle", 0)
         .setOrigin(0.5, 1)
         .setScale(0.42);
+      const farmerStateScales = {
+        "farmer-idle": 0.42,   // 360px frame
+        "farmer-run": 0.21,    // 720px frame
+        "farmer-walk": 0.42,   // 360px frame
+        "farmer-jump": 0.21,   // 720px frame
+        "farmer-plant": 0.42,  // 360px frame
+        "farmer-uproot": 0.42, // 360px frame
+        "farmer-collect": 0.42,// 360px frame
+        "farmer-attack": 0.42, // 360px frame
+        "farmer-hit": 0.352,   // 430px frame
+        "farmer-death": 0.352  // 430px frame
+      };
+      this.cavemanVisual.on("animationstart", (animation) => {
+        this.cavemanVisual.setScale(farmerStateScales[animation.key] || 0.42);
+      });
       this.caveman.add(this.cavemanVisual);
       this.cavemanVisual.play("farmer-idle");
     } else {
@@ -526,7 +540,7 @@ export default class BattleScene extends Scene {
 
   createFarmerAnimations() {
     const definitions = [
-      ["farmer-idle", "farmer-idle", 4, 3, -1],
+      ["farmer-idle", "farmer-idle", 4, 1.5, -1],
       ["farmer-run", "farmer-run", 6, 8, -1],
       ["farmer-walk", "farmer-walk", 8, 6, -1],
       ["farmer-jump", "farmer-jump", 5, 6, 0],
@@ -578,7 +592,11 @@ export default class BattleScene extends Scene {
       if (!this.cavemanVisual || !this.cavemanVisual.active) return;
       // Resume the correct locomotion state after an action. Planting and
       // uprooting can finish while the farmer is already sprinting home.
-      this.setFarmerAnimation(this.farmerWantsToRun ? "farmer-run" : "farmer-idle");
+      this.setFarmerAnimation(
+      this.plantingTarget
+        ? "farmer-walk"
+        : (this.farmerWantsToRun ? "farmer-run" : "farmer-idle")
+    );
     });
   }
 
@@ -1106,7 +1124,7 @@ export default class BattleScene extends Scene {
     if (this.energy < plantConfig.cost) { this.setMessage("Not enough mushrooms energy to plant this."); return; }
     const { x, y } = this.plantingCellCenter(col, row);
     this.plantingTarget = { col, row, x, y, type: this.selectedPlant };
-    this.setFarmerAnimation("farmer-run");
+    this.setFarmerAnimation("farmer-walk");
     this.facing = x >= this.caveman.x ? 1 : -1;
     this.caveman.scaleX = this.facing;
     this.setMessage("The caveman is walking to the selected soil cell...");
@@ -1119,7 +1137,7 @@ export default class BattleScene extends Scene {
     const dy = target.y - this.caveman.y;
     const distance = Math.hypot(dx, dy);
     if (distance > 7) {
-      const step = Math.min(distance, 360 * dt);
+      const step = Math.min(distance, 150 * dt);
       this.caveman.x += dx / distance * step;
       this.caveman.y += dy / distance * step;
       if (dx !== 0) { this.facing = Math.sign(dx); this.caveman.scaleX = this.facing; }
