@@ -1220,6 +1220,9 @@ export default class BattleScene extends Scene {
     }
     this.updatePlants(delta);
     this.updateMonsters(dt, delta);
+    // A farmhouse breach can end the run inside updateMonsters; stop this
+    // frame immediately so projectiles, wave logic, and HUD do not advance.
+    if (this.gameOver) return;
     this.updateDepthSorting();
     this.updateProjectiles(dt);
     this.checkWaveProgress();
@@ -1940,7 +1943,7 @@ export default class BattleScene extends Scene {
     for (const monster of this.monsters) {
       if (!monster.alive) continue;
       monster.attackCooldown -= delta;
-      const blocker = this.plants.filter((p) => p.alive && p.row === monster.row && this.worldToLane(p).localX < monster.localX)
+      const blocker = this.plants.filter((p) => p.alive && p.type === "radish" && p.row === monster.row && this.worldToLane(p).localX < monster.localX)
         .sort((a, b) => this.worldToLane(b).localX - this.worldToLane(a).localX)[0];
       const blockerLocalX = blocker ? this.worldToLane(blocker).localX : -Infinity;
       const withinBiteRange = Boolean(blocker && monster.localX - blockerLocalX <= 43);
