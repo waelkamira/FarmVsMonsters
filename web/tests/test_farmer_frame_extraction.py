@@ -11,13 +11,13 @@ SPEC.loader.exec_module(EXTRACTOR)
 
 class FarmerFrameExtractionTests(unittest.TestCase):
     def make_guttered_sheet(self):
-        image = Image.new("RGBA", (50, 50), (0, 0, 0, 0))
+        image = Image.new("RGBA", (54, 54), (0, 0, 0, 0))
         draw = ImageDraw.Draw(image)
-        # Four separate sprites, with fully transparent 4px gutters.
+        # Four separate sprites, with fully transparent 8px gutters.
         draw.rectangle((3, 3, 15, 17), fill=(220, 90, 50, 255))
-        draw.rectangle((22, 5, 43, 16), fill=(50, 180, 90, 255))
-        draw.rectangle((5, 25, 16, 44), fill=(70, 100, 220, 255))
-        draw.rectangle((25, 27, 40, 43), fill=(220, 180, 40, 255))
+        draw.rectangle((24, 5, 45, 16), fill=(50, 180, 90, 255))
+        draw.rectangle((5, 27, 16, 46), fill=(70, 100, 220, 255))
+        draw.rectangle((27, 29, 42, 45), fill=(220, 180, 40, 255))
         return image
 
     def test_detects_gutter_separated_two_by_two_frames(self):
