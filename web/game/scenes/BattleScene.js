@@ -415,7 +415,7 @@ export default class BattleScene extends Scene {
   }
 
   createCaveman() {
-    this.caveman = this.add.container(220, this.laneYs[2]).setDepth(20);
+    this.caveman = this.add.container(220, this.laneYs[2]).setDepth(10 + this.laneYs[2] / 1000);
     const body = this.add.graphics();
 
     // A recognizable stone-age villager: shaggy hide tunic, bone details,
@@ -915,11 +915,30 @@ export default class BattleScene extends Scene {
     }
     this.updatePlants(delta);
     this.updateMonsters(dt, delta);
+    this.updateDepthSorting();
     this.updateProjectiles(dt);
     this.checkWaveProgress();
     this.cavemanLabel.setPosition(this.caveman.x, this.caveman.y + 49);
     if (this.cavemanShadow) this.cavemanShadow.setPosition(this.caveman.x, this.caveman.y + 34);
     this.refreshHud();
+  }
+
+  // Sort world characters by their ground position: lower screen Y is
+  // farther away, while larger screen Y must render in front.
+  updateDepthSorting() {
+    const depthForY = (y) => 10 + y / 1000;
+    for (const plant of this.plants) {
+      if (plant.alive && plant.view && plant.view.active) {
+        plant.view.setDepth(depthForY(plant.y + 2));
+      }
+    }
+    for (const monster of this.monsters) {
+      if (!monster.alive || !monster.view || !monster.view.active) continue;
+      monster.view.setDepth(depthForY(monster.y + 30 * monster.view.scaleY));
+    }
+    if (this.caveman && this.caveman.active) {
+      this.caveman.setDepth(depthForY(this.caveman.y + 40));
+    }
   }
 
   handleControls(dt) {
@@ -1034,7 +1053,7 @@ export default class BattleScene extends Scene {
   }
 
   drawEnergyMushroom(x, y) {
-    const plant = this.add.container(x, y).setDepth(11);
+    const plant = this.add.container(x, y).setDepth(10 + y / 1000);
     const g = this.add.graphics();
     g.fillStyle(0xf0d7a2, 1);
     g.fillRoundedRect(-9, -28, 18, 29, 7);
@@ -1303,7 +1322,7 @@ export default class BattleScene extends Scene {
     const row = PhaserMath.Between(0, LANES - 1);
     const hp = 65 + Math.floor(this.wave * 4);
     const spawn = this.lanePoint(SPAWN_LOCAL_X, row);
-    const view = this.add.container(spawn.x, spawn.y);
+    const view = this.add.container(spawn.x, spawn.y).setDepth(10 + spawn.y / 1000);
     // Perspective lanes are closer together near the horizon. Scale each
     // monster to its lane spacing so creatures never overlap adjacent lanes.
     const laneGap = row < LANES - 1
