@@ -97,6 +97,7 @@ test("plant purchase rejects missing prices, invalid values, duplicates, and ins
   assert.equal(purchasePlant({ ...base, price: 50 }).reason, "insufficient-coins");
   assert.equal(purchasePlant({ ...base, price: 20, unlockedPlantIds: ["radish", "ice-bloom"] }).reason, "already-unlocked");
   assert.equal(purchasePlant({ ...base, plantId: "  ", price: 20 }).reason, "invalid-plant");
+  assert.equal(purchasePlant({ ...base, unlockedPlantIds: null, price: 20 }).reason, "invalid-unlocks");
   const unchanged = purchasePlant({ ...base, price: 50 });
   assert.equal(unchanged.coins, 40);
   assert.deepEqual(unchanged.unlockedPlantIds, ["radish"]);
