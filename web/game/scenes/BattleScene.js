@@ -469,17 +469,21 @@ export default class BattleScene extends Scene {
       this.cavemanVisual = this.add.sprite(0, 0, "farmer-idle", 0)
         .setOrigin(0.5, 1)
         .setScale(0.42);
+      // Every farmer animation is normalized to the same on-screen body
+      // height. The run/jump sheets have 720px-tall transparent frames, but
+      // the artwork itself is not twice as tall; halving their scale made the
+      // farmer visibly shrink as soon as he started running after planting.
       const farmerStateScales = {
-        "farmer-idle": 0.42,   // 360px frame
-        "farmer-run": 0.21,    // 720px frame
-        "farmer-walk": 0.42,   // 360px frame
-        "farmer-jump": 0.21,   // 720px frame
-        "farmer-plant": 0.42,  // 360px frame
-        "farmer-uproot": 0.42, // 360px frame
-        "farmer-collect": 0.42,// 360px frame
-        "farmer-attack": 0.42, // 360px frame
-        "farmer-hit": 0.352,   // 430px frame
-        "farmer-death": 0.352  // 430px frame
+        "farmer-idle": 0.42,
+        "farmer-run": 0.42,
+        "farmer-walk": 0.42,
+        "farmer-jump": 0.42,
+        "farmer-plant": 0.42,
+        "farmer-uproot": 0.42,
+        "farmer-collect": 0.42,
+        "farmer-attack": 0.42,
+        "farmer-hit": 0.42,
+        "farmer-death": 0.42
       };
       this.cavemanVisual.on("animationstart", (animation) => {
         this.cavemanVisual.setScale(farmerStateScales[animation.key] || 0.42);
