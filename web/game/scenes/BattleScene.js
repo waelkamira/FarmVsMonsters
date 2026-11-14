@@ -333,48 +333,103 @@ export default class BattleScene extends Scene {
   }
 
   createHud() {
-    this.add.rectangle(560, 34, 1080, 56, 0x263c2b, 0.92).setStrokeStyle(2, 0xe4d5a5);
-    this.hudText = this.add.text(28, 18, "", { fontFamily: "Arial", fontSize: "17px", color: "#fff7df", fontStyle: "bold" });
-    this.waveText = this.add.text(925, 18, "", { fontFamily: "Arial", fontSize: "17px", color: "#fff7df", fontStyle: "bold" }).setOrigin(1, 0);
-    this.messageText = this.add.text(560, 645, "", {
-      fontFamily: "Arial", fontSize: "16px", color: "#fff7df",
-      backgroundColor: "#263c2b", padding: { x: 14, y: 7 }, align: "center"
-    }).setOrigin(0.5, 1);
+    // Primitive timber-and-stone command rail. The playfield and calibrated
+    // planting mesh remain untouched beneath this interface.
+    const wood = this.add.graphics().setDepth(38);
+    wood.fillStyle(0x21170f, 0.42); wood.fillRoundedRect(18, 10, 1084, 83, 13);
+    wood.fillStyle(0x694329, 1); wood.fillRoundedRect(18, 5, 1084, 78, 12);
+    wood.lineStyle(4, 0x382317, 1); wood.strokeRoundedRect(18, 5, 1084, 78, 12);
+    wood.lineStyle(2, 0xb17b45, 0.95); wood.strokeRoundedRect(24, 11, 1072, 66, 9);
+    wood.lineStyle(2, 0x4a2e1c, 0.9);
+    for (let x = 42; x <= 1078; x += 34) {
+      wood.fillStyle(0xd2a66a, 0.8); wood.fillCircle(x, 14, 2.2);
+      wood.fillCircle(x, 74, 2.2);
+    }
+    // Small bone-carved separators.
+    for (const x of [350, 780]) {
+      wood.fillStyle(0xe4d1a3, 1); wood.fillRoundedRect(x, 21, 5, 46, 2);
+      wood.fillCircle(x + 2.5, 20, 4); wood.fillCircle(x + 2.5, 68, 4);
+    }
 
-    this.radishCard = this.createPlantCard(92, "RADISH", "35 energy", "radish", null, "radish-character");
-    this.mushroomCard = this.createPlantCard(242, "MUSHROOM", "50 energy", "mushroom", (g) => {
-      g.fillStyle(0x8b5bba, 1); g.fillEllipse(-43, -5, 28, 23);
-      g.fillStyle(0xf2d9a4, 1); g.fillRoundedRect(-49, 4, 12, 16, 4);
-      g.fillRoundedRect(-39, 4, 12, 16, 4);
-      g.fillStyle(0xfff1d1, 1); g.fillCircle(-49, -8, 3); g.fillCircle(-38, -8, 3);
+    this.add.text(44, 20, "TRIBE SUPPLIES", {
+      fontFamily: "Georgia", fontSize: "11px", color: "#f3d99e", fontStyle: "bold",
+      letterSpacing: 2
+    }).setDepth(41);
+    this.hudText = this.add.text(44, 40, "", {
+      fontFamily: "Georgia", fontSize: "17px", color: "#fff0c8", fontStyle: "bold",
+      stroke: "#382317", strokeThickness: 2
+    }).setDepth(41);
+    this.waveText = this.add.text(748, 31, "", {
+      fontFamily: "Georgia", fontSize: "18px", color: "#ffe2a0", fontStyle: "bold",
+      stroke: "#382317", strokeThickness: 3
+    }).setOrigin(1, 0.5).setDepth(41);
+
+    this.messageText = this.add.text(560, 660, "", {
+      fontFamily: "Georgia", fontSize: "15px", color: "#fff0c8", fontStyle: "bold",
+      backgroundColor: "#49301f", padding: { x: 18, y: 8 }, align: "center",
+      stroke: "#24170f", strokeThickness: 2
+    }).setOrigin(0.5, 1).setDepth(42);
+
+    this.add.text(36, 112, "GROW YOUR DEFENSE", {
+      fontFamily: "Georgia", fontSize: "11px", color: "#f5e1b2",
+      fontStyle: "bold", stroke: "#49301f", strokeThickness: 3
+    }).setDepth(39);
+
+    this.radishCard = this.createPlantCard(132, "RADISH", "35", "radish", null, "radish-character");
+    this.mushroomCard = this.createPlantCard(302, "ENERGY MUSHROOM", "50", "mushroom", (g) => {
+      g.fillStyle(0x8b5bba, 1); g.fillEllipse(-48, -3, 29, 22);
+      g.fillStyle(0xf2d9a4, 1); g.fillRoundedRect(-54, 5, 12, 16, 4);
+      g.fillRoundedRect(-44, 5, 12, 16, 4);
+      g.fillStyle(0xfff1d1, 1); g.fillCircle(-54, -7, 3); g.fillCircle(-43, -7, 3);
     });
   }
 
   createPlantCard(x, title, costLabel, type, drawIcon, imageKey = null) {
-    const card = this.add.container(x, 78).setDepth(40);
-    const panel = this.add.rectangle(0, 0, 138, 58, 0xf4dfb3, 1)
-      .setStrokeStyle(3, 0x65452f).setInteractive({ useHandCursor: true });
+    const card = this.add.container(x, 151).setDepth(45);
+    const shadow = this.add.rectangle(3, 5, 150, 76, 0x1c120c, 0.52).setStrokeStyle(2, 0x24160d);
+    const frame = this.add.rectangle(0, 0, 150, 76, 0x79502e, 1).setStrokeStyle(3, 0x392417);
+    const panel = this.add.rectangle(0, -2, 140, 66, 0xc69b5e, 1)
+      .setStrokeStyle(2, 0xf0d59a).setInteractive({ useHandCursor: true });
+    const inner = this.add.rectangle(0, -2, 132, 58, 0x9a7044, 1).setStrokeStyle(1, 0x5a3922);
+    const studs = this.add.graphics();
+    studs.fillStyle(0xe5c68d, 1);
+    studs.fillCircle(-64, -27, 2.2); studs.fillCircle(64, -27, 2.2);
+    studs.fillCircle(-64, 23, 2.2); studs.fillCircle(64, 23, 2.2);
     let icon;
     if (imageKey && this.textures.exists(imageKey)) {
-      const frame = this.textures.getFrame(imageKey);
-      const iconHeight = 38;
-      const iconWidth = iconHeight * (frame.realWidth / frame.realHeight);
-      icon = this.add.image(-48, 0, imageKey).setDisplaySize(iconWidth, iconHeight);
+      const frameData = this.textures.getFrame(imageKey);
+      const iconHeight = 49;
+      const iconWidth = iconHeight * (frameData.realWidth / frameData.realHeight);
+      icon = this.add.image(-48, -1, imageKey).setDisplaySize(iconWidth, iconHeight);
     } else {
       icon = this.add.graphics();
       if (drawIcon) drawIcon(icon);
     }
-    card.add([panel, icon,
-      this.add.text(-25, -10, title, { fontFamily: "Arial", fontSize: "12px", color: "#563a25", fontStyle: "bold" }),
-      this.add.text(-25, 9, costLabel, { fontFamily: "Arial", fontSize: "11px", color: "#72583c" })
-    ]);
+    const name = this.add.text(-15, -17, title, {
+      fontFamily: "Georgia", fontSize: title.length > 12 ? "9px" : "12px",
+      color: "#fff0c8", fontStyle: "bold", stroke: "#49301d", strokeThickness: 2
+    }).setOrigin(0, 0.5);
+    const cost = this.add.text(-14, 10, costLabel + " STONE", {
+      fontFamily: "Georgia", fontSize: "10px", color: "#ffe4a7", fontStyle: "bold",
+      stroke: "#49301d", strokeThickness: 2
+    }).setOrigin(0, 0.5);
+    card.add([shadow, frame, inner, panel, studs, icon, name, cost]);
+
+    panel.on("pointerover", () => {
+      if (this.selectedPlant !== type) panel.setFillStyle(0xd7b579, 1);
+      card.setY(148);
+    });
+    panel.on("pointerout", () => {
+      if (this.selectedPlant !== type) panel.setFillStyle(0xc69b5e, 1);
+      card.setY(151);
+    });
     panel.on("pointerdown", () => {
       if (this.gameOver) return;
       this.selectedPlant = type;
-      this.radishCard.setFillStyle(type === "radish" ? 0xd9efbd : 0xf4dfb3, 1);
-      this.mushroomCard.setFillStyle(type === "mushroom" ? 0xd9efbd : 0xf4dfb3, 1);
+      this.radishCard.setFillStyle(type === "radish" ? 0xe0c889 : 0xc69b5e, 1);
+      this.mushroomCard.setFillStyle(type === "mushroom" ? 0xe0c889 : 0xc69b5e, 1);
       const label = type === "radish" ? "Radish" : "Energy mushroom";
-      this.setMessage(label + " selected. Click an empty soil cell to plant it.");
+      this.setMessage(label + " chosen. Select an empty soil plot to plant.");
       this.refreshHud();
     });
     return panel;
@@ -449,13 +504,16 @@ export default class BattleScene extends Scene {
     this.audioMenu = this.add.container(990, 183).setDepth(70).setVisible(false);
     // Make the menu surface consume clicks so its empty areas never behave
     // like clicks on the battlefield underneath it.
-    const panel = this.add.rectangle(0, 0, 250, 220, 0xf4dfb3, 0.98)
-      .setStrokeStyle(3, 0x65452f)
+    const panel = this.add.rectangle(0, 0, 250, 220, 0x79502e, 0.99)
+      .setStrokeStyle(5, 0x3a2416)
       .setInteractive();
-    const heading = this.add.text(0, -91, "AUDIO VOLUME", {
-      fontFamily: "Arial", fontSize: "14px", color: "#563a25", fontStyle: "bold"
+    const inset = this.add.rectangle(0, 0, 236, 206, 0xb88950, 1)
+      .setStrokeStyle(2, 0xe5c68e);
+    const heading = this.add.text(0, -91, "TRIBE SOUND", {
+      fontFamily: "Georgia", fontSize: "15px", color: "#fff0c8", fontStyle: "bold",
+      stroke: "#49301d", strokeThickness: 2
     }).setOrigin(0.5);
-    this.audioMenu.add([panel, heading]);
+    this.audioMenu.add([panel, inset, heading]);
 
     this.musicAudioOption = this.createAudioVolumeSlider(-49, "Music", this.musicVolume, (value) => {
       this.musicVolume = value;
@@ -486,7 +544,7 @@ export default class BattleScene extends Scene {
     this.input.on("pointerup", () => { this.activeAudioSlider = null; });
 
     this.audioButton = this.add.container(1040, 34).setDepth(72);
-    const buttonBackground = this.add.circle(0, 0, 21, 0xf4dfb3, 1).setStrokeStyle(2, 0x65452f);
+    const buttonBackground = this.add.circle(0, 0, 23, 0xb88950, 1).setStrokeStyle(4, 0x392417);
     const speaker = this.add.graphics();
     speaker.fillStyle(0x563a25, 1);
     speaker.fillRoundedRect(-11, -6, 7, 12, 2);
@@ -498,8 +556,8 @@ export default class BattleScene extends Scene {
     speaker.strokePath();
     this.audioButton.add([buttonBackground, speaker]);
     buttonBackground.setInteractive({ useHandCursor: true });
-    buttonBackground.on("pointerover", () => buttonBackground.setFillStyle(0xd9efbd, 1));
-    buttonBackground.on("pointerout", () => buttonBackground.setFillStyle(0xf4dfb3, 1));
+    buttonBackground.on("pointerover", () => buttonBackground.setFillStyle(0xe0c889, 1));
+    buttonBackground.on("pointerout", () => buttonBackground.setFillStyle(0xb88950, 1));
     buttonBackground.on("pointerdown", () => {
       if (this.audioMenuOpen) this.closeAudioMenu();
       else this.openAudioMenu();
@@ -527,11 +585,11 @@ export default class BattleScene extends Scene {
   createAudioVolumeSlider(y, title, initialValue, onChange) {
     const container = this.add.container(0, y);
     const label = this.add.text(-101, -10, title, {
-      fontFamily: "Arial", fontSize: "11px", color: "#563a25", fontStyle: "bold"
+      fontFamily: "Georgia", fontSize: "11px", color: "#3d291a", fontStyle: "bold"
     }).setOrigin(0, 0.5);
-    const track = this.add.rectangle(5, 12, 132, 7, 0xb69b72, 1).setInteractive({ useHandCursor: true });
-    const fill = this.add.rectangle(-61, 12, 0, 5, 0x6c9a4d, 1).setOrigin(0, 0.5);
-    const knob = this.add.circle(-61, 12, 7, 0x6c9a4d, 1)
+    const track = this.add.rectangle(5, 12, 132, 8, 0x65452f, 1).setInteractive({ useHandCursor: true });
+    const fill = this.add.rectangle(-61, 12, 0, 5, 0xe2c078, 1).setOrigin(0, 0.5);
+    const knob = this.add.circle(-61, 12, 8, 0xe2c078, 1)
       .setStrokeStyle(2, 0x563a25).setInteractive({ useHandCursor: true });
     const valueText = this.add.text(96, -10, Math.round(initialValue) + "%", {
       fontFamily: "Arial", fontSize: "11px", color: "#563a25", fontStyle: "bold"
@@ -559,7 +617,7 @@ export default class BattleScene extends Scene {
       this.activeAudioSlider = setFromPointer;
       setFromPointer(pointer);
     });
-    track.on("pointerover", () => track.setFillStyle(0xc7ad83, 1));
+    track.on("pointerover", () => track.setFillStyle(0x9a7044, 1));
     setValue(initialValue, false);
     return { container };
   }
@@ -1346,7 +1404,7 @@ export default class BattleScene extends Scene {
     this.add.rectangle(560, 340, 1120, 680, 0x10170f, 0.72).setDepth(60);
     if (won) {
       this.stopBackgroundMusic();
-      this.add.rectangle(560, 340, 520, 150, 0x263c2b, 0.96).setStrokeStyle(3, 0xe4d5a5).setDepth(61);
+      this.add.rectangle(560, 340, 520, 150, 0x79502e, 0.98).setStrokeStyle(6, 0x392417).setDepth(61);
       this.add.text(560, 340, "VICTORY", {
         fontFamily: "Arial", fontSize: "48px", color: "#fff2c8", fontStyle: "bold"
       }).setOrigin(0.5).setDepth(62);
@@ -1377,13 +1435,16 @@ export default class BattleScene extends Scene {
 
   createGameOverButton(x, y, label, color, action) {
     const button = this.add.container(x, y).setDepth(63);
-    const background = this.add.rectangle(0, 0, 184, 54, color, 1)
-      .setStrokeStyle(3, 0x563a25)
+    const shadow = this.add.rectangle(2, 4, 190, 58, 0x21150d, 0.55);
+    const background = this.add.rectangle(0, 0, 190, 58, 0xb88950, 1)
+      .setStrokeStyle(4, 0x392417)
       .setInteractive({ useHandCursor: true });
+    const inset = this.add.rectangle(0, 0, 180, 48, color, 1).setStrokeStyle(1, 0xf0d59a);
     const text = this.add.text(0, 0, label, {
-      fontFamily: "Arial", fontSize: "17px", color: "#34271d", fontStyle: "bold"
+      fontFamily: "Georgia", fontSize: "16px", color: "#392719", fontStyle: "bold",
+      stroke: "#f3d9a4", strokeThickness: 1
     }).setOrigin(0.5);
-    button.add([background, text]);
+    button.add([shadow, background, inset, text]);
     background.on("pointerover", () => background.setScale(1.05));
     background.on("pointerout", () => background.setScale(1));
     background.on("pointerdown", action);
@@ -1393,7 +1454,7 @@ export default class BattleScene extends Scene {
   setMessage(message) { this.messageText.setText(message); }
 
   refreshHud() {
-    this.hudText.setText("MUSHROOMS  " + this.energy + "     HOUSE  " + this.houseHealth + "%     RADISHES  " + this.livingPlantCount());
-    this.waveText.setText("WAVE " + this.wave + (this.emergencyMode ? "  ·  EMERGENCY" : ""));
+    this.hudText.setText("ENERGY  " + this.energy + "     HOME  " + this.houseHealth + "%     RADISHES  " + this.livingPlantCount());
+    this.waveText.setText("RAID " + this.wave + (this.emergencyMode ? "  ·  LAST STAND" : ""));
   }
 }

@@ -9,13 +9,13 @@ export default function GamePage() {
     <main className="game-shell">
       <header className="game-header">
         <a href="/" className="wordmark">Farm <span>Vs</span> Monsters</a>
-        <div className="control-hint">Click RADISH, then click soil: the caveman walks there and plants it · WASD / arrows: move · Space: club only in emergency</div>
+        <div className="control-hint">Choose a carved seed token · Click a soil plot to plant · WASD / arrows to move · SPACE: emergency club</div>
       </header>
-      <section className="game-panel">
+      <section className="game-panel" aria-label="Stone age battle arena">
         <PhaserGame />
       </section>
       <p className="prototype-note">
-        Temporary vector placeholders are used for gameplay validation. Your original hand-drawn sprites and animation sheets will be integrated as the assets are approved.
+        A prehistoric farm-defense battle. Gather mushroom energy, raise living defenders, and keep the tribe's home safe.
       </p>
     </main>
   );

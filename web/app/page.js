@@ -4,14 +4,15 @@ export default function HomePage() {
   return (
     <main className="home-shell">
       <div className="home-card">
-        <p className="eyebrow">2D HAND-DRAWN FARM DEFENSE</p>
+        <p className="eyebrow">A PRIMITIVE 2D FARM DEFENSE ADVENTURE</p>
         <h1>Farm <span>Vs</span> Monsters</h1>
         <p className="home-copy">
-          Plant your defenders, protect the farmhouse, and keep the princess safe.
-          When the last plant falls, the caveman must defend the farm with his club.
+          The tribe's garden is the last wall between the monsters and the cave home.
+          Plant brave defenders, gather mushroom energy, and protect the princess.
+          When the final radish falls, the caveman takes up his wooden club.
         </p>
-        <Link className="primary-link" href="/game">Start the prototype</Link>
-        <p className="home-note">A playable systems prototype. Original character art will replace the temporary shapes.</p>
+        <Link className="primary-link" href="/game">Enter the battlefield</Link>
+        <p className="home-note">A hand-drawn prehistoric world of roots, stone, timber, and wild creatures.</p>
       </div>
     </main>
   );
