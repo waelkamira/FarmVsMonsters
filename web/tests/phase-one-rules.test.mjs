@@ -20,6 +20,7 @@ import {
 
 const here = dirname(fileURLToPath(import.meta.url));
 const scene = readFileSync(resolve(here, "../game/scenes/BattleScene.js"), "utf8");
+const pauseScene = readFileSync(resolve(here, "../game/scenes/PauseScene.js"), "utf8");
 const guide = readFileSync(resolve(here, "../app/how-to-play/page.js"), "utf8");
 const gamePage = readFileSync(resolve(here, "../app/game/page.js"), "utf8");
 const roadmap = readFileSync(resolve(here, "../../Documentation/GAME_DEVELOPMENT_ROADMAP.md"), "utf8");
@@ -131,6 +132,15 @@ test("pause, terminal-state and retry guards remain present", () => {
   assert.match(scene, /if \(this\.gameOver \|\| this\.isPaused \|\| !this\.scene\.isActive\(\)\) return/);
   assert.match(scene, /this\.scene\.restart\(\)/);
   assert.match(scene, /this\.stopBackgroundMusic\(\)/);
+});
+
+test("pause scene resumes, restarts and removes its keyboard listeners safely", () => {
+  assert.match(pauseScene, /this\.scene\.resume\("BattleScene"\)/);
+  assert.match(pauseScene, /battle\.resumeFromPause\(\)/);
+  assert.match(pauseScene, /this\.scene\.start\("BattleScene"\)/);
+  assert.match(pauseScene, /this\.input\.keyboard\.off\("keydown-ESC", this\.resumeBattle, this\)/);
+  assert.match(pauseScene, /this\.input\.keyboard\.off\("keydown-P", this\.resumeBattle, this\)/);
+  assert.match(scene, /this\.events\.once\("shutdown", \(\) => this\.input\.keyboard\.off\("keydown-P", this\.pauseGame, this\)\)/);
 });
 
 test("player guidance and roadmap match the current Phase 1 balance", () => {
