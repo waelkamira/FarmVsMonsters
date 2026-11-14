@@ -11,7 +11,7 @@ const GRID_CENTER_Y = (GRID_NODES[0][0].y + GRID_NODES[LANES][0].y) / 2;
 const CELL_W = GRID_WIDTH / COLUMNS;
 const CELL_H = GRID_HEIGHT / LANES;
 const HOME_LOCAL_X = -300;
-const CAVEMAN_RETURN_SPEED = 2000;
+const CAVEMAN_RETURN_SPEED = 420;
 const SPAWN_LOCAL_X = GRID_WIDTH / 2 + 28;
 const RADISH = { label: "Radish", cost: 35, hp: 110, cooldown: 1450, range: 360 };
 const MUSHROOM = { label: "Energy Mushroom", cost: 50, hp: 85, energy: 25, productionInterval: 8000 };
@@ -464,24 +464,12 @@ export default class BattleScene extends Scene {
     this.caveman = this.add.container(220, this.laneYs[2]).setDepth(10 + this.laneYs[2] / 1000);
 
     if (this.textures.exists("farmer-idle") && this.createFarmerAnimations()) {
+      // Keep one consistent sprite scale across every farmer state. The previous
+      // per-animation values made the idle pose visibly larger than locomotion
+      // and action poses, causing a size pop whenever the animation changed.
       this.cavemanVisual = this.add.sprite(0, 0, "farmer-idle", 0)
         .setOrigin(0.5, 1)
-        .setScale(0.76);
-      this.cavemanVisual.on("animationstart", (animation) => {
-        const farmerScales = {
-          "farmer-idle": 0.76,
-          "farmer-run": 0.42,
-          "farmer-walk": 0.40,
-          "farmer-jump": 0.42,
-          "farmer-plant": 0.42,
-          "farmer-uproot": 0.42,
-          "farmer-attack": 0.42,
-          "farmer-hit": 0.38,
-          "farmer-death": 0.38,
-          "farmer-collect": 0.42
-        };
-        this.cavemanVisual.setScale(farmerScales[animation.key] || 0.42);
-      });
+        .setScale(0.42);
       this.caveman.add(this.cavemanVisual);
       this.cavemanVisual.play("farmer-idle");
     } else {
@@ -538,16 +526,16 @@ export default class BattleScene extends Scene {
 
   createFarmerAnimations() {
     const definitions = [
-      ["farmer-idle", "farmer-idle", 4, 4, -1],
-      ["farmer-run", "farmer-run", 6, 12, -1],
-      ["farmer-walk", "farmer-walk", 8, 8, -1],
-      ["farmer-jump", "farmer-jump", 5, 8, 0],
-      ["farmer-plant", "farmer-plant", 6, 10, 0],
-      ["farmer-uproot", "farmer-uproot", 6, 10, 0],
-      ["farmer-collect", "farmer-collect", 6, 10, 0],
-      ["farmer-attack", "farmer-attack", 6, 12, 0],
-      ["farmer-hit", "farmer-hit", 6, 10, 0],
-      ["farmer-death", "farmer-death", 6, 8, 0]
+      ["farmer-idle", "farmer-idle", 4, 3, -1],
+      ["farmer-run", "farmer-run", 6, 8, -1],
+      ["farmer-walk", "farmer-walk", 8, 6, -1],
+      ["farmer-jump", "farmer-jump", 5, 6, 0],
+      ["farmer-plant", "farmer-plant", 6, 8, 0],
+      ["farmer-uproot", "farmer-uproot", 6, 8, 0],
+      ["farmer-collect", "farmer-collect", 6, 8, 0],
+      ["farmer-attack", "farmer-attack", 6, 8, 0],
+      ["farmer-hit", "farmer-hit", 6, 8, 0],
+      ["farmer-death", "farmer-death", 6, 6, 0]
     ];
 
     try {
@@ -1088,8 +1076,8 @@ export default class BattleScene extends Scene {
     if (this.keys.w.isDown || this.keys.up.isDown) dy -= 1;
     if (this.keys.s.isDown || this.keys.down.isDown) dy += 1;
     if (!this.plantingTarget && !this.returnTarget && (dx !== 0 || dy !== 0)) {
-      this.caveman.x = PhaserMath.Clamp(this.caveman.x + dx * 170 * dt, 105, 1010);
-      this.caveman.y = PhaserMath.Clamp(this.caveman.y + dy * 170 * dt, this.laneYs[0] - 22, this.laneYs[LANES - 1] + 22);
+      this.caveman.x = PhaserMath.Clamp(this.caveman.x + dx * 115 * dt, 105, 1010);
+      this.caveman.y = PhaserMath.Clamp(this.caveman.y + dy * 115 * dt, this.laneYs[0] - 22, this.laneYs[LANES - 1] + 22);
       if (dx !== 0) this.facing = Math.sign(dx);
       this.caveman.scaleX = this.facing;
     }
@@ -1131,7 +1119,7 @@ export default class BattleScene extends Scene {
     const dy = target.y - this.caveman.y;
     const distance = Math.hypot(dx, dy);
     if (distance > 7) {
-      const step = Math.min(distance, 900 * dt);
+      const step = Math.min(distance, 360 * dt);
       this.caveman.x += dx / distance * step;
       this.caveman.y += dy / distance * step;
       if (dx !== 0) { this.facing = Math.sign(dx); this.caveman.scaleX = this.facing; }
