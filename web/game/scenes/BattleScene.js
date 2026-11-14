@@ -59,6 +59,12 @@ export default class BattleScene extends Scene {
     this.projectileSoundEnabled = this.registry.get("projectileSoundEnabled");
     this.effectsSoundEnabled = this.registry.get("effectsSoundEnabled");
     this.musicEnabled = this.registry.get("musicEnabled");
+    this.musicVolume = this.readAudioVolume("musicVolume", this.musicEnabled ? 70 : 0);
+    this.effectsVolume = this.readAudioVolume("effectsVolume", this.effectsSoundEnabled ? 80 : 0);
+    this.projectileVolume = this.readAudioVolume("projectileVolume", this.projectileSoundEnabled ? 65 : 0);
+    this.musicEnabled = this.musicVolume > 0;
+    this.effectsSoundEnabled = this.effectsVolume > 0;
+    this.projectileSoundEnabled = this.projectileVolume > 0;
     this.musicStep = 0;
     this.musicTimer = null;
 
@@ -398,7 +404,24 @@ export default class BattleScene extends Scene {
     }
   }
 
+  readAudioVolume(key, fallback) {
+    try {
+      const stored = window.localStorage.getItem("farmVsMonsters.audio." + key);
+      if (stored === null) return fallback;
+      const value = Number(stored);
+      return Number.isFinite(value) ? PhaserMath.Clamp(value, 0, 100) : fallback;
+    } catch (error) {
+      return fallback;
+    }
+  }
+
   saveAudioPreferences() {
+    this.saveAudioPreference("musicVolume", this.musicVolume);
+    this.saveAudioPreference("effectsVolume", this.effectsVolume);
+    this.saveAudioPreference("projectileVolume", this.projectileVolume);
+    this.musicEnabled = this.musicVolume > 0;
+    this.effectsSoundEnabled = this.effectsVolume > 0;
+    this.projectileSoundEnabled = this.projectileVolume > 0;
     this.saveAudioPreference("projectileSoundEnabled", this.projectileSoundEnabled);
     this.saveAudioPreference("effectsSoundEnabled", this.effectsSoundEnabled);
     this.saveAudioPreference("musicEnabled", this.musicEnabled);
@@ -410,40 +433,39 @@ export default class BattleScene extends Scene {
   createAudioControls() {
     // A single speaker button keeps the battle HUD clean. All audio options
     // live in one compact popover anchored to this button.
-    this.audioMenuBounds = { left: 860, right: 1120, top: 66, bottom: 258 };
+    this.audioMenuBounds = { left: 860, right: 1120, top: 66, bottom: 300 };
     this.audioMenuOpen = false;
     this.audioMenuDismissedOnPointerDown = false;
 
-    this.audioMenu = this.add.container(990, 162).setDepth(70).setVisible(false);
+    this.audioMenu = this.add.container(990, 183).setDepth(70).setVisible(false);
     // Make the menu surface consume clicks so its empty areas never behave
     // like clicks on the battlefield underneath it.
-    const panel = this.add.rectangle(0, 0, 250, 184, 0xf4dfb3, 0.98)
+    const panel = this.add.rectangle(0, 0, 250, 220, 0xf4dfb3, 0.98)
       .setStrokeStyle(3, 0x65452f)
       .setInteractive();
-    const heading = this.add.text(0, -72, "AUDIO SETTINGS", {
+    const heading = this.add.text(0, -91, "AUDIO VOLUME", {
       fontFamily: "Arial", fontSize: "14px", color: "#563a25", fontStyle: "bold"
     }).setOrigin(0.5);
     this.audioMenu.add([panel, heading]);
 
-    this.musicAudioOption = this.createAudioMenuToggle(-29, "Background music", this.musicEnabled, (enabled) => {
-      this.musicEnabled = enabled;
-      this.registry.set("musicEnabled", enabled);
-      if (enabled) {
+    this.musicAudioOption = this.createAudioVolumeSlider(-49, "Music", this.musicVolume, (value) => {
+      this.musicVolume = value;
+      this.musicEnabled = value > 0;
+      if (this.musicEnabled) {
         this.startBackgroundMusic();
         this.resumeGameAudio();
       } else {
         this.stopBackgroundMusic();
       }
     });
-    this.effectsAudioOption = this.createAudioMenuToggle(17, "Game effects", this.effectsSoundEnabled, (enabled) => {
-      this.effectsSoundEnabled = enabled;
-      this.registry.set("effectsSoundEnabled", enabled);
+    this.effectsAudioOption = this.createAudioVolumeSlider(17, "Effects", this.effectsVolume, (value) => {
+      this.effectsVolume = value;
+      this.effectsSoundEnabled = value > 0;
     });
-    this.projectileAudioOption = this.createAudioMenuToggle(63, "Projectile sounds", this.projectileSoundEnabled, (enabled) => {
-      this.projectileSoundEnabled = enabled;
-      this.registry.set("projectileSoundEnabled", enabled);
+    this.projectileAudioOption = this.createAudioVolumeSlider(83, "Projectiles", this.projectileVolume, (value) => {
+      this.projectileVolume = value;
+      this.projectileSoundEnabled = value > 0;
     });
-
     this.audioMenu.add([
       this.musicAudioOption.container,
       this.effectsAudioOption.container,
@@ -489,35 +511,45 @@ export default class BattleScene extends Scene {
     if (this.musicEnabled) this.startBackgroundMusic();
   }
 
-  createAudioMenuToggle(y, title, initialValue, onChange) {
+  createAudioVolumeSlider(y, title, initialValue, onChange) {
     const container = this.add.container(0, y);
-    const background = this.add.rectangle(0, 0, 218, 36, 0xe8d5a8, 1)
-      .setStrokeStyle(1, 0x9b7950)
-      .setInteractive({ useHandCursor: true });
-    const label = this.add.text(-96, 0, title, {
-      fontFamily: "Arial", fontSize: "12px", color: "#563a25", fontStyle: "bold"
+    const label = this.add.text(-101, -10, title, {
+      fontFamily: "Arial", fontSize: "11px", color: "#563a25", fontStyle: "bold"
     }).setOrigin(0, 0.5);
-    const state = this.add.text(96, 0, initialValue ? "ON" : "OFF", {
-      fontFamily: "Arial", fontSize: "11px", color: initialValue ? "#326b35" : "#9a463d", fontStyle: "bold"
+    const track = this.add.rectangle(5, 12, 132, 7, 0xb69b72, 1).setInteractive({ useHandCursor: true });
+    const fill = this.add.rectangle(-61, 12, 0, 5, 0x6c9a4d, 1).setOrigin(0, 0.5);
+    const knob = this.add.circle(-61, 12, 7, 0x6c9a4d, 1)
+      .setStrokeStyle(2, 0x563a25).setInteractive({ useHandCursor: true });
+    const valueText = this.add.text(96, -10, Math.round(initialValue) + "%", {
+      fontFamily: "Arial", fontSize: "11px", color: "#563a25", fontStyle: "bold"
     }).setOrigin(1, 0.5);
-    container.add([background, label, state]);
+    container.add([label, track, fill, knob, valueText]);
 
-    const setEnabled = (enabled) => {
-      state.setText(enabled ? "ON" : "OFF");
-      state.setColor(enabled ? "#326b35" : "#9a463d");
-      background.setFillStyle(enabled ? 0xd9efbd : 0xe7c6bd, 1);
+    const setValue = (rawValue, persist = true) => {
+      const value = Math.round(PhaserMath.Clamp(rawValue, 0, 100));
+      const knobX = -61 + value * 1.32;
+      knob.setX(knobX);
+      fill.width = value * 1.32;
+      valueText.setText(value + "%");
+      onChange(value);
+      if (persist) {
+        this.saveAudioPreferences();
+        this.resumeGameAudio();
+      }
     };
-    setEnabled(initialValue);
-    background.on("pointerover", () => background.setStrokeStyle(2, 0x65452f));
-    background.on("pointerout", () => background.setStrokeStyle(1, 0x9b7950));
-    background.on("pointerdown", () => {
-      const enabled = state.text !== "ON";
-      onChange(enabled);
-      setEnabled(enabled);
-      this.saveAudioPreferences();
-      this.resumeGameAudio();
+    const setFromPointer = (pointer) => setValue(pointer.x - (990 - 61));
+    track.on("pointerdown", setFromPointer);
+    knob.on("pointerdown", (pointer) => {
+      this.activeAudioSlider = setFromPointer;
+      setFromPointer(pointer);
     });
-    return { container, setEnabled };
+    track.on("pointerover", () => track.setFillStyle(0xc7ad83, 1));
+    this.input.on("pointermove", (pointer) => {
+      if (pointer.isDown && this.activeAudioSlider) this.activeAudioSlider(pointer);
+    });
+    this.input.on("pointerup", () => { this.activeAudioSlider = null; });
+    setValue(initialValue, false);
+    return { container };
   }
 
   openAudioMenu() {
@@ -559,7 +591,7 @@ export default class BattleScene extends Scene {
   }
 
   playBackgroundMusicStep() {
-    if (!this.musicEnabled) return;
+    if (this.musicVolume <= 0) return;
     const audioContext = this.sound && this.sound.context;
     if (!audioContext || typeof audioContext.createOscillator !== "function") return;
     try {
@@ -588,10 +620,10 @@ export default class BattleScene extends Scene {
       filter.type = "lowpass";
       filter.frequency.setValueAtTime(520, start);
       bassGain.gain.setValueAtTime(0.0001, start);
-      bassGain.gain.linearRampToValueAtTime(0.045, start + 0.08);
+      bassGain.gain.linearRampToValueAtTime(0.045 * this.musicVolume / 100, start + 0.08);
       bassGain.gain.exponentialRampToValueAtTime(0.0001, start + 0.49);
       padGain.gain.setValueAtTime(0.0001, start);
-      padGain.gain.linearRampToValueAtTime(0.018, start + 0.12);
+      padGain.gain.linearRampToValueAtTime(0.018 * this.musicVolume / 100, start + 0.12);
       padGain.gain.exponentialRampToValueAtTime(0.0001, start + 0.5);
       bass.connect(bassGain);
       bassGain.connect(audioContext.destination);
@@ -609,7 +641,7 @@ export default class BattleScene extends Scene {
   }
 
   playPlantSound() {
-    if (!this.effectsSoundEnabled) return;
+    if (this.effectsVolume <= 0) return;
     const audioContext = this.sound && this.sound.context;
     if (!audioContext || typeof audioContext.createOscillator !== "function") return;
     try {
@@ -625,7 +657,7 @@ export default class BattleScene extends Scene {
       filter.type = "lowpass";
       filter.frequency.setValueAtTime(950, start);
       gain.gain.setValueAtTime(0.0001, start);
-      gain.gain.exponentialRampToValueAtTime(0.18, start + 0.025);
+      gain.gain.exponentialRampToValueAtTime(0.18 * this.effectsVolume / 100, start + 0.025);
       gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.28);
       oscillator.connect(filter);
       filter.connect(gain);
@@ -638,7 +670,7 @@ export default class BattleScene extends Scene {
   }
 
   playUprootSound() {
-    if (!this.effectsSoundEnabled) return;
+    if (this.effectsVolume <= 0) return;
     const audioContext = this.sound && this.sound.context;
     if (!audioContext || typeof audioContext.createOscillator !== "function") return;
     try {
@@ -654,7 +686,7 @@ export default class BattleScene extends Scene {
       filter.frequency.setValueAtTime(1250, start);
       filter.frequency.exponentialRampToValueAtTime(360, start + 0.2);
       gain.gain.setValueAtTime(0.0001, start);
-      gain.gain.exponentialRampToValueAtTime(0.16, start + 0.012);
+      gain.gain.exponentialRampToValueAtTime(0.16 * this.effectsVolume / 100, start + 0.012);
       gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.22);
       oscillator.connect(filter);
       filter.connect(gain);
@@ -667,7 +699,7 @@ export default class BattleScene extends Scene {
   }
 
   playMonsterBiteSound() {
-    if (!this.effectsSoundEnabled) return;
+    if (this.effectsVolume <= 0) return;
     const audioContext = this.sound && this.sound.context;
     if (!audioContext || typeof audioContext.createBuffer !== "function" ||
         typeof audioContext.createBufferSource !== "function") return;
@@ -690,7 +722,7 @@ export default class BattleScene extends Scene {
       filter.frequency.setValueAtTime(780, start);
       filter.frequency.exponentialRampToValueAtTime(260, start + duration);
       gain.gain.setValueAtTime(0.0001, start);
-      gain.gain.exponentialRampToValueAtTime(0.105, start + 0.018);
+      gain.gain.exponentialRampToValueAtTime(0.105 * this.effectsVolume / 100, start + 0.018);
       gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
       source.connect(filter);
       filter.connect(gain);
@@ -703,7 +735,7 @@ export default class BattleScene extends Scene {
   }
 
   playThornSound() {
-    if (!this.projectileSoundEnabled) return;
+    if (this.projectileVolume <= 0) return;
     const audioContext = this.sound && this.sound.context;
     if (!audioContext || typeof audioContext.createOscillator !== "function") return;
     try {
@@ -719,7 +751,7 @@ export default class BattleScene extends Scene {
       filter.frequency.setValueAtTime(1800, start);
       filter.frequency.exponentialRampToValueAtTime(650, start + 0.11);
       gain.gain.setValueAtTime(0.0001, start);
-      gain.gain.exponentialRampToValueAtTime(0.12, start + 0.008);
+      gain.gain.exponentialRampToValueAtTime(0.12 * this.projectileVolume / 100, start + 0.008);
       gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.12);
       oscillator.connect(filter);
       filter.connect(gain);
@@ -863,6 +895,12 @@ export default class BattleScene extends Scene {
       view: type === "mushroom" ? this.drawEnergyMushroom(x, y) : this.drawRadish(x, y)
     };
     this.plants.push(plant);
+    if (type === "mushroom") {
+      plant.energyCounter = this.add.text(x, y + 19, "0", {
+        fontFamily: "Arial", fontSize: "12px", color: "#fff7df", fontStyle: "bold",
+        stroke: "#563a25", strokeThickness: 3
+      }).setOrigin(0.5).setDepth(13);
+    }
     if (type === "radish") this.hasPlantedDefender = true;
     this.playPlantSound();
     this.updateEmergencyMode();
@@ -983,6 +1021,10 @@ export default class BattleScene extends Scene {
       if (!token.active || this.gameOver) return;
       this.collectingEnergyToken = true;
       this.energy = Math.min(300, this.energy + amount);
+      plant.energyCollected = (plant.energyCollected || 0) + amount;
+      if (plant.energyCounter && plant.energyCounter.active) {
+        plant.energyCounter.setText(String(plant.energyCollected));
+      }
       this.playPlantSound();
       this.refreshHud();
       if (token.expiryTimer) token.expiryTimer.remove(false);
@@ -1109,6 +1151,7 @@ export default class BattleScene extends Scene {
     if (!plant || !plant.alive || this.gameOver) return;
     plant.alive = false;
     plant.view.destroy();
+    if (plant.energyCounter) plant.energyCounter.destroy();
     this.playUprootSound();
     this.setMessage("Plant uprooted. Select a plant card and choose an empty soil cell.");
     this.updateEmergencyMode();
@@ -1118,6 +1161,7 @@ export default class BattleScene extends Scene {
   destroyPlant(plant) {
     if (!plant.alive) return;
     plant.alive = false; plant.view.destroy();
+    if (plant.energyCounter) plant.energyCounter.destroy();
     this.setMessage(plant.type === "mushroom" ? "An energy mushroom has been eaten!" : "A radish defender has fallen!");
     this.updateEmergencyMode();
   }
@@ -1159,7 +1203,7 @@ export default class BattleScene extends Scene {
 
   playDefeatMusic() {
     // A short original three-note descending defeat fanfare synthesized with Web Audio.
-    if (!this.effectsSoundEnabled) return;
+    if (this.effectsVolume <= 0) return;
     const audioContext = this.sound && this.sound.context;
     if (!audioContext || typeof audioContext.createOscillator !== "function") return;
     try {
