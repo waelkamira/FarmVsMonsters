@@ -359,39 +359,40 @@ export default class BattleScene extends Scene {
 
     // Compact seed tokens sit just below the status strip, not over the field.
     this.radishCard = this.createPlantCard(112, "RADISH", "35", "radish", null, "radish-character");
-    this.mushroomCard = this.createPlantCard(220, "MUSHROOM", "50", "mushroom", (g) => {
-      g.fillStyle(0x8b5bba, 1); g.fillEllipse(-32, -1, 19, 15);
-      g.fillStyle(0xf2d9a4, 1); g.fillRoundedRect(-36, 5, 8, 10, 3);
-      g.fillRoundedRect(-28, 5, 8, 10, 3);
-      g.fillStyle(0xfff1d1, 1); g.fillCircle(-37, -4, 2); g.fillCircle(-28, -4, 2);
+    this.mushroomCard = this.createPlantCard(254, "MUSHROOM", "50", "mushroom", (g) => {
+      g.fillStyle(0x8b5bba, 1); g.fillEllipse(-48, -5, 25, 19);
+      g.fillStyle(0xf2d9a4, 1); g.fillRoundedRect(-53, 2, 10, 13, 3);
+      g.fillRoundedRect(-43, 2, 10, 13, 3);
+      g.fillStyle(0xfff1d1, 1); g.fillCircle(-54, -8, 2.5); g.fillCircle(-42, -8, 2.5);
     });
   }
 
   createPlantCard(x, title, costLabel, type, drawIcon, imageKey = null) {
-    const card = this.add.container(x, 78).setDepth(45);
-    const shadow = this.add.rectangle(2, 3, 98, 46, 0x1c120c, 0.42);
-    const frame = this.add.rectangle(0, 0, 98, 46, 0x79502e, 1).setStrokeStyle(2, 0x392417);
-    const panel = this.add.rectangle(0, 0, 92, 40, 0xc69b5e, 1)
-      .setStrokeStyle(1.5, 0xf0d59a).setInteractive({ useHandCursor: true });
+    const card = this.add.container(x, 80).setDepth(45);
+    const shadow = this.add.rectangle(2, 3, 132, 54, 0x1c120c, 0.42);
+    const frame = this.add.rectangle(0, 0, 132, 54, 0x79502e, 1).setStrokeStyle(2, 0x392417);
+    const panel = this.add.rectangle(0, 0, 126, 48, 0xe0c18a, 1)
+      .setStrokeStyle(1.5, 0xf7e5bd).setInteractive({ useHandCursor: true });
+    const iconDivider = this.add.rectangle(-25, 0, 1.5, 36, 0x79502e, 0.55);
     let icon;
     if (imageKey && this.textures.exists(imageKey)) {
       const frameData = this.textures.getFrame(imageKey);
-      const iconHeight = 31;
+      const iconHeight = 36;
       const iconWidth = iconHeight * (frameData.realWidth / frameData.realHeight);
-      icon = this.add.image(-31, -1, imageKey).setDisplaySize(iconWidth, iconHeight);
+      icon = this.add.image(-48, -1, imageKey).setDisplaySize(iconWidth, iconHeight);
     } else {
       icon = this.add.graphics();
       if (drawIcon) drawIcon(icon);
     }
-    const name = this.add.text(-10, -8, title, {
-      fontFamily: "Georgia", fontSize: "9px", color: "#fff0c8", fontStyle: "bold",
-      stroke: "#49301d", strokeThickness: 2
+    const name = this.add.text(-17, -10, title, {
+      fontFamily: "Georgia", fontSize: "12px", color: "#382719", fontStyle: "bold",
+      resolution: 2
     }).setOrigin(0, 0.5);
-    const cost = this.add.text(-10, 9, costLabel + " ENERGY", {
-      fontFamily: "Georgia", fontSize: "9px", color: "#ffe4a7", fontStyle: "bold",
-      stroke: "#49301d", strokeThickness: 1
+    const cost = this.add.text(-17, 12, costLabel + " ENERGY", {
+      fontFamily: "Georgia", fontSize: "10px", color: "#68431f", fontStyle: "bold",
+      resolution: 2
     }).setOrigin(0, 0.5);
-    card.add([shadow, frame, panel, icon, name, cost]);
+    card.add([shadow, frame, panel, icon, iconDivider, name, cost]);
 
     panel.on("pointerover", () => {
       if (this.selectedPlant !== type) panel.setFillStyle(0xd7b579, 1);
