@@ -1,5 +1,19 @@
 import { Scene, Input, Math as PhaserMath } from "phaser";
 import gridCalibration from "../data/farm-grid-calibration.json";
+import {
+  PHASE_ONE_WAVE_SIZES,
+  PHASE_ONE_TOTAL_MONSTERS,
+  INITIAL_ENERGY,
+  MAX_ENERGY,
+  MONSTER_KILL_ENERGY_REWARD,
+  MUSHROOM_PICKUP_TTL_MS,
+  RADISH_CONFIG,
+  MUSHROOM_CONFIG,
+  collectEnergy,
+  isWaveComplete,
+  isPhaseOneVictory,
+  monsterArchetypeFor as resolveMonsterArchetype
+} from "../rules/phaseOneRules.mjs";
 
 const LANES = gridCalibration.grid.rows;
 const COLUMNS = gridCalibration.grid.columns;
@@ -13,10 +27,6 @@ const CELL_H = GRID_HEIGHT / LANES;
 const HOME_LOCAL_X = -300;
 const CAVEMAN_RETURN_SPEED = 420;
 const SPAWN_LOCAL_X = GRID_WIDTH / 2 + 28;
-const RADISH = { label: "Radish", cost: 35, hp: 160, cooldown: 1450, range: 360 };
-const MUSHROOM = { label: "Energy Mushroom", cost: 50, hp: 85, energy: 15, productionInterval: 12000 };
-const PHASE_ONE_WAVE_SIZES = [10, 15, 20, 25, 30];
-const PHASE_ONE_TOTAL_MONSTERS = PHASE_ONE_WAVE_SIZES.reduce((total, count) => total + count, 0);
 
 // Central combat balance table. Monster durability is expressed in standard radish hits when possible.
 const COMBAT_BALANCE = {
@@ -55,7 +65,7 @@ export default class BattleScene extends Scene {
 
   create() {
     this.isPaused = false;
-    this.energy = 150;
+    this.energy = INITIAL_ENERGY;
     this.houseHealth = 100;
     this.wave = 1;
     this.totalWaves = PHASE_ONE_WAVE_SIZES.length;
@@ -1368,7 +1378,7 @@ export default class BattleScene extends Scene {
   plantSelected(col, row, type, returnPosition = null) {
     if (this.gameOver) return;
     if (type !== "radish" && type !== "mushroom") return;
-    const config = type === "mushroom" ? MUSHROOM : RADISH;
+    const config = type === "mushroom" ? MUSHROOM_CONFIG : RADISH_CONFIG;
     if (this.energy < config.cost || this.plants.some((p) => p.alive && p.col === col && p.row === row)) {
       this.setMessage("Planting cancelled: this cell is no longer available."); return;
     }
@@ -1513,7 +1523,7 @@ export default class BattleScene extends Scene {
       if (plant.type === "mushroom") {
         plant.productionTimer -= delta;
         if (plant.productionTimer <= 0) {
-          plant.productionTimer += MUSHROOM.productionInterval;
+          plant.productionTimer += MUSHROOM_CONFIG.productionInterval;
           this.spawnMushroomEnergy(plant);
         }
         continue;
@@ -1530,7 +1540,7 @@ export default class BattleScene extends Scene {
   }
 
   spawnMushroomEnergy(plant) {
-    const amount = Math.min(MUSHROOM.energy, 300 - this.energy);
+    const amount = Math.min(MUSHROOM_CONFIG.energy, MAX_ENERGY - this.energy);
     if (amount <= 0) return;
     const token = this.add.container(plant.x, plant.y - 66).setDepth(35);
     // Brief production feedback: show the energy amount, then clear it quickly.
@@ -1576,10 +1586,11 @@ export default class BattleScene extends Scene {
     miniature.on("pointerdown", () => {
       if (!token.active || this.gameOver) return;
       this.collectingEnergyToken = true;
-      const collected = Math.min(amount, Math.max(0, 300 - this.energy));
+      const collection = collectEnergy(this.energy, amount);
+      const collected = collection.collected;
       if (collected > 0) {
         this.playFarmerAction("farmer-collect");
-        this.energy += collected;
+        this.energy = collection.energy;
         this.energyCollected += collected;
         this.playPlantSound();
         this.setMessage("Collected " + collected + " mushroom energy!");
@@ -1597,7 +1608,7 @@ export default class BattleScene extends Scene {
       targets: token, y: token.y - 9, duration: 700, ease: "Sine.easeInOut",
       yoyo: true, repeat: -1
     });
-    token.expiryTimer = this.time.delayedCall(12000, () => {
+    token.expiryTimer = this.time.delayedCall(MUSHROOM_PICKUP_TTL_MS, () => {
       if (token.active) {
         this.tweens.add({ targets: token, alpha: 0, duration: 350, onComplete: () => token.destroy() });
       }
@@ -1755,11 +1766,7 @@ export default class BattleScene extends Scene {
   }
 
   monsterArchetypeFor(spawnIndex) {
-    // Enemy roles arrive in measured steps: the opening raids teach the
-    // player the basic threat before introducing speed and armor.
-    if (this.wave >= 5 && (spawnIndex + 1) % 5 === 0) return "stonehide";
-    if (this.wave >= 3 && spawnIndex % 3 === 1) return "dust-skitter";
-    return "cave-brute";
+    return resolveMonsterArchetype(this.wave, spawnIndex);
   }
 
   spawnMonster() {
@@ -2099,7 +2106,7 @@ export default class BattleScene extends Scene {
       this.tweens.killTweensOf(monster.view);
       monster.view.destroy(true);
     }
-    this.energy = Math.min(300, this.energy + 8);
+    this.energy = Math.min(MAX_ENERGY, this.energy + MONSTER_KILL_ENERGY_REWARD);
     this.totalDefeatedMonsters += 1;
     this.waveDefeatedMonsters += 1;
   }
@@ -2157,10 +2164,10 @@ export default class BattleScene extends Scene {
   }
 
   checkWaveProgress() {
-    if (this.gameOver || this.spawnedThisWave < this.waveSize || this.monsters.length > 0) return;
+    if (this.gameOver || !isWaveComplete(this.spawnedThisWave, this.waveSize, this.monsters.length)) return;
 
     const clearedWave = this.wave;
-    if (clearedWave === this.totalWaves) {
+    if (isPhaseOneVictory(this.wave, this.totalWaves, this.spawnedThisWave, this.waveSize, this.monsters.length)) {
       // The final wave is complete only after every one of its monsters
       // has spawned and the battlefield contains no living monsters.
       this.endGame(true);
