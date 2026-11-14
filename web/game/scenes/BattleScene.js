@@ -471,6 +471,10 @@ export default class BattleScene extends Scene {
       this.effectsAudioOption.container,
       this.projectileAudioOption.container
     ]);
+    this.input.on("pointermove", (pointer) => {
+      if (pointer.isDown && this.activeAudioSlider) this.activeAudioSlider(pointer);
+    });
+    this.input.on("pointerup", () => { this.activeAudioSlider = null; });
 
     this.audioButton = this.add.container(1040, 34).setDepth(72);
     const buttonBackground = this.add.circle(0, 0, 21, 0xf4dfb3, 1).setStrokeStyle(2, 0x65452f);
@@ -537,17 +541,16 @@ export default class BattleScene extends Scene {
         this.resumeGameAudio();
       }
     };
-    const setFromPointer = (pointer) => setValue(pointer.x - (990 - 61));
-    track.on("pointerdown", setFromPointer);
+    const setFromPointer = (pointer) => setValue((pointer.x - (990 - 61)) / 1.32);
+    track.on("pointerdown", (pointer) => {
+      this.activeAudioSlider = setFromPointer;
+      setFromPointer(pointer);
+    });
     knob.on("pointerdown", (pointer) => {
       this.activeAudioSlider = setFromPointer;
       setFromPointer(pointer);
     });
     track.on("pointerover", () => track.setFillStyle(0xc7ad83, 1));
-    this.input.on("pointermove", (pointer) => {
-      if (pointer.isDown && this.activeAudioSlider) this.activeAudioSlider(pointer);
-    });
-    this.input.on("pointerup", () => { this.activeAudioSlider = null; });
     setValue(initialValue, false);
     return { container };
   }
