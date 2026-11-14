@@ -464,31 +464,18 @@ export default class BattleScene extends Scene {
     this.caveman = this.add.container(220, this.laneYs[2]).setDepth(10 + this.laneYs[2] / 1000);
 
     if (this.textures.exists("farmer-idle") && this.createFarmerAnimations()) {
-      // Normalize each sheet against its own frame height so the farmer keeps
-      // the same on-screen body height even though the source sheets differ.
+      // The sheets have different cell sizes and transparent padding.
+      // Measure visible alpha bounds per frame so every action keeps the
+      // same visible body height and the feet stay attached to the world anchor.
       this.cavemanVisual = this.add.sprite(0, 0, "farmer-idle", 0)
         .setOrigin(0.5, 1)
         .setScale(0.42);
-      // Every farmer animation is normalized to the same on-screen body
-      // height. The run/jump sheets have 720px-tall transparent frames, but
-      // the artwork itself is not twice as tall; halving their scale made the
-      // farmer visibly shrink as soon as he started running after planting.
-      const farmerStateScales = {
-        "farmer-idle": 0.42,
-        "farmer-run": 0.42,
-        "farmer-walk": 0.42,
-        "farmer-jump": 0.42,
-        "farmer-plant": 0.42,
-        "farmer-uproot": 0.42,
-        "farmer-collect": 0.42,
-        "farmer-attack": 0.42,
-        "farmer-hit": 0.42,
-        "farmer-death": 0.42
-      };
-      this.cavemanVisual.on("animationstart", (animation) => {
-        this.cavemanVisual.setScale(farmerStateScales[animation.key] || 0.42);
-      });
+      this.farmerFrameMetrics = new Map();
+      this.farmerTargetDisplayHeight = null;
+      this.cavemanVisual.on("animationstart", () => this.normalizeFarmerFrame());
+      this.cavemanVisual.on("animationupdate", () => this.normalizeFarmerFrame());
       this.caveman.add(this.cavemanVisual);
+      this.normalizeFarmerFrame();
       this.cavemanVisual.play("farmer-idle");
     } else {
     const body = this.add.graphics();
@@ -540,6 +527,78 @@ export default class BattleScene extends Scene {
 
   }
 
+  normalizeFarmerFrame() {
+    const sprite = this.cavemanVisual;
+    if (!sprite || !sprite.active || !sprite.frame) return;
+
+    const frame = sprite.frame;
+    const textureKey = sprite.texture.key;
+    const cacheKey = textureKey + ":" + frame.name;
+    let bounds = this.farmerFrameMetrics?.get(cacheKey);
+
+    if (!bounds) {
+      try {
+        const sourceImage = sprite.texture.getSourceImage();
+        const canvas = document.createElement("canvas");
+        canvas.width = frame.width;
+        canvas.height = frame.height;
+        const context = canvas.getContext("2d", { willReadFrequently: true });
+        if (!context || !sourceImage) throw new Error("Canvas alpha sampling is unavailable.");
+
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        context.drawImage(
+          sourceImage,
+          frame.cutX, frame.cutY, frame.width, frame.height,
+          0, 0, frame.width, frame.height
+        );
+        const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
+        let minX = canvas.width;
+        let minY = canvas.height;
+        let maxX = -1;
+        let maxY = -1;
+
+        for (let y = 0; y < canvas.height; y += 1) {
+          for (let x = 0; x < canvas.width; x += 1) {
+            if (pixels[(y * canvas.width + x) * 4 + 3] <= 16) continue;
+            if (x < minX) minX = x;
+            if (x > maxX) maxX = x;
+            if (y < minY) minY = y;
+            if (y > maxY) maxY = y;
+          }
+        }
+
+        if (maxX < minX || maxY < minY) throw new Error("The current farmer frame is empty.");
+        bounds = {
+          minX, minY, maxX, maxY,
+          width: maxX - minX + 1,
+          height: maxY - minY + 1
+        };
+        this.farmerFrameMetrics.set(cacheKey, bounds);
+
+        // The first standing frame defines the target visible size for every action.
+        if (textureKey === "farmer-idle" && this.farmerTargetDisplayHeight === null) {
+          this.farmerTargetDisplayHeight = bounds.height * 0.42;
+        }
+      } catch (error) {
+        // Keep the game playable on browsers that block canvas pixel reads.
+        sprite.setOrigin(0.5, 1).setScale(0.42);
+        return;
+      }
+    }
+
+    if (this.farmerTargetDisplayHeight === null) {
+      this.farmerTargetDisplayHeight = bounds.height * 0.42;
+    }
+
+    // Phaser's origin is the stable world anchor: center of the visible feet,
+    // not the bottom edge of a sheet cell full of transparent pixels.
+    sprite.setOrigin(
+      (bounds.minX + bounds.maxX + 1) / (2 * frame.width),
+      (bounds.maxY + 1) / frame.height
+    );
+    sprite.setScale(this.farmerTargetDisplayHeight / bounds.height);
+  }
+
   createFarmerAnimations() {
     const definitions = [
       ["farmer-idle", "farmer-idle", 4, 1.5, -1],
@@ -580,8 +639,7 @@ export default class BattleScene extends Scene {
     if (key === "farmer-idle" && this.farmerForceIdleFrame) {
       this.cavemanVisual.stop();
       this.cavemanVisual.setTexture("farmer-idle", 0);
-      this.cavemanVisual.setOrigin(0.5, 1);
-      this.cavemanVisual.setScale(0.42);
+      this.normalizeFarmerFrame();
       return;
     }
     const currentKey = this.cavemanVisual.anims.currentAnim?.key;
@@ -1204,8 +1262,7 @@ export default class BattleScene extends Scene {
       if (this.cavemanVisual && this.cavemanVisual.active) {
         this.cavemanVisual.stop();
         this.cavemanVisual.setTexture("farmer-idle", 0);
-        this.cavemanVisual.setOrigin(0.5, 1);
-        this.cavemanVisual.setScale(0.42);
+        this.normalizeFarmerFrame();
       }
       this.setFarmerAnimation("farmer-idle");
       this.setMessage("The caveman is back at his starting position.");
