@@ -165,6 +165,7 @@ BATTLE
 - The Phase 1 battle HUD now exposes only the Radish card; energy-producing Mushroom planting is reserved for Phase 2. The older Mushroom implementation remains dormant and is not selectable through the Phase 1 interface. Feature presence is not proof of correct runtime behavior.
 - Farmer frame-count validation was added on 2026-11-14.
 - The Phase 1 wave schedule is now fixed in code at 10 / 15 / 20 / 25 / 30 monsters (100 total); the sixth-wave loop has been removed.
+- The battle HUD now tracks total campaign defeats out of 100 and the current wave's defeats out of that wave's target; the per-wave counter resets only when the previous wave is fully cleared.
 - Final-wave completion now triggers a Victory result only after all scheduled monsters have spawned and no living monsters remain. Victory and Defeat result panels include run summaries and replay/menu actions.
 - Monsters that breach the farm now stop at the home boundary and damage farmhouse health on their attack cadence; defeat occurs only when home health reaches zero.
 - A dedicated `PauseScene` provides Resume, Restart, Settings, and Main Menu, with Escape/P resume shortcuts. Pause stops the background-music timer and suspends the Web Audio context; resume restores the audio context and soundtrack. The pause action is guarded against duplicate launches, and resume ignores stale/invalid requests. Runtime input/audio behavior still requires browser verification.
