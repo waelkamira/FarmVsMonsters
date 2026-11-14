@@ -73,7 +73,7 @@ BATTLE
 - Caveman controls and pathing: select Radish, click a valid empty cell, walk/run to it, plant, and return to the original position/facing.
 - Consistent farmer scale, foot anchor, correct depth behind the planted object, and clean idle/walk/run/plant/return/club/hurt/death states where used.
 - Radish remains fixed in its cell, has readable idle/hurt/death behavior, and automatically fires its own projectile/attack.
-- One baseline slow monster type with lane-aware movement, plant eating/attacking, hurt flash, death disappearance, and farmhouse breach.
+- Three Phase 1 monster archetypes (Cave-brute, Dust-skitter, Stonehide) with lane-aware movement, distinct durability/speed/attack profiles, plant eating/attacking, hurt flash, death disappearance, and farmhouse breach.
 - Health/damage/death rules for the Radish, monster, and farmhouse/princess objective.
 - Emergency mode: club combat is enabled only after the last living defender dies; it is disabled as soon as a new defender is planted.
 - Starting energy, correct cost deduction at successful planting, and the complete Energy Mushroom loop: timed production, visible collectible energy, click-to-collect, collection feedback, and the energy cap.
