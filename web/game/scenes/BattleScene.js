@@ -1291,7 +1291,7 @@ export default class BattleScene extends Scene {
       return;
     }
     if (!this.selectedPlant) { this.setMessage("Choose a plant card first."); return; }
-    const plantConfig = this.selectedPlant === "mushroom" ? MUSHROOM : RADISH;
+    const plantConfig = this.selectedPlant === "mushroom" ? MUSHROOM_CONFIG : RADISH_CONFIG;
     if (this.energy < plantConfig.cost) {
       this.setMessage("Not enough energy to plant " + (this.selectedPlant === "mushroom" ? "a Mushroom." : "a Radish."));
       return;
