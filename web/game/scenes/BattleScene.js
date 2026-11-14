@@ -1131,7 +1131,9 @@ export default class BattleScene extends Scene {
 
     if (this.textures.exists("radish-character")) {
       const frame = this.textures.getFrame("radish-character");
-      const displayHeight = 88;
+      // Reduce the planted radish artwork by one third while preserving
+      // its original proportions and the cell-centred planting position.
+      const displayHeight = 88 * (2 / 3);
       const displayWidth = displayHeight * (frame.realWidth / frame.realHeight);
       const character = this.add.image(0, -displayHeight / 2 + 2, "radish-character")
         .setDisplaySize(displayWidth, displayHeight);
