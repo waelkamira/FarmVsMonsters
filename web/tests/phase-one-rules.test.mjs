@@ -178,6 +178,19 @@ test("monster archetype composition introduces threats in measured waves", () =>
   }
 });
 
+test("Dust Skitters perform periodic visual hops while remaining grounded by plant collisions", () => {
+  const spawn = scene.slice(scene.indexOf("  spawnMonster() {"), scene.indexOf("  updateMonsters(dt, delta) {"));
+  const update = scene.slice(scene.indexOf("  updateMonsters(dt, delta) {"), scene.indexOf("  updateProjectiles(dt) {"));
+  assert.match(spawn, /jumpCooldown: archetype === "dust-skitter"/);
+  assert.match(spawn, /jumpDuration: 560/);
+  assert.match(update, /monster\.jumpCooldown -= delta/);
+  assert.match(update, /-Math\.sin\(progress \* Math\.PI\) \* 34 \* monster\.view\.scaleY/);
+  assert.match(update, /monster\.view\.setPosition\(position\.x, position\.y \+ jumpOffset\)/);
+  assert.match(update, /if \(withinBiteRange\) \{\s*\/\/ A skitter must land before it can stop to bite/);
+  assert.match(update, /monster\.isJumping = false;\s*monster\.jumpElapsed = 0;/);
+  assert.match(update, /monster\.shadow\.setPosition\(position\.x, position\.y \+ 2\)/);
+});
+
 test("all three monster profiles and Stonehide bracing damage reduction remain wired", () => {
   for (const kind of ["cave-brute", "dust-skitter", "stonehide"]) {
     assert.ok(scene.includes(`"${kind}": {`), `missing ${kind} profile`);
