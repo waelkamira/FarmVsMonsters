@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 import {
@@ -25,11 +25,34 @@ import {
 
 const here = dirname(fileURLToPath(import.meta.url));
 const scene = readFileSync(resolve(here, "../game/scenes/BattleScene.js"), "utf8");
+const soundAssets = JSON.parse(readFileSync(resolve(here, "../game/data/sound-assets.json"), "utf8"));
 const pauseScene = readFileSync(resolve(here, "../game/scenes/PauseScene.js"), "utf8");
 const guide = readFileSync(resolve(here, "../app/how-to-play/page.js"), "utf8");
 const gamePage = readFileSync(resolve(here, "../app/game/page.js"), "utf8");
 const homePage = readFileSync(resolve(here, "../app/page.js"), "utf8");
 const roadmap = readFileSync(resolve(here, "../../Documentation/GAME_DEVELOPMENT_ROADMAP.md"), "utf8");
+
+test("CC0 Kenney sound assets are bundled locally and mapped to gameplay events", () => {
+  assert.equal(soundAssets.license, "CC0-1.0");
+  assert.equal(soundAssets.creator, "Kenney");
+  assert.ok(soundAssets.assets.length >= 10);
+  for (const asset of soundAssets.assets) {
+    assert.ok(asset.key.startsWith("sfx-"));
+    assert.ok(asset.path.startsWith("/assets/audio/sfx/"));
+    assert.ok(existsSync(resolve(here, "../public", asset.path.slice(1))), `missing sound file: ${asset.path}`);
+    assert.match(asset.sourceUrl, /^https:\/\/kenney\.nl\/assets\//);
+  }
+  assert.match(scene, /for \(const asset of soundAssets\.assets\) \{\s*this\.load\.audio\(asset\.key, asset\.path\);/);
+  assert.match(scene, /this\.sound\.play\(key, \{ volume: PhaserMath\.Clamp\(volume \/ 100, 0, 1\) \}\)/);
+  assert.match(scene, /playFarmerFootsteps\(dt\)/);
+  assert.match(scene, /playMonsterJumpSound\(\)/);
+  assert.match(scene, /playMonsterLandSound\(\)/);
+  assert.match(scene, /playMonsterBiteSound\(\)/);
+  assert.match(scene, /playMonsterHitSound\(\)/);
+  assert.match(scene, /playMonsterDefeatSound\(\)/);
+  assert.match(scene, /playCoinRewardSound\(\)/);
+  assert.match(scene, /playThornImpactSound\(\)/);
+});
 
 test("five Phase 1 waves are strictly increasing and total exactly 100", () => {
   assert.deepEqual(PHASE_ONE_WAVE_SIZES, [10, 15, 20, 25, 30]);
