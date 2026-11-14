@@ -8,7 +8,7 @@ export default function HomePage() {
         <h1>Farm <span>Vs</span> Monsters</h1>
         <p className="home-copy">
           The tribe's garden is the last wall between the monsters and the cave home.
-          Plant brave defenders, gather mushroom energy, and protect the princess.
+          Plant brave Radish defenders, earn energy by defeating monsters, and protect the princess.
           When the final radish falls, the caveman takes up his wooden club.
         </p>
         <nav className="menu-actions" aria-label="Main menu">
