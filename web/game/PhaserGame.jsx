@@ -52,9 +52,11 @@ export default function PhaserGame() {
           scene: [sceneModule.default, pauseModule.default]
         });
 
-        game.events.once("ready", () => {
+        const markReady = () => {
           if (!cancelled) setStatus("ready");
-        });
+        };
+        if (game.isBooted) markReady();
+        else game.events.once("ready", markReady);
       } catch (error) {
         showError(error);
       }
