@@ -11,7 +11,7 @@ export default function PhaserGame() {
 
     Promise.all([
       import("phaser"),
-      import("./scenes/BattleScene")
+      import("./scenes/BattleScene"),\n      import("./scenes/PauseScene")
     ]).then(([phaserModule, sceneModule]) => {
       if (cancelled || !hostRef.current) return;
       const { Game, AUTO, Scale } = phaserModule;
@@ -29,7 +29,7 @@ export default function PhaserGame() {
           antialias: true,
           pixelArt: false
         },
-        scene: [sceneModule.default]
+        scene: [sceneModule.default, pauseModule.default]
       });
     });
 
