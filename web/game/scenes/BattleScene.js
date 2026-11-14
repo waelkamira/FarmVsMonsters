@@ -21,8 +21,10 @@ export default class BattleScene extends Scene {
 
   preload() {
     this.load.image("farm-battlefield", "/assets/backgrounds/farm-battlefield.jpeg");
+    this.load.image("radish-character", "/assets/plants/radish.png");
     this.load.on("loaderror", (file) => {
       if (file.key === "farm-battlefield") this.backgroundAssetFailed = true;
+      if (file.key === "radish-character") this.radishAssetFailed = true;
     });
   }
 
@@ -339,11 +341,7 @@ export default class BattleScene extends Scene {
       backgroundColor: "#263c2b", padding: { x: 14, y: 7 }, align: "center"
     }).setOrigin(0.5, 1);
 
-    this.radishCard = this.createPlantCard(92, "RADISH", "35 energy", "radish", (g) => {
-      g.fillStyle(0xc83e45, 1); g.fillEllipse(-43, 0, 22, 28);
-      g.fillStyle(0x4b8c45, 1); g.fillTriangle(-48, -12, -40, -28, -34, -12);
-      g.fillTriangle(-43, -13, -27, -23, -34, -8);
-    });
+    this.radishCard = this.createPlantCard(92, "RADISH", "35 energy", "radish", null, "radish-character");
     this.mushroomCard = this.createPlantCard(242, "MUSHROOM", "50 energy", "mushroom", (g) => {
       g.fillStyle(0x8b5bba, 1); g.fillEllipse(-43, -5, 28, 23);
       g.fillStyle(0xf2d9a4, 1); g.fillRoundedRect(-49, 4, 12, 16, 4);
@@ -352,12 +350,20 @@ export default class BattleScene extends Scene {
     });
   }
 
-  createPlantCard(x, title, costLabel, type, drawIcon) {
+  createPlantCard(x, title, costLabel, type, drawIcon, imageKey = null) {
     const card = this.add.container(x, 78).setDepth(40);
     const panel = this.add.rectangle(0, 0, 138, 58, 0xf4dfb3, 1)
       .setStrokeStyle(3, 0x65452f).setInteractive({ useHandCursor: true });
-    const icon = this.add.graphics();
-    drawIcon(icon);
+    let icon;
+    if (imageKey && this.textures.exists(imageKey)) {
+      const frame = this.textures.getFrame(imageKey);
+      const iconHeight = 38;
+      const iconWidth = iconHeight * (frame.realWidth / frame.realHeight);
+      icon = this.add.image(-48, 0, imageKey).setDisplaySize(iconWidth, iconHeight);
+    } else {
+      icon = this.add.graphics();
+      if (drawIcon) drawIcon(icon);
+    }
     card.add([panel, icon,
       this.add.text(-25, -10, title, { fontFamily: "Arial", fontSize: "12px", color: "#563a25", fontStyle: "bold" }),
       this.add.text(-25, 9, costLabel, { fontFamily: "Arial", fontSize: "11px", color: "#72583c" })
@@ -973,43 +979,31 @@ export default class BattleScene extends Scene {
 
   drawRadish(x, y) {
     const plant = this.add.container(x, y).setDepth(11);
-    const g = this.add.graphics();
 
-    // Rounded radish body: broad shoulders tapering to a root tip at y=0.
-    g.fillStyle(0x9f2937, 1);
-    g.fillEllipse(0, -25, 31, 34);
-    g.fillStyle(0xd94b52, 1);
-    g.fillTriangle(-14, -37, 14, -37, 0, -1);
-    g.fillStyle(0xf4a0a0, 0.9);
-    g.fillEllipse(-7, -28, 7, 15);
-    g.fillStyle(0x6f2630, 1);
-    g.fillTriangle(-3, -5, 3, -5, 0, 0);
+    if (this.textures.exists("radish-character")) {
+      const frame = this.textures.getFrame("radish-character");
+      const displayHeight = 88;
+      const displayWidth = displayHeight * (frame.realWidth / frame.realHeight);
+      const character = this.add.image(0, -displayHeight / 2 + 2, "radish-character")
+        .setDisplaySize(displayWidth, displayHeight);
+      plant.add(character);
+    } else {
+      // Keep a lightweight fallback if the uploaded character image cannot load.
+      const g = this.add.graphics();
+      g.fillStyle(0xe8d7b4, 1);
+      g.fillEllipse(0, -25, 31, 34);
+      g.fillStyle(0xf6e8cf, 1);
+      g.fillTriangle(-14, -37, 14, -37, 0, -1);
+      g.fillStyle(0x4f963f, 1);
+      g.fillEllipse(-10, -48, 18, 9);
+      g.fillEllipse(1, -54, 12, 18);
+      g.fillEllipse(11, -47, 17, 9);
+      g.fillStyle(0x302b29, 1);
+      g.fillCircle(-6, -25, 2);
+      g.fillCircle(6, -25, 2);
+      plant.add(g);
+    }
 
-    // Leaves and short stem rise from the shoulders, away from the soil.
-    g.lineStyle(4, 0x477b38, 1);
-    g.lineBetween(0, -38, 0, -48);
-    g.fillStyle(0x4f963f, 1);
-    g.fillEllipse(-10, -48, 18, 9);
-    g.fillEllipse(1, -54, 12, 18);
-    g.fillEllipse(11, -47, 17, 9);
-    g.lineStyle(1.5, 0x2f682e, 1);
-    g.lineBetween(-17, -48, -4, -48);
-    g.lineBetween(0, -61, 2, -47);
-    g.lineBetween(4, -47, 18, -47);
-
-    // Simple friendly face, positioned on the upper half of the root.
-    g.fillStyle(0xffeadc, 1);
-    g.fillEllipse(-6, -25, 5, 8);
-    g.fillEllipse(6, -25, 5, 8);
-    g.fillStyle(0x302b29, 1);
-    g.fillCircle(-6, -25, 2);
-    g.fillCircle(6, -25, 2);
-    g.lineStyle(2, 0x71333a, 1);
-    g.beginPath();
-    g.arc(0, -18, 5, 0.2, Math.PI - 0.2);
-    g.strokePath();
-
-    plant.add(g);
     this.tweens.add({
       targets: plant,
       scaleY: 1.025,
