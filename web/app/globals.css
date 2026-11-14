@@ -62,3 +62,21 @@ h1 span, .wordmark span { color: #e2ae58; }
   .game-panel { padding: 3px; border-width: 4px; }
   .control-hint { line-height: 1.5; }
 }
+
+.menu-actions { display:flex; flex-wrap:wrap; align-items:center; gap:14px; margin-top:24px; }
+.menu-actions .primary-link { margin-top:0; }
+.secondary-link { display:inline-flex; align-items:center; justify-content:center; min-height:54px; padding:12px 20px; border:3px solid #382315; border-radius:9px; background:linear-gradient(#d9bd8b,#967044); color:#392719; font-weight:900; text-transform:uppercase; letter-spacing:.05em; box-shadow:0 5px 0 #24160d; transition:transform .14s ease,filter .14s ease; }
+.secondary-link:hover { transform:translateY(-2px); filter:brightness(1.12); }
+.menu-facts { display:flex; flex-wrap:wrap; gap:10px; margin-top:30px; }
+.menu-facts span { padding:8px 12px; border:1px solid #d1a66b88; border-radius:20px; color:#f0d9a7; font-size:11px; font-weight:900; letter-spacing:.12em; }
+.info-shell { min-height:100vh; padding:28px 18px; display:grid; place-items:center; background:radial-gradient(ellipse at 50% 0,#665034,#21170f 58%,#120d08); }
+.info-card { width:min(780px,100%); padding:clamp(24px,5vw,52px); border:7px solid #3b2415; border-radius:16px; background:linear-gradient(145deg,#79502f,#4b301d 65%,#392315); box-shadow:inset 0 0 0 2px #d1a66b,0 24px 70px #000b; }
+.info-card h1 { font-size:clamp(34px,6vw,58px); }
+.info-card h2 { margin:26px 0 8px; color:#f0d9a7; font-size:20px; }
+.info-card p,.info-card li { color:#ead7b2; font-size:16px; line-height:1.7; }
+.info-card li { margin:7px 0; }
+.info-nav { display:flex; flex-wrap:wrap; gap:12px; margin-top:28px; }
+.settings-row { display:grid; grid-template-columns:1fr minmax(140px,260px) 42px; align-items:center; gap:14px; margin:22px 0; color:#f0d9a7; font-weight:700; }
+.settings-row input { width:100%; accent-color:#e2ae58; }
+.settings-row output { text-align:right; }
+@media(max-width:560px) { .settings-row { grid-template-columns:1fr 46px; } .settings-row input { grid-column:1/-1; grid-row:2; } .settings-row output { grid-column:2; grid-row:1; } }
