@@ -11,7 +11,7 @@ const GRID_CENTER_Y = (GRID_NODES[0][0].y + GRID_NODES[LANES][0].y) / 2;
 const CELL_W = GRID_WIDTH / COLUMNS;
 const CELL_H = GRID_HEIGHT / LANES;
 const HOME_LOCAL_X = -300;
-const SPAWN_LOCAL_X = 330;
+const SPAWN_LOCAL_X = GRID_WIDTH / 2 + 28;
 const RADISH = { label: "Radish", cost: 35, hp: 110, cooldown: 1450, range: 360 };
 
 export default class BattleScene extends Scene {
@@ -638,7 +638,7 @@ export default class BattleScene extends Scene {
     const dy = target.y - this.caveman.y;
     const distance = Math.hypot(dx, dy);
     if (distance > 7) {
-      const step = Math.min(distance, 460 * dt);
+      const step = Math.min(distance, 900 * dt);
       this.caveman.x += dx / distance * step;
       this.caveman.y += dy / distance * step;
       if (dx !== 0) { this.facing = Math.sign(dx); this.caveman.scaleX = this.facing; }
@@ -661,7 +661,7 @@ export default class BattleScene extends Scene {
       this.setMessage("The caveman is back behind the final defense line.");
       return;
     }
-    const step = Math.min(distance, 560 * dt);
+    const step = Math.min(distance, 1050 * dt);
     this.caveman.x += (dx / distance) * step;
     this.caveman.y += (dy / distance) * step;
     if (dx !== 0) {
@@ -773,6 +773,14 @@ export default class BattleScene extends Scene {
     const hp = 65 + Math.floor(this.wave * 4);
     const spawn = this.lanePoint(SPAWN_LOCAL_X, row);
     const view = this.add.container(spawn.x, spawn.y);
+    // Perspective lanes are closer together near the horizon. Scale each
+    // monster to its lane spacing so feet from one lane never cover the
+    // head of a monster in the lane behind it.
+    const laneGap = row < LANES - 1
+      ? this.laneYs[row + 1] - this.laneYs[row]
+      : this.laneYs[row] - this.laneYs[row - 1];
+    const monsterScale = PhaserMath.Clamp(laneGap / 108, 0.28, 0.62);
+    view.setScale(monsterScale);
     const g = this.add.graphics();
     g.fillStyle(0x7b9872, 1); g.fillEllipse(0, 16, 42, 58);
     g.fillStyle(0x9cae88, 1); g.fillCircle(0, -22, 25);
