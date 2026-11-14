@@ -493,7 +493,7 @@ export default class BattleScene extends Scene {
   }
 
   playUprootSound() {
-    if (!this.soundEnabled) return;
+    if (!this.effectsSoundEnabled) return;
     const audioContext = this.sound && this.sound.context;
     if (!audioContext || typeof audioContext.createOscillator !== "function") return;
     try {
@@ -559,6 +559,7 @@ export default class BattleScene extends Scene {
       space: Input.Keyboard.KeyCodes.SPACE
     });
     this.input.on("pointerdown", (pointer) => {
+      this.resumeGameAudio();
       if (this.gameOver) return;
       const { col, row } = this.worldToGrid(pointer.x, pointer.y);
       if (row >= 0 && row < LANES && col >= 0 && col < COLUMNS) this.requestPlant(col, row);
