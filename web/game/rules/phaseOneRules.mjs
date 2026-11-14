@@ -93,11 +93,11 @@ export function saveCoins(storage, value) {
 // the final roster and its prices are approved.
 export function purchasePlant({ coins, plantId, price, unlockedPlantIds = [] } = {}) {
   const balance = normalizeCoins(coins);
-  const id = typeof plantId === "string" ? plantId.trim() : "";
-  if (!id) return { ok: false, reason: "invalid-plant", coins: balance, unlockedPlantIds: [...unlockedPlantIds] };
   if (!Array.isArray(unlockedPlantIds)) {
     return { ok: false, reason: "invalid-unlocks", coins: balance, unlockedPlantIds: [] };
   }
+  const id = typeof plantId === "string" ? plantId.trim() : "";
+  if (!id) return { ok: false, reason: "invalid-plant", coins: balance, unlockedPlantIds: [...unlockedPlantIds] };
   if (unlockedPlantIds.includes(id)) {
     return { ok: false, reason: "already-unlocked", coins: balance, unlockedPlantIds: [...unlockedPlantIds] };
   }
