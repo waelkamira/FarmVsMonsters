@@ -50,3 +50,40 @@ export function monsterArchetypeFor(wave, spawnIndex) {
   if (wave >= 3 && spawnIndex % 3 === 1) return "dust-skitter";
   return "cave-brute";
 }
+
+
+export const PROGRESSION_STORAGE_KEY = "farmVsMonsters.progression.v1";
+export const PROGRESSION_DATA_VERSION = 1;
+
+export function normalizeCoins(value) {
+  const numeric = typeof value === "number" ? value : Number(value);
+  if (!Number.isSafeInteger(numeric) || numeric < 0) return 0;
+  return numeric;
+}
+
+export function loadSavedCoins(storage) {
+  if (!storage || typeof storage.getItem !== "function") return 0;
+  try {
+    const raw = storage.getItem(PROGRESSION_STORAGE_KEY);
+    if (!raw) return 0;
+    const data = JSON.parse(raw);
+    if (!data || data.version !== PROGRESSION_DATA_VERSION) return 0;
+    return normalizeCoins(data.coins);
+  } catch {
+    return 0;
+  }
+}
+
+export function saveCoins(storage, value) {
+  const coins = normalizeCoins(value);
+  if (!storage || typeof storage.setItem !== "function") return false;
+  try {
+    storage.setItem(PROGRESSION_STORAGE_KEY, JSON.stringify({
+      version: PROGRESSION_DATA_VERSION,
+      coins
+    }));
+    return true;
+  } catch {
+    return false;
+  }
+}
