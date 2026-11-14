@@ -17,7 +17,7 @@ export default function HomePage() {
           <Link className="secondary-link" href="/settings">Settings</Link>
           <Link className="secondary-link" href="/credits">Credits</Link>
         </nav>
-        <div className="menu-facts"><span>5 WAVES</span><span>61 MONSTERS</span><span>1 FARM TO DEFEND</span></div>
+        <div className="menu-facts"><span>5 WAVES</span><span>100 MONSTERS</span><span>1 FARM TO DEFEND</span></div>
         <p className="home-note">A hand-drawn prehistoric world of roots, stone, timber, and wild creatures.</p>
       </div>
     </main>
