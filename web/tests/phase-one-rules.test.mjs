@@ -137,7 +137,7 @@ test("player guidance and roadmap match the current Phase 1 balance", () => {
   assert.match(guide, /15-energy collectible every 12 seconds/);
   assert.match(gamePage, /Collect glowing Mushroom energy/);
   assert.match(roadmap, /10 \/ 15 \/ 20 \/ 25 \/ 30/);
-  assert.match(roadmap, /15 collectible energy per Mushroom every 12 seconds/);
+  assert.match(roadmap, /full 15-energy collectible per Mushroom every 12 seconds/);
   assert.match(roadmap, /Cave-brute, Dust-skitter, Stonehide/);
   assert.doesNotMatch(roadmap, /25 collectible energy per Mushroom every 8 seconds/i);
 });
