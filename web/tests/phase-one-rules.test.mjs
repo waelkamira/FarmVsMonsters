@@ -52,6 +52,8 @@ test("CC0 Kenney sound assets are bundled locally and mapped to gameplay events"
   assert.match(scene, /playMonsterDefeatSound\(\)/);
   assert.match(scene, /playCoinRewardSound\(\)/);
   assert.match(scene, /playThornImpactSound\(\)/);
+  assert.match(scene, /playVictoryMusic\(\) \{\s*this\.playSfx\("sfx-victory"/);
+  assert.match(scene, /playDefeatMusic\(\) \{\s*this\.playSfx\("sfx-defeat"/);
 });
 
 test("five Phase 1 waves are strictly increasing and total exactly 100", () => {
