@@ -162,8 +162,10 @@ BATTLE
 - The browser rebuild and core battle scene exist in `web/`.
 - The code contains planting, radish/energy-mushroom logic, monsters, wave progression, audio controls, and farmer animation calibration, but feature presence is not proof of correct runtime behavior.
 - Farmer frame-count validation was added on 2026-11-14.
+- The Phase 1 wave schedule is now fixed in code at 5 / 8 / 12 / 16 / 20 monsters (61 total); the sixth-wave loop has been removed.
+- Final-wave completion now triggers a Victory result only after all scheduled monsters have spawned and no living monsters remain. Victory and Defeat result panels include run summaries and replay/menu actions.
 - Browser build and end-to-end manual playthrough have not yet been verified in this development session.
-- Therefore **Phase 1 remains IN PROGRESS**. The next work is to implement/verify the screen flow and end conditions, correct asset slicing/animation issues, run the build, and complete the victory/defeat/restart playthrough matrix.
+- Therefore **Phase 1 remains IN PROGRESS**. Next: verify the wave/result flow in a real browser, validate objective breach/health behavior, finish the remaining screen flow, run the build, and complete the victory/defeat/restart playthrough matrix.
 
 ## Work order from here
 
