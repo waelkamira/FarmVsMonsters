@@ -132,6 +132,14 @@ def main():
     for index, frame in enumerate(frames, start=1):
         frame.save(output_dir / f"frame-{index:02d}.png")
 
+    # A Phaser-ready horizontal spritesheet: each cell is exactly 512x512.
+    # No inter-cell gutter is used because Phaser's frameWidth/frameHeight
+    # define the cell boundaries explicitly.
+    strip = Image.new("RGBA", (len(frames) * CANVAS, CANVAS), (0, 0, 0, 0))
+    for index, frame in enumerate(frames):
+        strip.alpha_composite(frame, (index * CANVAS, 0))
+    strip.save(output_dir / "farmer-animation-strip.png")
+
     columns = len(column_runs)
     rows = len(row_runs)
     pad, label_h = 12, 24
@@ -155,6 +163,14 @@ def main():
         "frame_count": len(frames),
         "detected_grid": {"rows": rows, "columns": columns},
         "canvas": [CANVAS, CANVAS],
+        "phaser_spritesheet": {
+            "file": "farmer-animation-strip.png",
+            "frame_width": CANVAS,
+            "frame_height": CANVAS,
+            "frame_count": len(frames),
+            "spacing": 0,
+            "margin": 0,
+        },
         "transparent_padding": PADDING,
         "shared_scale": scale,
         "frames": metadata,
@@ -163,6 +179,7 @@ def main():
         json.dumps(report, indent=2), encoding="utf-8"
     )
     print(f"Extracted {len(frames)} frames to {output_dir}")
+    print(f"Phaser spritesheet: {output_dir / 'farmer-animation-strip.png'}")
     print(f"Detected grid: {rows} row(s) x {columns} column(s)")
     print(f"Shared scale: {scale:.8f}")
     print("Pass this exact --scale value to every other action sheet.")
