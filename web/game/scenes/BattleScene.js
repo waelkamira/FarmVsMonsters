@@ -33,12 +33,21 @@ export default class BattleScene extends Scene {
     this.load.image("farm-battlefield", "/assets/backgrounds/farm-battlefield.jpeg");
     this.load.image("radish-character", "/assets/plants/radish.png");
     this.load.image("mushroom-character", "/assets/plants/mushroom.png");
-    this.load.image("farmer-sheet-source", "/assets/characters/farmer/farmer-sprite-sheet.jpeg");
+    this.load.spritesheet("farmer-run", "/assets/characters/farmer/farmer-run.png", { frameWidth: 180, frameHeight: 720 });
+    this.load.spritesheet("farmer-walk", "/assets/characters/farmer/farmer-walk.png", { frameWidth: 180, frameHeight: 720 });
+    this.load.spritesheet("farmer-jump", "/assets/characters/farmer/farmer-jump.png", { frameWidth: 216, frameHeight: 720 });
+    this.load.spritesheet("farmer-idle", "/assets/characters/farmer/farmer-idle.png", { frameWidth: 540, frameHeight: 360 });
+    this.load.spritesheet("farmer-plant", "/assets/characters/farmer/farmer-plant.png", { frameWidth: 180, frameHeight: 360 });
+    this.load.spritesheet("farmer-collect", "/assets/characters/farmer/farmer-collect.png", { frameWidth: 180, frameHeight: 360 });
+    this.load.spritesheet("farmer-uproot", "/assets/characters/farmer/farmer-uproot.png", { frameWidth: 180, frameHeight: 360 });
+    this.load.spritesheet("farmer-attack", "/assets/characters/farmer/farmer-attack.png", { frameWidth: 180, frameHeight: 360 });
+    this.load.spritesheet("farmer-hit", "/assets/characters/farmer/farmer-hit.png", { frameWidth: 152, frameHeight: 430 });
+    this.load.spritesheet("farmer-death", "/assets/characters/farmer/farmer-death.png", { frameWidth: 152, frameHeight: 430 });
     this.load.on("loaderror", (file) => {
       if (file.key === "farm-battlefield") this.backgroundAssetFailed = true;
       if (file.key === "radish-character") this.radishAssetFailed = true;
       if (file.key === "mushroom-character") this.mushroomAssetFailed = true;
-      if (file.key === "farmer-sheet-source") this.farmerAssetFailed = true;
+      if (file.key.startsWith("farmer-")) this.farmerAssetFailed = true;
     });
   }
 
@@ -454,10 +463,25 @@ export default class BattleScene extends Scene {
     this.farmerWantsToRun = false;
     this.caveman = this.add.container(220, this.laneYs[2]).setDepth(10 + this.laneYs[2] / 1000);
 
-    if (this.textures.exists("farmer-sheet-source") && this.createFarmerAnimations()) {
-      this.cavemanVisual = this.add.sprite(0, 0, "farmer-character", "idle")
-        .setOrigin(0.5, 0.82)
-        .setScale(1.02);
+    if (this.textures.exists("farmer-idle") && this.createFarmerAnimations()) {
+      this.cavemanVisual = this.add.sprite(0, 0, "farmer-idle", 0)
+        .setOrigin(0.5, 1)
+        .setScale(0.76);
+      this.cavemanVisual.on("animationstart", (animation) => {
+        const farmerScales = {
+          "farmer-idle": 0.76,
+          "farmer-run": 0.42,
+          "farmer-walk": 0.42,
+          "farmer-jump": 0.42,
+          "farmer-plant": 0.42,
+          "farmer-uproot": 0.42,
+          "farmer-attack": 0.42,
+          "farmer-hit": 0.38,
+          "farmer-death": 0.38,
+          "farmer-collect": 0.42
+        };
+        this.cavemanVisual.setScale(farmerScales[animation.key] || 0.42);
+      });
       this.caveman.add(this.cavemanVisual);
       this.cavemanVisual.play("farmer-idle");
     } else {
@@ -513,107 +537,35 @@ export default class BattleScene extends Scene {
   }
 
   createFarmerAnimations() {
-    if (this.textures.exists("farmer-character")) return true;
+    const definitions = [
+      ["farmer-idle", "farmer-idle", 4, 4, -1],
+      ["farmer-run", "farmer-run", 6, 12, -1],
+      ["farmer-walk", "farmer-walk", 8, 8, -1],
+      ["farmer-jump", "farmer-jump", 5, 8, 0],
+      ["farmer-plant", "farmer-plant", 6, 10, 0],
+      ["farmer-uproot", "farmer-uproot", 6, 10, 0],
+      ["farmer-collect", "farmer-collect", 6, 10, 0],
+      ["farmer-attack", "farmer-attack", 6, 12, 0],
+      ["farmer-hit", "farmer-hit", 6, 10, 0],
+      ["farmer-death", "farmer-death", 6, 8, 0]
+    ];
 
-    let canvasTexture = null;
     try {
-      const source = this.textures.get("farmer-sheet-source").getSourceImage();
-      if (!source || source.width !== 1080 || source.height !== 720) {
-        throw new Error("Farmer sprite sheet must be 1080 × 720 pixels.");
-      }
-
-      canvasTexture = this.textures.createCanvas("farmer-character", 1080, 720);
-      const context = canvasTexture.context;
-      context.drawImage(source, 0, 0, 1080, 720);
-
-      // Remove only near-white pixels connected to the canvas edge. This
-      // preserves the white eyes and teeth inside the farmer's silhouette.
-      const pixels = context.getImageData(0, 0, 1080, 720);
-      const data = pixels.data;
-      const width = 1080;
-      const height = 720;
-      const visited = new Uint8Array(width * height);
-      const queue = new Int32Array(width * height);
-      let head = 0;
-      let tail = 0;
-      const isPaper = (pixel) => {
-        const offset = pixel * 4;
-        const r = data[offset], g = data[offset + 1], b = data[offset + 2];
-        return Math.min(r, g, b) > 218 && Math.max(r, g, b) - Math.min(r, g, b) < 32;
-      };
-      const enqueue = (pixel) => {
-        if (pixel < 0 || pixel >= width * height || visited[pixel] || !isPaper(pixel)) return;
-        visited[pixel] = 1;
-        queue[tail++] = pixel;
-      };
-      for (let x = 0; x < width; x += 1) {
-        enqueue(x);
-        enqueue((height - 1) * width + x);
-      }
-      for (let y = 1; y < height - 1; y += 1) {
-        enqueue(y * width);
-        enqueue(y * width + width - 1);
-      }
-      while (head < tail) {
-        const pixel = queue[head++];
-        const x = pixel % width;
-        if (x > 0) enqueue(pixel - 1);
-        if (x < width - 1) enqueue(pixel + 1);
-        if (pixel >= width) enqueue(pixel - width);
-        if (pixel < width * (height - 1)) enqueue(pixel + width);
-      }
-      for (let pixel = 0; pixel < visited.length; pixel += 1) {
-        if (visited[pixel]) data[pixel * 4 + 3] = 0;
-      }
-      context.putImageData(pixels, 0, 0);
-      canvasTexture.refresh();
-
-      // Hand-fitted crops follow the seven actual artwork bands. Each crop
-      // contains one pose; the sheet is deliberately not treated as a uniform grid.
-      const centers = [110, 260, 405, 555, 700, 840, 985];
-      const regions = {};
-      centers.forEach((center, index) => {
-        regions["run-" + index] = [center - 68, 0, 136, 120];
-        regions["plant-" + index] = [center - 68, 215, 136, 112];
-        regions["uproot-" + index] = [center - 68, 315, 136, 115];
-        regions["attack-" + index] = [center - 68, 415, 136, 118];
-      });
-      [110, 260, 405, 555].forEach((center, index) => {
-        regions["idle-" + index] = [center - 68, 120, 136, 108];
-        regions["collect-" + index] = [center - 68, 610, 136, 110];
-      });
-      [110, 260, 405].forEach((center, index) => {
-        regions["hit-" + index] = [center - 68, 520, 136, 120];
-      });
-      [550, 695, 840, 985].forEach((center, index) => {
-        regions["death-" + index] = [center - 68, 520, 136, 120];
-      });
-      Object.entries(regions).forEach(([name, [x, y, frameWidth, frameHeight]]) => {
-        canvasTexture.add(name, 0, x, y, frameWidth, frameHeight);
-      });
-
-      const frames = (prefix, count) => Array.from(
-        { length: count },
-        (_, index) => ({ key: "farmer-character", frame: prefix + "-" + index })
-      );
-      const animations = [
-        ["farmer-run", frames("run", 7), 10, -1],
-        ["farmer-idle", frames("idle", 4), 4, -1],
-        ["farmer-plant", frames("plant", 7), 9, 0],
-        ["farmer-uproot", frames("uproot", 7), 9, 0],
-        ["farmer-attack", frames("attack", 7), 12, 0],
-        ["farmer-hit", frames("hit", 3), 10, 0],
-        ["farmer-death", frames("death", 4), 7, 0],
-        ["farmer-collect", frames("collect", 4), 9, 0]
-      ];
-      animations.forEach(([key, animationFrames, frameRate, repeat]) => {
+      for (const [key, texture, frameCount, frameRate, repeat] of definitions) {
+        if (!this.textures.exists(texture)) {
+          throw new Error("Missing farmer animation texture: " + texture);
+        }
         if (this.anims.exists(key)) this.anims.remove(key);
-        this.anims.create({ key, frames: animationFrames, frameRate, repeat });
-      });
+        this.anims.create({
+          key,
+          frames: this.anims.generateFrameNumbers(texture, { start: 0, end: frameCount - 1 }),
+          frameRate,
+          repeat
+        });
+      }
       return true;
     } catch (error) {
-      if (this.textures.exists("farmer-character")) this.textures.remove("farmer-character");
-      console.warn("Farmer sprite sheet unavailable; using fallback artwork.", error);
+      console.warn("Farmer animation assets unavailable; using fallback artwork.", error);
       this.farmerAssetFailed = true;
       return false;
     }
