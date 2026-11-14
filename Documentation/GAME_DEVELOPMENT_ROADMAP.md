@@ -33,7 +33,7 @@ BATTLE
 
 - **Main menu:** game logo, Play, How to Play, Settings, Credits; show a clear loading/error state if required assets fail.
 - **How to Play:** explain selecting either the Radish or Energy Mushroom card, choosing an empty cell, the caveman's planting trip, plant defense, collectible mushroom energy, monsters, and the farmhouse objective.
-- **Battle HUD:** wave number/progress, energy, selected plant, pause, audio controls, objective/short guidance, and clear feedback for invalid actions.
+- **Battle HUD:** wave number/progress, energy, coins, selected plant, pause, audio controls, objective/short guidance, and clear feedback for invalid actions.
 - **Pause:** freeze gameplay simulation (including movement, attacks, timers, spawns, and projectiles); offer Resume, Restart, Settings, Main Menu.
 - **Victory:** explicit VICTORY title, completed wave count, elapsed time, defeated monsters, plants planted, energy collected/remaining, and Play Again / Main Menu.
 - **Defeat:** explicit FARM LOST / DEFEAT title, cause of defeat, wave reached, elapsed time, defeated monsters, and Retry / Main Menu.
@@ -132,7 +132,7 @@ BATTLE
 ## Phase 5 — Campaign, progression, rewards, and persistence
 
 - Build a level/campaign map, unlock sequence, difficulty curve, wave definitions, boss milestones, and replay access.
-- Add earned rewards, currency, plant unlocks/upgrades, and progression rules. Avoid pay-to-win assumptions in the core prototype.
+- Add persistent earned rewards, currency, plant unlocks/upgrades, and progression rules. Avoid pay-to-win assumptions in the core prototype.
 - Save settings and progression safely; handle corrupted/missing save data with a recoverable default.
 - Add player profile only if required by the chosen release model; do not block the offline single-player loop on account creation.
 - Exit gate: progress survives reload, unlocks are deterministic, and no reward can be duplicated by retrying or refreshing.
@@ -178,7 +178,7 @@ BATTLE
 - The planting lifecycle now locks the caveman through travel, planting animation, and return travel. New planting requests, manual movement, and emergency club attacks cannot overlap an active planting/return action; game-over also cancels pending planting callbacks. Browser verification is still required.
 - Audio resume no longer triggers the opening soundtrack note twice after a suspended Web Audio context resumes.
 - Monsters now treat only living Radishes as defensive blockers; resource Mushrooms do not stop, delay, or redirect a monster lane. A farmhouse defeat also aborts the remainder of the current simulation frame immediately. Pending Mushroom pickups and their expiry timers are cleared when a victory or defeat result opens.
-- The Phase 1 resource loop starts with 150 energy, costs 35 for a Radish and 50 for a Mushroom, awards 8 energy per defeated monster, and produces a full 15-energy collectible per Mushroom every 12 seconds; the 300-energy cap is applied only when the pickup is collected. Radish health is 160; the baseline Cave-brute deals 16 damage every 1.15 seconds, while Stonehide deals 23 every 1.45 seconds and reduces incoming damage while braced. Runtime balance still requires playtesting.
+- The Phase 1 resource loop starts with 150 energy, costs 35 for a Radish and 50 for a Mushroom, awards 8 coins per defeated monster, and produces a full 15-energy collectible per Mushroom every 12 seconds; the 300-energy cap is applied only when the pickup is collected. Radish health is 160; the baseline Cave-brute deals 16 damage every 1.15 seconds, while Stonehide deals 23 every 1.45 seconds and reduces incoming damage while braced. Runtime balance still requires playtesting.
 - Therefore **Phase 1 remains IN PROGRESS**. Next: verify the Radish and Mushroom battle loops, all three monster archetypes, wave/result flow, objective breach/health behavior, pause/audio lifecycle, screen transitions, production build, and victory/defeat/restart playthrough matrix.
 
 ## Work order from here
