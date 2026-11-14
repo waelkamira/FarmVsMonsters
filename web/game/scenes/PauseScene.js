@@ -25,10 +25,6 @@ export default class PauseScene extends Scene {
       if (typeof window !== "undefined") window.location.assign("/");
     });
 
-    this.input.keyboard.addKeys({
-      escape: Input.Keyboard.KeyCodes.ESC,
-      p: Input.Keyboard.KeyCodes.P
-    });
     this.input.keyboard.on("keydown-ESC", this.resumeBattle, this);
     this.input.keyboard.on("keydown-P", this.resumeBattle, this);
     this.events.once("shutdown", () => {
@@ -51,13 +47,15 @@ export default class PauseScene extends Scene {
 
   resumeBattle() {
     const battle = this.scene.get("BattleScene");
+    if (!battle || !battle.isPaused || battle.gameOver) return;
     this.scene.stop();
     this.scene.resume("BattleScene");
     battle.resumeFromPause();
   }
 
   restartBattle() {
-    this.scene.stop("BattleScene");
+    const battle = this.scene.get("BattleScene");
+    if (battle && battle.scene.isActive()) battle.scene.stop();
     this.scene.start("BattleScene");
   }
 }
