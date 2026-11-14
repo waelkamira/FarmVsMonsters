@@ -409,7 +409,7 @@ export default class BattleScene extends Scene {
       fontFamily: "Georgia", fontSize: title.length > 12 ? "9px" : "12px",
       color: "#fff0c8", fontStyle: "bold", stroke: "#49301d", strokeThickness: 2
     }).setOrigin(0, 0.5);
-    const cost = this.add.text(-14, 10, costLabel + " STONE", {
+    const cost = this.add.text(-14, 10, costLabel + " ENERGY", {
       fontFamily: "Georgia", fontSize: "10px", color: "#ffe4a7", fontStyle: "bold",
       stroke: "#49301d", strokeThickness: 2
     }).setOrigin(0, 0.5);
