@@ -456,7 +456,7 @@ export default class BattleScene extends Scene {
     if (this.textures.exists("farmer-sheet-source") && this.createFarmerAnimations()) {
       this.cavemanVisual = this.add.sprite(0, 0, "farmer-character", "idle")
         .setOrigin(0.5, 0.82)
-        .setScale(0.34);
+        .setScale(1.02);
       this.caveman.add(this.cavemanVisual);
       this.cavemanVisual.play("farmer-idle");
     } else {
