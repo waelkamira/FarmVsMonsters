@@ -42,8 +42,19 @@ BATTLE
 
 ## End conditions (locked for the first playable version)
 
-- The first playable campaign has **5 waves**. Wave 5 is the final wave for the Phase 1 prototype.
-- **Victory:** the player survives all five waves and the final wave's remaining monsters are defeated. Only then show the Victory screen.
+- The first playable campaign has **5 waves and 61 monsters total**, with this fixed first-pass distribution:
+
+  | Wave | Monsters |
+  | --- | ---: |
+  | 1 | 5 |
+  | 2 | 8 |
+  | 3 | 12 |
+  | 4 | 16 |
+  | 5 | 20 |
+  | **Total** | **61** |
+
+- Wave counts are data-defined for Phase 1; do not generate an unbounded sixth wave.
+- **Victory:** the player survives all five waves, all 61 monsters have spawned, and no living monsters remain after Wave 5. Only then show the Victory screen and its result summary.
 - **Defeat:** the farmhouse/princess objective health reaches zero after monsters breach the defensive line. Show the Defeat screen immediately and stop battle simulation.
 - Plant destruction alone is not defeat. If all defensive plants die, switch to caveman emergency club combat according to the gameplay rules.
 - Restart/retry resets the entire battle state: wave, timers, enemies, plants, projectiles, energy, objective health, selection, animations, and result flags. It must not duplicate event listeners or leave old entities alive.
