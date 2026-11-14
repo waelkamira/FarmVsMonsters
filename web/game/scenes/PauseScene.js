@@ -1,4 +1,4 @@
-import { Scene, Input } from "phaser";
+import { Scene } from "phaser";
 
 export default class PauseScene extends Scene {
   constructor() {
