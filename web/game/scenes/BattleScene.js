@@ -546,9 +546,11 @@ export default class BattleScene extends Scene {
         if (!context || !sourceImage) throw new Error("Canvas alpha sampling is unavailable.");
 
         context.clearRect(0, 0, canvas.width, canvas.height);
+        const sourceX = Number.isFinite(frame.cutX) ? frame.cutX : frame.x;
+        const sourceY = Number.isFinite(frame.cutY) ? frame.cutY : frame.y;
         context.drawImage(
           sourceImage,
-          frame.cutX, frame.cutY, frame.width, frame.height,
+          sourceX, sourceY, frame.width, frame.height,
           0, 0, frame.width, frame.height
         );
         const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
