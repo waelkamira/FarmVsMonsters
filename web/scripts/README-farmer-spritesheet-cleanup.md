@@ -57,8 +57,10 @@ python -m pip install Pillow
 python web/scripts/extract-farmer-frames.py "path/to/farmer-sheet.png"
 ```
 
-The extractor detects frame rows and columns from transparent gutters (the
-authored separators should be at least 8px wide; the agreed target is 16px).
+The extractor detects frame rows and columns from transparent gutters. Narrow
+transparent slits smaller than 8px are merged, so internal gaps in a drawing do
+not split a frame; authored separators should be at least 8px wide (the agreed
+target is 16px).
 It writes numbered PNGs, `contact-sheet.jpg`, and `frames.json` into a new
 output folder. Each output is 512×512, with at least 16px transparent padding
 and a shared scale within that source sheet. The source PNG is never changed.
