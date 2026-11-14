@@ -176,8 +176,8 @@ BATTLE
 - The farmer walk animation now requests the four frames present in the 2×2 walk sheet instead of eight nonexistent frames. Planting also has a safe return-to-start fallback when the farmer animation artwork is unavailable, so missing animation assets do not strand the planting flow.
 - The planting lifecycle now locks the caveman through travel, planting animation, and return travel. New planting requests, manual movement, and emergency club attacks cannot overlap an active planting/return action; game-over also cancels pending planting callbacks. Browser verification is still required.
 - Audio resume no longer triggers the opening soundtrack note twice after a suspended Web Audio context resumes.
-- The Phase 1 resource loop starts with 150 energy, costs 35 for a Radish and 50 for a Mushroom, awards 8 energy per defeated monster, and produces 25 collectible energy per Mushroom every 8 seconds (subject to the 300-energy cap). Runtime balance still requires playtesting.
-- Therefore **Phase 1 remains IN PROGRESS**. Next: verify the Radish-only battle loop, wave/result flow, objective breach/health behavior, pause/audio lifecycle, screen transitions, production build, and victory/defeat/restart playthrough matrix.
+- The Phase 1 resource loop starts with 150 energy, costs 35 for a Radish and 50 for a Mushroom, awards 8 energy per defeated monster, and produces 15 collectible energy per Mushroom every 12 seconds (subject to the 300-energy cap). Runtime balance still requires playtesting.
+- Therefore **Phase 1 remains IN PROGRESS**. Next: verify the Radish and Mushroom battle loops, wave/result flow, objective breach/health behavior, pause/audio lifecycle, screen transitions, production build, and victory/defeat/restart playthrough matrix.
 
 ## Work order from here
 
