@@ -60,7 +60,7 @@ BATTLE
 - Restart/retry resets the entire battle state: wave, timers, enemies, plants, projectiles, energy, objective health, selection, animations, and result flags. It must not duplicate event listeners or leave old entities alive.
 - Main Menu exits the battle scene cleanly. Returning to battle starts a fresh run unless a future explicit save/resume feature is added.
 
-## Phase 1 — Complete playable vertical slice
+- Pause now runs in a dedicated Phaser `PauseScene` above the paused battle scene, so pause-menu input remains active while the simulation is frozen. Resume, Restart, Settings, Main Menu, and Escape/P resume controls are handled by the overlay scene. This replaces the earlier same-scene pause overlay; browser verification is still required.\n\n## Phase 1 — Complete playable vertical slice
 
 **Purpose:** prove one satisfying, complete game loop with one defender: the Radish. Do not add a second defensive plant in this phase.
 
