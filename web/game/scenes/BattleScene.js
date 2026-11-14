@@ -34,7 +34,7 @@ export default class BattleScene extends Scene {
     this.load.image("radish-character", "/assets/plants/radish.png");
     this.load.image("mushroom-character", "/assets/plants/mushroom.png");
     this.load.spritesheet("farmer-run", "/assets/characters/farmer/farmer-run.png", { frameWidth: 180, frameHeight: 720 });
-    this.load.spritesheet("farmer-walk", "/assets/characters/farmer/farmer-walk.png", { frameWidth: 180, frameHeight: 720 });
+    this.load.spritesheet("farmer-walk", "/assets/characters/farmer/farmer-walk.png", { frameWidth: 270, frameHeight: 360 });
     this.load.spritesheet("farmer-jump", "/assets/characters/farmer/farmer-jump.png", { frameWidth: 216, frameHeight: 720 });
     this.load.spritesheet("farmer-idle", "/assets/characters/farmer/farmer-idle.png", { frameWidth: 540, frameHeight: 360 });
     this.load.spritesheet("farmer-plant", "/assets/characters/farmer/farmer-plant.png", { frameWidth: 180, frameHeight: 360 });
@@ -471,7 +471,7 @@ export default class BattleScene extends Scene {
         const farmerScales = {
           "farmer-idle": 0.76,
           "farmer-run": 0.42,
-          "farmer-walk": 0.42,
+          "farmer-walk": 0.40,
           "farmer-jump": 0.42,
           "farmer-plant": 0.42,
           "farmer-uproot": 0.42,
