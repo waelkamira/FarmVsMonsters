@@ -1142,52 +1142,12 @@ export default class BattleScene extends Scene {
     if (this.gameOver || this.isPaused || !this.scene.isActive()) return;
     this.isPaused = true;
     this.stopBackgroundMusic();
-    this.pauseOverlay = this.add.container(560, 340).setDepth(1000);
-    const shade = this.add.rectangle(0, 0, 1120, 680, 0x160f0a, 0.72).setInteractive();
-    const panel = this.add.rectangle(0, 0, 430, 400, 0x79502e, 1).setStrokeStyle(6, 0x3b2517);
-    const inset = this.add.rectangle(0, 0, 410, 380, 0xb88950, 1).setStrokeStyle(2, 0xe5c68e);
-    const title = this.add.text(0, -155, "BATTLE PAUSED", {
-      fontFamily: "Georgia", fontSize: "30px", color: "#fff0c8",
-      fontStyle: "bold", stroke: "#392417", strokeThickness: 4
-    }).setOrigin(0.5);
-    this.pauseOverlay.add([shade, panel, inset, title]);
-    this.createPauseButton(-75, "RESUME", 0x9bc66e, () => this.resumeGame());
-    this.createPauseButton(0, "RESTART", 0xe5c27d, () => {
-      this.pauseOverlay.destroy();
-      this.pauseOverlay = null;
-      this.isPaused = false;
-      this.scene.restart();
-    });
-    this.createPauseButton(75, "SETTINGS", 0xe5c27d, () => {
-      if (typeof window !== "undefined") window.location.assign("/settings");
-    });
-    this.createPauseButton(150, "MAIN MENU", 0xe6a17d, () => {
-      if (typeof window !== "undefined") window.location.assign("/");
-    });
+    this.scene.launch("PauseScene");
     this.scene.pause();
   }
 
-  createPauseButton(y, label, color, action) {
-    const button = this.add.container(560, 340 + y).setDepth(1001);
-    const background = this.add.rectangle(0, 0, 230, 52, 0x4b301e, 1)
-      .setStrokeStyle(3, 0x392417).setInteractive({ useHandCursor: true });
-    const face = this.add.rectangle(0, 0, 220, 44, color, 1).setStrokeStyle(1, 0xf4dfb3);
-    const text = this.add.text(0, 0, label, {
-      fontFamily: "Georgia", fontSize: "15px", color: "#392719", fontStyle: "bold"
-    }).setOrigin(0.5);
-    button.add([background, face, text]);
-    background.on("pointerover", () => background.setScale(1.04));
-    background.on("pointerout", () => background.setScale(1));
-    background.on("pointerdown", action);
-    this.pauseOverlay.add(button);
-  }
-
-  resumeGame() {
-    if (!this.isPaused) return;
-    this.pauseOverlay?.destroy();
-    this.pauseOverlay = null;
+  resumeFromPause() {
     this.isPaused = false;
-    this.scene.resume();
     this.resumeGameAudio();
     if (this.musicEnabled) this.startBackgroundMusic();
   }
