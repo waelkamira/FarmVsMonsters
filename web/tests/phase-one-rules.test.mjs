@@ -92,6 +92,12 @@ test("all three monster profiles and Stonehide bracing damage reduction remain w
   assert.match(scene, /return monster\.braced \? armorMultiplier \* 0\.55 : armorMultiplier/);
 });
 
+test("requestPlant uses the imported centralized plant configs", () => {
+  const requestPlant = scene.slice(scene.indexOf("requestPlant(col, row) {"), scene.indexOf("updatePlantingMovement(dt) {"));
+  assert.match(requestPlant, /this\.selectedPlant === "mushroom" \? MUSHROOM_CONFIG : RADISH_CONFIG/);
+  assert.doesNotMatch(requestPlant, /\b(?:MUSHROOM|RADISH)\b(?!_CONFIG)/);
+});
+
 test("planting validates occupancy and energy before charging", () => {
   assert.match(scene, /if \(this\.energy < config\.cost \|\| this\.plants\.some\(\(p\) => p\.alive && p\.col === col && p\.row === row\)\)/);
   assert.match(scene, /this\.energy -= config\.cost/);
