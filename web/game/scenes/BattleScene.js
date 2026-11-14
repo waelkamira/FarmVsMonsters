@@ -1144,21 +1144,24 @@ export default class BattleScene extends Scene {
     this.stopBackgroundMusic();
     this.pauseOverlay = this.add.container(560, 340).setDepth(1000);
     const shade = this.add.rectangle(0, 0, 1120, 680, 0x160f0a, 0.72).setInteractive();
-    const panel = this.add.rectangle(0, 0, 430, 330, 0x79502e, 1).setStrokeStyle(6, 0x3b2517);
-    const inset = this.add.rectangle(0, 0, 410, 310, 0xb88950, 1).setStrokeStyle(2, 0xe5c68e);
-    const title = this.add.text(0, -120, "BATTLE PAUSED", {
+    const panel = this.add.rectangle(0, 0, 430, 400, 0x79502e, 1).setStrokeStyle(6, 0x3b2517);
+    const inset = this.add.rectangle(0, 0, 410, 380, 0xb88950, 1).setStrokeStyle(2, 0xe5c68e);
+    const title = this.add.text(0, -155, "BATTLE PAUSED", {
       fontFamily: "Georgia", fontSize: "30px", color: "#fff0c8",
       fontStyle: "bold", stroke: "#392417", strokeThickness: 4
     }).setOrigin(0.5);
     this.pauseOverlay.add([shade, panel, inset, title]);
-    this.createPauseButton(-45, "RESUME", 0x9bc66e, () => this.resumeGame());
-    this.createPauseButton(30, "RESTART", 0xe5c27d, () => {
+    this.createPauseButton(-75, "RESUME", 0x9bc66e, () => this.resumeGame());
+    this.createPauseButton(0, "RESTART", 0xe5c27d, () => {
       this.pauseOverlay.destroy();
       this.pauseOverlay = null;
       this.isPaused = false;
       this.scene.restart();
     });
-    this.createPauseButton(105, "MAIN MENU", 0xe6a17d, () => {
+    this.createPauseButton(75, "SETTINGS", 0xe5c27d, () => {
+      if (typeof window !== "undefined") window.location.assign("/settings");
+    });
+    this.createPauseButton(150, "MAIN MENU", 0xe6a17d, () => {
       if (typeof window !== "undefined") window.location.assign("/");
     });
     this.scene.pause();
