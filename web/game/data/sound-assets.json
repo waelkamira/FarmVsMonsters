@@ -115,6 +115,26 @@
       "usedFor": [
         "radish-projectile-impact"
       ]
+    },
+    {
+      "key": "sfx-victory",
+      "path": "/assets/audio/sfx/victory.ogg",
+      "sourceName": "confirmation_002",
+      "sourcePack": "Kenney Interface Sounds",
+      "sourceUrl": "https://kenney.nl/assets/interface-sounds",
+      "usedFor": [
+        "phase-victory"
+      ]
+    },
+    {
+      "key": "sfx-defeat",
+      "path": "/assets/audio/sfx/defeat.ogg",
+      "sourceName": "error_008",
+      "sourcePack": "Kenney Interface Sounds",
+      "sourceUrl": "https://kenney.nl/assets/interface-sounds",
+      "usedFor": [
+        "phase-defeat"
+      ]
     }
   ]
 }
