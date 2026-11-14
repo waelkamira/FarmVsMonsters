@@ -891,8 +891,9 @@ export default class BattleScene extends Scene {
       audioContext.resume().then(() => {
         if (audioContext.state !== "running" || this.audioSceneShuttingDown) return;
         if (this.musicEnabled && !this.gameOver) {
+          // startBackgroundMusic emits the first note itself. Calling the
+          // step again here would stack two notes on every pause/resume.
           this.startBackgroundMusic();
-          this.playBackgroundMusicStep();
         }
       }).catch(() => {});
       return;
