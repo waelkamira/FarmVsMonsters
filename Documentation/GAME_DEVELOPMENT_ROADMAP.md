@@ -60,7 +60,9 @@ BATTLE
 - Restart/retry resets the entire battle state: wave, timers, enemies, plants, projectiles, energy, objective health, selection, animations, and result flags. It must not duplicate event listeners or leave old entities alive.
 - Main Menu exits the battle scene cleanly. Returning to battle starts a fresh run unless a future explicit save/resume feature is added.
 
-- Pause now runs in a dedicated Phaser `PauseScene` above the paused battle scene, so pause-menu input remains active while the simulation is frozen. Resume, Restart, Settings, Main Menu, and Escape/P resume controls are handled by the overlay scene. This replaces the earlier same-scene pause overlay; browser verification is still required.\n\n## Phase 1 — Complete playable vertical slice
+- Pause now runs in a dedicated Phaser `PauseScene` above the paused battle scene, so pause-menu input remains active while the simulation is frozen. Resume, Restart, Settings, Main Menu, and Escape/P resume controls are handled by the overlay scene. This replaces the earlier same-scene pause overlay; browser verification is still required.
+
+## Phase 1 — Complete playable vertical slice
 
 **Purpose:** prove one satisfying, complete game loop with one defender: the Radish. Do not add a second defensive plant in this phase.
 
@@ -165,7 +167,8 @@ BATTLE
 - The Phase 1 wave schedule is now fixed in code at 5 / 8 / 12 / 16 / 20 monsters (61 total); the sixth-wave loop has been removed.
 - Final-wave completion now triggers a Victory result only after all scheduled monsters have spawned and no living monsters remain. Victory and Defeat result panels include run summaries and replay/menu actions.
 - Monsters that breach the farm now stop at the home boundary and damage farmhouse health on their attack cadence; defeat occurs only when home health reaches zero.
-- A dedicated `PauseScene` provides Resume, Restart, Settings, and Main Menu, with Escape/P resume shortcuts. Pause stops the background-music timer and suspends the Web Audio context; resume restores the audio context and soundtrack. The pause action is guarded against duplicate launches, and resume ignores stale/invalid requests. Runtime input/audio behavior still requires browser verification.\n- The main menu now links to New Game, How to Play, Settings, and Credits; the Credits page lists the current technology stack and leaves unconfirmed contributor/art credits explicitly pending. The field guide documents planting, monster lanes, farmhouse health, emergency combat, and controls. The settings page edits the three persisted audio volume keys used by BattleScene.
+- A dedicated `PauseScene` provides Resume, Restart, Settings, and Main Menu, with Escape/P resume shortcuts. Pause stops the background-music timer and suspends the Web Audio context; resume restores the audio context and soundtrack. The pause action is guarded against duplicate launches, and resume ignores stale/invalid requests. Runtime input/audio behavior still requires browser verification.
+- The main menu now links to New Game, How to Play, Settings, and Credits; the Credits page lists the current technology stack and leaves unconfirmed contributor/art credits explicitly pending. The field guide documents planting, monster lanes, farmhouse health, emergency combat, and controls. The settings page edits the three persisted audio volume keys used by BattleScene.
 - Phaser startup now has an explicit loading state, a readable initialization error with retry and main-menu recovery, and a ready-state transition. The browser build and end-to-end manual playthrough have not yet been verified in this development session.
 - Therefore **Phase 1 remains IN PROGRESS**. Next: verify the wave/result flow in a real browser, validate objective breach/health behavior, finish the remaining screen flow, run the build, and complete the victory/defeat/restart playthrough matrix.
 
