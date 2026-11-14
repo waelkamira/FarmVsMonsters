@@ -534,8 +534,6 @@ export default class BattleScene extends Scene {
     this.caveman.add(body);
     }
 
-    this.cavemanShadow = this.add.ellipse(220, this.laneYs[2] + 34, 48, 13, 0x21170f, 0.3)
-      .setDepth(19);
   }
 
   createFarmerAnimations() {
@@ -1065,7 +1063,6 @@ export default class BattleScene extends Scene {
     this.updateDepthSorting();
     this.updateProjectiles(dt);
     this.checkWaveProgress();
-    if (this.cavemanShadow) this.cavemanShadow.setPosition(this.caveman.x, this.caveman.y + 34);
     this.refreshHud();
   }
 
