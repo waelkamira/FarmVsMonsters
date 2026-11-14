@@ -1198,15 +1198,22 @@ export default class BattleScene extends Scene {
   spawnMushroomEnergy(plant) {
     const amount = Math.min(MUSHROOM.energy, 300 - this.energy);
     if (amount <= 0) return;
-    const token = this.add.container(plant.x, plant.y - 62).setDepth(35);
-    const cap = this.add.ellipse(0, -4, 34, 25, 0x9b6ac4, 1).setStrokeStyle(2, 0x563a72);
-    const stem = this.add.rectangle(0, 8, 10, 15, 0xf4dfb3, 1);
-    const sparkle = this.add.text(0, -5, "+", {
-      fontFamily: "Arial", fontSize: "17px", color: "#fff7df", fontStyle: "bold"
+    const token = this.add.container(plant.x, plant.y - 66).setDepth(35);
+    // The collectible is a miniature of the exact planted mushroom artwork,
+    // never a separately drawn geometric mushroom silhouette.
+    const glow = this.add.ellipse(0, 1, 42, 18, 0x8d68b5, 0.24);
+    const frame = this.textures.getFrame("mushroom-character");
+    const miniatureHeight = 39;
+    const miniatureWidth = miniatureHeight * (frame.realWidth / frame.realHeight);
+    const miniature = this.add.image(0, -2, "mushroom-character")
+      .setDisplaySize(miniatureWidth, miniatureHeight)
+      .setInteractive({ useHandCursor: true });
+    const sparkle = this.add.text(miniatureWidth * 0.34, -17, "+", {
+      fontFamily: "Arial", fontSize: "15px", color: "#fff7df",
+      fontStyle: "bold", stroke: "#563a72", strokeThickness: 3
     }).setOrigin(0.5);
-    token.add([stem, cap, sparkle]);
-    cap.setInteractive({ useHandCursor: true });
-    cap.on("pointerdown", () => {
+    token.add([glow, miniature, sparkle]);
+    miniature.on("pointerdown", () => {
       if (!token.active || this.gameOver) return;
       this.collectingEnergyToken = true;
       this.energy = Math.min(300, this.energy + amount);
