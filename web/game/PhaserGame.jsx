@@ -11,8 +11,9 @@ export default function PhaserGame() {
 
     Promise.all([
       import("phaser"),
-      import("./scenes/BattleScene"),\n      import("./scenes/PauseScene")
-    ]).then(([phaserModule, sceneModule]) => {
+      import("./scenes/BattleScene"),
+      import("./scenes/PauseScene")
+    ]).then(([phaserModule, sceneModule, pauseModule]) => {
       if (cancelled || !hostRef.current) return;
       const { Game, AUTO, Scale } = phaserModule;
       game = new Game({
