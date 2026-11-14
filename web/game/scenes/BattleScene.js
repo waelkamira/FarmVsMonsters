@@ -1199,6 +1199,16 @@ export default class BattleScene extends Scene {
     const amount = Math.min(MUSHROOM.energy, 300 - this.energy);
     if (amount <= 0) return;
     const token = this.add.container(plant.x, plant.y - 66).setDepth(35);
+    // Brief production feedback: show the energy amount, then clear it quickly.
+    const amountLabel = this.add.text(plant.x, plant.y - 105, `+${amount}`, {
+      fontFamily: "Arial", fontSize: "17px", color: "#fff2a8",
+      fontStyle: "bold", stroke: "#563a72", strokeThickness: 4
+    }).setOrigin(0.5).setDepth(36);
+    this.tweens.add({
+      targets: amountLabel, y: amountLabel.y - 24, alpha: 0,
+      duration: 650, ease: "Cubic.easeOut",
+      onComplete: () => amountLabel.destroy()
+    });
     // The collectible is a miniature of the exact planted mushroom artwork,
     // never a separately drawn geometric mushroom silhouette.
     const glow = this.add.ellipse(0, 1, 42, 18, 0x8d68b5, 0.24);
