@@ -700,7 +700,7 @@ export default class BattleScene extends Scene {
   startBackgroundMusic() {
     if (!this.musicEnabled || this.musicVolume <= 0 || this.musicTimer || this.gameOver) return;
     this.musicTimer = this.time.addEvent({
-      delay: 640,
+      delay: 720,
       loop: true,
       callback: () => this.playBackgroundMusicStep()
     });
@@ -746,11 +746,11 @@ export default class BattleScene extends Scene {
       filter.type = "lowpass";
       filter.frequency.setValueAtTime(520, start);
       bassGain.gain.setValueAtTime(0.0001, start);
-      bassGain.gain.linearRampToValueAtTime(0.085 * this.musicVolume / 100, start + 0.1);
-      bassGain.gain.exponentialRampToValueAtTime(0.0001, start + 0.61);
+      bassGain.gain.linearRampToValueAtTime(0.13 * this.musicVolume / 100, start + 0.12);
+      bassGain.gain.exponentialRampToValueAtTime(0.0001, start + 0.88);
       padGain.gain.setValueAtTime(0.0001, start);
-      padGain.gain.linearRampToValueAtTime(0.052 * this.musicVolume / 100, start + 0.16);
-      padGain.gain.exponentialRampToValueAtTime(0.0001, start + 0.62);
+      padGain.gain.linearRampToValueAtTime(0.085 * this.musicVolume / 100, start + 0.18);
+      padGain.gain.exponentialRampToValueAtTime(0.0001, start + 0.9);
       bass.connect(bassGain);
       bassGain.connect(audioContext.destination);
       pad.connect(filter);
@@ -758,8 +758,8 @@ export default class BattleScene extends Scene {
       padGain.connect(audioContext.destination);
       bass.start(start);
       pad.start(start);
-      bass.stop(start + 0.63);
-      pad.stop(start + 0.63);
+      bass.stop(start + 0.91);
+      pad.stop(start + 0.91);
       this.musicStep = (this.musicStep + 1) % 16;
     } catch (error) {
       // Music is optional and must never interrupt the game loop.
@@ -1413,7 +1413,9 @@ export default class BattleScene extends Scene {
     this.tweens.add({ targets: view, angle: { from: -2.5, to: 2.5 }, duration: 520, ease: "Sine.easeInOut", yoyo: true, repeat: -1 });
     this.monsters.push({
       row, x: spawn.x, y: spawn.y, localX: SPAWN_LOCAL_X, hp,
-      speed: Math.min(45, 14 + (this.wave - 1) * 1.8),
+      // The first raid is deliberately forgiving; each cleared wave adds
+      // a small, predictable speed increase instead of starting at a sprint.
+      speed: Math.min(30, 8 + (this.wave - 1) * 1.35),
       attackCooldown: 0, alive: true, view, shadow, dustTimer: 0
     });
   }
