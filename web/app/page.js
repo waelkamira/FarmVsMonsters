@@ -11,7 +11,12 @@ export default function HomePage() {
           Plant brave defenders, gather mushroom energy, and protect the princess.
           When the final radish falls, the caveman takes up his wooden club.
         </p>
-        <Link className="primary-link" href="/game">Enter the battlefield</Link>
+        <nav className="menu-actions" aria-label="Main menu">
+          <Link className="primary-link" href="/game">New Game</Link>
+          <Link className="secondary-link" href="/how-to-play">How to Play</Link>
+          <Link className="secondary-link" href="/settings">Settings</Link>
+        </nav>
+        <div className="menu-facts"><span>5 WAVES</span><span>61 MONSTERS</span><span>1 FARM TO DEFEND</span></div>
         <p className="home-note">A hand-drawn prehistoric world of roots, stone, timber, and wild creatures.</p>
       </div>
     </main>
