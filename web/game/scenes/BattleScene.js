@@ -2171,56 +2171,11 @@ export default class BattleScene extends Scene {
   }
 
   playVictoryMusic() {
-    if (this.effectsVolume <= 0) return;
-    const audioContext = this.sound && this.sound.context;
-    if (!audioContext || typeof audioContext.createOscillator !== "function") return;
-    try {
-      const start = audioContext.currentTime + 0.05;
-      const notes = [392, 493.88, 587.33, 783.99];
-      notes.forEach((frequency, index) => {
-        const oscillator = audioContext.createOscillator();
-        const gain = audioContext.createGain();
-        const noteStart = start + index * 0.16;
-        oscillator.type = "triangle";
-        oscillator.frequency.setValueAtTime(frequency, noteStart);
-        gain.gain.setValueAtTime(0.0001, noteStart);
-        gain.gain.exponentialRampToValueAtTime(0.12 * this.effectsVolume / 100, noteStart + 0.025);
-        gain.gain.exponentialRampToValueAtTime(0.0001, noteStart + 0.34);
-        oscillator.connect(gain);
-        gain.connect(audioContext.destination);
-        oscillator.start(noteStart);
-        oscillator.stop(noteStart + 0.36);
-      });
-    } catch (error) {
-      // The result screen must remain available when browser audio is unavailable.
-    }
+    this.playSfx("sfx-victory", this.effectsVolume * 0.82);
   }
 
   playDefeatMusic() {
-    // A short original three-note descending defeat fanfare synthesized with Web Audio.
-    if (this.effectsVolume <= 0) return;
-    const audioContext = this.sound && this.sound.context;
-    if (!audioContext || typeof audioContext.createOscillator !== "function") return;
-    try {
-      const start = audioContext.currentTime + 0.05;
-      const notes = [196, 164.81, 130.81, 98];
-      notes.forEach((frequency, index) => {
-        const oscillator = audioContext.createOscillator();
-        const gain = audioContext.createGain();
-        const noteStart = start + index * 0.42;
-        oscillator.type = "triangle";
-        oscillator.frequency.setValueAtTime(frequency, noteStart);
-        gain.gain.setValueAtTime(0.0001, noteStart);
-        gain.gain.exponentialRampToValueAtTime(0.16 * this.effectsVolume / 100, noteStart + 0.035);
-        gain.gain.exponentialRampToValueAtTime(0.0001, noteStart + 0.38);
-        oscillator.connect(gain);
-        gain.connect(audioContext.destination);
-        oscillator.start(noteStart);
-        oscillator.stop(noteStart + 0.4);
-      });
-    } catch (error) {
-      // The defeat overlay must still work if browser audio is unavailable.
-    }
+    this.playSfx("sfx-defeat", this.effectsVolume * 0.82);
   }
 
   endGame(won) {
