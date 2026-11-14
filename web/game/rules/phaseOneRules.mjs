@@ -3,7 +3,7 @@ export const PHASE_ONE_TOTAL_MONSTERS = PHASE_ONE_WAVE_SIZES.reduce((sum, count)
 
 export const INITIAL_ENERGY = 150;
 export const MAX_ENERGY = 300;
-export const MONSTER_KILL_ENERGY_REWARD = 8;
+export const MONSTER_KILL_COIN_REWARD = 8;
 export const MUSHROOM_PICKUP_TTL_MS = 12_000;
 
 export const RADISH_CONFIG = Object.freeze({
