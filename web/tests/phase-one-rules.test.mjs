@@ -80,6 +80,18 @@ test("a farmhouse defeat aborts the rest of the current simulation frame", () =>
   assert.match(update, /this\.updateMonsters\(dt, delta\);\s*if \(this\.gameOver\) return;\s*this\.updateDepthSorting\(\);/);
 });
 
+test("terminal results clean up pending Mushroom pickups and their expiry timers", () => {
+  const create = scene.slice(scene.indexOf("  create() {"), scene.indexOf("  drawField() {"));
+  const production = scene.slice(scene.indexOf("  spawnMushroomEnergy(plant) {"), scene.indexOf("  fireThorn(plant"));
+  const endGame = scene.slice(scene.indexOf("  endGame(won) {"), scene.indexOf("  createGameOverButton("));
+  assert.match(create, /this\.energyPickups = \[\]/);
+  assert.match(production, /this\.energyPickups\.push\(token\)/);
+  assert.match(production, /this\.energyPickups = this\.energyPickups\.filter\(\(pickup\) => pickup !== token\)/);
+  assert.match(endGame, /token\.expiryTimer\.remove\(false\)/);
+  assert.match(endGame, /this\.tweens\.killTweensOf\(token\)/);
+  assert.match(endGame, /this\.energyPickups = \[\]/);
+});
+
 test("monster archetype composition introduces threats in measured waves", () => {
   for (let i = 0; i < 10; i += 1) {
     assert.equal(monsterArchetypeFor(1, i), "cave-brute");
