@@ -77,6 +77,7 @@ export default class BattleScene extends Scene {
     this.facing = 1;
     this.plantingTarget = null;
     this.returnTarget = null;
+    this.farmerPlanting = false;
     this.gameOver = false;
     const legacySoundSetting = this.registry.get("soundEnabled");
     const defaultSoundSetting = legacySoundSetting === undefined ? true : legacySoundSetting;
@@ -1236,7 +1237,7 @@ export default class BattleScene extends Scene {
     if (this.keys.d.isDown || this.keys.right.isDown) dx += 1;
     if (this.keys.w.isDown || this.keys.up.isDown) dy -= 1;
     if (this.keys.s.isDown || this.keys.down.isDown) dy += 1;
-    if (!this.plantingTarget && !this.returnTarget && (dx !== 0 || dy !== 0)) {
+    if (!this.plantingTarget && !this.returnTarget && !this.farmerPlanting && (dx !== 0 || dy !== 0)) {
       this.caveman.x = PhaserMath.Clamp(this.caveman.x + dx * 115 * dt, 105, 1010);
       this.caveman.y = PhaserMath.Clamp(this.caveman.y + dy * 115 * dt, this.laneYs[0] - 22, this.laneYs[LANES - 1] + 22);
       this.farmerForceIdleFrame = false;
@@ -1254,6 +1255,7 @@ export default class BattleScene extends Scene {
         : (this.farmerWantsToRun ? "farmer-run" : "farmer-idle")
     );
     if (Input.Keyboard.JustDown(this.keys.space)) {
+      if (this.farmerPlanting || this.plantingTarget || this.returnTarget) return;
       if (this.livingPlantCount() > 0) this.setMessage("The radishes are alive and defending. The caveman cannot fight yet.");
       else if (this.hasPlantedDefender) this.clubAttack();
       else this.setMessage("Plant a radish first. The caveman's club is an emergency defense only.");
@@ -1261,8 +1263,12 @@ export default class BattleScene extends Scene {
   }
 
   requestPlant(col, row) {
+    if (this.gameOver) return;
     this.farmerForceIdleFrame = false;
-    if (this.plantingTarget) { this.setMessage("The caveman is already on his way to a planting spot."); return; }
+    if (this.plantingTarget || this.returnTarget || this.farmerPlanting) {
+      this.setMessage("The caveman must finish his current action before moving again.");
+      return;
+    }
     const existingPlant = this.plants.find((plant) => plant.alive && plant.col === col && plant.row === row);
     if (existingPlant) {
       this.uprootPlant(existingPlant);
@@ -1355,6 +1361,7 @@ export default class BattleScene extends Scene {
   }
 
   plantSelected(col, row, type, returnPosition = null) {
+    if (this.gameOver) return;
     if (type !== "radish") {
       this.setMessage("Only the Radish defender is available in this phase.");
       return;
@@ -1364,6 +1371,7 @@ export default class BattleScene extends Scene {
       this.setMessage("Planting cancelled: this cell is no longer available."); return;
     }
     this.energy -= config.cost;
+    this.farmerPlanting = true;
     this.playFarmerAction("farmer-plant");
     const { x, y } = this.plantingCellCenter(col, row);
     const plant = {
@@ -1388,6 +1396,7 @@ export default class BattleScene extends Scene {
     this.returnTarget = null;
     const beginReturnSprint = () => {
       if (!this.caveman?.active || this.gameOver) return;
+      this.farmerPlanting = false;
       this.caveman.setScale(1);
       this.returnTarget = { x: safePosition.x, y: safePosition.y, facing: safePosition.facing };
       this.farmerWantsToRun = true;
@@ -2198,6 +2207,7 @@ export default class BattleScene extends Scene {
     this.gameOver = true;
     this.plantingTarget = null;
     this.returnTarget = null;
+    this.farmerPlanting = false;
     this.setMessage(won ? "VICTORY! The farm is safe." : "GAME OVER — The monsters reached the final line.");
     this.add.rectangle(560, 340, 1120, 680, 0x10170f, 0.72).setDepth(60);
     if (won) {
