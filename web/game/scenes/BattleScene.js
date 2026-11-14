@@ -1540,8 +1540,10 @@ export default class BattleScene extends Scene {
   }
 
   spawnMushroomEnergy(plant) {
-    const amount = Math.min(MUSHROOM_CONFIG.energy, MAX_ENERGY - this.energy);
-    if (amount <= 0) return;
+    // Production creates a full collectible regardless of the current bank.
+    // The energy cap is applied only when the player collects it, so spending
+    // energy before pickup expiry cannot retroactively erase a production cycle.
+    const amount = MUSHROOM_CONFIG.energy;
     const token = this.add.container(plant.x, plant.y - 66).setDepth(35);
     // Brief production feedback: show the energy amount, then clear it quickly.
     const amountLabel = this.add.text(plant.x, plant.y - 105, `+${amount}`, {
