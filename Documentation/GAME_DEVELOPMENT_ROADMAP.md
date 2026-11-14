@@ -162,7 +162,7 @@ BATTLE
 ## Current status at roadmap creation
 
 - The browser rebuild and core battle scene exist in `web/`.
-- The code contains planting, radish/energy-mushroom logic, monsters, wave progression, audio controls, and farmer animation calibration, but feature presence is not proof of correct runtime behavior.
+- The Phase 1 battle HUD now exposes only the Radish card; energy-producing Mushroom planting is reserved for Phase 2. The older Mushroom implementation remains dormant and is not selectable through the Phase 1 interface. Feature presence is not proof of correct runtime behavior.
 - Farmer frame-count validation was added on 2026-11-14.
 - The Phase 1 wave schedule is now fixed in code at 5 / 8 / 12 / 16 / 20 monsters (61 total); the sixth-wave loop has been removed.
 - Final-wave completion now triggers a Victory result only after all scheduled monsters have spawned and no living monsters remain. Victory and Defeat result panels include run summaries and replay/menu actions.
@@ -170,7 +170,8 @@ BATTLE
 - A dedicated `PauseScene` provides Resume, Restart, Settings, and Main Menu, with Escape/P resume shortcuts. Pause stops the background-music timer and suspends the Web Audio context; resume restores the audio context and soundtrack. The pause action is guarded against duplicate launches, and resume ignores stale/invalid requests. Runtime input/audio behavior still requires browser verification.
 - The main menu now links to New Game, How to Play, Settings, and Credits; the Credits page lists the current technology stack and leaves unconfirmed contributor/art credits explicitly pending. The field guide documents planting, monster lanes, farmhouse health, emergency combat, and controls. The settings page edits the three persisted audio volume keys used by BattleScene.
 - Phaser startup now has an explicit loading state, a readable initialization error with retry and main-menu recovery, and a ready-state transition. The browser build and end-to-end manual playthrough have not yet been verified in this development session.
-- Therefore **Phase 1 remains IN PROGRESS**. Next: verify the wave/result flow in a real browser, validate objective breach/health behavior, finish the remaining screen flow, run the build, and complete the victory/defeat/restart playthrough matrix.
+- The main menu and field guide now describe the Phase 1 Radish-only resource loop: 150 starting energy, 35 energy per Radish, and 8 energy per defeated monster. These values are reflected in the current battle implementation; runtime balance still requires playtesting.
+- Therefore **Phase 1 remains IN PROGRESS**. Next: verify the Radish-only battle loop, wave/result flow, objective breach/health behavior, pause/audio lifecycle, screen transitions, production build, and victory/defeat/restart playthrough matrix.
 
 ## Work order from here
 
