@@ -2177,7 +2177,7 @@ export default class BattleScene extends Scene {
       this.totalDefeatedMonsters + " monsters defeated",
       this.totalPlantsPlanted + " plants planted",
       "Time survived: " + minutes + ":" + seconds
-    ].join("\\n");
+    ].join("\n");
     this.add.text(560, 355, summary, {
       fontFamily: "Georgia", fontSize: "18px", color: "#fff0c8",
       align: "center", lineSpacing: 7, fontStyle: "bold"
