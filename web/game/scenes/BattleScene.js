@@ -36,6 +36,7 @@ export default class BattleScene extends Scene {
     this.plants = [];
     this.monsters = [];
     this.projectiles = [];
+    this.collectingEnergyToken = false;
     this.laneYs = Array.from({ length: LANES }, (_, row) => this.gridCellCenter(0, row).y);
     this.emergencyMode = false;
     this.hasPlantedDefender = false;
@@ -703,6 +704,10 @@ export default class BattleScene extends Scene {
     });
     this.input.on("pointerdown", (pointer) => {
       this.resumeGameAudio();
+      if (this.collectingEnergyToken) {
+        this.collectingEnergyToken = false;
+        return;
+      }
       if (this.audioMenuOpen || this.audioMenuDismissedOnPointerDown) {
         this.audioMenuDismissedOnPointerDown = false;
         return;
@@ -929,20 +934,37 @@ export default class BattleScene extends Scene {
   spawnMushroomEnergy(plant) {
     const amount = Math.min(MUSHROOM.energy, 300 - this.energy);
     if (amount <= 0) return;
-    this.energy += amount;
-    const token = this.add.container(plant.x, plant.y - 58).setDepth(35);
-    const cap = this.add.ellipse(0, 0, 28, 22, 0x9b6ac4, 1).setStrokeStyle(2, 0x563a72);
-    const stem = this.add.roundRectangle(0, 8, 9, 13, 4, 0xf4dfb3, 1);
-    const value = this.add.text(20, -8, "+" + amount, {
-      fontFamily: "Arial", fontSize: "15px", color: "#fff7df", fontStyle: "bold",
-      stroke: "#493052", strokeThickness: 3
-    }).setOrigin(0, 0.5);
-    token.add([cap, stem, value]);
-    this.tweens.add({
-      targets: token, y: token.y - 48, alpha: 0, duration: 1050, ease: "Cubic.easeOut",
-      onComplete: () => token.destroy()
+    const token = this.add.container(plant.x, plant.y - 62).setDepth(35);
+    const cap = this.add.ellipse(0, -4, 34, 25, 0x9b6ac4, 1).setStrokeStyle(2, 0x563a72);
+    const stem = this.add.rectangle(0, 8, 10, 15, 0xf4dfb3, 1);
+    const sparkle = this.add.text(0, -5, "+", {
+      fontFamily: "Arial", fontSize: "17px", color: "#fff7df", fontStyle: "bold"
+    }).setOrigin(0.5);
+    token.add([stem, cap, sparkle]);
+    cap.setInteractive(new Phaser.Geom.Circle(0, 0, 22), Phaser.Geom.Circle.Contains);
+    token.setSize(42, 42);
+    cap.on("pointerdown", () => {
+      if (!token.active || this.gameOver) return;
+      this.collectingEnergyToken = true;
+      this.energy = Math.min(300, this.energy + amount);
+      this.playPlantSound();
+      this.refreshHud();
+      if (token.expiryTimer) token.expiryTimer.remove(false);
+      this.tweens.add({
+        targets: token, y: token.y - 30, alpha: 0, scale: 1.35, duration: 220,
+        onComplete: () => token.destroy()
+      });
+      this.setMessage("Collected " + amount + " mushroom energy!");
     });
-    this.refreshHud();
+    this.tweens.add({
+      targets: token, y: token.y - 9, duration: 700, ease: "Sine.easeInOut",
+      yoyo: true, repeat: -1
+    });
+    token.expiryTimer = this.time.delayedCall(12000, () => {
+      if (token.active) {
+        this.tweens.add({ targets: token, alpha: 0, duration: 350, onComplete: () => token.destroy() });
+      }
+    });
   }
 
   fireThorn(plant, _target) {
