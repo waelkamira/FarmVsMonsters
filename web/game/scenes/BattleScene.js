@@ -1108,6 +1108,7 @@ export default class BattleScene extends Scene {
     if (!this.plantingTarget && !this.returnTarget && (dx !== 0 || dy !== 0)) {
       this.caveman.x = PhaserMath.Clamp(this.caveman.x + dx * 115 * dt, 105, 1010);
       this.caveman.y = PhaserMath.Clamp(this.caveman.y + dy * 115 * dt, this.laneYs[0] - 22, this.laneYs[LANES - 1] + 22);
+      this.farmerForceIdleFrame = false;
       if (dx !== 0) this.facing = Math.sign(dx);
       this.caveman.scaleX = this.facing;
     }
@@ -1152,7 +1153,7 @@ export default class BattleScene extends Scene {
     this.plantingTarget = {
       col, row, x, y, type: this.selectedPlant,
       startU: startBoard.u, startV: startBoard.v,
-      startX: this.caveman.x, startY: this.caveman.y,
+      startX: this.caveman.x, startY: this.caveman.y, startFacing: this.facing,
       targetU: targetBoard.u, targetV: targetBoard.v,
       routeLength: Math.max(routeLength, 1), progress: 0
     };
@@ -1182,7 +1183,7 @@ export default class BattleScene extends Scene {
 
     this.caveman.setPosition(target.x, target.y);
     this.plantingTarget = null;
-    this.plantSelected(target.col, target.row, target.type, { x: target.startX, y: target.startY });
+    this.plantSelected(target.col, target.row, target.type, { x: target.startX, y: target.startY, facing: target.startFacing });
   }
 
   updateReturnMovement(dt) {
@@ -1194,6 +1195,10 @@ export default class BattleScene extends Scene {
     if (distance <= 5) {
       this.caveman.setPosition(target.x, target.y);
       this.returnTarget = null;
+      if (Number.isFinite(target.facing)) {
+        this.facing = target.facing;
+        this.caveman.scaleX = this.facing;
+      }
       this.farmerForceIdleFrame = true;
       // Finish on the exact original idle frame, not the final frame of the planting/run sheets.
       if (this.cavemanVisual && this.cavemanVisual.active) {
@@ -1246,7 +1251,7 @@ export default class BattleScene extends Scene {
     this.cavemanVisual.once("animationcomplete", (animation) => {
       if (animation.key !== "farmer-plant" || !this.caveman?.active) return;
       this.caveman.setScale(1);
-      this.returnTarget = { x: safePosition.x, y: safePosition.y };
+      this.returnTarget = { x: safePosition.x, y: safePosition.y, facing: safePosition.facing };
       this.farmerWantsToRun = true;
       this.setFarmerAnimation("farmer-run");
     });
