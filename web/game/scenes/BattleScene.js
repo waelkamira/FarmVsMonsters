@@ -1,5 +1,6 @@
 import { Scene, Input, Math as PhaserMath } from "phaser";
 import gridCalibration from "../data/farm-grid-calibration.json";
+import soundAssets from "../data/sound-assets.json";
 import {
   PHASE_ONE_WAVE_SIZES,
   PHASE_ONE_TOTAL_MONSTERS,
@@ -61,11 +62,18 @@ export default class BattleScene extends Scene {
     this.load.spritesheet("farmer-attack", "/assets/characters/farmer/farmer-attack.png", { frameWidth: 180, frameHeight: 360 });
     this.load.spritesheet("farmer-hit", "/assets/characters/farmer/farmer-hit.png", { frameWidth: 152, frameHeight: 430 });
     this.load.spritesheet("farmer-death", "/assets/characters/farmer/farmer-death.png", { frameWidth: 152, frameHeight: 430 });
+    for (const asset of soundAssets.assets) {
+      this.load.audio(asset.key, asset.path);
+    }
     this.load.on("loaderror", (file) => {
       if (file.key === "farm-battlefield") this.backgroundAssetFailed = true;
       if (file.key === "radish-character") this.radishAssetFailed = true;
       if (file.key === "mushroom-character") this.mushroomAssetFailed = true;
       if (file.key.startsWith("farmer-")) this.farmerAssetFailed = true;
+      if (file.key.startsWith("sfx-")) {
+        this.failedSoundAssets = this.failedSoundAssets || [];
+        this.failedSoundAssets.push(file.key);
+      }
     });
   }
 
@@ -97,6 +105,8 @@ export default class BattleScene extends Scene {
     this.monsters = [];
     this.projectiles = [];
     this.energyPickups = [];
+    this.sfxCooldowns = new Map();
+    this.farmerFootstepCooldownMs = 0;
     this.nextProjectileAim = "head";
     this.collectingEnergyToken = false;
     this.laneYs = Array.from({ length: LANES }, (_, row) => this.gridCellCenter(0, row).y);
@@ -1005,155 +1015,69 @@ export default class BattleScene extends Scene {
     }
   }
 
-  playPlantSound() {
-    if (this.effectsVolume <= 0) return;
-    const audioContext = this.sound && this.sound.context;
-    if (!audioContext || typeof audioContext.createOscillator !== "function") return;
+  playSfx(key, volume = this.effectsVolume, cooldownMs = 0) {
+    if (!this.sound || !this.cache.audio.exists(key) || volume <= 0) return false;
+    const now = this.time ? this.time.now : 0;
+    const lastPlayed = this.sfxCooldowns && this.sfxCooldowns.has(key)
+      ? this.sfxCooldowns.get(key)
+      : -Infinity;
+    if (cooldownMs > 0 && now - lastPlayed < cooldownMs) return false;
     try {
-      if (audioContext.state === "suspended") audioContext.resume();
-      const start = audioContext.currentTime;
-      const oscillator = audioContext.createOscillator();
-      const gain = audioContext.createGain();
-      const filter = audioContext.createBiquadFilter();
-      oscillator.type = "sine";
-      oscillator.frequency.setValueAtTime(185, start);
-      oscillator.frequency.exponentialRampToValueAtTime(420, start + 0.09);
-      oscillator.frequency.exponentialRampToValueAtTime(285, start + 0.24);
-      filter.type = "lowpass";
-      filter.frequency.setValueAtTime(950, start);
-      gain.gain.setValueAtTime(0.0001, start);
-      gain.gain.exponentialRampToValueAtTime(0.18 * this.effectsVolume / 100, start + 0.025);
-      gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.28);
-      oscillator.connect(filter);
-      filter.connect(gain);
-      gain.connect(audioContext.destination);
-      oscillator.start(start);
-      oscillator.stop(start + 0.29);
-    } catch (error) {
-      // Planting sound is optional; planting itself must always succeed.
+      this.sound.play(key, { volume: PhaserMath.Clamp(volume / 100, 0, 1) });
+      if (this.sfxCooldowns) this.sfxCooldowns.set(key, now);
+      return true;
+    } catch {
+      // Sound is optional; never let a failed audio device interrupt gameplay.
+      return false;
     }
+  }
+
+  playPlantSound() {
+    this.playSfx("sfx-plant-dig", this.effectsVolume * 0.78, 120);
   }
 
   playUprootSound() {
-    if (this.effectsVolume <= 0) return;
-    const audioContext = this.sound && this.sound.context;
-    if (!audioContext || typeof audioContext.createOscillator !== "function") return;
-    try {
-      if (audioContext.state === "suspended") audioContext.resume();
-      const start = audioContext.currentTime;
-      const oscillator = audioContext.createOscillator();
-      const gain = audioContext.createGain();
-      const filter = audioContext.createBiquadFilter();
-      oscillator.type = "triangle";
-      oscillator.frequency.setValueAtTime(520, start);
-      oscillator.frequency.exponentialRampToValueAtTime(115, start + 0.19);
-      filter.type = "lowpass";
-      filter.frequency.setValueAtTime(1250, start);
-      filter.frequency.exponentialRampToValueAtTime(360, start + 0.2);
-      gain.gain.setValueAtTime(0.0001, start);
-      gain.gain.exponentialRampToValueAtTime(0.16 * this.effectsVolume / 100, start + 0.012);
-      gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.22);
-      oscillator.connect(filter);
-      filter.connect(gain);
-      gain.connect(audioContext.destination);
-      oscillator.start(start);
-      oscillator.stop(start + 0.23);
-    } catch (error) {
-      // Uprooting sound is optional; removal must always work.
-    }
+    this.playSfx("sfx-plant-rustle", this.effectsVolume * 0.72, 120);
   }
 
   playMonsterBiteSound() {
-    if (this.effectsVolume <= 0) return;
-    const audioContext = this.sound && this.sound.context;
-    if (!audioContext || typeof audioContext.createBuffer !== "function" ||
-        typeof audioContext.createBufferSource !== "function") return;
-    try {
-      if (audioContext.state === "suspended") audioContext.resume();
-      const start = audioContext.currentTime;
-      const volume = this.effectsVolume / 100;
-
-      // A fuller, deliberately messy chomping sound: several wet crunches,
-      // a low bite thump and a short crunchy tail on every attack.
-      const duration = 0.58;
-      const sampleRate = audioContext.sampleRate;
-      const buffer = audioContext.createBuffer(1, Math.floor(sampleRate * duration), sampleRate);
-      const samples = buffer.getChannelData(0);
-      for (let i = 0; i < samples.length; i += 1) {
-        const t = i / sampleRate;
-        const pulse = Math.max(
-          Math.exp(-Math.pow((t - 0.055) / 0.052, 2)),
-          Math.exp(-Math.pow((t - 0.235) / 0.065, 2)),
-          Math.exp(-Math.pow((t - 0.405) / 0.075, 2))
-        );
-        const texture = (Math.random() * 2 - 1) * 0.72 +
-          Math.sin(2 * Math.PI * (72 + 24 * Math.sin(t * 31)) * t) * 0.28;
-        samples[i] = texture * pulse * (1 - t / duration);
-      }
-
-      const source = audioContext.createBufferSource();
-      const crunchFilter = audioContext.createBiquadFilter();
-      const crunchGain = audioContext.createGain();
-      source.buffer = buffer;
-      crunchFilter.type = "lowpass";
-      crunchFilter.frequency.setValueAtTime(1450, start);
-      crunchFilter.frequency.exponentialRampToValueAtTime(420, start + duration);
-      crunchGain.gain.setValueAtTime(0.0001, start);
-      crunchGain.gain.linearRampToValueAtTime(0.34 * volume, start + 0.025);
-      crunchGain.gain.setValueAtTime(0.22 * volume, start + 0.19);
-      crunchGain.gain.setValueAtTime(0.31 * volume, start + 0.22);
-      crunchGain.gain.setValueAtTime(0.19 * volume, start + 0.38);
-      crunchGain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
-      source.connect(crunchFilter);
-      crunchFilter.connect(crunchGain);
-      crunchGain.connect(audioContext.destination);
-      source.start(start);
-      source.stop(start + duration);
-
-      const thump = audioContext.createOscillator();
-      const thumpGain = audioContext.createGain();
-      thump.type = "sine";
-      thump.frequency.setValueAtTime(105, start);
-      thump.frequency.exponentialRampToValueAtTime(48, start + 0.2);
-      thumpGain.gain.setValueAtTime(0.0001, start);
-      thumpGain.gain.linearRampToValueAtTime(0.2 * volume, start + 0.018);
-      thumpGain.gain.exponentialRampToValueAtTime(0.0001, start + 0.24);
-      thump.connect(thumpGain);
-      thumpGain.connect(audioContext.destination);
-      thump.start(start);
-      thump.stop(start + 0.25);
-    } catch (error) {
-      // Creature audio is optional; combat and plant damage must continue.
-    }
+    this.playSfx("sfx-monster-bite", this.effectsVolume * 0.72, 220);
   }
 
   playThornSound() {
-    if (this.projectileVolume <= 0) return;
-    const audioContext = this.sound && this.sound.context;
-    if (!audioContext || typeof audioContext.createOscillator !== "function") return;
-    try {
-      if (audioContext.state === "suspended") audioContext.resume();
-      const start = audioContext.currentTime;
-      const oscillator = audioContext.createOscillator();
-      const gain = audioContext.createGain();
-      const filter = audioContext.createBiquadFilter();
-      oscillator.type = "sawtooth";
-      oscillator.frequency.setValueAtTime(620, start);
-      oscillator.frequency.exponentialRampToValueAtTime(240, start + 0.095);
-      filter.type = "lowpass";
-      filter.frequency.setValueAtTime(1800, start);
-      filter.frequency.exponentialRampToValueAtTime(650, start + 0.11);
-      gain.gain.setValueAtTime(0.0001, start);
-      gain.gain.exponentialRampToValueAtTime(0.12 * this.projectileVolume / 100, start + 0.008);
-      gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.12);
-      oscillator.connect(filter);
-      filter.connect(gain);
-      gain.connect(audioContext.destination);
-      oscillator.start(start);
-      oscillator.stop(start + 0.13);
-    } catch (error) {
-      // Sound is optional; projectile gameplay must continue if audio is unavailable.
-    }
+    this.playSfx("sfx-thorn-launch", this.projectileVolume * 0.7, 85);
+  }
+
+  playMonsterHitSound() {
+    this.playSfx("sfx-monster-hit", this.effectsVolume * 0.72, 70);
+  }
+
+  playMonsterDefeatSound() {
+    this.playSfx("sfx-monster-defeat", this.effectsVolume * 0.78, 100);
+  }
+
+  playCoinRewardSound() {
+    this.playSfx("sfx-coin-collect", this.effectsVolume * 0.5, 100);
+  }
+
+  playEnergyCollectSound() {
+    this.playSfx("sfx-coin-collect", this.effectsVolume * 0.42, 100);
+  }
+
+  playMonsterJumpSound() {
+    this.playSfx("sfx-grass-step-02", this.effectsVolume * 0.48, 100);
+  }
+
+  playMonsterLandSound() {
+    this.playSfx("sfx-monster-land", this.effectsVolume * 0.62, 100);
+  }
+
+  playFarmerFootsteps(dt) {
+    this.farmerFootstepCooldownMs -= dt * 1000;
+    if (this.farmerFootstepCooldownMs > 0) return;
+    const key = Math.random() < 0.5 ? "sfx-grass-step-01" : "sfx-grass-step-02";
+    this.playSfx(key, this.effectsVolume * 0.24, 80);
+    this.farmerFootstepCooldownMs = 285;
   }
 
   createPauseControl() {
@@ -1348,6 +1272,7 @@ export default class BattleScene extends Scene {
     const v = PhaserMath.Linear(target.startV, target.targetV, target.progress);
     const position = this.boardPoint(u, v);
     this.caveman.setPosition(position.x, position.y);
+    this.playFarmerFootsteps(dt);
     const horizontalDirection = target.x - this.caveman.x;
     if (Math.abs(horizontalDirection) > 0.5) {
       this.facing = Math.sign(horizontalDirection);
@@ -1384,6 +1309,7 @@ export default class BattleScene extends Scene {
       this.setMessage("The caveman is back at his starting position.");
       return;
     }
+    this.playFarmerFootsteps(dt);
     const step = Math.min(distance, CAVEMAN_RETURN_SPEED * dt);
     this.caveman.x += (dx / distance) * step;
     this.caveman.y += (dy / distance) * step;
@@ -1613,7 +1539,7 @@ export default class BattleScene extends Scene {
         this.playFarmerAction("farmer-collect");
         this.energy = collection.energy;
         this.energyCollected += collected;
-        this.playPlantSound();
+        this.playEnergyCollectSound();
         this.setMessage("Collected " + collected + " mushroom energy!");
       } else {
         this.setMessage("Energy is full. Defeat monsters or spend energy before collecting more.");
@@ -1983,6 +1909,7 @@ export default class BattleScene extends Scene {
 
       if (withinBiteRange) {
         // A skitter must land before it can stop to bite a defensive plant.
+        if (monster.isJumping) this.playMonsterLandSound();
         monster.isJumping = false;
         monster.jumpElapsed = 0;
         // If the skitter reaches a plant mid-hop, settle it onto the lane
@@ -2011,6 +1938,7 @@ export default class BattleScene extends Scene {
           monster.isJumping = true;
           monster.jumpElapsed = 0;
           monster.jumpDuration = PhaserMath.Between(480, 620);
+          this.playMonsterJumpSound();
           this.createFootstepDust(monster.x - 8, monster.y + 3, monster.view.scaleY);
         }
         if (monster.isJumping) {
@@ -2022,6 +1950,7 @@ export default class BattleScene extends Scene {
             monster.isJumping = false;
             monster.jumpElapsed = 0;
             monster.jumpCooldown = PhaserMath.Between(2100, 3400);
+            this.playMonsterLandSound();
             this.createFootstepDust(monster.x + 8, monster.y + 3, monster.view.scaleY);
             jumpOffset = 0;
           }
@@ -2128,6 +2057,7 @@ export default class BattleScene extends Scene {
   applyMonsterDamage(monster, amount) {
     if (!monster || !monster.alive || amount <= 0) return;
     monster.hp = Math.max(0, monster.hp - amount);
+    this.playMonsterHitSound();
     this.flashMonsterOnHit(monster);
     this.damageMonsterIfNeeded(monster);
   }
@@ -2141,6 +2071,8 @@ export default class BattleScene extends Scene {
     }
     if (monster.shadow && monster.shadow.active) monster.shadow.destroy();
     this.createMonsterDefeatBurst(monster.x, monster.y, monster.view && monster.view.scaleY);
+    this.playMonsterDefeatSound();
+    this.playCoinRewardSound();
     // Remove the complete creature container immediately. This guarantees
     // that no child graphic or hit-flash layer can remain visible after death.
     if (monster.view && monster.view.active) {
