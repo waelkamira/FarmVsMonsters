@@ -1545,13 +1545,29 @@ export default class BattleScene extends Scene {
     // The collectible is a miniature of the exact planted mushroom artwork,
     // never a separately drawn geometric mushroom silhouette.
     const glow = this.add.ellipse(0, 1, 42, 18, 0x8d68b5, 0.24);
-    const frame = this.textures.getFrame("mushroom-character");
-    const miniatureHeight = 39;
-    const miniatureWidth = miniatureHeight * (frame.realWidth / frame.realHeight);
-    const miniature = this.add.image(0, -2, "mushroom-character")
-      .setDisplaySize(miniatureWidth, miniatureHeight)
-      .setInteractive({ useHandCursor: true });
-    const sparkle = this.add.text(miniatureWidth * 0.34, -17, "+", {
+    let miniature;
+    let sparkleX = 13;
+    if (this.textures.exists("mushroom-character")) {
+      const frame = this.textures.getFrame("mushroom-character");
+      const miniatureHeight = 39;
+      const miniatureWidth = miniatureHeight * (frame.realWidth / frame.realHeight);
+      miniature = this.add.image(0, -2, "mushroom-character")
+        .setDisplaySize(miniatureWidth, miniatureHeight)
+        .setInteractive({ useHandCursor: true });
+      sparkleX = miniatureWidth * 0.34;
+    } else {
+      const fallback = this.add.graphics();
+      fallback.fillStyle(0xf0d7a2, 1);
+      fallback.fillRoundedRect(-7, -12, 14, 19, 5);
+      fallback.fillStyle(0x8a58b6, 1);
+      fallback.fillEllipse(0, -14, 35, 24);
+      fallback.fillStyle(0xfff0d2, 1);
+      fallback.fillCircle(-6, -13, 2);
+      fallback.fillCircle(6, -13, 2);
+      token.add(fallback);
+      miniature = this.add.zone(0, -2, 48, 48).setInteractive({ useHandCursor: true });
+    }
+    const sparkle = this.add.text(sparkleX, -17, "+", {
       fontFamily: "Arial", fontSize: "15px", color: "#fff7df",
       fontStyle: "bold", stroke: "#563a72", strokeThickness: 3
     }).setOrigin(0.5);
