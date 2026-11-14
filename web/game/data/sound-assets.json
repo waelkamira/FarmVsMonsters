@@ -109,9 +109,9 @@
     {
       "key": "sfx-thorn-impact",
       "path": "/assets/audio/sfx/thorn-impact.ogg",
-      "sourceName": "LaserSmall 000",
-      "sourcePack": "Kenney Sci-Fi Sounds",
-      "sourceUrl": "https://kenney.nl/assets/sci-fi-sounds",
+      "sourceName": "Impactgeneric Light 000",
+      "sourcePack": "Kenney Impact Sounds",
+      "sourceUrl": "https://kenney.nl/assets/impact-sounds",
       "usedFor": [
         "radish-projectile-impact"
       ]
