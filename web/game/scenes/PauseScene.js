@@ -6,7 +6,7 @@ export default class PauseScene extends Scene {
   }
 
   create() {
-    this.cameras.main.setBackgroundColor("rgba(18, 12, 7, 0.72)");
+    this.add.rectangle(560, 340, 1120, 680, 0x160f0a, 0.72).setDepth(-1);
     const panel = this.add.rectangle(560, 340, 450, 420, 0x79502e, 1)
       .setStrokeStyle(7, 0x3b2517);
     const inset = this.add.rectangle(560, 340, 430, 400, 0xb88950, 1)
@@ -15,9 +15,6 @@ export default class PauseScene extends Scene {
       fontFamily: "Georgia", fontSize: "31px", color: "#fff0c8",
       fontStyle: "bold", stroke: "#392417", strokeThickness: 4
     }).setOrigin(0.5);
-    this.add.existing(panel);
-    this.add.existing(inset);
-    this.add.existing(title);
 
     this.addMenuButton(270, "RESUME", 0x9bc66e, () => this.resumeBattle());
     this.addMenuButton(345, "RESTART", 0xe5c27d, () => this.restartBattle());
