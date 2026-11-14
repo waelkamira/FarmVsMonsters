@@ -249,6 +249,13 @@ export default class BattleScene extends Scene {
     return { x: cx * areaFactor, y: cy * areaFactor };
   }
 
+  plantingCellCenter(col, row) {
+    const center = this.gridCellCenter(col, row);
+    // Raise only planting anchors in the top three rows; keep lane geometry
+    // and monster movement on the original calibrated polygon centers.
+    return { x: center.x, y: center.y - (row < 3 ? 5 : 0) };
+  }
+
   worldToGrid(x, y) {
     for (let row = 0; row < LANES; row += 1) {
       for (let col = 0; col < COLUMNS; col += 1) {
@@ -383,7 +390,7 @@ export default class BattleScene extends Scene {
     if (this.plantingTarget) { this.setMessage("The caveman is already on his way to a planting spot."); return; }
     if (this.plants.some((p) => p.alive && p.col === col && p.row === row)) { this.setMessage("That soil cell is occupied."); return; }
     if (this.energy < RADISH.cost) { this.setMessage("Not enough energy to plant a radish."); return; }
-    const { x, y } = this.gridCellCenter(col, row);
+    const { x, y } = this.plantingCellCenter(col, row);
     this.plantingTarget = { col, row, x, y };
     this.facing = x >= this.caveman.x ? 1 : -1;
     this.caveman.scaleX = this.facing;
@@ -414,7 +421,7 @@ export default class BattleScene extends Scene {
     }
     this.energy -= RADISH.cost;
     this.hasPlantedDefender = true;
-    const { x, y } = this.gridCellCenter(col, row);
+    const { x, y } = this.plantingCellCenter(col, row);
     this.plants.push({
       type: "radish", col, row, x, y, hp: RADISH.hp, alive: true,
       cooldown: PhaserMath.Between(250, 650), view: this.drawRadish(x, y)
