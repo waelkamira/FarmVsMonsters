@@ -87,6 +87,16 @@ The current SpriteAnimation2D component supports Idle, Walk, Attack, Hurt and De
 
 Missing clips are allowed during staged development, but each production prefab must eventually have an Idle clip and all states required by its gameplay role.
 
+## Farmer runtime frame calibration
+
+The browser battle scene measures each farmer frame's non-transparent alpha bounds once and caches the result. It then:
+- Matches the visible character height to the first approved idle frame, regardless of source cell dimensions or transparent padding.
+- Sets the sprite origin to the visible foot-contact edge and horizontal silhouette center for each frame.
+- Reapplies calibration on animation frame changes so the character does not shrink, grow, or drift when switching between idle, walk, run, planting, and other actions.
+- Falls back to the standard sprite scale if canvas pixel sampling is unavailable.
+
+This is runtime alignment; it does not destructively crop or rewrite the source PNGs. Source sheets should still be reviewed and trimmed during art production when unwanted pixels or shadows are baked into the artwork.
+
 ## Review gate before accepting art
 - [ ] Original design, not a copy of a protected game asset
 - [ ] Full body and readable silhouette
