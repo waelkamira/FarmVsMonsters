@@ -69,6 +69,17 @@ test("Mushroom production always creates a full collectible; the energy cap is a
   assert.match(production, /collectEnergy\(this\.energy, amount\)/);
 });
 
+test("resource Mushrooms never stop monsters; only living Radishes are defensive blockers", () => {
+  const updateMonsters = scene.slice(scene.indexOf("  updateMonsters(dt, delta) {"), scene.indexOf("  updateProjectiles(dt) {"));
+  assert.match(updateMonsters, /p\.alive && p\.type === "radish" && p\.row === monster\.row/);
+  assert.doesNotMatch(updateMonsters, /p\.alive && p\.row === monster\.row/);
+});
+
+test("a farmhouse defeat aborts the rest of the current simulation frame", () => {
+  const update = scene.slice(scene.indexOf("  update(_time, delta) {"), scene.indexOf("  // Sort world characters"));
+  assert.match(update, /this\.updateMonsters\(dt, delta\);\s*if \(this\.gameOver\) return;\s*this\.updateDepthSorting\(\);/);
+});
+
 test("monster archetype composition introduces threats in measured waves", () => {
   for (let i = 0; i < 10; i += 1) {
     assert.equal(monsterArchetypeFor(1, i), "cave-brute");
