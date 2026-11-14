@@ -22,9 +22,11 @@ export default class BattleScene extends Scene {
   preload() {
     this.load.image("farm-battlefield", "/assets/backgrounds/farm-battlefield.jpeg");
     this.load.image("radish-character", "/assets/plants/radish.png");
+    this.load.image("mushroom-character", "/assets/plants/mushroom.png");
     this.load.on("loaderror", (file) => {
       if (file.key === "farm-battlefield") this.backgroundAssetFailed = true;
       if (file.key === "radish-character") this.radishAssetFailed = true;
+      if (file.key === "mushroom-character") this.mushroomAssetFailed = true;
     });
   }
 
@@ -383,12 +385,9 @@ export default class BattleScene extends Scene {
 
     // Compact seed tokens sit just below the status strip, not over the field.
     this.radishCard = this.createPlantCard(112, "RADISH", "35", "radish", null, "radish-character");
-    this.mushroomCard = this.createPlantCard(254, "MUSHROOM", "50", "mushroom", (g) => {
-      g.fillStyle(0x8b5bba, 1); g.fillEllipse(-48, -5, 25, 19);
-      g.fillStyle(0xf2d9a4, 1); g.fillRoundedRect(-53, 2, 10, 13, 3);
-      g.fillRoundedRect(-43, 2, 10, 13, 3);
-      g.fillStyle(0xfff1d1, 1); g.fillCircle(-54, -8, 2.5); g.fillCircle(-42, -8, 2.5);
-    });
+    this.mushroomCard = this.createPlantCard(
+      254, "MUSHROOM", "50", "mushroom", null, "mushroom-character"
+    );
   }
 
   createPlantCard(x, title, costLabel, type, drawIcon, imageKey = null) {
@@ -1065,7 +1064,7 @@ export default class BattleScene extends Scene {
       type, col, row, x, y, hp: config.hp, alive: true,
       cooldown: type === "radish" ? PhaserMath.Between(250, 650) : 0,
       productionTimer: type === "mushroom" ? MUSHROOM.productionInterval : 0,
-      view: type === "mushroom" ? this.drawEnergyMushroom(x, y) : this.drawRadish(x, y)
+      view: type === "mushroom" ? this.drawEnergyMushroom(x, y, row) : this.drawRadish(x, y)
     };
     this.plants.push(plant);
     if (type === "mushroom") {
@@ -1088,25 +1087,48 @@ export default class BattleScene extends Scene {
       : "Radish planted! The caveman is sprinting back behind the final line.");
   }
 
-  drawEnergyMushroom(x, y) {
+  drawEnergyMushroom(x, y, row = 2) {
     const plant = this.add.container(x, y).setDepth(10 + y / 1000);
-    const g = this.add.graphics();
-    g.fillStyle(0xf0d7a2, 1);
-    g.fillRoundedRect(-9, -28, 18, 29, 7);
-    g.fillStyle(0x8a58b6, 1);
-    g.fillEllipse(0, -31, 43, 31);
-    g.fillStyle(0xb887d6, 1);
-    g.fillEllipse(-8, -36, 16, 9);
-    g.fillStyle(0xfff0d2, 1);
-    g.fillEllipse(-7, -22, 5, 7);
-    g.fillEllipse(7, -22, 5, 7);
-    g.fillStyle(0x382b35, 1);
-    g.fillCircle(-7, -22, 2);
-    g.fillCircle(7, -22, 2);
-    g.lineStyle(2, 0x65406f, 1);
-    g.beginPath(); g.arc(0, -15, 5, 0.2, Math.PI - 0.2); g.strokePath();
-    plant.add(g);
-    this.tweens.add({ targets: plant, scaleY: 1.04, duration: 1250, ease: "Sine.easeInOut", yoyo: true, repeat: -1 });
+
+    if (this.textures.exists("mushroom-character")) {
+      const frame = this.textures.getFrame("mushroom-character");
+      const rowIndex = PhaserMath.Clamp(row, 0, LANES - 1);
+      const laneGap = rowIndex < LANES - 1
+        ? this.laneYs[rowIndex + 1] - this.laneYs[rowIndex]
+        : this.laneYs[rowIndex] - this.laneYs[rowIndex - 1];
+      // Match the artwork scale to the perspective of the selected soil row.
+      const perspectiveScale = PhaserMath.Clamp(laneGap / 54, 0.62, 1.08);
+      const displayHeight = 78 * perspectiveScale;
+      const displayWidth = displayHeight * (frame.realWidth / frame.realHeight);
+      const character = this.add.image(
+        0, -displayHeight / 2 + 2, "mushroom-character"
+      ).setDisplaySize(displayWidth, displayHeight);
+      plant.add(character);
+    } else {
+      // Keep the previous vector mushroom as a safe fallback if the asset
+      // cannot be loaded by the browser or is missing from the public bundle.
+      const g = this.add.graphics();
+      g.fillStyle(0xf0d7a2, 1);
+      g.fillRoundedRect(-9, -28, 18, 29, 7);
+      g.fillStyle(0x8a58b6, 1);
+      g.fillEllipse(0, -31, 43, 31);
+      g.fillStyle(0xb887d6, 1);
+      g.fillEllipse(-8, -36, 16, 9);
+      g.fillStyle(0xfff0d2, 1);
+      g.fillEllipse(-7, -22, 5, 7);
+      g.fillEllipse(7, -22, 5, 7);
+      g.fillStyle(0x382b35, 1);
+      g.fillCircle(-7, -22, 2);
+      g.fillCircle(7, -22, 2);
+      g.lineStyle(2, 0x65406f, 1);
+      g.beginPath(); g.arc(0, -15, 5, 0.2, Math.PI - 0.2); g.strokePath();
+      plant.add(g);
+    }
+
+    this.tweens.add({
+      targets: plant, scaleY: 1.04, duration: 1250,
+      ease: "Sine.easeInOut", yoyo: true, repeat: -1
+    });
     return plant;
   }
 
