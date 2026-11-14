@@ -638,7 +638,7 @@ export default class BattleScene extends Scene {
     const dy = target.y - this.caveman.y;
     const distance = Math.hypot(dx, dy);
     if (distance > 7) {
-      const step = Math.min(distance, 190 * dt);
+      const step = Math.min(distance, 460 * dt);
       this.caveman.x += dx / distance * step;
       this.caveman.y += dy / distance * step;
       if (dx !== 0) { this.facing = Math.sign(dx); this.caveman.scaleX = this.facing; }
@@ -661,7 +661,7 @@ export default class BattleScene extends Scene {
       this.setMessage("The caveman is back behind the final defense line.");
       return;
     }
-    const step = Math.min(distance, 430 * dt);
+    const step = Math.min(distance, 560 * dt);
     this.caveman.x += (dx / distance) * step;
     this.caveman.y += (dy / distance) * step;
     if (dx !== 0) {
