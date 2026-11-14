@@ -87,3 +87,30 @@ export function saveCoins(storage, value) {
     return false;
   }
 }
+
+// Pure purchase transaction: prices come from the approved plant catalog/UI,
+// never from an implicit fallback. This keeps currency rules testable before
+// the final roster and its prices are approved.
+export function purchasePlant({ coins, plantId, price, unlockedPlantIds = [] } = {}) {
+  const balance = normalizeCoins(coins);
+  const id = typeof plantId === "string" ? plantId.trim() : "";
+  if (!id) return { ok: false, reason: "invalid-plant", coins: balance, unlockedPlantIds: [...unlockedPlantIds] };
+  if (!Array.isArray(unlockedPlantIds)) {
+    return { ok: false, reason: "invalid-unlocks", coins: balance, unlockedPlantIds: [] };
+  }
+  if (unlockedPlantIds.includes(id)) {
+    return { ok: false, reason: "already-unlocked", coins: balance, unlockedPlantIds: [...unlockedPlantIds] };
+  }
+  if (!Number.isSafeInteger(price) || price <= 0) {
+    return { ok: false, reason: "invalid-price", coins: balance, unlockedPlantIds: [...unlockedPlantIds] };
+  }
+  if (balance < price) {
+    return { ok: false, reason: "insufficient-coins", coins: balance, unlockedPlantIds: [...unlockedPlantIds] };
+  }
+  return {
+    ok: true,
+    reason: "purchased",
+    coins: balance - price,
+    unlockedPlantIds: [...unlockedPlantIds, id]
+  };
+}
