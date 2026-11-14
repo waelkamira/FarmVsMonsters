@@ -1376,7 +1376,7 @@ export default class BattleScene extends Scene {
     this.playFarmerAction("farmer-plant");
     const { x, y } = this.plantingCellCenter(col, row);
     const plant = {
-      type: "radish", col, row, x, y, hp: config.hp, alive: true,
+      type, col, row, x, y, hp: config.hp, alive: true,
       cooldown: PhaserMath.Between(250, 650),
       productionTimer: type === "mushroom" ? config.productionInterval : undefined,
       view: type === "mushroom" ? this.drawEnergyMushroom(x, y, row) : this.drawRadish(x, y)
