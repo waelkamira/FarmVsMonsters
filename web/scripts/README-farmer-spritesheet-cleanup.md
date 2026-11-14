@@ -68,3 +68,20 @@ before integrating. If any frame touches another because the source does not
 have a full transparent gutter, stop and correct the source layout rather than
 guessing boundaries. The legacy cleaner above remains for its original fixed
 grid use only.
+
+### Keep every animation at the same visual scale
+
+Process the idle sheet first. Its report prints a `Shared scale` value. Pass
+that exact value to every other action sheet:
+
+```powershell
+python web/scripts/extract-farmer-frames.py "farmer-idle.png"
+python web/scripts/extract-farmer-frames.py "farmer-run.png" --scale 0.12345678
+python web/scripts/extract-farmer-frames.py "farmer-plant.png" --scale 0.12345678
+```
+
+Replace the example number with the value printed by the idle extraction.
+This keeps the same source-pixel-to-output-pixel scale across idle, walk, run,
+plant, uproot, attack, collect, hurt, jump, and death. The tool refuses a scale
+that would clip a frame; it never silently shrinks one action independently.
+Use the same scale for all sheets created from the same-resolution art export.
