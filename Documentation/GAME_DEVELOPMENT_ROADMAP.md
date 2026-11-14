@@ -32,7 +32,7 @@ BATTLE
 ### Required screens
 
 - **Main menu:** game logo, Play, How to Play, Settings, Credits; show a clear loading/error state if required assets fail.
-- **How to Play:** explain selecting the Radish card, choosing an empty cell, the caveman's planting trip, plant defense, energy, monsters, and the farmhouse objective.
+- **How to Play:** explain selecting either the Radish or Energy Mushroom card, choosing an empty cell, the caveman's planting trip, plant defense, collectible mushroom energy, monsters, and the farmhouse objective.
 - **Battle HUD:** wave number/progress, energy, selected plant, pause, audio controls, objective/short guidance, and clear feedback for invalid actions.
 - **Pause:** freeze gameplay simulation (including movement, attacks, timers, spawns, and projectiles); offer Resume, Restart, Settings, Main Menu.
 - **Victory:** explicit VICTORY title, completed wave count, elapsed time, defeated monsters, plants planted, energy collected/remaining, and Play Again / Main Menu.
@@ -68,6 +68,7 @@ BATTLE
 
 ### Scope
 - Main menu, How to Play, battle, pause, victory, defeat, settings, and clean scene transitions.
+- Two complementary plants from the first campaign: Radish (lane defense) and Energy Mushroom (resource production).
 - One 5-lane × 8-column battle grid, aligned to the approved battlefield art.
 - Caveman controls and pathing: select Radish, click a valid empty cell, walk/run to it, plant, and return to the original position/facing.
 - Consistent farmer scale, foot anchor, correct depth behind the planted object, and clean idle/walk/run/plant/return/club/hurt/death states where used.
@@ -75,7 +76,7 @@ BATTLE
 - One baseline slow monster type with lane-aware movement, plant eating/attacking, hurt flash, death disappearance, and farmhouse breach.
 - Health/damage/death rules for the Radish, monster, and farmhouse/princess objective.
 - Emergency mode: club combat is enabled only after the last living defender dies; it is disabled as soon as a new defender is planted.
-- A simple, balanced starting-energy rule and correct cost deduction at successful planting. Do not introduce another defensive plant just to test the Radish.
+- Starting energy, correct cost deduction at successful planting, and the complete Energy Mushroom loop: timed production, visible collectible energy, click-to-collect, collection feedback, and the energy cap.
 - Five waves with increasing but readable pressure, wave transition, spawn completion, and final-wave completion.
 - Audio controls and basic sound feedback for planting, attacks, hits, eating, collection/feedback, victory, and defeat.
 - Functional result screens and full restart/menu behavior.
@@ -104,8 +105,8 @@ BATTLE
 
 ## Phase 2 — Core gameplay polish and resource economy
 
-- Tune Radish health, attack cadence, projectile speed/damage, monster health/speed, wave pacing, starting energy, and objective health.
-- Add the energy-producing Mushroom as a distinct plant only after Phase 1 Radish behavior is approved. Its production, generated energy pickup, collection input, animation, sound, and UI counter must work as one loop.
+- Tune Radish health, attack cadence, projectile speed/damage, Mushroom cost/production/collection, monster health/speed, wave pacing, starting energy, and objective health.
+- Expand the resource loop with clear production timing, pickup feedback, collection animation, sound, and anti-duplication safeguards.
 - Add clear feedback for insufficient energy, successful collection, cooldowns, and unavailable cells.
 - Add satisfying plant/monster hit reactions, eating sounds, projectile impacts, death timing, and readable combat effects.
 - Add a structured wave configuration/data file instead of hard-coded wave values.
@@ -162,7 +163,7 @@ BATTLE
 ## Current status at roadmap creation
 
 - The browser rebuild and core battle scene exist in `web/`.
-- The Phase 1 battle HUD now exposes only the Radish card; energy-producing Mushroom planting is reserved for Phase 2. The older Mushroom implementation remains dormant and is not selectable through the Phase 1 interface. Feature presence is not proof of correct runtime behavior.
+- Phase 1 now exposes both Radish and Energy Mushroom cards. The Mushroom produces collectible energy on an eight-second interval; the player must click each pickup to collect up to the 300-energy cap. Mushrooms are resource plants, not defensive plants, and do not block emergency club combat. Browser verification is still required.
 - Farmer frame-count validation was added on 2026-11-14.
 - The Phase 1 wave schedule is now fixed in code at 10 / 15 / 20 / 25 / 30 monsters (100 total); the sixth-wave loop has been removed.
 - The battle HUD now tracks total campaign defeats out of 100 and the current wave's defeats out of that wave's target; the per-wave counter resets only when the previous wave is fully cleared.
@@ -174,7 +175,7 @@ BATTLE
 - The farmer walk animation now requests the four frames present in the 2×2 walk sheet instead of eight nonexistent frames. Planting also has a safe return-to-start fallback when the farmer animation artwork is unavailable, so missing animation assets do not strand the planting flow.
 - The planting lifecycle now locks the caveman through travel, planting animation, and return travel. New planting requests, manual movement, and emergency club attacks cannot overlap an active planting/return action; game-over also cancels pending planting callbacks. Browser verification is still required.
 - Audio resume no longer triggers the opening soundtrack note twice after a suspended Web Audio context resumes.
-- The main menu and field guide now describe the Phase 1 Radish-only resource loop: 150 starting energy, 35 energy per Radish, and 8 energy per defeated monster. These values are reflected in the current battle implementation; runtime balance still requires playtesting.
+- The Phase 1 resource loop starts with 150 energy, costs 35 for a Radish and 50 for a Mushroom, awards 8 energy per defeated monster, and produces 25 collectible energy per Mushroom every 8 seconds (subject to the 300-energy cap). Runtime balance still requires playtesting.
 - Therefore **Phase 1 remains IN PROGRESS**. Next: verify the Radish-only battle loop, wave/result flow, objective breach/health behavior, pause/audio lifecycle, screen transitions, production build, and victory/defeat/restart playthrough matrix.
 
 ## Work order from here
