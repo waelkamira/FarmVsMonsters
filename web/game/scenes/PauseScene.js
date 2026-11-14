@@ -7,11 +7,11 @@ export default class PauseScene extends Scene {
 
   create() {
     this.add.rectangle(560, 340, 1120, 680, 0x160f0a, 0.72).setDepth(-1);
-    const panel = this.add.rectangle(560, 340, 450, 420, 0x79502e, 1)
+    this.add.rectangle(560, 340, 450, 420, 0x79502e, 1)
       .setStrokeStyle(7, 0x3b2517);
-    const inset = this.add.rectangle(560, 340, 430, 400, 0xb88950, 1)
+    this.add.rectangle(560, 340, 430, 400, 0xb88950, 1)
       .setStrokeStyle(2, 0xe5c68e);
-    const title = this.add.text(560, 195, "BATTLE PAUSED", {
+    this.add.text(560, 195, "BATTLE PAUSED", {
       fontFamily: "Georgia", fontSize: "31px", color: "#fff0c8",
       fontStyle: "bold", stroke: "#392417", strokeThickness: 4
     }).setOrigin(0.5);
@@ -58,7 +58,6 @@ export default class PauseScene extends Scene {
 
   restartBattle() {
     this.scene.stop("BattleScene");
-    this.scene.stop();
     this.scene.start("BattleScene");
   }
 }
