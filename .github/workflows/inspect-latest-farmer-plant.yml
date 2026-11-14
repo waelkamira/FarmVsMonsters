@@ -1,0 +1,36 @@
+name: Inspect latest farmer planting frames
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/inspect-latest-farmer-plant.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install image processing dependency
+        run: python -m pip install Pillow
+      - name: Extract the user's latest planting artwork
+        run: |
+          python web/scripts/extract-farmer-frames.py \
+            "شخصيات/farmer/WhatsApp Image 2026-11-14 at 7.27.41 PM (2)-Photoroom.png" \
+            --output-dir /tmp/farmer-plant-review
+      - name: Upload review package
+        uses: actions/upload-artifact@v4
+        with:
+          name: latest-farmer-plant-frame-review
+          path: /tmp/farmer-plant-review/
+          if-no-files-found: error
+          retention-days: 7
