@@ -15,6 +15,7 @@ const CAVEMAN_RETURN_SPEED = 420;
 const SPAWN_LOCAL_X = GRID_WIDTH / 2 + 28;
 const RADISH = { label: "Radish", cost: 35, hp: 110, cooldown: 1450, range: 360 };
 const MUSHROOM = { label: "Energy Mushroom", cost: 50, hp: 85, energy: 25, productionInterval: 8000 };
+const PHASE_ONE_WAVE_SIZES = [5, 8, 12, 16, 20];
 
 // Central combat balance table. Monster durability is expressed in standard radish hits when possible.
 const COMBAT_BALANCE = {
@@ -55,8 +56,13 @@ export default class BattleScene extends Scene {
     this.energy = 150;
     this.houseHealth = 100;
     this.wave = 1;
+    this.totalWaves = PHASE_ONE_WAVE_SIZES.length;
     this.spawnedThisWave = 0;
-    this.waveSize = 5;
+    this.waveSize = PHASE_ONE_WAVE_SIZES[0];
+    this.totalSpawnedMonsters = 0;
+    this.totalDefeatedMonsters = 0;
+    this.totalPlantsPlanted = 0;
+    this.elapsedBattleMs = 0;
     this.spawnTimer = 1800;
     this.selectedPlant = null;
     this.plants = [];
@@ -1144,11 +1150,16 @@ export default class BattleScene extends Scene {
   update(_time, delta) {
     if (this.gameOver) return;
     const dt = delta / 1000;
+    this.elapsedBattleMs += delta;
     this.handleControls(dt);
-    this.spawnTimer -= delta;
-    if (this.spawnTimer <= 0 && this.spawnedThisWave < this.waveSize) {
-      this.spawnMonster(); this.spawnedThisWave += 1;
-      this.spawnTimer = Math.max(2300, 5200 - this.wave * 120);
+    if (this.wave <= this.totalWaves && this.spawnedThisWave < this.waveSize) {
+      this.spawnTimer -= delta;
+      if (this.spawnTimer <= 0) {
+        this.spawnMonster();
+        this.spawnedThisWave += 1;
+        this.totalSpawnedMonsters += 1;
+        this.spawnTimer = Math.max(2300, 5200 - this.wave * 120);
+      }
     }
     this.updatePlants(delta);
     this.updateMonsters(dt, delta);
@@ -1314,6 +1325,7 @@ export default class BattleScene extends Scene {
       view: type === "mushroom" ? this.drawEnergyMushroom(x, y, row) : this.drawRadish(x, y)
     };
     this.plants.push(plant);
+    this.totalPlantsPlanted += 1;
     if (type === "radish") this.hasPlantedDefender = true;
     this.playPlantSound();
     this.updateEmergencyMode();
@@ -1977,6 +1989,7 @@ export default class BattleScene extends Scene {
       monster.view.destroy(true);
     }
     this.energy = Math.min(300, this.energy + 8);
+    this.totalDefeatedMonsters += 1;
   }
 
   uprootPlant(plant) {
@@ -2032,13 +2045,49 @@ export default class BattleScene extends Scene {
   }
 
   checkWaveProgress() {
-    if (this.spawnedThisWave >= this.waveSize && this.monsters.length === 0) {
-      const clearedWave = this.wave;
-      this.wave += 1;
-      this.spawnedThisWave = 0;
-      this.spawnTimer = 3200;
-      this.waveSize = Math.min(14, 5 + this.wave);
-      this.setMessage("Raid " + clearedWave + " cleared. Raid " + this.wave + " is gathering beyond the gate.");
+    if (this.gameOver || this.spawnedThisWave < this.waveSize || this.monsters.length > 0) return;
+
+    const clearedWave = this.wave;
+    if (clearedWave === this.totalWaves) {
+      // The final wave is complete only after every one of its monsters
+      // has spawned and the battlefield contains no living monsters.
+      this.endGame(true);
+      return;
+    }
+
+    this.wave += 1;
+    this.spawnedThisWave = 0;
+    this.waveSize = PHASE_ONE_WAVE_SIZES[this.wave - 1];
+    this.spawnTimer = 3200;
+    this.setMessage(
+      "Wave " + clearedWave + " cleared. Wave " + this.wave +
+      " is gathering: " + this.waveSize + " monsters incoming."
+    );
+  }
+
+  playVictoryMusic() {
+    if (this.effectsVolume <= 0) return;
+    const audioContext = this.sound && this.sound.context;
+    if (!audioContext || typeof audioContext.createOscillator !== "function") return;
+    try {
+      const start = audioContext.currentTime + 0.05;
+      const notes = [392, 493.88, 587.33, 783.99];
+      notes.forEach((frequency, index) => {
+        const oscillator = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+        const noteStart = start + index * 0.16;
+        oscillator.type = "triangle";
+        oscillator.frequency.setValueAtTime(frequency, noteStart);
+        gain.gain.setValueAtTime(0.0001, noteStart);
+        gain.gain.exponentialRampToValueAtTime(0.12 * this.effectsVolume / 100, noteStart + 0.025);
+        gain.gain.exponentialRampToValueAtTime(0.0001, noteStart + 0.34);
+        oscillator.connect(gain);
+        gain.connect(audioContext.destination);
+        oscillator.start(noteStart);
+        oscillator.stop(noteStart + 0.36);
+      });
+    } catch (error) {
+      // The result screen must remain available when browser audio is unavailable.
     }
   }
 
@@ -2078,10 +2127,31 @@ export default class BattleScene extends Scene {
     this.add.rectangle(560, 340, 1120, 680, 0x10170f, 0.72).setDepth(60);
     if (won) {
       this.stopBackgroundMusic();
-      this.add.rectangle(560, 340, 520, 150, 0x79502e, 0.98).setStrokeStyle(6, 0x392417).setDepth(61);
-      this.add.text(560, 340, "VICTORY", {
-        fontFamily: "Arial", fontSize: "48px", color: "#fff2c8", fontStyle: "bold"
+      this.add.rectangle(560, 340, 650, 330, 0x79502e, 0.98)
+        .setStrokeStyle(6, 0x392417).setDepth(61);
+      this.add.text(560, 235, "VICTORY!", {
+        fontFamily: "Arial", fontSize: "54px", color: "#fff2c8", fontStyle: "bold",
+        stroke: "#392417", strokeThickness: 5
       }).setOrigin(0.5).setDepth(62);
+      const elapsedSeconds = Math.floor(this.elapsedBattleMs / 1000);
+      const minutes = Math.floor(elapsedSeconds / 60);
+      const seconds = String(elapsedSeconds % 60).padStart(2, "0");
+      const summary = [
+        "All " + this.totalWaves + " waves cleared",
+        this.totalDefeatedMonsters + " / " + this.totalSpawnedMonsters + " monsters defeated",
+        this.totalPlantsPlanted + " plants planted",
+        "Time: " + minutes + ":" + seconds,
+        "Energy remaining: " + this.energy
+      ].join("\n");
+      this.add.text(560, 330, summary, {
+        fontFamily: "Georgia", fontSize: "19px", color: "#fff0c8",
+        align: "center", lineSpacing: 8, fontStyle: "bold"
+      }).setOrigin(0.5).setDepth(62);
+      this.createGameOverButton(455, 465, "PLAY AGAIN", 0x9bc66e, () => this.scene.restart());
+      this.createGameOverButton(665, 465, "HOME", 0xe5c27d, () => {
+        if (typeof window !== "undefined") window.location.assign("/");
+      });
+      this.playVictoryMusic();
       return;
     }
     const title = this.add.text(560, 300, "GAME OVER", {
@@ -2129,6 +2199,9 @@ export default class BattleScene extends Scene {
 
   refreshHud() {
     this.hudText.setText("ENERGY  " + this.energy + "     HOME  " + this.houseHealth + "%     RADISHES  " + this.livingPlantCount());
-    this.waveText.setText("RAID " + this.wave + (this.emergencyMode ? "  ·  LAST STAND" : ""));
+    this.waveText.setText(
+      "WAVE " + Math.min(this.wave, this.totalWaves) + "/" + this.totalWaves +
+      (this.emergencyMode ? "  ·  LAST STAND" : "")
+    );
   }
 }
