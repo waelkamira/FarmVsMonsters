@@ -135,6 +135,18 @@
       "usedFor": [
         "phase-defeat"
       ]
+    },
+    {
+      "key": "sfx-monster-jump",
+      "path": "/assets/audio/sfx/monster-jump.ogg",
+      "sourceName": "sfx_movement_jump1.ogg",
+      "sourcePack": "512 Sound Effects (8-bit style)",
+      "sourceCreator": "Juhani Junkala",
+      "sourceUrl": "https://opengameart.org/content/512-sound-effects-8-bit-style",
+      "license": "CC0-1.0",
+      "usedFor": [
+        "monster-jump-takeoff"
+      ]
     }
   ]
 }
