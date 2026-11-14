@@ -77,6 +77,7 @@ export default class BattleScene extends Scene {
     this.createAudioControls();
     this.createCaveman();
     this.bindInput();
+    this.events.once("shutdown", () => this.stopBackgroundMusic());
     this.refreshHud();
     this.setMessage(this.textures.exists("farm-battlefield")
       ? "Choose the radish icon, then click an empty soil cell."
@@ -672,18 +673,35 @@ export default class BattleScene extends Scene {
 
   resumeGameAudio() {
     const audioContext = this.sound && this.sound.context;
-    if (audioContext && audioContext.state === "suspended") {
-      audioContext.resume().catch(() => {});
+    if (!audioContext) return;
+
+    // Browsers block Web Audio until a real user gesture. The first click
+    // unlocks the context; start the soundtrack only after resume succeeds.
+    if (audioContext.state === "suspended") {
+      audioContext.resume().then(() => {
+        if (audioContext.state !== "running" || !this.sys.isActive()) return;
+        if (this.musicEnabled && !this.gameOver) {
+          this.startBackgroundMusic();
+          this.playBackgroundMusicStep();
+        }
+      }).catch(() => {});
+      return;
+    }
+
+    if (audioContext.state === "running" && this.musicEnabled && !this.musicTimer && !this.gameOver) {
+      this.startBackgroundMusic();
     }
   }
 
   startBackgroundMusic() {
-    if (!this.musicEnabled || this.musicTimer) return;
+    if (!this.musicEnabled || this.musicVolume <= 0 || this.musicTimer || this.gameOver) return;
     this.musicTimer = this.time.addEvent({
-      delay: 520,
+      delay: 640,
       loop: true,
       callback: () => this.playBackgroundMusicStep()
     });
+    // This may be called before the browser unlocks audio. The first real
+    // user gesture calls resumeGameAudio(), which plays the opening note.
     this.playBackgroundMusicStep();
   }
 
@@ -724,11 +742,11 @@ export default class BattleScene extends Scene {
       filter.type = "lowpass";
       filter.frequency.setValueAtTime(520, start);
       bassGain.gain.setValueAtTime(0.0001, start);
-      bassGain.gain.linearRampToValueAtTime(0.045 * this.musicVolume / 100, start + 0.08);
-      bassGain.gain.exponentialRampToValueAtTime(0.0001, start + 0.49);
+      bassGain.gain.linearRampToValueAtTime(0.085 * this.musicVolume / 100, start + 0.1);
+      bassGain.gain.exponentialRampToValueAtTime(0.0001, start + 0.61);
       padGain.gain.setValueAtTime(0.0001, start);
-      padGain.gain.linearRampToValueAtTime(0.018 * this.musicVolume / 100, start + 0.12);
-      padGain.gain.exponentialRampToValueAtTime(0.0001, start + 0.5);
+      padGain.gain.linearRampToValueAtTime(0.052 * this.musicVolume / 100, start + 0.16);
+      padGain.gain.exponentialRampToValueAtTime(0.0001, start + 0.62);
       bass.connect(bassGain);
       bassGain.connect(audioContext.destination);
       pad.connect(filter);
@@ -736,8 +754,8 @@ export default class BattleScene extends Scene {
       padGain.connect(audioContext.destination);
       bass.start(start);
       pad.start(start);
-      bass.stop(start + 0.51);
-      pad.stop(start + 0.51);
+      bass.stop(start + 0.63);
+      pad.stop(start + 0.63);
       this.musicStep = (this.musicStep + 1) % 16;
     } catch (error) {
       // Music is optional and must never interrupt the game loop.
