@@ -44,13 +44,16 @@ export default class BattleScene extends Scene {
     this.returnTarget = null;
     this.gameOver = false;
     const legacySoundSetting = this.registry.get("soundEnabled");
+    const defaultSoundSetting = legacySoundSetting === undefined ? true : legacySoundSetting;
     if (this.registry.get("projectileSoundEnabled") === undefined) {
-      this.registry.set("projectileSoundEnabled", legacySoundSetting === undefined ? true : legacySoundSetting);
+      this.registry.set("projectileSoundEnabled", this.readAudioPreference("projectileSoundEnabled", defaultSoundSetting));
     }
     if (this.registry.get("effectsSoundEnabled") === undefined) {
-      this.registry.set("effectsSoundEnabled", legacySoundSetting === undefined ? true : legacySoundSetting);
+      this.registry.set("effectsSoundEnabled", this.readAudioPreference("effectsSoundEnabled", defaultSoundSetting));
     }
-    if (this.registry.get("musicEnabled") === undefined) this.registry.set("musicEnabled", true);
+    if (this.registry.get("musicEnabled") === undefined) {
+      this.registry.set("musicEnabled", this.readAudioPreference("musicEnabled", true));
+    }
     this.projectileSoundEnabled = this.registry.get("projectileSoundEnabled");
     this.effectsSoundEnabled = this.registry.get("effectsSoundEnabled");
     this.musicEnabled = this.registry.get("musicEnabled");
@@ -319,7 +322,7 @@ export default class BattleScene extends Scene {
   createHud() {
     this.add.rectangle(560, 34, 1080, 56, 0x263c2b, 0.92).setStrokeStyle(2, 0xe4d5a5);
     this.hudText = this.add.text(28, 18, "", { fontFamily: "Arial", fontSize: "17px", color: "#fff7df", fontStyle: "bold" });
-    this.waveText = this.add.text(1090, 18, "", { fontFamily: "Arial", fontSize: "17px", color: "#fff7df", fontStyle: "bold" }).setOrigin(1, 0);
+    this.waveText = this.add.text(925, 18, "", { fontFamily: "Arial", fontSize: "17px", color: "#fff7df", fontStyle: "bold" }).setOrigin(1, 0);
     this.messageText = this.add.text(560, 645, "", {
       fontFamily: "Arial", fontSize: "16px", color: "#fff7df",
       backgroundColor: "#263c2b", padding: { x: 14, y: 7 }, align: "center"
@@ -361,16 +364,47 @@ export default class BattleScene extends Scene {
     }).setOrigin(0.5);
   }
 
+  readAudioPreference(key, fallback) {
+    try {
+      const stored = window.localStorage.getItem("farmVsMonsters.audio." + key);
+      return stored === null ? fallback : stored === "true";
+    } catch (error) {
+      return fallback;
+    }
+  }
+
+  saveAudioPreference(key, value) {
+    try {
+      window.localStorage.setItem("farmVsMonsters.audio." + key, String(value));
+    } catch (error) {
+      // Audio preferences still remain active for the current game session.
+    }
+  }
+
+  saveAudioPreferences() {
+    this.saveAudioPreference("projectileSoundEnabled", this.projectileSoundEnabled);
+    this.saveAudioPreference("effectsSoundEnabled", this.effectsSoundEnabled);
+    this.saveAudioPreference("musicEnabled", this.musicEnabled);
+    this.registry.set("projectileSoundEnabled", this.projectileSoundEnabled);
+    this.registry.set("effectsSoundEnabled", this.effectsSoundEnabled);
+    this.registry.set("musicEnabled", this.musicEnabled);
+  }
+
   createAudioControls() {
-    this.projectileSoundButton = this.createAudioToggle(710, "SHOTS", this.projectileSoundEnabled, (enabled) => {
-      this.projectileSoundEnabled = enabled;
-      this.registry.set("projectileSoundEnabled", enabled);
-    });
-    this.effectsSoundButton = this.createAudioToggle(825, "EFFECTS", this.effectsSoundEnabled, (enabled) => {
-      this.effectsSoundEnabled = enabled;
-      this.registry.set("effectsSoundEnabled", enabled);
-    });
-    this.musicButton = this.createAudioToggle(940, "MUSIC", this.musicEnabled, (enabled) => {
+    // A single speaker button keeps the battle HUD clean. All audio options
+    // live in one compact popover anchored to this button.
+    this.audioMenuBounds = { left: 860, right: 1120, top: 66, bottom: 258 };
+    this.audioMenuOpen = false;
+
+    this.audioMenu = this.add.container(990, 162).setDepth(70).setVisible(false);
+    const panel = this.add.rectangle(0, 0, 250, 184, 0xf4dfb3, 0.98)
+      .setStrokeStyle(3, 0x65452f);
+    const heading = this.add.text(0, -72, "AUDIO SETTINGS", {
+      fontFamily: "Arial", fontSize: "14px", color: "#563a25", fontStyle: "bold"
+    }).setOrigin(0.5);
+    this.audioMenu.add([panel, heading]);
+
+    this.musicAudioOption = this.createAudioMenuToggle(-29, "Background music", this.musicEnabled, (enabled) => {
       this.musicEnabled = enabled;
       this.registry.set("musicEnabled", enabled);
       if (enabled) {
@@ -380,28 +414,98 @@ export default class BattleScene extends Scene {
         this.stopBackgroundMusic();
       }
     });
+    this.effectsAudioOption = this.createAudioMenuToggle(17, "Game effects", this.effectsSoundEnabled, (enabled) => {
+      this.effectsSoundEnabled = enabled;
+      this.registry.set("effectsSoundEnabled", enabled);
+    });
+    this.projectileAudioOption = this.createAudioMenuToggle(63, "Projectile sounds", this.projectileSoundEnabled, (enabled) => {
+      this.projectileSoundEnabled = enabled;
+      this.registry.set("projectileSoundEnabled", enabled);
+    });
+
+    this.audioMenu.add([
+      this.musicAudioOption.container,
+      this.effectsAudioOption.container,
+      this.projectileAudioOption.container
+    ]);
+
+    this.audioButton = this.add.container(1040, 34).setDepth(72);
+    const buttonBackground = this.add.circle(0, 0, 21, 0xf4dfb3, 1).setStrokeStyle(2, 0x65452f);
+    const speaker = this.add.graphics();
+    speaker.fillStyle(0x563a25, 1);
+    speaker.fillRoundedRect(-11, -6, 7, 12, 2);
+    speaker.fillTriangle(-5, -7, 5, -14, 5, 14);
+    speaker.fillTriangle(-5, 7, 5, 14, 5, -14);
+    speaker.lineStyle(2, 0x563a25, 1);
+    speaker.beginPath();
+    speaker.arc(3, 0, 10, -0.85, 0.85, false);
+    speaker.strokePath();
+    this.audioButton.add([buttonBackground, speaker]);
+    buttonBackground.setInteractive({ useHandCursor: true });
+    buttonBackground.on("pointerover", () => buttonBackground.setFillStyle(0xd9efbd, 1));
+    buttonBackground.on("pointerout", () => buttonBackground.setFillStyle(0xf4dfb3, 1));
+    buttonBackground.on("pointerdown", () => {
+      if (this.audioMenuOpen) this.closeAudioMenu();
+      else this.openAudioMenu();
+    });
+
+    this.input.on("pointerdown", (pointer) => {
+      if (!this.audioMenuOpen) return;
+      const inMenu = pointer.x >= this.audioMenuBounds.left &&
+        pointer.x <= this.audioMenuBounds.right &&
+        pointer.y >= this.audioMenuBounds.top &&
+        pointer.y <= this.audioMenuBounds.bottom;
+      const inButton = pointer.x >= 1015 && pointer.x <= 1065 &&
+        pointer.y >= 9 && pointer.y <= 59;
+      if (!inMenu && !inButton) this.closeAudioMenu();
+    });
+
     if (this.musicEnabled) this.startBackgroundMusic();
   }
 
-  createAudioToggle(x, title, initialValue, onChange) {
-    const button = this.add.container(x, 34).setDepth(45);
-    const background = this.add.rectangle(0, 0, 104, 34, initialValue ? 0xd9efbd : 0xe7c6bd, 1)
-      .setStrokeStyle(2, 0x65452f)
+  createAudioMenuToggle(y, title, initialValue, onChange) {
+    const container = this.add.container(0, y);
+    const background = this.add.rectangle(0, 0, 218, 36, 0xe8d5a8, 1)
+      .setStrokeStyle(1, 0x9b7950)
       .setInteractive({ useHandCursor: true });
-    const label = this.add.text(0, 0, title + (initialValue ? ": ON" : ": OFF"), {
-      fontFamily: "Arial", fontSize: "11px", color: "#563a25", fontStyle: "bold"
-    }).setOrigin(0.5);
-    button.add([background, label]);
-    background.on("pointerover", () => background.setScale(1.04));
-    background.on("pointerout", () => background.setScale(1));
-    background.on("pointerdown", () => {
-      const enabled = label.text.endsWith("OFF");
-      onChange(enabled);
-      label.setText(title + (enabled ? ": ON" : ": OFF"));
+    const label = this.add.text(-96, 0, title, {
+      fontFamily: "Arial", fontSize: "12px", color: "#563a25", fontStyle: "bold"
+    }).setOrigin(0, 0.5);
+    const state = this.add.text(96, 0, initialValue ? "ON" : "OFF", {
+      fontFamily: "Arial", fontSize: "11px", color: initialValue ? "#326b35" : "#9a463d", fontStyle: "bold"
+    }).setOrigin(1, 0.5);
+    container.add([background, label, state]);
+
+    const setEnabled = (enabled) => {
+      state.setText(enabled ? "ON" : "OFF");
+      state.setColor(enabled ? "#326b35" : "#9a463d");
       background.setFillStyle(enabled ? 0xd9efbd : 0xe7c6bd, 1);
+    };
+    setEnabled(initialValue);
+    background.on("pointerover", () => background.setStrokeStyle(2, 0x65452f));
+    background.on("pointerout", () => background.setStrokeStyle(1, 0x9b7950));
+    background.on("pointerdown", () => {
+      const enabled = state.text !== "ON";
+      onChange(enabled);
+      setEnabled(enabled);
+      this.saveAudioPreferences();
       this.resumeGameAudio();
     });
-    return button;
+    return { container, setEnabled };
+  }
+
+  openAudioMenu() {
+    this.audioMenuOpen = true;
+    this.audioMenu.setVisible(true);
+    this.audioMenu.setScale(0.96);
+    this.tweens.add({ targets: this.audioMenu, scale: 1, duration: 100, ease: "Back.Out" });
+  }
+
+  closeAudioMenu() {
+    if (!this.audioMenuOpen) return;
+    this.saveAudioPreferences();
+    this.audioMenuOpen = false;
+    this.audioMenu.setVisible(false);
   }
 
   resumeGameAudio() {
