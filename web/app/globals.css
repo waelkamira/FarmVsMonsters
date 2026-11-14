@@ -80,3 +80,24 @@ h1 span, .wordmark span { color: #e2ae58; }
 .settings-row input { width:100%; accent-color:#e2ae58; }
 .settings-row output { text-align:right; }
 @media(max-width:560px) { .settings-row { grid-template-columns:1fr 46px; } .settings-row input { grid-column:1/-1; grid-row:2; } .settings-row output { grid-column:2; grid-row:1; } }
+
+
+.phaser-host { position: relative; }
+.game-status {
+  position: absolute; inset: 0; z-index: 5; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 12px; padding: 28px;
+  text-align: center; color: #fff0c8; background: radial-gradient(ellipse at center, #53603a, #242316 62%, #130e09);
+}
+.game-status strong { font-size: clamp(20px, 3vw, 30px); }
+.game-status span { max-width: 440px; color: #ead7b2; line-height: 1.6; }
+.game-status-mark { font-size: 38px; color: #e5c27d !important; }
+.game-status-error { background: radial-gradient(ellipse at center, #693d2e, #2a1712 68%, #130e09); }
+.game-status-error span { overflow-wrap: anywhere; }
+.game-retry-button {
+  margin-top: 8px; min-height: 48px; padding: 10px 24px; border: 3px solid #382315;
+  border-radius: 9px; color: #392719; background: linear-gradient(#e5c27d, #ad783d);
+  font: inherit; font-weight: 900; cursor: pointer;
+}
+.game-retry-button:hover { filter: brightness(1.12); transform: translateY(-1px); }
+.game-back-link { color: #f0d9a7; text-decoration: underline; }
+.phaser-host canvas { position: relative; z-index: 1; }
