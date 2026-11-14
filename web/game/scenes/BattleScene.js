@@ -934,7 +934,7 @@ export default class BattleScene extends Scene {
     }
     for (const monster of this.monsters) {
       if (!monster.alive || !monster.view || !monster.view.active) continue;
-      monster.view.setDepth(depthForY(monster.y + 30 * monster.view.scaleY));
+      monster.view.setDepth(depthForY(monster.y));
     }
     if (this.caveman && this.caveman.active) {
       this.caveman.setDepth(depthForY(this.caveman.y + 40));
@@ -1330,6 +1330,10 @@ export default class BattleScene extends Scene {
       : this.laneYs[row] - this.laneYs[row - 1];
     const monsterScale = PhaserMath.Clamp(laneGap / 108, 0.28, 0.62);
     view.setScale(monsterScale);
+    // `spawn.y` is the centerline of the soil cell. The monster artwork's
+    // local ground/foot anchor is y=57, so lift its container by that amount
+    // to place its feet (not its torso origin) exactly on the lane center.
+    view.setPosition(spawn.x, spawn.y - 57 * monsterScale);
 
     const g = this.add.graphics();
     // A wild cave brute wearing a rough hide, stone ornaments and bone tusks.
@@ -1369,7 +1373,7 @@ export default class BattleScene extends Scene {
     g.fillEllipse(-21, 17, 9, 5); g.fillEllipse(22, 13, 8, 5);
     view.add(g); view.setDepth(8);
 
-    const shadow = this.add.ellipse(spawn.x, spawn.y + 27 * monsterScale, 48 * monsterScale, 12 * monsterScale, 0x21170f, 0.32)
+    const shadow = this.add.ellipse(spawn.x, spawn.y + 2, 48 * monsterScale, 12 * monsterScale, 0x21170f, 0.32)
       .setDepth(7);
     this.tweens.add({ targets: view, angle: { from: -2.5, to: 2.5 }, duration: 520, ease: "Sine.easeInOut", yoyo: true, repeat: -1 });
     this.monsters.push({
@@ -1402,13 +1406,13 @@ export default class BattleScene extends Scene {
       monster.localX -= monster.speed * dt;
       const position = this.lanePoint(monster.localX, monster.row);
       monster.x = position.x; monster.y = position.y;
-      monster.view.setPosition(position.x, position.y);
+      monster.view.setPosition(position.x, position.y - 57 * monster.view.scaleY);
       if (monster.shadow && monster.shadow.active) {
-        monster.shadow.setPosition(position.x, position.y + 27 * monster.view.scaleY);
+        monster.shadow.setPosition(position.x, position.y + 2);
       }
       monster.dustTimer -= dt * 1000;
       if (monster.dustTimer <= 0) {
-        this.createFootstepDust(position.x - 9, position.y + 20 * monster.view.scaleY, monster.view.scaleY);
+        this.createFootstepDust(position.x - 9, position.y + 2, monster.view.scaleY);
         monster.dustTimer = 155;
       }
     }
