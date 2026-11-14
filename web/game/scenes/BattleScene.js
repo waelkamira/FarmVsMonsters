@@ -1219,7 +1219,7 @@ export default class BattleScene extends Scene {
         oscillator.type = "triangle";
         oscillator.frequency.setValueAtTime(frequency, noteStart);
         gain.gain.setValueAtTime(0.0001, noteStart);
-        gain.gain.exponentialRampToValueAtTime(0.16, noteStart + 0.035);
+        gain.gain.exponentialRampToValueAtTime(0.16 * this.effectsVolume / 100, noteStart + 0.035);
         gain.gain.exponentialRampToValueAtTime(0.0001, noteStart + 0.38);
         oscillator.connect(gain);
         gain.connect(audioContext.destination);
