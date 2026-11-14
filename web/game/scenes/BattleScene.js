@@ -43,11 +43,14 @@ export default class BattleScene extends Scene {
     this.plantingTarget = null;
     this.returnTarget = null;
     this.gameOver = false;
+    if (this.registry.get("soundEnabled") === undefined) this.registry.set("soundEnabled", true);
+    this.soundEnabled = this.registry.get("soundEnabled");
 
     this.drawField();
     this.createFarmBackground();
     this.drawPlantingGrid();
     this.createHud();
+    this.createSoundButton();
     this.createCaveman();
     this.bindInput();
     this.refreshHud();
@@ -332,6 +335,54 @@ export default class BattleScene extends Scene {
     }).setOrigin(0.5);
   }
 
+  createSoundButton() {
+    const enabled = this.soundEnabled;
+    const button = this.add.container(1018, 34).setDepth(45);
+    const background = this.add.rectangle(0, 0, 112, 34, 0xf4dfb3, 1)
+      .setStrokeStyle(2, 0x65452f)
+      .setInteractive({ useHandCursor: true });
+    const label = this.add.text(0, 0, enabled ? "SOUND: ON" : "SOUND: OFF", {
+      fontFamily: "Arial", fontSize: "12px", color: "#563a25", fontStyle: "bold"
+    }).setOrigin(0.5);
+    button.add([background, label]);
+    background.on("pointerdown", () => {
+      this.soundEnabled = !this.soundEnabled;
+      this.registry.set("soundEnabled", this.soundEnabled);
+      label.setText(this.soundEnabled ? "SOUND: ON" : "SOUND: OFF");
+      background.setFillStyle(this.soundEnabled ? 0xd9efbd : 0xe7c6bd, 1);
+    });
+    this.soundButton = button;
+  }
+
+  playThornSound() {
+    if (!this.soundEnabled) return;
+    const audioContext = this.sound && this.sound.context;
+    if (!audioContext || typeof audioContext.createOscillator !== "function") return;
+    try {
+      if (audioContext.state === "suspended") audioContext.resume();
+      const start = audioContext.currentTime;
+      const oscillator = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+      const filter = audioContext.createBiquadFilter();
+      oscillator.type = "sawtooth";
+      oscillator.frequency.setValueAtTime(620, start);
+      oscillator.frequency.exponentialRampToValueAtTime(240, start + 0.095);
+      filter.type = "lowpass";
+      filter.frequency.setValueAtTime(1800, start);
+      filter.frequency.exponentialRampToValueAtTime(650, start + 0.11);
+      gain.gain.setValueAtTime(0.0001, start);
+      gain.gain.exponentialRampToValueAtTime(0.12, start + 0.008);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.12);
+      oscillator.connect(filter);
+      filter.connect(gain);
+      gain.connect(audioContext.destination);
+      oscillator.start(start);
+      oscillator.stop(start + 0.13);
+    } catch (error) {
+      // Sound is optional; projectile gameplay must continue if audio is unavailable.
+    }
+  }
+
   bindInput() {
     this.keys = this.input.keyboard.addKeys({
       w: Input.Keyboard.KeyCodes.W, a: Input.Keyboard.KeyCodes.A,
@@ -543,6 +594,7 @@ export default class BattleScene extends Scene {
     this.projectiles.push({
       view, localX, row, speed: 320, damage: 25, alive: true
     });
+    this.playThornSound();
   }
 
   spawnMonster() {
@@ -705,7 +757,7 @@ export default class BattleScene extends Scene {
       }).setOrigin(0.5).setDepth(62);
       return;
     }
-    const title = this.add.text(560, 340, "GAME OVER", {
+    const title = this.add.text(560, 300, "GAME OVER", {
       fontFamily: "Arial", fontSize: "68px", color: "#ffdf72", fontStyle: "bold",
       stroke: "#54221f", strokeThickness: 10, shadow: { offsetX: 0, offsetY: 5, color: "#000000", blur: 12, fill: true }
     }).setOrigin(0.5).setScale(0.18).setDepth(62);
@@ -719,7 +771,27 @@ export default class BattleScene extends Scene {
       hold: 130,
       onComplete: () => title.setScale(1.18)
     });
+
+    this.createGameOverButton(455, 405, "PLAY AGAIN", 0x9bc66e, () => this.scene.restart());
+    this.createGameOverButton(665, 405, "HOME", 0xe5c27d, () => {
+      if (typeof window !== "undefined") window.location.assign("/");
+    });
     this.playDefeatMusic();
+  }
+
+  createGameOverButton(x, y, label, color, action) {
+    const button = this.add.container(x, y).setDepth(63);
+    const background = this.add.rectangle(0, 0, 184, 54, color, 1)
+      .setStrokeStyle(3, 0x563a25)
+      .setInteractive({ useHandCursor: true });
+    const text = this.add.text(0, 0, label, {
+      fontFamily: "Arial", fontSize: "17px", color: "#34271d", fontStyle: "bold"
+    }).setOrigin(0.5);
+    button.add([background, text]);
+    background.on("pointerover", () => background.setScale(1.05));
+    background.on("pointerout", () => background.setScale(1));
+    background.on("pointerdown", action);
+    return button;
   }
 
   setMessage(message) { this.messageText.setText(message); }
