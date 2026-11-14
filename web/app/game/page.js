@@ -9,7 +9,7 @@ export default function GamePage() {
     <main className="game-shell">
       <header className="game-header">
         <a href="/" className="wordmark">Farm <span>Vs</span> Monsters</a>
-        <div className="control-hint">Choose a carved seed token · Click a soil plot to plant · WASD / arrows to move · SPACE: emergency club</div>
+        <div className="control-hint">Choose Radish or Mushroom · Click a soil plot to plant · Collect glowing Mushroom energy · WASD / arrows to move · SPACE: emergency club</div>
       </header>
       <section className="game-panel" aria-label="Stone age battle arena">
         <PhaserGame />
