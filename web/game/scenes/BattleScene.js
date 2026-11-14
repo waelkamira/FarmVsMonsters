@@ -69,6 +69,7 @@ export default class BattleScene extends Scene {
     this.projectileSoundEnabled = this.projectileVolume > 0;
     this.musicStep = 0;
     this.musicTimer = null;
+    this.audioSceneShuttingDown = false;
 
     this.drawField();
     this.createFarmBackground();
@@ -77,7 +78,10 @@ export default class BattleScene extends Scene {
     this.createAudioControls();
     this.createCaveman();
     this.bindInput();
-    this.events.once("shutdown", () => this.stopBackgroundMusic());
+    this.events.once("shutdown", () => {
+      this.audioSceneShuttingDown = true;
+      this.stopBackgroundMusic();
+    });
     this.refreshHud();
     this.setMessage(this.textures.exists("farm-battlefield")
       ? "Choose the radish icon, then click an empty soil cell."
@@ -679,7 +683,7 @@ export default class BattleScene extends Scene {
     // unlocks the context; start the soundtrack only after resume succeeds.
     if (audioContext.state === "suspended") {
       audioContext.resume().then(() => {
-        if (audioContext.state !== "running" || !this.sys.isActive()) return;
+        if (audioContext.state !== "running" || this.audioSceneShuttingDown) return;
         if (this.musicEnabled && !this.gameOver) {
           this.startBackgroundMusic();
           this.playBackgroundMusicStep();
