@@ -12,7 +12,7 @@ export default function HowToPlayPage() {
         <h2>1. Choose your plant</h2>
         <p>Select the Radish card (35 energy) to plant an automatic lane defender, or the Energy Mushroom card (50 energy) to grow a resource producer. You begin with 150 energy, and each defeated monster restores 8 energy.</p>
         <h2>2. Plant and collect</h2>
-        <p>Choose an empty soil cell. The caveman runs there, plants your selected seed, and returns to his original position. Radishes stay rooted and automatically attack monsters. Every Energy Mushroom produces a 25-energy collectible every 8 seconds. Click the glowing mushroom pickup to collect it before it expires. Energy is capped at 300.</p>
+        <p>Choose an empty soil cell. The caveman runs there, plants your selected seed, and returns to his original position. Radishes stay rooted and automatically attack monsters. Every Energy Mushroom produces a 25-energy collectible every 8 seconds. Click the glowing mushroom pickup to collect it within 12 seconds before it disappears. If your energy is already full, the pickup cannot add more. Energy is capped at 300.</p>
         <h2>3. Protect the farmhouse</h2>
         <p>Monsters stop to eat plants blocking their lane. If they break through, they attack the farmhouse over time. The battle is lost only when farmhouse health reaches zero.</p>
         <h2>4. Emergency club combat</h2>
