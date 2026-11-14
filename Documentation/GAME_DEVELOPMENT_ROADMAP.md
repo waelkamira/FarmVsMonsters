@@ -64,7 +64,7 @@ BATTLE
 
 - **Player coin wallet:** monster kills award 8 Coins. The browser build stores the validated wallet in versioned local storage (`farmVsMonsters.progression.v1`) so it survives page reloads and browser restarts. If storage is blocked or corrupt, battle remains playable and the wallet safely falls back to zero. This is local-device progress only; cloud/account synchronization is not implemented.
 
-## Phase 1 — Complete playable vertical slice
+### Currency transaction groundwork\n\n- A pure `purchasePlant` rule now validates a plant identifier and an explicitly supplied positive integer price, rejects duplicate unlocks and insufficient balances, and returns the exact new balance/unlock list without mutating its inputs. No plant prices or additional roster entries are assumed. The shop UI and persistent unlock inventory remain pending the approved plant roster and prices.\n\n## Phase 1 — Complete playable vertical slice
 
 **Purpose:** prove one satisfying, complete game loop with one defender: the Radish, supported by the resource-only Energy Mushroom. Do not add a second defensive plant in this phase.
 
@@ -200,7 +200,7 @@ The core Phase 1 rules are now centralized in `web/game/rules/phaseOneRules.mjs`
 The Node.js test suite in `web/tests/phase-one-rules.test.mjs` covers:
 - Exact five-wave schedule, strict wave growth, and the 100-monster total.
 - Starting energy, plant costs/health, Mushroom production interval and pickup lifetime.
-- Energy collection at the 300 cap, including full, negative, and out-of-range inputs.
+- Energy collection at the 300 cap, including full, negative, and out-of-range inputs.\n- Plant purchase transaction validation, exact coin deduction, duplicate-unlock protection, and missing/invalid-price rejection.
 - Radish-only defensive counting and the resource-only Mushroom rule.
 - Cave-brute, Dust-skitter, and Stonehide composition by wave.
 - Stonehide bracing damage reduction.
