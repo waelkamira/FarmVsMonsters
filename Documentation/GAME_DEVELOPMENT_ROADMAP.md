@@ -42,7 +42,7 @@ BATTLE
 
 ## End conditions (locked for the first playable version)
 
-- The first playable campaign has **5 waves and 61 monsters total**, with this fixed first-pass distribution:
+- The first playable campaign has **5 waves and 100 monsters total**, with this fixed first-pass distribution:
 
   | Wave | Monsters |
   | --- | ---: |
@@ -54,7 +54,7 @@ BATTLE
   | **Total** | **61** |
 
 - Wave counts are data-defined for Phase 1; do not generate an unbounded sixth wave.
-- **Victory:** the player survives all five waves, all 61 monsters have spawned, and no living monsters remain after Wave 5. Only then show the Victory screen and its result summary.
+- **Victory:** the player survives all five waves, all 100 monsters have spawned, and no living monsters remain after Wave 5. Only then show the Victory screen and its result summary.
 - **Defeat:** the farmhouse/princess objective health reaches zero after monsters breach the defensive line. Show the Defeat screen immediately and stop battle simulation.
 - Plant destruction alone is not defeat. If all defensive plants die, switch to caveman emergency club combat according to the gameplay rules.
 - Restart/retry resets the entire battle state: wave, timers, enemies, plants, projectiles, energy, objective health, selection, animations, and result flags. It must not duplicate event listeners or leave old entities alive.
@@ -164,7 +164,7 @@ BATTLE
 - The browser rebuild and core battle scene exist in `web/`.
 - The Phase 1 battle HUD now exposes only the Radish card; energy-producing Mushroom planting is reserved for Phase 2. The older Mushroom implementation remains dormant and is not selectable through the Phase 1 interface. Feature presence is not proof of correct runtime behavior.
 - Farmer frame-count validation was added on 2026-11-14.
-- The Phase 1 wave schedule is now fixed in code at 5 / 8 / 12 / 16 / 20 monsters (61 total); the sixth-wave loop has been removed.
+- The Phase 1 wave schedule is now fixed in code at 10 / 15 / 20 / 25 / 30 monsters (100 total); the sixth-wave loop has been removed.
 - Final-wave completion now triggers a Victory result only after all scheduled monsters have spawned and no living monsters remain. Victory and Defeat result panels include run summaries and replay/menu actions.
 - Monsters that breach the farm now stop at the home boundary and damage farmhouse health on their attack cadence; defeat occurs only when home health reaches zero.
 - A dedicated `PauseScene` provides Resume, Restart, Settings, and Main Menu, with Escape/P resume shortcuts. Pause stops the background-music timer and suspends the Web Audio context; resume restores the audio context and soundtrack. The pause action is guarded against duplicate launches, and resume ignores stale/invalid requests. Runtime input/audio behavior still requires browser verification.
