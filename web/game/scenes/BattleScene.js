@@ -1080,7 +1080,10 @@ export default class BattleScene extends Scene {
       monster.view.setDepth(depthForY(monster.y));
     }
     if (this.caveman && this.caveman.active) {
-      this.caveman.setDepth(depthForY(this.caveman.y + 40));
+      // Keep the farmer behind plants in the same lane. Plant bases sort at
+      // y + 2, so sorting the farmer at y - 40 places his whole character
+      // behind the planted object instead of covering it.
+      this.caveman.setDepth(depthForY(this.caveman.y - 40));
     }
   }
 
