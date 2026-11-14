@@ -13,6 +13,9 @@ on:
       - "Documentation/GAME_DEVELOPMENT_ROADMAP.md"
       - ".github/workflows/web-quality.yml"
 
+permissions:
+  contents: read
+
 jobs:
   validate:
     runs-on: ubuntu-latest
@@ -26,11 +29,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-          cache-dependency-path: web/package-lock.json
       - name: Install dependencies
-        run: npm ci
-      - name: Run Phase 1 regression tests
+        run: npm install
+      - name: Run Phase 1 gameplay tests
         run: npm test
       - name: Lint
         run: npm run lint
