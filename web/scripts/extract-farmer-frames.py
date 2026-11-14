@@ -19,7 +19,7 @@ PADDING = 16
 ALPHA_THRESHOLD = 8
 
 
-def occupied_runs(values: list[bool]) -> list[tuple[int, int]]:
+def occupied_runs(values: list[bool], minimum_gutter: int = 8) -> list[tuple[int, int]]:
     """Return half-open runs of occupied rows or columns."""
     runs = []
     start = None
