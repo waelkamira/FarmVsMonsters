@@ -46,12 +46,12 @@ BATTLE
 
   | Wave | Monsters |
   | --- | ---: |
-  | 1 | 5 |
-  | 2 | 8 |
-  | 3 | 12 |
-  | 4 | 16 |
-  | 5 | 20 |
-  | **Total** | **61** |
+  | 1 | 10 |
+  | 2 | 15 |
+  | 3 | 20 |
+  | 4 | 25 |
+  | 5 | 30 |
+  | **Total** | **100** |
 
 - Wave counts are data-defined for Phase 1; do not generate an unbounded sixth wave.
 - **Victory:** the player survives all five waves, all 100 monsters have spawned, and no living monsters remain after Wave 5. Only then show the Victory screen and its result summary.
