@@ -67,6 +67,8 @@ BATTLE
 ### Currency transaction groundwork\n\n- A pure `purchasePlant` rule now validates a plant identifier and an explicitly supplied positive integer price, rejects duplicate unlocks and insufficient balances, and returns the exact new balance/unlock list without mutating its inputs. No plant prices or additional roster entries are assumed. The shop UI and persistent unlock inventory remain pending the approved plant roster and prices.\n\n### Farmer sprite-sheet processing
 - A gutter-aware extraction utility is available at `web/scripts/extract-farmer-frames.py`. It detects separated frames, writes individual 512×512 transparent PNGs, aligns the foot baseline, and produces a contact sheet plus JSON metadata without modifying the source.
 - The utility and its regression tests are committed, but the revised source sheets have not yet been processed or visually approved. Do not replace runtime assets until each contact sheet has been reviewed.
+- The extractor now supports an explicit shared scale: derive it from the idle sheet and pass the same value to every other action sheet. This prevents each animation from being independently resized and changing the farmer's apparent size.
+
 
 ## Phase 1 — Complete playable vertical slice
 
