@@ -451,6 +451,7 @@ export default class BattleScene extends Scene {
   }
 
   createCaveman() {
+    this.farmerWantsToRun = false;
     this.caveman = this.add.container(220, this.laneYs[2]).setDepth(10 + this.laneYs[2] / 1000);
 
     if (this.textures.exists("farmer-sheet-source") && this.createFarmerAnimations()) {
@@ -634,7 +635,10 @@ export default class BattleScene extends Scene {
     if (!this.cavemanVisual || !this.cavemanVisual.active) return;
     this.setFarmerAnimation(key);
     this.cavemanVisual.once("animationcomplete", () => {
-      if (this.cavemanVisual && this.cavemanVisual.active) this.setFarmerAnimation("farmer-idle");
+      if (!this.cavemanVisual || !this.cavemanVisual.active) return;
+      // Resume the correct locomotion state after an action. Planting and
+      // uprooting can finish while the farmer is already sprinting home.
+      this.setFarmerAnimation(this.farmerWantsToRun ? "farmer-run" : "farmer-idle");
     });
   }
 
@@ -1139,7 +1143,10 @@ export default class BattleScene extends Scene {
     }
     this.updatePlantingMovement(dt);
     this.updateReturnMovement(dt);
-    this.setFarmerAnimation(this.plantingTarget || this.returnTarget || dx !== 0 || dy !== 0 ? "farmer-run" : "farmer-idle");
+    this.farmerWantsToRun = Boolean(
+      this.plantingTarget || this.returnTarget || dx !== 0 || dy !== 0
+    );
+    this.setFarmerAnimation(this.farmerWantsToRun ? "farmer-run" : "farmer-idle");
     if (Input.Keyboard.JustDown(this.keys.space)) {
       if (this.livingPlantCount() > 0) this.setMessage("The radishes are alive and defending. The caveman cannot fight yet.");
       else if (this.hasPlantedDefender) this.clubAttack();
