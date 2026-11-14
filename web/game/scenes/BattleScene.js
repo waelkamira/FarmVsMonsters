@@ -1069,7 +1069,7 @@ export default class BattleScene extends Scene {
   }
 
   playMonsterJumpSound() {
-    this.playSfx("sfx-grass-step-02", this.effectsVolume * 0.48, 100);
+    this.playSfx("sfx-monster-jump", this.effectsVolume * 0.52, 100);
   }
 
   playMonsterLandSound() {
