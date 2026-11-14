@@ -65,6 +65,7 @@ export default class BattleScene extends Scene {
     this.totalSpawnedMonsters = 0;
     this.totalDefeatedMonsters = 0;
     this.totalPlantsPlanted = 0;
+    this.energyCollected = 0;
     this.elapsedBattleMs = 0;
     this.spawnTimer = 1800;
     this.selectedPlant = null;
@@ -119,8 +120,8 @@ export default class BattleScene extends Scene {
     });
     this.refreshHud();
     this.setMessage(this.textures.exists("farm-battlefield")
-      ? "Choose the radish icon, then click an empty soil cell."
-      : "Temporary farm art active. Add farm-battlefield.jpeg when your background is ready.");
+      ? "Choose Radish to defend or Mushroom to produce energy, then click an empty soil cell."
+      : "Temporary farm art active. Choose Radish or Mushroom, then click an empty soil cell.");
   }
 
   drawField() {
@@ -1575,16 +1576,22 @@ export default class BattleScene extends Scene {
     miniature.on("pointerdown", () => {
       if (!token.active || this.gameOver) return;
       this.collectingEnergyToken = true;
-      this.playFarmerAction("farmer-collect");
-      this.energy = Math.min(300, this.energy + amount);
-      this.playPlantSound();
+      const collected = Math.min(amount, Math.max(0, 300 - this.energy));
+      if (collected > 0) {
+        this.playFarmerAction("farmer-collect");
+        this.energy += collected;
+        this.energyCollected += collected;
+        this.playPlantSound();
+        this.setMessage("Collected " + collected + " mushroom energy!");
+      } else {
+        this.setMessage("Energy is full. Defeat monsters or spend energy before collecting more.");
+      }
       this.refreshHud();
       if (token.expiryTimer) token.expiryTimer.remove(false);
       this.tweens.add({
         targets: token, y: token.y - 30, alpha: 0, scale: 1.35, duration: 220,
         onComplete: () => token.destroy()
       });
-      this.setMessage("Collected " + amount + " mushroom energy!");
     });
     this.tweens.add({
       targets: token, y: token.y - 9, duration: 700, ease: "Sine.easeInOut",
@@ -2248,6 +2255,7 @@ export default class BattleScene extends Scene {
         this.totalDefeatedMonsters + " / " + this.totalSpawnedMonsters + " monsters defeated",
         this.totalPlantsPlanted + " plants planted",
         "Time: " + minutes + ":" + seconds,
+        "Energy collected: " + this.energyCollected,
         "Energy remaining: " + this.energy
       ].join("\n");
       this.add.text(560, 330, summary, {
@@ -2283,6 +2291,7 @@ export default class BattleScene extends Scene {
       "Reached wave " + Math.min(this.wave, this.totalWaves) + " of " + this.totalWaves,
       this.totalDefeatedMonsters + " monsters defeated",
       this.totalPlantsPlanted + " plants planted",
+      "Energy collected: " + this.energyCollected,
       "Time survived: " + minutes + ":" + seconds
     ].join("\n");
     this.add.text(560, 355, summary, {
