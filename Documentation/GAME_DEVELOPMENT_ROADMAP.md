@@ -189,3 +189,23 @@ BATTLE
 5. Verify the loading, ready, asset-fallback, and initialization-error states in a real browser.
 6. Run production build and three complete browser playthroughs.
 7. Close Phase 1 with a recorded checklist and release tag; only then begin Phase 2.
+
+## Automated Phase 1 regression coverage
+
+The core Phase 1 rules are now centralized in `web/game/rules/phaseOneRules.mjs` and imported by `BattleScene`, so balancing constants and pure gameplay decisions are not duplicated between the game and tests.
+
+The Node.js test suite in `web/tests/phase-one-rules.test.mjs` covers:
+- Exact five-wave schedule, strict wave growth, and the 100-monster total.
+- Starting energy, plant costs/health, Mushroom production interval and pickup lifetime.
+- Energy collection at the 300 cap, including full, negative, and out-of-range inputs.
+- Radish-only defensive counting and the resource-only Mushroom rule.
+- Cave-brute, Dust-skitter, and Stonehide composition by wave.
+- Stonehide bracing damage reduction.
+- Plant placement validation before charging energy.
+- Idempotent monster defeat rewards and defeat counters.
+- Wave-clear and final-victory gates.
+- Pause, game-over, and retry guard contracts.
+- Alignment between the game rules, player guide, and this roadmap.
+
+Run from `web/` with `npm test`. GitHub Actions is configured to run the suite, lint, and the production build. The current GitHub-hosted workflow attempts are failing before a runner starts (no steps or logs are exposed), so CI is not yet a passing verification signal. The extracted pure rules module has separately passed a local Node.js 22 test run; the complete repository suite and production build still require a functioning runner.
+
