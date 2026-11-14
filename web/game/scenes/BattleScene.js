@@ -1216,7 +1216,8 @@ export default class BattleScene extends Scene {
     const lane = this.worldToLane(plant);
     const localX = lane.localX + 22;
     const row = plant.row;
-    const position = this.lanePoint(localX, row);
+    // Launch from the same raised lane center used by the monsters themselves.
+    const position = this.monsterLanePoint(localX, row);
     const view = this.add.container(position.x, position.y - 22).setDepth(16);
 
     const halo = this.add.circle(0, 0, 17, 0xffa52f, 0.16);
@@ -1354,31 +1355,64 @@ export default class BattleScene extends Scene {
     });
   }
 
+  monsterArchetypeFor(spawnIndex) {
+    // Enemy roles arrive in measured steps: the opening raids teach the
+    // player the basic threat before introducing speed and armor.
+    if (this.wave >= 5 && (spawnIndex + 1) % 5 === 0) return "stonehide";
+    if (this.wave >= 3 && spawnIndex % 3 === 1) return "dust-skitter";
+    return "cave-brute";
+  }
+
   spawnMonster() {
     const row = PhaserMath.Between(0, LANES - 1);
-    const hp = 65 + Math.floor(this.wave * 4);
+    const spawnIndex = this.spawnedThisWave;
+    const archetype = this.monsterArchetypeFor(spawnIndex);
+    const profiles = {
+      "cave-brute": {
+        hpMultiplier: 1, speedMultiplier: 1, maxSpeed: 30,
+        plantDamage: 16, attackInterval: 1150, incomingDamage: 1,
+        widthScale: 1, heightScale: 1, wobbleDuration: 520
+      },
+      "dust-skitter": {
+        hpMultiplier: 0.72, speedMultiplier: 1.55, maxSpeed: 34,
+        plantDamage: 10, attackInterval: 920, incomingDamage: 1,
+        widthScale: 0.8, heightScale: 0.88, wobbleDuration: 350
+      },
+      "stonehide": {
+        hpMultiplier: 2.2, speedMultiplier: 0.62, maxSpeed: 19,
+        plantDamage: 23, attackInterval: 1450, incomingDamage: 0.7,
+        widthScale: 1.18, heightScale: 1.14, wobbleDuration: 760
+      }
+    };
+    const profile = profiles[archetype];
+    const hp = Math.round((65 + Math.floor(this.wave * 4)) * profile.hpMultiplier);
+    const baseSpeed = Math.min(30, 8 + (this.wave - 1) * 1.35);
+    const speed = Math.min(profile.maxSpeed, baseSpeed * profile.speedMultiplier);
     const spawn = this.monsterLanePoint(SPAWN_LOCAL_X, row);
     const view = this.add.container(spawn.x, spawn.y).setDepth(10 + spawn.y / 1000);
-    // Perspective lanes are closer together near the horizon. Scale each
-    // monster to its lane spacing so creatures never overlap adjacent lanes.
+
+    // Scale each creature against the measured gap of its perspective lane.
     const laneGap = row < LANES - 1
       ? this.laneYs[row + 1] - this.laneYs[row]
       : this.laneYs[row] - this.laneYs[row - 1];
     const monsterScale = PhaserMath.Clamp(laneGap / 108, 0.28, 0.62);
-    view.setScale(monsterScale);
-    // Center the monster artwork inside its assigned soil cell. Its visual
-    // body center, not its feet, now follows the cell-centroid path.
+    view.setScale(monsterScale * profile.widthScale, monsterScale * profile.heightScale);
     view.setPosition(spawn.x, spawn.y);
 
     const g = this.add.graphics();
-    // A wild cave brute wearing a rough hide, stone ornaments and bone tusks.
+    const bodyColor = archetype === "stonehide" ? 0x68675b
+      : archetype === "dust-skitter" ? 0x895b3a : 0x765036;
+    const headColor = archetype === "stonehide" ? 0x898578
+      : archetype === "dust-skitter" ? 0xb18154 : 0x9a7048;
+
+    // Original prehistoric raider silhouette shared by the enemy family.
     g.fillStyle(0x2c2118, 0.9); g.fillEllipse(0, 18, 54, 68);
-    g.fillStyle(0x765036, 1);
+    g.fillStyle(bodyColor, 1);
     g.fillPoints([
       {x:-20,y:-4},{x:18,y:-7},{x:29,y:24},{x:19,y:43},
       {x:8,y:31},{x:0,y:48},{x:-9,y:31},{x:-26,y:42},{x:-30,y:16}
     ], true);
-    g.fillStyle(0x9a7048, 1); g.fillEllipse(0, -22, 53, 49);
+    g.fillStyle(headColor, 1); g.fillEllipse(0, -22, 53, 49);
     g.fillStyle(0x49301e, 1);
     g.fillEllipse(0, -39, 51, 18);
     g.fillTriangle(-22,-37,-12,-55,-5,-35);
@@ -1388,34 +1422,83 @@ export default class BattleScene extends Scene {
     g.fillEllipse(-10, -23, 8, 11); g.fillEllipse(11, -23, 8, 11);
     g.fillStyle(0xf1a34d, 1);
     g.fillCircle(-10, -23, 3.2); g.fillCircle(11, -23, 3.2);
-    g.fillStyle(0x2a1a13, 1);
-    g.fillEllipse(0, -8, 18, 10);
+    g.fillStyle(0x2a1a13, 1); g.fillEllipse(0, -8, 18, 10);
     g.fillStyle(0xf0dfbd, 1);
     g.fillTriangle(-14, -8, -9, 7, -4, -7);
     g.fillTriangle(4, -7, 9, 7, 14, -8);
     g.fillStyle(0x513321, 1);
     g.fillEllipse(-18, -5, 10, 18); g.fillEllipse(18, -5, 10, 18);
-    g.lineStyle(7, 0x765036, 1);
+    g.lineStyle(7, bodyColor, 1);
     g.lineBetween(-19, 1, -35, 20); g.lineBetween(19, 1, 35, 20);
     g.lineStyle(9, 0x4a3020, 1);
     g.lineBetween(-11, 40, -19, 57); g.lineBetween(11, 40, 19, 57);
-    // Bone necklace and a small tooth hanging at the chest.
     g.lineStyle(2, 0xe1d0a5, 1);
     g.beginPath(); g.arc(0, 8, 17, 0.25, Math.PI - 0.25); g.strokePath();
     g.fillStyle(0xf0dfbd, 1);
     g.fillTriangle(0, 15, -4, 25, 4, 25);
-    g.fillStyle(0x6c8b45, 1);
-    g.fillEllipse(-21, 17, 9, 5); g.fillEllipse(22, 13, 8, 5);
-    view.add(g); view.setDepth(8);
 
-    const shadow = this.add.ellipse(spawn.x, spawn.y + 2, 48 * monsterScale, 12 * monsterScale, 0x21170f, 0.32)
-      .setDepth(7);
-    this.tweens.add({ targets: view, angle: { from: -2.5, to: 2.5 }, duration: 520, ease: "Sine.easeInOut", yoyo: true, repeat: -1 });
+    if (archetype === "dust-skitter") {
+      // Lean horn-like ear guards and ankle wraps make this quick raider
+      // readable at a glance without borrowing another game's creature art.
+      g.fillStyle(0xd39b4e, 1);
+      g.fillTriangle(-18, -39, -31, -58, -25, -32);
+      g.fillTriangle(18, -39, 31, -58, 25, -32);
+      g.lineStyle(3, 0x54331f, 1);
+      g.lineBetween(-13, 43, -25, 56);
+      g.lineBetween(13, 43, 25, 56);
+      g.fillStyle(0xd8b77c, 1);
+      g.fillEllipse(-20, 21, 11, 5);
+      g.fillEllipse(20, 21, 11, 5);
+    } else if (archetype === "stonehide") {
+      // Layered shale plates are a distinct defensive trait, not a copied
+      // shield or costume from the genre reference.
+      const chestPlate = [
+        {x:-23,y:0},{x:-13,y:-8},{x:13,y:-8},{x:23,y:1},
+        {x:18,y:29},{x:0,y:39},{x:-18,y:29}
+      ];
+      g.fillStyle(0x555b56, 1); g.fillPoints(chestPlate, true);
+      g.lineStyle(3, 0xb5ad91, 1); g.strokePoints(chestPlate, true);
+      g.fillStyle(0x777c70, 1);
+      g.fillPoints([{x:-31,y:-4},{x:-23,y:-16},{x:-11,y:-5},{x:-16,y:12}], true);
+      g.fillPoints([{x:31,y:-4},{x:23,y:-16},{x:11,y:-5},{x:16,y:12}], true);
+      g.fillStyle(0x454c48, 1);
+      g.fillRoundedRect(-23, -47, 46, 10, 4);
+      g.lineStyle(2, 0xd0c5a5, 1);
+      g.lineBetween(-15, 5, 0, 13);
+      g.lineBetween(0, 13, 15, 5);
+    } else {
+      g.fillStyle(0x6c8b45, 1);
+      g.fillEllipse(-21, 17, 9, 5); g.fillEllipse(22, 13, 8, 5);
+    }
+
+    view.add(g);
+    view.setDepth(8);
+    const shadow = this.add.ellipse(
+      spawn.x, spawn.y + 2,
+      48 * monsterScale * profile.widthScale,
+      12 * monsterScale,
+      0x21170f, 0.32
+    ).setDepth(7);
+
+    this.tweens.add({
+      targets: view, angle: { from: -2.5, to: 2.5 },
+      duration: profile.wobbleDuration, ease: "Sine.easeInOut",
+      yoyo: true, repeat: -1
+    });
+
+    if (archetype === "dust-skitter" && this.wave === 3 && spawnIndex === 1) {
+      this.setMessage("A Dust Skitter has joined the raid: quick, but easier to bring down.");
+    } else if (archetype === "stonehide" && spawnIndex === 4) {
+      this.setMessage("A Stonehide is approaching: slow, heavily plated, and tough to stop.");
+    }
+
     this.monsters.push({
+      kind: archetype,
       row, x: spawn.x, y: spawn.y, localX: SPAWN_LOCAL_X, hp,
-      // The first raid is deliberately forgiving; each cleared wave adds
-      // a small, predictable speed increase instead of starting at a sprint.
-      speed: Math.min(30, 8 + (this.wave - 1) * 1.35),
+      speed,
+      plantDamage: profile.plantDamage,
+      attackInterval: profile.attackInterval,
+      incomingDamageMultiplier: profile.incomingDamage,
       attackCooldown: 0, alive: true, view, shadow, dustTimer: 0
     });
   }
@@ -1429,7 +1512,7 @@ export default class BattleScene extends Scene {
       const blockerLocalX = blocker ? this.worldToLane(blocker).localX : -Infinity;
       if (blocker && monster.localX - blockerLocalX <= 43) {
         if (monster.attackCooldown <= 0) {
-          blocker.hp -= 16; monster.attackCooldown = 1150;
+          blocker.hp -= monster.plantDamage; monster.attackCooldown = monster.attackInterval;
           this.playMonsterBiteSound();
           this.tweens.add({ targets: monster.view, x: monster.view.x - 4, scaleY: monster.view.scaleY * 0.94, duration: 85, yoyo: true });
           if (blocker.hp <= 0) this.destroyPlant(blocker);
@@ -1478,7 +1561,7 @@ export default class BattleScene extends Scene {
       );
       if (hit) {
         this.createProjectileImpact(position.x, position.y - 22);
-        hit.hp -= shot.damage;
+        hit.hp -= shot.damage * (hit.incomingDamageMultiplier || 1);
         if (hit.view && hit.view.active) {
           this.tweens.killTweensOf(hit.view);
           this.tweens.add({
@@ -1553,7 +1636,11 @@ export default class BattleScene extends Scene {
     const target = this.monsters.filter((m) => m.alive && m.row === this.nearestLane(this.caveman.y) && Math.abs(m.x - this.caveman.x) <= 112)
       .sort((a, b) => Math.abs(a.x - this.caveman.x) - Math.abs(b.x - this.caveman.x))[0];
     this.tweens.add({ targets: this.caveman, angle: this.facing * 22, duration: 100, yoyo: true });
-    if (target) { target.hp -= 42; this.damageMonsterIfNeeded(target); this.setMessage("Club hit!"); }
+    if (target) {
+      target.hp -= 42 * (target.incomingDamageMultiplier || 1);
+      this.damageMonsterIfNeeded(target);
+      this.setMessage("Club hit!");
+    }
     else this.setMessage("No monster is close enough for the club.");
   }
 
@@ -1564,9 +1651,12 @@ export default class BattleScene extends Scene {
 
   checkWaveProgress() {
     if (this.spawnedThisWave >= this.waveSize && this.monsters.length === 0) {
-      this.wave += 1; this.spawnedThisWave = 0; this.spawnTimer = 3200;
-      this.waveSize = Math.min(12, 5 + this.wave);
-      this.setMessage("Wave " + (this.wave - 1) + " cleared. More monsters are approaching.");
+      const clearedWave = this.wave;
+      this.wave += 1;
+      this.spawnedThisWave = 0;
+      this.spawnTimer = 3200;
+      this.waveSize = Math.min(14, 5 + this.wave);
+      this.setMessage("Raid " + clearedWave + " cleared. Raid " + this.wave + " is gathering beyond the gate.");
     }
   }
 
