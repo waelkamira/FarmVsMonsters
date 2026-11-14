@@ -1070,12 +1070,6 @@ export default class BattleScene extends Scene {
       view: type === "mushroom" ? this.drawEnergyMushroom(x, y, row) : this.drawRadish(x, y)
     };
     this.plants.push(plant);
-    if (type === "mushroom") {
-      plant.energyCounter = this.add.text(x, y + 19, "0", {
-        fontFamily: "Arial", fontSize: "12px", color: "#fff7df", fontStyle: "bold",
-        stroke: "#563a25", strokeThickness: 3
-      }).setOrigin(0.5).setDepth(13);
-    }
     if (type === "radish") this.hasPlantedDefender = true;
     this.playPlantSound();
     this.updateEmergencyMode();
@@ -1227,10 +1221,6 @@ export default class BattleScene extends Scene {
       if (!token.active || this.gameOver) return;
       this.collectingEnergyToken = true;
       this.energy = Math.min(300, this.energy + amount);
-      plant.energyCollected = (plant.energyCollected || 0) + amount;
-      if (plant.energyCounter && plant.energyCounter.active) {
-        plant.energyCounter.setText(String(plant.energyCollected));
-      }
       this.playPlantSound();
       this.refreshHud();
       if (token.expiryTimer) token.expiryTimer.remove(false);
@@ -1749,7 +1739,6 @@ export default class BattleScene extends Scene {
     if (!plant || !plant.alive || this.gameOver) return;
     plant.alive = false;
     plant.view.destroy();
-    if (plant.energyCounter) plant.energyCounter.destroy();
     this.playUprootSound();
     this.setMessage("Plant uprooted. Select a plant card and choose an empty soil cell.");
     this.updateEmergencyMode();
