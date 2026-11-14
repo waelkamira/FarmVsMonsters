@@ -1052,6 +1052,10 @@ export default class BattleScene extends Scene {
     this.playSfx("sfx-monster-hit", this.effectsVolume * 0.72, 70);
   }
 
+  playThornImpactSound() {
+    this.playSfx("sfx-thorn-impact", this.projectileVolume * 0.48, 90);
+  }
+
   playMonsterDefeatSound() {
     this.playSfx("sfx-monster-defeat", this.effectsVolume * 0.78, 100);
   }
@@ -2008,6 +2012,7 @@ export default class BattleScene extends Scene {
       );
       if (hit) {
         this.createProjectileImpact(position.x, position.y + shot.verticalOffset);
+        this.playThornImpactSound();
         this.applyMonsterDamage(
           hit, shot.damage * this.incomingMonsterDamageMultiplier(hit)
         );
