@@ -8,7 +8,7 @@ export default function HowToPlayPage() {
       <article className="info-card">
         <p className="eyebrow">FIELD GUIDE</p>
         <h1>How to Play</h1>
-        <p>Defend the farmhouse and princess through five increasingly difficult monster waves. The first campaign contains 61 monsters in total.</p>
+        <p>Defend the farmhouse and princess through five increasingly difficult monster waves. The first campaign contains 100 monsters across five waves: 10, 15, 20, 25, and 30 monsters.</p>
         <h2>1. Plant a Radish</h2>
         <p>Select the Radish seed card, then choose an empty soil cell. The caveman runs to that cell, plants the defender, and returns to his original position. Planting costs 35 energy. You begin with 150 energy, and each defeated monster restores 8 energy. The Radish is the only plant available in this first phase.</p>
         <h2>2. Build your defense</h2>
