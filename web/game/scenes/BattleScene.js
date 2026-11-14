@@ -1863,8 +1863,27 @@ export default class BattleScene extends Scene {
         continue;
       }
       if (!blocker && monster.localX <= HOME_LOCAL_X + 34) {
-        this.endGame(false);
-        return;
+        // A breach is not an instant defeat: the monster reaches the home
+        // boundary and damages its health on its normal attack cadence.
+        monster.localX = HOME_LOCAL_X + 34;
+        const homePosition = this.monsterLanePoint(monster.localX, monster.row);
+        monster.x = homePosition.x;
+        monster.y = homePosition.y;
+        monster.view.setPosition(homePosition.x, homePosition.y);
+        if (monster.shadow && monster.shadow.active) {
+          monster.shadow.setPosition(homePosition.x, homePosition.y + 2);
+        }
+        if (monster.attackCooldown <= 0) {
+          this.houseHealth = Math.max(0, this.houseHealth - monster.plantDamage);
+          monster.attackCooldown = monster.attackInterval;
+          this.playMonsterBiteSound();
+          this.setMessage("The monsters are attacking the farmhouse! Home health: " + this.houseHealth + "%");
+          if (this.houseHealth <= 0) {
+            this.endGame(false);
+            return;
+          }
+        }
+        continue;
       }
 
       let movementSpeed = monster.speed;
