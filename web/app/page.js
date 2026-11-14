@@ -1,6 +1,20 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { loadSavedCoins } from "../game/rules/phaseOneRules.mjs";
 
 export default function HomePage() {
+  const [coins, setCoins] = useState(0);
+
+  useEffect(() => {
+    try {
+      setCoins(loadSavedCoins(window.localStorage));
+    } catch {
+      setCoins(0);
+    }
+  }, []);
+
   return (
     <main className="home-shell">
       <div className="home-card">
@@ -11,6 +25,10 @@ export default function HomePage() {
           Plant Radish defenders, grow Energy Mushrooms to collect resources, and protect the princess.
           When the final radish falls, the caveman takes up his wooden club.
         </p>
+        <div className="coin-wallet" aria-label={`Saved coins: ${coins}`}>
+          <span className="coin-wallet-icon" aria-hidden="true">●</span>
+          <span><strong>{coins.toLocaleString()} COINS</strong><small>Saved player balance</small></span>
+        </div>
         <nav className="menu-actions" aria-label="Main menu">
           <Link className="primary-link" href="/game">New Game</Link>
           <Link className="secondary-link" href="/how-to-play">How to Play</Link>
