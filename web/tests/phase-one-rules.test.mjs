@@ -10,6 +10,10 @@ import {
   MAX_ENERGY,
   MONSTER_KILL_COIN_REWARD,
   MUSHROOM_PICKUP_TTL_MS,
+  PROGRESSION_STORAGE_KEY,
+  normalizeCoins,
+  loadSavedCoins,
+  saveCoins,
   RADISH_CONFIG,
   MUSHROOM_CONFIG,
   collectEnergy,
@@ -44,6 +48,33 @@ test("initial energy, plant costs, HP and mushroom production are centralized", 
     { cost: 50, hp: 85, energy: 15, interval: 12_000 }
   );
   assert.equal(MUSHROOM_PICKUP_TTL_MS, 12_000);
+});
+
+
+test("coin progression persists safely across browser sessions", () => {
+  const values = new Map();
+  const storage = {
+    getItem(key) { return values.has(key) ? values.get(key) : null; },
+    setItem(key, value) { values.set(key, value); }
+  };
+  assert.equal(loadSavedCoins(storage), 0);
+  assert.equal(saveCoins(storage, 24), true);
+  assert.equal(values.has(PROGRESSION_STORAGE_KEY), true);
+  assert.equal(loadSavedCoins(storage), 24);
+  assert.equal(normalizeCoins(-1), 0);
+  assert.equal(normalizeCoins(1.5), 0);
+  assert.equal(normalizeCoins(Number.MAX_SAFE_INTEGER + 1), 0);
+});
+
+test("coin progression rejects malformed, outdated, and inaccessible storage", () => {
+  const malformed = { getItem() { return "{not-json"; } };
+  const outdated = { getItem() { return JSON.stringify({ version: 0, coins: 900 }); } };
+  const inaccessible = { getItem() { throw new Error("blocked"); }, setItem() { throw new Error("blocked"); } };
+  assert.equal(loadSavedCoins(malformed), 0);
+  assert.equal(loadSavedCoins(outdated), 0);
+  assert.equal(loadSavedCoins(inaccessible), 0);
+  assert.equal(saveCoins(inaccessible, 8), false);
+  assert.equal(saveCoins(null, 8), false);
 });
 
 test("energy collection never exceeds 300 and never grants negative energy", () => {
