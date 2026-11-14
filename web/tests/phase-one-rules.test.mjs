@@ -8,7 +8,7 @@ import {
   PHASE_ONE_TOTAL_MONSTERS,
   INITIAL_ENERGY,
   MAX_ENERGY,
-  MONSTER_KILL_ENERGY_REWARD,
+  MONSTER_KILL_COIN_REWARD,
   MUSHROOM_PICKUP_TTL_MS,
   RADISH_CONFIG,
   MUSHROOM_CONFIG,
@@ -34,7 +34,7 @@ test("five Phase 1 waves are strictly increasing and total exactly 100", () => {
 test("initial energy, plant costs, HP and mushroom production are centralized", () => {
   assert.equal(INITIAL_ENERGY, 150);
   assert.equal(MAX_ENERGY, 300);
-  assert.equal(MONSTER_KILL_ENERGY_REWARD, 8);
+  assert.equal(MONSTER_KILL_COIN_REWARD, 8);
   assert.deepEqual(
     { cost: RADISH_CONFIG.cost, hp: RADISH_CONFIG.hp },
     { cost: 35, hp: 160 }
@@ -132,7 +132,8 @@ test("monster defeat is guarded against duplicate rewards", () => {
   assert.match(scene, /if \(monster\.hp > 0 \|\| !monster\.alive\) return/);
   assert.match(scene, /monster\.alive = false/);
   assert.match(scene, /this\.totalDefeatedMonsters \+= 1/);
-  assert.match(scene, /this\.energy = Math\.min\(MAX_ENERGY, this\.energy \+ MONSTER_KILL_ENERGY_REWARD\)/);
+  assert.match(scene, /this\.coins \+= MONSTER_KILL_COIN_REWARD/);
+  assert.match(scene, /this\.registry\.set\('coins', this\.coins\)/);
 });
 
 test("a wave clears only after all scheduled monsters spawn and all living monsters die", () => {
