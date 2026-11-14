@@ -166,7 +166,7 @@ BATTLE
 - Final-wave completion now triggers a Victory result only after all scheduled monsters have spawned and no living monsters remain. Victory and Defeat result panels include run summaries and replay/menu actions.
 - Monsters that breach the farm now stop at the home boundary and damage farmhouse health on their attack cadence; defeat occurs only when home health reaches zero.
 - A dedicated `PauseScene` provides Resume, Restart, Settings, and Main Menu, with Escape/P resume shortcuts. Pause stops the background-music timer and suspends the Web Audio context; resume restores the audio context and soundtrack. The pause action is guarded against duplicate launches, and resume ignores stale/invalid requests. Runtime input/audio behavior still requires browser verification.\n- The main menu now links to New Game, How to Play, Settings, and Credits; the Credits page lists the current technology stack and leaves unconfirmed contributor/art credits explicitly pending. The field guide documents planting, monster lanes, farmhouse health, emergency combat, and controls. The settings page edits the three persisted audio volume keys used by BattleScene.
-- Browser build and end-to-end manual playthrough have not yet been verified in this development session.
+- Phaser startup now has an explicit loading state, a readable initialization error with retry and main-menu recovery, and a ready-state transition. The browser build and end-to-end manual playthrough have not yet been verified in this development session.
 - Therefore **Phase 1 remains IN PROGRESS**. Next: verify the wave/result flow in a real browser, validate objective breach/health behavior, finish the remaining screen flow, run the build, and complete the victory/defeat/restart playthrough matrix.
 
 ## Work order from here
@@ -175,5 +175,6 @@ BATTLE
 2. Verify Radish-only battle loop and monster/objective damage.
 3. Implement and test wave 1–5 completion and exact victory/defeat conditions.
 4. Verify Pause/Resume audio suspension, then test Main Menu, How to Play, Settings persistence, and reliable restart/menu transitions.
-5. Run production build and three complete browser playthroughs.
-6. Close Phase 1 with a recorded checklist and release tag; only then begin Phase 2.
+5. Verify the loading, ready, asset-fallback, and initialization-error states in a real browser.
+6. Run production build and three complete browser playthroughs.
+7. Close Phase 1 with a recorded checklist and release tag; only then begin Phase 2.
