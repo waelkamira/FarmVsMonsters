@@ -941,8 +941,7 @@ export default class BattleScene extends Scene {
       fontFamily: "Arial", fontSize: "17px", color: "#fff7df", fontStyle: "bold"
     }).setOrigin(0.5);
     token.add([stem, cap, sparkle]);
-    cap.setInteractive(new Phaser.Geom.Circle(0, 0, 22), Phaser.Geom.Circle.Contains);
-    token.setSize(42, 42);
+    cap.setInteractive({ useHandCursor: true });
     cap.on("pointerdown", () => {
       if (!token.active || this.gameOver) return;
       this.collectingEnergyToken = true;
