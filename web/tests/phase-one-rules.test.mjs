@@ -41,7 +41,10 @@ test("CC0 Kenney sound assets are bundled locally and mapped to gameplay events"
     assert.ok(asset.key.startsWith("sfx-"));
     assert.ok(asset.path.startsWith("/assets/audio/sfx/"));
     assert.ok(existsSync(resolve(here, "../public", asset.path.slice(1))), `missing sound file: ${asset.path}`);
-    assert.match(asset.sourceUrl, /^https:\/\/kenney\.nl\/assets\//);
+    assert.ok(
+      asset.sourceUrl.startsWith("https://kenney.nl/assets/") ||
+      asset.sourceUrl === "https://opengameart.org/content/512-sound-effects-8-bit-style"
+    );
   }
   assert.match(scene, /for \(const asset of soundAssets\.assets\) \{\s*this\.load\.audio\(asset\.key, asset\.path\);/);
   assert.match(scene, /this\.sound\.play\(key, \{ volume: PhaserMath\.Clamp\(volume \/ 100, 0, 1\) \}\)/);
