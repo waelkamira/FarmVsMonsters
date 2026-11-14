@@ -708,30 +708,58 @@ export default class BattleScene extends Scene {
         typeof audioContext.createBufferSource !== "function") return;
     try {
       if (audioContext.state === "suspended") audioContext.resume();
-      const duration = 0.19;
+      const start = audioContext.currentTime;
+      const volume = this.effectsVolume / 100;
+
+      // A fuller, deliberately messy chomping sound: several wet crunches,
+      // a low bite thump and a short crunchy tail on every attack.
+      const duration = 0.58;
       const sampleRate = audioContext.sampleRate;
       const buffer = audioContext.createBuffer(1, Math.floor(sampleRate * duration), sampleRate);
       const samples = buffer.getChannelData(0);
       for (let i = 0; i < samples.length; i += 1) {
-        const fade = 1 - i / samples.length;
-        samples[i] = (Math.random() * 2 - 1) * fade * (i % 5 < 2 ? 0.95 : 0.48);
+        const t = i / sampleRate;
+        const pulse = Math.max(
+          Math.exp(-Math.pow((t - 0.055) / 0.052, 2)),
+          Math.exp(-Math.pow((t - 0.235) / 0.065, 2)),
+          Math.exp(-Math.pow((t - 0.405) / 0.075, 2))
+        );
+        const texture = (Math.random() * 2 - 1) * 0.72 +
+          Math.sin(2 * Math.PI * (72 + 24 * Math.sin(t * 31)) * t) * 0.28;
+        samples[i] = texture * pulse * (1 - t / duration);
       }
+
       const source = audioContext.createBufferSource();
-      const filter = audioContext.createBiquadFilter();
-      const gain = audioContext.createGain();
-      const start = audioContext.currentTime;
+      const crunchFilter = audioContext.createBiquadFilter();
+      const crunchGain = audioContext.createGain();
       source.buffer = buffer;
-      filter.type = "lowpass";
-      filter.frequency.setValueAtTime(780, start);
-      filter.frequency.exponentialRampToValueAtTime(260, start + duration);
-      gain.gain.setValueAtTime(0.0001, start);
-      gain.gain.exponentialRampToValueAtTime(0.105 * this.effectsVolume / 100, start + 0.018);
-      gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
-      source.connect(filter);
-      filter.connect(gain);
-      gain.connect(audioContext.destination);
+      crunchFilter.type = "lowpass";
+      crunchFilter.frequency.setValueAtTime(1450, start);
+      crunchFilter.frequency.exponentialRampToValueAtTime(420, start + duration);
+      crunchGain.gain.setValueAtTime(0.0001, start);
+      crunchGain.gain.linearRampToValueAtTime(0.34 * volume, start + 0.025);
+      crunchGain.gain.setValueAtTime(0.22 * volume, start + 0.19);
+      crunchGain.gain.setValueAtTime(0.31 * volume, start + 0.22);
+      crunchGain.gain.setValueAtTime(0.19 * volume, start + 0.38);
+      crunchGain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+      source.connect(crunchFilter);
+      crunchFilter.connect(crunchGain);
+      crunchGain.connect(audioContext.destination);
       source.start(start);
       source.stop(start + duration);
+
+      const thump = audioContext.createOscillator();
+      const thumpGain = audioContext.createGain();
+      thump.type = "sine";
+      thump.frequency.setValueAtTime(105, start);
+      thump.frequency.exponentialRampToValueAtTime(48, start + 0.2);
+      thumpGain.gain.setValueAtTime(0.0001, start);
+      thumpGain.gain.linearRampToValueAtTime(0.2 * volume, start + 0.018);
+      thumpGain.gain.exponentialRampToValueAtTime(0.0001, start + 0.24);
+      thump.connect(thumpGain);
+      thumpGain.connect(audioContext.destination);
+      thump.start(start);
+      thump.stop(start + 0.25);
     } catch (error) {
       // Creature audio is optional; combat and plant damage must continue.
     }
