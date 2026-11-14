@@ -1949,6 +1949,12 @@ export default class BattleScene extends Scene {
       // The skitter alternates normal movement with short, readable bursts.
       burstCooldown: archetype === "dust-skitter" ? PhaserMath.Between(1500, 2300) : 0,
       burstRemaining: 0,
+      // Only the agile Dust Skitters perform short hops; other monsters keep
+      // their grounded movement. The hop is visual and never skips a plant.
+      jumpCooldown: archetype === "dust-skitter" ? PhaserMath.Between(1100, 2600) : 0,
+      jumpDuration: 560,
+      jumpElapsed: 0,
+      isJumping: false,
       braced: false,
       braceCue,
       maxHp: hp,
@@ -1976,6 +1982,9 @@ export default class BattleScene extends Scene {
       }
 
       if (withinBiteRange) {
+        // A skitter must land before it can stop to bite a defensive plant.
+        monster.isJumping = false;
+        monster.jumpElapsed = 0;
         if (monster.attackCooldown <= 0) {
           blocker.hp -= monster.plantDamage; monster.attackCooldown = monster.attackInterval;
           this.playMonsterBiteSound();
@@ -1992,7 +2001,28 @@ export default class BattleScene extends Scene {
       }
 
       let movementSpeed = monster.speed;
+      let jumpOffset = 0;
       if (monster.kind === "dust-skitter") {
+        monster.jumpCooldown -= delta;
+        if (!monster.isJumping && monster.jumpCooldown <= 0) {
+          monster.isJumping = true;
+          monster.jumpElapsed = 0;
+          monster.jumpDuration = PhaserMath.Between(480, 620);
+          this.createFootstepDust(monster.x - 8, monster.y + 3, monster.view.scaleY);
+        }
+        if (monster.isJumping) {
+          monster.jumpElapsed += delta;
+          const progress = PhaserMath.Clamp(monster.jumpElapsed / monster.jumpDuration, 0, 1);
+          jumpOffset = -Math.sin(progress * Math.PI) * 34 * monster.view.scaleY;
+          movementSpeed *= 1.12;
+          if (progress >= 1) {
+            monster.isJumping = false;
+            monster.jumpElapsed = 0;
+            monster.jumpCooldown = PhaserMath.Between(2100, 3400);
+            this.createFootstepDust(monster.x + 8, monster.y + 3, monster.view.scaleY);
+            jumpOffset = 0;
+          }
+        }
         monster.burstCooldown -= delta;
         if (monster.burstCooldown <= 0 && monster.burstRemaining <= 0) {
           monster.burstRemaining = 420;
@@ -2009,7 +2039,9 @@ export default class BattleScene extends Scene {
       monster.localX -= movementSpeed * dt;
       const position = this.monsterLanePoint(monster.localX, monster.row);
       monster.x = position.x; monster.y = position.y;
-      monster.view.setPosition(position.x, position.y);
+      // Lift the creature while keeping its shadow pinned to the ground lane.
+      // Jumping does not grant collision immunity or let it pass through plants.
+      monster.view.setPosition(position.x, position.y + jumpOffset);
       if (monster.shadow && monster.shadow.active) {
         monster.shadow.setPosition(position.x, position.y + 2);
       }
