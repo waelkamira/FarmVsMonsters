@@ -19,7 +19,8 @@ import {
   collectEnergy,
   isWaveComplete,
   isPhaseOneVictory,
-  monsterArchetypeFor
+  monsterArchetypeFor,
+  purchasePlant
 } from "../game/rules/phaseOneRules.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -132,6 +133,18 @@ test("resource Mushrooms never stop monsters; only living Radishes are defensive
   assert.doesNotMatch(updateMonsters, /p\.alive && p\.row === monster\.row/);
 });
 
+test("the first monster crossing the final line ends the game immediately", () => {
+  const updateMonsters = scene.slice(scene.indexOf("  updateMonsters(dt, delta) {"), scene.indexOf("  updateProjectiles(dt) {"));
+  assert.match(updateMonsters, /if \(!blocker && monster\.localX <= HOME_LOCAL_X \+ 34\) \{\s*\/\/ The first monster to cross the final line ends the run immediately\.[\s\S]*?this\.endGame\(false\);\s*return;/);
+  assert.doesNotMatch(updateMonsters, /houseHealth\s*=\s*Math\.max/);
+});
+
+test("uprooting a plant does not switch the stationary farmer to an action animation", () => {
+  const uproot = scene.slice(scene.indexOf("  uprootPlant(plant) {"), scene.indexOf("  destroyPlant(plant) {"));
+  assert.doesNotMatch(uproot, /playFarmerAction|setFarmerAnimation|farmer-uproot/);
+  assert.match(uproot, /this\.playUprootSound\(\)/);
+});
+
 test("a farmhouse defeat aborts the rest of the current simulation frame", () => {
   const update = scene.slice(scene.indexOf("  update(_time, delta) {"), scene.indexOf("  // Sort world characters"));
   assert.match(update, /this\.updateMonsters\(dt, delta\);\s*if \(this\.gameOver\) return;\s*this\.updateDepthSorting\(\);/);
@@ -190,7 +203,7 @@ test("monster defeat is guarded against duplicate rewards", () => {
   assert.match(scene, /monster\.alive = false/);
   assert.match(scene, /this\.totalDefeatedMonsters \+= 1/);
   assert.match(scene, /this\.coins \+= MONSTER_KILL_COIN_REWARD/);
-  assert.match(scene, /this\.registry\.set\('coins', this\.coins\)/);
+  assert.match(scene, /this\\.registry\\.set\\(["']coins["'], this\\.coins\\)/);
 });
 
 test("a wave clears only after all scheduled monsters spawn and all living monsters die", () => {
