@@ -593,10 +593,10 @@ export default class BattleScene extends Scene {
       // Resume the correct locomotion state after an action. Planting and
       // uprooting can finish while the farmer is already sprinting home.
       this.setFarmerAnimation(
-      this.plantingTarget
-        ? "farmer-walk"
-        : (this.farmerWantsToRun ? "farmer-run" : "farmer-idle")
-    );
+        this.plantingTarget
+          ? "farmer-walk"
+          : (this.farmerWantsToRun ? "farmer-run" : "farmer-idle")
+      );
     });
   }
 
@@ -1104,7 +1104,11 @@ export default class BattleScene extends Scene {
     this.farmerWantsToRun = Boolean(
       this.plantingTarget || this.returnTarget || dx !== 0 || dy !== 0
     );
-    this.setFarmerAnimation(this.farmerWantsToRun ? "farmer-run" : "farmer-idle");
+    this.setFarmerAnimation(
+      this.plantingTarget
+        ? "farmer-walk"
+        : (this.farmerWantsToRun ? "farmer-run" : "farmer-idle")
+    );
     if (Input.Keyboard.JustDown(this.keys.space)) {
       if (this.livingPlantCount() > 0) this.setMessage("The radishes are alive and defending. The caveman cannot fight yet.");
       else if (this.hasPlantedDefender) this.clubAttack();
