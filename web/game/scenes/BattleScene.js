@@ -354,6 +354,64 @@ export default class BattleScene extends Scene {
     this.soundButton = button;
   }
 
+  playPlantSound() {
+    if (!this.soundEnabled) return;
+    const audioContext = this.sound && this.sound.context;
+    if (!audioContext || typeof audioContext.createOscillator !== "function") return;
+    try {
+      if (audioContext.state === "suspended") audioContext.resume();
+      const start = audioContext.currentTime;
+      const oscillator = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+      const filter = audioContext.createBiquadFilter();
+      oscillator.type = "sine";
+      oscillator.frequency.setValueAtTime(185, start);
+      oscillator.frequency.exponentialRampToValueAtTime(420, start + 0.09);
+      oscillator.frequency.exponentialRampToValueAtTime(285, start + 0.24);
+      filter.type = "lowpass";
+      filter.frequency.setValueAtTime(950, start);
+      gain.gain.setValueAtTime(0.0001, start);
+      gain.gain.exponentialRampToValueAtTime(0.18, start + 0.025);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.28);
+      oscillator.connect(filter);
+      filter.connect(gain);
+      gain.connect(audioContext.destination);
+      oscillator.start(start);
+      oscillator.stop(start + 0.29);
+    } catch (error) {
+      // Planting sound is optional; planting itself must always succeed.
+    }
+  }
+
+  playUprootSound() {
+    if (!this.soundEnabled) return;
+    const audioContext = this.sound && this.sound.context;
+    if (!audioContext || typeof audioContext.createOscillator !== "function") return;
+    try {
+      if (audioContext.state === "suspended") audioContext.resume();
+      const start = audioContext.currentTime;
+      const oscillator = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+      const filter = audioContext.createBiquadFilter();
+      oscillator.type = "triangle";
+      oscillator.frequency.setValueAtTime(520, start);
+      oscillator.frequency.exponentialRampToValueAtTime(115, start + 0.19);
+      filter.type = "lowpass";
+      filter.frequency.setValueAtTime(1250, start);
+      filter.frequency.exponentialRampToValueAtTime(360, start + 0.2);
+      gain.gain.setValueAtTime(0.0001, start);
+      gain.gain.exponentialRampToValueAtTime(0.16, start + 0.012);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.22);
+      oscillator.connect(filter);
+      filter.connect(gain);
+      gain.connect(audioContext.destination);
+      oscillator.start(start);
+      oscillator.stop(start + 0.23);
+    } catch (error) {
+      // Uprooting sound is optional; removal must always work.
+    }
+  }
+
   playThornSound() {
     if (!this.soundEnabled) return;
     const audioContext = this.sound && this.sound.context;
@@ -439,9 +497,13 @@ export default class BattleScene extends Scene {
   }
 
   requestPlant(col, row) {
-    if (!this.selectedPlant) { this.setMessage("Choose the radish icon first."); return; }
     if (this.plantingTarget) { this.setMessage("The caveman is already on his way to a planting spot."); return; }
-    if (this.plants.some((p) => p.alive && p.col === col && p.row === row)) { this.setMessage("That soil cell is occupied."); return; }
+    const existingPlant = this.plants.find((plant) => plant.alive && plant.col === col && plant.row === row);
+    if (existingPlant) {
+      this.uprootPlant(existingPlant);
+      return;
+    }
+    if (!this.selectedPlant) { this.setMessage("Choose the radish icon first."); return; }
     if (this.energy < RADISH.cost) { this.setMessage("Not enough energy to plant a radish."); return; }
     const { x, y } = this.plantingCellCenter(col, row);
     this.plantingTarget = { col, row, x, y };
@@ -500,6 +562,7 @@ export default class BattleScene extends Scene {
       type: "radish", col, row, x, y, hp: RADISH.hp, alive: true,
       cooldown: PhaserMath.Between(250, 650), view: this.drawRadish(x, y)
     });
+    this.playPlantSound();
     this.updateEmergencyMode();
     this.tweens.add({ targets: this.caveman, scaleY: 0.82, duration: 120, yoyo: true });
     const safePosition = this.lanePoint(HOME_LOCAL_X - 38, row);
@@ -673,6 +736,16 @@ export default class BattleScene extends Scene {
   damageMonsterIfNeeded(monster) {
     if (monster.hp > 0 || !monster.alive) return;
     monster.alive = false; monster.view.destroy(); this.energy = Math.min(300, this.energy + 8);
+  }
+
+  uprootPlant(plant) {
+    if (!plant || !plant.alive || this.gameOver) return;
+    plant.alive = false;
+    plant.view.destroy();
+    this.playUprootSound();
+    this.setMessage("Radish uprooted. Select the radish card and plant it in any empty soil cell.");
+    this.updateEmergencyMode();
+    this.refreshHud();
   }
 
   destroyPlant(plant) {
