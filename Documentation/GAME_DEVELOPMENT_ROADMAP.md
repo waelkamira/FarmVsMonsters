@@ -165,6 +165,7 @@ BATTLE
 - The Phase 1 wave schedule is now fixed in code at 5 / 8 / 12 / 16 / 20 monsters (61 total); the sixth-wave loop has been removed.
 - Final-wave completion now triggers a Victory result only after all scheduled monsters have spawned and no living monsters remain. Victory and Defeat result panels include run summaries and replay/menu actions.
 - Monsters that breach the farm now stop at the home boundary and damage farmhouse health on their attack cadence; defeat occurs only when home health reaches zero.
+- A battle pause overlay is implemented with a HUD pause control and the P key; it pauses the Phaser scene and provides Resume, Restart, and Main Menu actions. Runtime input behavior and timer/audio resumption still require browser verification.
 - Browser build and end-to-end manual playthrough have not yet been verified in this development session.
 - Therefore **Phase 1 remains IN PROGRESS**. Next: verify the wave/result flow in a real browser, validate objective breach/health behavior, finish the remaining screen flow, run the build, and complete the victory/defeat/restart playthrough matrix.
 
@@ -173,6 +174,6 @@ BATTLE
 1. Finish farmer asset/frame audit and verify the farmer planting/return sequence in browser.
 2. Verify Radish-only battle loop and monster/objective damage.
 3. Implement and test wave 1–5 completion and exact victory/defeat conditions.
-4. Implement Main Menu, How to Play, Pause, Victory, Defeat, Settings, and reliable restart/menu transitions.
+4. Verify Pause/Resume, then complete Main Menu, How to Play, Settings, and reliable restart/menu transitions.
 5. Run production build and three complete browser playthroughs.
 6. Close Phase 1 with a recorded checklist and release tag; only then begin Phase 2.
