@@ -531,10 +531,18 @@ export default class BattleScene extends Scene {
     }
   }
 
-  fireThorn(plant, target) {
-    const view = this.add.triangle(plant.x + 20, plant.y - 22, -7, 5, 7, 0, -7, -5, 0xf0e2ad);
+  fireThorn(plant, _target) {
+    // Monsters and thorns share the exact same perspective lane.
+    // Thorns travel forward along localX and never home in on a moving target.
+    const lane = this.worldToLane(plant);
+    const localX = lane.localX + 22;
+    const row = plant.row;
+    const position = this.lanePoint(localX, row);
+    const view = this.add.triangle(position.x, position.y - 22, -7, 5, 7, 0, -7, -5, 0xf0e2ad);
     view.setStrokeStyle(2, 0x456b35);
-    this.projectiles.push({ view, x: plant.x + 20, y: plant.y - 22, target, speed: 320, damage: 25, alive: true });
+    this.projectiles.push({
+      view, localX, row, speed: 320, damage: 25, alive: true
+    });
   }
 
   spawnMonster() {
@@ -584,17 +592,30 @@ export default class BattleScene extends Scene {
   updateProjectiles(dt) {
     for (const shot of this.projectiles) {
       if (!shot.alive) continue;
-      if (!shot.target || !shot.target.alive) { shot.alive = false; shot.view.destroy(); continue; }
-      const dx = shot.target.x - shot.x; const dy = shot.target.y - 22 - shot.y;
-      const distance = Math.hypot(dx, dy); const step = shot.speed * dt;
-      if (distance <= step + 12) {
-        shot.target.hp -= shot.damage; this.damageMonsterIfNeeded(shot.target);
-        shot.alive = false; shot.view.destroy();
-      } else {
-        shot.x += dx / distance * step; shot.y += dy / distance * step; shot.view.setPosition(shot.x, shot.y);
+      shot.localX += shot.speed * dt;
+      const position = this.lanePoint(shot.localX, shot.row);
+      shot.view.setPosition(position.x, position.y - 22);
+
+      // Collision is checked only against monsters occupying this same lane.
+      const hit = this.monsters.find((monster) =>
+        monster.alive &&
+        monster.row === shot.row &&
+        Math.abs(monster.localX - shot.localX) <= 24
+      );
+      if (hit) {
+        hit.hp -= shot.damage;
+        this.damageMonsterIfNeeded(hit);
+        shot.alive = false;
+        shot.view.destroy();
+        continue;
+      }
+
+      if (shot.localX > SPAWN_LOCAL_X + 80) {
+        shot.alive = false;
+        shot.view.destroy();
       }
     }
-    this.projectiles = this.projectiles.filter((p) => p.alive);
+    this.projectiles = this.projectiles.filter((shot) => shot.alive);
   }
 
   damageMonsterIfNeeded(monster) {
