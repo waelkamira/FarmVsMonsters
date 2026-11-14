@@ -18,7 +18,7 @@ export default function HowToPlayPage() {
         <h2>4. Emergency club combat</h2>
         <p>If every defensive plant is destroyed, the caveman can use his club. Planting a new defender successfully ends emergency combat immediately.</p>
         <h2>Controls</h2>
-        <ul><li>W A S D or Arrow keys: move the caveman.</li><li>Space: use the club when emergency combat is active.</li><li>P: pause or open the pause menu.</li><li>Mouse: select a seed card and plant in an empty cell.</li></ul>
+        <ul><li>W A S D or Arrow keys: move the caveman.</li><li>Space: use the club when emergency combat is active.</li><li>P: pause or open the pause menu.</li><li>Mouse: select the Radish card and plant in an empty cell.</li></ul>
         <nav className="info-nav"><Link className="primary-link" href="/game">Start Game</Link><Link className="secondary-link" href="/">Main Menu</Link></nav>
       </article>
     </main>
