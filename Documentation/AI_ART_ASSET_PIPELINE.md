@@ -93,6 +93,7 @@ The browser battle scene measures each farmer frame's non-transparent alpha boun
 - Matches the visible character height to the first approved idle frame, regardless of source cell dimensions or transparent padding.
 - Sets the sprite origin to the visible foot-contact edge and horizontal silhouette center for each frame.
 - Reapplies calibration on animation frame changes so the character does not shrink, grow, or drift when switching between idle, walk, run, planting, and other actions.
+- Validates the loaded Phaser texture's actual numeric frame IDs against each animation's requested frame count before creating the clip. A malformed or unexpectedly re-sliced sheet fails with a clear diagnostic instead of requesting nonexistent frames.
 - Falls back to the standard sprite scale if canvas pixel sampling is unavailable.
 
 This is runtime alignment; it does not destructively crop or rewrite the source PNGs. Source sheets should still be reviewed and trimmed during art production when unwanted pixels or shadows are baked into the artwork.
