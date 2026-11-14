@@ -38,6 +38,7 @@ export default class BattleScene extends Scene {
       if (file.key === "farm-battlefield") this.backgroundAssetFailed = true;
       if (file.key === "radish-character") this.radishAssetFailed = true;
       if (file.key === "mushroom-character") this.mushroomAssetFailed = true;
+      if (file.key === "farmer-sheet-source") this.farmerAssetFailed = true;
     });
   }
 
@@ -452,8 +453,7 @@ export default class BattleScene extends Scene {
   createCaveman() {
     this.caveman = this.add.container(220, this.laneYs[2]).setDepth(10 + this.laneYs[2] / 1000);
 
-    if (this.textures.exists("farmer-sheet-source")) {
-      this.createFarmerAnimations();
+    if (this.textures.exists("farmer-sheet-source") && this.createFarmerAnimations()) {
       this.cavemanVisual = this.add.sprite(0, 0, "farmer-character", "idle")
         .setOrigin(0.5, 0.82)
         .setScale(0.34);
@@ -512,27 +512,34 @@ export default class BattleScene extends Scene {
   }
 
   createFarmerAnimations() {
-    if (this.textures.exists("farmer-character")) return;
-    const source = this.textures.get("farmer-sheet-source").getSourceImage();
-    const canvasTexture = this.textures.createCanvas("farmer-character", 750, 1000);
-    const context = canvasTexture.context;
-    context.drawImage(source, 0, 0, 750, 1000);
+    if (this.textures.exists("farmer-character")) return true;
 
-    // Remove the near-white paper background while retaining the dark ink
-    // outlines and the soft antialiasing around the farmer.
-    const pixels = context.getImageData(0, 0, 750, 1000);
-    const data = pixels.data;
-    for (let i = 0; i < data.length; i += 4) {
-      const r = data[i], g = data[i + 1], b = data[i + 2];
-      const minimum = Math.min(r, g, b);
-      const spread = Math.max(r, g, b) - minimum;
-      if (minimum > 246 && spread < 12) data[i + 3] = 0;
-      else if (minimum > 224 && spread < 18) {
-        data[i + 3] = Math.round(data[i + 3] * (246 - minimum) / 22);
+    let canvasTexture = null;
+    try {
+      const source = this.textures.get("farmer-sheet-source").getSourceImage();
+      if (!source || source.width !== 750 || source.height !== 1000) {
+        throw new Error("Farmer sprite sheet must be 750 × 1000 pixels.");
       }
-    }
-    context.putImageData(pixels, 0, 0);
-    canvasTexture.refresh();
+
+      canvasTexture = this.textures.createCanvas("farmer-character", 750, 1000);
+      const context = canvasTexture.context;
+      context.drawImage(source, 0, 0, 750, 1000);
+
+      // Remove the near-white paper background while retaining the dark ink
+      // outlines and the soft antialiasing around the farmer.
+      const pixels = context.getImageData(0, 0, 750, 1000);
+      const data = pixels.data;
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i], g = data[i + 1], b = data[i + 2];
+        const minimum = Math.min(r, g, b);
+        const spread = Math.max(r, g, b) - minimum;
+        if (minimum > 246 && spread < 12) data[i + 3] = 0;
+        else if (minimum > 224 && spread < 18) {
+          data[i + 3] = Math.round(data[i + 3] * (246 - minimum) / 22);
+        }
+      }
+      context.putImageData(pixels, 0, 0);
+      canvasTexture.refresh();
 
     // Individual hand-fitted regions: the artwork is arranged in three
     // visual rows, but its character silhouettes are not equal-sized cells.
@@ -575,6 +582,17 @@ export default class BattleScene extends Scene {
       frameRate: 1,
       repeat: 0
     });
+      return true;
+    } catch (error) {
+      // Keep the game playable with the original vector caveman if sprite
+      // decoding, canvas pixel access, or frame registration fails.
+      if (this.textures.exists("farmer-character")) {
+        this.textures.remove("farmer-character");
+      }
+      console.warn("Farmer sprite sheet unavailable; using fallback artwork.", error);
+      this.farmerAssetFailed = true;
+      return false;
+    }
   }
 
   setFarmerAnimation(key) {
