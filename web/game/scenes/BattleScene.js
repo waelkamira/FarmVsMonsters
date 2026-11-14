@@ -665,6 +665,42 @@ export default class BattleScene extends Scene {
     }
   }
 
+  playMonsterBiteSound() {
+    if (!this.effectsSoundEnabled) return;
+    const audioContext = this.sound && this.sound.context;
+    if (!audioContext || typeof audioContext.createBuffer !== "function" ||
+        typeof audioContext.createBufferSource !== "function") return;
+    try {
+      if (audioContext.state === "suspended") audioContext.resume();
+      const duration = 0.19;
+      const sampleRate = audioContext.sampleRate;
+      const buffer = audioContext.createBuffer(1, Math.floor(sampleRate * duration), sampleRate);
+      const samples = buffer.getChannelData(0);
+      for (let i = 0; i < samples.length; i += 1) {
+        const fade = 1 - i / samples.length;
+        samples[i] = (Math.random() * 2 - 1) * fade * (i % 5 < 2 ? 0.95 : 0.48);
+      }
+      const source = audioContext.createBufferSource();
+      const filter = audioContext.createBiquadFilter();
+      const gain = audioContext.createGain();
+      const start = audioContext.currentTime;
+      source.buffer = buffer;
+      filter.type = "lowpass";
+      filter.frequency.setValueAtTime(780, start);
+      filter.frequency.exponentialRampToValueAtTime(260, start + duration);
+      gain.gain.setValueAtTime(0.0001, start);
+      gain.gain.exponentialRampToValueAtTime(0.105, start + 0.018);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+      source.connect(filter);
+      filter.connect(gain);
+      gain.connect(audioContext.destination);
+      source.start(start);
+      source.stop(start + duration);
+    } catch (error) {
+      // Creature audio is optional; combat and plant damage must continue.
+    }
+  }
+
   playThornSound() {
     if (!this.projectileSoundEnabled) return;
     const audioContext = this.sound && this.sound.context;
@@ -1016,7 +1052,8 @@ export default class BattleScene extends Scene {
       if (blocker && monster.localX - blockerLocalX <= 43) {
         if (monster.attackCooldown <= 0) {
           blocker.hp -= 16; monster.attackCooldown = 1150;
-          this.tweens.add({ targets: monster.view, x: monster.view.x - 4, duration: 90, yoyo: true });
+          this.playMonsterBiteSound();
+          this.tweens.add({ targets: monster.view, x: monster.view.x - 4, scaleY: monster.view.scaleY * 0.94, duration: 85, yoyo: true });
           if (blocker.hp <= 0) this.destroyPlant(blocker);
         }
         continue;
