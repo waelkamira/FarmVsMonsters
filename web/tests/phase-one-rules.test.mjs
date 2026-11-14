@@ -27,6 +27,7 @@ const scene = readFileSync(resolve(here, "../game/scenes/BattleScene.js"), "utf8
 const pauseScene = readFileSync(resolve(here, "../game/scenes/PauseScene.js"), "utf8");
 const guide = readFileSync(resolve(here, "../app/how-to-play/page.js"), "utf8");
 const gamePage = readFileSync(resolve(here, "../app/game/page.js"), "utf8");
+const homePage = readFileSync(resolve(here, "../app/page.js"), "utf8");
 const roadmap = readFileSync(resolve(here, "../../Documentation/GAME_DEVELOPMENT_ROADMAP.md"), "utf8");
 
 test("five Phase 1 waves are strictly increasing and total exactly 100", () => {
@@ -202,6 +203,11 @@ test("pause scene resumes, restarts and removes its keyboard listeners safely", 
   assert.match(pauseScene, /this\.input\.keyboard\.off\("keydown-ESC", this\.resumeBattle, this\)/);
   assert.match(pauseScene, /this\.input\.keyboard\.off\("keydown-P", this\.resumeBattle, this\)/);
   assert.match(scene, /this\.events\.once\("shutdown", \(\) => this\.input\.keyboard\.off\("keydown-P", this\.pauseGame, this\)\)/);
+});
+
+test("home menu reads the saved coin wallet", () => {
+  assert.match(homePage, /loadSavedCoins\(window\.localStorage\)/);
+  assert.match(homePage, /Saved player balance/);
 });
 
 test("player guidance and roadmap match the current Phase 1 balance", () => {
