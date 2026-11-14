@@ -42,7 +42,7 @@ python -m pip install Pillow
 python -m unittest web.tests.test_farmer_spritesheet_cleaner
 ```
 
-The tests cover removal of a tiny detached edge artifact, preservation of a
-small detached interior detail, preservation of a larger edge-connected
-shape, and refusal to guess when the sheet dimensions do not divide evenly
-into the declared frame grid.
+The tests cover removal of tiny detached edge artifacts, preservation of a
+small detached interior detail and a larger edge-connected shape, strict
+separation of neighboring frame boundaries, and refusal to guess when the
+sheet dimensions do not divide evenly into the declared frame grid.
