@@ -15,7 +15,7 @@ const CAVEMAN_RETURN_SPEED = 420;
 const SPAWN_LOCAL_X = GRID_WIDTH / 2 + 28;
 const RADISH = { label: "Radish", cost: 35, hp: 110, cooldown: 1450, range: 360 };
 const MUSHROOM = { label: "Energy Mushroom", cost: 50, hp: 85, energy: 25, productionInterval: 8000 };
-const PHASE_ONE_WAVE_SIZES = [5, 8, 12, 16, 20];
+const PHASE_ONE_WAVE_SIZES = [10, 15, 20, 25, 30];
 
 // Central combat balance table. Monster durability is expressed in standard radish hits when possible.
 const COMBAT_BALANCE = {
