@@ -43,14 +43,25 @@ export default class BattleScene extends Scene {
     this.plantingTarget = null;
     this.returnTarget = null;
     this.gameOver = false;
-    if (this.registry.get("soundEnabled") === undefined) this.registry.set("soundEnabled", true);
-    this.soundEnabled = this.registry.get("soundEnabled");
+    const legacySoundSetting = this.registry.get("soundEnabled");
+    if (this.registry.get("projectileSoundEnabled") === undefined) {
+      this.registry.set("projectileSoundEnabled", legacySoundSetting === undefined ? true : legacySoundSetting);
+    }
+    if (this.registry.get("effectsSoundEnabled") === undefined) {
+      this.registry.set("effectsSoundEnabled", legacySoundSetting === undefined ? true : legacySoundSetting);
+    }
+    if (this.registry.get("musicEnabled") === undefined) this.registry.set("musicEnabled", true);
+    this.projectileSoundEnabled = this.registry.get("projectileSoundEnabled");
+    this.effectsSoundEnabled = this.registry.get("effectsSoundEnabled");
+    this.musicEnabled = this.registry.get("musicEnabled");
+    this.musicStep = 0;
+    this.musicTimer = null;
 
     this.drawField();
     this.createFarmBackground();
     this.drawPlantingGrid();
     this.createHud();
-    this.createSoundButton();
+    this.createAudioControls();
     this.createCaveman();
     this.bindInput();
     this.refreshHud();
@@ -335,27 +346,125 @@ export default class BattleScene extends Scene {
     }).setOrigin(0.5);
   }
 
-  createSoundButton() {
-    const enabled = this.soundEnabled;
-    const button = this.add.container(920, 34).setDepth(45);
-    const background = this.add.rectangle(0, 0, 112, 34, 0xf4dfb3, 1)
+  createAudioControls() {
+    this.projectileSoundButton = this.createAudioToggle(710, "SHOTS", this.projectileSoundEnabled, (enabled) => {
+      this.projectileSoundEnabled = enabled;
+      this.registry.set("projectileSoundEnabled", enabled);
+    });
+    this.effectsSoundButton = this.createAudioToggle(825, "EFFECTS", this.effectsSoundEnabled, (enabled) => {
+      this.effectsSoundEnabled = enabled;
+      this.registry.set("effectsSoundEnabled", enabled);
+    });
+    this.musicButton = this.createAudioToggle(940, "MUSIC", this.musicEnabled, (enabled) => {
+      this.musicEnabled = enabled;
+      this.registry.set("musicEnabled", enabled);
+      if (enabled) {
+        this.startBackgroundMusic();
+        this.resumeGameAudio();
+      } else {
+        this.stopBackgroundMusic();
+      }
+    });
+    if (this.musicEnabled) this.startBackgroundMusic();
+  }
+
+  createAudioToggle(x, title, initialValue, onChange) {
+    const button = this.add.container(x, 34).setDepth(45);
+    const background = this.add.rectangle(0, 0, 104, 34, initialValue ? 0xd9efbd : 0xe7c6bd, 1)
       .setStrokeStyle(2, 0x65452f)
       .setInteractive({ useHandCursor: true });
-    const label = this.add.text(0, 0, enabled ? "SOUND: ON" : "SOUND: OFF", {
-      fontFamily: "Arial", fontSize: "12px", color: "#563a25", fontStyle: "bold"
+    const label = this.add.text(0, 0, title + (initialValue ? ": ON" : ": OFF"), {
+      fontFamily: "Arial", fontSize: "11px", color: "#563a25", fontStyle: "bold"
     }).setOrigin(0.5);
     button.add([background, label]);
+    background.on("pointerover", () => background.setScale(1.04));
+    background.on("pointerout", () => background.setScale(1));
     background.on("pointerdown", () => {
-      this.soundEnabled = !this.soundEnabled;
-      this.registry.set("soundEnabled", this.soundEnabled);
-      label.setText(this.soundEnabled ? "SOUND: ON" : "SOUND: OFF");
-      background.setFillStyle(this.soundEnabled ? 0xd9efbd : 0xe7c6bd, 1);
+      const enabled = label.text.endsWith("OFF");
+      onChange(enabled);
+      label.setText(title + (enabled ? ": ON" : ": OFF"));
+      background.setFillStyle(enabled ? 0xd9efbd : 0xe7c6bd, 1);
+      this.resumeGameAudio();
     });
-    this.soundButton = button;
+    return button;
+  }
+
+  resumeGameAudio() {
+    const audioContext = this.sound && this.sound.context;
+    if (audioContext && audioContext.state === "suspended") {
+      audioContext.resume().catch(() => {});
+    }
+  }
+
+  startBackgroundMusic() {
+    if (!this.musicEnabled || this.musicTimer) return;
+    this.musicTimer = this.time.addEvent({
+      delay: 520,
+      loop: true,
+      callback: () => this.playBackgroundMusicStep()
+    });
+    this.playBackgroundMusicStep();
+  }
+
+  stopBackgroundMusic() {
+    if (this.musicTimer) {
+      this.musicTimer.remove(false);
+      this.musicTimer = null;
+    }
+  }
+
+  playBackgroundMusicStep() {
+    if (!this.musicEnabled) return;
+    const audioContext = this.sound && this.sound.context;
+    if (!audioContext || typeof audioContext.createOscillator !== "function") return;
+    try {
+      if (audioContext.state === "suspended") {
+        audioContext.resume().catch(() => {});
+        return;
+      }
+      const progression = [
+        [130.81, 164.81, 196.00],
+        [110.00, 146.83, 174.61],
+        [87.31, 130.81, 164.81],
+        [98.00, 146.83, 196.00],
+      ];
+      const chord = progression[Math.floor(this.musicStep / 4) % progression.length];
+      const note = chord[this.musicStep % chord.length];
+      const start = audioContext.currentTime;
+      const bass = audioContext.createOscillator();
+      const pad = audioContext.createOscillator();
+      const bassGain = audioContext.createGain();
+      const padGain = audioContext.createGain();
+      const filter = audioContext.createBiquadFilter();
+      bass.type = "triangle";
+      bass.frequency.setValueAtTime(note / 2, start);
+      pad.type = "sine";
+      pad.frequency.setValueAtTime(note, start);
+      filter.type = "lowpass";
+      filter.frequency.setValueAtTime(520, start);
+      bassGain.gain.setValueAtTime(0.0001, start);
+      bassGain.gain.linearRampToValueAtTime(0.045, start + 0.08);
+      bassGain.gain.exponentialRampToValueAtTime(0.0001, start + 0.49);
+      padGain.gain.setValueAtTime(0.0001, start);
+      padGain.gain.linearRampToValueAtTime(0.018, start + 0.12);
+      padGain.gain.exponentialRampToValueAtTime(0.0001, start + 0.5);
+      bass.connect(bassGain);
+      bassGain.connect(audioContext.destination);
+      pad.connect(filter);
+      filter.connect(padGain);
+      padGain.connect(audioContext.destination);
+      bass.start(start);
+      pad.start(start);
+      bass.stop(start + 0.51);
+      pad.stop(start + 0.51);
+      this.musicStep = (this.musicStep + 1) % 16;
+    } catch (error) {
+      // Music is optional and must never interrupt the game loop.
+    }
   }
 
   playPlantSound() {
-    if (!this.soundEnabled) return;
+    if (!this.effectsSoundEnabled) return;
     const audioContext = this.sound && this.sound.context;
     if (!audioContext || typeof audioContext.createOscillator !== "function") return;
     try {
@@ -413,7 +522,7 @@ export default class BattleScene extends Scene {
   }
 
   playThornSound() {
-    if (!this.soundEnabled) return;
+    if (!this.projectileSoundEnabled) return;
     const audioContext = this.sound && this.sound.context;
     if (!audioContext || typeof audioContext.createOscillator !== "function") return;
     try {
@@ -792,6 +901,7 @@ export default class BattleScene extends Scene {
 
   playDefeatMusic() {
     // A short original three-note descending defeat fanfare synthesized with Web Audio.
+    if (!this.effectsSoundEnabled) return;
     const audioContext = this.sound && this.sound.context;
     if (!audioContext || typeof audioContext.createOscillator !== "function") return;
     try {
@@ -824,6 +934,7 @@ export default class BattleScene extends Scene {
     this.setMessage(won ? "VICTORY! The farm is safe." : "GAME OVER — The monsters reached the final line.");
     this.add.rectangle(560, 340, 1120, 680, 0x10170f, 0.72).setDepth(60);
     if (won) {
+      this.stopBackgroundMusic();
       this.add.rectangle(560, 340, 520, 150, 0x263c2b, 0.96).setStrokeStyle(3, 0xe4d5a5).setDepth(61);
       this.add.text(560, 340, "VICTORY", {
         fontFamily: "Arial", fontSize: "48px", color: "#fff2c8", fontStyle: "bold"
@@ -845,6 +956,7 @@ export default class BattleScene extends Scene {
       onComplete: () => title.setScale(1.18)
     });
 
+    this.stopBackgroundMusic();
     this.createGameOverButton(455, 405, "PLAY AGAIN", 0x9bc66e, () => this.scene.restart());
     this.createGameOverButton(665, 405, "HOME", 0xe5c27d, () => {
       if (typeof window !== "undefined") window.location.assign("/");
