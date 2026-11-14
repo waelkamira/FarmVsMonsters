@@ -106,6 +106,7 @@ export default class BattleScene extends Scene {
     this.drawPlantingGrid();
     this.createHud();
     this.createAudioControls();
+    this.createPauseControl();
     this.createCaveman();
     this.bindInput();
     this.events.once("shutdown", () => {
@@ -1123,14 +1124,81 @@ export default class BattleScene extends Scene {
     }
   }
 
+  createPauseControl() {
+    const button = this.add.container(1044, 27).setDepth(46);
+    const background = this.add.rectangle(0, 0, 54, 30, 0x4a2e1d, 0.98)
+      .setStrokeStyle(2, 0xd8b477).setInteractive({ useHandCursor: true });
+    const label = this.add.text(0, 0, "Ⅱ", {
+      fontFamily: "Arial", fontSize: "19px", color: "#fff0c8", fontStyle: "bold"
+    }).setOrigin(0.5);
+    button.add([background, label]);
+    background.on("pointerover", () => background.setFillStyle(0x79502e, 1));
+    background.on("pointerout", () => background.setFillStyle(0x4a2e1d, 0.98));
+    background.on("pointerdown", () => this.pauseGame());
+    this.pauseControl = button;
+  }
+
+  pauseGame() {
+    if (this.gameOver || this.isPaused || !this.scene.isActive()) return;
+    this.isPaused = true;
+    this.stopBackgroundMusic();
+    this.pauseOverlay = this.add.container(560, 340).setDepth(1000);
+    const shade = this.add.rectangle(0, 0, 1120, 680, 0x160f0a, 0.72).setInteractive();
+    const panel = this.add.rectangle(0, 0, 430, 330, 0x79502e, 1).setStrokeStyle(6, 0x3b2517);
+    const inset = this.add.rectangle(0, 0, 410, 310, 0xb88950, 1).setStrokeStyle(2, 0xe5c68e);
+    const title = this.add.text(0, -120, "BATTLE PAUSED", {
+      fontFamily: "Georgia", fontSize: "30px", color: "#fff0c8",
+      fontStyle: "bold", stroke: "#392417", strokeThickness: 4
+    }).setOrigin(0.5);
+    this.pauseOverlay.add([shade, panel, inset, title]);
+    this.createPauseButton(-45, "RESUME", 0x9bc66e, () => this.resumeGame());
+    this.createPauseButton(30, "RESTART", 0xe5c27d, () => {
+      this.pauseOverlay.destroy();
+      this.pauseOverlay = null;
+      this.isPaused = false;
+      this.scene.restart();
+    });
+    this.createPauseButton(105, "MAIN MENU", 0xe6a17d, () => {
+      if (typeof window !== "undefined") window.location.assign("/");
+    });
+    this.scene.pause();
+  }
+
+  createPauseButton(y, label, color, action) {
+    const button = this.add.container(560, 340 + y).setDepth(1001);
+    const background = this.add.rectangle(0, 0, 230, 52, 0x4b301e, 1)
+      .setStrokeStyle(3, 0x392417).setInteractive({ useHandCursor: true });
+    const face = this.add.rectangle(0, 0, 220, 44, color, 1).setStrokeStyle(1, 0xf4dfb3);
+    const text = this.add.text(0, 0, label, {
+      fontFamily: "Georgia", fontSize: "15px", color: "#392719", fontStyle: "bold"
+    }).setOrigin(0.5);
+    button.add([background, face, text]);
+    background.on("pointerover", () => background.setScale(1.04));
+    background.on("pointerout", () => background.setScale(1));
+    background.on("pointerdown", action);
+    this.pauseOverlay.add(button);
+  }
+
+  resumeGame() {
+    if (!this.isPaused) return;
+    this.pauseOverlay?.destroy();
+    this.pauseOverlay = null;
+    this.isPaused = false;
+    this.scene.resume();
+    this.resumeGameAudio();
+    if (this.musicEnabled) this.startBackgroundMusic();
+  }
+
   bindInput() {
     this.keys = this.input.keyboard.addKeys({
       w: Input.Keyboard.KeyCodes.W, a: Input.Keyboard.KeyCodes.A,
       s: Input.Keyboard.KeyCodes.S, d: Input.Keyboard.KeyCodes.D,
       up: Input.Keyboard.KeyCodes.UP, down: Input.Keyboard.KeyCodes.DOWN,
       left: Input.Keyboard.KeyCodes.LEFT, right: Input.Keyboard.KeyCodes.RIGHT,
-      space: Input.Keyboard.KeyCodes.SPACE
+      space: Input.Keyboard.KeyCodes.SPACE, p: Input.Keyboard.KeyCodes.P
     });
+    this.input.keyboard.on("keydown-P", this.pauseGame, this);
+    this.events.once("shutdown", () => this.input.keyboard.off("keydown-P", this.pauseGame, this));
     this.input.on("pointerdown", (pointer) => {
       this.resumeGameAudio();
       if (this.collectingEnergyToken) {
@@ -1148,7 +1216,7 @@ export default class BattleScene extends Scene {
   }
 
   update(_time, delta) {
-    if (this.gameOver) return;
+    if (this.gameOver || this.isPaused) return;
     const dt = delta / 1000;
     this.elapsedBattleMs += delta;
     this.handleControls(dt);
