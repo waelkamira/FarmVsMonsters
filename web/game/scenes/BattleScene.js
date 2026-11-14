@@ -33,7 +33,7 @@ export default class BattleScene extends Scene {
     this.load.image("farm-battlefield", "/assets/backgrounds/farm-battlefield.jpeg");
     this.load.image("radish-character", "/assets/plants/radish.png");
     this.load.image("mushroom-character", "/assets/plants/mushroom.png");
-    this.load.image("farmer-sheet-source", "/assets/characters/farmer/farmer-sprite-sheet.png");
+    this.load.image("farmer-sheet-source", "/assets/characters/farmer/farmer-sprite-sheet.jpeg");
     this.load.on("loaderror", (file) => {
       if (file.key === "farm-battlefield") this.backgroundAssetFailed = true;
       if (file.key === "radish-character") this.radishAssetFailed = true;
@@ -517,78 +517,101 @@ export default class BattleScene extends Scene {
     let canvasTexture = null;
     try {
       const source = this.textures.get("farmer-sheet-source").getSourceImage();
-      if (!source || source.width !== 750 || source.height !== 1000) {
-        throw new Error("Farmer sprite sheet must be 750 × 1000 pixels.");
+      if (!source || source.width !== 1080 || source.height !== 720) {
+        throw new Error("Farmer sprite sheet must be 1080 × 720 pixels.");
       }
 
-      canvasTexture = this.textures.createCanvas("farmer-character", 750, 1000);
+      canvasTexture = this.textures.createCanvas("farmer-character", 1080, 720);
       const context = canvasTexture.context;
-      context.drawImage(source, 0, 0, 750, 1000);
+      context.drawImage(source, 0, 0, 1080, 720);
 
-      // Remove the near-white paper background while retaining the dark ink
-      // outlines and the soft antialiasing around the farmer.
-      const pixels = context.getImageData(0, 0, 750, 1000);
+      // Remove only near-white pixels connected to the canvas edge. This
+      // preserves the white eyes and teeth inside the farmer's silhouette.
+      const pixels = context.getImageData(0, 0, 1080, 720);
       const data = pixels.data;
-      for (let i = 0; i < data.length; i += 4) {
-        const r = data[i], g = data[i + 1], b = data[i + 2];
-        const minimum = Math.min(r, g, b);
-        const spread = Math.max(r, g, b) - minimum;
-        if (minimum > 246 && spread < 12) data[i + 3] = 0;
-        else if (minimum > 224 && spread < 18) {
-          data[i + 3] = Math.round(data[i + 3] * (246 - minimum) / 22);
-        }
+      const width = 1080;
+      const height = 720;
+      const visited = new Uint8Array(width * height);
+      const queue = new Int32Array(width * height);
+      let head = 0;
+      let tail = 0;
+      const isPaper = (pixel) => {
+        const offset = pixel * 4;
+        const r = data[offset], g = data[offset + 1], b = data[offset + 2];
+        return Math.min(r, g, b) > 218 && Math.max(r, g, b) - Math.min(r, g, b) < 32;
+      };
+      const enqueue = (pixel) => {
+        if (pixel < 0 || pixel >= width * height || visited[pixel] || !isPaper(pixel)) return;
+        visited[pixel] = 1;
+        queue[tail++] = pixel;
+      };
+      for (let x = 0; x < width; x += 1) {
+        enqueue(x);
+        enqueue((height - 1) * width + x);
+      }
+      for (let y = 1; y < height - 1; y += 1) {
+        enqueue(y * width);
+        enqueue(y * width + width - 1);
+      }
+      while (head < tail) {
+        const pixel = queue[head++];
+        const x = pixel % width;
+        if (x > 0) enqueue(pixel - 1);
+        if (x < width - 1) enqueue(pixel + 1);
+        if (pixel >= width) enqueue(pixel - width);
+        if (pixel < width * (height - 1)) enqueue(pixel + width);
+      }
+      for (let pixel = 0; pixel < visited.length; pixel += 1) {
+        if (visited[pixel]) data[pixel * 4 + 3] = 0;
       }
       context.putImageData(pixels, 0, 0);
       canvasTexture.refresh();
 
-    // Individual hand-fitted regions: the artwork is arranged in three
-    // visual rows, but its character silhouettes are not equal-sized cells.
-    const regions = {
-      "run-0": [0, 0, 270, 330],
-      "run-1": [275, 0, 245, 330],
-      "run-2": [520, 0, 230, 330],
-      "run-3": [0, 330, 275, 335],
-      "run-4": [275, 330, 245, 335],
-      "run-5": [520, 330, 230, 335],
-      attack: [0, 665, 275, 335],
-      idle: [270, 650, 255, 350],
-      hit: [475, 665, 275, 335]
-    };
-    Object.entries(regions).forEach(([name, [x, y, width, height]]) => {
-      canvasTexture.add(name, 0, x, y, width, height);
-    });
+      // Hand-fitted crops follow the seven actual artwork bands. Each crop
+      // contains one pose; the sheet is deliberately not treated as a uniform grid.
+      const centers = [110, 260, 405, 555, 700, 840, 985];
+      const regions = {};
+      centers.forEach((center, index) => {
+        regions["run-" + index] = [center - 68, 0, 136, 120];
+        regions["plant-" + index] = [center - 68, 215, 136, 112];
+        regions["uproot-" + index] = [center - 68, 315, 136, 115];
+        regions["attack-" + index] = [center - 68, 415, 136, 118];
+      });
+      [110, 260, 405, 555].forEach((center, index) => {
+        regions["idle-" + index] = [center - 68, 120, 136, 108];
+        regions["collect-" + index] = [center - 68, 610, 136, 110];
+      });
+      [110, 260, 405].forEach((center, index) => {
+        regions["hit-" + index] = [center - 68, 520, 136, 120];
+      });
+      [550, 695, 840, 985].forEach((center, index) => {
+        regions["death-" + index] = [center - 68, 520, 136, 120];
+      });
+      Object.entries(regions).forEach(([name, [x, y, frameWidth, frameHeight]]) => {
+        canvasTexture.add(name, 0, x, y, frameWidth, frameHeight);
+      });
 
-    this.anims.create({
-      key: "farmer-run",
-      frames: Array.from({ length: 6 }, (_, index) => ({ key: "farmer-character", frame: "run-" + index })),
-      frameRate: 9,
-      repeat: -1
-    });
-    this.anims.create({
-      key: "farmer-idle",
-      frames: [{ key: "farmer-character", frame: "idle" }],
-      frameRate: 1,
-      repeat: -1
-    });
-    this.anims.create({
-      key: "farmer-attack",
-      frames: [{ key: "farmer-character", frame: "attack" }],
-      frameRate: 1,
-      repeat: 0
-    });
-    this.anims.create({
-      key: "farmer-hit",
-      frames: [{ key: "farmer-character", frame: "hit" }],
-      frameRate: 1,
-      repeat: 0
-    });
+      const frames = (prefix, count) => Array.from(
+        { length: count },
+        (_, index) => ({ key: "farmer-character", frame: prefix + "-" + index })
+      );
+      const animations = [
+        ["farmer-run", frames("run", 7), 10, -1],
+        ["farmer-idle", frames("idle", 4), 4, -1],
+        ["farmer-plant", frames("plant", 7), 9, 0],
+        ["farmer-uproot", frames("uproot", 7), 9, 0],
+        ["farmer-attack", frames("attack", 7), 12, 0],
+        ["farmer-hit", frames("hit", 3), 10, 0],
+        ["farmer-death", frames("death", 4), 7, 0],
+        ["farmer-collect", frames("collect", 4), 9, 0]
+      ];
+      animations.forEach(([key, animationFrames, frameRate, repeat]) => {
+        if (this.anims.exists(key)) this.anims.remove(key);
+        this.anims.create({ key, frames: animationFrames, frameRate, repeat });
+      });
       return true;
     } catch (error) {
-      // Keep the game playable with the original vector caveman if sprite
-      // decoding, canvas pixel access, or frame registration fails.
-      if (this.textures.exists("farmer-character")) {
-        this.textures.remove("farmer-character");
-      }
+      if (this.textures.exists("farmer-character")) this.textures.remove("farmer-character");
       console.warn("Farmer sprite sheet unavailable; using fallback artwork.", error);
       this.farmerAssetFailed = true;
       return false;
@@ -597,8 +620,22 @@ export default class BattleScene extends Scene {
 
   setFarmerAnimation(key) {
     if (!this.cavemanVisual || !this.cavemanVisual.active) return;
-    if (this.cavemanVisual.anims.currentAnim?.key === key && this.cavemanVisual.anims.isPlaying) return;
+    const currentKey = this.cavemanVisual.anims.currentAnim?.key;
+    const actionAnimations = [
+      "farmer-plant", "farmer-uproot", "farmer-attack",
+      "farmer-hit", "farmer-death", "farmer-collect"
+    ];
+    if (actionAnimations.includes(currentKey) && this.cavemanVisual.anims.isPlaying && key !== currentKey) return;
+    if (currentKey === key && this.cavemanVisual.anims.isPlaying) return;
     this.cavemanVisual.play(key);
+  }
+
+  playFarmerAction(key) {
+    if (!this.cavemanVisual || !this.cavemanVisual.active) return;
+    this.setFarmerAnimation(key);
+    this.cavemanVisual.once("animationcomplete", () => {
+      if (this.cavemanVisual && this.cavemanVisual.active) this.setFarmerAnimation("farmer-idle");
+    });
   }
 
   readAudioPreference(key, fallback) {
@@ -1122,6 +1159,7 @@ export default class BattleScene extends Scene {
     if (this.energy < plantConfig.cost) { this.setMessage("Not enough mushrooms energy to plant this."); return; }
     const { x, y } = this.plantingCellCenter(col, row);
     this.plantingTarget = { col, row, x, y, type: this.selectedPlant };
+    this.setFarmerAnimation("farmer-run");
     this.facing = x >= this.caveman.x ? 1 : -1;
     this.caveman.scaleX = this.facing;
     this.setMessage("The caveman is walking to the selected soil cell...");
@@ -1172,6 +1210,7 @@ export default class BattleScene extends Scene {
       this.setMessage("Planting cancelled: this cell is no longer available."); return;
     }
     this.energy -= config.cost;
+    this.playFarmerAction("farmer-plant");
     const { x, y } = this.plantingCellCenter(col, row);
     const plant = {
       type, col, row, x, y, hp: config.hp, alive: true,
@@ -1332,6 +1371,7 @@ export default class BattleScene extends Scene {
     miniature.on("pointerdown", () => {
       if (!token.active || this.gameOver) return;
       this.collectingEnergyToken = true;
+      this.playFarmerAction("farmer-collect");
       this.energy = Math.min(300, this.energy + amount);
       this.playPlantSound();
       this.refreshHud();
@@ -1836,6 +1876,7 @@ export default class BattleScene extends Scene {
     if (!plant || !plant.alive || this.gameOver) return;
     plant.alive = false;
     plant.view.destroy();
+    this.playFarmerAction("farmer-uproot");
     this.playUprootSound();
     this.setMessage("Plant uprooted. Select a plant card and choose an empty soil cell.");
     this.updateEmergencyMode();
@@ -1867,8 +1908,7 @@ export default class BattleScene extends Scene {
     if (!this.emergencyMode || this.livingPlantCount() > 0) return;
     const target = this.monsters.filter((m) => m.alive && m.row === this.nearestLane(this.caveman.y) && Math.abs(m.x - this.caveman.x) <= 112)
       .sort((a, b) => Math.abs(a.x - this.caveman.x) - Math.abs(b.x - this.caveman.x))[0];
-    this.setFarmerAnimation("farmer-attack");
-    if (this.cavemanVisual) this.cavemanVisual.once("animationcomplete", () => this.setFarmerAnimation("farmer-idle"));
+    this.playFarmerAction("farmer-attack");
     this.tweens.add({ targets: this.caveman, angle: this.facing * 22, duration: 100, yoyo: true });
     if (target) {
       this.applyMonsterDamage(
