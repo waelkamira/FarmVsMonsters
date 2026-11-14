@@ -6,6 +6,8 @@ import {
   INITIAL_ENERGY,
   MONSTER_KILL_COIN_REWARD,
   MUSHROOM_PICKUP_TTL_MS,
+  loadSavedCoins,
+  saveCoins,
   RADISH_CONFIG,
   MUSHROOM_CONFIG,
   collectEnergy,
@@ -70,7 +72,14 @@ export default class BattleScene extends Scene {
   create() {
     this.isPaused = false;
     this.energy = INITIAL_ENERGY;
-    this.coins = Math.max(0, Number(this.registry.get('coins')) || 0);
+    let savedCoins = 0;
+    try {
+      savedCoins = loadSavedCoins(window.localStorage);
+    } catch {
+      // The battle remains playable when browser storage is unavailable.
+    }
+    this.coins = savedCoins;
+    this.registry.set("coins", this.coins);
     this.houseHealth = 100;
     this.wave = 1;
     this.totalWaves = PHASE_ONE_WAVE_SIZES.length;
@@ -2121,7 +2130,12 @@ export default class BattleScene extends Scene {
       monster.view.destroy(true);
     }
     this.coins += MONSTER_KILL_COIN_REWARD;
-    this.registry.set('coins', this.coins);
+    this.registry.set("coins", this.coins);
+    try {
+      saveCoins(window.localStorage, this.coins);
+    } catch {
+      // A blocked storage API must never interrupt combat or reward handling.
+    }
     this.totalDefeatedMonsters += 1;
     this.waveDefeatedMonsters += 1;
   }
