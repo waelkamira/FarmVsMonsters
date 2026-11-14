@@ -20,6 +20,21 @@ class FarmerFrameExtractionTests(unittest.TestCase):
         draw.rectangle((27, 29, 42, 45), fill=(220, 180, 40, 255))
         return image
 
+    def test_merges_narrow_transparent_slits_but_keeps_real_gutters(self):
+        self.assertEqual(
+            EXTRACTOR.occupied_runs(
+                [True, True, False, False, True, True], minimum_gutter=3
+            ),
+            [(0, 6)],
+        )
+        self.assertEqual(
+            EXTRACTOR.occupied_runs(
+                [True, True, False, False, False, True, True],
+                minimum_gutter=3,
+            ),
+            [(0, 2), (5, 7)],
+        )
+
     def test_detects_gutter_separated_two_by_two_frames(self):
         image = self.make_guttered_sheet()
         rgba, boxes, rows, columns = EXTRACTOR.detect_frames(image)
