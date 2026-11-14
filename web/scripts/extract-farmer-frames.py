@@ -29,7 +29,16 @@ def occupied_runs(values: list[bool], minimum_gutter: int = 8) -> list[tuple[int
         elif not occupied and start is not None:
             runs.append((start, index))
             start = None
-    return runs
+
+    # Tiny transparent slits inside a drawing are not frame separators.
+    # Only gaps at least minimum_gutter pixels wide split separate frames.
+    merged = []
+    for left, right in runs:
+        if merged and left - merged[-1][1] < minimum_gutter:
+            merged[-1] = (merged[-1][0], right)
+        else:
+            merged.append((left, right))
+    return merged
 
 
 def detect_frames(image: Image.Image, alpha_threshold: int = ALPHA_THRESHOLD):
