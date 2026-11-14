@@ -105,6 +105,19 @@ def normalize_frames(image: Image.Image, boxes, canvas=CANVAS, padding=PADDING,
     return frames, metadata, scale
 
 
+
+def build_phaser_strip(frames, canvas=CANVAS):
+    """Pack normalized frames into a horizontal Phaser spritesheet."""
+    if not frames:
+        raise ValueError("At least one frame is required.")
+    if any(frame.size != (canvas, canvas) for frame in frames):
+        raise ValueError(f"Every frame must be {canvas}x{canvas}.")
+    strip = Image.new("RGBA", (len(frames) * canvas, canvas), (0, 0, 0, 0))
+    for index, frame in enumerate(frames):
+        strip.alpha_composite(frame, (index * canvas, 0))
+    return strip
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("input", type=Path)
@@ -135,9 +148,7 @@ def main():
     # A Phaser-ready horizontal spritesheet: each cell is exactly 512x512.
     # No inter-cell gutter is used because Phaser's frameWidth/frameHeight
     # define the cell boundaries explicitly.
-    strip = Image.new("RGBA", (len(frames) * CANVAS, CANVAS), (0, 0, 0, 0))
-    for index, frame in enumerate(frames):
-        strip.alpha_composite(frame, (index * CANVAS, 0))
+    strip = build_phaser_strip(frames)
     strip.save(output_dir / "farmer-animation-strip.png")
 
     columns = len(column_runs)
