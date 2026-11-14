@@ -1143,6 +1143,7 @@ export default class BattleScene extends Scene {
     this.plantingTarget = {
       col, row, x, y, type: this.selectedPlant,
       startU: startBoard.u, startV: startBoard.v,
+      startX: this.caveman.x, startY: this.caveman.y,
       targetU: targetBoard.u, targetV: targetBoard.v,
       routeLength: Math.max(routeLength, 1), progress: 0
     };
@@ -1158,7 +1159,7 @@ export default class BattleScene extends Scene {
     // Walk across the calibrated board surface. Bilinear board mapping keeps
     // the feet on the perspective soil plane instead of cutting through it
     // along a straight screen-space line.
-    target.progress = Math.min(1, target.progress + (150 * dt) / target.routeLength);
+    target.progress = Math.min(1, target.progress + (320 * dt) / target.routeLength);
     const u = PhaserMath.Linear(target.startU, target.targetU, target.progress);
     const v = PhaserMath.Linear(target.startV, target.targetV, target.progress);
     const position = this.boardPoint(u, v);
@@ -1172,7 +1173,7 @@ export default class BattleScene extends Scene {
 
     this.caveman.setPosition(target.x, target.y);
     this.plantingTarget = null;
-    this.plantSelected(target.col, target.row, target.type);
+    this.plantSelected(target.col, target.row, target.type, { x: target.startX, y: target.startY });
   }
 
   updateReturnMovement(dt) {
@@ -1184,7 +1185,15 @@ export default class BattleScene extends Scene {
     if (distance <= 5) {
       this.caveman.setPosition(target.x, target.y);
       this.returnTarget = null;
-      this.setMessage("The caveman is back behind the final defense line.");
+      // Finish on the exact original idle frame, not the final frame of the planting/run sheets.
+      if (this.cavemanVisual && this.cavemanVisual.active) {
+        this.cavemanVisual.stop();
+        this.cavemanVisual.setTexture("farmer-idle", 0);
+        this.cavemanVisual.setOrigin(0.5, 1);
+        this.cavemanVisual.setScale(0.42);
+      }
+      this.setFarmerAnimation("farmer-idle");
+      this.setMessage("The caveman is back at his starting position.");
       return;
     }
     const step = Math.min(distance, CAVEMAN_RETURN_SPEED * dt);
@@ -1196,7 +1205,7 @@ export default class BattleScene extends Scene {
     }
   }
 
-  plantSelected(col, row, type) {
+  plantSelected(col, row, type, returnPosition = null) {
     const config = type === "mushroom" ? MUSHROOM : RADISH;
     if (this.energy < config.cost || this.plants.some((p) => p.alive && p.col === col && p.row === row)) {
       this.setMessage("Planting cancelled: this cell is no longer available."); return;
@@ -1215,24 +1224,14 @@ export default class BattleScene extends Scene {
     this.playPlantSound();
     this.updateEmergencyMode();
 
-    // Make the planting bend immediate and brief, then restore the farmer's
-    // exact standing scale before he starts running back.
-    this.tweens.killTweensOf(this.caveman);
-    this.caveman.setScale(1);
-    this.tweens.add({
-      targets: this.caveman,
-      scaleY: 0.72,
-      duration: 85,
-      ease: "Quad.easeIn",
-      yoyo: true,
-      hold: 25,
-      onComplete: () => this.caveman?.setScale(1)
-    });
+    // The dedicated planting sprite sheet supplies the bend and recovery.
+    // Do not scale the whole character container: that changes apparent body
+    // size and foot placement between animation states.
 
     // Do not let the return movement overlap the planting pose. Start the
     // sprint only after the planting animation has completed and the farmer
     // has returned to his normal upright posture.
-    const safePosition = this.lanePoint(-GRID_WIDTH / 2 - 48, row);
+    const safePosition = returnPosition || this.lanePoint(-GRID_WIDTH / 2 - 48, row);
     this.returnTarget = null;
     this.cavemanVisual.once("animationcomplete", (animation) => {
       if (animation.key !== "farmer-plant" || !this.caveman?.active) return;
