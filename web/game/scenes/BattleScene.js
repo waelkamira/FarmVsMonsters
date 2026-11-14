@@ -82,6 +82,7 @@ export default class BattleScene extends Scene {
     this.plants = [];
     this.monsters = [];
     this.projectiles = [];
+    this.energyPickups = [];
     this.nextProjectileAim = "head";
     this.collectingEnergyToken = false;
     this.laneYs = Array.from({ length: LANES }, (_, row) => this.gridCellCenter(0, row).y);
@@ -1548,6 +1549,7 @@ export default class BattleScene extends Scene {
     // energy before pickup expiry cannot retroactively erase a production cycle.
     const amount = MUSHROOM_CONFIG.energy;
     const token = this.add.container(plant.x, plant.y - 66).setDepth(35);
+    this.energyPickups.push(token);
     // Brief production feedback: show the energy amount, then clear it quickly.
     const amountLabel = this.add.text(plant.x, plant.y - 105, `+${amount}`, {
       fontFamily: "Arial", fontSize: "17px", color: "#fff2a8",
@@ -1604,6 +1606,7 @@ export default class BattleScene extends Scene {
       }
       this.refreshHud();
       if (token.expiryTimer) token.expiryTimer.remove(false);
+      this.energyPickups = this.energyPickups.filter((pickup) => pickup !== token);
       this.tweens.add({
         targets: token, y: token.y - 30, alpha: 0, scale: 1.35, duration: 220,
         onComplete: () => token.destroy()
@@ -1615,6 +1618,7 @@ export default class BattleScene extends Scene {
     });
     token.expiryTimer = this.time.delayedCall(MUSHROOM_PICKUP_TTL_MS, () => {
       if (token.active) {
+        this.energyPickups = this.energyPickups.filter((pickup) => pickup !== token);
         this.tweens.add({ targets: token, alpha: 0, duration: 350, onComplete: () => token.destroy() });
       }
     });
@@ -2246,6 +2250,14 @@ export default class BattleScene extends Scene {
   endGame(won) {
     if (this.gameOver) return;
     this.gameOver = true;
+    // Collectibles are no longer usable after a terminal result; remove their
+    // expiry timers and idle tweens instead of leaving disabled pickups visible.
+    for (const token of this.energyPickups) {
+      if (token.expiryTimer) token.expiryTimer.remove(false);
+      this.tweens.killTweensOf(token);
+      if (token.active) token.destroy();
+    }
+    this.energyPickups = [];
     this.plantingTarget = null;
     this.returnTarget = null;
     this.farmerPlanting = false;
