@@ -436,19 +436,59 @@ export default class BattleScene extends Scene {
   }
 
   createCaveman() {
-    this.caveman = this.add.container(220, this.laneYs[2]);
+    this.caveman = this.add.container(220, this.laneYs[2]).setDepth(20);
     const body = this.add.graphics();
-    body.fillStyle(0x7a4c2c, 1); body.fillEllipse(0, 16, 38, 52);
-    body.fillStyle(0xe7ad75, 1); body.fillCircle(0, -17, 21);
-    body.fillStyle(0x382b22, 1); body.fillRoundedRect(-20, -38, 40, 13, 6);
-    body.fillStyle(0xffffff, 1); body.fillCircle(-7, -20, 5); body.fillCircle(7, -20, 5);
-    body.fillStyle(0x2b211c, 1); body.fillCircle(-7, -20, 2); body.fillCircle(7, -20, 2);
-    body.lineStyle(7, 0x80512e, 1); body.lineBetween(15, 0, 35, -25);
-    body.lineStyle(10, 0x68452a, 1); body.lineBetween(32, -29, 48, -40);
-    this.caveman.add(body); this.caveman.setDepth(20);
-    this.cavemanLabel = this.add.text(220, this.laneYs[2] + 32, "CAVEMAN", {
-      fontFamily: "Arial", fontSize: "10px", color: "#fff4d4", fontStyle: "bold"
-    }).setOrigin(0.5);
+
+    // A recognizable stone-age villager: shaggy hide tunic, bone details,
+    // leather belt, tousled hair and a wooden club with a chipped stone head.
+    body.fillStyle(0x3b2619, 0.95);
+    body.fillEllipse(0, 17, 46, 59);
+    body.fillStyle(0x9b6038, 1);
+    body.fillPoints([
+      { x: -18, y: -7 }, { x: 17, y: -8 }, { x: 24, y: 30 },
+      { x: 14, y: 42 }, { x: 6, y: 31 }, { x: -3, y: 44 },
+      { x: -13, y: 30 }, { x: -24, y: 39 }
+    ], true);
+    body.fillStyle(0x70452a, 1);
+    body.fillTriangle(-20, 22, -9, 40, -25, 37);
+    body.fillTriangle(7, 28, 20, 43, 14, 24);
+    body.fillStyle(0xe7ad75, 1);
+    body.fillCircle(0, -18, 22);
+    body.fillStyle(0x4a2d1b, 1);
+    body.fillEllipse(0, -34, 38, 17);
+    body.fillTriangle(-17, -35, -7, -49, -3, -31);
+    body.fillTriangle(-3, -36, 8, -51, 12, -30);
+    body.fillTriangle(8, -34, 22, -43, 18, -25);
+    body.fillStyle(0x2b211c, 1);
+    body.fillEllipse(-8, -19, 5, 7);
+    body.fillEllipse(8, -19, 5, 7);
+    body.fillStyle(0xf4dfb3, 1);
+    body.fillCircle(-8, -20, 1.8); body.fillCircle(8, -20, 1.8);
+    body.lineStyle(2, 0x754326, 1);
+    body.beginPath(); body.arc(0, -10, 7, 0.2, Math.PI - 0.2); body.strokePath();
+    body.lineStyle(3, 0xf0d9a7, 1);
+    body.lineBetween(-13, -2, -5, 5); body.lineBetween(-5, 5, 4, -1);
+    body.fillStyle(0x49301d, 1);
+    body.fillRoundedRect(-20, 12, 40, 7, 3);
+    body.fillStyle(0xe6d3a6, 1);
+    body.fillTriangle(-13, 9, -8, 17, -3, 9);
+    body.fillTriangle(3, 9, 8, 17, 13, 9);
+    body.lineStyle(8, 0x9b6038, 1);
+    body.lineBetween(15, 0, 30, -17);
+    body.lineStyle(9, 0x704321, 1);
+    body.lineBetween(27, -20, 43, -34);
+    body.fillStyle(0x8b8b75, 1);
+    body.fillPoints([{x:37,y:-41},{x:48,y:-38},{x:52,y:-28},{x:43,y:-23},{x:34,y:-30}], true);
+    body.lineStyle(2, 0x4a493d, 1);
+    body.lineBetween(40, -35, 49, -31);
+    this.caveman.add(body);
+
+    this.cavemanShadow = this.add.ellipse(220, this.laneYs[2] + 34, 48, 13, 0x21170f, 0.3)
+      .setDepth(19);
+    this.cavemanLabel = this.add.text(220, this.laneYs[2] + 49, "TRIBE GUARD", {
+      fontFamily: "Georgia", fontSize: "9px", color: "#f5dfb2", fontStyle: "bold",
+      stroke: "#382317", strokeThickness: 3, letterSpacing: 1
+    }).setOrigin(0.5).setDepth(21);
   }
 
   readAudioPreference(key, fallback) {
@@ -898,7 +938,8 @@ export default class BattleScene extends Scene {
     this.updateMonsters(dt, delta);
     this.updateProjectiles(dt);
     this.checkWaveProgress();
-    this.cavemanLabel.setPosition(this.caveman.x, this.caveman.y + 32);
+    this.cavemanLabel.setPosition(this.caveman.x, this.caveman.y + 49);
+    if (this.cavemanShadow) this.cavemanShadow.setPosition(this.caveman.x, this.caveman.y + 34);
     this.refreshHud();
   }
 
@@ -1219,29 +1260,125 @@ export default class BattleScene extends Scene {
     });
   }
 
+  createFootstepDust(x, y, scale = 1) {
+    const puff = this.add.container(x, y).setDepth(12);
+    const size = PhaserMath.Between(4, 7) * scale;
+    const cloud = this.add.ellipse(0, 0, size * 2.2, size, 0xb99a70, 0.34);
+    const grit = this.add.circle(PhaserMath.Between(-5, 5) * scale, -2 * scale, Math.max(1, size * 0.32), 0xe0c89c, 0.55);
+    puff.add([cloud, grit]);
+    this.tweens.add({
+      targets: puff, x: x - PhaserMath.Between(8, 17) * scale,
+      y: y - PhaserMath.Between(5, 11) * scale, alpha: 0, scale: 1.7,
+      duration: 360, ease: "Sine.easeOut", onComplete: () => puff.destroy()
+    });
+  }
+
+  createStoneHitDust(x, y, scale = 1) {
+    const burst = this.add.container(x, y).setDepth(25);
+    const colors = [0xd9c49b, 0x9e8763, 0xe7d8b8, 0x76563a];
+    const bits = [];
+    for (let i = 0; i < 7; i += 1) {
+      const bit = this.add.circle(0, 0, PhaserMath.Between(2, 4) * scale,
+        colors[i % colors.length], 0.9);
+      bits.push(bit);
+    }
+    burst.add(bits);
+    bits.forEach((bit, index) => {
+      const angle = (Math.PI * 2 * index) / bits.length;
+      this.tweens.add({
+        targets: bit,
+        x: Math.cos(angle) * PhaserMath.Between(10, 20) * scale,
+        y: Math.sin(angle) * PhaserMath.Between(8, 17) * scale,
+        alpha: 0, scale: 0.2, duration: 260, ease: "Cubic.easeOut"
+      });
+    });
+    this.time.delayedCall(280, () => burst.destroy());
+  }
+
+  createMonsterDefeatBurst(x, y, scale = 1) {
+    const burst = this.add.container(x, y).setDepth(26);
+    const puff = this.add.ellipse(0, 8, 42 * scale, 18 * scale, 0xc4a77a, 0.48);
+    const bones = [];
+    for (let i = 0; i < 4; i += 1) {
+      const bone = this.add.rectangle(0, 0, 12 * scale, 3 * scale, 0xe7d9b8, 0.95);
+      bones.push(bone);
+    }
+    burst.add([puff, ...bones]);
+    bones.forEach((bone, index) => {
+      const angle = (Math.PI * 2 * index) / bones.length;
+      this.tweens.add({
+        targets: bone,
+        x: Math.cos(angle) * 23 * scale,
+        y: Math.sin(angle) * 18 * scale - 7 * scale,
+        angle: PhaserMath.Between(-100, 100),
+        alpha: 0, duration: 340, ease: "Cubic.easeOut"
+      });
+    });
+    this.tweens.add({
+      targets: puff, scale: 1.8, alpha: 0, duration: 330,
+      onComplete: () => burst.destroy()
+    });
+  }
+
   spawnMonster() {
     const row = PhaserMath.Between(0, LANES - 1);
     const hp = 65 + Math.floor(this.wave * 4);
     const spawn = this.lanePoint(SPAWN_LOCAL_X, row);
     const view = this.add.container(spawn.x, spawn.y);
     // Perspective lanes are closer together near the horizon. Scale each
-    // monster to its lane spacing so feet from one lane never cover the
-    // head of a monster in the lane behind it.
+    // monster to its lane spacing so creatures never overlap adjacent lanes.
     const laneGap = row < LANES - 1
       ? this.laneYs[row + 1] - this.laneYs[row]
       : this.laneYs[row] - this.laneYs[row - 1];
     const monsterScale = PhaserMath.Clamp(laneGap / 108, 0.28, 0.62);
     view.setScale(monsterScale);
+
     const g = this.add.graphics();
-    g.fillStyle(0x7b9872, 1); g.fillEllipse(0, 16, 42, 58);
-    g.fillStyle(0x9cae88, 1); g.fillCircle(0, -22, 25);
-    g.fillStyle(0xeee7c9, 1); g.fillCircle(-9, -25, 8); g.fillCircle(9, -25, 8);
-    g.fillStyle(0x29362a, 1); g.fillCircle(-8, -24, 3); g.fillCircle(10, -24, 3);
-    g.lineStyle(7, 0x7b9872, 1); g.lineBetween(-18, 0, -33, 15); g.lineBetween(18, 0, 33, 15);
-    g.lineStyle(8, 0x51422e, 1); g.lineBetween(-10, 39, -18, 55); g.lineBetween(10, 39, 18, 55);
+    // A wild cave brute wearing a rough hide, stone ornaments and bone tusks.
+    g.fillStyle(0x2c2118, 0.9); g.fillEllipse(0, 18, 54, 68);
+    g.fillStyle(0x765036, 1);
+    g.fillPoints([
+      {x:-20,y:-4},{x:18,y:-7},{x:29,y:24},{x:19,y:43},
+      {x:8,y:31},{x:0,y:48},{x:-9,y:31},{x:-26,y:42},{x:-30,y:16}
+    ], true);
+    g.fillStyle(0x9a7048, 1); g.fillEllipse(0, -22, 53, 49);
+    g.fillStyle(0x49301e, 1);
+    g.fillEllipse(0, -39, 51, 18);
+    g.fillTriangle(-22,-37,-12,-55,-5,-35);
+    g.fillTriangle(-7,-39,5,-57,12,-34);
+    g.fillTriangle(9,-36,25,-49,22,-27);
+    g.fillStyle(0x3b2118, 1);
+    g.fillEllipse(-10, -23, 8, 11); g.fillEllipse(11, -23, 8, 11);
+    g.fillStyle(0xf1a34d, 1);
+    g.fillCircle(-10, -23, 3.2); g.fillCircle(11, -23, 3.2);
+    g.fillStyle(0x2a1a13, 1);
+    g.fillEllipse(0, -8, 18, 10);
+    g.fillStyle(0xf0dfbd, 1);
+    g.fillTriangle(-14, -8, -9, 7, -4, -7);
+    g.fillTriangle(4, -7, 9, 7, 14, -8);
+    g.fillStyle(0x513321, 1);
+    g.fillEllipse(-18, -5, 10, 18); g.fillEllipse(18, -5, 10, 18);
+    g.lineStyle(7, 0x765036, 1);
+    g.lineBetween(-19, 1, -35, 20); g.lineBetween(19, 1, 35, 20);
+    g.lineStyle(9, 0x4a3020, 1);
+    g.lineBetween(-11, 40, -19, 57); g.lineBetween(11, 40, 19, 57);
+    // Bone necklace and a small tooth hanging at the chest.
+    g.lineStyle(2, 0xe1d0a5, 1);
+    g.beginPath(); g.arc(0, 8, 17, 0.25, Math.PI - 0.25); g.strokePath();
+    g.fillStyle(0xf0dfbd, 1);
+    g.fillTriangle(0, 15, -4, 25, 4, 25);
+    g.fillStyle(0x6c8b45, 1);
+    g.fillEllipse(-21, 17, 9, 5); g.fillEllipse(22, 13, 8, 5);
     view.add(g); view.setDepth(8);
+
+    const shadow = this.add.ellipse(spawn.x, spawn.y + 27 * monsterScale, 48 * monsterScale, 12 * monsterScale, 0x21170f, 0.32)
+      .setDepth(7);
     this.tweens.add({ targets: view, angle: { from: -2.5, to: 2.5 }, duration: 520, ease: "Sine.easeInOut", yoyo: true, repeat: -1 });
-    this.monsters.push({ row, x: spawn.x, y: spawn.y, localX: SPAWN_LOCAL_X, hp, speed: Math.min(45, 14 + (this.wave - 1) * 1.8), attackCooldown: 0, alive: true, view });
+    this.monsters.push({
+      row, x: spawn.x, y: spawn.y, localX: SPAWN_LOCAL_X, hp,
+      speed: Math.min(45, 14 + (this.wave - 1) * 1.8),
+      attackCooldown: 0, alive: true, view, shadow, dustTimer: 0
+    });
   }
 
   updateMonsters(dt, delta) {
@@ -1268,6 +1405,14 @@ export default class BattleScene extends Scene {
       const position = this.lanePoint(monster.localX, monster.row);
       monster.x = position.x; monster.y = position.y;
       monster.view.setPosition(position.x, position.y);
+      if (monster.shadow && monster.shadow.active) {
+        monster.shadow.setPosition(position.x, position.y + 27 * monster.view.scaleY);
+      }
+      monster.dustTimer -= dt * 1000;
+      if (monster.dustTimer <= 0) {
+        this.createFootstepDust(position.x - 9, position.y + 20 * monster.view.scaleY, monster.view.scaleY);
+        monster.dustTimer = 155;
+      }
     }
     this.monsters = this.monsters.filter((m) => m.alive);
   }
@@ -1295,6 +1440,14 @@ export default class BattleScene extends Scene {
       if (hit) {
         this.createProjectileImpact(position.x, position.y - 22);
         hit.hp -= shot.damage;
+        if (hit.view && hit.view.active) {
+          this.tweens.killTweensOf(hit.view);
+          this.tweens.add({
+            targets: hit.view, x: hit.view.x - 7, angle: hit.view.angle - 7,
+            duration: 55, yoyo: true, repeat: 1, ease: "Sine.easeOut"
+          });
+          this.createStoneHitDust(position.x, position.y - 18, hit.view.scaleY);
+        }
         this.damageMonsterIfNeeded(hit);
         shot.alive = false;
         shot.view.destroy();
@@ -1311,7 +1464,15 @@ export default class BattleScene extends Scene {
 
   damageMonsterIfNeeded(monster) {
     if (monster.hp > 0 || !monster.alive) return;
-    monster.alive = false; monster.view.destroy(); this.energy = Math.min(300, this.energy + 8);
+    monster.alive = false;
+    if (monster.shadow && monster.shadow.active) monster.shadow.destroy();
+    this.createMonsterDefeatBurst(monster.x, monster.y, monster.view.scaleY);
+    this.tweens.add({
+      targets: monster.view, alpha: 0, scale: monster.view.scale * 0.55,
+      angle: PhaserMath.Between(-18, 18), duration: 230, ease: "Cubic.easeIn",
+      onComplete: () => monster.view.destroy()
+    });
+    this.energy = Math.min(300, this.energy + 8);
   }
 
   uprootPlant(plant) {
