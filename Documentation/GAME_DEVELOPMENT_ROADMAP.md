@@ -62,6 +62,8 @@ BATTLE
 
 - Pause now runs in a dedicated Phaser `PauseScene` above the paused battle scene, so pause-menu input remains active while the simulation is frozen. Resume, Restart, Settings, Main Menu, and Escape/P resume controls are handled by the overlay scene. This replaces the earlier same-scene pause overlay; browser verification is still required.
 
+- **Player coin wallet:** monster kills award 8 Coins. The browser build stores the validated wallet in versioned local storage (`farmVsMonsters.progression.v1`) so it survives page reloads and browser restarts. If storage is blocked or corrupt, battle remains playable and the wallet safely falls back to zero. This is local-device progress only; cloud/account synchronization is not implemented.
+
 ## Phase 1 — Complete playable vertical slice
 
 **Purpose:** prove one satisfying, complete game loop with one defender: the Radish, supported by the resource-only Energy Mushroom. Do not add a second defensive plant in this phase.
