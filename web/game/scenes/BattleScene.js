@@ -317,6 +317,25 @@ export default class BattleScene extends Scene {
     };
   }
 
+  monsterLanePoint(localX, row) {
+    const position = this.lanePoint(localX, row);
+    const safeRow = PhaserMath.Clamp(Math.floor(row), 0, LANES - 1);
+    const u = (localX + GRID_WIDTH / 2) / GRID_WIDTH;
+    const cellPosition = u * COLUMNS;
+    const col = PhaserMath.Clamp(Math.floor(cellPosition), 0, COLUMNS - 1);
+    const cellU = cellPosition - col;
+    const topLeft = GRID_NODES[safeRow][col];
+    const topRight = GRID_NODES[safeRow][col + 1];
+    const bottomLeft = GRID_NODES[safeRow + 1][col];
+    const bottomRight = GRID_NODES[safeRow + 1][col + 1];
+    const topY = PhaserMath.Linear(topLeft.y, topRight.y, cellU);
+    const bottomY = PhaserMath.Linear(bottomLeft.y, bottomRight.y, cellU);
+    // Raise the complete monster/projectile lane by half the local cell
+    // height, following the perspective of the specific cell.
+    position.y -= (bottomY - topY) / 2;
+    return position;
+  }
+
   worldToLane(point) {
     const { u, v } = this.boardCoordinates(point.x, point.y);
     return {
@@ -1316,7 +1335,7 @@ export default class BattleScene extends Scene {
   spawnMonster() {
     const row = PhaserMath.Between(0, LANES - 1);
     const hp = 65 + Math.floor(this.wave * 4);
-    const spawn = this.lanePoint(SPAWN_LOCAL_X, row);
+    const spawn = this.monsterLanePoint(SPAWN_LOCAL_X, row);
     const view = this.add.container(spawn.x, spawn.y).setDepth(10 + spawn.y / 1000);
     // Perspective lanes are closer together near the horizon. Scale each
     // monster to its lane spacing so creatures never overlap adjacent lanes.
@@ -1398,7 +1417,7 @@ export default class BattleScene extends Scene {
         return;
       }
       monster.localX -= monster.speed * dt;
-      const position = this.lanePoint(monster.localX, monster.row);
+      const position = this.monsterLanePoint(monster.localX, monster.row);
       monster.x = position.x; monster.y = position.y;
       monster.view.setPosition(position.x, position.y);
       if (monster.shadow && monster.shadow.active) {
@@ -1417,7 +1436,7 @@ export default class BattleScene extends Scene {
     for (const shot of this.projectiles) {
       if (!shot.alive) continue;
       shot.localX += shot.speed * dt;
-      const position = this.lanePoint(shot.localX, shot.row);
+      const position = this.monsterLanePoint(shot.localX, shot.row);
       shot.view.setPosition(position.x, position.y - 22);
 
       // Leave small fading embers behind the glowing thorn as it travels.
