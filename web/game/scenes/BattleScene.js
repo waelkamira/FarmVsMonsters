@@ -1549,6 +1549,7 @@ export default class BattleScene extends Scene {
       braced: false,
       braceCue,
       maxHp: hp,
+      hitFlashGraphic: g, hitFlashTimer: null,
       attackCooldown: 0, alive: true, view, shadow, dustTimer: 0
     });
   }
@@ -1671,16 +1672,16 @@ export default class BattleScene extends Scene {
   }
 
   flashMonsterOnHit(monster) {
-    if (!monster || !monster.view || !monster.view.active) return;
-    // A quick visible blink communicates every hit without displaying numeric
-    // health or a bar above the enemy.
-    this.tweens.killTweensOf(monster.view, "alpha");
-    monster.view.setAlpha(0.28);
-    this.tweens.add({
-      targets: monster.view,
-      alpha: 1,
-      duration: 95,
-      ease: "Quad.easeOut"
+    if (!monster || !monster.alive || !monster.hitFlashGraphic || !monster.hitFlashGraphic.active) return;
+    // Brief additive highlight makes the creature visibly flash on impact.
+    // Keep its alpha and scale untouched so it never fades or vanishes on a hit.
+    if (monster.hitFlashTimer) monster.hitFlashTimer.remove(false);
+    monster.hitFlashGraphic.setBlendMode(1); // Phaser BlendModes.ADD
+    monster.hitFlashTimer = this.time.delayedCall(85, () => {
+      if (monster.hitFlashGraphic && monster.hitFlashGraphic.active) {
+        monster.hitFlashGraphic.setBlendMode(0); // Phaser BlendModes.NORMAL
+      }
+      monster.hitFlashTimer = null;
     });
   }
 
