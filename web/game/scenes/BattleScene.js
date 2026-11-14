@@ -690,17 +690,6 @@ export default class BattleScene extends Scene {
   }
 
   drawRadish(x, y) {
-    // The gold target is the plant's soil/root anchor. The complete radish
-    // grows upward from that exact point; no gameplay coordinate is offset.
-    const anchor = this.add.graphics().setPosition(x, y).setDepth(10);
-    anchor.lineStyle(2, 0x172b36, 1);
-    anchor.strokeCircle(0, 0, 8);
-    anchor.fillStyle(0xffd54a, 1);
-    anchor.fillCircle(0, 0, 4);
-    anchor.lineStyle(2, 0xffd54a, 1);
-    anchor.lineBetween(-11, 0, 11, 0);
-    anchor.lineBetween(0, -11, 0, 11);
-
     const plant = this.add.container(x, y).setDepth(11);
     const g = this.add.graphics();
 
