@@ -1468,7 +1468,9 @@ export default class BattleScene extends Scene {
     if (monster.shadow && monster.shadow.active) monster.shadow.destroy();
     this.createMonsterDefeatBurst(monster.x, monster.y, monster.view.scaleY);
     this.tweens.add({
-      targets: monster.view, alpha: 0, scale: monster.view.scale * 0.55,
+      targets: monster.view, alpha: 0,
+      scaleX: monster.view.scaleX * 0.55,
+      scaleY: monster.view.scaleY * 0.55,
       angle: PhaserMath.Between(-18, 18), duration: 230, ease: "Cubic.easeIn",
       onComplete: () => monster.view.destroy()
     });
