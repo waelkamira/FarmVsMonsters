@@ -337,7 +337,7 @@ export default class BattleScene extends Scene {
 
   createSoundButton() {
     const enabled = this.soundEnabled;
-    const button = this.add.container(1018, 34).setDepth(45);
+    const button = this.add.container(920, 34).setDepth(45);
     const background = this.add.rectangle(0, 0, 112, 34, 0xf4dfb3, 1)
       .setStrokeStyle(2, 0x65452f)
       .setInteractive({ useHandCursor: true });
