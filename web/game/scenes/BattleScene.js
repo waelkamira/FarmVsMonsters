@@ -1697,15 +1697,18 @@ export default class BattleScene extends Scene {
   damageMonsterIfNeeded(monster) {
     if (monster.hp > 0 || !monster.alive) return;
     monster.alive = false;
+    if (monster.hitFlashTimer) {
+      monster.hitFlashTimer.remove(false);
+      monster.hitFlashTimer = null;
+    }
     if (monster.shadow && monster.shadow.active) monster.shadow.destroy();
-    this.createMonsterDefeatBurst(monster.x, monster.y, monster.view.scaleY);
-    this.tweens.add({
-      targets: monster.view, alpha: 0,
-      scaleX: monster.view.scaleX * 0.55,
-      scaleY: monster.view.scaleY * 0.55,
-      angle: PhaserMath.Between(-18, 18), duration: 230, ease: "Cubic.easeIn",
-      onComplete: () => monster.view.destroy()
-    });
+    this.createMonsterDefeatBurst(monster.x, monster.y, monster.view && monster.view.scaleY);
+    // Remove the complete creature container immediately. This guarantees
+    // that no child graphic or hit-flash layer can remain visible after death.
+    if (monster.view && monster.view.active) {
+      this.tweens.killTweensOf(monster.view);
+      monster.view.destroy(true);
+    }
     this.energy = Math.min(300, this.energy + 8);
   }
 
