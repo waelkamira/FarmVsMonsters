@@ -47,6 +47,7 @@ export default class BattleScene extends Scene {
     this.load.image("farm-battlefield", "/assets/backgrounds/farm-battlefield.jpeg");
     this.load.image("radish-character", "/assets/plants/radish.png");
     this.load.image("mushroom-character", "/assets/plants/mushroom.png");
+    this.load.spritesheet("gold-coin", "/assets/items/currency/gold-coin.png", { frameWidth: 170, frameHeight: 170 });
     this.load.spritesheet("farmer-run", "/assets/characters/farmer/farmer-run.png", { frameWidth: 180, frameHeight: 720 });
     this.load.spritesheet("farmer-walk", "/assets/characters/farmer/farmer-walk.png", { frameWidth: 270, frameHeight: 360 });
     this.load.spritesheet("farmer-jump", "/assets/characters/farmer/farmer-jump.png", { frameWidth: 216, frameHeight: 720 });
@@ -441,7 +442,9 @@ export default class BattleScene extends Scene {
       fontFamily: "Georgia", fontSize: "13px", color: "#fff0c8", fontStyle: "bold",
       stroke: "#382317", strokeThickness: 2
     }).setOrigin(0, 0.5).setDepth(41);
-    this.waveText = this.add.text(950, 27, "", {
+    this.coinHudIcon = this.add.image(205, 27, "gold-coin", 0)
+      .setDisplaySize(20, 20).setDepth(42);
+    this.waveText = this.add.text(950, 27, "",
       fontFamily: "Georgia", fontSize: "14px", color: "#ffe2a0", fontStyle: "bold",
       stroke: "#382317", strokeThickness: 2
     }).setOrigin(1, 0.5).setDepth(41);
