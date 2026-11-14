@@ -333,101 +333,79 @@ export default class BattleScene extends Scene {
   }
 
   createHud() {
-    // Primitive timber-and-stone command rail. The playfield and calibrated
-    // planting mesh remain untouched beneath this interface.
+    // Slim timber status strip: keep the battlefield and all planting lanes visible.
     const wood = this.add.graphics().setDepth(38);
-    wood.fillStyle(0x21170f, 0.42); wood.fillRoundedRect(18, 10, 1084, 83, 13);
-    wood.fillStyle(0x694329, 1); wood.fillRoundedRect(18, 5, 1084, 78, 12);
-    wood.lineStyle(4, 0x382317, 1); wood.strokeRoundedRect(18, 5, 1084, 78, 12);
-    wood.lineStyle(2, 0xb17b45, 0.95); wood.strokeRoundedRect(24, 11, 1072, 66, 9);
-    wood.lineStyle(2, 0x4a2e1c, 0.9);
-    for (let x = 42; x <= 1078; x += 34) {
-      wood.fillStyle(0xd2a66a, 0.8); wood.fillCircle(x, 14, 2.2);
-      wood.fillCircle(x, 74, 2.2);
-    }
-    // Small bone-carved separators.
-    for (const x of [350, 780]) {
-      wood.fillStyle(0xe4d1a3, 1); wood.fillRoundedRect(x, 21, 5, 46, 2);
-      wood.fillCircle(x + 2.5, 20, 4); wood.fillCircle(x + 2.5, 68, 4);
-    }
+    wood.fillStyle(0x21170f, 0.36); wood.fillRoundedRect(24, 11, 1072, 43, 8);
+    wood.fillStyle(0x694329, 0.96); wood.fillRoundedRect(20, 6, 1072, 42, 8);
+    wood.lineStyle(2, 0x382317, 1); wood.strokeRoundedRect(20, 6, 1072, 42, 8);
+    wood.lineStyle(1, 0xb17b45, 0.9); wood.strokeRoundedRect(24, 10, 1064, 34, 6);
+    wood.fillStyle(0xd2a66a, 0.85);
+    for (const x of [34, 1078]) { wood.fillCircle(x, 13, 2); wood.fillCircle(x, 41, 2); }
 
-    this.add.text(44, 20, "TRIBE SUPPLIES", {
-      fontFamily: "Georgia", fontSize: "11px", color: "#f3d99e", fontStyle: "bold",
-      letterSpacing: 2
-    }).setDepth(41);
-    this.hudText = this.add.text(44, 40, "", {
-      fontFamily: "Georgia", fontSize: "17px", color: "#fff0c8", fontStyle: "bold",
+    this.hudText = this.add.text(38, 27, "", {
+      fontFamily: "Georgia", fontSize: "13px", color: "#fff0c8", fontStyle: "bold",
       stroke: "#382317", strokeThickness: 2
-    }).setDepth(41);
-    this.waveText = this.add.text(748, 31, "", {
-      fontFamily: "Georgia", fontSize: "18px", color: "#ffe2a0", fontStyle: "bold",
-      stroke: "#382317", strokeThickness: 3
+    }).setOrigin(0, 0.5).setDepth(41);
+    this.waveText = this.add.text(950, 27, "", {
+      fontFamily: "Georgia", fontSize: "14px", color: "#ffe2a0", fontStyle: "bold",
+      stroke: "#382317", strokeThickness: 2
     }).setOrigin(1, 0.5).setDepth(41);
 
     this.messageText = this.add.text(560, 660, "", {
-      fontFamily: "Georgia", fontSize: "15px", color: "#fff0c8", fontStyle: "bold",
-      backgroundColor: "#49301f", padding: { x: 18, y: 8 }, align: "center",
+      fontFamily: "Georgia", fontSize: "14px", color: "#fff0c8", fontStyle: "bold",
+      backgroundColor: "#49301f", padding: { x: 14, y: 6 }, align: "center",
       stroke: "#24170f", strokeThickness: 2
     }).setOrigin(0.5, 1).setDepth(42);
 
-    this.add.text(36, 112, "GROW YOUR DEFENSE", {
-      fontFamily: "Georgia", fontSize: "11px", color: "#f5e1b2",
-      fontStyle: "bold", stroke: "#49301f", strokeThickness: 3
-    }).setDepth(39);
-
-    this.radishCard = this.createPlantCard(132, "RADISH", "35", "radish", null, "radish-character");
-    this.mushroomCard = this.createPlantCard(302, "ENERGY MUSHROOM", "50", "mushroom", (g) => {
-      g.fillStyle(0x8b5bba, 1); g.fillEllipse(-48, -3, 29, 22);
-      g.fillStyle(0xf2d9a4, 1); g.fillRoundedRect(-54, 5, 12, 16, 4);
-      g.fillRoundedRect(-44, 5, 12, 16, 4);
-      g.fillStyle(0xfff1d1, 1); g.fillCircle(-54, -7, 3); g.fillCircle(-43, -7, 3);
+    // Compact seed tokens sit just below the status strip, not over the field.
+    this.radishCard = this.createPlantCard(112, "RADISH", "35", "radish", null, "radish-character");
+    this.mushroomCard = this.createPlantCard(220, "MUSHROOM", "50", "mushroom", (g) => {
+      g.fillStyle(0x8b5bba, 1); g.fillEllipse(-32, -1, 19, 15);
+      g.fillStyle(0xf2d9a4, 1); g.fillRoundedRect(-36, 5, 8, 10, 3);
+      g.fillRoundedRect(-28, 5, 8, 10, 3);
+      g.fillStyle(0xfff1d1, 1); g.fillCircle(-37, -4, 2); g.fillCircle(-28, -4, 2);
     });
   }
 
   createPlantCard(x, title, costLabel, type, drawIcon, imageKey = null) {
-    const card = this.add.container(x, 151).setDepth(45);
-    const shadow = this.add.rectangle(3, 5, 150, 76, 0x1c120c, 0.52).setStrokeStyle(2, 0x24160d);
-    const frame = this.add.rectangle(0, 0, 150, 76, 0x79502e, 1).setStrokeStyle(3, 0x392417);
-    const panel = this.add.rectangle(0, -2, 140, 66, 0xc69b5e, 1)
-      .setStrokeStyle(2, 0xf0d59a).setInteractive({ useHandCursor: true });
-    const inner = this.add.rectangle(0, -2, 132, 58, 0x9a7044, 1).setStrokeStyle(1, 0x5a3922);
-    const studs = this.add.graphics();
-    studs.fillStyle(0xe5c68d, 1);
-    studs.fillCircle(-64, -27, 2.2); studs.fillCircle(64, -27, 2.2);
-    studs.fillCircle(-64, 23, 2.2); studs.fillCircle(64, 23, 2.2);
+    const card = this.add.container(x, 78).setDepth(45);
+    const shadow = this.add.rectangle(2, 3, 98, 46, 0x1c120c, 0.42);
+    const frame = this.add.rectangle(0, 0, 98, 46, 0x79502e, 1).setStrokeStyle(2, 0x392417);
+    const panel = this.add.rectangle(0, 0, 92, 40, 0xc69b5e, 1)
+      .setStrokeStyle(1.5, 0xf0d59a).setInteractive({ useHandCursor: true });
     let icon;
     if (imageKey && this.textures.exists(imageKey)) {
       const frameData = this.textures.getFrame(imageKey);
-      const iconHeight = 49;
+      const iconHeight = 31;
       const iconWidth = iconHeight * (frameData.realWidth / frameData.realHeight);
-      icon = this.add.image(-48, -1, imageKey).setDisplaySize(iconWidth, iconHeight);
+      icon = this.add.image(-31, -1, imageKey).setDisplaySize(iconWidth, iconHeight);
     } else {
       icon = this.add.graphics();
       if (drawIcon) drawIcon(icon);
     }
-    const name = this.add.text(-15, -17, title, {
-      fontFamily: "Georgia", fontSize: title.length > 12 ? "9px" : "12px",
-      color: "#fff0c8", fontStyle: "bold", stroke: "#49301d", strokeThickness: 2
-    }).setOrigin(0, 0.5);
-    const cost = this.add.text(-14, 10, costLabel + " ENERGY", {
-      fontFamily: "Georgia", fontSize: "10px", color: "#ffe4a7", fontStyle: "bold",
+    const name = this.add.text(-10, -8, title, {
+      fontFamily: "Georgia", fontSize: "9px", color: "#fff0c8", fontStyle: "bold",
       stroke: "#49301d", strokeThickness: 2
     }).setOrigin(0, 0.5);
-    card.add([shadow, frame, inner, panel, studs, icon, name, cost]);
+    const cost = this.add.text(-10, 9, costLabel + " ENERGY", {
+      fontFamily: "Georgia", fontSize: "9px", color: "#ffe4a7", fontStyle: "bold",
+      stroke: "#49301d", strokeThickness: 1
+    }).setOrigin(0, 0.5);
+    card.add([shadow, frame, panel, icon, name, cost]);
 
     panel.on("pointerover", () => {
       if (this.selectedPlant !== type) panel.setFillStyle(0xd7b579, 1);
-      card.setY(148);
+      card.setScale(1.035);
     });
     panel.on("pointerout", () => {
       if (this.selectedPlant !== type) panel.setFillStyle(0xc69b5e, 1);
-      card.setY(151);
+      card.setScale(1);
     });
     panel.on("pointerdown", () => {
       if (this.gameOver) return;
       this.selectedPlant = type;
-      this.radishCard.setFillStyle(type === "radish" ? 0xe0c889 : 0xc69b5e, 1);
-      this.mushroomCard.setFillStyle(type === "mushroom" ? 0xe0c889 : 0xc69b5e, 1);
+      this.radishCard.setAlpha(type === "radish" ? 1 : 0.82);
+      this.mushroomCard.setAlpha(type === "mushroom" ? 1 : 0.82);
       const label = type === "radish" ? "Radish" : "Energy mushroom";
       this.setMessage(label + " chosen. Select an empty soil plot to plant.");
       this.refreshHud();
