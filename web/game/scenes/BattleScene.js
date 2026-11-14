@@ -1127,7 +1127,21 @@ export default class BattleScene extends Scene {
     const plantConfig = this.selectedPlant === "mushroom" ? MUSHROOM : RADISH;
     if (this.energy < plantConfig.cost) { this.setMessage("Not enough mushrooms energy to plant this."); return; }
     const { x, y } = this.plantingCellCenter(col, row);
-    this.plantingTarget = { col, row, x, y, type: this.selectedPlant };
+    // Store the route in board coordinates, not as a straight screen-space
+    // diagonal. The board is perspective-warped, so screen-space lerping makes
+    // the farmer appear to float above the soil while changing rows.
+    const startBoard = this.boardCoordinates(this.caveman.x, this.caveman.y);
+    const targetBoard = this.boardCoordinates(x, y);
+    const routeLength = Math.hypot(
+      (targetBoard.u - startBoard.u) * GRID_WIDTH,
+      (targetBoard.v - startBoard.v) * GRID_HEIGHT
+    );
+    this.plantingTarget = {
+      col, row, x, y, type: this.selectedPlant,
+      startU: startBoard.u, startV: startBoard.v,
+      targetU: targetBoard.u, targetV: targetBoard.v,
+      routeLength: Math.max(routeLength, 1), progress: 0
+    };
     this.setFarmerAnimation("farmer-walk");
     this.facing = x >= this.caveman.x ? 1 : -1;
     this.caveman.scaleX = this.facing;
@@ -1137,16 +1151,21 @@ export default class BattleScene extends Scene {
   updatePlantingMovement(dt) {
     if (!this.plantingTarget) return;
     const target = this.plantingTarget;
-    const dx = target.x - this.caveman.x;
-    const dy = target.y - this.caveman.y;
-    const distance = Math.hypot(dx, dy);
-    if (distance > 7) {
-      const step = Math.min(distance, 150 * dt);
-      this.caveman.x += dx / distance * step;
-      this.caveman.y += dy / distance * step;
-      if (dx !== 0) { this.facing = Math.sign(dx); this.caveman.scaleX = this.facing; }
-      return;
+    // Walk across the calibrated board surface. Bilinear board mapping keeps
+    // the feet on the perspective soil plane instead of cutting through it
+    // along a straight screen-space line.
+    target.progress = Math.min(1, target.progress + (150 * dt) / target.routeLength);
+    const u = PhaserMath.Linear(target.startU, target.targetU, target.progress);
+    const v = PhaserMath.Linear(target.startV, target.targetV, target.progress);
+    const position = this.boardPoint(u, v);
+    this.caveman.setPosition(position.x, position.y);
+    const horizontalDirection = target.x - this.caveman.x;
+    if (Math.abs(horizontalDirection) > 0.5) {
+      this.facing = Math.sign(horizontalDirection);
+      this.caveman.scaleX = this.facing;
     }
+    if (target.progress < 1) return;
+
     this.caveman.setPosition(target.x, target.y);
     this.plantingTarget = null;
     this.plantSelected(target.col, target.row, target.type);
