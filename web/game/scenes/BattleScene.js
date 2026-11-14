@@ -300,10 +300,13 @@ export default class BattleScene extends Scene {
     const safeRow = PhaserMath.Clamp(Math.floor(row), 0, LANES - 1);
     const u = (localX + GRID_WIDTH / 2) / GRID_WIDTH;
     const centerIndex = u * COLUMNS - 0.5;
+    // Keep a valid adjacent-cell segment, but allow the interpolation
+    // factor to extend beyond either edge. This is essential for positions
+    // outside the board (the caveman's safe return point and monster entry).
     const leftCol = Math.floor(centerIndex);
-    const blend = centerIndex - leftCol;
-    const aCol = PhaserMath.Clamp(leftCol, 0, COLUMNS - 1);
-    const bCol = PhaserMath.Clamp(leftCol + 1, 0, COLUMNS - 1);
+    const aCol = PhaserMath.Clamp(leftCol, 0, COLUMNS - 2);
+    const bCol = aCol + 1;
+    const blend = centerIndex - aCol;
     const a = this.gridCellCenter(aCol, safeRow);
     const b = this.gridCellCenter(bCol, safeRow);
     return {
@@ -936,7 +939,10 @@ export default class BattleScene extends Scene {
     this.playPlantSound();
     this.updateEmergencyMode();
     this.tweens.add({ targets: this.caveman, scaleY: 0.82, duration: 120, yoyo: true });
-    const safePosition = this.lanePoint(HOME_LOCAL_X - 38, row);
+    // Return beyond the left boundary of the calibrated board, not merely
+    // to the first cell center. The lanePoint extrapolation preserves the
+    // perspective of the outermost two cell centers.
+    const safePosition = this.lanePoint(-GRID_WIDTH / 2 - 48, row);
     this.returnTarget = { x: safePosition.x, y: safePosition.y };
     this.setMessage(type === "mushroom"
       ? "Energy mushroom planted! It will produce mushrooms for planting more defenders."
