@@ -68,6 +68,22 @@ class FarmerFrameExtractionTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             EXTRACTOR.normalize_frames(rgba, boxes, shared_scale=100)
 
+    def test_phaser_strip_packs_frames_in_order_without_gutters(self):
+        frames = [
+            Image.new("RGBA", (512, 512), (255, 0, 0, 255)),
+            Image.new("RGBA", (512, 512), (0, 255, 0, 255)),
+            Image.new("RGBA", (512, 512), (0, 0, 255, 255)),
+        ]
+        strip = EXTRACTOR.build_phaser_strip(frames)
+        self.assertEqual(strip.size, (1536, 512))
+        self.assertEqual(strip.getpixel((10, 10)), (255, 0, 0, 255))
+        self.assertEqual(strip.getpixel((520, 10)), (0, 255, 0, 255))
+        self.assertEqual(strip.getpixel((1030, 10)), (0, 0, 255, 255))
+
+    def test_phaser_strip_rejects_inconsistent_frame_dimensions(self):
+        with self.assertRaises(ValueError):
+            EXTRACTOR.build_phaser_strip([Image.new("RGBA", (128, 128))])
+
     def test_empty_image_is_rejected(self):
         image = Image.new("RGBA", (32, 32), (0, 0, 0, 0))
         with self.assertRaises(ValueError):
