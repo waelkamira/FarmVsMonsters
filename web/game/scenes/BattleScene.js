@@ -1207,12 +1207,34 @@ export default class BattleScene extends Scene {
     if (type === "radish") this.hasPlantedDefender = true;
     this.playPlantSound();
     this.updateEmergencyMode();
-    this.tweens.add({ targets: this.caveman, scaleY: 0.82, duration: 120, yoyo: true });
-    // Return beyond the left boundary of the calibrated board, not merely
-    // to the first cell center. The lanePoint extrapolation preserves the
-    // perspective of the outermost two cell centers.
+
+    // Make the planting bend immediate and brief, then restore the farmer's
+    // exact standing scale before he starts running back.
+    this.tweens.killTweensOf(this.caveman);
+    this.caveman.setScale(1);
+    this.tweens.add({
+      targets: this.caveman,
+      scaleY: 0.72,
+      duration: 85,
+      ease: "Quad.easeIn",
+      yoyo: true,
+      hold: 25,
+      onComplete: () => this.caveman?.setScale(1)
+    });
+
+    // Do not let the return movement overlap the planting pose. Start the
+    // sprint only after the planting animation has completed and the farmer
+    // has returned to his normal upright posture.
     const safePosition = this.lanePoint(-GRID_WIDTH / 2 - 48, row);
-    this.returnTarget = { x: safePosition.x, y: safePosition.y };
+    this.returnTarget = null;
+    this.cavemanVisual.once("animationcomplete", (animation) => {
+      if (animation.key !== "farmer-plant" || !this.caveman?.active) return;
+      this.caveman.setScale(1);
+      this.returnTarget = { x: safePosition.x, y: safePosition.y };
+      this.farmerWantsToRun = true;
+      this.setFarmerAnimation("farmer-run");
+    });
+
     this.setMessage(type === "mushroom"
       ? "Energy mushroom planted! It will produce mushrooms for planting more defenders."
       : "Radish planted! The caveman is sprinting back behind the final line.");
