@@ -281,18 +281,24 @@ export default class BattleScene extends Scene {
   }
 
   lanePoint(localX, row) {
-    // Build each lane from that row's own calibrated cell mesh.
-    // Do not use boardPoint() here: its outside-board corner extrapolation
-    // follows the whole field's outer quadrilateral, which bends away from
-    // the row's actual perspective path and creates a discontinuity at u=0/1.
-    // Interpolating the first/last cell beyond their edges keeps the path
-    // continuous from monster spawn, through every plant cell, to the house.
+    // A monster lane must pass through the CENTERS of the soil cells,
+    // not along either horizontal grid edge. Use the same polygon-area
+    // centroids used for planting, then interpolate between adjacent cells.
+    // localX remains a normalized board coordinate so plants, monsters and
+    // projectiles continue to share one perspective lane system.
     const safeRow = PhaserMath.Clamp(Math.floor(row), 0, LANES - 1);
     const u = (localX + GRID_WIDTH / 2) / GRID_WIDTH;
-    const scaledU = u * COLUMNS;
-    const col = PhaserMath.Clamp(Math.floor(scaledU), 0, COLUMNS - 1);
-    const localU = scaledU - col;
-    return this.interpolateCell(col, safeRow, localU, 0.5);
+    const centerIndex = u * COLUMNS - 0.5;
+    const leftCol = Math.floor(centerIndex);
+    const blend = centerIndex - leftCol;
+    const aCol = PhaserMath.Clamp(leftCol, 0, COLUMNS - 1);
+    const bCol = PhaserMath.Clamp(leftCol + 1, 0, COLUMNS - 1);
+    const a = this.gridCellCenter(aCol, safeRow);
+    const b = this.gridCellCenter(bCol, safeRow);
+    return {
+      x: PhaserMath.Linear(a.x, b.x, blend),
+      y: PhaserMath.Linear(a.y, b.y, blend),
+    };
   }
 
   worldToLane(point) {
