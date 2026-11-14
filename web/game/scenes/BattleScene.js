@@ -41,6 +41,7 @@ export default class BattleScene extends Scene {
     this.plants = [];
     this.monsters = [];
     this.projectiles = [];
+    this.nextProjectileAim = "head";
     this.collectingEnergyToken = false;
     this.laneYs = Array.from({ length: LANES }, (_, row) => this.gridCellCenter(0, row).y);
     this.emergencyMode = false;
@@ -1249,7 +1250,11 @@ export default class BattleScene extends Scene {
     const row = plant.row;
     // Launch from the same raised lane center used by the monsters themselves.
     const position = this.monsterLanePoint(localX, row);
-    const view = this.add.container(position.x, position.y - 22).setDepth(16);
+    // Alternate successive thorns between the monster's head and torso.
+    const verticalOffset = this.nextProjectileAim === "head" ? -22 : 14;
+    this.nextProjectileAim = this.nextProjectileAim === "head" ? "middle" : "head";
+    const launchY = position.y + verticalOffset;
+    const view = this.add.container(position.x, launchY).setDepth(16);
 
     const halo = this.add.circle(0, 0, 17, 0xffa52f, 0.16);
     const outerGlow = this.add.circle(0, 0, 11, 0xffc247, 0.34);
@@ -1277,7 +1282,7 @@ export default class BattleScene extends Scene {
       repeat: -1
     });
 
-    const muzzleFlash = this.add.circle(position.x, position.y - 22, 13, 0xffe28a, 0.8).setDepth(15);
+    const muzzleFlash = this.add.circle(position.x, launchY, 13, 0xffe28a, 0.8).setDepth(15);
     this.tweens.add({
       targets: muzzleFlash,
       alpha: 0,
@@ -1287,7 +1292,7 @@ export default class BattleScene extends Scene {
     });
 
     this.projectiles.push({
-      view, localX, row, speed: 320, damage: 25, alive: true, trailTimer: 0
+      view, localX, row, verticalOffset, speed: 320, damage: 25, alive: true, trailTimer: 0
     });
     this.playThornSound();
   }
@@ -1624,12 +1629,12 @@ export default class BattleScene extends Scene {
       if (!shot.alive) continue;
       shot.localX += shot.speed * dt;
       const position = this.monsterLanePoint(shot.localX, shot.row);
-      shot.view.setPosition(position.x, position.y - 22);
+      shot.view.setPosition(position.x, position.y + shot.verticalOffset);
 
       // Leave small fading embers behind the glowing thorn as it travels.
       shot.trailTimer -= dt * 1000;
       if (shot.trailTimer <= 0) {
-        this.createProjectileTrail(position.x - 5, position.y - 22);
+        this.createProjectileTrail(position.x - 5, position.y + shot.verticalOffset);
         shot.trailTimer = 48;
       }
 
@@ -1640,7 +1645,7 @@ export default class BattleScene extends Scene {
         Math.abs(monster.localX - shot.localX) <= 24
       );
       if (hit) {
-        this.createProjectileImpact(position.x, position.y - 22);
+        this.createProjectileImpact(position.x, position.y + shot.verticalOffset);
         this.applyMonsterDamage(
           hit, shot.damage * this.incomingMonsterDamageMultiplier(hit)
         );
@@ -1650,7 +1655,7 @@ export default class BattleScene extends Scene {
             targets: hit.view, x: hit.view.x - 7, angle: hit.view.angle - 7,
             duration: 55, yoyo: true, repeat: 1, ease: "Sine.easeOut"
           });
-          this.createStoneHitDust(position.x, position.y - 18, hit.view.scaleY);
+          this.createStoneHitDust(position.x, position.y + shot.verticalOffset + 4, hit.view.scaleY);
         }
         this.damageMonsterIfNeeded(hit);
         shot.alive = false;
