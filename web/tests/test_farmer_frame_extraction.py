@@ -37,6 +37,22 @@ class FarmerFrameExtractionTests(unittest.TestCase):
         self.assertTrue(all(item["foot_baseline_y"] == 496 for item in metadata))
         self.assertGreater(scale, 0)
 
+    def test_shared_scale_keeps_different_action_sheets_consistent(self):
+        image = self.make_guttered_sheet()
+        rgba, boxes, _, _ = EXTRACTOR.detect_frames(image)
+        frames, metadata, scale = EXTRACTOR.normalize_frames(
+            rgba, boxes, shared_scale=10
+        )
+        self.assertEqual(scale, 10)
+        self.assertEqual(metadata[0]["output_size"], [512, 512])
+        self.assertEqual(frames[0].getbbox()[3], 496)
+
+    def test_shared_scale_that_would_clip_is_rejected(self):
+        image = self.make_guttered_sheet()
+        rgba, boxes, _, _ = EXTRACTOR.detect_frames(image)
+        with self.assertRaises(ValueError):
+            EXTRACTOR.normalize_frames(rgba, boxes, shared_scale=100)
+
     def test_empty_image_is_rejected(self):
         image = Image.new("RGBA", (32, 32), (0, 0, 0, 0))
         with self.assertRaises(ValueError):
