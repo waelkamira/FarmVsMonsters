@@ -16,6 +16,16 @@ const SPAWN_LOCAL_X = GRID_WIDTH / 2 + 28;
 const RADISH = { label: "Radish", cost: 35, hp: 110, cooldown: 1450, range: 360 };
 const MUSHROOM = { label: "Energy Mushroom", cost: 50, hp: 85, energy: 25, productionInterval: 8000 };
 
+// Central combat balance table. Monster durability is expressed in standard radish hits when possible.
+const COMBAT_BALANCE = {
+  plants: { radish: { projectileDamage: 25 } },
+  monsters: {
+    "cave-brute": { hitsToDefeat: 7 },
+    "dust-skitter": { hpMultiplier: 0.72 },
+    "stonehide": { hpMultiplier: 2.2 }
+  }
+};
+
 export default class BattleScene extends Scene {
   constructor() { super("BattleScene"); }
 
@@ -1292,7 +1302,7 @@ export default class BattleScene extends Scene {
     });
 
     this.projectiles.push({
-      view, localX, row, verticalOffset, speed: 320, damage: 25, alive: true, trailTimer: 0
+      view, localX, row, verticalOffset, speed: 320, damage: COMBAT_BALANCE.plants.radish.projectileDamage, alive: true, trailTimer: 0
     });
     this.playThornSound();
   }
@@ -1405,23 +1415,26 @@ export default class BattleScene extends Scene {
     const archetype = this.monsterArchetypeFor(spawnIndex);
     const profiles = {
       "cave-brute": {
-        hpMultiplier: 1, speedMultiplier: 1, maxSpeed: 30,
+        speedMultiplier: 1, maxSpeed: 30,
         plantDamage: 16, attackInterval: 1150, incomingDamage: 1,
         widthScale: 1, heightScale: 1, wobbleDuration: 520
       },
       "dust-skitter": {
-        hpMultiplier: 0.72, speedMultiplier: 1.55, maxSpeed: 34,
+        speedMultiplier: 1.55, maxSpeed: 34,
         plantDamage: 10, attackInterval: 920, incomingDamage: 1,
         widthScale: 0.8, heightScale: 0.88, wobbleDuration: 350
       },
       "stonehide": {
-        hpMultiplier: 2.2, speedMultiplier: 0.62, maxSpeed: 19,
+        speedMultiplier: 0.62, maxSpeed: 19,
         plantDamage: 23, attackInterval: 1450, incomingDamage: 0.7,
         widthScale: 1.18, heightScale: 1.14, wobbleDuration: 760
       }
     };
     const profile = profiles[archetype];
-    const hp = Math.round((65 + Math.floor(this.wave * 4)) * profile.hpMultiplier);
+    const durability = COMBAT_BALANCE.monsters[archetype];
+    const hp = durability.hitsToDefeat
+      ? COMBAT_BALANCE.plants.radish.projectileDamage * durability.hitsToDefeat
+      : Math.round((65 + Math.floor(this.wave * 4)) * durability.hpMultiplier);
     const baseSpeed = Math.min(30, 8 + (this.wave - 1) * 1.35);
     const speed = Math.min(profile.maxSpeed, baseSpeed * profile.speedMultiplier);
     const spawn = this.monsterLanePoint(SPAWN_LOCAL_X, row);
