@@ -41,6 +41,7 @@ export default class BattleScene extends Scene {
     this.hasPlantedDefender = false;
     this.facing = 1;
     this.plantingTarget = null;
+    this.returnTarget = null;
     this.gameOver = false;
 
     this.drawField();
@@ -371,13 +372,14 @@ export default class BattleScene extends Scene {
     if (this.keys.d.isDown || this.keys.right.isDown) dx += 1;
     if (this.keys.w.isDown || this.keys.up.isDown) dy -= 1;
     if (this.keys.s.isDown || this.keys.down.isDown) dy += 1;
-    if (!this.plantingTarget && (dx !== 0 || dy !== 0)) {
+    if (!this.plantingTarget && !this.returnTarget && (dx !== 0 || dy !== 0)) {
       this.caveman.x = PhaserMath.Clamp(this.caveman.x + dx * 170 * dt, 105, 1010);
       this.caveman.y = PhaserMath.Clamp(this.caveman.y + dy * 170 * dt, this.laneYs[0] - 22, this.laneYs[LANES - 1] + 22);
       if (dx !== 0) this.facing = Math.sign(dx);
       this.caveman.scaleX = this.facing;
     }
     this.updatePlantingMovement(dt);
+    this.updateReturnMovement(dt);
     if (Input.Keyboard.JustDown(this.keys.space)) {
       if (this.livingPlantCount() > 0) this.setMessage("The radishes are alive and defending. The caveman cannot fight yet.");
       else if (this.hasPlantedDefender) this.clubAttack();
@@ -415,6 +417,27 @@ export default class BattleScene extends Scene {
     this.plantRadish(target.col, target.row);
   }
 
+  updateReturnMovement(dt) {
+    if (!this.returnTarget) return;
+    const target = this.returnTarget;
+    const dx = target.x - this.caveman.x;
+    const dy = target.y - this.caveman.y;
+    const distance = Math.hypot(dx, dy);
+    if (distance <= 5) {
+      this.caveman.setPosition(target.x, target.y);
+      this.returnTarget = null;
+      this.setMessage("The caveman is back behind the final defense line.");
+      return;
+    }
+    const step = Math.min(distance, 430 * dt);
+    this.caveman.x += (dx / distance) * step;
+    this.caveman.y += (dy / distance) * step;
+    if (dx !== 0) {
+      this.facing = Math.sign(dx);
+      this.caveman.scaleX = this.facing;
+    }
+  }
+
   plantRadish(col, row) {
     if (this.energy < RADISH.cost || this.plants.some((p) => p.alive && p.col === col && p.row === row)) {
       this.setMessage("Planting cancelled: this cell is no longer available."); return;
@@ -428,7 +451,9 @@ export default class BattleScene extends Scene {
     });
     this.updateEmergencyMode();
     this.tweens.add({ targets: this.caveman, scaleY: 0.82, duration: 120, yoyo: true });
-    this.setMessage("The caveman planted a radish! It is rooted in place and will defend this lane.");
+    const safePosition = this.lanePoint(HOME_LOCAL_X - 38, row);
+    this.returnTarget = { x: safePosition.x, y: safePosition.y };
+    this.setMessage("Radish planted! The caveman is sprinting back behind the final line.");
   }
 
   drawRadish(x, y) {
@@ -545,11 +570,8 @@ export default class BattleScene extends Scene {
         continue;
       }
       if (!blocker && monster.localX <= HOME_LOCAL_X + 34) {
-        if (monster.attackCooldown <= 0) {
-          this.houseHealth = Math.max(0, this.houseHealth - 8); monster.attackCooldown = 1250;
-          if (this.houseHealth <= 0) this.endGame(false);
-        }
-        continue;
+        this.endGame(false);
+        return;
       }
       monster.localX -= monster.speed * dt;
       const position = this.lanePoint(monster.localX, monster.row);
@@ -622,14 +644,61 @@ export default class BattleScene extends Scene {
     }
   }
 
+  playDefeatMusic() {
+    // A short original three-note descending defeat fanfare synthesized with Web Audio.
+    const audioContext = this.sound && this.sound.context;
+    if (!audioContext || typeof audioContext.createOscillator !== "function") return;
+    try {
+      const start = audioContext.currentTime + 0.05;
+      const notes = [196, 164.81, 130.81, 98];
+      notes.forEach((frequency, index) => {
+        const oscillator = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+        const noteStart = start + index * 0.42;
+        oscillator.type = "triangle";
+        oscillator.frequency.setValueAtTime(frequency, noteStart);
+        gain.gain.setValueAtTime(0.0001, noteStart);
+        gain.gain.exponentialRampToValueAtTime(0.16, noteStart + 0.035);
+        gain.gain.exponentialRampToValueAtTime(0.0001, noteStart + 0.38);
+        oscillator.connect(gain);
+        gain.connect(audioContext.destination);
+        oscillator.start(noteStart);
+        oscillator.stop(noteStart + 0.4);
+      });
+    } catch (error) {
+      // The defeat overlay must still work if browser audio is unavailable.
+    }
+  }
+
   endGame(won) {
     if (this.gameOver) return;
     this.gameOver = true;
-    this.setMessage(won ? "VICTORY! The farm is safe." : "DEFEAT! The farmhouse has fallen.");
-    this.add.rectangle(560, 340, 520, 150, 0x263c2b, 0.94).setStrokeStyle(3, 0xe4d5a5).setDepth(60);
-    this.add.text(560, 340, won ? "VICTORY" : "FARM LOST", {
-      fontFamily: "Arial", fontSize: "42px", color: "#fff2c8", fontStyle: "bold"
-    }).setOrigin(0.5).setDepth(61);
+    this.plantingTarget = null;
+    this.returnTarget = null;
+    this.setMessage(won ? "VICTORY! The farm is safe." : "GAME OVER — The monsters reached the final line.");
+    this.add.rectangle(560, 340, 1120, 680, 0x10170f, 0.72).setDepth(60);
+    if (won) {
+      this.add.rectangle(560, 340, 520, 150, 0x263c2b, 0.96).setStrokeStyle(3, 0xe4d5a5).setDepth(61);
+      this.add.text(560, 340, "VICTORY", {
+        fontFamily: "Arial", fontSize: "48px", color: "#fff2c8", fontStyle: "bold"
+      }).setOrigin(0.5).setDepth(62);
+      return;
+    }
+    const title = this.add.text(560, 340, "GAME OVER", {
+      fontFamily: "Arial", fontSize: "68px", color: "#ffdf72", fontStyle: "bold",
+      stroke: "#54221f", strokeThickness: 10, shadow: { offsetX: 0, offsetY: 5, color: "#000000", blur: 12, fill: true }
+    }).setOrigin(0.5).setScale(0.18).setDepth(62);
+    this.tweens.add({
+      targets: title,
+      scale: 1.18,
+      duration: 420,
+      ease: "Back.easeOut",
+      yoyo: true,
+      repeat: 2,
+      hold: 130,
+      onComplete: () => title.setScale(1.18)
+    });
+    this.playDefeatMusic();
   }
 
   setMessage(message) { this.messageText.setText(message); }
