@@ -164,6 +164,7 @@ BATTLE
 - Farmer frame-count validation was added on 2026-11-14.
 - The Phase 1 wave schedule is now fixed in code at 5 / 8 / 12 / 16 / 20 monsters (61 total); the sixth-wave loop has been removed.
 - Final-wave completion now triggers a Victory result only after all scheduled monsters have spawned and no living monsters remain. Victory and Defeat result panels include run summaries and replay/menu actions.
+- Monsters that breach the farm now stop at the home boundary and damage farmhouse health on their attack cadence; defeat occurs only when home health reaches zero.
 - Browser build and end-to-end manual playthrough have not yet been verified in this development session.
 - Therefore **Phase 1 remains IN PROGRESS**. Next: verify the wave/result flow in a real browser, validate objective breach/health behavior, finish the remaining screen flow, run the build, and complete the victory/defeat/restart playthrough matrix.
 
