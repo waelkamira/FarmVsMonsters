@@ -241,8 +241,8 @@ export default class BattleScene extends Scene {
     });
     this.refreshHud();
     this.setMessage(this.textures.exists("farm-battlefield")
-      ? "Choose Radish to defend or Mushroom to produce energy, then click an empty soil cell."
-      : "Temporary farm art active. Choose Radish or Mushroom, then click an empty soil cell.");
+      ? "Choose a plant card, then click an empty soil cell. Tomato and Onion attack; Pumpkin blocks."
+      : "Temporary farm art active. Choose a plant card, then click an empty soil cell.");
   }
 
   drawField() {
@@ -2775,9 +2775,8 @@ export default class BattleScene extends Scene {
           monster.voiceCooldown = PhaserMath.Between(6500, 12500);
         }
       }
-      // Only living Radish defenders block a monster's lane.
-      // Energy Mushrooms are resource producers, not defensive targets:
-      // monsters pass them and continue toward the next Radish or the farm.
+      // Radish and Pumpkin plants block their own lane. Resource producers
+      // and ranged attackers are passed by monsters.
       const blocker = selectLaneBlocker({
         plants: this.plants.map((plant) => ({
           plant,
@@ -3183,7 +3182,14 @@ export default class BattleScene extends Scene {
     if (!plant.alive) return;
     plant.alive = false; plant.view.destroy();
     if (plant.energyCounter) plant.energyCounter.destroy();
-    this.setMessage(plant.type === "mushroom" ? "An energy mushroom has been eaten!" : "A radish defender has fallen!");
+    const defeatedMessages = {
+      mushroom: "An energy mushroom has been eaten!",
+      radish: "A radish defender has fallen!",
+      tomato: "The tomato plant has been eaten!",
+      pumpkin: "The pumpkin guard has been destroyed!",
+      onion: "The onion plant has been eaten!"
+    };
+    this.setMessage(defeatedMessages[plant.type] || "A plant has been destroyed!");
     this.updateEmergencyMode();
   }
 
