@@ -154,7 +154,12 @@ These are approved constraints unless the user explicitly changes them.
 - Hyenas stop at a living plant and eat it. They must not pass through or stand on top of the plant while eating. Jumping over plants is a possible future mechanic for a specifically designed later enemy/level, not part of the current behavior.
 - Do not add shadows beneath any character.
 - No permanent procedural fallback characters in place of missing authored monster artwork. Missing critical art should produce a clear diagnostic/loading state, not a different character.
-- First campaign wave schedule currently defined as 10 / 15 / 20 / 25 / 30 monsters (100 total). Victory only after all scheduled monsters have spawned and every living monster is defeated. Defeat occurs when farmhouse health reaches zero.
+- The existing prototype currently uses five waves and 100 monsters (10 / 15 / 20 / 25 / 30), but this is an implementation baseline—not a locked design target. Rebalance the first stage to a forgiving, teachable curve; reduce enemy volume and/or pressure where playtesting shows that one Radish and the current resource support cannot reasonably defend the farm. Do not preserve 100 merely to satisfy an old counter.
+- Difficulty must rise gradually across waves and stages. Early encounters use fewer, slower, less durable enemies, generous recovery windows, and clear teaching moments. Add pressure through carefully introduced enemy combinations and timing only after the player has learned the relevant response. Avoid sudden difficulty spikes and immediate unavoidable losses.
+- At the start of the final wave of Stage 1 (Wave 5 in the current five-wave structure), the small dragon begins appearing while a small number of ordinary monsters/hyenas may still remain. The dragon moves behind the battlefield, shifts left and right, and launches clearly telegraphed fireballs. The ordinary followers continue fighting; after they are defeated, the dragon remains as the final boss.
+- Once the dragon is present and within attack range, the farmer automatically uses the slingshot to throw stones at it. This automatic ranged attack is dragon-phase-only; do not use the slingshot before the dragon appears. The user will supply the dragon character sheet later; do not invent or substitute final dragon artwork.
+- Stage 1 uses a normal small dragon, not a dragon on a wooden cart. The cart-and-two-hyena presentation is reserved for a later, stronger dragon stage.
+- Victory only after all required ordinary followers and the dragon are defeated. Defeat occurs when farmhouse health reaches zero.
 - Restart must reset all battle entities, timers, counters, projectiles, input locks, audio state, and result flags.
 
 ### Signature victory ritual: the treasure cave (approved concept)
@@ -223,7 +228,9 @@ Scope:
 7. Verify that hyenas stop at plants, never overlap/pass them while eating, damage the plant over time, play the eating sound, and resume movement only after the plant is destroyed.
 8. Verify monster variants and size/health/damage/speed relationships without unintended scale changes during animations.
 9. Verify emergency club combat starts only when no living defensive plant remains and stops immediately after a new defender is planted.
-10. Verify all five waves, exact total of 100 monsters, spawn pacing, wave counters, home damage, victory and defeat conditions.
+10. Verify the five-wave structure with a rebalanced, forgiving enemy count and spawn pacing; do not treat 100 monsters as mandatory. Verify wave counters, home damage, and victory/defeat conditions.
+11. Integrate the Stage 1 dragon into the final wave: it appears at Wave 5 start while a few followers may remain, moves behind the battlefield, attacks with telegraphed fireballs, and remains as the final boss after its followers are defeated.
+12. Verify the farmer's automatic slingshot attack begins only after the dragon appears and only while it is in range. The user supplies the dragon character sheet later; until then, do not fabricate final dragon art.
 11. Verify Pause truly freezes timers, movement, attacks, spawns, projectiles, and relevant audio; Resume does not jump timers or duplicate sound.
 12. Verify complete restart cleanup and no duplicate listeners, stale callbacks, or entities.
 13. Verify all key sounds and actual volume sliders.
@@ -257,7 +264,7 @@ Exit gate:
 Work:
 - Tune farmer speed, planting timing, plant durability/attack cadence, projectile speed, monster speed/damage/health, bite timing, and home durability.
 - Tune wave pacing so each wave has a readable rhythm: introduction, pressure, short relief, escalation.
-- After the core battle gate is closed, extend the first playable encounter into the first complete story stage: introduce one distinct dragon and the captive wife, integrate the dragon as a boss threat after/alongside the monster waves, and require the dragon plus its remaining followers to be defeated before triggering the rescue.
+- Stage 1's dragon, captive-wife presentation, automatic slingshot counter, and rescue ending are part of the first complete Phase 1 playable slice—not a later phase. Phase 2 may polish their feel and balance, but must not postpone their initial implementation.
 - Build the first rescue ending: release the wife, show a short farmer-wife reunion and celebration, present the stage result, then run the treasure-cave reward ritual. Give the player a deliberate quiet interval before the next-stage reveal.
 - Keep the current five waves / 100 monsters as the first battle's existing wave structure; they are not five campaign stages. The dragon/rescue layer is a planned story-stage extension, not a reason to mislabel the existing prototype as a complete campaign stage.
 - Improve hit reactions, eating feedback, projectile impacts, death, reward collection, wave transition, victory, and defeat.
@@ -267,6 +274,8 @@ Work:
 - Design the post-stage treasure-cave victory ritual: farmer carries the earned gold sack on his shoulder, walks to the cave, the entrance opens with “Open Sesame” / «افتح يا سمسم», deposits the reward, and the accumulated wealth counter updates. Use temporary neutral presentation only until the user supplies the cave art; do not fabricate final cave assets.
 - Define the reward ledger and decide whether the cave displays spendable Coins or a separate lifetime-wealth total. Ensure exact-once reward credit and prevent duplicate deposits on replay/retry.
 - Add difficulty options only if testing demonstrates a need; keep the intended default balanced.
+- Do not add further plant types until the battlefield environment, stage composition, gameplay controls/buttons, menus, and HUD visual language have been approved. Keep the currently approved starter plant/resource setup while those foundations are finalized; later plant additions must be introduced gradually with clear tutorials and matching enemy counters.
+- Give every campaign stage its own distinctive illustrated emblem/logo that communicates its central conflict and cast (for Stage 1: farmer versus dragon, the captive wife centered behind them, small menacing hyenas, and defensive plants).
 
 Exit gate:
 - New players can explain the objective and perform the core actions without coaching.
