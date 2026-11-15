@@ -6,7 +6,6 @@ import {
   PHASE_ONE_WAVE_SIZES,
   PHASE_ONE_TOTAL_MONSTERS,
   INITIAL_ENERGY,
-  MONSTER_KILL_COIN_REWARD,
   MUSHROOM_PICKUP_TTL_MS,
   loadSavedCoins,
   saveCoins,
@@ -18,6 +17,13 @@ import {
   unlockNextStage,
   monsterArchetypeFor as resolveMonsterArchetype
 } from "../rules/phaseOneRules.mjs";
+import {
+  PHASE_ONE_DRAGON,
+  PHASE_ONE_PLANTS,
+  PHASE_ONE_REWARDS,
+  getMonsterCombatStats,
+  getStonehideIncomingDamageMultiplier
+} from "../rules/phaseOneCombatContract.mjs";
 
 const LANES = gridCalibration.grid.rows;
 const COLUMNS = gridCalibration.grid.columns;
@@ -39,17 +45,6 @@ const MONSTER_TIER_TINTS = {
 const HOME_LOCAL_X = -300;
 const CAVEMAN_RETURN_SPEED = 420;
 const SPAWN_LOCAL_X = GRID_WIDTH / 2 + 28;
-
-// Central combat balance table. Monster durability is expressed in standard radish hits when possible.
-const COMBAT_BALANCE = {
-  plants: { radish: { projectileDamage: 25 } },
-  monsters: {
-    "cave-brute": { hitsToDefeat: 7 },
-    "dust-skitter": { hpMultiplier: 0.52 },
-    "stonehide": { hpMultiplier: 2.2 },
-    "alpha-brute": { hitsToDefeat: 14 }
-  }
-};
 
 export default class BattleScene extends Scene {
   constructor() { super("BattleScene"); }
@@ -846,8 +841,8 @@ export default class BattleScene extends Scene {
     this.caveman.scaleX = 1;
     this.createPrincessActor();
     this.dragonBoss = {
-      hp: 750, maxHp: 750, alive: true,
-      attackCooldown: 2800, shotCooldown: 850, sprite: null
+      hp: PHASE_ONE_DRAGON.maxHp, maxHp: PHASE_ONE_DRAGON.maxHp, alive: true,
+      attackCooldown: 2800, shotCooldown: PHASE_ONE_DRAGON.farmerSlingIntervalMs - 50, sprite: null
     };
     if (this.textures.exists("dragon-boss")) {
       const texture = this.textures.get("dragon-boss");
@@ -917,14 +912,14 @@ export default class BattleScene extends Scene {
         ease: "Quad.easeIn",
         onComplete: () => {
           if (stone.active) stone.destroy();
-          if (boss.alive && !this.gameOver) this.damageDragonBoss(25);
+          if (boss.alive && !this.gameOver) this.damageDragonBoss(PHASE_ONE_DRAGON.farmerSlingDamage);
         }
       });
     }
 
     boss.attackCooldown -= delta;
     if (boss.attackCooldown <= 0) {
-      boss.attackCooldown = 3900;
+      boss.attackCooldown = PHASE_ONE_DRAGON.attackIntervalMs;
       const targetPlant = this.plants.filter((plant) => plant.alive)
         .sort((a, b) => a.hp - b.hp)[0];
       const targetX = targetPlant ? targetPlant.x : 92;
@@ -933,16 +928,16 @@ export default class BattleScene extends Scene {
         .setStrokeStyle(3, 0xffd16c, 1).setDepth(53);
       this.tweens.add({
         targets: fireball, x: targetX, y: targetY, scale: 1.45,
-        duration: 1050, ease: "Quad.easeIn",
+        duration: PHASE_ONE_DRAGON.fireballTravelMs, ease: "Quad.easeIn",
         onComplete: () => {
           if (fireball.active) fireball.destroy();
           if (this.gameOver || this.storySequenceActive || this.collectionMenuOpen) return;
           if (targetPlant?.alive) {
-            targetPlant.hp -= 55;
+            targetPlant.hp -= PHASE_ONE_DRAGON.fireballDamageToPlant;
             this.flashEatenPlant(targetPlant);
             if (targetPlant.hp <= 0) this.destroyPlant(targetPlant);
           } else {
-            this.houseHealth = Math.max(0, this.houseHealth - 12);
+            this.houseHealth = Math.max(0, this.houseHealth - PHASE_ONE_DRAGON.fireballDamageToFarm);
             if (this.houseHealth <= 0) this.endGame(false);
             this.refreshHud();
           }
@@ -2208,7 +2203,7 @@ export default class BattleScene extends Scene {
     });
 
     this.projectiles.push({
-      view, localX, row, verticalOffset, speed: 320, damage: COMBAT_BALANCE.plants.radish.projectileDamage, alive: true, trailTimer: 0
+      view, localX, row, verticalOffset, speed: 320, damage: PHASE_ONE_PLANTS.radish.projectileDamage, alive: true, trailTimer: 0
     });
     this.playThornSound();
   }
@@ -2410,39 +2405,9 @@ export default class BattleScene extends Scene {
     const row = PhaserMath.Between(0, LANES - 1);
     const spawnIndex = this.spawnedThisWave;
     const archetype = this.monsterArchetypeFor(spawnIndex);
-    const profiles = {
-      "cave-brute": {
-        speedMultiplier: 1, maxSpeed: 30,
-        plantDamage: 16, attackInterval: 1150, incomingDamage: 1,
-        widthScale: 1, heightScale: 1, wobbleDuration: 520
-      },
-      "dust-skitter": {
-        // Small scouts have roughly half the standard durability, but use
-        // frequent speed bursts to slip through gaps in the defense.
-        speedMultiplier: 1.7, maxSpeed: 36,
-        plantDamage: 8, attackInterval: 850, incomingDamage: 1,
-        widthScale: 0.62, heightScale: 0.68, wobbleDuration: 350
-      },
-      "stonehide": {
-        speedMultiplier: 0.62, maxSpeed: 19,
-        plantDamage: 23, attackInterval: 1450, incomingDamage: 0.7,
-        widthScale: 1.35, heightScale: 1.3, wobbleDuration: 760
-      },
-      "alpha-brute": {
-        // A rare giant: exactly double the normal creature's visual scale
-        // and twice its standard radish-hit durability.
-        speedMultiplier: 0.48, maxSpeed: 15,
-        plantDamage: 32, attackInterval: 1350, incomingDamage: 0.85,
-        widthScale: 2, heightScale: 2, wobbleDuration: 900
-      }
-    };
-    const profile = profiles[archetype];
-    const durability = COMBAT_BALANCE.monsters[archetype];
-    const hp = durability.hitsToDefeat
-      ? COMBAT_BALANCE.plants.radish.projectileDamage * durability.hitsToDefeat
-      : Math.round((65 + Math.floor(this.wave * 4)) * durability.hpMultiplier);
-    const baseSpeed = Math.min(30, 8 + (this.wave - 1) * 1.35);
-    const speed = Math.min(profile.maxSpeed, baseSpeed * profile.speedMultiplier);
+    const profile = getMonsterCombatStats(archetype, this.wave);
+    const hp = profile.hp;
+    const speed = profile.speed;
     const spawn = this.monsterLanePoint(SPAWN_LOCAL_X, row);
     const view = this.add.container(spawn.x, spawn.y).setDepth(10 + spawn.y / 1000);
 
@@ -2566,7 +2531,7 @@ export default class BattleScene extends Scene {
     view.setDepth(8);
     this.tweens.add({
       targets: view, angle: { from: -2.5, to: 2.5 },
-      duration: profile.wobbleDuration, ease: "Sine.easeInOut",
+      duration: profile.wobbleDurationMs, ease: "Sine.easeInOut",
       yoyo: true, repeat: -1
     });
 
@@ -2585,8 +2550,8 @@ export default class BattleScene extends Scene {
       heightScale: profile.heightScale,
       speed,
       plantDamage: profile.plantDamage,
-      attackInterval: profile.attackInterval,
-      incomingDamageMultiplier: profile.incomingDamage,
+      attackInterval: profile.attackIntervalMs,
+      incomingDamageMultiplier: profile.incomingDamageMultiplier,
       // The skitter alternates normal movement with short, readable bursts.
       burstCooldown: archetype === "dust-skitter" ? PhaserMath.Between(1500, 2300) : 0,
       burstRemaining: 0,
@@ -2830,7 +2795,7 @@ export default class BattleScene extends Scene {
     const armorMultiplier = monster.incomingDamageMultiplier || 1;
     // Bracing cuts a further 45% from incoming hits, but only while the
     // Stonehide is stationary and actively biting a plant.
-    return monster.braced ? armorMultiplier * 0.55 : armorMultiplier;
+    return monster.kind === 'stonehide' ? getStonehideIncomingDamageMultiplier(monster.braced) : armorMultiplier;
   }
 
   flashMonsterOnHit(monster) {
@@ -2909,7 +2874,7 @@ export default class BattleScene extends Scene {
         monster.view.destroy(true);
       }
     }
-    this.coins += MONSTER_KILL_COIN_REWARD;
+    this.coins += PHASE_ONE_REWARDS.ordinaryMonsterDefeatCoins;
     this.registry.set("coins", this.coins);
     try {
       saveCoins(window.localStorage, this.coins);
