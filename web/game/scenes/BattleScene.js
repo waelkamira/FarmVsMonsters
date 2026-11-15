@@ -3055,7 +3055,9 @@ export default class BattleScene extends Scene {
     const sprite = monster.hyenaSprite;
     if (sprite?.active) {
       monster.hitAnimUntil = this.time.now + 260;
-      this.playHyenaAnimation(monster, "hyena-hit", true);
+      // The authored hit sheet has an upward hop; use the grounded idle pose
+      // and communicate impact with tint + a brief horizontal recoil instead.
+      this.playHyenaAnimation(monster, "hyena-idle", true);
       sprite.setTint(0xffcf70);
       this.tweens.killTweensOf(sprite);
       const baseX = Number.isFinite(monster.hitRecoilBaseX) ? monster.hitRecoilBaseX : sprite.x;
