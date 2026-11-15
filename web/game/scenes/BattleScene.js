@@ -506,8 +506,8 @@ export default class BattleScene extends Scene {
 
     this.messageText = this.add.text(560, 574, "", {
       fontFamily: "Arial", fontSize: "16px", color: "#ffffff", fontStyle: "bold",
-      backgroundColor: "#315b91", padding: { x: 16, y: 7 }, align: "center",
-      stroke: "#17213d", strokeThickness: 4, resolution: 2
+      backgroundColor: "rgba(49,91,145,0.68)", padding: { x: 16, y: 7 }, align: "center",
+      stroke: "#24365d", strokeThickness: 3, resolution: 2
     }).setOrigin(0.5, 1).setDepth(42);
   }
 
