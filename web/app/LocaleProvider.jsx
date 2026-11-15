@@ -82,7 +82,7 @@ export function translate(value, locale = "ar") {
     return "جمعت " + value.slice(10, -" mushroom energy!".length) + " من طاقة الفطر!";
   }
   if (value.startsWith("Wave ") && value.includes(" cleared. Wave ")) {
-    const match = value.match(/^Wave (\\d+) cleared\\. Wave (\\d+) is gathering: (\\d+) monsters incoming\\.$/);
+    const match = value.match(/^Wave (\d+) cleared\. Wave (\d+) is gathering: (\d+) monsters incoming\.$/);
     if (match) return "اكتملت الموجة " + match[1] + ". الموجة " + match[2] + " قادمة وبها " + match[3] + " وحشاً.";
   }
   if (value.startsWith("Not enough energy to plant ")) return value.includes("Mushroom") ? "الطاقة غير كافية لزراعة فطر الطاقة." : "الطاقة غير كافية لزراعة الفجل.";
