@@ -91,6 +91,9 @@ export default class BattleScene extends Scene {
     this.load.spritesheet("hyena-bite", "/assets/characters/monsters/hyena/hyena-bite.png", { frameWidth: 360, frameHeight: 298 });
     this.load.spritesheet("hyena-hit", "/assets/characters/monsters/hyena/hyena-hit.png", { frameWidth: 360, frameHeight: 894 });
     this.load.spritesheet("hyena-death", "/assets/characters/monsters/hyena/hyena-death.png", { frameWidth: 360, frameHeight: 447 });
+    // The jump sheet has two different row layouts, so register it as an image
+    // and add its eight frames with explicit source rectangles below.
+    this.load.image("hyena-jump", "/assets/characters/monsters/hyena/hyena-jump.png");
     for (const asset of soundAssets.assets) {
       this.load.audio(asset.key, asset.path);
     }
@@ -2366,6 +2369,27 @@ export default class BattleScene extends Scene {
         });
       }
 
+      // Jump is an optional authored animation with five 216x447 frames on
+      // row one and three 360x447 frames on row two. Keep its irregular grid
+      // intact rather than forcing Phaser to slice it into equal cells.
+      if (this.textures.exists("hyena-jump")) {
+        const jumpTexture = this.textures.get("hyena-jump");
+        const jumpFrames = [
+          ...Array.from({ length: 5 }, (_, i) => ({ x: i * 216, y: 0, width: 216, height: 447 })),
+          ...Array.from({ length: 3 }, (_, i) => ({ x: i * 360, y: 447, width: 360, height: 447 }))
+        ];
+        jumpFrames.forEach((frame, index) => {
+          jumpTexture.add(String(index), 0, frame.x, frame.y, frame.width, frame.height);
+        });
+        if (this.anims.exists("hyena-jump")) this.anims.remove("hyena-jump");
+        this.anims.create({
+          key: "hyena-jump",
+          frames: jumpFrames.map((_, index) => ({ key: "hyena-jump", frame: String(index) })),
+          frameRate: 10,
+          repeat: 0
+        });
+      }
+
       return true;
     } catch (error) {
       console.error("Required hyena artwork is unavailable; refusing to replace it with vector monsters.", error);
@@ -2567,6 +2591,12 @@ export default class BattleScene extends Scene {
       // The skitter alternates normal movement with short, readable bursts.
       burstCooldown: archetype === "dust-skitter" ? PhaserMath.Between(1500, 2300) : 0,
       burstRemaining: 0,
+      // Dust Skitters occasionally hop; this is purely visual and never
+      // changes their lane, collision position, or ability to be hit.
+      jumpCooldown: archetype === "dust-skitter" ? PhaserMath.Between(1100, 2600) : 0,
+      jumpDuration: 560,
+      jumpElapsed: 0,
+      isJumping: false,
       braced: false,
       braceCue,
       maxHp: hp,
@@ -2650,6 +2680,11 @@ export default class BattleScene extends Scene {
       }
 
       if (withinBiteRange) {
+        if (monster.isJumping) {
+          monster.isJumping = false;
+          monster.jumpElapsed = 0;
+          if (monster.hyenaSprite?.active) monster.hyenaSprite.y = 0;
+        }
         // Keep the hyena fixed at the plant while its authored bite cycle loops.
         // The bite sheet animates the mouth/body (including the legs); movement
         // coordinates are deliberately not advanced anywhere in this branch.
@@ -2677,7 +2712,28 @@ export default class BattleScene extends Scene {
       }
 
       let movementSpeed = monster.speed;
+      let jumpOffset = 0;
       if (monster.kind === "dust-skitter") {
+        monster.jumpCooldown -= delta;
+        if (!monster.isJumping && monster.jumpCooldown <= 0) {
+          monster.isJumping = true;
+          monster.jumpElapsed = 0;
+          monster.jumpDuration = PhaserMath.Between(480, 620);
+          this.createFootstepDust(monster.x - 8, monster.y + 3, monster.view.scaleY);
+        }
+        if (monster.isJumping) {
+          monster.jumpElapsed += delta;
+          const progress = PhaserMath.Clamp(monster.jumpElapsed / monster.jumpDuration, 0, 1);
+          jumpOffset = -Math.sin(progress * Math.PI) * 34 * monster.view.scaleY;
+          movementSpeed *= 1.12;
+          if (progress >= 1) {
+            monster.isJumping = false;
+            monster.jumpElapsed = 0;
+            monster.jumpCooldown = PhaserMath.Between(2100, 3400);
+            this.createFootstepDust(monster.x + 8, monster.y + 3, monster.view.scaleY);
+            jumpOffset = 0;
+          }
+        }
         monster.burstCooldown -= delta;
         if (monster.burstCooldown <= 0 && monster.burstRemaining <= 0) {
           monster.burstRemaining = 420;
@@ -2702,10 +2758,13 @@ export default class BattleScene extends Scene {
       const position = this.monsterLanePoint(monster.localX, monster.row);
       monster.x = position.x; monster.y = position.y;
       monster.view.setPosition(position.x, position.y);
+      if (monster.hyenaSprite?.active) monster.hyenaSprite.y = jumpOffset;
       if (monster.hyenaSprite && monster.hitAnimUntil <= this.time.now) {
-        const movementAnimation = monster.kind === "dust-skitter" && monster.burstRemaining > 0
-          ? "hyena-run"
-          : "hyena-walk";
+        const movementAnimation = monster.isJumping
+          ? "hyena-jump"
+          : monster.kind === "dust-skitter" && monster.burstRemaining > 0
+            ? "hyena-run"
+            : "hyena-walk";
         this.playHyenaAnimation(monster, movementAnimation);
       }
       monster.dustTimer -= dt * 1000;
@@ -2784,6 +2843,8 @@ export default class BattleScene extends Scene {
     // collision lane, and movement progress remain untouched.
     const sprite = monster.hyenaSprite;
     if (sprite?.active) {
+      monster.hitAnimUntil = this.time.now + 260;
+      this.playHyenaAnimation(monster, "hyena-hit", true);
       sprite.setTint(0xffcf70);
       this.tweens.killTweensOf(sprite);
       const baseX = Number.isFinite(monster.hitRecoilBaseX) ? monster.hitRecoilBaseX : sprite.x;
