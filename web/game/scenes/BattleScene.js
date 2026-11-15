@@ -1046,6 +1046,63 @@ export default class BattleScene extends Scene {
     }
   }
 
+  playHyenaVoice(kind = "growl", intensity = 1) {
+    // Original procedural cartoon animal vocals: generated with Web Audio,
+    // so the game ships no third-party recordings or restrictive audio files.
+    const context = this.sound && this.sound.context;
+    if (!context || context.state !== "running" || typeof context.createOscillator !== "function") return false;
+    if (this.effectsVolume <= 0) return false;
+
+    const now = context.currentTime;
+    const master = context.createGain();
+    master.gain.setValueAtTime(0.0001, now);
+    master.gain.linearRampToValueAtTime(
+      PhaserMath.Clamp((this.effectsVolume / 100) * intensity * 0.34, 0, 0.34),
+      now + 0.018
+    );
+    master.connect(context.destination);
+
+    const addTone = (startFrequency, endFrequency, duration, waveform = "sawtooth", offset = 0, level = 0.42) => {
+      const oscillator = context.createOscillator();
+      const gain = context.createGain();
+      oscillator.type = waveform;
+      oscillator.frequency.setValueAtTime(startFrequency, now + offset);
+      oscillator.frequency.exponentialRampToValueAtTime(Math.max(35, endFrequency), now + offset + duration);
+      gain.gain.setValueAtTime(0.0001, now + offset);
+      gain.gain.linearRampToValueAtTime(level, now + offset + 0.018);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + offset + duration);
+      oscillator.connect(gain);
+      gain.connect(master);
+      oscillator.start(now + offset);
+      oscillator.stop(now + offset + duration + 0.025);
+    };
+
+    if (kind === "laugh") {
+      // Three quick, pitch-bending cackles with a bright, silly nasal tone.
+      [0, 0.16, 0.34].forEach((offset, index) => {
+        addTone(610 - index * 65, 390 + index * 24, 0.19, "square", offset, 0.34);
+        addTone(1220 - index * 110, 760, 0.13, "triangle", offset + 0.015, 0.10);
+      });
+      master.gain.setValueAtTime(0.0001, now + 0.68);
+    } else if (kind === "yelp") {
+      // A short upward squeak followed by a falling, soft whimper.
+      addTone(760, 310, 0.24, "triangle", 0, 0.52);
+      addTone(420, 190, 0.28, "sine", 0.19, 0.25);
+      master.gain.setValueAtTime(0.0001, now + 0.52);
+    } else if (kind === "bite") {
+      // A playful low chomp with a tiny high-frequency snap.
+      addTone(250, 78, 0.16, "sawtooth", 0, 0.40);
+      addTone(1250, 420, 0.055, "square", 0, 0.13);
+      master.gain.setValueAtTime(0.0001, now + 0.21);
+    } else {
+      // A short, rounded growl with two wobbling harmonics.
+      addTone(145, 78, 0.42, "sawtooth", 0, 0.40);
+      addTone(292, 156, 0.34, "triangle", 0.025, 0.18);
+      master.gain.setValueAtTime(0.0001, now + 0.46);
+    }
+    return true;
+  }
+
   playPlantSound() {
     this.playSfx("sfx-plant-dig", this.effectsVolume * 0.78, 120);
   }
@@ -1055,7 +1112,8 @@ export default class BattleScene extends Scene {
   }
 
   playMonsterBiteSound() {
-    this.playSfx("sfx-monster-bite", this.effectsVolume * 0.72, 220);
+    this.playSfx("sfx-monster-bite", this.effectsVolume * 0.54, 220);
+    this.playHyenaVoice("bite", 0.9);
   }
 
   playThornSound() {
@@ -1063,7 +1121,7 @@ export default class BattleScene extends Scene {
   }
 
   playMonsterHitSound() {
-    this.playSfx("sfx-monster-hit", this.effectsVolume * 0.72, 70);
+    this.playSfx("sfx-monster-hit", this.effectsVolume * 0.58, 70);
   }
 
   playThornImpactSound() {
@@ -2105,6 +2163,7 @@ export default class BattleScene extends Scene {
     if (!monster || !monster.alive || amount <= 0) return;
     monster.hp = Math.max(0, monster.hp - amount);
     this.playMonsterHitSound();
+    if (monster.hyenaSprite) this.playHyenaVoice("yelp", 0.82);
     this.flashMonsterOnHit(monster);
     this.damageMonsterIfNeeded(monster);
   }
@@ -2118,6 +2177,7 @@ export default class BattleScene extends Scene {
     }
     this.createMonsterDefeatBurst(monster.x, monster.y, monster.view && monster.view.scaleY);
     this.playMonsterDefeatSound();
+    if (monster.hyenaSprite) this.playHyenaVoice("laugh", 0.88);
     this.playCoinRewardSound();
     // Play the authored death sequence before removing the creature. The
     // reward and wave counters are still granted immediately and exactly once.
