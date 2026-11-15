@@ -94,3 +94,49 @@ Keep original ZIPs and license/source notices outside runtime folders (for examp
 ## Current implementation note
 
 The current catalog thumbnail component still uses Twemoji as a temporary fallback. This document does not claim that external packs have been downloaded or imported. Binary assets must be downloaded, visually inspected, and committed before changing runtime paths away from the current fallback.
+
+
+## Pinterest visual-reference board (inspiration only)
+
+Pinterest is the preferred discovery/mood-board source, not an automatic asset license. Pins may be reposts or copyrighted previews. Do not copy a Pin image into the game unless the Pin links to the original creator/source and that source explicitly permits the intended commercial use.
+
+Useful Pinterest searches to review and match the chosen direction:
+- 2D cartoon fantasy game UI: https://www.pinterest.com/search/pins/?q=2d%20cartoon%20fantasy%20game%20ui
+- Colorful casual game buttons and panels: https://www.pinterest.com/search/pins/?q=colorful%20cartoon%20game%20buttons%20panels
+- Cute plant monster character design: https://www.pinterest.com/search/pins/?q=cute%20plant%20monster%20character%20design
+- Cartoon tower-defense enemy sprites: https://www.pinterest.com/search/pins/?q=cartoon%20tower%20defense%20enemy%20sprites
+- Fantasy game HUD and menu design: https://www.pinterest.com/search/pins/?q=fantasy%20game%20hud%20menu%20design
+
+Visual direction observed in the reference search:
+- Rounded, glossy, saturated buttons with clear pressed states.
+- Panels and icons with a shared outline, highlights, and dimensional shading.
+- Plant/leaf motifs can appear as small accents, but avoid wood/brown as the dominant surface.
+- Use bright green, lime, cyan, violet, coral, and gold; keep all interface text white.
+- The final in-game interface must be redrawn/rebuilt as a consistent local asset set, not a collage of unrelated Pin images.
+
+## Additional verified candidate sources
+
+### Cartoon UI
+- Kenney UI Pack on OpenGameArt: 430+ separate PNG sprites, sprite sheets, vector files and fonts; CC0.
+  - https://opengameart.org/content/ui-pack
+- Kenney UI Pack Adventure: 130 UI elements; CC0.
+  - https://kenney.nl/assets/ui-pack-adventure
+- OpenGameArt Game Button Pack: 40+ cute/kawaii/casual buttons, vector and transparent PNG formats; CC0.
+  - https://opengameart.org/content/game-button-pack
+- Free Fantasy Game GUI by pzUH: level selection, pause menu, settings, bars and icons; check individual download/license terms before shipping.
+  - https://pzuh.itch.io/free-fantasy-game-gui
+- Cartoon Fantasy RPG UI Kit by Arsly: layered PSD with panels, buttons and icons; name-your-price download, verify current terms at checkout.
+  - https://arsly.itch.io/rpg-ui-kit
+
+### Character artwork
+- OpenGameArt Plant Monster sheets: CC0, transparent PNGs, but the page notes only a very small number of animation frames; use as reference/portrait art only unless a full animation is authored.
+  - https://opengameart.org/content/bevouliin-free-sprite-sheets-plant-monster
+- OpenGameArt Walking Monster sheets: CC0 transparent PNGs; inspect exact frames and art style before use.
+  - https://opengameart.org/content/bevouliin-free-walking-monster-sprite-sheets
+- SpriteCanvas monster pack: four CC0 animated monsters with five states each, transparent PNG sheets and JSON atlases; actual frame counts vary and do not automatically meet the 24-frame target.
+  - https://spritecanvas.itch.io/free-cc0-monster-sprites
+
+Pinterest inspiration examples discovered:
+- Jungle game interface mega set: https://vectorelements.net/objects/6414-jungle-game-interface-mega-set.html (wood-heavy; reference for component variety only, not chosen palette).
+- Fantasy game button maker: https://www.behance.net/gallery/45387303/Fantasy-Game-Button-Maker (reference for colorful button silhouettes; verify creator licensing before reuse).
+- Bounceville Stories UI: https://www.behance.net/gallery/157357989/Bounceville-Stories-UI-%28Appyfurious%29 (reference for bright, rounded, glossy controls; not a redistribution source).
