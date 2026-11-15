@@ -1,5 +1,6 @@
 import { resolvePlantPlacement, resolvePlantUproot, resolveEnergyPickup } from "./combatSimulation.mjs";
-import { PHASE_ONE_ENERGY, PHASE_ONE_PLANTS, PHASE_ONE_COMBAT_CONTRACT_VERSION } from "./phaseOneCombatContract.mjs";
+import { PHASE_ONE_ENERGY, PHASE_ONE_PLANTS, PHASE_ONE_COMBAT_CONTRACT_VERSION, PHASE_ONE_WAVE_SIZES, getMonsterCombatStats } from "./phaseOneCombatContract.mjs";
+import { resolveMonsterArchetype } from "./combatSimulation.mjs";
 import { validateCombatEventLog } from "./combatEventLog.mjs";
 
 export const PHASE_ONE_RULES_VERSION = `phase-one-v${PHASE_ONE_COMBAT_CONTRACT_VERSION}`;
@@ -7,7 +8,7 @@ const MUSHROOM_INTERVAL = PHASE_ONE_PLANTS.energyMushroom.productionIntervalMs;
 const MUSHROOM_VALUE = PHASE_ONE_PLANTS.energyMushroom.energyPerPickup;
 const MUSHROOM_PICKUP_TTL_MS = PHASE_ONE_PLANTS.energyMushroom.pickupTtlMs;
 export function createCombatReplayState() {
-  return Object.freeze({ energy: PHASE_ONE_ENERGY.initial, plants: Object.freeze([]), pickups: Object.freeze([]), nextPickupSequence: 1, appliedEvents: 0, lastTick: 0 });
+  return Object.freeze({ energy: PHASE_ONE_ENERGY.initial, plants: Object.freeze([]), pickups: Object.freeze([]), monsters: Object.freeze([]), nextMonsterSequence: 1, currentWave: 1, spawnedInWave: 0, nextPickupSequence: 1, appliedEvents: 0, lastTick: 0 });
 }
 function fail(state, reason, event = null) { return Object.freeze({ ok: false, reason, state, eventSequence: event?.sequence ?? null }); }
 function overdueMushroom(state, tick, exceptPlant = null) {
@@ -49,6 +50,36 @@ export function applyCombatReplayEvent(state, event) {
     plants[index] = Object.freeze({ ...plant, productionCount: plant.productionCount + 1, nextProductionAt: plant.nextProductionAt + MUSHROOM_INTERVAL });
     const pickup = Object.freeze({ id: expectedId, sourceCol: plant.col, sourceRow: plant.row, amount: MUSHROOM_VALUE, spawnedAt: event.tick, expiresAt: event.tick + MUSHROOM_PICKUP_TTL_MS });
     return nextState(state, event, { plants: Object.freeze(plants), pickups: Object.freeze([...state.pickups, pickup]), nextPickupSequence: state.nextPickupSequence + 1 });
+  }
+  if (event.type === "monster_spawned") {
+    const payload = event.payload ?? {};
+    const waveSize = PHASE_ONE_WAVE_SIZES[state.currentWave - 1];
+    if (payload.monsterId !== `monster-${state.nextMonsterSequence}` || payload.wave !== state.currentWave || payload.spawnIndex !== state.spawnedInWave || payload.spawnIndex >= waveSize) return fail(state, "INVALID_MONSTER_WAVE_SEQUENCE", event);
+    if (payload.archetype !== resolveMonsterArchetype(payload.wave, payload.spawnIndex)) return fail(state, "INVALID_MONSTER_ARCHETYPE", event);
+    let profile;
+    try { profile = getMonsterCombatStats(payload.archetype, payload.wave); } catch { return fail(state, "INVALID_MONSTER_PROFILE", event); }
+    if (payload.hp !== profile.hp || payload.speed !== profile.speed) return fail(state, "MONSTER_STATS_MISMATCH", event);
+    const monster = Object.freeze({ id: payload.monsterId, wave: payload.wave, spawnIndex: payload.spawnIndex, row: payload.row, archetype: payload.archetype, hp: profile.hp, maxHp: profile.hp, speed: profile.speed, plantDamage: profile.plantDamage, attackIntervalMs: profile.attackIntervalMs, lastBiteAt: null, alive: true });
+    const spawnedInWave = state.spawnedInWave + 1;
+    const waveFinished = spawnedInWave === waveSize;
+    return nextState(state, event, { monsters: Object.freeze([...state.monsters, monster]), nextMonsterSequence: state.nextMonsterSequence + 1, currentWave: waveFinished ? state.currentWave + 1 : state.currentWave, spawnedInWave: waveFinished ? 0 : spawnedInWave });
+  }
+  if (event.type === "monster_bite") {
+    const payload = event.payload ?? {};
+    const monsterIndex = state.monsters.findIndex((monster) => monster.id === payload.monsterId && monster.alive);
+    const plantIndex = state.plants.findIndex((plant) => plant.alive && plant.type === "radish" && plant.col === payload.plantCol && plant.row === payload.plantRow);
+    if (monsterIndex < 0) return fail(state, "MONSTER_NOT_ALIVE", event);
+    if (plantIndex < 0) return fail(state, "BITE_TARGET_NOT_ALIVE_RADISH", event);
+    const monster = state.monsters[monsterIndex];
+    if (monster.row !== payload.plantRow || payload.damage !== monster.plantDamage) return fail(state, "INVALID_MONSTER_BITE_TARGET_OR_DAMAGE", event);
+    if (monster.lastBiteAt !== null && event.tick - monster.lastBiteAt < monster.attackIntervalMs) return fail(state, "MONSTER_BITE_TOO_EARLY", event);
+    const plants = state.plants.slice();
+    const plant = plants[plantIndex];
+    const damage = Math.min(plant.hp, monster.plantDamage);
+    plants[plantIndex] = Object.freeze({ ...plant, hp: plant.hp - damage, alive: plant.hp - damage > 0 });
+    const monsters = state.monsters.slice();
+    monsters[monsterIndex] = Object.freeze({ ...monster, lastBiteAt: event.tick });
+    return nextState(state, event, { plants: Object.freeze(plants), monsters: Object.freeze(monsters) });
   }
   if (event.type === "energy_collected" || event.type === "energy_discarded") {
     const pickup = state.pickups.find((item) => item.id === event.payload?.pickupId);
