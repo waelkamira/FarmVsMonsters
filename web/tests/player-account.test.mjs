@@ -68,7 +68,8 @@ test("playing as a guest never requires authentication and keeps local progress"
   assert.match(home, /اختياري|Optional/);
   assert.match(accountPage, /Continue as Guest/);
   assert.match(accountPage, /اللعب كضيف/);
-  assert.match(client, /if \(!session\.user\) return null/);
+  assert.match(client, /export function readLocalPlayerProgress/);
+  assert.match(battle, /saveCoins\(window\.localStorage/);
   assert.match(accountRoute, /cloudAvailable: false/);
 });
 
