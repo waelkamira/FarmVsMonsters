@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useLocale, LanguageToggle } from "../LocaleProvider";
 import { loadUnlockedStage } from "../../game/rules/phaseOneRules.mjs";
+import { getPlayerSession, restoreOrInitializeCloudProgress } from "../../game/services/playerAccount.mjs";
 import { CAMPAIGN_WORLDS, MISSIONS_PER_WORLD } from "../../game/data/campaignWorlds.mjs";
 
 function MissionNode({ world, mission, ar, unlockedStage }) {
@@ -43,11 +44,32 @@ export default function StagesPage() {
   const [unlockedStage, setUnlockedStage] = useState(1);
 
   useEffect(() => {
+    let active = true;
+
     try {
       setUnlockedStage(loadUnlockedStage(window.localStorage));
     } catch {
       setUnlockedStage(1);
     }
+
+    async function restoreAccountProgress() {
+      try {
+        const session = await getPlayerSession();
+        if (!active || !session?.user) return;
+        const result = await restoreOrInitializeCloudProgress();
+        const cloudUnlocked = Number(result?.progress?.unlockedStage);
+        if (active && Number.isInteger(cloudUnlocked)) {
+          setUnlockedStage(Math.min(10, Math.max(1, cloudUnlocked)));
+        }
+      } catch {
+        // The local save remains usable when the account service is offline.
+      }
+    }
+
+    restoreAccountProgress();
+    return () => {
+      active = false;
+    };
   }, []);
 
   return (
@@ -79,7 +101,6 @@ export default function StagesPage() {
       <section className="campaign-world-list" aria-label={ar ? "مناطق الحملة" : "Campaign regions"}>
         {CAMPAIGN_WORLDS.map((world, index) => {
           const worldAvailable = index === 0 || (index === 1 && unlockedStage >= 2);
-          const firstMissionAvailable = index === 0 || (index === 1 && unlockedStage >= 2);
           return (
             <article className={`campaign-world-card theme-${world.theme} ${worldAvailable ? "world-is-open" : "world-is-locked"}`} key={world.id}>
               <div className="campaign-world-main">
