@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { loadSavedCoins } from "../game/rules/phaseOneRules.mjs";
+import { useLocale, LanguageToggle } from "./LocaleProvider";
 
 export default function HomePage() {
   const [coins, setCoins] = useState(0);
+  const { t } = useLocale();
 
   useEffect(() => {
     try {
@@ -18,25 +20,26 @@ export default function HomePage() {
   return (
     <main className="home-shell">
       <div className="home-card">
-        <p className="eyebrow">A PRIMITIVE 2D FARM DEFENSE ADVENTURE</p>
+        <LanguageToggle />
+        <p className="eyebrow">{t("A PRIMITIVE 2D FARM DEFENSE ADVENTURE")}</p>
         <h1>Farm <span>Vs</span> Monsters</h1>
         <p className="home-copy">
           The tribe's garden is the last wall between the monsters and the cave home.
           Plant Radish defenders, grow Energy Mushrooms to collect resources, and protect the princess.
           When the final radish falls, the caveman takes up his wooden club.
         </p>
-        <div className="coin-wallet" aria-label={`Saved coins: ${coins}`}>
+        <div className="coin-wallet" aria-label={`${t("Saved coins")}: ${coins}`}>
           <span className="coin-wallet-icon" aria-hidden="true">●</span>
-          <span><strong>{coins.toLocaleString()} COINS</strong><small>Saved player balance</small></span>
+          <span><strong>{coins.toLocaleString()} {t("COINS")}</strong><small>{t("Saved player balance")}</small></span>
         </div>
         <nav className="menu-actions" aria-label="Main menu">
-          <Link className="primary-link" href="/game">New Game</Link>
-          <Link className="secondary-link" href="/how-to-play">How to Play</Link>
-          <Link className="secondary-link" href="/settings">Settings</Link>
-          <Link className="secondary-link" href="/credits">Credits</Link>
+          <Link className="primary-link" href="/game">{t("New Game")}</Link>
+          <Link className="secondary-link" href="/how-to-play">{t("How to Play")}</Link>
+          <Link className="secondary-link" href="/settings">{t("Settings")}</Link>
+          <Link className="secondary-link" href="/credits">{t("Credits")}</Link>
         </nav>
-        <div className="menu-facts"><span>5 WAVES</span><span>100 MONSTERS</span><span>1 FARM TO DEFEND</span></div>
-        <p className="home-note">A hand-drawn prehistoric world of roots, stone, timber, and wild creatures.</p>
+        <div className="menu-facts"><span>{t("5 WAVES")}</span><span>{t("100 MONSTERS")}</span><span>{t("1 FARM TO DEFEND")}</span></div>
+        <p className="home-note">{t("A hand-drawn prehistoric world of roots, stone, timber, and wild creatures.")}</p>
       </div>
     </main>
   );
