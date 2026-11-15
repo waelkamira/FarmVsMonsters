@@ -66,3 +66,25 @@ test("playing as a guest never requires authentication and keeps local progress"
   assert.match(client, /if \(!session\.user\) return null/);
   assert.match(accountRoute, /cloudAvailable: false/);
 });
+
+
+test("Google OAuth uses server-side PKCE and protects the callback with state", async () => {
+  const start = readFileSync(resolve(here, "../app/api/player/account/google/route.js"), "utf8");
+  const callback = readFileSync(resolve(here, "../app/api/player/account/google/callback/route.js"), "utf8");
+  assert.match(accountPage, /Continue with Google|المتابعة باستخدام Google/);
+  assert.match(start, /code_challenge_method/);
+  assert.match(start, /httpOnly: true/);
+  assert.match(callback, /timingSafeEqual/);
+  assert.match(callback, /grant_type=pkce/);
+  assert.match(callback, /farm_player_access/);
+});
+
+test("player data migration provisions private profile, settings, achievement and inventory tables", () => {
+  const dataMigration = readFileSync(resolve(here, "../supabase/migrations/002_player_data.sql"), "utf8");
+  for (const table of ["player_profiles", "player_settings", "player_achievements", "player_inventory"]) {
+    assert.match(dataMigration, new RegExp("create table if not exists public\\." + table));
+  }
+  assert.match(dataMigration, /enable row level security/i);
+  assert.match(dataMigration, /auth\.uid\(\) = user_id/);
+  assert.match(dataMigration, /on_auth_user_created_player_profile/);
+});
