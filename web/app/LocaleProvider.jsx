@@ -56,6 +56,7 @@ export function LocaleProvider({ children }) {
     const saved = window.localStorage.getItem("farmVsMonsters.language");
     if (saved === "en" || saved === "ar") setLocaleState(saved);
   }, []);
+  useEffect(() => { document.documentElement.lang = locale; document.documentElement.dir = locale === "ar" ? "rtl" : "ltr"; }, [locale]);
   const setLocale = (next) => {
     setLocaleState(next);
     window.localStorage.setItem("farmVsMonsters.language", next);
