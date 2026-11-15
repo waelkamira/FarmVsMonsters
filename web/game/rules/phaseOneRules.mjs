@@ -1,4 +1,5 @@
 import { PHASE_ONE_PLANTS, PHASE_ONE_REWARDS, PHASE_ONE_WAVE_SIZES, PHASE_ONE_ENERGY } from "./phaseOneCombatContract.mjs";
+import { resolveEnergyPickup } from "./combatSimulation.mjs";
 
 // Thirty ordinary monsters across five gentle-to-challenging waves. The dragon boss is separate.
 export { PHASE_ONE_WAVE_SIZES };
@@ -28,21 +29,7 @@ export const MUSHROOM_CONFIG = Object.freeze({
   productionInterval: PHASE_ONE_PLANTS.energyMushroom.productionIntervalMs
 });
 
-export function collectEnergy(currentEnergy, requestedAmount) {
-  const energy = Number.isFinite(currentEnergy)
-    ? Math.min(MAX_ENERGY, Math.max(0, currentEnergy))
-    : 0;
-  const amount = Number.isFinite(requestedAmount)
-    ? Math.max(0, requestedAmount)
-    : 0;
-  const collected = Math.min(amount, MAX_ENERGY - energy);
-
-  return {
-    energy: energy + collected,
-    collected
-  };
-}
-
+export const collectEnergy = resolveEnergyPickup;
 export function isWaveComplete(spawnedCount, waveSize, livingMonsterCount) {
   return spawnedCount >= waveSize && livingMonsterCount === 0;
 }
