@@ -136,7 +136,7 @@ The user will create and provide the cave artwork later. Do not invent final cav
 - Add satisfying plant/monster hit reactions, eating sounds, projectile impacts, death timing, and readable combat effects.
 - Add a structured wave configuration/data file instead of hard-coded wave values.
 - Add a post-wave summary and a preparation window between waves, with clear start/continue behavior.
-- After Phase 1 passes, extend the core battle into the first complete story stage with one distinct dragon boss and the captive-wife presentation. The dragon joins the encounter after/alongside the monster assault, uses a readable signature attack against the farmer and plants, and must be defeated together with all required surviving followers.
+- Phase 1 itself includes the complete Stage 1 story: captive-wife presentation, dragon joining at the start of Wave 5 while a few followers may remain, telegraphed fireballs, automatic farmer slingshot attacks when in range, dragon defeat, wife rescue, reunion, and celebration.
 - Implement the first wife-rescue ending: release her only after the dragon and required enemies are defeated; show a short reunion and celebration, followed by a calm interval before the next-stage reveal. Do not implement an immediate re-kidnapping during the reunion.
 - Add the post-stage treasure-cave victory ceremony after the rescue/reunion: farmer carries the stage's gold sack on his shoulder, walks to the cave, opens it with “Open Sesame” / «افتح يا سمسم», deposits the reward, and updates the visible accumulated-wealth counter. Use placeholder layout only until the user supplies approved cave artwork.
 - Define exact-once reward/deposit accounting and decide whether the cave counter is spendable Coins or a separate lifetime-wealth total.
@@ -231,7 +231,7 @@ The user will create and provide the cave artwork later. Do not invent final cav
 The core Phase 1 rules are now centralized in `web/game/rules/phaseOneRules.mjs` and imported by `BattleScene`, so balancing constants and pure gameplay decisions are not duplicated between the game and tests.
 
 The Node.js test suite in `web/tests/phase-one-rules.test.mjs` covers:
-- Exact five-wave schedule, strict wave growth, and the 100-monster total.
+- Existing regression tests still assert the old 10 / 15 / 20 / 25 / 30 schedule and 100-monster total; update these tests alongside the wave-balance code so they verify the new approved, easier data-driven curve instead.
 - Starting energy, plant costs/health, Mushroom production interval and pickup lifetime.
 - Energy collection at the 300 cap, including full, negative, and out-of-range inputs.\n- Plant purchase transaction validation, exact coin deduction, duplicate-unlock protection, and missing/invalid-price rejection.
 - Radish-only defensive counting and the resource-only Mushroom rule.
