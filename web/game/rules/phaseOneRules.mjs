@@ -1,5 +1,9 @@
-export const PHASE_ONE_WAVE_SIZES = Object.freeze([10, 15, 20, 25, 30]);
+// Thirty ordinary monsters across five gentle-to-challenging waves. The dragon boss is separate.
+export const PHASE_ONE_WAVE_SIZES = Object.freeze([3, 5, 6, 7, 9]);
 export const PHASE_ONE_TOTAL_MONSTERS = PHASE_ONE_WAVE_SIZES.reduce((sum, count) => sum + count, 0);
+export const CAMPAIGN_STAGE_COUNT = 10;
+export const ordinaryMonsterCountForStage = (stage) =>
+  Number.isInteger(stage) && stage >= 1 && stage <= CAMPAIGN_STAGE_COUNT ? 29 + stage : 0;
 
 export const INITIAL_ENERGY = 150;
 export const MAX_ENERGY = 300;
