@@ -1,7 +1,15 @@
 const TWEMOJI = "https://cdn.jsdelivr.net/gh/twitter/twemoji@15.1.0/assets/72x72";
 const LOCAL_PLANT_ICONS = {
   radish: "/assets/plant-icons/radish.svg",
-  "energy-mushroom": "/assets/plant-icons/mushroom.svg"
+  "energy-mushroom": "/assets/plant-icons/mushroom.svg",
+  "pea-shooter": "/assets/plant-icons/pea-shooter.svg",
+  "thorn-wall": "/assets/plant-icons/thorn-wall.svg",
+  sunflower: "/assets/plant-icons/sunflower.svg",
+  "ice-bloom": "/assets/plant-icons/ice-bloom.svg",
+  "double-radish": "/assets/plant-icons/double-radish.svg",
+  "pumpkin-guard": "/assets/plant-icons/pumpkin-guard.svg",
+  "explosive-berry": "/assets/plant-icons/explosive-berry.svg",
+  "fire-pepper": "/assets/plant-icons/fire-pepper.svg"
 };
 
 const ART = {
