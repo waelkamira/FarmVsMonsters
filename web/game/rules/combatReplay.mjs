@@ -7,7 +7,7 @@ const MUSHROOM_INTERVAL = PHASE_ONE_PLANTS.energyMushroom.productionIntervalMs;
 const MUSHROOM_VALUE = PHASE_ONE_PLANTS.energyMushroom.energyPerPickup;
 const MUSHROOM_PICKUP_TTL_MS = PHASE_ONE_PLANTS.energyMushroom.pickupTtlMs;
 export function createCombatReplayState() {
-  return Object.freeze({ energy: PHASE_ONE_ENERGY.initial, plants: Object.freeze([]), pickups: Object.freeze([]), appliedEvents: 0, lastTick: 0 });
+  return Object.freeze({ energy: PHASE_ONE_ENERGY.initial, plants: Object.freeze([]), pickups: Object.freeze([]), nextPickupSequence: 1, appliedEvents: 0, lastTick: 0 });
 }
 function fail(state, reason, event = null) { return Object.freeze({ ok: false, reason, state, eventSequence: event?.sequence ?? null }); }
 function overdueMushroom(state, tick, exceptPlant = null) {
@@ -39,14 +39,16 @@ export function applyCombatReplayEvent(state, event) {
     const index = state.plants.findIndex((plant) => plant.alive && plant.type === "mushroom" && plant.col === payload.sourceCol && plant.row === payload.sourceRow);
     if (index < 0) return fail(state, "ENERGY_SOURCE_MUSHROOM_NOT_ALIVE", event);
     const plant = state.plants[index];
+    const firstDueIndex = state.plants.findIndex((candidate) => candidate.alive && candidate.type === "mushroom" && candidate.nextProductionAt <= event.tick);
+    if (firstDueIndex !== index) return fail(state, "MUSHROOM_PRODUCTION_ORDER_MISMATCH", event);
     if (event.tick < plant.nextProductionAt) return fail(state, "MUSHROOM_PRODUCTION_TOO_EARLY", event);
     if (payload.amount !== MUSHROOM_VALUE) return fail(state, "INVALID_MUSHROOM_ENERGY_VALUE", event);
-    const expectedId = `mushroom-${plant.col}-${plant.row}-${plant.productionCount + 1}`;
+    const expectedId = `pickup-${state.nextPickupSequence}`;
     if (payload.pickupId !== expectedId || state.pickups.some((pickup) => pickup.id === payload.pickupId)) return fail(state, "INVALID_OR_DUPLICATE_PICKUP_ID", event);
     const plants = state.plants.slice();
     plants[index] = Object.freeze({ ...plant, productionCount: plant.productionCount + 1, nextProductionAt: plant.nextProductionAt + MUSHROOM_INTERVAL });
     const pickup = Object.freeze({ id: expectedId, sourceCol: plant.col, sourceRow: plant.row, amount: MUSHROOM_VALUE, spawnedAt: event.tick, expiresAt: event.tick + MUSHROOM_PICKUP_TTL_MS });
-    return nextState(state, event, { plants: Object.freeze(plants), pickups: Object.freeze([...state.pickups, pickup]) });
+    return nextState(state, event, { plants: Object.freeze(plants), pickups: Object.freeze([...state.pickups, pickup]), nextPickupSequence: state.nextPickupSequence + 1 });
   }
   if (event.type === "energy_collected" || event.type === "energy_discarded") {
     const pickup = state.pickups.find((item) => item.id === event.payload?.pickupId);
