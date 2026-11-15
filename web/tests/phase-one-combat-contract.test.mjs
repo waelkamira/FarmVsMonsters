@@ -10,6 +10,7 @@ import {
   PHASE_ONE_TIMING,
   PHASE_ONE_REWARDS,
   PHASE_ONE_PLANTS,
+  PHASE_ONE_FARMER,
   PHASE_ONE_DRAGON,
   getMonsterSpawnIntervalMs,
   getMonsterCombatStats,
@@ -31,6 +32,8 @@ test("combat contract version, wave roster, and reward policy are explicit", () 
 test("radish, mushroom and dragon combat values preserve the current tuning", () => {
   assert.deepEqual(PHASE_ONE_PLANTS.radish, {
     projectileDamage: 25,
+    projectileSpeed: 320,
+    projectileCollisionRadius: 24,
     plantingEnergyCost: 35,
     hp: 160,
     cooldownMs: 1450,
