@@ -2,6 +2,7 @@ import { Scene, Input, Math as PhaserMath } from "phaser";
 import { translate } from "../../app/LocaleProvider";
 import gridCalibration from "../data/farm-grid-calibration.json";
 import soundAssets from "../data/sound-assets.json";
+import { syncProgressAfterVictory } from "../services/playerAccount.mjs";
 import {
   PHASE_ONE_WAVE_SIZES,
   PHASE_ONE_TOTAL_MONSTERS,
@@ -2922,6 +2923,7 @@ export default class BattleScene extends Scene {
     this.add.rectangle(560, 340, 1120, 680, 0x10170f, 0.72).setDepth(60);
     if (won) {
       try { unlockNextStage(window.localStorage, 1); } catch { /* Progress saving must never block the victory screen. */ }
+      void syncProgressAfterVictory();
       this.stopBackgroundMusic();
       this.add.rectangle(560, 350, 790, 520, 0x79502e, 0.99)
         .setStrokeStyle(7, 0x392417).setDepth(61);
