@@ -21,7 +21,11 @@ import {
   isWaveComplete,
   isPhaseOneVictory,
   monsterArchetypeFor,
-  purchasePlant
+  purchasePlant,
+  CAMPAIGN_PROGRESS_KEY,
+  CAMPAIGN_STAGE_COUNT,
+  loadUnlockedStage,
+  unlockNextStage
 } from "../game/rules/phaseOneRules.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -313,4 +317,45 @@ test("player guidance and roadmap match the current Phase 1 balance", () => {
   assert.match(roadmap, /full 15-energy collectible per Mushroom every 12 seconds/);
   assert.match(roadmap, /Cave-brute, Dust-skitter, Stonehide/);
   assert.doesNotMatch(roadmap, /25 collectible energy per Mushroom every 8 seconds/i);
+});
+
+
+test("campaign progression unlocks the next stage only through a valid completion write", () => {
+  const values = new Map();
+  const storage = {
+    getItem: (key) => values.has(key) ? values.get(key) : null,
+    setItem: (key, value) => values.set(key, value)
+  };
+
+  assert.equal(loadUnlockedStage(storage), 1);
+  assert.equal(unlockNextStage(storage, 0), false);
+  assert.equal(unlockNextStage(storage, 1), true);
+  assert.equal(loadUnlockedStage(storage), 2);
+  assert.deepEqual(JSON.parse(values.get(CAMPAIGN_PROGRESS_KEY)), {
+    version: 1,
+    unlockedStage: 2,
+    completedStages: [1]
+  });
+
+  assert.equal(unlockNextStage(storage, CAMPAIGN_STAGE_COUNT), true);
+  assert.equal(loadUnlockedStage(storage), CAMPAIGN_STAGE_COUNT);
+  assert.equal(unlockNextStage(storage, CAMPAIGN_STAGE_COUNT + 1), false);
+});
+
+test("campaign progression safely falls back to stage one for corrupt or unavailable storage", () => {
+  assert.equal(loadUnlockedStage(null), 1);
+  assert.equal(loadUnlockedStage({ getItem: () => "not-json" }), 1);
+  assert.equal(loadUnlockedStage({ getItem: () => JSON.stringify({ version: 9, unlockedStage: 8 }) }), 1);
+  assert.equal(loadUnlockedStage({ getItem: () => JSON.stringify({ version: 1, unlockedStage: 999 }) }), CAMPAIGN_STAGE_COUNT);
+  assert.equal(unlockNextStage({ getItem: () => null, setItem: () => { throw new Error("quota"); } }, 1), false);
+});
+
+test("stage selection reflects saved unlocks without linking unfinished stages into gameplay", () => {
+  const stagePage = readFileSync(resolve(here, "../app/stages/page.js"), "utf8");
+  assert.match(stagePage, /loadUnlockedStage\(window\.localStorage\)/);
+  assert.match(stagePage, /stage <= unlockedStage/);
+  assert.match(stagePage, /Unlocked · In development/);
+  assert.match(stagePage, /href="\/stage\/1"/);
+  assert.match(scene, /won = Boolean\(won && this\.phaseOneStoryState === "complete"\)/);
+  assert.match(scene, /unlockNextStage\(window\.localStorage, 1\)/);
 });
