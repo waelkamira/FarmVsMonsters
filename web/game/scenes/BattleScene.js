@@ -20,7 +20,9 @@ import {
 import {
   resolvePlantPlacement,
   resolvePlantUproot,
-  applyHitPointsDamage
+  applyHitPointsDamage,
+  resolveMonsterLaneStep,
+  resolveProjectileLaneStep
 } from "../rules/combatSimulation.mjs";
 import {
   PHASE_ONE_DRAGON,
@@ -2732,11 +2734,14 @@ export default class BattleScene extends Scene {
 
       // Stop just outside the plant's bite reach. Clamp the step so even a
       // fast skitter cannot tunnel through a plant between two update frames.
-      const nextLocalX = monster.localX - movementSpeed * dt;
-      const stopLocalX = blocker ? blockerLocalX + biteReach : -Infinity;
-      monster.localX = blocker
-        ? Math.max(nextLocalX, stopLocalX)
-        : nextLocalX;
+      const laneStep = resolveMonsterLaneStep({
+        localX: monster.localX,
+        speed: movementSpeed,
+        deltaSeconds: dt,
+        blockerLocalX: blocker ? blockerLocalX : null,
+        biteReach
+      });
+      monster.localX = laneStep.localX;
 
       const position = this.monsterLanePoint(monster.localX, monster.row);
       monster.x = position.x; monster.y = position.y;
@@ -2762,7 +2767,7 @@ export default class BattleScene extends Scene {
   updateProjectiles(dt) {
     for (const shot of this.projectiles) {
       if (!shot.alive) continue;
-      shot.localX += shot.speed * dt;
+      shot.localX = resolveProjectileLaneStep({ localX: shot.localX, speed: shot.speed, deltaSeconds: dt });
       const position = this.monsterLanePoint(shot.localX, shot.row);
       shot.view.setPosition(position.x, position.y + shot.verticalOffset);
 
