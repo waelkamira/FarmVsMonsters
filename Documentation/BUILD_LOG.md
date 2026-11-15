@@ -735,7 +735,7 @@
 - The previous 100-monster first-stage schedule is obsolete and must be replaced in gameplay code and corresponding tests. No runtime code changed in this documentation update.
 
 ## 2026-11-15 — Phase 1 dragon boss and princess rescue flow
-- Added a separate dragon boss encounter at the start of wave 5; the boss is not included in ordinary monster wave counts.
+- Added a separate dragon boss encounter shortly after wave 5 begins, once two ordinary hyenas have entered; the boss is not included in ordinary monster wave counts.
 - Added automatic farmer sling attacks, a dedicated dragon health bar, dragon movement, and fireball attacks against living plants or the farmhouse.
 - Phase 1 victory now waits for every ordinary monster and the dragon to be defeated.
 - Added the rescue sequence: the farmer reaches the princess, picks her up, carries her back to the farmhouse, and only then opens the victory screen.
