@@ -1,4 +1,4 @@
-const TWEMOJI = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72";
+const TWEMOJI = "https://cdn.jsdelivr.net/gh/twitter/twemoji@15.1.0/assets/72x72";
 
 const ART = {
   radish: ["1f96c", "Radish greens"],
