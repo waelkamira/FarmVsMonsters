@@ -45,12 +45,12 @@ export default class PauseScene extends Scene {
   }
 
   drawPanel(title, height = 420) {
-    this.add.rectangle(560, 340, 1120, 680, 0x160f0a, 0.76).setDepth(-1);
-    this.add.rectangle(560, 340, 500, height, 0x79502e, 1).setStrokeStyle(7, 0x3b2517);
-    this.add.rectangle(560, 340, 480, height - 20, 0xb88950, 1).setStrokeStyle(2, 0xe5c68e);
+    this.add.rectangle(560, 340, 1120, 680, 0x080503, 0.88).setDepth(-1);
+    this.add.rectangle(560, 340, 500, height, 0x21150d, 1).setStrokeStyle(8, 0x100904);
+    this.add.rectangle(560, 340, 480, height - 20, 0x49301d, 1).setStrokeStyle(3, 0xf0ca83);
     this.add.text(560, 340 - height / 2 + 58, this.tr(title), {
-      fontFamily: "Georgia", fontSize: "30px", color: "#fff0c8",
-      fontStyle: "bold", stroke: "#392417", strokeThickness: 4
+      fontFamily: "Arial", fontSize: "32px", color: "#ffffff",
+      fontStyle: "bold", stroke: "#100904", strokeThickness: 6, resolution: 2
     }).setOrigin(0.5);
   }
 
@@ -79,11 +79,11 @@ export default class PauseScene extends Scene {
       const y = 270 + index * 92;
       const value = this.readVolume(channel.key, channel.initial);
       this.add.text(560, y - 23, this.tr(channel.label), {
-        fontFamily: "Georgia", fontSize: "17px", color: "#fff0c8", fontStyle: "bold"
+        fontFamily: "Arial", fontSize: "19px", color: "#ffffff", fontStyle: "bold", stroke: "#100904", strokeThickness: 3, resolution: 2
       }).setOrigin(0.5);
       this.addVolumeButton(420, y + 14, "−", () => this.changeVolume(channel, -5));
       this.add.text(560, y + 14, value + "%", {
-        fontFamily: "Georgia", fontSize: "20px", color: "#fff0c8", fontStyle: "bold"
+        fontFamily: "Arial", fontSize: "22px", color: "#fff5dc", fontStyle: "bold", stroke: "#100904", strokeThickness: 3, resolution: 2
       }).setOrigin(0.5);
       this.addVolumeButton(700, y + 14, "+", () => this.changeVolume(channel, 5));
     });
@@ -104,7 +104,7 @@ export default class PauseScene extends Scene {
       .setStrokeStyle(3, 0x392417).setInteractive({ useHandCursor: true });
     this.add.rectangle(x, y, 46, 34, 0xe5c27d, 1).setStrokeStyle(1, 0xf4dfb3);
     this.add.text(x, y - 1, label, {
-      fontFamily: "Arial", fontSize: "25px", color: "#392719", fontStyle: "bold"
+      fontFamily: "Arial", fontSize: "28px", color: "#211307", fontStyle: "bold", stroke: "#fff0c8", strokeThickness: 1, resolution: 2
     }).setOrigin(0.5);
     bg.on("pointerover", () => bg.setScale(1.06));
     bg.on("pointerout", () => bg.setScale(1));
@@ -116,7 +116,7 @@ export default class PauseScene extends Scene {
       .setStrokeStyle(3, 0x392417).setInteractive({ useHandCursor: true });
     this.add.rectangle(560, y, 240, 44, color, 1).setStrokeStyle(1, 0xf4dfb3);
     this.add.text(560, y, this.tr(label), {
-      fontFamily: "Georgia", fontSize: "16px", color: "#392719", fontStyle: "bold"
+      fontFamily: "Arial", fontSize: "18px", color: "#211307", fontStyle: "bold", stroke: "#fff0c8", strokeThickness: 1, resolution: 2
     }).setOrigin(0.5);
     bg.on("pointerover", () => bg.setScale(1.04));
     bg.on("pointerout", () => bg.setScale(1));
