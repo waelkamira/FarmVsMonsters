@@ -23,7 +23,7 @@ export default function StagesPage() {
   return (
     <main className="info-shell">
       <section className="info-card stages-card">
-        <div className="stages-top"><span className="eyebrow">{ar ? "حملة إنقاذ الأميرة" : "THE RESCUE CAMPAIGN"}</span><LanguageToggle /></div>
+        <div className="stages-top"><span className="eyebrow">{ar ? "حملة إنقاذ الأميرة" : "THE RESCUE CAMPAIGN"}</span><div className="stages-actions"><Link className="secondary-link" href="/account">{ar ? "حساب اللاعب" : "Player Account"}</Link><LanguageToggle /></div></div>
         <h1>{ar ? "اختر المرحلة" : "Choose a Stage"}</h1>
         <p>{ar ? "كل مرحلة مغامرة مستقلة بأرض جديدة ووحوش وتنين مختلف. اهزم أتباع التنين، اقضِ عليه، ثم أنقذ الأميرة." : "Every stage is its own adventure with a new land, monsters, and dragon. Defeat the dragon's followers, defeat the dragon, then rescue the princess."}</p>
         <div className="stage-grid">
