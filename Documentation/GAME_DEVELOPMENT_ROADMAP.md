@@ -112,6 +112,12 @@ BATTLE
 
 **Exit rule:** Phase 1 is complete only when all acceptance items pass in a real browser. Artwork can be improved later, but placeholder/final art must be readable enough to verify gameplay. A GitHub commit alone does not close the phase.
 
+## Approved signature feature — post-stage treasure cave
+
+After each stage victory, the farmer carries a sack of the gold earned in that stage over his shoulder, walks to the treasure cave, and the entrance opens with “Open Sesame” / «افتح يا سمسم». He deposits the gold, then the game displays the growing accumulated wealth total. The deposit must match the stage reward ledger exactly and must never duplicate currency. Decide before implementation whether this display mirrors spendable Coins or is a separate lifetime-wealth statistic.
+
+The user will create and provide the cave artwork later. Do not invent final cave art or replace user assets. Schedule the ceremony design and implementation in Phase 2; connect its saved long-term wealth to progression in Phase 5. The sequence should be celebratory but skippable/brief on replay.
+
 ## Phase 2 — Core gameplay polish and resource economy
 
 - Tune Radish health, attack cadence, projectile speed/damage, Mushroom cost/production/collection, Cave-brute/Dust-skitter/Stonehide health/speed/damage, wave pacing, starting energy, and objective health.
@@ -120,6 +126,8 @@ BATTLE
 - Add satisfying plant/monster hit reactions, eating sounds, projectile impacts, death timing, and readable combat effects.
 - Add a structured wave configuration/data file instead of hard-coded wave values.
 - Add a post-wave summary and a preparation window between waves, with clear start/continue behavior.
+- Add the post-stage treasure-cave victory ceremony: farmer carries the stage's gold sack on his shoulder, walks to the cave, opens it with “Open Sesame” / «افتح يا سمسم», deposits the reward, and updates the visible accumulated-wealth counter. Use placeholder layout only until the user supplies approved cave artwork.
+- Define exact-once reward/deposit accounting and decide whether the cave counter is spendable Coins or a separate lifetime-wealth total.
 - Exit gate: resource loop is exploitable neither by duplication nor by timing glitches; all values are tunable from data.
 
 ## Phase 3 — Plant roster and plant-specific identity
@@ -142,6 +150,7 @@ BATTLE
 - Build a level/campaign map, unlock sequence, difficulty curve, wave definitions, boss milestones, and replay access.
 - Add persistent earned rewards, currency, plant unlocks/upgrades, and progression rules. Avoid pay-to-win assumptions in the core prototype.
 - Save settings and progression safely; handle corrupted/missing save data with a recoverable default.
+- Persist the treasure-cave wealth total and deposit history without duplicating stage rewards; keep spendable Coins distinct if the cave represents lifetime wealth.
 - Add player profile only if required by the chosen release model; do not block the offline single-player loop on account creation.
 - Exit gate: progress survives reload, unlocks are deterministic, and no reward can be duplicated by retrying or refreshing.
 
