@@ -15,10 +15,9 @@ export const MUSHROOM_PICKUP_TTL_MS = PHASE_ONE_PLANTS.energyMushroom.pickupTtlM
 
 export const RADISH_CONFIG = Object.freeze({
   label: "Radish",
+  ...PHASE_ONE_PLANTS.radish,
   cost: PHASE_ONE_PLANTS.radish.plantingEnergyCost,
-  hp: PHASE_ONE_PLANTS.radish.hp,
-  cooldown: PHASE_ONE_PLANTS.radish.cooldownMs,
-  range: PHASE_ONE_PLANTS.radish.range
+  cooldown: PHASE_ONE_PLANTS.radish.cooldownMs
 });
 
 export const MUSHROOM_CONFIG = Object.freeze({
