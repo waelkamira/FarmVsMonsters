@@ -662,7 +662,16 @@ export default class BattleScene extends Scene {
       (bounds.minX + bounds.maxX + 1) / (2 * frame.width),
       (bounds.maxY + 1) / frame.height
     );
-    sprite.setScale(this.farmerTargetDisplayHeight / bounds.height);
+    // Keep one scale for the entire spritesheet. Recalculating it from each
+    // planting frame makes crouched poses (with a shorter alpha silhouette)
+    // enlarge dramatically, especially the head and torso.
+    this.farmerTextureScales ||= new Map();
+    let textureScale = this.farmerTextureScales.get(textureKey);
+    if (!Number.isFinite(textureScale)) {
+      textureScale = this.farmerTargetDisplayHeight / bounds.height;
+      this.farmerTextureScales.set(textureKey, textureScale);
+    }
+    sprite.setScale(textureScale);
   }
 
   createFarmerAnimations() {
