@@ -18,8 +18,8 @@ export default function HomePage() {
       const session = await getPlayerSession();
       if (session.user) {
         const { progress } = await restoreOrInitializeCloudProgress();
-        const lastUnlockedStage = Math.min(10, Math.max(1, Number(progress?.unlockedStage) || 1));
-        router.push(lastUnlockedStage > 1 ? `/stage/${lastUnlockedStage}` : "/game");
+        const lastUnlockedStage = Math.min(2, Math.max(1, Number(progress?.unlockedStage) || 1));
+        router.push(lastUnlockedStage === 2 ? "/stage/2" : "/game");
         return;
       }
     } catch {
