@@ -51,7 +51,7 @@ export default function HomePage() {
           <Link className="secondary-link" href="/settings">{t("Settings")}</Link>
           <Link className="secondary-link" href="/credits">{t("Credits")}</Link>
         </nav>
-        <div className="menu-facts"><span>{t("5 WAVES")}</span><span>{t("100 MONSTERS")}</span><span>{t("1 FARM TO DEFEND")}</span></div>
+        <div className="menu-facts"><span>{t("5 WAVES")}</span><span>{t("30 MONSTERS")}</span><span>{t("1 FARM TO DEFEND")}</span></div>
         <p className="home-note">{t("A hand-drawn prehistoric world of roots, stone, timber, and wild creatures.")}</p>
       </div>
     </main>
