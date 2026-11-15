@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useLocale, LanguageToggle } from "../LocaleProvider";
 import { loadSavedCoins } from "../../game/rules/phaseOneRules.mjs";
 import { STAGE_ONE_PLANTS } from "../../game/data/stageOnePlants.mjs";
+import CatalogThumb from "../components/CatalogThumb";
 
 const icons = {
   radish: "🥬",
@@ -69,10 +70,7 @@ export default function PlantsPage() {
         <div className="collection-grid">
           {activePlants.map((plant) => (
             <article className="collection-card is-active" key={plant.id}>
-              <div className="plant-art-placeholder" aria-label={ar ? "مكان الصورة التي سترفع لاحقاً" : "Artwork placeholder for later upload"}>
-                <span aria-hidden="true">{icons[plant.id]}</span>
-                <small>{ar ? "مكان الصورة" : "ARTWORK SLOT"}</small>
-              </div>
+              <CatalogThumb id={plant.id} label={ar ? plant.nameAr : plant.name} className="plant-thumb" />
               <h2>{ar ? plant.nameAr : plant.name}</h2>
               <span className="collection-status">{ar ? "✓ مفعّل في اللعبة" : "✓ ACTIVE IN GAME"}</span>
               <p>{ar ? plant.descriptionAr : plant.description}</p>
@@ -96,10 +94,7 @@ export default function PlantsPage() {
             const canAfford = coins >= price;
             return (
               <article className="collection-card is-locked" key={plant.id}>
-                <div className="plant-art-placeholder is-planned" aria-label={ar ? "مكان الصورة التي سترفع لاحقاً" : "Artwork placeholder for later upload"}>
-                  <span aria-hidden="true">{icons[plant.id]}</span>
-                  <small>{ar ? "بانتظار الصورة" : "AWAITING ART"}</small>
-                </div>
+                <CatalogThumb id={plant.id} label={ar ? plant.nameAr : plant.name} className="plant-thumb is-planned" />
                 <h2>{ar ? plant.nameAr : plant.name}</h2>
                 <span className="collection-status">{ar ? "🔒 غير مفعّل" : "🔒 NOT IMPLEMENTED"}</span>
                 <p><strong>{ar ? plant.roleAr : plant.role}</strong></p>
