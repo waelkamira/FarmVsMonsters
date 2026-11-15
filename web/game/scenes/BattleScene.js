@@ -37,7 +37,6 @@ import {
   PHASE_ONE_PLANTS,
   PHASE_ONE_FARMER,
   PHASE_ONE_TIMING,
-  getMonsterSpawnIntervalMs,
   PHASE_ONE_REWARDS,
   getMonsterCombatStats,
   getStonehideIncomingDamageMultiplier
