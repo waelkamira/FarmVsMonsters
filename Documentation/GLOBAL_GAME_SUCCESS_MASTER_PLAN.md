@@ -266,7 +266,7 @@ Work:
 - Tune wave pacing so each wave has a readable rhythm: introduction, pressure, short relief, escalation.
 - Stage 1's dragon, captive-wife presentation, automatic slingshot counter, and rescue ending are part of the first complete Phase 1 playable slice—not a later phase. Phase 2 may polish their feel and balance, but must not postpone their initial implementation.
 - Build the first rescue ending: release the wife, show a short farmer-wife reunion and celebration, present the stage result, then run the treasure-cave reward ritual. Give the player a deliberate quiet interval before the next-stage reveal.
-- Keep the current five waves / 100 monsters as the first battle's existing wave structure; they are not five campaign stages. The dragon/rescue layer is a planned story-stage extension, not a reason to mislabel the existing prototype as a complete campaign stage.
+- Keep the current five-wave structure as the first stage's wave framework; it is not five separate campaign stages. The current 100-monster count is not a requirement and must be reduced/rebalanced. Stage 1's dragon and rescue are required parts of Phase 1.
 - Improve hit reactions, eating feedback, projectile impacts, death, reward collection, wave transition, victory, and defeat.
 - Make UI feedback precise: selected plant, insufficient energy, occupied cell, pickup available/expired, monster breach, objective danger, and wave completion.
 - Add short contextual tutorial prompts and a first-session learning flow; allow replay or disabling of basic hints.
