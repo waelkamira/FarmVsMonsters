@@ -891,3 +891,10 @@
 - The client seed is explicitly provisional and cannot establish authoritative wins or rewards; server-issued session seeds and replay validation remain future work.
 - Existing wave sizes, spawn cadence, archetype composition, movement multipliers, and random sampling ranges are unchanged.
 - Tests/build were not run in this environment; the earlier GitHub Actions runner allocation issue remains unresolved.
+
+
+## 2026-11-16 — Combat action event log foundation
+- Added immutable versioned event-log primitives with ordered sequence numbers, monotonic simulation ticks, payload validation, and integrity-shape validation.
+- Instrumented successful plant placement, manual uprooting, and positive energy collection in the live scene.
+- Event data remains in-memory and client-controlled. No server submission, replay verification, or cloud reward path was enabled.
+- Added focused event-log tests; test/build execution is still pending.
