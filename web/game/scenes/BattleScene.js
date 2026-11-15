@@ -1,4 +1,5 @@
 import { Scene, Input, Math as PhaserMath } from "phaser";
+import { translate } from "../../app/LocaleProvider";
 import gridCalibration from "../data/farm-grid-calibration.json";
 import soundAssets from "../data/sound-assets.json";
 import {
@@ -2512,17 +2513,17 @@ export default class BattleScene extends Scene {
     return button;
   }
 
-  setMessage(message) { this.messageText.setText(message); }
+  setMessage(message) {\n    const locale = typeof window !== "undefined" ? window.localStorage.getItem("farmVsMonsters.language") || "ar" : "ar";\n    this.messageText.setText(translate(message, locale));\n  }
 
   refreshHud() {
     this.hudText.setText(
-      "ENERGY  " + this.energy + "     COINS  " + this.coins + "     HOME  " + this.houseHealth + "%     RADISHES  " +
-      this.livingPlantCount() + "     KILLS  " + this.totalDefeatedMonsters + "/" + PHASE_ONE_TOTAL_MONSTERS
+      "الطاقة  " + this.energy + "     العملات  " + this.coins + "     المزرعة  " + this.houseHealth + "%     الفجل  " +
+      this.livingPlantCount() + "     المهزومون  " + this.totalDefeatedMonsters + "/" + PHASE_ONE_TOTAL_MONSTERS
     );
     this.waveText.setText(
-      "WAVE " + Math.min(this.wave, this.totalWaves) + "/" + this.totalWaves +
-      "  ·  " + this.waveDefeatedMonsters + "/" + this.waveSize + " DOWN" +
-      (this.emergencyMode ? "  ·  LAST STAND" : "")
+      "الموجة " + Math.min(this.wave, this.totalWaves) + "/" + this.totalWaves +
+      "  ·  " + this.waveDefeatedMonsters + "/" + this.waveSize + " هُزم" +
+      (this.emergencyMode ? "  ·  المواجهة الأخيرة" : "")
     );
   }
 }
