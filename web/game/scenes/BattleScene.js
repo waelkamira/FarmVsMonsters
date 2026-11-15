@@ -2011,7 +2011,8 @@ export default class BattleScene extends Scene {
       braceCue,
       maxHp: hp,
       hitFlashGraphic: g, hitFlashTimer: null, hyenaSprite, hitAnimUntil: 0,
-      attackCooldown: 0, alive: true, view, dustTimer: 0
+      attackCooldown: 0, alive: true, view, dustTimer: 0,
+      voiceCooldown: PhaserMath.Between(4200, 8500)
     };
     this.monsters.push(monsterRecord);
   }
@@ -2020,6 +2021,13 @@ export default class BattleScene extends Scene {
     for (const monster of this.monsters) {
       if (!monster.alive) continue;
       monster.attackCooldown -= delta;
+      if (monster.hyenaSprite && !this.gameOver) {
+        monster.voiceCooldown -= delta;
+        if (monster.voiceCooldown <= 0) {
+          if (Math.random() < 0.42) this.playHyenaVoice(Math.random() < 0.58 ? "laugh" : "growl", 0.38);
+          monster.voiceCooldown = PhaserMath.Between(6500, 12500);
+        }
+      }
       const blocker = this.plants.filter((p) => p.alive && p.type === "radish" && p.row === monster.row && this.worldToLane(p).localX < monster.localX)
         .sort((a, b) => this.worldToLane(b).localX - this.worldToLane(a).localX)[0];
       const blockerLocalX = blocker ? this.worldToLane(blocker).localX : -Infinity;
@@ -2177,7 +2185,7 @@ export default class BattleScene extends Scene {
     }
     this.createMonsterDefeatBurst(monster.x, monster.y, monster.view && monster.view.scaleY);
     this.playMonsterDefeatSound();
-    if (monster.hyenaSprite) this.playHyenaVoice("laugh", 0.88);
+    if (monster.hyenaSprite) this.playHyenaVoice("yelp", 0.88);
     this.playCoinRewardSound();
     // Play the authored death sequence before removing the creature. The
     // reward and wave counters are still granted immediately and exactly once.
