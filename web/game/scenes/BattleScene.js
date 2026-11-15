@@ -899,7 +899,7 @@ export default class BattleScene extends Scene {
     }
     boss.shotCooldown -= delta;
     if (boss.shotCooldown <= 0) {
-      boss.shotCooldown = 900;
+      boss.shotCooldown = PHASE_ONE_DRAGON.farmerSlingIntervalMs;
       if (this.anims.exists("farmer-sling") && this.cavemanVisual?.active) {
         this.playFarmerAction("farmer-sling");
       }
