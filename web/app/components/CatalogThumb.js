@@ -1,4 +1,8 @@
 const TWEMOJI = "https://cdn.jsdelivr.net/gh/twitter/twemoji@15.1.0/assets/72x72";
+const LOCAL_PLANT_ICONS = {
+  radish: "/assets/plant-icons/radish.svg",
+  "energy-mushroom": "/assets/plant-icons/mushroom.svg"
+};
 
 const ART = {
   radish: ["1f96c", "Radish greens"],
@@ -24,14 +28,22 @@ const ART = {
 export default function CatalogThumb({ id, label, className = "" }) {
   const [code, fallback] = ART[id] || ART.stage;
   const safeCode = code.replace(/[^a-f0-9-]/gi, "");
+  const localIcon = LOCAL_PLANT_ICONS[id];
   return (
     <div className={`catalog-thumb ${className}`} role="img" aria-label={label || fallback}>
       <span className="catalog-thumb-glow" />
       <img
-        src={`${TWEMOJI}/${safeCode}.png`}
+        src={localIcon || `${TWEMOJI}/${safeCode}.png`}
         alt=""
         loading="lazy"
-        onError={(event) => { event.currentTarget.style.display = "none"; }}
+        onError={(event) => {
+          if (localIcon && !event.currentTarget.dataset.fallback) {
+            event.currentTarget.dataset.fallback = "true";
+            event.currentTarget.src = `${TWEMOJI}/${safeCode}.png`;
+            return;
+          }
+          event.currentTarget.style.display = "none";
+        }}
       />
     </div>
   );
