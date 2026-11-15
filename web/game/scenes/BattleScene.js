@@ -2513,7 +2513,10 @@ export default class BattleScene extends Scene {
     return button;
   }
 
-  setMessage(message) {\n    const locale = typeof window !== "undefined" ? window.localStorage.getItem("farmVsMonsters.language") || "ar" : "ar";\n    this.messageText.setText(translate(message, locale));\n  }
+  setMessage(message) {
+    const locale = typeof window !== "undefined" ? window.localStorage.getItem("farmVsMonsters.language") || "ar" : "ar";
+    this.messageText.setText(translate(message, locale));
+  }
 
   refreshHud() {
     this.hudText.setText(
