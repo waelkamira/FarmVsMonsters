@@ -39,9 +39,9 @@ export function applyCombatReplayEvent(state, event) {
     const index = state.plants.findIndex((plant) => plant.alive && plant.type === "mushroom" && plant.col === payload.sourceCol && plant.row === payload.sourceRow);
     if (index < 0) return fail(state, "ENERGY_SOURCE_MUSHROOM_NOT_ALIVE", event);
     const plant = state.plants[index];
+    if (event.tick < plant.nextProductionAt) return fail(state, "MUSHROOM_PRODUCTION_TOO_EARLY", event);
     const firstDueIndex = state.plants.findIndex((candidate) => candidate.alive && candidate.type === "mushroom" && candidate.nextProductionAt <= event.tick);
     if (firstDueIndex !== index) return fail(state, "MUSHROOM_PRODUCTION_ORDER_MISMATCH", event);
-    if (event.tick < plant.nextProductionAt) return fail(state, "MUSHROOM_PRODUCTION_TOO_EARLY", event);
     if (payload.amount !== MUSHROOM_VALUE) return fail(state, "INVALID_MUSHROOM_ENERGY_VALUE", event);
     const expectedId = `pickup-${state.nextPickupSequence}`;
     if (payload.pickupId !== expectedId || state.pickups.some((pickup) => pickup.id === payload.pickupId)) return fail(state, "INVALID_OR_DUPLICATE_PICKUP_ID", event);
