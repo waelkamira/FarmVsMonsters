@@ -258,3 +258,10 @@ Run from `web/` with `npm test`. GitHub Actions is configured to run the suite, 
 - Monster entries show existing hyena artwork and actual HP scaling/damage rules; the dragon is listed separately.
 - Menu opening pauses battle simulation and blocks planting clicks until the menu closes.
 - Updated the home screen's monster count and regression tests. Automated execution and browser visual verification remain pending.
+
+
+## Campaign map UI — implementation status (2026-11-15)
+- The main menu now links to `/stages`, which renders the eleven proposed campaign regions and ten planned mission slots per region.
+- The map is a visual roadmap, not a claim that all 110 missions exist. Stage 1 mission 01 is the only implemented battle entry. Stage 2's introductory page is shown as unlocked only when the current saved progression unlocks Stage 2; its battle is still marked as under development.
+- Future regions and unimplemented missions remain locked. This screen does not change the existing ten-stage progression rules or the five-wave Stage 1 battle.
+- Acceptance checks still required: responsive browser review (desktop and mobile), Arabic/English direction and wrapping review, verify guest and saved-progress unlock states, and confirm the Stage 1 link opens the existing intro. Run `npm test` and `npm run build` from `web/` before calling this screen verified.
