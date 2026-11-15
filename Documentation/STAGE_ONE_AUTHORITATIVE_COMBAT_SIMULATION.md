@@ -104,3 +104,11 @@ The pure combat kernel now also owns target selection:
 - living plant with the lowest HP for dragon fireballs, preserving stable tie order.
 
 BattleScene supplies current world-to-lane positions and visual collision dimensions, while the pure functions decide which entity is selected. This is intentionally a boundary step: Phaser still owns coordinate projection, sprite bounds, projectile presentation/tweens, attack cooldowns, and the actual encounter loop. Dragon fireball plant damage now also uses the shared HP resolver.
+
+
+## Attack timing and Dust Skitter motion extraction (implemented)
+- `advanceCooldown` now handles elapsed-time advancement for ordinary monster bites, Radish firing, and both dragon attack timers.
+- `resolveBiteAttack` owns the bite-ready decision and interval reset while the scene retains the existing damage/audio/visual side effects.
+- `resolveDustSkitterMotionStep` owns jump/burst state transitions, elapsed durations, jump visual offset, and combined movement multipliers. The scene samples the existing Phaser random duration ranges only at transition boundaries and passes those samples into the pure resolver; random behavior has not yet been replaced with the server-seeded RNG.
+- Jumping remains presentation-only: it changes the sprite's vertical offset and movement multiplier, not lane coordinates or collision geometry. Bite-range interruption and the current jump/burst timing values are preserved.
+- The Phaser scene still owns spawn timing, random sampling, audio, dust effects, and animation playback. This is not yet a deterministic or server-authoritative battle.
