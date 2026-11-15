@@ -32,7 +32,7 @@ export default function AccountPage() {
         if (current) {
           try {
             await restoreOrInitializeCloudProgress();
-            if (active) setMessage("تمت استعادة تقدم حسابك.".replace("تمت استعادة تقدم حسابك.", "تمت مزامنة تقدم حسابك."));
+            if (active) setMessage(ar ? "تمت مزامنة تقدم حسابك." : "Your cloud progress is synced.");
           } catch (reason) {
             if (active) setError(reason.message);
           }
