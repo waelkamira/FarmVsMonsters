@@ -940,3 +940,6 @@ Coordinate correction: movement replay now uses calibrated lane width/spawn posi
 
 
 Movement replay hardening: added configured-speed checks for standard monsters, bounded lower/upper speed checks for Dust Skitters, and clock checkpoints during stationary bite cycles. The anti-tunneling fixture now traverses the full calibrated lane distance; negative movement distance is rejected at the event-log boundary. No test/build run succeeded in this environment.
+
+
+Final anti-tunneling check: replay now compares the claimed travelled distance with the distance actually produced by the shared clamped lane-step resolver. A log that claims the monster crossed the blocking Radish is rejected instead of silently clamping the replay position.
