@@ -27,6 +27,14 @@ const GRID_CENTER_X = (GRID_NODES[0][0].x + GRID_NODES[LANES][COLUMNS].x) / 2;
 const GRID_CENTER_Y = (GRID_NODES[0][0].y + GRID_NODES[LANES][0].y) / 2;
 const CELL_W = GRID_WIDTH / COLUMNS;
 const CELL_H = GRID_HEIGHT / LANES;
+// Reversible visual rarity palette for the current hyena archetypes.
+// White is the baseline; stronger archetypes receive progressively richer tints.
+const MONSTER_TIER_TINTS = {
+  "dust-skitter": 0xd7e1e8, // lighter scout: below standard durability
+  "cave-brute": 0xffffff,  // standard hyena
+  "stonehide": 0x579bff,   // reinforced hyena
+  "alpha-brute": 0xffc247  // giant alpha
+};
 const HOME_LOCAL_X = -300;
 const CAVEMAN_RETURN_SPEED = 420;
 const SPAWN_LOCAL_X = GRID_WIDTH / 2 + 28;
@@ -2003,11 +2011,14 @@ export default class BattleScene extends Scene {
     const hyenaSprite = this.hyenaAnimationsReady
       ? this.add.sprite(0, 0, "hyena-idle", 0).setOrigin(0.5, 1).setFlipX(true).setScale(0.918)
       : null;
+    const tierTint = MONSTER_TIER_TINTS[archetype] ?? 0xffffff;
     if (hyenaSprite) {
       // The original vector monster remains available as a fallback only.
+      // Tint the existing artwork in-place; no source sprites are modified.
       g.setVisible(false);
       view.add(g);
       view.add(hyenaSprite);
+      hyenaSprite.setTint(tierTint);
       hyenaSprite.play("hyena-idle");
       hyenaSprite.on("animationcomplete", (animation) => {
         if (!monsterRecord || !monsterRecord.alive) return;
@@ -2063,6 +2074,7 @@ export default class BattleScene extends Scene {
       braced: false,
       braceCue,
       maxHp: hp,
+      tierTint,
       hitFlashGraphic: g, hitFlashTimer: null, hyenaSprite, hitAnimUntil: 0,
       attackCooldown: 0, alive: true, view, dustTimer: 0,
       knockedPlants: new Set(),
@@ -2284,7 +2296,8 @@ export default class BattleScene extends Scene {
     if (monster.hitFlashTimer) monster.hitFlashTimer.remove(false);
     monster.hitFlashTimer = this.time.delayedCall(125, () => {
       if (sprite?.active) {
-        sprite.clearTint();
+        // Restore the creature's rarity color after the temporary hit flash.
+        sprite.setTint(monster.tierTint ?? 0xffffff);
         if (Number.isFinite(monster.hitRecoilBaseX)) sprite.x = monster.hitRecoilBaseX;
       }
       if (graphic?.active) graphic.setBlendMode(0);
