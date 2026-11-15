@@ -172,3 +172,6 @@ Pickup identity hardening: collectible IDs are now globally monotonic for the ba
 
 
 Coordinate and bite-range correction: replay now uses the calibrated 420.823-unit board width and the actual spawn coordinate (238.4115) shared with the scene, rather than treating board columns as unit-spaced. Bite events are preceded by a movement checkpoint when the monster enters bite range, and replay rejects bites while the monster is still outside the target's clearance.
+
+
+Movement replay hardening: non-Dust-Skitter archetypes must match their configured base movement speed after the shared lane-step clamp; Dust Skitters are bounded between their base speed and the combined jump/burst maximum pending exact PRNG-state replay. Movement checkpoints continue during chewing so stationary bite time is not incorrectly counted as travel time. Bite entry always forces a fresh position checkpoint.
