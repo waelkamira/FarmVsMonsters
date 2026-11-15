@@ -95,7 +95,7 @@ export async function restoreOrInitializeCloudProgress() {
     // Legacy cloud balances are not trusted. Only a future verified reward
     // pipeline may set coins_verified=true and authorize restoring this value.
     coins: result.progress.coins_verified === true
-      ? Math.max(local.coins, Number(result.progress.coins) || 0)
+      ? (Number(result.progress.coins) || 0)
       : local.coins
   };
 
