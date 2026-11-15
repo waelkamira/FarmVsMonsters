@@ -72,7 +72,7 @@ export default function MonstersPage() {
             : "Meet the four hyena archetypes in the Stage 1 dragon army. They differ in speed, durability, and battlefield role."}
         </p>
         <div className="collection-grid">
-          {monsters.map((monster, index) => (
+          {monsters.map((monster) => (
             <article className="collection-card is-active" key={monster.id}>
               <div className="collection-art" aria-hidden="true">{monster.icon}</div>
               <h2>{ar ? monster.ar : monster.en}</h2>
