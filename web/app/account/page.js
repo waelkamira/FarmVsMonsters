@@ -26,7 +26,18 @@ export default function AccountPage() {
   useEffect(() => {
     let active = true;
     getPlayerSession()
-      .then(({ user: current }) => { if (active) setUser(current); })
+      .then(async ({ user: current }) => {
+        if (!active) return;
+        setUser(current);
+        if (current) {
+          try {
+            await restoreOrInitializeCloudProgress();
+            if (active) setMessage("تمت استعادة تقدم حسابك.".replace("تمت استعادة تقدم حسابك.", "تمت مزامنة تقدم حسابك."));
+          } catch (reason) {
+            if (active) setError(reason.message);
+          }
+        }
+      })
       .catch((reason) => {
         if (active && !String(reason.message).includes("Failed to fetch")) setError(reason.message);
       })
