@@ -128,3 +128,10 @@ Phaser still chooses the visual lane using its current random source, creates sp
 - This makes those gameplay-affecting random choices reproducible when the same local seed is supplied to the same scene logic. The seed is not accepted from a player as proof and is not trusted by a server.
 - Cosmetic voice timing/selection, animation, and incidental presentation randomness remain separate from the simulation stream.
 - The next authoritative step is to issue the seed from a server-created session and move the same deterministic rules into a server replay validator. Until then, client combat outcomes and locally generated seeds remain untrusted; cloud rewards and progression writes stay disabled.
+
+
+## Ordered player-action event log (first client instrumentation step)
+- Added a versioned, immutable combat event log with a session seed, rules version, contiguous sequence numbers, and nondecreasing millisecond ticks.
+- The live scene records successful plant placement, manual uprooting, and positive energy collection actions. Failed actions and zero-value pickups are not recorded.
+- Event payloads are normalized and bounded to the current 8×5 battlefield and the two implemented plant types. The log is currently retained in scene memory only.
+- This is instrumentation, not a replay validator: monster outcomes, autonomous energy generation, combat damage, wave/boss state, and terminal outcomes are not yet replayed or verified. Client event logs remain untrusted and must not grant currency or progression.
