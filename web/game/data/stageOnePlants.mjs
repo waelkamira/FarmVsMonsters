@@ -2,6 +2,7 @@
 export const STAGE_ONE_PLANTS = Object.freeze([
   {
     id: "radish",
+    assetPath: "/assets/plants/radish.png",
     name: "Radish Defender",
     nameAr: "الفجل المدافع",
     role: "Lane defender",
@@ -19,6 +20,7 @@ export const STAGE_ONE_PLANTS = Object.freeze([
   },
   {
     id: "energy-mushroom",
+    assetPath: "/assets/plants/energy-mushroom.png",
     name: "Energy Mushroom",
     nameAr: "فطر الطاقة",
     role: "Energy producer",
@@ -36,6 +38,7 @@ export const STAGE_ONE_PLANTS = Object.freeze([
   },
   {
     id: "pea-shooter",
+    assetPath: "/assets/plants/pea-shooter.png",
     name: "Pea Shooter",
     nameAr: "قاذف البازلاء",
     role: "Rapid ranged attacker",
@@ -47,6 +50,7 @@ export const STAGE_ONE_PLANTS = Object.freeze([
   },
   {
     id: "thorn-wall",
+    assetPath: "/assets/plants/thorn-wall.png",
     name: "Thorn Wall",
     nameAr: "جدار الأشواك",
     role: "Heavy blocker",
@@ -58,6 +62,7 @@ export const STAGE_ONE_PLANTS = Object.freeze([
   },
   {
     id: "sunflower",
+    assetPath: "/assets/plants/sunflower.png",
     name: "Sunflower",
     nameAr: "عباد الشمس",
     role: "Energy generator",
@@ -69,6 +74,7 @@ export const STAGE_ONE_PLANTS = Object.freeze([
   },
   {
     id: "ice-bloom",
+    assetPath: "/assets/plants/ice-bloom.png",
     name: "Ice Bloom",
     nameAr: "زهرة الصقيع",
     role: "Slowing support",
@@ -80,6 +86,7 @@ export const STAGE_ONE_PLANTS = Object.freeze([
   },
   {
     id: "double-radish",
+    assetPath: "/assets/plants/double-radish.png",
     name: "Twin Radish",
     nameAr: "الفجل المزدوج",
     role: "Double projectile attacker",
@@ -91,6 +98,7 @@ export const STAGE_ONE_PLANTS = Object.freeze([
   },
   {
     id: "pumpkin-guard",
+    assetPath: "/assets/plants/pumpkin-guard.png",
     name: "Pumpkin Guard",
     nameAr: "حارس اليقطين",
     role: "Armored blocker",
@@ -102,6 +110,7 @@ export const STAGE_ONE_PLANTS = Object.freeze([
   },
   {
     id: "explosive-berry",
+    assetPath: "/assets/plants/explosive-berry.png",
     name: "Blast Berry",
     nameAr: "توتة متفجرة",
     role: "Area damage",
@@ -113,6 +122,7 @@ export const STAGE_ONE_PLANTS = Object.freeze([
   },
   {
     id: "fire-pepper",
+    assetPath: "/assets/plants/fire-pepper.png",
     name: "Fire Pepper",
     nameAr: "فلفل النار",
     role: "Lane-clearing special",
