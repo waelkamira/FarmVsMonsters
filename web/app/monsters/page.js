@@ -20,8 +20,8 @@ export default function MonstersPage() {
         <h1>{ar ? "قائمة الوحوش" : "Monster Collection"}</h1>
         <p className="collection-intro">
           {ar
-            ? "تعرّف على الأنواع الأربعة الموجودة في جيش التنين في المرحلة الأولى. تختلف في السرعة والتحمّل والدور القتالي."
-            : "Meet the four hyena archetypes in the Stage 1 dragon army. They differ in speed, durability, and battlefield role."}
+            ? "تضم الموسوعة ١٠٠ خانة للوحوش. الأنواع المنفّذة فقط تظهر كأعداء جاهزين؛ أما بقية الخانات فمعلّمة بوضوح بأنها تصاميم مستقبلية وليست قابلة للعب أو الشراء."
+            : "The encyclopedia reserves 100 monster entries. Only implemented types are shown as ready enemies; all remaining entries are clearly marked as future designs, not playable or purchasable."}
         </p>
         <div className="collection-summary">
           <span>{ar ? "أنواع منفّذة" : "IMPLEMENTED"}: <strong>{STAGE_ONE_MONSTERS.length}</strong></span>
