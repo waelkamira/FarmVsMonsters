@@ -47,7 +47,7 @@ BATTLE
 
 ## End conditions (locked for the first playable version)
 
-- The first stage keeps a five-wave structure for now, but **100 monsters is no longer a required or approved difficulty target**. The current code's 10 / 15 / 20 / 25 / 30 schedule is known to be too punishing with the current plant roster and must be rebalanced before the public demo. The exact lower counts are to be selected through playtesting; do not invent a new fixed total in documentation.
+- The first stage keeps five waves, with **30 ordinary monsters total across the entire stage**. Stage 2 targets 31, Stage 3 targets 32, and each later stage adds one (Stage N = 29 + N). These are per-stage totals, not per-wave counts; dragon bosses are tracked separately. The current code's 10 / 15 / 20 / 25 / 30 schedule (100 total) must be replaced. The exact distribution of each stage total across its waves will be tuned through playtesting.
 - Wave counts must be data-defined and finite; do not generate an unbounded sixth wave.
 - **Difficulty curve:** Wave 1 must be a forgiving introduction with few slow/basic enemies and enough time/resources to learn planting and defense. Each subsequent wave increases pressure in small, understandable steps. Introduce faster, tougher, or special enemies only after their counterplay has been taught. Give the player short recovery/breathing intervals; avoid a sudden swarm or an unavoidable early defeat.
 - **Final-wave dragon timing:** at the start of Wave 5, the small Stage 1 dragon begins appearing behind the battlefield while a few ordinary followers may still be alive. The dragon moves left/right and launches telegraphed fireballs at plants/farm. The followers continue their attacks. Once all followers are defeated, the dragon remains alone as the final boss.
@@ -83,7 +83,7 @@ BATTLE
 - Health/damage/death rules for the Radish, monster, and farmhouse/princess objective.
 - Emergency mode: club combat is enabled only after the last living defender dies; it is disabled as soon as a new defender is planted.
 - Starting energy, correct cost deduction at successful planting, and the complete Energy Mushroom loop: timed production, visible collectible energy, click-to-collect, collection feedback, and the energy cap.
-- Five waves with increasing but readable pressure, but with a lower, playtested enemy volume than the current 100-monster prototype. Wave 1 must be easy and teach the basics; increase pressure gradually, with recovery intervals and no sudden swarms.
+- Five waves with increasing but readable pressure, with 30 ordinary monsters total in Stage 1. Stage 2 targets 31, Stage 3 targets 32, then +1 ordinary monster per stage. Dragon bosses are tracked separately. Distribute the monsters across waves so Wave 1 is easy and teaches the basics; increase pressure gradually, with recovery intervals and no sudden swarms.
 - Stage 1 dragon appearance at the beginning of Wave 5 while a few ordinary followers may remain; left/right movement behind the battlefield; telegraphed fireball attacks; dragon-specific health bar and final-boss state.
 - Farmer automatically fires slingshot stones at the dragon only after it appears and enters range. Do not require player clicks.
 - After all followers are defeated, keep the dragon alive as the final boss. Only after the dragon is defeated, run the wife rescue, farmer-wife reunion, celebration, and stage result flow.
@@ -103,6 +103,7 @@ BATTLE
 - [ ] The last-defender transition enables club combat; planting a new defender disables it immediately.
 - [ ] Energy never becomes negative and is deducted only when planting succeeds.
 - [ ] Pause truly freezes all battle simulation; Resume continues without timer jumps.
+- [ ] Stage 1 spawns 30 ordinary monsters total across five waves; Stage 2 is configured for 31, Stage 3 for 32, and later stages follow +1 per stage. Dragon bosses are tracked separately.
 - [ ] Five waves progress correctly with a forgiving, gradually increasing difficulty curve; wave 1 is beatable by a new player using the starter setup.
 - [ ] Wave 5 begins the dragon appearance while a few followers may remain; dragon fireballs are telegraphed and can be countered through the available defense.
 - [ ] Farmer automatically launches slingshot stones only when the dragon is present and in range.
@@ -120,7 +121,7 @@ BATTLE
 
 Every campaign stage is a complete rescue adventure. Its opening shows a different dragon captor behind/in command of a distinct monster army, with the farmer's wife restrained beside/behind that dragon. The dragon intervenes during the battle and becomes the stage boss. The player must defeat both the dragon and all required surviving followers; ordinary wave survival alone is not enough for story-stage victory. The wife is then released and reunited with the farmer. Let the reunion and celebration breathe before the next stage reveals a different territory and dragon. Never re-kidnap her immediately during the reunion.
 
-The five-wave structure is retained, but the current 100-monster implementation is an over-difficult prototype baseline and must be rebalanced. Stage 1's dragon and rescue are required parts of Phase 1, not a later extension. The dragon appears at the start of Wave 5 while a few followers may remain; the farmer's slingshot fires automatically once the dragon is in range.
+The five-wave structure is retained. Stage 1 targets 30 ordinary monsters total; Stage 2 targets 31; Stage 3 targets 32; each later stage adds one. Dragon bosses are counted separately. Replace the old 100-monster prototype schedule. Stage 1's dragon and rescue are required parts of Phase 1, not a later extension. The dragon appears at the start of Wave 5 while a few followers may remain; the farmer's slingshot fires automatically once the dragon is in range.
 
 ## Approved signature feature — post-stage treasure cave
 
@@ -201,7 +202,7 @@ The user will create and provide the cave artwork later. Do not invent final cav
 - The browser rebuild and core battle scene exist in `web/`.
 - Phase 1 now exposes both Radish and Energy Mushroom cards. The Mushroom produces a full 15-energy collectible every 12 seconds even when the energy bank is full; the player must click each pickup before its 12-second expiry, and the 300-energy cap is applied at collection. Mushrooms are resource plants, not defensive plants, and do not block emergency club combat. Browser verification is still required.
 - Farmer frame-count validation was added on 2026-11-14.
-- The current Phase 1 code still uses 10 / 15 / 20 / 25 / 30 monsters (100 total), but this is now explicitly marked as too difficult and not a design lock. Reduce and rebalance the wave counts in code after agreeing the level/UI foundations; the sixth-wave loop remains removed.
+- The current Phase 1 code still uses 10 / 15 / 20 / 25 / 30 monsters (100 total), but the approved Stage 1 target is now 30 ordinary monsters total across five waves (dragon boss separate). Stage 2 targets 31, Stage 3 targets 32, then +1 per stage. Update code and tests after agreeing the level/UI foundations; the sixth-wave loop remains removed.
 - Phase 1 currently includes three monster archetypes: Cave-brute, Dust-skitter, and Stonehide. Stonehide braces while eating, reducing incoming damage; it is intended to require layered defense rather than a single Radish.
 - The battle HUD now tracks total campaign defeats out of 100 and the current wave's defeats out of that wave's target; the per-wave counter resets only when the previous wave is fully cleared.
 - Current code still triggers ordinary final-wave Victory after all scheduled monsters die; this is not yet correct for the approved story stage. Replace it with the Wave 5 dragon sequence, automatic slingshot combat, and rescue ending before declaring victory.
