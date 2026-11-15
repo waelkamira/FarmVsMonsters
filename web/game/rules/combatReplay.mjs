@@ -1,11 +1,11 @@
 import { resolvePlantPlacement, resolvePlantUproot, resolveEnergyPickup } from "./combatSimulation.mjs";
 import { PHASE_ONE_ENERGY, PHASE_ONE_PLANTS, PHASE_ONE_COMBAT_CONTRACT_VERSION } from "./phaseOneCombatContract.mjs";
-import { MUSHROOM_PICKUP_TTL_MS } from "./phaseOneRules.mjs";
 import { validateCombatEventLog } from "./combatEventLog.mjs";
 
 export const PHASE_ONE_RULES_VERSION = `phase-one-v${PHASE_ONE_COMBAT_CONTRACT_VERSION}`;
 const MUSHROOM_INTERVAL = PHASE_ONE_PLANTS.energyMushroom.productionIntervalMs;
 const MUSHROOM_VALUE = PHASE_ONE_PLANTS.energyMushroom.energyPerPickup;
+const MUSHROOM_PICKUP_TTL_MS = PHASE_ONE_PLANTS.energyMushroom.pickupTtlMs;
 export function createCombatReplayState() {
   return Object.freeze({ energy: PHASE_ONE_ENERGY.initial, plants: Object.freeze([]), pickups: Object.freeze([]), appliedEvents: 0, lastTick: 0 });
 }
