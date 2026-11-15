@@ -65,3 +65,21 @@ The migrations provision these player-owned records:
 Plant purchases are designed to run through the database function `purchase_player_plant(plant_key)`. It reads the approved price from the database catalogue, locks the player's progress row, checks stage access and ownership, debits the balance, records the transaction, and grants the inventory item in one database transaction. Do not call it with a client-supplied price.
 
 The Stage 1 catalogue currently contains two implemented plants and eight planned plants. All planned plants remain unavailable and non-purchasable until their final art and gameplay behavior are integrated.
+
+
+## Stage 1 plant artwork drop locations
+
+When the plant illustrations are ready, add transparent PNG files under `web/public/assets/plants/` using these exact names:
+
+- `radish.png`
+- `energy-mushroom.png`
+- `pea-shooter.png`
+- `thorn-wall.png`
+- `sunflower.png`
+- `ice-bloom.png`
+- `double-radish.png`
+- `pumpkin-guard.png`
+- `explosive-berry.png`
+- `fire-pepper.png`
+
+The game data already reserves these asset paths. The two starter plants remain playable; the other eight stay locked until their images and gameplay implementations are integrated.
