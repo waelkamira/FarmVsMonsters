@@ -106,7 +106,7 @@ export default class BattleScene extends Scene {
     // These four hyena sheets now share one standardized 360x298 frame grid.
     this.load.spritesheet("hyena-idle", "/assets/characters/monsters/hyena/hyena-idle.png", { frameWidth: 360, frameHeight: 298 });
     this.load.spritesheet("hyena-walk", "/assets/characters/monsters/hyena/hyena-walk.png", { frameWidth: 360, frameHeight: 298 });
-    this.load.spritesheet("hyena-run", "/assets/characters/monsters/hyena/hyena-run.png", { frameWidth: 360, frameHeight: 298 });
+    this.load.spritesheet("hyena-run", "/assets/characters/monsters/hyena/hyena-run1.png", { frameWidth: 367, frameHeight: 298 });
     this.load.spritesheet("hyena-bite", "/assets/characters/monsters/hyena/hyena-bite.png", { frameWidth: 360, frameHeight: 298 });
     this.load.spritesheet("hyena-hit", "/assets/characters/monsters/hyena/hyena-hit.png", { frameWidth: 360, frameHeight: 894 });
     this.load.spritesheet("hyena-death", "/assets/characters/monsters/hyena/hyena-death.png", { frameWidth: 360, frameHeight: 447 });
@@ -2963,9 +2963,12 @@ export default class BattleScene extends Scene {
       monster.view.setPosition(position.x, position.y);
       if (monster.hyenaSprite?.active) monster.hyenaSprite.y = jumpOffset;
       if (monster.hyenaSprite && monster.hitAnimUntil <= this.time.now) {
+        // The corrected seven-frame run sheet belongs to the fast hyena.
+        // Keep it running for the full advance so its new crop can be tested
+        // clearly in a normal battle, rather than only during a short burst.
         const movementAnimation = monster.isJumping
           ? "hyena-jump"
-          : monster.kind === "dust-skitter" && monster.burstRemaining > 0
+          : monster.kind === "dust-skitter"
             ? "hyena-run"
             : "hyena-walk";
         this.playHyenaAnimation(monster, movementAnimation);
