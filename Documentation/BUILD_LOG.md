@@ -943,3 +943,10 @@ Movement replay hardening: added configured-speed checks for standard monsters, 
 
 
 Final anti-tunneling check: replay now compares the claimed travelled distance with the distance actually produced by the shared clamped lane-step resolver. A log that claims the monster crossed the blocking Radish is rejected instead of silently clamping the replay position.
+
+
+## 2026-11-16 — Plant-shaped projectile visual
+- Replaced the Radish's abstract golden thorn projectile with a miniature of the same loaded `radish-character` PNG used by the planted defender, rotated sideways so its root points toward monsters.
+- Kept the existing projectile lane, travel speed, damage, target selection, and collision radius unchanged. Retained a small pink/green glow and added a matching leaf-coloured impact burst.
+- Added a simple Radish-shaped fallback only for the asset-load failure case. This visual integration is currently for the active Radish defender; future plants need their own projectile-art mapping and firing profiles.
+- GitHub source was updated; no browser preview, local test run, or production deployment was performed.
