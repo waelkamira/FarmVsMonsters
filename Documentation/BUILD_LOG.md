@@ -810,3 +810,14 @@
 - Updated the purchase RPC to require verified progression as well as verified currency before checking stage gates or spending coins.
 - Added regression assertions for the progression verification gate and documented the behavior.
 - Migration 004 remains a repository change only; it has not been applied to the live Supabase project. No tests/build/browser run was performed in this step.
+
+
+
+## 2026-11-15 — Shared Stage 1 combat contract and replay RNG foundation
+- Added `web/game/rules/phaseOneCombatContract.mjs`, a versioned, renderer-independent source for Stage 1 waves, energy, plant combat values, all four monster profiles, Dust Skitter timing/movement, dragon combat, spawn pacing, and the existing 8-coin ordinary-monster reward.
+- Refactored `phaseOneRules.mjs` and `BattleScene.js` to consume the shared contract instead of duplicating monster HP, movement, damage, dragon, reward, and wave pacing constants. Existing balance values and wave counts were preserved.
+- Added `web/game/rules/seededRandom.mjs` with deterministic xorshift32 and unbiased integer sampling for future server/client replay. It is not yet wired into BattleScene; existing Phaser random calls remain client-side until session seed flow and simulation replay are implemented.
+- Added tests in `phase-one-combat-contract.test.mjs` and `seeded-random.test.mjs` covering exact current values, deterministic sequences, input validation, and shared-contract usage.
+- Added `Documentation/STAGE_ONE_AUTHORITATIVE_COMBAT_SIMULATION.md` describing the server-authoritative replay design, trust boundaries, deterministic requirements, rollout, and acceptance tests.
+- No economy values were changed: each ordinary monster still awards 8 local coins; dragon reward remains separate/unconfigured. Cloud progress and currency writes remain disabled pending a trusted server simulator.
+- Validation: GitHub source read/write only. No local npm test, lint, production build, browser test, or live Supabase migration was run.
