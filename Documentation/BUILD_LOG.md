@@ -905,3 +905,10 @@
 - Reuses shared phase-one rules and validates planting costs, occupied cells, full refund, legal pickup denomination, sequence/tick order, duration, and rules version.
 - Explicitly does not validate world pickup provenance, combat simulation, boss defeat, victory, rewards, or progression; no trusted server path enabled.
 - Added four focused replay tests. Execution/build status remains unverified in this environment.
+
+
+## 2026-11-16 — Mushroom energy lifecycle replay
+- Added event records for mushroom energy production, exact pickup collection, and full-bank discard.
+- Added replay checks for live source mushroom, 12-second production cadence, deterministic per-plant pickup IDs, 15-energy denomination, 12-second expiry, single-use collection, and the 300-energy cap.
+- Added an active-combat clock that pauses across story sequences for consistent replay timestamps.
+- Expanded focused replay tests. Tests/build were not executed in this environment.
