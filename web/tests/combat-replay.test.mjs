@@ -97,6 +97,8 @@ test("movement replay rejects forged speed, skipped movement time and an incorre
  assert.equal(replayCombatEventLog(wrongBlocker).reason,"MONSTER_MOVEMENT_BLOCKER_MISMATCH");
 });
 test("movement replay cannot pass through a radish or move backwards", () => {
- const through=makeLog([ev(0,"plant_placed",{type:"radish",col:2,row:1}),ev(0,"monster_spawned",{monsterId:"monster-1",wave:1,spawnIndex:0,row:1,archetype:"cave-brute",hp:175,speed:8,localX:238.4115}),ev(1000,"monster_moved",{monsterId:"monster-1",distance:6,deltaMs:1000,blockerCol:2,biteReach:0.25})]);
+ const through=makeLog([ev(0,"plant_placed",{type:"radish",col:2,row:1}),ev(0,"monster_spawned",{monsterId:"monster-1",wave:1,spawnIndex:0,row:1,archetype:"cave-brute",hp:175,speed:8,localX:238.4115}),ev(40000,"monster_moved",{monsterId:"monster-1",distance:320,deltaMs:40000,blockerCol:2,biteReach:0.25})]);
  assert.equal(replayCombatEventLog(through).ok,true); assert.ok(Math.abs(replayCombatEventLog(through).state.monsters[0].localX - (((2.5 / 8) * 420.823) - (420.823 / 2) + 0.25)) < 1e-8);
+ const invalid=createCombatEventLog({seed:123,rulesVersion:PHASE_ONE_RULES_VERSION});
+ assert.throws(()=>appendCombatEvent(invalid,ev(1,"monster_moved",{monsterId:"monster-1",distance:-1,deltaMs:1,blockerCol:null,biteReach:0})),/INVALID_MONSTER_MOVEMENT_EVENT/);
 });
