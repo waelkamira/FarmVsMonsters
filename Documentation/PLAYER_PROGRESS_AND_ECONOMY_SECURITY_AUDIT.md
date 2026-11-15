@@ -35,14 +35,23 @@ Once that trust boundary exists, one database transaction should:
 - update completed stages, unlocked stage, and coin balance;
 - return the authoritative balance and progression.
 
-## Required follow-up before enabling cloud currency
+## Implemented in the repository
 
-- Replace the insecure progress `PUT` path with separate server-authoritative progression and reward operations.
-- Restrict direct client updates to `player_progress.coins`; only trusted database functions may change the balance.
-- Add a unique idempotency key for each stage completion and reward event.
-- Change cloud restore so it never promotes local coins into the authoritative cloud balance.
-- Keep local-only play available, but clearly distinguish its local balance from a verified account balance until sync is supported.
-- Add tests for forged balances, replayed completions, concurrent reward requests, cross-user access, and cloud/local conflict handling.
+- Disabled the progress API `PUT` endpoint with HTTP 410; it no longer accepts client-supplied balances or stage progression.
+- Added migration 004 to revoke direct client insert/update access to `player_progress`.
+- Added `coins_verified`, default false, and blocked plant purchases while the balance is unverified. Existing balances are retained, not silently erased.
+- Removed browser-side victory upload and removed local-to-cloud balance promotion.
+- Cloud restore copies a coin balance to local storage only when the database explicitly marks it verified.
+- Kept guest play, local stage progression, and local coin saving active; account UI and setup documentation disclose the temporary cloud-sync pause.
+
+## Remaining before cloud progression and currency can be re-enabled
+
+- Apply migration 004 to the live Supabase project before deploying this source transition.
+- Implement a trusted game-session and completion-verification boundary. A client-side victory event or kill report alone is not proof of a win.
+- Add a server-authoritative, idempotent stage-completion operation that validates a one-time completion record, updates completed stages/unlocked stage, and grants a server-defined reward in one database transaction.
+- Define how legacy unverified balances will be reconciled. Do not mark them verified or make them spendable based only on client/local-storage values.
+- Add behavioral tests for forged balance writes, replayed completions, concurrent completion requests, cross-user access, and local/cloud reconciliation.
+- Re-enable cloud progress writes only through those trusted operations; do not restore a generic client-write endpoint.
 
 ## Scope and limitations
 
