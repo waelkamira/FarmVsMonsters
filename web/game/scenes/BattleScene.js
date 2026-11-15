@@ -173,6 +173,7 @@ export default class BattleScene extends Scene {
     this.monsters = [];
     this.projectiles = [];
     this.energyPickups = [];
+    this.nextEnergyPickupId = 1;
     this.sfxCooldowns = new Map();
     this.farmerFootstepCooldownMs = 0;
     this.nextProjectileAim = "head";
@@ -2123,7 +2124,7 @@ export default class BattleScene extends Scene {
     // energy before pickup expiry cannot retroactively erase a production cycle.
     const amount = MUSHROOM_CONFIG.energy;
     plant.productionCount = (plant.productionCount ?? 0) + 1;
-    const pickupId = `mushroom-${plant.col}-${plant.row}-${plant.productionCount}`;
+    const pickupId = `pickup-${this.nextEnergyPickupId++}`;
     this.recordCombatEvent("energy_spawned", { sourceCol: plant.col, sourceRow: plant.row, pickupId, amount });
     const token = this.add.container(plant.x, plant.y - 66).setDepth(35);
     token.combatPickupId = pickupId;
