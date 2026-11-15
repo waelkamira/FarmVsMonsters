@@ -57,3 +57,8 @@ Once that trust boundary exists, one database transaction should:
 ## Scope and limitations
 
 This audit records source-level findings only. No database migration was applied to a live Supabase project, and no build, automated test suite, or browser session was run as part of this audit. A follow-up lockdown has now been implemented in the repository: migration `004_lock_unverified_player_progress.sql` revokes direct client writes, marks legacy coin balances unverified, and prevents spending from those balances. The progress API returns HTTP 410 for writes; the browser no longer uploads local progress or reports a win to the cloud. Local play and local saves remain available. This is a deliberate temporary loss of cloud write/sync functionality, not a completed secure reward system. Migration 004 has only been committed to the repository; it has **not** been applied to a live Supabase project. Cloud currency and progression must not be described as fully secure until the migration is applied and a server-verifiable game completion pipeline is implemented.
+
+
+## Follow-up implementation status
+
+The Stage 1 renderer and rules now consume a shared versioned combat contract at `web/game/rules/phaseOneCombatContract.mjs`. It centralizes the existing wave roster, plant/monster/dragon/farmer values, spawn pacing, and 8-coin ordinary-monster reward. A deterministic seeded PRNG foundation is also present at `web/game/rules/seededRandom.mjs`, with unit tests. These are preparatory refactors only: the live battle still runs in the browser and still uses Phaser randomness for gameplay choices. They do not yet make rewards server-authoritative or justify re-enabling cloud sync.
