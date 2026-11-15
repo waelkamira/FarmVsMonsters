@@ -928,3 +928,9 @@ Hardening: pickup IDs are unique across the full battle session, including after
 
 
 Validation follow-up: corrected monster ID regex validation and added malformed-ID/out-of-range-lane tests. GitHub Actions still fails at runner allocation before any job steps; no test/build success is claimed.
+
+
+## 2026-11-16 — Monster lane movement replay
+- Added periodic movement checkpoints with lane distance, elapsed combat time, and nearest Radish blocker.
+- Replay derives the blocker from the lane state and clamps movement through the shared lane-step resolver; it rejects movement exceeding archetype speed bounds, clock mismatches, and incorrect blockers.
+- Added focused movement replay tests. This is a checkpoint-based validation slice, not yet a complete deterministic frame simulation; Dust Skitter random state, projectile hits, deaths, farm breach and boss resolution remain open. Tests/build not executed locally.
