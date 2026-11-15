@@ -54,6 +54,27 @@ export default function HomePage() {
       <div className="world-forest" aria-hidden="true"><i /><i /><i /><i /><i /><i /></div>
       <div className="world-ground" aria-hidden="true" />
 
+      <div className="world-battlefield-showcase" aria-hidden="true">
+        <img className="world-battlefield-image" src="/assets/backgrounds/farm-battlefield.jpeg" alt="" />
+        <div className="world-battlefield-atmosphere" />
+        <div className="battlefield-farmer">
+          <img src="/assets/characters/farmer/farmer-idle.png" alt="" />
+        </div>
+        <div className="battlefield-hyena battlefield-hyena-one">
+          <img src="/assets/characters/monsters/hyena/hyena-idle.png" alt="" />
+        </div>
+        <div className="battlefield-hyena battlefield-hyena-two">
+          <img src="/assets/characters/monsters/hyena/hyena-idle.png" alt="" />
+        </div>
+        <div className="battlefield-hyena battlefield-hyena-three">
+          <img src="/assets/characters/monsters/hyena/hyena-idle.png" alt="" />
+        </div>
+        <div className="battlefield-plant battlefield-plant-radish"><img src="/assets/plants/radish.png" alt="" /></div>
+        <div className="battlefield-plant battlefield-plant-mushroom"><img src="/assets/plants/mushroom.png" alt="" /></div>
+        <div className="battlefield-plant battlefield-plant-radish-small"><img src="/assets/plants/radish.png" alt="" /></div>
+        <div className="battlefield-ground-glow" />
+      </div>
+
       <header className="world-topbar">
         <Link className="world-logo" href="/" aria-label="Farm Vs Monsters">🌿 <span>Farm</span><b>Vs</b><span>Monsters</span></Link>
         <div className="world-top-actions">
