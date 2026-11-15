@@ -918,3 +918,10 @@ Correction: completed BattleScene instrumentation for mushroom spawn, pickup IDs
 
 
 Hardening: pickup IDs are unique across the full battle session, including after a mushroom is uprooted and replanted in the same cell. Replay checks the next expected ID and mushroom production order.
+
+
+## 2026-11-16 — Monster spawn and bite replay slice
+- Added unique monster spawn IDs and logged each monster's wave/index, lane, archetype, HP and speed.
+- Replay validates the exact five-wave roster sequence and derives archetypes and combat stats from the shared contract.
+- Logged monster bites against radish cells; replay checks living attacker/target, lane match, archetype damage and attack interval, then recalculates plant HP.
+- Movement, projectile hits, deaths, breach, boss and rewards remain outside authoritative replay. Tests/build not executed in this environment.
