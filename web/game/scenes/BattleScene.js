@@ -2634,13 +2634,14 @@ export default class BattleScene extends Scene {
       tierTint,
       hitFlashGraphic: g, hitFlashTimer: null, hyenaSprite, hitAnimUntil: 0,
       attackCooldown: 0, alive: true, view, dustTimer: 0,
+      replayMoveElapsedMs: 0, replayMoveStartLocalX: SPAWN_LOCAL_X, replayLastMovementTick: Math.floor(this.combatClockMs), replayLastBlockerCol: null,
       knockedPlants: new Set(),
       voiceCooldown: PhaserMath.Between(4200, 8500)
     };
     this.monsters.push(monsterRecord);
     this.recordCombatEvent("monster_spawned", {
       monsterId: monsterRecord.combatId, wave: this.wave, spawnIndex, row, archetype,
-      hp, speed
+      hp, speed, localX: SPAWN_LOCAL_X
     });
   }
 
@@ -2818,6 +2819,25 @@ export default class BattleScene extends Scene {
         biteReach
       });
       monster.localX = laneStep.localX;
+      monster.replayMoveElapsedMs += delta;
+      const blockerCol = blocker ? blocker.col : null;
+      const movementTick = Math.floor(this.combatClockMs);
+      const movementCheckpointDue = monster.replayMoveElapsedMs >= 500 ||
+        (withinBiteRange && monster.replayLastBlockerCol !== blockerCol) ||
+        monster.replayLastBlockerCol !== blockerCol;
+      if (movementCheckpointDue) {
+        this.recordCombatEvent("monster_moved", {
+          monsterId: monster.combatId,
+          distance: Math.max(0, monster.replayMoveStartLocalX - monster.localX),
+          deltaMs: Math.max(0, movementTick - monster.replayLastMovementTick),
+          blockerCol,
+          biteReach: blocker ? Math.min(1.5, biteReach) : 0
+        });
+        monster.replayMoveStartLocalX = monster.localX;
+        monster.replayLastMovementTick = movementTick;
+        monster.replayMoveElapsedMs = 0;
+        monster.replayLastBlockerCol = blockerCol;
+      }
 
       const position = this.monsterLanePoint(monster.localX, monster.row);
       monster.x = position.x; monster.y = position.y;
