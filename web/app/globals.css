@@ -1666,3 +1666,90 @@ select option {
   opacity:.58;
   cursor:not-allowed;
 }
+
+
+/* Original Farm Vs Monsters campaign world map */
+.campaign-map-shell {
+  min-height:100vh;
+  padding:clamp(16px,3vw,36px);
+  color:#fff;
+  background:
+    radial-gradient(ellipse at 10% 0%,#2acb8b55,transparent 38%),
+    radial-gradient(ellipse at 95% 8%,#8a66ee55,transparent 35%),
+    linear-gradient(145deg,#101e35 0%,#142d45 48%,#18243e 100%);
+}
+.campaign-map-topbar { display:flex; align-items:center; justify-content:space-between; gap:14px; max-width:1160px; margin:0 auto 22px; }
+.campaign-map-back,.campaign-map-secondary {
+  display:inline-flex; align-items:center; justify-content:center; min-height:42px; padding:9px 16px;
+  border:1px solid #ffffff55; border-radius:999px; color:#fff!important; text-decoration:none;
+  background:#ffffff18; backdrop-filter:blur(14px); font-weight:900;
+}
+.campaign-map-heading { max-width:1160px; margin:0 auto 22px; padding:clamp(22px,4vw,38px); text-align:center;
+  border:1px solid #ffffff45; border-radius:28px; background:linear-gradient(135deg,#ffffff22,#ffffff09);
+  box-shadow:inset 0 1px 0 #ffffff55,0 18px 55px #030b1c55; backdrop-filter:blur(18px);
+}
+.campaign-map-eyebrow { color:#b9ffe1; font-size:12px; font-weight:1000; letter-spacing:.18em; }
+.campaign-map-heading h1 { margin:10px 0; color:#fff; font-size:clamp(34px,6vw,58px); font-weight:1000; text-shadow:0 4px 22px #0006; }
+.campaign-map-heading>p { max-width:760px; margin:0 auto; color:#f1f8ff; font-size:clamp(15px,2vw,18px); line-height:1.8; }
+.campaign-map-stats { display:flex; justify-content:center; flex-wrap:wrap; gap:10px; margin-top:22px; }
+.campaign-map-stats span { display:flex; align-items:center; gap:7px; padding:9px 15px; border:1px solid #ffffff45; border-radius:999px; background:#07172c66; color:#fff; font-size:13px; font-weight:800; }
+.campaign-map-stats strong { color:#ffe27a; font-size:20px; }
+.campaign-map-legend { display:flex; flex-wrap:wrap; justify-content:center; gap:12px 22px; max-width:1160px; margin:0 auto 20px; padding:12px 16px; border:1px solid #ffffff30; border-radius:16px; background:#ffffff10; }
+.campaign-map-legend span { display:flex; align-items:center; gap:8px; color:#fff; font-size:13px; font-weight:800; }
+.legend-dot { width:11px; height:11px; display:inline-block; border-radius:50%; box-shadow:0 0 12px currentColor; }
+.legend-playable { background:#72f4a8; color:#72f4a8; }
+.legend-preview { background:#ffdb72; color:#ffdb72; }
+.legend-locked { background:#aab7ca; color:#aab7ca; }
+.campaign-world-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; max-width:1160px; margin:0 auto; }
+.campaign-world-card { --world-accent:#62d6a0; position:relative; min-width:0; overflow:hidden; padding:20px; border:1px solid #ffffff50; border-radius:24px;
+  background:linear-gradient(145deg,#ffffff25,#ffffff0b); box-shadow:inset 0 1px 0 #ffffff45,0 12px 32px #020b1b66; backdrop-filter:blur(16px);
+}
+.campaign-world-card:before { content:""; position:absolute; inset:0 auto 0 0; width:5px; background:var(--world-accent); box-shadow:0 0 20px var(--world-accent); }
+[dir="rtl"] .campaign-world-card:before { inset:0 0 0 auto; }
+.theme-farm { --world-accent:#8af17d; }
+.theme-coast { --world-accent:#4edcff; }
+.theme-frontier { --world-accent:#ffbd62; }
+.theme-ice { --world-accent:#a9e8ff; }
+.theme-jungle { --world-accent:#8ce96c; }
+.theme-tech { --world-accent:#b99aff; }
+.theme-night { --world-accent:#a99bff; }
+.theme-festival { --world-accent:#ff8ec8; }
+.theme-primeval { --world-accent:#d7d879; }
+.theme-flood { --world-accent:#69e5d2; }
+.theme-rift { --world-accent:#ff8b78; }
+.world-is-locked { filter:saturate(.72); }
+.campaign-world-main { display:flex; gap:15px; align-items:flex-start; }
+.campaign-world-emblem { display:grid; place-items:center; flex:0 0 62px; width:62px; height:62px; border:1px solid var(--world-accent); border-radius:19px;
+  background:linear-gradient(145deg,color-mix(in srgb,var(--world-accent) 35%,transparent),#ffffff0b); font-size:32px; box-shadow:0 8px 20px #0003,inset 0 1px 0 #fff7;
+}
+.campaign-world-copy { min-width:0; flex:1; }
+.campaign-world-kicker { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:7px; color:#c9d8ed; font-size:10px; font-weight:1000; letter-spacing:.13em; }
+.campaign-world-kicker b { padding:5px 9px; border-radius:999px; background:#ffffff1a; color:var(--world-accent); letter-spacing:.04em; }
+.campaign-world-copy h2 { margin:8px 0 4px; color:#fff; font-size:clamp(17px,2vw,21px); line-height:1.25; }
+.campaign-world-subtitle { margin:0 0 7px!important; color:#e4efff!important; font-size:13px!important; font-weight:800; }
+.campaign-world-description { margin:0!important; color:#d2e0f3!important; font-size:12px!important; line-height:1.65!important; }
+.campaign-mission-track { margin-top:20px; padding:14px; border:1px solid #ffffff30; border-radius:17px; background:#06172a77; }
+.campaign-track-label { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px; color:#fff; font-size:11px; font-weight:1000; letter-spacing:.1em; }
+.campaign-track-label small { color:#c8d6e8; font-size:11px; font-weight:700; letter-spacing:0; }
+.campaign-mission-nodes { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:9px; }
+.campaign-mission-node { display:flex; align-items:center; justify-content:center; gap:4px; min-width:0; min-height:42px; padding:5px; border:1px solid #aab7ca66; border-radius:13px; color:#fff; background:#ffffff12; text-decoration:none; }
+.campaign-mission-number { font-size:13px; font-weight:1000; }
+.campaign-mission-state { font-size:10px; }
+.campaign-mission-node.is-playable { border:2px solid #7af3a7; color:#fff; background:linear-gradient(145deg,#2bba78,#16744f); box-shadow:0 0 18px #57f2a766; }
+.campaign-mission-node.is-unlocked-preview { border:2px solid #ffdc78; color:#fff; background:linear-gradient(145deg,#b88a2f,#78501e); }
+.campaign-mission-node.is-locked { color:#d4deec; background:#ffffff0a; opacity:.7; }
+.campaign-world-footnote { margin-top:12px; color:#d8e4f2; font-size:11px; line-height:1.6; }
+.campaign-map-footer { display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:10px; max-width:1160px; margin:22px auto 0; padding:20px; border:1px solid #ffffff35; border-radius:20px; background:#ffffff10; }
+.campaign-map-footer p { flex-basis:100%; margin:0 0 4px; color:#e5efff; font-size:13px; line-height:1.7; text-align:center; }
+.campaign-map-secondary { min-height:38px; font-size:13px; }
+@media(max-width:820px) { .campaign-world-list { grid-template-columns:1fr; } }
+@media(max-width:520px) {
+  .campaign-map-shell { padding:12px; }
+  .campaign-map-heading { border-radius:20px; }
+  .campaign-world-card { padding:15px; border-radius:19px; }
+  .campaign-world-emblem { flex-basis:52px; width:52px; height:52px; font-size:27px; }
+  .campaign-mission-nodes { gap:6px; }
+  .campaign-mission-node { min-height:39px; border-radius:10px; }
+  .campaign-mission-number { font-size:12px; }
+  .campaign-map-stats span { font-size:11px; }
+}
