@@ -94,3 +94,13 @@ Current row selection, burst/jump timings, and several cosmetic effects still us
 `BattleScene.js` now delegates planting, uprooting, monster bite damage, projectile damage, and dragon damage to these pure functions. The existing 8×5 grid, 35/50 planting costs, full manual refund behavior, 300 energy pickup cap, damage amounts, and 8-coin ordinary-monster reward remain unchanged.
 
 This is a first kernel extraction, not a complete simulation. Monster movement, target selection, collision geometry, projectile travel, wave scheduling, Dust Skitter gameplay randomness, dragon targeting, and victory/loss transitions still need to move into deterministic simulation functions. The client still owns the live battle and local reward display; cloud rewards remain disabled.
+
+
+## Target selection extraction (implemented)
+The pure combat kernel now also owns target selection:
+- nearest living Radish blocker in the monster's row and behind its current position; Energy Mushrooms remain non-blocking;
+- first eligible monster in the projectile's lane and collision radius, preserving monster-array first-match behavior and per-monster width scaling;
+- nearest eligible monster in the farmer's current lane and melee reach, preserving stable tie order;
+- living plant with the lowest HP for dragon fireballs, preserving stable tie order.
+
+BattleScene supplies current world-to-lane positions and visual collision dimensions, while the pure functions decide which entity is selected. This is intentionally a boundary step: Phaser still owns coordinate projection, sprite bounds, projectile presentation/tweens, attack cooldowns, and the actual encounter loop. Dragon fireball plant damage now also uses the shared HP resolver.
