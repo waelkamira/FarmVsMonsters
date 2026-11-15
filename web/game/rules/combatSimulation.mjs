@@ -1,6 +1,8 @@
 import {
   PHASE_ONE_ENERGY,
-  PHASE_ONE_PLANTS
+  PHASE_ONE_PLANTS,
+  PHASE_ONE_WAVE_SIZES,
+  getMonsterSpawnIntervalMs
 } from "./phaseOneCombatContract.mjs";
 
 const PLANT_RULES = Object.freeze({
@@ -325,5 +327,62 @@ export function resolveDustSkitterMotionStep({
     burstRemainingMs: burstRemaining,
     burstStarted,
     movementMultiplier
+  });
+}
+
+export function resolveMonsterArchetype(wave, spawnIndex) {
+  if (
+    !Number.isInteger(wave) || wave < 1 || wave > PHASE_ONE_WAVE_SIZES.length ||
+    !Number.isInteger(spawnIndex) || spawnIndex < 0 ||
+    spawnIndex >= PHASE_ONE_WAVE_SIZES[wave - 1]
+  ) throw new RangeError("INVALID_MONSTER_SPAWN_INDEX");
+
+  if (wave >= 4 && (spawnIndex + 1) % 10 === 0) return "alpha-brute";
+  if (wave >= 5 && (spawnIndex + 1) % 5 === 0) return "stonehide";
+  if (wave >= 3 && spawnIndex % 3 === 1) return "dust-skitter";
+  return "cave-brute";
+}
+
+export function resolveWaveSpawnStep({
+  wave,
+  totalWaves = PHASE_ONE_WAVE_SIZES.length,
+  waveSize,
+  spawnedThisWave,
+  intermissionMs,
+  spawnTimerMs,
+  deltaMs
+} = {}) {
+  if (
+    !Number.isInteger(wave) || wave < 1 || wave > totalWaves ||
+    !Number.isInteger(totalWaves) || totalWaves < 1 ||
+    !Number.isInteger(waveSize) || waveSize < 1 ||
+    !Number.isInteger(spawnedThisWave) || spawnedThisWave < 0 || spawnedThisWave > waveSize ||
+    !Number.isFinite(intermissionMs) || intermissionMs < 0 ||
+    !Number.isFinite(spawnTimerMs) ||
+    !Number.isFinite(deltaMs) || deltaMs < 0
+  ) throw new RangeError("INVALID_WAVE_SPAWN_STATE");
+
+  const nextIntermissionMs = intermissionMs > 0
+    ? Math.max(0, intermissionMs - deltaMs)
+    : 0;
+  let nextSpawnTimerMs = spawnTimerMs;
+  let nextSpawnedThisWave = spawnedThisWave;
+  let shouldSpawn = false;
+
+  if (nextIntermissionMs <= 0 && wave <= totalWaves && spawnedThisWave < waveSize) {
+    nextSpawnTimerMs -= deltaMs;
+    if (nextSpawnTimerMs <= 0) {
+      shouldSpawn = true;
+      nextSpawnedThisWave += 1;
+      nextSpawnTimerMs = getMonsterSpawnIntervalMs(wave);
+    }
+  }
+
+  return Object.freeze({
+    shouldSpawn,
+    spawnedThisWave: nextSpawnedThisWave,
+    intermissionMs: nextIntermissionMs,
+    spawnTimerMs: nextSpawnTimerMs,
+    remainingIntermissionSecond: Math.ceil(nextIntermissionMs / 1000)
   });
 }
