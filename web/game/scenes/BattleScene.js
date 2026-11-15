@@ -67,7 +67,7 @@ export default class BattleScene extends Scene {
     // Hyena sheets keep their original artwork untouched. Each sheet is sliced
     // using the grid that is actually present in that specific PNG.
     this.load.spritesheet("hyena-idle", "/assets/characters/monsters/hyena/hyena-idle.png", { frameWidth: 540, frameHeight: 447 });
-    this.load.spritesheet("hyena-walk", "/assets/characters/monsters/hyena/hyena-walk.png", { frameWidth: 360, frameHeight: 298 });
+    this.load.image("hyena-walk", "/assets/characters/monsters/hyena/hyena-walk.png");
     this.load.spritesheet("hyena-run", "/assets/characters/monsters/hyena/hyena-run.png", { frameWidth: 367, frameHeight: 298 });
     this.load.spritesheet("hyena-bite", "/assets/characters/monsters/hyena/hyena-bite.png", { frameWidth: 360, frameHeight: 447 });
     this.load.spritesheet("hyena-hit", "/assets/characters/monsters/hyena/hyena-hit.png", { frameWidth: 360, frameHeight: 894 });
@@ -1748,6 +1748,21 @@ export default class BattleScene extends Scene {
 
     try {
       if (this.hyenaAssetFailed) throw new Error("A hyena sprite sheet failed to load.");
+
+      // The walk sheet has 3 columns × 3 rows. The first two rows need
+      // 12 extra pixels at the bottom so the paw silhouettes are not clipped.
+      // The added area contains only the transparent gap before the next row.
+      const walkTexture = this.textures.get("hyena-walk");
+      const walkRows = [
+        { y: 0, height: 310 },
+        { y: 298, height: 310 },
+        { y: 596, height: 298 }
+      ];
+      walkRows.forEach((row, rowIndex) => {
+        for (let column = 0; column < 3; column += 1) {
+          walkTexture.add(String(rowIndex * 3 + column), 0, column * 360, row.y, 360, row.height);
+        }
+      });
 
       for (const [key, frameCount, frameRate, repeat] of definitions) {
         const texture = this.textures.get(key);
