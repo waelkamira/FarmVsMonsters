@@ -779,3 +779,12 @@
 - Added a World Map entry to the main menu and links to the plant and monster catalogues.
 - This is a presentation/progression-map layer only. It does not add 110 playable missions, alter wave composition, or replace the approved primary campaign rules.
 - Validation: source files were written to `main` and read/write operations succeeded through GitHub. No npm test, production build, or browser visual check was run; the map still requires local runtime verification.
+
+
+## 2026-11-15 — Player progress and economy security audit
+- Audited the Supabase progress API, local/cloud merge logic, BattleScene reward flow, and existing plant-purchase transaction.
+- Confirmed that the current progress PUT accepts a client-supplied coin balance and that local coins are merged upward with cloud coins. This makes cloud currency client-controlled and unsuitable as an authoritative balance.
+- Confirmed that monster-kill rewards are currently calculated in the browser; a database function accepting client-reported kill counts would still be forgeable.
+- Added `Documentation/PLAYER_PROGRESS_AND_ECONOMY_SECURITY_AUDIT.md` with verified findings, the safe trust boundary, required transaction/idempotency design, and migration steps.
+- No unsafe partial fix was applied: disabling the current endpoint without migrating the account/game flow would break cloud progression. Cloud currency must remain explicitly classified as untrusted until server-verifiable game completions and database-only balance updates are implemented.
+- Validation: source-level review and GitHub read-after-write only. No live Supabase migration, npm tests, production build, or browser test was run.
