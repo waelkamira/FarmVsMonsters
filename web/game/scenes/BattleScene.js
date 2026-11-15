@@ -1844,7 +1844,7 @@ export default class BattleScene extends Scene {
       ["hyena-idle", 4, 5, -1],
       ["hyena-walk", 9, 9, -1],
       ["hyena-run", 7, 10, -1],
-      ["hyena-bite", 6, 9, 0],
+      ["hyena-bite", 6, 9, -1],
       ["hyena-hit", 3, 12, 0],
       ["hyena-death", 6, 8, 0]
     ];
@@ -2152,11 +2152,10 @@ export default class BattleScene extends Scene {
       }
 
       if (withinBiteRange) {
-        // Freeze the exact movement frame on arrival. Switching sprite sheets or
-        // looping idle frames can change the visible silhouette and look like growth.
+        // Play the dedicated chewing cycle while the hyena is stopped at the plant.
         if (monster.hyenaSprite && !monster.isEating) {
-          monster.hyenaSprite.anims.pause();
           monster.isEating = true;
+          this.playHyenaAnimation(monster, "hyena-bite", true);
         }
         if (monster.attackCooldown <= 0) {
           blocker.hp -= monster.plantDamage;
@@ -2169,6 +2168,12 @@ export default class BattleScene extends Scene {
       }
       if (monster.isEating) {
         monster.isEating = false;
+        if (monster.hyenaSprite && monster.hitAnimUntil <= this.time.now) {
+          const resumeAnimation = monster.kind === "dust-skitter" && monster.burstRemaining > 0
+            ? "hyena-run"
+            : "hyena-walk";
+          this.playHyenaAnimation(monster, resumeAnimation, true);
+        }
       }
       if (!blocker && monster.localX <= HOME_LOCAL_X + 34) {
         // The first monster to cross the final line ends the run immediately.
