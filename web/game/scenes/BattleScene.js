@@ -74,12 +74,11 @@ export default class BattleScene extends Scene {
     this.load.spritesheet("farmer-hit", "/assets/characters/farmer/farmer-hit.png", { frameWidth: 152, frameHeight: 430 });
     this.load.spritesheet("farmer-death", "/assets/characters/farmer/farmer-death.png", { frameWidth: 152, frameHeight: 430 });
 
-    // Hyena sheets keep their original artwork untouched. Each sheet is sliced
-    // using the grid that is actually present in that specific PNG.
-    this.load.spritesheet("hyena-idle", "/assets/characters/monsters/hyena/hyena-idle.png", { frameWidth: 540, frameHeight: 447 });
+    // These four hyena sheets now share one standardized 360x298 frame grid.
+    this.load.spritesheet("hyena-idle", "/assets/characters/monsters/hyena/hyena-idle.png", { frameWidth: 360, frameHeight: 298 });
     this.load.spritesheet("hyena-walk", "/assets/characters/monsters/hyena/hyena-walk.png", { frameWidth: 360, frameHeight: 298 });
-    this.load.spritesheet("hyena-run", "/assets/characters/monsters/hyena/hyena-run.png", { frameWidth: 367, frameHeight: 298 });
-    this.load.spritesheet("hyena-bite", "/assets/characters/monsters/hyena/hyena-bite.png", { frameWidth: 360, frameHeight: 447 });
+    this.load.spritesheet("hyena-run", "/assets/characters/monsters/hyena/hyena-run.png", { frameWidth: 360, frameHeight: 298 });
+    this.load.spritesheet("hyena-bite", "/assets/characters/monsters/hyena/hyena-bite.png", { frameWidth: 360, frameHeight: 298 });
     this.load.spritesheet("hyena-hit", "/assets/characters/monsters/hyena/hyena-hit.png", { frameWidth: 360, frameHeight: 894 });
     this.load.spritesheet("hyena-death", "/assets/characters/monsters/hyena/hyena-death.png", { frameWidth: 360, frameHeight: 447 });
     for (const asset of soundAssets.assets) {
