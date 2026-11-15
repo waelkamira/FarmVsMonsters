@@ -809,3 +809,41 @@ html[dir="rtl"] body { font-family: Tahoma, Arial, sans-serif; }
   .stage-intro-card .info-nav { flex-direction:column; }
   .stage-intro-card .info-nav a { width:100%; }
 }
+
+
+/* Stage two briefing: keep the next chapter visibly distinct without inventing its final artwork. */
+.stage-two-intro-card .stage-intro-emblem {
+  border-color:#ff7185;
+  background:
+    radial-gradient(circle at 50% 30%,#ff718555,transparent 56%),
+    linear-gradient(145deg,#315b91,#60428b 58%,#286b70);
+}
+.stage-two-cast-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
+.stage-two-cast-grid .stage-cast-placeholder:nth-child(1) {
+  border-color:#ff7185;
+  background:radial-gradient(ellipse at 50% 20%,#ff718566,transparent 56%),linear-gradient(145deg,#783e70,#44396f 62%,#27365f);
+}
+.stage-two-cast-grid .stage-cast-placeholder:nth-child(2) {
+  border-color:#a7e84f;
+  background:radial-gradient(ellipse at 50% 20%,#a7e84f55,transparent 56%),linear-gradient(145deg,#26785f,#28577a 62%,#293b69);
+}
+.stage-two-cast-grid .stage-cast-placeholder:nth-child(3) {
+  border-color:#ffca45;
+}
+.stage-two-development-note {
+  max-width:790px;
+  margin:22px auto 10px;
+  padding:15px 18px;
+  border:2px solid #ffca45;
+  border-radius:16px;
+  background:linear-gradient(120deg,#51417fdd,#24566bdd);
+  color:#fff !important;
+  text-align:center;
+  font-size:14px !important;
+  font-weight:800;
+  line-height:1.9 !important;
+}
+@media(max-width:640px) {
+  .stage-two-cast-grid { grid-template-columns:1fr; }
+  .stage-two-cast-grid .stage-cast-placeholder { min-height:155px; }
+}
