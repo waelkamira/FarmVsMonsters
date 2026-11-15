@@ -220,13 +220,13 @@ test("monster archetype composition introduces threats in measured waves", () =>
 });
 
 test("Dust Skitters perform periodic visual hops while remaining grounded by plant collisions", () => {
-  const spawn = scene.slice(scene.indexOf("  spawnMonster() {"), scene.indexOf("  updateMonsters(dt, delta) {"));
+  const spawn = scene.slice(scene.indexOf("  spawnMonster("), scene.indexOf("  updateMonsters(dt, delta) {"));
   const update = scene.slice(scene.indexOf("  updateMonsters(dt, delta) {"), scene.indexOf("  updateProjectiles(dt) {"));
   assert.match(spawn, /jumpCooldown: archetype === "dust-skitter"/);
   assert.match(spawn, /jumpDuration: 560/);
-  assert.match(update, /monster\.jumpCooldown -= delta/);
-  assert.match(update, /-Math\.sin\(progress \* Math\.PI\) \* 34 \* monster\.view\.scaleY/);
-  assert.match(update, /monster\.view\.setPosition\(position\.x, position\.y \+ jumpOffset\)/);
+  assert.match(update, /resolveDustSkitterMotionStep\(/);
+  assert.match(update, /jumpVisualHeight: 34/);
+  assert.match(update, /monster\.hyenaSprite\.y = jumpOffset/);
   assert.match(update, /if \(withinBiteRange\) \{\s*\/\/ A skitter must land before it can stop to bite/);
   assert.match(update, /monster\.isJumping = false;\s*monster\.jumpElapsed = 0;/);
   assert.doesNotMatch(spawn, /\bshadow\b/i, "characters must not receive ground shadows");
@@ -367,9 +367,10 @@ test("wave transitions include a pausable five-second preparation window without
   const update = scene.slice(scene.indexOf("  update(_time, delta) {"), scene.indexOf("  // Sort world characters"));
   const progress = scene.slice(scene.indexOf("  checkWaveProgress() {"), scene.indexOf("  playVictoryMusic() {"));
   assert.match(create, /this\.waveIntermissionMs = 0/);
-  assert.match(update, /if \(this\.waveIntermissionMs > 0\)/);
-  assert.match(update, /this\.waveIntermissionMs = Math\.max\(0, this\.waveIntermissionMs - delta\)/);
-  assert.match(update, /this\.waveIntermissionMs <= 0 && this\.wave <= this\.totalWaves/);
+  assert.match(update, /resolveWaveSpawnStep\(/);
+  assert.match(update, /this\.waveIntermissionMs = spawnStep\.intermissionMs/);
+  assert.match(update, /if \(spawnStep\.shouldSpawn\)/);
+  assert.match(update, /this\.spawnMonster\(spawnIndex\)/);
   assert.match(progress, /this\.waveIntermissionMs = 5000/);
   assert.match(progress, /this\.spawnTimer = 1600/);
   assert.deepEqual(PHASE_ONE_WAVE_SIZES, [3, 5, 6, 7, 9]);
