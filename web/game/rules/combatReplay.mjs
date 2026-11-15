@@ -1,4 +1,4 @@
-import { resolvePlantPlacement, resolvePlantUproot, resolveEnergyPickup } from "./combatSimulation.mjs";
+import { resolvePlantPlacement, resolvePlantUproot, resolveEnergyPickup, resolveMonsterLaneStep } from "./combatSimulation.mjs";
 import { PHASE_ONE_ENERGY, PHASE_ONE_PLANTS, PHASE_ONE_COMBAT_CONTRACT_VERSION, PHASE_ONE_WAVE_SIZES, getMonsterCombatStats } from "./phaseOneCombatContract.mjs";
 import { resolveMonsterArchetype } from "./combatSimulation.mjs";
 import { validateCombatEventLog } from "./combatEventLog.mjs";
@@ -58,11 +58,30 @@ export function applyCombatReplayEvent(state, event) {
     if (payload.archetype !== resolveMonsterArchetype(payload.wave, payload.spawnIndex)) return fail(state, "INVALID_MONSTER_ARCHETYPE", event);
     let profile;
     try { profile = getMonsterCombatStats(payload.archetype, payload.wave); } catch { return fail(state, "INVALID_MONSTER_PROFILE", event); }
-    if (payload.hp !== profile.hp || payload.speed !== profile.speed) return fail(state, "MONSTER_STATS_MISMATCH", event);
-    const monster = Object.freeze({ id: payload.monsterId, wave: payload.wave, spawnIndex: payload.spawnIndex, row: payload.row, archetype: payload.archetype, hp: profile.hp, maxHp: profile.hp, speed: profile.speed, plantDamage: profile.plantDamage, attackIntervalMs: profile.attackIntervalMs, lastBiteAt: null, alive: true });
+    if (payload.hp !== profile.hp || payload.speed !== profile.speed || !Number.isFinite(payload.localX)) return fail(state, "MONSTER_STATS_MISMATCH", event);
+    const monster = Object.freeze({ id: payload.monsterId, wave: payload.wave, spawnIndex: payload.spawnIndex, row: payload.row, archetype: payload.archetype, hp: profile.hp, maxHp: profile.hp, speed: profile.speed, plantDamage: profile.plantDamage, attackIntervalMs: profile.attackIntervalMs, lastBiteAt: null, localX: payload.localX, lastMovementTick: event.tick, alive: true });
     const spawnedInWave = state.spawnedInWave + 1;
     const waveFinished = spawnedInWave === waveSize;
     return nextState(state, event, { monsters: Object.freeze([...state.monsters, monster]), nextMonsterSequence: state.nextMonsterSequence + 1, currentWave: waveFinished ? state.currentWave + 1 : state.currentWave, spawnedInWave: waveFinished ? 0 : spawnedInWave });
+  }
+  if (event.type === "monster_moved") {
+    const payload = event.payload ?? {};
+    const index = state.monsters.findIndex((monster) => monster.id === payload.monsterId && monster.alive);
+    if (index < 0) return fail(state, "MONSTER_NOT_ALIVE", event);
+    const monster = state.monsters[index];
+    const elapsed = event.tick - monster.lastMovementTick;
+    if (payload.deltaMs !== elapsed) return fail(state, "MONSTER_MOVEMENT_CLOCK_MISMATCH", event);
+    const blocker = state.plants.filter((plant) => plant.alive && plant.type === "radish" && plant.row === monster.row && plant.col - 3.5 < monster.localX).sort((a,b) => b.col - a.col)[0] ?? null;
+    if ((blocker?.col ?? null) !== payload.blockerCol) return fail(state, "MONSTER_MOVEMENT_BLOCKER_MISMATCH", event);
+    if (!blocker && payload.biteReach !== 0) return fail(state, "INVALID_MONSTER_BITE_REACH", event);
+    const maxSpeed = monster.speed * (monster.archetype === "dust-skitter" ? 1.848 : 1);
+    const seconds = elapsed / 1000;
+    const effectiveSpeed = seconds > 0 ? payload.distance / seconds : 0;
+    if (effectiveSpeed > maxSpeed + 0.05) return fail(state, "MONSTER_MOVEMENT_TOO_FAST", event);
+    const expected = resolveMonsterLaneStep({ localX: monster.localX, speed: effectiveSpeed, deltaSeconds: seconds, blockerLocalX: blocker ? blocker.col - 3.5 : null, biteReach: payload.biteReach });
+    const monsters = state.monsters.slice();
+    monsters[index] = Object.freeze({ ...monster, localX: expected.localX, lastMovementTick: event.tick });
+    return nextState(state, event, { monsters: Object.freeze(monsters) });
   }
   if (event.type === "monster_bite") {
     const payload = event.payload ?? {};
