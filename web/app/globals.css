@@ -986,6 +986,8 @@ html[dir="rtl"] body { font-family: Tahoma, Arial, sans-serif; }
 }
 .catalog-thumb-glow { position:absolute; inset:0; pointer-events:none; background:linear-gradient(135deg,#ffffff30,transparent 45%,#0c635022); }
 .plant-thumb { width:100%; aspect-ratio:1.2 / 1; border-radius:18px; }
+/* Keep the source artwork square and crisp inside the wider encyclopedia card. */
+.plant-thumb img { width:64px; height:64px; max-width:76%; max-height:76%; object-fit:contain; image-rendering:auto; }
 .plant-thumb.is-planned { background:linear-gradient(145deg,#c5a1ff,#8760dc 55%,#593bb4); }
 .monster-thumb { width:100%; min-height:145px; aspect-ratio:1.55 / 1; background:linear-gradient(145deg,#8edcff,#399ce9 55%,#4565c8); }
 .monster-thumb:nth-child(2n) { background:linear-gradient(145deg,#ffbd82,#f27b61 58%,#c74670); }
