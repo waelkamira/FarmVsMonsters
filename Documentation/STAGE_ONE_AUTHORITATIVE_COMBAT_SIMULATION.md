@@ -175,3 +175,6 @@ Coordinate and bite-range correction: replay now uses the calibrated 420.823-uni
 
 
 Movement replay hardening: non-Dust-Skitter archetypes must match their configured base movement speed after the shared lane-step clamp; Dust Skitters are bounded between their base speed and the combined jump/burst maximum pending exact PRNG-state replay. Movement checkpoints continue during chewing so stationary bite time is not incorrectly counted as travel time. Bite entry always forces a fresh position checkpoint.
+
+
+The replay also reconciles each claimed movement distance against the resolved, blocker-clamped displacement; it rejects events that claim travel through a Radish even if the reconstructed position would otherwise be clamped.
