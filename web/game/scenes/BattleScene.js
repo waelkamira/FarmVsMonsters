@@ -2110,27 +2110,17 @@ export default class BattleScene extends Scene {
       plant.cooldown = advanceCooldown(plant.cooldown, delta);
       if (plant.cooldown > 0) continue;
       const plantLaneX = this.worldToLane(plant).localX;
-      // A Radish can defend adjacent lanes too. Choose the nearest advancing
-      // monster in horizontal range, then arc the Radish projectile toward
-      // that monster's lane instead of filtering to plant.row.
+      // Radishes defend only their own lane. Monsters in adjacent lanes
+      // are deliberately ignored, even when they are horizontally closer.
       const target = this.monsters
         .filter((monster) =>
           monster.alive &&
+          monster.row === plant.row &&
           Number.isFinite(monster.localX) &&
           monster.localX > plantLaneX &&
           monster.localX - plantLaneX <= RADISH_CONFIG.range
         )
-        .sort((a, b) => {
-          const distanceA = Math.hypot(
-            a.localX - plantLaneX,
-            (a.row - plant.row) * (GRID_HEIGHT / LANES)
-          );
-          const distanceB = Math.hypot(
-            b.localX - plantLaneX,
-            (b.row - plant.row) * (GRID_HEIGHT / LANES)
-          );
-          return distanceA - distanceB;
-        })[0];
+        .sort((a, b) => a.localX - b.localX)[0];
       if (!target) continue;
       this.fireThorn(plant, target);
       plant.cooldown = RADISH_CONFIG.cooldown;
@@ -2244,7 +2234,7 @@ export default class BattleScene extends Scene {
     const lane = this.worldToLane(plant);
     const localX = lane.localX + 22;
     const row = plant.row;
-    const targetRow = target.row;
+    const targetRow = plant.row;
     const targetLocalX = Math.max(localX + 1, target.localX);
     const position = this.monsterLanePoint(localX, row);
     const verticalOffset = this.nextProjectileAim === "head" ? -22 : 14;
@@ -2913,29 +2903,15 @@ export default class BattleScene extends Scene {
     for (const shot of this.projectiles) {
       if (!shot.alive) continue;
       shot.localX = resolveProjectileLaneStep({ localX: shot.localX, speed: shot.speed, deltaSeconds: dt });
-      // Track the living target as it advances toward the farm so the diagonal
-      // trajectory converges on its current position instead of stale aim data.
-      if (shot.target && shot.target.alive && Number.isFinite(shot.target.localX)) {
+      // Keep the projectile locked to the Radish's original lane. Only its
+      // horizontal aim follows the target; it never travels diagonally.
+      if (shot.target && shot.target.alive && shot.target.row === shot.row &&
+          Number.isFinite(shot.target.localX)) {
         shot.targetLocalX = Math.max(shot.startLocalX + 1, shot.target.localX);
       }
 
-      // Interpolate between the firing lane and the selected target lane.
-      // Rows are blended in board space, then projected through the same
-      // perspective lane mesh used by monsters and the planted defenders.
-      const laneTravel = Math.max(1, shot.targetLocalX - shot.startLocalX);
-      const laneProgress = PhaserMath.Clamp(
-        (shot.localX - shot.startLocalX) / laneTravel, 0, 1
-      );
-      shot.currentRow = PhaserMath.Linear(shot.startRow, shot.targetRow, laneProgress);
-      const lowerRow = PhaserMath.Clamp(Math.floor(shot.currentRow), 0, LANES - 1);
-      const upperRow = Math.min(LANES - 1, lowerRow + 1);
-      const rowBlend = PhaserMath.Clamp(shot.currentRow - lowerRow, 0, 1);
-      const lowerPosition = this.monsterLanePoint(shot.localX, lowerRow);
-      const upperPosition = this.monsterLanePoint(shot.localX, upperRow);
-      const position = {
-        x: PhaserMath.Linear(lowerPosition.x, upperPosition.x, rowBlend),
-        y: PhaserMath.Linear(lowerPosition.y, upperPosition.y, rowBlend)
-      };
+      shot.currentRow = shot.row;
+      const position = this.monsterLanePoint(shot.localX, shot.row);
       shot.view.setPosition(position.x, position.y + shot.verticalOffset);
 
       shot.trailTimer -= dt * 1000;
@@ -2944,22 +2920,17 @@ export default class BattleScene extends Scene {
         shot.trailTimer = 48;
       }
 
-      // A projectile may hit a monster only when it is close to that
-      // monster's lane AND its horizontal position. This allows diagonal
-      // shots to cross the gap without damaging unrelated lanes.
+      // A Radish projectile can damage monsters in its own lane only.
       let hit = null;
       let nearestHitDistance = Infinity;
       for (const monster of this.monsters) {
-        if (!monster?.alive || !Number.isFinite(monster.localX)) continue;
-        const laneDistance = Math.abs(monster.row - shot.currentRow);
-        if (laneDistance > 0.35) continue;
+        if (!monster?.alive || monster.row !== shot.row ||
+            !Number.isFinite(monster.localX)) continue;
         const horizontalDistance = Math.abs(monster.localX - shot.localX);
         const hitRadius = PHASE_ONE_PLANTS.radish.projectileCollisionRadius * (monster.widthScale || 1);
-        if (horizontalDistance > hitRadius) continue;
-        const combinedDistance = Math.hypot(horizontalDistance, laneDistance * (GRID_HEIGHT / LANES));
-        if (combinedDistance >= nearestHitDistance) continue;
+        if (horizontalDistance > hitRadius || horizontalDistance >= nearestHitDistance) continue;
         hit = monster;
-        nearestHitDistance = combinedDistance;
+        nearestHitDistance = horizontalDistance;
       }
 
       if (hit) {
