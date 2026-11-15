@@ -55,7 +55,7 @@ export async function GET(request) {
     if (user) return NextResponse.json({ user });
   }
 
-  if (!refreshToken) return NextResponse.json({ user: null }, { status: 401 });
+  if (!refreshToken) return NextResponse.json({ user: null });
   const refreshed = await fetch(api.url + "/auth/v1/token?grant_type=refresh_token", {
     method: "POST",
     headers: { apikey: api.key, "Content-Type": "application/json" },
@@ -63,7 +63,7 @@ export async function GET(request) {
     cache: "no-store"
   });
   if (!refreshed.ok) {
-    const response = NextResponse.json({ user: null }, { status: 401 });
+    const response = NextResponse.json({ user: null });
     clearSessionCookies(response);
     return response;
   }
