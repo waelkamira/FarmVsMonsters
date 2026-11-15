@@ -2998,10 +2998,12 @@ export default class BattleScene extends Scene {
     this.add.rectangle(560, 340, 1120, 680, 0x10170f, 0.72).setDepth(60);
     if (won) {
       this.stopBackgroundMusic();
-      this.add.rectangle(560, 350, 790, 520, 0x17213d, 0.99)
-        .setStrokeStyle(7, 0x35bceb).setDepth(61);
-      this.add.rectangle(560, 350, 770, 500, 0x315b91, 0.98)
-        .setStrokeStyle(2, 0xa7e84f).setDepth(61);
+      this.add.rectangle(560, 350, 790, 520, 0x8b65e8, 0.18)
+        .setStrokeStyle(1.5, 0xffffff, 0.48).setDepth(61);
+      this.add.rectangle(560, 350, 770, 500, 0x315b91, 0.68)
+        .setStrokeStyle(1, 0xffffff, 0.72).setDepth(61);
+      this.add.rectangle(560, 350, 748, 478, 0x35bceb, 0.10)
+        .setStrokeStyle(1, 0xa7e84f, 0.28).setDepth(61);
       // A celebratory finish is shown only after the farmer has carried his wife home.
       const celebration = [
         [205, 150, 0xffdf75], [915, 150, 0xffdf75], [245, 520, 0xffb5a0],
@@ -3039,8 +3041,8 @@ export default class BattleScene extends Scene {
       const elapsedSeconds = Math.floor(this.elapsedBattleMs / 1000);
       const minutes = Math.floor(elapsedSeconds / 60);
       const seconds = String(elapsedSeconds % 60).padStart(2, "0");
-      this.add.rectangle(560, 355, 360, 30, 0x238a58, 1)
-        .setStrokeStyle(2, 0xa7e84f).setDepth(63);
+      this.add.rectangle(560, 355, 360, 34, 0x42c96b, 0.62)
+        .setStrokeStyle(1, 0xffffff, 0.76).setDepth(63);
       this.add.text(560, 355, locale === "ar" ? "تم فتح المرحلة الثانية!" : "STAGE 2 UNLOCKED!", {
         fontFamily: "Arial", fontSize: locale === "ar" ? "16px" : "15px",
         color: "#ffffff", fontStyle: "bold", stroke: "#14523d", strokeThickness: 3
@@ -3071,8 +3073,8 @@ export default class BattleScene extends Scene {
         const row = Math.floor(index / 2);
         const x = column === 0 ? 390 : 730;
         const y = 397 + row * 42;
-        this.add.rectangle(x, y, 326, 34, statColors[index % statColors.length], 0.98)
-          .setStrokeStyle(1.5, 0xffffff).setDepth(63);
+        this.add.rectangle(x, y, 326, 34, statColors[index % statColors.length], 0.58)
+          .setStrokeStyle(1, 0xffffff, 0.62).setDepth(63);
         this.add.text(x, y, label + "  ·  " + value, {
           fontFamily: "Arial", fontSize: locale === "ar" ? "13px" : "14px",
           color: "#ffffff", fontStyle: "bold", align: "center",
@@ -3080,13 +3082,20 @@ export default class BattleScene extends Scene {
           wordWrap: { width: 306, useAdvancedWrap: true }
         }).setOrigin(0.5).setDepth(64);
       });
-      this.createGameOverButton(445, 575, "PLAY AGAIN", 0x9bc66e, () => this.scene.restart());
-      this.createGameOverButton(675, 575, "CAMPAIGN MAP", 0xe5c27d, () => {
+      this.createGameOverButton(445, 575, "PLAY AGAIN", 0x42c96b, () => this.scene.restart());
+      this.createGameOverButton(675, 575, "CAMPAIGN MAP", 0x8b65e8, () => {
         if (typeof window !== "undefined") window.location.assign("/stages");
       });
       this.playVictoryMusic();
       return;
     }
+    this.add.rectangle(560, 355, 660, 370, 0x8b65e8, 0.18)
+      .setStrokeStyle(1.5, 0xffffff, 0.46).setDepth(61);
+    this.add.rectangle(560, 355, 640, 350, 0x315b91, 0.70)
+      .setStrokeStyle(1, 0xffffff, 0.72).setDepth(61);
+    this.add.rectangle(560, 355, 620, 330, 0x35bceb, 0.09)
+      .setStrokeStyle(1, 0xa7e84f, 0.28).setDepth(61);
+
     const title = this.add.text(560, 255, translate("FARM LOST", locale), {
       fontFamily: "Arial", fontSize: "68px", color: "#ffffff", fontStyle: "bold",
       stroke: "#8b65e8", strokeThickness: 10, shadow: { offsetX: 0, offsetY: 5, color: "#000000", blur: 12, fill: true }
@@ -3114,8 +3123,8 @@ export default class BattleScene extends Scene {
     }).setOrigin(0.5).setDepth(62);
 
     this.stopBackgroundMusic();
-    this.createGameOverButton(455, 465, "RETRY", 0x9bc66e, () => this.scene.restart());
-    this.createGameOverButton(665, 465, "HOME", 0xe5c27d, () => {
+    this.createGameOverButton(455, 465, "RETRY", 0x42c96b, () => this.scene.restart());
+    this.createGameOverButton(665, 465, "HOME", 0xff7185, () => {
       if (typeof window !== "undefined") window.location.assign("/");
     });
     this.playDefeatMusic();
@@ -3123,19 +3132,19 @@ export default class BattleScene extends Scene {
 
   createGameOverButton(x, y, label, color, action) {
     const button = this.add.container(x, y).setDepth(63);
-    const shadow = this.add.rectangle(2, 5, 190, 58, 0x101a2e, 0.22);
-    const background = this.add.rectangle(0, 0, 190, 58, 0x315b91, 0.34)
-      .setStrokeStyle(1, 0xffffff, 0.78)
+    const glow = this.add.rectangle(0, 1, 194, 62, 0xffffff, 0.10);
+    const background = this.add.rectangle(0, 0, 190, 58, 0xdaf3ff, 0.22)
+      .setStrokeStyle(1, 0xffffff, 0.82)
       .setInteractive({ useHandCursor: true });
-    const inset = this.add.rectangle(0, 0, 180, 48, color, 0.76).setStrokeStyle(1, 0xffffff, 0.62);
+    const inset = this.add.rectangle(0, 0, 180, 48, color, 0.62).setStrokeStyle(1, 0xffffff, 0.68);
     const locale = typeof window !== "undefined" ? window.localStorage.getItem("farmVsMonsters.language") || "ar" : "ar";
     const text = this.add.text(0, 0, translate(label, locale), {
       fontFamily: "Arial", fontSize: "16px", color: "#ffffff", fontStyle: "bold",
       stroke: "#17213d", strokeThickness: 3
     }).setOrigin(0.5);
-    button.add([shadow, background, inset, text]);
-    background.on("pointerover", () => { background.setScale(1.05); inset.setAlpha(0.96); });
-    background.on("pointerout", () => { background.setScale(1); inset.setAlpha(0.76); });
+    button.add([glow, background, inset, text]);
+    background.on("pointerover", () => { background.setScale(1.05).setFillStyle(0x35bceb, 0.34); inset.setAlpha(0.82); });
+    background.on("pointerout", () => { background.setScale(1).setFillStyle(0xdaf3ff, 0.22); inset.setAlpha(0.62); });
     background.on("pointerdown", action);
     return button;
   }
