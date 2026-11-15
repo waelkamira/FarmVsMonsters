@@ -1512,15 +1512,15 @@ export default class BattleScene extends Scene {
     this.collectionMenuOpen = true;
     this.collectionMenuTab = "phases";
     this.collectionMenuLayer = this.add.container(560, 340).setDepth(90);
-    this.collectionMenuLayer.add(this.add.rectangle(0, 0, 1120, 680, 0x100b07, 0.78).setInteractive());
-    const panel = this.add.rectangle(0, 0, 760, 570, 0x604027, 0.99).setStrokeStyle(7, 0x2b1b11);
+    this.collectionMenuLayer.add(this.add.rectangle(0, 0, 1120, 680, 0x101a2e, 0.82).setInteractive());
+    const panel = this.add.rectangle(0, 0, 760, 570, 0x17213d, 0.99).setStrokeStyle(7, 0x8b65e8);
     this.collectionMenuLayer.add(panel);
-    this.collectionMenuLayer.add(this.add.rectangle(0, -274, 738, 40, 0x9b7047).setStrokeStyle(2, 0xd7b477));
+    this.collectionMenuLayer.add(this.add.rectangle(0, -274, 738, 40, 0x287eb7).setStrokeStyle(2, 0xa7e84f));
     this.collectionMenuLayer.add(this.add.text(0, -274, "دفتر المزرعة والمغامرة  ·  FARM JOURNAL", {
-      fontFamily: "Georgia", fontSize: "19px", color: "#fff0c8", fontStyle: "bold"
+      fontFamily: "Arial", fontSize: "19px", color: "#ffffff", fontStyle: "bold", stroke: "#17213d", strokeThickness: 3
     }).setOrigin(0.5));
     const close = this.add.text(350, -274, "✕", {
-      fontFamily: "Arial", fontSize: "23px", color: "#fff0c8", backgroundColor: "#63351f",
+      fontFamily: "Arial", fontSize: "23px", color: "#ffffff", backgroundColor: "#ff7185",
       padding: { x: 8, y: 2 }
     }).setOrigin(0.5).setInteractive({ useHandCursor: true });
     close.on("pointerdown", () => this.closeCollectionMenu());
@@ -1552,10 +1552,11 @@ export default class BattleScene extends Scene {
     tabs.forEach(([id, label], index) => {
       const x = -270 + index * 180;
       const active = this.collectionMenuTab === id;
-      const bg = this.add.rectangle(x, 0, 164, 42, active ? 0xd9b36e : 0x79502e, 1)
-        .setStrokeStyle(2, 0x392417).setInteractive({ useHandCursor: true });
+      const tabColors = [0x238a58, 0x287eb7, 0xff9b45, 0x8b65e8];
+      const bg = this.add.rectangle(x, 0, 164, 42, active ? tabColors[index] : 0x263b60, 1)
+        .setStrokeStyle(2, active ? 0xa7e84f : 0x35bceb).setInteractive({ useHandCursor: true });
       const txt = this.add.text(x, 0, label, {
-        fontFamily: "Georgia", fontSize: "15px", color: active ? "#382719" : "#fff0c8", fontStyle: "bold"
+        fontFamily: "Arial", fontSize: "15px", color: "#ffffff", fontStyle: "bold", stroke: "#17213d", strokeThickness: 2
       }).setOrigin(0.5);
       bg.on("pointerdown", () => { this.collectionMenuTab = id; this.renderCollectionMenu(); });
       this.collectionMenuTabs.add([bg, txt]);
@@ -1564,16 +1565,16 @@ export default class BattleScene extends Scene {
     const addLabel = (x, y, value, size = 19, color = "#fff0c8") =>
       content.add(this.add.text(x, y, value, { fontFamily: "Georgia", fontSize: size + "px", color, fontStyle: "bold", align: "center", wordWrap: { width: 650 } }).setOrigin(0.5));
     const addRow = (y, imageKey, title, detail, locked = false) => {
-      content.add(this.add.rectangle(0, y, 660, 72, 0x8a603b, 0.94).setStrokeStyle(2, 0xc79a5c));
+      content.add(this.add.rectangle(0, y, 660, 72, 0x315b91, 0.98).setStrokeStyle(2, 0x35bceb));
       if (imageKey && this.textures.exists(imageKey)) {
         const icon = this.add.image(-285, y, imageKey).setDisplaySize(54, 54);
         content.add(icon);
       } else {
-        addLabel(-285, y, locked ? "🔒" : "❖", 27, "#f4d58e");
+        addLabel(-285, y, locked ? "🔒" : "❖", 27, "#ffffff");
       }
       addLabel(-115, y - 11, title, 17);
-      addLabel(120, y + 15, detail, 13, "#f5dba9");
-      if (locked) addLabel(285, y, "🔗  🗝", 20, "#f5dba9");
+      addLabel(120, y + 15, detail, 13, "#ffffff");
+      if (locked) addLabel(285, y, "🔗  🗝", 20, "#ffffff");
     };
     if (this.collectionMenuTab === "phases") {
       addLabel(0, -10, locale === "ar" ? "اختر مغامرتك — المرحلة الأولى متاحة" : "Choose your adventure — Stage 1 is available", 17);
@@ -1581,15 +1582,15 @@ export default class BattleScene extends Scene {
         const row = Math.floor((stage - 1) / 2);
         const col = (stage - 1) % 2;
         const x = col === 0 ? -170 : 170;
-        content.add(this.add.rectangle(x, 35 + row * 82, 300, 82, 0x8a603b).setStrokeStyle(2, 0xc79a5c));
+        content.add(this.add.rectangle(x, 35 + row * 82, 300, 82, stage === 1 ? 0x238a58 : 0x34415e).setStrokeStyle(2, stage === 1 ? 0xa7e84f : 0x8b95ad));
         const unlocked = stage === 1;
         if (stage === 1 && this.textures.exists("phase-one-emblem")) {
           content.add(this.add.image(x - 105, 65 + row * 100, "phase-one-emblem").setDisplaySize(90, 58));
         } else {
-          content.add(this.add.text(x - 105, 65 + row * 100, unlocked ? "I" : "🔒", { fontSize: "30px", color: "#f5dba9" }).setOrigin(0.5));
+          content.add(this.add.text(x - 105, 65 + row * 100, unlocked ? "I" : "🔒", { fontSize: "30px", color: "#ffffff", stroke: "#17213d", strokeThickness: 3 }).setOrigin(0.5));
         }
-        content.add(this.add.text(x + 35, 18 + row * 82, locale === "ar" ? "المرحلة " + stage : "STAGE " + stage, { fontSize: "17px", color: "#fff0c8", fontStyle: "bold" }).setOrigin(0.5));
-        content.add(this.add.text(x + 35, 48 + row * 82, unlocked ? (locale === "ar" ? "متاحة للعب" : "AVAILABLE") : (locale === "ar" ? "مغلقة — تحتاج مفتاحاً" : "LOCKED · KEY REQUIRED"), { fontSize: "12px", color: unlocked ? "#c9e59a" : "#f3c77e" }).setOrigin(0.5));
+        content.add(this.add.text(x + 35, 18 + row * 82, locale === "ar" ? "المرحلة " + stage : "STAGE " + stage, { fontSize: "17px", color: "#ffffff", fontStyle: "bold", stroke: "#17213d", strokeThickness: 2 }).setOrigin(0.5));
+        content.add(this.add.text(x + 35, 48 + row * 82, unlocked ? (locale === "ar" ? "متاحة للعب" : "AVAILABLE") : (locale === "ar" ? "مغلقة — تحتاج مفتاحاً" : "LOCKED · KEY REQUIRED"), { fontSize: "12px", color: "#ffffff", fontStyle: "bold", stroke: "#17213d", strokeThickness: 2 }).setOrigin(0.5));
       }
       addLabel(0, 435, locale === "ar" ? "ستُفتح المراحل التالية بعد إكمال المغامرات السابقة." : "Complete earlier adventures to unlock later stages.", 13, "#e8c995");
     } else if (this.collectionMenuTab === "plants") {
@@ -2991,10 +2992,10 @@ export default class BattleScene extends Scene {
     this.add.rectangle(560, 340, 1120, 680, 0x10170f, 0.72).setDepth(60);
     if (won) {
       this.stopBackgroundMusic();
-      this.add.rectangle(560, 350, 790, 520, 0x79502e, 0.99)
-        .setStrokeStyle(7, 0x392417).setDepth(61);
-      this.add.rectangle(560, 350, 770, 500, 0x3e2b1c, 0.98)
-        .setStrokeStyle(2, 0xe8c887).setDepth(61);
+      this.add.rectangle(560, 350, 790, 520, 0x17213d, 0.99)
+        .setStrokeStyle(7, 0x35bceb).setDepth(61);
+      this.add.rectangle(560, 350, 770, 500, 0x315b91, 0.98)
+        .setStrokeStyle(2, 0xa7e84f).setDepth(61);
       // A celebratory finish is shown only after the farmer has carried his wife home.
       const celebration = [
         [205, 150, 0xffdf75], [915, 150, 0xffdf75], [245, 520, 0xffb5a0],
@@ -3009,15 +3010,15 @@ export default class BattleScene extends Scene {
       }
       this.add.text(560, 225, locale === "ar" ? "عادت الزوجة إلى المزرعة!" : "SHE IS HOME!", {
         fontFamily: "Arial", fontSize: locale === "ar" ? "30px" : "34px",
-        color: "#ffe49a", fontStyle: "bold", stroke: "#392417", strokeThickness: 5
+        color: "#ffffff", fontStyle: "bold", stroke: "#17213d", strokeThickness: 5
       }).setOrigin(0.5).setDepth(64);
       this.add.text(560, 275, translate("VICTORY!", locale), {
-        fontFamily: "Arial", fontSize: "48px", color: "#fff2c8", fontStyle: "bold",
-        stroke: "#392417", strokeThickness: 5
+        fontFamily: "Arial", fontSize: "48px", color: "#ffffff", fontStyle: "bold",
+        stroke: "#17213d", strokeThickness: 5
       }).setOrigin(0.5).setDepth(64);
       this.add.text(560, 322, locale === "ar" ? "اكتملت المرحلة الأولى · تم إنقاذ الأميرة" : "STAGE 1 COMPLETE · THE PRINCESS IS RESCUED", {
         fontFamily: "Arial", fontSize: locale === "ar" ? "17px" : "15px",
-        color: "#bfe8a2", fontStyle: "bold", stroke: "#24180f", strokeThickness: 3
+        color: "#ffffff", fontStyle: "bold", stroke: "#17213d", strokeThickness: 3
       }).setOrigin(0.5).setDepth(64);
       const elapsedSeconds = Math.floor(this.elapsedBattleMs / 1000);
       const minutes = Math.floor(elapsedSeconds / 60);
@@ -3026,7 +3027,7 @@ export default class BattleScene extends Scene {
         ? ["الموجات المكتملة: " + this.totalWaves + " / 5", "الضباع المهزومة: " + this.totalDefeatedMonsters + " / " + this.totalSpawnedMonsters, "النباتات المزروعة: " + this.totalPlantsPlanted, "الوقت: " + minutes + ":" + seconds, "الطاقة المجموعة: " + this.energyCollected, "الطاقة المتبقية: " + this.energy, "العملات: " + this.coins].join("\n")
         : ["Waves cleared: " + this.totalWaves + " / 5", "Hyenas defeated: " + this.totalDefeatedMonsters + " / " + this.totalSpawnedMonsters, "Plants grown: " + this.totalPlantsPlanted, "Time: " + minutes + ":" + seconds, "Energy collected: " + this.energyCollected, "Energy remaining: " + this.energy, "Coins earned: " + this.coins].join("\n");
       this.add.text(560, 425, summary, {
-        fontFamily: "Georgia", fontSize: "16px", color: "#fff0c8",
+        fontFamily: "Arial", fontSize: "16px", color: "#ffffff",
         align: "center", lineSpacing: 3, fontStyle: "bold"
       }).setOrigin(0.5).setDepth(64);
       this.createGameOverButton(445, 575, "PLAY AGAIN", 0x9bc66e, () => this.scene.restart());
@@ -3037,8 +3038,8 @@ export default class BattleScene extends Scene {
       return;
     }
     const title = this.add.text(560, 255, translate("FARM LOST", locale), {
-      fontFamily: "Arial", fontSize: "68px", color: "#ffdf72", fontStyle: "bold",
-      stroke: "#54221f", strokeThickness: 10, shadow: { offsetX: 0, offsetY: 5, color: "#000000", blur: 12, fill: true }
+      fontFamily: "Arial", fontSize: "68px", color: "#ffffff", fontStyle: "bold",
+      stroke: "#8b65e8", strokeThickness: 10, shadow: { offsetX: 0, offsetY: 5, color: "#000000", blur: 12, fill: true }
     }).setOrigin(0.5).setScale(0.18).setDepth(62);
     this.tweens.add({
       targets: title,
@@ -3058,7 +3059,7 @@ export default class BattleScene extends Scene {
       ? ["وصلت إلى الموجة " + Math.min(this.wave, this.totalWaves) + " من " + this.totalWaves, "الوحوش المهزومة: " + this.totalDefeatedMonsters, "النباتات المزروعة: " + this.totalPlantsPlanted, "الطاقة المجموعة: " + this.energyCollected, "العملات: " + this.coins, "مدة الصمود: " + minutes + ":" + seconds].join("\n")
       : ["Reached wave " + Math.min(this.wave, this.totalWaves) + " of " + this.totalWaves, this.totalDefeatedMonsters + " monsters defeated", this.totalPlantsPlanted + " plants planted", "Energy collected: " + this.energyCollected, "Coins: " + this.coins, "Time survived: " + minutes + ":" + seconds].join("\n");
     this.add.text(560, 355, summary, {
-      fontFamily: "Georgia", fontSize: "18px", color: "#fff0c8",
+      fontFamily: "Arial", fontSize: "18px", color: "#ffffff",
       align: "center", lineSpacing: 7, fontStyle: "bold"
     }).setOrigin(0.5).setDepth(62);
 
