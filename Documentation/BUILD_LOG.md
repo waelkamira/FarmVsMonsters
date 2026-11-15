@@ -845,3 +845,11 @@
 - Added `web/tests/combat-simulation.test.mjs` with 9 test cases covering valid/invalid placements, occupied cells, energy costs, destroyed plants, refund integrity, pickup caps, HP damage, and Phaser integration.
 - No balance changes: plant costs remain 35/50, HP remains unchanged, energy pickup cap remains 300, and ordinary monster rewards remain 8 coins.
 - Validation: GitHub source read/write verification only. Local tests, lint, production build, and browser playtest have not been run; GitHub Actions runner availability remains unresolved.
+
+
+
+## 2026-11-15 — Extract deterministic lane movement
+- Added pure `resolveMonsterLaneStep` and `resolveProjectileLaneStep` functions to `combatSimulation.mjs`.
+- BattleScene now delegates monster movement/clamping at plant bite reach and projectile local-coordinate advancement to these functions. This preserves the current delta-time movement formula and prevents fast monsters from stepping through a blocking plant.
+- Expanded `combat-simulation.test.mjs` with lane-step, projectile-step, invalid-input, and Phaser integration coverage.
+- Movement modifiers, collision detection, bite reach geometry, and Dust Skitter jump/burst scheduling are still resolved in BattleScene and remain future extraction work.
