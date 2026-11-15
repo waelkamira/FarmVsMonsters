@@ -2,7 +2,6 @@ import { Scene, Input, Math as PhaserMath } from "phaser";
 import { translate } from "../../app/LocaleProvider";
 import gridCalibration from "../data/farm-grid-calibration.json";
 import soundAssets from "../data/sound-assets.json";
-import { syncPlayerProgress } from "../services/playerAccount.mjs";
 import {
   PHASE_ONE_WAVE_SIZES,
   PHASE_ONE_TOTAL_MONSTERS,
@@ -3067,7 +3066,6 @@ export default class BattleScene extends Scene {
     const locale = typeof window !== "undefined" ? window.localStorage.getItem("farmVsMonsters.language") || "ar" : "ar";
     this.setMessage(won ? "VICTORY! The farm is safe." : "GAME OVER — The monsters reached the final line.");
     if (won) { try { unlockNextStage(window.localStorage, 1); } catch { /* Keep the local game result even if storage is unavailable. */ } }
-    void syncPlayerProgress();
     this.add.rectangle(560, 340, 1120, 680, 0x10170f, 0.72).setDepth(60);
     if (won) {
       this.stopBackgroundMusic();
