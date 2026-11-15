@@ -305,6 +305,9 @@ test("player guidance and roadmap match the current Phase 1 balance", () => {
   assert.match(scene, /this\.collectionMenuTab = "phases"/);
   assert.match(scene, /"treasure-cave-menu"/);
   assert.match(scene, /"dragon-boss"/);
+  assert.match(scene, /\["hyena-bite", 6, 9, -1\]/);
+  assert.match(scene, /this\.playHyenaAnimation\(monster, "hyena-bite"\)/);
+  assert.doesNotMatch(scene, /monster\.hyenaSprite\.anims\.pause\(\)/);
   assert.match(roadmap, /3 \/ 5 \/ 6 \/ 7 \/ 9/);
   assert.match(roadmap, /full 15-energy collectible per Mushroom every 12 seconds/);
   assert.match(roadmap, /Cave-brute, Dust-skitter, Stonehide/);
