@@ -1914,7 +1914,7 @@ export default class BattleScene extends Scene {
 
     let monsterRecord = null;
     const hyenaSprite = this.hyenaAnimationsReady
-      ? this.add.sprite(0, 0, "hyena-idle", 0).setOrigin(0.5, 1).setFlipX(true).setScale(0.34)
+      ? this.add.sprite(0, 0, "hyena-idle", 0).setOrigin(0.5, 1).setFlipX(true).setScale(1.02)
       : null;
     if (hyenaSprite) {
       // The original vector monster remains available as a fallback only.
@@ -1947,13 +1947,6 @@ export default class BattleScene extends Scene {
     }
 
     view.setDepth(8);
-    const shadow = this.add.ellipse(
-      spawn.x, spawn.y + 2,
-      48 * monsterScale * profile.widthScale,
-      12 * monsterScale,
-      0x21170f, 0.32
-    ).setDepth(7);
-
     this.tweens.add({
       targets: view, angle: { from: -2.5, to: 2.5 },
       duration: profile.wobbleDuration, ease: "Sine.easeInOut",
@@ -1986,7 +1979,7 @@ export default class BattleScene extends Scene {
       braceCue,
       maxHp: hp,
       hitFlashGraphic: g, hitFlashTimer: null, hyenaSprite, hitAnimUntil: 0,
-      attackCooldown: 0, alive: true, view, shadow, dustTimer: 0
+      attackCooldown: 0, alive: true, view, dustTimer: 0
     };
     this.monsters.push(monsterRecord);
   }
@@ -2084,9 +2077,6 @@ export default class BattleScene extends Scene {
             ? "hyena-run"
             : "hyena-walk";
         this.playHyenaAnimation(monster, movementAnimation);
-      }
-      if (monster.shadow && monster.shadow.active) {
-        monster.shadow.setPosition(position.x, position.y + 2);
       }
       monster.dustTimer -= dt * 1000;
       if (monster.dustTimer <= 0) {
@@ -2186,7 +2176,6 @@ export default class BattleScene extends Scene {
       monster.hitFlashTimer.remove(false);
       monster.hitFlashTimer = null;
     }
-    if (monster.shadow && monster.shadow.active) monster.shadow.destroy();
     this.createMonsterDefeatBurst(monster.x, monster.y, monster.view && monster.view.scaleY);
     this.playMonsterDefeatSound();
     this.playCoinRewardSound();
