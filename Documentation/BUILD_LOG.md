@@ -934,3 +934,6 @@ Validation follow-up: corrected monster ID regex validation and added malformed-
 - Added periodic movement checkpoints with lane distance, elapsed combat time, and nearest Radish blocker.
 - Replay derives the blocker from the lane state and clamps movement through the shared lane-step resolver; it rejects movement exceeding archetype speed bounds, clock mismatches, and incorrect blockers.
 - Added focused movement replay tests. This is a checkpoint-based validation slice, not yet a complete deterministic frame simulation; Dust Skitter random state, projectile hits, deaths, farm breach and boss resolution remain open. Tests/build not executed locally.
+
+
+Coordinate correction: movement replay now uses calibrated lane width/spawn position, and a checkpoint is forced when entering bite range so the replay cannot accept a bite from an outdated distant position. Focused bite fixtures now include the actual lane traversal. Tests/build still not executed in this environment.
