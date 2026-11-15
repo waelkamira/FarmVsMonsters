@@ -2,8 +2,7 @@ import {
   CAMPAIGN_PROGRESS_KEY,
   loadUnlockedStage,
   loadSavedCoins,
-  saveCoins,
-  unlockNextStage
+  saveCoins
 } from "../rules/phaseOneRules.mjs";
 
 async function requestJson(url, options = {}) {
