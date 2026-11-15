@@ -2193,7 +2193,7 @@ export default class BattleScene extends Scene {
         .sort((a, b) => a.localX - b.localX)[0];
       if (!target) continue;
       this.fireThorn(plant, target);
-      plant.cooldown = config.cooldown;
+      plant.cooldown = Number.isFinite(config.cooldownMs) ? config.cooldownMs : config.cooldown;
     }
   }
 
