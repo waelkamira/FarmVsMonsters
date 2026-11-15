@@ -1355,3 +1355,81 @@ input[type=range] {accent-color:var(--ui-lime);}
 @media(prefers-reduced-motion:reduce) {
   *,*::before,*::after {scroll-behavior:auto !important;transition:none !important;animation-duration:.01ms !important;}
 }
+
+
+/* Homepage battle showcase: use the actual game battlefield and character art. */
+.world-home{background:#7fd7a1}
+.world-sky,.world-sun,.world-cloud,.world-mountains,.world-hills,.world-river,.world-forest,.world-ground,.world-scene-decor{display:none!important}
+.world-battlefield-showcase{
+  position:absolute;z-index:0;left:0;right:0;bottom:0;height:67%;
+  overflow:hidden;isolation:isolate;
+  background:linear-gradient(180deg,#75d8f1,#73c95c 72%,#3eaa50);
+}
+.world-battlefield-image{
+  position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 58%;
+  filter:saturate(1.12) brightness(1.04);
+}
+.world-battlefield-atmosphere{
+  position:absolute;inset:0;
+  background:linear-gradient(180deg,rgba(39,176,219,.08),transparent 28%,rgba(13,76,46,.12) 75%,rgba(13,70,42,.3));
+}
+.battlefield-farmer,.battlefield-hyena,.battlefield-plant{
+  position:absolute;z-index:2;display:block;pointer-events:none;
+}
+.battlefield-farmer{
+  left:23%;bottom:12%;width:clamp(110px,15vw,210px);height:clamp(112px,15vw,210px);
+  overflow:hidden;filter:drop-shadow(0 9px 7px rgba(14,52,36,.22));
+}
+.battlefield-farmer img{
+  position:absolute;left:0;top:0;width:400%;height:100%;max-width:none;object-fit:fill;
+}
+.battlefield-hyena{
+  width:clamp(82px,11vw,150px);height:clamp(70px,9vw,126px);overflow:hidden;
+  filter:drop-shadow(0 7px 5px rgba(17,49,38,.24));
+}
+.battlefield-hyena img{
+  position:absolute;left:0;top:0;width:400%;height:100%;max-width:none;object-fit:fill;
+}
+.battlefield-hyena-one{right:20%;bottom:15%}
+.battlefield-hyena-two{right:8%;bottom:24%;transform:scale(.82)}
+.battlefield-hyena-three{right:34%;bottom:5%;transform:scale(.7)}
+.battlefield-plant{width:clamp(54px,7vw,96px);height:clamp(58px,8vw,110px)}
+.battlefield-plant img{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 6px 5px rgba(16,58,36,.2))}
+.battlefield-plant-radish{left:8%;bottom:9%}
+.battlefield-plant-mushroom{left:43%;bottom:6%;width:clamp(48px,6vw,82px)}
+.battlefield-plant-radish-small{right:4%;bottom:8%;transform:scale(.78)}
+.battlefield-ground-glow{
+  position:absolute;z-index:1;left:-5%;right:-5%;bottom:-22%;height:42%;
+  border-radius:50%;background:radial-gradient(ellipse,rgba(183,244,91,.42),rgba(44,160,75,0) 70%);
+}
+.world-topbar{z-index:8}
+.world-icon-rail{z-index:8}
+.world-hero{
+  z-index:7;top:15%;left:57%;width:min(520px,48vw);
+  padding:clamp(16px,2vw,26px);border:1px solid rgba(255,255,255,.4);
+  border-radius:30px;background:linear-gradient(145deg,rgba(31,106,139,.32),rgba(40,125,92,.2));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 16px 40px rgba(12,58,57,.12);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+}
+.world-title{font-size:clamp(40px,6.4vw,78px)}
+.world-bottom{z-index:8}
+@media(max-width:700px){
+  .world-battlefield-showcase{height:62%}
+  .world-battlefield-image{object-position:52% center}
+  .world-hero{top:16%;left:58%;width:64vw;padding:12px 10px;border-radius:22px}
+  .world-title{font-size:clamp(32px,8vw,54px)}
+  .battlefield-farmer{left:17%;bottom:11%;width:clamp(92px,23vw,140px);height:clamp(96px,24vw,145px)}
+  .battlefield-hyena{width:clamp(64px,17vw,105px);height:clamp(56px,15vw,90px)}
+  .battlefield-hyena-one{right:14%;bottom:15%}
+  .battlefield-hyena-two{right:1%;bottom:26%}
+  .battlefield-hyena-three{right:37%;bottom:5%}
+  .battlefield-plant-radish{left:4%;bottom:8%}
+  .battlefield-plant-mushroom{left:49%;bottom:4%}
+  .battlefield-plant-radish-small{right:1%;bottom:6%}
+}
+@media(max-width:390px){
+  .world-hero{left:60%;top:18%;width:61vw}
+  .world-story-badge{font-size:8px}
+  .battlefield-farmer{left:13%;width:88px;height:92px}
+  .battlefield-hyena-three{display:none}
+}
