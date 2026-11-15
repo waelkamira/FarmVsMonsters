@@ -1,5 +1,6 @@
 import { Scene, Input, Math as PhaserMath } from "phaser";
 import { translate } from "../../app/LocaleProvider";
+import { createSeededRandom } from "../rules/seededRandom.mjs";
 import gridCalibration from "../data/farm-grid-calibration.json";
 import soundAssets from "../data/sound-assets.json";
 import {
@@ -123,6 +124,13 @@ export default class BattleScene extends Scene {
 
   create() {
     this.isPaused = false;
+    // Client-local deterministic seed for reproducible development sessions only.
+    // The authoritative server must issue and retain its own seed per game session.
+    const seedBuffer = new Uint32Array(1);
+    if (window.crypto?.getRandomValues) window.crypto.getRandomValues(seedBuffer);
+    else seedBuffer[0] = Date.now() >>> 0;
+    this.simulationSeed = seedBuffer[0];
+    this.simulationRandom = createSeededRandom(this.simulationSeed);
     this.languageChangeHandler = () => {
       this.refreshHud();
       if (this.lastMessage) this.setMessage(this.lastMessage);
@@ -2437,7 +2445,7 @@ export default class BattleScene extends Scene {
   }
 
   spawnMonster(spawnIndex = this.spawnedThisWave) {
-    const row = PhaserMath.Between(0, LANES - 1);
+    const row = this.simulationRandom.nextInt(0, LANES - 1);
     const archetype = this.monsterArchetypeFor(spawnIndex);
     const profile = getMonsterCombatStats(archetype, this.wave);
     const hp = profile.hp;
@@ -2587,12 +2595,12 @@ export default class BattleScene extends Scene {
       attackInterval: profile.attackIntervalMs,
       incomingDamageMultiplier: profile.incomingDamageMultiplier,
       // The skitter alternates normal movement with short, readable bursts.
-      burstCooldown: archetype === "dust-skitter" ? PhaserMath.Between(profile.initialBurstCooldownMinMs, profile.initialBurstCooldownMaxMs) : 0,
+      burstCooldown: archetype === "dust-skitter" ? this.simulationRandom.nextInt(profile.initialBurstCooldownMinMs, profile.initialBurstCooldownMaxMs) : 0,
       burstRemaining: 0,
       combatProfile: profile,
       // Dust Skitters occasionally hop; this is purely visual and never
       // changes their lane, collision position, or ability to be hit.
-      jumpCooldown: archetype === "dust-skitter" ? PhaserMath.Between(profile.jumpCooldownMinMs, profile.jumpCooldownMaxMs) : 0,
+      jumpCooldown: archetype === "dust-skitter" ? this.simulationRandom.nextInt(profile.jumpCooldownMinMs, profile.jumpCooldownMaxMs) : 0,
       jumpDuration: 560,
       jumpElapsed: 0,
       isJumping: false,
@@ -2739,17 +2747,17 @@ export default class BattleScene extends Scene {
           jumpVisualHeight: 34,
           visualScale: monster.view.scaleY,
           nextJumpDurationMs: jumpWillStart
-            ? PhaserMath.Between(profile.jumpDurationMinMs, profile.jumpDurationMaxMs)
+            ? this.simulationRandom.nextInt(profile.jumpDurationMinMs, profile.jumpDurationMaxMs)
             : null,
           nextJumpResetCooldownMs: jumpWillLand
-            ? PhaserMath.Between(profile.jumpResetCooldownMinMs, profile.jumpResetCooldownMaxMs)
+            ? this.simulationRandom.nextInt(profile.jumpResetCooldownMinMs, profile.jumpResetCooldownMaxMs)
             : null,
           burstCooldownMs: monster.burstCooldown,
           burstRemainingMs: monster.burstRemaining,
           burstDurationMs: profile.burstDurationMs,
           burstSpeedMultiplier: profile.burstSpeedMultiplier,
           nextBurstCooldownMs: burstWillStart
-            ? PhaserMath.Between(profile.burstCooldownMinMs, profile.burstCooldownMaxMs)
+            ? this.simulationRandom.nextInt(profile.burstCooldownMinMs, profile.burstCooldownMaxMs)
             : null
         });
         monster.isJumping = motion.isJumping;
