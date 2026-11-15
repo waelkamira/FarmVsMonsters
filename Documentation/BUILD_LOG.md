@@ -800,3 +800,13 @@
 - Added regression assertions for the write lock and unverified-balance purchase guard.
 - IMPORTANT: migration 004 must be applied in the Supabase SQL Editor before deploying the updated app. The repository change alone does not alter a live Supabase database. Existing cloud balances remain unverified and cannot be spent until a trusted reward pipeline verifies them.
 - Validation: GitHub source read/write only. No live Supabase migration, npm test, production build, or browser verification was run.
+
+
+
+## 2026-11-15 — Reject legacy unverified cloud progression
+- Extended migration 004 with `progress_verified boolean not null default false`, alongside the existing `coins_verified` flag. Existing cloud stage unlocks and completion arrays are treated as untrusted because the previous client-write path could alter them.
+- Updated the progress read API to expose the verification flag.
+- Updated cloud restore to ignore legacy cloud stage data and balances unless their respective verification flags are true. It no longer merges untrusted cloud stage progress into the local save.
+- Updated the purchase RPC to require verified progression as well as verified currency before checking stage gates or spending coins.
+- Added regression assertions for the progression verification gate and documented the behavior.
+- Migration 004 remains a repository change only; it has not been applied to the live Supabase project. No tests/build/browser run was performed in this step.
