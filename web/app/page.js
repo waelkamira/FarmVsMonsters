@@ -52,6 +52,7 @@ export default function HomePage() {
         </div>
         <nav className="menu-actions" aria-label="Main menu">
           <Link className="primary-link" href="/stages">{t("New Game")}</Link>
+          <Link className="secondary-link" href="/account">{arabic ? "حساب اللاعب / حفظ التقدم" : "Player Account / Save Progress"}</Link>
           <Link className="secondary-link" href="/how-to-play">{t("How to Play")}</Link>
           <Link className="secondary-link" href="/settings">{t("Settings")}</Link>
           <Link className="secondary-link" href="/credits">{t("Credits")}</Link>
