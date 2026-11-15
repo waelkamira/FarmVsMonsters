@@ -11,6 +11,7 @@ const assets = JSON.parse(readFileSync(resolve(here, "../game/data/phase-one-sto
 test("the dragon and captive princess enter during wave five and remain separate from ordinary monsters", () => {
   assert.match(scene, /if \(this\.wave === 5 && this\.spawnedThisWave === 2\) this\.beginDragonEncounter\(\)/);
   assert.match(scene, /this\.phaseOneStoryState = "dragon"/);
+  assert.match(scene, /this\.facing = 1;\s*this\.caveman\.scaleX = 1;/);
   assert.match(scene, /this\.createPrincessActor\(\);\s*this\.dragonBoss = \{/);
   assert.doesNotMatch(scene, /this\.monsters\.push\(this\.dragonBoss\)/);
 });
