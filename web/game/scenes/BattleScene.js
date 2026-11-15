@@ -2219,32 +2219,40 @@ export default class BattleScene extends Scene {
   }
 
   fireThorn(plant, _target) {
-    // Monsters and thorns share the exact same perspective lane.
-    // The projectile keeps the original lane, speed and collision behavior,
-    // but now has a layered golden glow and a short launch flash.
+    // The Radish fires a miniature copy of its own artwork, turned sideways
+    // so the root points toward incoming monsters. Keep the combat contract
+    // (lane, speed, damage and collision) unchanged.
     const lane = this.worldToLane(plant);
     const localX = lane.localX + 22;
     const row = plant.row;
-    // Launch from the same raised lane center used by the monsters themselves.
     const position = this.monsterLanePoint(localX, row);
-    // Alternate successive thorns between the monster's head and torso.
     const verticalOffset = this.nextProjectileAim === "head" ? -22 : 14;
     this.nextProjectileAim = this.nextProjectileAim === "head" ? "middle" : "head";
     const launchY = position.y + verticalOffset;
     const view = this.add.container(position.x, launchY).setDepth(16);
 
-    const halo = this.add.circle(0, 0, 17, 0xffa52f, 0.16);
-    const outerGlow = this.add.circle(0, 0, 11, 0xffc247, 0.34);
-    const innerGlow = this.add.circle(0, 0, 6.5, 0xfff0a0, 0.9);
-    const thorn = this.add.triangle(0, 0, -10, 6, 12, 0, -10, -6, 0xfff8cf)
-      .setStrokeStyle(1.5, 0xffa52f, 1);
-    const highlight = this.add.triangle(-1, -1, -7, 2, 7, 0, -7, -2, 0xffffff);
-    view.add([halo, outerGlow, innerGlow, thorn, highlight]);
+    const halo = this.add.circle(0, 0, 18, 0xff7185, 0.13);
+    const outerGlow = this.add.circle(0, 0, 13, 0x8bd66f, 0.2);
+    const innerGlow = this.add.circle(0, 0, 9, 0xffd5dc, 0.28);
+    view.add([halo, outerGlow, innerGlow]);
+
+    if (this.textures.exists("radish-character")) {
+      const radishProjectile = this.add.image(0, 0, "radish-character")
+        .setDisplaySize(29, 29)
+        .setRotation(-Math.PI / 2);
+      view.add(radishProjectile);
+    } else {
+      // Visible fallback only if the Radish artwork failed to load.
+      const fallback = this.add.ellipse(0, 0, 23, 13, 0xff7185, 1)
+        .setStrokeStyle(2, 0xffffff, 0.9);
+      const leaf = this.add.triangle(-8, -2, -3, 0, -12, -8, -12, 5, 0x65bd62);
+      view.add([fallback, leaf]);
+    }
 
     this.tweens.add({
       targets: [halo, outerGlow],
-      alpha: { from: 0.2, to: 0.62 },
-      scale: { from: 0.82, to: 1.22 },
+      alpha: { from: 0.12, to: 0.42 },
+      scale: { from: 0.86, to: 1.18 },
       duration: 180,
       ease: "Sine.easeInOut",
       yoyo: true,
@@ -2252,8 +2260,8 @@ export default class BattleScene extends Scene {
     });
     this.tweens.add({
       targets: innerGlow,
-      alpha: { from: 0.72, to: 1 },
-      scale: { from: 0.9, to: 1.18 },
+      alpha: { from: 0.18, to: 0.42 },
+      scale: { from: 0.9, to: 1.16 },
       duration: 125,
       yoyo: true,
       repeat: -1
@@ -2276,11 +2284,12 @@ export default class BattleScene extends Scene {
 
   createProjectileImpact(x, y) {
     const burst = this.add.container(x, y).setDepth(24);
-    const flash = this.add.circle(0, 0, 10, 0xfff4b0, 0.95);
+    const flash = this.add.circle(0, 0, 10, 0xfff4f7, 0.96);
     const sparks = [];
+    const colors = [0xff7185, 0x8bd66f, 0xffc7d0, 0x65bd62, 0xffffff, 0xffa4b2];
     for (let i = 0; i < 6; i += 1) {
       const angle = (Math.PI * 2 * i) / 6;
-      const spark = this.add.circle(Math.cos(angle) * 5, Math.sin(angle) * 5, 3, 0xffc247, 1);
+      const spark = this.add.circle(Math.cos(angle) * 5, Math.sin(angle) * 5, 3, colors[i], 1);
       sparks.push(spark);
     }
     burst.add([flash, ...sparks]);
