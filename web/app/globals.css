@@ -226,3 +226,9 @@ body { color:var(--text-primary); }
 .guest-play-panel strong { color:#fff1cc; font-size:20px; }
 .guest-play-panel p { margin:0; color:#f4e2c2; font-size:15px; line-height:1.8; }
 .guest-play-panel .primary-link { margin-top:6px; }
+
+.google-signin-button { display:flex; align-items:center; justify-content:center; gap:12px; width:100%; min-height:56px; margin:22px 0 14px; padding:12px 18px; border:2px solid #e5d6bd; border-radius:10px; background:#fff; color:#26221d; font:inherit; font-size:16px; font-weight:900; text-decoration:none; box-shadow:0 4px 0 #b9a98e; transition:transform .14s ease,filter .14s ease; }
+.google-signin-button:hover { filter:brightness(.96); transform:translateY(-1px); }
+.google-mark { display:grid; place-items:center; width:27px; height:27px; border-radius:50%; background:#fff; color:#4285f4; font:900 22px Arial,sans-serif; text-shadow:1px 0 #34a853,-1px 0 #ea4335,0 1px #fbbc05; }
+.account-or-divider { display:flex; align-items:center; gap:12px; margin:12px 0 18px; color:#e8d7b6; font-size:12px; font-weight:900; letter-spacing:.08em; }
+.account-or-divider::before,.account-or-divider::after { content:""; flex:1; height:1px; background:#d8b77788; }
