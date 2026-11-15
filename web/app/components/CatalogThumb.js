@@ -12,6 +12,13 @@ const LOCAL_PLANT_ICONS = {
   "fire-pepper": "/assets/plant-icons/fire-pepper.svg"
 };
 
+const LOCAL_MONSTER_ICONS = {
+  "cave-brute": "/assets/monster-icons/cave-brute.svg",
+  "dust-skitter": "/assets/monster-icons/dust-skitter.svg",
+  stonehide: "/assets/monster-icons/stonehide.svg",
+  "alpha-brute": "/assets/monster-icons/alpha-brute.svg"
+};
+
 const ART = {
   radish: ["1f96c", "Radish greens"],
   "energy-mushroom": ["1f344", "Mushroom"],
@@ -36,7 +43,7 @@ const ART = {
 export default function CatalogThumb({ id, label, className = "" }) {
   const [code, fallback] = ART[id] || ART.stage;
   const safeCode = code.replace(/[^a-f0-9-]/gi, "");
-  const localIcon = LOCAL_PLANT_ICONS[id];
+  const localIcon = LOCAL_PLANT_ICONS[id] || LOCAL_MONSTER_ICONS[id];
   return (
     <div className={`catalog-thumb ${className}`} role="img" aria-label={label || fallback}>
       <span className="catalog-thumb-glow" />
