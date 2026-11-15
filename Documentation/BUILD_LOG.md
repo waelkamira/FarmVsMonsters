@@ -741,6 +741,6 @@
 - Added the rescue sequence: the farmer reaches the princess, picks her up, carries her back to the farmhouse, and only then opens the victory screen.
 - Added optional user-authored asset slots and web/game/data/phase-one-story-assets.json; missing story artwork does not replace or modify existing character art.
 - Added focused story-flow tests in web/tests/phase-one-story.test.mjs.
-- Asset contract: farmer story sheets use 360×430 frames (6 frames each); dragon sheet uses 512×512 frames; princess and emblem are standalone PNG images.
+- Asset contract: farmer story sheets use 360×430 frames (6 frames each); dragon sheet uses 512×512 frames; captive and rescued princess poses are separate standalone PNGs; emblem is a standalone PNG.
 - Validation status: source and tests were updated, but browser gameplay, visual placement, and the web build still require execution in a local checkout after the user supplies the story artwork.
 
