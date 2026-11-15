@@ -1856,13 +1856,17 @@ export default class BattleScene extends Scene {
     try {
       if (this.hyenaAssetFailed) throw new Error("A required hyena sprite sheet failed to load.");
 
-      for (const [key, frameCount, frameRate, repeat] of requiredDefinitions) {
+      for (const [key, expectedFrames, frameRate, repeat] of requiredDefinitions) {
         if (!this.textures.exists(key)) throw new Error(`Missing required hyena sheet: ${key}.`);
         const texture = this.textures.get(key);
-        const available = Object.keys(texture.frames).filter((name) => name !== "__BASE");
-        if (available.length < frameCount) {
-          throw new Error(`Invalid ${key} sheet: expected ${frameCount} frames, found ${available.length}.`);
+        const available = Object.keys(texture.frames).filter((name) => name !== "__BASE").length;
+        if (available < 1) {
+          throw new Error(`Invalid ${key} sheet: no animation frames were found.`);
         }
+        // Use every frame that actually exists in the authored sheet, up to
+        // the intended maximum. Some approved sheets contain fewer frames
+        // (for example, hyena-idle has 3 rather than 4); that is valid artwork.
+        const frameCount = Math.min(expectedFrames, available);
         if (this.anims.exists(key)) this.anims.remove(key);
         this.anims.create({
           key,
