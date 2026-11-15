@@ -262,3 +262,176 @@ body { color:var(--text-primary); }
 .plant-art-placeholder.is-planned { background:radial-gradient(circle at 50% 35%,#514733,#2c241c 75%); border-color:#8d7859; }
 .plant-locked-button { width:100%; margin-top:14px; padding:11px 12px; border:1px solid #8b7655; border-radius:9px; background:#292017; color:#d9c7a5; font-weight:800; cursor:not-allowed; opacity:.9; }
 .collection-note { margin-top:20px; }
+
+
+/* === Farm vs Monsters: vibrant plant-and-monster UI theme === */
+:root {
+  color-scheme: dark;
+  --cave-night: #101a2e;
+  --wood-deep: #17213d;
+  --wood: #25375c;
+  --wood-light: #35bceB;
+  --bone: #ffffff;
+  --moss: #42c96b;
+  --ember: #ffca45;
+  --text-primary: #ffffff;
+  --text-secondary: #ffffff;
+  --panel-ink: #17213d;
+  --panel-edge: #a7e84f;
+}
+html, body {
+  color: #fff !important;
+  background: #101a2e;
+  font-family: "Trebuchet MS", Tahoma, Arial, sans-serif;
+}
+body {
+  background:
+    radial-gradient(ellipse at 12% 0%, #254e68 0, transparent 42%),
+    radial-gradient(ellipse at 88% 12%, #563c83 0, transparent 38%),
+    linear-gradient(145deg, #101a2e, #182b46 55%, #17203b);
+}
+.home-shell, .info-shell, .game-shell {
+  background:
+    radial-gradient(ellipse at 15% 8%, #286b68 0, transparent 34%),
+    radial-gradient(ellipse at 85% 15%, #604b91 0, transparent 36%),
+    linear-gradient(145deg, #101a2e, #172d4a 58%, #18203b);
+}
+.home-card, .info-card {
+  border: 4px solid #8b65e8;
+  outline: 2px solid #35bceb;
+  outline-offset: -12px;
+  border-radius: 26px;
+  background: linear-gradient(145deg, #276c70 0%, #315b91 48%, #60428b 100%);
+  box-shadow: inset 0 2px 0 #ffffff55, inset 0 -10px 28px #101a2e55, 0 22px 55px #050b1dcc;
+}
+.home-card::before, .home-card::after { background: linear-gradient(90deg,#a7e84f,#35bceb,#ffca45); height:5px; }
+h1, h2, h3, .wordmark, .info-card h2, .stage-tile h2,
+.eyebrow, .menu-version, .control-hint, .home-copy, .home-note,
+.prototype-note, .info-card p, .info-card li, .campaign-note,
+.menu-facts span, .game-status, .game-status strong, .game-status span,
+.game-back-link, .collection-intro, .collection-section-title,
+.collection-card h2, .collection-card p, .collection-meta span,
+.collection-summary span, .stage-number, .stage-tile p,
+.stage-lock-label, .stage-briefing strong, .stage-briefing span,
+.account-form label, .account-intro, .account-signed-in strong,
+.account-signed-in p, .account-email, .optional-account-entry small {
+  color: #fff !important;
+  text-shadow: 0 2px 3px #101a2eaa;
+}
+h1 { text-shadow: 0 3px 0 #263d66, 0 7px 18px #07101f; }
+h1 span, .wordmark span { color: #ffca45 !important; }
+.home-copy, .info-card p, .info-card li { color:#fff !important; }
+.game-header {
+  border: 3px solid #35bceb;
+  border-radius: 18px;
+  background: linear-gradient(90deg,#286b68,#315b91 50%,#60428b);
+  box-shadow: inset 0 1px 0 #ffffff55, 0 8px 20px #050b1dcc;
+}
+.game-panel {
+  border: 4px solid #8b65e8;
+  border-radius: 20px;
+  background: linear-gradient(135deg,#35bceb,#42c96b 48%,#8b65e8);
+  box-shadow: inset 0 1px 0 #ffffff66, 0 18px 45px #050b1dcc;
+}
+.phaser-host canvas {
+  border: 3px solid #35bceb;
+  border-radius: 12px;
+}
+.primary-link, .secondary-link, .language-toggle, .game-retry-button,
+.account-submit, .account-tabs button, .stage-action a {
+  color: #fff !important;
+  text-shadow: 0 2px 3px #14213d !important;
+  border: 2px solid #ffffffaa !important;
+  border-radius: 15px !important;
+  font-weight: 900;
+  box-shadow: 0 5px 0 #101a2e99, 0 9px 18px #050b1d88 !important;
+  transition: transform .14s ease, filter .14s ease, box-shadow .14s ease;
+}
+.primary-link, .account-submit, .game-retry-button {
+  background: linear-gradient(180deg,#69df78,#219d61) !important;
+}
+.secondary-link, .language-toggle {
+  background: linear-gradient(180deg,#9b7af0,#6847c4) !important;
+}
+.menu-actions .secondary-link:nth-child(2n) {
+  background: linear-gradient(180deg,#55c9f2,#258acb) !important;
+}
+.primary-link:hover, .secondary-link:hover, .language-toggle:hover,
+.account-submit:hover, .game-retry-button:hover {
+  filter: brightness(1.12) saturate(1.12);
+  transform: translateY(-2px);
+}
+.primary-link:active, .secondary-link:active, .account-submit:active {
+  transform: translateY(3px);
+  box-shadow: 0 2px 0 #101a2e99 !important;
+}
+.menu-facts span, .campaign-note, .account-feedback, .account-security,
+.account-status, .account-signed-in, .guest-play-panel {
+  border: 2px solid #35bceb;
+  border-radius: 15px;
+  background: linear-gradient(145deg,#214e67dd,#29365fdd);
+  color: #fff !important;
+}
+.coin-wallet, .collection-wallet, .collection-summary span {
+  border: 2px solid #ffca45;
+  border-radius: 16px;
+  background: linear-gradient(135deg,#5a4a91,#274c76);
+  color: #fff !important;
+}
+.coin-wallet-icon {
+  border: 2px solid #fff;
+  background: radial-gradient(circle at 35% 30%,#fff7a8,#ffca45 68%,#f08a36);
+  color: #fff !important;
+}
+.stage-tile, .collection-card, .stage-cast-placeholder,
+.stage-briefing div, .stage-intro-emblem {
+  border: 2px solid #35bceb;
+  border-radius: 18px;
+  background: linear-gradient(145deg,#276c70,#315b91 58%,#493b78);
+  color: #fff !important;
+  box-shadow: inset 0 1px 0 #ffffff44, 0 8px 20px #08122688;
+}
+.stage-available, .collection-card.is-active { border-color:#a7e84f; }
+.stage-locked, .collection-card.is-locked {
+  background: linear-gradient(145deg,#39445c,#28334d);
+  border-color:#8b95ad;
+  filter:saturate(.72);
+}
+.stage-art-placeholder, .plant-art-placeholder, .collection-art {
+  border: 2px solid #a7e84f;
+  border-radius: 16px;
+  background: radial-gradient(circle at 35% 25%,#a7e84f,#258e78 55%,#315b91);
+  color: #fff !important;
+}
+.plant-art-placeholder.is-planned {
+  border-color:#8b65e8;
+  background: radial-gradient(circle at 50% 35%,#6550a0,#29365f 75%);
+}
+.collection-status { background:#238a58; color:#fff !important; border:1px solid #a7e84f; }
+.is-locked .collection-status { background:#4b4f69; color:#fff !important; }
+.plant-locked-button {
+  background:linear-gradient(180deg,#59637b,#343e5b);
+  color:#fff !important;
+  border:2px solid #9aa6c1;
+  border-radius:12px;
+}
+.account-form input {
+  background:#111d35;
+  border:2px solid #35bceb;
+  border-radius:12px;
+  color:#fff !important;
+}
+.account-form input::placeholder { color:#d9e7ff; }
+.account-tabs button { background:linear-gradient(180deg,#35bceb,#287eb7); }
+.account-tabs button.active { background:linear-gradient(180deg,#ffca45,#e98a38); }
+.account-avatar { background:linear-gradient(145deg,#ffca45,#ff7185); color:#fff !important; }
+.google-signin-button { color:#24314e !important; text-shadow:none !important; }
+.game-status {
+  background: radial-gradient(ellipse at center,#286b68,#24375c 62%,#101a2e);
+  color:#fff !important;
+}
+.game-status-error { background:radial-gradient(ellipse at center,#a83f68,#442653 68%,#101a2e); }
+.game-status-mark { color:#ffca45 !important; }
+.settings-row, .settings-row label, .settings-row output { color:#fff !important; }
+.settings-row input { accent-color:#a7e84f; }
+html[dir="rtl"] body { font-family: Tahoma, Arial, sans-serif; }
