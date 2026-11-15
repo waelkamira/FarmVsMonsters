@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "note": "User-authored Phase 1 story artwork. Optional until the matching files are added under web/public/assets.",
+  "assets": [
+    {
+      "key": "farmer-sling",
+      "path": "/assets/characters/farmer/farmer-sling.png",
+      "frameWidth": 360,
+      "frameHeight": 430,
+      "frames": 6,
+      "purpose": "Farmer aims and fires the sling automatically at the dragon."
+    },
+    {
+      "key": "farmer-rescue",
+      "path": "/assets/characters/farmer/farmer-rescue.png",
+      "frameWidth": 360,
+      "frameHeight": 430,
+      "frames": 6,
+      "purpose": "Farmer reaches down and lifts the princess after the dragon is defeated."
+    },
+    {
+      "key": "farmer-carry",
+      "path": "/assets/characters/farmer/farmer-carry.png",
+      "frameWidth": 360,
+      "frameHeight": 430,
+      "frames": 6,
+      "purpose": "Farmer carries the princess while running back to the farm."
+    },
+    {
+      "key": "dragon-boss",
+      "path": "/assets/characters/monsters/dragon/dragon-boss.png",
+      "frameWidth": 512,
+      "frameHeight": 512,
+      "frames": "1 or more",
+      "purpose": "Small Phase 1 dragon boss; animated horizontally behind the battle lanes."
+    },
+    {
+      "key": "phase-one-princess",
+      "path": "/assets/characters/princess/princess.png",
+      "type": "image",
+      "purpose": "Princess waiting near the farmhouse, then attached to the farmer during the rescue."
+    },
+    {
+      "key": "phase-one-emblem",
+      "path": "/assets/levels/phase-1-emblem.png",
+      "type": "image",
+      "recommendedWidth": 840,
+      "recommendedHeight": 500,
+      "purpose": "Phase 1 emblem shown on the victory screen."
+    }
+  ]
+}
