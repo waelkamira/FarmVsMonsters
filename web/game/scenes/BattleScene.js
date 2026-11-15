@@ -501,8 +501,8 @@ export default class BattleScene extends Scene {
     }).setOrigin(0, 0.5).setDepth(41);
 
     // Plant selection cells stay distinct and larger than the status counters.
-    this.radishCard = this.createPlantCard(794, "RADISH", "35", "radish", null, "radish-character", 94);
-    this.mushroomCard = this.createPlantCard(888, "MUSHROOM", "50", "mushroom", null, "mushroom-character", 94);
+    this.radishCard = this.createPlantCard(24, "RADISH", "35", "radish", null, "radish-character", 64);
+    this.mushroomCard = this.createPlantCard(72, "MUSHROOM", "50", "mushroom", null, "mushroom-character", 64);
 
     this.messageText = this.add.text(560, 574, "", {
       fontFamily: "Arial", fontSize: "16px", color: "#ffffff", fontStyle: "bold",
