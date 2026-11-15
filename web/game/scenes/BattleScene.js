@@ -2109,13 +2109,17 @@ export default class BattleScene extends Scene {
       const previousLocalX = monster.localX;
       monster.localX -= movementSpeed * dt;
 
-      // Detect the exact moment a monster crosses a plant's lane position.
-      // This covers every plant type and avoids repeated impacts while it
-      // remains on the far side of the plant.
+      // Detect a swept pass across each plant, not just an exact X match.
+      // The extra contact radius also catches fast bursts and jump-over
+      // movement where a monster can move from one side to the other in a
+      // single update. Apply once per monster/plant pair, for every plant type.
+      const plantContactRadius = 30;
       for (const plant of this.plants) {
         if (!plant.alive || plant.row !== monster.row || monster.knockedPlants.has(plant)) continue;
         const plantLocalX = this.worldToLane(plant).localX;
-        if (previousLocalX > plantLocalX && monster.localX <= plantLocalX) {
+        const crossedPlant = previousLocalX > plantLocalX + plantContactRadius &&
+          monster.localX <= plantLocalX + plantContactRadius;
+        if (crossedPlant) {
           monster.knockedPlants.add(plant);
           this.knockBackPlant(plant, monster);
         }
