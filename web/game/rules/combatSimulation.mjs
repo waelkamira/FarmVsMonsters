@@ -7,7 +7,10 @@ import {
 
 const PLANT_RULES = Object.freeze({
   radish: PHASE_ONE_PLANTS.radish,
-  mushroom: PHASE_ONE_PLANTS.energyMushroom
+  mushroom: PHASE_ONE_PLANTS.energyMushroom,
+  tomato: PHASE_ONE_PLANTS.tomato,
+  pumpkin: PHASE_ONE_PLANTS.pumpkin,
+  onion: PHASE_ONE_PLANTS.onion
 });
 
 function validEnergy(value) {
@@ -159,7 +162,7 @@ export function selectLaneBlocker({ plants, row, monsterLocalX } = {}) {
   for (const candidate of plants) {
     if (
       !candidate?.plant?.alive ||
-      candidate.plant.type !== "radish" ||
+      !["radish", "pumpkin"].includes(candidate.plant.type) ||
       candidate.plant.row !== row ||
       !Number.isFinite(candidate.localX) ||
       candidate.localX >= monsterLocalX
