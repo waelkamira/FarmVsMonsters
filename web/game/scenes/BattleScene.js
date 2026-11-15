@@ -2298,8 +2298,9 @@ export default class BattleScene extends Scene {
     });
 
     this.projectiles.push({
-      view, localX, row, startRow: row, targetRow, startLocalX: localX,
-      targetLocalX, verticalOffset, speed: PHASE_ONE_PLANTS.radish.projectileSpeed,
+      view, localX, row, startRow: row, targetRow, target,
+      startLocalX: localX, targetLocalX, verticalOffset,
+      speed: PHASE_ONE_PLANTS.radish.projectileSpeed,
       damage: PHASE_ONE_PLANTS.radish.projectileDamage, alive: true, trailTimer: 0
     });
     this.playThornSound();
@@ -2912,6 +2913,11 @@ export default class BattleScene extends Scene {
     for (const shot of this.projectiles) {
       if (!shot.alive) continue;
       shot.localX = resolveProjectileLaneStep({ localX: shot.localX, speed: shot.speed, deltaSeconds: dt });
+      // Track the living target as it advances toward the farm so the diagonal
+      // trajectory converges on its current position instead of stale aim data.
+      if (shot.target && shot.target.alive && Number.isFinite(shot.target.localX)) {
+        shot.targetLocalX = Math.max(shot.startLocalX + 1, shot.target.localX);
+      }
 
       // Interpolate between the firing lane and the selected target lane.
       // Rows are blended in board space, then projected through the same
