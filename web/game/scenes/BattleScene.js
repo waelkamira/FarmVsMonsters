@@ -22,7 +22,11 @@ import {
   resolvePlantUproot,
   applyHitPointsDamage,
   resolveMonsterLaneStep,
-  resolveProjectileLaneStep
+  resolveProjectileLaneStep,
+  selectLaneBlocker,
+  selectProjectileTarget,
+  selectFarmerMeleeTarget,
+  selectDragonFireballTarget
 } from "../rules/combatSimulation.mjs";
 import {
   PHASE_ONE_DRAGON,
@@ -930,8 +934,7 @@ export default class BattleScene extends Scene {
     boss.attackCooldown -= delta;
     if (boss.attackCooldown <= 0) {
       boss.attackCooldown = PHASE_ONE_DRAGON.attackIntervalMs;
-      const targetPlant = this.plants.filter((plant) => plant.alive)
-        .sort((a, b) => a.hp - b.hp)[0];
+      const targetPlant = selectDragonFireballTarget(this.plants);
       const targetX = targetPlant ? targetPlant.x : 92;
       const targetY = targetPlant ? targetPlant.y - 18 : 490;
       const fireball = this.add.circle(boss.sprite?.x ?? 930, (boss.sprite?.y ?? 145) - 38, 15, 0xff762e, 1)
@@ -2636,9 +2639,16 @@ export default class BattleScene extends Scene {
       // Only living Radish defenders block a monster's lane.
       // Energy Mushrooms are resource producers, not defensive targets:
       // monsters pass them and continue toward the next Radish or the farm.
-      const blocker = this.plants
-        .filter((p) => p.alive && p.type === "radish" && p.row === monster.row && this.worldToLane(p).localX < monster.localX)
-        .sort((a, b) => this.worldToLane(b).localX - this.worldToLane(a).localX)[0];
+      const blocker = selectLaneBlocker({
+        plants: this.plants.map((plant) => ({
+          plant,
+          localX: plant.alive && plant.type === "radish" && plant.row === monster.row
+            ? this.worldToLane(plant).localX
+            : null
+        })),
+        row: monster.row,
+        monsterLocalX: monster.localX
+      });
       const blockerLocalX = blocker ? this.worldToLane(blocker).localX : -Infinity;
       // Calculate a real visual clearance from both rendered bounds, then
       // convert screen pixels back into this lane's local movement units.
@@ -2779,11 +2789,12 @@ export default class BattleScene extends Scene {
       }
 
       // Collision is checked only against monsters occupying this same lane.
-      const hit = this.monsters.find((monster) =>
-        monster.alive &&
-        monster.row === shot.row &&
-        Math.abs(monster.localX - shot.localX) <= PHASE_ONE_PLANTS.radish.projectileCollisionRadius * (monster.widthScale || 1)
-      );
+      const hit = selectProjectileTarget({
+        monsters: this.monsters,
+        row: shot.row,
+        localX: shot.localX,
+        collisionRadius: PHASE_ONE_PLANTS.radish.projectileCollisionRadius
+      });
       if (hit) {
         this.createProjectileImpact(position.x, position.y + shot.verticalOffset);
         this.playThornImpactSound();
@@ -2984,8 +2995,12 @@ export default class BattleScene extends Scene {
 
   clubAttack() {
     if (!this.emergencyMode || this.livingPlantCount() > 0) return;
-    const target = this.monsters.filter((m) => m.alive && m.row === this.nearestLane(this.caveman.y) && Math.abs(m.x - this.caveman.x) <= PHASE_ONE_FARMER.clubReachPx)
-      .sort((a, b) => Math.abs(a.x - this.caveman.x) - Math.abs(b.x - this.caveman.x))[0];
+    const target = selectFarmerMeleeTarget({
+      monsters: this.monsters,
+      row: this.nearestLane(this.caveman.y),
+      farmerX: this.caveman.x,
+      reach: PHASE_ONE_FARMER.clubReachPx
+    });
     this.playFarmerAction("farmer-attack");
     this.tweens.add({ targets: this.caveman, angle: this.facing * 22, duration: 100, yoyo: true });
     if (target) {
