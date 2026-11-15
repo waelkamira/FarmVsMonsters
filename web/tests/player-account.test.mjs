@@ -14,6 +14,7 @@ const home = readFileSync(resolve(here, "../app/page.js"), "utf8");
 const stages = readFileSync(resolve(here, "../app/stages/page.js"), "utf8");
 const battle = readFileSync(resolve(here, "../game/scenes/BattleScene.js"), "utf8");
 const styles = readFileSync(resolve(here, "../app/globals.css"), "utf8");
+const accountRoute = readFileSync(resolve(here, "../app/api/player/account/route.js"), "utf8");
 
 test("player account screen provides sign-in and account creation", () => {
   assert.match(accountPage, /signInPlayer/);
@@ -54,4 +55,14 @@ test("menus and account controls use high-contrast text and visible focus states
   assert.match(styles, /\.account-form input:focus/);
   assert.match(styles, /\.stage-lock-label[\s\S]*?background:#17100b/);
   assert.match(battle, /strokeThickness: 4, resolution: 2/);
+});
+
+
+test("playing as a guest never requires authentication and keeps local progress", () => {
+  assert.match(home, /href="\/stages"/);
+  assert.match(home, /اختياري|Optional/);
+  assert.match(accountPage, /Continue as Guest/);
+  assert.match(accountPage, /اللعب كضيف/);
+  assert.match(client, /if \(!session\.user\) return null/);
+  assert.match(accountRoute, /cloudAvailable: false/);
 });
