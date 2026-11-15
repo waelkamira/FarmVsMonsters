@@ -147,6 +147,7 @@ export default function AccountPage() {
             : "The game never stores your password. Supabase handles authentication, and database policies isolate each player's progress."}
         </p>
         <nav className="info-nav">
+          <Link className="secondary-link" href="/stages">{ar ? "اللعب كضيف" : "Play as Guest"}</Link>
           <Link className="secondary-link" href="/">{ar ? "القائمة الرئيسية" : "Main Menu"}</Link>
           <Link className="secondary-link" href="/stages">{ar ? "المراحل" : "Stages"}</Link>
         </nav>
