@@ -108,8 +108,3 @@ export async function restoreOrInitializeCloudProgress() {
   return { restored: true, progress: merged, cloudProgress: result.progress };
 }
 
-export async function syncPlayerProgress() {
-  // Browser-reported wins and balances are not authoritative. Keep guest
-  // progression local until the server can verify a completed game session.
-  return null;
-}
