@@ -2128,8 +2128,19 @@ export default class BattleScene extends Scene {
         .filter((p) => p.alive && p.row === monster.row && this.worldToLane(p).localX < monster.localX)
         .sort((a, b) => this.worldToLane(b).localX - this.worldToLane(a).localX)[0];
       const blockerLocalX = blocker ? this.worldToLane(blocker).localX : -Infinity;
-      // Keep the hyena's nose just short of the plant instead of letting its body overlap it.
-      const biteReach = 65 * (monster.widthScale || 1);
+      // Calculate a real visual clearance from both rendered bounds, then
+      // convert screen pixels back into this lane's local movement units.
+      const lanePixelStep = blocker
+        ? Math.abs(this.monsterLanePoint(blockerLocalX + 1, monster.row).x -
+          this.monsterLanePoint(blockerLocalX, monster.row).x)
+        : 1;
+      const monsterHalfWidth = monster.hyenaSprite
+        ? monster.hyenaSprite.width * monster.hyenaSprite.scaleX * monster.view.scaleX * 0.5
+        : monster.view.getBounds().width * 0.5;
+      const plantHalfWidth = blocker ? blocker.view.getBounds().width * 0.5 : 0;
+      const biteReach = blocker
+        ? (monsterHalfWidth + plantHalfWidth + 10) / Math.max(0.01, lanePixelStep)
+        : 0;
       const withinBiteRange = Boolean(blocker && monster.localX - blockerLocalX <= biteReach);
 
       // A Stonehide locks its shale plates into place while chewing a plant.
@@ -2142,18 +2153,23 @@ export default class BattleScene extends Scene {
       }
 
       if (withinBiteRange) {
+        // Freeze the exact movement frame on arrival. Switching sprite sheets or
+        // looping idle frames can change the visible silhouette and look like growth.
+        if (monster.hyenaSprite && !monster.isEating) {
+          monster.hyenaSprite.anims.pause();
+          monster.isEating = true;
+        }
         if (monster.attackCooldown <= 0) {
-          // The bite sheet has inconsistent character framing between poses, which
-          // makes the hyena appear to grow. Keep its stable idle frame while chewing.
-          this.playHyenaAnimation(monster, "hyena-idle", true);
-          blocker.hp -= monster.plantDamage; monster.attackCooldown = monster.attackInterval;
+          blocker.hp -= monster.plantDamage;
+          monster.attackCooldown = monster.attackInterval;
           this.playMonsterBiteSound();
           this.flashEatenPlant(blocker);
-          // Keep the hyena at a constant size while chewing; only add a tiny horizontal recoil.
-          this.tweens.add({ targets: monster.view, x: monster.view.x - 4, duration: 85, yoyo: true });
           if (blocker.hp <= 0) this.destroyPlant(blocker);
         }
         continue;
+      }
+      if (monster.isEating) {
+        monster.isEating = false;
       }
       if (!blocker && monster.localX <= HOME_LOCAL_X + 34) {
         // The first monster to cross the final line ends the run immediately.
