@@ -135,3 +135,11 @@ Phaser still chooses the visual lane using its current random source, creates sp
 - The live scene records successful plant placement, manual uprooting, and positive energy collection actions. Failed actions and zero-value pickups are not recorded.
 - Event payloads are normalized and bounded to the current 8×5 battlefield and the two implemented plant types. The log is currently retained in scene memory only.
 - This is instrumentation, not a replay validator: monster outcomes, autonomous energy generation, combat damage, wave/boss state, and terminal outcomes are not yet replayed or verified. Client event logs remain untrusted and must not grant currency or progression.
+
+
+## First deterministic action replay reducer (limited scope)
+- Added a pure replay reducer for the currently instrumented player actions: plant placement, manual uprooting, and energy pickup.
+- Replay starts from the phase-one initial energy, reuses the shared placement/uproot/pickup resolvers, enforces the 8×5 board, occupied-cell checks, planting costs, full manual refund, event order, duration bound, and exact rules version.
+- Energy collection is provisionally restricted to the current 15-energy mushroom pickup denomination. This still does not prove a pickup existed; world-generated pickup provenance must be simulated before energy events can be considered authoritative.
+- The reducer does not yet simulate autonomous mushroom production, monster movement/attacks, projectiles, wave spawns, dragon combat, farm damage, kill rewards, or victory. A successful replay means only that the supported player-action subset is internally consistent, never that the stage was won.
+- No server endpoint, database writes, cloud rewards, or progression unlocks are enabled by this work.
