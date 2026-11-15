@@ -2724,6 +2724,7 @@ export default class BattleScene extends Scene {
 
       if (withinBiteRange) {
         const enteringBiteRange = !monster.isEating;
+        monster.replayMoveElapsedMs += delta;
         const movementTick = Math.floor(this.combatClockMs);
         if (enteringBiteRange || monster.replayLastBlockerCol !== blocker.col || monster.replayMoveElapsedMs >= 500) {
           this.recordCombatEvent("monster_moved", {
