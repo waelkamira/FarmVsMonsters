@@ -3,6 +3,28 @@
 // client consume the same rules instead of maintaining separate balance tables.
 export const PHASE_ONE_COMBAT_CONTRACT_VERSION = 1;
 
+export const PHASE_ONE_WAVE_SIZES = Object.freeze([3, 5, 6, 7, 9]);
+export const PHASE_ONE_ENERGY = Object.freeze({ initial: 150, maximum: 300 });
+
+export const PHASE_ONE_TIMING = Object.freeze({
+  firstMonsterSpawnDelayMs: 1800,
+  nextWaveSpawnDelayMs: 1600,
+  waveIntermissionMs: 5000,
+  minimumMonsterSpawnIntervalMs: 2300,
+  monsterSpawnIntervalBaseMs: 5200,
+  monsterSpawnIntervalWaveReductionMs: 120
+});
+
+export function getMonsterSpawnIntervalMs(wave) {
+  if (!Number.isInteger(wave) || wave < 1 || wave > PHASE_ONE_WAVE_SIZES.length) {
+    throw new RangeError("INVALID_WAVE_NUMBER");
+  }
+  return Math.max(
+    PHASE_ONE_TIMING.minimumMonsterSpawnIntervalMs,
+    PHASE_ONE_TIMING.monsterSpawnIntervalBaseMs - wave * PHASE_ONE_TIMING.monsterSpawnIntervalWaveReductionMs
+  );
+}
+
 export const PHASE_ONE_REWARDS = Object.freeze({
   ordinaryMonsterDefeatCoins: 8
 });
