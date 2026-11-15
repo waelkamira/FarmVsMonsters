@@ -62,3 +62,8 @@ This audit records source-level findings only. No database migration was applied
 ## Follow-up implementation status
 
 The Stage 1 renderer and rules now consume a shared versioned combat contract at `web/game/rules/phaseOneCombatContract.mjs`. It centralizes the existing wave roster, plant/monster/dragon/farmer values, spawn pacing, and 8-coin ordinary-monster reward. A deterministic seeded PRNG foundation is also present at `web/game/rules/seededRandom.mjs`, with unit tests. These are preparatory refactors only: the live battle still runs in the browser and still uses Phaser randomness for gameplay choices. They do not yet make rewards server-authoritative or justify re-enabling cloud sync.
+
+
+
+## Pure combat kernel progress
+The first renderer-independent simulation module, `web/game/rules/combatSimulation.mjs`, is now used by the Phaser battle for plant placement, manual uproot/refund validation, energy pickup calculation, and HP damage resolution. This reduces duplicated client logic and creates reusable server-side rules, but does not yet establish authoritative sessions or server-verified wins. Movement, targeting, collisions, wave timing, random monster behavior, and victory conditions remain in the client.
