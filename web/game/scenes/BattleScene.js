@@ -18,6 +18,11 @@ import {
   monsterArchetypeFor as resolveMonsterArchetype
 } from "../rules/phaseOneRules.mjs";
 import {
+  resolvePlantPlacement,
+  resolvePlantUproot,
+  applyHitPointsDamage
+} from "../rules/combatSimulation.mjs";
+import {
   PHASE_ONE_DRAGON,
   PHASE_ONE_PLANTS,
   PHASE_ONE_FARMER,
@@ -952,7 +957,7 @@ export default class BattleScene extends Scene {
   damageDragonBoss(amount) {
     const boss = this.dragonBoss;
     if (!boss?.alive || amount <= 0) return;
-    boss.hp = Math.max(0, boss.hp - amount);
+    boss.hp = applyHitPointsDamage(boss.hp, amount).hp;
     if (boss.sprite?.active) {
       boss.sprite.setTint(0xffc078);
       this.time.delayedCall(110, () => { if (boss.sprite?.active) boss.sprite.clearTint(); });
@@ -1901,17 +1906,27 @@ export default class BattleScene extends Scene {
   plantSelected(col, row, type, returnPosition = null) {
     if (this.gameOver) return;
     if (type !== "radish" && type !== "mushroom") return;
-    const config = type === "mushroom" ? MUSHROOM_CONFIG : RADISH_CONFIG;
-    if (this.energy < config.cost || this.plants.some((p) => p.alive && p.col === col && p.row === row)) {
-      this.setMessage("Planting cancelled: this cell is no longer available."); return;
+    const placement = resolvePlantPlacement({
+      energy: this.energy,
+      plants: this.plants,
+      type,
+      col,
+      row,
+      columns: COLUMNS,
+      rows: LANES
+    });
+    if (!placement.ok) {
+      this.setMessage("Planting cancelled: this cell is no longer available.");
+      return;
     }
-    this.energy -= config.cost;
+    const config = type === "mushroom" ? MUSHROOM_CONFIG : RADISH_CONFIG;
+    this.energy = placement.energy;
     this.farmerPlanting = true;
     this.playFarmerAction("farmer-plant");
     const { x, y } = this.plantingCellCenter(col, row);
     const plant = {
-      type, col, row, x, y, hp: config.hp, alive: true,
-      energyCost: config.cost,
+      ...placement.plant,
+      x, y,
       cooldown: PhaserMath.Between(250, 650),
       productionTimer: type === "mushroom" ? config.productionInterval : undefined,
       view: type === "mushroom" ? this.drawEnergyMushroom(x, y, row) : this.drawRadish(x, y)
@@ -2847,7 +2862,7 @@ export default class BattleScene extends Scene {
 
   applyMonsterDamage(monster, amount) {
     if (!monster || !monster.alive || amount <= 0) return;
-    monster.hp = Math.max(0, monster.hp - amount);
+    monster.hp = applyHitPointsDamage(monster.hp, amount).hp;
     this.playMonsterHitSound();
     if (monster.hyenaSprite) this.playHyenaVoice("yelp", 0.82);
     this.flashMonsterOnHit(monster);
@@ -2891,11 +2906,12 @@ export default class BattleScene extends Scene {
 
   uprootPlant(plant) {
     if (!plant || !plant.alive || this.gameOver) return;
+    const uproot = resolvePlantUproot({ energy: this.energy, plant });
+    if (!uproot.ok) return;
     plant.alive = false;
     plant.view.destroy();
-    // Return the exact energy paid for this plant so it can be replanted
-    // anywhere. Only manual uprooting refunds energy; destroyed plants do not.
-    this.energy += Number.isFinite(plant.energyCost) ? plant.energyCost : (plant.type === "mushroom" ? MUSHROOM_CONFIG.cost : RADISH_CONFIG.cost);
+    // Only manual uprooting refunds energy; destroyed plants do not.
+    this.energy = uproot.energy;
     // Uprooting is performed while the farmer is standing still. Do not
     // switch to an action sprite sheet or alter his locomotion animation.
     this.playUprootSound();
