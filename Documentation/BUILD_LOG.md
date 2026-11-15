@@ -898,3 +898,10 @@
 - Instrumented successful plant placement, manual uprooting, and positive energy collection in the live scene.
 - Event data remains in-memory and client-controlled. No server submission, replay verification, or cloud reward path was enabled.
 - Added focused event-log tests; test/build execution is still pending.
+
+
+## 2026-11-16 — Limited-scope combat replay reducer
+- Added deterministic replay for currently recorded plant placement, manual uprooting, and energy pickup actions.
+- Reuses shared phase-one rules and validates planting costs, occupied cells, full refund, legal pickup denomination, sequence/tick order, duration, and rules version.
+- Explicitly does not validate world pickup provenance, combat simulation, boss defeat, victory, rewards, or progression; no trusted server path enabled.
+- Added four focused replay tests. Execution/build status remains unverified in this environment.
