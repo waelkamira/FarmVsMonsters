@@ -137,24 +137,24 @@ export const STAGE_ONE_PLANTS = Object.freeze([
     assetPath: "/assets/plants/tomato.png",
     name: "Tomato",
     nameAr: "الطماطم",
-    role: "Ability design pending",
-    roleAr: "القدرة قيد التصميم",
-    description: "Artwork added to the encyclopedia. Combat role and ability will be defined before activation.",
-    descriptionAr: "أُضيفت صورتها إلى الموسوعة. ستُحدد وظيفتها وقدرتها القتالية قبل تفعيلها.",
-    energyCost: 0, coinPrice: 0, status: "planned", implemented: false, purchasable: false, image: null,
-    stats: ["Artwork available", "Gameplay not implemented"], statsAr: ["الصورة متوفرة", "لم تُبرمج آلية اللعب"]
+    role: "Lane projectile attacker",
+    roleAr: "مهاجم بمقذوفات ضمن المسار",
+    description: "Playtest prototype: fires miniature tomato shots at monsters in its own lane.",
+    descriptionAr: "نسخة تجريبية: تطلق حبات طماطم صغيرة على الوحوش الموجودة في مسارها فقط.",
+    energyCost: 55, coinPrice: 0, status: "active", implemented: true, purchasable: false, image: null,
+    stats: ["115 HP", "34 damage", "1850 ms cooldown"], statsAr: ["١١٥ صحة", "ضرر ٣٤", "فاصل هجوم ١٨٥٠ مللي ثانية"]
   },
   {
     id: "onion",
     assetPath: "/assets/plants/Onion.png",
     name: "Onion",
     nameAr: "البصل",
-    role: "Ability design pending",
-    roleAr: "القدرة قيد التصميم",
-    description: "Artwork added to the encyclopedia. Combat role and ability will be defined before activation.",
-    descriptionAr: "أُضيفت صورتها إلى الموسوعة. ستُحدد وظيفتها وقدرتها القتالية قبل تفعيلها.",
-    energyCost: 0, coinPrice: 0, status: "planned", implemented: false, purchasable: false, image: null,
-    stats: ["Artwork available", "Gameplay not implemented"], statsAr: ["الصورة متوفرة", "لم تُبرمج آلية اللعب"]
+    role: "Armored lane blocker",
+    roleAr: "حاجز مدرّع للمسار",
+    description: "Playtest prototype: absorbs monster bites and holds its lane with high durability.",
+    descriptionAr: "نسخة تجريبية: يمتص عضّات الوحوش ويمنعها من التقدم بفضل تحمّله العالي.",
+    energyCost: 75, coinPrice: 0, status: "active", implemented: true, purchasable: false, image: null,
+    stats: ["520 HP", "Blocks monsters", "No ranged attack"], statsAr: ["٥٢٠ صحة", "يوقف الوحوش", "لا يهاجم عن بُعد"]
   }
 ]);
 
