@@ -20,7 +20,7 @@ export const STAGE_ONE_PLANTS = Object.freeze([
   },
   {
     id: "energy-mushroom",
-    assetPath: "/assets/plants/energy-mushroom.png",
+    assetPath: "/assets/plants/mushroom.png",
     name: "Energy Mushroom",
     nameAr: "فطر الطاقة",
     role: "Energy producer",
@@ -98,7 +98,7 @@ export const STAGE_ONE_PLANTS = Object.freeze([
   },
   {
     id: "pumpkin-guard",
-    assetPath: "/assets/plants/pumpkin-guard.png",
+    assetPath: "/assets/plants/pumpkin.png",
     name: "Pumpkin Guard",
     nameAr: "حارس اليقطين",
     role: "Armored blocker",
@@ -131,6 +131,30 @@ export const STAGE_ONE_PLANTS = Object.freeze([
     descriptionAr: "يشعل خطاً نارياً يلحق الضرر بكل وحش يعبر مساره.",
     energyCost: 130, coinPrice: 360, status: "planned", implemented: false, purchasable: false, image: null,
     stats: ["Lane-wide damage", "Rare plant"], statsAr: ["ضرر على كامل المسار", "نبتة نادرة"]
+  },
+  {
+    id: "tomato",
+    assetPath: "/assets/plants/tomato.png",
+    name: "Tomato",
+    nameAr: "الطماطم",
+    role: "Ability design pending",
+    roleAr: "القدرة قيد التصميم",
+    description: "Artwork added to the encyclopedia. Combat role and ability will be defined before activation.",
+    descriptionAr: "أُضيفت صورتها إلى الموسوعة. ستُحدد وظيفتها وقدرتها القتالية قبل تفعيلها.",
+    energyCost: 0, coinPrice: 0, status: "planned", implemented: false, purchasable: false, image: null,
+    stats: ["Artwork available", "Gameplay not implemented"], statsAr: ["الصورة متوفرة", "لم تُبرمج آلية اللعب"]
+  },
+  {
+    id: "onion",
+    assetPath: "/assets/plants/Onion.png",
+    name: "Onion",
+    nameAr: "البصل",
+    role: "Ability design pending",
+    roleAr: "القدرة قيد التصميم",
+    description: "Artwork added to the encyclopedia. Combat role and ability will be defined before activation.",
+    descriptionAr: "أُضيفت صورتها إلى الموسوعة. ستُحدد وظيفتها وقدرتها القتالية قبل تفعيلها.",
+    energyCost: 0, coinPrice: 0, status: "planned", implemented: false, purchasable: false, image: null,
+    stats: ["Artwork available", "Gameplay not implemented"], statsAr: ["الصورة متوفرة", "لم تُبرمج آلية اللعب"]
   }
 ]);
 
