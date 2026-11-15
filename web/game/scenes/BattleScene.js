@@ -479,7 +479,7 @@ export default class BattleScene extends Scene {
   }
 
   createHud() {
-    // Slim timber status strip: keep the battlefield and all planting lanes visible.
+    // One compact timber strip carries all live battle information.
     const wood = this.add.graphics().setDepth(38);
     wood.fillStyle(0x080503, 0.82); wood.fillRoundedRect(24, 11, 1072, 43, 8);
     wood.fillStyle(0x24160d, 0.99); wood.fillRoundedRect(20, 6, 1072, 42, 8);
@@ -489,29 +489,34 @@ export default class BattleScene extends Scene {
     for (const x of [34, 1078]) { wood.fillCircle(x, 13, 2); wood.fillCircle(x, 41, 2); }
 
     this.hudText = this.add.text(38, 27, "", {
-      fontFamily: "Arial", fontSize: "16px", color: "#ffffff", fontStyle: "bold",
+      fontFamily: "Arial", fontSize: "15px", color: "#ffffff", fontStyle: "bold",
       stroke: "#120a05", strokeThickness: 4, resolution: 2
     }).setOrigin(0, 0.5).setDepth(41);
-    this.waveText = this.add.text(950, 27, "", {
-      fontFamily: "Arial", fontSize: "16px", color: "#fff4d6", fontStyle: "bold",
+    this.waveText = this.add.text(930, 27, "", {
+      fontFamily: "Arial", fontSize: "14px", color: "#fff4d6", fontStyle: "bold",
       stroke: "#120a05", strokeThickness: 4, resolution: 2
     }).setOrigin(1, 0.5).setDepth(41);
 
-    this.messageText = this.add.text(560, 660, "", {
-      fontFamily: "Arial", fontSize: "17px", color: "#ffffff", fontStyle: "bold",
-      backgroundColor: "#130c07", padding: { x: 18, y: 9 }, align: "center",
-      stroke: "#000000", strokeThickness: 4, resolution: 2,
-      shadow: { offsetX: 0, offsetY: 2, color: "#000000", blur: 4, fill: true }
+    // Short gameplay feedback sits above the planting dock, not over the controls.
+    this.messageText = this.add.text(560, 574, "", {
+      fontFamily: "Arial", fontSize: "16px", color: "#ffffff", fontStyle: "bold",
+      backgroundColor: "#130c07", padding: { x: 16, y: 7 }, align: "center",
+      stroke: "#000000", strokeThickness: 4, resolution: 2
     }).setOrigin(0.5, 1).setDepth(42);
 
-    // Both core plants are available from the first campaign: Radish defends,
-    // while Mushroom supplies collectible energy.
-    this.radishCard = this.createPlantCard(112, "RADISH", "35", "radish", null, "radish-character");
-    this.mushroomCard = this.createPlantCard(260, "MUSHROOM", "50", "mushroom", null, "mushroom-character");
+    // A single lower dock groups the two plant choices and collection shortcuts.
+    const dock = this.add.graphics().setDepth(43);
+    dock.fillStyle(0x160e08, 0.78);
+    dock.fillRoundedRect(354, 580, 470, 78, 15);
+    dock.lineStyle(2, 0xe0bd7c, 0.9);
+    dock.strokeRoundedRect(354, 580, 470, 78, 15);
+
+    this.radishCard = this.createPlantCard(430, "RADISH", "35", "radish", null, "radish-character");
+    this.mushroomCard = this.createPlantCard(575, "MUSHROOM", "50", "mushroom", null, "mushroom-character");
   }
 
   createPlantCard(x, title, costLabel, type, drawIcon, imageKey = null) {
-    const card = this.add.container(x, 80).setDepth(45);
+    const card = this.add.container(x, 619).setDepth(45);
     const shadow = this.add.rectangle(2, 3, 132, 54, 0x1c120c, 0.42);
     const frame = this.add.rectangle(0, 0, 132, 54, 0x79502e, 1).setStrokeStyle(2, 0x392417);
     const panel = this.add.rectangle(0, 0, 126, 48, 0xe0c18a, 1)
@@ -1435,24 +1440,38 @@ export default class BattleScene extends Scene {
   }
 
   createQuickCollectionButtons() {
-    const makeButton = (x, label, tab, tint) => {
-      const button = this.add.container(x, 80).setDepth(48);
-      const plate = this.add.rectangle(0, 0, 112, 36, tint, 0.98)
-        .setStrokeStyle(2, 0xf1d49a).setInteractive({ useHandCursor: true });
-      const text = this.add.text(0, 0, label, {
-        fontFamily: "Arial", fontSize: "14px", color: "#fff8e8", fontStyle: "bold",
-        stroke: "#2a180d", strokeThickness: 3
-      }).setOrigin(0.5);
-      button.add([plate, text]);
+    const makeButton = (x, tab, tint) => {
+      const button = this.add.container(x, 619).setDepth(48);
+      const plate = this.add.circle(0, 0, 24, tint, 0.98)
+        .setStrokeStyle(3, 0xf1d49a).setInteractive({ useHandCursor: true });
+      const icon = this.add.graphics();
+      icon.lineStyle(3, 0xfff3d6, 1);
+      if (tab === "plants") {
+        // Simple sprout glyph; the final button skin can be art-directed later.
+        icon.lineBetween(0, 13, 0, -2);
+        icon.lineBetween(0, 3, -10, -7);
+        icon.lineBetween(0, 0, 10, -11);
+        icon.strokeEllipse(-8, -8, 12, 8);
+        icon.strokeEllipse(8, -12, 12, 8);
+        icon.lineBetween(-13, 15, 13, 15);
+      } else {
+        // Paw-print glyph for the monster collection.
+        icon.fillStyle(0xfff3d6, 1);
+        icon.fillEllipse(0, 7, 17, 12);
+        icon.fillCircle(-10, -7, 4);
+        icon.fillCircle(-3, -13, 4);
+        icon.fillCircle(5, -13, 4);
+        icon.fillCircle(11, -6, 4);
+      }
+      button.add([plate, icon]);
       plate.on("pointerover", () => plate.setFillStyle(0x9b7047, 1));
       plate.on("pointerout", () => plate.setFillStyle(tint, 0.98));
       plate.on("pointerdown", () => this.openCollectionMenuTab(tab));
       return button;
     };
 
-    const locale = window.localStorage.getItem("farmVsMonsters.language") || "ar";
-    this.quickPlantsButton = makeButton(790, locale === "ar" ? "النباتات" : "PLANTS", "plants", 0x426b35);
-    this.quickMonstersButton = makeButton(914, locale === "ar" ? "الوحوش" : "MONSTERS", "monsters", 0x75412d);
+    this.quickPlantsButton = makeButton(720, "plants", 0x426b35);
+    this.quickMonstersButton = makeButton(790, "monsters", 0x75412d);
   }
 
   openCollectionMenuTab(tab) {
@@ -1465,7 +1484,7 @@ export default class BattleScene extends Scene {
     const button = this.add.container(978, 27).setDepth(47);
     const plate = this.add.rectangle(0, 0, 46, 30, 0x4a2e1d, 0.98)
       .setStrokeStyle(2, 0xd8b477).setInteractive({ useHandCursor: true });
-    const label = this.add.text(0, 0, "☰", {
+    const label = this.add.text(0, 0, "▤", {
       fontFamily: "Arial", fontSize: "20px", color: "#fff0c8", fontStyle: "bold"
     }).setOrigin(0.5);
     button.add([plate, label]);
@@ -1591,7 +1610,7 @@ export default class BattleScene extends Scene {
   }
 
   createPauseControl() {
-    const button = this.add.container(1044, 27).setDepth(46);
+    const button = this.add.container(1035, 27).setDepth(46);
     const background = this.add.rectangle(0, 0, 54, 30, 0x4a2e1d, 0.98)
       .setStrokeStyle(2, 0xd8b477).setInteractive({ useHandCursor: true });
     const label = this.add.text(0, 0, "Ⅱ", {
