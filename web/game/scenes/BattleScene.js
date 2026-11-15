@@ -2920,28 +2920,47 @@ export default class BattleScene extends Scene {
     if (won) {
       try { unlockNextStage(window.localStorage, 1); } catch { /* Progress saving must never block the victory screen. */ }
       this.stopBackgroundMusic();
-      if (this.textures.exists("phase-one-emblem")) {
-        this.add.image(560, 145, "phase-one-emblem").setDisplaySize(210, 125).setDepth(62);
+      this.add.rectangle(560, 350, 790, 520, 0x79502e, 0.99)
+        .setStrokeStyle(7, 0x392417).setDepth(61);
+      this.add.rectangle(560, 350, 770, 500, 0x3e2b1c, 0.98)
+        .setStrokeStyle(2, 0xe8c887).setDepth(61);
+      // A celebratory finish is shown only after the farmer has carried his wife home.
+      const celebration = [
+        [205, 150, 0xffdf75], [915, 150, 0xffdf75], [245, 520, 0xffb5a0],
+        [875, 520, 0xffb5a0], [310, 225, 0x9bdc87], [810, 225, 0x9bdc87],
+        [390, 125, 0xffdf75], [730, 125, 0xffdf75]
+      ];
+      for (const [x, y, color] of celebration) {
+        this.add.star(x, y, 5, 5, 12, color, 1).setDepth(63);
       }
-      this.add.rectangle(560, 340, 650, 330, 0x79502e, 0.98)
-        .setStrokeStyle(6, 0x392417).setDepth(61);
-      this.add.text(560, 235, translate("VICTORY!", locale), {
-        fontFamily: "Arial", fontSize: "54px", color: "#fff2c8", fontStyle: "bold",
+      if (this.textures.exists("phase-one-emblem")) {
+        this.add.image(560, 155, "phase-one-emblem").setDisplaySize(150, 90).setDepth(62);
+      }
+      this.add.text(560, 225, locale === "ar" ? "عادت الزوجة إلى المزرعة!" : "SHE IS HOME!", {
+        fontFamily: "Arial", fontSize: locale === "ar" ? "30px" : "34px",
+        color: "#ffe49a", fontStyle: "bold", stroke: "#392417", strokeThickness: 5
+      }).setOrigin(0.5).setDepth(64);
+      this.add.text(560, 275, translate("VICTORY!", locale), {
+        fontFamily: "Arial", fontSize: "48px", color: "#fff2c8", fontStyle: "bold",
         stroke: "#392417", strokeThickness: 5
-      }).setOrigin(0.5).setDepth(62);
+      }).setOrigin(0.5).setDepth(64);
+      this.add.text(560, 322, locale === "ar" ? "اكتملت المرحلة الأولى · تم إنقاذ الأميرة" : "STAGE 1 COMPLETE · THE PRINCESS IS RESCUED", {
+        fontFamily: "Arial", fontSize: locale === "ar" ? "17px" : "15px",
+        color: "#bfe8a2", fontStyle: "bold", stroke: "#24180f", strokeThickness: 3
+      }).setOrigin(0.5).setDepth(64);
       const elapsedSeconds = Math.floor(this.elapsedBattleMs / 1000);
       const minutes = Math.floor(elapsedSeconds / 60);
       const seconds = String(elapsedSeconds % 60).padStart(2, "0");
       const summary = locale === "ar"
-        ? ["اكتملت جميع الموجات: " + this.totalWaves, "الوحوش المهزومة: " + this.totalDefeatedMonsters + " / " + this.totalSpawnedMonsters, "النباتات المزروعة: " + this.totalPlantsPlanted, "الوقت: " + minutes + ":" + seconds, "الطاقة المجموعة: " + this.energyCollected, "الطاقة المتبقية: " + this.energy, "العملات: " + this.coins].join("\n")
-        : ["All " + this.totalWaves + " waves cleared", this.totalDefeatedMonsters + " / " + this.totalSpawnedMonsters + " monsters defeated", this.totalPlantsPlanted + " plants planted", "Time: " + minutes + ":" + seconds, "Energy collected: " + this.energyCollected, "Energy remaining: " + this.energy, "Coins: " + this.coins].join("\n");
-      this.add.text(560, 330, summary, {
-        fontFamily: "Georgia", fontSize: "19px", color: "#fff0c8",
-        align: "center", lineSpacing: 8, fontStyle: "bold"
-      }).setOrigin(0.5).setDepth(62);
-      this.createGameOverButton(455, 465, "PLAY AGAIN", 0x9bc66e, () => this.scene.restart());
-      this.createGameOverButton(665, 465, "HOME", 0xe5c27d, () => {
-        if (typeof window !== "undefined") window.location.assign("/");
+        ? ["الموجات المكتملة: " + this.totalWaves + " / 5", "الضباع المهزومة: " + this.totalDefeatedMonsters + " / " + this.totalSpawnedMonsters, "النباتات المزروعة: " + this.totalPlantsPlanted, "الوقت: " + minutes + ":" + seconds, "الطاقة المجموعة: " + this.energyCollected, "الطاقة المتبقية: " + this.energy, "العملات: " + this.coins].join("\\n")
+        : ["Waves cleared: " + this.totalWaves + " / 5", "Hyenas defeated: " + this.totalDefeatedMonsters + " / " + this.totalSpawnedMonsters, "Plants grown: " + this.totalPlantsPlanted, "Time: " + minutes + ":" + seconds, "Energy collected: " + this.energyCollected, "Energy remaining: " + this.energy, "Coins earned: " + this.coins].join("\\n");
+      this.add.text(560, 425, summary, {
+        fontFamily: "Georgia", fontSize: "16px", color: "#fff0c8",
+        align: "center", lineSpacing: 3, fontStyle: "bold"
+      }).setOrigin(0.5).setDepth(64);
+      this.createGameOverButton(445, 575, "PLAY AGAIN", 0x9bc66e, () => this.scene.restart());
+      this.createGameOverButton(675, 575, "CAMPAIGN MAP", 0xe5c27d, () => {
+        if (typeof window !== "undefined") window.location.assign("/stages");
       });
       this.playVictoryMusic();
       return;
