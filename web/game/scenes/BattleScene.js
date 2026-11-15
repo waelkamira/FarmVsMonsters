@@ -3002,11 +3002,21 @@ export default class BattleScene extends Scene {
         [875, 520, 0xffb5a0], [310, 225, 0x9bdc87], [810, 225, 0x9bdc87],
         [390, 125, 0xffdf75], [730, 125, 0xffdf75]
       ];
-      for (const [x, y, color] of celebration) {
-        this.add.star(x, y, 5, 5, 12, color, 1).setDepth(63);
-      }
+      celebration.forEach(([x, y, color], index) => {
+        const star = this.add.star(x, y, 5, 5, 12, color, 1).setDepth(63);
+        this.tweens.add({
+          targets: star, angle: 180, scale: { from: 0.75, to: 1.2 },
+          alpha: { from: 0.55, to: 1 }, duration: 1150 + index * 95,
+          ease: "Sine.easeInOut", yoyo: true, repeat: -1
+        });
+      });
       if (this.textures.exists("phase-one-emblem")) {
         this.add.image(560, 155, "phase-one-emblem").setDisplaySize(150, 90).setDepth(62);
+      }
+      // Reuse the player's rescued-princess artwork in the final celebration.
+      if (this.textures.exists("phase-one-princess-rescued")) {
+        this.add.image(850, 246, "phase-one-princess-rescued")
+          .setDisplaySize(76, 112).setDepth(63);
       }
       this.add.text(560, 225, locale === "ar" ? "عادت الزوجة إلى المزرعة!" : "SHE IS HOME!", {
         fontFamily: "Arial", fontSize: locale === "ar" ? "30px" : "34px",
@@ -3023,13 +3033,47 @@ export default class BattleScene extends Scene {
       const elapsedSeconds = Math.floor(this.elapsedBattleMs / 1000);
       const minutes = Math.floor(elapsedSeconds / 60);
       const seconds = String(elapsedSeconds % 60).padStart(2, "0");
-      const summary = locale === "ar"
-        ? ["الموجات المكتملة: " + this.totalWaves + " / 5", "الضباع المهزومة: " + this.totalDefeatedMonsters + " / " + this.totalSpawnedMonsters, "النباتات المزروعة: " + this.totalPlantsPlanted, "الوقت: " + minutes + ":" + seconds, "الطاقة المجموعة: " + this.energyCollected, "الطاقة المتبقية: " + this.energy, "العملات: " + this.coins].join("\n")
-        : ["Waves cleared: " + this.totalWaves + " / 5", "Hyenas defeated: " + this.totalDefeatedMonsters + " / " + this.totalSpawnedMonsters, "Plants grown: " + this.totalPlantsPlanted, "Time: " + minutes + ":" + seconds, "Energy collected: " + this.energyCollected, "Energy remaining: " + this.energy, "Coins earned: " + this.coins].join("\n");
-      this.add.text(560, 425, summary, {
-        fontFamily: "Arial", fontSize: "16px", color: "#ffffff",
-        align: "center", lineSpacing: 3, fontStyle: "bold"
+      this.add.rectangle(560, 355, 360, 30, 0x238a58, 1)
+        .setStrokeStyle(2, 0xa7e84f).setDepth(63);
+      this.add.text(560, 355, locale === "ar" ? "تم فتح المرحلة الثانية!" : "STAGE 2 UNLOCKED!", {
+        fontFamily: "Arial", fontSize: locale === "ar" ? "16px" : "15px",
+        color: "#ffffff", fontStyle: "bold", stroke: "#14523d", strokeThickness: 3
       }).setOrigin(0.5).setDepth(64);
+
+      const summaryStats = locale === "ar"
+        ? [
+            ["الموجات المكتملة", this.totalWaves + " / 5"],
+            ["الضباع المهزومة", this.totalDefeatedMonsters + " / " + this.totalSpawnedMonsters],
+            ["النباتات المزروعة", String(this.totalPlantsPlanted)],
+            ["الوقت", minutes + ":" + seconds],
+            ["الطاقة المجموعة", String(this.energyCollected)],
+            ["الطاقة المتبقية", String(this.energy)],
+            ["العملات", String(this.coins)]
+          ]
+        : [
+            ["WAVES CLEARED", this.totalWaves + " / 5"],
+            ["HYENAS DEFEATED", this.totalDefeatedMonsters + " / " + this.totalSpawnedMonsters],
+            ["PLANTS GROWN", String(this.totalPlantsPlanted)],
+            ["TIME", minutes + ":" + seconds],
+            ["ENERGY COLLECTED", String(this.energyCollected)],
+            ["ENERGY REMAINING", String(this.energy)],
+            ["COINS EARNED", String(this.coins)]
+          ];
+      const statColors = [0x258b68, 0x9a4f83, 0x287eaa, 0x6851a6];
+      summaryStats.forEach(([label, value], index) => {
+        const column = index % 2;
+        const row = Math.floor(index / 2);
+        const x = column === 0 ? 390 : 730;
+        const y = 397 + row * 42;
+        this.add.rectangle(x, y, 326, 34, statColors[index % statColors.length], 0.98)
+          .setStrokeStyle(1.5, 0xffffff).setDepth(63);
+        this.add.text(x, y, label + "  ·  " + value, {
+          fontFamily: "Arial", fontSize: locale === "ar" ? "13px" : "14px",
+          color: "#ffffff", fontStyle: "bold", align: "center",
+          stroke: "#17213d", strokeThickness: 3,
+          wordWrap: { width: 306, useAdvancedWrap: true }
+        }).setOrigin(0.5).setDepth(64);
+      });
       this.createGameOverButton(445, 575, "PLAY AGAIN", 0x9bc66e, () => this.scene.restart());
       this.createGameOverButton(675, 575, "CAMPAIGN MAP", 0xe5c27d, () => {
         if (typeof window !== "undefined") window.location.assign("/stages");
