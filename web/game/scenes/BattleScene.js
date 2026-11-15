@@ -142,6 +142,7 @@ export default class BattleScene extends Scene {
     this.energyCollected = 0;
     this.elapsedBattleMs = 0;
     this.spawnTimer = 1800;
+    this.waveIntermissionMs = 0;
     this.selectedPlant = null;
     this.plants = [];
     this.monsters = [];
@@ -1681,7 +1682,18 @@ export default class BattleScene extends Scene {
       return;
     }
     this.handleControls(dt);
-    if (this.wave <= this.totalWaves && this.spawnedThisWave < this.waveSize) {
+    // A cleared wave grants a short, pausable preparation window before the next group arrives.
+    if (this.waveIntermissionMs > 0) {
+      const previousSecond = Math.ceil(this.waveIntermissionMs / 1000);
+      this.waveIntermissionMs = Math.max(0, this.waveIntermissionMs - delta);
+      const remainingSecond = Math.ceil(this.waveIntermissionMs / 1000);
+      if (remainingSecond !== previousSecond) {
+        this.setMessage(remainingSecond > 0
+          ? "Wave " + this.wave + " begins in " + remainingSecond + "..."
+          : "Wave " + this.wave + " incoming!");
+      }
+    }
+    if (this.waveIntermissionMs <= 0 && this.wave <= this.totalWaves && this.spawnedThisWave < this.waveSize) {
       this.spawnTimer -= delta;
       if (this.spawnTimer <= 0) {
         this.spawnMonster();
@@ -2933,10 +2945,11 @@ export default class BattleScene extends Scene {
     this.spawnedThisWave = 0;
     this.waveDefeatedMonsters = 0;
     this.waveSize = PHASE_ONE_WAVE_SIZES[this.wave - 1];
-    this.spawnTimer = 3200;
+    this.waveIntermissionMs = 5000;
+    this.spawnTimer = 1600;
     this.setMessage(
-      "Wave " + clearedWave + " cleared. Wave " + this.wave +
-      " is gathering: " + this.waveSize + " monsters incoming."
+      "Wave " + clearedWave + " cleared. Prepare for wave " + this.wave +
+      ": " + this.waveSize + " monsters in 5 seconds."
     );
   }
 
