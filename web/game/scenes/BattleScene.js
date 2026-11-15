@@ -501,8 +501,8 @@ export default class BattleScene extends Scene {
     }).setOrigin(0, 0.5).setDepth(41);
 
     // Plant selection cells stay distinct and larger than the status counters.
-    this.radishCard = this.createPlantCard(794, "RADISH", "35", "radish", null, "radish-character", 34);
-    this.mushroomCard = this.createPlantCard(944, "MUSHROOM", "50", "mushroom", null, "mushroom-character", 34);
+    this.radishCard = this.createPlantCard(794, "RADISH", "35", "radish", null, "radish-character", 94);
+    this.mushroomCard = this.createPlantCard(944, "MUSHROOM", "50", "mushroom", null, "mushroom-character", 94);
 
     this.messageText = this.add.text(560, 574, "", {
       fontFamily: "Arial", fontSize: "16px", color: "#ffffff", fontStyle: "bold",
@@ -513,44 +513,45 @@ export default class BattleScene extends Scene {
 
   createPlantCard(x, title, costLabel, type, drawIcon, imageKey = null, y = 619) {
     const card = this.add.container(x, y).setDepth(45);
-    // Compact plant selector: artwork first, with a tiny cost indicator only.
-    // No plant name or "energy" label is shown in the HUD cell.
-    const shadow = this.add.rectangle(1, 3, 70, 48, 0x101a2e, 0.42);
-    const cardTint = type === "radish" ? 0x238a58 : 0x287eb7;
-    const frame = this.add.rectangle(0, 0, 70, 48, 0x17213d, 1).setStrokeStyle(2, 0x35bceb);
-    const panel = this.add.rectangle(0, 0, 64, 42, cardTint, 1)
-      .setStrokeStyle(2, type === "radish" ? 0xa7e84f : 0x8b65e8)
+    // Floating glass selector, positioned below the top resource/status strip.
+    // A soft translucent white halo gives a light blur-like edge without a frame.
+    const tint = type === "radish" ? 0x8ff0b0 : 0x9edfff;
+    const halo = this.add.rectangle(0, 1, 76, 54, 0xffffff, 0.10);
+    const panel = this.add.rectangle(0, 0, 68, 46, 0xffffff, 0.22)
       .setInteractive({ useHandCursor: true });
+    panel.setStrokeStyle(0, 0xffffff, 0);
     let icon;
     if (imageKey && this.textures.exists(imageKey)) {
       const frameData = this.textures.getFrame(imageKey);
       const iconHeight = 30;
       const iconWidth = iconHeight * (frameData.realWidth / frameData.realHeight);
-      icon = this.add.image(0, -5, imageKey).setDisplaySize(Math.min(iconWidth, 42), iconHeight);
+      icon = this.add.image(0, -5, imageKey)
+        .setDisplaySize(Math.min(iconWidth, 42), iconHeight);
     } else {
       icon = this.add.graphics();
       if (drawIcon) drawIcon(icon);
     }
     const cost = this.add.text(0, 16, "⚡" + costLabel, {
       fontFamily: "Arial", fontSize: "10px", color: "#ffffff", fontStyle: "bold",
-      stroke: "#17213d", strokeThickness: 2, resolution: 2,
+      stroke: "#536477", strokeThickness: 2, resolution: 2,
       align: "center"
     }).setOrigin(0.5, 0.5);
-    card.add([shadow, frame, panel, icon, cost]);
+    card.add([halo, panel, icon, cost]);
 
     panel.on("pointerover", () => {
-      if (this.selectedPlant !== type) panel.setFillStyle(type === "radish" ? 0x42c96b : 0x35bceb, 1);
+      if (this.selectedPlant !== type) panel.setFillStyle(tint, 0.34);
       card.setScale(1.04);
     });
     panel.on("pointerout", () => {
-      if (this.selectedPlant !== type) panel.setFillStyle(type === "radish" ? 0x238a58 : 0x287eb7, 1);
+      panel.setFillStyle(0xffffff, 0.22);
       card.setScale(1);
     });
     panel.on("pointerdown", () => {
       if (this.gameOver) return;
       this.selectedPlant = type;
-      this.radishCard.setAlpha(type === "radish" ? 1 : 0.92);
-      this.mushroomCard.setAlpha(type === "mushroom" ? 1 : 0.92);
+      this.radishCard.setAlpha(type === "radish" ? 1 : 0.78);
+      this.mushroomCard.setAlpha(type === "mushroom" ? 1 : 0.78);
+      panel.setFillStyle(tint, 0.38);
       this.setMessage(type === "radish"
         ? "Radish chosen. Select an empty soil plot to defend the lane."
         : "Mushroom chosen. Plant it, then collect its energy when it appears.");
