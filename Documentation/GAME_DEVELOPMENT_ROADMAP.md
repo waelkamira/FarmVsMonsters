@@ -25,8 +25,11 @@ BOOT
        -> CREDITS
 BATTLE
   -> PAUSE OVERLAY -> RESUME / RESTART / SETTINGS / MAIN MENU
-  -> CORE BATTLE CLEAR -> DRAGON BOSS (once story-stage integration is implemented)
-  -> DRAGON + REQUIRED FOLLOWERS DEFEATED -> WIFE RESCUE / REUNION
+  -> WAVES 1–4 -> FINAL WAVE 5 STARTS
+       -> SMALL DRAGON APPEARS WHILE A FEW FOLLOWERS MAY STILL REMAIN
+       -> FARMER AUTOMATICALLY USES SLINGSHOT WHEN DRAGON IS IN RANGE
+       -> DEFEAT ALL REMAINING FOLLOWERS -> DRAGON REMAINS AS FINAL BOSS
+       -> DEFEAT DRAGON -> WIFE RESCUE / REUNION
        -> STAGE RESULTS -> TREASURE CAVE -> BREATHING SPACE -> NEXT STAGE INTRO
   -> DEFEAT SCREEN -> RETRY SAME STAGE / MAIN MENU
 ```
@@ -44,20 +47,12 @@ BATTLE
 
 ## End conditions (locked for the first playable version)
 
-- The first playable campaign has **5 waves and 100 monsters total**, with this fixed first-pass distribution:
-
-  | Wave | Monsters |
-  | --- | ---: |
-  | 1 | 10 |
-  | 2 | 15 |
-  | 3 | 20 |
-  | 4 | 25 |
-  | 5 | 30 |
-  | **Total** | **100** |
-
-- Wave counts are data-defined for Phase 1; do not generate an unbounded sixth wave.
-- **Current Phase 1 prototype clear:** the player survives all five waves, all 100 monsters have spawned, and no living monsters remain after Wave 5. This closes the current core-battle prototype only; it is not yet a complete narrative rescue stage.
-- **Full story-stage victory (planned extension after Phase 1):** all required waves have completed, all required surviving monster followers are defeated, the stage's dragon boss is defeated, and farmhouse health remains above zero. Only then trigger the wife's release, farmer-wife reunion, stage results, and reward sequence.
+- The first stage keeps a five-wave structure for now, but **100 monsters is no longer a required or approved difficulty target**. The current code's 10 / 15 / 20 / 25 / 30 schedule is known to be too punishing with the current plant roster and must be rebalanced before the public demo. The exact lower counts are to be selected through playtesting; do not invent a new fixed total in documentation.
+- Wave counts must be data-defined and finite; do not generate an unbounded sixth wave.
+- **Difficulty curve:** Wave 1 must be a forgiving introduction with few slow/basic enemies and enough time/resources to learn planting and defense. Each subsequent wave increases pressure in small, understandable steps. Introduce faster, tougher, or special enemies only after their counterplay has been taught. Give the player short recovery/breathing intervals; avoid a sudden swarm or an unavoidable early defeat.
+- **Final-wave dragon timing:** at the start of Wave 5, the small Stage 1 dragon begins appearing behind the battlefield while a few ordinary followers may still be alive. The dragon moves left/right and launches telegraphed fireballs at plants/farm. The followers continue their attacks. Once all followers are defeated, the dragon remains alone as the final boss.
+- **Automatic slingshot:** when the dragon has appeared and is within range, the farmer automatically throws stones at it. No manual clicking is required. The slingshot is not used before the dragon appears.
+- **Stage 1 victory:** all required followers and the dragon are defeated and farmhouse health remains above zero. Then trigger the wife's release, farmer-wife reunion/celebration, stage results, and reward sequence. This dragon/rescue flow is part of Phase 1's complete playable stage, not a later extension.
 - **Defeat:** farmhouse health reaches zero after enemies breach the defensive line or through a defined dragon attack. Show Defeat immediately and stop battle simulation. The wife is not the health bar and is not harmed or killed by a battle loss.
 - Plant destruction alone is not defeat. If all defensive plants die, switch to caveman emergency club combat according to the gameplay rules.
 - Restart/retry resets the entire battle state: wave, timers, enemies, plants, projectiles, energy, objective health, selection, animations, and result flags. It must not duplicate event listeners or leave old entities alive.
@@ -73,9 +68,9 @@ BATTLE
 - The extractor now supports an explicit shared scale: derive it from the idle sheet and pass the same value to every other action sheet. This prevents each animation from being independently resized and changing the farmer's apparent size.
 
 
-## Phase 1 — Complete playable vertical slice
+## Phase 1 — Complete playable vertical slice and first rescue stage
 
-**Purpose:** prove one satisfying, complete game loop with one defender: the Radish, supported by the resource-only Energy Mushroom. Do not add a second defensive plant in this phase.
+**Purpose:** deliver one satisfying, forgiving, complete first stage from the main menu through the dragon fight and the wife's rescue. Keep the current starter plant/resource setup; do not add new plant types until the battlefield environment, stage presentation, controls/buttons, menus, and HUD design are approved.
 
 ### Scope
 - Main menu, How to Play, battle, pause, victory, defeat, settings, and clean scene transitions.
@@ -88,7 +83,10 @@ BATTLE
 - Health/damage/death rules for the Radish, monster, and farmhouse/princess objective.
 - Emergency mode: club combat is enabled only after the last living defender dies; it is disabled as soon as a new defender is planted.
 - Starting energy, correct cost deduction at successful planting, and the complete Energy Mushroom loop: timed production, visible collectible energy, click-to-collect, collection feedback, and the energy cap.
-- Five waves with increasing but readable pressure, wave transition, spawn completion, and final-wave completion.
+- Five waves with increasing but readable pressure, but with a lower, playtested enemy volume than the current 100-monster prototype. Wave 1 must be easy and teach the basics; increase pressure gradually, with recovery intervals and no sudden swarms.
+- Stage 1 dragon appearance at the beginning of Wave 5 while a few ordinary followers may remain; left/right movement behind the battlefield; telegraphed fireball attacks; dragon-specific health bar and final-boss state.
+- Farmer automatically fires slingshot stones at the dragon only after it appears and enters range. Do not require player clicks.
+- After all followers are defeated, keep the dragon alive as the final boss. Only after the dragon is defeated, run the wife rescue, farmer-wife reunion, celebration, and stage result flow.
 - Audio controls and basic sound feedback for planting, attacks, hits, eating, collection/feedback, victory, and defeat.
 - Functional result screens and full restart/menu behavior.
 
@@ -105,9 +103,12 @@ BATTLE
 - [ ] The last-defender transition enables club combat; planting a new defender disables it immediately.
 - [ ] Energy never becomes negative and is deducted only when planting succeeds.
 - [ ] Pause truly freezes all battle simulation; Resume continues without timer jumps.
-- [ ] Five waves progress correctly; no premature victory while monsters remain.
+- [ ] Five waves progress correctly with a forgiving, gradually increasing difficulty curve; wave 1 is beatable by a new player using the starter setup.
+- [ ] Wave 5 begins the dragon appearance while a few followers may remain; dragon fireballs are telegraphed and can be countered through the available defense.
+- [ ] Farmer automatically launches slingshot stones only when the dragon is present and in range.
+- [ ] The dragon remains after all followers die and victory is not triggered until the dragon is defeated.
 - [ ] Objective health reaching zero triggers Defeat exactly once.
-- [ ] Clearing the final wave triggers Victory exactly once.
+- [ ] Defeating the dragon and all required followers triggers the rescue/reunion and stage victory exactly once.
 - [ ] Victory and Defeat show correct results; Play Again/Retry fully resets; Main Menu exits cleanly.
 - [ ] Audio sliders change actual volume continuously and persist after reload.
 - [ ] Desktop browser build succeeds; the full start-to-result loop is manually played at least three times (victory, defeat, restart).
@@ -119,7 +120,7 @@ BATTLE
 
 Every campaign stage is a complete rescue adventure. Its opening shows a different dragon captor behind/in command of a distinct monster army, with the farmer's wife restrained beside/behind that dragon. The dragon intervenes during the battle and becomes the stage boss. The player must defeat both the dragon and all required surviving followers; ordinary wave survival alone is not enough for story-stage victory. The wife is then released and reunited with the farmer. Let the reunion and celebration breathe before the next stage reveals a different territory and dragon. Never re-kidnap her immediately during the reunion.
 
-The current Phase 1 five-wave / 100-monster implementation remains the core battle prototype and is not five separate campaign stages. The dragon boss and rescue sequence are a deliberate later extension after the core battle acceptance gate.
+The five-wave structure is retained, but the current 100-monster implementation is an over-difficult prototype baseline and must be rebalanced. Stage 1's dragon and rescue are required parts of Phase 1, not a later extension. The dragon appears at the start of Wave 5 while a few followers may remain; the farmer's slingshot fires automatically once the dragon is in range.
 
 ## Approved signature feature — post-stage treasure cave
 
@@ -200,10 +201,10 @@ The user will create and provide the cave artwork later. Do not invent final cav
 - The browser rebuild and core battle scene exist in `web/`.
 - Phase 1 now exposes both Radish and Energy Mushroom cards. The Mushroom produces a full 15-energy collectible every 12 seconds even when the energy bank is full; the player must click each pickup before its 12-second expiry, and the 300-energy cap is applied at collection. Mushrooms are resource plants, not defensive plants, and do not block emergency club combat. Browser verification is still required.
 - Farmer frame-count validation was added on 2026-11-14.
-- The Phase 1 wave schedule is now fixed in code at 10 / 15 / 20 / 25 / 30 monsters (100 total); the sixth-wave loop has been removed.
+- The current Phase 1 code still uses 10 / 15 / 20 / 25 / 30 monsters (100 total), but this is now explicitly marked as too difficult and not a design lock. Reduce and rebalance the wave counts in code after agreeing the level/UI foundations; the sixth-wave loop remains removed.
 - Phase 1 currently includes three monster archetypes: Cave-brute, Dust-skitter, and Stonehide. Stonehide braces while eating, reducing incoming damage; it is intended to require layered defense rather than a single Radish.
 - The battle HUD now tracks total campaign defeats out of 100 and the current wave's defeats out of that wave's target; the per-wave counter resets only when the previous wave is fully cleared.
-- Final-wave completion now triggers a Victory result only after all scheduled monsters have spawned and no living monsters remain. Victory and Defeat result panels include run summaries and replay/menu actions.
+- Current code still triggers ordinary final-wave Victory after all scheduled monsters die; this is not yet correct for the approved story stage. Replace it with the Wave 5 dragon sequence, automatic slingshot combat, and rescue ending before declaring victory.
 - Monsters that breach the farm now stop at the home boundary and damage farmhouse health on their attack cadence; defeat occurs only when home health reaches zero.
 - A dedicated `PauseScene` provides Resume, Restart, Settings, and Main Menu, with Escape/P resume shortcuts. Pause stops the background-music timer and suspends the Web Audio context; resume restores the audio context and soundtrack. The pause action is guarded against duplicate launches, and resume ignores stale/invalid requests. Runtime input/audio behavior still requires browser verification.
 - The main menu now links to New Game, How to Play, Settings, and Credits; the Credits page lists the current technology stack and leaves unconfirmed contributor/art credits explicitly pending. The field guide documents planting, monster lanes, farmhouse health, emergency combat, and controls. The settings page edits the three persisted audio volume keys used by BattleScene.
@@ -217,13 +218,13 @@ The user will create and provide the cave artwork later. Do not invent final cav
 
 ## Work order from here
 
-1. Finish farmer asset/frame audit and verify the farmer planting/return sequence in browser.
-2. Verify Radish defense, Mushroom production/collection, and monster/objective damage.
-3. Implement and test wave 1–5 completion and exact victory/defeat conditions.
-4. Verify Pause/Resume audio suspension, then test Main Menu, How to Play, Settings persistence, and reliable restart/menu transitions.
-5. Verify the loading, ready, asset-fallback, and initialization-error states in a real browser.
-6. Run production build and three complete browser playthroughs.
-7. Close Phase 1 with a recorded checklist and release tag; only then begin Phase 2.
+1. Finalize and verify the battlefield environment, grid alignment, farmer movement/planting, and current starter plant/resource interactions.
+2. Finalize the game visual system: stage presentation, buttons, HUD, main menu, How to Play, pause, and settings. Do not add new plant types before these foundations are approved.
+3. Rebalance the five waves so the opening is forgiving and enemy pressure increases gradually; reduce the current excessive 100-enemy total based on playtesting.
+4. Implement the Wave 5 dragon appearance while a few followers remain, dragon fireballs, dedicated boss health, and automatic farmer slingshot attacks when in range.
+5. Implement dragon defeat → wife rescue → reunion/celebration → stage results. Do not show victory before the dragon and required followers are defeated.
+6. Verify Pause/Resume audio suspension, all menu/settings transitions, restart, and defeat/retry behavior in a real browser.
+7. Run production build and at least three complete browser playthroughs (victory, defeat, restart), then close Phase 1 with evidence and a release checklist.
 
 ## Automated Phase 1 regression coverage
 
