@@ -1,76 +1,103 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { useEffect, useState } from "react";
 import { loadSavedCoins } from "../game/rules/phaseOneRules.mjs";
 import { useLocale, LanguageToggle } from "./LocaleProvider";
 
+const MENU_ITEMS = [
+  { id: "plants", icon: "🌱", ar: "النباتات", en: "Plants", href: "/plants", color: "mint" },
+  { id: "monsters", icon: "👾", ar: "الوحوش", en: "Monsters", href: "/monsters", color: "violet" },
+  { id: "store", icon: "🛍️", ar: "المتجر", en: "Store", href: "/plants", color: "gold" },
+  { id: "stages", icon: "🗺️", ar: "المراحل", en: "Campaign", href: "/stages", color: "blue" },
+  { id: "farmer", icon: "🧑‍🌾", ar: "المزارع", en: "Farmer", href: "/account", color: "coral" },
+  { id: "tasks", icon: "🏆", ar: "المهام", en: "Missions", href: "/how-to-play", color: "pink" },
+  { id: "settings", icon: "⚙️", ar: "الإعدادات", en: "Settings", href: "/settings", color: "slate" },
+];
+
 export default function HomePage() {
   const [coins, setCoins] = useState(0);
-  const [showPhaseEmblem, setShowPhaseEmblem] = useState(true);
+  const [activeMenu, setActiveMenu] = useState(null);
   const { t, locale } = useLocale();
+  const arabic = locale === "ar";
+  const activeItem = MENU_ITEMS.find((item) => item.id === activeMenu);
 
   useEffect(() => {
-    try {
-      setCoins(loadSavedCoins(window.localStorage));
-    } catch {
-      setCoins(0);
-    }
+    try { setCoins(loadSavedCoins(window.localStorage)); } catch { setCoins(0); }
   }, []);
 
-  const arabic = locale === "ar";
+  useEffect(() => {
+    if (!activeMenu) return undefined;
+    const closeOnEscape = (event) => { if (event.key === "Escape") setActiveMenu(null); };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [activeMenu]);
 
   return (
-    <main className="home-shell">
-      <div className="home-card">
-        <div className="home-topbar">
-          <span className="menu-version">{arabic ? "المغامرة الأولى" : "THE FIRST ADVENTURE"}</span>
+    <main className="world-home" dir={arabic ? "rtl" : "ltr"}>
+      <div className="world-sky" aria-hidden="true" />
+      <div className="world-sun" aria-hidden="true" />
+      <div className="world-cloud cloud-one" aria-hidden="true" />
+      <div className="world-cloud cloud-two" aria-hidden="true" />
+      <div className="world-mountains" aria-hidden="true"><i /><i /><i /></div>
+      <div className="world-hills" aria-hidden="true"><i /><i /><i /></div>
+      <div className="world-river" aria-hidden="true" />
+      <div className="world-forest" aria-hidden="true"><i /><i /><i /><i /><i /><i /></div>
+      <div className="world-ground" aria-hidden="true" />
+
+      <header className="world-topbar">
+        <Link className="world-logo" href="/" aria-label="Farm Vs Monsters">🌿 <span>Farm</span><b>Vs</b><span>Monsters</span></Link>
+        <div className="world-top-actions">
+          <div className="world-wallet"><span>🪙</span><strong>{coins.toLocaleString()}</strong></div>
           <LanguageToggle />
         </div>
-        <p className="eyebrow">{t("A PRIMITIVE 2D FARM DEFENSE ADVENTURE")}</p>
-        {showPhaseEmblem && (
-          <Image
-            src="/assets/levels/phase-1-emblem.png"
-            alt={t("Phase 1 emblem")}
-            width={420}
-            height={250}
-            className="phase-one-emblem"
-            priority
-            onError={() => setShowPhaseEmblem(false)}
-          />
-        )}
-        <h1>Farm <span>Vs</span> Monsters</h1>
-        <p className="home-copy">
-          {t("The tribe's garden is the last wall between the monsters and the cave home.")}{" "}
-          {t("Plant Radish defenders, grow Energy Mushrooms to collect resources, and protect the princess.")}{" "}
-          {t("When the final radish falls, the caveman takes up his wooden club.")}
-        </p>
-        <div className="coin-wallet" aria-label={`${t("Saved coins")}: ${coins}`}>
-          <span className="coin-wallet-icon" aria-hidden="true">●</span>
-          <span><strong>{coins.toLocaleString()} {t("COINS")}</strong><small>{t("Saved player balance")}</small></span>
-        </div>
-        <nav className="menu-actions" aria-label="Main menu">
-          <Link className="primary-link" href="/stages">{t("New Game")}</Link>
-          <div className="optional-account-entry"><Link className="secondary-link" href="/account">{arabic ? "حساب اللاعب · حفظ التقدم" : "Player Account · Save Progress"}</Link><small>{arabic ? "اختياري — يمكنك اللعب كضيف دون تسجيل الدخول" : "Optional — play as a guest, no sign-in required"}</small></div>
-          <Link className="secondary-link" href="/plants">{arabic ? "قائمة النباتات" : "Plant Collection"}</Link>
-          <Link className="secondary-link" href="/monsters">{arabic ? "قائمة الوحوش" : "Monster Collection"}</Link>
-          <Link className="secondary-link" href="/how-to-play">{t("How to Play")}</Link>
-          <Link className="secondary-link" href="/settings">{t("Settings")}</Link>
-          <Link className="secondary-link" href="/credits">{t("Credits")}</Link>
-        </nav>
-        <div className="menu-facts">
-          <span>{arabic ? "٥ موجات" : "5 WAVES"}</span>
-          <span>{arabic ? "٣٠ وحشاً عادياً" : "30 ORDINARY MONSTERS"}</span>
-          <span>{arabic ? "تنين وزوجة أسيرة" : "DRAGON & CAPTIVE WIFE"}</span>
-        </div>
-        <p className="campaign-note">
-          {arabic
-            ? "في نهاية كل مرحلة، اهزم التنين وأتباعه، ثم حرّر الأميرة واجتمع بها قبل الانتقال إلى أرض جديدة."
-            : "Defeat each dragon and its followers, rescue the princess, and reunite before travelling to a new land."}
-        </p>
-        <p className="home-note">{t("A hand-drawn prehistoric world of roots, stone, timber, and wild creatures.")}</p>
+      </header>
+
+      <nav className="world-icon-rail" aria-label={arabic ? "القوائم الرئيسية" : "Main menus"}>
+        {MENU_ITEMS.map((item) => (
+          <button key={item.id} type="button" className={`world-icon-button ${item.color}`} onClick={() => setActiveMenu(item.id)} aria-label={arabic ? item.ar : item.en}>
+            <span className="world-icon-art">{item.icon}</span>
+            <span className="world-icon-label">{arabic ? item.ar : item.en}</span>
+          </button>
+        ))}
+      </nav>
+
+      <section className="world-hero">
+        <div className="world-story-badge">{arabic ? "مغامرة خيالية · عالم المزرعة" : "FANTASY ADVENTURE · FARM WORLD"}</div>
+        <h1 className="world-title">Farm <em>Vs</em><br />Monsters</h1>
+        <p className="world-tagline">{arabic ? "ازرع، دافع عن مزرعتك، وأنقذ الأميرة!" : "Grow your garden, defend your home, rescue the princess!"}</p>
+        <Link className="world-play-button" href="/stages"><span>⚔️</span>{arabic ? "ابدأ المغامرة" : "START ADVENTURE"}<span>➜</span></Link>
+        <div className="world-chapter">{arabic ? "الفصل الأول · أرض التنين" : "CHAPTER ONE · DRAGONLAND"}</div>
+      </section>
+
+      <div className="world-scene-decor" aria-hidden="true">
+        <div className="scene-cottage"><span>🏡</span></div>
+        <div className="scene-windmill">🌻</div>
+        <div className="scene-fence">⌁　⌁　⌁　⌁　⌁</div>
+        <div className="scene-crops"><span>🥕</span><span>🌱</span><span>🥬</span><span>🌻</span><span>🥕</span></div>
       </div>
+
+      <footer className="world-bottom">
+        <Link href="/account">{arabic ? "حساب اللاعب" : "PLAYER ACCOUNT"}</Link>
+        <span>•</span><Link href="/how-to-play">{arabic ? "طريقة اللعب" : "HOW TO PLAY"}</Link>
+        <span>•</span><Link href="/credits">{arabic ? "حول اللعبة" : "ABOUT"}</Link>
+      </footer>
+
+      {activeItem && (
+        <div className="world-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setActiveMenu(null); }}>
+          <section className="world-menu-modal" role="dialog" aria-modal="true" aria-labelledby="world-modal-title">
+            <button type="button" className="world-modal-close" onClick={() => setActiveMenu(null)} aria-label={arabic ? "إغلاق" : "Close"}>✕</button>
+            <div className={`world-modal-emblem ${activeItem.color}`}>{activeItem.icon}</div>
+            <p className="world-modal-kicker">{arabic ? "مملكة المزرعة" : "FARM KINGDOM"}</p>
+            <h2 id="world-modal-title">{arabic ? activeItem.ar : activeItem.en}</h2>
+            <p className="world-modal-description">{arabic ? "استكشف هذا القسم واكتشف محتوياته ومكافآته." : "Explore this section and discover its contents and rewards."}</p>
+            <div className="world-modal-actions">
+              <Link className={`world-modal-primary ${activeItem.color}`} href={activeItem.href}>{arabic ? "فتح القائمة" : "OPEN MENU"} <span>➜</span></Link>
+              <button type="button" className="world-modal-secondary" onClick={() => setActiveMenu(null)}>{arabic ? "العودة للعالم" : "BACK TO WORLD"}</button>
+            </div>
+          </section>
+        </div>
+      )}
     </main>
   );
 }
