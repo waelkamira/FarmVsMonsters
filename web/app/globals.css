@@ -435,3 +435,94 @@ h1 span, .wordmark span { color: #ffca45 !important; }
 .settings-row, .settings-row label, .settings-row output { color:#fff !important; }
 .settings-row input { accent-color:#a7e84f; }
 html[dir="rtl"] body { font-family: Tahoma, Arial, sans-serif; }
+
+
+/* Collection cards: polished, colorful game-library presentation */
+.collection-grid { align-items:stretch; gap:20px; }
+.collection-card {
+  display:flex; flex-direction:column; align-items:stretch;
+  min-width:0; overflow:hidden; padding:20px;
+  border-width:2px; border-radius:22px;
+  background:linear-gradient(150deg,#245e78 0%,#31558b 52%,#51407e 100%);
+  box-shadow:inset 0 2px 0 #ffffff44, inset 0 -16px 28px #101a2e55, 0 12px 24px #050b1d88;
+  transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease;
+}
+.collection-card:hover {
+  transform:translateY(-4px);
+  box-shadow:inset 0 2px 0 #ffffff66,0 17px 30px #050b1dcc;
+}
+.collection-card.is-active { border-color:#a7e84f; }
+.collection-card.is-locked {
+  border-color:#8b65e8; filter:none;
+  background:linear-gradient(150deg,#39466e 0%,#343b62 55%,#4c3e78 100%);
+}
+.collection-card h2 { margin:14px 0 8px; font-size:clamp(20px,2.2vw,25px); line-height:1.2; }
+.collection-card p { margin:9px 0; color:#fff !important; line-height:1.65; }
+.collection-art,.plant-art-placeholder {
+  position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  width:100%; min-height:142px; margin:0 0 4px; overflow:hidden;
+  border:2px solid #a7e84f; border-radius:18px;
+  background:radial-gradient(circle at 35% 25%,#a7e84f 0%,#35bceb 45%,#315b91 82%);
+  box-shadow:inset 0 2px 0 #ffffff66,0 8px 18px #101a2e66;
+}
+.collection-art { width:100%; height:142px; font-size:62px; }
+.plant-art-placeholder span { font-size:58px; filter:drop-shadow(0 4px 5px #101a2e88); }
+.plant-art-placeholder small { color:#fff !important; text-shadow:0 2px 4px #101a2e; }
+.plant-art-placeholder.is-planned {
+  border-color:#a98af4;
+  background:radial-gradient(circle at 35% 25%,#8b65e8 0%,#514783 55%,#29365f 100%);
+}
+.collection-status {
+  align-self:flex-start; margin:8px 0 5px; padding:7px 12px;
+  border:1px solid #a7e84f; border-radius:999px;
+  background:linear-gradient(180deg,#35bd72,#188653);
+  color:#fff !important; font-size:12px; font-weight:900;
+  text-shadow:0 1px 3px #102d35;
+}
+.is-locked .collection-status {
+  border-color:#b49aff;
+  background:linear-gradient(180deg,#8b65e8,#6042b8);
+  color:#fff !important;
+}
+.collection-meta { gap:8px; margin-top:auto; padding-top:12px; }
+.collection-meta span {
+  padding:7px 10px; border:1px solid #ffffff35; border-radius:10px;
+  background:linear-gradient(135deg,#172e50dd,#253d67dd);
+  color:#fff !important; font-size:12px; font-weight:700; line-height:1.4;
+}
+.collection-summary { gap:10px; }
+.collection-summary span {
+  flex:1 1 130px; border:1px solid #35bceb; border-radius:13px;
+  background:linear-gradient(135deg,#245c79,#493d79);
+  color:#fff !important; text-align:center; font-weight:800;
+}
+.collection-summary strong { color:#ffca45; font-size:18px; }
+.collection-wallet {
+  border-color:#ffca45;
+  background:linear-gradient(110deg,#5a4792,#28617b 58%,#287a68);
+  color:#fff !important;
+}
+.collection-wallet strong:last-child { color:#ffdf69; font-size:18px; }
+.collection-section-title {
+  padding-bottom:10px; border-bottom:2px solid #35bceb;
+  color:#fff !important; text-shadow:0 2px 4px #101a2e;
+}
+.collection-note {
+  border:2px solid #ffca45;
+  background:linear-gradient(135deg,#4b4279,#24536c);
+  color:#fff !important;
+}
+.plant-locked-button {
+  min-height:48px; margin-top:16px; padding:11px 14px;
+  border:2px solid #aab7d3; border-radius:13px;
+  background:linear-gradient(180deg,#687594,#394767);
+  color:#fff !important; font-weight:900; text-shadow:0 1px 3px #101a2e;
+}
+.plant-locked-button:disabled { opacity:1; cursor:not-allowed; }
+.collection-back { display:flex; flex-wrap:wrap; gap:12px; }
+@media(max-width:560px) {
+  .collection-grid { grid-template-columns:1fr; gap:14px; }
+  .collection-card { padding:17px; }
+  .collection-art,.plant-art-placeholder { min-height:125px; }
+  .collection-wallet { align-items:flex-start; flex-direction:column; }
+}
