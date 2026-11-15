@@ -1,6 +1,5 @@
 import {
   CAMPAIGN_PROGRESS_KEY,
-  PROGRESSION_STORAGE_KEY,
   loadUnlockedStage,
   loadSavedCoins,
   saveCoins,
