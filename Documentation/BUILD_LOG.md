@@ -716,3 +716,13 @@
 - Lane lookup now derives its row from the same mesh coordinates; lane spawn paths retain controlled extrapolation beyond the board boundary.
 - Added a calibration view at `/game?gridDebug=1` with red mesh lines, cyan node markers, and node labels.
 - **Calibration is not yet 100% pixel-verified:** the 54 control nodes currently bootstrap from the existing four outer-corner estimates. Exact alignment requires measuring all 54 intersections against the source art and checking the result in a live Phaser screenshot. The available connected browser view exposed page text but not screenshot/reload controls, so no runtime screenshot or build was claimed.
+
+
+## 2026-11-15 — Approved Stage 1 story and fair-difficulty decisions
+- Recorded the user's decision that the small ordinary dragon begins appearing at the start of the final wave (Wave 5 in the current structure), while a few hyenas/ordinary followers may still remain. The dragon moves left/right behind the battlefield and attacks with telegraphed fireballs.
+- Recorded automatic slingshot behavior: the farmer throws stones at the dragon automatically when it is present and within range; no player clicking is required. The user will provide the dragon character sheet later. Stage 1 uses a normal dragon, not a cart-mounted dragon.
+- Replaced the 100-monster fixed design target with a clear balance requirement: retain five waves for now, but reduce/rebalance the current excessive enemy volume through playtesting. Early waves must be forgiving, slow, and teachable; difficulty increases gradually with recovery intervals and introduced counterplay.
+- Recorded the production order: finalize the battlefield environment, stage presentation, controls/buttons, HUD, menus, and visual language before adding further plant types. Keep the current starter plant/resource setup in the meantime; introduce new plants gradually later.
+- Added a distinct illustrated emblem/logo requirement for each stage; Stage 1's emblem composition is farmer versus dragon, captive wife centered behind, small evil hyenas below, and defensive plants.
+- Updated the Phase 1 acceptance target so the first complete playable stage includes the dragon, automatic slingshot, rescue, reunion, and celebration.
+- Documentation only: these decisions are recorded in the plan/roadmap/story documents. Gameplay code has not yet been changed or browser-verified as part of this documentation update.
