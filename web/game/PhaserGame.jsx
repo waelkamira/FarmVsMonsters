@@ -74,7 +74,7 @@ export default function PhaserGame() {
   }, [attempt]);
 
   return (
-    <div className="phaser-host" ref={hostRef} aria-label="Farm Vs Monsters playable battle">
+    <div className="phaser-host" ref={hostRef} aria-label={t("Farm Vs Monsters playable battle")}>
       {status === "loading" && (
         <div className="game-status" role="status" aria-live="polite">
           <span className="game-status-mark" aria-hidden="true">✦</span>
@@ -85,9 +85,9 @@ export default function PhaserGame() {
       {status === "error" && (
         <div className="game-status game-status-error" role="alert">
           <strong>{t("The battle could not be started")}</strong>
-          <span>{errorMessage || "The game engine failed to initialize."}</span>
+          <span>{errorMessage || t("The game engine failed to initialize.")}</span>
           <button type="button" className="game-retry-button" onClick={() => setAttempt((value) => value + 1)}>
-            Try Again
+            {t("Try Again")}
           </button>
           <a href="/" className="game-back-link">{t("Return to Main Menu")}</a>
         </div>
