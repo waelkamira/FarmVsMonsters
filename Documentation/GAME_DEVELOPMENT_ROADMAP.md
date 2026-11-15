@@ -47,7 +47,7 @@ BATTLE
 
 ## End conditions (locked for the first playable version)
 
-- The first stage keeps five waves, with **30 ordinary monsters total across the entire stage**. Stage 2 targets 31, Stage 3 targets 32, and each later stage adds one (Stage N = 29 + N). These are per-stage totals, not per-wave counts; dragon bosses are tracked separately. The current code's 3 / 5 / 6 / 7 / 9 schedule (100 total) must be replaced. The exact distribution of each stage total across its waves will be tuned through playtesting.
+- The first stage keeps five waves, with **30 ordinary monsters total across the entire stage**. Stage 2 targets 31, Stage 3 targets 32, and each later stage adds one (Stage N = 29 + N). These are per-stage totals, not per-wave counts; dragon bosses are tracked separately. The implemented Stage 1 schedule is 3 / 5 / 6 / 7 / 9 (30 total). The exact distribution of each stage total across its waves will be tuned through playtesting.
 - Wave counts must be data-defined and finite; do not generate an unbounded sixth wave.
 - **Difficulty curve:** Wave 1 must be a forgiving introduction with few slow/basic enemies and enough time/resources to learn planting and defense. Each subsequent wave increases pressure in small, understandable steps. Introduce faster, tougher, or special enemies only after their counterplay has been taught. Give the player short recovery/breathing intervals; avoid a sudden swarm or an unavoidable early defeat.
 - **Final-wave dragon timing:** at the start of Wave 5, the small Stage 1 dragon begins appearing behind the battlefield while a few ordinary followers may still be alive. The dragon moves left/right and launches telegraphed fireballs at plants/farm. The followers continue their attacks. Once all followers are defeated, the dragon remains alone as the final boss.
@@ -202,9 +202,9 @@ The user will create and provide the cave artwork later. Do not invent final cav
 - The browser rebuild and core battle scene exist in `web/`.
 - Phase 1 now exposes both Radish and Energy Mushroom cards. The Mushroom produces a full 15-energy collectible every 12 seconds even when the energy bank is full; the player must click each pickup before its 12-second expiry, and the 300-energy cap is applied at collection. Mushrooms are resource plants, not defensive plants, and do not block emergency club combat. Browser verification is still required.
 - Farmer frame-count validation was added on 2026-11-14.
-- The current Phase 1 code still uses 3 / 5 / 6 / 7 / 9 monsters (100 total), but the approved Stage 1 target is now 30 ordinary monsters total across five waves (dragon boss separate). Stage 2 targets 31, Stage 3 targets 32, then +1 per stage. Update code and tests after agreeing the level/UI foundations; the sixth-wave loop remains removed.
+- The Phase 1 code now uses 3 / 5 / 6 / 7 / 9 ordinary monsters (30 total). Stage 2 targets 31, Stage 3 targets 32, then +1 per stage. The dragon boss is counted separately; the sixth-wave loop remains removed.
 - Phase 1 currently includes three monster archetypes: Cave-brute, Dust-skitter, and Stonehide. Stonehide braces while eating, reducing incoming damage; it is intended to require layered defense rather than a single Radish.
-- The battle HUD now tracks total campaign defeats out of 100 and the current wave's defeats out of that wave's target; the per-wave counter resets only when the previous wave is fully cleared.
+- The battle HUD now tracks total campaign defeats out of 30 and the current wave's defeats out of that wave's target; the per-wave counter resets only when the previous wave is fully cleared.
 - Current code still triggers ordinary final-wave Victory after all scheduled monsters die; this is not yet correct for the approved story stage. Replace it with the Wave 5 dragon sequence, automatic slingshot combat, and rescue ending before declaring victory.
 - Monsters that breach the farm now stop at the home boundary and damage farmhouse health on their attack cadence; defeat occurs only when home health reaches zero.
 - A dedicated `PauseScene` provides Resume, Restart, Settings, and Main Menu, with Escape/P resume shortcuts. Pause stops the background-music timer and suspends the Web Audio context; resume restores the audio context and soundtrack. The pause action is guarded against duplicate launches, and resume ignores stale/invalid requests. Runtime input/audio behavior still requires browser verification.
@@ -232,7 +232,7 @@ The user will create and provide the cave artwork later. Do not invent final cav
 The core Phase 1 rules are now centralized in `web/game/rules/phaseOneRules.mjs` and imported by `BattleScene`, so balancing constants and pure gameplay decisions are not duplicated between the game and tests.
 
 The Node.js test suite in `web/tests/phase-one-rules.test.mjs` covers:
-- Existing regression tests still assert the old 3 / 5 / 6 / 7 / 9 schedule and 100-monster total; update these tests alongside the wave-balance code so they verify the new approved, easier data-driven curve instead.
+- Regression tests now assert the approved 3 / 5 / 6 / 7 / 9 schedule and 30-monster total.
 - Starting energy, plant costs/health, Mushroom production interval and pickup lifetime.
 - Energy collection at the 300 cap, including full, negative, and out-of-range inputs.\n- Plant purchase transaction validation, exact coin deduction, duplicate-unlock protection, and missing/invalid-price rejection.
 - Radish-only defensive counting and the resource-only Mushroom rule.
@@ -246,3 +246,15 @@ The Node.js test suite in `web/tests/phase-one-rules.test.mjs` covers:
 
 Run from `web/` with `npm test`. GitHub Actions is configured to run the suite, lint, and the production build. The current GitHub-hosted workflow attempts are failing before a runner starts (no steps or logs are exposed), so CI is not yet a passing verification signal. The extracted pure rules module has separately passed a local Node.js 22 test run; the complete repository suite and production build still require a functioning runner.
 
+
+
+## 2026-11-15 — Stage 1 balance and in-game field guide
+- Replaced the obsolete 100-monster prototype schedule with five waves of 3 / 5 / 6 / 7 / 9 ordinary monsters (30 total). The dragon remains a separate boss.
+- Added a ten-stage campaign count helper: Stage N contains 29 + N ordinary monsters (Stage 1 = 30 through Stage 10 = 39).
+- Added an in-battle journal/menu with four tabs: campaign stages, plant catalogue, cave/coin balance, and monster field guide.
+- Stage 1 is shown as available; later stages are visibly locked pending campaign progression. No unsupported unlock claims are made.
+- Plant entries show existing thumbnails and their current energy costs. Coin purchases remain disabled until new plant prices and purchase rules are approved.
+- The cave panel displays the saved coin balance and a clear art placeholder. The cave background image is not yet in the repository and is awaiting the user's artwork.
+- Monster entries show existing hyena artwork and actual HP scaling/damage rules; the dragon is listed separately.
+- Menu opening pauses battle simulation and blocks planting clicks until the menu closes.
+- Updated the home screen's monster count and regression tests. Automated execution and browser visual verification remain pending.
