@@ -9,7 +9,7 @@ import { useLocale, LanguageToggle } from "./LocaleProvider";
 export default function HomePage() {
   const [coins, setCoins] = useState(0);
   const [showPhaseEmblem, setShowPhaseEmblem] = useState(true);
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
 
   useEffect(() => {
     try {
@@ -19,10 +19,15 @@ export default function HomePage() {
     }
   }, []);
 
+  const arabic = locale === "ar";
+
   return (
     <main className="home-shell">
       <div className="home-card">
-        <LanguageToggle />
+        <div className="home-topbar">
+          <span className="menu-version">{arabic ? "المغامرة الأولى" : "THE FIRST ADVENTURE"}</span>
+          <LanguageToggle />
+        </div>
         <p className="eyebrow">{t("A PRIMITIVE 2D FARM DEFENSE ADVENTURE")}</p>
         {showPhaseEmblem && (
           <Image
@@ -51,7 +56,16 @@ export default function HomePage() {
           <Link className="secondary-link" href="/settings">{t("Settings")}</Link>
           <Link className="secondary-link" href="/credits">{t("Credits")}</Link>
         </nav>
-        <div className="menu-facts"><span>{t("5 WAVES")}</span><span>{t("30 MONSTERS")}</span><span>{t("1 FARM TO DEFEND")}</span></div>
+        <div className="menu-facts">
+          <span>{arabic ? "٥ موجات" : "5 WAVES"}</span>
+          <span>{arabic ? "٣٠ وحشاً عادياً" : "30 ORDINARY MONSTERS"}</span>
+          <span>{arabic ? "تنين وزوجة أسيرة" : "DRAGON & CAPTIVE WIFE"}</span>
+        </div>
+        <p className="campaign-note">
+          {arabic
+            ? "في نهاية كل مرحلة، اهزم التنين وأتباعه، ثم حرّر الأميرة واجتمع بها قبل الانتقال إلى أرض جديدة."
+            : "Defeat each dragon and its followers, rescue the princess, and reunite before travelling to a new land."}
+        </p>
         <p className="home-note">{t("A hand-drawn prehistoric world of roots, stone, timber, and wild creatures.")}</p>
       </div>
     </main>
