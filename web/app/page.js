@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { loadSavedCoins } from "../game/rules/phaseOneRules.mjs";
 import { useLocale, LanguageToggle } from "./LocaleProvider";
 import { STAGE_ONE_PLANTS } from "../game/data/stageOnePlants.mjs";
+import CatalogThumb from "./components/CatalogThumb";
 
 const MONSTER_CARDS = [
   { id: "cave-brute", icon: "🐾", ar: "الضبع العادي", en: "Cave Brute", roleAr: "الضبع الأساسي", roleEn: "Standard raider", descAr: "يتقدم في مساره ويتوقف لالتهام النبتة التي تعترض طريقه.", descEn: "Advances along its lane and stops to eat plants blocking its path.", statAr: "تحمّل عادي · ٧ ضربات من الفجل", statEn: "Standard durability · 7 radish hits" },
@@ -110,7 +111,7 @@ export default function HomePage() {
                   {STAGE_ONE_PLANTS.map((plant) => (
                     <article className={`world-item-card ${plant.implemented ? "is-live" : "is-coming"}`} key={plant.id}>
                       <div className="world-item-art">
-                        <img src={plant.assetPath} alt={arabic ? plant.nameAr : plant.name} onError={(event) => { event.currentTarget.style.display = "none"; }} />
+                        <CatalogThumb id={plant.id} label={arabic ? plant.nameAr : plant.name} className="world-plant-thumb" />
                         {!plant.implemented && <span className="world-item-lock">🔒</span>}
                       </div>
                       <strong>{arabic ? plant.nameAr : plant.name}</strong>
@@ -131,7 +132,7 @@ export default function HomePage() {
                 <div className="world-item-grid world-monster-grid">
                   {MONSTER_CARDS.map((monster) => (
                     <article className="world-item-card is-live" key={monster.id}>
-                      <div className="world-monster-art">{monster.icon}</div>
+                      <CatalogThumb id={monster.id} label={arabic ? monster.ar : monster.en} className="world-monster-thumb" />
                       <strong>{arabic ? monster.ar : monster.en}</strong>
                       <small>{arabic ? monster.roleAr : monster.roleEn}</small>
                       <p>{arabic ? monster.descAr : monster.descEn}</p>
@@ -139,7 +140,7 @@ export default function HomePage() {
                     </article>
                   ))}
                 </div>
-                <div className="world-boss-strip"><span>🐉</span><div><strong>{arabic ? "التنين الشرير · زعيم المرحلة" : "EVIL DRAGON · STAGE BOSS"}</strong><small>{arabic ? "زعيم مستقل يظهر في الموجة الخامسة، ويجب هزيمته لتحرير الأميرة." : "Separate boss in Wave 5. Defeat it to rescue the princess."}</small></div></div>
+                <div className="world-boss-strip"><CatalogThumb id="dragon" label={arabic ? "التنين الشرير" : "Evil Dragon"} className="world-boss-thumb" /><div><strong>{arabic ? "التنين الشرير · زعيم المرحلة" : "EVIL DRAGON · STAGE BOSS"}</strong><small>{arabic ? "زعيم مستقل يظهر في الموجة الخامسة، ويجب هزيمته لتحرير الأميرة." : "Separate boss in Wave 5. Defeat it to rescue the princess."}</small></div></div>
                 <div className="world-modal-actions">
                   <Link className={`world-modal-primary ${activeItem.color}`} href="/monsters">{arabic ? "تفاصيل موسوعة الوحوش" : "FULL MONSTER ENCYCLOPEDIA"} <span>➜</span></Link>
                   <button type="button" className="world-modal-secondary" onClick={() => setActiveMenu(null)}>{arabic ? "العودة للعالم" : "BACK TO WORLD"}</button>
