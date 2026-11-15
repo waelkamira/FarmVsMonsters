@@ -27,7 +27,7 @@ export async function GET(request) {
   if (!user?.id) return NextResponse.json({ error: "Sign in to load cloud progress." }, { status: 401 });
 
   const query = new URLSearchParams({
-    select: "unlocked_stage,completed_stages,coins,updated_at",
+    select: "unlocked_stage,completed_stages,coins,coins_verified,updated_at",
     user_id: "eq." + user.id,
     limit: "1"
   });
@@ -40,43 +40,8 @@ export async function GET(request) {
   return NextResponse.json({ progress: payload[0] || null });
 }
 
-export async function PUT(request) {
-  const api = config();
-  if (!api) return NextResponse.json({ error: "Cloud accounts are not configured." }, { status: 503 });
-  const user = await authenticatedUser(request, api);
-  if (!user?.id) return NextResponse.json({ error: "Sign in to save cloud progress." }, { status: 401 });
-
-  let body;
-  try { body = await request.json(); } catch { return NextResponse.json({ error: "Invalid progress payload." }, { status: 400 }); }
-  const unlockedStage = body.unlockedStage;
-  const completedStages = Array.isArray(body.completedStages)
-    ? [...new Set(body.completedStages.filter((value) => Number.isInteger(value) && value >= 1 && value <= 10))].sort((a, b) => a - b)
-    : [];
-  const coins = body.coins;
-  if (!Number.isInteger(unlockedStage) || unlockedStage < 1 || unlockedStage > 10 ||
-      !Number.isSafeInteger(coins) || coins < 0) {
-    return NextResponse.json({ error: "Player progress values are invalid." }, { status: 400 });
-  }
-
-  const token = request.cookies.get(ACCESS_COOKIE).value;
-  const response = await fetch(api.url + "/rest/v1/player_progress?on_conflict=user_id", {
-    method: "POST",
-    headers: {
-      apikey: api.key,
-      Authorization: "Bearer " + token,
-      "Content-Type": "application/json",
-      Prefer: "resolution=merge-duplicates,return=representation"
-    },
-    body: JSON.stringify({
-      user_id: user.id,
-      unlocked_stage: unlockedStage,
-      completed_stages: completedStages,
-      coins,
-      updated_at: new Date().toISOString()
-    }),
-    cache: "no-store"
-  });
-  const payload = await response.json().catch(() => ({}));
-  if (!response.ok) return NextResponse.json({ error: "Could not save player progress." }, { status: response.status });
-  return NextResponse.json({ progress: Array.isArray(payload) ? payload[0] : payload });
+export async function PUT() {
+  return NextResponse.json({
+    error: "Cloud progress writes are temporarily paused while server-verified progression is implemented. Local play and local saves are unaffected."
+  }, { status: 410 });
 }
