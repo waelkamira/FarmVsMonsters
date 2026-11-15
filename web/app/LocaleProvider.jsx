@@ -52,7 +52,7 @@ const translations = {
   "A Dust Skitter has joined the raid: quick, but easier to bring down.": "انضم ضبع الغبار السريع إلى الهجوم: سريع لكنه أسهل في الهزيمة.",
   "A Stonehide is approaching: slow, heavily plated, and tough to stop.": "ضبع الجلد الحجري يقترب: بطيء ومدرع بشدة ويصعب إيقافه.",
   "ALPHA BRUTE! A giant raider with double health and crushing bites is approaching!": "الضبع العملاق! وحش ضخم بضعف الطاقة وعضّات ساحقة يقترب!",
-  "EMERGENCY! The last radish has fallen. Move close and press SPACE to swing the club.": "طوارئ! سقطت آخر نبتة فجل. اقترب واضغط المسافة لضرب الوحش بالهراوة."
+  "EMERGENCY! The last radish has fallen. Move close and press SPACE to swing the club.": "طوارئ! سقطت آخر نبتة فجل. اقترب واضغط المسافة لضرب الوحش بالهراوة.",
   "BATTLE PAUSED": "المعركة متوقفة مؤقتاً", "RESUME": "متابعة", "RESTART": "إعادة البدء", "SETTINGS": "الإعدادات", "MAIN MENU": "القائمة الرئيسية",
   "ENERGY": "الطاقة", "HOME": "المزرعة", "RADISHES": "الفجل", "KILLS": "المهزومون", "WAVE": "الموجة", "DOWN": "هُزم", "LAST STAND": "المواجهة الأخيرة",
   "Radish planted! The caveman is sprinting back behind the final line.": "تمت زراعة الفجل! رجل الكهف يركض عائداً إلى خط الدفاع الأخير.",
