@@ -15,6 +15,7 @@ import {
   collectEnergy,
   isWaveComplete,
   isPhaseOneVictory,
+  unlockNextStage,
   monsterArchetypeFor as resolveMonsterArchetype
 } from "../rules/phaseOneRules.mjs";
 
@@ -2899,6 +2900,8 @@ export default class BattleScene extends Scene {
 
   endGame(won) {
     if (this.gameOver) return;
+    // A campaign win is valid only after the dragon is defeated and the rescue sequence completes.
+    won = Boolean(won && this.phaseOneStoryState === "complete");
     this.gameOver = true;
     // Collectibles are no longer usable after a terminal result; remove their
     // expiry timers and idle tweens instead of leaving disabled pickups visible.
@@ -2915,6 +2918,7 @@ export default class BattleScene extends Scene {
     this.setMessage(won ? "VICTORY! The farm is safe." : "GAME OVER — The monsters reached the final line.");
     this.add.rectangle(560, 340, 1120, 680, 0x10170f, 0.72).setDepth(60);
     if (won) {
+      try { unlockNextStage(window.localStorage, 1); } catch { /* Progress saving must never block the victory screen. */ }
       this.stopBackgroundMusic();
       if (this.textures.exists("phase-one-emblem")) {
         this.add.image(560, 145, "phase-one-emblem").setDisplaySize(210, 125).setDepth(62);
