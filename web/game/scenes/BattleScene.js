@@ -55,6 +55,7 @@ export default class BattleScene extends Scene {
 
   preload() {
     this.load.image("farm-battlefield", "/assets/backgrounds/farm-battlefield.jpeg");
+    this.load.image("treasure-cave-menu", "/assets/backgrounds/treasure-cave.jpeg");
     this.load.image("radish-character", "/assets/plants/radish.png");
     this.load.image("mushroom-character", "/assets/plants/mushroom.png");
     this.load.spritesheet("gold-coin", "/assets/items/currency/gold-coin.png", { frameWidth: 170, frameHeight: 170 });
@@ -96,6 +97,7 @@ export default class BattleScene extends Scene {
       if (file.key === "farm-battlefield") this.backgroundAssetFailed = true;
       if (file.key === "radish-character") this.radishAssetFailed = true;
       if (file.key === "mushroom-character") this.mushroomAssetFailed = true;
+      if (file.key === "treasure-cave-menu") this.treasureCaveAssetFailed = true;
       if (file.key.startsWith("farmer-")) this.farmerAssetFailed = true;
       if (["hyena-idle", "hyena-walk", "hyena-run", "hyena-bite"].includes(file.key)) this.hyenaAssetFailed = true;
       if (file.key.startsWith("sfx-")) {
@@ -192,6 +194,7 @@ export default class BattleScene extends Scene {
     this.createHud();
     this.createAudioControls();
     this.createPauseControl();
+    this.createCollectionMenuControl();
     this.createCaveman();
     this.bindInput();
     this.events.once("shutdown", () => {
@@ -927,7 +930,7 @@ export default class BattleScene extends Scene {
         duration: 1050, ease: "Quad.easeIn",
         onComplete: () => {
           if (fireball.active) fireball.destroy();
-          if (this.gameOver || this.storySequenceActive) return;
+          if (this.gameOver || this.storySequenceActive || this.collectionMenuOpen) return;
           if (targetPlant?.alive) {
             targetPlant.hp -= 55;
             this.flashEatenPlant(targetPlant);
@@ -1427,6 +1430,135 @@ export default class BattleScene extends Scene {
     const key = Math.random() < 0.5 ? "sfx-grass-step-01" : "sfx-grass-step-02";
     this.playSfx(key, this.effectsVolume * 0.24, 80);
     this.farmerFootstepCooldownMs = 285;
+  }
+
+  createCollectionMenuControl() {
+    const button = this.add.container(978, 27).setDepth(47);
+    const plate = this.add.rectangle(0, 0, 46, 30, 0x4a2e1d, 0.98)
+      .setStrokeStyle(2, 0xd8b477).setInteractive({ useHandCursor: true });
+    const label = this.add.text(0, 0, "☰", {
+      fontFamily: "Arial", fontSize: "20px", color: "#fff0c8", fontStyle: "bold"
+    }).setOrigin(0.5);
+    button.add([plate, label]);
+    plate.on("pointerover", () => plate.setFillStyle(0x79502e, 1));
+    plate.on("pointerout", () => plate.setFillStyle(0x4a2e1d, 0.98));
+    plate.on("pointerdown", () => this.toggleCollectionMenu());
+    this.collectionMenuControl = button;
+    this.collectionMenuOpen = false;
+  }
+
+  toggleCollectionMenu() {
+    if (this.gameOver) return;
+    if (this.collectionMenuOpen) {
+      this.closeCollectionMenu();
+      return;
+    }
+    this.collectionMenuOpen = true;
+    this.collectionMenuTab = "phases";
+    this.collectionMenuLayer = this.add.container(560, 340).setDepth(90);
+    this.collectionMenuLayer.add(this.add.rectangle(0, 0, 1120, 680, 0x100b07, 0.78).setInteractive());
+    const panel = this.add.rectangle(0, 0, 760, 570, 0x604027, 0.99).setStrokeStyle(7, 0x2b1b11);
+    this.collectionMenuLayer.add(panel);
+    this.collectionMenuLayer.add(this.add.rectangle(0, -274, 738, 40, 0x9b7047).setStrokeStyle(2, 0xd7b477));
+    this.collectionMenuLayer.add(this.add.text(0, -274, "دفتر المزرعة والمغامرة  ·  FARM JOURNAL", {
+      fontFamily: "Georgia", fontSize: "19px", color: "#fff0c8", fontStyle: "bold"
+    }).setOrigin(0.5));
+    const close = this.add.text(350, -274, "✕", {
+      fontFamily: "Arial", fontSize: "23px", color: "#fff0c8", backgroundColor: "#63351f",
+      padding: { x: 8, y: 2 }
+    }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+    close.on("pointerdown", () => this.closeCollectionMenu());
+    this.collectionMenuLayer.add(close);
+    this.collectionMenuTabs = this.add.container(0, -220);
+    this.collectionMenuLayer.add(this.collectionMenuTabs);
+    this.collectionMenuContent = this.add.container(0, -160);
+    this.collectionMenuLayer.add(this.collectionMenuContent);
+    this.renderCollectionMenu();
+  }
+
+  closeCollectionMenu() {
+    this.collectionMenuOpen = false;
+    if (this.collectionMenuLayer) this.collectionMenuLayer.destroy(true);
+    this.collectionMenuLayer = null;
+  }
+
+  renderCollectionMenu() {
+    if (!this.collectionMenuLayer) return;
+    this.collectionMenuTabs.removeAll(true);
+    this.collectionMenuContent.removeAll(true);
+    const locale = typeof window !== "undefined" ? window.localStorage.getItem("farmVsMonsters.language") || "ar" : "ar";
+    const tabs = [
+      ["phases", locale === "ar" ? "المراحل" : "PHASES"],
+      ["plants", locale === "ar" ? "النباتات" : "PLANTS"],
+      ["coins", locale === "ar" ? "المغارة والنقود" : "CAVE & COINS"],
+      ["monsters", locale === "ar" ? "الوحوش" : "MONSTERS"]
+    ];
+    tabs.forEach(([id, label], index) => {
+      const x = -270 + index * 180;
+      const active = this.collectionMenuTab === id;
+      const bg = this.add.rectangle(x, 0, 164, 42, active ? 0xd9b36e : 0x79502e, 1)
+        .setStrokeStyle(2, 0x392417).setInteractive({ useHandCursor: true });
+      const txt = this.add.text(x, 0, label, {
+        fontFamily: "Georgia", fontSize: "15px", color: active ? "#382719" : "#fff0c8", fontStyle: "bold"
+      }).setOrigin(0.5);
+      bg.on("pointerdown", () => { this.collectionMenuTab = id; this.renderCollectionMenu(); });
+      this.collectionMenuTabs.add([bg, txt]);
+    });
+    const content = this.collectionMenuContent;
+    const addLabel = (x, y, value, size = 19, color = "#fff0c8") =>
+      content.add(this.add.text(x, y, value, { fontFamily: "Georgia", fontSize: size + "px", color, fontStyle: "bold", align: "center", wordWrap: { width: 650 } }).setOrigin(0.5));
+    const addRow = (y, imageKey, title, detail, locked = false) => {
+      content.add(this.add.rectangle(0, y, 660, 72, 0x8a603b, 0.94).setStrokeStyle(2, 0xc79a5c));
+      if (imageKey && this.textures.exists(imageKey)) {
+        const icon = this.add.image(-285, y, imageKey).setDisplaySize(54, 54);
+        content.add(icon);
+      } else {
+        addLabel(-285, y, locked ? "🔒" : "❖", 27, "#f4d58e");
+      }
+      addLabel(-115, y - 11, title, 17);
+      addLabel(120, y + 15, detail, 13, "#f5dba9");
+      if (locked) addLabel(285, y, "🔗  🗝", 20, "#f5dba9");
+    };
+    if (this.collectionMenuTab === "phases") {
+      addLabel(0, -10, locale === "ar" ? "اختر مغامرتك — المرحلة الأولى متاحة" : "Choose your adventure — Stage 1 is available", 17);
+      for (let stage = 1; stage <= 8; stage += 1) {
+        const row = Math.floor((stage - 1) / 2);
+        const col = (stage - 1) % 2;
+        const x = col === 0 ? -170 : 170;
+        content.add(this.add.rectangle(x, 65 + row * 100, 300, 82, 0x8a603b).setStrokeStyle(2, 0xc79a5c));
+        const unlocked = stage === 1;
+        if (stage === 1 && this.textures.exists("phase-one-emblem")) {
+          content.add(this.add.image(x - 105, 65 + row * 100, "phase-one-emblem").setDisplaySize(90, 58));
+        } else {
+          content.add(this.add.text(x - 105, 65 + row * 100, unlocked ? "I" : "🔒", { fontSize: "30px", color: "#f5dba9" }).setOrigin(0.5));
+        }
+        content.add(this.add.text(x + 35, 48 + row * 100, locale === "ar" ? "المرحلة " + stage : "STAGE " + stage, { fontSize: "17px", color: "#fff0c8", fontStyle: "bold" }).setOrigin(0.5));
+        content.add(this.add.text(x + 35, 78 + row * 100, unlocked ? (locale === "ar" ? "متاحة للعب" : "AVAILABLE") : (locale === "ar" ? "مغلقة — تحتاج مفتاحاً" : "LOCKED · KEY REQUIRED"), { fontSize: "12px", color: unlocked ? "#c9e59a" : "#f3c77e" }).setOrigin(0.5));
+      }
+      addLabel(0, 455, locale === "ar" ? "ستُفتح المراحل التالية بعد إكمال المغامرات السابقة." : "Complete earlier adventures to unlock later stages.", 13, "#e8c995");
+    } else if (this.collectionMenuTab === "plants") {
+      addLabel(0, -8, locale === "ar" ? "النباتات المتاحة وأسعار الطاقة" : "Available plants and their energy costs", 17);
+      addRow(65, "radish-character", locale === "ar" ? "الفجل الدفاعي" : "Defensive Radish", "35 " + (locale === "ar" ? "طاقة" : "ENERGY"));
+      addRow(155, "mushroom-character", locale === "ar" ? "فطر الطاقة" : "Energy Mushroom", "50 " + (locale === "ar" ? "طاقة" : "ENERGY"));
+      addLabel(0, 260, locale === "ar" ? "النباتات الجديدة ستظهر هنا لاحقاً مع سعر الشراء بالنقود." : "New plants and coin purchase prices will appear here later.", 14, "#e8c995");
+      addLabel(0, 320, locale === "ar" ? "الشراء غير مفعّل حالياً؛ هذان النباتان متاحان للزراعة مباشرة." : "Purchases are not enabled yet; both plants are already available.", 13, "#f5dba9");
+    } else if (this.collectionMenuTab === "coins") {
+      if (this.textures.exists("treasure-cave-menu")) {
+        content.add(this.add.image(0, 115, "treasure-cave-menu").setDisplaySize(610, 310));
+      } else {
+        content.add(this.add.rectangle(0, 115, 610, 310, 0x352316).setStrokeStyle(5, 0x9c7544));
+        addLabel(0, 60, locale === "ar" ? "مغارة الكنز — بانتظار رسم المغارة" : "TREASURE CAVE — ARTWORK PENDING", 18);
+      }
+      addLabel(0, 185, (locale === "ar" ? "رصيدك الحالي: " : "CURRENT BALANCE: ") + this.coins.toLocaleString() + "  🪙", 25, "#ffe29a");
+      addLabel(0, 270, locale === "ar" ? "كل ضبع مهزوم يمنحك 8 نقود. ستُضاف آلية شراء النباتات لاحقاً." : "Each defeated hyena awards 8 coins. Plant purchases will be added later.", 13);
+    } else {
+      addLabel(0, -8, locale === "ar" ? "دليل الوحوش — نقاط الصحة وقوة الهجوم" : "Monster field guide — health and attack strength", 17);
+      addRow(55, "hyena-idle", locale === "ar" ? "الضبع العادي" : "Cave Brute", (locale === "ar" ? "الصحة: 69 · ضرر النبات: 16" : "HP: 69 · Plant damage: 16"));
+      addRow(145, "hyena-idle", locale === "ar" ? "الضبع السريع" : "Dust Skitter", (locale === "ar" ? "الصحة: 36 · ضرر النبات: 8" : "HP: 36 · Plant damage: 8"));
+      addRow(235, "hyena-idle", locale === "ar" ? "الضبع المدرع" : "Stonehide", (locale === "ar" ? "الصحة: 152 · ضرر النبات: 23" : "HP: 152 · Plant damage: 23"));
+      addRow(325, "hyena-idle", locale === "ar" ? "الضبع العملاق" : "Alpha Brute", (locale === "ar" ? "الصحة: 350 · ضرر النبات: 32" : "HP: 350 · Plant damage: 32"));
+      addRow(415, "dragon-boss", locale === "ar" ? "التنين الزعيم" : "Dragon Boss", locale === "ar" ? "زعيم مستقل · شريط صحة خاص" : "Separate boss · dedicated health bar");
+    }
   }
 
   createPauseControl() {
