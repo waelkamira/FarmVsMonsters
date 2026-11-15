@@ -1,4 +1,5 @@
 import "./globals.css";
+import { LocaleProvider } from "./LocaleProvider";
 
 export const metadata = {
   title: "Farm Vs Monsters",
@@ -7,8 +8,8 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
-      <body>{children}</body>
+    <html lang="ar" dir="rtl">
+      <body><LocaleProvider>{children}</LocaleProvider></body>
     </html>
   );
 }
