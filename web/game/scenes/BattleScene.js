@@ -20,6 +20,8 @@ import {
 import {
   PHASE_ONE_DRAGON,
   PHASE_ONE_PLANTS,
+  PHASE_ONE_TIMING,
+  getMonsterSpawnIntervalMs,
   PHASE_ONE_REWARDS,
   getMonsterCombatStats,
   getStonehideIncomingDamageMultiplier
@@ -138,7 +140,7 @@ export default class BattleScene extends Scene {
     this.totalPlantsPlanted = 0;
     this.energyCollected = 0;
     this.elapsedBattleMs = 0;
-    this.spawnTimer = 1800;
+    this.spawnTimer = PHASE_ONE_TIMING.firstMonsterSpawnDelayMs;
     this.waveIntermissionMs = 0;
     this.selectedPlant = null;
     this.plants = [];
@@ -1723,7 +1725,7 @@ export default class BattleScene extends Scene {
         this.spawnedThisWave += 1;
         this.totalSpawnedMonsters += 1;
         if (this.wave === 5 && this.spawnedThisWave === 2) this.beginDragonEncounter();
-        this.spawnTimer = Math.max(2300, 5200 - this.wave * 120);
+        this.spawnTimer = getMonsterSpawnIntervalMs(this.wave);
       }
     }
     this.updatePlants(delta);
@@ -2997,8 +2999,8 @@ export default class BattleScene extends Scene {
     this.spawnedThisWave = 0;
     this.waveDefeatedMonsters = 0;
     this.waveSize = PHASE_ONE_WAVE_SIZES[this.wave - 1];
-    this.waveIntermissionMs = 5000;
-    this.spawnTimer = 1600;
+    this.waveIntermissionMs = PHASE_ONE_TIMING.waveIntermissionMs;
+    this.spawnTimer = PHASE_ONE_TIMING.nextWaveSpawnDelayMs;
     this.setMessage(
       "Wave " + clearedWave + " cleared. Prepare for wave " + this.wave +
       ": " + this.waveSize + " monsters in 5 seconds."
