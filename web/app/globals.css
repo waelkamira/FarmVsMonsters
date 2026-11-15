@@ -1644,3 +1644,23 @@ input[type=range] {accent-color:var(--ui-lime);}
     box-shadow:inset 0 1px 0 rgba(255,255,255,.58),0 16px 34px rgba(15,45,78,.25);
   }
 }
+
+/* Final polish: remove the last brown/orange extrusion from the minimal start CTA
+   and keep native form menus readable against the dark glass surfaces. */
+.home-start-button {
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.68),inset 0 -1px 0 rgba(255,255,255,.08),0 10px 26px rgba(15,45,78,.28) !important;
+}
+.home-start-button:hover {
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.76),0 14px 30px rgba(15,45,78,.34) !important;
+}
+.home-start-button:active {
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.55),0 5px 14px rgba(15,45,78,.24) !important;
+}
+select option {
+  color:#172e55;
+  background:#f4f8ff;
+}
+:where(input,select,textarea):disabled {
+  opacity:.58;
+  cursor:not-allowed;
+}
