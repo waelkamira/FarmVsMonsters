@@ -61,11 +61,11 @@ export function resolvePlantUproot({ energy, plant } = {}) {
     return { ok: false, reason: "INVALID_UPROOT_STATE" };
   }
   const configuredCost = PLANT_RULES[plant.type]?.plantingEnergyCost;
-  if (
-    !Number.isFinite(configuredCost) ||
-    (plant.energyCost !== undefined && plant.energyCost !== configuredCost)
-  ) {
+  if (!Number.isFinite(configuredCost)) {
     return { ok: false, reason: "UNKNOWN_PLANT_TYPE" };
+  }
+  if (plant.energyCost !== undefined && plant.energyCost !== configuredCost) {
+    return { ok: false, reason: "PLANT_COST_MISMATCH" };
   }
 
   // Preserve the live game rule: manual uprooting refunds the full planting
