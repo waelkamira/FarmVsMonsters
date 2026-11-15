@@ -2203,22 +2203,15 @@ export default class BattleScene extends Scene {
     // Keep the hyena grounded on its lane: do not play the hit spritesheet,
     // whose pose can read as a jump/flying reaction. Use a brief color flash.
     const sprite = monster.hyenaSprite;
-    if (sprite?.active) {
-      if (monster.hitFlashTimer) monster.hitFlashTimer.remove(false);
-      sprite.setTint(0xffe0a0);
-      monster.hitFlashTimer = this.time.delayedCall(95, () => {
-        if (sprite.active) sprite.clearTint();
-        monster.hitFlashTimer = null;
-      });
-    }
+    if (sprite?.active) sprite.setTint(0xffe0a0);
 
-    if (!monster.hitFlashGraphic || !monster.hitFlashGraphic.active) return;
+    const graphic = monster.hitFlashGraphic;
+    if (graphic?.active) graphic.setBlendMode(1);
+
     if (monster.hitFlashTimer) monster.hitFlashTimer.remove(false);
-    monster.hitFlashGraphic.setBlendMode(1);
-    monster.hitFlashTimer = this.time.delayedCall(85, () => {
-      if (monster.hitFlashGraphic?.active) {
-        monster.hitFlashGraphic.setBlendMode(0);
-      }
+    monster.hitFlashTimer = this.time.delayedCall(95, () => {
+      if (sprite?.active) sprite.clearTint();
+      if (graphic?.active) graphic.setBlendMode(0);
       monster.hitFlashTimer = null;
     });
   }
