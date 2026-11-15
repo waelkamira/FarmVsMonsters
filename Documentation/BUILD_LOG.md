@@ -873,3 +873,13 @@
 - Preserved visual-only jump behavior: jump offset does not alter logical lane position or collision. Preserved burst duration, cooldown ranges, jump duration/reset ranges, and simultaneous jump/burst speed multipliers.
 - Expanded combat simulation tests to 20 cases, including cooldown boundaries, jump start/landing, burst first-frame timing, and combined movement multipliers.
 - Source verification confirms old inline Skitter timing block and direct cooldown decrements were replaced. No local test/build/browser run was performed; GitHub Actions runner allocation is still failing before job steps.
+
+
+
+## 2026-11-15 — Extract wave scheduling and spawn composition
+- Added `resolveWaveSpawnStep` to the pure combat kernel. It owns intermission countdown, spawn timer advancement, one-spawn-per-update decisions, and spawned-count progression.
+- The scheduler validates wave number and roster size against the phase-one contract, preserving [3, 5, 6, 7, 9] ordinary monsters, first-spawn/next-wave delays, the five-second intermission, and the per-wave spawn interval formula.
+- Moved monster archetype selection into `resolveMonsterArchetype`; kept `phaseOneRules.mjs` compatibility export backed by the shared resolver.
+- BattleScene now consumes the scheduler output and retains only Phaser-specific lane randomness, sprite construction, effects, and the existing dragon trigger after the second ordinary monster in wave five.
+- Added three kernel test cases for intermission and spawn cadence, roster boundaries, and archetype composition. Updated scene integration assertions to the extracted scheduler and existing Skitter resolver.
+- No wave sizes, enemy stats, reward values, or boss conditions were intentionally changed. No local tests/build/browser run was performed; CI runner allocation remains unresolved.
