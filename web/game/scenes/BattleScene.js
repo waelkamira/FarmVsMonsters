@@ -842,7 +842,7 @@ export default class BattleScene extends Scene {
     this.createPrincessActor();
     this.dragonBoss = {
       hp: PHASE_ONE_DRAGON.maxHp, maxHp: PHASE_ONE_DRAGON.maxHp, alive: true,
-      attackCooldown: 2800, shotCooldown: PHASE_ONE_DRAGON.farmerSlingIntervalMs - 50, sprite: null
+      attackCooldown: PHASE_ONE_DRAGON.dragonInitialAttackDelayMs, shotCooldown: PHASE_ONE_DRAGON.farmerSlingInitialDelayMs, sprite: null
     };
     if (this.textures.exists("dragon-boss")) {
       const texture = this.textures.get("dragon-boss");
@@ -2553,7 +2553,7 @@ export default class BattleScene extends Scene {
       attackInterval: profile.attackIntervalMs,
       incomingDamageMultiplier: profile.incomingDamageMultiplier,
       // The skitter alternates normal movement with short, readable bursts.
-      burstCooldown: archetype === "dust-skitter" ? PhaserMath.Between(1500, 2300) : 0,
+      burstCooldown: archetype === "dust-skitter" ? PhaserMath.Between(profile.initialBurstCooldownMinMs, profile.initialBurstCooldownMaxMs) : 0,
       burstRemaining: 0,
       combatProfile: profile,
       // Dust Skitters occasionally hop; this is purely visual and never
