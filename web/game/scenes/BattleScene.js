@@ -164,7 +164,8 @@ export default class BattleScene extends Scene {
     this.totalDefeatedMonsters = 0;
     this.totalPlantsPlanted = 0;
     this.energyCollected = 0;
-    this.elapsedBattleMs = 0;\n    this.combatClockMs = 0;
+    this.elapsedBattleMs = 0;
+    this.combatClockMs = 0;
     this.spawnTimer = PHASE_ONE_TIMING.firstMonsterSpawnDelayMs;
     this.waveIntermissionMs = 0;
     this.selectedPlant = null;
@@ -1730,6 +1731,7 @@ export default class BattleScene extends Scene {
       this.refreshHud();
       return;
     }
+    this.combatClockMs += delta;
     this.handleControls(dt);
     // Wave timing and spawn decisions are resolved by the renderer-independent combat kernel.
     const previousIntermissionSecond = this.waveIntermissionMs > 0
@@ -1964,7 +1966,8 @@ export default class BattleScene extends Scene {
       ...placement.plant,
       x, y,
       cooldown: PhaserMath.Between(250, 650),
-      productionTimer: type === "mushroom" ? config.productionInterval : undefined,\n      productionCount: 0,
+      productionTimer: type === "mushroom" ? config.productionInterval : undefined,
+      productionCount: 0,
       view: type === "mushroom" ? this.drawEnergyMushroom(x, y, row) : this.drawRadish(x, y)
     };
     this.plants.push(plant);
@@ -2119,7 +2122,11 @@ export default class BattleScene extends Scene {
     // The energy cap is applied only when the player collects it, so spending
     // energy before pickup expiry cannot retroactively erase a production cycle.
     const amount = MUSHROOM_CONFIG.energy;
+    plant.productionCount = (plant.productionCount ?? 0) + 1;
+    const pickupId = `mushroom-${plant.col}-${plant.row}-${plant.productionCount}`;
+    this.recordCombatEvent("energy_spawned", { sourceCol: plant.col, sourceRow: plant.row, pickupId, amount });
     const token = this.add.container(plant.x, plant.y - 66).setDepth(35);
+    token.combatPickupId = pickupId;
     this.energyPickups.push(token);
     // Brief production feedback: show the energy amount, then clear it quickly.
     const amountLabel = this.add.text(plant.x, plant.y - 105, `+${amount}`, {
@@ -2185,6 +2192,7 @@ export default class BattleScene extends Scene {
         this.playEnergyCollectSound();
         this.setMessage("Collected " + collected + " mushroom energy!");
       } else {
+        this.recordCombatEvent("energy_discarded", { pickupId: token.combatPickupId });
         this.setMessage("Energy is full. Defeat monsters or spend energy before collecting more.");
       }
       this.refreshHud();
