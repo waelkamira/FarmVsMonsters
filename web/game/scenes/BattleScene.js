@@ -2310,11 +2310,14 @@ export default class BattleScene extends Scene {
     const innerGlow = this.add.circle(0, 0, 9, 0xffd5dc, 0.28);
     view.add([halo, outerGlow, innerGlow]);
 
-    if (this.textures.exists("radish-character")) {
-      const radishProjectile = this.add.image(0, 0, "radish-character")
-        .setDisplaySize(29, 29)
+    const projectileTexture = plant.type === "tomato" ? "tomato-character"
+      : plant.type === "onion" ? "onion-character" : "radish-character";
+    if (this.textures.exists(projectileTexture)) {
+      const projectileSize = plant.type === "onion" ? 27 : 29;
+      const plantProjectile = this.add.image(0, 0, projectileTexture)
+        .setDisplaySize(projectileSize, projectileSize)
         .setRotation(-Math.PI / 2);
-      view.add(radishProjectile);
+      view.add(plantProjectile);
     } else {
       // Visible fallback only if the Radish artwork failed to load.
       const fallback = this.add.ellipse(0, 0, 23, 13, 0xff7185, 1)
