@@ -517,12 +517,14 @@ export default class BattleScene extends Scene {
       { icon: "🌱", label: "RADISHES" },
       { icon: "👾", label: "KILLS" },
     ];
+    this.hudLabelTexts = [];
     this.hudValueTexts = statTiles.map((tile, index) => {
       const meta = tileMeta[index];
-      this.add.text(tile.x + 8, 19, meta.icon + " " + translate(meta.label, window.localStorage.getItem("farmVsMonsters.language") || "ar"), {
+      const labelText = this.add.text(tile.x + 8, 19, meta.icon + " " + translate(meta.label, window.localStorage.getItem("farmVsMonsters.language") || "ar"), {
         fontFamily: "Arial", fontSize: "10px", color: "#ffffff", fontStyle: "bold",
         stroke: "#17213d", strokeThickness: 3, resolution: 2
       }).setOrigin(0, 0.5).setDepth(41);
+      this.hudLabelTexts.push(labelText);
       return this.add.text(tile.x + 49, 43, "0", {
         fontFamily: "Arial", fontSize: "17px", color: "#ffffff", fontStyle: "bold",
         stroke: "#17213d", strokeThickness: 4, resolution: 2
@@ -3170,6 +3172,10 @@ export default class BattleScene extends Scene {
     const labels = locale === "ar"
       ? { energy: "⚡ الطاقة", coins: "🪙 العملات", home: "🏡 المزرعة", radishes: "🌱 الفجل", kills: "👾 المهزومون", wave: "الموجة", down: "هُزم", last: "المواجهة الأخيرة" }
       : { energy: "⚡ ENERGY", coins: "🪙 COINS", home: "🏡 HOME", radishes: "🌱 RADISHES", kills: "👾 KILLS", wave: "WAVE", down: "DOWN", last: "LAST STAND" };
+    const statLabels = locale === "ar"
+      ? ["⚡ الطاقة", "🪙 العملات", "🏡 المزرعة", "🌱 الفجل", "👾 المهزومون"]
+      : ["⚡ ENERGY", "🪙 COINS", "🏡 HOME", "🌱 RADISHES", "👾 KILLS"];
+    if (this.hudLabelTexts) this.hudLabelTexts.forEach((text, index) => text.setText(statLabels[index]));
     const values = [
       this.energy,
       this.coins,
