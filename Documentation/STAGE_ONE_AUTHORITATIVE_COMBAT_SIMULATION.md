@@ -121,3 +121,10 @@ The pure combat kernel now resolves the Stage 1 spawn schedule:
 - Wave sizes and intervals are validated against the central phase-one contract; the five-second preparation window and the existing first/next spawn delays are preserved.
 - Monster archetype composition is also resolved in the kernel (Cave Brute, Dust Skitter, Stonehide, Alpha Brute). The legacy `phaseOneRules.mjs` export remains as a compatibility alias.
 Phaser still chooses the visual lane using its current random source, creates sprites/effects, and starts the dragon encounter after the second ordinary spawn in wave five. Lane selection is not yet deterministic or server-authoritative.
+
+
+## Client-seeded random sampling (implemented as a development boundary)
+- `BattleScene` now creates one client-local unsigned 32-bit seed when a battle scene starts and uses `createSeededRandom` for monster lane selection and Dust Skitter initial/transition jump and burst timing samples.
+- This makes those gameplay-affecting random choices reproducible when the same local seed is supplied to the same scene logic. The seed is not accepted from a player as proof and is not trusted by a server.
+- Cosmetic voice timing/selection, animation, and incidental presentation randomness remain separate from the simulation stream.
+- The next authoritative step is to issue the seed from a server-created session and move the same deterministic rules into a server replay validator. Until then, client combat outcomes and locally generated seeds remain untrusted; cloud rewards and progression writes stay disabled.
