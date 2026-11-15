@@ -209,3 +209,121 @@ export function selectDragonFireballTarget(plants) {
   }
   return weakest;
 }
+
+export function advanceCooldown(remainingMs, deltaMs) {
+  if (!Number.isFinite(remainingMs) || !Number.isFinite(deltaMs) || deltaMs < 0) {
+    throw new RangeError("INVALID_COOLDOWN_STEP");
+  }
+  return remainingMs - deltaMs;
+}
+
+export function resolveBiteAttack({ cooldownMs, deltaMs, intervalMs } = {}) {
+  if (
+    !Number.isFinite(cooldownMs) ||
+    !Number.isFinite(deltaMs) || deltaMs < 0 ||
+    !Number.isFinite(intervalMs) || intervalMs <= 0
+  ) throw new RangeError("INVALID_BITE_ATTACK_TIMING");
+  const remainingMs = advanceCooldown(cooldownMs, deltaMs);
+  const shouldAttack = remainingMs <= 0;
+  return Object.freeze({
+    shouldAttack,
+    cooldownMs: shouldAttack ? intervalMs : remainingMs
+  });
+}
+
+export function resolveDustSkitterMotionStep({
+  isJumping,
+  jumpCooldownMs,
+  jumpElapsedMs,
+  jumpDurationMs,
+  deltaMs,
+  jumpSpeedMultiplier,
+  jumpVisualHeight,
+  visualScale,
+  nextJumpDurationMs,
+  nextJumpResetCooldownMs,
+  burstCooldownMs,
+  burstRemainingMs,
+  burstDurationMs,
+  burstSpeedMultiplier,
+  nextBurstCooldownMs
+} = {}) {
+  const finite = [
+    jumpCooldownMs, jumpElapsedMs, deltaMs, jumpSpeedMultiplier,
+    jumpVisualHeight, visualScale, burstCooldownMs, burstRemainingMs,
+    burstDurationMs, burstSpeedMultiplier
+  ].every(Number.isFinite);
+  if (
+    typeof isJumping !== "boolean" || !finite || deltaMs < 0 ||
+    jumpSpeedMultiplier <= 0 || visualScale < 0 ||
+    burstDurationMs < 0 || burstSpeedMultiplier <= 0 ||
+    (isJumping && (!Number.isFinite(jumpDurationMs) || jumpDurationMs <= 0))
+  ) throw new RangeError("INVALID_DUST_SKITTER_STEP");
+
+  let jumping = isJumping;
+  let jumpElapsed = jumpElapsedMs;
+  let jumpDuration = jumpDurationMs;
+  let jumpCooldown = jumpCooldownMs;
+  let jumpStarted = false;
+  let jumpLanded = false;
+  let jumpOffset = 0;
+  let movementMultiplier = 1;
+
+  jumpCooldown = advanceCooldown(jumpCooldown, deltaMs);
+  if (!jumping && jumpCooldown <= 0) {
+    if (!Number.isFinite(nextJumpDurationMs) || nextJumpDurationMs <= 0) {
+      throw new RangeError("MISSING_DUST_SKITTER_JUMP_DURATION");
+    }
+    jumping = true;
+    jumpElapsed = 0;
+    jumpDuration = nextJumpDurationMs;
+    jumpStarted = true;
+  }
+
+  if (jumping) {
+    jumpElapsed += deltaMs;
+    const progress = Math.max(0, Math.min(1, jumpElapsed / jumpDuration));
+    jumpOffset = -Math.sin(progress * Math.PI) * jumpVisualHeight * visualScale;
+    movementMultiplier *= jumpSpeedMultiplier;
+    if (progress >= 1) {
+      jumping = false;
+      jumpElapsed = 0;
+      if (!Number.isFinite(nextJumpResetCooldownMs) || nextJumpResetCooldownMs < 0) {
+        throw new RangeError("MISSING_DUST_SKITTER_JUMP_RESET");
+      }
+      jumpCooldown = nextJumpResetCooldownMs;
+      jumpLanded = true;
+      jumpOffset = 0;
+    }
+  }
+
+  let burstCooldown = advanceCooldown(burstCooldownMs, deltaMs);
+  let burstRemaining = burstRemainingMs;
+  let burstStarted = false;
+  if (burstCooldown <= 0 && burstRemaining <= 0) {
+    if (!Number.isFinite(nextBurstCooldownMs) || nextBurstCooldownMs < 0) {
+      throw new RangeError("MISSING_DUST_SKITTER_BURST_RESET");
+    }
+    burstRemaining = burstDurationMs;
+    burstCooldown = nextBurstCooldownMs;
+    burstStarted = true;
+  }
+  if (burstRemaining > 0) {
+    burstRemaining = Math.max(0, burstRemaining - deltaMs);
+    movementMultiplier *= burstSpeedMultiplier;
+  }
+
+  return Object.freeze({
+    isJumping: jumping,
+    jumpCooldownMs: jumpCooldown,
+    jumpElapsedMs: jumpElapsed,
+    jumpDurationMs: jumpDuration,
+    jumpOffset,
+    jumpStarted,
+    jumpLanded,
+    burstCooldownMs: burstCooldown,
+    burstRemainingMs: burstRemaining,
+    burstStarted,
+    movementMultiplier
+  });
+}
