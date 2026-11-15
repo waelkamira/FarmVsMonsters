@@ -75,3 +75,7 @@ Lane movement progress: monster local-X stepping (including blocker stop clampin
 
 
 Target selection has been extracted to pure functions for lane blockers, projectile hits, farmer melee, and dragon fireballs. The Phaser scene supplies current coordinates and dimensions; target decisions are reusable but still execute client-side. No server trust boundary has been enabled.
+
+
+
+Combat extraction now includes shared cooldown advancement and pure Dust Skitter jump/burst state transitions. Random duration values are still sampled client-side through Phaser and passed into the resolver, so this work does not establish deterministic replay or server authority.
