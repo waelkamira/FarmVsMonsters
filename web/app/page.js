@@ -1,11 +1,32 @@
 "use client";
 
-import Link from "next/link";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useLocale, LanguageToggle } from "./LocaleProvider";
+import { getPlayerSession, restoreOrInitializeCloudProgress } from "../game/services/playerAccount.mjs";
 
 export default function HomePage() {
   const { locale } = useLocale();
   const arabic = locale === "ar";
+  const router = useRouter();
+  const [starting, setStarting] = useState(false);
+
+  async function startAdventure() {
+    if (starting) return;
+    setStarting(true);
+    try {
+      const session = await getPlayerSession();
+      if (session.user) {
+        const { progress } = await restoreOrInitializeCloudProgress();
+        const lastUnlockedStage = Math.min(10, Math.max(1, Number(progress?.unlockedStage) || 1));
+        router.push(lastUnlockedStage > 1 ? `/stage/${lastUnlockedStage}` : "/game");
+        return;
+      }
+    } catch {
+      // Account service may be unavailable; keep guest play immediately accessible.
+    }
+    router.push("/game");
+  }
 
   return (
     <main className="world-home" dir={arabic ? "rtl" : "ltr"}>
@@ -28,11 +49,11 @@ export default function HomePage() {
         <div className="home-title-kicker">{arabic ? "مغامرة خيالية · عالم المزرعة" : "FANTASY ADVENTURE · FARM WORLD"}</div>
         <h1 className="home-game-title">Farm <span>Vs</span> Monsters</h1>
         <p className="home-game-tagline">{arabic ? "ازرع، دافع عن مزرعتك، وأنقذ الأميرة!" : "Grow your garden, defend your home, rescue the princess!"}</p>
-        <Link className="home-start-button" href="/stages">
+        <button className="home-start-button" type="button" onClick={startAdventure} disabled={starting}>
           <span aria-hidden="true">⚔️</span>
-          {arabic ? "ابدأ" : "START"}
+          {starting ? (arabic ? "جارٍ التحضير..." : "LOADING...") : (arabic ? "ابدأ" : "START")}
           <span aria-hidden="true">➜</span>
-        </Link>
+        </button>
       </section>
     </main>
   );
