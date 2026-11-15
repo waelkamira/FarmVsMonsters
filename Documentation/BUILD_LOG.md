@@ -915,3 +915,6 @@
 
 
 Correction: completed BattleScene instrumentation for mushroom spawn, pickup IDs, collection and full-bank discard. Added an active combat clock that pauses during story sequences; replay uses the shared pickup TTL constant. Replay tests now include partial cap collection and discard.
+
+
+Hardening: pickup IDs are unique across the full battle session, including after a mushroom is uprooted and replanted in the same cell. Replay checks the next expected ID and mushroom production order.
