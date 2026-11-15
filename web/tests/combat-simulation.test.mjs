@@ -13,7 +13,10 @@ import {
   selectLaneBlocker,
   selectProjectileTarget,
   selectFarmerMeleeTarget,
-  selectDragonFireballTarget
+  selectDragonFireballTarget,
+  advanceCooldown,
+  resolveBiteAttack,
+  resolveDustSkitterMotionStep
 } from "../game/rules/combatSimulation.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -214,4 +217,111 @@ test("dragon fireball chooses the living plant with the lowest HP and preserves 
     tied
   ]), weakest);
   assert.equal(selectDragonFireballTarget([{ hp: 1, alive: false }]), null);
+});
+
+test("cooldown advances by elapsed milliseconds and bite attacks reset to the configured interval", () => {
+  assert.equal(advanceCooldown(500, 120), 380);
+  assert.deepEqual(resolveBiteAttack({ cooldownMs: 40, deltaMs: 50, intervalMs: 900 }), {
+    shouldAttack: true,
+    cooldownMs: 900
+  });
+  assert.deepEqual(resolveBiteAttack({ cooldownMs: 500, deltaMs: 100, intervalMs: 900 }), {
+    shouldAttack: false,
+    cooldownMs: 400
+  });
+  assert.throws(() => advanceCooldown(100, -1), /INVALID_COOLDOWN_STEP/);
+});
+
+test("Dust Skitter jump starts, advances visually, and lands without changing lane position", () => {
+  const started = resolveDustSkitterMotionStep({
+    isJumping: false,
+    jumpCooldownMs: 20,
+    jumpElapsedMs: 0,
+    jumpDurationMs: 500,
+    deltaMs: 40,
+    jumpSpeedMultiplier: 1.12,
+    jumpVisualHeight: 34,
+    visualScale: 0.68,
+    nextJumpDurationMs: 500,
+    nextJumpResetCooldownMs: null,
+    burstCooldownMs: 1000,
+    burstRemainingMs: 0,
+    burstDurationMs: 420,
+    burstSpeedMultiplier: 1.65,
+    nextBurstCooldownMs: null
+  });
+  assert.equal(started.isJumping, true);
+  assert.equal(started.jumpStarted, true);
+  assert.equal(started.jumpElapsedMs, 40);
+  assert.ok(started.jumpOffset < 0);
+  assert.equal(started.movementMultiplier, 1.12);
+
+  const landed = resolveDustSkitterMotionStep({
+    isJumping: true,
+    jumpCooldownMs: 800,
+    jumpElapsedMs: 480,
+    jumpDurationMs: 500,
+    deltaMs: 40,
+    jumpSpeedMultiplier: 1.12,
+    jumpVisualHeight: 34,
+    visualScale: 0.68,
+    nextJumpDurationMs: null,
+    nextJumpResetCooldownMs: 2400,
+    burstCooldownMs: 1000,
+    burstRemainingMs: 0,
+    burstDurationMs: 420,
+    burstSpeedMultiplier: 1.65,
+    nextBurstCooldownMs: null
+  });
+  assert.equal(landed.isJumping, false);
+  assert.equal(landed.jumpLanded, true);
+  assert.equal(landed.jumpElapsedMs, 0);
+  assert.equal(landed.jumpOffset, 0);
+  assert.equal(landed.jumpCooldownMs, 2400);
+});
+
+test("Dust Skitter burst begins and consumes its first frame exactly as the live scene did", () => {
+  const step = resolveDustSkitterMotionStep({
+    isJumping: false,
+    jumpCooldownMs: 1000,
+    jumpElapsedMs: 0,
+    jumpDurationMs: 500,
+    deltaMs: 20,
+    jumpSpeedMultiplier: 1.12,
+    jumpVisualHeight: 34,
+    visualScale: 0.68,
+    nextJumpDurationMs: null,
+    nextJumpResetCooldownMs: null,
+    burstCooldownMs: 10,
+    burstRemainingMs: 0,
+    burstDurationMs: 420,
+    burstSpeedMultiplier: 1.65,
+    nextBurstCooldownMs: 3300
+  });
+  assert.equal(step.burstStarted, true);
+  assert.equal(step.burstRemainingMs, 400);
+  assert.equal(step.burstCooldownMs, 3300);
+  assert.equal(step.movementMultiplier, 1.65);
+});
+
+test("Dust Skitter combines jump and burst movement multipliers", () => {
+  const step = resolveDustSkitterMotionStep({
+    isJumping: true,
+    jumpCooldownMs: 900,
+    jumpElapsedMs: 100,
+    jumpDurationMs: 500,
+    deltaMs: 50,
+    jumpSpeedMultiplier: 1.12,
+    jumpVisualHeight: 34,
+    visualScale: 0.68,
+    nextJumpDurationMs: null,
+    nextJumpResetCooldownMs: null,
+    burstCooldownMs: 800,
+    burstRemainingMs: 100,
+    burstDurationMs: 420,
+    burstSpeedMultiplier: 1.65,
+    nextBurstCooldownMs: null
+  });
+  assert.equal(step.movementMultiplier, 1.12 * 1.65);
+  assert.equal(step.burstRemainingMs, 50);
 });
