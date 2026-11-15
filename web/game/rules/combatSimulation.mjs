@@ -148,3 +148,64 @@ export function resolveProjectileLaneStep({ localX, speed, deltaSeconds } = {}) 
   }
   return localX + speed * deltaSeconds;
 }
+
+export function selectLaneBlocker({ plants, row, monsterLocalX } = {}) {
+  if (!Array.isArray(plants) || !Number.isInteger(row) || !Number.isFinite(monsterLocalX)) {
+    throw new RangeError("INVALID_LANE_BLOCKER_QUERY");
+  }
+  let nearest = null;
+  for (const candidate of plants) {
+    if (
+      !candidate?.plant?.alive ||
+      candidate.plant.type !== "radish" ||
+      candidate.plant.row !== row ||
+      !Number.isFinite(candidate.localX) ||
+      candidate.localX >= monsterLocalX
+    ) continue;
+    if (!nearest || candidate.localX > nearest.localX) nearest = candidate;
+  }
+  return nearest?.plant ?? null;
+}
+
+export function selectProjectileTarget({ monsters, row, localX, collisionRadius } = {}) {
+  if (
+    !Array.isArray(monsters) || !Number.isInteger(row) ||
+    !Number.isFinite(localX) || !Number.isFinite(collisionRadius) || collisionRadius < 0
+  ) throw new RangeError("INVALID_PROJECTILE_TARGET_QUERY");
+
+  // Preserve the live game's first-match rule (monster array order).
+  return monsters.find((monster) =>
+    monster?.alive &&
+    monster.row === row &&
+    Number.isFinite(monster.localX) &&
+    Math.abs(monster.localX - localX) <= collisionRadius * (monster.widthScale || 1)
+  ) ?? null;
+}
+
+export function selectFarmerMeleeTarget({ monsters, row, farmerX, reach } = {}) {
+  if (
+    !Array.isArray(monsters) || !Number.isInteger(row) ||
+    !Number.isFinite(farmerX) || !Number.isFinite(reach) || reach < 0
+  ) throw new RangeError("INVALID_MELEE_TARGET_QUERY");
+
+  let target = null;
+  let nearestDistance = Infinity;
+  for (const monster of monsters) {
+    if (!monster?.alive || monster.row !== row || !Number.isFinite(monster.x)) continue;
+    const distance = Math.abs(monster.x - farmerX);
+    if (distance > reach || distance >= nearestDistance) continue;
+    target = monster;
+    nearestDistance = distance;
+  }
+  return target;
+}
+
+export function selectDragonFireballTarget(plants) {
+  if (!Array.isArray(plants)) throw new TypeError("INVALID_DRAGON_TARGET_LIST");
+  let weakest = null;
+  for (const plant of plants) {
+    if (!plant?.alive || !Number.isFinite(plant.hp)) continue;
+    if (!weakest || plant.hp < weakest.hp) weakest = plant;
+  }
+  return weakest;
+}
