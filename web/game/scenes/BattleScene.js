@@ -2228,7 +2228,7 @@ export default class BattleScene extends Scene {
       ["hyena-idle", 4, 5, -1],
       ["hyena-walk", 9, 9, -1],
       ["hyena-run", 7, 10, -1],
-      ["hyena-bite", 6, 9, 0]
+      ["hyena-bite", 6, 9, -1]
     ];
     const optionalDefinitions = [
       ["hyena-hit", 3, 12, 0],
@@ -2556,11 +2556,12 @@ export default class BattleScene extends Scene {
       }
 
       if (withinBiteRange) {
-        // Freeze the exact movement frame on arrival. Switching sprite sheets or
-        // looping idle frames can change the visible silhouette and look like growth.
-        if (monster.hyenaSprite && !monster.isEating) {
-          monster.hyenaSprite.anims.pause();
-          monster.isEating = true;
+        // Keep the hyena fixed at the plant while its authored bite cycle loops.
+        // The bite sheet animates the mouth/body (including the legs); movement
+        // coordinates are deliberately not advanced anywhere in this branch.
+        if (!monster.isEating) monster.isEating = true;
+        if (monster.hyenaSprite && monster.hitAnimUntil <= this.time.now) {
+          this.playHyenaAnimation(monster, "hyena-bite");
         }
         if (monster.attackCooldown <= 0) {
           blocker.hp -= monster.plantDamage;
