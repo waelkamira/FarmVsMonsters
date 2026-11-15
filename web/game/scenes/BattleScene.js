@@ -480,67 +480,30 @@ export default class BattleScene extends Scene {
   }
 
   createHud() {
-    // Segmented top HUD: each statistic is its own colorful tile,
-    // followed by the wave tile and the two plant selection cells.
-    const hud = this.add.graphics().setDepth(38);
-    const statTiles = [
-      { x: 20, icon: "⚡", color: 0x35bceb, edge: 0xa7e84f },
-      { x: 126, icon: "🪙", color: 0xffb936, edge: 0xffe27a },
-      { x: 232, icon: "🏡", color: 0x42c96b, edge: 0xa7e84f },
-      { x: 338, icon: "🌱", color: 0x54c77c, edge: 0xc4f58a },
-      { x: 444, icon: "👾", color: 0x8b65e8, edge: 0xc6aaff },
+    // Compact HUD counters: icons with small values, never large statistic cards.
+    const counters = [
+      { x: 26, icon: "⚡" },
+      { x: 116, icon: "🪙" },
+      { x: 210, icon: "🏡" },
+      { x: 304, icon: "🌱" },
+      { x: 398, icon: "👾" },
     ];
-    statTiles.forEach((tile) => {
-      hud.fillStyle(0x101a2e, 0.72);
-      hud.fillRoundedRect(tile.x + 2, 11, 98, 54, 12);
-      hud.fillStyle(tile.color, 1);
-      hud.fillRoundedRect(tile.x, 7, 98, 54, 12);
-      hud.lineStyle(2.5, 0xffffff, 1);
-      hud.strokeRoundedRect(tile.x, 7, 98, 54, 12);
-      hud.lineStyle(1.5, tile.edge, 1);
-      hud.strokeRoundedRect(tile.x + 4, 11, 90, 46, 9);
-    });
-    // Wave progress is a distinct tile, not an extension of the status row.
-    hud.fillStyle(0x101a2e, 0.72);
-    hud.fillRoundedRect(554, 11, 174, 54, 12);
-    hud.fillGradientStyle(0x397fd1, 0x397fd1, 0x7655c8, 0x7655c8, 1);
-    hud.fillRoundedRect(552, 7, 174, 54, 12);
-    hud.lineStyle(2.5, 0xffffff, 1);
-    hud.strokeRoundedRect(552, 7, 174, 54, 12);
-    hud.lineStyle(1.5, 0x9fe9ff, 1);
-    hud.strokeRoundedRect(556, 11, 166, 46, 9);
+    this.hudValueTexts = counters.map((counter) => this.add.text(counter.x, 34, counter.icon + " 0", {
+      fontFamily: "Arial", fontSize: "17px", color: "#ffffff", fontStyle: "bold",
+      stroke: "#17213d", strokeThickness: 4, resolution: 2
+    }).setOrigin(0, 0.5).setDepth(41));
 
-    const tileMeta = [
-      { icon: "⚡", label: "ENERGY" },
-      { icon: "🪙", label: "COINS" },
-      { icon: "🏡", label: "HOME" },
-      { icon: "🌱", label: "RADISHES" },
-      { icon: "👾", label: "KILLS" },
-    ];
-    this.hudLabelTexts = [];
-    this.hudValueTexts = statTiles.map((tile, index) => {
-      const meta = tileMeta[index];
-      const labelText = this.add.text(tile.x + 8, 19, meta.icon + " " + translate(meta.label, window.localStorage.getItem("farmVsMonsters.language") || "ar"), {
-        fontFamily: "Arial", fontSize: "10px", color: "#ffffff", fontStyle: "bold",
-        stroke: "#17213d", strokeThickness: 3, resolution: 2
-      }).setOrigin(0, 0.5).setDepth(41);
-      this.hudLabelTexts.push(labelText);
-      return this.add.text(tile.x + 49, 43, "0", {
-        fontFamily: "Arial", fontSize: "17px", color: "#ffffff", fontStyle: "bold",
-        stroke: "#17213d", strokeThickness: 4, resolution: 2
-      }).setOrigin(0.5, 0.5).setDepth(41);
-    });
-    this.waveText = this.add.text(639, 34, "", {
-      fontFamily: "Arial", fontSize: "13px", color: "#ffffff", fontStyle: "bold",
-      align: "center", stroke: "#17213d", strokeThickness: 4, resolution: 2,
-      wordWrap: { width: 158 }
-    }).setOrigin(0.5, 0.5).setDepth(41);
+    // Wave is a compact icon + number, aligned with the other counters.
+    this.waveText = this.add.text(510, 34, "🌊 1/5", {
+      fontFamily: "Arial", fontSize: "16px", color: "#ffffff", fontStyle: "bold",
+      stroke: "#17213d", strokeThickness: 4, resolution: 2,
+      align: "left"
+    }).setOrigin(0, 0.5).setDepth(41);
 
-    // Plant selection cells sit in the same top row, but remain visually separate.
+    // Plant selection cells stay distinct and larger than the status counters.
     this.radishCard = this.createPlantCard(794, "RADISH", "35", "radish", null, "radish-character", 34);
     this.mushroomCard = this.createPlantCard(944, "MUSHROOM", "50", "mushroom", null, "mushroom-character", 34);
 
-    // Short gameplay feedback sits clear of the board and controls.
     this.messageText = this.add.text(560, 574, "", {
       fontFamily: "Arial", fontSize: "16px", color: "#ffffff", fontStyle: "bold",
       backgroundColor: "#315b91", padding: { x: 16, y: 7 }, align: "center",
@@ -3168,26 +3131,18 @@ export default class BattleScene extends Scene {
   }
 
   refreshHud() {
-    const locale = typeof window !== "undefined" ? window.localStorage.getItem("farmVsMonsters.language") || "ar" : "ar";
-    const labels = locale === "ar"
-      ? { energy: "⚡ الطاقة", coins: "🪙 العملات", home: "🏡 المزرعة", radishes: "🌱 الفجل", kills: "👾 المهزومون", wave: "الموجة", down: "هُزم", last: "المواجهة الأخيرة" }
-      : { energy: "⚡ ENERGY", coins: "🪙 COINS", home: "🏡 HOME", radishes: "🌱 RADISHES", kills: "👾 KILLS", wave: "WAVE", down: "DOWN", last: "LAST STAND" };
-    const statLabels = locale === "ar"
-      ? ["⚡ الطاقة", "🪙 العملات", "🏡 المزرعة", "🌱 الفجل", "👾 المهزومون"]
-      : ["⚡ ENERGY", "🪙 COINS", "🏡 HOME", "🌱 RADISHES", "👾 KILLS"];
-    if (this.hudLabelTexts) this.hudLabelTexts.forEach((text, index) => text.setText(statLabels[index]));
     const values = [
-      this.energy,
-      this.coins,
-      this.houseHealth + "%",
-      this.livingPlantCount(),
-      this.totalDefeatedMonsters + "/" + PHASE_ONE_TOTAL_MONSTERS,
+      "⚡ " + this.energy,
+      "🪙 " + this.coins,
+      "🏡 " + this.houseHealth + "%",
+      "🌱 " + this.livingPlantCount(),
+      "👾 " + this.totalDefeatedMonsters + "/" + PHASE_ONE_TOTAL_MONSTERS,
     ];
-    if (this.hudValueTexts) this.hudValueTexts.forEach((text, index) => text.setText(String(values[index])));
-    if (this.waveText) this.waveText.setText(
-      labels.wave + " " + Math.min(this.wave, this.totalWaves) + "/" + this.totalWaves +
-      "\n" + this.waveDefeatedMonsters + "/" + this.waveSize + " " + labels.down +
-      (this.emergencyMode ? " · " + labels.last : "")
-    );
+    if (this.hudValueTexts) {
+      this.hudValueTexts.forEach((text, index) => text.setText(values[index]));
+    }
+    if (this.waveText) {
+      this.waveText.setText("🌊 " + Math.min(this.wave, this.totalWaves) + "/" + this.totalWaves);
+    }
   }
 }
