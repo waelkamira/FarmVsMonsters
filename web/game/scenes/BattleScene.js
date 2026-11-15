@@ -480,10 +480,24 @@ export default class BattleScene extends Scene {
   }
 
   monsterLanePoint(localX, row) {
-    // Monsters and projectiles must share the exact same calibrated lane
-    // center as planted objects. Adding a row-height offset here placed them
-    // on the lower cell boundary, visually shifting every lane downward.
-    return this.lanePoint(localX, row);
+    const position = this.lanePoint(localX, row);
+    const safeRow = PhaserMath.Clamp(Math.floor(row), 0, LANES - 1);
+    const u = (localX + GRID_WIDTH / 2) / GRID_WIDTH;
+    const cellPosition = u * COLUMNS;
+    const col = PhaserMath.Clamp(Math.floor(cellPosition), 0, COLUMNS - 1);
+    const cellU = cellPosition - col;
+    const topLeft = GRID_NODES[safeRow][col];
+    const topRight = GRID_NODES[safeRow][col + 1];
+    const bottomLeft = GRID_NODES[safeRow + 1][col];
+    const bottomRight = GRID_NODES[safeRow + 1][col + 1];
+    const topY = PhaserMath.Linear(topLeft.y, topRight.y, cellU);
+    const bottomY = PhaserMath.Linear(bottomLeft.y, bottomRight.y, cellU);
+
+    // The board cells are perspective trapezoids, not perfect squares.
+    // Move the monster/projectile lane down by half the ACTUAL cell height
+    // at this exact horizontal position, interpolated along both cell edges.
+    position.y += (bottomY - topY) / 2;
+    return position;
   }
 
   worldToLane(point) {
