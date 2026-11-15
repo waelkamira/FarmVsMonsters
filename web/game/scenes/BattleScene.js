@@ -2676,7 +2676,7 @@ export default class BattleScene extends Scene {
           this.playHyenaAnimation(monster, "hyena-bite");
         }
         if (monster.attackCooldown <= 0) {
-          blocker.hp -= monster.plantDamage;
+          blocker.hp = applyHitPointsDamage(blocker.hp, monster.plantDamage).hp;
           monster.attackCooldown = monster.attackInterval;
           this.playMonsterBiteSound();
           this.flashEatenPlant(blocker);
