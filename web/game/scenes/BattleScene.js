@@ -1438,8 +1438,9 @@ export default class BattleScene extends Scene {
   createQuickCollectionButtons() {
     const makeButton = (x, tab, tint) => {
       const button = this.add.container(x, 619).setDepth(48);
-      const plate = this.add.circle(0, 0, 24, tint, 0.98)
-        .setStrokeStyle(3, 0xffffff).setInteractive({ useHandCursor: true });
+      const halo = this.add.circle(0, 0, 27, 0xffffff, 0.12);
+      const plate = this.add.circle(0, 0, 24, tint, 0.62)
+        .setStrokeStyle(1, 0xffffff, 0.78).setInteractive({ useHandCursor: true });
       const icon = this.add.graphics();
       icon.lineStyle(3, 0xffffff, 1);
       if (tab === "plants") {
@@ -1459,7 +1460,7 @@ export default class BattleScene extends Scene {
         icon.fillCircle(5, -13, 4);
         icon.fillCircle(11, -6, 4);
       }
-      button.add([plate, icon]);
+      button.add([halo, plate, icon]);
       plate.on("pointerover", () => plate.setFillStyle(0x35bceb, 1));
       plate.on("pointerout", () => plate.setFillStyle(tint, 0.98));
       plate.on("pointerdown", () => this.openCollectionMenuTab(tab));
@@ -1478,8 +1479,8 @@ export default class BattleScene extends Scene {
 
   createCollectionMenuControl() {
     const button = this.add.container(978, 27).setDepth(47);
-    const plate = this.add.rectangle(0, 0, 46, 30, 0x287eb7, 0.98)
-      .setStrokeStyle(2, 0x35bceb).setInteractive({ useHandCursor: true });
+    const plate = this.add.rectangle(0, 0, 46, 30, 0x35bceb, 0.48)
+      .setStrokeStyle(1, 0xffffff, 0.78).setInteractive({ useHandCursor: true });
     const label = this.add.text(0, 0, "▤", {
       fontFamily: "Arial", fontSize: "20px", color: "#ffffff", fontStyle: "bold"
     }).setOrigin(0.5);
@@ -1500,17 +1501,18 @@ export default class BattleScene extends Scene {
     this.collectionMenuOpen = true;
     this.collectionMenuTab = "phases";
     this.collectionMenuLayer = this.add.container(560, 340).setDepth(90);
-    this.collectionMenuLayer.add(this.add.rectangle(0, 0, 1120, 680, 0x101a2e, 0.82).setInteractive());
-    const panel = this.add.rectangle(0, 0, 760, 570, 0x17213d, 0.99).setStrokeStyle(7, 0x8b65e8);
-    this.collectionMenuLayer.add(panel);
-    this.collectionMenuLayer.add(this.add.rectangle(0, -274, 738, 40, 0x287eb7).setStrokeStyle(2, 0xa7e84f));
+    this.collectionMenuLayer.add(this.add.rectangle(0, 0, 1120, 680, 0x15294c, 0.48).setInteractive());
+    const panelGlow = this.add.rectangle(0, 0, 774, 584, 0x8b65e8, 0.16).setStrokeStyle(1, 0xffffff, 0.4);
+    const panel = this.add.rectangle(0, 0, 760, 570, 0x315b91, 0.78).setStrokeStyle(2, 0xffffff, 0.7);
+    this.collectionMenuLayer.add([panelGlow, panel]);
+    this.collectionMenuLayer.add(this.add.rectangle(0, -274, 738, 40, 0x35bceb, 0.48).setStrokeStyle(1, 0xffffff, 0.72));
     this.collectionMenuLayer.add(this.add.text(0, -274, "دفتر المزرعة والمغامرة  ·  FARM JOURNAL", {
       fontFamily: "Arial", fontSize: "19px", color: "#ffffff", fontStyle: "bold", stroke: "#17213d", strokeThickness: 3
     }).setOrigin(0.5));
     const close = this.add.text(350, -274, "✕", {
       fontFamily: "Arial", fontSize: "23px", color: "#ffffff", backgroundColor: "#ff7185",
       padding: { x: 8, y: 2 }
-    }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+    }).setOrigin(0.5).setAlpha(0.88).setInteractive({ useHandCursor: true });
     close.on("pointerdown", () => this.closeCollectionMenu());
     this.collectionMenuLayer.add(close);
     this.collectionMenuTabs = this.add.container(0, -220);
@@ -1541,8 +1543,8 @@ export default class BattleScene extends Scene {
       const x = -270 + index * 180;
       const active = this.collectionMenuTab === id;
       const tabColors = [0x238a58, 0x287eb7, 0xff9b45, 0x8b65e8];
-      const bg = this.add.rectangle(x, 0, 164, 42, active ? tabColors[index] : 0x263b60, 1)
-        .setStrokeStyle(2, active ? 0xa7e84f : 0x35bceb).setInteractive({ useHandCursor: true });
+      const bg = this.add.rectangle(x, 0, 164, 42, active ? tabColors[index] : 0x315b91, active ? 0.78 : 0.34)
+        .setStrokeStyle(1, 0xffffff, active ? 0.88 : 0.48).setInteractive({ useHandCursor: true });
       const txt = this.add.text(x, 0, label, {
         fontFamily: "Arial", fontSize: "15px", color: "#ffffff", fontStyle: "bold", stroke: "#17213d", strokeThickness: 2
       }).setOrigin(0.5);
@@ -1553,7 +1555,7 @@ export default class BattleScene extends Scene {
     const addLabel = (x, y, value, size = 19, color = "#ffffff") =>
       content.add(this.add.text(x, y, value, { fontFamily: "Georgia", fontSize: size + "px", color, fontStyle: "bold", align: "center", wordWrap: { width: 650 } }).setOrigin(0.5));
     const addRow = (y, imageKey, title, detail, locked = false) => {
-      content.add(this.add.rectangle(0, y, 660, 72, 0x315b91, 0.98).setStrokeStyle(2, 0x35bceb));
+      content.add(this.add.rectangle(0, y, 660, 72, 0x8edcff, 0.18).setStrokeStyle(1, 0xffffff, 0.42));
       if (imageKey && this.textures.exists(imageKey)) {
         const icon = this.add.image(-285, y, imageKey).setDisplaySize(54, 54);
         content.add(icon);
@@ -1570,7 +1572,7 @@ export default class BattleScene extends Scene {
         const row = Math.floor((stage - 1) / 2);
         const col = (stage - 1) % 2;
         const x = col === 0 ? -170 : 170;
-        content.add(this.add.rectangle(x, 35 + row * 82, 300, 82, stage === 1 ? 0x238a58 : 0x34415e).setStrokeStyle(2, stage === 1 ? 0xa7e84f : 0x8b95ad));
+        content.add(this.add.rectangle(x, 35 + row * 82, 300, 82, stage === 1 ? 0x42c96b : 0x8b65e8, stage === 1 ? 0.42 : 0.24).setStrokeStyle(1, 0xffffff, 0.46));
         const unlocked = stage === 1;
         if (stage === 1 && this.textures.exists("phase-one-emblem")) {
           content.add(this.add.image(x - 105, 65 + row * 100, "phase-one-emblem").setDisplaySize(90, 58));
@@ -1608,8 +1610,8 @@ export default class BattleScene extends Scene {
 
   createPauseControl() {
     const button = this.add.container(1035, 27).setDepth(46);
-    const background = this.add.rectangle(0, 0, 54, 30, 0x8b65e8, 0.98)
-      .setStrokeStyle(2, 0x35bceb).setInteractive({ useHandCursor: true });
+    const background = this.add.rectangle(0, 0, 54, 30, 0x8b65e8, 0.58)
+      .setStrokeStyle(1, 0xffffff, 0.78).setInteractive({ useHandCursor: true });
     const label = this.add.text(0, 0, "Ⅱ", {
       fontFamily: "Arial", fontSize: "19px", color: "#ffffff", fontStyle: "bold"
     }).setOrigin(0.5);
@@ -3105,19 +3107,19 @@ export default class BattleScene extends Scene {
 
   createGameOverButton(x, y, label, color, action) {
     const button = this.add.container(x, y).setDepth(63);
-    const shadow = this.add.rectangle(2, 4, 190, 58, 0x101a2e, 0.6);
-    const background = this.add.rectangle(0, 0, 190, 58, 0x17213d, 1)
-      .setStrokeStyle(4, 0x35bceb)
+    const shadow = this.add.rectangle(2, 5, 190, 58, 0x101a2e, 0.22);
+    const background = this.add.rectangle(0, 0, 190, 58, 0x315b91, 0.34)
+      .setStrokeStyle(1, 0xffffff, 0.78)
       .setInteractive({ useHandCursor: true });
-    const inset = this.add.rectangle(0, 0, 180, 48, color, 1).setStrokeStyle(2, 0xffffff);
+    const inset = this.add.rectangle(0, 0, 180, 48, color, 0.76).setStrokeStyle(1, 0xffffff, 0.62);
     const locale = typeof window !== "undefined" ? window.localStorage.getItem("farmVsMonsters.language") || "ar" : "ar";
     const text = this.add.text(0, 0, translate(label, locale), {
       fontFamily: "Arial", fontSize: "16px", color: "#ffffff", fontStyle: "bold",
       stroke: "#17213d", strokeThickness: 3
     }).setOrigin(0.5);
     button.add([shadow, background, inset, text]);
-    background.on("pointerover", () => background.setScale(1.05));
-    background.on("pointerout", () => background.setScale(1));
+    background.on("pointerover", () => { background.setScale(1.05); inset.setAlpha(0.96); });
+    background.on("pointerout", () => { background.setScale(1); inset.setAlpha(0.76); });
     background.on("pointerdown", action);
     return button;
   }
