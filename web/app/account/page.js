@@ -24,6 +24,23 @@ export default function AccountPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const googleError = params.get("google_error");
+    if (params.get("google") === "connected") {
+      setMessage(ar ? "تم تسجيل الدخول باستخدام Google. جارٍ مزامنة تقدمك." : "Signed in with Google. Syncing your progress...");
+    } else if (googleError) {
+      const messages = {
+        cloud_unconfigured: ar ? "خدمة الحسابات السحابية غير مهيأة بعد." : "Cloud accounts are not configured yet.",
+        google_denied: ar ? "تم إلغاء تسجيل الدخول باستخدام Google." : "Google sign-in was cancelled.",
+        oauth_invalid_state: ar ? "تعذر التحقق من طلب تسجيل الدخول. حاول مرة أخرى." : "The sign-in request could not be verified. Please try again.",
+        oauth_exchange_failed: ar ? "تعذر إكمال تسجيل الدخول باستخدام Google." : "Google sign-in could not be completed."
+      };
+      setError(messages[googleError] || (ar ? "حدث خطأ أثناء تسجيل الدخول." : "Google sign-in failed."));
+    }
+    if (params.has("google") || params.has("google_error")) {
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+
     let active = true;
     getPlayerSession()
       .then(async ({ user: current }) => {
@@ -123,6 +140,11 @@ export default function AccountPage() {
                 {ar ? "إنشاء حساب" : "Create account"}
               </button>
             </div>
+            <a className="google-signin-button" href="/api/player/account/google">
+              <span className="google-mark" aria-hidden="true">G</span>
+              {ar ? "المتابعة باستخدام Google" : "Continue with Google"}
+            </a>
+            <div className="account-or-divider"><span>{ar ? "أو بالبريد الإلكتروني" : "OR WITH EMAIL"}</span></div>
             <form className="account-form" onSubmit={submit}>
               <label htmlFor="player-email">{ar ? "البريد الإلكتروني" : "Email address"}</label>
               <input id="player-email" type="email" autoComplete="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="player@example.com" />
