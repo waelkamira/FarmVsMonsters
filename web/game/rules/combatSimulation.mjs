@@ -334,7 +334,7 @@ export function resolveMonsterArchetype(wave, spawnIndex) {
   if (
     !Number.isInteger(wave) || wave < 1 || wave > PHASE_ONE_WAVE_SIZES.length ||
     !Number.isInteger(spawnIndex) || spawnIndex < 0 ||
-    spawnIndex >= PHASE_ONE_WAVE_SIZES[wave - 1]
+    spawnIndex >= PHASE_ONE_WAVE_SIZES.reduce((sum, count) => sum + count, 0)
   ) throw new RangeError("INVALID_MONSTER_SPAWN_INDEX");
 
   if (wave >= 4 && (spawnIndex + 1) % 10 === 0) return "alpha-brute";
