@@ -1408,6 +1408,7 @@ export default class BattleScene extends Scene {
     const { x, y } = this.plantingCellCenter(col, row);
     const plant = {
       type, col, row, x, y, hp: config.hp, alive: true,
+      energyCost: config.cost,
       cooldown: PhaserMath.Between(250, 650),
       productionTimer: type === "mushroom" ? config.productionInterval : undefined,
       view: type === "mushroom" ? this.drawEnergyMushroom(x, y, row) : this.drawRadish(x, y)
@@ -2215,10 +2216,13 @@ export default class BattleScene extends Scene {
     if (!plant || !plant.alive || this.gameOver) return;
     plant.alive = false;
     plant.view.destroy();
+    // Return the exact energy paid for this plant so it can be replanted
+    // anywhere. Only manual uprooting refunds energy; destroyed plants do not.
+    this.energy += Number.isFinite(plant.energyCost) ? plant.energyCost : (plant.type === "mushroom" ? MUSHROOM_CONFIG.cost : RADISH_CONFIG.cost);
     // Uprooting is performed while the farmer is standing still. Do not
     // switch to an action sprite sheet or alter his locomotion animation.
     this.playUprootSound();
-    this.setMessage("Plant uprooted. Select a plant card and choose an empty soil cell.");
+    this.setMessage("Plant uprooted. Its full energy cost was refunded; choose any empty soil cell to replant.");
     this.updateEmergencyMode();
     this.refreshHud();
   }
