@@ -2555,9 +2555,10 @@ export default class BattleScene extends Scene {
       // The skitter alternates normal movement with short, readable bursts.
       burstCooldown: archetype === "dust-skitter" ? PhaserMath.Between(1500, 2300) : 0,
       burstRemaining: 0,
+      combatProfile: profile,
       // Dust Skitters occasionally hop; this is purely visual and never
       // changes their lane, collision position, or ability to be hit.
-      jumpCooldown: archetype === "dust-skitter" ? PhaserMath.Between(1100, 2600) : 0,
+      jumpCooldown: archetype === "dust-skitter" ? PhaserMath.Between(profile.jumpCooldownMinMs, profile.jumpCooldownMaxMs) : 0,
       jumpDuration: 560,
       jumpElapsed: 0,
       isJumping: false,
@@ -2682,32 +2683,32 @@ export default class BattleScene extends Scene {
         if (!monster.isJumping && monster.jumpCooldown <= 0) {
           monster.isJumping = true;
           monster.jumpElapsed = 0;
-          monster.jumpDuration = PhaserMath.Between(480, 620);
+          monster.jumpDuration = PhaserMath.Between(monster.combatProfile.jumpDurationMinMs, monster.combatProfile.jumpDurationMaxMs);
           this.createFootstepDust(monster.x - 8, monster.y + 3, monster.view.scaleY);
         }
         if (monster.isJumping) {
           monster.jumpElapsed += delta;
           const progress = PhaserMath.Clamp(monster.jumpElapsed / monster.jumpDuration, 0, 1);
           jumpOffset = -Math.sin(progress * Math.PI) * 34 * monster.view.scaleY;
-          movementSpeed *= 1.12;
+          movementSpeed *= monster.combatProfile.jumpSpeedMultiplier;
           if (progress >= 1) {
             monster.isJumping = false;
             monster.jumpElapsed = 0;
-            monster.jumpCooldown = PhaserMath.Between(2100, 3400);
+            monster.jumpCooldown = PhaserMath.Between(monster.combatProfile.jumpResetCooldownMinMs, monster.combatProfile.jumpResetCooldownMaxMs);
             this.createFootstepDust(monster.x + 8, monster.y + 3, monster.view.scaleY);
             jumpOffset = 0;
           }
         }
         monster.burstCooldown -= delta;
         if (monster.burstCooldown <= 0 && monster.burstRemaining <= 0) {
-          monster.burstRemaining = 420;
-          monster.burstCooldown = PhaserMath.Between(3000, 3900);
+          monster.burstRemaining = monster.combatProfile.burstDurationMs;
+          monster.burstCooldown = PhaserMath.Between(monster.combatProfile.burstCooldownMinMs, monster.combatProfile.burstCooldownMaxMs);
           this.createFootstepDust(monster.x - 10, monster.y + 3, monster.view.scaleY * 1.15);
           this.createFootstepDust(monster.x + 4, monster.y + 1, monster.view.scaleY);
         }
         if (monster.burstRemaining > 0) {
           monster.burstRemaining = Math.max(0, monster.burstRemaining - delta);
-          movementSpeed *= 1.65;
+          movementSpeed *= monster.combatProfile.burstSpeedMultiplier;
         }
       }
 
