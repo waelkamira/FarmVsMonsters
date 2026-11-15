@@ -502,7 +502,7 @@ export default class BattleScene extends Scene {
 
     // Plant selection cells stay distinct and larger than the status counters.
     this.radishCard = this.createPlantCard(794, "RADISH", "35", "radish", null, "radish-character", 94);
-    this.mushroomCard = this.createPlantCard(944, "MUSHROOM", "50", "mushroom", null, "mushroom-character", 94);
+    this.mushroomCard = this.createPlantCard(888, "MUSHROOM", "50", "mushroom", null, "mushroom-character", 94);
 
     this.messageText = this.add.text(560, 574, "", {
       fontFamily: "Arial", fontSize: "16px", color: "#ffffff", fontStyle: "bold",
@@ -516,23 +516,23 @@ export default class BattleScene extends Scene {
     // Floating glass selector, positioned below the top resource/status strip.
     // A soft translucent white halo gives a light blur-like edge without a frame.
     const tint = type === "radish" ? 0x8ff0b0 : 0x9edfff;
-    const halo = this.add.rectangle(0, 1, 76, 54, 0xffffff, 0.10);
-    const panel = this.add.rectangle(0, 0, 68, 46, 0xffffff, 0.22)
+    const halo = this.add.rectangle(0, 1, 54, 44, 0xffffff, 0.10);
+    const panel = this.add.rectangle(0, 0, 48, 38, 0xffffff, 0.22)
       .setInteractive({ useHandCursor: true });
     panel.setStrokeStyle(0, 0xffffff, 0);
     let icon;
     if (imageKey && this.textures.exists(imageKey)) {
       const frameData = this.textures.getFrame(imageKey);
-      const iconHeight = 30;
+      const iconHeight = 25;
       const iconWidth = iconHeight * (frameData.realWidth / frameData.realHeight);
       icon = this.add.image(0, -5, imageKey)
-        .setDisplaySize(Math.min(iconWidth, 42), iconHeight);
+        .setDisplaySize(Math.min(iconWidth, 34), iconHeight);
     } else {
       icon = this.add.graphics();
       if (drawIcon) drawIcon(icon);
     }
-    const cost = this.add.text(0, 16, "⚡" + costLabel, {
-      fontFamily: "Arial", fontSize: "10px", color: "#ffffff", fontStyle: "bold",
+    const cost = this.add.text(0, 13, "⚡" + costLabel, {
+      fontFamily: "Arial", fontSize: "9px", color: "#ffffff", fontStyle: "bold",
       stroke: "#536477", strokeThickness: 2, resolution: 2,
       align: "center"
     }).setOrigin(0.5, 0.5);
