@@ -141,6 +141,11 @@ test("projectile lane stepping uses elapsed seconds and rejects invalid values",
 test("Phaser delegates monster and projectile lane movement to the simulation kernel", () => {
   assert.match(scene, /resolveMonsterLaneStep\(/);
   assert.match(scene, /resolveProjectileLaneStep\(/);
+  assert.match(scene, /selectLaneBlocker\(/);
+  assert.match(scene, /selectProjectileTarget\(/);
+  assert.match(scene, /selectFarmerMeleeTarget\(/);
+  assert.match(scene, /selectDragonFireballTarget\(/);
+  assert.match(scene, /targetPlant\.hp = applyHitPointsDamage\(/);
 });
 
 test("lane blocker selection chooses the nearest living radish behind the monster", () => {
