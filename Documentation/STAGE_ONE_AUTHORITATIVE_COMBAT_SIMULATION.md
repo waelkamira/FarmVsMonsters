@@ -22,6 +22,7 @@ Version 1 centralizes:
 - radish and energy mushroom combat/economy values;
 - all four monster archetype health, speed, attack, armor, and Dust Skitter movement parameters;
 - dragon health, farmer sling damage/cadence, fireball damage and timing;
+- farmer club damage/reach, radish projectile speed/collision radius, monster scaling formulas;
 - 8 coins per ordinary monster defeat;
 - spawn pacing and inter-wave delay.
 
@@ -48,7 +49,7 @@ The current tuning is intentionally preserved. This refactor does not change the
 
 ## Important gaps before this can be implemented safely
 
-The shared contract is not yet the simulator. BattleScene still contains gameplay behavior that must be extracted and modelled:
+The shared contract and seeded PRNG are foundations, not the simulator. The PRNG is deliberately not yet wired into the live battle. BattleScene still contains gameplay behavior that must be extracted and modelled:
 - grid-to-lane geometry and collision reach;
 - player action validation and energy economy;
 - monster targeting and bite cadence;
