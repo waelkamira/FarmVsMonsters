@@ -958,3 +958,11 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - Collision now requires both horizontal proximity and proximity to the projectile's interpolated lane, preventing cross-lane shots from damaging unrelated monsters.
 - Existing Radish projectile speed, damage, attack cooldown, and configured collision radius remain unchanged.
 - Source updated on main. Browser gameplay verification and automated test/build execution remain outstanding.
+
+
+## 2026-11-16 — Radish same-lane targeting correction
+
+- Corrected the Radish targeting rule: it now selects living monsters in the planted Radish's exact lane only.
+- Radish projectiles travel horizontally within their firing lane; they no longer interpolate toward adjacent lanes.
+- Projectile collision is restricted to monsters whose lane exactly matches the projectile's lane, preventing cross-lane damage.
+- Verification: source updated on `main`; browser gameplay and build/tests have not been run in this change.
