@@ -45,24 +45,24 @@ export default class PauseScene extends Scene {
   }
 
   drawPanel(title, height = 420) {
-    this.add.rectangle(560, 340, 1120, 680, 0x080503, 0.88).setDepth(-1);
-    this.add.rectangle(560, 340, 500, height, 0x21150d, 1).setStrokeStyle(8, 0x100904);
-    this.add.rectangle(560, 340, 480, height - 20, 0x49301d, 1).setStrokeStyle(3, 0xf0ca83);
+    this.add.rectangle(560, 340, 1120, 680, 0x101a2e, 0.84).setDepth(-1);
+    this.add.rectangle(560, 340, 500, height, 0x17213d, 1).setStrokeStyle(8, 0x8b65e8);
+    this.add.rectangle(560, 340, 480, height - 20, 0x315b91, 1).setStrokeStyle(3, 0x35bceb);
     this.add.text(560, 340 - height / 2 + 58, this.tr(title), {
       fontFamily: "Arial", fontSize: "32px", color: "#ffffff",
-      fontStyle: "bold", stroke: "#100904", strokeThickness: 6, resolution: 2
+      fontStyle: "bold", stroke: "#17213d", strokeThickness: 6, resolution: 2
     }).setOrigin(0.5);
   }
 
   drawPauseMenu() {
     this.drawPanel("BATTLE PAUSED", 420);
-    this.addMenuButton(270, "RESUME", 0x9bc66e, () => this.resumeBattle());
-    this.addMenuButton(345, "RESTART", 0xe5c27d, () => this.restartBattle());
-    this.addMenuButton(420, "SETTINGS", 0xe5c27d, () => {
+    this.addMenuButton(270, "RESUME", 0x238a58, () => this.resumeBattle());
+    this.addMenuButton(345, "RESTART", 0x287eb7, () => this.restartBattle());
+    this.addMenuButton(420, "SETTINGS", 0x8b65e8, () => {
       this.menuMode = "settings";
       this.drawCurrentMenu();
     });
-    this.addMenuButton(495, "MAIN MENU", 0xe6a17d, () => {
+    this.addMenuButton(495, "MAIN MENU", 0xff7185, () => {
       if (typeof window !== "undefined") window.location.assign("/");
     });
   }
@@ -79,15 +79,15 @@ export default class PauseScene extends Scene {
       const y = 270 + index * 92;
       const value = this.readVolume(channel.key, channel.initial);
       this.add.text(560, y - 23, this.tr(channel.label), {
-        fontFamily: "Arial", fontSize: "19px", color: "#ffffff", fontStyle: "bold", stroke: "#100904", strokeThickness: 3, resolution: 2
+        fontFamily: "Arial", fontSize: "19px", color: "#ffffff", fontStyle: "bold", stroke: "#17213d", strokeThickness: 3, resolution: 2
       }).setOrigin(0.5);
       this.addVolumeButton(420, y + 14, "−", () => this.changeVolume(channel, -5));
       this.add.text(560, y + 14, value + "%", {
-        fontFamily: "Arial", fontSize: "22px", color: "#fff5dc", fontStyle: "bold", stroke: "#100904", strokeThickness: 3, resolution: 2
+        fontFamily: "Arial", fontSize: "22px", color: "#ffffff", fontStyle: "bold", stroke: "#17213d", strokeThickness: 3, resolution: 2
       }).setOrigin(0.5);
       this.addVolumeButton(700, y + 14, "+", () => this.changeVolume(channel, 5));
     });
-    this.addMenuButton(520, "BACK", 0x9bc66e, () => {
+    this.addMenuButton(520, "BACK", 0x238a58, () => {
       this.menuMode = "pause";
       this.drawCurrentMenu();
     });
@@ -100,11 +100,11 @@ export default class PauseScene extends Scene {
   }
 
   addVolumeButton(x, y, label, action) {
-    const bg = this.add.rectangle(x, y, 54, 42, 0x4b301e, 1)
-      .setStrokeStyle(3, 0x392417).setInteractive({ useHandCursor: true });
-    this.add.rectangle(x, y, 46, 34, 0xe5c27d, 1).setStrokeStyle(1, 0xf4dfb3);
+    const bg = this.add.rectangle(x, y, 54, 42, 0x17213d, 1)
+      .setStrokeStyle(3, 0x35bceb).setInteractive({ useHandCursor: true });
+    this.add.rectangle(x, y, 46, 34, 0xffca45, 1).setStrokeStyle(1, 0xffffff);
     this.add.text(x, y - 1, label, {
-      fontFamily: "Arial", fontSize: "28px", color: "#211307", fontStyle: "bold", stroke: "#fff0c8", strokeThickness: 1, resolution: 2
+      fontFamily: "Arial", fontSize: "28px", color: "#ffffff", fontStyle: "bold", stroke: "#17213d", strokeThickness: 3, resolution: 2
     }).setOrigin(0.5);
     bg.on("pointerover", () => bg.setScale(1.06));
     bg.on("pointerout", () => bg.setScale(1));
@@ -112,14 +112,14 @@ export default class PauseScene extends Scene {
   }
 
   addMenuButton(y, label, color, action) {
-    const bg = this.add.rectangle(560, y, 250, 52, 0x4b301e, 1)
-      .setStrokeStyle(3, 0x392417).setInteractive({ useHandCursor: true });
-    this.add.rectangle(560, y, 240, 44, color, 1).setStrokeStyle(1, 0xf4dfb3);
+    const bg = this.add.rectangle(560, y, 250, 52, 0x17213d, 1)
+      .setStrokeStyle(3, 0x35bceb).setInteractive({ useHandCursor: true });
+    this.add.rectangle(560, y, 240, 44, color, 1).setStrokeStyle(2, 0xffffff);
     this.add.text(560, y, this.tr(label), {
-      fontFamily: "Arial", fontSize: "18px", color: "#211307", fontStyle: "bold", stroke: "#fff0c8", strokeThickness: 1, resolution: 2
+      fontFamily: "Arial", fontSize: "18px", color: "#ffffff", fontStyle: "bold", stroke: "#17213d", strokeThickness: 3, resolution: 2
     }).setOrigin(0.5);
-    bg.on("pointerover", () => bg.setScale(1.04));
-    bg.on("pointerout", () => bg.setScale(1));
+    bg.on("pointerover", () => bg.setFillStyle(0x35bceb, 1).setScale(1.04));
+    bg.on("pointerout", () => bg.setFillStyle(0x17213d, 1).setScale(1));
     bg.on("pointerdown", action);
   }
 
