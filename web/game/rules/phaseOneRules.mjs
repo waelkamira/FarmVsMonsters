@@ -1,14 +1,14 @@
-import { PHASE_ONE_PLANTS, PHASE_ONE_REWARDS } from "./phaseOneCombatContract.mjs";
+import { PHASE_ONE_PLANTS, PHASE_ONE_REWARDS, PHASE_ONE_WAVE_SIZES, PHASE_ONE_ENERGY } from "./phaseOneCombatContract.mjs";
 
 // Thirty ordinary monsters across five gentle-to-challenging waves. The dragon boss is separate.
-export const PHASE_ONE_WAVE_SIZES = Object.freeze([3, 5, 6, 7, 9]);
+export { PHASE_ONE_WAVE_SIZES };
 export const PHASE_ONE_TOTAL_MONSTERS = PHASE_ONE_WAVE_SIZES.reduce((sum, count) => sum + count, 0);
 export const CAMPAIGN_STAGE_COUNT = 10;
 export const ordinaryMonsterCountForStage = (stage) =>
   Number.isInteger(stage) && stage >= 1 && stage <= CAMPAIGN_STAGE_COUNT ? 29 + stage : 0;
 
-export const INITIAL_ENERGY = 150;
-export const MAX_ENERGY = 300;
+export const INITIAL_ENERGY = PHASE_ONE_ENERGY.initial;
+export const MAX_ENERGY = PHASE_ONE_ENERGY.maximum;
 export const MONSTER_KILL_COIN_REWARD = PHASE_ONE_REWARDS.ordinaryMonsterDefeatCoins;
 export const MUSHROOM_PICKUP_TTL_MS = PHASE_ONE_PLANTS.energyMushroom.pickupTtlMs;
 
