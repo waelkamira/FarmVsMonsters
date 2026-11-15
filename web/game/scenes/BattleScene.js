@@ -78,7 +78,8 @@ export default class BattleScene extends Scene {
     this.load.spritesheet("farmer-rescue", "/assets/characters/farmer/farmer-rescue.png", { frameWidth: 360, frameHeight: 430 });
     this.load.spritesheet("farmer-carry", "/assets/characters/farmer/farmer-carry.png", { frameWidth: 360, frameHeight: 430 });
     this.load.spritesheet("dragon-boss", "/assets/characters/monsters/dragon/dragon-boss.png", { frameWidth: 512, frameHeight: 512 });
-    this.load.image("phase-one-princess", "/assets/characters/princess/princess.png");
+    this.load.image("phase-one-princess-captive", "/assets/characters/princess/princess-captive.png");
+    this.load.image("phase-one-princess-rescued", "/assets/characters/princess/princess-rescued.png");
     this.load.image("phase-one-emblem", "/assets/levels/phase-1-emblem.png");
 
     // These four hyena sheets now share one standardized 360x298 frame grid.
@@ -824,8 +825,8 @@ export default class BattleScene extends Scene {
 
   createPrincessActor() {
     // The princess is only rendered from the user's authored asset.
-    if (!this.textures.exists("phase-one-princess")) return;
-    this.princessActor = this.add.image(995, 270, "phase-one-princess")
+    if (!this.textures.exists("phase-one-princess-captive")) return;
+    this.princessActor = this.add.image(995, 270, "phase-one-princess-captive")
       .setOrigin(0.5, 1)
       .setDisplaySize(66, 96)
       .setDepth(8.6);
@@ -997,6 +998,9 @@ export default class BattleScene extends Scene {
           this.princessActor.setDepth(0);
           this.caveman.add(this.princessActor);
           this.princessActor.setPosition(22, -48).setDisplaySize(58, 84);
+          if (this.textures.exists("phase-one-princess-rescued")) {
+            this.princessActor.setTexture("phase-one-princess-rescued");
+          }
         }
         this.time.delayedCall(650, () => {
           if (this.cavemanVisual?.active) {
