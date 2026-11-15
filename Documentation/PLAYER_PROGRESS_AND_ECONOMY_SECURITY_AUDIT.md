@@ -39,9 +39,10 @@ Once that trust boundary exists, one database transaction should:
 
 - Disabled the progress API `PUT` endpoint with HTTP 410; it no longer accepts client-supplied balances or stage progression.
 - Added migration 004 to revoke direct client insert/update access to `player_progress`.
-- Added `coins_verified`, default false, and blocked plant purchases while the balance is unverified. Existing balances are retained, not silently erased.
+- Added `coins_verified` and `progress_verified`, both default false. Legacy cloud balances and stage progression are retained for audit but are not imported into local saves or used to authorize purchases.
+- Blocked plant purchases unless both the progression and coin balance are verified. Existing balances are retained, not silently erased.
 - Removed browser-side victory upload and removed local-to-cloud balance promotion.
-- Cloud restore copies a coin balance to local storage only when the database explicitly marks it verified.
+- Cloud restore ignores all legacy stage and coin values unless the database explicitly marks progression as verified; it copies the coin balance only when the database separately marks coins verified.
 - Kept guest play, local stage progression, and local coin saving active; account UI and setup documentation disclose the temporary cloud-sync pause.
 
 ## Remaining before cloud progression and currency can be re-enabled
