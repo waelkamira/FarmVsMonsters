@@ -58,3 +58,9 @@ test("story artwork uses explicit user-owned asset paths and optional animation 
   for (const asset of assets.assets) assert.ok(asset.path.startsWith("/assets/"));
   assert.match(scene, /Optional sheets are validated independently/);
 });
+
+
+test("victory saves the unlocked campaign stage to the signed-in player's cloud account", () => {
+  assert.match(scene, /import \{ syncProgressAfterVictory \} from "\.\.\/services\/playerAccount\.mjs"/);
+  assert.match(scene, /unlockNextStage\(window\.localStorage, 1\);[\s\S]*?syncProgressAfterVictory\(\)/);
+});
