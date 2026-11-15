@@ -1530,6 +1530,8 @@ export default class BattleScene extends Scene {
       fontFamily: "Arial", fontSize: "23px", color: "#ffffff", backgroundColor: "rgba(255,113,133,0.72)",
       padding: { x: 8, y: 2 }, stroke: "#ffffff", strokeThickness: 1
     }).setOrigin(0.5).setAlpha(0.88).setInteractive({ useHandCursor: true });
+    close.on("pointerover", () => close.setScale(1.08).setAlpha(1));
+    close.on("pointerout", () => close.setScale(1).setAlpha(0.88));
     close.on("pointerdown", () => this.closeCollectionMenu());
     this.collectionMenuLayer.add(close);
     this.collectionMenuTabs = this.add.container(0, -220);
@@ -1565,6 +1567,15 @@ export default class BattleScene extends Scene {
       const txt = this.add.text(x, 0, label, {
         fontFamily: "Arial", fontSize: "15px", color: "#ffffff", fontStyle: "bold", stroke: "#17213d", strokeThickness: 2
       }).setOrigin(0.5);
+      bg.on("pointerover", () => {
+        if (!active) bg.setFillStyle(tabColors[index], 0.42).setStrokeStyle(1, 0xffffff, 0.72);
+        bg.setScale(1.025);
+      });
+      bg.on("pointerout", () => {
+        bg.setFillStyle(active ? tabColors[index] : 0xdaf3ff, active ? 0.58 : 0.16)
+          .setStrokeStyle(1, 0xffffff, active ? 0.88 : 0.42)
+          .setScale(1);
+      });
       bg.on("pointerdown", () => { this.collectionMenuTab = id; this.renderCollectionMenu(); });
       this.collectionMenuTabs.add([bg, txt]);
     });
