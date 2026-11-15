@@ -1898,6 +1898,12 @@ export default class BattleScene extends Scene {
     if (!force && monster.hitAnimUntil > this.time.now && key !== "hyena-hit") return;
     const currentKey = sprite.anims.currentAnim?.key;
     if (!force && currentKey === key && sprite.anims.isPlaying) return;
+
+    // The authored bite poses sit lower inside their 360x298 cells than the
+    // locomotion poses. Raise the sprite's local foot anchor during chewing so
+    // the crouched body stays above the ground instead of sinking below it.
+    // Restore the normal foot anchor for every other action.
+    sprite.setOrigin(0.5, key === "hyena-bite" ? 1.12 : 1);
     sprite.play(key);
   }
 
