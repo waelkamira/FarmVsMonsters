@@ -1843,26 +1843,24 @@ export default class BattleScene extends Scene {
     // These four authored sheets are the required monster artwork. Hit and
     // death are optional single-pose sheets and must never disable the hyenas.
     const requiredDefinitions = [
-      ["hyena-idle", 4, 5, -1],
-      ["hyena-walk", 9, 9, -1],
-      ["hyena-run", 7, 10, -1],
-      ["hyena-bite", 6, 9, -1]
+      ["hyena-idle", 5, -1],
+      ["hyena-walk", 9, -1],
+      ["hyena-run", 10, -1],
+      ["hyena-bite", 9, -1]
     ];
     const optionalDefinitions = [
-      ["hyena-hit", 3, 12, 0],
-      ["hyena-death", 6, 8, 0]
+      ["hyena-hit", 12, 0],
+      ["hyena-death", 8, 0]
     ];
 
     try {
       if (this.hyenaAssetFailed) throw new Error("A required hyena sprite sheet failed to load.");
 
-      for (const [key, frameCount, frameRate, repeat] of requiredDefinitions) {
+      for (const [key, frameRate, repeat] of requiredDefinitions) {
         if (!this.textures.exists(key)) throw new Error(`Missing required hyena sheet: ${key}.`);
         const texture = this.textures.get(key);
-        const available = Object.keys(texture.frames).filter((name) => name !== "__BASE");
-        if (available.length < frameCount) {
-          throw new Error(`Invalid ${key} sheet: expected ${frameCount} frames, found ${available.length}.`);
-        }
+        const frameCount = Object.keys(texture.frames).filter((name) => name !== "__BASE").length;
+        if (frameCount < 1) throw new Error(`Empty required hyena sheet: ${key}.`);
         if (this.anims.exists(key)) this.anims.remove(key);
         this.anims.create({
           key,
@@ -1872,12 +1870,11 @@ export default class BattleScene extends Scene {
         });
       }
 
-      for (const [key, expectedFrames, frameRate, repeat] of optionalDefinitions) {
+      for (const [key, frameRate, repeat] of optionalDefinitions) {
         if (!this.textures.exists(key)) continue;
         const texture = this.textures.get(key);
-        const available = Object.keys(texture.frames).filter((name) => name !== "__BASE").length;
-        if (available < 1) continue;
-        const frameCount = Math.min(expectedFrames, available);
+        const frameCount = Object.keys(texture.frames).filter((name) => name !== "__BASE").length;
+        if (frameCount < 1) continue;
         if (this.anims.exists(key)) this.anims.remove(key);
         this.anims.create({
           key,
