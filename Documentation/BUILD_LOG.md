@@ -937,3 +937,6 @@ Validation follow-up: corrected monster ID regex validation and added malformed-
 
 
 Coordinate correction: movement replay now uses calibrated lane width/spawn position, and a checkpoint is forced when entering bite range so the replay cannot accept a bite from an outdated distant position. Focused bite fixtures now include the actual lane traversal. Tests/build still not executed in this environment.
+
+
+Movement replay hardening: added configured-speed checks for standard monsters, bounded lower/upper speed checks for Dust Skitters, and clock checkpoints during stationary bite cycles. The anti-tunneling fixture now traverses the full calibrated lane distance; negative movement distance is rejected at the event-log boundary. No test/build run succeeded in this environment.
