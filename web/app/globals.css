@@ -112,3 +112,20 @@ h1 span, .wordmark span { color: #e2ae58; }
 .coin-wallet strong,.coin-wallet small { display: block; }
 .coin-wallet strong { font-size: 14px; letter-spacing: .1em; }
 .coin-wallet small { margin-top: 3px; color: #d5bd91; font-size: 11px; }
+
+
+/* Language selector and right-to-left Arabic layout */
+.language-toggle {
+  display: inline-flex; align-items: center; justify-content: center; min-height: 40px;
+  padding: 8px 16px; border: 2px solid #e5c68e; border-radius: 9px;
+  background: linear-gradient(#e5c27d,#ad783d); color: #392719;
+  font: inherit; font-weight: 900; cursor: pointer; box-shadow: 0 3px 0 #24160d;
+}
+.language-toggle:hover { filter: brightness(1.12); transform: translateY(-1px); }
+html[dir="rtl"] body { font-family: Tahoma, Arial, sans-serif; }
+html[dir="rtl"] .eyebrow { letter-spacing: 0; }
+html[dir="rtl"] .home-copy, html[dir="rtl"] .info-card p, html[dir="rtl"] .info-card li { line-height: 1.9; }
+html[dir="rtl"] .settings-row { direction: rtl; }
+html[dir="rtl"] .settings-row output { text-align: left; }
+html[dir="rtl"] .game-header { direction: rtl; }
+html[dir="rtl"] .control-hint { text-align: right; }
