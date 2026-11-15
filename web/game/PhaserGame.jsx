@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useLocale } from "../app/LocaleProvider";
 
 export default function PhaserGame() {
+  const { t } = useLocale();
   const hostRef = useRef(null);
   const [attempt, setAttempt] = useState(0);
   const [status, setStatus] = useState("loading");
@@ -76,18 +78,18 @@ export default function PhaserGame() {
       {status === "loading" && (
         <div className="game-status" role="status" aria-live="polite">
           <span className="game-status-mark" aria-hidden="true">✦</span>
-          <strong>Preparing the farm...</strong>
-          <span>Loading the battlefield and getting the tribe ready.</span>
+          <strong>{t("Preparing the farm...")}</strong>
+          <span>{t("Loading the battlefield and getting the tribe ready.")}</span>
         </div>
       )}
       {status === "error" && (
         <div className="game-status game-status-error" role="alert">
-          <strong>The battle could not be started</strong>
+          <strong>{t("The battle could not be started")}</strong>
           <span>{errorMessage || "The game engine failed to initialize."}</span>
           <button type="button" className="game-retry-button" onClick={() => setAttempt((value) => value + 1)}>
             Try Again
           </button>
-          <a href="/" className="game-back-link">Return to Main Menu</a>
+          <a href="/" className="game-back-link">{t("Return to Main Menu")}</a>
         </div>
       )}
     </div>
