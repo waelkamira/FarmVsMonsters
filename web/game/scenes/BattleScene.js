@@ -213,9 +213,9 @@ export default class BattleScene extends Scene {
     g.fillStyle(0xf0d6a5, 1); g.fillTriangle(145, 354, 130, 380, 160, 380);
     g.fillStyle(0x9b4d58, 1); g.fillCircle(145, 342, 15);
     g.fillStyle(0xf3c96d, 1); g.fillCircle(145, 346, 9);
-    this.add.text(145, 386, translate("PRINCESS", window.localStorage.getItem("farmVsMonsters.language") || "ar"), { fontFamily: "Arial", fontSize: "10px", color: "#fff4d4", fontStyle: "bold" }).setOrigin(0.5);
-    this.add.text(94, 555, translate("FARMHOUSE", window.localStorage.getItem("farmVsMonsters.language") || "ar"), { fontFamily: "Arial", fontSize: "13px", color: "#fff3d4", fontStyle: "bold" }).setOrigin(0.5);
-    this.add.text(1000, 95, translate("MONSTER GATE", window.localStorage.getItem("farmVsMonsters.language") || "ar"), { fontFamily: "Arial", fontSize: "13px", color: "#563c2c", fontStyle: "bold" }).setOrigin(0.5);
+    this.add.text(145, 386, translate("PRINCESS", window.localStorage.getItem("farmVsMonsters.language") || "ar"), { fontFamily: "Arial", fontSize: "10px", color: "#fff4d4", fontStyle: "bold" }).setOrigin(0.5).setData("localeKey", "PRINCESS");
+    this.add.text(94, 555, translate("FARMHOUSE", window.localStorage.getItem("farmVsMonsters.language") || "ar"), { fontFamily: "Arial", fontSize: "13px", color: "#fff3d4", fontStyle: "bold" }).setOrigin(0.5).setData("localeKey", "FARMHOUSE");
+    this.add.text(1000, 95, translate("MONSTER GATE", window.localStorage.getItem("farmVsMonsters.language") || "ar"), { fontFamily: "Arial", fontSize: "13px", color: "#563c2c", fontStyle: "bold" }).setOrigin(0.5).setData("localeKey", "MONSTER GATE");
   }
 
   createFarmBackground() {
@@ -509,11 +509,11 @@ export default class BattleScene extends Scene {
     const name = this.add.text(-17, -10, translate(title, locale), {
       fontFamily: "Georgia", fontSize: "12px", color: "#382719", fontStyle: "bold",
       resolution: 2
-    }).setOrigin(0, 0.5);
+    }).setOrigin(0, 0.5).setData("localeKey", title);
     const cost = this.add.text(-17, 12, costLabel + " " + translate("ENERGY", locale), {
       fontFamily: "Georgia", fontSize: "10px", color: "#68431f", fontStyle: "bold",
       resolution: 2
-    }).setOrigin(0, 0.5);
+    }).setOrigin(0, 0.5).setData("localeKey", String(costLabel) + " ENERGY");
     card.add([shadow, frame, panel, icon, iconDivider, name, cost]);
 
     panel.on("pointerover", () => {
@@ -838,7 +838,7 @@ export default class BattleScene extends Scene {
     const heading = this.add.text(0, -91, translate("TRIBE SOUND", window.localStorage.getItem("farmVsMonsters.language") || "ar"), {
       fontFamily: "Georgia", fontSize: "15px", color: "#fff0c8", fontStyle: "bold",
       stroke: "#49301d", strokeThickness: 2
-    }).setOrigin(0.5);
+    }).setOrigin(0.5).setData("localeKey", "TRIBE SOUND");
     this.audioMenu.add([panel, inset, heading]);
 
     this.musicAudioOption = this.createAudioVolumeSlider(-49, "Music", this.musicVolume, (value) => {
@@ -912,7 +912,7 @@ export default class BattleScene extends Scene {
     const container = this.add.container(0, y);
     const label = this.add.text(-101, -10, translate(title, window.localStorage.getItem("farmVsMonsters.language") || "ar"), {
       fontFamily: "Georgia", fontSize: "11px", color: "#3d291a", fontStyle: "bold"
-    }).setOrigin(0, 0.5);
+    }).setOrigin(0, 0.5).setData("localeKey", title);
     const track = this.add.rectangle(5, 12, 132, 8, 0x65452f, 1).setInteractive({ useHandCursor: true });
     const fill = this.add.rectangle(-61, 12, 0, 5, 0xe2c078, 1).setOrigin(0, 0.5);
     const knob = this.add.circle(-61, 12, 8, 0xe2c078, 1)
