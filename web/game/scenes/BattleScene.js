@@ -2426,28 +2426,23 @@ export default class BattleScene extends Scene {
     this.plantingTarget = null;
     this.returnTarget = null;
     this.farmerPlanting = false;
+    const locale = typeof window !== "undefined" ? window.localStorage.getItem("farmVsMonsters.language") || "ar" : "ar";
     this.setMessage(won ? "VICTORY! The farm is safe." : "GAME OVER — The monsters reached the final line.");
     this.add.rectangle(560, 340, 1120, 680, 0x10170f, 0.72).setDepth(60);
     if (won) {
       this.stopBackgroundMusic();
       this.add.rectangle(560, 340, 650, 330, 0x79502e, 0.98)
         .setStrokeStyle(6, 0x392417).setDepth(61);
-      this.add.text(560, 235, "VICTORY!", {
+      this.add.text(560, 235, translate("VICTORY!", locale), {
         fontFamily: "Arial", fontSize: "54px", color: "#fff2c8", fontStyle: "bold",
         stroke: "#392417", strokeThickness: 5
       }).setOrigin(0.5).setDepth(62);
       const elapsedSeconds = Math.floor(this.elapsedBattleMs / 1000);
       const minutes = Math.floor(elapsedSeconds / 60);
       const seconds = String(elapsedSeconds % 60).padStart(2, "0");
-      const summary = [
-        "All " + this.totalWaves + " waves cleared",
-        this.totalDefeatedMonsters + " / " + this.totalSpawnedMonsters + " monsters defeated",
-        this.totalPlantsPlanted + " plants planted",
-        "Time: " + minutes + ":" + seconds,
-        "Energy collected: " + this.energyCollected,
-        "Energy remaining: " + this.energy,
-        "Coins: " + this.coins
-      ].join("\n");
+      const summary = locale === "ar"
+        ? ["اكتملت جميع الموجات: " + this.totalWaves, "الوحوش المهزومة: " + this.totalDefeatedMonsters + " / " + this.totalSpawnedMonsters, "النباتات المزروعة: " + this.totalPlantsPlanted, "الوقت: " + minutes + ":" + seconds, "الطاقة المجموعة: " + this.energyCollected, "الطاقة المتبقية: " + this.energy, "العملات: " + this.coins].join("\n")
+        : ["All " + this.totalWaves + " waves cleared", this.totalDefeatedMonsters + " / " + this.totalSpawnedMonsters + " monsters defeated", this.totalPlantsPlanted + " plants planted", "Time: " + minutes + ":" + seconds, "Energy collected: " + this.energyCollected, "Energy remaining: " + this.energy, "Coins: " + this.coins].join("\n");
       this.add.text(560, 330, summary, {
         fontFamily: "Georgia", fontSize: "19px", color: "#fff0c8",
         align: "center", lineSpacing: 8, fontStyle: "bold"
@@ -2459,7 +2454,7 @@ export default class BattleScene extends Scene {
       this.playVictoryMusic();
       return;
     }
-    const title = this.add.text(560, 255, "FARM LOST", {
+    const title = this.add.text(560, 255, translate("FARM LOST", locale), {
       fontFamily: "Arial", fontSize: "68px", color: "#ffdf72", fontStyle: "bold",
       stroke: "#54221f", strokeThickness: 10, shadow: { offsetX: 0, offsetY: 5, color: "#000000", blur: 12, fill: true }
     }).setOrigin(0.5).setScale(0.18).setDepth(62);
@@ -2477,14 +2472,9 @@ export default class BattleScene extends Scene {
     const elapsedSeconds = Math.floor(this.elapsedBattleMs / 1000);
     const minutes = Math.floor(elapsedSeconds / 60);
     const seconds = String(elapsedSeconds % 60).padStart(2, "0");
-    const summary = [
-      "Reached wave " + Math.min(this.wave, this.totalWaves) + " of " + this.totalWaves,
-      this.totalDefeatedMonsters + " monsters defeated",
-      this.totalPlantsPlanted + " plants planted",
-      "Energy collected: " + this.energyCollected,
-      "Coins: " + this.coins,
-      "Time survived: " + minutes + ":" + seconds
-    ].join("\n");
+    const summary = locale === "ar"
+      ? ["وصلت إلى الموجة " + Math.min(this.wave, this.totalWaves) + " من " + this.totalWaves, "الوحوش المهزومة: " + this.totalDefeatedMonsters, "النباتات المزروعة: " + this.totalPlantsPlanted, "الطاقة المجموعة: " + this.energyCollected, "العملات: " + this.coins, "مدة الصمود: " + minutes + ":" + seconds].join("\n")
+      : ["Reached wave " + Math.min(this.wave, this.totalWaves) + " of " + this.totalWaves, this.totalDefeatedMonsters + " monsters defeated", this.totalPlantsPlanted + " plants planted", "Energy collected: " + this.energyCollected, "Coins: " + this.coins, "Time survived: " + minutes + ":" + seconds].join("\n");
     this.add.text(560, 355, summary, {
       fontFamily: "Georgia", fontSize: "18px", color: "#fff0c8",
       align: "center", lineSpacing: 7, fontStyle: "bold"
@@ -2505,7 +2495,8 @@ export default class BattleScene extends Scene {
       .setStrokeStyle(4, 0x392417)
       .setInteractive({ useHandCursor: true });
     const inset = this.add.rectangle(0, 0, 180, 48, color, 1).setStrokeStyle(1, 0xf0d59a);
-    const text = this.add.text(0, 0, label, {
+    const locale = typeof window !== "undefined" ? window.localStorage.getItem("farmVsMonsters.language") || "ar" : "ar";
+    const text = this.add.text(0, 0, translate(label, locale), {
       fontFamily: "Georgia", fontSize: "16px", color: "#392719", fontStyle: "bold",
       stroke: "#f3d9a4", strokeThickness: 1
     }).setOrigin(0.5);
