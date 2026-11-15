@@ -92,6 +92,9 @@ export default class BattleScene extends Scene {
 
   create() {
     this.isPaused = false;
+    this.languageChangeHandler = () => { this.refreshHud(); if (this.lastMessage) this.setMessage(this.lastMessage); };
+    window.addEventListener("farm-language-change", this.languageChangeHandler);
+    this.events.once("shutdown", () => window.removeEventListener("farm-language-change", this.languageChangeHandler));
     this.energy = INITIAL_ENERGY;
     let savedCoins = 0;
     try {
@@ -2514,19 +2517,24 @@ export default class BattleScene extends Scene {
   }
 
   setMessage(message) {
+    this.lastMessage = message;
     const locale = typeof window !== "undefined" ? window.localStorage.getItem("farmVsMonsters.language") || "ar" : "ar";
     this.messageText.setText(translate(message, locale));
   }
 
   refreshHud() {
+    const locale = typeof window !== "undefined" ? window.localStorage.getItem("farmVsMonsters.language") || "ar" : "ar";
+    const labels = locale === "ar"
+      ? { energy: "الطاقة", coins: "العملات", home: "المزرعة", radishes: "الفجل", kills: "المهزومون", wave: "الموجة", down: "هُزم", last: "المواجهة الأخيرة" }
+      : { energy: "ENERGY", coins: "COINS", home: "HOME", radishes: "RADISHES", kills: "KILLS", wave: "WAVE", down: "DOWN", last: "LAST STAND" };
     this.hudText.setText(
-      "الطاقة  " + this.energy + "     العملات  " + this.coins + "     المزرعة  " + this.houseHealth + "%     الفجل  " +
-      this.livingPlantCount() + "     المهزومون  " + this.totalDefeatedMonsters + "/" + PHASE_ONE_TOTAL_MONSTERS
+      labels.energy + "  " + this.energy + "     " + labels.coins + "  " + this.coins + "     " + labels.home + "  " + this.houseHealth + "%     " + labels.radishes + "  " +
+      this.livingPlantCount() + "     " + labels.kills + "  " + this.totalDefeatedMonsters + "/" + PHASE_ONE_TOTAL_MONSTERS
     );
     this.waveText.setText(
-      "الموجة " + Math.min(this.wave, this.totalWaves) + "/" + this.totalWaves +
-      "  ·  " + this.waveDefeatedMonsters + "/" + this.waveSize + " هُزم" +
-      (this.emergencyMode ? "  ·  المواجهة الأخيرة" : "")
+      labels.wave + " " + Math.min(this.wave, this.totalWaves) + "/" + this.totalWaves +
+      "  ·  " + this.waveDefeatedMonsters + "/" + this.waveSize + " " + labels.down +
+      (this.emergencyMode ? "  ·  " + labels.last : "")
     );
   }
 }
