@@ -87,7 +87,9 @@ Current row selection, burst/jump timings, and several cosmetic effects still us
 - authoritative plant record creation and exact energy deduction;
 - manual uproot validation and catalog-derived refund (rejects a modified/forged stored cost);
 - energy pickup cap calculation;
-- hit-point damage clamping and defeat detection.
+- hit-point damage clamping and defeat detection;
+- monster lane movement with plant bite-reach clamping (prevents tunnelling through a blocker);
+- projectile lane advancement using elapsed simulation seconds.
 
 `BattleScene.js` now delegates planting, uprooting, monster bite damage, projectile damage, and dragon damage to these pure functions. The existing 8×5 grid, 35/50 planting costs, full manual refund behavior, 300 energy pickup cap, damage amounts, and 8-coin ordinary-monster reward remain unchanged.
 
