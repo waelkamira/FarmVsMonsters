@@ -107,3 +107,44 @@ export function applyHitPointsDamage(currentHp, damage) {
     defeated: hp === 0
   });
 }
+
+export function resolveMonsterLaneStep({
+  localX,
+  speed,
+  deltaSeconds,
+  blockerLocalX = null,
+  biteReach = 0
+} = {}) {
+  if (
+    !Number.isFinite(localX) ||
+    !Number.isFinite(speed) || speed < 0 ||
+    !Number.isFinite(deltaSeconds) || deltaSeconds < 0 ||
+    (blockerLocalX !== null && !Number.isFinite(blockerLocalX)) ||
+    !Number.isFinite(biteReach) || biteReach < 0
+  ) {
+    throw new RangeError("INVALID_MONSTER_LANE_STEP");
+  }
+
+  const proposedLocalX = localX - speed * deltaSeconds;
+  if (blockerLocalX === null) {
+    return Object.freeze({ localX: proposedLocalX, stoppedByPlant: false });
+  }
+
+  const stopLocalX = blockerLocalX + biteReach;
+  const nextLocalX = Math.max(proposedLocalX, stopLocalX);
+  return Object.freeze({
+    localX: nextLocalX,
+    stoppedByPlant: nextLocalX === stopLocalX
+  });
+}
+
+export function resolveProjectileLaneStep({ localX, speed, deltaSeconds } = {}) {
+  if (
+    !Number.isFinite(localX) ||
+    !Number.isFinite(speed) || speed < 0 ||
+    !Number.isFinite(deltaSeconds) || deltaSeconds < 0
+  ) {
+    throw new RangeError("INVALID_PROJECTILE_LANE_STEP");
+  }
+  return localX + speed * deltaSeconds;
+}
