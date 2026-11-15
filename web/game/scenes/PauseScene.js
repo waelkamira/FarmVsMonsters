@@ -45,9 +45,11 @@ export default class PauseScene extends Scene {
   }
 
   drawPanel(title, height = 420) {
-    this.add.rectangle(560, 340, 1120, 680, 0x101a2e, 0.84).setDepth(-1);
-    this.add.rectangle(560, 340, 500, height, 0x17213d, 1).setStrokeStyle(8, 0x8b65e8);
-    this.add.rectangle(560, 340, 480, height - 20, 0x315b91, 1).setStrokeStyle(3, 0x35bceb);
+    this.add.rectangle(560, 340, 1120, 680, 0x15294c, 0.48).setDepth(-1);
+    this.add.rectangle(560, 340, 516, height + 16, 0x8b65e8, 0.16).setStrokeStyle(1, 0xffffff, 0.42);
+    this.add.rectangle(560, 340, 500, height, 0x315b91, 0.78).setStrokeStyle(2, 0xffffff, 0.62);
+    this.add.rectangle(560, 340, 480, height - 20, 0x35bceb, 0.12).setStrokeStyle(1, 0xa7e84f, 0.46);
+    this.add.rectangle(560, 340 - height / 2 + 10, 470, 8, 0xffffff, 0.22);
     this.add.text(560, 340 - height / 2 + 58, this.tr(title), {
       fontFamily: "Arial", fontSize: "32px", color: "#ffffff",
       fontStyle: "bold", stroke: "#17213d", strokeThickness: 6, resolution: 2
@@ -100,9 +102,9 @@ export default class PauseScene extends Scene {
   }
 
   addVolumeButton(x, y, label, action) {
-    const bg = this.add.rectangle(x, y, 54, 42, 0x17213d, 1)
-      .setStrokeStyle(3, 0x35bceb).setInteractive({ useHandCursor: true });
-    this.add.rectangle(x, y, 46, 34, 0xffca45, 1).setStrokeStyle(1, 0xffffff);
+    const bg = this.add.rectangle(x, y, 54, 42, 0x35bceb, 0.42)
+      .setStrokeStyle(1, 0xffffff, 0.72).setInteractive({ useHandCursor: true });
+    this.add.rectangle(x, y, 46, 34, 0xffca45, 0.42).setStrokeStyle(1, 0xffffff, 0.52);
     this.add.text(x, y - 1, label, {
       fontFamily: "Arial", fontSize: "28px", color: "#ffffff", fontStyle: "bold", stroke: "#17213d", strokeThickness: 3, resolution: 2
     }).setOrigin(0.5);
@@ -112,9 +114,9 @@ export default class PauseScene extends Scene {
   }
 
   addMenuButton(y, label, color, action) {
-    const bg = this.add.rectangle(560, y, 250, 52, 0x17213d, 1)
-      .setStrokeStyle(3, 0x35bceb).setInteractive({ useHandCursor: true });
-    this.add.rectangle(560, y, 240, 44, color, 1).setStrokeStyle(2, 0xffffff);
+    const bg = this.add.rectangle(560, y, 250, 52, 0x315b91, 0.34)
+      .setStrokeStyle(1, 0xffffff, 0.76).setInteractive({ useHandCursor: true });
+    this.add.rectangle(560, y, 240, 44, color, 0.76).setStrokeStyle(1, 0xffffff, 0.72);
     this.add.text(560, y, this.tr(label), {
       fontFamily: "Arial", fontSize: "18px", color: "#ffffff", fontStyle: "bold", stroke: "#17213d", strokeThickness: 3, resolution: 2
     }).setOrigin(0.5);
