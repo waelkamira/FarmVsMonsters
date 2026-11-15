@@ -1615,7 +1615,18 @@ export default class BattleScene extends Scene {
       const collection = collectEnergy(this.energy, amount);
       const collected = collection.collected;
       if (collected > 0) {
-        this.playFarmerAction("farmer-collect");
+        // Collecting a mushroom is an instant resource interaction, not a
+        // movement action. Never replace the farmer's planting/return
+        // animation or attach an action-complete listener while he is busy:
+        // that can leave the movement/action state out of sync.
+        const farmerIsStationary = !this.plantingTarget && !this.returnTarget && !this.farmerPlanting;
+        const currentFarmerAction = this.cavemanVisual?.anims?.currentAnim?.key;
+        const actionInProgress = [
+          "farmer-plant", "farmer-uproot", "farmer-attack", "farmer-hit", "farmer-death", "farmer-collect"
+        ].includes(currentFarmerAction) && this.cavemanVisual?.anims?.isPlaying;
+        if (farmerIsStationary && !actionInProgress) {
+          this.playFarmerAction("farmer-collect");
+        }
         this.energy = collection.energy;
         this.energyCollected += collected;
         this.playEnergyCollectSound();
