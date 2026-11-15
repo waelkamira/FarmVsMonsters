@@ -360,3 +360,18 @@ test("stage selection reflects saved unlocks without linking unfinished stages i
   assert.match(scene, /won = Boolean\(won && this\.phaseOneStoryState === "complete"\)/);
   assert.match(scene, /unlockNextStage\(window\.localStorage, 1\)/);
 });
+
+
+test("wave transitions include a pausable five-second preparation window without changing wave sizes", () => {
+  const create = scene.slice(scene.indexOf("  create() {"), scene.indexOf("  drawField() {"));
+  const update = scene.slice(scene.indexOf("  update(_time, delta) {"), scene.indexOf("  // Sort world characters"));
+  const progress = scene.slice(scene.indexOf("  checkWaveProgress() {"), scene.indexOf("  playVictoryMusic() {"));
+  assert.match(create, /this\.waveIntermissionMs = 0/);
+  assert.match(update, /if \(this\.waveIntermissionMs > 0\)/);
+  assert.match(update, /this\.waveIntermissionMs = Math\.max\(0, this\.waveIntermissionMs - delta\)/);
+  assert.match(update, /this\.waveIntermissionMs <= 0 && this\.wave <= this\.totalWaves/);
+  assert.match(progress, /this\.waveIntermissionMs = 5000/);
+  assert.match(progress, /this\.spawnTimer = 1600/);
+  assert.deepEqual(PHASE_ONE_WAVE_SIZES, [3, 5, 6, 7, 9]);
+  assert.match(scene, /if \(this\.gameOver \|\| this\.isPaused \|\| this\.collectionMenuOpen\) return/);
+});
