@@ -143,3 +143,11 @@ Phaser still chooses the visual lane using its current random source, creates sp
 - Energy collection is provisionally restricted to the current 15-energy mushroom pickup denomination. This still does not prove a pickup existed; world-generated pickup provenance must be simulated before energy events can be considered authoritative.
 - The reducer does not yet simulate autonomous mushroom production, monster movement/attacks, projectiles, wave spawns, dragon combat, farm damage, kill rewards, or victory. A successful replay means only that the supported player-action subset is internally consistent, never that the stage was won.
 - No server endpoint, database writes, cloud rewards, or progression unlocks are enabled by this work.
+
+
+## Mushroom energy production and collectible replay
+- The battle scene now records each mushroom energy spawn with its source cell and deterministic per-plant pickup ID; collection references that exact pickup rather than trusting a claimed amount alone.
+- Replay now verifies that the source mushroom was planted and remains alive, the 12-second production interval elapsed, the pickup ID and 15-energy value match the plant's production sequence, the pickup has not expired (12-second TTL), and the pickup has not already been collected.
+- Collected energy is derived from the replayed bank and the 300-energy cap; the event's claimed gain must match the computed gain. Clicking a pickup at full energy is recorded as a discard so the replay cannot leave a phantom collectible.
+- A separate combat clock advances only during active battle updates, avoiding story-sequence elapsed time from falsely advancing mushroom production.
+- This remains a limited action/economy replay: monster combat, kills, boss victory, and rewards are not yet authoritative. No server rewards or cloud progression are enabled.
