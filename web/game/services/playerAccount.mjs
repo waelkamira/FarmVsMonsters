@@ -115,6 +115,8 @@ export async function restoreOrInitializeCloudProgress() {
 
 export async function syncPlayerProgress() {
   try {
+    const session = await getPlayerSession();
+    if (!session.user) return null;
     return await saveCloudProgress(readLocalPlayerProgress());
   } catch {
     return null;
