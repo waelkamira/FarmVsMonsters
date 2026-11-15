@@ -24,8 +24,8 @@ export default function HomePage() {
         <p className="eyebrow">{t("A PRIMITIVE 2D FARM DEFENSE ADVENTURE")}</p>
         <h1>Farm <span>Vs</span> Monsters</h1>
         <p className="home-copy">
-          {t("The tribe's garden is the last wall between the monsters and the cave home.")}
-          {t("Plant Radish defenders, grow Energy Mushrooms to collect resources, and protect the princess.")}
+          {t("The tribe's garden is the last wall between the monsters and the cave home.")}{" "}
+          {t("Plant Radish defenders, grow Energy Mushrooms to collect resources, and protect the princess.")}{" "}
           {t("When the final radish falls, the caveman takes up his wooden club.")}
         </p>
         <div className="coin-wallet" aria-label={`${t("Saved coins")}: ${coins}`}>
