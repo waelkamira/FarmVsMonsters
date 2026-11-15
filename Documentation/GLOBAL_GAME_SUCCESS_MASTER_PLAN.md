@@ -192,6 +192,12 @@ After the player wins a stage:
 
 ---
 
+## 3.1 Secondary comparative campaign study
+
+A separate research-backed alternative campaign map is documented in [SECONDARY_CAMPAIGN_MAP_PVZ2_COMPARISON.md](SECONDARY_CAMPAIGN_MAP_PVZ2_COMPARISON.md). It studies the international Plants vs. Zombies 2 Adventure map (11 worlds and its progression structure) and proposes an original 11-territory / 110-mission long-term structure for comparison. **This is not an approved replacement for the primary plan.** The primary story, gameplay rules, stage progression, and implementation order in this master plan remain authoritative until the user explicitly approves changes.
+
+---
+
 ## 4. The complete phased development plan
 
 Phases are sequential. A later phase must not begin in earnest until the previous phase passes its exit gate. Small preparatory research or asset planning is allowed, but do not build major dependent systems on an unstable foundation.
