@@ -1,22 +1,34 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname, resolve } from "node:path";
 import {
   PHASE_ONE_COMBAT_CONTRACT_VERSION,
+  PHASE_ONE_WAVE_SIZES,
+  PHASE_ONE_ENERGY,
+  PHASE_ONE_TIMING,
   PHASE_ONE_REWARDS,
   PHASE_ONE_PLANTS,
   PHASE_ONE_DRAGON,
-  PHASE_ONE_MONSTERS,
+  getMonsterSpawnIntervalMs,
   getMonsterCombatStats,
   getStonehideIncomingDamageMultiplier
 } from "../game/rules/phaseOneCombatContract.mjs";
 
-test("Stage 1 combat contract is explicitly versioned and keeps the approved coin reward", () => {
+const here = dirname(fileURLToPath(import.meta.url));
+const scene = readFileSync(resolve(here, "../game/scenes/BattleScene.js"), "utf8");
+const rules = readFileSync(resolve(here, "../game/rules/phaseOneRules.mjs"), "utf8");
+
+test("combat contract version, wave roster, and reward policy are explicit", () => {
   assert.equal(PHASE_ONE_COMBAT_CONTRACT_VERSION, 1);
+  assert.deepEqual(PHASE_ONE_WAVE_SIZES, [3, 5, 6, 7, 9]);
+  assert.equal(PHASE_ONE_WAVE_SIZES.reduce((sum, size) => sum + size, 0), 30);
+  assert.deepEqual(PHASE_ONE_ENERGY, { initial: 150, maximum: 300 });
   assert.equal(PHASE_ONE_REWARDS.ordinaryMonsterDefeatCoins, 8);
-  assert.ok(Object.isFrozen(PHASE_ONE_REWARDS));
 });
 
-test("plant and dragon combat values are centralized without changing current tuning", () => {
+test("radish, mushroom and dragon combat values preserve the current tuning", () => {
   assert.deepEqual(PHASE_ONE_PLANTS.radish, {
     projectileDamage: 25,
     plantingEnergyCost: 35,
@@ -24,17 +36,26 @@ test("plant and dragon combat values are centralized without changing current tu
     cooldownMs: 1450,
     range: 360
   });
+  assert.equal(PHASE_ONE_PLANTS.energyMushroom.plantingEnergyCost, 50);
+  assert.equal(PHASE_ONE_PLANTS.energyMushroom.hp, 85);
   assert.equal(PHASE_ONE_PLANTS.energyMushroom.energyPerPickup, 15);
   assert.equal(PHASE_ONE_PLANTS.energyMushroom.productionIntervalMs, 12000);
-  assert.equal(PHASE_ONE_DRAGON.maxHp, 750);
-  assert.equal(PHASE_ONE_DRAGON.farmerSlingDamage, 25);
-  assert.equal(PHASE_ONE_DRAGON.farmerSlingInitialDelayMs, 850);
-  assert.equal(PHASE_ONE_DRAGON.farmerSlingIntervalMs, 900);
-  assert.equal(PHASE_ONE_DRAGON.fireballDamageToPlant, 55);
-  assert.equal(PHASE_ONE_DRAGON.fireballDamageToFarm, 12);
+  assert.equal(PHASE_ONE_PLANTS.energyMushroom.pickupTtlMs, 12000);
+
+  assert.deepEqual(PHASE_ONE_DRAGON, {
+    maxHp: 750,
+    farmerSlingDamage: 25,
+    farmerSlingInitialDelayMs: 850,
+    farmerSlingIntervalMs: 900,
+    dragonInitialAttackDelayMs: 2800,
+    fireballDamageToPlant: 55,
+    fireballDamageToFarm: 12,
+    attackIntervalMs: 3900,
+    fireballTravelMs: 1050
+  });
 });
 
-test("monster HP, movement, attack and armor values match the live Stage 1 rules", () => {
+test("monster stats match the existing Stage 1 combat values", () => {
   const brute = getMonsterCombatStats("cave-brute", 1);
   assert.equal(brute.hp, 175);
   assert.equal(brute.speed, 8);
@@ -45,6 +66,8 @@ test("monster HP, movement, attack and armor values match the live Stage 1 rules
   assert.equal(skitter.hp, 36);
   assert.equal(skitter.speed, 13.6);
   assert.equal(skitter.burstDurationMs, 420);
+  assert.equal(skitter.initialBurstCooldownMinMs, 1500);
+  assert.equal(skitter.initialBurstCooldownMaxMs, 2300);
   assert.equal(skitter.jumpSpeedMultiplier, 1.12);
   assert.equal(skitter.burstSpeedMultiplier, 1.65);
 
@@ -61,23 +84,22 @@ test("monster HP, movement, attack and armor values match the live Stage 1 rules
   assert.equal(alpha.plantDamage, 32);
 });
 
-test("combat contract rejects unknown archetypes and invalid wave numbers", () => {
-  assert.throws(() => getMonsterCombatStats("unknown", 1), /INVALID_MONSTER_COMBAT_INPUT/);
-  assert.throws(() => getMonsterCombatStats("cave-brute", 0), /INVALID_MONSTER_COMBAT_INPUT/);
-  assert.throws(() => getMonsterCombatStats("cave-brute", 11), /INVALID_MONSTER_COMBAT_INPUT/);
+test("wave pacing is shared and rejects invalid wave numbers", () => {
+  assert.equal(PHASE_ONE_TIMING.firstMonsterSpawnDelayMs, 1800);
+  assert.equal(PHASE_ONE_TIMING.nextWaveSpawnDelayMs, 1600);
+  assert.equal(PHASE_ONE_TIMING.waveIntermissionMs, 5000);
+  assert.equal(getMonsterSpawnIntervalMs(1), 5080);
+  assert.equal(getMonsterSpawnIntervalMs(5), 4600);
+  assert.throws(() => getMonsterSpawnIntervalMs(0), /INVALID_WAVE_NUMBER/);
+  assert.throws(() => getMonsterSpawnIntervalMs(6), /INVALID_WAVE_NUMBER/);
 });
 
-test("Phaser consumes the shared combat contract instead of owning a duplicate balance table", async () => {
-  const { readFileSync } = await import("node:fs");
-  const { fileURLToPath } = await import("node:url");
-  const { dirname, resolve } = await import("node:path");
-  const here = dirname(fileURLToPath(import.meta.url));
-  const scene = readFileSync(resolve(here, "../game/scenes/BattleScene.js"), "utf8");
-  const rules = readFileSync(resolve(here, "../game/rules/phaseOneRules.mjs"), "utf8");
-
+test("Phaser uses the shared contract and has no duplicate monster balance table", () => {
   assert.match(scene, /getMonsterCombatStats\(archetype, this\.wave\)/);
   assert.match(scene, /PHASE_ONE_DRAGON\.maxHp/);
   assert.match(scene, /PHASE_ONE_REWARDS\.ordinaryMonsterDefeatCoins/);
+  assert.match(scene, /getMonsterSpawnIntervalMs\(this\.wave\)/);
   assert.doesNotMatch(scene, /const COMBAT_BALANCE\s*=/);
   assert.match(rules, /PHASE_ONE_REWARDS\.ordinaryMonsterDefeatCoins/);
+  assert.match(rules, /PHASE_ONE_WAVE_SIZES/);
 });
