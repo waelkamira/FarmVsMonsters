@@ -835,6 +835,8 @@ export default class BattleScene extends Scene {
   beginDragonEncounter() {
     if (this.dragonBoss || this.phaseOneStoryState !== "battle") return;
     this.phaseOneStoryState = "dragon";
+    this.facing = 1;
+    this.caveman.scaleX = 1;
     this.createPrincessActor();
     this.dragonBoss = {
       hp: 750, maxHp: 750, alive: true,
