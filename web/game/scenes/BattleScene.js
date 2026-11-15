@@ -2215,17 +2215,38 @@ export default class BattleScene extends Scene {
   flashMonsterOnHit(monster) {
     if (!monster || !monster.alive) return;
 
-    // Keep the hyena grounded on its lane: do not play the hit spritesheet,
-    // whose pose can read as a jump/flying reaction. Use a brief color flash.
+    // Keep the hyena grounded and on its original lane. Strengthen the flash
+    // by about 30%, then add a tiny horizontal recoil on the sprite only.
+    // The monster record/container position is never changed, so its route,
+    // collision lane, and movement progress remain untouched.
     const sprite = monster.hyenaSprite;
-    if (sprite?.active) sprite.setTint(0xffe0a0);
+    if (sprite?.active) {
+      sprite.setTint(0xffcf70);
+      this.tweens.killTweensOf(sprite);
+      const baseX = Number.isFinite(monster.hitRecoilBaseX) ? monster.hitRecoilBaseX : sprite.x;
+      monster.hitRecoilBaseX = baseX;
+      sprite.x = baseX;
+      this.tweens.add({
+        targets: sprite,
+        x: baseX + 9,
+        duration: 65,
+        ease: "Quad.easeOut",
+        yoyo: true,
+        onComplete: () => {
+          if (sprite.active) sprite.x = baseX;
+        }
+      });
+    }
 
     const graphic = monster.hitFlashGraphic;
     if (graphic?.active) graphic.setBlendMode(1);
 
     if (monster.hitFlashTimer) monster.hitFlashTimer.remove(false);
-    monster.hitFlashTimer = this.time.delayedCall(95, () => {
-      if (sprite?.active) sprite.clearTint();
+    monster.hitFlashTimer = this.time.delayedCall(125, () => {
+      if (sprite?.active) {
+        sprite.clearTint();
+        if (Number.isFinite(monster.hitRecoilBaseX)) sprite.x = monster.hitRecoilBaseX;
+      }
       if (graphic?.active) graphic.setBlendMode(0);
       monster.hitFlashTimer = null;
     });
