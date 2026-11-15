@@ -232,3 +232,22 @@ body { color:var(--text-primary); }
 .google-mark { display:grid; place-items:center; width:27px; height:27px; border-radius:50%; background:#fff; color:#4285f4; font:900 22px Arial,sans-serif; text-shadow:1px 0 #34a853,-1px 0 #ea4335,0 1px #fbbc05; }
 .account-or-divider { display:flex; align-items:center; gap:12px; margin:12px 0 18px; color:#e8d7b6; font-size:12px; font-weight:900; letter-spacing:.08em; }
 .account-or-divider::before,.account-or-divider::after { content:""; flex:1; height:1px; background:#d8b77788; }
+
+
+/* Stage-one field guide collections */
+.collection-intro { margin: 8px 0 22px; color: #ead7b2; line-height: 1.7; }
+.collection-wallet { display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; margin:18px 0 24px; padding:13px 16px; border:2px solid #d9ad62; border-radius:12px; background:#2d1d13; color:#ffe3a0; }
+.collection-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px; margin-top:18px; }
+.collection-card { position:relative; min-height:210px; padding:20px; border:3px solid #69472b; border-radius:14px; background:linear-gradient(145deg,#6b482c,#3d281a); box-shadow:inset 0 0 0 1px #c49a60,0 8px 18px #160d08aa; }
+.collection-card.is-active { border-color:#9aa86a; }
+.collection-card.is-locked { filter:saturate(.55); background:linear-gradient(145deg,#51402d,#302319); }
+.collection-card h2 { margin:10px 0 8px; color:#ffe6b4; font-size:23px; }
+.collection-card p { color:#ead7b2; line-height:1.6; }
+.collection-art { display:grid; place-items:center; width:74px; height:74px; border:2px solid #d4b47b; border-radius:18px; background:radial-gradient(circle at 35% 25%,#d6c28d,#6b5838 75%); color:#fff0c8; font-size:38px; }
+.collection-status { display:inline-flex; margin-top:8px; padding:6px 10px; border-radius:20px; background:#34462a; color:#e4efbd; font-size:12px; font-weight:900; }
+.is-locked .collection-status { background:#4a3929; color:#e7c99a; }
+.collection-section-title { margin:30px 0 8px; color:#f0d9a7; font-size:24px; }
+.collection-empty { padding:18px; border:1px dashed #b88b5b; border-radius:12px; color:#d9c39d; line-height:1.7; background:#291b12aa; }
+.collection-meta { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+.collection-meta span { padding:6px 9px; border-radius:8px; background:#2a1b12; color:#f0d9a7; font-size:12px; }
+.collection-back { margin-top:28px; }
