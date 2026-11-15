@@ -14,8 +14,7 @@ import {
   collectEnergy,
   isWaveComplete,
   isPhaseOneVictory,
-  unlockNextStage,
-  monsterArchetypeFor as resolveMonsterArchetype
+  unlockNextStage
 } from "../rules/phaseOneRules.mjs";
 import {
   resolvePlantPlacement,
@@ -29,7 +28,9 @@ import {
   selectDragonFireballTarget,
   advanceCooldown,
   resolveBiteAttack,
-  resolveDustSkitterMotionStep
+  resolveDustSkitterMotionStep,
+  resolveWaveSpawnStep,
+  resolveMonsterArchetype
 } from "../rules/combatSimulation.mjs";
 import {
   PHASE_ONE_DRAGON,
@@ -1721,26 +1722,35 @@ export default class BattleScene extends Scene {
       return;
     }
     this.handleControls(dt);
-    // A cleared wave grants a short, pausable preparation window before the next group arrives.
-    if (this.waveIntermissionMs > 0) {
-      const previousSecond = Math.ceil(this.waveIntermissionMs / 1000);
-      this.waveIntermissionMs = Math.max(0, this.waveIntermissionMs - delta);
-      const remainingSecond = Math.ceil(this.waveIntermissionMs / 1000);
-      if (remainingSecond !== previousSecond) {
-        this.setMessage(remainingSecond > 0
-          ? "Wave " + this.wave + " begins in " + remainingSecond + "..."
-          : "Wave " + this.wave + " incoming!");
-      }
+    // Wave timing and spawn decisions are resolved by the renderer-independent combat kernel.
+    const previousIntermissionSecond = this.waveIntermissionMs > 0
+      ? Math.ceil(this.waveIntermissionMs / 1000)
+      : null;
+    const spawnStep = resolveWaveSpawnStep({
+      wave: this.wave,
+      totalWaves: this.totalWaves,
+      waveSize: this.waveSize,
+      spawnedThisWave: this.spawnedThisWave,
+      intermissionMs: this.waveIntermissionMs,
+      spawnTimerMs: this.spawnTimer,
+      deltaMs: delta
+    });
+    this.waveIntermissionMs = spawnStep.intermissionMs;
+    this.spawnTimer = spawnStep.spawnTimerMs;
+    if (
+      previousIntermissionSecond !== null &&
+      spawnStep.remainingIntermissionSecond !== previousIntermissionSecond
+    ) {
+      this.setMessage(spawnStep.remainingIntermissionSecond > 0
+        ? "Wave " + this.wave + " begins in " + spawnStep.remainingIntermissionSecond + "..."
+        : "Wave " + this.wave + " incoming!");
     }
-    if (this.waveIntermissionMs <= 0 && this.wave <= this.totalWaves && this.spawnedThisWave < this.waveSize) {
-      this.spawnTimer -= delta;
-      if (this.spawnTimer <= 0) {
-        this.spawnMonster();
-        this.spawnedThisWave += 1;
-        this.totalSpawnedMonsters += 1;
-        if (this.wave === 5 && this.spawnedThisWave === 2) this.beginDragonEncounter();
-        this.spawnTimer = getMonsterSpawnIntervalMs(this.wave);
-      }
+    if (spawnStep.shouldSpawn) {
+      const spawnIndex = this.spawnedThisWave;
+      this.spawnMonster(spawnIndex);
+      this.spawnedThisWave = spawnStep.spawnedThisWave;
+      this.totalSpawnedMonsters += 1;
+      if (this.wave === 5 && this.spawnedThisWave === 2) this.beginDragonEncounter();
     }
     this.updatePlants(delta);
     this.updateMonsters(dt, delta);
@@ -2427,9 +2437,8 @@ export default class BattleScene extends Scene {
     sprite.play(key);
   }
 
-  spawnMonster() {
+  spawnMonster(spawnIndex = this.spawnedThisWave) {
     const row = PhaserMath.Between(0, LANES - 1);
-    const spawnIndex = this.spawnedThisWave;
     const archetype = this.monsterArchetypeFor(spawnIndex);
     const profile = getMonsterCombatStats(archetype, this.wave);
     const hp = profile.hp;
