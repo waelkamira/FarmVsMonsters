@@ -169,3 +169,6 @@ Pickup identity hardening: collectible IDs are now globally monotonic for the ba
 - Spawn events now include the canonical lane-local starting coordinate. Periodic movement checkpoints record travelled distance, elapsed combat-clock time, nearest blocking radish column, and a bounded bite-clearance value.
 - Replay derives the nearest living radish in the same lane, checks the elapsed clock and maximum archetype movement speed (including the existing Dust Skitter jump/burst upper bound), and runs `resolveMonsterLaneStep` to clamp movement at the blocker. It rejects forged speed, incorrect blockers, and movement through a defender.
 - Checkpoints are periodic and emitted when the blocking target changes; they are not yet a frame-by-frame authoritative simulation. Exact Dust Skitter random-state replay and damage/death/projectile/farm-breach resolution remain outstanding. Client logs are still untrusted and no rewards are granted from them.
+
+
+Coordinate and bite-range correction: replay now uses the calibrated 420.823-unit board width and the actual spawn coordinate (238.4115) shared with the scene, rather than treating board columns as unit-spaced. Bite events are preceded by a movement checkpoint when the monster enters bite range, and replay rejects bites while the monster is still outside the target's clearance.
