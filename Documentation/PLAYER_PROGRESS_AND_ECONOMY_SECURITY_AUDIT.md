@@ -67,3 +67,7 @@ The Stage 1 renderer and rules now consume a shared versioned combat contract at
 
 ## Pure combat kernel progress
 The first renderer-independent simulation module, `web/game/rules/combatSimulation.mjs`, is now used by the Phaser battle for plant placement, manual uproot/refund validation, energy pickup calculation, and HP damage resolution. This reduces duplicated client logic and creates reusable server-side rules, but does not yet establish authoritative sessions or server-verified wins. Movement, targeting, collisions, wave timing, random monster behavior, and victory conditions remain in the client.
+
+
+
+Lane movement progress: monster local-X stepping (including blocker stop clamping) and projectile local-X advancement now use pure functions in `combatSimulation.mjs`. Collision geometry, bite reach calculation, target selection, and jump/burst timing remain in the Phaser scene.
