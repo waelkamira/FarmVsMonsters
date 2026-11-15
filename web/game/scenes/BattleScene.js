@@ -72,6 +72,9 @@ export default class BattleScene extends Scene {
     this.load.image("farm-battlefield", "/assets/backgrounds/farm-battlefield.jpeg");
     this.load.image("radish-character", "/assets/plants/radish.png");
     this.load.image("mushroom-character", "/assets/plants/mushroom.png");
+    this.load.image("tomato-character", "/assets/plants/tomato.png");
+    this.load.image("pumpkin-character", "/assets/plants/pumpkin.png");
+    this.load.image("onion-character", "/assets/plants/Onion.png");
     this.load.spritesheet("gold-coin", "/assets/items/currency/gold-coin.png", { frameWidth: 170, frameHeight: 170 });
     this.load.spritesheet("farmer-run", "/assets/characters/farmer/farmer-run.png", { frameWidth: 360, frameHeight: 430 });
     this.load.spritesheet("farmer-walk", "/assets/characters/farmer/farmer-walk.png", { frameWidth: 360, frameHeight: 430 });
@@ -114,6 +117,10 @@ export default class BattleScene extends Scene {
       if (file.key === "farm-battlefield") this.backgroundAssetFailed = true;
       if (file.key === "radish-character") this.radishAssetFailed = true;
       if (file.key === "mushroom-character") this.mushroomAssetFailed = true;
+      if (["tomato-character", "pumpkin-character", "onion-character"].includes(file.key)) {
+        this.optionalPlantAssetFailures = this.optionalPlantAssetFailures || [];
+        this.optionalPlantAssetFailures.push(file.key);
+      }
       if (file.key.startsWith("farmer-")) this.farmerAssetFailed = true;
       if (["hyena-idle", "hyena-walk", "hyena-run", "hyena-bite"].includes(file.key)) this.hyenaAssetFailed = true;
       if (file.key.startsWith("sfx-")) {
@@ -529,6 +536,11 @@ export default class BattleScene extends Scene {
     // Plant selection cells stay distinct and larger than the status counters.
     this.radishCard = this.createPlantCard(24, "RADISH", "35", "radish", null, "radish-character", 64);
     this.mushroomCard = this.createPlantCard(72, "MUSHROOM", "50", "mushroom", null, "mushroom-character", 64);
+    // New artwork is visible in the battle selector, but these plants stay
+    // locked until their combat rules and planting implementations are ready.
+    this.tomatoCard = this.createPlantCard(120, "TOMATO", "LOCK", "tomato", null, "tomato-character", 64, true);
+    this.pumpkinCard = this.createPlantCard(168, "PUMPKIN", "LOCK", "pumpkin", null, "pumpkin-character", 64, true);
+    this.onionCard = this.createPlantCard(216, "ONION", "LOCK", "onion", null, "onion-character", 64, true);
 
     this.messageText = this.add.text(560, 574, "", {
       fontFamily: "Arial", fontSize: "15px", color: "#ffffff", fontStyle: "bold",
@@ -538,13 +550,13 @@ export default class BattleScene extends Scene {
     }).setOrigin(0.5, 1).setDepth(42);
   }
 
-  createPlantCard(x, title, costLabel, type, drawIcon, imageKey = null, y = 619) {
+  createPlantCard(x, title, costLabel, type, drawIcon, imageKey = null, y = 619, locked = false) {
     const card = this.add.container(x, y).setDepth(45);
     // Floating glass selector, positioned below the top resource/status strip.
     // A soft translucent white halo gives a light blur-like edge without a frame.
-    const tint = type === "radish" ? 0x8ff0b0 : 0x9edfff;
+    const tint = locked ? 0xb7c4d3 : (type === "radish" ? 0x8ff0b0 : 0x9edfff);
     const halo = this.add.rectangle(0, 1, 54, 44, 0xffffff, 0.10);
-    const panel = this.add.rectangle(0, 0, 48, 38, 0xffffff, 0.22)
+    const panel = this.add.rectangle(0, 0, 48, 38, 0xffffff, locked ? 0.12 : 0.22)
       .setInteractive({ useHandCursor: true });
     panel.setStrokeStyle(0, 0xffffff, 0);
     let icon;
@@ -563,21 +575,39 @@ export default class BattleScene extends Scene {
       stroke: "#536477", strokeThickness: 2, resolution: 2,
       align: "center"
     }).setOrigin(0.5, 0.5);
-    card.add([halo, panel, icon, cost]);
+    if (locked) {
+      icon.setAlpha(0.78);
+      cost.setText("🔒");
+      const lockLabel = this.add.text(0, 26, title, {
+        fontFamily: "Arial", fontSize: "7px", color: "#ffffff", fontStyle: "bold",
+        stroke: "#34445b", strokeThickness: 2, resolution: 2
+      }).setOrigin(0.5, 0.5);
+      card.add([halo, panel, icon, cost, lockLabel]);
+      card.setAlpha(0.78);
+    } else {
+      card.add([halo, panel, icon, cost]);
+    }
 
     panel.on("pointerover", () => {
-      if (this.selectedPlant !== type) panel.setFillStyle(tint, 0.34);
+      if (!locked && this.selectedPlant !== type) panel.setFillStyle(tint, 0.34);
       card.setScale(1.04);
     });
     panel.on("pointerout", () => {
-      panel.setFillStyle(0xffffff, 0.22);
+      panel.setFillStyle(0xffffff, locked ? 0.12 : 0.22);
       card.setScale(1);
     });
     panel.on("pointerdown", () => {
       if (this.gameOver) return;
+      if (locked) {
+        this.setMessage(title + " is coming soon. Its combat ability is not ready yet.");
+        return;
+      }
       this.selectedPlant = type;
       this.radishCard.setAlpha(type === "radish" ? 1 : 0.78);
       this.mushroomCard.setAlpha(type === "mushroom" ? 1 : 0.78);
+      this.tomatoCard?.setAlpha(0.78);
+      this.pumpkinCard?.setAlpha(0.78);
+      this.onionCard?.setAlpha(0.78);
       panel.setFillStyle(tint, 0.38);
       this.setMessage(type === "radish"
         ? "Radish chosen. Select an empty soil plot to defend the lane."
