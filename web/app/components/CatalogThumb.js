@@ -9,7 +9,7 @@ const ART = {
   "ice-bloom": ["2744", "Snowflake"],
   "double-radish": ["1f331", "Seedling"],
   "pumpkin-guard": ["1f383", "Pumpkin"],
-  "explosive-berry": ["1fAD0".toLowerCase(), "Blueberries"],
+  "explosive-berry": ["1fad0", "Blueberries"],
   "fire-pepper": ["1fad1", "Hot pepper"],
   "cave-brute": ["1f43a", "Wolf-like hyena"],
   "dust-skitter": ["1f4a8", "Speed dust"],
