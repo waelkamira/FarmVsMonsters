@@ -251,16 +251,16 @@ export function resolveDustSkitterMotionStep({
   burstRemainingMs,
   burstDurationMs,
   burstSpeedMultiplier,
-  nextBurstCooldownMs
+  nextBurstCooldownMs,
+  enableJump = true
 } = {}) {
   const finite = [
-    jumpCooldownMs, jumpElapsedMs, deltaMs, jumpSpeedMultiplier,
-    jumpVisualHeight, visualScale, burstCooldownMs, burstRemainingMs,
-    burstDurationMs, burstSpeedMultiplier
+    deltaMs, burstCooldownMs, burstRemainingMs, burstDurationMs, burstSpeedMultiplier,
+    ...(enableJump ? [jumpCooldownMs, jumpElapsedMs, jumpSpeedMultiplier, jumpVisualHeight, visualScale] : [])
   ].every(Number.isFinite);
   if (
-    typeof isJumping !== "boolean" || !finite || deltaMs < 0 ||
-    jumpSpeedMultiplier <= 0 || visualScale < 0 ||
+    typeof isJumping !== "boolean" || typeof enableJump !== "boolean" || !finite || deltaMs < 0 ||
+    (enableJump && (jumpSpeedMultiplier <= 0 || visualScale < 0)) ||
     burstDurationMs < 0 || burstSpeedMultiplier <= 0 ||
     (isJumping && (!Number.isFinite(jumpDurationMs) || jumpDurationMs <= 0))
   ) throw new RangeError("INVALID_DUST_SKITTER_STEP");
@@ -273,35 +273,42 @@ export function resolveDustSkitterMotionStep({
   let jumpLanded = false;
   let jumpOffset = 0;
   let movementMultiplier = 1;
-
-  jumpCooldown = advanceCooldown(jumpCooldown, deltaMs);
-  if (!jumping && jumpCooldown <= 0) {
-    if (!Number.isFinite(nextJumpDurationMs) || nextJumpDurationMs <= 0) {
-      throw new RangeError("MISSING_DUST_SKITTER_JUMP_DURATION");
-    }
-    jumping = true;
+  if (!enableJump) {
+    jumping = false;
     jumpElapsed = 0;
-    jumpDuration = nextJumpDurationMs;
-    jumpStarted = true;
+    jumpOffset = 0;
   }
 
-  if (jumping) {
-    jumpElapsed += deltaMs;
-    const progress = Math.max(0, Math.min(1, jumpElapsed / jumpDuration));
-    jumpOffset = -Math.sin(progress * Math.PI) * jumpVisualHeight * visualScale;
-    movementMultiplier *= jumpSpeedMultiplier;
-    if (progress >= 1) {
-      jumping = false;
-      jumpElapsed = 0;
-      if (!Number.isFinite(nextJumpResetCooldownMs) || nextJumpResetCooldownMs < 0) {
-        throw new RangeError("MISSING_DUST_SKITTER_JUMP_RESET");
+  if (enableJump) {
+    jumpCooldown = advanceCooldown(jumpCooldown, deltaMs);
+    if (!jumping && jumpCooldown <= 0) {
+      if (!Number.isFinite(nextJumpDurationMs) || nextJumpDurationMs <= 0) {
+        throw new RangeError("MISSING_DUST_SKITTER_JUMP_DURATION");
       }
-      jumpCooldown = nextJumpResetCooldownMs;
-      jumpLanded = true;
-      jumpOffset = 0;
+      jumping = true;
+      jumpElapsed = 0;
+      jumpDuration = nextJumpDurationMs;
+      jumpStarted = true;
     }
+  
+    if (jumping) {
+      jumpElapsed += deltaMs;
+      const progress = Math.max(0, Math.min(1, jumpElapsed / jumpDuration));
+      jumpOffset = -Math.sin(progress * Math.PI) * jumpVisualHeight * visualScale;
+      movementMultiplier *= jumpSpeedMultiplier;
+      if (progress >= 1) {
+        jumping = false;
+        jumpElapsed = 0;
+        if (!Number.isFinite(nextJumpResetCooldownMs) || nextJumpResetCooldownMs < 0) {
+          throw new RangeError("MISSING_DUST_SKITTER_JUMP_RESET");
+        }
+        jumpCooldown = nextJumpResetCooldownMs;
+        jumpLanded = true;
+        jumpOffset = 0;
+      }
+    }
+  
   }
-
   let burstCooldown = advanceCooldown(burstCooldownMs, deltaMs);
   let burstRemaining = burstRemainingMs;
   let burstStarted = false;
