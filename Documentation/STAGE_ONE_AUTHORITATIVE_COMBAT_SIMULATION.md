@@ -154,3 +154,6 @@ Phaser still chooses the visual lane using its current random source, creates sp
 
 
 Implementation correction: the battle scene now records production/collection/discard events using the active-combat clock, which does not advance during story sequences. Pickup IDs are assigned per mushroom and production cycle. The replay reads the 12-second pickup lifetime directly from the shared combat contract.
+
+
+Pickup identity hardening: collectible IDs are now globally monotonic for the battle session rather than derived from a board cell, preventing an uprooted/replanted mushroom at the same cell from reusing an older still-active pickup ID. Replay independently derives the expected ID sequence and enforces production ordering across live mushrooms.
