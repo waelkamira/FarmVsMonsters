@@ -1521,21 +1521,21 @@ export default class BattleScene extends Scene {
     };
     if (this.collectionMenuTab === "phases") {
       addLabel(0, -10, locale === "ar" ? "اختر مغامرتك — المرحلة الأولى متاحة" : "Choose your adventure — Stage 1 is available", 17);
-      for (let stage = 1; stage <= 8; stage += 1) {
+      for (let stage = 1; stage <= 10; stage += 1) {
         const row = Math.floor((stage - 1) / 2);
         const col = (stage - 1) % 2;
         const x = col === 0 ? -170 : 170;
-        content.add(this.add.rectangle(x, 65 + row * 100, 300, 82, 0x8a603b).setStrokeStyle(2, 0xc79a5c));
+        content.add(this.add.rectangle(x, 35 + row * 82, 300, 82, 0x8a603b).setStrokeStyle(2, 0xc79a5c));
         const unlocked = stage === 1;
         if (stage === 1 && this.textures.exists("phase-one-emblem")) {
           content.add(this.add.image(x - 105, 65 + row * 100, "phase-one-emblem").setDisplaySize(90, 58));
         } else {
           content.add(this.add.text(x - 105, 65 + row * 100, unlocked ? "I" : "🔒", { fontSize: "30px", color: "#f5dba9" }).setOrigin(0.5));
         }
-        content.add(this.add.text(x + 35, 48 + row * 100, locale === "ar" ? "المرحلة " + stage : "STAGE " + stage, { fontSize: "17px", color: "#fff0c8", fontStyle: "bold" }).setOrigin(0.5));
-        content.add(this.add.text(x + 35, 78 + row * 100, unlocked ? (locale === "ar" ? "متاحة للعب" : "AVAILABLE") : (locale === "ar" ? "مغلقة — تحتاج مفتاحاً" : "LOCKED · KEY REQUIRED"), { fontSize: "12px", color: unlocked ? "#c9e59a" : "#f3c77e" }).setOrigin(0.5));
+        content.add(this.add.text(x + 35, 18 + row * 82, locale === "ar" ? "المرحلة " + stage : "STAGE " + stage, { fontSize: "17px", color: "#fff0c8", fontStyle: "bold" }).setOrigin(0.5));
+        content.add(this.add.text(x + 35, 48 + row * 82, unlocked ? (locale === "ar" ? "متاحة للعب" : "AVAILABLE") : (locale === "ar" ? "مغلقة — تحتاج مفتاحاً" : "LOCKED · KEY REQUIRED"), { fontSize: "12px", color: unlocked ? "#c9e59a" : "#f3c77e" }).setOrigin(0.5));
       }
-      addLabel(0, 455, locale === "ar" ? "ستُفتح المراحل التالية بعد إكمال المغامرات السابقة." : "Complete earlier adventures to unlock later stages.", 13, "#e8c995");
+      addLabel(0, 435, locale === "ar" ? "ستُفتح المراحل التالية بعد إكمال المغامرات السابقة." : "Complete earlier adventures to unlock later stages.", 13, "#e8c995");
     } else if (this.collectionMenuTab === "plants") {
       addLabel(0, -8, locale === "ar" ? "النباتات المتاحة وأسعار الطاقة" : "Available plants and their energy costs", 17);
       addRow(65, "radish-character", locale === "ar" ? "الفجل الدفاعي" : "Defensive Radish", "35 " + (locale === "ar" ? "طاقة" : "ENERGY"));
@@ -1555,7 +1555,7 @@ export default class BattleScene extends Scene {
       addLabel(0, -8, locale === "ar" ? "دليل الوحوش — نقاط الصحة وقوة الهجوم" : "Monster field guide — health and attack strength", 17);
       addRow(55, "hyena-idle", locale === "ar" ? "الضبع العادي" : "Cave Brute", (locale === "ar" ? "الصحة: 69 · ضرر النبات: 16" : "HP: 69 · Plant damage: 16"));
       addRow(145, "hyena-idle", locale === "ar" ? "الضبع السريع" : "Dust Skitter", (locale === "ar" ? "الصحة: 36 · ضرر النبات: 8" : "HP: 36 · Plant damage: 8"));
-      addRow(235, "hyena-idle", locale === "ar" ? "الضبع المدرع" : "Stonehide", (locale === "ar" ? "الصحة: 152 · ضرر النبات: 23" : "HP: 152 · Plant damage: 23"));
+      addRow(235, "hyena-idle", locale === "ar" ? "الضبع المدرع" : "Stonehide", (locale === "ar" ? "الصحة: 187 تقريباً · ضرر النبات: 23" : "HP: about 187 · Plant damage: 23"));
       addRow(325, "hyena-idle", locale === "ar" ? "الضبع العملاق" : "Alpha Brute", (locale === "ar" ? "الصحة: 350 · ضرر النبات: 32" : "HP: 350 · Plant damage: 32"));
       addRow(415, "dragon-boss", locale === "ar" ? "التنين الزعيم" : "Dragon Boss", locale === "ar" ? "زعيم مستقل · شريط صحة خاص" : "Separate boss · dedicated health bar");
     }
@@ -1625,7 +1625,7 @@ export default class BattleScene extends Scene {
   }
 
   update(_time, delta) {
-    if (this.gameOver || this.isPaused) return;
+    if (this.gameOver || this.isPaused || this.collectionMenuOpen) return;
     const dt = delta / 1000;
     this.elapsedBattleMs += delta;
     if (this.storySequenceActive) {
