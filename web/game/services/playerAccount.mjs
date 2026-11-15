@@ -45,7 +45,7 @@ export function applyRemotePlayerProgress(progress, storage = window.localStorag
       unlockedStage,
       completedStages
     }));
-    saveCoins(storage, progress.coins);
+    if (progress.coins_verified === true) saveCoins(storage, progress.coins);
     return true;
   } catch {
     return false;
@@ -78,47 +78,38 @@ export async function loadCloudProgress() {
   return requestJson("/api/player/progress");
 }
 
-export async function saveCloudProgress(progress = readLocalPlayerProgress()) {
-  return requestJson("/api/player/progress", {
-    method: "PUT",
-    body: JSON.stringify(progress)
-  });
-}
-
 export async function restoreOrInitializeCloudProgress() {
   const result = await loadCloudProgress();
-  if (result.progress) {
-    const local = readLocalPlayerProgress();
-    const merged = {
-      unlockedStage: Math.max(local.unlockedStage, Number(result.progress.unlocked_stage) || 1),
-      completedStages: [...new Set([
-        ...local.completedStages,
-        ...(Array.isArray(result.progress.completed_stages) ? result.progress.completed_stages : [])
-      ])].filter((stage) => Number.isInteger(stage) && stage >= 1 && stage < 10).sort((a, b) => a - b),
-      coins: Math.max(local.coins, Number(result.progress.coins) || 0)
-    };
-    applyRemotePlayerProgress({
-      unlocked_stage: merged.unlockedStage,
-      completed_stages: merged.completedStages,
-      coins: merged.coins
-    });
-    const cloudIsBehind = merged.unlockedStage > (Number(result.progress.unlocked_stage) || 1) ||
-      merged.coins > (Number(result.progress.coins) || 0) ||
-      merged.completedStages.length > (result.progress.completed_stages || []).length;
-    if (cloudIsBehind) await saveCloudProgress(merged);
-    return { restored: true, progress: merged };
-  }
   const local = readLocalPlayerProgress();
-  await saveCloudProgress(local);
-  return { restored: false, progress: local };
+  if (!result.progress) {
+    // Do not initialize a cloud row from browser-controlled local values.
+    return { restored: false, progress: local, cloudProgress: null };
+  }
+
+  const merged = {
+    unlockedStage: Math.max(local.unlockedStage, Number(result.progress.unlocked_stage) || 1),
+    completedStages: [...new Set([
+      ...local.completedStages,
+      ...(Array.isArray(result.progress.completed_stages) ? result.progress.completed_stages : [])
+    ])].filter((stage) => Number.isInteger(stage) && stage >= 1 && stage < 10).sort((a, b) => a - b),
+    // Legacy cloud balances are not trusted. Only a future verified reward
+    // pipeline may set coins_verified=true and authorize restoring this value.
+    coins: result.progress.coins_verified === true
+      ? Math.max(local.coins, Number(result.progress.coins) || 0)
+      : local.coins
+  };
+
+  applyRemotePlayerProgress({
+    unlocked_stage: merged.unlockedStage,
+    completed_stages: merged.completedStages,
+    coins: result.progress.coins,
+    coins_verified: result.progress.coins_verified === true
+  });
+  return { restored: true, progress: merged, cloudProgress: result.progress };
 }
 
 export async function syncPlayerProgress() {
-  try {
-    const session = await getPlayerSession();
-    if (!session.user) return null;
-    return await saveCloudProgress(readLocalPlayerProgress());
-  } catch {
-    return null;
-  }
+  // Browser-reported wins and balances are not authoritative. Keep guest
+  // progression local until the server can verify a completed game session.
+  return null;
 }
