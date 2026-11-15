@@ -1,7 +1,7 @@
 const TWEMOJI = "https://cdn.jsdelivr.net/gh/twitter/twemoji@15.1.0/assets/72x72";
 const LOCAL_PLANT_ICONS = {
-  radish: "/assets/plant-icons/radish.svg",
-  "energy-mushroom": "/assets/plant-icons/mushroom.svg",
+  radish: "/assets/plants/radish.png",
+  "energy-mushroom": "/assets/plants/mushroom.png",
   "pea-shooter": "/assets/plant-icons/pea-shooter.svg",
   "thorn-wall": "/assets/plant-icons/thorn-wall.svg",
   sunflower: "/assets/plant-icons/sunflower.svg",
