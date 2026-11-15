@@ -1501,8 +1501,8 @@ export default class BattleScene extends Scene {
       fontFamily: "Arial", fontSize: "20px", color: "#ffffff", fontStyle: "bold"
     }).setOrigin(0.5);
     button.add([plate, label]);
-    plate.on("pointerover", () => plate.setFillStyle(0x35bceb, 1));
-    plate.on("pointerout", () => plate.setFillStyle(0x287eb7, 0.98));
+    plate.on("pointerover", () => plate.setFillStyle(0x35bceb, 0.72).setScale(1.04));
+    plate.on("pointerout", () => plate.setFillStyle(0x35bceb, 0.42).setScale(1));
     plate.on("pointerdown", () => this.toggleCollectionMenu());
     this.collectionMenuControl = button;
     this.collectionMenuOpen = false;
