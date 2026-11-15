@@ -20,6 +20,7 @@ import {
 import {
   PHASE_ONE_DRAGON,
   PHASE_ONE_PLANTS,
+  PHASE_ONE_FARMER,
   PHASE_ONE_TIMING,
   getMonsterSpawnIntervalMs,
   PHASE_ONE_REWARDS,
@@ -2205,7 +2206,7 @@ export default class BattleScene extends Scene {
     });
 
     this.projectiles.push({
-      view, localX, row, verticalOffset, speed: 320, damage: PHASE_ONE_PLANTS.radish.projectileDamage, alive: true, trailTimer: 0
+      view, localX, row, verticalOffset, speed: PHASE_ONE_PLANTS.radish.projectileSpeed, damage: PHASE_ONE_PLANTS.radish.projectileDamage, alive: true, trailTimer: 0
     });
     this.playThornSound();
   }
@@ -2761,7 +2762,7 @@ export default class BattleScene extends Scene {
       const hit = this.monsters.find((monster) =>
         monster.alive &&
         monster.row === shot.row &&
-        Math.abs(monster.localX - shot.localX) <= 24 * (monster.widthScale || 1)
+        Math.abs(monster.localX - shot.localX) <= PHASE_ONE_PLANTS.radish.projectileCollisionRadius * (monster.widthScale || 1)
       );
       if (hit) {
         this.createProjectileImpact(position.x, position.y + shot.verticalOffset);
@@ -2962,13 +2963,13 @@ export default class BattleScene extends Scene {
 
   clubAttack() {
     if (!this.emergencyMode || this.livingPlantCount() > 0) return;
-    const target = this.monsters.filter((m) => m.alive && m.row === this.nearestLane(this.caveman.y) && Math.abs(m.x - this.caveman.x) <= 112)
+    const target = this.monsters.filter((m) => m.alive && m.row === this.nearestLane(this.caveman.y) && Math.abs(m.x - this.caveman.x) <= PHASE_ONE_FARMER.clubReachPx)
       .sort((a, b) => Math.abs(a.x - this.caveman.x) - Math.abs(b.x - this.caveman.x))[0];
     this.playFarmerAction("farmer-attack");
     this.tweens.add({ targets: this.caveman, angle: this.facing * 22, duration: 100, yoyo: true });
     if (target) {
       this.applyMonsterDamage(
-        target, 42 * this.incomingMonsterDamageMultiplier(target)
+        target, PHASE_ONE_FARMER.clubDamage * this.incomingMonsterDamageMultiplier(target)
       );
       this.setMessage("Club hit!");
     }
