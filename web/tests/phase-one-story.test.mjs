@@ -41,6 +41,7 @@ test("the rescue sequence picks up the princess, carries her home, then opens th
   const rescue = scene.slice(scene.indexOf("  beginPrincessRescue() {"), scene.indexOf("  readAudioPreference(key, fallback) {"));
   assert.match(rescue, /this\.caveman\.add\(this\.princessActor\)/);
   assert.match(rescue, /"farmer-rescue"/);
+  assert.match(rescue, /"phase-one-princess-rescued"/);
   assert.match(rescue, /"farmer-carry"/);
   assert.match(rescue, /x: 82/);
   assert.match(rescue, /this\.endGame\(true\)/);
@@ -50,7 +51,7 @@ test("the rescue sequence picks up the princess, carries her home, then opens th
 test("story artwork uses explicit user-owned asset paths and optional animation sheets", () => {
   assert.equal(assets.version, 1);
   const keys = assets.assets.map((asset) => asset.key);
-  for (const key of ["farmer-sling", "farmer-rescue", "farmer-carry", "dragon-boss", "phase-one-princess", "phase-one-emblem"]) {
+  for (const key of ["farmer-sling", "farmer-rescue", "farmer-carry", "dragon-boss", "phase-one-princess-captive", "phase-one-princess-rescued", "phase-one-emblem"]) {
     assert.ok(keys.includes(key), "missing story asset contract: " + key);
   }
   for (const asset of assets.assets) assert.ok(asset.path.startsWith("/assets/"));
