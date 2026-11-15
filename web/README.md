@@ -44,7 +44,24 @@ The current scene still uses temporary Phaser-drawn shapes for the battlefield a
 3. Run `web/supabase/migrations/001_player_progress.sql` in the Supabase SQL Editor.
 4. In Supabase Authentication -> Providers, enable Google and add the Google OAuth Client ID and Client Secret. In Google Cloud Console, create an OAuth 2.0 Web Client and add this exact Supabase callback URL to its Authorized redirect URIs: `https://YOUR_PROJECT_REF.supabase.co/auth/v1/callback`.
 5. In Supabase Authentication -> URL Configuration, set the local and production Site URLs. Add these Redirect URLs to the allow list: `http://localhost:3000/api/player/account/google/callback` and `https://YOUR_GAME_DOMAIN/api/player/account/google/callback`. Add any other real deployment callback URLs you use.
-6. Run `web/supabase/migrations/002_player_data.sql` after migration 001. It creates player profiles, settings, achievements, and inventory tables with row-level security, and automatically creates/updates profiles for email and Google identities.
+6. Run `web/supabase/migrations/002_player_data.sql` after migration 001. It creates player profiles, settings, achievements, and inventory tables with row-level security, and automatically creates/updates profiles for email and Google identities.\n7. Run `web/supabase/migrations/003_plant_catalog_and_purchases.sql`. It creates the Stage 1 plant catalogue, a private coin transaction history, and an atomic `purchase_player_plant` database function. Planned plants are deliberately marked unavailable and not purchasable until their artwork and battle behavior are implemented and approved.
 7. Restart the Next.js server. The Google button uses a server-side PKCE flow; access and refresh tokens remain in HttpOnly cookies. No Google client secret or Supabase service-role key belongs in the web app environment.
 
 The web app uses Supabase Auth through server routes. Access and refresh tokens are stored in HttpOnly cookies; the Supabase service-role key is never used in the browser. Row-level security limits each player to their own progress row. Without the two environment variables, the account screen remains visible but cloud sign-in/sync is unavailable; local browser progress continues to work.
+
+
+## Player database tables
+
+The migrations provision these player-owned records:
+
+- `player_progress`: unlocked stages, completed stages, and saved coin balance.
+- `player_profiles`: display name, avatar, and sign-in provider.
+- `player_settings`: per-player settings stored as JSON.
+- `player_achievements`: uniquely awarded achievements.
+- `player_inventory`: owned unlocks and collectibles.
+- `stage_one_plant_catalog`: authoritative plant metadata, availability, stage requirement, and coin price.
+- `player_coin_transactions`: auditable coin debits and rewards.
+
+Plant purchases are designed to run through the database function `purchase_player_plant(plant_key)`. It reads the approved price from the database catalogue, locks the player's progress row, checks stage access and ownership, debits the balance, records the transaction, and grants the inventory item in one database transaction. Do not call it with a client-supplied price.
+
+The Stage 1 catalogue currently contains two implemented plants and eight planned plants. All planned plants remain unavailable and non-purchasable until their final art and gameplay behavior are integrated.
