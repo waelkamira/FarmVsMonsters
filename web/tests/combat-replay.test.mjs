@@ -71,3 +71,9 @@ test("replay applies monster bites only to living radishes and respects attack i
  ]);
  const result=replayCombatEventLog(valid); assert.equal(result.ok,true); assert.equal(result.state.plants[0].hp,128);
 });
+
+test("rejects malformed monster IDs and out-of-range monster lanes at event-log boundary", () => {
+ const base=createCombatEventLog({seed:123,rulesVersion:PHASE_ONE_RULES_VERSION});
+ assert.throws(()=>appendCombatEvent(base,ev(0,"monster_spawned",{monsterId:"monster-x",wave:1,spawnIndex:0,row:0,archetype:"cave-brute",hp:175,speed:8})),/INVALID_COMBAT_EVENT_ORDER_OR_LOG|INVALID_COMBAT_EVENT_PAYLOAD|INVALID_MONSTER_SPAWN_EVENT/);
+ assert.throws(()=>appendCombatEvent(base,ev(0,"monster_spawned",{monsterId:"monster-1",wave:1,spawnIndex:0,row:5,archetype:"cave-brute",hp:175,speed:8})),/INVALID_MONSTER_SPAWN_EVENT/);
+});
