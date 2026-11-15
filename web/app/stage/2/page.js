@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale, LanguageToggle } from "../../LocaleProvider";
 import { loadUnlockedStage } from "../../../game/rules/phaseOneRules.mjs";
+import { getPlayerSession, restoreOrInitializeCloudProgress } from "../../../game/services/playerAccount.mjs";
 import CatalogThumb from "../../components/CatalogThumb";
 
 export default function StageTwoIntroPage() {
@@ -14,19 +15,41 @@ export default function StageTwoIntroPage() {
   const [access, setAccess] = useState("checking");
 
   useEffect(() => {
-    let unlocked = 1;
-    try {
-      unlocked = loadUnlockedStage(window.localStorage);
-    } catch {
-      unlocked = 1;
+    let active = true;
+
+    async function checkCampaignAccess() {
+      let unlocked = 1;
+      try {
+        unlocked = loadUnlockedStage(window.localStorage);
+      } catch {
+        unlocked = 1;
+      }
+
+      if (unlocked < 2) {
+        try {
+          const session = await getPlayerSession();
+          if (session?.user) {
+            const restored = await restoreOrInitializeCloudProgress();
+            unlocked = Math.max(unlocked, Number(restored?.progress?.unlockedStage) || 1);
+          }
+        } catch {
+          // Keep the local save as the fallback when cloud accounts are unavailable.
+        }
+      }
+
+      if (!active) return;
+      if (unlocked >= 2) {
+        setAccess("unlocked");
+      } else {
+        setAccess("locked");
+        router.replace("/stages");
+      }
     }
 
-    if (unlocked >= 2) {
-      setAccess("unlocked");
-    } else {
-      setAccess("locked");
-      router.replace("/stages");
-    }
+    checkCampaignAccess();
+    return () => {
+      active = false;
+    };
   }, [router]);
 
   if (access !== "unlocked") {
