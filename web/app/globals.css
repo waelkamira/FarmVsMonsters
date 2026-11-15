@@ -219,3 +219,10 @@ body { color:var(--text-primary); }
 .account-avatar { display:grid; place-items:center; width:58px; height:58px; border-radius:50%; background:#b98549; color:#211307; font-size:30px; }
 .stages-actions { display:flex; align-items:center; gap:12px; }
 @media(max-width:560px) { .account-card { padding:24px 16px; } .account-tabs button { font-size:14px; } .stage-tile p,.stage-briefing span { font-size:14px; } .stages-actions { flex-wrap:wrap; justify-content:flex-end; } }
+
+.optional-account-entry { display:flex; flex-direction:column; align-items:flex-start; gap:8px; }
+.optional-account-entry small { color:#fff0d0; font-size:13px; line-height:1.6; text-shadow:0 1px 2px #100804; }
+.guest-play-panel { display:flex; flex-direction:column; align-items:center; gap:10px; margin:22px 0; padding:22px; border:2px solid #e0bc7b; border-radius:14px; background:linear-gradient(145deg,#21150d,#3c2818); text-align:center; }
+.guest-play-panel strong { color:#fff1cc; font-size:20px; }
+.guest-play-panel p { margin:0; color:#f4e2c2; font-size:15px; line-height:1.8; }
+.guest-play-panel .primary-link { margin-top:6px; }
