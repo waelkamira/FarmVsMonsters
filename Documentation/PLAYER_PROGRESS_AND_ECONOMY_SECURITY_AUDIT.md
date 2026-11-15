@@ -79,3 +79,7 @@ Target selection has been extracted to pure functions for lane blockers, project
 
 
 Combat extraction now includes shared cooldown advancement and pure Dust Skitter jump/burst state transitions. Random duration values are still sampled client-side through Phaser and passed into the resolver, so this work does not establish deterministic replay or server authority.
+
+
+
+Wave timing and monster archetype selection are now pure shared rules. However, Phaser still chooses spawn lanes through its local random source, and all spawn decisions still execute client-side. This does not establish a trusted replay validator or server-side reward authority.
