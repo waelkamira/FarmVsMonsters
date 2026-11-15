@@ -214,7 +214,7 @@ test("monster archetype composition introduces threats in measured waves", () =>
     assert.equal(monsterArchetypeFor(wave, 4), "dust-skitter");
   }
   for (let i = 0; i < 30; i += 1) {
-    const expected = (i + 1) % 5 === 0 ? "stonehide" : i % 3 === 1 ? "dust-skitter" : "cave-brute";
+    const expected = (i + 1) % 10 === 0 ? "alpha-brute" : (i + 1) % 5 === 0 ? "stonehide" : i % 3 === 1 ? "dust-skitter" : "cave-brute";
     assert.equal(monsterArchetypeFor(5, i), expected);
   }
 });
@@ -227,7 +227,7 @@ test("Dust Skitters perform periodic visual hops while remaining grounded by pla
   assert.match(update, /resolveDustSkitterMotionStep\(/);
   assert.match(update, /jumpVisualHeight: 34/);
   assert.match(update, /monster\.hyenaSprite\.y = jumpOffset/);
-  assert.match(update, /if \(withinBiteRange\) \{\s*\/\/ A skitter must land before it can stop to bite/);
+  assert.match(update, /if \(withinBiteRange\) \{\s*if \(monster\.isJumping\)/);
   assert.match(update, /monster\.isJumping = false;\s*monster\.jumpElapsed = 0;/);
   assert.doesNotMatch(spawn, /\bshadow\b/i, "characters must not receive ground shadows");
   assert.doesNotMatch(update, /monster\.shadow/, "monster movement must not update a ground shadow");
@@ -371,8 +371,8 @@ test("wave transitions include a pausable five-second preparation window without
   assert.match(update, /this\.waveIntermissionMs = spawnStep\.intermissionMs/);
   assert.match(update, /if \(spawnStep\.shouldSpawn\)/);
   assert.match(update, /this\.spawnMonster\(spawnIndex\)/);
-  assert.match(progress, /this\.waveIntermissionMs = 5000/);
-  assert.match(progress, /this\.spawnTimer = 1600/);
+  assert.match(progress, /this\.waveIntermissionMs = PHASE_ONE_TIMING\.waveIntermissionMs/);
+  assert.match(progress, /this\.spawnTimer = PHASE_ONE_TIMING\.nextWaveSpawnDelayMs/);
   assert.deepEqual(PHASE_ONE_WAVE_SIZES, [3, 5, 6, 7, 9]);
   assert.match(scene, /if \(this\.gameOver \|\| this\.isPaused \|\| this\.collectionMenuOpen\) return/);
 });
