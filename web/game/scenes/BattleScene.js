@@ -1877,14 +1877,17 @@ export default class BattleScene extends Scene {
 
   requestPlant(col, row) {
     if (this.gameOver) return;
-    this.farmerForceIdleFrame = false;
-    if (this.plantingTarget || this.returnTarget || this.farmerPlanting) {
-      this.setMessage("The caveman must finish his current action before moving again.");
-      return;
-    }
+    // Uprooting is a direct player action and must remain available even while
+    // the farmer is walking back from a previous planting animation.
+    // Check the occupied cell before applying movement/action locks.
     const existingPlant = this.plants.find((plant) => plant.alive && plant.col === col && plant.row === row);
     if (existingPlant) {
       this.uprootPlant(existingPlant);
+      return;
+    }
+    this.farmerForceIdleFrame = false;
+    if (this.plantingTarget || this.returnTarget || this.farmerPlanting) {
+      this.setMessage("The caveman must finish his current action before moving again.");
       return;
     }
     if (!this.selectedPlant) { this.setMessage("Choose a plant card first."); return; }
