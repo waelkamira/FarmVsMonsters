@@ -505,9 +505,10 @@ export default class BattleScene extends Scene {
     this.mushroomCard = this.createPlantCard(72, "MUSHROOM", "50", "mushroom", null, "mushroom-character", 64);
 
     this.messageText = this.add.text(560, 574, "", {
-      fontFamily: "Arial", fontSize: "16px", color: "#ffffff", fontStyle: "bold",
-      backgroundColor: "rgba(49,91,145,0.68)", padding: { x: 16, y: 7 }, align: "center",
-      stroke: "#24365d", strokeThickness: 3, resolution: 2
+      fontFamily: "Arial", fontSize: "15px", color: "#ffffff", fontStyle: "bold",
+      backgroundColor: "rgba(255,255,255,0.18)", padding: { x: 18, y: 8 }, align: "center",
+      stroke: "#24466b", strokeThickness: 3, resolution: 2,
+      shadow: { offsetX: 0, offsetY: 2, color: "#17314f", blur: 5, fill: true }
     }).setOrigin(0.5, 1).setDepth(42);
   }
 
@@ -1439,39 +1440,51 @@ export default class BattleScene extends Scene {
   }
 
   createQuickCollectionButtons() {
+    // A shared translucent glass dock ties the two collection shortcuts together.
+    this.quickCollectionDock = this.add.container(755, 619).setDepth(47);
+    const dockGlow = this.add.rectangle(0, 1, 146, 52, 0xffffff, 0.10);
+    const dock = this.add.rectangle(0, 0, 140, 46, 0xdaf3ff, 0.22)
+      .setStrokeStyle(1, 0xffffff, 0.42);
+    this.quickCollectionDock.add([dockGlow, dock]);
+
     const makeButton = (x, tab, tint) => {
-      const button = this.add.container(x, 619).setDepth(48);
-      const halo = this.add.circle(0, 0, 27, 0xffffff, 0.12);
-      const plate = this.add.circle(0, 0, 24, tint, 0.62)
-        .setStrokeStyle(1, 0xffffff, 0.78).setInteractive({ useHandCursor: true });
+      const button = this.add.container(x, 0);
+      const halo = this.add.circle(0, 0, 21, 0xffffff, 0.10);
+      const plate = this.add.circle(0, 0, 18, tint, 0.38)
+        .setStrokeStyle(1, 0xffffff, 0.72).setInteractive({ useHandCursor: true });
       const icon = this.add.graphics();
-      icon.lineStyle(3, 0xffffff, 1);
+      icon.lineStyle(2.6, 0xffffff, 1);
       if (tab === "plants") {
-        // Simple sprout glyph; the final button skin can be art-directed later.
-        icon.lineBetween(0, 13, 0, -2);
-        icon.lineBetween(0, 3, -10, -7);
-        icon.lineBetween(0, 0, 10, -11);
-        icon.strokeEllipse(-8, -8, 12, 8);
-        icon.strokeEllipse(8, -12, 12, 8);
-        icon.lineBetween(-13, 15, 13, 15);
+        icon.lineBetween(0, 11, 0, -2);
+        icon.lineBetween(0, 2, -8, -6);
+        icon.lineBetween(0, -1, 8, -9);
+        icon.strokeEllipse(-7, -7, 10, 7);
+        icon.strokeEllipse(7, -10, 10, 7);
+        icon.lineBetween(-10, 12, 10, 12);
       } else {
-        // Paw-print glyph for the monster collection.
         icon.fillStyle(0xffffff, 1);
-        icon.fillEllipse(0, 7, 17, 12);
-        icon.fillCircle(-10, -7, 4);
-        icon.fillCircle(-3, -13, 4);
-        icon.fillCircle(5, -13, 4);
-        icon.fillCircle(11, -6, 4);
+        icon.fillEllipse(0, 6, 14, 10);
+        icon.fillCircle(-8, -6, 3.2);
+        icon.fillCircle(-2, -11, 3.2);
+        icon.fillCircle(5, -11, 3.2);
+        icon.fillCircle(10, -5, 3.2);
       }
       button.add([halo, plate, icon]);
-      plate.on("pointerover", () => plate.setFillStyle(0x35bceb, 1));
-      plate.on("pointerout", () => plate.setFillStyle(tint, 0.98));
+      plate.on("pointerover", () => {
+        plate.setFillStyle(tint, 0.72);
+        button.setScale(1.06);
+      });
+      plate.on("pointerout", () => {
+        plate.setFillStyle(tint, 0.38);
+        button.setScale(1);
+      });
       plate.on("pointerdown", () => this.openCollectionMenuTab(tab));
+      this.quickCollectionDock.add(button);
       return button;
     };
 
-    this.quickPlantsButton = makeButton(720, "plants", 0x238a58);
-    this.quickMonstersButton = makeButton(790, "monsters", 0x8b65e8);
+    this.quickPlantsButton = makeButton(-34, "plants", 0x42c96b);
+    this.quickMonstersButton = makeButton(34, "monsters", 0x8b65e8);
   }
 
   openCollectionMenuTab(tab) {
