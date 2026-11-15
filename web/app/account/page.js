@@ -95,9 +95,11 @@ export default function AccountPage() {
         <h1>{ar ? "احفظ مغامرتك" : "Save Your Adventure"}</h1>
         <p className="account-intro">
           {ar
-            ? "أنشئ حساباً أو سجّل الدخول لحفظ المراحل التي أنجزتها والعملات، واستعادة تقدمك عند العودة."
-            : "Create an account or sign in to save completed stages and coins, then restore your progress when you return."}
+            ? "يمكنك اللعب فوراً كضيف دون تسجيل الدخول. سيُحفظ تقدمك على هذا الجهاز. أنشئ حساباً اختيارياً لحفظ المراحل والعملات سحابياً واستعادتها على أجهزتك الأخرى."
+            : "You can play immediately as a guest without signing in. Your progress stays on this device. Create an optional account to back up stages and coins to the cloud and restore them on your other devices."}
         </p>
+
+        <div className="guest-play-panel"><strong>{ar ? "لا تحتاج إلى حساب للعب!" : "No account needed to play!"}</strong><p>{ar ? "تقدم الضيف يُحفظ محلياً تلقائياً. التسجيل مطلوب فقط للمزامنة السحابية." : "Guest progress is saved locally automatically. Sign-in is only needed for cloud sync."}</p><Link className="primary-link" href="/stages">{ar ? "متابعة اللعب كضيف" : "Continue as Guest"}</Link></div>
 
         {loading ? (
           <div className="account-status">{ar ? "جارٍ التحقق من الحساب..." : "Checking account..."}</div>
