@@ -27,7 +27,7 @@ export async function GET(request) {
   if (!user?.id) return NextResponse.json({ error: "Sign in to load cloud progress." }, { status: 401 });
 
   const query = new URLSearchParams({
-    select: "unlocked_stage,completed_stages,coins,coins_verified,updated_at",
+    select: "unlocked_stage,completed_stages,coins,coins_verified,progress_verified,updated_at",
     user_id: "eq." + user.id,
     limit: "1"
   });
