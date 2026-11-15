@@ -1122,7 +1122,7 @@ export default class BattleScene extends Scene {
     });
     this.input.on("pointerup", () => { this.activeAudioSlider = null; });
 
-    this.audioButton = this.add.container(1040, 34).setDepth(72);
+    this.audioButton = this.add.container(1090, 34).setDepth(72);
     const buttonBackground = this.add.circle(0, 0, 23, 0xb88950, 1).setStrokeStyle(4, 0x392417);
     const speaker = this.add.graphics();
     speaker.fillStyle(0x563a25, 1);
@@ -1148,7 +1148,7 @@ export default class BattleScene extends Scene {
         pointer.x <= this.audioMenuBounds.right &&
         pointer.y >= this.audioMenuBounds.top &&
         pointer.y <= this.audioMenuBounds.bottom;
-      const inButton = pointer.x >= 1015 && pointer.x <= 1065 &&
+      const inButton = pointer.x >= 1065 && pointer.x <= 1115 &&
         pointer.y >= 9 && pointer.y <= 59;
       if (!inMenu && !inButton) {
         // The same outside click must only dismiss the menu; it must not
