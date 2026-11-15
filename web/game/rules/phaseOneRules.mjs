@@ -1,5 +1,5 @@
 import { PHASE_ONE_PLANTS, PHASE_ONE_REWARDS, PHASE_ONE_WAVE_SIZES, PHASE_ONE_ENERGY } from "./phaseOneCombatContract.mjs";
-import { resolveEnergyPickup } from "./combatSimulation.mjs";
+import { resolveEnergyPickup, resolveMonsterArchetype } from "./combatSimulation.mjs";
 
 // Thirty ordinary monsters across five gentle-to-challenging waves. The dragon boss is separate.
 export { PHASE_ONE_WAVE_SIZES };
@@ -38,14 +38,7 @@ export function isPhaseOneVictory(wave, totalWaves, spawnedCount, waveSize, livi
   return wave === totalWaves && isWaveComplete(spawnedCount, waveSize, livingMonsterCount);
 }
 
-export function monsterArchetypeFor(wave, spawnIndex) {
-  // Alpha Brutes are rare wave leaders: huge, exceptionally durable, and
-  // dangerous to plants. Reserve them for the later waves.
-  if (wave >= 4 && (spawnIndex + 1) % 10 === 0) return "alpha-brute";
-  if (wave >= 5 && (spawnIndex + 1) % 5 === 0) return "stonehide";
-  if (wave >= 3 && spawnIndex % 3 === 1) return "dust-skitter";
-  return "cave-brute";
-}
+export const monsterArchetypeFor = resolveMonsterArchetype;
 
 
 export const PROGRESSION_STORAGE_KEY = "farmVsMonsters.progression.v1";
