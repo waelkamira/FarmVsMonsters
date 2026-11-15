@@ -950,3 +950,11 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - Kept the existing projectile lane, travel speed, damage, target selection, and collision radius unchanged. Retained a small pink/green glow and added a matching leaf-coloured impact burst.
 - Added a simple Radish-shaped fallback only for the asset-load failure case. This visual integration is currently for the active Radish defender; future plants need their own projectile-art mapping and firing profiles.
 - GitHub source was updated; no browser preview, local test run, or production deployment was performed.
+
+
+## 2026-11-16 — Radish cross-lane targeting correction
+- Removed the same-row-only target filter: Radishes now consider advancing monsters in any of the five lanes within their horizontal attack range and select the nearest by board-space distance.
+- Each Radish projectile stores its firing row and target row, then travels diagonally between them using the calibrated perspective lane mesh.
+- Collision now requires both horizontal proximity and proximity to the projectile's interpolated lane, preventing cross-lane shots from damaging unrelated monsters.
+- Existing Radish projectile speed, damage, attack cooldown, and configured collision radius remain unchanged.
+- Source updated on main. Browser gameplay verification and automated test/build execution remain outstanding.
