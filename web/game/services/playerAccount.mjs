@@ -80,30 +80,39 @@ export async function loadCloudProgress() {
 export async function restoreOrInitializeCloudProgress() {
   const result = await loadCloudProgress();
   const local = readLocalPlayerProgress();
-  if (!result.progress) {
-    // Do not initialize a cloud row from browser-controlled local values.
-    return { restored: false, progress: local, cloudProgress: null };
+  const cloud = result.progress;
+
+  if (!cloud || cloud.progress_verified !== true) {
+    // Legacy cloud stages and balances were previously writable by clients.
+    // Keep this device's local save, but never import those unverified values.
+    return {
+      restored: false,
+      progress: local,
+      cloudProgress: cloud || null,
+      reason: cloud ? "cloud-progress-unverified" : "no-cloud-progress"
+    };
   }
 
-  const merged = {
-    unlockedStage: Math.max(local.unlockedStage, Number(result.progress.unlocked_stage) || 1),
-    completedStages: [...new Set([
-      ...local.completedStages,
-      ...(Array.isArray(result.progress.completed_stages) ? result.progress.completed_stages : [])
-    ])].filter((stage) => Number.isInteger(stage) && stage >= 1 && stage < 10).sort((a, b) => a - b),
-    // Legacy cloud balances are not trusted. Only a future verified reward
-    // pipeline may set coins_verified=true and authorize restoring this value.
-    coins: result.progress.coins_verified === true
-      ? (Number(result.progress.coins) || 0)
-      : local.coins
-  };
+  const unlockedStage = Math.min(10, Math.max(1, Number(cloud.unlocked_stage) || 1));
+  const completedStages = Array.isArray(cloud.completed_stages)
+    ? [...new Set(cloud.completed_stages.filter((stage) =>
+        Number.isInteger(stage) && stage >= 1 && stage < unlockedStage
+      ))].sort((a, b) => a - b)
+    : [];
+  const coins = cloud.coins_verified === true
+    ? (Number(cloud.coins) || 0)
+    : local.coins;
 
   applyRemotePlayerProgress({
-    unlocked_stage: merged.unlockedStage,
-    completed_stages: merged.completedStages,
-    coins: result.progress.coins,
-    coins_verified: result.progress.coins_verified === true
+    unlocked_stage: unlockedStage,
+    completed_stages: completedStages,
+    coins,
+    coins_verified: cloud.coins_verified === true
   });
-  return { restored: true, progress: merged, cloudProgress: result.progress };
-}
 
+  return {
+    restored: true,
+    progress: { unlockedStage, completedStages, coins },
+    cloudProgress: cloud
+  };
+}
