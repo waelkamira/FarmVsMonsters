@@ -2,12 +2,14 @@ const TWEMOJI = "https://cdn.jsdelivr.net/gh/twitter/twemoji@15.1.0/assets/72x72
 const LOCAL_PLANT_ICONS = {
   radish: "/assets/plants/radish.png",
   "energy-mushroom": "/assets/plants/mushroom.png",
+  tomato: "/assets/plants/tomato.png",
+  onion: "/assets/plants/Onion.png",
+  "pumpkin-guard": "/assets/plants/pumpkin.png",
   "pea-shooter": "/assets/plant-icons/pea-shooter.svg",
   "thorn-wall": "/assets/plant-icons/thorn-wall.svg",
   sunflower: "/assets/plant-icons/sunflower.svg",
   "ice-bloom": "/assets/plant-icons/ice-bloom.svg",
   "double-radish": "/assets/plant-icons/double-radish.svg",
-  "pumpkin-guard": "/assets/plant-icons/pumpkin-guard.svg",
   "explosive-berry": "/assets/plant-icons/explosive-berry.svg",
   "fire-pepper": "/assets/plant-icons/fire-pepper.svg"
 };
@@ -23,12 +25,14 @@ const LOCAL_MONSTER_ICONS = {
 const ART = {
   radish: ["1f96c", "Radish greens"],
   "energy-mushroom": ["1f344", "Mushroom"],
+  tomato: ["1f345", "Tomato"],
+  onion: ["1f9c5", "Onion"],
+  "pumpkin-guard": ["1f383", "Pumpkin"],
   "pea-shooter": ["1fadb", "Pea pod"],
   "thorn-wall": ["1f335", "Cactus"],
   sunflower: ["1f33b", "Sunflower"],
   "ice-bloom": ["2744", "Snowflake"],
   "double-radish": ["1f331", "Seedling"],
-  "pumpkin-guard": ["1f383", "Pumpkin"],
   "explosive-berry": ["1fad0", "Blueberries"],
   "fire-pepper": ["1fad1", "Hot pepper"],
   "cave-brute": ["1f43a", "Wolf-like hyena"],
