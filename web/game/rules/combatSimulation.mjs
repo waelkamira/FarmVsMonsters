@@ -353,9 +353,9 @@ export function resolveWaveSpawnStep({
   deltaMs
 } = {}) {
   if (
+    !Number.isInteger(totalWaves) || totalWaves !== PHASE_ONE_WAVE_SIZES.length ||
     !Number.isInteger(wave) || wave < 1 || wave > totalWaves ||
-    !Number.isInteger(totalWaves) || totalWaves < 1 ||
-    !Number.isInteger(waveSize) || waveSize < 1 ||
+    !Number.isInteger(waveSize) || waveSize !== PHASE_ONE_WAVE_SIZES[wave - 1] ||
     !Number.isInteger(spawnedThisWave) || spawnedThisWave < 0 || spawnedThisWave > waveSize ||
     !Number.isFinite(intermissionMs) || intermissionMs < 0 ||
     !Number.isFinite(spawnTimerMs) ||
