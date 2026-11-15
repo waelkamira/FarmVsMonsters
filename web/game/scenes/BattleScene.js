@@ -35,8 +35,9 @@ const COMBAT_BALANCE = {
   plants: { radish: { projectileDamage: 25 } },
   monsters: {
     "cave-brute": { hitsToDefeat: 7 },
-    "dust-skitter": { hpMultiplier: 0.72 },
-    "stonehide": { hpMultiplier: 2.2 }
+    "dust-skitter": { hpMultiplier: 0.52 },
+    "stonehide": { hpMultiplier: 2.2 },
+    "alpha-brute": { hitsToDefeat: 14 }
   }
 };
 
@@ -1864,14 +1865,23 @@ export default class BattleScene extends Scene {
         widthScale: 1, heightScale: 1, wobbleDuration: 520
       },
       "dust-skitter": {
-        speedMultiplier: 1.55, maxSpeed: 34,
-        plantDamage: 10, attackInterval: 920, incomingDamage: 1,
-        widthScale: 0.8, heightScale: 0.88, wobbleDuration: 350
+        // Small scouts have roughly half the standard durability, but use
+        // frequent speed bursts to slip through gaps in the defense.
+        speedMultiplier: 1.7, maxSpeed: 36,
+        plantDamage: 8, attackInterval: 850, incomingDamage: 1,
+        widthScale: 0.62, heightScale: 0.68, wobbleDuration: 350
       },
       "stonehide": {
         speedMultiplier: 0.62, maxSpeed: 19,
         plantDamage: 23, attackInterval: 1450, incomingDamage: 0.7,
-        widthScale: 1.18, heightScale: 1.14, wobbleDuration: 760
+        widthScale: 1.35, heightScale: 1.3, wobbleDuration: 760
+      },
+      "alpha-brute": {
+        // A rare giant: exactly double the normal creature's visual scale
+        // and twice its standard radish-hit durability.
+        speedMultiplier: 0.48, maxSpeed: 15,
+        plantDamage: 32, attackInterval: 1350, incomingDamage: 0.85,
+        widthScale: 2, heightScale: 2, wobbleDuration: 900
       }
     };
     const profile = profiles[archetype];
@@ -1894,8 +1904,10 @@ export default class BattleScene extends Scene {
 
     const g = this.add.graphics();
     const bodyColor = archetype === "stonehide" ? 0x68675b
+      : archetype === "alpha-brute" ? 0x4d3931
       : archetype === "dust-skitter" ? 0x895b3a : 0x765036;
     const headColor = archetype === "stonehide" ? 0x898578
+      : archetype === "alpha-brute" ? 0x80604b
       : archetype === "dust-skitter" ? 0xb18154 : 0x9a7048;
 
     // Original prehistoric raider silhouette shared by the enemy family.
@@ -2009,11 +2021,15 @@ export default class BattleScene extends Scene {
       this.setMessage("A Dust Skitter has joined the raid: quick, but easier to bring down.");
     } else if (archetype === "stonehide" && spawnIndex === 4) {
       this.setMessage("A Stonehide is approaching: slow, heavily plated, and tough to stop.");
+    } else if (archetype === "alpha-brute") {
+      this.setMessage("ALPHA BRUTE! A giant raider with double health and crushing bites is approaching!");
     }
 
     monsterRecord = {
       kind: archetype,
       row, x: spawn.x, y: spawn.y, localX: SPAWN_LOCAL_X, hp,
+      widthScale: profile.widthScale,
+      heightScale: profile.heightScale,
       speed,
       plantDamage: profile.plantDamage,
       attackInterval: profile.attackInterval,
@@ -2074,7 +2090,8 @@ export default class BattleScene extends Scene {
       const blocker = this.plants.filter((p) => p.alive && p.type === "radish" && p.row === monster.row && this.worldToLane(p).localX < monster.localX)
         .sort((a, b) => this.worldToLane(b).localX - this.worldToLane(a).localX)[0];
       const blockerLocalX = blocker ? this.worldToLane(blocker).localX : -Infinity;
-      const withinBiteRange = Boolean(blocker && monster.localX - blockerLocalX <= 43);
+      const biteReach = 43 * (monster.widthScale || 1);
+      const withinBiteRange = Boolean(blocker && monster.localX - blockerLocalX <= biteReach);
 
       // A Stonehide locks its shale plates into place while chewing a plant.
       // This state also changes how much damage incoming hits can inflict.
@@ -2124,7 +2141,7 @@ export default class BattleScene extends Scene {
       // The extra contact radius also catches fast bursts and jump-over
       // movement where a monster can move from one side to the other in a
       // single update. Apply once per monster/plant pair, for every plant type.
-      const plantContactRadius = 30;
+      const plantContactRadius = 30 * (monster.widthScale || 1);
       for (const plant of this.plants) {
         if (!plant.alive || plant.row !== monster.row || monster.knockedPlants.has(plant)) continue;
         const plantLocalX = this.worldToLane(plant).localX;
@@ -2172,7 +2189,7 @@ export default class BattleScene extends Scene {
       const hit = this.monsters.find((monster) =>
         monster.alive &&
         monster.row === shot.row &&
-        Math.abs(monster.localX - shot.localX) <= 24
+        Math.abs(monster.localX - shot.localX) <= 24 * (monster.widthScale || 1)
       );
       if (hit) {
         this.createProjectileImpact(position.x, position.y + shot.verticalOffset);
