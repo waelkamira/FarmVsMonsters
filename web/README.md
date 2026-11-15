@@ -35,3 +35,14 @@ Open http://localhost:3000.
 - See `../Documentation/PHASER_FARM_BACKGROUND_INTEGRATION.md` for the integration contract.
 
 The current scene still uses temporary Phaser-drawn shapes for the battlefield and characters. The generated background and approved original sprite sheets will be integrated as they are supplied.
+
+
+## Player accounts and cloud progress
+
+1. Create a Supabase project.
+2. Copy `web/.env.example` to `web/.env.local` and fill in `SUPABASE_URL` and `SUPABASE_ANON_KEY` from Project Settings -> API.
+3. Run `web/supabase/migrations/001_player_progress.sql` in the Supabase SQL Editor.
+4. In Supabase Authentication -> URL Configuration, set the local and production site URLs. Configure email confirmation to match your preferred sign-up flow.
+5. Restart the Next.js server.
+
+The web app uses Supabase Auth through server routes. Access and refresh tokens are stored in HttpOnly cookies; the Supabase service-role key is never used in the browser. Row-level security limits each player to their own progress row. Without the two environment variables, the account screen remains visible but cloud sign-in/sync is unavailable; local browser progress continues to work.
