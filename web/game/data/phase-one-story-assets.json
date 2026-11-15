@@ -35,10 +35,16 @@
       "purpose": "Small Phase 1 dragon boss; animated horizontally behind the battle lanes."
     },
     {
-      "key": "phase-one-princess",
-      "path": "/assets/characters/princess/princess.png",
+      "key": "phase-one-princess-captive",
+      "path": "/assets/characters/princess/princess-captive.png",
       "type": "image",
-      "purpose": "Captive princess shown beside the dragon during the final wave, then attached to the farmer during the rescue."
+      "purpose": "Bound/captive pose shown beside the dragon during the final wave."
+    },
+    {
+      "key": "phase-one-princess-rescued",
+      "path": "/assets/characters/princess/princess-rescued.png",
+      "type": "image",
+      "purpose": "Unbound pose attached to the farmer after the rescue animation."
     },
     {
       "key": "phase-one-emblem",
