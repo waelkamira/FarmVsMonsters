@@ -26,9 +26,11 @@ test("different seeds produce different sequences and zero seed is normalized", 
     Array.from({ length: 8 }, () => second.nextUint32())
   );
   assert.equal(normalizeSimulationSeed(0), 0x6d2b79f5);
+  const zeroA = createSeededRandom(0);
+  const zeroB = createSeededRandom(0);
   assert.deepEqual(
-    Array.from({ length: 8 }, () => createSeededRandom(0).nextUint32()),
-    Array.from({ length: 8 }, () => createSeededRandom(0).nextUint32())
+    Array.from({ length: 8 }, () => zeroA.nextUint32()),
+    Array.from({ length: 8 }, () => zeroB.nextUint32())
   );
 });
 
