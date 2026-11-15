@@ -117,7 +117,16 @@ export async function POST(request) {
   return response;
 }
 
-export async function DELETE() {
+export async function DELETE(request) {
+  const api = config();
+  const accessToken = request.cookies.get(ACCESS_COOKIE)?.value;
+  if (api && accessToken) {
+    await fetch(api.url + "/auth/v1/logout", {
+      method: "POST",
+      headers: { apikey: api.key, Authorization: "Bearer " + accessToken },
+      cache: "no-store"
+    }).catch(() => null);
+  }
   const response = NextResponse.json({ ok: true });
   clearSessionCookies(response);
   return response;
