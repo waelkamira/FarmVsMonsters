@@ -835,3 +835,13 @@
 ## 2026-11-15 — CI runner availability check
 - GitHub Actions was triggered for the new combat-contract and seeded-PRNG commits. The latest run `43760589466` failed before any job step started: job `validate` has `runner_id=0` and an empty steps list.
 - This is an unavailable/unassigned runner result, not evidence that the source passed or failed compilation/tests. No test, lint, or build result is available from this run.
+
+
+
+## 2026-11-15 — First pure combat simulation kernel extracted
+- Added `web/game/rules/combatSimulation.mjs` with pure resolvers for plant placement, uprooting/refunds, energy pickups, and HP damage.
+- Wired BattleScene to use those resolvers for planting, manual uprooting, monster bites, projectile hits, and dragon damage. Moved energy pickup calculation behind the same pure module while retaining the existing phaseOneRules export.
+- Uproot refunds are now checked against the plant catalog rather than trusting a mutable per-plant refund value. The existing exact refund behavior is preserved; refunds can still exceed the normal 300 pickup cap, matching the current game.
+- Added `web/tests/combat-simulation.test.mjs` with 9 test cases covering valid/invalid placements, occupied cells, energy costs, destroyed plants, refund integrity, pickup caps, HP damage, and Phaser integration.
+- No balance changes: plant costs remain 35/50, HP remains unchanged, energy pickup cap remains 300, and ordinary monster rewards remain 8 coins.
+- Validation: GitHub source read/write verification only. Local tests, lint, production build, and browser playtest have not been run; GitHub Actions runner availability remains unresolved.
