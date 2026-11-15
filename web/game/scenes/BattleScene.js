@@ -2698,11 +2698,15 @@ export default class BattleScene extends Scene {
     }
 
     view.setDepth(8);
-    this.tweens.add({
-      targets: view, angle: { from: -2.5, to: 2.5 },
-      duration: profile.wobbleDurationMs, ease: "Sine.easeInOut",
-      yoyo: true, repeat: -1
-    });
+    // Keep the running test hyena level and at a constant visual scale.
+    // Other monster archetypes retain their subtle idle wobble.
+    if (archetype !== "dust-skitter") {
+      this.tweens.add({
+        targets: view, angle: { from: -2.5, to: 2.5 },
+        duration: profile.wobbleDurationMs, ease: "Sine.easeInOut",
+        yoyo: true, repeat: -1
+      });
+    }
 
     if (archetype === "dust-skitter" && this.wave === 3 && spawnIndex === 1) {
       this.setMessage("A Dust Skitter has joined the raid: quick, but easier to bring down.");
@@ -2886,31 +2890,28 @@ export default class BattleScene extends Scene {
       let jumpOffset = 0;
       if (monster.kind === "dust-skitter") {
         const profile = monster.combatProfile;
-        const jumpWillStart = !monster.isJumping && monster.jumpCooldown - delta <= 0;
-        const jumpWillLand = monster.isJumping && monster.jumpElapsed + delta >= monster.jumpDuration;
+        const jumpWillStart = false;
+        const jumpWillLand = false;
         const burstWillStart = monster.burstCooldown - delta <= 0 && monster.burstRemaining <= 0;
         const motion = resolveDustSkitterMotionStep({
-          isJumping: monster.isJumping,
+          isJumping: false,
           jumpCooldownMs: monster.jumpCooldown,
           jumpElapsedMs: monster.jumpElapsed,
           jumpDurationMs: monster.jumpDuration,
           deltaMs: delta,
-          jumpSpeedMultiplier: profile.jumpSpeedMultiplier,
-          jumpVisualHeight: 34,
-          visualScale: monster.view.scaleY,
-          nextJumpDurationMs: jumpWillStart
-            ? this.simulationRandom.nextInt(profile.jumpDurationMinMs, profile.jumpDurationMaxMs)
-            : null,
-          nextJumpResetCooldownMs: jumpWillLand
-            ? this.simulationRandom.nextInt(profile.jumpResetCooldownMinMs, profile.jumpResetCooldownMaxMs)
-            : null,
+          jumpSpeedMultiplier: 1,
+          jumpVisualHeight: 0,
+          visualScale: 1,
+          nextJumpDurationMs: null,
+          nextJumpResetCooldownMs: null,
           burstCooldownMs: monster.burstCooldown,
           burstRemainingMs: monster.burstRemaining,
           burstDurationMs: profile.burstDurationMs,
           burstSpeedMultiplier: profile.burstSpeedMultiplier,
           nextBurstCooldownMs: burstWillStart
             ? this.simulationRandom.nextInt(profile.burstCooldownMinMs, profile.burstCooldownMaxMs)
-            : null
+            : null,
+          enableJump: false
         });
         monster.isJumping = motion.isJumping;
         monster.jumpCooldown = motion.jumpCooldownMs;
@@ -2920,8 +2921,6 @@ export default class BattleScene extends Scene {
         monster.burstRemaining = motion.burstRemainingMs;
         jumpOffset = motion.jumpOffset;
         movementSpeed *= motion.movementMultiplier;
-        if (motion.jumpStarted) this.createFootstepDust(monster.x - 8, monster.y + 3, monster.view.scaleY);
-        if (motion.jumpLanded) this.createFootstepDust(monster.x + 8, monster.y + 3, monster.view.scaleY);
         if (motion.burstStarted) {
           this.createFootstepDust(monster.x - 10, monster.y + 3, monster.view.scaleY * 1.15);
           this.createFootstepDust(monster.x + 4, monster.y + 1, monster.view.scaleY);
@@ -2961,16 +2960,14 @@ export default class BattleScene extends Scene {
       const position = this.monsterLanePoint(monster.localX, monster.row);
       monster.x = position.x; monster.y = position.y;
       monster.view.setPosition(position.x, position.y);
-      if (monster.hyenaSprite?.active) monster.hyenaSprite.y = jumpOffset;
+      if (monster.hyenaSprite?.active) monster.hyenaSprite.y = 0;
       if (monster.hyenaSprite && monster.hitAnimUntil <= this.time.now) {
         // The corrected 20-frame run sheet belongs to the fast hyena.
         // Keep it running for the full advance so its new crop can be tested
         // clearly in a normal battle, rather than only during a short burst.
-        const movementAnimation = monster.isJumping
-          ? "hyena-jump"
-          : monster.kind === "dust-skitter"
-            ? "hyena-run"
-            : "hyena-walk";
+        const movementAnimation = monster.kind === "dust-skitter"
+          ? "hyena-run"
+          : "hyena-walk";
         this.playHyenaAnimation(monster, movementAnimation);
       }
       monster.dustTimer -= dt * 1000;
