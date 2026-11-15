@@ -1,4 +1,5 @@
 import { Scene } from "phaser";
+import { translate } from "../../app/LocaleProvider";
 
 export default class PauseScene extends Scene {
   constructor() {
@@ -6,22 +7,24 @@ export default class PauseScene extends Scene {
   }
 
   create() {
+    const locale = typeof window !== "undefined" ? window.localStorage.getItem("farmVsMonsters.language") || "ar" : "ar";
+    const tr = (value) => translate(value, locale);
     this.add.rectangle(560, 340, 1120, 680, 0x160f0a, 0.72).setDepth(-1);
     this.add.rectangle(560, 340, 450, 420, 0x79502e, 1)
       .setStrokeStyle(7, 0x3b2517);
     this.add.rectangle(560, 340, 430, 400, 0xb88950, 1)
       .setStrokeStyle(2, 0xe5c68e);
-    this.add.text(560, 195, "BATTLE PAUSED", {
+    this.add.text(560, 195, tr("BATTLE PAUSED"), {
       fontFamily: "Georgia", fontSize: "31px", color: "#fff0c8",
       fontStyle: "bold", stroke: "#392417", strokeThickness: 4
     }).setOrigin(0.5);
 
-    this.addMenuButton(270, "RESUME", 0x9bc66e, () => this.resumeBattle());
-    this.addMenuButton(345, "RESTART", 0xe5c27d, () => this.restartBattle());
-    this.addMenuButton(420, "SETTINGS", 0xe5c27d, () => {
+    this.addMenuButton(270, tr("RESUME"), 0x9bc66e, () => this.resumeBattle());
+    this.addMenuButton(345, tr("RESTART"), 0xe5c27d, () => this.restartBattle());
+    this.addMenuButton(420, tr("SETTINGS"), 0xe5c27d, () => {
       if (typeof window !== "undefined") window.location.assign("/settings");
     });
-    this.addMenuButton(495, "MAIN MENU", 0xe6a17d, () => {
+    this.addMenuButton(495, tr("MAIN MENU"), 0xe6a17d, () => {
       if (typeof window !== "undefined") window.location.assign("/");
     });
 
@@ -37,7 +40,8 @@ export default class PauseScene extends Scene {
     const bg = this.add.rectangle(560, y, 250, 52, 0x4b301e, 1)
       .setStrokeStyle(3, 0x392417).setInteractive({ useHandCursor: true });
     this.add.rectangle(560, y, 240, 44, color, 1).setStrokeStyle(1, 0xf4dfb3);
-    this.add.text(560, y, label, {
+    const locale = typeof window !== "undefined" ? window.localStorage.getItem("farmVsMonsters.language") || "ar" : "ar";
+    this.add.text(560, y, translate(label, locale), {
       fontFamily: "Georgia", fontSize: "16px", color: "#392719", fontStyle: "bold"
     }).setOrigin(0.5);
     bg.on("pointerover", () => bg.setScale(1.04));
