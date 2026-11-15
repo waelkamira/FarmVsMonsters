@@ -32,6 +32,8 @@ export const PHASE_ONE_REWARDS = Object.freeze({
 export const PHASE_ONE_PLANTS = Object.freeze({
   radish: Object.freeze({
     projectileDamage: 25,
+    projectileSpeed: 320,
+    projectileCollisionRadius: 24,
     plantingEnergyCost: 35,
     hp: 160,
     cooldownMs: 1450,
@@ -46,6 +48,11 @@ export const PHASE_ONE_PLANTS = Object.freeze({
   })
 });
 
+export const PHASE_ONE_FARMER = Object.freeze({
+  clubDamage: 42,
+  clubReachPx: 112
+});
+
 export const PHASE_ONE_DRAGON = Object.freeze({
   maxHp: 750,
   farmerSlingDamage: 25,
@@ -56,6 +63,14 @@ export const PHASE_ONE_DRAGON = Object.freeze({
   fireballDamageToFarm: 12,
   attackIntervalMs: 3900,
   fireballTravelMs: 1050
+});
+
+export const PHASE_ONE_MONSTER_SCALING = Object.freeze({
+  baseHp: 65,
+  hpPerWave: 4,
+  baseSpeed: 8,
+  speedPerWave: 1.35,
+  maxBaseSpeed: 30
 });
 
 export const PHASE_ONE_MONSTERS = Object.freeze({
@@ -127,8 +142,8 @@ export function getMonsterCombatStats(archetype, wave) {
 
   const hp = profile.hitsToDefeat
     ? PHASE_ONE_PLANTS.radish.projectileDamage * profile.hitsToDefeat
-    : Math.round((65 + Math.floor(wave * 4)) * profile.hpMultiplier);
-  const baseSpeed = Math.min(30, 8 + (wave - 1) * 1.35);
+    : Math.round((PHASE_ONE_MONSTER_SCALING.baseHp + Math.floor(wave * PHASE_ONE_MONSTER_SCALING.hpPerWave)) * profile.hpMultiplier);
+  const baseSpeed = Math.min(PHASE_ONE_MONSTER_SCALING.maxBaseSpeed, PHASE_ONE_MONSTER_SCALING.baseSpeed + (wave - 1) * PHASE_ONE_MONSTER_SCALING.speedPerWave);
 
   return Object.freeze({
     ...profile,
