@@ -418,9 +418,11 @@ export default class BattleScene extends Scene {
     const bottomRight = GRID_NODES[safeRow + 1][col + 1];
     const topY = PhaserMath.Linear(topLeft.y, topRight.y, cellU);
     const bottomY = PhaserMath.Linear(bottomLeft.y, bottomRight.y, cellU);
-    // Raise the complete monster/projectile lane by half the local cell
-    // height, following the perspective of the specific cell.
-    position.y -= (bottomY - topY) / 2;
+    // Shift monster/projectile paths down by one complete local grid cell.
+    // The trapezoid height changes with perspective, so derive the offset
+    // from this column's interpolated top and bottom edges instead of using
+    // a fixed pixel value or the average GRID_HEIGHT / LANES.
+    position.y += (bottomY - topY) / 2;
     return position;
   }
 
