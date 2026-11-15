@@ -2473,6 +2473,10 @@ export default class BattleScene extends Scene {
   }
 
   monsterArchetypeFor(spawnIndex) {
+    // TEMPORARY PLAYTEST OVERRIDE: show the running hyena as the very first
+    // enemy in wave 1. Remove this single condition to restore the original
+    // campaign order after the run animation has been verified.
+    if (this.wave === 1 && spawnIndex === 0) return "dust-skitter";
     return resolveMonsterArchetype(this.wave, spawnIndex);
   }
 
