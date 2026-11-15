@@ -140,6 +140,23 @@ These are approved constraints unless the user explicitly changes them.
 - First campaign wave schedule currently defined as 10 / 15 / 20 / 25 / 30 monsters (100 total). Victory only after all scheduled monsters have spawned and every living monster is defeated. Defeat occurs when farmhouse health reaches zero.
 - Restart must reset all battle entities, timers, counters, projectiles, input locks, audio state, and result flags.
 
+### Signature victory ritual: the treasure cave (approved concept)
+
+This is a high-priority, distinctive reward moment and must not be forgotten during implementation.
+
+After the player wins a stage:
+1. Show the farmer carrying a visibly heavy sack of golden coins over his shoulder.
+2. The farmer walks from the victory area toward the treasure cave.
+3. The cave entrance opens with the iconic phrase **“Open Sesame”** (Arabic presentation may use **«افتح يا سمسم»**). The phrase should be presented as an original game interaction, with fitting animation and sound.
+4. The farmer deposits the stage's earned gold inside the cave.
+5. Show the growing accumulated treasure/wealth total clearly, so the player can see the fortune being built across completed stages.
+6. The amount deposited must match the stage reward and the player's actual reward ledger exactly. The ceremony must never create or duplicate currency.
+7. The sequence should feel celebratory and satisfying, while remaining skippable or brief on replay so it does not slow repeated play.
+
+**Art dependency:** The user will create/provide the treasure cave artwork later. Until those assets are supplied and approved, implement only the documented flow/data/UI hooks when its scheduled phase arrives; do not invent or replace the cave artwork. The farmer's carrying-sack animation may also require user-provided frames or a separately approved animation plan.
+
+**Economy distinction:** Stage earnings are awarded according to the approved reward rules. The cave is the visual treasury/presentation of the player's accumulated wealth; it must not accidentally count the same reward twice. Decide and document whether the cave total mirrors the player's spendable Coins or represents a separate non-spendable lifetime treasure statistic before implementing the economy connection. Do not silently merge these concepts.
+
 ### Current art and behavior priorities
 - Preserve user-authored farmer and hyena sprite sheets and their approved direction.
 - Correct sprite frame counts, frame spacing, foot baseline, origins, scale, and depth before tuning decorative effects.
@@ -227,6 +244,8 @@ Work:
 - Make UI feedback precise: selected plant, insufficient energy, occupied cell, pickup available/expired, monster breach, objective danger, and wave completion.
 - Add short contextual tutorial prompts and a first-session learning flow; allow replay or disabling of basic hints.
 - Improve the first 5–10 minutes: introduce the objective, resource, first defender, first monster, and first tactical decision in sequence.
+- Design the post-stage treasure-cave victory ritual: farmer carries the earned gold sack on his shoulder, walks to the cave, the entrance opens with “Open Sesame” / «افتح يا سمسم», deposits the reward, and the accumulated wealth counter updates. Use temporary neutral presentation only until the user supplies the cave art; do not fabricate final cave assets.
+- Define the reward ledger and decide whether the cave displays spendable Coins or a separate lifetime-wealth total. Ensure exact-once reward credit and prevent duplicate deposits on replay/retry.
 - Add difficulty options only if testing demonstrates a need; keep the intended default balanced.
 
 Exit gate:
@@ -296,6 +315,7 @@ Work:
 - Add tools that change farm tasks in useful ways.
 - Add crafting recipes and trade only where they create meaningful decisions; avoid busywork and excessive clicking.
 - Connect battle rewards to farm materials, unlocks, and upgrades.
+- Integrate the treasure cave as the player's visible long-term treasury: stage rewards are deposited through the post-victory farmer animation, and the accumulated wealth is saved and displayed. Preserve the distinction between spendable Coins and any lifetime treasure total.
 - Keep battle plants distinct from ordinary farm crops unless a clearly explained mechanic connects them.
 - Build inventory, storage limits, item definitions, production timers, crafting costs, and reward tables as data-driven systems.
 - Make offline progression conservative and transparent if later required; do not introduce timers merely to slow the player.
@@ -556,6 +576,7 @@ Do not delay quality to maximize raw content count. A smaller set of excellent, 
 5. Run the production build and the available automated rules tests; resolve failures that block Phase 1.
 6. Complete the manual victory/defeat/restart/pause test matrix.
 7. Record the Phase 1 evidence and close its gate before starting Phase 2.
+8. When Phase 2 is reached, design and implement the post-stage treasure-cave ceremony; keep cave artwork pending until the user supplies it.
 
 **Current phase status: Phase 1 — IN PROGRESS.** Existing code, prior commits, and rule tests are useful groundwork, but they do not replace browser verification and complete playthroughs.
 
