@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { useLocale, LanguageToggle } from "../LocaleProvider";
+import CatalogThumb from "../components/CatalogThumb";
 
 const monsters = [
   {
     id: "cave-brute",
-    icon: "🐾",
+    icon: "cave-brute",
     en: "Cave Brute",
     ar: "الضبع العادي",
     enRole: "Standard raider",
@@ -18,7 +19,7 @@ const monsters = [
   },
   {
     id: "dust-skitter",
-    icon: "💨",
+    icon: "dust-skitter",
     en: "Dust Skitter",
     ar: "ضبع الغبار السريع",
     enRole: "Fast, fragile scout",
@@ -30,7 +31,7 @@ const monsters = [
   },
   {
     id: "stonehide",
-    icon: "🛡️",
+    icon: "stonehide",
     en: "Stonehide",
     ar: "ضبع الجلد الحجري",
     enRole: "Armored heavy",
@@ -42,7 +43,7 @@ const monsters = [
   },
   {
     id: "alpha-brute",
-    icon: "👑",
+    icon: "alpha-brute",
     en: "Alpha Brute",
     ar: "الضبع العملاق",
     enRole: "Rare giant leader",
@@ -74,7 +75,7 @@ export default function MonstersPage() {
         <div className="collection-grid">
           {monsters.map((monster) => (
             <article className="collection-card is-active" key={monster.id}>
-              <div className="collection-art" aria-hidden="true">{monster.icon}</div>
+              <CatalogThumb id={monster.icon} label={ar ? monster.ar : monster.en} className="monster-thumb" />
               <h2>{ar ? monster.ar : monster.en}</h2>
               <span className="collection-status">{ar ? "موجود في المرحلة" : "IN THIS STAGE"}</span>
               <p><strong>{ar ? monster.arRole : monster.enRole}</strong></p>
@@ -90,7 +91,7 @@ export default function MonstersPage() {
         </div>
         <h2 className="collection-section-title">{ar ? "زعيم المرحلة" : "Stage boss"}</h2>
         <div className="collection-card">
-          <div className="collection-art" aria-hidden="true">🐉</div>
+          <CatalogThumb id="dragon" label={ar ? "التنين الشرير" : "The Evil Dragon"} className="monster-thumb boss-thumb" />
           <h2>{ar ? "التنين الشرير" : "The Evil Dragon"}</h2>
           <p>{ar ? "زعيم مستقل عن عدد الوحوش العادية. يظهر في الموجة الخامسة، ويجب هزيمته بعد أتباعه لتحرير الأميرة." : "A separate boss, not included in the ordinary monster count. It appears in Wave 5 and must be defeated after its followers to rescue the princess."}</p>
           <span className="collection-status">{ar ? "زعيم المرحلة الأولى" : "STAGE ONE BOSS"}</span>
