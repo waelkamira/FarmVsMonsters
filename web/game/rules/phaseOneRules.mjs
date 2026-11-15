@@ -1,3 +1,5 @@
+import { PHASE_ONE_PLANTS, PHASE_ONE_REWARDS } from "./phaseOneCombatContract.mjs";
+
 // Thirty ordinary monsters across five gentle-to-challenging waves. The dragon boss is separate.
 export const PHASE_ONE_WAVE_SIZES = Object.freeze([3, 5, 6, 7, 9]);
 export const PHASE_ONE_TOTAL_MONSTERS = PHASE_ONE_WAVE_SIZES.reduce((sum, count) => sum + count, 0);
@@ -7,23 +9,23 @@ export const ordinaryMonsterCountForStage = (stage) =>
 
 export const INITIAL_ENERGY = 150;
 export const MAX_ENERGY = 300;
-export const MONSTER_KILL_COIN_REWARD = 8;
-export const MUSHROOM_PICKUP_TTL_MS = 12_000;
+export const MONSTER_KILL_COIN_REWARD = PHASE_ONE_REWARDS.ordinaryMonsterDefeatCoins;
+export const MUSHROOM_PICKUP_TTL_MS = PHASE_ONE_PLANTS.energyMushroom.pickupTtlMs;
 
 export const RADISH_CONFIG = Object.freeze({
   label: "Radish",
-  cost: 35,
-  hp: 160,
-  cooldown: 1450,
-  range: 360
+  cost: PHASE_ONE_PLANTS.radish.plantingEnergyCost,
+  hp: PHASE_ONE_PLANTS.radish.hp,
+  cooldown: PHASE_ONE_PLANTS.radish.cooldownMs,
+  range: PHASE_ONE_PLANTS.radish.range
 });
 
 export const MUSHROOM_CONFIG = Object.freeze({
   label: "Energy Mushroom",
-  cost: 50,
-  hp: 85,
-  energy: 15,
-  productionInterval: 12_000
+  cost: PHASE_ONE_PLANTS.energyMushroom.plantingEnergyCost,
+  hp: PHASE_ONE_PLANTS.energyMushroom.hp,
+  energy: PHASE_ONE_PLANTS.energyMushroom.energyPerPickup,
+  productionInterval: PHASE_ONE_PLANTS.energyMushroom.productionIntervalMs
 });
 
 export function collectEnergy(currentEnergy, requestedAmount) {
