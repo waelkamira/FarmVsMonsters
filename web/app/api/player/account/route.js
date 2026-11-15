@@ -46,7 +46,7 @@ async function getUser(api, accessToken) {
 
 export async function GET(request) {
   const api = config();
-  if (!api) return unavailable();
+  if (!api) return NextResponse.json({ user: null, cloudAvailable: false });
 
   const accessToken = request.cookies.get(ACCESS_COOKIE)?.value;
   const refreshToken = request.cookies.get(REFRESH_COOKIE)?.value;
