@@ -129,3 +129,5 @@ html[dir="rtl"] .settings-row { direction: rtl; }
 html[dir="rtl"] .settings-row output { text-align: left; }
 html[dir="rtl"] .game-header { direction: rtl; }
 html[dir="rtl"] .control-hint { text-align: right; }
+
+.phase-one-emblem { display:block; width:min(320px, 82%); height:auto; object-fit:contain; margin:18px auto 22px; filter:drop-shadow(0 8px 12px #160d08aa); }
