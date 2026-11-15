@@ -85,3 +85,7 @@ When the plant illustrations are ready, add transparent PNG files under `web/pub
 - `fire-pepper.png`
 
 The game data already reserves these asset paths. The two starter plants remain playable; the other eight stay locked until their images and gameplay implementations are integrated.
+
+
+### Combat simulation security
+- [Stage 1 authoritative combat simulation contract](../Documentation/STAGE_ONE_AUTHORITATIVE_COMBAT_SIMULATION.md) — shared combat values, deterministic replay design, and server verification requirements.
