@@ -192,7 +192,6 @@ export default class BattleScene extends Scene {
     this.createAudioControls();
     this.createPauseControl();
     this.createCaveman();
-    this.createPrincessActor();
     this.bindInput();
     this.events.once("shutdown", () => {
       this.audioSceneShuttingDown = true;
@@ -826,7 +825,7 @@ export default class BattleScene extends Scene {
   createPrincessActor() {
     // The princess is only rendered from the user's authored asset.
     if (!this.textures.exists("phase-one-princess")) return;
-    this.princessActor = this.add.image(145, 375, "phase-one-princess")
+    this.princessActor = this.add.image(995, 270, "phase-one-princess")
       .setOrigin(0.5, 1)
       .setDisplaySize(66, 96)
       .setDepth(8.6);
@@ -835,6 +834,7 @@ export default class BattleScene extends Scene {
   beginDragonEncounter() {
     if (this.dragonBoss || this.phaseOneStoryState !== "battle") return;
     this.phaseOneStoryState = "dragon";
+    this.createPrincessActor();
     this.dragonBoss = {
       hp: 750, maxHp: 750, alive: true,
       attackCooldown: 2800, shotCooldown: 850, sprite: null
@@ -977,6 +977,10 @@ export default class BattleScene extends Scene {
     this.storySequenceActive = true;
     this.phaseOneStoryState = "rescuing";
     this.setMessage("The battlefield is safe. The farmer is rescuing the princess!");
+    this.facing = 1;
+    this.caveman.scaleX = 1;
+    this.farmerWantsToRun = true;
+    this.setFarmerAnimation("farmer-run");
     const rescueX = this.princessActor?.active ? this.princessActor.x : 145;
     const rescueY = this.princessActor?.active ? this.princessActor.y : 375;
     this.tweens.add({
