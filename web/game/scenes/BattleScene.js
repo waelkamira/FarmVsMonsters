@@ -63,6 +63,16 @@ export default class BattleScene extends Scene {
     this.load.spritesheet("farmer-attack", "/assets/characters/farmer/farmer-attack.png", { frameWidth: 180, frameHeight: 360 });
     this.load.spritesheet("farmer-hit", "/assets/characters/farmer/farmer-hit.png", { frameWidth: 152, frameHeight: 430 });
     this.load.spritesheet("farmer-death", "/assets/characters/farmer/farmer-death.png", { frameWidth: 152, frameHeight: 430 });
+
+    // Hyena sheets keep their original artwork untouched. Each sheet is sliced
+    // using the grid that is actually present in that specific PNG.
+    this.load.spritesheet("hyena-idle", "/assets/characters/monsters/hyena/hyena-idle.png", { frameWidth: 540, frameHeight: 447 });
+    this.load.spritesheet("hyena-walk", "/assets/characters/monsters/hyena/hyena-walk.png", { frameWidth: 360, frameHeight: 298 });
+    this.load.spritesheet("hyena-run", "/assets/characters/monsters/hyena/hyena-run.png", { frameWidth: 367, frameHeight: 298 });
+    this.load.image("hyena-jump", "/assets/characters/monsters/hyena/hyena-jump.png");
+    this.load.spritesheet("hyena-bite", "/assets/characters/monsters/hyena/hyena-bite.png", { frameWidth: 360, frameHeight: 447 });
+    this.load.spritesheet("hyena-hit", "/assets/characters/monsters/hyena/hyena-hit.png", { frameWidth: 360, frameHeight: 894 });
+    this.load.spritesheet("hyena-death", "/assets/characters/monsters/hyena/hyena-death.png", { frameWidth: 360, frameHeight: 447 });
     for (const asset of soundAssets.assets) {
       this.load.audio(asset.key, asset.path);
     }
@@ -71,6 +81,7 @@ export default class BattleScene extends Scene {
       if (file.key === "radish-character") this.radishAssetFailed = true;
       if (file.key === "mushroom-character") this.mushroomAssetFailed = true;
       if (file.key.startsWith("farmer-")) this.farmerAssetFailed = true;
+      if (file.key.startsWith("hyena-")) this.hyenaAssetFailed = true;
       if (file.key.startsWith("sfx-")) {
         this.failedSoundAssets = this.failedSoundAssets || [];
         this.failedSoundAssets.push(file.key);
@@ -118,6 +129,7 @@ export default class BattleScene extends Scene {
     this.returnTarget = null;
     this.farmerPlanting = false;
     this.gameOver = false;
+    this.hyenaAnimationsReady = this.createHyenaAnimations();
     const legacySoundSetting = this.registry.get("soundEnabled");
     const defaultSoundSetting = legacySoundSetting === undefined ? true : legacySoundSetting;
     if (this.registry.get("projectileSoundEnabled") === undefined) {
@@ -1725,6 +1737,70 @@ export default class BattleScene extends Scene {
     return resolveMonsterArchetype(this.wave, spawnIndex);
   }
 
+  createHyenaAnimations() {
+    const definitions = [
+      ["hyena-idle", 4, 5, -1],
+      ["hyena-walk", 9, 9, -1],
+      ["hyena-run", 7, 10, -1],
+      ["hyena-bite", 6, 9, 0],
+      ["hyena-hit", 3, 12, 0],
+      ["hyena-death", 6, 8, 0]
+    ];
+
+    try {
+      if (this.hyenaAssetFailed) throw new Error("A hyena sprite sheet failed to load.");
+
+      // The jump artwork has five frames on the first row and three on the
+      // second. Add individual source rectangles instead of forcing a false
+      // uniform grid and clipping the artwork.
+      const jumpTexture = this.textures.get("hyena-jump");
+      const jumpFrames = [
+        ...Array.from({ length: 5 }, (_, i) => ({ x: i * 216, y: 0, width: 216, height: 447 })),
+        ...Array.from({ length: 3 }, (_, i) => ({ x: i * 360, y: 447, width: 360, height: 447 }))
+      ];
+      jumpFrames.forEach((frame, index) => {
+        jumpTexture.add(String(index), 0, frame.x, frame.y, frame.width, frame.height);
+      });
+
+      for (const [key, frameCount, frameRate, repeat] of definitions) {
+        const texture = this.textures.get(key);
+        const available = Object.keys(texture.frames).filter((name) => name !== "__BASE");
+        if (available.length < frameCount) {
+          throw new Error(`Invalid ${key} sheet: expected ${frameCount} frames, found ${available.length}.`);
+        }
+        if (this.anims.exists(key)) this.anims.remove(key);
+        this.anims.create({
+          key,
+          frames: this.anims.generateFrameNumbers(key, { start: 0, end: frameCount - 1 }),
+          frameRate,
+          repeat
+        });
+      }
+
+      if (this.anims.exists("hyena-jump")) this.anims.remove("hyena-jump");
+      this.anims.create({
+        key: "hyena-jump",
+        frames: jumpFrames.map((_, index) => ({ key: "hyena-jump", frame: String(index) })),
+        frameRate: 10,
+        repeat: 0
+      });
+      return true;
+    } catch (error) {
+      console.warn("Hyena animation assets unavailable; using fallback monster artwork.", error);
+      this.hyenaAssetFailed = true;
+      return false;
+    }
+  }
+
+  playHyenaAnimation(monster, key, force = false) {
+    const sprite = monster && monster.hyenaSprite;
+    if (!sprite || !sprite.active || !this.hyenaAnimationsReady) return;
+    if (!force && monster.hitAnimUntil > this.time.now && key !== "hyena-hit") return;
+    const currentKey = sprite.anims.currentAnim?.key;
+    if (!force && currentKey === key && sprite.anims.isPlaying) return;
+    sprite.play(key);
+  }
+
   spawnMonster() {
     const row = PhaserMath.Between(0, LANES - 1);
     const spawnIndex = this.spawnedThisWave;
@@ -1836,7 +1912,25 @@ export default class BattleScene extends Scene {
       g.fillEllipse(-21, 17, 9, 5); g.fillEllipse(22, 13, 8, 5);
     }
 
-    view.add(g);
+    let monsterRecord = null;
+    const hyenaSprite = this.hyenaAnimationsReady
+      ? this.add.sprite(0, 0, "hyena-idle", 0).setOrigin(0.5, 1).setFlipX(true).setScale(0.34)
+      : null;
+    if (hyenaSprite) {
+      // The original vector monster remains available as a fallback only.
+      g.setVisible(false);
+      view.add(g);
+      view.add(hyenaSprite);
+      hyenaSprite.play("hyena-idle");
+      hyenaSprite.on("animationcomplete", (animation) => {
+        if (!monsterRecord || !monsterRecord.alive) return;
+        if (animation.key === "hyena-bite" || animation.key === "hyena-hit") {
+          this.playHyenaAnimation(monsterRecord, "hyena-idle", true);
+        }
+      });
+    } else {
+      view.add(g);
+    }
 
     // Stonehide raises a clearly visible shale ring while it braces over prey.
     let braceCue = null;
@@ -1872,7 +1966,7 @@ export default class BattleScene extends Scene {
       this.setMessage("A Stonehide is approaching: slow, heavily plated, and tough to stop.");
     }
 
-    this.monsters.push({
+    monsterRecord = {
       kind: archetype,
       row, x: spawn.x, y: spawn.y, localX: SPAWN_LOCAL_X, hp,
       speed,
@@ -1891,9 +1985,10 @@ export default class BattleScene extends Scene {
       braced: false,
       braceCue,
       maxHp: hp,
-      hitFlashGraphic: g, hitFlashTimer: null,
+      hitFlashGraphic: g, hitFlashTimer: null, hyenaSprite, hitAnimUntil: 0,
       attackCooldown: 0, alive: true, view, shadow, dustTimer: 0
-    });
+    };
+    this.monsters.push(monsterRecord);
   }
 
   updateMonsters(dt, delta) {
@@ -1923,6 +2018,7 @@ export default class BattleScene extends Scene {
         // before entering its stationary bite state.
         monster.view.setPosition(monster.x, monster.y);
         if (monster.attackCooldown <= 0) {
+          this.playHyenaAnimation(monster, "hyena-bite", true);
           blocker.hp -= monster.plantDamage; monster.attackCooldown = monster.attackInterval;
           this.playMonsterBiteSound();
           this.tweens.add({ targets: monster.view, x: monster.view.x - 4, scaleY: monster.view.scaleY * 0.94, duration: 85, yoyo: true });
@@ -1981,6 +2077,14 @@ export default class BattleScene extends Scene {
       // Lift the creature while keeping its shadow pinned to the ground lane.
       // Jumping does not grant collision immunity or let it pass through plants.
       monster.view.setPosition(position.x, position.y + jumpOffset);
+      if (monster.hyenaSprite && monster.hitAnimUntil <= this.time.now) {
+        const movementAnimation = monster.isJumping
+          ? "hyena-jump"
+          : monster.kind === "dust-skitter" && monster.burstRemaining > 0
+            ? "hyena-run"
+            : "hyena-walk";
+        this.playHyenaAnimation(monster, movementAnimation);
+      }
       if (monster.shadow && monster.shadow.active) {
         monster.shadow.setPosition(position.x, position.y + 2);
       }
@@ -2049,7 +2153,12 @@ export default class BattleScene extends Scene {
   }
 
   flashMonsterOnHit(monster) {
-    if (!monster || !monster.alive || !monster.hitFlashGraphic || !monster.hitFlashGraphic.active) return;
+    if (!monster || !monster.alive) return;
+    if (monster.hyenaSprite && monster.hyenaSprite.active) {
+      monster.hitAnimUntil = this.time.now + 260;
+      this.playHyenaAnimation(monster, "hyena-hit", true);
+    }
+    if (!monster.hitFlashGraphic || !monster.hitFlashGraphic.active) return;
     // Brief additive highlight makes the creature visibly flash on impact.
     // Keep its alpha and scale untouched so it never fades or vanishes on a hit.
     if (monster.hitFlashTimer) monster.hitFlashTimer.remove(false);
@@ -2081,11 +2190,18 @@ export default class BattleScene extends Scene {
     this.createMonsterDefeatBurst(monster.x, monster.y, monster.view && monster.view.scaleY);
     this.playMonsterDefeatSound();
     this.playCoinRewardSound();
-    // Remove the complete creature container immediately. This guarantees
-    // that no child graphic or hit-flash layer can remain visible after death.
+    // Play the authored death sequence before removing the creature. The
+    // reward and wave counters are still granted immediately and exactly once.
     if (monster.view && monster.view.active) {
       this.tweens.killTweensOf(monster.view);
-      monster.view.destroy(true);
+      if (monster.hyenaSprite && monster.hyenaSprite.active) {
+        this.playHyenaAnimation(monster, "hyena-death", true);
+        this.time.delayedCall(760, () => {
+          if (monster.view && monster.view.active) monster.view.destroy(true);
+        });
+      } else {
+        monster.view.destroy(true);
+      }
     }
     this.coins += MONSTER_KILL_COIN_REWARD;
     this.registry.set("coins", this.coins);
