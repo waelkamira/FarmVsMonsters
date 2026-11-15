@@ -513,37 +513,34 @@ export default class BattleScene extends Scene {
 
   createPlantCard(x, title, costLabel, type, drawIcon, imageKey = null, y = 619) {
     const card = this.add.container(x, y).setDepth(45);
-    const shadow = this.add.rectangle(2, 4, 132, 54, 0x101a2e, 0.55);
+    // Compact plant selector: artwork first, with a tiny cost indicator only.
+    // No plant name or "energy" label is shown in the HUD cell.
+    const shadow = this.add.rectangle(1, 3, 70, 48, 0x101a2e, 0.42);
     const cardTint = type === "radish" ? 0x238a58 : 0x287eb7;
-    const frame = this.add.rectangle(0, 0, 132, 54, 0x17213d, 1).setStrokeStyle(3, 0x35bceb);
-    const panel = this.add.rectangle(0, 0, 126, 48, cardTint, 1)
+    const frame = this.add.rectangle(0, 0, 70, 48, 0x17213d, 1).setStrokeStyle(2, 0x35bceb);
+    const panel = this.add.rectangle(0, 0, 64, 42, cardTint, 1)
       .setStrokeStyle(2, type === "radish" ? 0xa7e84f : 0x8b65e8)
       .setInteractive({ useHandCursor: true });
-    const iconDivider = this.add.rectangle(-25, 0, 1.5, 36, 0xffffff, 0.55);
     let icon;
     if (imageKey && this.textures.exists(imageKey)) {
       const frameData = this.textures.getFrame(imageKey);
-      const iconHeight = 36;
+      const iconHeight = 30;
       const iconWidth = iconHeight * (frameData.realWidth / frameData.realHeight);
-      icon = this.add.image(-48, -1, imageKey).setDisplaySize(iconWidth, iconHeight);
+      icon = this.add.image(0, -5, imageKey).setDisplaySize(Math.min(iconWidth, 42), iconHeight);
     } else {
       icon = this.add.graphics();
       if (drawIcon) drawIcon(icon);
     }
-    const locale = window.localStorage.getItem("farmVsMonsters.language") || "ar";
-    const name = this.add.text(-17, -10, translate(title, locale), {
-      fontFamily: "Arial", fontSize: "14px", color: "#ffffff", fontStyle: "bold",
-      stroke: "#17213d", strokeThickness: 3, resolution: 2
-    }).setOrigin(0, 0.5).setData("localeKey", title);
-    const cost = this.add.text(-17, 12, costLabel + " " + translate("ENERGY", locale), {
-      fontFamily: "Arial", fontSize: "12px", color: "#ffffff", fontStyle: "bold",
-      stroke: "#17213d", strokeThickness: 3, resolution: 2
-    }).setOrigin(0, 0.5).setData("localeKey", String(costLabel) + " ENERGY");
-    card.add([shadow, frame, panel, icon, iconDivider, name, cost]);
+    const cost = this.add.text(0, 16, "⚡" + costLabel, {
+      fontFamily: "Arial", fontSize: "10px", color: "#ffffff", fontStyle: "bold",
+      stroke: "#17213d", strokeThickness: 2, resolution: 2,
+      align: "center"
+    }).setOrigin(0.5, 0.5);
+    card.add([shadow, frame, panel, icon, cost]);
 
     panel.on("pointerover", () => {
       if (this.selectedPlant !== type) panel.setFillStyle(type === "radish" ? 0x42c96b : 0x35bceb, 1);
-      card.setScale(1.035);
+      card.setScale(1.04);
     });
     panel.on("pointerout", () => {
       if (this.selectedPlant !== type) panel.setFillStyle(type === "radish" ? 0x238a58 : 0x287eb7, 1);
