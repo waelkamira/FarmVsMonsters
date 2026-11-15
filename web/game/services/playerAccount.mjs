@@ -88,8 +88,25 @@ export async function saveCloudProgress(progress = readLocalPlayerProgress()) {
 export async function restoreOrInitializeCloudProgress() {
   const result = await loadCloudProgress();
   if (result.progress) {
-    applyRemotePlayerProgress(result.progress);
-    return { restored: true, progress: result.progress };
+    const local = readLocalPlayerProgress();
+    const merged = {
+      unlockedStage: Math.max(local.unlockedStage, Number(result.progress.unlocked_stage) || 1),
+      completedStages: [...new Set([
+        ...local.completedStages,
+        ...(Array.isArray(result.progress.completed_stages) ? result.progress.completed_stages : [])
+      ])].filter((stage) => Number.isInteger(stage) && stage >= 1 && stage < 10).sort((a, b) => a - b),
+      coins: Math.max(local.coins, Number(result.progress.coins) || 0)
+    };
+    applyRemotePlayerProgress({
+      unlocked_stage: merged.unlockedStage,
+      completed_stages: merged.completedStages,
+      coins: merged.coins
+    });
+    const cloudIsBehind = merged.unlockedStage > (Number(result.progress.unlocked_stage) || 1) ||
+      merged.coins > (Number(result.progress.coins) || 0) ||
+      merged.completedStages.length > (result.progress.completed_stages || []).length;
+    if (cloudIsBehind) await saveCloudProgress(merged);
+    return { restored: true, progress: merged };
   }
   const local = readLocalPlayerProgress();
   await saveCloudProgress(local);
