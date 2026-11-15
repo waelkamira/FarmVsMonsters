@@ -1,6 +1,7 @@
 import { Scene, Input, Math as PhaserMath } from "phaser";
 import { translate } from "../../app/LocaleProvider";
 import { createSeededRandom } from "../rules/seededRandom.mjs";
+import { createCombatEventLog, appendCombatEvent } from "../rules/combatEventLog.mjs";
 import gridCalibration from "../data/farm-grid-calibration.json";
 import soundAssets from "../data/sound-assets.json";
 import {
@@ -131,6 +132,7 @@ export default class BattleScene extends Scene {
     else seedBuffer[0] = Date.now() >>> 0;
     this.simulationSeed = seedBuffer[0];
     this.simulationRandom = createSeededRandom(this.simulationSeed);
+    this.combatEventLog = createCombatEventLog({ seed: this.simulationSeed, rulesVersion: "phase-one-v1" });
     this.languageChangeHandler = () => {
       this.refreshHud();
       if (this.lastMessage) this.setMessage(this.lastMessage);
@@ -1928,6 +1930,14 @@ export default class BattleScene extends Scene {
     }
   }
 
+  recordCombatEvent(type, payload) {
+    this.combatEventLog = appendCombatEvent(this.combatEventLog, {
+      tick: Math.max(0, Math.floor(this.elapsedBattleMs)),
+      type,
+      payload
+    });
+  }
+
   plantSelected(col, row, type, returnPosition = null) {
     if (this.gameOver) return;
     if (type !== "radish" && type !== "mushroom") return;
@@ -1944,6 +1954,7 @@ export default class BattleScene extends Scene {
       this.setMessage("Planting cancelled: this cell is no longer available.");
       return;
     }
+    this.recordCombatEvent("plant_placed", { type, col, row });
     const config = type === "mushroom" ? MUSHROOM_CONFIG : RADISH_CONFIG;
     this.energy = placement.energy;
     this.farmerPlanting = true;
@@ -2168,6 +2179,7 @@ export default class BattleScene extends Scene {
         if (farmerIsStationary && !actionInProgress) {
           this.playFarmerAction("farmer-collect");
         }
+        this.recordCombatEvent("energy_collected", { amount: collected });
         this.energy = collection.energy;
         this.energyCollected += collected;
         this.playEnergyCollectSound();
@@ -2958,6 +2970,7 @@ export default class BattleScene extends Scene {
     if (!plant || !plant.alive || this.gameOver) return;
     const uproot = resolvePlantUproot({ energy: this.energy, plant });
     if (!uproot.ok) return;
+    this.recordCombatEvent("plant_uprooted", { type: plant.type, col: plant.col, row: plant.row });
     plant.alive = false;
     plant.view.destroy();
     // Only manual uprooting refunds energy; destroyed plants do not.
