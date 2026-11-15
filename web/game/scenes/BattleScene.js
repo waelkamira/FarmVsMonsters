@@ -1764,13 +1764,16 @@ export default class BattleScene extends Scene {
 
   update(_time, delta) {
     if (this.gameOver || this.isPaused || this.collectionMenuOpen) return;
-    const dt = delta / 1000;
-    this.elapsedBattleMs += delta;
+    // Phaser can produce a non-finite or negative frame delta during unusual
+    // tab visibility/resume transitions. Never pass that into combat rules.
+    const deltaMs = Number.isFinite(delta) ? Math.max(0, delta) : 0;
+    const dt = deltaMs / 1000;
+    this.elapsedBattleMs += deltaMs;
     if (this.storySequenceActive) {
       this.refreshHud();
       return;
     }
-    this.combatClockMs += delta;
+    this.combatClockMs += deltaMs;
     this.handleControls(dt);
     // Wave timing and spawn decisions are resolved by the renderer-independent combat kernel.
     const previousIntermissionSecond = this.waveIntermissionMs > 0
@@ -1783,7 +1786,7 @@ export default class BattleScene extends Scene {
       spawnedThisWave: this.spawnedThisWave,
       intermissionMs: this.waveIntermissionMs,
       spawnTimerMs: this.spawnTimer,
-      deltaMs: delta
+      deltaMs
     });
     this.waveIntermissionMs = spawnStep.intermissionMs;
     this.spawnTimer = spawnStep.spawnTimerMs;
@@ -1802,10 +1805,10 @@ export default class BattleScene extends Scene {
       this.totalSpawnedMonsters += 1;
       if (this.wave === 5 && this.spawnedThisWave === 2) this.beginDragonEncounter();
     }
-    this.updatePlants(delta);
-    this.updateMonsters(dt, delta);
+    this.updatePlants(deltaMs);
+    this.updateMonsters(dt, deltaMs);
     if (this.gameOver) return;
-    this.updateDragonBoss(delta);
+    this.updateDragonBoss(deltaMs);
     if (this.storySequenceActive || this.gameOver) {
       this.refreshHud();
       return;
@@ -2161,6 +2164,7 @@ export default class BattleScene extends Scene {
   }
 
   updatePlants(delta) {
+    const deltaMs = Number.isFinite(delta) ? Math.max(0, delta) : 0;
     for (const plant of this.plants) {
       if (!plant.alive) continue;
       if (plant.type === "mushroom") {
@@ -2175,7 +2179,10 @@ export default class BattleScene extends Scene {
       const configs = { radish: RADISH_CONFIG, tomato: TOMATO_CONFIG, onion: ONION_CONFIG };
       const config = configs[plant.type];
       if (!config) continue;
-      plant.cooldown = advanceCooldown(plant.cooldown, delta);
+      // Recover safely if a plant was created by an older or partial runtime
+      // state that did not initialize its firing timer.
+      const cooldownMs = Number.isFinite(plant.cooldown) ? plant.cooldown : 0;
+      plant.cooldown = advanceCooldown(cooldownMs, deltaMs);
       if (plant.cooldown > 0) continue;
       const plantLaneX = this.worldToLane(plant).localX;
       // Every shooter is lane-locked: it never targets an adjacent row.
