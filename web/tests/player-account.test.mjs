@@ -88,3 +88,32 @@ test("player data migration provisions private profile, settings, achievement an
   assert.match(dataMigration, /auth\.uid\(\) = user_id/);
   assert.match(dataMigration, /on_auth_user_created_player_profile/);
 });
+
+
+test("Google OAuth CSRF state is preserved in the app callback URL, not sent as Supabase authorize state", async () => {
+  const start = readFileSync(resolve(here, "../app/api/player/account/google/route.js"), "utf8");
+  assert.match(start, /callback\.searchParams\.set\("state", state\)/);
+  assert.match(start, /redirect_to/);
+  assert.doesNotMatch(start, /authorizeUrl\.searchParams\.set\("state"/);
+});
+
+test("plant catalog includes implemented starters and a locked upcoming roster", () => {
+  const catalog = readFileSync(resolve(here, "../game/data/stageOnePlants.mjs"), "utf8");
+  for (const id of ["radish", "energy-mushroom", "pea-shooter", "thorn-wall", "sunflower", "ice-bloom", "double-radish", "pumpkin-guard", "explosive-berry", "fire-pepper"]) {
+    assert.match(catalog, new RegExp('id: "' + id + '"'));
+  }
+  assert.match(catalog, /implemented: true/);
+  assert.match(catalog, /purchasable: false/);
+  assert.match(catalog, /coinPrice: 360/);
+});
+
+test("plant purchase migration uses database-owned prices and an atomic transaction", () => {
+  const migration = readFileSync(resolve(here, "../supabase/migrations/003_plant_catalog_and_purchases.sql"), "utf8");
+  assert.match(migration, /create table if not exists public\.stage_one_plant_catalog/i);
+  assert.match(migration, /create table if not exists public\.player_coin_transactions/i);
+  assert.match(migration, /create or replace function public\.purchase_player_plant/i);
+  assert.match(migration, /for update/i);
+  assert.match(migration, /v_plant\.coin_price/i);
+  assert.match(migration, /PLANT_NOT_AVAILABLE_FOR_PURCHASE/);
+  assert.match(migration, /grant execute on function public\.purchase_player_plant\(text\) to authenticated/i);
+});
