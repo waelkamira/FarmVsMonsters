@@ -1921,6 +1921,12 @@ export default class BattleScene extends Scene {
       view.add(g);
       view.add(hyenaSprite);
       hyenaSprite.play("hyena-idle");
+      hyenaSprite.on("animationcomplete", (animation) => {
+        if (!monsterAliveForAnimation()) return;
+        if (animation.key === "hyena-bite" || animation.key === "hyena-hit") {
+          this.playHyenaAnimation(monster, "hyena-idle", true);
+        }
+      });
     } else {
       view.add(g);
     }
@@ -1940,6 +1946,7 @@ export default class BattleScene extends Scene {
     }
 
     view.setDepth(8);
+    let monsterAliveForAnimation = () => true;
     const shadow = this.add.ellipse(
       spawn.x, spawn.y + 2,
       48 * monsterScale * profile.widthScale,
@@ -1959,7 +1966,7 @@ export default class BattleScene extends Scene {
       this.setMessage("A Stonehide is approaching: slow, heavily plated, and tough to stop.");
     }
 
-    this.monsters.push({
+    const monsterRecord = {
       kind: archetype,
       row, x: spawn.x, y: spawn.y, localX: SPAWN_LOCAL_X, hp,
       speed,
@@ -1980,7 +1987,9 @@ export default class BattleScene extends Scene {
       maxHp: hp,
       hitFlashGraphic: g, hitFlashTimer: null, hyenaSprite, hitAnimUntil: 0,
       attackCooldown: 0, alive: true, view, shadow, dustTimer: 0
-    });
+    };
+    monsterAliveForAnimation = () => monsterRecord.alive;
+    this.monsters.push(monsterRecord);
   }
 
   updateMonsters(dt, delta) {
