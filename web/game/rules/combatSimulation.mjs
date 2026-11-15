@@ -61,10 +61,10 @@ export function resolvePlantUproot({ energy, plant } = {}) {
     return { ok: false, reason: "INVALID_UPROOT_STATE" };
   }
   const configuredCost = PLANT_RULES[plant.type]?.plantingEnergyCost;
-  const refund = Number.isFinite(plant.energyCost) && plant.energyCost >= 0
-    ? plant.energyCost
-    : configuredCost;
-  if (!Number.isFinite(refund)) {
+  if (
+    !Number.isFinite(configuredCost) ||
+    (plant.energyCost !== undefined && plant.energyCost !== configuredCost)
+  ) {
     return { ok: false, reason: "UNKNOWN_PLANT_TYPE" };
   }
 
@@ -73,8 +73,8 @@ export function resolvePlantUproot({ energy, plant } = {}) {
   return {
     ok: true,
     reason: "PLANT_UPROOTED",
-    energy: energy + refund,
-    refund
+    energy: energy + configuredCost,
+    refund: configuredCost
   };
 }
 
