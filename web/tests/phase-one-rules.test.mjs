@@ -229,7 +229,8 @@ test("Dust Skitters perform periodic visual hops while remaining grounded by pla
   assert.match(update, /monster\.view\.setPosition\(position\.x, position\.y \+ jumpOffset\)/);
   assert.match(update, /if \(withinBiteRange\) \{\s*\/\/ A skitter must land before it can stop to bite/);
   assert.match(update, /monster\.isJumping = false;\s*monster\.jumpElapsed = 0;/);
-  assert.match(update, /monster\.shadow\.setPosition\(position\.x, position\.y \+ 2\)/);
+  assert.doesNotMatch(spawn, /\bshadow\b/i, "characters must not receive ground shadows");
+  assert.doesNotMatch(update, /monster\.shadow/, "monster movement must not update a ground shadow");
 });
 
 test("all three monster profiles and Stonehide bracing damage reduction remain wired", () => {
