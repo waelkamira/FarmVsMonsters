@@ -2952,7 +2952,7 @@ export default class BattleScene extends Scene {
       for (const monster of this.monsters) {
         if (!monster?.alive || !Number.isFinite(monster.localX)) continue;
         const laneDistance = Math.abs(monster.row - shot.currentRow);
-        if (laneDistance > 0.5) continue;
+        if (laneDistance > 0.35) continue;
         const horizontalDistance = Math.abs(monster.localX - shot.localX);
         const hitRadius = PHASE_ONE_PLANTS.radish.projectileCollisionRadius * (monster.widthScale || 1);
         if (horizontalDistance > hitRadius) continue;
