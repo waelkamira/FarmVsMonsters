@@ -883,3 +883,11 @@
 - BattleScene now consumes the scheduler output and retains only Phaser-specific lane randomness, sprite construction, effects, and the existing dragon trigger after the second ordinary monster in wave five.
 - Added three kernel test cases for intermission and spawn cadence, roster boundaries, and archetype composition. Updated scene integration assertions to the extracted scheduler and existing Skitter resolver.
 - No wave sizes, enemy stats, reward values, or boss conditions were intentionally changed. No local tests/build/browser run was performed; CI runner allocation remains unresolved.
+
+
+## 2026-11-16 — Deterministic client simulation sampling
+- Added a scene-scoped seeded random stream for monster lane selection and Dust Skitter jump/burst gameplay timing samples.
+- Kept cosmetic voice randomness outside the simulation stream.
+- The client seed is explicitly provisional and cannot establish authoritative wins or rewards; server-issued session seeds and replay validation remain future work.
+- Existing wave sizes, spawn cadence, archetype composition, movement multipliers, and random sampling ranges are unchanged.
+- Tests/build were not run in this environment; the earlier GitHub Actions runner allocation issue remains unresolved.
