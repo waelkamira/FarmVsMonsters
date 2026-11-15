@@ -41,6 +41,18 @@ const translations = {
   "Loading the battlefield and getting the tribe ready.": "جارٍ تحميل ساحة المعركة وتجهيز القبيلة.",
   "The battle could not be started": "تعذّر بدء المعركة", "The game engine failed to initialize.": "تعذّر تشغيل محرك اللعبة.",
   "Retry": "إعادة المحاولة", "Back to Main Menu": "العودة إلى القائمة الرئيسية",
+
+  "The caveman must finish his current action before moving again.": "يجب أن ينهي رجل الكهف حركته الحالية قبل أن يتحرك مجدداً.",
+  "Choose a plant card first.": "اختر بطاقة نبتة أولاً.",
+  "Choose a plant card first": "اختر بطاقة نبتة أولاً.",
+  "The caveman is walking to the selected soil cell...": "رجل الكهف يتجه إلى خلية التربة المختارة...",
+  "The caveman is back at his starting position.": "عاد رجل الكهف إلى نقطة انطلاقه.",
+  "Planting cancelled: this cell is no longer available.": "أُلغيت الزراعة: هذه الخلية لم تعد متاحة.",
+  "Energy is full. Defeat monsters or spend energy before collecting more.": "الطاقة ممتلئة. اهزم الوحوش أو أنفق بعض الطاقة قبل جمع المزيد.",
+  "A Dust Skitter has joined the raid: quick, but easier to bring down.": "انضم ضبع الغبار السريع إلى الهجوم: سريع لكنه أسهل في الهزيمة.",
+  "A Stonehide is approaching: slow, heavily plated, and tough to stop.": "ضبع الجلد الحجري يقترب: بطيء ومدرع بشدة ويصعب إيقافه.",
+  "ALPHA BRUTE! A giant raider with double health and crushing bites is approaching!": "الضبع العملاق! وحش ضخم بضعف الطاقة وعضّات ساحقة يقترب!",
+  "EMERGENCY! The last radish has fallen. Move close and press SPACE to swing the club.": "طوارئ! سقطت آخر نبتة فجل. اقترب واضغط المسافة لضرب الوحش بالهراوة."
   "BATTLE PAUSED": "المعركة متوقفة مؤقتاً", "RESUME": "متابعة", "RESTART": "إعادة البدء", "SETTINGS": "الإعدادات", "MAIN MENU": "القائمة الرئيسية",
   "ENERGY": "الطاقة", "HOME": "المزرعة", "RADISHES": "الفجل", "KILLS": "المهزومون", "WAVE": "الموجة", "DOWN": "هُزم", "LAST STAND": "المواجهة الأخيرة",
   "Radish planted! The caveman is sprinting back behind the final line.": "تمت زراعة الفجل! رجل الكهف يركض عائداً إلى خط الدفاع الأخير.",
@@ -60,9 +72,17 @@ const translations = {
 
 export function translate(value, locale = "ar") {
   if (locale !== "ar" || typeof value !== "string") return value;
+  if (value.startsWith("Collected ") && value.endsWith(" mushroom energy!")) {
+    return "جمعت " + value.slice(10, -" mushroom energy!".length) + " من طاقة الفطر!";
+  }
+  if (value.startsWith("Wave ") && value.includes(" cleared. Wave ")) {
+    const match = value.match(/^Wave (\\d+) cleared\\. Wave (\\d+) is gathering: (\\d+) monsters incoming\\.$/);
+    if (match) return "اكتملت الموجة " + match[1] + ". الموجة " + match[2] + " قادمة وبها " + match[3] + " وحشاً.";
+  }
+  if (value.startsWith("Not enough energy to plant ")) return value.includes("Mushroom") ? "الطاقة غير كافية لزراعة فطر الطاقة." : "الطاقة غير كافية لزراعة الفجل.";
+  if (value.startsWith("The battle is lost") ) return "انتهت المعركة بخسارة المزرعة.";
   return translations[value] || value;
 }
-
 const LocaleContext = createContext({ locale: "ar", setLocale: () => {}, t: (v) => translate(v, "ar") });
 
 export function LocaleProvider({ children }) {
