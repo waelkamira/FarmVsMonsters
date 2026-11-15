@@ -4,56 +4,7 @@ import Link from "next/link";
 import { useLocale, LanguageToggle } from "../LocaleProvider";
 import CatalogThumb from "../components/CatalogThumb";
 
-const monsters = [
-  {
-    id: "cave-brute",
-    icon: "cave-brute",
-    en: "Cave Brute",
-    ar: "الضبع العادي",
-    enRole: "Standard raider",
-    arRole: "الضبع الأساسي",
-    enDesc: "The baseline enemy. It advances through its lane and stops to eat a plant blocking its path.",
-    arDesc: "النوع الأساسي. يتقدم في مساره ويتوقف لالتهام أي نبتة تعترض طريقه.",
-    enStats: "Standard durability · 7 radish hits",
-    arStats: "تحمّل عادي · ٧ ضربات من الفجل"
-  },
-  {
-    id: "dust-skitter",
-    icon: "dust-skitter",
-    en: "Dust Skitter",
-    ar: "ضبع الغبار السريع",
-    enRole: "Fast, fragile scout",
-    arRole: "كشاف سريع وضعيف التحمل",
-    enDesc: "Moves faster than the standard hyena but is much easier to defeat.",
-    arDesc: "يتحرك أسرع من الضبع العادي، لكنه أسهل بكثير في الهزيمة.",
-    enStats: "About 52% of standard durability",
-    arStats: "نحو ٥٢٪ من تحمّل الضبع العادي"
-  },
-  {
-    id: "stonehide",
-    icon: "stonehide",
-    en: "Stonehide",
-    ar: "ضبع الجلد الحجري",
-    enRole: "Armored heavy",
-    arRole: "وحش ثقيل ومدرّع",
-    enDesc: "A slower, heavily plated hyena that takes much more damage before falling.",
-    arDesc: "ضبع أبطأ ومدرّع بشدة، ويتطلب إسقاطه ضرراً أكبر.",
-    enStats: "2.2× standard durability",
-    arStats: "٢٫٢ ضعف تحمّل الضبع العادي"
-  },
-  {
-    id: "alpha-brute",
-    icon: "alpha-brute",
-    en: "Alpha Brute",
-    ar: "الضبع العملاق",
-    enRole: "Rare giant leader",
-    arRole: "قائد عملاق نادر",
-    enDesc: "A huge late-wave enemy with exceptional durability and crushing bites.",
-    arDesc: "وحش ضخم يظهر في الموجات المتأخرة، يتمتع بتحمّل استثنائي وعضّات ساحقة.",
-    enStats: "14 radish hits",
-    arStats: "١٤ ضربة من الفجل"
-  }
-];
+import { STAGE_ONE_MONSTERS, FUTURE_MONSTERS, MONSTER_ROSTER_TOTAL } from "../../game/data/monsterRoster.mjs";
 
 export default function MonstersPage() {
   const { locale } = useLocale();
@@ -72,20 +23,42 @@ export default function MonstersPage() {
             ? "تعرّف على الأنواع الأربعة الموجودة في جيش التنين في المرحلة الأولى. تختلف في السرعة والتحمّل والدور القتالي."
             : "Meet the four hyena archetypes in the Stage 1 dragon army. They differ in speed, durability, and battlefield role."}
         </p>
+        <div className="collection-summary">
+          <span>{ar ? "أنواع منفّذة" : "IMPLEMENTED"}: <strong>{STAGE_ONE_MONSTERS.length}</strong></span>
+          <span>{ar ? "تصاميم مستقبلية" : "PLANNED"}: <strong>{FUTURE_MONSTERS.length}</strong></span>
+          <span>{ar ? "إجمالي الخانات" : "TOTAL ENTRIES"}: <strong>{MONSTER_ROSTER_TOTAL}</strong></span>
+        </div>
+        <h2 className="collection-section-title">{ar ? "الوحوش المنفّذة في المرحلة الأولى" : "Implemented Stage 1 enemies"}</h2>
         <div className="collection-grid">
-          {monsters.map((monster) => (
+          {STAGE_ONE_MONSTERS.map((monster) => (
             <article className="collection-card is-active" key={monster.id}>
-              <CatalogThumb id={monster.icon} label={ar ? monster.ar : monster.en} className="monster-thumb" />
-              <h2>{ar ? monster.ar : monster.en}</h2>
-              <span className="collection-status">{ar ? "موجود في المرحلة" : "IN THIS STAGE"}</span>
-              <p><strong>{ar ? monster.arRole : monster.enRole}</strong></p>
-              <p>{ar ? monster.arDesc : monster.enDesc}</p>
+              <CatalogThumb id={monster.icon} label={ar ? monster.nameAr : monster.name} className="monster-thumb" />
+              <h2>{ar ? monster.nameAr : monster.name}</h2>
+              <span className="collection-status">{ar ? "✓ منفّذ في اللعبة" : "✓ IMPLEMENTED"}</span>
+              <p><strong>{ar ? monster.roleAr : monster.role}</strong></p>
+              <p>{ar ? monster.descriptionAr : monster.description}</p>
               <div className="collection-meta">
-                <span>{ar ? monster.arStats : monster.enStats}</span>
-                {monster.id === "alpha-brute" && <span>{ar ? "موجات متأخرة" : "Late waves"}</span>}
-                {monster.id === "stonehide" && <span>{ar ? "موجات متأخرة" : "Late waves"}</span>}
-                {monster.id === "dust-skitter" && <span>{ar ? "من الموجة الثالثة" : "From Wave 3"}</span>}
+                <span>{ar ? monster.statsAr : monster.stats}</span>
+                {monster.spawnNote && <span>{ar ? monster.spawnNoteAr : monster.spawnNote}</span>}
               </div>
+            </article>
+          ))}
+        </div>
+        <h2 className="collection-section-title">{ar ? "خانات الوحوش المستقبلية" : "Future monster entries"}</h2>
+        <p className="collection-intro">
+          {ar
+            ? "هذه الخانات تحجز مكان الأنواع القادمة في خطة اللعبة. لم نعتمد أسماءها أو قدراتها أو صورها بعد، ولن تظهر في المعركة حتى يكتمل تنفيذها واختبارها."
+            : "These entries reserve space for future roster additions. Their names, abilities, and artwork are not approved yet, and they will not appear in battle until implemented and tested."}
+        </p>
+        <div className="collection-grid">
+          {FUTURE_MONSTERS.map((monster) => (
+            <article className="collection-card is-locked" key={monster.id}>
+              <div className="catalog-thumb monster-thumb is-planned" role="img" aria-label={ar ? "وحش قيد التصميم" : "Monster in design"}>
+                <span aria-hidden="true" style={{fontSize: "2.2rem"}}>🔒</span>
+              </div>
+              <h2>{ar ? monster.nameAr : monster.name}</h2>
+              <span className="collection-status">{ar ? "قيد التصميم · غير قابل للعب" : "IN DESIGN · NOT PLAYABLE"}</span>
+              <p>{ar ? "لم تُحدد الشخصية أو آلياتها بعد. هذه خانة تنظيمية فقط ضمن قائمة المئة." : "Character concept and gameplay are not defined yet. This is a roster placeholder only."}</p>
             </article>
           ))}
         </div>
