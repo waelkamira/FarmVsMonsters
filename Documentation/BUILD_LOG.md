@@ -764,3 +764,9 @@
 - The monster returns to its walking/running animation after the plant is destroyed.
 - No sprite scaling, foot-position offsets, or ground shadows were added.
 - Automated test execution and in-browser visual confirmation remain pending.
+
+
+## 2026-11-15 — Fix hyena sinking during plant eating
+- Corrected the hyena bite animation to use authored frames 6–8 from the final row of `hyena-bite.png`, rather than incorrectly playing frames 0–5.
+- Kept the hyena's world position fixed while eating and preserved the looping bite animation; no character images or sprite dimensions were changed.
+- Added a regression assertion for the bite frame range. Automated test/build execution and in-browser visual verification are still pending.
