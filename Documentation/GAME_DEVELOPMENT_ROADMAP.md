@@ -1,6 +1,6 @@
 # Farm Vs Monsters — Master Development Roadmap
 
-**Authority:** This document defines the phase gates, feature ownership, screen flow, and acceptance criteria for the rebuilt 2D browser game.
+**Authority:** This document defines the detailed implementation checklist, screen flow, and acceptance criteria. The strategic product direction, ten success factors, full phase map, success metrics, and schedule are governed by [GLOBAL_GAME_SUCCESS_MASTER_PLAN.md](GLOBAL_GAME_SUCCESS_MASTER_PLAN.md). If details conflict, follow the master plan and the latest explicit user decisions.
 **Runtime:** Next.js + React + JavaScript + Phaser 3 in `web/`.
 **First target:** Windows PC browser. Mobile and packaged desktop are later delivery targets.
 **Art direction:** Original hand-drawn 2D cartoon art only. The legacy Unity project remains a reference until equivalent systems are rebuilt and verified.
