@@ -34,3 +34,7 @@ npm run dev
 
 ## ملاحظة حول Unity
 توجد أنظمة Unity/C# سابقة في المستودع. تبقى مرجعاً للمفاهيم والبيانات أثناء إعادة البناء، لكنها ليست محرك النسخة الجديدة. لا تعتبر النسخة الجديدة مكافئة للأنظمة القديمة قبل نقل كل نظام واختباره.
+
+
+## Campaign map
+The current world-map UI is documented in [the eleven-world campaign map plan](Documentation/SECONDARY_CAMPAIGN_MAP_PVZ2_COMPARISON.md) and implemented at `/stages`. The eleven regions and ten mission slots per region are long-term planned content; only implemented entries are playable.
