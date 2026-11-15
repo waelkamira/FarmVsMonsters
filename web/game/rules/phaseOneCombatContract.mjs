@@ -4,6 +4,11 @@
 export const PHASE_ONE_COMBAT_CONTRACT_VERSION = 1;
 
 export const PHASE_ONE_WAVE_SIZES = Object.freeze([3, 5, 6, 7, 9]);
+export const PHASE_ONE_BOARD = Object.freeze({ columns: 8, rows: 5, laneWidth: 420.823, spawnLocalX: 238.4115, homeLocalX: -300 });
+export function getPlantLaneLocalX(col) {
+  if (!Number.isInteger(col) || col < 0 || col >= PHASE_ONE_BOARD.columns) throw new RangeError("INVALID_PLANT_COLUMN");
+  return ((col + 0.5) / PHASE_ONE_BOARD.columns) * PHASE_ONE_BOARD.laneWidth - PHASE_ONE_BOARD.laneWidth / 2;
+}
 export const PHASE_ONE_ENERGY = Object.freeze({ initial: 150, maximum: 300 });
 
 export const PHASE_ONE_TIMING = Object.freeze({
