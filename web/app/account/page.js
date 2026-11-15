@@ -27,7 +27,7 @@ export default function AccountPage() {
     const params = new URLSearchParams(window.location.search);
     const googleError = params.get("google_error");
     if (params.get("google") === "connected") {
-      setMessage(ar ? "تم تسجيل الدخول باستخدام Google. جارٍ مزامنة تقدمك." : "Signed in with Google. Syncing your progress...");
+      setMessage(ar ? "تم تسجيل الدخول باستخدام Google. الحفظ السحابي متوقف مؤقتاً أثناء تأمين تقدمك." : "Signed in with Google. Cloud saving is temporarily paused while progression security is upgraded.");
     } else if (googleError) {
       const messages = {
         cloud_unconfigured: ar ? "خدمة الحسابات السحابية غير مهيأة بعد." : "Cloud accounts are not configured yet.",
@@ -49,7 +49,7 @@ export default function AccountPage() {
         if (current) {
           try {
             await restoreOrInitializeCloudProgress();
-            if (active) setMessage(ar ? "تمت مزامنة تقدم حسابك." : "Your cloud progress is synced.");
+            if (active) setMessage(ar ? "تم التحقق من حسابك؛ تقدم اللعب محفوظ محلياً حالياً." : "Your account is connected; gameplay progress is currently saved locally.");
           } catch (reason) {
             if (active) setError(reason.message);
           }
@@ -79,7 +79,7 @@ export default function AccountPage() {
       }
       setUser(result.user);
       await restoreOrInitializeCloudProgress();
-      setMessage(ar ? "تم تسجيل الدخول ومزامنة تقدمك بنجاح." : "Signed in. Your cloud progress is synced.");
+      setMessage(ar ? "تم تسجيل الدخول بنجاح. الحفظ المحلي مستمر والمزامنة السحابية متوقفة مؤقتاً." : "Signed in. Local saves remain active; cloud progression sync is temporarily paused.");
       setPassword("");
     } catch (reason) {
       setError(reason.message || (ar ? "تعذر إكمال العملية." : "The request could not be completed."));
@@ -94,7 +94,7 @@ export default function AccountPage() {
     try {
       await signOutPlayer();
       setUser(null);
-      setMessage(ar ? "تم تسجيل الخروج. تقدمك محفوظ في حسابك." : "Signed out. Your progress remains saved to your account.");
+      setMessage(ar ? "تم تسجيل الخروج. تقدم اللعب محفوظ محلياً على هذا الجهاز." : "Signed out. Your local gameplay progress remains saved on this device.");
     } catch (reason) {
       setError(reason.message);
     } finally {
@@ -112,8 +112,8 @@ export default function AccountPage() {
         <h1>{ar ? "احفظ مغامرتك" : "Save Your Adventure"}</h1>
         <p className="account-intro">
           {ar
-            ? "يمكنك اللعب فوراً كضيف دون تسجيل الدخول. سيُحفظ تقدمك على هذا الجهاز. أنشئ حساباً اختيارياً لحفظ المراحل والعملات سحابياً واستعادتها على أجهزتك الأخرى."
-            : "You can play immediately as a guest without signing in. Your progress stays on this device. Create an optional account to back up stages and coins to the cloud and restore them on your other devices."}
+            ? "يمكنك اللعب فوراً كضيف دون تسجيل الدخول. سيُحفظ تقدمك على هذا الجهاز. الحساب اختياري، لكن المزامنة السحابية متوقفة مؤقتاً حتى نؤمّن حفظ المراحل والعملات من التلاعب."
+            : "You can play immediately as a guest without signing in. Your progress stays on this device. Accounts are optional; cloud sync is temporarily paused while stage and coin saving are secured against tampering."}
         </p>
 
         <div className="guest-play-panel"><strong>{ar ? "لا تحتاج إلى حساب للعب!" : "No account needed to play!"}</strong><p>{ar ? "تقدم الضيف يُحفظ محلياً تلقائياً. التسجيل مطلوب فقط للمزامنة السحابية." : "Guest progress is saved locally automatically. Sign-in is only needed for cloud sync."}</p><Link className="primary-link" href="/stages">{ar ? "متابعة اللعب كضيف" : "Continue as Guest"}</Link></div>
@@ -125,7 +125,7 @@ export default function AccountPage() {
             <div className="account-avatar" aria-hidden="true">✦</div>
             <strong>{ar ? "أنت مسجل الدخول" : "You are signed in"}</strong>
             <span className="account-email">{user.email}</span>
-            <p>{ar ? "تتم مزامنة تقدم المراحل مع حسابك السحابي." : "Your stage progress is synced with your cloud account."}</p>
+            <p>{ar ? "الحساب متصل، لكن مزامنة تقدم اللعب متوقفة مؤقتاً. يستمر الحفظ المحلي دون انقطاع." : "Your account is connected, but gameplay progress sync is temporarily paused. Local saving continues."}</p>
             <button className="account-submit" type="button" onClick={logout} disabled={busy}>
               {busy ? (ar ? "لحظة..." : "Please wait...") : (ar ? "تسجيل الخروج" : "Sign out")}
             </button>
