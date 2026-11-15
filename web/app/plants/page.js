@@ -62,6 +62,7 @@ export default function PlantsPage() {
           <span>{ar ? "النباتات المفعّلة" : "ACTIVE"}: <strong>{activePlants.length}</strong></span>
           <span>{ar ? "قيد التجهيز" : "IN DEVELOPMENT"}: <strong>{plannedPlants.length}</strong></span>
           <span>{ar ? "الإجمالي" : "TOTAL"}: <strong>{STAGE_ONE_PLANTS.length}</strong></span>
+          <span>{ar ? "قابل للشراء الآن" : "BUYABLE NOW"}: <strong>{STAGE_ONE_PLANTS.filter((plant) => plant.purchasable).length}</strong></span>
         </div>
 
         <h2 className="collection-section-title">{ar ? "النباتات المفعّلة داخل المعركة" : "Active in battle"}</h2>
