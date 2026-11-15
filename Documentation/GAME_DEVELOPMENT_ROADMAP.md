@@ -121,7 +121,7 @@ BATTLE
 
 Every campaign stage is a complete rescue adventure. Its opening shows a different dragon captor behind/in command of a distinct monster army, with the farmer's wife restrained beside/behind that dragon. The dragon intervenes during the battle and becomes the stage boss. The player must defeat both the dragon and all required surviving followers; ordinary wave survival alone is not enough for story-stage victory. The wife is then released and reunited with the farmer. Let the reunion and celebration breathe before the next stage reveals a different territory and dragon. Never re-kidnap her immediately during the reunion.
 
-The five-wave structure is retained. Stage 1 targets 30 ordinary monsters total; Stage 2 targets 31; Stage 3 targets 32; each later stage adds one. Dragon bosses are counted separately. Replace the old 100-monster prototype schedule. Stage 1's dragon and rescue are required parts of Phase 1, not a later extension. The dragon appears at the start of Wave 5 while a few followers may remain; the farmer's slingshot fires automatically once the dragon is in range.
+The five-wave structure is retained. Stage 1 targets 30 ordinary monsters total; Stage 2 targets 31; Stage 3 targets 32; each later stage adds one. Dragon bosses are counted separately. The old 100-monster prototype schedule has been retired. Stage 1's dragon and rescue are required parts of Phase 1, not a later extension. The dragon appears at the start of Wave 5 while a few followers may remain; the farmer's slingshot fires automatically once the dragon is in range.
 
 ## Approved signature feature — post-stage treasure cave
 
