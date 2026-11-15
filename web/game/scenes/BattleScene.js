@@ -947,6 +947,8 @@ export default class BattleScene extends Scene {
     this.drawDragonHealthBar();
     if (boss.hp > 0) return;
     boss.alive = false;
+    this.dragonHealthBar?.destroy();
+    this.dragonHealthLabel?.destroy();
     if (boss.sprite?.active) {
       this.tweens.killTweensOf(boss.sprite);
       this.tweens.add({
@@ -987,7 +989,7 @@ export default class BattleScene extends Scene {
         if (this.princessActor?.active) {
           this.princessActor.setDepth(0);
           this.caveman.add(this.princessActor);
-          this.princessActor.setPosition(-22, -48).setDisplaySize(58, 84);
+          this.princessActor.setPosition(22, -48).setDisplaySize(58, 84);
         }
         this.time.delayedCall(650, () => {
           if (this.cavemanVisual?.active) {
@@ -1492,6 +1494,7 @@ export default class BattleScene extends Scene {
         this.spawnMonster();
         this.spawnedThisWave += 1;
         this.totalSpawnedMonsters += 1;
+        if (this.wave === 5 && this.spawnedThisWave === 2) this.beginDragonEncounter();
         this.spawnTimer = Math.max(2300, 5200 - this.wave * 120);
       }
     }
@@ -2731,7 +2734,6 @@ export default class BattleScene extends Scene {
     this.waveDefeatedMonsters = 0;
     this.waveSize = PHASE_ONE_WAVE_SIZES[this.wave - 1];
     this.spawnTimer = 3200;
-    if (this.wave === 5) this.beginDragonEncounter();
     this.setMessage(
       "Wave " + clearedWave + " cleared. Wave " + this.wave +
       " is gathering: " + this.waveSize + " monsters incoming."
