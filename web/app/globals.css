@@ -169,3 +169,53 @@ html[dir="rtl"] .menu-version { letter-spacing:0; }
 .stage-briefing strong { color:#f6d79b; font-size:11px; letter-spacing:.08em; }
 .stage-briefing span { color:#fff0d4; font-size:13px; line-height:1.6; }
 @media(max-width:640px) { .stage-grid { grid-template-columns:1fr; } .stage-cast-grid { grid-template-columns:1fr; } .stage-briefing { grid-template-columns:1fr; } .stages-card { padding:24px 16px; } }
+
+
+/* High-contrast readability pass: menus, status bars, forms and every game strip. */
+:root { --text-primary:#fff9e9; --text-secondary:#f5e7c8; --panel-ink:#1b1009; --panel-edge:#f1cf8a; }
+body { color:var(--text-primary); }
+.eyebrow,.menu-version,.control-hint,.home-copy,.info-card p,.info-card li,.campaign-note,.prototype-note { color:var(--text-secondary); text-shadow:0 1px 2px #120a05; }
+.home-note,.coin-wallet small { color:#f0dfbd; }
+.menu-facts span { color:#fff5dc; background:#1c120b99; border-color:#e7c47f; font-size:13px; }
+.primary-link,.secondary-link,.language-toggle,.game-retry-button { color:#211307; text-shadow:none; font-weight:900; border-color:#28180d; outline-color:#fff0c7; box-shadow:0 5px 0 #160d07,0 8px 18px #0009; }
+.secondary-link,.menu-actions .secondary-link { background:linear-gradient(#f2dfb8,#c49a60); }
+.info-card { color:#fff9e9; border-color:#2b190d; outline:2px solid #e2b86f; outline-offset:-13px; }
+.info-card h2,.stage-tile h2 { color:#fff0c9; text-shadow:0 2px 3px #160c05; }
+.stage-tile { border-color:#d8b36f; background:linear-gradient(160deg,#694326,#24170f 92%); }
+.stage-locked { opacity:.9; filter:saturate(.65); }
+.stage-number,.stage-tile p,.stage-lock-label,.stage-briefing strong,.stage-briefing span,.stage-intro-emblem,.stage-cast-placeholder { color:#fff1d0; text-shadow:0 1px 2px #100804; }
+.stage-lock-label { background:#17100b; border:2px solid #d9b878; font-size:14px; }
+.stage-art-placeholder,.stage-intro-emblem,.stage-cast-placeholder { border-color:#e8c783; background-color:#24170f; }
+.stage-briefing div { background:#17100b; border:2px solid #c79c5d; }
+.stage-briefing strong { font-size:13px; }
+.stage-briefing span,.stage-tile p { font-size:15px; }
+.coin-wallet { color:#fff1c5; background:#1a1009; border-width:3px; }
+.coin-wallet small { color:#f3e2bf; font-size:13px; }
+.game-header,.game-panel { border-color:#241509; }
+.game-header { background:linear-gradient(90deg,#422815,#1c120b 48%,#422815); }
+.game-status { color:#fff9e9; }
+.game-status span { color:#f5e7c8; }
+.game-status strong { text-shadow:0 2px 3px #120a05; }
+.game-back-link { color:#fff1c9; font-weight:800; }
+.account-card { max-width:680px; }
+.account-intro { font-size:17px !important; }
+.account-tabs { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:26px 0 18px; }
+.account-tabs button { min-height:52px; border:2px solid #d7b879; border-radius:10px; background:#21150d; color:#fff2d2; font:inherit; font-weight:900; cursor:pointer; }
+.account-tabs button.active { background:linear-gradient(#f0d39b,#b98549); color:#211307; border-color:#fff0c7; }
+.account-form { display:grid; gap:10px; }
+.account-form label { margin-top:8px; color:#fff0c9; font-weight:900; font-size:16px; }
+.account-form input { width:100%; min-height:54px; padding:12px 15px; border:2px solid #d8b777; border-radius:9px; background:#170f09; color:#fff9e9; font:inherit; font-size:16px; }
+.account-form input::placeholder { color:#cbb994; }
+.account-form input:focus { outline:3px solid #f0c56e; outline-offset:2px; }
+.account-submit { min-height:56px; margin-top:18px; padding:12px 20px; border:3px solid #29180d; border-radius:10px; background:linear-gradient(#f0d49e,#b67b3d); color:#211307; font:inherit; font-size:16px; font-weight:900; cursor:pointer; box-shadow:0 5px 0 #160d07; }
+.account-submit:disabled { opacity:.65; cursor:wait; }
+.account-feedback,.account-security,.account-status { padding:13px 15px; border:2px solid #d7b879; border-radius:10px; background:#1b120b; color:#fff5df !important; font-size:14px !important; line-height:1.8; }
+.account-error { border-color:#ef8b72; color:#ffd8cc !important; }
+.account-success { border-color:#a7d58b; color:#e4ffd5 !important; }
+.account-security { margin-top:20px; color:#e7d5b4 !important; }
+.account-signed-in { display:flex; flex-direction:column; align-items:center; gap:10px; padding:26px; border:2px solid #d8b777; border-radius:14px; background:#1a1009; text-align:center; }
+.account-signed-in strong { color:#fff2d2; font-size:20px; }
+.account-signed-in p,.account-email { color:#f2dfbd; overflow-wrap:anywhere; }
+.account-avatar { display:grid; place-items:center; width:58px; height:58px; border-radius:50%; background:#b98549; color:#211307; font-size:30px; }
+.stages-actions { display:flex; align-items:center; gap:12px; }
+@media(max-width:560px) { .account-card { padding:24px 16px; } .account-tabs button { font-size:14px; } .stage-tile p,.stage-briefing span { font-size:14px; } .stages-actions { flex-wrap:wrap; justify-content:flex-end; } }
