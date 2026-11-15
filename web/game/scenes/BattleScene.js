@@ -2723,6 +2723,20 @@ export default class BattleScene extends Scene {
       }
 
       if (withinBiteRange) {
+        const movementTick = Math.floor(this.combatClockMs);
+        if (monster.replayLastBlockerCol !== blocker.col || monster.replayMoveElapsedMs >= 500) {
+          this.recordCombatEvent("monster_moved", {
+            monsterId: monster.combatId,
+            distance: Math.max(0, monster.replayMoveStartLocalX - monster.localX),
+            deltaMs: Math.max(0, movementTick - monster.replayLastMovementTick),
+            blockerCol: blocker.col,
+            biteReach: Math.min(1.5, biteReach)
+          });
+          monster.replayMoveStartLocalX = monster.localX;
+          monster.replayLastMovementTick = movementTick;
+          monster.replayMoveElapsedMs = 0;
+          monster.replayLastBlockerCol = blocker.col;
+        }
         if (monster.isJumping) {
           monster.isJumping = false;
           monster.jumpElapsed = 0;
