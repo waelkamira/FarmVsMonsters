@@ -163,3 +163,9 @@ Pickup identity hardening: collectible IDs are now globally monotonic for the ba
 - Each ordinary monster spawn is recorded with a session-unique ID, wave/index, lane, archetype, and combat stats. Replay checks the exact five-wave roster sequence, archetype schedule, HP and speed against the shared combat contract.
 - Each monster bite is recorded against a specific radish cell. Replay verifies that the attacker exists and is alive, the target is a living radish in the same lane, damage matches the archetype profile, and bite intervals are respected; plant HP and destruction are recalculated.
 - This is not yet a full monster simulation: lane movement, target proximity, projectile damage, monster deaths, breach/farm defeat, and rewards still require deterministic replay. Client event claims remain untrusted until those steps are implemented and server-side replay is authoritative.
+
+
+## Monster lane movement replay
+- Spawn events now include the canonical lane-local starting coordinate. Periodic movement checkpoints record travelled distance, elapsed combat-clock time, nearest blocking radish column, and a bounded bite-clearance value.
+- Replay derives the nearest living radish in the same lane, checks the elapsed clock and maximum archetype movement speed (including the existing Dust Skitter jump/burst upper bound), and runs `resolveMonsterLaneStep` to clamp movement at the blocker. It rejects forged speed, incorrect blockers, and movement through a defender.
+- Checkpoints are periodic and emitted when the blocking target changes; they are not yet a frame-by-frame authoritative simulation. Exact Dust Skitter random-state replay and damage/death/projectile/farm-breach resolution remain outstanding. Client logs are still untrusted and no rewards are granted from them.
