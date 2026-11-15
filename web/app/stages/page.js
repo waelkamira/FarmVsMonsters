@@ -1,11 +1,23 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useLocale, LanguageToggle } from "../LocaleProvider";
+import { loadUnlockedStage } from "../../game/rules/phaseOneRules.mjs";
 
 export default function StagesPage() {
   const { locale } = useLocale();
   const ar = locale === "ar";
+  const [unlockedStage, setUnlockedStage] = useState(1);
+
+  useEffect(() => {
+    try {
+      setUnlockedStage(loadUnlockedStage(window.localStorage));
+    } catch {
+      setUnlockedStage(1);
+    }
+  }, []);
+
   const stages = Array.from({ length: 10 }, (_, index) => index + 1);
 
   return (
@@ -16,7 +28,7 @@ export default function StagesPage() {
         <p>{ar ? "كل مرحلة مغامرة مستقلة بأرض جديدة ووحوش وتنين مختلف. اهزم أتباع التنين، اقضِ عليه، ثم أنقذ الأميرة." : "Every stage is its own adventure with a new land, monsters, and dragon. Defeat the dragon's followers, defeat the dragon, then rescue the princess."}</p>
         <div className="stage-grid">
           {stages.map((stage) => (
-            <article className={stage === 1 ? "stage-tile stage-available" : "stage-tile stage-locked"} key={stage}>
+            <article className={stage <= unlockedStage ? "stage-tile stage-available" : "stage-tile stage-locked"} key={stage}>
               <div className="stage-number">{String(stage).padStart(2, "0")}</div>
               <div className="stage-art-placeholder" aria-hidden="true"><span>{stage === 1 ? "✦" : "?"}</span></div>
               <h2>{ar ? `المرحلة ${stage}` : `Stage ${stage}`}</h2>
@@ -25,7 +37,9 @@ export default function StagesPage() {
                 : (ar ? "أرض جديدة وتحديات قادمة" : "A new land and challenges to come")}</p>
               {stage === 1
                 ? <Link className="primary-link stage-action" href="/stage/1">{ar ? "استعد للمغامرة" : "View Stage"}</Link>
-                : <span className="stage-lock-label">{ar ? "قريباً" : "Coming soon"}</span>}
+                : stage <= unlockedStage
+                  ? <span className="stage-lock-label">{ar ? "تم الفتح · قيد التطوير" : "Unlocked · In development"}</span>
+                  : <span className="stage-lock-label">{ar ? "مقفل" : "Locked"}</span>}
             </article>
           ))}
         </div>
