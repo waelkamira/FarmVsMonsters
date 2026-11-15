@@ -112,3 +112,12 @@ BattleScene supplies current world-to-lane positions and visual collision dimens
 - `resolveDustSkitterMotionStep` owns jump/burst state transitions, elapsed durations, jump visual offset, and combined movement multipliers. The scene samples the existing Phaser random duration ranges only at transition boundaries and passes those samples into the pure resolver; random behavior has not yet been replaced with the server-seeded RNG.
 - Jumping remains presentation-only: it changes the sprite's vertical offset and movement multiplier, not lane coordinates or collision geometry. Bite-range interruption and the current jump/burst timing values are preserved.
 - The Phaser scene still owns spawn timing, random sampling, audio, dust effects, and animation playback. This is not yet a deterministic or server-authoritative battle.
+
+
+## Wave scheduling and spawn composition extraction (implemented)
+The pure combat kernel now resolves the Stage 1 spawn schedule:
+- It consumes the current wave, configured roster size, spawned count, intermission, spawn timer, and elapsed milliseconds.
+- It returns whether exactly one monster should spawn this update, the next spawned count, remaining intermission, and next spawn timer.
+- Wave sizes and intervals are validated against the central phase-one contract; the five-second preparation window and the existing first/next spawn delays are preserved.
+- Monster archetype composition is also resolved in the kernel (Cave Brute, Dust Skitter, Stonehide, Alpha Brute). The legacy `phaseOneRules.mjs` export remains as a compatibility alias.
+Phaser still chooses the visual lane using its current random source, creates sprites/effects, and starts the dragon encounter after the second ordinary spawn in wave five. Lane selection is not yet deterministic or server-authoritative.
