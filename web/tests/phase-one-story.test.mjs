@@ -8,10 +8,10 @@ const here = dirname(fileURLToPath(import.meta.url));
 const scene = readFileSync(resolve(here, "../game/scenes/BattleScene.js"), "utf8");
 const assets = JSON.parse(readFileSync(resolve(here, "../game/data/phase-one-story-assets.json"), "utf8"));
 
-test("the Phase 1 dragon enters at the beginning of wave five and remains separate from ordinary monsters", () => {
+test("the dragon and captive princess enter during wave five and remain separate from ordinary monsters", () => {
   assert.match(scene, /if \(this\.wave === 5 && this\.spawnedThisWave === 2\) this\.beginDragonEncounter\(\)/);
   assert.match(scene, /this\.phaseOneStoryState = "dragon"/);
-  assert.match(scene, /this\.dragonBoss = \{/);
+  assert.match(scene, /this\.createPrincessActor\(\);\s*this\.dragonBoss = \{/);
   assert.doesNotMatch(scene, /this\.monsters\.push\(this\.dragonBoss\)/);
 });
 
