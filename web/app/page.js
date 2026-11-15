@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { loadSavedCoins } from "../game/rules/phaseOneRules.mjs";
 import { useLocale, LanguageToggle } from "./LocaleProvider";
 
 export default function HomePage() {
   const [coins, setCoins] = useState(0);
+  const [showPhaseEmblem, setShowPhaseEmblem] = useState(true);
   const { t } = useLocale();
 
   useEffect(() => {
@@ -22,6 +24,17 @@ export default function HomePage() {
       <div className="home-card">
         <LanguageToggle />
         <p className="eyebrow">{t("A PRIMITIVE 2D FARM DEFENSE ADVENTURE")}</p>
+        {showPhaseEmblem && (
+          <Image
+            src="/assets/levels/phase-1-emblem.png"
+            alt={t("Phase 1 emblem")}
+            width={420}
+            height={250}
+            className="phase-one-emblem"
+            priority
+            onError={() => setShowPhaseEmblem(false)}
+          />
+        )}
         <h1>Farm <span>Vs</span> Monsters</h1>
         <p className="home-copy">
           {t("The tribe's garden is the last wall between the monsters and the cave home.")}{" "}
