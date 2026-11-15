@@ -55,3 +55,43 @@ This is a **reference shortlist**, not an imported game-asset pack. Preview imag
 - No image binaries were imported by this reference-board change.
 - Existing in-game placeholders are unchanged.
 - No plant or monster has been newly activated by this document.
+
+
+## Additional visual candidates — 15 November 2026
+
+These were found in the latest visual search. They are references for selection, not proof that the files have been imported.
+
+### Plant sprite sheet
+- Pinterest pin: https://www.pinterest.com/pin/cactus-character-sprite-game-art-partners--363032419945123197/
+- Preview: https://i.pinimg.com/originals/9c/04/0b/9c040bfb8074579c7643a711a0a61be1.jpg
+- Notes: multi-row cactus frames with bright green body and pink flower. Inspect original frame grid and verify each state before use.
+
+### Plant monster roster concept
+- Preview: https://cdn.renderhub.com/cgsea/100-fantasy-tree-monster-characters-2d-game-asset/100-fantasy-tree-monster-characters-2d-game-asset-04.jpg
+- Source: https://www.renderhub.com/cgsea/100-fantasy-tree-monster-characters-2d-game-asset
+- Notes: useful as a shape/color reference for a varied plant-monster roster. It is a commercial asset listing, not a free-use source.
+
+### Tower-defense enemy sprites
+- Preview: https://img.craftpix.net/2018/03/Tower-Defense-Monster-2D-Sprites3.jpg
+- Source: https://craftpix.net/product/tower-defense-monster-2d-sprites/
+- Notes: hand-drawn fantasy enemies and separated body parts; check purchase/licensing terms and source animation files before use.
+
+### Fantasy menu and HUD
+- Preview: https://img.itch.zone/aW1hZ2UvNDg4NDcxLzI1MjM4ODAuanBn/original/q%2BTH5i.jpg
+- Source: https://pzuh.itch.io/free-fantasy-game-gui
+- Notes: level selection, pause menu, counters and status bars. Check the exact license and attribution terms on the download page before import.
+
+### Cartoon fantasy UI kit
+- Source: https://arsly.itch.io/rpg-ui-kit
+- Notes: PSD-only layered UI elements, buttons, panels and icons; useful for visual reference and recoloring. Confirm the current download terms before using in a release build.
+
+### New free UI library
+- Source: https://freegameui.net/
+- Notes: site currently lists 2,316 CC0 UI assets across buttons, panels, icons, gauges and decorations. Good candidate for a consistent UI base; select a matching subset and recolor to the project's palette.
+
+## Updated selection guidance
+
+- Best current free UI starting points: Free Game UI Assets (CC0) and Kenney UI Pack (CC0).
+- Best current technical monster-animation candidate: SpriteCanvas CC0 Fantasy Monster pack; inspect real frame counts per state.
+- Pinterest images and commercial previews remain inspiration unless the original creator's license explicitly grants the required rights.
+- No binary assets were imported by this update.
