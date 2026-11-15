@@ -67,11 +67,15 @@ test("manual uprooting refunds the recorded planting cost, including above the p
   });
 });
 
-test("uproot rejects destroyed plants and does not mutate its input", () => {
+test("uproot rejects destroyed plants, forged refunds and does not mutate its input", () => {
   const plant = { type: "mushroom", alive: false, energyCost: 50 };
   const snapshot = { ...plant };
   assert.equal(resolvePlantUproot({ energy: 100, plant }).reason, "INVALID_UPROOT_STATE");
   assert.deepEqual(plant, snapshot);
+  assert.equal(
+    resolvePlantUproot({ energy: 100, plant: { type: "radish", alive: true, energyCost: 999 } }).reason,
+    "UNKNOWN_PLANT_TYPE"
+  );
 });
 
 test("energy pickup applies the 300 energy cap and handles malformed amounts safely", () => {
