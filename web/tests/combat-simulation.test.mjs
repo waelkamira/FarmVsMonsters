@@ -74,7 +74,7 @@ test("uproot rejects destroyed plants, forged refunds and does not mutate its in
   assert.deepEqual(plant, snapshot);
   assert.equal(
     resolvePlantUproot({ energy: 100, plant: { type: "radish", alive: true, energyCost: 999 } }).reason,
-    "UNKNOWN_PLANT_TYPE"
+    "PLANT_COST_MISMATCH"
   );
 });
 
