@@ -145,9 +145,75 @@ export default function HomePage() {
                   <button type="button" className="world-modal-secondary" onClick={() => setActiveMenu(null)}>{arabic ? "العودة للعالم" : "BACK TO WORLD"}</button>
                 </div>
               </>
+            ) : activeMenu === "store" ? (
+              <>
+                <p className="world-modal-description">{arabic ? "متجر المملكة يعرض محتوى المرحلة الأولى. لن تُخصم العملات أو تُفتح عناصر قبل تفعيل نظام الشراء فعلياً." : "The kingdom store previews Stage One content. No coins are charged and no items unlock until purchasing is fully implemented."}</p>
+                <div className="world-collection-stats">
+                  <span>🪙 {coins.toLocaleString()} {arabic ? "رصيدك" : "YOUR BALANCE"}</span>
+                  <span>🌱 {STAGE_ONE_PLANTS.filter((plant) => plant.implemented).length} {arabic ? "نباتات مفعّلة" : "ACTIVE PLANTS"}</span>
+                  <span>🔒 {STAGE_ONE_PLANTS.filter((plant) => !plant.implemented).length} {arabic ? "قيد التطوير" : "COMING SOON"}</span>
+                </div>
+                <div className="world-item-grid">
+                  {STAGE_ONE_PLANTS.map((plant) => (
+                    <article className={`world-item-card ${plant.implemented ? "is-live" : "is-coming"}`} key={plant.id}>
+                      <div className="world-item-art"><img src={plant.assetPath} alt={arabic ? plant.nameAr : plant.name} onError={(event) => { event.currentTarget.style.display = "none"; }} />{!plant.implemented && <span className="world-item-lock">🔒</span>}</div>
+                      <strong>{arabic ? plant.nameAr : plant.name}</strong>
+                      <small>{plant.implemented ? (arabic ? "متاح في المعركة" : "AVAILABLE IN BATTLE") : (arabic ? "قريباً · غير قابل للشراء" : "COMING SOON · NOT FOR SALE")}</small>
+                      <p>{arabic ? plant.descriptionAr : plant.description}</p>
+                      <div className="world-item-price">{plant.implemented ? (arabic ? "مفعّل · لا يحتاج شراء" : "ACTIVE · NO PURCHASE") : `🪙 ${plant.coinPrice} · ${arabic ? "سعر مقترح فقط" : "PROPOSED PRICE ONLY"}`}</div>
+                    </article>
+                  ))}
+                </div>
+                <div className="world-modal-actions">
+                  <Link className={`world-modal-primary ${activeItem.color}`} href="/plants">{arabic ? "استعراض النباتات" : "BROWSE PLANTS"} <span>➜</span></Link>
+                  <button type="button" className="world-modal-secondary" onClick={() => setActiveMenu(null)}>{arabic ? "العودة للعالم" : "BACK TO WORLD"}</button>
+                </div>
+              </>
+            ) : activeMenu === "farmer" ? (
+              <>
+                <p className="world-modal-description">{arabic ? "ملف المزارع هو حساب اللاعب الذي يحفظ تقدم المغامرة والعملات والمراحل المفتوحة." : "Your farmer profile is your player account for saving campaign progress, coins and unlocked stages."}</p>
+                <div className="world-feature-panel farmer-feature">
+                  <div className="world-feature-icon">🧑‍🌾</div>
+                  <div><strong>{arabic ? "ملف اللاعب" : "PLAYER PROFILE"}</strong><p>{arabic ? "يمكنك اللعب كضيف وحفظ تقدمك على هذا الجهاز، أو تسجيل الدخول لمزامنته سحابياً." : "Play as a guest and keep progress on this device, or sign in to sync it to the cloud."}</p></div>
+                </div>
+                <div className="world-modal-actions">
+                  <Link className={`world-modal-primary ${activeItem.color}`} href="/account">{arabic ? "فتح حساب اللاعب" : "OPEN PLAYER ACCOUNT"} <span>➜</span></Link>
+                  <button type="button" className="world-modal-secondary" onClick={() => setActiveMenu(null)}>{arabic ? "العودة للعالم" : "BACK TO WORLD"}</button>
+                </div>
+              </>
+            ) : activeMenu === "tasks" ? (
+              <>
+                <p className="world-modal-description">{arabic ? "أهداف حملة المرحلة الأولى. هذه أهداف تقدم وليست مهاماً بمكافآت قابلة للمطالبة." : "Stage One campaign objectives. These track your adventure; they are not claimable reward quests."}</p>
+                <div className="world-task-list">
+                  <div><span>01</span><strong>{arabic ? "اصمد أمام الموجات الخمس" : "Survive all five waves"}</strong><small>{arabic ? "٣٠ وحشاً عادياً موزعين على الموجات" : "30 regular monsters across the waves"}</small></div>
+                  <div><span>02</span><strong>{arabic ? "احمِ نباتات المزرعة" : "Defend the garden"}</strong><small>{arabic ? "ازرع الفجل المدافع واجمع طاقة الفطر" : "Plant Radish Defenders and collect Mushroom energy"}</small></div>
+                  <div><span>03</span><strong>{arabic ? "اهزم التنين الشرير" : "Defeat the evil dragon"}</strong><small>{arabic ? "الزعيم مستقل عن عدد الوحوش الثلاثين" : "The boss is separate from the 30 regular enemies"}</small></div>
+                  <div><span>04</span><strong>{arabic ? "أنقذ الأميرة وافتح المرحلة التالية" : "Rescue the princess and unlock the next stage"}</strong><small>{arabic ? "لا يكتمل الفوز قبل هزيمة التنين وإنقاذها" : "Victory requires defeating the dragon and rescuing her"}</small></div>
+                </div>
+                <div className="world-modal-actions">
+                  <Link className={`world-modal-primary ${activeItem.color}`} href="/stage/1">{arabic ? "تفاصيل المرحلة الأولى" : "STAGE ONE BRIEFING"} <span>➜</span></Link>
+                  <button type="button" className="world-modal-secondary" onClick={() => setActiveMenu(null)}>{arabic ? "العودة للعالم" : "BACK TO WORLD"}</button>
+                </div>
+              </>
+            ) : activeMenu === "settings" ? (
+              <>
+                <p className="world-modal-description">{arabic ? "اضبط أصوات اللعبة واختر لغة الواجهة. يتم حفظ إعدادات الصوت محلياً في هذا المتصفح." : "Adjust game audio and choose the interface language. Audio preferences are saved locally in this browser."}</p>
+                <div className="world-feature-panel settings-feature">
+                  <div className="world-feature-icon">🔊</div>
+                  <div><strong>{arabic ? "إعدادات الصوت" : "AUDIO PREFERENCES"}</strong><p>{arabic ? "تحكم منفصل بالموسيقى والمؤثرات وأصوات المقذوفات." : "Separate controls for music, sound effects and projectile sounds."}</p></div>
+                </div>
+                <div className="world-feature-panel settings-feature">
+                  <div className="world-feature-icon">🌐</div>
+                  <div><strong>{arabic ? "لغة اللعبة" : "GAME LANGUAGE"}</strong><p>{arabic ? "استخدم زر اللغة في الشريط العلوي للتبديل بين العربية والإنجليزية." : "Use the language switch in the top bar to switch between Arabic and English."}</p></div>
+                </div>
+                <div className="world-modal-actions">
+                  <Link className={`world-modal-primary ${activeItem.color}`} href="/settings">{arabic ? "فتح إعدادات الصوت" : "OPEN AUDIO SETTINGS"} <span>➜</span></Link>
+                  <button type="button" className="world-modal-secondary" onClick={() => setActiveMenu(null)}>{arabic ? "العودة للعالم" : "BACK TO WORLD"}</button>
+                </div>
+              </>
             ) : (
               <>
-                <p className="world-modal-description">{arabic ? "استكشف هذا القسم واكتشف محتوياته ومكافآته." : "Explore this section and discover its contents and rewards."}</p>
+                <p className="world-modal-description">{arabic ? "افتح هذا القسم لمتابعة مغامرتك." : "Open this section to continue your adventure."}</p>
                 <div className="world-modal-actions">
                   <Link className={`world-modal-primary ${activeItem.color}`} href={activeItem.href}>{arabic ? "فتح القائمة" : "OPEN MENU"} <span>➜</span></Link>
                   <button type="button" className="world-modal-secondary" onClick={() => setActiveMenu(null)}>{arabic ? "العودة للعالم" : "BACK TO WORLD"}</button>
