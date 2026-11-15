@@ -58,7 +58,7 @@ const translations = {
   "Temporary farm art active. Choose Radish or Mushroom, then click an empty soil cell.": "تم تفعيل الرسومات البديلة للمزرعة. اختر الفجل أو الفطر ثم انقر على خلية ترابية فارغة.",
   "Radish chosen. Select an empty soil plot to defend the lane.": "اخترت الفجل. حدد مساحة ترابية فارغة للدفاع عن المسار.",
   "Mushroom chosen. Select an empty soil plot to produce energy.": "اخترت الفطر. حدد مساحة ترابية فارغة لإنتاج الطاقة.",
-  ", "Radish": "الفجل", "Energy Mushroom": "فطر الطاقة", "TRIBE SOUND": "أصوات القبيلة", "ENERGY": "الطاقة",
+   "Radish": "الفجل", "Energy Mushroom": "فطر الطاقة", "TRIBE SOUND": "أصوات القبيلة", "ENERGY": "الطاقة",
   "BATTLE PAUSED": "المعركة متوقفة مؤقتاً", "RESUME": "متابعة", "RESTART": "إعادة البدء", "SETTINGS": "الإعدادات", "MAIN MENU": "القائمة الرئيسية",
   "ENERGY": "الطاقة", "HOME": "الرئيسية", "RADISHES": "الفجل", "KILLS": "المهزومون", "WAVE": "الموجة", "DOWN": "هُزم", "LAST STAND": "المواجهة الأخيرة",
   "Radish planted! The caveman is sprinting back behind the final line.": "تمت زراعة الفجل! رجل الكهف يركض عائداً إلى خط الدفاع الأخير.",
