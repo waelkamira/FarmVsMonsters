@@ -788,3 +788,15 @@
 - Added `Documentation/PLAYER_PROGRESS_AND_ECONOMY_SECURITY_AUDIT.md` with verified findings, the safe trust boundary, required transaction/idempotency design, and migration steps.
 - No unsafe partial fix was applied: disabling the current endpoint without migrating the account/game flow would break cloud progression. Cloud currency must remain explicitly classified as untrusted until server-verifiable game completions and database-only balance updates are implemented.
 - Validation: source-level review and GitHub read-after-write only. No live Supabase migration, npm tests, production build, or browser test was run.
+
+
+
+## 2026-11-15 — Lock down client-authoritative cloud progress
+- Added Supabase migration `004_lock_unverified_player_progress.sql`: revokes direct authenticated client insert/update access to `player_progress`, removes the corresponding write policies, and adds `coins_verified` defaulting to false.
+- Updated `purchase_player_plant` to reject spending from unverified legacy balances while retaining their recorded values for audit. No existing balance is silently zeroed or overwritten.
+- Disabled the progress API's client-write endpoint (HTTP 410) and removed browser-side victory sync. Cloud progress can still be read; the browser no longer uploads its local stage, completion list, or coin balance.
+- Updated cloud restore so local currency is never promoted into cloud state, and an unverified cloud balance is never copied over the local wallet. A verified cloud balance, when one exists, is restored exactly rather than merged upward.
+- Updated account messaging and README migration order to disclose the temporary cloud-sync pause. Guest play and local saves remain active.
+- Added regression assertions for the write lock and unverified-balance purchase guard.
+- IMPORTANT: migration 004 must be applied in the Supabase SQL Editor before deploying the updated app. The repository change alone does not alter a live Supabase database. Existing cloud balances remain unverified and cannot be spent until a trusted reward pipeline verifies them.
+- Validation: GitHub source read/write only. No live Supabase migration, npm test, production build, or browser verification was run.
