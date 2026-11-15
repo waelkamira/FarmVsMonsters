@@ -60,7 +60,7 @@ The exact way the dragon damages the battlefield, how its boss health is display
 
 The campaign is organized into themed territories. A territory may contain one or more stages; the number of stages per territory is not fixed by this story document.
 
-Every new stage must offer meaningful changes rather than simply increasing enemy health. Difficulty must climb in small, fair steps across the campaign; teach each new mechanic before testing it under pressure. The first stage must be forgiving enough to make a new player want to continue, not punish them with an immediate swarm. Do not add new plant types until the battlefield environment, stage composition, buttons/controls, and menus are finalized; introduce additional plants gradually afterward.
+Every new stage must offer meaningful changes rather than simply increasing enemy health. Difficulty must climb in small, fair steps across the campaign; teach each new mechanic before testing it under pressure. The first stage must be forgiving enough to make a new player want to continue, not punish them with an immediate swarm. The approved ordinary-monster totals are 30 in Stage 1, 31 in Stage 2, 32 in Stage 3, then +1 per subsequent stage (Stage N = 29 + N). These are totals across all waves in each stage; dragon bosses are tracked separately. Wave-by-wave distribution remains a balancing decision. Do not add new plant types until the battlefield environment, stage composition, buttons/controls, and menus are finalized; introduce additional plants gradually afterward.
 
 Every stage must also have its own distinctive illustrated logo/emblem that communicates its characters and conflict. Stage 1's emblem should feature the farmer facing the dragon, the captive wife centered behind them, small evil hyenas below, and a few defensive plants.
 
@@ -98,7 +98,7 @@ The previously approved treasure-cave feature remains part of the post-stage cel
 ## 8. Production boundaries
 
 - The current first battle remains the immediate implementation priority, but Stage 1's dragon and rescue are part of completing this first playable stage—not deferred campaign extras.
-- Keep the current five-wave structure for now, but the existing 100-monster count is too difficult and is not a fixed requirement. Rebalance it downward through playtesting.
+- Keep five waves in Stage 1. Its approved target is 30 ordinary monsters total; Stage 2 has 31; Stage 3 has 32; each subsequent stage adds one ordinary monster. Dragon bosses are additional and not included in these ordinary-monster totals. The old 100-monster target is replaced.
 - Stage 1 is the smallest complete proof of the story: one territory, its monster force, one small ordinary dragon, the captive wife, automatic slingshot counterplay, and a clear rescue ending.
 - The user's original art assets remain authoritative. Do not crop, recolor, resize, replace, or generate final character/background assets without an explicit request.
 - Preserve all fixed gameplay constraints in the master plan, including no shadows beneath characters, the plant/monster lane rules, and exact-once reward accounting.
