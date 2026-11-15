@@ -9,7 +9,11 @@ import {
   resolveEnergyPickup,
   applyHitPointsDamage,
   resolveMonsterLaneStep,
-  resolveProjectileLaneStep
+  resolveProjectileLaneStep,
+  selectLaneBlocker,
+  selectProjectileTarget,
+  selectFarmerMeleeTarget,
+  selectDragonFireballTarget
 } from "../game/rules/combatSimulation.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -137,4 +141,72 @@ test("projectile lane stepping uses elapsed seconds and rejects invalid values",
 test("Phaser delegates monster and projectile lane movement to the simulation kernel", () => {
   assert.match(scene, /resolveMonsterLaneStep\(/);
   assert.match(scene, /resolveProjectileLaneStep\(/);
+});
+
+test("lane blocker selection chooses the nearest living radish behind the monster", () => {
+  const nearest = { type: "radish", row: 2, alive: true, id: "near" };
+  const farther = { type: "radish", row: 2, alive: true, id: "far" };
+  const result = selectLaneBlocker({
+    plants: [
+      { plant: farther, localX: -2 },
+      { plant: { type: "mushroom", row: 2, alive: true }, localX: -0.5 },
+      { plant: { type: "radish", row: 1, alive: true }, localX: -0.25 },
+      { plant: { type: "radish", row: 2, alive: false }, localX: -0.1 },
+      { plant: nearest, localX: -0.25 },
+      { plant: { type: "radish", row: 2, alive: true }, localX: 0.2 }
+    ],
+    row: 2,
+    monsterLocalX: 0
+  });
+  assert.equal(result, nearest);
+  assert.equal(selectLaneBlocker({ plants: [], row: 2, monsterLocalX: 0 }), null);
+  assert.throws(() => selectLaneBlocker({ plants: [], row: 2, monsterLocalX: NaN }), /INVALID_LANE_BLOCKER_QUERY/);
+});
+
+test("projectile targeting preserves same-lane first-match and scaled hit radius", () => {
+  const first = { row: 1, localX: 1.1, alive: true, widthScale: 2, id: "first" };
+  const closer = { row: 1, localX: 1.01, alive: true, id: "closer" };
+  const result = selectProjectileTarget({
+    monsters: [
+      { row: 0, localX: 1, alive: true },
+      first,
+      closer,
+      { row: 1, localX: 1, alive: false }
+    ],
+    row: 1,
+    localX: 1,
+    collisionRadius: 0.1
+  });
+  assert.equal(result, first);
+  assert.equal(selectProjectileTarget({ monsters: [], row: 1, localX: 1, collisionRadius: 0.1 }), null);
+});
+
+test("farmer melee selects the nearest monster in the active lane and preserves tie order", () => {
+  const first = { row: 2, x: 105, alive: true, id: "first" };
+  const tied = { row: 2, x: 95, alive: true, id: "tied" };
+  const result = selectFarmerMeleeTarget({
+    monsters: [
+      { row: 1, x: 100, alive: true },
+      { row: 2, x: 140, alive: true },
+      first,
+      tied
+    ],
+    row: 2,
+    farmerX: 100,
+    reach: 10
+  });
+  assert.equal(result, first);
+  assert.equal(selectFarmerMeleeTarget({ monsters: [], row: 2, farmerX: 100, reach: 10 }), null);
+});
+
+test("dragon fireball chooses the living plant with the lowest HP and preserves tie order", () => {
+  const weakest = { hp: 12, alive: true, id: "weakest" };
+  const tied = { hp: 12, alive: true, id: "tied" };
+  assert.equal(selectDragonFireballTarget([
+    { hp: 1, alive: false },
+    { hp: 30, alive: true },
+    weakest,
+    tied
+  ]), weakest);
+  assert.equal(selectDragonFireballTarget([{ hp: 1, alive: false }]), null);
 });
