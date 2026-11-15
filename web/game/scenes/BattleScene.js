@@ -73,6 +73,13 @@ export default class BattleScene extends Scene {
     this.load.spritesheet("farmer-attack", "/assets/characters/farmer/farmer-attack.png", { frameWidth: 180, frameHeight: 360 });
     this.load.spritesheet("farmer-hit", "/assets/characters/farmer/farmer-hit.png", { frameWidth: 152, frameHeight: 430 });
     this.load.spritesheet("farmer-death", "/assets/characters/farmer/farmer-death.png", { frameWidth: 152, frameHeight: 430 });
+    // Optional authored story sheets; missing files do not block the battle.
+    this.load.spritesheet("farmer-sling", "/assets/characters/farmer/farmer-sling.png", { frameWidth: 360, frameHeight: 430 });
+    this.load.spritesheet("farmer-rescue", "/assets/characters/farmer/farmer-rescue.png", { frameWidth: 360, frameHeight: 430 });
+    this.load.spritesheet("farmer-carry", "/assets/characters/farmer/farmer-carry.png", { frameWidth: 360, frameHeight: 430 });
+    this.load.spritesheet("dragon-boss", "/assets/characters/monsters/dragon/dragon-boss.png", { frameWidth: 512, frameHeight: 512 });
+    this.load.image("phase-one-princess", "/assets/characters/princess/princess.png");
+    this.load.image("phase-one-emblem", "/assets/levels/phase-1-emblem.png");
 
     // These four hyena sheets now share one standardized 360x298 frame grid.
     this.load.spritesheet("hyena-idle", "/assets/characters/monsters/hyena/hyena-idle.png", { frameWidth: 360, frameHeight: 298 });
@@ -148,6 +155,10 @@ export default class BattleScene extends Scene {
     this.plantingTarget = null;
     this.returnTarget = null;
     this.farmerPlanting = false;
+    this.phaseOneStoryState = "battle";
+    this.storySequenceActive = false;
+    this.dragonBoss = null;
+    this.princessActor = null;
     this.gameOver = false;
     this.hyenaAnimationsReady = this.createHyenaAnimations();
     const legacySoundSetting = this.registry.get("soundEnabled");
@@ -181,6 +192,7 @@ export default class BattleScene extends Scene {
     this.createAudioControls();
     this.createPauseControl();
     this.createCaveman();
+    this.createPrincessActor();
     this.bindInput();
     this.events.once("shutdown", () => {
       this.audioSceneShuttingDown = true;
@@ -562,6 +574,7 @@ export default class BattleScene extends Scene {
       this.caveman.add(this.cavemanVisual);
       this.normalizeFarmerFrame();
       this.cavemanVisual.play("farmer-idle");
+      this.createStoryFarmerAnimations();
     } else {
     const body = this.add.graphics();
 
@@ -761,7 +774,7 @@ export default class BattleScene extends Scene {
     const currentKey = this.cavemanVisual.anims.currentAnim?.key;
     const actionAnimations = [
       "farmer-plant", "farmer-uproot", "farmer-attack",
-      "farmer-hit", "farmer-death", "farmer-collect"
+      "farmer-hit", "farmer-death", "farmer-collect", "farmer-sling", "farmer-rescue"
     ];
     if (actionAnimations.includes(currentKey) && this.cavemanVisual.anims.isPlaying && key !== currentKey) return;
     if (currentKey === key && this.cavemanVisual.anims.isPlaying) return;
@@ -781,6 +794,219 @@ export default class BattleScene extends Scene {
           ? "farmer-walk"
           : (this.farmerWantsToRun ? "farmer-run" : "farmer-idle")
       );
+    });
+  }
+
+  createStoryFarmerAnimations() {
+    // Optional sheets are validated independently so unfinished story art
+    // never disables the existing farmer animations.
+    const definitions = [
+      ["farmer-sling", 6, 9, 0],
+      ["farmer-rescue", 6, 8, 0],
+      ["farmer-carry", 6, 8, -1]
+    ];
+    for (const [key, frameCount, frameRate, repeat] of definitions) {
+      if (!this.textures.exists(key)) continue;
+      const texture = this.textures.get(key);
+      const available = Object.keys(texture.frames).filter((name) => name !== "__BASE").length;
+      if (available < frameCount) {
+        console.warn("Optional story sheet has too few frames:", key, available, "/", frameCount);
+        continue;
+      }
+      if (this.anims.exists(key)) this.anims.remove(key);
+      this.anims.create({
+        key,
+        frames: this.anims.generateFrameNumbers(key, { start: 0, end: frameCount - 1 }),
+        frameRate,
+        repeat
+      });
+    }
+  }
+
+  createPrincessActor() {
+    // The princess is only rendered from the user's authored asset.
+    if (!this.textures.exists("phase-one-princess")) return;
+    this.princessActor = this.add.image(145, 375, "phase-one-princess")
+      .setOrigin(0.5, 1)
+      .setDisplaySize(66, 96)
+      .setDepth(8.6);
+  }
+
+  beginDragonEncounter() {
+    if (this.dragonBoss || this.phaseOneStoryState !== "battle") return;
+    this.phaseOneStoryState = "dragon";
+    this.dragonBoss = {
+      hp: 750, maxHp: 750, alive: true,
+      attackCooldown: 2800, shotCooldown: 850, sprite: null
+    };
+    if (this.textures.exists("dragon-boss")) {
+      const texture = this.textures.get("dragon-boss");
+      const frames = Object.keys(texture.frames).filter((name) => name !== "__BASE").length;
+      this.dragonBoss.sprite = this.add.sprite(930, 145, "dragon-boss", 0)
+        .setOrigin(0.5, 1).setDisplaySize(220, 220).setDepth(8.2);
+      if (frames > 1) {
+        if (!this.anims.exists("dragon-boss-idle")) {
+          this.anims.create({
+            key: "dragon-boss-idle",
+            frames: this.anims.generateFrameNumbers("dragon-boss", { start: 0, end: frames - 1 }),
+            frameRate: 7, repeat: -1
+          });
+        }
+        this.dragonBoss.sprite.play("dragon-boss-idle");
+      }
+      this.tweens.add({
+        targets: this.dragonBoss.sprite,
+        x: { from: 835, to: 1010 }, y: { from: 140, to: 165 },
+        duration: 2600, ease: "Sine.easeInOut", yoyo: true, repeat: -1
+      });
+    }
+    this.dragonHealthBar = this.add.graphics().setDepth(56);
+    this.dragonHealthLabel = this.add.text(910, 55, "DRAGON", {
+      fontFamily: "Georgia", fontSize: "14px", color: "#fff0c8",
+      fontStyle: "bold", stroke: "#382317", strokeThickness: 3
+    }).setOrigin(0.5).setDepth(57);
+    this.drawDragonHealthBar();
+    this.setMessage("The dragon has arrived! The farmer is loading his sling.");
+  }
+
+  drawDragonHealthBar() {
+    if (!this.dragonBoss || !this.dragonHealthBar?.active) return;
+    const ratio = PhaserMath.Clamp(this.dragonBoss.hp / this.dragonBoss.maxHp, 0, 1);
+    this.dragonHealthBar.clear();
+    this.dragonHealthBar.fillStyle(0x24150f, 0.9);
+    this.dragonHealthBar.fillRoundedRect(760, 65, 300, 16, 7);
+    this.dragonHealthBar.fillStyle(0xc63e2e, 1);
+    this.dragonHealthBar.fillRoundedRect(763, 68, 294 * ratio, 10, 5);
+    this.dragonHealthBar.lineStyle(2, 0xffd99a, 1);
+    this.dragonHealthBar.strokeRoundedRect(760, 65, 300, 16, 7);
+  }
+
+  updateDragonBoss(delta) {
+    const boss = this.dragonBoss;
+    if (!boss?.alive || this.phaseOneStoryState !== "dragon") return;
+    boss.shotCooldown -= delta;
+    if (boss.shotCooldown <= 0) {
+      boss.shotCooldown = 900;
+      if (this.anims.exists("farmer-sling") && this.cavemanVisual?.active) {
+        this.playFarmerAction("farmer-sling");
+      }
+      const startX = this.caveman.x + this.facing * 28;
+      const startY = this.caveman.y - 52;
+      const targetX = boss.sprite?.x ?? 930;
+      const targetY = (boss.sprite?.y ?? 145) + 22;
+      const stone = this.add.circle(startX, startY, 7, 0xb9a58b, 1)
+        .setStrokeStyle(2, 0x66513c, 1).setDepth(52);
+      this.tweens.add({
+        targets: stone, x: targetX - 18, y: targetY,
+        duration: PhaserMath.Clamp(Math.abs(targetX - startX) / 0.62, 380, 1050),
+        ease: "Quad.easeIn",
+        onComplete: () => {
+          if (stone.active) stone.destroy();
+          if (boss.alive && !this.gameOver) this.damageDragonBoss(25);
+        }
+      });
+    }
+
+    boss.attackCooldown -= delta;
+    if (boss.attackCooldown <= 0) {
+      boss.attackCooldown = 3900;
+      const targetPlant = this.plants.filter((plant) => plant.alive)
+        .sort((a, b) => a.hp - b.hp)[0];
+      const targetX = targetPlant ? targetPlant.x : 92;
+      const targetY = targetPlant ? targetPlant.y - 18 : 490;
+      const fireball = this.add.circle(boss.sprite?.x ?? 930, (boss.sprite?.y ?? 145) - 38, 15, 0xff762e, 1)
+        .setStrokeStyle(3, 0xffd16c, 1).setDepth(53);
+      this.tweens.add({
+        targets: fireball, x: targetX, y: targetY, scale: 1.45,
+        duration: 1050, ease: "Quad.easeIn",
+        onComplete: () => {
+          if (fireball.active) fireball.destroy();
+          if (this.gameOver || this.storySequenceActive) return;
+          if (targetPlant?.alive) {
+            targetPlant.hp -= 55;
+            this.flashEatenPlant(targetPlant);
+            if (targetPlant.hp <= 0) this.destroyPlant(targetPlant);
+          } else {
+            this.houseHealth = Math.max(0, this.houseHealth - 12);
+            if (this.houseHealth <= 0) this.endGame(false);
+            this.refreshHud();
+          }
+        }
+      });
+    }
+  }
+
+  damageDragonBoss(amount) {
+    const boss = this.dragonBoss;
+    if (!boss?.alive || amount <= 0) return;
+    boss.hp = Math.max(0, boss.hp - amount);
+    if (boss.sprite?.active) {
+      boss.sprite.setTint(0xffc078);
+      this.time.delayedCall(110, () => { if (boss.sprite?.active) boss.sprite.clearTint(); });
+    }
+    this.drawDragonHealthBar();
+    if (boss.hp > 0) return;
+    boss.alive = false;
+    if (boss.sprite?.active) {
+      this.tweens.killTweensOf(boss.sprite);
+      this.tweens.add({
+        targets: boss.sprite, alpha: 0, y: boss.sprite.y - 22, duration: 650,
+        onComplete: () => boss.sprite?.destroy()
+      });
+    }
+    this.playMonsterDefeatSound();
+    this.setMessage("The dragon has fallen! The farmer is going to rescue the princess.");
+    this.tryFinishPhaseOne();
+  }
+
+  tryFinishPhaseOne() {
+    if (
+      this.phaseOneStoryState !== "dragon" ||
+      this.wave !== this.totalWaves ||
+      this.spawnedThisWave < this.waveSize ||
+      this.monsters.some((monster) => monster.alive) ||
+      this.dragonBoss?.alive
+    ) return;
+    this.beginPrincessRescue();
+  }
+
+  beginPrincessRescue() {
+    if (this.storySequenceActive || this.phaseOneStoryState === "complete") return;
+    this.storySequenceActive = true;
+    this.phaseOneStoryState = "rescuing";
+    this.setMessage("The battlefield is safe. The farmer is rescuing the princess!");
+    const rescueX = this.princessActor?.active ? this.princessActor.x : 145;
+    const rescueY = this.princessActor?.active ? this.princessActor.y : 375;
+    this.tweens.add({
+      targets: this.caveman, x: rescueX + 24, y: rescueY,
+      duration: 1050, ease: "Sine.easeInOut",
+      onComplete: () => {
+        if (this.cavemanVisual?.active && this.anims.exists("farmer-rescue")) {
+          this.cavemanVisual.play("farmer-rescue");
+        }
+        if (this.princessActor?.active) {
+          this.princessActor.setDepth(0);
+          this.caveman.add(this.princessActor);
+          this.princessActor.setPosition(-22, -48).setDisplaySize(58, 84);
+        }
+        this.time.delayedCall(650, () => {
+          if (this.cavemanVisual?.active) {
+            const carryAnimation = this.anims.exists("farmer-carry") ? "farmer-carry" : "farmer-run";
+            this.cavemanVisual.play(carryAnimation);
+          }
+          this.facing = -1;
+          this.caveman.scaleX = -1;
+          this.tweens.add({
+            targets: this.caveman, x: 82, y: 485,
+            duration: 1650, ease: "Sine.easeInOut",
+            onComplete: () => {
+              this.phaseOneStoryState = "complete";
+              this.storySequenceActive = false;
+              this.endGame(true);
+            }
+          });
+        });
+      }
     });
   }
 
@@ -1245,7 +1471,7 @@ export default class BattleScene extends Scene {
         this.audioMenuDismissedOnPointerDown = false;
         return;
       }
-      if (this.gameOver) return;
+      if (this.gameOver || this.storySequenceActive) return;
       const { col, row } = this.worldToGrid(pointer.x, pointer.y);
       if (row >= 0 && row < LANES && col >= 0 && col < COLUMNS) this.requestPlant(col, row);
     });
@@ -1255,6 +1481,10 @@ export default class BattleScene extends Scene {
     if (this.gameOver || this.isPaused) return;
     const dt = delta / 1000;
     this.elapsedBattleMs += delta;
+    if (this.storySequenceActive) {
+      this.refreshHud();
+      return;
+    }
     this.handleControls(dt);
     if (this.wave <= this.totalWaves && this.spawnedThisWave < this.waveSize) {
       this.spawnTimer -= delta;
@@ -1267,6 +1497,12 @@ export default class BattleScene extends Scene {
     }
     this.updatePlants(delta);
     this.updateMonsters(dt, delta);
+    if (this.gameOver) return;
+    this.updateDragonBoss(delta);
+    if (this.storySequenceActive || this.gameOver) {
+      this.refreshHud();
+      return;
+    }
     // A farmhouse breach can end the run inside updateMonsters; stop this
     // frame immediately so projectiles, wave logic, and HUD do not advance.
     if (this.gameOver) return;
@@ -2480,8 +2716,12 @@ export default class BattleScene extends Scene {
 
     const clearedWave = this.wave;
     if (isPhaseOneVictory(this.wave, this.totalWaves, this.spawnedThisWave, this.waveSize, this.monsters.length)) {
-      // The final wave is complete only after every one of its monsters
-      // has spawned and the battlefield contains no living monsters.
+      // The dragon is a separate boss and is never included in ordinary wave counts.
+      if (this.dragonBoss) {
+        this.tryFinishPhaseOne();
+        if (this.dragonBoss.alive) this.setMessage("The ordinary monsters are defeated. Finish the dragon to rescue the princess!");
+        return;
+      }
       this.endGame(true);
       return;
     }
@@ -2491,6 +2731,7 @@ export default class BattleScene extends Scene {
     this.waveDefeatedMonsters = 0;
     this.waveSize = PHASE_ONE_WAVE_SIZES[this.wave - 1];
     this.spawnTimer = 3200;
+    if (this.wave === 5) this.beginDragonEncounter();
     this.setMessage(
       "Wave " + clearedWave + " cleared. Wave " + this.wave +
       " is gathering: " + this.waveSize + " monsters incoming."
@@ -2524,6 +2765,9 @@ export default class BattleScene extends Scene {
     this.add.rectangle(560, 340, 1120, 680, 0x10170f, 0.72).setDepth(60);
     if (won) {
       this.stopBackgroundMusic();
+      if (this.textures.exists("phase-one-emblem")) {
+        this.add.image(560, 145, "phase-one-emblem").setDisplaySize(210, 125).setDepth(62);
+      }
       this.add.rectangle(560, 340, 650, 330, 0x79502e, 0.98)
         .setStrokeStyle(6, 0x392417).setDepth(61);
       this.add.text(560, 235, translate("VICTORY!", locale), {
