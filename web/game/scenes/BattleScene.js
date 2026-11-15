@@ -2242,17 +2242,22 @@ export default class BattleScene extends Scene {
         if (!this.textures.exists(key)) throw new Error(`Missing required hyena sheet: ${key}.`);
         const texture = this.textures.get(key);
         const available = Object.keys(texture.frames).filter((name) => name !== "__BASE").length;
-        if (available < 1) {
-          throw new Error(`Invalid ${key} sheet: no animation frames were found.`);
+        // The bite artwork is authored in the final row of its 3x3 sheet.
+        // Frames 0-5 are setup/transition poses; only 6-8 are the actual
+        // grounded chewing cycle. Playing the earlier frames made the hyena
+        // appear to sink or float while it was eating.
+        const startFrame = key === "hyena-bite" ? 6 : 0;
+        if (available <= startFrame) {
+          throw new Error(`Invalid ${key} sheet: expected frames starting at ${startFrame}, found ${available}.`);
         }
-        // Use every frame that actually exists in the authored sheet, up to
-        // the intended maximum. Some approved sheets contain fewer frames
-        // (for example, hyena-idle has 3 rather than 4); that is valid artwork.
-        const frameCount = Math.min(expectedFrames, available);
+        // Respect the authored frame range while tolerating shorter approved
+        // sheets (for example, hyena-idle may contain only 3 frames).
+        const frameCount = Math.min(expectedFrames, available - startFrame);
+        const endFrame = startFrame + frameCount - 1;
         if (this.anims.exists(key)) this.anims.remove(key);
         this.anims.create({
           key,
-          frames: this.anims.generateFrameNumbers(key, { start: 0, end: frameCount - 1 }),
+          frames: this.anims.generateFrameNumbers(key, { start: startFrame, end: endFrame }),
           frameRate,
           repeat
         });
