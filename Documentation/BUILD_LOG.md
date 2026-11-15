@@ -925,3 +925,6 @@ Hardening: pickup IDs are unique across the full battle session, including after
 - Replay validates the exact five-wave roster sequence and derives archetypes and combat stats from the shared contract.
 - Logged monster bites against radish cells; replay checks living attacker/target, lane match, archetype damage and attack interval, then recalculates plant HP.
 - Movement, projectile hits, deaths, breach, boss and rewards remain outside authoritative replay. Tests/build not executed in this environment.
+
+
+Validation follow-up: corrected monster ID regex validation and added malformed-ID/out-of-range-lane tests. GitHub Actions still fails at runner allocation before any job steps; no test/build success is claimed.
