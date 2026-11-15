@@ -2110,8 +2110,27 @@ export default class BattleScene extends Scene {
       plant.cooldown = advanceCooldown(plant.cooldown, delta);
       if (plant.cooldown > 0) continue;
       const plantLaneX = this.worldToLane(plant).localX;
-      const target = this.monsters.filter((m) => m.alive && m.row === plant.row && m.localX > plantLaneX && m.localX - plantLaneX <= RADISH_CONFIG.range)
-        .sort((a, b) => a.localX - b.localX)[0];
+      // A Radish can defend adjacent lanes too. Choose the nearest advancing
+      // monster in horizontal range, then arc the Radish projectile toward
+      // that monster's lane instead of filtering to plant.row.
+      const target = this.monsters
+        .filter((monster) =>
+          monster.alive &&
+          Number.isFinite(monster.localX) &&
+          monster.localX > plantLaneX &&
+          monster.localX - plantLaneX <= RADISH_CONFIG.range
+        )
+        .sort((a, b) => {
+          const distanceA = Math.hypot(
+            a.localX - plantLaneX,
+            (a.row - plant.row) * (GRID_HEIGHT / LANES)
+          );
+          const distanceB = Math.hypot(
+            b.localX - plantLaneX,
+            (b.row - plant.row) * (GRID_HEIGHT / LANES)
+          );
+          return distanceA - distanceB;
+        })[0];
       if (!target) continue;
       this.fireThorn(plant, target);
       plant.cooldown = RADISH_CONFIG.cooldown;
@@ -2218,13 +2237,15 @@ export default class BattleScene extends Scene {
     });
   }
 
-  fireThorn(plant, _target) {
+  fireThorn(plant, target) {
     // The Radish fires a miniature copy of its own artwork, turned sideways
     // so the root points toward incoming monsters. Keep the combat contract
     // (lane, speed, damage and collision) unchanged.
     const lane = this.worldToLane(plant);
     const localX = lane.localX + 22;
     const row = plant.row;
+    const targetRow = target.row;
+    const targetLocalX = Math.max(localX + 1, target.localX);
     const position = this.monsterLanePoint(localX, row);
     const verticalOffset = this.nextProjectileAim === "head" ? -22 : 14;
     this.nextProjectileAim = this.nextProjectileAim === "head" ? "middle" : "head";
@@ -2277,7 +2298,10 @@ export default class BattleScene extends Scene {
     });
 
     this.projectiles.push({
-      view, localX, row, verticalOffset, speed: PHASE_ONE_PLANTS.radish.projectileSpeed, damage: PHASE_ONE_PLANTS.radish.projectileDamage, alive: true, trailTimer: 0
+      view, localX, row, startRow: row, targetRow, target,
+      startLocalX: localX, targetLocalX, verticalOffset,
+      speed: PHASE_ONE_PLANTS.radish.projectileSpeed,
+      damage: PHASE_ONE_PLANTS.radish.projectileDamage, alive: true, trailTimer: 0
     });
     this.playThornSound();
   }
@@ -2889,23 +2913,55 @@ export default class BattleScene extends Scene {
     for (const shot of this.projectiles) {
       if (!shot.alive) continue;
       shot.localX = resolveProjectileLaneStep({ localX: shot.localX, speed: shot.speed, deltaSeconds: dt });
-      const position = this.monsterLanePoint(shot.localX, shot.row);
+      // Track the living target as it advances toward the farm so the diagonal
+      // trajectory converges on its current position instead of stale aim data.
+      if (shot.target && shot.target.alive && Number.isFinite(shot.target.localX)) {
+        shot.targetLocalX = Math.max(shot.startLocalX + 1, shot.target.localX);
+      }
+
+      // Interpolate between the firing lane and the selected target lane.
+      // Rows are blended in board space, then projected through the same
+      // perspective lane mesh used by monsters and the planted defenders.
+      const laneTravel = Math.max(1, shot.targetLocalX - shot.startLocalX);
+      const laneProgress = PhaserMath.Clamp(
+        (shot.localX - shot.startLocalX) / laneTravel, 0, 1
+      );
+      shot.currentRow = PhaserMath.Linear(shot.startRow, shot.targetRow, laneProgress);
+      const lowerRow = PhaserMath.Clamp(Math.floor(shot.currentRow), 0, LANES - 1);
+      const upperRow = Math.min(LANES - 1, lowerRow + 1);
+      const rowBlend = PhaserMath.Clamp(shot.currentRow - lowerRow, 0, 1);
+      const lowerPosition = this.monsterLanePoint(shot.localX, lowerRow);
+      const upperPosition = this.monsterLanePoint(shot.localX, upperRow);
+      const position = {
+        x: PhaserMath.Linear(lowerPosition.x, upperPosition.x, rowBlend),
+        y: PhaserMath.Linear(lowerPosition.y, upperPosition.y, rowBlend)
+      };
       shot.view.setPosition(position.x, position.y + shot.verticalOffset);
 
-      // Leave small fading embers behind the glowing thorn as it travels.
       shot.trailTimer -= dt * 1000;
       if (shot.trailTimer <= 0) {
         this.createProjectileTrail(position.x - 5, position.y + shot.verticalOffset);
         shot.trailTimer = 48;
       }
 
-      // Collision is checked only against monsters occupying this same lane.
-      const hit = selectProjectileTarget({
-        monsters: this.monsters,
-        row: shot.row,
-        localX: shot.localX,
-        collisionRadius: PHASE_ONE_PLANTS.radish.projectileCollisionRadius
-      });
+      // A projectile may hit a monster only when it is close to that
+      // monster's lane AND its horizontal position. This allows diagonal
+      // shots to cross the gap without damaging unrelated lanes.
+      let hit = null;
+      let nearestHitDistance = Infinity;
+      for (const monster of this.monsters) {
+        if (!monster?.alive || !Number.isFinite(monster.localX)) continue;
+        const laneDistance = Math.abs(monster.row - shot.currentRow);
+        if (laneDistance > 0.35) continue;
+        const horizontalDistance = Math.abs(monster.localX - shot.localX);
+        const hitRadius = PHASE_ONE_PLANTS.radish.projectileCollisionRadius * (monster.widthScale || 1);
+        if (horizontalDistance > hitRadius) continue;
+        const combinedDistance = Math.hypot(horizontalDistance, laneDistance * (GRID_HEIGHT / LANES));
+        if (combinedDistance >= nearestHitDistance) continue;
+        hit = monster;
+        nearestHitDistance = combinedDistance;
+      }
+
       if (hit) {
         this.createProjectileImpact(position.x, position.y + shot.verticalOffset);
         this.playThornImpactSound();
@@ -2913,7 +2969,6 @@ export default class BattleScene extends Scene {
           hit, shot.damage * this.incomingMonsterDamageMultiplier(hit)
         );
         if (hit.view && hit.view.active) {
-          // A tiny sideways flinch only; never alter vertical position or scale.
           this.tweens.add({
             targets: hit.view,
             x: hit.view.x - 3,
@@ -2929,7 +2984,8 @@ export default class BattleScene extends Scene {
         continue;
       }
 
-      if (shot.localX > SPAWN_LOCAL_X + 80) {
+      if (shot.localX > shot.targetLocalX + PHASE_ONE_PLANTS.radish.projectileCollisionRadius ||
+          shot.localX > SPAWN_LOCAL_X + 80) {
         shot.alive = false;
         shot.view.destroy();
       }
