@@ -195,6 +195,7 @@ export default class BattleScene extends Scene {
     this.createAudioControls();
     this.createPauseControl();
     this.createCollectionMenuControl();
+    this.createQuickCollectionButtons();
     this.createCaveman();
     this.bindInput();
     this.events.once("shutdown", () => {
@@ -1431,6 +1432,33 @@ export default class BattleScene extends Scene {
     const key = Math.random() < 0.5 ? "sfx-grass-step-01" : "sfx-grass-step-02";
     this.playSfx(key, this.effectsVolume * 0.24, 80);
     this.farmerFootstepCooldownMs = 285;
+  }
+
+  createQuickCollectionButtons() {
+    const makeButton = (x, label, tab, tint) => {
+      const button = this.add.container(x, 80).setDepth(48);
+      const plate = this.add.rectangle(0, 0, 112, 36, tint, 0.98)
+        .setStrokeStyle(2, 0xf1d49a).setInteractive({ useHandCursor: true });
+      const text = this.add.text(0, 0, label, {
+        fontFamily: "Arial", fontSize: "14px", color: "#fff8e8", fontStyle: "bold",
+        stroke: "#2a180d", strokeThickness: 3
+      }).setOrigin(0.5);
+      button.add([plate, text]);
+      plate.on("pointerover", () => plate.setFillStyle(0x9b7047, 1));
+      plate.on("pointerout", () => plate.setFillStyle(tint, 0.98));
+      plate.on("pointerdown", () => this.openCollectionMenuTab(tab));
+      return button;
+    };
+
+    const locale = window.localStorage.getItem("farmVsMonsters.language") || "ar";
+    this.quickPlantsButton = makeButton(790, locale === "ar" ? "النباتات" : "PLANTS", "plants", 0x426b35);
+    this.quickMonstersButton = makeButton(914, locale === "ar" ? "الوحوش" : "MONSTERS", "monsters", 0x75412d);
+  }
+
+  openCollectionMenuTab(tab) {
+    if (!this.collectionMenuOpen) this.toggleCollectionMenu();
+    this.collectionMenuTab = tab;
+    this.renderCollectionMenu();
   }
 
   createCollectionMenuControl() {
