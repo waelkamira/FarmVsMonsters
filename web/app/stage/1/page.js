@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useLocale, LanguageToggle } from "../../LocaleProvider";
+import CatalogThumb from "../../components/CatalogThumb";
 
 export default function StageOneIntroPage() {
   const { locale } = useLocale();
@@ -11,9 +12,7 @@ export default function StageOneIntroPage() {
     <main className="info-shell">
       <article className="info-card stage-intro-card">
         <div className="stages-top"><span className="eyebrow">{ar ? "مهمة إنقاذ" : "RESCUE MISSION"}</span><LanguageToggle /></div>
-        <div className="stage-intro-emblem" aria-label={ar ? "مكان شعار المرحلة" : "Stage emblem placeholder"}>
-          <span>{ar ? "شعار المرحلة الأولى" : "STAGE ONE EMBLEM"}</span>
-        </div>
+        <CatalogThumb id="stage" label={ar ? "شعار المرحلة الأولى" : "Stage One emblem"} className="stage-intro-thumb" />
         <h1>{ar ? "المرحلة الأولى: أرض المزرعة" : "Stage One: The Farm Lands"}</h1>
         <p className="stage-story">
           {ar
@@ -21,8 +20,8 @@ export default function StageOneIntroPage() {
             : "An evil dragon has kidnapped the farmer's wife and keeps her captive at his side. The dragon leads an army of hyenas toward the farm. The farmer must defend his land, defeat the monsters, face the dragon, and rescue his wife."}
         </p>
         <div className="stage-cast-grid">
-          <div className="stage-cast-placeholder"><span>{ar ? "مكان صورة التنين" : "DRAGON ART"}</span></div>
-          <div className="stage-cast-placeholder"><span>{ar ? "مكان صورة الأميرة الأسيرة" : "CAPTIVE PRINCESS ART"}</span></div>
+          <CatalogThumb id="dragon" label={ar ? "التنين الشرير" : "Evil Dragon"} className="stage-cast-thumb" />
+          <CatalogThumb id="princess" label={ar ? "الأميرة الأسيرة" : "Captive princess"} className="stage-cast-thumb" />
         </div>
         <div className="stage-briefing">
           <div><strong>{ar ? "الأعداء" : "ENEMIES"}</strong><span>{ar ? "٣٠ ضبعاً عادياً + تنين الزعيم" : "30 ordinary hyenas + dragon boss"}</span></div>
