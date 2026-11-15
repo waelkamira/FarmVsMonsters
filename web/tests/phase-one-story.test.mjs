@@ -33,7 +33,7 @@ test("Phase 1 cannot finish until all ordinary monsters and the separate dragon 
   assert.match(finish, /this\.spawnedThisWave < this\.waveSize/);
   assert.match(finish, /this\.monsters\.some\(\(monster\) => monster\.alive\)/);
   assert.match(finish, /this\.dragonBoss\?\.alive/);
-  assert.match(scene, /if \\(this\\.dragonBoss\\) \\{[\\s\\S]*?this\\.tryFinishPhaseOne\\(\\)/);
+  assert.match(scene, /if \(this\.dragonBoss\) \{[\s\S]*?this\.tryFinishPhaseOne\(\)/);
 });
 
 test("the rescue sequence picks up the princess, carries her home, then opens the victory screen", () => {
