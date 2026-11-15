@@ -8,7 +8,7 @@
 - Windows PC هو هدف النموذج الأول، ثم الهواتف والتغليف المكتبي.
 
 ## خارطة التطوير ومراحل الإنجاز
-المرجع الاستراتيجي الأعلى لبناء اللعبة وعوامل النجاح العشرة ومراحلها الكاملة هو [GLOBAL_GAME_SUCCESS_MASTER_PLAN.md](Documentation/GLOBAL_GAME_SUCCESS_MASTER_PLAN.md). أما تفاصيل التنفيذ ومعايير إغلاق كل مرحلة فتوجد في [GAME_DEVELOPMENT_ROADMAP.md](Documentation/GAME_DEVELOPMENT_ROADMAP.md). لا تُعد أي مرحلة منتهية قبل اجتياز معايير قبولها واختبارها فعلياً.
+المرجع الاستراتيجي الأعلى لبناء اللعبة وعوامل النجاح العشرة ومراحلها الكاملة هو [GLOBAL_GAME_SUCCESS_MASTER_PLAN.md](Documentation/GLOBAL_GAME_SUCCESS_MASTER_PLAN.md). أما تفاصيل التنفيذ ومعايير إغلاق كل مرحلة فتوجد في [GAME_DEVELOPMENT_ROADMAP.md](Documentation/GAME_DEVELOPMENT_ROADMAP.md). توجد أيضاً [الخطة المقارنة لخريطة الحملة المستوحاة من دراسة Plants vs. Zombies 2](Documentation/SECONDARY_CAMPAIGN_MAP_PVZ2_COMPARISON.md) كخطة ثانية اختيارية، ولا تستبدل الخطة الأساسية. لا تُعد أي مرحلة منتهية قبل اجتياز معايير قبولها واختبارها فعلياً.
 
 ## قواعد اللعب المعتمدة
 - النباتات ثابتة في خلاياها؛ تتنفس بهدوء وتهاجم من موضعها وفق طبيعتها، ولا تمشي أبداً.
