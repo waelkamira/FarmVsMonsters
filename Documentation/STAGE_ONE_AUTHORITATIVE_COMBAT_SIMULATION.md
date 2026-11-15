@@ -157,3 +157,9 @@ Implementation correction: the battle scene now records production/collection/di
 
 
 Pickup identity hardening: collectible IDs are now globally monotonic for the battle session rather than derived from a board cell, preventing an uprooted/replanted mushroom at the same cell from reusing an older still-active pickup ID. Replay independently derives the expected ID sequence and enforces production ordering across live mushrooms.
+
+
+## First monster replay slice
+- Each ordinary monster spawn is recorded with a session-unique ID, wave/index, lane, archetype, and combat stats. Replay checks the exact five-wave roster sequence, archetype schedule, HP and speed against the shared combat contract.
+- Each monster bite is recorded against a specific radish cell. Replay verifies that the attacker exists and is alive, the target is a living radish in the same lane, damage matches the archetype profile, and bite intervals are respected; plant HP and destruction are recalculated.
+- This is not yet a full monster simulation: lane movement, target proximity, projectile damage, monster deaths, breach/farm defeat, and rewards still require deterministic replay. Client event claims remain untrusted until those steps are implemented and server-side replay is authoritative.
