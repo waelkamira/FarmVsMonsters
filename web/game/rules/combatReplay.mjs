@@ -78,7 +78,14 @@ export function applyCombatReplayEvent(state, event) {
     const seconds = elapsed / 1000;
     const effectiveSpeed = seconds > 0 ? payload.distance / seconds : 0;
     if (effectiveSpeed > maxSpeed + 0.05) return fail(state, "MONSTER_MOVEMENT_TOO_FAST", event);
-    const expected = resolveMonsterLaneStep({ localX: monster.localX, speed: effectiveSpeed, deltaSeconds: seconds, blockerLocalX: blocker ? getPlantLaneLocalX(blocker.col) : null, biteReach: payload.biteReach });
+    const blockerLocalX = blocker ? getPlantLaneLocalX(blocker.col) : null;
+    const expected = resolveMonsterLaneStep({ localX: monster.localX, speed: effectiveSpeed, deltaSeconds: seconds, blockerLocalX, biteReach: payload.biteReach });
+    const expectedAtBaseSpeed = resolveMonsterLaneStep({ localX: monster.localX, speed: monster.speed, deltaSeconds: seconds, blockerLocalX, biteReach: payload.biteReach });
+    if (monster.archetype === "dust-skitter") {
+      if (effectiveSpeed > 0 && effectiveSpeed < monster.speed - 0.05) return fail(state, "MONSTER_MOVEMENT_TOO_SLOW", event);
+    } else if (Math.abs(expected.localX - expectedAtBaseSpeed.localX) > 0.1) {
+      return fail(state, "MONSTER_MOVEMENT_SPEED_MISMATCH", event);
+    }
     const monsters = state.monsters.slice();
     monsters[index] = Object.freeze({ ...monster, localX: expected.localX, lastMovementTick: event.tick, biteReach: payload.biteReach });
     return nextState(state, event, { monsters: Object.freeze(monsters) });
