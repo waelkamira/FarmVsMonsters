@@ -4,7 +4,7 @@ const MAX_EVENTS = 10000;
 function validCell(payload) {
   return Number.isInteger(payload?.col) && payload.col >= 0 && payload.col < 8 && Number.isInteger(payload?.row) && payload.row >= 0 && payload.row < 5;
 }
-function validPickupId(value) { return typeof value === "string" && /^mushroom-\d+-\d+-\d+$/.test(value); }
+function validPickupId(value) { return typeof value === "string" && /^pickup-\d+$/.test(value); }
 function normalizePayload(type, payload) {
   if (!payload || typeof payload !== "object" || Array.isArray(payload)) throw new TypeError("INVALID_COMBAT_EVENT_PAYLOAD");
   if (type === "plant_placed" || type === "plant_uprooted") {
