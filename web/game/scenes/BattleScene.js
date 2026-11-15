@@ -480,37 +480,42 @@ export default class BattleScene extends Scene {
   }
 
   createHud() {
-    // One compact timber strip carries all live battle information.
+    // Jewel-toned status rail inspired by plant greens and monster purples.
     const wood = this.add.graphics().setDepth(38);
-    wood.fillStyle(0x080503, 0.82); wood.fillRoundedRect(24, 11, 1072, 43, 8);
-    wood.fillStyle(0x24160d, 0.99); wood.fillRoundedRect(20, 6, 1072, 42, 8);
-    wood.lineStyle(3, 0x120a05, 1); wood.strokeRoundedRect(20, 6, 1072, 42, 8);
-    wood.lineStyle(2, 0xf0c779, 1); wood.strokeRoundedRect(24, 10, 1064, 34, 6);
-    wood.fillStyle(0xd2a66a, 0.85);
-    for (const x of [34, 1078]) { wood.fillCircle(x, 13, 2); wood.fillCircle(x, 41, 2); }
+    wood.fillStyle(0x101a2e, 0.78); wood.fillRoundedRect(24, 11, 1072, 43, 12);
+    wood.fillGradientStyle(0x276c70, 0x315b91, 0x315b91, 0x60428b, 1);
+    wood.fillRoundedRect(20, 6, 1072, 42, 12);
+    wood.lineStyle(3, 0x35bceb, 1); wood.strokeRoundedRect(20, 6, 1072, 42, 12);
+    wood.lineStyle(1.5, 0xa7e84f, 0.95); wood.strokeRoundedRect(25, 11, 1062, 32, 9);
+    wood.fillStyle(0xffca45, 0.95);
+    for (const x of [34, 1078]) { wood.fillCircle(x, 13, 3); wood.fillCircle(x, 41, 3); }
 
     this.hudText = this.add.text(38, 27, "", {
       fontFamily: "Arial", fontSize: "15px", color: "#ffffff", fontStyle: "bold",
       stroke: "#120a05", strokeThickness: 4, resolution: 2
     }).setOrigin(0, 0.5).setDepth(41);
     this.waveText = this.add.text(930, 27, "", {
-      fontFamily: "Arial", fontSize: "14px", color: "#fff4d6", fontStyle: "bold",
-      stroke: "#120a05", strokeThickness: 4, resolution: 2
+      fontFamily: "Arial", fontSize: "14px", color: "#ffffff", fontStyle: "bold",
+      stroke: "#17213d", strokeThickness: 4, resolution: 2
     }).setOrigin(1, 0.5).setDepth(41);
 
     // Short gameplay feedback sits above the planting dock, not over the controls.
     this.messageText = this.add.text(560, 574, "", {
       fontFamily: "Arial", fontSize: "16px", color: "#ffffff", fontStyle: "bold",
-      backgroundColor: "#130c07", padding: { x: 16, y: 7 }, align: "center",
-      stroke: "#000000", strokeThickness: 4, resolution: 2
+      backgroundColor: "#315b91", padding: { x: 16, y: 7 }, align: "center",
+      stroke: "#17213d", strokeThickness: 4, resolution: 2
     }).setOrigin(0.5, 1).setDepth(42);
 
-    // A single lower dock groups the two plant choices and collection shortcuts.
+    // Colorful lower dock: emerald, cyan and violet, with no timber styling.
     const dock = this.add.graphics().setDepth(43);
-    dock.fillStyle(0x160e08, 0.78);
-    dock.fillRoundedRect(354, 580, 470, 78, 15);
-    dock.lineStyle(2, 0xe0bd7c, 0.9);
-    dock.strokeRoundedRect(354, 580, 470, 78, 15);
+    dock.fillStyle(0x101a2e, 0.78);
+    dock.fillRoundedRect(354, 580, 470, 78, 18);
+    dock.fillGradientStyle(0x276c70, 0x315b91, 0x315b91, 0x60428b, 0.98);
+    dock.fillRoundedRect(350, 576, 470, 78, 18);
+    dock.lineStyle(3, 0x35bceb, 1);
+    dock.strokeRoundedRect(350, 576, 470, 78, 18);
+    dock.lineStyle(1, 0xa7e84f, 0.9);
+    dock.strokeRoundedRect(356, 582, 458, 66, 14);
 
     this.radishCard = this.createPlantCard(430, "RADISH", "35", "radish", null, "radish-character");
     this.mushroomCard = this.createPlantCard(575, "MUSHROOM", "50", "mushroom", null, "mushroom-character");
@@ -518,11 +523,13 @@ export default class BattleScene extends Scene {
 
   createPlantCard(x, title, costLabel, type, drawIcon, imageKey = null) {
     const card = this.add.container(x, 619).setDepth(45);
-    const shadow = this.add.rectangle(2, 3, 132, 54, 0x1c120c, 0.42);
-    const frame = this.add.rectangle(0, 0, 132, 54, 0x79502e, 1).setStrokeStyle(2, 0x392417);
-    const panel = this.add.rectangle(0, 0, 126, 48, 0xe0c18a, 1)
-      .setStrokeStyle(1.5, 0xf7e5bd).setInteractive({ useHandCursor: true });
-    const iconDivider = this.add.rectangle(-25, 0, 1.5, 36, 0x79502e, 0.55);
+    const shadow = this.add.rectangle(2, 4, 132, 54, 0x101a2e, 0.55);
+    const cardTint = type === "radish" ? 0x238a58 : 0x287eb7;
+    const frame = this.add.rectangle(0, 0, 132, 54, 0x17213d, 1).setStrokeStyle(3, 0x35bceb);
+    const panel = this.add.rectangle(0, 0, 126, 48, cardTint, 1)
+      .setStrokeStyle(2, type === "radish" ? 0xa7e84f : 0x8b65e8)
+      .setInteractive({ useHandCursor: true });
+    const iconDivider = this.add.rectangle(-25, 0, 1.5, 36, 0xffffff, 0.55);
     let icon;
     if (imageKey && this.textures.exists(imageKey)) {
       const frameData = this.textures.getFrame(imageKey);
@@ -535,21 +542,21 @@ export default class BattleScene extends Scene {
     }
     const locale = window.localStorage.getItem("farmVsMonsters.language") || "ar";
     const name = this.add.text(-17, -10, translate(title, locale), {
-      fontFamily: "Arial", fontSize: "14px", color: "#211307", fontStyle: "bold",
-      stroke: "#fff1d0", strokeThickness: 1, resolution: 2
+      fontFamily: "Arial", fontSize: "14px", color: "#ffffff", fontStyle: "bold",
+      stroke: "#17213d", strokeThickness: 3, resolution: 2
     }).setOrigin(0, 0.5).setData("localeKey", title);
     const cost = this.add.text(-17, 12, costLabel + " " + translate("ENERGY", locale), {
-      fontFamily: "Arial", fontSize: "12px", color: "#2a180a", fontStyle: "bold",
-      stroke: "#fff0c8", strokeThickness: 1, resolution: 2
+      fontFamily: "Arial", fontSize: "12px", color: "#ffffff", fontStyle: "bold",
+      stroke: "#17213d", strokeThickness: 3, resolution: 2
     }).setOrigin(0, 0.5).setData("localeKey", String(costLabel) + " ENERGY");
     card.add([shadow, frame, panel, icon, iconDivider, name, cost]);
 
     panel.on("pointerover", () => {
-      if (this.selectedPlant !== type) panel.setFillStyle(0xd7b579, 1);
+      if (this.selectedPlant !== type) panel.setFillStyle(type === "radish" ? 0x42c96b : 0x35bceb, 1);
       card.setScale(1.035);
     });
     panel.on("pointerout", () => {
-      if (this.selectedPlant !== type) panel.setFillStyle(0xc69b5e, 1);
+      if (this.selectedPlant !== type) panel.setFillStyle(type === "radish" ? 0x238a58 : 0x287eb7, 1);
       card.setScale(1);
     });
     panel.on("pointerdown", () => {
@@ -1089,14 +1096,14 @@ export default class BattleScene extends Scene {
     this.audioMenu = this.add.container(990, 183).setDepth(70).setVisible(false);
     // Make the menu surface consume clicks so its empty areas never behave
     // like clicks on the battlefield underneath it.
-    const panel = this.add.rectangle(0, 0, 250, 220, 0x79502e, 0.99)
-      .setStrokeStyle(5, 0x3a2416)
+    const panel = this.add.rectangle(0, 0, 250, 220, 0x17213d, 0.99)
+      .setStrokeStyle(5, 0x35bceb)
       .setInteractive();
-    const inset = this.add.rectangle(0, 0, 236, 206, 0xb88950, 1)
-      .setStrokeStyle(2, 0xe5c68e);
+    const inset = this.add.rectangle(0, 0, 236, 206, 0x315b91, 1)
+      .setStrokeStyle(2, 0xa7e84f);
     const heading = this.add.text(0, -91, translate("TRIBE SOUND", window.localStorage.getItem("farmVsMonsters.language") || "ar"), {
-      fontFamily: "Georgia", fontSize: "15px", color: "#fff0c8", fontStyle: "bold",
-      stroke: "#49301d", strokeThickness: 2
+      fontFamily: "Arial", fontSize: "15px", color: "#ffffff", fontStyle: "bold",
+      stroke: "#17213d", strokeThickness: 3
     }).setOrigin(0.5).setData("localeKey", "TRIBE SOUND");
     this.audioMenu.add([panel, inset, heading]);
 
@@ -1129,20 +1136,20 @@ export default class BattleScene extends Scene {
     this.input.on("pointerup", () => { this.activeAudioSlider = null; });
 
     this.audioButton = this.add.container(1090, 34).setDepth(72);
-    const buttonBackground = this.add.circle(0, 0, 23, 0xb88950, 1).setStrokeStyle(4, 0x392417);
+    const buttonBackground = this.add.circle(0, 0, 23, 0x287eb7, 1).setStrokeStyle(3, 0x35bceb);
     const speaker = this.add.graphics();
-    speaker.fillStyle(0x563a25, 1);
+    speaker.fillStyle(0xffffff, 1);
     speaker.fillRoundedRect(-11, -6, 7, 12, 2);
     speaker.fillTriangle(-5, -7, 5, -14, 5, 14);
     speaker.fillTriangle(-5, 7, 5, 14, 5, -14);
-    speaker.lineStyle(2, 0x563a25, 1);
+    speaker.lineStyle(2, 0xffffff, 1);
     speaker.beginPath();
     speaker.arc(3, 0, 10, -0.85, 0.85, false);
     speaker.strokePath();
     this.audioButton.add([buttonBackground, speaker]);
     buttonBackground.setInteractive({ useHandCursor: true });
-    buttonBackground.on("pointerover", () => buttonBackground.setFillStyle(0xe0c889, 1));
-    buttonBackground.on("pointerout", () => buttonBackground.setFillStyle(0xb88950, 1));
+    buttonBackground.on("pointerover", () => buttonBackground.setFillStyle(0x35bceb, 1));
+    buttonBackground.on("pointerout", () => buttonBackground.setFillStyle(0x287eb7, 1));
     buttonBackground.on("pointerdown", () => {
       if (this.audioMenuOpen) this.closeAudioMenu();
       else this.openAudioMenu();
@@ -1170,14 +1177,14 @@ export default class BattleScene extends Scene {
   createAudioVolumeSlider(y, title, initialValue, onChange) {
     const container = this.add.container(0, y);
     const label = this.add.text(-101, -10, translate(title, window.localStorage.getItem("farmVsMonsters.language") || "ar"), {
-      fontFamily: "Georgia", fontSize: "11px", color: "#3d291a", fontStyle: "bold"
+      fontFamily: "Arial", fontSize: "11px", color: "#ffffff", fontStyle: "bold", stroke: "#17213d", strokeThickness: 2
     }).setOrigin(0, 0.5).setData("localeKey", title);
-    const track = this.add.rectangle(5, 12, 132, 8, 0x65452f, 1).setInteractive({ useHandCursor: true });
-    const fill = this.add.rectangle(-61, 12, 0, 5, 0xe2c078, 1).setOrigin(0, 0.5);
-    const knob = this.add.circle(-61, 12, 8, 0xe2c078, 1)
-      .setStrokeStyle(2, 0x563a25).setInteractive({ useHandCursor: true });
+    const track = this.add.rectangle(5, 12, 132, 8, 0x17213d, 1).setInteractive({ useHandCursor: true });
+    const fill = this.add.rectangle(-61, 12, 0, 5, 0xa7e84f, 1).setOrigin(0, 0.5);
+    const knob = this.add.circle(-61, 12, 8, 0xffca45, 1)
+      .setStrokeStyle(2, 0xffffff).setInteractive({ useHandCursor: true });
     const valueText = this.add.text(96, -10, Math.round(initialValue) + "%", {
-      fontFamily: "Arial", fontSize: "11px", color: "#563a25", fontStyle: "bold"
+      fontFamily: "Arial", fontSize: "11px", color: "#ffffff", fontStyle: "bold", stroke: "#17213d", strokeThickness: 2
     }).setOrigin(1, 0.5);
     container.add([label, track, fill, knob, valueText]);
 
@@ -1202,7 +1209,7 @@ export default class BattleScene extends Scene {
       this.activeAudioSlider = setFromPointer;
       setFromPointer(pointer);
     });
-    track.on("pointerover", () => track.setFillStyle(0x9a7044, 1));
+    track.on("pointerover", () => track.setFillStyle(0x35bceb, 1));
     setValue(initialValue, false);
     return { container };
   }
@@ -1444,9 +1451,9 @@ export default class BattleScene extends Scene {
     const makeButton = (x, tab, tint) => {
       const button = this.add.container(x, 619).setDepth(48);
       const plate = this.add.circle(0, 0, 24, tint, 0.98)
-        .setStrokeStyle(3, 0xf1d49a).setInteractive({ useHandCursor: true });
+        .setStrokeStyle(3, 0xffffff).setInteractive({ useHandCursor: true });
       const icon = this.add.graphics();
-      icon.lineStyle(3, 0xfff3d6, 1);
+      icon.lineStyle(3, 0xffffff, 1);
       if (tab === "plants") {
         // Simple sprout glyph; the final button skin can be art-directed later.
         icon.lineBetween(0, 13, 0, -2);
@@ -1457,7 +1464,7 @@ export default class BattleScene extends Scene {
         icon.lineBetween(-13, 15, 13, 15);
       } else {
         // Paw-print glyph for the monster collection.
-        icon.fillStyle(0xfff3d6, 1);
+        icon.fillStyle(0xffffff, 1);
         icon.fillEllipse(0, 7, 17, 12);
         icon.fillCircle(-10, -7, 4);
         icon.fillCircle(-3, -13, 4);
@@ -1465,14 +1472,14 @@ export default class BattleScene extends Scene {
         icon.fillCircle(11, -6, 4);
       }
       button.add([plate, icon]);
-      plate.on("pointerover", () => plate.setFillStyle(0x9b7047, 1));
+      plate.on("pointerover", () => plate.setFillStyle(0x35bceb, 1));
       plate.on("pointerout", () => plate.setFillStyle(tint, 0.98));
       plate.on("pointerdown", () => this.openCollectionMenuTab(tab));
       return button;
     };
 
-    this.quickPlantsButton = makeButton(720, "plants", 0x426b35);
-    this.quickMonstersButton = makeButton(790, "monsters", 0x75412d);
+    this.quickPlantsButton = makeButton(720, "plants", 0x238a58);
+    this.quickMonstersButton = makeButton(790, "monsters", 0x8b65e8);
   }
 
   openCollectionMenuTab(tab) {
@@ -1483,14 +1490,14 @@ export default class BattleScene extends Scene {
 
   createCollectionMenuControl() {
     const button = this.add.container(978, 27).setDepth(47);
-    const plate = this.add.rectangle(0, 0, 46, 30, 0x4a2e1d, 0.98)
-      .setStrokeStyle(2, 0xd8b477).setInteractive({ useHandCursor: true });
+    const plate = this.add.rectangle(0, 0, 46, 30, 0x287eb7, 0.98)
+      .setStrokeStyle(2, 0x35bceb).setInteractive({ useHandCursor: true });
     const label = this.add.text(0, 0, "▤", {
-      fontFamily: "Arial", fontSize: "20px", color: "#fff0c8", fontStyle: "bold"
+      fontFamily: "Arial", fontSize: "20px", color: "#ffffff", fontStyle: "bold"
     }).setOrigin(0.5);
     button.add([plate, label]);
-    plate.on("pointerover", () => plate.setFillStyle(0x79502e, 1));
-    plate.on("pointerout", () => plate.setFillStyle(0x4a2e1d, 0.98));
+    plate.on("pointerover", () => plate.setFillStyle(0x35bceb, 1));
+    plate.on("pointerout", () => plate.setFillStyle(0x287eb7, 0.98));
     plate.on("pointerdown", () => this.toggleCollectionMenu());
     this.collectionMenuControl = button;
     this.collectionMenuOpen = false;
@@ -1612,14 +1619,14 @@ export default class BattleScene extends Scene {
 
   createPauseControl() {
     const button = this.add.container(1035, 27).setDepth(46);
-    const background = this.add.rectangle(0, 0, 54, 30, 0x4a2e1d, 0.98)
-      .setStrokeStyle(2, 0xd8b477).setInteractive({ useHandCursor: true });
+    const background = this.add.rectangle(0, 0, 54, 30, 0x8b65e8, 0.98)
+      .setStrokeStyle(2, 0x35bceb).setInteractive({ useHandCursor: true });
     const label = this.add.text(0, 0, "Ⅱ", {
-      fontFamily: "Arial", fontSize: "19px", color: "#fff0c8", fontStyle: "bold"
+      fontFamily: "Arial", fontSize: "19px", color: "#ffffff", fontStyle: "bold"
     }).setOrigin(0.5);
     button.add([background, label]);
-    background.on("pointerover", () => background.setFillStyle(0x79502e, 1));
-    background.on("pointerout", () => background.setFillStyle(0x4a2e1d, 0.98));
+    background.on("pointerover", () => background.setFillStyle(0xa07df2, 1));
+    background.on("pointerout", () => background.setFillStyle(0x8b65e8, 0.98));
     background.on("pointerdown", () => this.pauseGame());
     this.pauseControl = button;
   }
@@ -3065,15 +3072,15 @@ export default class BattleScene extends Scene {
 
   createGameOverButton(x, y, label, color, action) {
     const button = this.add.container(x, y).setDepth(63);
-    const shadow = this.add.rectangle(2, 4, 190, 58, 0x21150d, 0.55);
-    const background = this.add.rectangle(0, 0, 190, 58, 0xb88950, 1)
-      .setStrokeStyle(4, 0x392417)
+    const shadow = this.add.rectangle(2, 4, 190, 58, 0x101a2e, 0.6);
+    const background = this.add.rectangle(0, 0, 190, 58, 0x17213d, 1)
+      .setStrokeStyle(4, 0x35bceb)
       .setInteractive({ useHandCursor: true });
-    const inset = this.add.rectangle(0, 0, 180, 48, color, 1).setStrokeStyle(1, 0xf0d59a);
+    const inset = this.add.rectangle(0, 0, 180, 48, color, 1).setStrokeStyle(2, 0xffffff);
     const locale = typeof window !== "undefined" ? window.localStorage.getItem("farmVsMonsters.language") || "ar" : "ar";
     const text = this.add.text(0, 0, translate(label, locale), {
-      fontFamily: "Georgia", fontSize: "16px", color: "#392719", fontStyle: "bold",
-      stroke: "#f3d9a4", strokeThickness: 1
+      fontFamily: "Arial", fontSize: "16px", color: "#ffffff", fontStyle: "bold",
+      stroke: "#17213d", strokeThickness: 3
     }).setOrigin(0.5);
     button.add([shadow, background, inset, text]);
     background.on("pointerover", () => background.setScale(1.05));
