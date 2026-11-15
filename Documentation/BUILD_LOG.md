@@ -853,3 +853,13 @@
 - BattleScene now delegates monster movement/clamping at plant bite reach and projectile local-coordinate advancement to these functions. This preserves the current delta-time movement formula and prevents fast monsters from stepping through a blocking plant.
 - Expanded `combat-simulation.test.mjs` with lane-step, projectile-step, invalid-input, and Phaser integration coverage.
 - Movement modifiers, collision detection, bite reach geometry, and Dust Skitter jump/burst scheduling are still resolved in BattleScene and remain future extraction work.
+
+
+
+## 2026-11-15 — Extract combat target selection
+- Added pure selectors in `web/game/rules/combatSimulation.mjs` for nearest Radish lane blocker, projectile collision target, farmer melee target, and dragon fireball plant target.
+- Updated BattleScene to delegate all four target choices to the shared kernel. Existing selection semantics are preserved: nearest Radish behind each monster (mushrooms do not block), first eligible monster in projectile array order, nearest monster in the farmer's lane with stable tie order, and lowest-HP living plant for dragon fireballs.
+- Dragon fireball plant damage now also uses the shared HP damage resolver.
+- Expanded `web/tests/combat-simulation.test.mjs` to 16 test cases, including target selection, lane restrictions, collision radius/width scaling, tie handling, and Phaser integration assertions.
+- The Phaser scene still owns world-to-lane projection, rendered collision dimensions, attack cooldowns, tweens, and encounter orchestration. This extraction does not make the client authoritative.
+- Validation remains source inspection only; no local test/build/browser run was possible in this execution, and GitHub Actions runner allocation remains unresolved.
