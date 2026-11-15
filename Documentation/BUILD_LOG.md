@@ -733,3 +733,14 @@
 - Counts are totals per campaign stage across its waves, not per-wave counts. Dragon bosses are tracked separately from ordinary monster/follower totals.
 - Stage 1 retains five waves; exact distribution of its 30 ordinary monsters across those waves will be tuned to keep the opening easy, readable, and fair.
 - The previous 100-monster first-stage schedule is obsolete and must be replaced in gameplay code and corresponding tests. No runtime code changed in this documentation update.
+
+## 2026-11-15 — Phase 1 dragon boss and princess rescue flow
+- Added a separate dragon boss encounter at the start of wave 5; the boss is not included in ordinary monster wave counts.
+- Added automatic farmer sling attacks, a dedicated dragon health bar, dragon movement, and fireball attacks against living plants or the farmhouse.
+- Phase 1 victory now waits for every ordinary monster and the dragon to be defeated.
+- Added the rescue sequence: the farmer reaches the princess, picks her up, carries her back to the farmhouse, and only then opens the victory screen.
+- Added optional user-authored asset slots and web/game/data/phase-one-story-assets.json; missing story artwork does not replace or modify existing character art.
+- Added focused story-flow tests in web/tests/phase-one-story.test.mjs.
+- Asset contract: farmer story sheets use 360×430 frames (6 frames each); dragon sheet uses 512×512 frames; princess and emblem are standalone PNG images.
+- Validation status: source and tests were updated, but browser gameplay, visual placement, and the web build still require execution in a local checkout after the user supplies the story artwork.
+
