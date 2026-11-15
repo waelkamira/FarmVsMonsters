@@ -480,49 +480,74 @@ export default class BattleScene extends Scene {
   }
 
   createHud() {
-    // Jewel-toned status rail inspired by plant greens and monster purples.
-    const wood = this.add.graphics().setDepth(38);
-    wood.fillStyle(0x101a2e, 0.78); wood.fillRoundedRect(24, 11, 1072, 43, 12);
-    wood.fillGradientStyle(0x276c70, 0x315b91, 0x315b91, 0x60428b, 1);
-    wood.fillRoundedRect(20, 6, 1072, 42, 12);
-    wood.lineStyle(3, 0x35bceb, 1); wood.strokeRoundedRect(20, 6, 1072, 42, 12);
-    wood.lineStyle(1.5, 0xa7e84f, 0.95); wood.strokeRoundedRect(25, 11, 1062, 32, 9);
-    wood.fillStyle(0xffca45, 0.95);
-    for (const x of [34, 1078]) { wood.fillCircle(x, 13, 3); wood.fillCircle(x, 41, 3); }
+    // Segmented top HUD: each statistic is its own colorful tile,
+    // followed by the wave tile and the two plant selection cells.
+    const hud = this.add.graphics().setDepth(38);
+    const statTiles = [
+      { x: 20, icon: "⚡", color: 0x35bceb, edge: 0xa7e84f },
+      { x: 126, icon: "🪙", color: 0xffb936, edge: 0xffe27a },
+      { x: 232, icon: "🏡", color: 0x42c96b, edge: 0xa7e84f },
+      { x: 338, icon: "🌱", color: 0x54c77c, edge: 0xc4f58a },
+      { x: 444, icon: "👾", color: 0x8b65e8, edge: 0xc6aaff },
+    ];
+    statTiles.forEach((tile) => {
+      hud.fillStyle(0x101a2e, 0.72);
+      hud.fillRoundedRect(tile.x + 2, 11, 98, 54, 12);
+      hud.fillStyle(tile.color, 1);
+      hud.fillRoundedRect(tile.x, 7, 98, 54, 12);
+      hud.lineStyle(2.5, 0xffffff, 1);
+      hud.strokeRoundedRect(tile.x, 7, 98, 54, 12);
+      hud.lineStyle(1.5, tile.edge, 1);
+      hud.strokeRoundedRect(tile.x + 4, 11, 90, 46, 9);
+    });
+    // Wave progress is a distinct tile, not an extension of the status row.
+    hud.fillStyle(0x101a2e, 0.72);
+    hud.fillRoundedRect(554, 11, 174, 54, 12);
+    hud.fillGradientStyle(0x397fd1, 0x397fd1, 0x7655c8, 0x7655c8, 1);
+    hud.fillRoundedRect(552, 7, 174, 54, 12);
+    hud.lineStyle(2.5, 0xffffff, 1);
+    hud.strokeRoundedRect(552, 7, 174, 54, 12);
+    hud.lineStyle(1.5, 0x9fe9ff, 1);
+    hud.strokeRoundedRect(556, 11, 166, 46, 9);
 
-    this.hudText = this.add.text(38, 27, "", {
-      fontFamily: "Arial", fontSize: "15px", color: "#ffffff", fontStyle: "bold",
-      stroke: "#120a05", strokeThickness: 4, resolution: 2
-    }).setOrigin(0, 0.5).setDepth(41);
-    this.waveText = this.add.text(930, 27, "", {
-      fontFamily: "Arial", fontSize: "14px", color: "#ffffff", fontStyle: "bold",
-      stroke: "#17213d", strokeThickness: 4, resolution: 2
-    }).setOrigin(1, 0.5).setDepth(41);
+    const tileMeta = [
+      { icon: "⚡", label: "ENERGY" },
+      { icon: "🪙", label: "COINS" },
+      { icon: "🏡", label: "HOME" },
+      { icon: "🌱", label: "RADISHES" },
+      { icon: "👾", label: "KILLS" },
+    ];
+    this.hudValueTexts = statTiles.map((tile, index) => {
+      const meta = tileMeta[index];
+      this.add.text(tile.x + 8, 19, meta.icon + " " + translate(meta.label, window.localStorage.getItem("farmVsMonsters.language") || "ar"), {
+        fontFamily: "Arial", fontSize: "10px", color: "#ffffff", fontStyle: "bold",
+        stroke: "#17213d", strokeThickness: 3, resolution: 2
+      }).setOrigin(0, 0.5).setDepth(41);
+      return this.add.text(tile.x + 49, 43, "0", {
+        fontFamily: "Arial", fontSize: "17px", color: "#ffffff", fontStyle: "bold",
+        stroke: "#17213d", strokeThickness: 4, resolution: 2
+      }).setOrigin(0.5, 0.5).setDepth(41);
+    });
+    this.waveText = this.add.text(639, 34, "", {
+      fontFamily: "Arial", fontSize: "13px", color: "#ffffff", fontStyle: "bold",
+      align: "center", stroke: "#17213d", strokeThickness: 4, resolution: 2,
+      wordWrap: { width: 158 }
+    }).setOrigin(0.5, 0.5).setDepth(41);
 
-    // Short gameplay feedback sits above the planting dock, not over the controls.
+    // Plant selection cells sit in the same top row, but remain visually separate.
+    this.radishCard = this.createPlantCard(794, "RADISH", "35", "radish", null, "radish-character", 34);
+    this.mushroomCard = this.createPlantCard(944, "MUSHROOM", "50", "mushroom", null, "mushroom-character", 34);
+
+    // Short gameplay feedback sits clear of the board and controls.
     this.messageText = this.add.text(560, 574, "", {
       fontFamily: "Arial", fontSize: "16px", color: "#ffffff", fontStyle: "bold",
       backgroundColor: "#315b91", padding: { x: 16, y: 7 }, align: "center",
       stroke: "#17213d", strokeThickness: 4, resolution: 2
     }).setOrigin(0.5, 1).setDepth(42);
-
-    // Colorful lower dock: emerald, cyan and violet, with no timber styling.
-    const dock = this.add.graphics().setDepth(43);
-    dock.fillStyle(0x101a2e, 0.78);
-    dock.fillRoundedRect(354, 580, 470, 78, 18);
-    dock.fillGradientStyle(0x276c70, 0x315b91, 0x315b91, 0x60428b, 0.98);
-    dock.fillRoundedRect(350, 576, 470, 78, 18);
-    dock.lineStyle(3, 0x35bceb, 1);
-    dock.strokeRoundedRect(350, 576, 470, 78, 18);
-    dock.lineStyle(1, 0xa7e84f, 0.9);
-    dock.strokeRoundedRect(356, 582, 458, 66, 14);
-
-    this.radishCard = this.createPlantCard(430, "RADISH", "35", "radish", null, "radish-character");
-    this.mushroomCard = this.createPlantCard(575, "MUSHROOM", "50", "mushroom", null, "mushroom-character");
   }
 
-  createPlantCard(x, title, costLabel, type, drawIcon, imageKey = null) {
-    const card = this.add.container(x, 619).setDepth(45);
+  createPlantCard(x, title, costLabel, type, drawIcon, imageKey = null, y = 619) {
+    const card = this.add.container(x, y).setDepth(45);
     const shadow = this.add.rectangle(2, 4, 132, 54, 0x101a2e, 0.55);
     const cardTint = type === "radish" ? 0x238a58 : 0x287eb7;
     const frame = this.add.rectangle(0, 0, 132, 54, 0x17213d, 1).setStrokeStyle(3, 0x35bceb);
@@ -3143,16 +3168,20 @@ export default class BattleScene extends Scene {
   refreshHud() {
     const locale = typeof window !== "undefined" ? window.localStorage.getItem("farmVsMonsters.language") || "ar" : "ar";
     const labels = locale === "ar"
-      ? { energy: "الطاقة", coins: "العملات", home: "المزرعة", radishes: "الفجل", kills: "المهزومون", wave: "الموجة", down: "هُزم", last: "المواجهة الأخيرة" }
-      : { energy: "ENERGY", coins: "COINS", home: "HOME", radishes: "RADISHES", kills: "KILLS", wave: "WAVE", down: "DOWN", last: "LAST STAND" };
-    this.hudText.setText(
-      labels.energy + "  " + this.energy + "     " + labels.coins + "  " + this.coins + "     " + labels.home + "  " + this.houseHealth + "%     " + labels.radishes + "  " +
-      this.livingPlantCount() + "     " + labels.kills + "  " + this.totalDefeatedMonsters + "/" + PHASE_ONE_TOTAL_MONSTERS
-    );
-    this.waveText.setText(
+      ? { energy: "⚡ الطاقة", coins: "🪙 العملات", home: "🏡 المزرعة", radishes: "🌱 الفجل", kills: "👾 المهزومون", wave: "الموجة", down: "هُزم", last: "المواجهة الأخيرة" }
+      : { energy: "⚡ ENERGY", coins: "🪙 COINS", home: "🏡 HOME", radishes: "🌱 RADISHES", kills: "👾 KILLS", wave: "WAVE", down: "DOWN", last: "LAST STAND" };
+    const values = [
+      this.energy,
+      this.coins,
+      this.houseHealth + "%",
+      this.livingPlantCount(),
+      this.totalDefeatedMonsters + "/" + PHASE_ONE_TOTAL_MONSTERS,
+    ];
+    if (this.hudValueTexts) this.hudValueTexts.forEach((text, index) => text.setText(String(values[index])));
+    if (this.waveText) this.waveText.setText(
       labels.wave + " " + Math.min(this.wave, this.totalWaves) + "/" + this.totalWaves +
-      "  ·  " + this.waveDefeatedMonsters + "/" + this.waveSize + " " + labels.down +
-      (this.emergencyMode ? "  ·  " + labels.last : "")
+      "\n" + this.waveDefeatedMonsters + "/" + this.waveSize + " " + labels.down +
+      (this.emergencyMode ? " · " + labels.last : "")
     );
   }
 }
