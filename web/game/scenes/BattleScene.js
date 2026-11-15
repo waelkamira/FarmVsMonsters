@@ -2122,7 +2122,10 @@ export default class BattleScene extends Scene {
           monster.voiceCooldown = PhaserMath.Between(6500, 12500);
         }
       }
-      const blocker = this.plants.filter((p) => p.alive && p.type === "radish" && p.row === monster.row && this.worldToLane(p).localX < monster.localX)
+      // Every living plant blocks the hyena in its lane, not only radishes.
+      // The nearest plant ahead is the next target to eat.
+      const blocker = this.plants
+        .filter((p) => p.alive && p.row === monster.row && this.worldToLane(p).localX < monster.localX)
         .sort((a, b) => this.worldToLane(b).localX - this.worldToLane(a).localX)[0];
       const blockerLocalX = blocker ? this.worldToLane(blocker).localX : -Infinity;
       const biteReach = 43 * (monster.widthScale || 1);
@@ -2142,6 +2145,7 @@ export default class BattleScene extends Scene {
           this.playHyenaAnimation(monster, "hyena-bite", true);
           blocker.hp -= monster.plantDamage; monster.attackCooldown = monster.attackInterval;
           this.playMonsterBiteSound();
+          this.flashEatenPlant(blocker);
           this.tweens.add({ targets: monster.view, x: monster.view.x - 4, scaleY: monster.view.scaleY * 0.94, duration: 85, yoyo: true });
           if (blocker.hp <= 0) this.destroyPlant(blocker);
         }
@@ -2169,24 +2173,13 @@ export default class BattleScene extends Scene {
         }
       }
 
-      const previousLocalX = monster.localX;
-      monster.localX -= movementSpeed * dt;
-
-      // Detect a swept pass across each plant, not just an exact X match.
-      // The extra contact radius also catches fast bursts and jump-over
-      // movement where a monster can move from one side to the other in a
-      // single update. Apply once per monster/plant pair, for every plant type.
-      const plantContactRadius = 30 * (monster.widthScale || 1);
-      for (const plant of this.plants) {
-        if (!plant.alive || plant.row !== monster.row || monster.knockedPlants.has(plant)) continue;
-        const plantLocalX = this.worldToLane(plant).localX;
-        const crossedPlant = previousLocalX > plantLocalX + plantContactRadius &&
-          monster.localX <= plantLocalX + plantContactRadius;
-        if (crossedPlant) {
-          monster.knockedPlants.add(plant);
-          this.knockBackPlant(plant, monster);
-        }
-      }
+      // Stop just outside the plant's bite reach. Clamp the step so even a
+      // fast skitter cannot tunnel through a plant between two update frames.
+      const nextLocalX = monster.localX - movementSpeed * dt;
+      const stopLocalX = blocker ? blockerLocalX + biteReach : -Infinity;
+      monster.localX = blocker
+        ? Math.max(nextLocalX, stopLocalX)
+        : nextLocalX;
 
       const position = this.monsterLanePoint(monster.localX, monster.row);
       monster.x = position.x; monster.y = position.y;
@@ -2362,6 +2355,42 @@ export default class BattleScene extends Scene {
     this.setMessage("Plant uprooted. Its full energy cost was refunded; choose any empty soil cell to replant.");
     this.updateEmergencyMode();
     this.refreshHud();
+  }
+
+  flashEatenPlant(plant) {
+    if (!plant?.alive || !plant.view?.active) return;
+    // Brief warm-red pulse on the plant artwork each time the hyena bites.
+    // Only image children support tint; fallback vector art still gets a pulse.
+    const artwork = (plant.view.list || []).filter((child) => child?.active);
+    for (const child of artwork) {
+      if (typeof child.setTint === "function") {
+        child.setTint(0xff7777);
+        this.tweens.killTweensOf(child);
+        this.tweens.add({
+          targets: child,
+          alpha: 0.58,
+          duration: 90,
+          yoyo: true,
+          onComplete: () => {
+            if (child.active) {
+              child.clearTint?.();
+              child.setAlpha(1);
+            }
+          }
+        });
+      } else {
+        this.tweens.killTweensOf(plant.view);
+        this.tweens.add({
+          targets: plant.view,
+          alpha: 0.62,
+          duration: 90,
+          yoyo: true,
+          onComplete: () => {
+            if (plant.view?.active) plant.view.setAlpha(1);
+          }
+        });
+      }
+    }
   }
 
   destroyPlant(plant) {
