@@ -5,7 +5,8 @@
 -- not spendable until a trusted reward pipeline explicitly verifies them.
 
 alter table public.player_progress
-  add column if not exists coins_verified boolean not null default false;
+  add column if not exists coins_verified boolean not null default false,
+  add column if not exists progress_verified boolean not null default false;
 
 drop policy if exists "Players can insert their own progress" on public.player_progress;
 drop policy if exists "Players can update their own progress" on public.player_progress;
@@ -28,6 +29,7 @@ declare
   v_coins bigint;
   v_unlocked_stage integer;
   v_coins_verified boolean;
+  v_progress_verified boolean;
   v_new_balance bigint;
 begin
   if v_user_id is null then
@@ -46,11 +48,15 @@ begin
   values (v_user_id)
   on conflict (user_id) do nothing;
 
-  select coins, unlocked_stage, coins_verified
-    into v_coins, v_unlocked_stage, v_coins_verified
+  select coins, unlocked_stage, coins_verified, progress_verified
+    into v_coins, v_unlocked_stage, v_coins_verified, v_progress_verified
   from public.player_progress
   where user_id = v_user_id
   for update;
+
+  if not v_progress_verified then
+    raise exception 'PLAYER_PROGRESS_NOT_VERIFIED';
+  end if;
 
   if not v_coins_verified then
     raise exception 'COIN_BALANCE_NOT_VERIFIED';
