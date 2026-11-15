@@ -69,7 +69,7 @@ const translations = {
   "Plant a radish first. The caveman's club is an emergency defense only.": "ازرع الفجل أولاً. هراوة رجل الكهف مخصصة للدفاع في حالات الطوارئ فقط.",
   "Club hit!": "ضربة بالهراوة!", "No monster is close enough for the club.": "لا يوجد وحش قريب بما يكفي لضربه بالهراوة.",
   "VICTORY! The farm is safe.": "انتصار! المزرعة أصبحت آمنة.", "GAME OVER — The monsters reached the final line.": "انتهت اللعبة — وصلت الوحوش إلى خط الدفاع الأخير.",
-  "FARM LOST": "خسرت المزرعة", "VICTORY!": "انتصار!", "PLAY AGAIN": "العب مجدداً", "RETRY": "إعادة المحاولة",
+  "FARM LOST": "خسرت المزرعة", "VICTORY!": "انتصار!", "PLAY AGAIN": "العب مجدداً", "RETRY": "إعادة المحاولة", "CAMPAIGN MAP": "خريطة المراحل",
   "All 5 waves cleared": "تم اجتياز الموجات الخمس", "The caveman is walking to the selected soil cell...": "رجل الكهف يتجه إلى خلية التربة المختارة...",
   "The caveman is back at his starting position.": "عاد رجل الكهف إلى نقطة انطلاقه.",
   "A new radish is planted. The caveman stops fighting; the plant defends again.": "تمت زراعة فجل جديد. يتوقف رجل الكهف عن القتال وتعود النبتة للدفاع."
