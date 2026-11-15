@@ -1118,3 +1118,81 @@ html[dir="rtl"] body { font-family: Tahoma, Arial, sans-serif; }
 .world-feature-panel button:hover,.world-task-list button:hover {
   transform:translateY(-2px);filter:brightness(1.1) saturate(1.12);
 }
+
+
+/* Glass finish pass: account, settings, catalogue and campaign detail surfaces. */
+.google-signin-button,.collection-back a,.stage-intro-card .info-nav a,
+.optional-account-entry .secondary-link,.info-nav a {
+  border:1px solid rgba(255,255,255,.56) !important;
+  border-radius:16px !important;
+  color:#fff !important;
+  text-shadow:0 1px 3px rgba(19,42,82,.45);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.52),0 9px 22px rgba(18,42,75,.2) !important;
+  backdrop-filter:blur(12px) saturate(150%);
+  -webkit-backdrop-filter:blur(12px) saturate(150%);
+}
+.google-signin-button {
+  background:linear-gradient(120deg,rgba(53,188,235,.72),rgba(139,101,232,.78)) !important;
+}
+.settings-row {
+  border:1px solid rgba(255,255,255,.38);
+  border-radius:16px;
+  padding:14px 16px;
+  margin:12px 0;
+  background:linear-gradient(125deg,rgba(53,188,235,.22),rgba(139,101,232,.2),rgba(66,201,107,.2));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 8px 18px rgba(18,42,75,.14);
+  backdrop-filter:blur(12px) saturate(145%);
+  -webkit-backdrop-filter:blur(12px) saturate(145%);
+}
+.settings-row input[type="range"] {
+  accent-color:#a7e84f;
+  cursor:pointer;
+  filter:drop-shadow(0 1px 3px rgba(18,42,75,.25));
+}
+.settings-row output {
+  min-width:48px;
+  padding:6px 9px;
+  border:1px solid rgba(255,255,255,.45);
+  border-radius:12px;
+  background:rgba(255,255,255,.18);
+  text-align:center;
+  font-weight:900;
+}
+.collection-art,.stage-art-placeholder,.stage-cast-thumb,.stage-card-thumb,.stage-intro-thumb {
+  border:1px solid rgba(255,255,255,.48) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.52),0 10px 22px rgba(18,42,75,.2) !important;
+  backdrop-filter:blur(8px) saturate(145%);
+}
+.collection-status,.stage-number,.stage-lock-label,.collection-meta span,
+.collection-summary span,.world-collection-stats span {
+  border:1px solid rgba(255,255,255,.42) !important;
+  border-radius:999px !important;
+  color:#fff !important;
+  background:linear-gradient(120deg,rgba(53,188,235,.48),rgba(139,101,232,.48)) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.35);
+  backdrop-filter:blur(8px);
+}
+.collection-card.is-active .collection-status,.stage-available .stage-lock-label {
+  background:linear-gradient(120deg,rgba(167,232,79,.76),rgba(66,201,107,.72)) !important;
+}
+.collection-card.is-locked .collection-status,.stage-locked .stage-lock-label {
+  background:linear-gradient(120deg,rgba(139,101,232,.62),rgba(75,91,164,.64)) !important;
+}
+.stage-briefing div:nth-child(1),.stage-briefing div:nth-child(2),.stage-briefing div:nth-child(3) {
+  border:1px solid rgba(255,255,255,.48) !important;
+  background:linear-gradient(145deg,rgba(255,113,133,.34),rgba(139,101,232,.3),rgba(53,188,235,.28)) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.42),0 9px 20px rgba(18,42,75,.16);
+  backdrop-filter:blur(12px) saturate(145%);
+}
+.account-or-divider span { color:rgba(255,255,255,.88) !important; }
+.account-form label { color:#fff !important; }
+.account-feedback,.account-security,.account-status,.guest-play-panel {
+  border:1px solid rgba(255,255,255,.4) !important;
+  border-radius:16px !important;
+  background:linear-gradient(135deg,rgba(53,188,235,.2),rgba(139,101,232,.22)) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.3);
+  backdrop-filter:blur(10px);
+}
+.info-nav a:hover,.google-signin-button:hover,.collection-back a:hover {
+  transform:translateY(-2px);filter:brightness(1.12) saturate(1.12);
+}
