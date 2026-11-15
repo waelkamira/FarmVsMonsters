@@ -2128,6 +2128,7 @@ export default class BattleScene extends Scene {
     this.recordCombatEvent("energy_spawned", { sourceCol: plant.col, sourceRow: plant.row, pickupId, amount });
     const token = this.add.container(plant.x, plant.y - 66).setDepth(35);
     token.combatPickupId = pickupId;
+    token.combatPickupConsumed = false;
     this.energyPickups.push(token);
     // Brief production feedback: show the energy amount, then clear it quickly.
     const amountLabel = this.add.text(plant.x, plant.y - 105, `+${amount}`, {
@@ -2170,7 +2171,8 @@ export default class BattleScene extends Scene {
     }).setOrigin(0.5);
     token.add([glow, miniature, sparkle]);
     miniature.on("pointerdown", () => {
-      if (!token.active || this.gameOver) return;
+      if (!token.active || token.combatPickupConsumed || this.gameOver) return;
+      token.combatPickupConsumed = true;
       this.collectingEnergyToken = true;
       const collection = collectEnergy(this.energy, amount);
       const collected = collection.collected;
