@@ -89,7 +89,7 @@ export default class BattleScene extends Scene {
       if (file.key === "radish-character") this.radishAssetFailed = true;
       if (file.key === "mushroom-character") this.mushroomAssetFailed = true;
       if (file.key.startsWith("farmer-")) this.farmerAssetFailed = true;
-      if (file.key.startsWith("hyena-")) this.hyenaAssetFailed = true;
+      if (["hyena-idle", "hyena-walk", "hyena-run", "hyena-bite"].includes(file.key)) this.hyenaAssetFailed = true;
       if (file.key.startsWith("sfx-")) {
         this.failedSoundAssets = this.failedSoundAssets || [];
         this.failedSoundAssets.push(file.key);
@@ -1840,19 +1840,24 @@ export default class BattleScene extends Scene {
   }
 
   createHyenaAnimations() {
-    const definitions = [
+    // These four authored sheets are the required monster artwork. Hit and
+    // death are optional single-pose sheets and must never disable the hyenas.
+    const requiredDefinitions = [
       ["hyena-idle", 4, 5, -1],
       ["hyena-walk", 9, 9, -1],
       ["hyena-run", 7, 10, -1],
-      ["hyena-bite", 6, 9, -1],
+      ["hyena-bite", 6, 9, -1]
+    ];
+    const optionalDefinitions = [
       ["hyena-hit", 3, 12, 0],
       ["hyena-death", 6, 8, 0]
     ];
 
     try {
-      if (this.hyenaAssetFailed) throw new Error("A hyena sprite sheet failed to load.");
+      if (this.hyenaAssetFailed) throw new Error("A required hyena sprite sheet failed to load.");
 
-      for (const [key, frameCount, frameRate, repeat] of definitions) {
+      for (const [key, frameCount, frameRate, repeat] of requiredDefinitions) {
+        if (!this.textures.exists(key)) throw new Error(`Missing required hyena sheet: ${key}.`);
         const texture = this.textures.get(key);
         const available = Object.keys(texture.frames).filter((name) => name !== "__BASE");
         if (available.length < frameCount) {
@@ -1867,9 +1872,24 @@ export default class BattleScene extends Scene {
         });
       }
 
+      for (const [key, expectedFrames, frameRate, repeat] of optionalDefinitions) {
+        if (!this.textures.exists(key)) continue;
+        const texture = this.textures.get(key);
+        const available = Object.keys(texture.frames).filter((name) => name !== "__BASE").length;
+        if (available < 1) continue;
+        const frameCount = Math.min(expectedFrames, available);
+        if (this.anims.exists(key)) this.anims.remove(key);
+        this.anims.create({
+          key,
+          frames: this.anims.generateFrameNumbers(key, { start: 0, end: frameCount - 1 }),
+          frameRate,
+          repeat
+        });
+      }
+
       return true;
     } catch (error) {
-      console.warn("Hyena animation assets unavailable; using fallback monster artwork.", error);
+      console.error("Required hyena artwork is unavailable; refusing to replace it with vector monsters.", error);
       this.hyenaAssetFailed = true;
       return false;
     }
@@ -1877,7 +1897,7 @@ export default class BattleScene extends Scene {
 
   playHyenaAnimation(monster, key, force = false) {
     const sprite = monster && monster.hyenaSprite;
-    if (!sprite || !sprite.active || !this.hyenaAnimationsReady) return;
+    if (!sprite || !sprite.active || !this.hyenaAnimationsReady || !this.anims.exists(key)) return;
     if (!force && monster.hitAnimUntil > this.time.now && key !== "hyena-hit") return;
     const currentKey = sprite.anims.currentAnim?.key;
     if (!force && currentKey === key && sprite.anims.isPlaying) return;
@@ -2011,11 +2031,11 @@ export default class BattleScene extends Scene {
       ? this.add.sprite(0, 0, "hyena-idle", 0).setOrigin(0.5, 1).setFlipX(true).setScale(0.918)
       : null;
     const tierTint = MONSTER_TIER_TINTS[archetype] ?? 0xffffff;
+    // Monster visuals must always use the authored hyena artwork. Never show
+    // the old programmatically drawn creature as a fallback.
+    g.setVisible(false);
+    view.add(g);
     if (hyenaSprite) {
-      // The original vector monster remains available as a fallback only.
-      // Tint the existing artwork in-place; no source sprites are modified.
-      g.setVisible(false);
-      view.add(g);
       view.add(hyenaSprite);
       hyenaSprite.setTint(tierTint);
       hyenaSprite.play("hyena-idle");
@@ -2025,8 +2045,6 @@ export default class BattleScene extends Scene {
           this.playHyenaAnimation(monsterRecord, "hyena-idle", true);
         }
       });
-    } else {
-      view.add(g);
     }
 
     // Stonehide raises a clearly visible shale ring while it braces over prey.
