@@ -79,3 +79,16 @@ Current row selection, burst/jump timings, and several cosmetic effects still us
 - Two concurrent completion requests produce one completion and one reward grant.
 - A defeat cannot unlock the next stage.
 - A replay using an old, expired, other-user, or different-contract session cannot grant currency.
+
+
+## First extracted simulation kernel (implemented)
+`web/game/rules/combatSimulation.mjs` now owns pure, renderer-independent resolution for:
+- planting validation (known plant type, valid 8×5 grid coordinate, unoccupied living cell, and sufficient energy);
+- authoritative plant record creation and exact energy deduction;
+- manual uproot validation and catalog-derived refund (rejects a modified/forged stored cost);
+- energy pickup cap calculation;
+- hit-point damage clamping and defeat detection.
+
+`BattleScene.js` now delegates planting, uprooting, monster bite damage, projectile damage, and dragon damage to these pure functions. The existing 8×5 grid, 35/50 planting costs, full manual refund behavior, 300 energy pickup cap, damage amounts, and 8-coin ordinary-monster reward remain unchanged.
+
+This is a first kernel extraction, not a complete simulation. Monster movement, target selection, collision geometry, projectile travel, wave scheduling, Dust Skitter gameplay randomness, dragon targeting, and victory/loss transitions still need to move into deterministic simulation functions. The client still owns the live battle and local reward display; cloud rewards remain disabled.
