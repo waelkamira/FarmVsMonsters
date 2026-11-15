@@ -71,3 +71,7 @@ The first renderer-independent simulation module, `web/game/rules/combatSimulati
 
 
 Lane movement progress: monster local-X stepping (including blocker stop clamping) and projectile local-X advancement now use pure functions in `combatSimulation.mjs`. Collision geometry, bite reach calculation, target selection, and jump/burst timing remain in the Phaser scene.
+
+
+
+Target selection has been extracted to pure functions for lane blockers, projectile hits, farmer melee, and dragon fireballs. The Phaser scene supplies current coordinates and dimensions; target decisions are reusable but still execute client-side. No server trust boundary has been enabled.
