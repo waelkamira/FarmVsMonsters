@@ -2015,9 +2015,38 @@ export default class BattleScene extends Scene {
       maxHp: hp,
       hitFlashGraphic: g, hitFlashTimer: null, hyenaSprite, hitAnimUntil: 0,
       attackCooldown: 0, alive: true, view, dustTimer: 0,
+      knockedPlants: new Set(),
       voiceCooldown: PhaserMath.Between(4200, 8500)
     };
     this.monsters.push(monsterRecord);
+  }
+
+  knockBackPlant(plant, monster) {
+    if (!plant?.alive || !plant.view?.active) return;
+
+    // A creature passing a plant jolts it away from the direction of travel.
+    // Keep its logical grid position unchanged; this is a short impact animation.
+    const view = plant.view;
+    const perspectiveGap = plant.row < LANES - 1
+      ? this.laneYs[plant.row + 1] - this.laneYs[plant.row]
+      : this.laneYs[plant.row] - this.laneYs[plant.row - 1];
+    const shove = PhaserMath.Clamp(perspectiveGap * 0.24, 9, 19);
+    this.tweens.add({
+      targets: view,
+      x: view.x + shove,
+      y: view.y - shove * 0.28,
+      angle: PhaserMath.Between(-9, 9),
+      scaleX: 1.08,
+      duration: 105,
+      ease: "Cubic.easeOut",
+      yoyo: true,
+      hold: 35,
+      onComplete: () => {
+        if (view.active) view.setAngle(0).setScale(1, view.scaleY);
+      }
+    });
+    plant.lastKnockbackAt = this.time.now;
+    this.playMonsterLandSound();
   }
 
   updateMonsters(dt, delta) {
@@ -2077,7 +2106,21 @@ export default class BattleScene extends Scene {
         }
       }
 
+      const previousLocalX = monster.localX;
       monster.localX -= movementSpeed * dt;
+
+      // Detect the exact moment a monster crosses a plant's lane position.
+      // This covers every plant type and avoids repeated impacts while it
+      // remains on the far side of the plant.
+      for (const plant of this.plants) {
+        if (!plant.alive || plant.row !== monster.row || monster.knockedPlants.has(plant)) continue;
+        const plantLocalX = this.worldToLane(plant).localX;
+        if (previousLocalX > plantLocalX && monster.localX <= plantLocalX) {
+          monster.knockedPlants.add(plant);
+          this.knockBackPlant(plant, monster);
+        }
+      }
+
       const position = this.monsterLanePoint(monster.localX, monster.row);
       monster.x = position.x; monster.y = position.y;
       monster.view.setPosition(position.x, position.y);
