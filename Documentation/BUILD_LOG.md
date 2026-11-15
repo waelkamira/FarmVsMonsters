@@ -726,3 +726,10 @@
 - Added a distinct illustrated emblem/logo requirement for each stage; Stage 1's emblem composition is farmer versus dragon, captive wife centered behind, small evil hyenas below, and defensive plants.
 - Updated the Phase 1 acceptance target so the first complete playable stage includes the dragon, automatic slingshot, rescue, reunion, and celebration.
 - Documentation only: these decisions are recorded in the plan/roadmap/story documents. Gameplay code has not yet been changed or browser-verified as part of this documentation update.
+
+
+## 2026-11-15 — Campaign monster-count progression approved
+- User approved 30 ordinary monsters total in Stage 1, 31 in Stage 2, 32 in Stage 3, then +1 ordinary monster for each subsequent stage (Stage N = 29 + N).
+- Counts are totals per campaign stage across its waves, not per-wave counts. Dragon bosses are tracked separately from ordinary monster/follower totals.
+- Stage 1 retains five waves; exact distribution of its 30 ordinary monsters across those waves will be tuned to keep the opening easy, readable, and fair.
+- The previous 100-monster first-stage schedule is obsolete and must be replaced in gameplay code and corresponding tests. No runtime code changed in this documentation update.
