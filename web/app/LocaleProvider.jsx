@@ -7,7 +7,7 @@ const translations = {
   "The tribe's garden is the last wall between the monsters and the cave home.": "حديقة القبيلة هي خط الدفاع الأخير بين الوحوش وموطن الكهف.",
   "Plant Radish defenders, grow Energy Mushrooms to collect resources, and protect the princess.": "ازرع الفجل المدافع، وأنمُ فطر الطاقة لجمع الموارد، واحمِ الأميرة.",
   "When the final radish falls, the caveman takes up his wooden club.": "عندما تسقط آخر نبتة فجل، يحمل رجل الكهف هراوته الخشبية.",
-  "Saved player balance": "رصيد اللاعب المحفوظ",
+  "Saved player balance": "رصيد اللاعب المحفوظ", "COINS": "عملة", "GAME PREFERENCES": "تفضيلات اللعبة", "Saved coins": "العملات المحفوظة",
   "New Game": "لعبة جديدة", "How to Play": "طريقة اللعب", "Settings": "الإعدادات", "Credits": "حقوق اللعبة",
   "5 WAVES": "٥ موجات", "100 MONSTERS": "١٠٠ وحش", "1 FARM TO DEFEND": "مزرعة واحدة للدفاع عنها",
   "A hand-drawn prehistoric world of roots, stone, timber, and wild creatures.": "عالم بدائي مرسوم يدوياً، مليء بالجذور والحجارة والأخشاب والمخلوقات البرية.",
@@ -40,7 +40,22 @@ const translations = {
   "Play Game": "العب", "Preparing the farm...": "جارٍ تجهيز المزرعة...",
   "Loading the battlefield and getting the tribe ready.": "جارٍ تحميل ساحة المعركة وتجهيز القبيلة.",
   "The battle could not be started": "تعذّر بدء المعركة", "The game engine failed to initialize.": "تعذّر تشغيل محرك اللعبة.",
-  "Retry": "إعادة المحاولة", "Back to Main Menu": "العودة إلى القائمة الرئيسية"
+  "Retry": "إعادة المحاولة", "Back to Main Menu": "العودة إلى القائمة الرئيسية",
+  "BATTLE PAUSED": "المعركة متوقفة مؤقتاً", "RESUME": "متابعة", "RESTART": "إعادة البدء", "SETTINGS": "الإعدادات", "MAIN MENU": "القائمة الرئيسية",
+  "ENERGY": "الطاقة", "HOME": "المزرعة", "RADISHES": "الفجل", "KILLS": "المهزومون", "WAVE": "الموجة", "DOWN": "هُزم", "LAST STAND": "المواجهة الأخيرة",
+  "Radish planted! The caveman is sprinting back behind the final line.": "تمت زراعة الفجل! رجل الكهف يركض عائداً إلى خط الدفاع الأخير.",
+  "Energy Mushroom planted! It will produce collectible energy.": "تمت زراعة فطر الطاقة! سينتج طاقة قابلة للجمع.",
+  "Plant uprooted. Its full energy cost was refunded; choose any empty soil cell to replant.": "تم اقتلاع النبتة وإعادة كامل تكلفتها من الطاقة. اختر خلية ترابية فارغة لإعادة الزراعة.",
+  "An energy mushroom has been eaten!": "الوحوش التهمت فطر الطاقة!", "A radish defender has fallen!": "سقط أحد نباتات الفجل المدافعة!",
+  "The radishes are alive and defending. The caveman cannot fight yet.": "نباتات الفجل ما زالت تدافع. لا يستطيع رجل الكهف القتال الآن.",
+  "Plant a radish first. The caveman's club is an emergency defense only.": "ازرع الفجل أولاً. هراوة رجل الكهف مخصصة للدفاع في حالات الطوارئ فقط.",
+  "Club hit!": "ضربة بالهراوة!", "No monster is close enough for the club.": "لا يوجد وحش قريب بما يكفي لضربه بالهراوة.",
+  "VICTORY! The farm is safe.": "انتصار! المزرعة أصبحت آمنة.", "GAME OVER — The monsters reached the final line.": "انتهت اللعبة — وصلت الوحوش إلى خط الدفاع الأخير.",
+  "FARM LOST": "خسرت المزرعة", "VICTORY!": "انتصار!", "PLAY AGAIN": "العب مجدداً", "RETRY": "إعادة المحاولة",
+  "All 5 waves cleared": "تم اجتياز الموجات الخمس", "The caveman is walking to the selected soil cell...": "رجل الكهف يتجه إلى خلية التربة المختارة...",
+  "The caveman is back at his starting position.": "عاد رجل الكهف إلى نقطة انطلاقه.",
+  "A new radish is planted. The caveman stops fighting; the plant defends again.": "تمت زراعة فجل جديد. يتوقف رجل الكهف عن القتال وتعود النبتة للدفاع."
+
 };
 
 export function translate(value, locale = "ar") {
