@@ -912,3 +912,6 @@
 - Added replay checks for live source mushroom, 12-second production cadence, deterministic per-plant pickup IDs, 15-energy denomination, 12-second expiry, single-use collection, and the 300-energy cap.
 - Added an active-combat clock that pauses across story sequences for consistent replay timestamps.
 - Expanded focused replay tests. Tests/build were not executed in this environment.
+
+
+Correction: completed BattleScene instrumentation for mushroom spawn, pickup IDs, collection and full-bank discard. Added an active combat clock that pauses during story sequences; replay uses the shared pickup TTL constant. Replay tests now include partial cap collection and discard.
