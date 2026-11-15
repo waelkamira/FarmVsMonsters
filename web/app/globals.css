@@ -1098,3 +1098,23 @@ html[dir="rtl"] body { font-family: Tahoma, Arial, sans-serif; }
   .primary-link,.secondary-link,.language-toggle,.game-retry-button,.account-submit,
   .world-play-button,.world-modal-primary,.world-modal-secondary,.world-icon-button {transition:none;}
 }
+
+
+/* Catch page-specific and dynamically rendered buttons not covered by named variants. */
+.info-card button,.stage-tile button,.collection-card button,
+.world-menu-modal button,.account-card button,.stages-card button,
+.world-feature-panel button,.world-task-list button {
+  border:1px solid rgba(255,255,255,.52);
+  border-radius:14px;
+  color:#fff;
+  text-shadow:0 1px 3px rgba(20,45,85,.48);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.48),0 7px 18px rgba(18,42,75,.2);
+  backdrop-filter:blur(10px) saturate(145%);
+  -webkit-backdrop-filter:blur(10px) saturate(145%);
+  transition:transform .18s ease,filter .18s ease;
+}
+.info-card button:hover,.stage-tile button:hover,.collection-card button:hover,
+.world-menu-modal button:hover,.account-card button:hover,.stages-card button:hover,
+.world-feature-panel button:hover,.world-task-list button:hover {
+  transform:translateY(-2px);filter:brightness(1.1) saturate(1.12);
+}
