@@ -164,7 +164,7 @@ export default class BattleScene extends Scene {
     this.totalDefeatedMonsters = 0;
     this.totalPlantsPlanted = 0;
     this.energyCollected = 0;
-    this.elapsedBattleMs = 0;
+    this.elapsedBattleMs = 0;\n    this.combatClockMs = 0;
     this.spawnTimer = PHASE_ONE_TIMING.firstMonsterSpawnDelayMs;
     this.waveIntermissionMs = 0;
     this.selectedPlant = null;
@@ -1932,7 +1932,7 @@ export default class BattleScene extends Scene {
 
   recordCombatEvent(type, payload) {
     this.combatEventLog = appendCombatEvent(this.combatEventLog, {
-      tick: Math.max(0, Math.floor(this.elapsedBattleMs)),
+      tick: Math.max(0, Math.floor(this.combatClockMs)),
       type,
       payload
     });
@@ -1964,7 +1964,7 @@ export default class BattleScene extends Scene {
       ...placement.plant,
       x, y,
       cooldown: PhaserMath.Between(250, 650),
-      productionTimer: type === "mushroom" ? config.productionInterval : undefined,
+      productionTimer: type === "mushroom" ? config.productionInterval : undefined,\n      productionCount: 0,
       view: type === "mushroom" ? this.drawEnergyMushroom(x, y, row) : this.drawRadish(x, y)
     };
     this.plants.push(plant);
@@ -2179,7 +2179,7 @@ export default class BattleScene extends Scene {
         if (farmerIsStationary && !actionInProgress) {
           this.playFarmerAction("farmer-collect");
         }
-        this.recordCombatEvent("energy_collected", { amount: collected });
+        this.recordCombatEvent("energy_collected", { pickupId: token.combatPickupId, amount: collected });
         this.energy = collection.energy;
         this.energyCollected += collected;
         this.playEnergyCollectSound();
