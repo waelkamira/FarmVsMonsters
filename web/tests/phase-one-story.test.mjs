@@ -20,6 +20,7 @@ test("the farmer automatically fires sling stones and the dragon has its own hea
   assert.match(scene, /this\.playFarmerAction\("farmer-sling"\)/);
   assert.match(scene, /this\.damageDragonBoss\(25\)/);
   assert.match(scene, /drawDragonHealthBar\(\)/);
+  assert.match(scene, /this\.princessActor\.setPosition\(boss\.sprite\.x \+ 78, boss\.sprite\.y \+ 96\)/);
 });
 
 test("dragon fireballs attack living plants or the farmhouse", () => {
