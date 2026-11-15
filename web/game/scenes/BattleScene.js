@@ -1257,10 +1257,11 @@ export default class BattleScene extends Scene {
       monster.view.setDepth(depthForY(monster.y));
     }
     if (this.caveman && this.caveman.active) {
-      // Keep the farmer behind plants in the same lane. Plant bases sort at
-      // y + 2, so sorting the farmer at y - 40 places his whole character
-      // behind the planted object instead of covering it.
-      this.caveman.setDepth(depthForY(this.caveman.y - 40));
+      // The farmer sprite uses origin (0.5, 1), so the container Y is the
+      // actual foot/ground contact point. Sort it against monsters using
+      // that same ground coordinate: farther up-screen renders behind,
+      // farther down-screen renders in front. Do not offset the farmer's Y.
+      this.caveman.setDepth(depthForY(this.caveman.y));
     }
   }
 
