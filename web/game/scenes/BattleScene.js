@@ -2952,8 +2952,8 @@ export default class BattleScene extends Scene {
       const minutes = Math.floor(elapsedSeconds / 60);
       const seconds = String(elapsedSeconds % 60).padStart(2, "0");
       const summary = locale === "ar"
-        ? ["الموجات المكتملة: " + this.totalWaves + " / 5", "الضباع المهزومة: " + this.totalDefeatedMonsters + " / " + this.totalSpawnedMonsters, "النباتات المزروعة: " + this.totalPlantsPlanted, "الوقت: " + minutes + ":" + seconds, "الطاقة المجموعة: " + this.energyCollected, "الطاقة المتبقية: " + this.energy, "العملات: " + this.coins].join("\\n")
-        : ["Waves cleared: " + this.totalWaves + " / 5", "Hyenas defeated: " + this.totalDefeatedMonsters + " / " + this.totalSpawnedMonsters, "Plants grown: " + this.totalPlantsPlanted, "Time: " + minutes + ":" + seconds, "Energy collected: " + this.energyCollected, "Energy remaining: " + this.energy, "Coins earned: " + this.coins].join("\\n");
+        ? ["الموجات المكتملة: " + this.totalWaves + " / 5", "الضباع المهزومة: " + this.totalDefeatedMonsters + " / " + this.totalSpawnedMonsters, "النباتات المزروعة: " + this.totalPlantsPlanted, "الوقت: " + minutes + ":" + seconds, "الطاقة المجموعة: " + this.energyCollected, "الطاقة المتبقية: " + this.energy, "العملات: " + this.coins].join("\n")
+        : ["Waves cleared: " + this.totalWaves + " / 5", "Hyenas defeated: " + this.totalDefeatedMonsters + " / " + this.totalSpawnedMonsters, "Plants grown: " + this.totalPlantsPlanted, "Time: " + minutes + ":" + seconds, "Energy collected: " + this.energyCollected, "Energy remaining: " + this.energy, "Coins earned: " + this.coins].join("\n");
       this.add.text(560, 425, summary, {
         fontFamily: "Georgia", fontSize: "16px", color: "#fff0c8",
         align: "center", lineSpacing: 3, fontStyle: "bold"
