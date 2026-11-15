@@ -770,3 +770,12 @@
 - Corrected the hyena bite animation to use authored frames 6–8 from the final row of `hyena-bite.png`, rather than incorrectly playing frames 0–5.
 - Kept the hyena's world position fixed while eating and preserved the looping bite animation; no character images or sprite dimensions were changed.
 - Added a regression assertion for the bite frame range. Automated test/build execution and in-browser visual verification are still pending.
+
+
+## 2026-11-15 — Eleven-world campaign map UI
+- Added `web/game/data/campaignWorlds.mjs` with the eleven original long-term campaign regions and their Arabic/English names, descriptions, visual themes, and ten planned mission slots per region.
+- Rebuilt `/stages` as a responsive glass-style world map with eleven region cards, ten mission nodes per region, and a clear legend for playable, unlocked-introduction, and locked/in-design states.
+- Only the existing Stage 1 battle is directly playable from the map. Stage 2's introduction link appears only when the existing progression save reports Stage 2 unlocked; its battle missions remain explicitly marked as not implemented.
+- Added a World Map entry to the main menu and links to the plant and monster catalogues.
+- This is a presentation/progression-map layer only. It does not add 110 playable missions, alter wave composition, or replace the approved primary campaign rules.
+- Validation: source files were written to `main` and read/write operations succeeded through GitHub. No npm test, production build, or browser visual check was run; the map still requires local runtime verification.
