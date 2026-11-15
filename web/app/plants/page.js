@@ -7,19 +7,6 @@ import { loadSavedCoins } from "../../game/rules/phaseOneRules.mjs";
 import { STAGE_ONE_PLANTS } from "../../game/data/stageOnePlants.mjs";
 import CatalogThumb from "../components/CatalogThumb";
 
-const icons = {
-  radish: "🥬",
-  "energy-mushroom": "🍄",
-  "pea-shooter": "🫛",
-  "thorn-wall": "🌵",
-  sunflower: "🌻",
-  "ice-bloom": "❄️",
-  "double-radish": "🌱",
-  "pumpkin-guard": "🎃",
-  "explosive-berry": "🫐",
-  "fire-pepper": "🌶️"
-};
-
 export default function PlantsPage() {
   const { locale } = useLocale();
   const ar = locale === "ar";
