@@ -3,7 +3,7 @@ const TWEMOJI = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72
 const ART = {
   radish: ["1f96c", "Radish greens"],
   "energy-mushroom": ["1f344", "Mushroom"],
-  "pea-shooter": ["1fad []", "Pea pod"],
+  "pea-shooter": ["1fadb", "Pea pod"],
   "thorn-wall": ["1f335", "Cactus"],
   sunflower: ["1f33b", "Sunflower"],
   "ice-bloom": ["2744", "Snowflake"],
