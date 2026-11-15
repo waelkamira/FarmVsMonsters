@@ -37,3 +37,37 @@ test("manual uprooting preserves full refund and unknown rules versions are reje
  assert.equal(replayCombatEventLog(log).state.energy,150);
  assert.equal(replayCombatEventLog({...log,rulesVersion:"future"}).reason,"RULES_VERSION_MISMATCH");
 });
+
+test("replay validates the five-wave monster roster, archetypes and exact combat stats", () => {
+ const log=makeLog([
+  ev(0,"monster_spawned",{monsterId:"monster-1",wave:1,spawnIndex:0,row:2,archetype:"cave-brute",hp:175,speed:8}),
+  ev(1000,"monster_spawned",{monsterId:"monster-2",wave:1,spawnIndex:1,row:1,archetype:"cave-brute",hp:175,speed:8}),
+  ev(2000,"monster_spawned",{monsterId:"monster-3",wave:1,spawnIndex:2,row:4,archetype:"cave-brute",hp:175,speed:8}),
+  ev(3000,"monster_spawned",{monsterId:"monster-4",wave:2,spawnIndex:0,row:0,archetype:"cave-brute",hp:175,speed:9.35})
+ ]);
+ const result=replayCombatEventLog(log); assert.equal(result.ok,true); assert.equal(result.state.monsters.length,4); assert.equal(result.state.currentWave,2); assert.equal(result.state.spawnedInWave,1);
+});
+test("rejects forged monster identity, wave order, archetype and health", () => {
+ const wrongId=makeLog([ev(0,"monster_spawned",{monsterId:"monster-9",wave:1,spawnIndex:0,row:1,archetype:"cave-brute",hp:175,speed:8})]);
+ assert.equal(replayCombatEventLog(wrongId).reason,"INVALID_MONSTER_WAVE_SEQUENCE");
+ const wrongType=makeLog([ev(0,"monster_spawned",{monsterId:"monster-1",wave:1,spawnIndex:0,row:1,archetype:"stonehide",hp:175,speed:8})]);
+ assert.equal(replayCombatEventLog(wrongType).reason,"INVALID_MONSTER_ARCHETYPE");
+ const wrongStats=makeLog([ev(0,"monster_spawned",{monsterId:"monster-1",wave:1,spawnIndex:0,row:1,archetype:"cave-brute",hp:1,speed:8})]);
+ assert.equal(replayCombatEventLog(wrongStats).reason,"MONSTER_STATS_MISMATCH");
+});
+test("replay applies monster bites only to living radishes and respects attack intervals", () => {
+ const log=makeLog([
+  ev(0,"plant_placed",{type:"radish",col:2,row:1}),
+  ev(100,"monster_spawned",{monsterId:"monster-1",wave:1,spawnIndex:0,row:1,archetype:"cave-brute",hp:175,speed:8}),
+  ev(200,"monster_bite",{monsterId:"monster-1",plantCol:2,plantRow:1,damage:16}),
+  ev(1000,"monster_bite",{monsterId:"monster-1",plantCol:2,plantRow:1,damage:16})
+ ]);
+ assert.equal(replayCombatEventLog(log).reason,"MONSTER_BITE_TOO_EARLY");
+ const valid=makeLog([
+  ev(0,"plant_placed",{type:"radish",col:2,row:1}),
+  ev(100,"monster_spawned",{monsterId:"monster-1",wave:1,spawnIndex:0,row:1,archetype:"cave-brute",hp:175,speed:8}),
+  ev(200,"monster_bite",{monsterId:"monster-1",plantCol:2,plantRow:1,damage:16}),
+  ev(1350,"monster_bite",{monsterId:"monster-1",plantCol:2,plantRow:1,damage:16})
+ ]);
+ const result=replayCombatEventLog(valid); assert.equal(result.ok,true); assert.equal(result.state.plants[0].hp,128);
+});
