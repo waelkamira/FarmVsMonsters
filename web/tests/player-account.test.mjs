@@ -32,22 +32,27 @@ test("account sessions use HttpOnly cookies and never expose a service-role key"
   assert.doesNotMatch(accountRoute, /SUPABASE_SERVICE_ROLE_KEY/);
 });
 
-test("cloud progress is isolated to the authenticated player with row-level security", () => {
+test("cloud progress is read-only for clients until trusted game results exist", () => {
   assert.match(migration, /enable row level security/i);
   assert.match(migration, /auth\.uid\(\) = user_id/);
   assert.match(progressRoute, /authenticatedUser/);
-  assert.match(progressRoute, /on_conflict=user_id/);
   assert.match(progressRoute, /unlocked_stage/);
   assert.match(progressRoute, /completed_stages/);
+  assert.match(progressRoute, /coins_verified/);
+  assert.match(progressRoute, /status: 410/);
+  assert.doesNotMatch(progressRoute, /resolution=merge-duplicates/);
 });
 
-test("signing in restores remote progress and campaign victory syncs it back", () => {
-  assert.match(client, /applyRemotePlayerProgress/);
+test("local saves remain active and client balances are never uploaded to cloud", () => {
+  const lockdown = readFileSync(resolve(here, "../supabase/migrations/004_lock_unverified_player_progress.sql"), "utf8");
+  assert.match(lockdown, /revoke insert, update on public\.player_progress from anon, authenticated/i);
+  assert.match(lockdown, /coins_verified boolean not null default false/i);
+  assert.match(lockdown, /COIN_BALANCE_NOT_VERIFIED/);
   assert.match(client, /restoreOrInitializeCloudProgress/);
-  assert.match(client, /Math\.max\(local\.unlockedStage/);
-  assert.match(client, /cloudIsBehind/);
-  assert.match(client, /syncPlayerProgress/);
-  assert.match(battle, /syncPlayerProgress\(\)/);
+  assert.match(client, /coins_verified === true/);
+  assert.match(client, /Do not initialize a cloud row from browser-controlled local values/);
+  assert.match(client, /Browser-reported wins and balances are not authoritative/);
+  assert.doesNotMatch(battle, /syncPlayerProgress/);
 });
 
 test("menus and account controls use high-contrast text and visible focus states", () => {
