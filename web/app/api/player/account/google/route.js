@@ -21,7 +21,7 @@ export async function GET(request) {
   const state = randomBytes(32).toString("base64url");
   const verifier = randomBytes(48).toString("base64url");
   const challenge = createHash("sha256").update(verifier).digest("base64url");
-  const callbackUrl = new URL("/api/player/account/google/callback", request.url).toString();
+  const callback = new URL("/api/player/account/google/callback", request.url);\n  callback.searchParams.set("state", state);\n  const callbackUrl = callback.toString();
   const authorizeUrl = new URL(config.url + "/auth/v1/authorize");
   authorizeUrl.searchParams.set("provider", "google");
   authorizeUrl.searchParams.set("redirect_to", callbackUrl);
