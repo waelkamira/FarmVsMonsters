@@ -43,8 +43,8 @@ test("cloud progress is isolated to the authenticated player with row-level secu
 test("signing in restores remote progress and campaign victory syncs it back", () => {
   assert.match(client, /applyRemotePlayerProgress/);
   assert.match(client, /restoreOrInitializeCloudProgress/);
-  assert.match(client, /syncProgressAfterVictory/);
-  assert.match(battle, /syncProgressAfterVictory\(\)/);
+  assert.match(client, /syncPlayerProgress/);
+  assert.match(battle, /syncPlayerProgress\(\)/);
 });
 
 test("menus and account controls use high-contrast text and visible focus states", () => {
