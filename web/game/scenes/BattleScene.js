@@ -2146,7 +2146,8 @@ export default class BattleScene extends Scene {
           blocker.hp -= monster.plantDamage; monster.attackCooldown = monster.attackInterval;
           this.playMonsterBiteSound();
           this.flashEatenPlant(blocker);
-          this.tweens.add({ targets: monster.view, x: monster.view.x - 4, scaleY: monster.view.scaleY * 0.94, duration: 85, yoyo: true });
+          // Keep the hyena at a constant size while chewing; only add a tiny horizontal recoil.
+          this.tweens.add({ targets: monster.view, x: monster.view.x - 4, duration: 85, yoyo: true });
           if (blocker.hp <= 0) this.destroyPlant(blocker);
         }
         continue;
