@@ -92,7 +92,16 @@ export default class BattleScene extends Scene {
 
   create() {
     this.isPaused = false;
-    this.languageChangeHandler = () => { this.refreshHud(); if (this.lastMessage) this.setMessage(this.lastMessage); };
+    this.languageChangeHandler = () => {
+      this.refreshHud();
+      if (this.lastMessage) this.setMessage(this.lastMessage);
+      const refreshLocalized = (items) => items.forEach((item) => {
+        const key = item?.getData?.("localeKey");
+        if (key && item.setText) item.setText(translate(key, window.localStorage.getItem("farmVsMonsters.language") || "ar"));
+        if (item?.list) refreshLocalized(item.list);
+      });
+      refreshLocalized(this.children.list);
+    };
     window.addEventListener("farm-language-change", this.languageChangeHandler);
     this.events.once("shutdown", () => window.removeEventListener("farm-language-change", this.languageChangeHandler));
     this.energy = INITIAL_ENERGY;
