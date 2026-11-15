@@ -1952,7 +1952,7 @@ export default class BattleScene extends Scene {
 
     let monsterRecord = null;
     const hyenaSprite = this.hyenaAnimationsReady
-      ? this.add.sprite(0, 0, "hyena-idle", 0).setOrigin(0.5, 1).setFlipX(true).setScale(1.02)
+      ? this.add.sprite(0, 0, "hyena-idle", 0).setOrigin(0.5, 1).setFlipX(true).setScale(0.918)
       : null;
     if (hyenaSprite) {
       // The original vector monster remains available as a fallback only.
