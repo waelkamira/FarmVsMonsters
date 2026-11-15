@@ -14,7 +14,7 @@ const home = readFileSync(resolve(here, "../app/page.js"), "utf8");
 const stages = readFileSync(resolve(here, "../app/stages/page.js"), "utf8");
 const battle = readFileSync(resolve(here, "../game/scenes/BattleScene.js"), "utf8");
 const styles = readFileSync(resolve(here, "../app/globals.css"), "utf8");
-const accountRoute = readFileSync(resolve(here, "../app/api/player/account/route.js"), "utf8");
+
 
 test("player account screen provides sign-in and account creation", () => {
   assert.match(accountPage, /signInPlayer/);
