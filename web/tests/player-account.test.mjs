@@ -39,6 +39,7 @@ test("cloud progress is read-only for clients until trusted game results exist",
   assert.match(progressRoute, /unlocked_stage/);
   assert.match(progressRoute, /completed_stages/);
   assert.match(progressRoute, /coins_verified/);
+  assert.match(progressRoute, /progress_verified/);
   assert.match(progressRoute, /status: 410/);
   assert.doesNotMatch(progressRoute, /resolution=merge-duplicates/);
 });
@@ -47,8 +48,11 @@ test("local saves remain active and client balances are never uploaded to cloud"
   const lockdown = readFileSync(resolve(here, "../supabase/migrations/004_lock_unverified_player_progress.sql"), "utf8");
   assert.match(lockdown, /revoke insert, update on public\.player_progress from anon, authenticated/i);
   assert.match(lockdown, /coins_verified boolean not null default false/i);
+  assert.match(lockdown, /progress_verified boolean not null default false/i);
   assert.match(lockdown, /COIN_BALANCE_NOT_VERIFIED/);
   assert.match(client, /restoreOrInitializeCloudProgress/);
+  assert.match(client, /progress_verified !== true/);
+  assert.match(client, /cloud-progress-unverified/);
   assert.match(client, /coins_verified === true/);
   assert.match(client, /Do not initialize a cloud row from browser-controlled local values/);
   assert.match(client, /coins_verified === true/);
