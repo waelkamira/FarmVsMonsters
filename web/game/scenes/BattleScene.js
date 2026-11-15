@@ -48,18 +48,18 @@ export default class BattleScene extends Scene {
     this.load.image("radish-character", "/assets/plants/radish.png");
     this.load.image("mushroom-character", "/assets/plants/mushroom.png");
     this.load.spritesheet("gold-coin", "/assets/items/currency/gold-coin.png", { frameWidth: 170, frameHeight: 170 });
-    this.load.spritesheet("farmer-run", "/assets/characters/farmer/farmer-run.png", { frameWidth: 180, frameHeight: 720 });
-    this.load.spritesheet("farmer-walk", "/assets/characters/farmer/farmer-walk.png", { frameWidth: 270, frameHeight: 360 });
+    this.load.spritesheet("farmer-run", "/assets/characters/farmer/farmer-run.png", { frameWidth: 360, frameHeight: 430 });
+    this.load.spritesheet("farmer-walk", "/assets/characters/farmer/farmer-walk.png", { frameWidth: 360, frameHeight: 430 });
     this.load.spritesheet("farmer-jump", "/assets/characters/farmer/farmer-jump.png", { frameWidth: 216, frameHeight: 720 });
     this.load.spritesheet("farmer-idle", "/assets/characters/farmer/farmer-idle.png", { frameWidth: 540, frameHeight: 360 });
     this.load.spritesheet("farmer-plant", "/assets/characters/farmer/farmer-plant.png", {
-      frameWidth: 180,
-      frameHeight: 360,
+      frameWidth: 360,
+      frameHeight: 430,
       margin: 0,
       spacing: 0
     });
     this.load.spritesheet("farmer-collect", "/assets/characters/farmer/farmer-collect.png", { frameWidth: 180, frameHeight: 360 });
-    this.load.spritesheet("farmer-uproot", "/assets/characters/farmer/farmer-uproot.png", { frameWidth: 180, frameHeight: 360 });
+    this.load.spritesheet("farmer-uproot", "/assets/characters/farmer/farmer-uproot.png", { frameWidth: 360, frameHeight: 430 });
     this.load.spritesheet("farmer-attack", "/assets/characters/farmer/farmer-attack.png", { frameWidth: 180, frameHeight: 360 });
     this.load.spritesheet("farmer-hit", "/assets/characters/farmer/farmer-hit.png", { frameWidth: 152, frameHeight: 430 });
     this.load.spritesheet("farmer-death", "/assets/characters/farmer/farmer-death.png", { frameWidth: 152, frameHeight: 430 });
@@ -666,8 +666,7 @@ export default class BattleScene extends Scene {
     const definitions = [
       ["farmer-idle", "farmer-idle", 4, 1.5, -1],
       ["farmer-run", "farmer-run", 6, 8, -1],
-      // The 1080×720 walk sheet is a 2×2 grid of 270×360 cells: four frames.
-      ["farmer-walk", "farmer-walk", 4, 6, -1],
+      ["farmer-walk", "farmer-walk", 8, 6, -1],
       ["farmer-jump", "farmer-jump", 5, 6, 0],
       ["farmer-plant", "farmer-plant", 6, 8, 0],
       ["farmer-uproot", "farmer-uproot", 6, 8, 0],
