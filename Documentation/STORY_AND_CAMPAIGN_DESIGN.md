@@ -23,9 +23,9 @@ The wife may be presented visually as a princess or royal heroine if that suits 
 Each stage is a complete rescue story with a beginning, escalation, climax, and resolution.
 
 1. **Dragon's introduction:** Establish the new territory and show its dragon, its monster followers, and the captive wife held behind the enemy front. The player should immediately understand who the captor is and whom they are trying to rescue.
-2. **Monster assault:** The farmer builds a defense using the plants available in that territory. The dragon's army attacks in escalating waves.
-3. **Dragon intervention:** The dragon enters or actively threatens the battlefield. Its signature ability—such as a fire breath—creates a new tactical problem for both the farmer and the plants. Its movement and attacks must be clearly telegraphed and fair.
-4. **Boss climax:** The player defeats the dragon as well as clearing its remaining monster followers. A stage is not won merely by surviving ordinary waves while the dragon remains undefeated.
+2. **Monster assault:** The farmer defends using the starter plants available in the first stage. The waves begin gently and increase in pressure gradually; early enemies are few, slow, and easy to understand. Do not overwhelm a new player before they learn the controls and plant roles.
+3. **Dragon intervention:** In Stage 1, the small ordinary dragon begins appearing at the start of the final wave (Wave 5 in the current structure), while a few hyenas/ordinary followers may still remain. It moves left and right behind the battlefield and launches clearly telegraphed fireballs toward plants and the farm. Followers continue fighting during the dragon's arrival.
+4. **Boss climax:** Once all ordinary followers have been defeated, the dragon remains alone as the final boss. The farmer automatically fires stones from his slingshot when the dragon is within range; this requires no player clicking and does not happen before the dragon appears. The dragon and all required followers must be defeated before victory.
 5. **Rescue:** The dragon is defeated, the wife's restraints are released, and the farmer reunites with her. This is a distinct victory beat, not an instantly skipped transition.
 6. **Reward and celebration:** Present the stage result and earned reward. Preserve the approved treasure-cave ritual: the farmer carries the stage's gold to the cave, opens it with “Open Sesame” / «افتح يا سمسم», and deposits the reward exactly once.
 7. **Breathing room:** Let the player enjoy the rescue and victory before the next threat is introduced.
@@ -60,7 +60,9 @@ The exact way the dragon damages the battlefield, how its boss health is display
 
 The campaign is organized into themed territories. A territory may contain one or more stages; the number of stages per territory is not fixed by this story document.
 
-Every new stage must offer meaningful changes rather than simply increasing enemy health:
+Every new stage must offer meaningful changes rather than simply increasing enemy health. Difficulty must climb in small, fair steps across the campaign; teach each new mechanic before testing it under pressure. The first stage must be forgiving enough to make a new player want to continue, not punish them with an immediate swarm. Do not add new plant types until the battlefield environment, stage composition, buttons/controls, and menus are finalized; introduce additional plants gradually afterward.
+
+Every stage must also have its own distinctive illustrated logo/emblem that communicates its characters and conflict. Stage 1's emblem should feature the farmer facing the dragon, the captive wife centered behind them, small evil hyenas below, and a few defensive plants.
 
 - A distinct territory, battlefield background, atmosphere, and environmental identity.
 - A different dragon design, personality, attack pattern, and boss behavior.
@@ -95,9 +97,9 @@ The previously approved treasure-cave feature remains part of the post-stage cel
 
 ## 8. Production boundaries
 
-- The current first battle remains the immediate implementation priority. Do not interrupt Phase 1 to build the full campaign, dragon roster, new territories, or rescue cinematics.
-- Treat the current five waves / 100 monsters as the first battle's existing wave structure, not as five campaign stages.
-- Design the first stage as the smallest complete proof of the approved story: one territory, its monster force, one dragon boss, one captive-wife presentation, and a clear rescue ending. Implement these only after the existing Phase 1 battle foundation is stable and its scope is deliberately extended.
+- The current first battle remains the immediate implementation priority, but Stage 1's dragon and rescue are part of completing this first playable stage—not deferred campaign extras.
+- Keep the current five-wave structure for now, but the existing 100-monster count is too difficult and is not a fixed requirement. Rebalance it downward through playtesting.
+- Stage 1 is the smallest complete proof of the story: one territory, its monster force, one small ordinary dragon, the captive wife, automatic slingshot counterplay, and a clear rescue ending.
 - The user's original art assets remain authoritative. Do not crop, recolor, resize, replace, or generate final character/background assets without an explicit request.
 - Preserve all fixed gameplay constraints in the master plan, including no shadows beneath characters, the plant/monster lane rules, and exact-once reward accounting.
 
