@@ -149,6 +149,12 @@ test("Phaser delegates monster and projectile lane movement to the simulation ke
   assert.match(scene, /selectFarmerMeleeTarget\(/);
   assert.match(scene, /selectDragonFireballTarget\(/);
   assert.match(scene, /targetPlant\.hp = applyHitPointsDamage\(/);
+  assert.match(scene, /monster\.attackCooldown = advanceCooldown\(/);
+  assert.match(scene, /boss\.shotCooldown = advanceCooldown\(/);
+  assert.match(scene, /boss\.attackCooldown = advanceCooldown\(/);
+  assert.match(scene, /plant\.cooldown = advanceCooldown\(/);
+  assert.match(scene, /resolveDustSkitterMotionStep\(/);
+  assert.match(scene, /resolveBiteAttack\(/);
 });
 
 test("lane blocker selection chooses the nearest living radish behind the monster", () => {
