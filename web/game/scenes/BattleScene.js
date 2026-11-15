@@ -911,7 +911,7 @@ export default class BattleScene extends Scene {
     if (boss.sprite?.active && this.princessActor?.active) {
       this.princessActor.setPosition(boss.sprite.x + 78, boss.sprite.y + 96);
     }
-    boss.shotCooldown -= delta;
+    boss.shotCooldown = advanceCooldown(boss.shotCooldown, delta);
     if (boss.shotCooldown <= 0) {
       boss.shotCooldown = PHASE_ONE_DRAGON.farmerSlingIntervalMs;
       if (this.anims.exists("farmer-sling") && this.cavemanVisual?.active) {
@@ -934,7 +934,7 @@ export default class BattleScene extends Scene {
       });
     }
 
-    boss.attackCooldown -= delta;
+    boss.attackCooldown = advanceCooldown(boss.attackCooldown, delta);
     if (boss.attackCooldown <= 0) {
       boss.attackCooldown = PHASE_ONE_DRAGON.attackIntervalMs;
       const targetPlant = selectDragonFireballTarget(this.plants);
@@ -2075,7 +2075,7 @@ export default class BattleScene extends Scene {
         }
         continue;
       }
-      plant.cooldown -= delta;
+      plant.cooldown = advanceCooldown(plant.cooldown, delta);
       if (plant.cooldown > 0) continue;
       const plantLaneX = this.worldToLane(plant).localX;
       const target = this.monsters.filter((m) => m.alive && m.row === plant.row && m.localX > plantLaneX && m.localX - plantLaneX <= RADISH_CONFIG.range)
