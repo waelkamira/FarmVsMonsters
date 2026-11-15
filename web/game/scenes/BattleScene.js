@@ -69,7 +69,6 @@ export default class BattleScene extends Scene {
     this.load.spritesheet("hyena-idle", "/assets/characters/monsters/hyena/hyena-idle.png", { frameWidth: 540, frameHeight: 447 });
     this.load.spritesheet("hyena-walk", "/assets/characters/monsters/hyena/hyena-walk.png", { frameWidth: 360, frameHeight: 298 });
     this.load.spritesheet("hyena-run", "/assets/characters/monsters/hyena/hyena-run.png", { frameWidth: 367, frameHeight: 298 });
-    this.load.image("hyena-jump", "/assets/characters/monsters/hyena/hyena-jump.png");
     this.load.spritesheet("hyena-bite", "/assets/characters/monsters/hyena/hyena-bite.png", { frameWidth: 360, frameHeight: 447 });
     this.load.spritesheet("hyena-hit", "/assets/characters/monsters/hyena/hyena-hit.png", { frameWidth: 360, frameHeight: 894 });
     this.load.spritesheet("hyena-death", "/assets/characters/monsters/hyena/hyena-death.png", { frameWidth: 360, frameHeight: 447 });
@@ -1750,21 +1749,6 @@ export default class BattleScene extends Scene {
     try {
       if (this.hyenaAssetFailed) throw new Error("A hyena sprite sheet failed to load.");
 
-      // The jump artwork has five frames on the first row and three on the
-      // second. Add individual source rectangles instead of forcing a false
-      // uniform grid and clipping the artwork.
-      const jumpTexture = this.textures.get("hyena-jump");
-      const jumpFrames = [
-        // The five upper poses extend below the old 447px row boundary.
-        // Give them the full upper band so their feet are not clipped.
-        ...Array.from({ length: 5 }, (_, i) => ({ x: i * 216, y: 0, width: 216, height: 596 })),
-        // The three lower poses occupy the remaining 298px band.
-        ...Array.from({ length: 3 }, (_, i) => ({ x: i * 360, y: 596, width: 360, height: 298 }))
-      ];
-      jumpFrames.forEach((frame, index) => {
-        jumpTexture.add(String(index), 0, frame.x, frame.y, frame.width, frame.height);
-      });
-
       for (const [key, frameCount, frameRate, repeat] of definitions) {
         const texture = this.textures.get(key);
         const available = Object.keys(texture.frames).filter((name) => name !== "__BASE");
@@ -1780,13 +1764,6 @@ export default class BattleScene extends Scene {
         });
       }
 
-      if (this.anims.exists("hyena-jump")) this.anims.remove("hyena-jump");
-      this.anims.create({
-        key: "hyena-jump",
-        frames: jumpFrames.map((_, index) => ({ key: "hyena-jump", frame: String(index) })),
-        frameRate: 10,
-        repeat: 0
-      });
       return true;
     } catch (error) {
       console.warn("Hyena animation assets unavailable; using fallback monster artwork.", error);
@@ -1972,12 +1949,6 @@ export default class BattleScene extends Scene {
       // The skitter alternates normal movement with short, readable bursts.
       burstCooldown: archetype === "dust-skitter" ? PhaserMath.Between(1500, 2300) : 0,
       burstRemaining: 0,
-      // Only the agile Dust Skitters perform short hops; other monsters keep
-      // their grounded movement. The hop is visual and never skips a plant.
-      jumpCooldown: archetype === "dust-skitter" ? PhaserMath.Between(1100, 2600) : 0,
-      jumpDuration: 560,
-      jumpElapsed: 0,
-      isJumping: false,
       braced: false,
       braceCue,
       maxHp: hp,
@@ -2006,13 +1977,6 @@ export default class BattleScene extends Scene {
       }
 
       if (withinBiteRange) {
-        // A skitter must land before it can stop to bite a defensive plant.
-        if (monster.isJumping) this.playMonsterLandSound();
-        monster.isJumping = false;
-        monster.jumpElapsed = 0;
-        // If the skitter reaches a plant mid-hop, settle it onto the lane
-        // before entering its stationary bite state.
-        monster.view.setPosition(monster.x, monster.y);
         if (monster.attackCooldown <= 0) {
           this.playHyenaAnimation(monster, "hyena-bite", true);
           blocker.hp -= monster.plantDamage; monster.attackCooldown = monster.attackInterval;
@@ -2030,30 +1994,7 @@ export default class BattleScene extends Scene {
       }
 
       let movementSpeed = monster.speed;
-      let jumpOffset = 0;
       if (monster.kind === "dust-skitter") {
-        monster.jumpCooldown -= delta;
-        if (!monster.isJumping && monster.jumpCooldown <= 0) {
-          monster.isJumping = true;
-          monster.jumpElapsed = 0;
-          monster.jumpDuration = PhaserMath.Between(480, 620);
-          this.playMonsterJumpSound();
-          this.createFootstepDust(monster.x - 8, monster.y + 3, monster.view.scaleY);
-        }
-        if (monster.isJumping) {
-          monster.jumpElapsed += delta;
-          const progress = PhaserMath.Clamp(monster.jumpElapsed / monster.jumpDuration, 0, 1);
-          jumpOffset = -Math.sin(progress * Math.PI) * 34 * monster.view.scaleY;
-          movementSpeed *= 1.12;
-          if (progress >= 1) {
-            monster.isJumping = false;
-            monster.jumpElapsed = 0;
-            monster.jumpCooldown = PhaserMath.Between(2100, 3400);
-            this.playMonsterLandSound();
-            this.createFootstepDust(monster.x + 8, monster.y + 3, monster.view.scaleY);
-            jumpOffset = 0;
-          }
-        }
         monster.burstCooldown -= delta;
         if (monster.burstCooldown <= 0 && monster.burstRemaining <= 0) {
           monster.burstRemaining = 420;
@@ -2070,15 +2011,11 @@ export default class BattleScene extends Scene {
       monster.localX -= movementSpeed * dt;
       const position = this.monsterLanePoint(monster.localX, monster.row);
       monster.x = position.x; monster.y = position.y;
-      // Lift the creature while keeping its shadow pinned to the ground lane.
-      // Jumping does not grant collision immunity or let it pass through plants.
-      monster.view.setPosition(position.x, position.y + jumpOffset);
+      monster.view.setPosition(position.x, position.y);
       if (monster.hyenaSprite && monster.hitAnimUntil <= this.time.now) {
-        const movementAnimation = monster.isJumping
-          ? "hyena-jump"
-          : monster.kind === "dust-skitter" && monster.burstRemaining > 0
-            ? "hyena-run"
-            : "hyena-walk";
+        const movementAnimation = monster.kind === "dust-skitter" && monster.burstRemaining > 0
+          ? "hyena-run"
+          : "hyena-walk";
         this.playHyenaAnimation(monster, movementAnimation);
       }
       monster.dustTimer -= dt * 1000;
