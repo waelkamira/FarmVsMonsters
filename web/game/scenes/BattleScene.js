@@ -2609,6 +2609,7 @@ export default class BattleScene extends Scene {
     }
 
     monsterRecord = {
+      combatId: `monster-${this.totalSpawnedMonsters + 1}`,
       kind: archetype,
       row, x: spawn.x, y: spawn.y, localX: SPAWN_LOCAL_X, hp,
       widthScale: profile.widthScale,
@@ -2637,6 +2638,10 @@ export default class BattleScene extends Scene {
       voiceCooldown: PhaserMath.Between(4200, 8500)
     };
     this.monsters.push(monsterRecord);
+    this.recordCombatEvent("monster_spawned", {
+      monsterId: monsterRecord.combatId, wave: this.wave, spawnIndex, row, archetype,
+      hp, speed
+    });
   }
 
   knockBackPlant(plant, monster) {
@@ -2736,6 +2741,10 @@ export default class BattleScene extends Scene {
         });
         monster.attackCooldown = bite.cooldownMs;
         if (bite.shouldAttack) {
+          this.recordCombatEvent("monster_bite", {
+            monsterId: monster.combatId, plantCol: blocker.col, plantRow: blocker.row,
+            damage: monster.plantDamage
+          });
           blocker.hp = applyHitPointsDamage(blocker.hp, monster.plantDamage).hp;
           this.playMonsterBiteSound();
           this.flashEatenPlant(blocker);
