@@ -78,7 +78,7 @@ const translations = {
 
 export function translate(value, locale = "ar") {
   if (locale !== "ar" || typeof value !== "string") return value;
-  if (/^\\d+ ENERGY$/.test(value)) return value.replace(" ENERGY", " طاقة");
+  if (value.endsWith(" ENERGY") && Number.isFinite(Number(value.slice(0, -7)))) return value.slice(0, -7) + " طاقة";
   if (value.startsWith("Collected ") && value.endsWith(" mushroom energy!")) {
     return "جمعت " + value.slice(10, -" mushroom energy!".length) + " من طاقة الفطر!";
   }
