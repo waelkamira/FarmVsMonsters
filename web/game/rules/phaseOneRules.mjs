@@ -121,3 +121,35 @@ export function purchasePlant({ coins, plantId, price, unlockedPlantIds = [] } =
     unlockedPlantIds: [...unlockedPlantIds, id]
   };
 }
+
+
+export const CAMPAIGN_PROGRESS_KEY = "farmVsMonsters.campaignProgress.v1";
+
+export function loadUnlockedStage(storage) {
+  if (!storage || typeof storage.getItem !== "function") return 1;
+  try {
+    const raw = storage.getItem(CAMPAIGN_PROGRESS_KEY);
+    if (!raw) return 1;
+    const data = JSON.parse(raw);
+    if (!data || data.version !== 1 || !Number.isInteger(data.unlockedStage)) return 1;
+    return Math.min(CAMPAIGN_STAGE_COUNT, Math.max(1, data.unlockedStage));
+  } catch {
+    return 1;
+  }
+}
+
+export function unlockNextStage(storage, completedStage) {
+  if (!storage || typeof storage.getItem !== "function" || typeof storage.setItem !== "function") return false;
+  if (!Number.isInteger(completedStage) || completedStage < 1 || completedStage > CAMPAIGN_STAGE_COUNT) return false;
+  const unlockedStage = Math.min(CAMPAIGN_STAGE_COUNT, Math.max(loadUnlockedStage(storage), completedStage + 1));
+  try {
+    storage.setItem(CAMPAIGN_PROGRESS_KEY, JSON.stringify({
+      version: 1,
+      unlockedStage,
+      completedStages: Array.from({ length: unlockedStage - 1 }, (_, index) => index + 1)
+    }));
+    return true;
+  } catch {
+    return false;
+  }
+}
