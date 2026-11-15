@@ -2580,10 +2580,11 @@ export default class BattleScene extends Scene {
           monster.voiceCooldown = PhaserMath.Between(6500, 12500);
         }
       }
-      // Every living plant blocks the hyena in its lane, not only radishes.
-      // The nearest plant ahead is the next target to eat.
+      // Only living Radish defenders block a monster's lane.
+      // Energy Mushrooms are resource producers, not defensive targets:
+      // monsters pass them and continue toward the next Radish or the farm.
       const blocker = this.plants
-        .filter((p) => p.alive && p.row === monster.row && this.worldToLane(p).localX < monster.localX)
+        .filter((p) => p.alive && p.type === "radish" && p.row === monster.row && this.worldToLane(p).localX < monster.localX)
         .sort((a, b) => this.worldToLane(b).localX - this.worldToLane(a).localX)[0];
       const blockerLocalX = blocker ? this.worldToLane(blocker).localX : -Infinity;
       // Calculate a real visual clearance from both rendered bounds, then
