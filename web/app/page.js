@@ -4,6 +4,14 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { loadSavedCoins } from "../game/rules/phaseOneRules.mjs";
 import { useLocale, LanguageToggle } from "./LocaleProvider";
+import { STAGE_ONE_PLANTS } from "../game/data/stageOnePlants.mjs";
+
+const MONSTER_CARDS = [
+  { id: "cave-brute", icon: "🐾", ar: "الضبع العادي", en: "Cave Brute", roleAr: "الضبع الأساسي", roleEn: "Standard raider", descAr: "يتقدم في مساره ويتوقف لالتهام النبتة التي تعترض طريقه.", descEn: "Advances along its lane and stops to eat plants blocking its path.", statAr: "تحمّل عادي · ٧ ضربات من الفجل", statEn: "Standard durability · 7 radish hits" },
+  { id: "dust-skitter", icon: "💨", ar: "ضبع الغبار السريع", en: "Dust Skitter", roleAr: "كشاف سريع وضعيف التحمل", roleEn: "Fast, fragile scout", descAr: "أسرع من الضبع العادي لكنه أقل تحملاً.", descEn: "Faster than the standard hyena, but much less durable.", statAr: "نحو ٥٢٪ من تحمّل الضبع العادي", statEn: "About 52% of standard durability" },
+  { id: "stonehide", icon: "🛡️", ar: "ضبع الجلد الحجري", en: "Stonehide", roleAr: "وحش ثقيل ومدرّع", roleEn: "Armored heavy", descAr: "أبطأ ومدرّع ويتطلب ضرراً أكبر لإسقاطه.", descEn: "A slower armored hyena that takes much more damage.", statAr: "٢٫٢ ضعف تحمّل الضبع العادي", statEn: "2.2× standard durability" },
+  { id: "alpha-brute", icon: "👑", ar: "الضبع العملاق", en: "Alpha Brute", roleAr: "قائد عملاق نادر", roleEn: "Rare giant leader", descAr: "وحش ضخم يظهر في الموجات المتأخرة ويتمتع بتحمّل استثنائي.", descEn: "A huge late-wave enemy with exceptional durability.", statAr: "١٤ ضربة من الفجل", statEn: "14 radish hits" },
+];
 
 const MENU_ITEMS = [
   { id: "plants", icon: "🌱", ar: "النباتات", en: "Plants", href: "/plants", color: "mint" },
@@ -90,11 +98,62 @@ export default function HomePage() {
             <div className={`world-modal-emblem ${activeItem.color}`}>{activeItem.icon}</div>
             <p className="world-modal-kicker">{arabic ? "مملكة المزرعة" : "FARM KINGDOM"}</p>
             <h2 id="world-modal-title">{arabic ? activeItem.ar : activeItem.en}</h2>
-            <p className="world-modal-description">{arabic ? "استكشف هذا القسم واكتشف محتوياته ومكافآته." : "Explore this section and discover its contents and rewards."}</p>
-            <div className="world-modal-actions">
-              <Link className={`world-modal-primary ${activeItem.color}`} href={activeItem.href}>{arabic ? "فتح القائمة" : "OPEN MENU"} <span>➜</span></Link>
-              <button type="button" className="world-modal-secondary" onClick={() => setActiveMenu(null)}>{arabic ? "العودة للعالم" : "BACK TO WORLD"}</button>
-            </div>
+            {activeMenu === "plants" ? (
+              <>
+                <p className="world-modal-description">{arabic ? "النباتات المتاحة والمخططة في المرحلة الأولى." : "Available and planned plants for Stage One."}</p>
+                <div className="world-collection-stats">
+                  <span>🌿 {STAGE_ONE_PLANTS.filter((plant) => plant.implemented).length} {arabic ? "مفعّل" : "ACTIVE"}</span>
+                  <span>🔒 {STAGE_ONE_PLANTS.filter((plant) => !plant.implemented).length} {arabic ? "قادم" : "PLANNED"}</span>
+                  <span>🪙 {coins.toLocaleString()}</span>
+                </div>
+                <div className="world-item-grid">
+                  {STAGE_ONE_PLANTS.map((plant) => (
+                    <article className={`world-item-card ${plant.implemented ? "is-live" : "is-coming"}`} key={plant.id}>
+                      <div className="world-item-art">
+                        <img src={plant.assetPath} alt={arabic ? plant.nameAr : plant.name} onError={(event) => { event.currentTarget.style.display = "none"; }} />
+                        {!plant.implemented && <span className="world-item-lock">🔒</span>}
+                      </div>
+                      <strong>{arabic ? plant.nameAr : plant.name}</strong>
+                      <small>{plant.implemented ? (arabic ? "مفعّل في المعركة" : "ACTIVE IN BATTLE") : (arabic ? "قيد التطوير" : "IN DEVELOPMENT")}</small>
+                      <p>{arabic ? plant.descriptionAr : plant.description}</p>
+                      <div className="world-item-price">{plant.implemented ? (arabic ? `تكلفة الطاقة: ${plant.energyCost}` : `Energy: ${plant.energyCost}`) : `🪙 ${plant.coinPrice} · ${arabic ? "سعر مقترح" : "PROPOSED"}`}</div>
+                    </article>
+                  ))}
+                </div>
+                <div className="world-modal-actions">
+                  <Link className={`world-modal-primary ${activeItem.color}`} href="/plants">{arabic ? "تفاصيل موسوعة النباتات" : "FULL PLANT ENCYCLOPEDIA"} <span>➜</span></Link>
+                  <button type="button" className="world-modal-secondary" onClick={() => setActiveMenu(null)}>{arabic ? "العودة للعالم" : "BACK TO WORLD"}</button>
+                </div>
+              </>
+            ) : activeMenu === "monsters" ? (
+              <>
+                <p className="world-modal-description">{arabic ? "تعرف على أفراد جيش التنين وقدراتهم." : "Meet the dragon's troops and their battlefield roles."}</p>
+                <div className="world-item-grid world-monster-grid">
+                  {MONSTER_CARDS.map((monster) => (
+                    <article className="world-item-card is-live" key={monster.id}>
+                      <div className="world-monster-art">{monster.icon}</div>
+                      <strong>{arabic ? monster.ar : monster.en}</strong>
+                      <small>{arabic ? monster.roleAr : monster.roleEn}</small>
+                      <p>{arabic ? monster.descAr : monster.descEn}</p>
+                      <div className="world-item-price">{arabic ? monster.statAr : monster.statEn}</div>
+                    </article>
+                  ))}
+                </div>
+                <div className="world-boss-strip"><span>🐉</span><div><strong>{arabic ? "التنين الشرير · زعيم المرحلة" : "EVIL DRAGON · STAGE BOSS"}</strong><small>{arabic ? "زعيم مستقل يظهر في الموجة الخامسة، ويجب هزيمته لتحرير الأميرة." : "Separate boss in Wave 5. Defeat it to rescue the princess."}</small></div></div>
+                <div className="world-modal-actions">
+                  <Link className={`world-modal-primary ${activeItem.color}`} href="/monsters">{arabic ? "تفاصيل موسوعة الوحوش" : "FULL MONSTER ENCYCLOPEDIA"} <span>➜</span></Link>
+                  <button type="button" className="world-modal-secondary" onClick={() => setActiveMenu(null)}>{arabic ? "العودة للعالم" : "BACK TO WORLD"}</button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="world-modal-description">{arabic ? "استكشف هذا القسم واكتشف محتوياته ومكافآته." : "Explore this section and discover its contents and rewards."}</p>
+                <div className="world-modal-actions">
+                  <Link className={`world-modal-primary ${activeItem.color}`} href={activeItem.href}>{arabic ? "فتح القائمة" : "OPEN MENU"} <span>➜</span></Link>
+                  <button type="button" className="world-modal-secondary" onClick={() => setActiveMenu(null)}>{arabic ? "العودة للعالم" : "BACK TO WORLD"}</button>
+                </div>
+              </>
+            )}
           </section>
         </div>
       )}
