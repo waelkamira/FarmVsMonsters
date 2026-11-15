@@ -46,6 +46,9 @@ export function isPhaseOneVictory(wave, totalWaves, spawnedCount, waveSize, livi
 }
 
 export function monsterArchetypeFor(wave, spawnIndex) {
+  // Alpha Brutes are rare wave leaders: huge, exceptionally durable, and
+  // dangerous to plants. Reserve them for the later waves.
+  if (wave >= 4 && (spawnIndex + 1) % 10 === 0) return "alpha-brute";
   if (wave >= 5 && (spawnIndex + 1) % 5 === 0) return "stonehide";
   if (wave >= 3 && spawnIndex % 3 === 1) return "dust-skitter";
   return "cave-brute";
