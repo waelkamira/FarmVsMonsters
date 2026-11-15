@@ -375,3 +375,16 @@ test("wave transitions include a pausable five-second preparation window without
   assert.deepEqual(PHASE_ONE_WAVE_SIZES, [3, 5, 6, 7, 9]);
   assert.match(scene, /if \(this\.gameOver \|\| this\.isPaused \|\| this\.collectionMenuOpen\) return/);
 });
+
+
+test("stage two intro restores signed-in cloud progress before redirecting", () => {
+  const stageTwoPage = readFileSync(resolve(here, "../app/stage/2/page.js"), "utf8");
+  assert.match(stageTwoPage, /getPlayerSession, restoreOrInitializeCloudProgress/);
+  assert.match(stageTwoPage, /await getPlayerSession\(\)/);
+  assert.match(stageTwoPage, /await restoreOrInitializeCloudProgress\(\)/);
+  assert.match(stageTwoPage, /restored\?\.progress\?\.unlockedStage/);
+  assert.match(stageTwoPage, /if \(unlocked >= 2\)/);
+  assert.match(stageTwoPage, /router\.replace\("\/stages"\)/);
+  assert.match(stageTwoPage, /return \(\) => \{\s*active = false;/);
+  assert.match(stageTwoPage, /battle waves are still being developed|موجات القتال ما زال قيد التطوير/);
+});
