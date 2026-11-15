@@ -40,7 +40,7 @@ const translations = {
   "Play Game": "العب", "Preparing the farm...": "جارٍ تجهيز المزرعة...",
   "Loading the battlefield and getting the tribe ready.": "جارٍ تحميل ساحة المعركة وتجهيز القبيلة.",
   "The battle could not be started": "تعذّر بدء المعركة", "The game engine failed to initialize.": "تعذّر تشغيل محرك اللعبة.",
-  "Retry": "إعادة المحاولة", "Back to Main Menu": "العودة إلى القائمة الرئيسية",
+  "Try Again": "حاول مجدداً", "Farm Vs Monsters playable battle": "معركة لعبة المزرعة ضد الوحوش", "Retry": "إعادة المحاولة", "Back to Main Menu": "العودة إلى القائمة الرئيسية",
 
   "The caveman must finish his current action before moving again.": "يجب أن ينهي رجل الكهف حركته الحالية قبل أن يتحرك مجدداً.",
   "Choose a plant card first.": "اختر بطاقة نبتة أولاً.",
