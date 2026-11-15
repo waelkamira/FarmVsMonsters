@@ -1,8 +1,9 @@
 -- Farm Vs Monsters: lock player progress writes until trusted server-side game results exist.
 -- Apply after 003_plant_catalog_and_purchases.sql.
 --
--- IMPORTANT: existing coin balances are retained but marked unverified. They are
--- not spendable until a trusted reward pipeline explicitly verifies them.
+-- IMPORTANT: legacy coin balances and progression are retained but marked
+-- unverified. Neither can be imported into a device or used for purchases until
+-- a trusted server-side completion pipeline explicitly verifies them.
 
 alter table public.player_progress
   add column if not exists coins_verified boolean not null default false,
