@@ -884,6 +884,9 @@ export default class BattleScene extends Scene {
   updateDragonBoss(delta) {
     const boss = this.dragonBoss;
     if (!boss?.alive || this.phaseOneStoryState !== "dragon") return;
+    if (boss.sprite?.active && this.princessActor?.active) {
+      this.princessActor.setPosition(boss.sprite.x + 78, boss.sprite.y + 96);
+    }
     boss.shotCooldown -= delta;
     if (boss.shotCooldown <= 0) {
       boss.shotCooldown = 900;
