@@ -821,3 +821,11 @@
 - Added `Documentation/STAGE_ONE_AUTHORITATIVE_COMBAT_SIMULATION.md` describing the server-authoritative replay design, trust boundaries, deterministic requirements, rollout, and acceptance tests.
 - No economy values were changed: each ordinary monster still awards 8 local coins; dragon reward remains separate/unconfigured. Cloud progress and currency writes remain disabled pending a trusted server simulator.
 - Validation: GitHub source read/write only. No local npm test, lint, production build, browser test, or live Supabase migration was run.
+
+
+
+## 2026-11-15 — Complete shared combat constants extraction
+- Extended the shared Stage 1 combat contract to include farmer club damage/reach, radish projectile speed/collision radius, and monster HP/speed scaling formulas.
+- Updated BattleScene to read these values from the shared contract without changing the approved 8-coin reward or current tuning.
+- Expanded combat contract tests to cover the new shared values.
+- The live simulation is still client-side; the seeded PRNG is not yet connected to battle gameplay. This remains preparation for the authoritative server replay, not a completed anti-cheat system.
