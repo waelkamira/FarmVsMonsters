@@ -53,7 +53,7 @@ const translations = {
   "A Stonehide is approaching: slow, heavily plated, and tough to stop.": "ضبع الجلد الحجري يقترب: بطيء ومدرع بشدة ويصعب إيقافه.",
   "ALPHA BRUTE! A giant raider with double health and crushing bites is approaching!": "الضبع العملاق! وحش ضخم بضعف الطاقة وعضّات ساحقة يقترب!",
   "EMERGENCY! The last radish has fallen. Move close and press SPACE to swing the club.": "طوارئ! سقطت آخر نبتة فجل. اقترب واضغط المسافة لضرب الوحش بالهراوة.",
-  "Music": "الموسيقى", "Effects": "المؤثرات", "Projectiles": "المقذوفات",
+  "RADISH": "الفجل", "MUSHROOM": "الفطر", "Music": "الموسيقى", "Effects": "المؤثرات", "Projectiles": "المقذوفات",
   "Choose Radish to defend or Mushroom to produce energy, then click an empty soil cell.": "اختر الفجل للدفاع أو الفطر لإنتاج الطاقة، ثم انقر على خلية ترابية فارغة.",
   "Temporary farm art active. Choose Radish or Mushroom, then click an empty soil cell.": "تم تفعيل الرسومات البديلة للمزرعة. اختر الفجل أو الفطر ثم انقر على خلية ترابية فارغة.",
   "Radish chosen. Select an empty soil plot to defend the lane.": "اخترت الفجل. حدد مساحة ترابية فارغة للدفاع عن المسار.",
@@ -78,6 +78,7 @@ const translations = {
 
 export function translate(value, locale = "ar") {
   if (locale !== "ar" || typeof value !== "string") return value;
+  if (/^\\d+ ENERGY$/.test(value)) return value.replace(" ENERGY", " طاقة");
   if (value.startsWith("Collected ") && value.endsWith(" mushroom energy!")) {
     return "جمعت " + value.slice(10, -" mushroom energy!".length) + " من طاقة الفطر!";
   }
