@@ -101,12 +101,12 @@ export const STAGE_ONE_PLANTS = Object.freeze([
     assetPath: "/assets/plants/pumpkin.png",
     name: "Pumpkin Guard",
     nameAr: "حارس اليقطين",
-    role: "Armored blocker",
-    roleAr: "حاجز مدرّع",
-    description: "A slow-growing armored plant designed to absorb repeated bites.",
-    descriptionAr: "نبتة مدرّعة بطيئة النمو، مهمتها امتصاص العضّات المتكررة.",
-    energyCost: 90, coinPrice: 250, status: "planned", implemented: false, purchasable: false, image: null,
-    stats: ["Extreme durability", "No ranged attack"], statsAr: ["تحمّل استثنائي", "بلا هجوم بعيد"]
+    role: "Armored lane blocker",
+    roleAr: "حاجز مدرّع للمسار",
+    description: "Playtest prototype: absorbs monster bites and holds its lane with high durability.",
+    descriptionAr: "نسخة تجريبية: يمتص عضّات الوحوش ويمنعها من التقدم بفضل تحمّله العالي.",
+    energyCost: 75, coinPrice: 0, status: "active", implemented: true, purchasable: false, image: null,
+    stats: ["520 HP", "Blocks monsters", "No ranged attack"], statsAr: ["٥٢٠ صحة", "يوقف الوحوش", "لا يهاجم عن بُعد"]
   },
   {
     id: "explosive-berry",
@@ -149,12 +149,12 @@ export const STAGE_ONE_PLANTS = Object.freeze([
     assetPath: "/assets/plants/Onion.png",
     name: "Onion",
     nameAr: "البصل",
-    role: "Armored lane blocker",
-    roleAr: "حاجز مدرّع للمسار",
-    description: "Playtest prototype: absorbs monster bites and holds its lane with high durability.",
-    descriptionAr: "نسخة تجريبية: يمتص عضّات الوحوش ويمنعها من التقدم بفضل تحمّله العالي.",
-    energyCost: 75, coinPrice: 0, status: "active", implemented: true, purchasable: false, image: null,
-    stats: ["520 HP", "Blocks monsters", "No ranged attack"], statsAr: ["٥٢٠ صحة", "يوقف الوحوش", "لا يهاجم عن بُعد"]
+    role: "Heavy lane projectile attacker",
+    roleAr: "مهاجم بمقذوفات ثقيلة ضمن المسار",
+    description: "Playtest prototype: launches slower, stronger miniature onion shots at monsters in its own lane.",
+    descriptionAr: "نسخة تجريبية: يطلق حبات بصل صغيرة أبطأ وأقوى على الوحوش في مساره فقط.",
+    energyCost: 65, coinPrice: 0, status: "active", implemented: true, purchasable: false, image: null,
+    stats: ["135 HP", "48 damage", "2350 ms cooldown"], statsAr: ["١٣٥ صحة", "ضرر ٤٨", "فاصل هجوم ٢٣٥٠ مللي ثانية"]
   }
 ]);
 
