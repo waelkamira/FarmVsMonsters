@@ -13,6 +13,9 @@ import {
   saveCoins,
   RADISH_CONFIG,
   MUSHROOM_CONFIG,
+  TOMATO_CONFIG,
+  PUMPKIN_CONFIG,
+  ONION_CONFIG,
   collectEnergy,
   isWaveComplete,
   isPhaseOneVictory,
@@ -538,9 +541,9 @@ export default class BattleScene extends Scene {
     this.mushroomCard = this.createPlantCard(72, "MUSHROOM", "50", "mushroom", null, "mushroom-character", 64);
     // New artwork is visible in the battle selector, but these plants stay
     // locked until their combat rules and planting implementations are ready.
-    this.tomatoCard = this.createPlantCard(120, "TOMATO", "LOCK", "tomato", null, "tomato-character", 64, true);
-    this.pumpkinCard = this.createPlantCard(168, "PUMPKIN", "LOCK", "pumpkin", null, "pumpkin-character", 64, true);
-    this.onionCard = this.createPlantCard(216, "ONION", "LOCK", "onion", null, "onion-character", 64, true);
+    this.tomatoCard = this.createPlantCard(120, "TOMATO", String(TOMATO_CONFIG.cost), "tomato", null, "tomato-character", 64);
+    this.pumpkinCard = this.createPlantCard(168, "PUMPKIN", String(PUMPKIN_CONFIG.cost), "pumpkin", null, "pumpkin-character", 64);
+    this.onionCard = this.createPlantCard(216, "ONION", String(ONION_CONFIG.cost), "onion", null, "onion-character", 64);
 
     this.messageText = this.add.text(560, 574, "", {
       fontFamily: "Arial", fontSize: "15px", color: "#ffffff", fontStyle: "bold",
@@ -605,13 +608,18 @@ export default class BattleScene extends Scene {
       this.selectedPlant = type;
       this.radishCard.setAlpha(type === "radish" ? 1 : 0.78);
       this.mushroomCard.setAlpha(type === "mushroom" ? 1 : 0.78);
-      this.tomatoCard?.setAlpha(0.78);
-      this.pumpkinCard?.setAlpha(0.78);
-      this.onionCard?.setAlpha(0.78);
+      this.tomatoCard?.setAlpha(type === "tomato" ? 1 : 0.78);
+      this.pumpkinCard?.setAlpha(type === "pumpkin" ? 1 : 0.78);
+      this.onionCard?.setAlpha(type === "onion" ? 1 : 0.78);
       panel.setFillStyle(tint, 0.38);
-      this.setMessage(type === "radish"
-        ? "Radish chosen. Select an empty soil plot to defend the lane."
-        : "Mushroom chosen. Plant it, then collect its energy when it appears.");
+      const plantHints = {
+        radish: "Radish chosen. Fires thorn shots in its lane.",
+        mushroom: "Mushroom chosen. Collect its energy when it appears.",
+        tomato: "Tomato chosen. Fires tomato shots in its lane.",
+        pumpkin: "Pumpkin chosen. A durable lane blocker.",
+        onion: "Onion chosen. Fires heavy onion shots in its lane."
+      };
+      this.setMessage(plantHints[type] || "Plant chosen.");
       this.refreshHud();
     });
     return panel;
@@ -1877,9 +1885,10 @@ export default class BattleScene extends Scene {
       return;
     }
     if (!this.selectedPlant) { this.setMessage("Choose a plant card first."); return; }
-    const plantConfig = this.selectedPlant === "mushroom" ? MUSHROOM_CONFIG : RADISH_CONFIG;
+    const plantConfigs = { radish: RADISH_CONFIG, mushroom: MUSHROOM_CONFIG, tomato: TOMATO_CONFIG, pumpkin: PUMPKIN_CONFIG, onion: ONION_CONFIG };
+    const plantConfig = plantConfigs[this.selectedPlant];
     if (this.energy < plantConfig.cost) {
-      this.setMessage("Not enough energy to plant " + (this.selectedPlant === "mushroom" ? "a Mushroom." : "a Radish."));
+      this.setMessage("Not enough energy to plant " + this.selectedPlant + ".");
       return;
     }
     const { x, y } = this.plantingCellCenter(col, row);
@@ -1973,7 +1982,7 @@ export default class BattleScene extends Scene {
 
   plantSelected(col, row, type, returnPosition = null) {
     if (this.gameOver) return;
-    if (type !== "radish" && type !== "mushroom") return;
+    if (!["radish", "mushroom", "tomato", "pumpkin", "onion"].includes(type)) return;
     const placement = resolvePlantPlacement({
       energy: this.energy,
       plants: this.plants,
@@ -1988,7 +1997,8 @@ export default class BattleScene extends Scene {
       return;
     }
     this.recordCombatEvent("plant_placed", { type, col, row });
-    const config = type === "mushroom" ? MUSHROOM_CONFIG : RADISH_CONFIG;
+    const configs = { radish: RADISH_CONFIG, mushroom: MUSHROOM_CONFIG, tomato: TOMATO_CONFIG, pumpkin: PUMPKIN_CONFIG, onion: ONION_CONFIG };
+    const config = configs[type];
     this.energy = placement.energy;
     this.farmerPlanting = true;
     this.playFarmerAction("farmer-plant");
@@ -1999,7 +2009,9 @@ export default class BattleScene extends Scene {
       cooldown: PhaserMath.Between(250, 650),
       productionTimer: type === "mushroom" ? config.productionInterval : undefined,
       productionCount: 0,
-      view: type === "mushroom" ? this.drawEnergyMushroom(x, y, row) : this.drawRadish(x, y)
+      view: type === "mushroom" ? this.drawEnergyMushroom(x, y, row)
+        : type === "radish" ? this.drawRadish(x, y)
+        : this.drawCatalogPlant(type, x, y)
     };
     this.plants.push(plant);
     this.totalPlantsPlanted += 1;
@@ -2036,9 +2048,14 @@ export default class BattleScene extends Scene {
       beginReturnSprint();
     }
 
-    this.setMessage(type === "mushroom"
-      ? "Energy Mushroom planted! It will produce collectible energy."
-      : "Radish planted! The caveman is sprinting back behind the final line.");
+    const plantedMessages = {
+      radish: "Radish planted! It defends this lane.",
+      mushroom: "Energy Mushroom planted! It will produce collectible energy.",
+      tomato: "Tomato planted! It fires tomato shots down this lane.",
+      pumpkin: "Pumpkin planted! It blocks and absorbs bites.",
+      onion: "Onion planted! It fires heavy onion shots down this lane."
+    };
+    this.setMessage(plantedMessages[type] || "Plant planted.");
   }
 
   drawEnergyMushroom(x, y, row = 2) {
@@ -2083,6 +2100,23 @@ export default class BattleScene extends Scene {
       targets: plant, scaleY: 1.04, duration: 1250,
       ease: "Sine.easeInOut", yoyo: true, repeat: -1
     });
+    return plant;
+  }
+
+  drawCatalogPlant(type, x, y) {
+    const plant = this.add.container(x, y).setDepth(11);
+    const texture = type === "tomato" ? "tomato-character" : type === "pumpkin" ? "pumpkin-character" : "onion-character";
+    if (this.textures.exists(texture)) {
+      const frame = this.textures.getFrame(texture);
+      const height = type === "pumpkin" ? 70 : 64;
+      const width = height * (frame.realWidth / frame.realHeight);
+      plant.add(this.add.image(0, -height / 2 + 2, texture).setDisplaySize(Math.min(width, 76), height));
+    } else {
+      const fallback = this.add.ellipse(0, -24, 42, 48,
+        type === "tomato" ? 0xe85b55 : type === "pumpkin" ? 0xf39b32 : 0xe8e5d7, 1);
+      plant.add(fallback);
+    }
+    this.tweens.add({ targets: plant, scaleY: 1.025, duration: 1350, ease: "Sine.easeInOut", yoyo: true, repeat: -1 });
     return plant;
   }
 
@@ -2137,23 +2171,22 @@ export default class BattleScene extends Scene {
         }
         continue;
       }
+      if (plant.type === "pumpkin") continue;
+      const configs = { radish: RADISH_CONFIG, tomato: TOMATO_CONFIG, onion: ONION_CONFIG };
+      const config = configs[plant.type];
+      if (!config) continue;
       plant.cooldown = advanceCooldown(plant.cooldown, delta);
       if (plant.cooldown > 0) continue;
       const plantLaneX = this.worldToLane(plant).localX;
-      // Radishes defend only their own lane. Monsters in adjacent lanes
-      // are deliberately ignored, even when they are horizontally closer.
+      // Every shooter is lane-locked: it never targets an adjacent row.
       const target = this.monsters
-        .filter((monster) =>
-          monster.alive &&
-          monster.row === plant.row &&
-          Number.isFinite(monster.localX) &&
-          monster.localX > plantLaneX &&
-          monster.localX - plantLaneX <= RADISH_CONFIG.range
-        )
+        .filter((monster) => monster.alive && monster.row === plant.row &&
+          Number.isFinite(monster.localX) && monster.localX > plantLaneX &&
+          monster.localX - plantLaneX <= config.range)
         .sort((a, b) => a.localX - b.localX)[0];
       if (!target) continue;
       this.fireThorn(plant, target);
-      plant.cooldown = RADISH_CONFIG.cooldown;
+      plant.cooldown = config.cooldown;
     }
   }
 
@@ -2320,8 +2353,10 @@ export default class BattleScene extends Scene {
     this.projectiles.push({
       view, localX, row, startRow: row, targetRow, target,
       startLocalX: localX, targetLocalX, verticalOffset,
-      speed: PHASE_ONE_PLANTS.radish.projectileSpeed,
-      damage: PHASE_ONE_PLANTS.radish.projectileDamage, alive: true, trailTimer: 0
+      speed: (plant.type === "tomato" ? TOMATO_CONFIG : plant.type === "onion" ? ONION_CONFIG : RADISH_CONFIG).projectileSpeed,
+      damage: (plant.type === "tomato" ? TOMATO_CONFIG : plant.type === "onion" ? ONION_CONFIG : RADISH_CONFIG).projectileDamage,
+      collisionRadius: (plant.type === "tomato" ? TOMATO_CONFIG : plant.type === "onion" ? ONION_CONFIG : RADISH_CONFIG).projectileCollisionRadius,
+      alive: true, trailTimer: 0
     });
     this.playThornSound();
   }
@@ -2743,7 +2778,7 @@ export default class BattleScene extends Scene {
       const blocker = selectLaneBlocker({
         plants: this.plants.map((plant) => ({
           plant,
-          localX: plant.alive && plant.type === "radish" && plant.row === monster.row
+          localX: plant.alive && ["radish", "pumpkin"].includes(plant.type) && plant.row === monster.row
             ? this.worldToLane(plant).localX
             : null
         })),
@@ -2957,7 +2992,7 @@ export default class BattleScene extends Scene {
         if (!monster?.alive || monster.row !== shot.row ||
             !Number.isFinite(monster.localX)) continue;
         const horizontalDistance = Math.abs(monster.localX - shot.localX);
-        const hitRadius = PHASE_ONE_PLANTS.radish.projectileCollisionRadius * (monster.widthScale || 1);
+        const hitRadius = (shot.collisionRadius || PHASE_ONE_PLANTS.radish.projectileCollisionRadius) * (monster.widthScale || 1);
         if (horizontalDistance > hitRadius || horizontalDistance >= nearestHitDistance) continue;
         hit = monster;
         nearestHitDistance = horizontalDistance;
