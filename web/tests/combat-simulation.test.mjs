@@ -7,7 +7,9 @@ import {
   resolvePlantPlacement,
   resolvePlantUproot,
   resolveEnergyPickup,
-  applyHitPointsDamage
+  applyHitPointsDamage,
+  resolveMonsterLaneStep,
+  resolveProjectileLaneStep
 } from "../game/rules/combatSimulation.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -104,4 +106,35 @@ test("Phaser delegates player plant actions and HP changes to the pure simulatio
   assert.match(scene, /applyHitPointsDamage\(/);
   assert.match(rules, /resolveEnergyPickup/);
   assert.doesNotMatch(scene, /this\.energy -= config\.cost/);
+});
+
+test("monster lane stepping clamps movement at plant bite reach without tunneling", () => {
+  assert.deepEqual(resolveMonsterLaneStep({
+    localX: 120, speed: 80, deltaSeconds: 0.5,
+    blockerLocalX: 100, biteReach: 12
+  }), { localX: 112, stoppedByPlant: true });
+  assert.deepEqual(resolveMonsterLaneStep({
+    localX: 150, speed: 20, deltaSeconds: 0.5,
+    blockerLocalX: 100, biteReach: 12
+  }), { localX: 140, stoppedByPlant: false });
+  assert.deepEqual(resolveMonsterLaneStep({
+    localX: 120, speed: 80, deltaSeconds: 0.5
+  }), { localX: 80, stoppedByPlant: false });
+  assert.throws(() => resolveMonsterLaneStep({
+    localX: 10, speed: -1, deltaSeconds: 0.1
+  }), /INVALID_MONSTER_LANE_STEP/);
+});
+
+test("projectile lane stepping uses elapsed seconds and rejects invalid values", () => {
+  assert.equal(resolveProjectileLaneStep({
+    localX: 10, speed: 320, deltaSeconds: 0.25
+  }), 90);
+  assert.throws(() => resolveProjectileLaneStep({
+    localX: 10, speed: 320, deltaSeconds: -1
+  }), /INVALID_PROJECTILE_LANE_STEP/);
+});
+
+test("Phaser delegates monster and projectile lane movement to the simulation kernel", () => {
+  assert.match(scene, /resolveMonsterLaneStep\(/);
+  assert.match(scene, /resolveProjectileLaneStep\(/);
 });
