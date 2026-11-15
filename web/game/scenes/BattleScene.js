@@ -2302,14 +2302,15 @@ export default class BattleScene extends Scene {
     // so the root points toward incoming monsters. Keep the combat contract
     // (lane, speed, damage and collision) unchanged.
     const lane = this.worldToLane(plant);
-    const localX = lane.localX + 22;
+    // Start at the visual center of the plant itself, not at its lower edge
+    // or at the monster's lowered collision lane.
+    const localX = lane.localX;
     const row = plant.row;
     const targetRow = plant.row;
     const targetLocalX = Math.max(localX + 1, target.localX);
-    const position = this.monsterLanePoint(localX, row);
-    // Keep every shot on the exact centerline of its source lane.
-    // Alternating head/middle offsets made straight projectiles appear to
-    // weave vertically and miss the visual path despite same-row targeting.
+    const position = { x: plant.x, y: plant.y };
+    // After launch, the projectile follows the centerline through the soil
+    // cell centroids across X, using the perspective-calibrated grid mesh.
     const verticalOffset = 0;
     const launchY = position.y;
     const view = this.add.container(position.x, launchY).setDepth(16);
@@ -2987,7 +2988,9 @@ export default class BattleScene extends Scene {
       }
 
       shot.currentRow = shot.row;
-      const position = this.monsterLanePoint(shot.localX, shot.row);
+      // Projectiles travel through the horizontal centerline of each
+      // perspective soil cell; monster sprites use a separately lowered lane.
+      const position = this.lanePoint(shot.localX, shot.row);
       shot.view.setPosition(position.x, position.y + shot.verticalOffset);
 
       shot.trailTimer -= dt * 1000;
