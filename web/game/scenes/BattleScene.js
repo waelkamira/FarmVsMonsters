@@ -479,28 +479,29 @@ export default class BattleScene extends Scene {
   createHud() {
     // Slim timber status strip: keep the battlefield and all planting lanes visible.
     const wood = this.add.graphics().setDepth(38);
-    wood.fillStyle(0x21170f, 0.36); wood.fillRoundedRect(24, 11, 1072, 43, 8);
-    wood.fillStyle(0x694329, 0.96); wood.fillRoundedRect(20, 6, 1072, 42, 8);
-    wood.lineStyle(2, 0x382317, 1); wood.strokeRoundedRect(20, 6, 1072, 42, 8);
-    wood.lineStyle(1, 0xb17b45, 0.9); wood.strokeRoundedRect(24, 10, 1064, 34, 6);
+    wood.fillStyle(0x080503, 0.82); wood.fillRoundedRect(24, 11, 1072, 43, 8);
+    wood.fillStyle(0x24160d, 0.99); wood.fillRoundedRect(20, 6, 1072, 42, 8);
+    wood.lineStyle(3, 0x120a05, 1); wood.strokeRoundedRect(20, 6, 1072, 42, 8);
+    wood.lineStyle(2, 0xf0c779, 1); wood.strokeRoundedRect(24, 10, 1064, 34, 6);
     wood.fillStyle(0xd2a66a, 0.85);
     for (const x of [34, 1078]) { wood.fillCircle(x, 13, 2); wood.fillCircle(x, 41, 2); }
 
     this.hudText = this.add.text(38, 27, "", {
-      fontFamily: "Georgia", fontSize: "13px", color: "#fff0c8", fontStyle: "bold",
-      stroke: "#382317", strokeThickness: 2
+      fontFamily: "Arial", fontSize: "16px", color: "#ffffff", fontStyle: "bold",
+      stroke: "#120a05", strokeThickness: 4, resolution: 2
     }).setOrigin(0, 0.5).setDepth(41);
     this.coinHudIcon = this.add.image(230, 27, "gold-coin", 0)
       .setDisplaySize(20, 20).setDepth(42);
     this.waveText = this.add.text(950, 27, "", {
-      fontFamily: "Georgia", fontSize: "14px", color: "#ffe2a0", fontStyle: "bold",
-      stroke: "#382317", strokeThickness: 2
+      fontFamily: "Arial", fontSize: "16px", color: "#fff4d6", fontStyle: "bold",
+      stroke: "#120a05", strokeThickness: 4, resolution: 2
     }).setOrigin(1, 0.5).setDepth(41);
 
     this.messageText = this.add.text(560, 660, "", {
-      fontFamily: "Georgia", fontSize: "14px", color: "#fff0c8", fontStyle: "bold",
-      backgroundColor: "#49301f", padding: { x: 14, y: 6 }, align: "center",
-      stroke: "#24170f", strokeThickness: 2
+      fontFamily: "Arial", fontSize: "17px", color: "#ffffff", fontStyle: "bold",
+      backgroundColor: "#130c07", padding: { x: 18, y: 9 }, align: "center",
+      stroke: "#000000", strokeThickness: 4, resolution: 2,
+      shadow: { offsetX: 0, offsetY: 2, color: "#000000", blur: 4, fill: true }
     }).setOrigin(0.5, 1).setDepth(42);
 
     // Both core plants are available from the first campaign: Radish defends,
@@ -528,12 +529,12 @@ export default class BattleScene extends Scene {
     }
     const locale = window.localStorage.getItem("farmVsMonsters.language") || "ar";
     const name = this.add.text(-17, -10, translate(title, locale), {
-      fontFamily: "Georgia", fontSize: "12px", color: "#382719", fontStyle: "bold",
-      resolution: 2
+      fontFamily: "Arial", fontSize: "14px", color: "#211307", fontStyle: "bold",
+      stroke: "#fff1d0", strokeThickness: 1, resolution: 2
     }).setOrigin(0, 0.5).setData("localeKey", title);
     const cost = this.add.text(-17, 12, costLabel + " " + translate("ENERGY", locale), {
-      fontFamily: "Georgia", fontSize: "10px", color: "#68431f", fontStyle: "bold",
-      resolution: 2
+      fontFamily: "Arial", fontSize: "12px", color: "#2a180a", fontStyle: "bold",
+      stroke: "#fff0c8", strokeThickness: 1, resolution: 2
     }).setOrigin(0, 0.5).setData("localeKey", String(costLabel) + " ENERGY");
     card.add([shadow, frame, panel, icon, iconDivider, name, cost]);
 
@@ -867,8 +868,8 @@ export default class BattleScene extends Scene {
     }
     this.dragonHealthBar = this.add.graphics().setDepth(56);
     this.dragonHealthLabel = this.add.text(910, 55, "DRAGON", {
-      fontFamily: "Georgia", fontSize: "14px", color: "#fff0c8",
-      fontStyle: "bold", stroke: "#382317", strokeThickness: 3
+      fontFamily: "Arial", fontSize: "17px", color: "#ffffff",
+      fontStyle: "bold", stroke: "#090503", strokeThickness: 5, resolution: 2
     }).setOrigin(0.5).setDepth(57);
     this.drawDragonHealthBar();
     this.setMessage("The dragon has arrived! The farmer is loading his sling.");
@@ -879,11 +880,13 @@ export default class BattleScene extends Scene {
     const ratio = PhaserMath.Clamp(this.dragonBoss.hp / this.dragonBoss.maxHp, 0, 1);
     this.dragonHealthBar.clear();
     this.dragonHealthBar.fillStyle(0x24150f, 0.9);
-    this.dragonHealthBar.fillRoundedRect(760, 65, 300, 16, 7);
-    this.dragonHealthBar.fillStyle(0xc63e2e, 1);
-    this.dragonHealthBar.fillRoundedRect(763, 68, 294 * ratio, 10, 5);
-    this.dragonHealthBar.lineStyle(2, 0xffd99a, 1);
-    this.dragonHealthBar.strokeRoundedRect(760, 65, 300, 16, 7);
+    this.dragonHealthBar.fillRoundedRect(756, 66, 308, 23, 8);
+    this.dragonHealthBar.fillStyle(0x5b1710, 1);
+    this.dragonHealthBar.fillRoundedRect(760, 70, 300, 15, 6);
+    this.dragonHealthBar.fillStyle(0xff4b3e, 1);
+    this.dragonHealthBar.fillRoundedRect(760, 70, 300 * ratio, 15, 6);
+    this.dragonHealthBar.lineStyle(3, 0xffe0a2, 1);
+    this.dragonHealthBar.strokeRoundedRect(756, 66, 308, 23, 8);
   }
 
   updateDragonBoss(delta) {
