@@ -24,7 +24,7 @@ function normalizePayload(type, payload) {
     return Object.freeze({ monsterId: payload.monsterId, wave: payload.wave, spawnIndex: payload.spawnIndex, row: payload.row, archetype: payload.archetype, hp: payload.hp, speed: payload.speed, localX: payload.localX });
   }
   if (type === "monster_moved") {
-    if (typeof payload.monsterId !== "string" || !/^monster-\\d+$/.test(payload.monsterId) || !Number.isFinite(payload.distance) || payload.distance < 0 || !Number.isInteger(payload.deltaMs) || payload.deltaMs < 0 || !(payload.blockerCol === null || (Number.isInteger(payload.blockerCol) && payload.blockerCol >= 0 && payload.blockerCol < 8)) || !Number.isFinite(payload.biteReach) || payload.biteReach < 0 || payload.biteReach > 1.5) throw new RangeError("INVALID_MONSTER_MOVEMENT_EVENT");
+    if (typeof payload.monsterId !== "string" || !/^monster-\d+$/.test(payload.monsterId) || !Number.isFinite(payload.distance) || payload.distance < 0 || !Number.isInteger(payload.deltaMs) || payload.deltaMs < 0 || !(payload.blockerCol === null || (Number.isInteger(payload.blockerCol) && payload.blockerCol >= 0 && payload.blockerCol < 8)) || !Number.isFinite(payload.biteReach) || payload.biteReach < 0 || payload.biteReach > 1.5) throw new RangeError("INVALID_MONSTER_MOVEMENT_EVENT");
     return Object.freeze({ monsterId: payload.monsterId, distance: payload.distance, deltaMs: payload.deltaMs, blockerCol: payload.blockerCol, biteReach: payload.biteReach });
   }
   if (type === "monster_bite") {
