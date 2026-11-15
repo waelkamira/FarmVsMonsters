@@ -150,7 +150,7 @@ Phaser still chooses the visual lane using its current random source, creates sp
 - Replay now verifies that the source mushroom was planted and remains alive, the 12-second production interval elapsed, the pickup ID and 15-energy value match the plant's production sequence, the pickup has not expired (12-second TTL), and the pickup has not already been collected.
 - Collected energy is derived from the replayed bank and the 300-energy cap; the event's claimed gain must match the computed gain. Clicking a pickup at full energy is recorded as a discard so the replay cannot leave a phantom collectible.
 - A separate combat clock advances only during active battle updates, avoiding story-sequence elapsed time from falsely advancing mushroom production.
-- This remains a limited action/economy replay: monster combat, kills, boss victory, and rewards are not yet authoritative. No server rewards or cloud progression are enabled.
+- This remains a limited replay: monster movement and target proximity, projectile damage, monster deaths, farmhouse breach, boss victory, and rewards are not yet authoritative. No server rewards or cloud progression are enabled.
 
 
 Implementation correction: the battle scene now records production/collection/discard events using the active-combat clock, which does not advance during story sequences. Pickup IDs are assigned per mushroom and production cycle. The replay reads the 12-second pickup lifetime directly from the shared combat contract.
