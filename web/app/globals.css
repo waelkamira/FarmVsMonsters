@@ -1196,3 +1196,162 @@ html[dir="rtl"] body { font-family: Tahoma, Arial, sans-serif; }
 .info-nav a:hover,.google-signin-button:hover,.collection-back a:hover {
   transform:translateY(-2px);filter:brightness(1.12) saturate(1.12);
 }
+
+
+/* FINAL DESIGN SYSTEM — consistent glass, color, spacing and feedback across every web screen. */
+:root {
+  --ui-green:#42c96b;
+  --ui-lime:#a7e84f;
+  --ui-blue:#35bceb;
+  --ui-violet:#8b65e8;
+  --ui-gold:#ffca45;
+  --ui-coral:#ff7185;
+  --ui-pink:#f58fc3;
+  --ui-glass:rgba(255,255,255,.16);
+  --ui-glass-strong:rgba(255,255,255,.24);
+  --ui-glass-line:rgba(255,255,255,.48);
+  --ui-shadow:0 14px 34px rgba(15,45,78,.22);
+  --ui-blur:blur(14px) saturate(150%);
+}
+html,body {
+  color:#fff !important;
+  background-color:#162c50;
+}
+body {
+  background-image:
+    radial-gradient(ellipse at 12% 8%,rgba(53,188,235,.24),transparent 36%),
+    radial-gradient(ellipse at 88% 18%,rgba(139,101,232,.25),transparent 38%),
+    radial-gradient(ellipse at 50% 100%,rgba(66,201,107,.2),transparent 44%),
+    linear-gradient(145deg,#172e55,#203b67 52%,#193c59) !important;
+}
+.home-shell,.info-shell,.game-shell {
+  background:
+    radial-gradient(ellipse at 12% 8%,rgba(53,188,235,.24),transparent 36%),
+    radial-gradient(ellipse at 88% 18%,rgba(139,101,232,.24),transparent 38%),
+    linear-gradient(145deg,#172e55dd,#203b67e8 52%,#193c59ee) !important;
+}
+.home-card,.info-card,.game-header,.game-panel,.stage-tile,.collection-card,
+.collection-wallet,.account-signed-in,.guest-play-panel,.world-menu-modal,
+.world-item-card,.world-feature-panel,.world-task-list>div,.world-boss-strip,
+.stage-briefing>div,.settings-row,.account-feedback,.account-security,.account-status {
+  color:#fff !important;
+  border:1px solid var(--ui-glass-line) !important;
+  border-radius:22px !important;
+  background:linear-gradient(135deg,rgba(77,181,226,.34),rgba(124,105,222,.32) 54%,rgba(65,198,137,.28)) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.48),inset 0 -1px 0 rgba(16,48,92,.12),var(--ui-shadow) !important;
+  backdrop-filter:var(--ui-blur);
+  -webkit-backdrop-filter:var(--ui-blur);
+}
+.home-card::before,.home-card::after { background:#fff !important;opacity:.16 !important; }
+h1,h2,h3,h4,.wordmark,.eyebrow,.menu-version,.collection-card h2,
+.stage-tile h2,.info-card h2,.world-menu-modal h2 {
+  color:#fff !important;
+  text-shadow:0 2px 8px rgba(17,43,82,.3);
+}
+p,li,label,small,.home-copy,.info-card p,.info-card li,
+.collection-intro,.collection-card p,.stage-tile p,.stage-story,
+.control-hint,.prototype-note,.home-note,.menu-facts span {
+  color:rgba(255,255,255,.96) !important;
+}
+.primary-link,.secondary-link,.language-toggle,.game-retry-button,
+.account-submit,.account-tabs button,.google-signin-button,
+.plant-locked-button,.world-play-button,.world-modal-primary,
+.world-modal-secondary,.world-modal-close,.world-icon-button,
+.info-card button,.stage-tile button,.collection-card button,
+.account-card button,.world-menu-modal button,.stages-card button {
+  min-height:44px;
+  border:1px solid rgba(255,255,255,.58) !important;
+  border-radius:16px !important;
+  color:#fff !important;
+  font-weight:900;
+  text-shadow:0 1px 3px rgba(18,43,83,.45) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.56),inset 0 -1px 0 rgba(17,44,84,.12),0 8px 20px rgba(15,45,78,.2) !important;
+  backdrop-filter:var(--ui-blur);
+  -webkit-backdrop-filter:var(--ui-blur);
+  transition:transform .18s ease,filter .18s ease,box-shadow .18s ease;
+}
+.primary-link,.account-submit,.world-play-button,.world-modal-primary {
+  background:linear-gradient(125deg,rgba(255,202,69,.96),rgba(255,113,133,.9)) !important;
+}
+.secondary-link,.language-toggle,.world-modal-secondary {
+  background:linear-gradient(125deg,rgba(53,188,235,.9),rgba(139,101,232,.9)) !important;
+}
+.account-tabs button,.plant-locked-button {
+  background:linear-gradient(125deg,rgba(139,101,232,.78),rgba(53,188,235,.72)) !important;
+}
+.account-tabs button.active {
+  background:linear-gradient(125deg,rgba(167,232,79,.96),rgba(66,201,107,.92)) !important;
+}
+.world-modal-close {
+  background:linear-gradient(135deg,#ff7185,#e84f87) !important;
+}
+.google-signin-button {
+  background:linear-gradient(125deg,rgba(53,188,235,.88),rgba(139,101,232,.88)) !important;
+}
+button:not(:disabled):hover,a.primary-link:hover,a.secondary-link:hover,
+a.world-play-button:hover {
+  transform:translateY(-2px);
+  filter:brightness(1.1) saturate(1.12);
+}
+button:disabled,.plant-locked-button:disabled {
+  cursor:not-allowed !important;
+  opacity:.62;
+  filter:saturate(.7);
+}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,
+textarea:focus-visible {
+  outline:3px solid var(--ui-lime) !important;
+  outline-offset:3px;
+}
+input,select,textarea,.account-form input {
+  color:#fff !important;
+  border:1px solid rgba(255,255,255,.5) !important;
+  border-radius:14px !important;
+  background:rgba(255,255,255,.14) !important;
+  box-shadow:inset 0 1px 8px rgba(14,40,78,.16);
+  backdrop-filter:blur(9px);
+}
+input::placeholder,textarea::placeholder {color:rgba(255,255,255,.7) !important;}
+input[type=range] {accent-color:var(--ui-lime);}
+.coin-wallet,.world-wallet {
+  border:1px solid rgba(255,255,255,.6) !important;
+  background:linear-gradient(125deg,rgba(255,202,69,.78),rgba(255,113,133,.58)) !important;
+  color:#fff !important;
+}
+.world-modal-backdrop,[role=dialog]::backdrop {
+  background:rgba(10,25,54,.58) !important;
+  backdrop-filter:blur(12px) saturate(125%);
+}
+.world-menu-modal,[role=dialog] {
+  border:1px solid rgba(255,255,255,.62) !important;
+  background:linear-gradient(145deg,rgba(72,197,188,.82),rgba(66,145,220,.82) 52%,rgba(130,103,222,.84)) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 22px 56px rgba(7,30,67,.42) !important;
+  backdrop-filter:blur(18px) saturate(155%);
+}
+[role=alert],.toast,.notification,.alert,.confirm-dialog,.confirmation-dialog,
+.error-message,.success-message {
+  border:1px solid rgba(255,255,255,.55) !important;
+  border-radius:16px !important;
+  color:#fff !important;
+  background:linear-gradient(130deg,rgba(53,188,235,.42),rgba(139,101,232,.42)) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.42),0 10px 26px rgba(12,36,74,.24) !important;
+  backdrop-filter:blur(12px) saturate(145%);
+}
+.error-message,.alert-error {background:linear-gradient(130deg,rgba(255,113,133,.72),rgba(196,67,115,.68)) !important;}
+.success-message,.alert-success {background:linear-gradient(130deg,rgba(66,201,107,.72),rgba(53,188,235,.58)) !important;}
+.collection-status,.stage-number,.stage-lock-label,.collection-meta span,
+.collection-summary span,.world-collection-stats span {
+  color:#fff !important;
+  border:1px solid rgba(255,255,255,.48) !important;
+  background:linear-gradient(120deg,rgba(53,188,235,.48),rgba(139,101,232,.5)) !important;
+}
+.collection-card.is-active .collection-status,.stage-available .stage-lock-label {
+  background:linear-gradient(120deg,rgba(167,232,79,.78),rgba(66,201,107,.76)) !important;
+}
+@media(max-width:640px) {
+  .home-card,.info-card {border-radius:18px !important;}
+  .info-nav,.menu-actions {gap:10px;}
+}
+@media(prefers-reduced-motion:reduce) {
+  *,*::before,*::after {scroll-behavior:auto !important;transition:none !important;animation-duration:.01ms !important;}
+}
