@@ -1084,16 +1084,18 @@ export default class BattleScene extends Scene {
     this.audioMenu = this.add.container(990, 183).setDepth(70).setVisible(false);
     // Make the menu surface consume clicks so its empty areas never behave
     // like clicks on the battlefield underneath it.
-    const panel = this.add.rectangle(0, 0, 250, 220, 0x17213d, 0.99)
-      .setStrokeStyle(5, 0x35bceb)
+    const panelGlow = this.add.rectangle(0, 0, 258, 228, 0x8b65e8, 0.16)
+      .setStrokeStyle(1, 0xffffff, 0.42);
+    const panel = this.add.rectangle(0, 0, 250, 220, 0x315b91, 0.76)
+      .setStrokeStyle(1, 0xffffff, 0.72)
       .setInteractive();
-    const inset = this.add.rectangle(0, 0, 236, 206, 0x315b91, 1)
-      .setStrokeStyle(2, 0xa7e84f);
+    const inset = this.add.rectangle(0, 0, 236, 206, 0x35bceb, 0.12)
+      .setStrokeStyle(1, 0xa7e84f, 0.42);
     const heading = this.add.text(0, -91, translate("TRIBE SOUND", window.localStorage.getItem("farmVsMonsters.language") || "ar"), {
       fontFamily: "Arial", fontSize: "15px", color: "#ffffff", fontStyle: "bold",
       stroke: "#17213d", strokeThickness: 3
     }).setOrigin(0.5).setData("localeKey", "TRIBE SOUND");
-    this.audioMenu.add([panel, inset, heading]);
+    this.audioMenu.add([panelGlow, panel, inset, heading]);
 
     this.musicAudioOption = this.createAudioVolumeSlider(-49, "Music", this.musicVolume, (value) => {
       this.musicVolume = value;
@@ -1124,7 +1126,8 @@ export default class BattleScene extends Scene {
     this.input.on("pointerup", () => { this.activeAudioSlider = null; });
 
     this.audioButton = this.add.container(1090, 34).setDepth(72);
-    const buttonBackground = this.add.circle(0, 0, 23, 0x287eb7, 1).setStrokeStyle(3, 0x35bceb);
+    const buttonHalo = this.add.circle(0, 0, 26, 0xffffff, 0.12);
+    const buttonBackground = this.add.circle(0, 0, 23, 0x287eb7, 0.62).setStrokeStyle(1, 0xffffff, 0.82);
     const speaker = this.add.graphics();
     speaker.fillStyle(0xffffff, 1);
     speaker.fillRoundedRect(-11, -6, 7, 12, 2);
@@ -1134,7 +1137,7 @@ export default class BattleScene extends Scene {
     speaker.beginPath();
     speaker.arc(3, 0, 10, -0.85, 0.85, false);
     speaker.strokePath();
-    this.audioButton.add([buttonBackground, speaker]);
+    this.audioButton.add([buttonHalo, buttonBackground, speaker]);
     buttonBackground.setInteractive({ useHandCursor: true });
     buttonBackground.on("pointerover", () => buttonBackground.setFillStyle(0x35bceb, 1));
     buttonBackground.on("pointerout", () => buttonBackground.setFillStyle(0x287eb7, 1));
@@ -1167,10 +1170,10 @@ export default class BattleScene extends Scene {
     const label = this.add.text(-101, -10, translate(title, window.localStorage.getItem("farmVsMonsters.language") || "ar"), {
       fontFamily: "Arial", fontSize: "11px", color: "#ffffff", fontStyle: "bold", stroke: "#17213d", strokeThickness: 2
     }).setOrigin(0, 0.5).setData("localeKey", title);
-    const track = this.add.rectangle(5, 12, 132, 8, 0x17213d, 1).setInteractive({ useHandCursor: true });
+    const track = this.add.rectangle(5, 12, 132, 8, 0xffffff, 0.24).setStrokeStyle(1, 0xffffff, 0.46).setInteractive({ useHandCursor: true });
     const fill = this.add.rectangle(-61, 12, 0, 5, 0xa7e84f, 1).setOrigin(0, 0.5);
-    const knob = this.add.circle(-61, 12, 8, 0xffca45, 1)
-      .setStrokeStyle(2, 0xffffff).setInteractive({ useHandCursor: true });
+    const knob = this.add.circle(-61, 12, 8, 0xffca45, 0.9)
+      .setStrokeStyle(1, 0xffffff, 0.9).setInteractive({ useHandCursor: true });
     const valueText = this.add.text(96, -10, Math.round(initialValue) + "%", {
       fontFamily: "Arial", fontSize: "11px", color: "#ffffff", fontStyle: "bold", stroke: "#17213d", strokeThickness: 2
     }).setOrigin(1, 0.5);
