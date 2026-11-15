@@ -1,10 +1,21 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createCombatEventLog, appendCombatEvent } from "../game/rules/combatEventLog.mjs";
+import { createCombatEventLog, appendCombatEvent, validateCombatEventLog } from "../game/rules/combatEventLog.mjs";
 import { replayCombatEventLog, PHASE_ONE_RULES_VERSION } from "../game/rules/combatReplay.mjs";
 const INTERVAL = 12000;
 function makeLog(actions) { return actions.reduce((log, action) => appendCombatEvent(log, action), createCombatEventLog({ seed: 123, rulesVersion: PHASE_ONE_RULES_VERSION })); }
 function ev(tick, type, payload) { return { tick, type, payload }; }
+
+test("combat event log accepts every plant type supported by the battle scene", () => {
+ const supported = ["radish", "mushroom", "tomato", "pumpkin", "onion"];
+ for (const type of supported) {
+  const log = makeLog([ev(0, "plant_placed", { type, col: 1, row: 2 }), ev(1, "plant_uprooted", { type, col: 1, row: 2 })]);
+  assert.equal(log.events.length, 2);
+  assert.equal(validateCombatEventLog(log), true);
+  assert.equal(log.events[0].payload.type, type);
+ }
+ assert.throws(() => makeLog([ev(0, "plant_placed", { type: "unknown-plant", col: 1, row: 2 })]), /INVALID_PLANT_EVENT/);
+});
 
 test("mushroom produces a 15-energy collectible after its 12-second cycle and it can be collected once", () => {
  const log=makeLog([ev(0,"plant_placed",{type:"mushroom",col:1,row:2}),ev(INTERVAL,"energy_spawned",{sourceCol:1,sourceRow:2,pickupId:"pickup-1",amount:15}),ev(INTERVAL+100,"energy_collected",{pickupId:"pickup-1",amount:15})]);
