@@ -96,7 +96,7 @@ export async function restoreOrInitializeCloudProgress() {
   return { restored: false, progress: local };
 }
 
-export async function syncProgressAfterVictory() {
+export async function syncPlayerProgress() {
   try {
     return await saveCloudProgress(readLocalPlayerProgress());
   } catch {
