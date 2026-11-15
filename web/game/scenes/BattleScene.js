@@ -946,7 +946,7 @@ export default class BattleScene extends Scene {
           if (fireball.active) fireball.destroy();
           if (this.gameOver || this.storySequenceActive || this.collectionMenuOpen) return;
           if (targetPlant?.alive) {
-            targetPlant.hp -= PHASE_ONE_DRAGON.fireballDamageToPlant;
+            targetPlant.hp = applyHitPointsDamage(targetPlant.hp, PHASE_ONE_DRAGON.fireballDamageToPlant).hp;
             this.flashEatenPlant(targetPlant);
             if (targetPlant.hp <= 0) this.destroyPlant(targetPlant);
           } else {
