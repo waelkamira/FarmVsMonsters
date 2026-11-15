@@ -744,3 +744,15 @@
 - Asset contract: farmer story sheets use 360×430 frames (6 frames each); dragon sheet uses 512×512 frames; captive and rescued princess poses are separate standalone PNGs; emblem is a standalone PNG.
 - Validation status: source and tests were updated, but browser gameplay, visual placement, and the web build still require execution in a local checkout after the user supplies the story artwork.
 
+
+
+## 2026-11-15 — Phase 1 balance and in-game collection menu
+- Changed Stage 1 ordinary monster total from 100 to 30 across five waves: 3 / 5 / 6 / 7 / 9. Dragon boss is separate.
+- Added campaign stage count helper for Stages 1–10: 30–39 ordinary monsters, increasing by one per stage.
+- Added a pause-on-open in-game journal menu with tabs for stages, plants, cave/coins, and monsters.
+- Stage list shows ten stages; Stage 1 is available and later stages display lock/key status.
+- Plant list uses the existing Radish and Mushroom thumbnails and displays their energy planting costs. Future coin purchases are explicitly not enabled yet.
+- Coin tab displays the saved balance and awaits the user-designed cave background asset.
+- Monster guide uses current hyena sprite art and explains health scaling and plant damage; dragon is separate.
+- Updated the home page counter and focused regression assertions.
+- Not yet run: npm test, npm run build, or in-browser visual validation. Cave background art is not yet present.
