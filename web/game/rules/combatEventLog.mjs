@@ -20,11 +20,11 @@ function normalizePayload(type, payload) {
     return Object.freeze({ pickupId: payload.pickupId, amount: payload.amount });
   }
   if (type === "monster_spawned") {
-    if (typeof payload.monsterId !== "string" || !/^monster-\\d+$/.test(payload.monsterId) || !Number.isInteger(payload.wave) || payload.wave < 1 || payload.wave > 5 || !Number.isInteger(payload.spawnIndex) || payload.spawnIndex < 0 || !Number.isInteger(payload.row) || payload.row < 0 || payload.row >= 5 || typeof payload.archetype !== "string" || !Number.isFinite(payload.hp) || payload.hp <= 0 || !Number.isFinite(payload.speed) || payload.speed <= 0) throw new RangeError("INVALID_MONSTER_SPAWN_EVENT");
+    if (typeof payload.monsterId !== "string" || !/^monster-\d+$/.test(payload.monsterId) || !Number.isInteger(payload.wave) || payload.wave < 1 || payload.wave > 5 || !Number.isInteger(payload.spawnIndex) || payload.spawnIndex < 0 || !Number.isInteger(payload.row) || payload.row < 0 || payload.row >= 5 || typeof payload.archetype !== "string" || !Number.isFinite(payload.hp) || payload.hp <= 0 || !Number.isFinite(payload.speed) || payload.speed <= 0) throw new RangeError("INVALID_MONSTER_SPAWN_EVENT");
     return Object.freeze({ monsterId: payload.monsterId, wave: payload.wave, spawnIndex: payload.spawnIndex, row: payload.row, archetype: payload.archetype, hp: payload.hp, speed: payload.speed });
   }
   if (type === "monster_bite") {
-    if (typeof payload.monsterId !== "string" || !/^monster-\\d+$/.test(payload.monsterId) || !validCell({ col: payload.plantCol, row: payload.plantRow }) || !Number.isFinite(payload.damage) || payload.damage <= 0) throw new RangeError("INVALID_MONSTER_BITE_EVENT");
+    if (typeof payload.monsterId !== "string" || !/^monster-\d+$/.test(payload.monsterId) || !validCell({ col: payload.plantCol, row: payload.plantRow }) || !Number.isFinite(payload.damage) || payload.damage <= 0) throw new RangeError("INVALID_MONSTER_BITE_EVENT");
     return Object.freeze({ monsterId: payload.monsterId, plantCol: payload.plantCol, plantRow: payload.plantRow, damage: payload.damage });
   }
   if (type === "energy_discarded") {
