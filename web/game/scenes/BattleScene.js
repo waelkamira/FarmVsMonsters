@@ -2293,9 +2293,11 @@ export default class BattleScene extends Scene {
     const targetRow = plant.row;
     const targetLocalX = Math.max(localX + 1, target.localX);
     const position = this.monsterLanePoint(localX, row);
-    const verticalOffset = this.nextProjectileAim === "head" ? -22 : 14;
-    this.nextProjectileAim = this.nextProjectileAim === "head" ? "middle" : "head";
-    const launchY = position.y + verticalOffset;
+    // Keep every shot on the exact centerline of its source lane.
+    // Alternating head/middle offsets made straight projectiles appear to
+    // weave vertically and miss the visual path despite same-row targeting.
+    const verticalOffset = 0;
+    const launchY = position.y;
     const view = this.add.container(position.x, launchY).setDepth(16);
 
     const halo = this.add.circle(0, 0, 18, 0xff7185, 0.13);
