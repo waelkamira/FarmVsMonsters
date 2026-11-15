@@ -1087,8 +1087,8 @@ export default class BattleScene extends Scene {
     // like clicks on the battlefield underneath it.
     const panelGlow = this.add.rectangle(0, 0, 258, 228, 0x8b65e8, 0.16)
       .setStrokeStyle(1, 0xffffff, 0.42);
-    const panel = this.add.rectangle(0, 0, 250, 220, 0x315b91, 0.76)
-      .setStrokeStyle(1, 0xffffff, 0.72)
+    const panel = this.add.rectangle(0, 0, 250, 220, 0x315b91, 0.64)
+      .setStrokeStyle(1, 0xffffff, 0.76)
       .setInteractive();
     const inset = this.add.rectangle(0, 0, 236, 206, 0x35bceb, 0.12)
       .setStrokeStyle(1, 0xa7e84f, 0.42);
@@ -1128,7 +1128,7 @@ export default class BattleScene extends Scene {
 
     this.audioButton = this.add.container(1090, 34).setDepth(72);
     const buttonHalo = this.add.circle(0, 0, 26, 0xffffff, 0.12);
-    const buttonBackground = this.add.circle(0, 0, 23, 0x287eb7, 0.62).setStrokeStyle(1, 0xffffff, 0.82);
+    const buttonBackground = this.add.circle(0, 0, 23, 0x35bceb, 0.42).setStrokeStyle(1, 0xffffff, 0.82);
     const speaker = this.add.graphics();
     speaker.fillStyle(0xffffff, 1);
     speaker.fillRoundedRect(-11, -6, 7, 12, 2);
@@ -1140,8 +1140,8 @@ export default class BattleScene extends Scene {
     speaker.strokePath();
     this.audioButton.add([buttonHalo, buttonBackground, speaker]);
     buttonBackground.setInteractive({ useHandCursor: true });
-    buttonBackground.on("pointerover", () => buttonBackground.setFillStyle(0x35bceb, 1));
-    buttonBackground.on("pointerout", () => buttonBackground.setFillStyle(0x287eb7, 1));
+    buttonBackground.on("pointerover", () => buttonBackground.setFillStyle(0x35bceb, 0.72));
+    buttonBackground.on("pointerout", () => buttonBackground.setFillStyle(0x35bceb, 0.42));
     buttonBackground.on("pointerdown", () => {
       if (this.audioMenuOpen) this.closeAudioMenu();
       else this.openAudioMenu();
@@ -1517,17 +1517,18 @@ export default class BattleScene extends Scene {
     this.collectionMenuOpen = true;
     this.collectionMenuTab = "phases";
     this.collectionMenuLayer = this.add.container(560, 340).setDepth(90);
-    this.collectionMenuLayer.add(this.add.rectangle(0, 0, 1120, 680, 0x15294c, 0.48).setInteractive());
-    const panelGlow = this.add.rectangle(0, 0, 774, 584, 0x8b65e8, 0.16).setStrokeStyle(1, 0xffffff, 0.4);
-    const panel = this.add.rectangle(0, 0, 760, 570, 0x315b91, 0.78).setStrokeStyle(2, 0xffffff, 0.7);
-    this.collectionMenuLayer.add([panelGlow, panel]);
-    this.collectionMenuLayer.add(this.add.rectangle(0, -274, 738, 40, 0x35bceb, 0.48).setStrokeStyle(1, 0xffffff, 0.72));
+    this.collectionMenuLayer.add(this.add.rectangle(0, 0, 1120, 680, 0x142b50, 0.42).setInteractive());
+    const panelGlow = this.add.rectangle(0, 0, 774, 584, 0x8b65e8, 0.18).setStrokeStyle(1, 0xffffff, 0.48);
+    const panel = this.add.rectangle(0, 0, 760, 570, 0x315b91, 0.68).setStrokeStyle(1, 0xffffff, 0.76);
+    const panelInset = this.add.rectangle(0, 0, 742, 552, 0x35bceb, 0.08).setStrokeStyle(1, 0xa7e84f, 0.28);
+    this.collectionMenuLayer.add([panelGlow, panel, panelInset]);
+    this.collectionMenuLayer.add(this.add.rectangle(0, -274, 738, 40, 0x35bceb, 0.34).setStrokeStyle(1, 0xffffff, 0.72));
     this.collectionMenuLayer.add(this.add.text(0, -274, "دفتر المزرعة والمغامرة  ·  FARM JOURNAL", {
       fontFamily: "Arial", fontSize: "19px", color: "#ffffff", fontStyle: "bold", stroke: "#17213d", strokeThickness: 3
     }).setOrigin(0.5));
     const close = this.add.text(350, -274, "✕", {
-      fontFamily: "Arial", fontSize: "23px", color: "#ffffff", backgroundColor: "#ff7185",
-      padding: { x: 8, y: 2 }
+      fontFamily: "Arial", fontSize: "23px", color: "#ffffff", backgroundColor: "rgba(255,113,133,0.72)",
+      padding: { x: 8, y: 2 }, stroke: "#ffffff", strokeThickness: 1
     }).setOrigin(0.5).setAlpha(0.88).setInteractive({ useHandCursor: true });
     close.on("pointerdown", () => this.closeCollectionMenu());
     this.collectionMenuLayer.add(close);
@@ -1558,9 +1559,9 @@ export default class BattleScene extends Scene {
     tabs.forEach(([id, label], index) => {
       const x = -270 + index * 180;
       const active = this.collectionMenuTab === id;
-      const tabColors = [0x238a58, 0x287eb7, 0xff9b45, 0x8b65e8];
-      const bg = this.add.rectangle(x, 0, 164, 42, active ? tabColors[index] : 0x315b91, active ? 0.78 : 0.34)
-        .setStrokeStyle(1, 0xffffff, active ? 0.88 : 0.48).setInteractive({ useHandCursor: true });
+      const tabColors = [0x42c96b, 0x35bceb, 0xffca45, 0x8b65e8];
+      const bg = this.add.rectangle(x, 0, 164, 42, active ? tabColors[index] : 0xdaf3ff, active ? 0.58 : 0.16)
+        .setStrokeStyle(1, 0xffffff, active ? 0.88 : 0.42).setInteractive({ useHandCursor: true });
       const txt = this.add.text(x, 0, label, {
         fontFamily: "Arial", fontSize: "15px", color: "#ffffff", fontStyle: "bold", stroke: "#17213d", strokeThickness: 2
       }).setOrigin(0.5);
@@ -1609,7 +1610,7 @@ export default class BattleScene extends Scene {
       if (this.textures.exists("treasure-cave-menu")) {
         content.add(this.add.image(0, 115, "treasure-cave-menu").setDisplaySize(610, 310));
       } else {
-        content.add(this.add.rectangle(0, 115, 610, 310, 0x315b91).setStrokeStyle(5, 0x35bceb));
+        content.add(this.add.rectangle(0, 115, 610, 310, 0x35bceb, 0.14).setStrokeStyle(1, 0xffffff, 0.62));
         addLabel(0, 60, locale === "ar" ? "مغارة الكنز — بانتظار رسم المغارة" : "TREASURE CAVE — ARTWORK PENDING", 18);
       }
       addLabel(0, 185, (locale === "ar" ? "رصيدك الحالي: " : "CURRENT BALANCE: ") + this.coins.toLocaleString() + "  🪙", 25, "#ffffff");
@@ -1626,14 +1627,14 @@ export default class BattleScene extends Scene {
 
   createPauseControl() {
     const button = this.add.container(1035, 27).setDepth(46);
-    const background = this.add.rectangle(0, 0, 54, 30, 0x8b65e8, 0.58)
-      .setStrokeStyle(1, 0xffffff, 0.78).setInteractive({ useHandCursor: true });
+    const background = this.add.rectangle(0, 0, 54, 30, 0x8b65e8, 0.42)
+      .setStrokeStyle(1, 0xffffff, 0.82).setInteractive({ useHandCursor: true });
     const label = this.add.text(0, 0, "Ⅱ", {
       fontFamily: "Arial", fontSize: "19px", color: "#ffffff", fontStyle: "bold"
     }).setOrigin(0.5);
     button.add([background, label]);
-    background.on("pointerover", () => background.setFillStyle(0xa07df2, 1));
-    background.on("pointerout", () => background.setFillStyle(0x8b65e8, 0.98));
+    background.on("pointerover", () => background.setFillStyle(0xa07df2, 0.72));
+    background.on("pointerout", () => background.setFillStyle(0x8b65e8, 0.42));
     background.on("pointerdown", () => this.pauseGame());
     this.pauseControl = button;
   }
