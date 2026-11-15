@@ -756,3 +756,11 @@
 - Monster guide uses current hyena sprite art and explains health scaling and plant damage; dragon is separate.
 - Updated the home page counter and focused regression assertions.
 - Not yet run: npm test, npm run build, or in-browser visual validation. Cave background art is not yet present.
+
+
+## 2026-11-15 — Hyena feeding animation
+- Hyenas now stop at the plant without pausing their sprite animation.
+- The authored hyena-bite sheet loops continuously during feeding, keeping the monster's world position fixed while its bite/body animation plays.
+- The monster returns to its walking/running animation after the plant is destroyed.
+- No sprite scaling, foot-position offsets, or ground shadows were added.
+- Automated test execution and in-browser visual confirmation remain pending.
