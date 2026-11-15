@@ -7,6 +7,17 @@ const AUDIO_CHANNELS = [
   { key: "projectileVolume", label: "Projectile sounds", initial: 65 }
 ];
 
+const GLASS = {
+  panel: 0x315b91,
+  panelGlow: 0x35bceb,
+  green: 0x42c96b,
+  blue: 0x35bceb,
+  violet: 0x8b65e8,
+  coral: 0xff7185,
+  gold: 0xffca45,
+  white: 0xffffff
+};
+
 export default class PauseScene extends Scene {
   constructor() {
     super("PauseScene");
@@ -45,26 +56,29 @@ export default class PauseScene extends Scene {
   }
 
   drawPanel(title, height = 420) {
-    this.add.rectangle(560, 340, 1120, 680, 0x15294c, 0.48).setDepth(-1);
-    this.add.rectangle(560, 340, 516, height + 16, 0x8b65e8, 0.16).setStrokeStyle(1, 0xffffff, 0.42);
-    this.add.rectangle(560, 340, 500, height, 0x315b91, 0.78).setStrokeStyle(2, 0xffffff, 0.62);
-    this.add.rectangle(560, 340, 480, height - 20, 0x35bceb, 0.12).setStrokeStyle(1, 0xa7e84f, 0.46);
-    this.add.rectangle(560, 340 - height / 2 + 10, 470, 8, 0xffffff, 0.22);
+    this.add.rectangle(560, 340, 1120, 680, 0x142b50, 0.58).setDepth(-1);
+    this.add.rectangle(560, 340, 526, height + 22, GLASS.violet, 0.18)
+      .setStrokeStyle(1, GLASS.white, 0.5);
+    this.add.rectangle(560, 340, 508, height, GLASS.panel, 0.64)
+      .setStrokeStyle(1, GLASS.white, 0.72);
+    this.add.rectangle(560, 340, 488, height - 20, GLASS.blue, 0.12)
+      .setStrokeStyle(1, GLASS.lime || 0xa7e84f, 0.38);
+    this.add.rectangle(560, 340 - height / 2 + 12, 472, 5, GLASS.white, 0.28);
     this.add.text(560, 340 - height / 2 + 58, this.tr(title), {
       fontFamily: "Arial", fontSize: "32px", color: "#ffffff",
-      fontStyle: "bold", stroke: "#17213d", strokeThickness: 6, resolution: 2
+      fontStyle: "bold", stroke: "#24365d", strokeThickness: 5, resolution: 2
     }).setOrigin(0.5);
   }
 
   drawPauseMenu() {
     this.drawPanel("BATTLE PAUSED", 420);
-    this.addMenuButton(270, "RESUME", 0x238a58, () => this.resumeBattle());
-    this.addMenuButton(345, "RESTART", 0x287eb7, () => this.restartBattle());
-    this.addMenuButton(420, "SETTINGS", 0x8b65e8, () => {
+    this.addMenuButton(270, "RESUME", GLASS.green, () => this.resumeBattle());
+    this.addMenuButton(345, "RESTART", GLASS.blue, () => this.restartBattle());
+    this.addMenuButton(420, "SETTINGS", GLASS.violet, () => {
       this.menuMode = "settings";
       this.drawCurrentMenu();
     });
-    this.addMenuButton(495, "MAIN MENU", 0xff7185, () => {
+    this.addMenuButton(495, "MAIN MENU", GLASS.coral, () => {
       if (typeof window !== "undefined") window.location.assign("/");
     });
   }
@@ -80,16 +94,20 @@ export default class PauseScene extends Scene {
     AUDIO_CHANNELS.forEach((channel, index) => {
       const y = 270 + index * 92;
       const value = this.readVolume(channel.key, channel.initial);
+      this.add.rectangle(560, y + 10, 390, 66, GLASS.white, 0.09)
+        .setStrokeStyle(1, GLASS.white, 0.32);
       this.add.text(560, y - 23, this.tr(channel.label), {
-        fontFamily: "Arial", fontSize: "19px", color: "#ffffff", fontStyle: "bold", stroke: "#17213d", strokeThickness: 3, resolution: 2
+        fontFamily: "Arial", fontSize: "19px", color: "#ffffff",
+        fontStyle: "bold", stroke: "#24365d", strokeThickness: 3, resolution: 2
       }).setOrigin(0.5);
-      this.addVolumeButton(420, y + 14, "−", () => this.changeVolume(channel, -5));
+      this.addVolumeButton(420, y + 14, "−", () => this.changeVolume(channel, -5), GLASS.blue);
       this.add.text(560, y + 14, value + "%", {
-        fontFamily: "Arial", fontSize: "22px", color: "#ffffff", fontStyle: "bold", stroke: "#17213d", strokeThickness: 3, resolution: 2
+        fontFamily: "Arial", fontSize: "22px", color: "#ffffff",
+        fontStyle: "bold", stroke: "#24365d", strokeThickness: 3, resolution: 2
       }).setOrigin(0.5);
-      this.addVolumeButton(700, y + 14, "+", () => this.changeVolume(channel, 5));
+      this.addVolumeButton(700, y + 14, "+", () => this.changeVolume(channel, 5), GLASS.green);
     });
-    this.addMenuButton(520, "BACK", 0x238a58, () => {
+    this.addMenuButton(520, "BACK", GLASS.gold, () => {
       this.menuMode = "pause";
       this.drawCurrentMenu();
     });
@@ -101,12 +119,14 @@ export default class PauseScene extends Scene {
     this.drawCurrentMenu();
   }
 
-  addVolumeButton(x, y, label, action) {
-    const bg = this.add.rectangle(x, y, 54, 42, 0x35bceb, 0.42)
-      .setStrokeStyle(1, 0xffffff, 0.72).setInteractive({ useHandCursor: true });
-    this.add.rectangle(x, y, 46, 34, 0xffca45, 0.42).setStrokeStyle(1, 0xffffff, 0.52);
+  addVolumeButton(x, y, label, action, color) {
+    const bg = this.add.rectangle(x, y, 54, 42, GLASS.blue, 0.3)
+      .setStrokeStyle(1, GLASS.white, 0.78).setInteractive({ useHandCursor: true });
+    this.add.rectangle(x, y, 46, 34, color, 0.62)
+      .setStrokeStyle(1, GLASS.white, 0.62);
     this.add.text(x, y - 1, label, {
-      fontFamily: "Arial", fontSize: "28px", color: "#ffffff", fontStyle: "bold", stroke: "#17213d", strokeThickness: 3, resolution: 2
+      fontFamily: "Arial", fontSize: "28px", color: "#ffffff",
+      fontStyle: "bold", stroke: "#24365d", strokeThickness: 3, resolution: 2
     }).setOrigin(0.5);
     bg.on("pointerover", () => bg.setScale(1.06));
     bg.on("pointerout", () => bg.setScale(1));
@@ -114,14 +134,16 @@ export default class PauseScene extends Scene {
   }
 
   addMenuButton(y, label, color, action) {
-    const bg = this.add.rectangle(560, y, 250, 52, 0x315b91, 0.34)
-      .setStrokeStyle(1, 0xffffff, 0.76).setInteractive({ useHandCursor: true });
-    this.add.rectangle(560, y, 240, 44, color, 0.76).setStrokeStyle(1, 0xffffff, 0.72);
+    const bg = this.add.rectangle(560, y, 250, 52, GLASS.blue, 0.28)
+      .setStrokeStyle(1, GLASS.white, 0.82).setInteractive({ useHandCursor: true });
+    this.add.rectangle(560, y, 240, 44, color, 0.72)
+      .setStrokeStyle(1, GLASS.white, 0.76);
     this.add.text(560, y, this.tr(label), {
-      fontFamily: "Arial", fontSize: "18px", color: "#ffffff", fontStyle: "bold", stroke: "#17213d", strokeThickness: 3, resolution: 2
+      fontFamily: "Arial", fontSize: "18px", color: "#ffffff",
+      fontStyle: "bold", stroke: "#24365d", strokeThickness: 3, resolution: 2
     }).setOrigin(0.5);
-    bg.on("pointerover", () => bg.setFillStyle(0x35bceb, 1).setScale(1.04));
-    bg.on("pointerout", () => bg.setFillStyle(0x17213d, 1).setScale(1));
+    bg.on("pointerover", () => bg.setFillStyle(GLASS.blue, 0.72).setScale(1.04));
+    bg.on("pointerout", () => bg.setFillStyle(GLASS.blue, 0.28).setScale(1));
     bg.on("pointerdown", action);
   }
 
