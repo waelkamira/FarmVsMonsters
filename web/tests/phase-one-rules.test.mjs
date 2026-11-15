@@ -6,6 +6,7 @@ import { dirname, resolve } from "node:path";
 import {
   PHASE_ONE_WAVE_SIZES,
   PHASE_ONE_TOTAL_MONSTERS,
+  ordinaryMonsterCountForStage,
   INITIAL_ENERGY,
   MAX_ENERGY,
   MONSTER_KILL_COIN_REWARD,
@@ -61,10 +62,16 @@ test("CC0 Kenney sound assets are bundled locally and mapped to gameplay events"
   assert.match(scene, /playDefeatMusic\(\) \{\s*this\.playSfx\("sfx-defeat"/);
 });
 
-test("five Phase 1 waves are strictly increasing and total exactly 100", () => {
-  assert.deepEqual(PHASE_ONE_WAVE_SIZES, [10, 15, 20, 25, 30]);
-  assert.equal(PHASE_ONE_TOTAL_MONSTERS, 100);
+test("five Phase 1 waves are gently increasing and total exactly 30 ordinary monsters", () => {
+  assert.deepEqual(PHASE_ONE_WAVE_SIZES, [3, 5, 6, 7, 9]);
+  assert.equal(PHASE_ONE_TOTAL_MONSTERS, 30);
   assert.ok(PHASE_ONE_WAVE_SIZES.every((count, index) => index === 0 || count > PHASE_ONE_WAVE_SIZES[index - 1]));
+});
+
+test("campaign stage counts increase by one ordinary monster per stage; dragon is excluded", () => {
+  assert.deepEqual(Array.from({ length: 10 }, (_, i) => ordinaryMonsterCountForStage(i + 1)), [30,31,32,33,34,35,36,37,38,39]);
+  assert.equal(ordinaryMonsterCountForStage(0), 0);
+  assert.equal(ordinaryMonsterCountForStage(11), 0);
 });
 
 test("initial energy, plant costs, HP and mushroom production are centralized", () => {
@@ -294,7 +301,11 @@ test("home menu reads the saved coin wallet", () => {
 test("player guidance and roadmap match the current Phase 1 balance", () => {
   assert.match(guide, /15-energy collectible every 12 seconds/);
   assert.match(gamePage, /Collect glowing Mushroom energy/);
-  assert.match(roadmap, /10 \/ 15 \/ 20 \/ 25 \/ 30/);
+  assert.match(scene, /createCollectionMenuControl\(\)/);
+  assert.match(scene, /this\.collectionMenuTab = "phases"/);
+  assert.match(scene, /"treasure-cave-menu"/);
+  assert.match(scene, /"dragon-boss"/);
+  assert.match(roadmap, /3 \/ 5 \/ 6 \/ 7 \/ 9/);
   assert.match(roadmap, /full 15-energy collectible per Mushroom every 12 seconds/);
   assert.match(roadmap, /Cave-brute, Dust-skitter, Stonehide/);
   assert.doesNotMatch(roadmap, /25 collectible energy per Mushroom every 8 seconds/i);
