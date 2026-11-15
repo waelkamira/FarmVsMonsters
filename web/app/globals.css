@@ -1605,3 +1605,42 @@ input[type=range] {accent-color:var(--ui-lime);}
 .home-start-button:active {
   transform:translateY(1px) scale(.99);
 }
+
+/* Interaction-state consistency pass: every web control shares the same glass feedback. */
+:where(a,button,[role="button"],input,select,textarea) {
+  -webkit-tap-highlight-color:transparent;
+}
+:where(a.primary-link,a.secondary-link,button,.google-signin-button,.plant-locked-button,
+  .world-modal-primary,.world-modal-secondary,.world-modal-close,.world-icon-button) {
+  isolation:isolate;
+  position:relative;
+  overflow:hidden;
+}
+:where(a.primary-link,a.secondary-link,button,.google-signin-button,.plant-locked-button,
+  .world-modal-primary,.world-modal-secondary,.world-modal-close,.world-icon-button):not(:disabled):active {
+  transform:translateY(1px) scale(.985);
+  filter:brightness(1.08) saturate(1.15);
+}
+:where(.collection-card,.stage-tile,.stage-briefing>div,.collection-wallet,
+  .account-signed-in,.guest-play-panel,.world-item-card,.world-feature-panel) {
+  backdrop-filter:var(--ui-blur);
+  -webkit-backdrop-filter:var(--ui-blur);
+}
+:where(.collection-card,.stage-tile) h2,
+:where(.collection-card,.stage-tile) p,
+:where(.collection-card,.stage-tile) small,
+:where(.collection-card,.stage-tile) label {
+  color:#fff !important;
+}
+:where(.collection-card,.stage-tile) :where(button,a) {
+  min-height:44px;
+}
+:where(.collection-card,.stage-tile) button:disabled {
+  background:linear-gradient(125deg,rgba(139,101,232,.58),rgba(53,188,235,.48)) !important;
+  border-color:rgba(255,255,255,.36) !important;
+}
+@media(hover:hover) {
+  :where(.collection-card,.stage-tile,.stage-briefing>div):hover {
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.58),0 16px 34px rgba(15,45,78,.25);
+  }
+}
