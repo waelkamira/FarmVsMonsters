@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale, LanguageToggle } from "./LocaleProvider";
@@ -54,6 +55,10 @@ export default function HomePage() {
           {starting ? (arabic ? "جارٍ التحضير..." : "LOADING...") : (arabic ? "ابدأ" : "START")}
           <span aria-hidden="true">➜</span>
         </button>
+        <Link className="home-world-map-button" href="/stages">
+          <span aria-hidden="true">🗺️</span>
+          {arabic ? "خريطة العوالم" : "WORLD MAP"}
+        </Link>
       </section>
     </main>
   );
