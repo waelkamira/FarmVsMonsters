@@ -106,7 +106,7 @@ export default class BattleScene extends Scene {
     // These four hyena sheets now share one standardized 360x298 frame grid.
     this.load.spritesheet("hyena-idle", "/assets/characters/monsters/hyena/hyena-idle.png", { frameWidth: 360, frameHeight: 298 });
     this.load.spritesheet("hyena-walk", "/assets/characters/monsters/hyena/hyena-walk.png", { frameWidth: 360, frameHeight: 298 });
-    this.load.spritesheet("hyena-run", "/assets/characters/monsters/hyena/hyena-run.png", { frameWidth: 360, frameHeight: 296 });
+    this.load.spritesheet("hyena-run", "/assets/characters/monsters/hyena/hyena-run1.png", { frameWidth: 367, frameHeight: 298 });
     this.load.spritesheet("hyena-bite", "/assets/characters/monsters/hyena/hyena-bite.png", { frameWidth: 360, frameHeight: 298 });
     this.load.spritesheet("hyena-hit", "/assets/characters/monsters/hyena/hyena-hit.png", { frameWidth: 360, frameHeight: 894 });
     this.load.spritesheet("hyena-death", "/assets/characters/monsters/hyena/hyena-death.png", { frameWidth: 360, frameHeight: 447 });
@@ -2486,7 +2486,7 @@ export default class BattleScene extends Scene {
     const requiredDefinitions = [
       ["hyena-idle", 4, 5, -1],
       ["hyena-walk", 9, 9, -1],
-      ["hyena-run", 9, 14, -1],
+      ["hyena-run", 7, 14, -1],
       ["hyena-bite", 6, 9, -1]
     ];
     const optionalDefinitions = [
