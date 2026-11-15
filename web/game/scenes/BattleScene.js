@@ -1755,8 +1755,11 @@ export default class BattleScene extends Scene {
       // uniform grid and clipping the artwork.
       const jumpTexture = this.textures.get("hyena-jump");
       const jumpFrames = [
-        ...Array.from({ length: 5 }, (_, i) => ({ x: i * 216, y: 0, width: 216, height: 447 })),
-        ...Array.from({ length: 3 }, (_, i) => ({ x: i * 360, y: 447, width: 360, height: 447 }))
+        // The five upper poses extend below the old 447px row boundary.
+        // Give them the full upper band so their feet are not clipped.
+        ...Array.from({ length: 5 }, (_, i) => ({ x: i * 216, y: 0, width: 216, height: 596 })),
+        // The three lower poses occupy the remaining 298px band.
+        ...Array.from({ length: 3 }, (_, i) => ({ x: i * 360, y: 596, width: 360, height: 298 }))
       ];
       jumpFrames.forEach((frame, index) => {
         jumpTexture.add(String(index), 0, frame.x, frame.y, frame.width, frame.height);
