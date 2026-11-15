@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale, LanguageToggle } from "../../LocaleProvider";
 import { loadUnlockedStage } from "../../../game/rules/phaseOneRules.mjs";
+import CatalogThumb from "../../components/CatalogThumb";
 
 export default function StageTwoIntroPage() {
   const { locale } = useLocale();
@@ -46,9 +47,7 @@ export default function StageTwoIntroPage() {
           <LanguageToggle />
         </div>
 
-        <div className="stage-intro-emblem" aria-label={ar ? "مكان شعار المرحلة الثانية" : "Stage two emblem placeholder"}>
-          <span>{ar ? "مكان شعار المرحلة الثانية" : "STAGE TWO EMBLEM"}</span>
-        </div>
+        <CatalogThumb id="stage" label={ar ? "شعار المرحلة الثانية" : "Stage Two emblem"} className="stage-intro-thumb" />
 
         <h1>{ar ? "المرحلة الثانية: مغامرة جديدة" : "Stage Two: A New Adventure"}</h1>
 
@@ -59,15 +58,9 @@ export default function StageTwoIntroPage() {
         </p>
 
         <div className="stage-cast-grid stage-two-cast-grid">
-          <div className="stage-cast-placeholder">
-            <span>{ar ? "مكان صورة تنين المرحلة الثانية" : "STAGE TWO DRAGON ART"}</span>
-          </div>
-          <div className="stage-cast-placeholder">
-            <span>{ar ? "مكان صورة وحوش المرحلة الثانية" : "STAGE TWO MONSTER ARMY ART"}</span>
-          </div>
-          <div className="stage-cast-placeholder">
-            <span>{ar ? "مكان صورة الأميرة الأسيرة" : "CAPTIVE PRINCESS ART"}</span>
-          </div>
+          <CatalogThumb id="dragon" label={ar ? "تنين المرحلة الثانية" : "Stage Two dragon"} className="stage-cast-thumb" />
+          <CatalogThumb id="cave-brute" label={ar ? "جيش الوحوش" : "Monster army"} className="stage-cast-thumb" />
+          <CatalogThumb id="princess" label={ar ? "الأميرة الأسيرة" : "Captive princess"} className="stage-cast-thumb" />
         </div>
 
         <div className="stage-briefing stage-two-briefing">
