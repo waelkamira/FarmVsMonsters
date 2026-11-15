@@ -829,3 +829,9 @@
 - Updated BattleScene to read these values from the shared contract without changing the approved 8-coin reward or current tuning.
 - Expanded combat contract tests to cover the new shared values.
 - The live simulation is still client-side; the seeded PRNG is not yet connected to battle gameplay. This remains preparation for the authoritative server replay, not a completed anti-cheat system.
+
+
+
+## 2026-11-15 — CI runner availability check
+- GitHub Actions was triggered for the new combat-contract and seeded-PRNG commits. The latest run `43760589466` failed before any job step started: job `validate` has `runner_id=0` and an empty steps list.
+- This is an unavailable/unassigned runner result, not evidence that the source passed or failed compilation/tests. No test, lint, or build result is available from this run.
