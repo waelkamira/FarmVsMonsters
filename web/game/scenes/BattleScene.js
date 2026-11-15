@@ -26,7 +26,10 @@ import {
   selectLaneBlocker,
   selectProjectileTarget,
   selectFarmerMeleeTarget,
-  selectDragonFireballTarget
+  selectDragonFireballTarget,
+  advanceCooldown,
+  resolveBiteAttack,
+  resolveDustSkitterMotionStep
 } from "../rules/combatSimulation.mjs";
 import {
   PHASE_ONE_DRAGON,
@@ -2628,7 +2631,7 @@ export default class BattleScene extends Scene {
   updateMonsters(dt, delta) {
     for (const monster of this.monsters) {
       if (!monster.alive) continue;
-      monster.attackCooldown -= delta;
+      monster.attackCooldown = advanceCooldown(monster.attackCooldown, delta);
       if (monster.hyenaSprite && !this.gameOver) {
         monster.voiceCooldown -= delta;
         if (monster.voiceCooldown <= 0) {
@@ -2687,9 +2690,14 @@ export default class BattleScene extends Scene {
         if (monster.hyenaSprite && monster.hitAnimUntil <= this.time.now) {
           this.playHyenaAnimation(monster, "hyena-bite");
         }
-        if (monster.attackCooldown <= 0) {
+        const bite = resolveBiteAttack({
+          cooldownMs: monster.attackCooldown,
+          deltaMs: 0,
+          intervalMs: monster.attackInterval
+        });
+        monster.attackCooldown = bite.cooldownMs;
+        if (bite.shouldAttack) {
           blocker.hp = applyHitPointsDamage(blocker.hp, monster.plantDamage).hp;
-          monster.attackCooldown = monster.attackInterval;
           this.playMonsterBiteSound();
           this.flashEatenPlant(blocker);
           if (blocker.hp <= 0) this.destroyPlant(blocker);
@@ -2709,36 +2717,46 @@ export default class BattleScene extends Scene {
       let movementSpeed = monster.speed;
       let jumpOffset = 0;
       if (monster.kind === "dust-skitter") {
-        monster.jumpCooldown -= delta;
-        if (!monster.isJumping && monster.jumpCooldown <= 0) {
-          monster.isJumping = true;
-          monster.jumpElapsed = 0;
-          monster.jumpDuration = PhaserMath.Between(monster.combatProfile.jumpDurationMinMs, monster.combatProfile.jumpDurationMaxMs);
-          this.createFootstepDust(monster.x - 8, monster.y + 3, monster.view.scaleY);
-        }
-        if (monster.isJumping) {
-          monster.jumpElapsed += delta;
-          const progress = PhaserMath.Clamp(monster.jumpElapsed / monster.jumpDuration, 0, 1);
-          jumpOffset = -Math.sin(progress * Math.PI) * 34 * monster.view.scaleY;
-          movementSpeed *= monster.combatProfile.jumpSpeedMultiplier;
-          if (progress >= 1) {
-            monster.isJumping = false;
-            monster.jumpElapsed = 0;
-            monster.jumpCooldown = PhaserMath.Between(monster.combatProfile.jumpResetCooldownMinMs, monster.combatProfile.jumpResetCooldownMaxMs);
-            this.createFootstepDust(monster.x + 8, monster.y + 3, monster.view.scaleY);
-            jumpOffset = 0;
-          }
-        }
-        monster.burstCooldown -= delta;
-        if (monster.burstCooldown <= 0 && monster.burstRemaining <= 0) {
-          monster.burstRemaining = monster.combatProfile.burstDurationMs;
-          monster.burstCooldown = PhaserMath.Between(monster.combatProfile.burstCooldownMinMs, monster.combatProfile.burstCooldownMaxMs);
+        const profile = monster.combatProfile;
+        const jumpWillStart = !monster.isJumping && monster.jumpCooldown - delta <= 0;
+        const jumpWillLand = monster.isJumping && monster.jumpElapsed + delta >= monster.jumpDuration;
+        const burstWillStart = monster.burstCooldown - delta <= 0 && monster.burstRemaining <= 0;
+        const motion = resolveDustSkitterMotionStep({
+          isJumping: monster.isJumping,
+          jumpCooldownMs: monster.jumpCooldown,
+          jumpElapsedMs: monster.jumpElapsed,
+          jumpDurationMs: monster.jumpDuration,
+          deltaMs: delta,
+          jumpSpeedMultiplier: profile.jumpSpeedMultiplier,
+          jumpVisualHeight: 34,
+          visualScale: monster.view.scaleY,
+          nextJumpDurationMs: jumpWillStart
+            ? PhaserMath.Between(profile.jumpDurationMinMs, profile.jumpDurationMaxMs)
+            : null,
+          nextJumpResetCooldownMs: jumpWillLand
+            ? PhaserMath.Between(profile.jumpResetCooldownMinMs, profile.jumpResetCooldownMaxMs)
+            : null,
+          burstCooldownMs: monster.burstCooldown,
+          burstRemainingMs: monster.burstRemaining,
+          burstDurationMs: profile.burstDurationMs,
+          burstSpeedMultiplier: profile.burstSpeedMultiplier,
+          nextBurstCooldownMs: burstWillStart
+            ? PhaserMath.Between(profile.burstCooldownMinMs, profile.burstCooldownMaxMs)
+            : null
+        });
+        monster.isJumping = motion.isJumping;
+        monster.jumpCooldown = motion.jumpCooldownMs;
+        monster.jumpElapsed = motion.jumpElapsedMs;
+        monster.jumpDuration = motion.jumpDurationMs;
+        monster.burstCooldown = motion.burstCooldownMs;
+        monster.burstRemaining = motion.burstRemainingMs;
+        jumpOffset = motion.jumpOffset;
+        movementSpeed *= motion.movementMultiplier;
+        if (motion.jumpStarted) this.createFootstepDust(monster.x - 8, monster.y + 3, monster.view.scaleY);
+        if (motion.jumpLanded) this.createFootstepDust(monster.x + 8, monster.y + 3, monster.view.scaleY);
+        if (motion.burstStarted) {
           this.createFootstepDust(monster.x - 10, monster.y + 3, monster.view.scaleY * 1.15);
           this.createFootstepDust(monster.x + 4, monster.y + 1, monster.view.scaleY);
-        }
-        if (monster.burstRemaining > 0) {
-          monster.burstRemaining = Math.max(0, monster.burstRemaining - delta);
-          movementSpeed *= monster.combatProfile.burstSpeedMultiplier;
         }
       }
 
