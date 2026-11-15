@@ -16,7 +16,8 @@ const LOCAL_MONSTER_ICONS = {
   "cave-brute": "/assets/monster-icons/cave-brute.svg",
   "dust-skitter": "/assets/monster-icons/dust-skitter.svg",
   stonehide: "/assets/monster-icons/stonehide.svg",
-  "alpha-brute": "/assets/monster-icons/alpha-brute.svg"
+  "alpha-brute": "/assets/monster-icons/alpha-brute.svg",
+  dragon: "/assets/monster-icons/dragon.svg"
 };
 
 const ART = {
