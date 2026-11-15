@@ -2166,10 +2166,13 @@ export default class BattleScene extends Scene {
           hit, shot.damage * this.incomingMonsterDamageMultiplier(hit)
         );
         if (hit.view && hit.view.active) {
-          this.tweens.killTweensOf(hit.view);
+          // A tiny sideways flinch only; never alter vertical position or scale.
           this.tweens.add({
-            targets: hit.view, x: hit.view.x - 7, angle: hit.view.angle - 7,
-            duration: 55, yoyo: true, repeat: 1, ease: "Sine.easeOut"
+            targets: hit.view,
+            x: hit.view.x - 3,
+            duration: 65,
+            yoyo: true,
+            ease: "Sine.easeOut"
           });
           this.createStoneHitDust(position.x, position.y + shot.verticalOffset + 4, hit.view.scaleY);
         }
@@ -2196,18 +2199,25 @@ export default class BattleScene extends Scene {
 
   flashMonsterOnHit(monster) {
     if (!monster || !monster.alive) return;
-    if (monster.hyenaSprite && monster.hyenaSprite.active) {
-      monster.hitAnimUntil = this.time.now + 260;
-      this.playHyenaAnimation(monster, "hyena-hit", true);
+
+    // Keep the hyena grounded on its lane: do not play the hit spritesheet,
+    // whose pose can read as a jump/flying reaction. Use a brief color flash.
+    const sprite = monster.hyenaSprite;
+    if (sprite?.active) {
+      if (monster.hitFlashTimer) monster.hitFlashTimer.remove(false);
+      sprite.setTint(0xffe0a0);
+      monster.hitFlashTimer = this.time.delayedCall(95, () => {
+        if (sprite.active) sprite.clearTint();
+        monster.hitFlashTimer = null;
+      });
     }
+
     if (!monster.hitFlashGraphic || !monster.hitFlashGraphic.active) return;
-    // Brief additive highlight makes the creature visibly flash on impact.
-    // Keep its alpha and scale untouched so it never fades or vanishes on a hit.
     if (monster.hitFlashTimer) monster.hitFlashTimer.remove(false);
-    monster.hitFlashGraphic.setBlendMode(1); // Phaser BlendModes.ADD
+    monster.hitFlashGraphic.setBlendMode(1);
     monster.hitFlashTimer = this.time.delayedCall(85, () => {
-      if (monster.hitFlashGraphic && monster.hitFlashGraphic.active) {
-        monster.hitFlashGraphic.setBlendMode(0); // Phaser BlendModes.NORMAL
+      if (monster.hitFlashGraphic?.active) {
+        monster.hitFlashGraphic.setBlendMode(0);
       }
       monster.hitFlashTimer = null;
     });
