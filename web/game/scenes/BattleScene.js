@@ -2128,7 +2128,8 @@ export default class BattleScene extends Scene {
         .filter((p) => p.alive && p.row === monster.row && this.worldToLane(p).localX < monster.localX)
         .sort((a, b) => this.worldToLane(b).localX - this.worldToLane(a).localX)[0];
       const blockerLocalX = blocker ? this.worldToLane(blocker).localX : -Infinity;
-      const biteReach = 43 * (monster.widthScale || 1);
+      // Keep the hyena's nose just short of the plant instead of letting its body overlap it.
+      const biteReach = 65 * (monster.widthScale || 1);
       const withinBiteRange = Boolean(blocker && monster.localX - blockerLocalX <= biteReach);
 
       // A Stonehide locks its shale plates into place while chewing a plant.
@@ -2142,7 +2143,9 @@ export default class BattleScene extends Scene {
 
       if (withinBiteRange) {
         if (monster.attackCooldown <= 0) {
-          this.playHyenaAnimation(monster, "hyena-bite", true);
+          // The bite sheet has inconsistent character framing between poses, which
+          // makes the hyena appear to grow. Keep its stable idle frame while chewing.
+          this.playHyenaAnimation(monster, "hyena-idle", true);
           blocker.hp -= monster.plantDamage; monster.attackCooldown = monster.attackInterval;
           this.playMonsterBiteSound();
           this.flashEatenPlant(blocker);
