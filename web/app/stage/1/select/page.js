@@ -30,14 +30,15 @@ export default function StageOneSeedSelectionPage() {
   function togglePlant(plant) {
     if (plant.required) return;
     setNotice("");
-    setSelected((current) => {
-      if (current.includes(plant.id)) return current.filter((id) => id !== plant.id);
-      if (current.length >= MAX_SEEDS) {
-        setNotice(ar ? "يمكنك تجهيز ٧ نباتات فقط في هذه المعركة." : "You can bring only 7 plants into this battle.");
-        return current;
-      }
-      return [...current, plant.id];
-    });
+    if (selected.includes(plant.id)) {
+      setSelected(selected.filter((id) => id !== plant.id));
+      return;
+    }
+    if (selected.length >= MAX_SEEDS) {
+      setNotice(ar ? "يمكنك تجهيز ٧ نباتات فقط في هذه المعركة." : "You can bring only 7 plants into this battle.");
+      return;
+    }
+    setSelected([...selected, plant.id]);
   }
 
   function beginBattle() {
