@@ -2157,26 +2157,6 @@ export default class BattleScene extends Scene {
     return plant;
   }
 
-  startPineappleIdleMotion(sprite) {
-    if (!sprite?.active) return;
-    this.tweens.killTweensOf(sprite);
-    const baseY = sprite.getData("pineappleIdleBaseY") ?? sprite.y;
-    sprite.setY(baseY).setAngle(0).setScale(1);
-    // A more expressive planted idle: the pineapple gently rises, leans,
-    // and settles back, without moving its soil-cell anchor.
-    sprite.setAngle(-7);
-    this.tweens.add({
-      targets: sprite,
-      y: baseY - 7,
-      angle: 7,
-      scaleY: 1.07,
-      duration: 520,
-      ease: "Sine.easeInOut",
-      yoyo: true,
-      repeat: -1
-    });
-  }
-
   drawCatalogPlant(type, x, y, row = 2) {
     const plant = this.add.container(x, y).setDepth(11);
     const texture = type === "tomato" ? "tomato-character" : type === "pumpkin" ? "pumpkin-character" : type === "pineapple" ? "pineapple-level-1" : "onion-character";
@@ -2197,12 +2177,9 @@ export default class BattleScene extends Scene {
       const width = height * (this.textures.getFrame(texture).realWidth / this.textures.getFrame(texture).realHeight);
       const maxWidth = (type === "tomato" ? 38 : type === "pineapple" ? 152 : 76) * pineapplePerspectiveScale;
       if (type === "pineapple") {
-        const pineappleBaseY = -height / 2 + 2;
-        const pineapple = this.add.sprite(0, pineappleBaseY, texture, 0).setDisplaySize(Math.min(width, maxWidth), height);
+        const pineapple = this.add.sprite(0, -height / 2 + 2, texture, 0).setDisplaySize(Math.min(width, maxWidth), height);
         pineapple.setData("pineappleThrowSprite", true);
-        pineapple.setData("pineappleIdleBaseY", pineappleBaseY);
         plant.add(pineapple);
-        this.startPineappleIdleMotion(pineapple);
       } else {
         plant.add(this.add.image(0, -height / 2 + 2, texture).setDisplaySize(Math.min(width, maxWidth), height));
       }
@@ -2398,17 +2375,11 @@ export default class BattleScene extends Scene {
       const throwSprite = plant.view.list.find((child) => child?.getData?.("pineappleThrowSprite"));
       if (throwSprite && this.anims.exists("pineapple-level-1-throw")) {
         plant.pineappleThrowing = true;
-        this.tweens.killTweensOf(throwSprite);
-        throwSprite.setY(throwSprite.getData("pineappleIdleBaseY") ?? throwSprite.y);
-        throwSprite.setAngle(0).setScale(1);
         throwSprite.stop();
         throwSprite.setTexture("pineapple-level-1", 0);
         throwSprite.play("pineapple-level-1-throw");
         throwSprite.once("animationcomplete", () => {
-          if (throwSprite.active) {
-            throwSprite.setTexture("pineapple-level-1", 0);
-            this.startPineappleIdleMotion(throwSprite);
-          }
+          if (throwSprite.active) throwSprite.setTexture("pineapple-level-1", 0);
           // Add a short beat after the final throw pose before releasing the bomb.
           this.time.delayedCall(0, () => {
             plant.pineappleThrowing = false;
