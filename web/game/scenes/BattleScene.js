@@ -2487,6 +2487,8 @@ export default class BattleScene extends Scene {
       speed: projectileConfig.projectileSpeed,
       damage: projectileConfig.projectileDamage,
       collisionRadius: projectileConfig.projectileCollisionRadius,
+      dropSpeed: Math.max(360, projectileConfig.projectileSpeed * 1.5),
+      dropPhase: "horizontal",
       alive: true, trailTimer: 0
     });
     this.playThornSound();
@@ -3104,25 +3106,61 @@ export default class BattleScene extends Scene {
   updateProjectiles(dt) {
     for (const shot of this.projectiles) {
       if (!shot.alive) continue;
+      const pineappleTarget = shot.plantType === "pineapple" &&
+        shot.target?.alive && shot.target.row === shot.row &&
+        shot.target.view?.active;
+      if (shot.plantType === "pineapple" && shot.dropPhase === "dropping" && pineappleTarget) {
+        // During the drop, continuously follow the monster's live bounds. This
+        // keeps the bomb over its head even when the monster moves or is scaled.
+        const bounds = shot.target.view.getBounds();
+        const headY = bounds.top;
+        const headX = bounds.centerX;
+        const bombHalfHeight = 10.5;
+        const nextY = Math.min(headY - bombHalfHeight, shot.view.y + shot.dropSpeed * dt);
+        shot.view.setPosition(headX, nextY);
+        shot.localX = shot.target.localX;
+        shot.trailTimer -= dt * 1000;
+        if (shot.trailTimer <= 0) {
+          this.createProjectileTrail(headX - 5, nextY);
+          shot.trailTimer = 48;
+        }
+        if (nextY >= headY - bombHalfHeight - 0.5) {
+          this.createProjectileImpact(headX, headY);
+          this.playThornImpactSound();
+          this.applyMonsterDamage(shot.target, shot.damage * this.incomingMonsterDamageMultiplier(shot.target));
+          this.damageMonsterIfNeeded(shot.target);
+          shot.alive = false;
+          shot.view.destroy();
+        }
+        continue;
+      }
+
       shot.localX = resolveProjectileLaneStep({ localX: shot.localX, speed: shot.speed, deltaSeconds: dt });
-      // Keep the projectile locked to the Radish's original lane. Only its
-      // horizontal aim follows the target; it never travels diagonally.
+      // Keep every projectile in its plant's original lane. Aim follows the
+      // live target, while pineapple bombs switch to a vertical head drop.
       if (shot.target && shot.target.alive && shot.target.row === shot.row &&
           Number.isFinite(shot.target.localX)) {
         shot.targetLocalX = Math.max(shot.startLocalX + 1, shot.target.localX);
       }
 
       shot.currentRow = shot.row;
-      // Projectiles travel through the horizontal centerline of each
-      // perspective soil cell; monster sprites use a separately lowered lane.
       const position = shot.plantType === "pineapple"
         ? this.pineappleLanePoint(shot.localX, shot.row)
         : this.lanePoint(shot.localX, shot.row);
-      // Preserve the pineapple's upper-right launch height throughout flight.
-      // The bomb advances horizontally with the lane perspective, without
-      // falling toward the plant's foot-level centerline after it is fired.
       const projectileX = position.x + (shot.launchOffsetX || 0);
       const projectileY = position.y + (shot.launchOffsetY || 0);
+
+      // The pineapple first travels horizontally, then changes to a vertical
+      // drop directly above the monster's current head. The transition uses
+      // the monster's rendered bounds, not fixed sprite or plant dimensions.
+      if (pineappleTarget) {
+        const targetBounds = shot.target.view.getBounds();
+        if (projectileX >= targetBounds.centerX - 4) {
+          shot.dropPhase = "dropping";
+          shot.view.setPosition(targetBounds.centerX, projectileY);
+          continue;
+        }
+      }
       shot.view.setPosition(projectileX, projectileY);
 
       shot.trailTimer -= dt * 1000;
