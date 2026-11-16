@@ -76,7 +76,8 @@ export default class BattleScene extends Scene {
 
   preload() {
     this.load.image("farm-battlefield", "/assets/backgrounds/farm-battlefield.jpeg");
-    this.load.image("radish-character", "/assets/plants/radish.png");
+    this.load.image("radish-level-1", "/assets/plants/radish-level-1.png");
+    this.load.image("radish-level-1-bomb", "/assets/plants/radish-level-1-bomb.png");
     this.load.image("mushroom-character", "/assets/plants/mushroom.png");
     this.load.image("tomato-character", "/assets/plants/tomato.png");
     this.load.image("pumpkin-character", "/assets/plants/pumpkin.png");
@@ -130,7 +131,7 @@ export default class BattleScene extends Scene {
     }
     this.load.on("loaderror", (file) => {
       if (file.key === "farm-battlefield") this.backgroundAssetFailed = true;
-      if (file.key === "radish-character") this.radishAssetFailed = true;
+      if (file.key === "radish-level-1") this.radishAssetFailed = true;
       if (file.key === "mushroom-character") this.mushroomAssetFailed = true;
       if (["tomato-character", "pumpkin-character", "onion-character"].includes(file.key)) {
         this.optionalPlantAssetFailures = this.optionalPlantAssetFailures || [];
@@ -229,8 +230,28 @@ export default class BattleScene extends Scene {
         }
       }
     }
+    if (this.textures.exists("radish-level-1")) {
+      const radishTexture = this.textures.get("radish-level-1");
+      const radishSource = radishTexture.getSourceImage();
+      // The uploaded Radish Level 1 sheet is 908×1079, arranged 3×3.
+      // Derive every crop edge from the real dimensions (302/303 × 359/360).
+      for (let index = 0; index < 9; index += 1) {
+        const column = index % 3;
+        const row = Math.floor(index / 3);
+        const frameX = Math.floor((column * radishSource.width) / 3);
+        const frameY = Math.floor((row * radishSource.height) / 3);
+        const nextFrameX = Math.floor(((column + 1) * radishSource.width) / 3);
+        const nextFrameY = Math.floor(((row + 1) * radishSource.height) / 3);
+        if (!radishTexture.has(String(index))) {
+          radishTexture.add(String(index), 0, frameX, frameY, nextFrameX - frameX, nextFrameY - frameY);
+        }
+      }
+    }
     if (this.textures.exists("mango-level-1") && !this.anims.exists("mango-level-1-throw")) {
       this.anims.create({ key: "mango-level-1-throw", frames: this.anims.generateFrameNumbers("mango-level-1", { start: 0, end: 8 }), frameRate: 12, repeat: 0 });
+    }
+    if (this.textures.exists("radish-level-1") && !this.anims.exists("radish-level-1-throw")) {
+      this.anims.create({ key: "radish-level-1-throw", frames: this.anims.generateFrameNumbers("radish-level-1", { start: 0, end: 8 }), frameRate: 12, repeat: 0 });
     }
     if (this.textures.exists("pineapple-level-1") && !this.anims.exists("pineapple-level-1-throw")) {
       this.anims.create({ key: "pineapple-level-1-throw", frames: this.anims.generateFrameNumbers("pineapple-level-1", { start: 0, end: 8 }), frameRate: 14.78, repeat: 0 });
@@ -627,7 +648,7 @@ export default class BattleScene extends Scene {
 
     // Build the seed bank from the player's pre-battle loadout.
     const plantOptions = [
-      { type: "radish", title: "RADISH", cost: 35, image: "radish-character" },
+      { type: "radish", title: "RADISH L1", cost: RADISH_CONFIG.cost, image: "radish-level-1" },
       { type: "mushroom", title: "MUSHROOM", cost: 50, image: "mushroom-character" },
       { type: "tomato", title: "TOMATO", cost: TOMATO_CONFIG.cost, image: "tomato-character" },
       { type: "pumpkin", title: "PUMPKIN", cost: PUMPKIN_CONFIG.cost, image: "pumpkin-character" },
@@ -684,12 +705,13 @@ export default class BattleScene extends Scene {
       .setInteractive({ useHandCursor: true });
     let icon;
     if (imageKey && this.textures.exists(imageKey)) {
-      const frameData = this.textures.getFrame(imageKey, imageKey === "mango-level-1" ? 0 : undefined);
+      const usesGridSheet = imageKey === "mango-level-1" || imageKey === "radish-level-1";
+      const frameData = this.textures.getFrame(imageKey, usesGridSheet ? 0 : undefined);
       // Use nearly the full packet face for the plant artwork while keeping
       // a dedicated strip below for the energy cost.
       const iconHeight = 58;
       const iconWidth = iconHeight * (frameData.realWidth / frameData.realHeight);
-      icon = imageKey === "mango-level-1"
+      icon = usesGridSheet
         ? this.add.sprite(0, -11, imageKey, 0).setDisplaySize(Math.min(iconWidth, 64), iconHeight)
         : this.add.image(0, -11, imageKey).setDisplaySize(Math.min(iconWidth, 64), iconHeight);
     } else {
@@ -1799,7 +1821,7 @@ export default class BattleScene extends Scene {
       addLabel(0, 435, locale === "ar" ? "ستُفتح المراحل التالية بعد إكمال المغامرات السابقة." : "Complete earlier adventures to unlock later stages.", 13, "#ffffff");
     } else if (this.collectionMenuTab === "plants") {
       addLabel(0, -8, locale === "ar" ? "النباتات المتاحة وأسعار الطاقة" : "Available plants and their energy costs", 17);
-      addRow(65, "radish-character", locale === "ar" ? "الفجل الدفاعي" : "Defensive Radish", "35 " + (locale === "ar" ? "طاقة" : "ENERGY"));
+      addRow(65, "radish-level-1", locale === "ar" ? "الفجل الدفاعي" : "Defensive Radish", "35 " + (locale === "ar" ? "طاقة" : "ENERGY"));
       addRow(155, "mushroom-character", locale === "ar" ? "فطر الطاقة" : "Energy Mushroom", "50 " + (locale === "ar" ? "طاقة" : "ENERGY"));
       addLabel(0, 260, locale === "ar" ? "النباتات الجديدة ستظهر هنا لاحقاً مع سعر الشراء بالنقود." : "New plants and coin purchase prices will appear here later.", 14, "#ffffff");
       addLabel(0, 320, locale === "ar" ? "الشراء غير مفعّل حالياً؛ هذان النباتان متاحان للزراعة مباشرة." : "Purchases are not enabled yet; both plants are already available.", 13, "#ffffff");
@@ -2320,14 +2342,13 @@ export default class BattleScene extends Scene {
   drawRadish(x, y) {
     const plant = this.add.container(x, y).setDepth(11);
 
-    if (this.textures.exists("radish-character")) {
-      const frame = this.textures.getFrame("radish-character");
-      // Reduce the planted radish artwork by one third while preserving
-      // its original proportions and the cell-centred planting position.
-      const displayHeight = 88 * (2 / 3);
+    if (this.textures.exists("radish-level-1")) {
+      const frame = this.textures.getFrame("radish-level-1", 0);
+      const displayHeight = 72;
       const displayWidth = displayHeight * (frame.realWidth / frame.realHeight);
-      const character = this.add.image(0, -displayHeight / 2 + 2, "radish-character")
-        .setDisplaySize(displayWidth, displayHeight);
+      const character = this.add.sprite(0, -displayHeight / 2 + 2, "radish-level-1", 0)
+        .setDisplaySize(displayWidth, displayHeight)
+        .setData("radishThrowSprite", true);
       plant.add(character);
     } else {
       // Keep a lightweight fallback if the uploaded character image cannot load.
@@ -2496,7 +2517,7 @@ export default class BattleScene extends Scene {
   fireThorn(plant, target) {
     // Pineapple projectiles must not exist until the throw animation reaches
     // its final frame. This keeps the visual action and the actual launch in sync.
-    if (["pineapple", "hazelnut", "mango"].includes(plant.type) && plant.view?.active) {
+    if (["radish", "pineapple", "hazelnut", "mango"].includes(plant.type) && plant.view?.active) {
       const animationType = plant.type;
       const throwingKey = `${animationType}Throwing`;
       if (plant[throwingKey]) return;
@@ -2541,7 +2562,14 @@ export default class BattleScene extends Scene {
       : this.lanePoint(localX, row);
     let launchOffsetX = 0;
     let launchOffsetY = 0;
-    if (plant.type === "pineapple") {
+    if (plant.type === "radish") {
+      const frame = this.textures.getFrame("radish-level-1", 0);
+      const displayHeight = 72;
+      const displayWidth = displayHeight * (frame.realWidth / frame.realHeight);
+      // Launch from the radish's forward hand, not from the soil-cell center.
+      launchOffsetX = displayWidth * 0.32;
+      launchOffsetY = -(displayHeight * 0.48);
+    } else if (plant.type === "pineapple") {
       const frame = this.textures.getFrame("pineapple-level-1");
       const perspectiveScale = plant.view?.getData?.("pineapplePerspectiveScale") || 1;
       const displayHeight = 105.6 * perspectiveScale;
@@ -2575,16 +2603,19 @@ export default class BattleScene extends Scene {
     const innerGlow = this.add.circle(0, 0, 9, 0xffd5dc, 0.28);
     view.add([halo, outerGlow, innerGlow]);
 
-    const projectileTexture = plant.type === "pineapple" ? "pineapple-level-1-bomb"
+    const projectileTexture = plant.type === "radish" ? "radish-level-1-bomb"
+      : plant.type === "pineapple" ? "pineapple-level-1-bomb"
       : plant.type === "hazelnut" ? "hazelnut-level-1-bomb"
       : plant.type === "mango" ? "mango-level-1-bomb"
       : plant.type === "tomato" ? "tomato-character"
-      : plant.type === "onion" ? "onion-character" : "radish-character";
+      : plant.type === "onion" ? "onion-character" : "radish-level-1";
     if (this.textures.exists(projectileTexture)) {
       const plantProjectile = this.add.image(0, 0, projectileTexture);
       if (plant.type === "pineapple" || plant.type === "hazelnut" || plant.type === "mango") {
         const bombSize = plant.type === "hazelnut" ? 31 : plant.type === "mango" ? 30 : 34;
         plantProjectile.setDisplaySize(bombSize, plant.type === "hazelnut" ? 30 : plant.type === "mango" ? 30 : 21);
+      } else if (plant.type === "radish") {
+        plantProjectile.setDisplaySize(27, 31).setRotation(-Math.PI / 2);
       } else {
         const projectileSize = plant.type === "onion" ? 27 : 29;
         plantProjectile.setDisplaySize(projectileSize, projectileSize).setRotation(-Math.PI / 2);
