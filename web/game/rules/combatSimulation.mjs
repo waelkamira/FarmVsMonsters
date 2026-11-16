@@ -10,7 +10,8 @@ const PLANT_RULES = Object.freeze({
   mushroom: PHASE_ONE_PLANTS.energyMushroom,
   tomato: PHASE_ONE_PLANTS.tomato,
   pumpkin: PHASE_ONE_PLANTS.pumpkin,
-  onion: PHASE_ONE_PLANTS.onion
+  onion: PHASE_ONE_PLANTS.onion,
+  pineapple: PHASE_ONE_PLANTS.pineapple
 });
 
 function validEnergy(value) {

@@ -30,6 +30,7 @@ export const MUSHROOM_CONFIG = Object.freeze({
 export const TOMATO_CONFIG = Object.freeze({ label: "Tomato", ...PHASE_ONE_PLANTS.tomato, cost: PHASE_ONE_PLANTS.tomato.plantingEnergyCost });
 export const PUMPKIN_CONFIG = Object.freeze({ label: "Pumpkin", ...PHASE_ONE_PLANTS.pumpkin, cost: PHASE_ONE_PLANTS.pumpkin.plantingEnergyCost });
 export const ONION_CONFIG = Object.freeze({ label: "Onion", ...PHASE_ONE_PLANTS.onion, cost: PHASE_ONE_PLANTS.onion.plantingEnergyCost });
+export const PINEAPPLE_CONFIG = Object.freeze({ label: "Pineapple", ...PHASE_ONE_PLANTS.pineapple, cost: PHASE_ONE_PLANTS.pineapple.plantingEnergyCost });
 
 export const collectEnergy = resolveEnergyPickup;
 export function isWaveComplete(spawnedCount, waveSize, livingMonsterCount) {

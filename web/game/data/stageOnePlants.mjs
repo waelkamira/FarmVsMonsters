@@ -145,6 +145,18 @@ export const STAGE_ONE_PLANTS = Object.freeze([
     stats: ["115 HP", "34 damage", "1850 ms cooldown"], statsAr: ["١١٥ صحة", "ضرر ٣٤", "فاصل هجوم ١٨٥٠ مللي ثانية"]
   },
   {
+    id: "pineapple",
+    assetPath: "/assets/plants/pineapple-level-1.png",
+    name: "Pineapple Level 1",
+    nameAr: "الأناناس المستوى الأول",
+    role: "Lane projectile attacker",
+    roleAr: "مهاجم بمقذوفات ضمن المسار",
+    description: "Prototype: plays its nine-frame throw animation and launches a miniature pineapple bomb down its own lane.",
+    descriptionAr: "نسخة تجريبية: تشغّل أنيميشن القذف ذي الإطارات التسعة وتطلق قذيفة أناناس صغيرة ضمن مسارها فقط.",
+    energyCost: 70, coinPrice: 0, status: "active", implemented: true, purchasable: false, image: null,
+    stats: ["140 HP", "42 damage", "2100 ms cooldown"], statsAr: ["١٤٠ صحة", "ضرر ٤٢", "فاصل هجوم ٢١٠٠ مللي ثانية"]
+  },
+  {
     id: "onion",
     assetPath: "/assets/plants/Onion.png",
     name: "Onion",

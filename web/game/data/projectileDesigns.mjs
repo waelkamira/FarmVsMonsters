@@ -78,6 +78,18 @@ export const PLANT_PROJECTILE_DESIGNS = Object.freeze({
     scale: 0.32,
     implemented: false
   },
+  pineapple: {
+    kind: "projectile",
+    name: "Mini pineapple bomb",
+    nameAr: "قذيفة أناناس صغيرة",
+    assetPath: "/assets/plants/pineapple-level-1-bomb.png",
+    sourcePlant: "/assets/plants/pineapple-level-1.png",
+    shape: "miniature pineapple bomb matching the Pineapple Level 1 artwork",
+    palette: ["pineapple-yellow", "leaf-green", "gold"],
+    impact: "compact pineapple impact burst",
+    scale: 0.32,
+    implemented: true
+  },
   "double-radish": {
     kind: "projectile",
     name: "Twin mini radishes",

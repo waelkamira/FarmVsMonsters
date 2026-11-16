@@ -62,6 +62,11 @@ export const PHASE_ONE_PLANTS = Object.freeze({
   onion: Object.freeze({
     projectileDamage: 48, projectileSpeed: 250, projectileCollisionRadius: 27,
     plantingEnergyCost: 65, hp: 135, cooldownMs: 2350, range: 330
+  }),
+  // Temporary pineapple prototype values for the first visual/combat playtest.
+  pineapple: Object.freeze({
+    projectileDamage: 42, projectileSpeed: 270, projectileCollisionRadius: 24,
+    plantingEnergyCost: 70, hp: 140, cooldownMs: 2100, range: 360
   })
 });
 

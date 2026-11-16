@@ -16,6 +16,7 @@ import {
   TOMATO_CONFIG,
   PUMPKIN_CONFIG,
   ONION_CONFIG,
+  PINEAPPLE_CONFIG,
   collectEnergy,
   isWaveComplete,
   isPhaseOneVictory,
@@ -78,6 +79,9 @@ export default class BattleScene extends Scene {
     this.load.image("tomato-character", "/assets/plants/tomato.png");
     this.load.image("pumpkin-character", "/assets/plants/pumpkin.png");
     this.load.image("onion-character", "/assets/plants/Onion.png");
+    // 1254×1254 artwork is a 3×3 sheet: nine 418×418 animation frames.
+    this.load.spritesheet("pineapple-level-1", "/assets/plants/pineapple-level-1.png", { frameWidth: 418, frameHeight: 418, margin: 0, spacing: 0 });
+    this.load.image("pineapple-level-1-bomb", "/assets/plants/pineapple-level-1-bomb.png");
     this.load.spritesheet("gold-coin", "/assets/items/currency/gold-coin.png", { frameWidth: 170, frameHeight: 170 });
     this.load.spritesheet("farmer-run", "/assets/characters/farmer/farmer-run.png", { frameWidth: 360, frameHeight: 430 });
     this.load.spritesheet("farmer-walk", "/assets/characters/farmer/farmer-walk.png", { frameWidth: 360, frameHeight: 430 });
@@ -201,6 +205,9 @@ export default class BattleScene extends Scene {
     this.princessActor = null;
     this.gameOver = false;
     this.hyenaAnimationsReady = this.createHyenaAnimations();
+    if (this.textures.exists("pineapple-level-1") && !this.anims.exists("pineapple-level-1-throw")) {
+      this.anims.create({ key: "pineapple-level-1-throw", frames: this.anims.generateFrameNumbers("pineapple-level-1", { start: 0, end: 8 }), frameRate: 12, repeat: 0 });
+    }
     const legacySoundSetting = this.registry.get("soundEnabled");
     const defaultSoundSetting = legacySoundSetting === undefined ? true : legacySoundSetting;
     if (this.registry.get("projectileSoundEnabled") === undefined) {
@@ -545,6 +552,7 @@ export default class BattleScene extends Scene {
     this.tomatoCard = this.createPlantCard(216, "TOMATO", String(TOMATO_CONFIG.cost), "tomato", null, "tomato-character", 64);
     this.pumpkinCard = this.createPlantCard(312, "PUMPKIN", String(PUMPKIN_CONFIG.cost), "pumpkin", null, "pumpkin-character", 64);
     this.onionCard = this.createPlantCard(408, "ONION", String(ONION_CONFIG.cost), "onion", null, "onion-character", 64);
+    this.pineappleCard = this.createPlantCard(504, "PINEAPPLE L1", String(PINEAPPLE_CONFIG.cost), "pineapple", null, "pineapple-level-1", 64);
 
     this.messageText = this.add.text(560, 574, "", {
       fontFamily: "Arial", fontSize: "15px", color: "#ffffff", fontStyle: "bold",
@@ -612,6 +620,7 @@ export default class BattleScene extends Scene {
       this.tomatoCard?.setAlpha(type === "tomato" ? 1 : 0.78);
       this.pumpkinCard?.setAlpha(type === "pumpkin" ? 1 : 0.78);
       this.onionCard?.setAlpha(type === "onion" ? 1 : 0.78);
+      this.pineappleCard?.setAlpha(type === "pineapple" ? 1 : 0.78);
       panel.setFillStyle(tint, 0.38);
       const plantHints = {
         radish: "Radish chosen. Fires thorn shots in its lane.",
@@ -1892,7 +1901,7 @@ export default class BattleScene extends Scene {
       return;
     }
     if (!this.selectedPlant) { this.setMessage("Choose a plant card first."); return; }
-    const plantConfigs = { radish: RADISH_CONFIG, mushroom: MUSHROOM_CONFIG, tomato: TOMATO_CONFIG, pumpkin: PUMPKIN_CONFIG, onion: ONION_CONFIG };
+    const plantConfigs = { radish: RADISH_CONFIG, mushroom: MUSHROOM_CONFIG, tomato: TOMATO_CONFIG, pumpkin: PUMPKIN_CONFIG, onion: ONION_CONFIG, pineapple: PINEAPPLE_CONFIG };
     const plantConfig = plantConfigs[this.selectedPlant];
     if (this.energy < plantConfig.cost) {
       this.setMessage("Not enough energy to plant " + this.selectedPlant + ".");
@@ -1989,7 +1998,7 @@ export default class BattleScene extends Scene {
 
   plantSelected(col, row, type, returnPosition = null) {
     if (this.gameOver) return;
-    if (!["radish", "mushroom", "tomato", "pumpkin", "onion"].includes(type)) return;
+    if (!["radish", "mushroom", "tomato", "pumpkin", "onion", "pineapple"].includes(type)) return;
     const placement = resolvePlantPlacement({
       energy: this.energy,
       plants: this.plants,
@@ -2004,7 +2013,7 @@ export default class BattleScene extends Scene {
       return;
     }
     this.recordCombatEvent("plant_placed", { type, col, row });
-    const configs = { radish: RADISH_CONFIG, mushroom: MUSHROOM_CONFIG, tomato: TOMATO_CONFIG, pumpkin: PUMPKIN_CONFIG, onion: ONION_CONFIG };
+    const configs = { radish: RADISH_CONFIG, mushroom: MUSHROOM_CONFIG, tomato: TOMATO_CONFIG, pumpkin: PUMPKIN_CONFIG, onion: ONION_CONFIG, pineapple: PINEAPPLE_CONFIG };
     const config = configs[type];
     this.energy = placement.energy;
     this.farmerPlanting = true;
@@ -2060,7 +2069,8 @@ export default class BattleScene extends Scene {
       mushroom: "Energy Mushroom planted! It will produce collectible energy.",
       tomato: "Tomato planted! It fires tomato shots down this lane.",
       pumpkin: "Pumpkin planted! It blocks and absorbs bites.",
-      onion: "Onion planted! It fires heavy onion shots down this lane."
+      onion: "Onion planted! It fires heavy onion shots down this lane.",
+      pineapple: "Pineapple Level 1 planted! It launches pineapple bombs down this lane."
     };
     this.setMessage(plantedMessages[type] || "Plant planted.");
   }
@@ -2112,13 +2122,19 @@ export default class BattleScene extends Scene {
 
   drawCatalogPlant(type, x, y) {
     const plant = this.add.container(x, y).setDepth(11);
-    const texture = type === "tomato" ? "tomato-character" : type === "pumpkin" ? "pumpkin-character" : "onion-character";
+    const texture = type === "tomato" ? "tomato-character" : type === "pumpkin" ? "pumpkin-character" : type === "pineapple" ? "pineapple-level-1" : "onion-character";
     if (this.textures.exists(texture)) {
       const frame = this.textures.getFrame(texture);
-      const height = type === "tomato" ? 32 : type === "pumpkin" ? 70 : 64;
+      const height = type === "tomato" ? 32 : type === "pumpkin" ? 70 : type === "pineapple" ? 66 : 64;
       const width = height * (frame.realWidth / frame.realHeight);
       const maxWidth = type === "tomato" ? 38 : 76;
-      plant.add(this.add.image(0, -height / 2 + 2, texture).setDisplaySize(Math.min(width, maxWidth), height));
+      if (type === "pineapple") {
+        const pineapple = this.add.sprite(0, -height / 2 + 2, texture, 0).setDisplaySize(Math.min(width, maxWidth), height);
+        pineapple.setData("pineappleThrowSprite", true);
+        plant.add(pineapple);
+      } else {
+        plant.add(this.add.image(0, -height / 2 + 2, texture).setDisplaySize(Math.min(width, maxWidth), height));
+      }
     } else {
       const fallback = this.add.ellipse(0, type === "tomato" ? -12 : -24,
         type === "tomato" ? 21 : 42, type === "tomato" ? 24 : 48,
@@ -2182,7 +2198,7 @@ export default class BattleScene extends Scene {
         continue;
       }
       if (plant.type === "pumpkin") continue;
-      const configs = { radish: RADISH_CONFIG, tomato: TOMATO_CONFIG, onion: ONION_CONFIG };
+      const configs = { radish: RADISH_CONFIG, tomato: TOMATO_CONFIG, onion: ONION_CONFIG, pineapple: PINEAPPLE_CONFIG };
       const config = configs[plant.type];
       if (!config) continue;
       // Recover safely if a plant was created by an older or partial runtime
@@ -2308,6 +2324,17 @@ export default class BattleScene extends Scene {
     // so the root points toward incoming monsters. Keep the combat contract
     // (lane, speed, damage and collision) unchanged.
     const lane = this.worldToLane(plant);
+    if (plant.type === "pineapple" && plant.view?.active) {
+      const throwSprite = plant.view.list.find((child) => child?.getData?.("pineappleThrowSprite"));
+      if (throwSprite && this.anims.exists("pineapple-level-1-throw")) {
+        throwSprite.stop();
+        throwSprite.setTexture("pineapple-level-1", 0);
+        throwSprite.play("pineapple-level-1-throw");
+        throwSprite.once("animationcomplete", () => {
+          if (throwSprite.active) throwSprite.setTexture("pineapple-level-1", 0);
+        });
+      }
+    }
     // Start at the visual center of the plant itself, not at its lower edge
     // or at the monster's lowered collision lane.
     const localX = lane.localX;
@@ -2326,13 +2353,17 @@ export default class BattleScene extends Scene {
     const innerGlow = this.add.circle(0, 0, 9, 0xffd5dc, 0.28);
     view.add([halo, outerGlow, innerGlow]);
 
-    const projectileTexture = plant.type === "tomato" ? "tomato-character"
+    const projectileTexture = plant.type === "pineapple" ? "pineapple-level-1-bomb"
+      : plant.type === "tomato" ? "tomato-character"
       : plant.type === "onion" ? "onion-character" : "radish-character";
     if (this.textures.exists(projectileTexture)) {
-      const projectileSize = plant.type === "onion" ? 27 : 29;
-      const plantProjectile = this.add.image(0, 0, projectileTexture)
-        .setDisplaySize(projectileSize, projectileSize)
-        .setRotation(-Math.PI / 2);
+      const plantProjectile = this.add.image(0, 0, projectileTexture);
+      if (plant.type === "pineapple") {
+        plantProjectile.setDisplaySize(34, 21);
+      } else {
+        const projectileSize = plant.type === "onion" ? 27 : 29;
+        plantProjectile.setDisplaySize(projectileSize, projectileSize).setRotation(-Math.PI / 2);
+      }
       view.add(plantProjectile);
     } else {
       // Visible fallback only if the Radish artwork failed to load.
@@ -2369,12 +2400,15 @@ export default class BattleScene extends Scene {
       onComplete: () => muzzleFlash.destroy()
     });
 
+    const projectileConfig = plant.type === "pineapple" ? PINEAPPLE_CONFIG
+      : plant.type === "tomato" ? TOMATO_CONFIG
+      : plant.type === "onion" ? ONION_CONFIG : RADISH_CONFIG;
     this.projectiles.push({
       view, localX, row, startRow: row, targetRow, target,
       startLocalX: localX, targetLocalX, verticalOffset,
-      speed: (plant.type === "tomato" ? TOMATO_CONFIG : plant.type === "onion" ? ONION_CONFIG : RADISH_CONFIG).projectileSpeed,
-      damage: (plant.type === "tomato" ? TOMATO_CONFIG : plant.type === "onion" ? ONION_CONFIG : RADISH_CONFIG).projectileDamage,
-      collisionRadius: (plant.type === "tomato" ? TOMATO_CONFIG : plant.type === "onion" ? ONION_CONFIG : RADISH_CONFIG).projectileCollisionRadius,
+      speed: projectileConfig.projectileSpeed,
+      damage: projectileConfig.projectileDamage,
+      collisionRadius: projectileConfig.projectileCollisionRadius,
       alive: true, trailTimer: 0
     });
     this.playThornSound();
