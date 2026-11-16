@@ -27,9 +27,7 @@ export const MUSHROOM_CONFIG = Object.freeze({
   energy: PHASE_ONE_PLANTS.energyMushroom.energyPerPickup,
   productionInterval: PHASE_ONE_PLANTS.energyMushroom.productionIntervalMs
 });
-export const TOMATO_CONFIG = Object.freeze({ label: "Tomato", ...PHASE_ONE_PLANTS.tomato, cost: PHASE_ONE_PLANTS.tomato.plantingEnergyCost });
 export const PUMPKIN_CONFIG = Object.freeze({ label: "Pumpkin", ...PHASE_ONE_PLANTS.pumpkin, cost: PHASE_ONE_PLANTS.pumpkin.plantingEnergyCost });
-export const ONION_CONFIG = Object.freeze({ label: "Onion", ...PHASE_ONE_PLANTS.onion, cost: PHASE_ONE_PLANTS.onion.plantingEnergyCost });
 export const PINEAPPLE_CONFIG = Object.freeze({ label: "Pineapple", ...PHASE_ONE_PLANTS.pineapple, cost: PHASE_ONE_PLANTS.pineapple.plantingEnergyCost });
 export const HAZELNUT_CONFIG = Object.freeze({ label: "Hazelnut", ...PHASE_ONE_PLANTS.hazelnut, cost: PHASE_ONE_PLANTS.hazelnut.plantingEnergyCost });
 export const MANGO_CONFIG = Object.freeze({ label: "Mango", ...PHASE_ONE_PLANTS.mango, cost: PHASE_ONE_PLANTS.mango.plantingEnergyCost });
