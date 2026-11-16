@@ -52,17 +52,11 @@ export const PHASE_ONE_PLANTS = Object.freeze({
     pickupTtlMs: 12000
   }),
   // Temporary playtest values; tune after hands-on balancing.
-  tomato: Object.freeze({
-    projectileDamage: 34, projectileSpeed: 300, projectileCollisionRadius: 25,
-    plantingEnergyCost: 55, hp: 115, cooldownMs: 1850, range: 360
-  }),
+
   pumpkin: Object.freeze({
     plantingEnergyCost: 75, hp: 520
   }),
-  onion: Object.freeze({
-    projectileDamage: 48, projectileSpeed: 250, projectileCollisionRadius: 27,
-    plantingEnergyCost: 65, hp: 135, cooldownMs: 2350, range: 330
-  }),
+
   // Temporary pineapple prototype values for the first visual/combat playtest.
   pineapple: Object.freeze({
     projectileDamage: 42, projectileSpeed: 270, projectileCollisionRadius: 24,
