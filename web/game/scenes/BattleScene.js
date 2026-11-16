@@ -2043,10 +2043,19 @@ export default class BattleScene extends Scene {
     this.energy = placement.energy;
     this.farmerPlanting = true;
     this.playFarmerAction("farmer-plant");
-    // Pineapples are visually centered on the exact cell centroid on both axes.
-    const { x, y } = type === "pineapple"
+    // Pineapples sit slightly forward within their own cell. Measure the
+    // actual perspective cell width from its left/right edges, then advance
+    // the plant anchor by 20% of that width along the positive X axis.
+    const pineappleCell = type === "pineapple" ? this.cellPolygon(col, row) : null;
+    const pineappleCellWidth = pineappleCell
+      ? ((pineappleCell[1].x - pineappleCell[0].x) +
+         (pineappleCell[2].x - pineappleCell[3].x)) / 2
+      : 0;
+    const cellCenter = type === "pineapple"
       ? this.gridCellCenter(col, row)
       : this.plantingCellCenter(col, row);
+    const x = cellCenter.x + (type === "pineapple" ? pineappleCellWidth * 0.2 : 0);
+    const { y } = cellCenter;
     const plant = {
       ...placement.plant,
       x, y,
