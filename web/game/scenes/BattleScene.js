@@ -1550,7 +1550,7 @@ export default class BattleScene extends Scene {
 
   createQuickCollectionButtons() {
     // A shared translucent glass dock ties the two collection shortcuts together.
-    this.quickCollectionDock = this.add.container(755, 619).setDepth(47);
+    this.quickCollectionDock = this.add.container(755, 34).setDepth(47);
     const dockGlow = this.add.rectangle(0, 1, 146, 52, 0xffffff, 0.10);
     const dock = this.add.rectangle(0, 0, 140, 46, 0xdaf3ff, 0.22)
       .setStrokeStyle(1, 0xffffff, 0.42);
