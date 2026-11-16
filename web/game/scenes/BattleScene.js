@@ -3109,6 +3109,11 @@ export default class BattleScene extends Scene {
       const pineappleTarget = shot.plantType === "pineapple" &&
         shot.target?.alive && shot.target.row === shot.row &&
         shot.target.view?.active;
+      if (shot.plantType === "pineapple" && shot.dropPhase === "dropping" && !pineappleTarget) {
+        shot.alive = false;
+        shot.view.destroy();
+        continue;
+      }
       if (shot.plantType === "pineapple" && shot.dropPhase === "dropping" && pineappleTarget) {
         // During the drop, continuously follow the monster's live bounds. This
         // keeps the bomb over its head even when the monster moves or is scaled.
