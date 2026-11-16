@@ -2078,7 +2078,7 @@ export default class BattleScene extends Scene {
     const plant = {
       ...placement.plant,
       x, y,
-      cooldown: PhaserMath.Between(250, 650),
+      cooldown: 0,
       productionTimer: type === "mushroom" ? config.productionInterval : undefined,
       productionCount: 0,
       view: type === "mushroom" ? this.drawEnergyMushroom(x, y, row)
@@ -2279,8 +2279,10 @@ export default class BattleScene extends Scene {
       // Every shooter is lane-locked: it never targets an adjacent row.
       const target = this.monsters
         .filter((monster) => monster.alive && monster.row === plant.row &&
-          Number.isFinite(monster.localX) && monster.localX > plantLaneX &&
-          monster.localX - plantLaneX <= config.range)
+          Number.isFinite(monster.localX) &&
+          // Start firing the instant the monster crosses the lawn's far/right edge.
+          // Keep targeting only monsters ahead of this plant in the same lane.
+          monster.localX <= GRID_WIDTH / 2 && monster.localX > plantLaneX)
         .sort((a, b) => a.localX - b.localX)[0];
       if (!target) continue;
       this.fireThorn(plant, target);
