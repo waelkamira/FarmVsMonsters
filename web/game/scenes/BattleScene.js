@@ -2171,7 +2171,7 @@ export default class BattleScene extends Scene {
       return;
     }
     this.recordCombatEvent("plant_placed", { type, col, row });
-    const configs = { radish: RADISH_CONFIG, mushroom: MUSHROOM_CONFIG, tomato: TOMATO_CONFIG, pumpkin: PUMPKIN_CONFIG, onion: ONION_CONFIG, pineapple: PINEAPPLE_CONFIG, hazelnut: HAZELNUT_CONFIG, mango: MANGO_CONFIG };
+    const configs = { radish: RADISH_CONFIG, mushroom: MUSHROOM_CONFIG, pumpkin: PUMPKIN_CONFIG, pineapple: PINEAPPLE_CONFIG, hazelnut: HAZELNUT_CONFIG, mango: MANGO_CONFIG };
     const config = configs[type];
     this.energy = placement.energy;
     this.farmerPlanting = true;
@@ -2241,9 +2241,7 @@ export default class BattleScene extends Scene {
     const plantedMessages = {
       radish: "Radish Level 1 planted! It launches miniature radish bombs down this lane.",
       mushroom: "Energy Mushroom planted! It will produce collectible energy.",
-      tomato: "Tomato planted! It fires tomato shots down this lane.",
       pumpkin: "Pumpkin planted! It blocks and absorbs bites.",
-      onion: "Onion planted! It fires heavy onion shots down this lane.",
       pineapple: "Pineapple Level 1 planted! It launches pineapple bombs down this lane.",
       hazelnut: "Hazelnut Level 1 planted! It fires hazelnut bombs down this lane.",
       mango: "Mango Level 1 planted! It launches curved mango bombs onto monsters in this lane."
