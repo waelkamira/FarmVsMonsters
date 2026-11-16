@@ -154,8 +154,8 @@ export function resolveProjectileLaneStep({ localX, speed, deltaSeconds } = {}) 
   return localX + speed * deltaSeconds;
 }
 
-export function selectLaneBlocker({ plants, row, monsterLocalX } = {}) {
-  if (!Array.isArray(plants) || !Number.isInteger(row) || !Number.isFinite(monsterLocalX)) {
+export function selectLaneBlocker({ plants, row, monsterLocalX, maxOvershoot = 0 } = {}) {
+  if (!Array.isArray(plants) || !Number.isInteger(row) || !Number.isFinite(monsterLocalX) || !Number.isFinite(maxOvershoot) || maxOvershoot < 0) {
     throw new RangeError("INVALID_LANE_BLOCKER_QUERY");
   }
   let nearest = null;
@@ -165,7 +165,7 @@ export function selectLaneBlocker({ plants, row, monsterLocalX } = {}) {
       !["radish", "pumpkin"].includes(candidate.plant.type) ||
       candidate.plant.row !== row ||
       !Number.isFinite(candidate.localX) ||
-      candidate.localX >= monsterLocalX
+      candidate.localX - monsterLocalX > maxOvershoot
     ) continue;
     if (!nearest || candidate.localX > nearest.localX) nearest = candidate;
   }
