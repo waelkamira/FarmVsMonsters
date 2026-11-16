@@ -67,6 +67,11 @@ export const PHASE_ONE_PLANTS = Object.freeze({
   pineapple: Object.freeze({
     projectileDamage: 42, projectileSpeed: 270, projectileCollisionRadius: 24,
     plantingEnergyCost: 70, hp: 140, cooldownMs: 2100, range: 360
+  }),
+  // Initial Hazelnut Level 1 playtest values; tune after hands-on testing.
+  hazelnut: Object.freeze({
+    projectileDamage: 38, projectileSpeed: 285, projectileCollisionRadius: 24,
+    plantingEnergyCost: 65, hp: 130, cooldownMs: 1950, range: 360
   })
 });
 
