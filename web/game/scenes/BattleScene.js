@@ -1937,8 +1937,12 @@ export default class BattleScene extends Scene {
       return;
     }
     if (!this.selectedPlant) { this.setMessage("Choose a plant card first."); return; }
-    const plantConfigs = { radish: RADISH_CONFIG, mushroom: MUSHROOM_CONFIG, tomato: TOMATO_CONFIG, pumpkin: PUMPKIN_CONFIG, onion: ONION_CONFIG, pineapple: PINEAPPLE_CONFIG };
+    const plantConfigs = { radish: RADISH_CONFIG, mushroom: MUSHROOM_CONFIG, tomato: TOMATO_CONFIG, pumpkin: PUMPKIN_CONFIG, onion: ONION_CONFIG, pineapple: PINEAPPLE_CONFIG, hazelnut: HAZELNUT_CONFIG };
     const plantConfig = plantConfigs[this.selectedPlant];
+    if (!plantConfig) {
+      this.setMessage("This plant is not available yet: " + this.selectedPlant + ".");
+      return;
+    }
     if (this.energy < plantConfig.cost) {
       this.setMessage("Not enough energy to plant " + this.selectedPlant + ".");
       return;
