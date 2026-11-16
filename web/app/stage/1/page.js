@@ -29,7 +29,7 @@ export default function StageOneIntroPage() {
           <div><strong>{ar ? "المهمة" : "OBJECTIVE"}</strong><span>{ar ? "احمِ المزرعة وأنقذ الأميرة" : "Defend the farm and rescue the princess"}</span></div>
         </div>
         <nav className="info-nav">
-          <Link className="primary-link" href="/game">{ar ? "ابدأ المرحلة" : "Begin Stage"}</Link>
+          <Link className="primary-link" href="/stage/1/select">{ar ? "اختر النباتات وابدأ" : "Choose Plants & Begin"}</Link>
           <Link className="secondary-link" href="/stages">{ar ? "العودة للمراحل" : "Back to Stages"}</Link>
         </nav>
       </article>
