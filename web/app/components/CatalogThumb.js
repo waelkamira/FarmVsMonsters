@@ -3,6 +3,8 @@ const LOCAL_PLANT_ICONS = {
   radish: "/assets/plants/radish-level-1.png",
   "energy-mushroom": "/assets/plants/mushroom.png",
   mango: "/assets/plants/mango-level-1.png",
+  pineapple: "/assets/plants/pineapple-level-1.png",
+  hazelnut: "/assets/plants/hazelnut-level-1.png",
   "pumpkin-guard": "/assets/plants/pumpkin.png",
   "pea-shooter": "/assets/plant-icons/pea-shooter.svg",
   "thorn-wall": "/assets/plant-icons/thorn-wall.svg",
@@ -53,7 +55,7 @@ export default function CatalogThumb({ id, label, className = "" }) {
       <img
         src={localIcon || `${TWEMOJI}/${safeCode}.png`}
         alt=""
-        className={id === "radish" ? "catalog-thumb-radish-sheet" : undefined}
+        className={["radish", "mango", "pineapple", "hazelnut"].includes(id) ? "catalog-thumb-sprite-sheet" : undefined}
         loading="lazy"
         onError={(event) => {
           if (localIcon && !event.currentTarget.dataset.fallback) {
