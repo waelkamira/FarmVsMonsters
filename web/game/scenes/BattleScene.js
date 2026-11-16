@@ -2125,9 +2125,10 @@ export default class BattleScene extends Scene {
     const texture = type === "tomato" ? "tomato-character" : type === "pumpkin" ? "pumpkin-character" : type === "pineapple" ? "pineapple-level-1" : "onion-character";
     if (this.textures.exists(texture)) {
       const frame = this.textures.getFrame(texture);
-      const height = type === "tomato" ? 32 : type === "pumpkin" ? 70 : type === "pineapple" ? 66 : 64;
+      // Pineapple Level 1 is intentionally twice the previous in-world size.
+      const height = type === "tomato" ? 32 : type === "pumpkin" ? 70 : type === "pineapple" ? 132 : 64;
       const width = height * (frame.realWidth / frame.realHeight);
-      const maxWidth = type === "tomato" ? 38 : 76;
+      const maxWidth = type === "tomato" ? 38 : type === "pineapple" ? 152 : 76;
       if (type === "pineapple") {
         const pineapple = this.add.sprite(0, -height / 2 + 2, texture, 0).setDisplaySize(Math.min(width, maxWidth), height);
         pineapple.setData("pineappleThrowSprite", true);
@@ -2335,18 +2336,28 @@ export default class BattleScene extends Scene {
         });
       }
     }
-    // Start at the visual center of the plant itself, not at its lower edge
-    // or at the monster's lowered collision lane.
     const localX = lane.localX;
     const row = plant.row;
     const targetRow = plant.row;
     const targetLocalX = Math.max(localX + 1, target.localX);
-    const position = { x: plant.x, y: plant.y };
-    // After launch, the projectile follows the centerline through the soil
-    // cell centroids across X, using the perspective-calibrated grid mesh.
-    const verticalOffset = 0;
-    const launchY = position.y;
-    const view = this.add.container(position.x, launchY).setDepth(16);
+    // The pineapple bomb visibly leaves the upper-right corner of the enlarged
+    // animation frame, then smoothly settles onto the lane centerline.
+    const laneOrigin = this.lanePoint(localX, row);
+    let launchOffsetX = 0;
+    let launchOffsetY = 0;
+    if (plant.type === "pineapple") {
+      const frame = this.textures.getFrame("pineapple-level-1");
+      const displayHeight = 132;
+      const displayWidth = Math.min(displayHeight * (frame.realWidth / frame.realHeight), 152);
+      launchOffsetX = displayWidth / 2;
+      launchOffsetY = -displayHeight + 2;
+    }
+    const launchX = laneOrigin.x + launchOffsetX;
+    const launchY = laneOrigin.y + launchOffsetY;
+    const view = this.add.container(launchX, launchY).setDepth(16);
+    // Preserve the authored corner launch for a short, smooth transition;
+    // afterwards the shot travels exactly along its own lane centerline.
+    const launchOffsetDurationMs = plant.type === "pineapple" ? 180 : 0;
 
     const halo = this.add.circle(0, 0, 18, 0xff7185, 0.13);
     const outerGlow = this.add.circle(0, 0, 13, 0x8bd66f, 0.2);
@@ -2391,7 +2402,7 @@ export default class BattleScene extends Scene {
       repeat: -1
     });
 
-    const muzzleFlash = this.add.circle(position.x, launchY, 13, 0xffe28a, 0.8).setDepth(15);
+    const muzzleFlash = this.add.circle(launchX, launchY, 13, 0xffe28a, 0.8).setDepth(15);
     this.tweens.add({
       targets: muzzleFlash,
       alpha: 0,
@@ -2405,7 +2416,8 @@ export default class BattleScene extends Scene {
       : plant.type === "onion" ? ONION_CONFIG : RADISH_CONFIG;
     this.projectiles.push({
       view, localX, row, startRow: row, targetRow, target,
-      startLocalX: localX, targetLocalX, verticalOffset,
+      startLocalX: localX, targetLocalX,
+      launchOffsetX, launchOffsetY, launchOffsetDurationMs, launchElapsedMs: 0,
       speed: projectileConfig.projectileSpeed,
       damage: projectileConfig.projectileDamage,
       collisionRadius: projectileConfig.projectileCollisionRadius,
@@ -3038,11 +3050,21 @@ export default class BattleScene extends Scene {
       // Projectiles travel through the horizontal centerline of each
       // perspective soil cell; monster sprites use a separately lowered lane.
       const position = this.lanePoint(shot.localX, shot.row);
-      shot.view.setPosition(position.x, position.y + shot.verticalOffset);
+      shot.launchElapsedMs = Math.min(
+        shot.launchOffsetDurationMs || 0,
+        (shot.launchElapsedMs || 0) + dt * 1000
+      );
+      const launchProgress = shot.launchOffsetDurationMs > 0
+        ? shot.launchElapsedMs / shot.launchOffsetDurationMs
+        : 1;
+      const launchEase = 1 - launchProgress;
+      const projectileX = position.x + (shot.launchOffsetX || 0) * launchEase;
+      const projectileY = position.y + (shot.launchOffsetY || 0) * launchEase;
+      shot.view.setPosition(projectileX, projectileY);
 
       shot.trailTimer -= dt * 1000;
       if (shot.trailTimer <= 0) {
-        this.createProjectileTrail(position.x - 5, position.y + shot.verticalOffset);
+        this.createProjectileTrail(projectileX - 5, projectileY);
         shot.trailTimer = 48;
       }
 
@@ -3060,7 +3082,7 @@ export default class BattleScene extends Scene {
       }
 
       if (hit) {
-        this.createProjectileImpact(position.x, position.y + shot.verticalOffset);
+        this.createProjectileImpact(projectileX, projectileY);
         this.playThornImpactSound();
         this.applyMonsterDamage(
           hit, shot.damage * this.incomingMonsterDamageMultiplier(hit)
@@ -3073,7 +3095,7 @@ export default class BattleScene extends Scene {
             yoyo: true,
             ease: "Sine.easeOut"
           });
-          this.createStoneHitDust(position.x, position.y + shot.verticalOffset + 4, hit.view.scaleY);
+          this.createStoneHitDust(projectileX, projectileY + 4, hit.view.scaleY);
         }
         this.damageMonsterIfNeeded(hit);
         shot.alive = false;
