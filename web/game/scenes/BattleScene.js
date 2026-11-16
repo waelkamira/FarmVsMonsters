@@ -557,37 +557,57 @@ export default class BattleScene extends Scene {
   }
 
   createHud() {
-    // Compact HUD counters: icons with small values, never large statistic cards.
+    // Classic PvZ-inspired seed bank: sun meter on the left, wooden packet tray
+    // across the center, compact battle information above it, and collection
+    // shortcuts kept at the far right.
+    const trayShadow = this.add.rectangle(474, 73, 700, 104, 0x17100a, 0.30)
+      .setStrokeStyle(3, 0x3c2414, 0.9).setDepth(39);
+    const tray = this.add.rectangle(474, 69, 692, 100, 0x9a6334, 0.98)
+      .setStrokeStyle(4, 0xd8ad70, 1).setDepth(40);
+    const trayInset = this.add.rectangle(474, 69, 674, 84, 0x57391f, 0.98)
+      .setStrokeStyle(2, 0x3c2818, 1).setDepth(40);
+    this.add.rectangle(474, 69, 660, 72, 0x76502d, 0.96)
+      .setStrokeStyle(1, 0xb88751, 0.9).setDepth(40);
+
+    // Sun counter / resource bank, styled as the original PvZ meter.
+    this.sunBank = this.add.container(62, 70).setDepth(43);
+    const sunOuter = this.add.rectangle(0, 0, 112, 96, 0x6b4929, 1)
+      .setStrokeStyle(4, 0xd5a66a, 1);
+    const sunInner = this.add.rectangle(0, 0, 100, 84, 0x342719, 1)
+      .setStrokeStyle(2, 0x9d7547, 1);
+    const sunIcon = this.add.text(0, -19, "☀️", { fontFamily: "Arial", fontSize: "30px" }).setOrigin(0.5);
+    this.sunValueText = this.add.text(0, 22, String(this.energy), {
+      fontFamily: "Arial", fontSize: "23px", color: "#fff2a8", fontStyle: "bold",
+      stroke: "#39240f", strokeThickness: 3, resolution: 2
+    }).setOrigin(0.5);
+    this.sunBank.add([sunOuter, sunInner, sunIcon, this.sunValueText]);
+
+    // Secondary battle counters remain visible in a slim top information row.
     const counters = [
-      { x: 26, icon: "⚡" },
-      { x: 116, icon: "🪙" },
-      { x: 210, icon: "🏡" },
-      { x: 304, icon: "🌱" },
-      { x: 398, icon: "👾" },
+      { x: 178, icon: "🪙" },
+      { x: 270, icon: "🏡" },
+      { x: 365, icon: "🌱" },
+      { x: 460, icon: "👾" },
     ];
-    this.hudValueTexts = counters.map((counter) => this.add.text(counter.x, 34, counter.icon + " 0", {
-      fontFamily: "Arial", fontSize: "17px", color: "#ffffff", fontStyle: "bold",
-      stroke: "#17213d", strokeThickness: 4, resolution: 2
-    }).setOrigin(0, 0.5).setDepth(41));
+    this.hudValueTexts = counters.map((counter) => this.add.text(counter.x, 15, counter.icon + " 0", {
+      fontFamily: "Arial", fontSize: "15px", color: "#fff8e8", fontStyle: "bold",
+      stroke: "#392719", strokeThickness: 3, resolution: 2
+    }).setOrigin(0, 0.5).setDepth(44));
 
-    // Wave is a compact icon + number, aligned with the other counters.
-    this.waveText = this.add.text(510, 34, "🌊 1/5", {
-      fontFamily: "Arial", fontSize: "16px", color: "#ffffff", fontStyle: "bold",
-      stroke: "#17213d", strokeThickness: 4, resolution: 2,
+    this.waveText = this.add.text(565, 15, "🌊 1/5", {
+      fontFamily: "Arial", fontSize: "15px", color: "#fff8e8", fontStyle: "bold",
+      stroke: "#392719", strokeThickness: 3, resolution: 2,
       align: "left"
-    }).setOrigin(0, 0.5).setDepth(41);
+    }).setOrigin(0, 0.5).setDepth(44);
 
-    // Plant selection cells stay distinct and larger than the status counters.
-    // Double the plant selector cells while keeping their row and order intact.
-    this.radishCard = this.createPlantCard(24, "RADISH", "35", "radish", null, "radish-character", 64);
-    this.mushroomCard = this.createPlantCard(120, "MUSHROOM", "50", "mushroom", null, "mushroom-character", 64);
-    // New artwork is visible in the battle selector, but these plants stay
-    // locked until their combat rules and planting implementations are ready.
-    this.tomatoCard = this.createPlantCard(216, "TOMATO", String(TOMATO_CONFIG.cost), "tomato", null, "tomato-character", 64);
-    this.pumpkinCard = this.createPlantCard(312, "PUMPKIN", String(PUMPKIN_CONFIG.cost), "pumpkin", null, "pumpkin-character", 64);
-    this.onionCard = this.createPlantCard(408, "ONION", String(ONION_CONFIG.cost), "onion", null, "onion-character", 64);
-    this.pineappleCard = this.createPlantCard(504, "PINEAPPLE L1", String(PINEAPPLE_CONFIG.cost), "pineapple", null, "pineapple-level-1", 64);
-    this.hazelnutCard = this.createPlantCard(600, "HAZELNUT L1", String(HAZELNUT_CONFIG.cost), "hazelnut", null, "hazelnut-level-1", 64);
+    // Seed packets sit in one evenly spaced row, like the PvZ seed bank.
+    this.radishCard = this.createPlantCard(164, "RADISH", "35", "radish", null, "radish-character", 76);
+    this.mushroomCard = this.createPlantCard(254, "MUSHROOM", "50", "mushroom", null, "mushroom-character", 76);
+    this.tomatoCard = this.createPlantCard(344, "TOMATO", String(TOMATO_CONFIG.cost), "tomato", null, "tomato-character", 76);
+    this.pumpkinCard = this.createPlantCard(434, "PUMPKIN", String(PUMPKIN_CONFIG.cost), "pumpkin", null, "pumpkin-character", 76);
+    this.onionCard = this.createPlantCard(524, "ONION", String(ONION_CONFIG.cost), "onion", null, "onion-character", 76);
+    this.pineappleCard = this.createPlantCard(614, "PINEAPPLE L1", String(PINEAPPLE_CONFIG.cost), "pineapple", null, "pineapple-level-1", 76);
+    this.hazelnutCard = this.createPlantCard(704, "HAZELNUT L1", String(HAZELNUT_CONFIG.cost), "hazelnut", null, "hazelnut-level-1", 76);
 
     this.messageText = this.add.text(560, 574, "", {
       fontFamily: "Arial", fontSize: "15px", color: "#ffffff", fontStyle: "bold",
@@ -599,27 +619,29 @@ export default class BattleScene extends Scene {
 
   createPlantCard(x, title, costLabel, type, drawIcon, imageKey = null, y = 619, locked = false) {
     const card = this.add.container(x, y).setDepth(45);
-    // Floating glass selector, positioned below the top resource/status strip.
-    // A soft translucent white halo gives a light blur-like edge without a frame.
-    const tint = locked ? 0xb7c4d3 : (type === "radish" ? 0x8ff0b0 : 0x9edfff);
-    const halo = this.add.rectangle(0, 1, 108, 88, 0xffffff, 0.10);
-    const panel = this.add.rectangle(0, 0, 96, 76, 0xffffff, locked ? 0.12 : 0.22)
+    // Individual seed packets: warm parchment face, dark border and a clear
+    // selected state, matching the compact packet proportions of PvZ.
+    const tint = locked ? 0x9aa0a6 : (type === "radish" ? 0x8ff0b0 : 0xffdf8a);
+    const halo = this.add.rectangle(0, 1, 84, 96, 0x1b1008, 0.35);
+    const packetFrame = this.add.rectangle(0, 0, 78, 90, 0x4a2d18, 1)
+      .setStrokeStyle(3, 0x24170e, 1);
+    const panel = this.add.rectangle(0, 0, 70, 82, locked ? 0x858585 : 0xe6c58c, 1)
+      .setStrokeStyle(2, locked ? 0x626262 : 0xf7e5bd, 1)
       .setInteractive({ useHandCursor: true });
-    panel.setStrokeStyle(0, 0xffffff, 0);
     let icon;
     if (imageKey && this.textures.exists(imageKey)) {
       const frameData = this.textures.getFrame(imageKey);
-      const iconHeight = 50;
+      const iconHeight = 48;
       const iconWidth = iconHeight * (frameData.realWidth / frameData.realHeight);
-      icon = this.add.image(0, -10, imageKey)
-        .setDisplaySize(Math.min(iconWidth, 68), iconHeight);
+      icon = this.add.image(0, -12, imageKey)
+        .setDisplaySize(Math.min(iconWidth, 58), iconHeight);
     } else {
       icon = this.add.graphics();
       if (drawIcon) drawIcon(icon);
     }
-    const cost = this.add.text(0, 26, "⚡" + costLabel, {
-      fontFamily: "Arial", fontSize: "18px", color: "#ffffff", fontStyle: "bold",
-      stroke: "#536477", strokeThickness: 2, resolution: 2,
+    const cost = this.add.text(0, 29, "☀ " + costLabel, {
+      fontFamily: "Arial", fontSize: "16px", color: "#4b2e16", fontStyle: "bold",
+      stroke: "#f8e7c6", strokeThickness: 1, resolution: 2,
       align: "center"
     }).setOrigin(0.5, 0.5);
     if (locked) {
@@ -629,10 +651,10 @@ export default class BattleScene extends Scene {
         fontFamily: "Arial", fontSize: "14px", color: "#ffffff", fontStyle: "bold",
         stroke: "#34445b", strokeThickness: 2, resolution: 2
       }).setOrigin(0.5, 0.5);
-      card.add([halo, panel, icon, cost, lockLabel]);
+      card.add([halo, packetFrame, panel, icon, cost, lockLabel]);
       card.setAlpha(0.78);
     } else {
-      card.add([halo, panel, icon, cost]);
+      card.add([halo, packetFrame, panel, icon, cost]);
     }
 
     panel.on("pointerover", () => {
@@ -1551,10 +1573,10 @@ export default class BattleScene extends Scene {
 
   createQuickCollectionButtons() {
     // A shared translucent glass dock ties the two collection shortcuts together.
-    this.quickCollectionDock = this.add.container(755, 34).setDepth(47);
-    const dockGlow = this.add.rectangle(0, 1, 146, 52, 0xffffff, 0.10);
-    const dock = this.add.rectangle(0, 0, 140, 46, 0xdaf3ff, 0.22)
-      .setStrokeStyle(1, 0xffffff, 0.42);
+    this.quickCollectionDock = this.add.container(1010, 70).setDepth(47);
+    const dockGlow = this.add.rectangle(0, 1, 112, 96, 0x17100a, 0.28);
+    const dock = this.add.rectangle(0, 0, 106, 88, 0x6b4929, 1)
+      .setStrokeStyle(3, 0xd5a66a, 1);
     this.quickCollectionDock.add([dockGlow, dock]);
 
     const makeButton = (x, tab, tint) => {
@@ -3699,12 +3721,12 @@ export default class BattleScene extends Scene {
 
   refreshHud() {
     const values = [
-      "⚡ " + this.energy,
       "🪙 " + this.coins,
       "🏡 " + this.houseHealth + "%",
       "🌱 " + this.livingPlantCount(),
       "👾 " + this.totalDefeatedMonsters + "/" + PHASE_ONE_TOTAL_MONSTERS,
     ];
+    if (this.sunValueText) this.sunValueText.setText(String(this.energy));
     if (this.hudValueTexts) {
       this.hudValueTexts.forEach((text, index) => text.setText(values[index]));
     }
