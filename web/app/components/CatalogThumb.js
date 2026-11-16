@@ -2,8 +2,6 @@ const TWEMOJI = "https://cdn.jsdelivr.net/gh/twitter/twemoji@15.1.0/assets/72x72
 const LOCAL_PLANT_ICONS = {
   radish: "/assets/plants/radish-level-1.png",
   "energy-mushroom": "/assets/plants/mushroom.png",
-  tomato: "/assets/plants/tomato.png",
-  onion: "/assets/plants/Onion.png",
   mango: "/assets/plants/mango-level-1.png",
   "pumpkin-guard": "/assets/plants/pumpkin.png",
   "pea-shooter": "/assets/plant-icons/pea-shooter.svg",
@@ -26,8 +24,6 @@ const LOCAL_MONSTER_ICONS = {
 const ART = {
   radish: ["1f96c", "Radish greens"],
   "energy-mushroom": ["1f344", "Mushroom"],
-  tomato: ["1f345", "Tomato"],
-  onion: ["1f9c5", "Onion"],
   mango: ["1f96d", "Mango"],
   "pumpkin-guard": ["1f383", "Pumpkin"],
   "pea-shooter": ["1fadb", "Pea pod"],
