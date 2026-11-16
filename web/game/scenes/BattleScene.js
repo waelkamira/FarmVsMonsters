@@ -772,7 +772,7 @@ export default class BattleScene extends Scene {
       // same visible body height and the feet stay attached to the world anchor.
       this.cavemanVisual = this.add.sprite(0, 0, "farmer-idle", 0)
         .setOrigin(0.5, 1)
-        .setScale(0.42);
+        .setScale(0.63);
       this.farmerFrameMetrics = new Map();
       this.farmerTargetDisplayHeight = null;
       this.cavemanVisual.on("animationstart", () => this.normalizeFarmerFrame());
@@ -883,17 +883,17 @@ export default class BattleScene extends Scene {
 
         // The first standing frame defines the target visible size for every action.
         if (textureKey === "farmer-idle" && this.farmerTargetDisplayHeight === null) {
-          this.farmerTargetDisplayHeight = bounds.height * 0.42;
+          this.farmerTargetDisplayHeight = bounds.height * 0.63;
         }
       } catch (error) {
         // Keep the game playable on browsers that block canvas pixel reads.
-        sprite.setOrigin(0.5, 1).setScale(0.42);
+        sprite.setOrigin(0.5, 1).setScale(0.63);
         return;
       }
     }
 
     if (this.farmerTargetDisplayHeight === null) {
-      this.farmerTargetDisplayHeight = bounds.height * 0.42;
+      this.farmerTargetDisplayHeight = bounds.height * 0.63;
     }
 
     // Phaser's origin is the stable world anchor: center of the visible feet,
