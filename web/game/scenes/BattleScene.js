@@ -3183,7 +3183,7 @@ export default class BattleScene extends Scene {
       }
 
       shot.currentRow = shot.row;
-      const position = shot.plantType === "pineapple"
+      const position = ["pineapple", "hazelnut"].includes(shot.plantType)
         ? this.pineappleLanePoint(shot.localX, shot.row)
         : this.lanePoint(shot.localX, shot.row);
       const projectileX = position.x + (shot.launchOffsetX || 0);
@@ -3195,7 +3195,7 @@ export default class BattleScene extends Scene {
         const targetBounds = shot.target.view.getBounds();
         const travelSpan = Math.max(1, shot.targetLocalX - shot.startLocalX);
         const arcProgress = Phaser.Math.Clamp((shot.localX - shot.startLocalX) / travelSpan, 0, 1);
-        const launchPosition = shot.plantType === "pineapple" ? this.pineappleLanePoint(shot.startLocalX, shot.row) : this.lanePoint(shot.startLocalX, shot.row);
+        const launchPosition = this.pineappleLanePoint(shot.startLocalX, shot.row);
         const launchScreenX = launchPosition.x + (shot.launchOffsetX || 0);
         const launchScreenY = launchPosition.y + (shot.launchOffsetY || 0);
         const arcHeight = Math.max(34, Math.min(90, Math.abs(targetBounds.centerX - launchScreenX) * 0.18));
