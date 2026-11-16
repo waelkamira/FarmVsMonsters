@@ -206,7 +206,7 @@ export default class BattleScene extends Scene {
     this.gameOver = false;
     this.hyenaAnimationsReady = this.createHyenaAnimations();
     if (this.textures.exists("pineapple-level-1") && !this.anims.exists("pineapple-level-1-throw")) {
-      this.anims.create({ key: "pineapple-level-1-throw", frames: this.anims.generateFrameNumbers("pineapple-level-1", { start: 0, end: 8 }), frameRate: 13.67, repeat: 0 });
+      this.anims.create({ key: "pineapple-level-1-throw", frames: this.anims.generateFrameNumbers("pineapple-level-1", { start: 0, end: 8 }), frameRate: 14.32, repeat: 0 });
     }
     const legacySoundSetting = this.registry.get("soundEnabled");
     const defaultSoundSetting = legacySoundSetting === undefined ? true : legacySoundSetting;
