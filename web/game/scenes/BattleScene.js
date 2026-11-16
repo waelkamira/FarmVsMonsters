@@ -2172,10 +2172,10 @@ export default class BattleScene extends Scene {
     plant.setData("pineapplePerspectiveScale", pineapplePerspectiveScale);
     if (this.textures.exists(texture)) {
       // Pineapple Level 1 keeps its tuned base size; only its row perspective changes.
-      const baseHeight = type === "tomato" ? 32 : type === "pumpkin" ? 70 : type === "pineapple" ? 105.6 : 64;
+      const baseHeight = type === "tomato" ? 32 : type === "pumpkin" ? 70 : type === "pineapple" ? 132 : 64;
       const height = baseHeight * pineapplePerspectiveScale;
       const width = height * (this.textures.getFrame(texture).realWidth / this.textures.getFrame(texture).realHeight);
-      const maxWidth = (type === "tomato" ? 38 : type === "pineapple" ? 121.6 : 76) * pineapplePerspectiveScale;
+      const maxWidth = (type === "tomato" ? 38 : type === "pineapple" ? 152 : 76) * pineapplePerspectiveScale;
       if (type === "pineapple") {
         const pineapple = this.add.sprite(0, -height / 2 + 2, texture, 0).setDisplaySize(Math.min(width, maxWidth), height);
         pineapple.setData("pineappleThrowSprite", true);
