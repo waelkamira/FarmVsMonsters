@@ -2321,21 +2321,34 @@ export default class BattleScene extends Scene {
   }
 
   fireThorn(plant, target) {
-    // The Radish fires a miniature copy of its own artwork, turned sideways
-    // so the root points toward incoming monsters. Keep the combat contract
-    // (lane, speed, damage and collision) unchanged.
-    const lane = this.worldToLane(plant);
+    // Pineapple projectiles must not exist until the throw animation reaches
+    // its final frame. This keeps the visual action and the actual launch in sync.
     if (plant.type === "pineapple" && plant.view?.active) {
+      if (plant.pineappleThrowing) return;
       const throwSprite = plant.view.list.find((child) => child?.getData?.("pineappleThrowSprite"));
       if (throwSprite && this.anims.exists("pineapple-level-1-throw")) {
+        plant.pineappleThrowing = true;
         throwSprite.stop();
         throwSprite.setTexture("pineapple-level-1", 0);
         throwSprite.play("pineapple-level-1-throw");
         throwSprite.once("animationcomplete", () => {
+          plant.pineappleThrowing = false;
           if (throwSprite.active) throwSprite.setTexture("pineapple-level-1", 0);
+          if (plant.alive && target?.alive && !this.gameOver) {
+            this.fireThornProjectile(plant, target);
+          }
         });
+        return;
       }
     }
+    this.fireThornProjectile(plant, target);
+  }
+
+  fireThornProjectile(plant, target) {
+    // The Radish fires a miniature copy of its own artwork, turned sideways
+    // so the root points toward incoming monsters. Keep the combat contract
+    // (lane, speed, damage and collision) unchanged.
+    const lane = this.worldToLane(plant);
     const localX = lane.localX;
     const row = plant.row;
     const targetRow = plant.row;
