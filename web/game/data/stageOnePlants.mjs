@@ -9,7 +9,7 @@ export const STAGE_ONE_PLANTS = Object.freeze([
     roleAr: "مدافع المسار",
     description: "Roots into a soil cell, performs its nine-frame attack animation, and launches miniature Radish Level 1 bombs at monsters in its lane.",
     descriptionAr: "يثبت في خلية ترابية، وينفذ حركة هجوم من تسعة إطارات، ثم يطلق قذائف فجل صغيرة على الوحوش في مساره.",
-    energyCost: 35,
+    energyCost: 25,
     coinPrice: 0,
     status: "active",
     implemented: true,
