@@ -1263,22 +1263,22 @@ export default class BattleScene extends Scene {
     });
     this.input.on("pointerup", () => { this.activeAudioSlider = null; });
 
-    this.audioButton = this.add.container(1090, 34).setDepth(72);
-    const buttonHalo = this.add.circle(0, 0, 26, 0xffffff, 0.12);
-    const buttonBackground = this.add.circle(0, 0, 23, 0x35bceb, 0.42).setStrokeStyle(1, 0xffffff, 0.82);
+    this.audioButton = this.add.container(1090, 27).setDepth(72);
+    const buttonHalo = this.add.rectangle(0, 1, 42, 36, 0x1b1008, 0.32);
+    const buttonBackground = this.add.rectangle(0, 0, 36, 32, 0xe6c58c, 1).setStrokeStyle(3, 0x4a2d18, 1);
     const speaker = this.add.graphics();
-    speaker.fillStyle(0xffffff, 1);
+    speaker.fillStyle(0x4b2e16, 1);
     speaker.fillRoundedRect(-11, -6, 7, 12, 2);
     speaker.fillTriangle(-5, -7, 5, -14, 5, 14);
     speaker.fillTriangle(-5, 7, 5, 14, 5, -14);
-    speaker.lineStyle(2, 0xffffff, 1);
+    speaker.lineStyle(2, 0x4b2e16, 1);
     speaker.beginPath();
     speaker.arc(3, 0, 10, -0.85, 0.85, false);
     speaker.strokePath();
     this.audioButton.add([buttonHalo, buttonBackground, speaker]);
     buttonBackground.setInteractive({ useHandCursor: true });
-    buttonBackground.on("pointerover", () => buttonBackground.setFillStyle(0x35bceb, 0.72));
-    buttonBackground.on("pointerout", () => buttonBackground.setFillStyle(0x35bceb, 0.42));
+    buttonBackground.on("pointerover", () => buttonBackground.setFillStyle(0xffdf8a, 1));
+    buttonBackground.on("pointerout", () => buttonBackground.setFillStyle(0xe6c58c, 1));
     buttonBackground.on("pointerdown", () => {
       if (this.audioMenuOpen) this.closeAudioMenu();
       else this.openAudioMenu();
@@ -1632,14 +1632,14 @@ export default class BattleScene extends Scene {
 
   createCollectionMenuControl() {
     const button = this.add.container(978, 27).setDepth(47);
-    const plate = this.add.rectangle(0, 0, 46, 30, 0x35bceb, 0.48)
-      .setStrokeStyle(1, 0xffffff, 0.78).setInteractive({ useHandCursor: true });
+    const plate = this.add.rectangle(0, 0, 42, 36, 0xe6c58c, 1)
+      .setStrokeStyle(3, 0x4a2d18, 1).setInteractive({ useHandCursor: true });
     const label = this.add.text(0, 0, "▤", {
-      fontFamily: "Arial", fontSize: "20px", color: "#ffffff", fontStyle: "bold"
+      fontFamily: "Arial", fontSize: "20px", color: "#4b2e16", fontStyle: "bold"
     }).setOrigin(0.5);
     button.add([plate, label]);
-    plate.on("pointerover", () => plate.setFillStyle(0x35bceb, 0.72).setScale(1.04));
-    plate.on("pointerout", () => plate.setFillStyle(0x35bceb, 0.42).setScale(1));
+    plate.on("pointerover", () => plate.setFillStyle(0xffdf8a, 1).setScale(1.04));
+    plate.on("pointerout", () => plate.setFillStyle(0xe6c58c, 1).setScale(1));
     plate.on("pointerdown", () => this.toggleCollectionMenu());
     this.collectionMenuControl = button;
     this.collectionMenuOpen = false;
@@ -1775,28 +1775,28 @@ export default class BattleScene extends Scene {
 
   createPauseControl() {
     const button = this.add.container(1035, 27).setDepth(46);
-    const background = this.add.rectangle(0, 0, 54, 30, 0x8b65e8, 0.42)
-      .setStrokeStyle(1, 0xffffff, 0.82).setInteractive({ useHandCursor: true });
+    const background = this.add.rectangle(0, 0, 42, 36, 0xe6c58c, 1)
+      .setStrokeStyle(3, 0x4a2d18, 1).setInteractive({ useHandCursor: true });
     const label = this.add.text(0, 0, "Ⅱ", {
-      fontFamily: "Arial", fontSize: "19px", color: "#ffffff", fontStyle: "bold"
+      fontFamily: "Arial", fontSize: "19px", color: "#4b2e16", fontStyle: "bold"
     }).setOrigin(0.5);
     button.add([background, label]);
-    background.on("pointerover", () => background.setFillStyle(0xa07df2, 0.72));
-    background.on("pointerout", () => background.setFillStyle(0x8b65e8, 0.42));
+    background.on("pointerover", () => background.setFillStyle(0xffdf8a, 1));
+    background.on("pointerout", () => background.setFillStyle(0xe6c58c, 1));
     background.on("pointerdown", () => this.pauseGame());
     this.pauseControl = button;
   }
 
   createSettingsControl() {
     const button = this.add.container(1084, 27).setDepth(48);
-    const background = this.add.rectangle(0, 0, 38, 30, 0x8b65e8, 0.48)
-      .setStrokeStyle(1, 0xffffff, 0.82).setInteractive({ useHandCursor: true });
+    const background = this.add.rectangle(0, 0, 36, 36, 0xe6c58c, 1)
+      .setStrokeStyle(3, 0x4a2d18, 1).setInteractive({ useHandCursor: true });
     const label = this.add.text(0, 0, "⚙", {
-      fontFamily: "Arial", fontSize: "20px", color: "#ffffff", fontStyle: "bold"
+      fontFamily: "Arial", fontSize: "20px", color: "#4b2e16", fontStyle: "bold"
     }).setOrigin(0.5);
     button.add([background, label]);
-    background.on("pointerover", () => background.setFillStyle(0xa07df2, 0.78));
-    background.on("pointerout", () => background.setFillStyle(0x8b65e8, 0.48));
+    background.on("pointerover", () => background.setFillStyle(0xffdf8a, 1));
+    background.on("pointerout", () => background.setFillStyle(0xe6c58c, 1));
     background.on("pointerdown", () => this.openSettingsMenu());
     this.settingsControl = button;
   }
