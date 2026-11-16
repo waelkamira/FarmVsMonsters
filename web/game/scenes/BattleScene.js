@@ -2426,20 +2426,36 @@ export default class BattleScene extends Scene {
     const row = plant.row;
     const targetRow = plant.row;
     const targetLocalX = Math.max(localX + 1, target.localX);
-    // The pineapple bomb launches from the upper-right corner, lowered by
-    // half a displayed pineapple height above the plant's ground-level line.
-    const laneOrigin = plant.type === "pineapple"
+    // Pineapple and Hazelnut travel on the same raised lane. Their launch
+    // offsets are measured from that lane so the complete curved trajectory
+    // retains the exact launch position instead of snapping on its first tick.
+    const usesRaisedBombLane = plant.type === "pineapple" || plant.type === "hazelnut";
+    const laneOrigin = usesRaisedBombLane
       ? this.pineappleLanePoint(localX, row)
       : this.lanePoint(localX, row);
     let launchOffsetX = 0;
     let launchOffsetY = 0;
     if (plant.type === "pineapple") {
       const frame = this.textures.getFrame("pineapple-level-1");
-      const displayHeight = 105.6 * (plant.view?.getData?.("pineapplePerspectiveScale") || 1);
-      const displayWidth = Math.min(displayHeight * (frame.realWidth / frame.realHeight), 121.6 * (plant.view?.getData?.("pineapplePerspectiveScale") || 1));
+      const perspectiveScale = plant.view?.getData?.("pineapplePerspectiveScale") || 1;
+      const displayHeight = 105.6 * perspectiveScale;
+      const displayWidth = Math.min(displayHeight * (frame.realWidth / frame.realHeight), 121.6 * perspectiveScale);
       launchOffsetX = displayWidth / 2;
-      // Raise the established launch point by another 20 pixels.
+      // Preserve the pineapple's already-tuned launch position.
       launchOffsetY = -(displayHeight / 2) - 8;
+    } else if (plant.type === "hazelnut") {
+      const frame = this.textures.getFrame("hazelnut-level-1");
+      const perspectiveScale = plant.view?.getData?.("pineapplePerspectiveScale") || 1;
+      const displayHeight = 112 * perspectiveScale;
+      const displayWidth = Math.min(
+        displayHeight * (frame.realWidth / frame.realHeight),
+        116 * perspectiveScale
+      );
+      // Start at the center of the planted Hazelnut's displayed height,
+      // then move right by half its displayed width.
+      const midpointY = plant.y - displayHeight / 2 + 2;
+      launchOffsetX = displayWidth / 2;
+      launchOffsetY = midpointY - laneOrigin.y;
     }
     const launchX = laneOrigin.x + launchOffsetX;
     const launchY = laneOrigin.y + launchOffsetY;
