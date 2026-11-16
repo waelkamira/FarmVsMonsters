@@ -55,7 +55,7 @@ export function applyCombatReplayEvent(state, event) {
     const payload = event.payload ?? {};
     const waveSize = PHASE_ONE_WAVE_SIZES[state.currentWave - 1];
     if (payload.monsterId !== `monster-${state.nextMonsterSequence}` || payload.wave !== state.currentWave || payload.spawnIndex !== state.spawnedInWave || payload.spawnIndex >= waveSize) return fail(state, "INVALID_MONSTER_WAVE_SEQUENCE", event);
-    // Keep the explicitly requested first-wave hyena playtest override replayable without changing the canonical campaign roster.\n    const expectedArchetype = payload.wave === 1 && payload.spawnIndex === 0\n      ? "dust-skitter"\n      : resolveMonsterArchetype(payload.wave, payload.spawnIndex);\n    if (payload.archetype !== expectedArchetype) return fail(state, "INVALID_MONSTER_ARCHETYPE", event);
+    const expectedArchetype = resolveMonsterArchetype(payload.wave, payload.spawnIndex);\n    if (payload.archetype !== expectedArchetype) return fail(state, "INVALID_MONSTER_ARCHETYPE", event);
     let profile;
     try { profile = getMonsterCombatStats(payload.archetype, payload.wave); } catch { return fail(state, "INVALID_MONSTER_PROFILE", event); }
     if (payload.hp !== profile.hp || payload.speed !== profile.speed || payload.localX !== PHASE_ONE_BOARD.spawnLocalX) return fail(state, "MONSTER_STATS_MISMATCH", event);
