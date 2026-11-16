@@ -503,7 +503,11 @@ export default class BattleScene extends Scene {
     const bottomRight = GRID_NODES[safeRow + 1][col + 1];
     const topY = PhaserMath.Linear(topLeft.y, topRight.y, cellU);
     const bottomY = PhaserMath.Linear(bottomLeft.y, bottomRight.y, cellU);
-    position.y -= (bottomY - topY) / 2;
+    // Use the cell's actual top edge as the raised lane: this is exactly
+    // half a cell-height above its vertical midpoint, independently for
+    // every column and row. Assigning the edge directly avoids sign or
+    // centroid differences in the perspective-warped grid.
+    position.y = topY;
     return position;
   }
 
