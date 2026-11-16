@@ -988,6 +988,7 @@ html[dir="rtl"] body { font-family: Tahoma, Arial, sans-serif; }
 .plant-thumb { width:100%; aspect-ratio:1.2 / 1; border-radius:18px; }
 /* Keep the source artwork square and crisp inside the wider encyclopedia card. */
 .plant-thumb img { width:64px; height:64px; max-width:76%; max-height:76%; object-fit:contain; image-rendering:auto; }
+.plant-thumb img.catalog-thumb-radish-sheet { position:absolute; top:calc(50% - 38px); left:calc(50% - 32px); width:192px; height:auto; max-width:none; max-height:none; object-fit:unset; }
 .plant-thumb.is-planned { background:linear-gradient(145deg,#c5a1ff,#8760dc 55%,#593bb4); }
 .monster-thumb { width:100%; min-height:145px; aspect-ratio:1.55 / 1; background:linear-gradient(145deg,#8edcff,#399ce9 55%,#4565c8); }
 .monster-thumb:nth-child(2n) { background:linear-gradient(145deg,#ffbd82,#f27b61 58%,#c74670); }
@@ -1913,6 +1914,8 @@ select option {
 .seed-select-card strong { font-size:15px; font-weight:1000; text-align:center; }
 .seed-select-card small { min-height:30px; color:#614426; font-size:11px; font-weight:800; text-align:center; }
 .seed-select-art { display:grid; place-items:center; width:86px; height:80px; }
+.seed-select-art.is-sprite-sheet { overflow:hidden; height:103px; align-items:start; }
+.seed-select-art.is-sprite-sheet img { width:300%; max-width:none; max-height:none; height:auto; object-fit:unset; }
 .seed-select-art img { max-width:100%; max-height:100%; object-fit:contain; filter:drop-shadow(0 4px 3px #3a241b66); }
 .seed-select-check { position:absolute; top:7px; inset-inline-end:8px; display:grid; place-items:center; width:25px; height:25px; border:2px solid #54351d; border-radius:50%; background:#fff1c8; color:#385d2a; font-size:16px; font-weight:1000; }
 .seed-select-card:not(.is-selected) .seed-select-check { color:#78522b; background:#d9c39c; }
