@@ -2355,9 +2355,9 @@ export default class BattleScene extends Scene {
     const launchX = laneOrigin.x + launchOffsetX;
     const launchY = laneOrigin.y + launchOffsetY;
     const view = this.add.container(launchX, launchY).setDepth(16);
-    // Preserve the authored corner launch for a short, smooth transition;
-    // afterwards the shot travels exactly along its own lane centerline.
-    const launchOffsetDurationMs = plant.type === "pineapple" ? 180 : 0;
+    // Keep the projectile on the exact height of the pineapple's upper-right
+    // launch point. Do not ease its vertical offset toward the lane center:
+    // that creates the unwanted immediate downward drop.
 
     const halo = this.add.circle(0, 0, 18, 0xff7185, 0.13);
     const outerGlow = this.add.circle(0, 0, 13, 0x8bd66f, 0.2);
@@ -2417,7 +2417,7 @@ export default class BattleScene extends Scene {
     this.projectiles.push({
       view, localX, row, startRow: row, targetRow, target,
       startLocalX: localX, targetLocalX,
-      launchOffsetX, launchOffsetY, launchOffsetDurationMs, launchElapsedMs: 0,
+      launchOffsetX, launchOffsetY,
       speed: projectileConfig.projectileSpeed,
       damage: projectileConfig.projectileDamage,
       collisionRadius: projectileConfig.projectileCollisionRadius,
@@ -3050,16 +3050,11 @@ export default class BattleScene extends Scene {
       // Projectiles travel through the horizontal centerline of each
       // perspective soil cell; monster sprites use a separately lowered lane.
       const position = this.lanePoint(shot.localX, shot.row);
-      shot.launchElapsedMs = Math.min(
-        shot.launchOffsetDurationMs || 0,
-        (shot.launchElapsedMs || 0) + dt * 1000
-      );
-      const launchProgress = shot.launchOffsetDurationMs > 0
-        ? shot.launchElapsedMs / shot.launchOffsetDurationMs
-        : 1;
-      const launchEase = 1 - launchProgress;
-      const projectileX = position.x + (shot.launchOffsetX || 0) * launchEase;
-      const projectileY = position.y + (shot.launchOffsetY || 0) * launchEase;
+      // Preserve the pineapple's upper-right launch height throughout flight.
+      // The bomb advances horizontally with the lane perspective, without
+      // falling toward the plant's foot-level centerline after it is fired.
+      const projectileX = position.x + (shot.launchOffsetX || 0);
+      const projectileY = position.y + (shot.launchOffsetY || 0);
       shot.view.setPosition(projectileX, projectileY);
 
       shot.trailTimer -= dt * 1000;
