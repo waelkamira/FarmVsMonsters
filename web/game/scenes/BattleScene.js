@@ -2340,17 +2340,17 @@ export default class BattleScene extends Scene {
     const row = plant.row;
     const targetRow = plant.row;
     const targetLocalX = Math.max(localX + 1, target.localX);
-    // The pineapple bomb visibly leaves the upper-right corner of the enlarged
-    // animation frame, then smoothly settles onto the lane centerline.
+    // The pineapple bomb launches from the upper-right corner, lowered by
+    // one full displayed pineapple height to the plant's ground-level line.
     const laneOrigin = this.lanePoint(localX, row);
     let launchOffsetX = 0;
     let launchOffsetY = 0;
     if (plant.type === "pineapple") {
       const frame = this.textures.getFrame("pineapple-level-1");
-      const displayHeight = 132;
-      const displayWidth = Math.min(displayHeight * (frame.realWidth / frame.realHeight), 152);
+      const displayHeight = 105.6;
+      const displayWidth = Math.min(displayHeight * (frame.realWidth / frame.realHeight), 121.6);
       launchOffsetX = displayWidth / 2;
-      launchOffsetY = -displayHeight + 2;
+      launchOffsetY = -displayHeight + 2 + displayHeight;
     }
     const launchX = laneOrigin.x + launchOffsetX;
     const launchY = laneOrigin.y + launchOffsetY;
