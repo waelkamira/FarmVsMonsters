@@ -3127,15 +3127,15 @@ export default class BattleScene extends Scene {
   updateProjectiles(dt) {
     for (const shot of this.projectiles) {
       if (!shot.alive) continue;
-      const pineappleTarget = shot.plantType === "pineapple" &&
+      const pineappleTarget = ["pineapple", "hazelnut"].includes(shot.plantType) &&
         shot.target?.alive && shot.target.row === shot.row &&
         shot.target.view?.active;
-      if (shot.plantType === "pineapple" && shot.dropPhase === "dropping" && !pineappleTarget) {
+      if (["pineapple", "hazelnut"].includes(shot.plantType) && shot.dropPhase === "dropping" && !pineappleTarget) {
         shot.alive = false;
         shot.view.destroy();
         continue;
       }
-      if (shot.plantType === "pineapple" && shot.dropPhase === "dropping" && pineappleTarget) {
+      if (["pineapple", "hazelnut"].includes(shot.plantType) && shot.dropPhase === "dropping" && pineappleTarget) {
         // Follow the monster's live bounds while tracing a quadratic arc to
         // the top-center of its head, regardless of the monster's rendered size.
         const bounds = shot.target.view.getBounds();
@@ -3187,11 +3187,11 @@ export default class BattleScene extends Scene {
 
       // Give the outgoing pineapple bomb a smooth launch arc. Progress is
       // measured along its lane, while the arc height adapts to travel distance.
-      if (shot.plantType === "pineapple" && pineappleTarget) {
+      if (["pineapple", "hazelnut"].includes(shot.plantType) && pineappleTarget) {
         const targetBounds = shot.target.view.getBounds();
         const travelSpan = Math.max(1, shot.targetLocalX - shot.startLocalX);
         const arcProgress = Phaser.Math.Clamp((shot.localX - shot.startLocalX) / travelSpan, 0, 1);
-        const launchPosition = this.pineappleLanePoint(shot.startLocalX, shot.row);
+        const launchPosition = shot.plantType === "pineapple" ? this.pineappleLanePoint(shot.startLocalX, shot.row) : this.lanePoint(shot.startLocalX, shot.row);
         const launchScreenX = launchPosition.x + (shot.launchOffsetX || 0);
         const launchScreenY = launchPosition.y + (shot.launchOffsetY || 0);
         const arcHeight = Math.max(34, Math.min(90, Math.abs(targetBounds.centerX - launchScreenX) * 0.18));
