@@ -8,15 +8,13 @@ import { useLocale, LanguageToggle } from "../../../LocaleProvider";
 const PLANTS = [
   { id: "radish", name: "Radish Level 1", ar: "الفجل المستوى الأول", role: "Lane attacker", roleAr: "مهاجم للمسار", cost: 35, image: "/assets/plants/radish-level-1.png" },
   { id: "mushroom", name: "Energy Mushroom", ar: "فطر الطاقة", role: "Energy producer · Required", roleAr: "منتج الطاقة · أساسي", cost: 50, image: "/assets/plants/mushroom.png", required: true },
-  { id: "tomato", name: "Tomato", ar: "الطماطم", role: "Ranged attacker", roleAr: "مهاجم بعيد", cost: 55, image: "/assets/plants/tomato.png" },
   { id: "pumpkin", name: "Pumpkin", ar: "اليقطين", role: "Heavy blocker", roleAr: "حاجز دفاعي", cost: 75, image: "/assets/plants/pumpkin.png" },
-  { id: "onion", name: "Onion", ar: "البصل", role: "Heavy ranged attacker", roleAr: "مهاجم بعيد ثقيل", cost: 65, image: "/assets/plants/Onion.png" },
   { id: "pineapple", name: "Pineapple L1", ar: "الأناناس L1", role: "Arcing bomb attacker", roleAr: "قاذف قنابل مقوسة", cost: 70, image: "/assets/plants/pineapple-level-1.png" },
   { id: "hazelnut", name: "Hazelnut L1", ar: "البندق L1", role: "Arcing bomb attacker", roleAr: "قاذف قنابل مقوسة", cost: 65, image: "/assets/plants/hazelnut-level-1.png" },
   { id: "mango", name: "Mango L1", ar: "المانجو L1", role: "Arcing bomb attacker", roleAr: "قاذف قنابل مقوسة", cost: 70, image: "/assets/plants/mango-level-1.png" }
 ];
 
-const DEFAULT_LOADOUT = ["radish", "mushroom", "tomato", "pumpkin", "onion", "pineapple", "mango"];
+const DEFAULT_LOADOUT = ["radish", "mushroom", "pumpkin", "pineapple", "hazelnut", "mango"];
 const MAX_SEEDS = 7;
 
 export default function StageOneSeedSelectionPage() {
