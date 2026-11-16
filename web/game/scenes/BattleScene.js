@@ -2416,7 +2416,7 @@ export default class BattleScene extends Scene {
       const displayWidth = Math.min(displayHeight * (frame.realWidth / frame.realHeight), 121.6 * (plant.view?.getData?.("pineapplePerspectiveScale") || 1));
       launchOffsetX = displayWidth / 2;
       // Raise the established launch point by another 20 pixels.
-      launchOffsetY = -(displayHeight / 2) - 18;
+      launchOffsetY = -(displayHeight / 2) - 8;
     }
     const launchX = laneOrigin.x + launchOffsetX;
     const launchY = laneOrigin.y + launchOffsetY;
@@ -3120,7 +3120,7 @@ export default class BattleScene extends Scene {
         const bounds = shot.target.view.getBounds();
         const headY = bounds.top;
         const headX = bounds.centerX;
-        const bombHalfHeight = 10.5;
+        const bombHalfHeight = 0.5;
         const nextY = Math.min(headY - bombHalfHeight, shot.view.y + shot.dropSpeed * dt);
         shot.view.setPosition(headX, nextY);
         shot.localX = shot.target.localX;
