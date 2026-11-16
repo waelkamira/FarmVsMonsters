@@ -633,10 +633,12 @@ export default class BattleScene extends Scene {
     let icon;
     if (imageKey && this.textures.exists(imageKey)) {
       const frameData = this.textures.getFrame(imageKey);
-      const iconHeight = 48;
+      // Use nearly the full packet face for the plant artwork while keeping
+      // a dedicated strip below for the energy cost.
+      const iconHeight = 58;
       const iconWidth = iconHeight * (frameData.realWidth / frameData.realHeight);
-      icon = this.add.image(0, -12, imageKey)
-        .setDisplaySize(Math.min(iconWidth, 58), iconHeight);
+      icon = this.add.image(0, -11, imageKey)
+        .setDisplaySize(Math.min(iconWidth, 64), iconHeight);
     } else {
       icon = this.add.graphics();
       if (drawIcon) drawIcon(icon);
