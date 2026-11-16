@@ -2951,14 +2951,13 @@ export default class BattleScene extends Scene {
           monster.voiceCooldown = PhaserMath.Between(6500, 12500);
         }
       }
-      // Radish and Pumpkin plants block their own lane. Resource producers
-      // and ranged attackers are passed by monsters.
+      // Every living plant blocks monsters in its own lane. A monster must
+      // finish eating that plant before it can continue toward the farmhouse.
       const monsterHalfWidth = monster.hyenaSprite
         ? monster.hyenaSprite.width * monster.hyenaSprite.scaleX * monster.view.scaleX * 0.5
         : monster.view.getBounds().width * 0.5;
       const widestBlockingPlantHalfWidth = this.plants.reduce((widest, plant) => {
-        if (!plant.alive || !["radish", "pumpkin"].includes(plant.type) ||
-            plant.row !== monster.row || !plant.view?.active) return widest;
+        if (!plant.alive || plant.row !== monster.row || !plant.view?.active) return widest;
         return Math.max(widest, plant.view.getBounds().width * 0.5);
       }, 0);
       // Include a plant that the monster has just crossed by a few pixels.
@@ -2967,7 +2966,7 @@ export default class BattleScene extends Scene {
       const blocker = selectLaneBlocker({
         plants: this.plants.map((plant) => ({
           plant,
-          localX: plant.alive && ["radish", "pumpkin"].includes(plant.type) && plant.row === monster.row
+          localX: plant.alive && plant.row === monster.row
             ? this.worldToLane(plant).localX
             : null
         })),
