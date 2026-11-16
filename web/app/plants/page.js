@@ -54,10 +54,10 @@ export default function PlantsPage() {
         </div>
 
         <h2 className="collection-section-title">{ar ? "النباتات المفعّلة داخل المعركة" : "Active in battle"}</h2>
-        <div className="collection-grid">
+        <div className="collection-grid active-plant-grid">
           {activePlants.map((plant) => (
             <article className="collection-card is-active" key={plant.id}>
-              <CatalogThumb id={plant.id} label={ar ? plant.nameAr : plant.name} className="plant-thumb" />
+              <CatalogThumb id={plant.id} label={ar ? plant.nameAr : plant.name} className="plant-thumb active-plant-thumb" />
               <h2>{ar ? plant.nameAr : plant.name}</h2>
               <span className="collection-status">{ar ? "✓ مفعّل في اللعبة" : "✓ ACTIVE IN GAME"}</span>
               <p>{ar ? plant.descriptionAr : plant.description}</p>
