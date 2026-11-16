@@ -18,6 +18,7 @@ import {
   ONION_CONFIG,
   PINEAPPLE_CONFIG,
   HAZELNUT_CONFIG,
+  MANGO_CONFIG,
   collectEnergy,
   isWaveComplete,
   isPhaseOneVictory,
@@ -702,6 +703,7 @@ export default class BattleScene extends Scene {
       this.onionCard?.setAlpha(type === "onion" ? 1 : 0.78);
       this.pineappleCard?.setAlpha(type === "pineapple" ? 1 : 0.78);
       this.hazelnutCard?.setAlpha(type === "hazelnut" ? 1 : 0.78);
+      this.mangoCard?.setAlpha(type === "mango" ? 1 : 0.78);
       panel.setFillStyle(tint, 0.38);
       const plantHints = {
         radish: "Radish chosen. Fires thorn shots in its lane.",
@@ -709,7 +711,8 @@ export default class BattleScene extends Scene {
         tomato: "Tomato chosen. Fires tomato shots in its lane.",
         pumpkin: "Pumpkin chosen. A durable lane blocker.",
         onion: "Onion chosen. Fires heavy onion shots in its lane.",
-        hazelnut: "Hazelnut chosen. Fires hazelnut bombs in its lane."
+        hazelnut: "Hazelnut chosen. Fires hazelnut bombs in its lane.",
+        mango: "Mango chosen. Launches a curved mango bomb onto monsters in its lane."
       };
       this.setMessage(plantHints[type] || "Plant chosen.");
       this.refreshHud();
