@@ -3115,22 +3115,31 @@ export default class BattleScene extends Scene {
         continue;
       }
       if (shot.plantType === "pineapple" && shot.dropPhase === "dropping" && pineappleTarget) {
-        // During the drop, continuously follow the monster's live bounds. This
-        // keeps the bomb over its head even when the monster moves or is scaled.
+        // Follow the monster's live bounds while tracing a quadratic arc to
+        // the top-center of its head, regardless of the monster's rendered size.
         const bounds = shot.target.view.getBounds();
-        const headY = bounds.top;
-        const headX = bounds.centerX;
-        const bombHalfHeight = 0.5;
-        const nextY = Math.min(headY - bombHalfHeight, shot.view.y + shot.dropSpeed * dt);
-        shot.view.setPosition(headX, nextY);
+        const endX = bounds.centerX;
+        const endY = bounds.top - 0.5;
+        const startX = shot.dropStartX;
+        const startY = shot.dropStartY;
+        const remainingDistance = Math.max(1, Math.hypot(endX - startX, endY - startY));
+        shot.dropProgress = Math.min(1, shot.dropProgress + (shot.dropSpeed * dt) / remainingDistance);
+        const t = shot.dropProgress;
+        const controlX = (startX + endX) / 2;
+        const arcHeight = Math.max(26, Math.min(82, Math.abs(endX - startX) * 0.16));
+        const controlY = Math.min(startY, endY) - arcHeight;
+        const inverseT = 1 - t;
+        const nextX = inverseT * inverseT * startX + 2 * inverseT * t * controlX + t * t * endX;
+        const nextY = inverseT * inverseT * startY + 2 * inverseT * t * controlY + t * t * endY;
+        shot.view.setPosition(nextX, nextY);
         shot.localX = shot.target.localX;
         shot.trailTimer -= dt * 1000;
         if (shot.trailTimer <= 0) {
-          this.createProjectileTrail(headX - 5, nextY);
+          this.createProjectileTrail(nextX - 5, nextY);
           shot.trailTimer = 48;
         }
-        if (nextY >= headY - bombHalfHeight - 0.5) {
-          this.createProjectileImpact(headX, headY);
+        if (t >= 1) {
+          this.createProjectileImpact(endX, bounds.top);
           this.playThornImpactSound();
           this.applyMonsterDamage(shot.target, shot.damage * this.incomingMonsterDamageMultiplier(shot.target));
           this.damageMonsterIfNeeded(shot.target);
@@ -3155,18 +3164,29 @@ export default class BattleScene extends Scene {
       const projectileX = position.x + (shot.launchOffsetX || 0);
       const projectileY = position.y + (shot.launchOffsetY || 0);
 
-      // The pineapple first travels horizontally, then changes to a vertical
-      // drop directly above the monster's current head. The transition uses
-      // the monster's rendered bounds, not fixed sprite or plant dimensions.
-      if (pineappleTarget) {
+      // Give the outgoing pineapple bomb a smooth launch arc. Progress is
+      // measured along its lane, while the arc height adapts to travel distance.
+      if (shot.plantType === "pineapple" && pineappleTarget) {
         const targetBounds = shot.target.view.getBounds();
+        const travelSpan = Math.max(1, shot.targetLocalX - shot.startLocalX);
+        const arcProgress = Phaser.Math.Clamp((shot.localX - shot.startLocalX) / travelSpan, 0, 1);
+        const launchPosition = this.pineappleLanePoint(shot.startLocalX, shot.row);
+        const launchScreenX = launchPosition.x + (shot.launchOffsetX || 0);
+        const launchScreenY = launchPosition.y + (shot.launchOffsetY || 0);
+        const arcHeight = Math.max(34, Math.min(90, Math.abs(targetBounds.centerX - launchScreenX) * 0.18));
+        const arcedY = projectileY - Math.sin(Math.PI * arcProgress) * arcHeight;
         if (projectileX >= targetBounds.centerX - 4) {
           shot.dropPhase = "dropping";
-          shot.view.setPosition(targetBounds.centerX, projectileY);
+          shot.dropStartX = projectileX;
+          shot.dropStartY = arcedY;
+          shot.dropProgress = 0;
+          shot.view.setPosition(projectileX, arcedY);
           continue;
         }
+        shot.view.setPosition(projectileX, arcedY);
+      } else {
+        shot.view.setPosition(projectileX, projectileY);
       }
-      shot.view.setPosition(projectileX, projectileY);
 
       shot.trailTimer -= dt * 1000;
       if (shot.trailTimer <= 0) {
