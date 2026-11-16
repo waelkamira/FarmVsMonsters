@@ -14,7 +14,7 @@ export const MONSTER_KILL_COIN_REWARD = PHASE_ONE_REWARDS.ordinaryMonsterDefeatC
 export const MUSHROOM_PICKUP_TTL_MS = PHASE_ONE_PLANTS.energyMushroom.pickupTtlMs;
 
 export const RADISH_CONFIG = Object.freeze({
-  label: "Radish",
+  label: "Radish Level 1",
   ...PHASE_ONE_PLANTS.radish,
   cost: PHASE_ONE_PLANTS.radish.plantingEnergyCost,
   cooldown: PHASE_ONE_PLANTS.radish.cooldownMs
