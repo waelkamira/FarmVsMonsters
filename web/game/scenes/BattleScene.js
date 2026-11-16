@@ -2027,7 +2027,7 @@ export default class BattleScene extends Scene {
       productionCount: 0,
       view: type === "mushroom" ? this.drawEnergyMushroom(x, y, row)
         : type === "radish" ? this.drawRadish(x, y)
-        : this.drawCatalogPlant(type, x, y)
+        : this.drawCatalogPlant(type, x, y, row)
     };
     this.plants.push(plant);
     this.totalPlantsPlanted += 1;
@@ -2120,15 +2120,25 @@ export default class BattleScene extends Scene {
     return plant;
   }
 
-  drawCatalogPlant(type, x, y) {
+  drawCatalogPlant(type, x, y, row = 2) {
     const plant = this.add.container(x, y).setDepth(11);
     const texture = type === "tomato" ? "tomato-character" : type === "pumpkin" ? "pumpkin-character" : type === "pineapple" ? "pineapple-level-1" : "onion-character";
+    const rowIndex = PhaserMath.Clamp(row, 0, LANES - 1);
+    const laneGap = rowIndex < LANES - 1
+      ? this.laneYs[rowIndex + 1] - this.laneYs[rowIndex]
+      : this.laneYs[rowIndex] - this.laneYs[rowIndex - 1];
+    // Reverse the board's apparent depth scaling for pineapples: far rows
+    // (smaller lane gaps) get a larger plant, while near rows get a smaller one.
+    const pineapplePerspectiveScale = type === "pineapple"
+      ? PhaserMath.Clamp(54 / Math.max(laneGap, 1), 0.8, 1.2)
+      : 1;
+    plant.setData("pineapplePerspectiveScale", pineapplePerspectiveScale);
     if (this.textures.exists(texture)) {
-      const frame = this.textures.getFrame(texture);
-      // Pineapple Level 1 is intentionally twice the previous in-world size.
-      const height = type === "tomato" ? 32 : type === "pumpkin" ? 70 : type === "pineapple" ? 105.6 : 64;
-      const width = height * (frame.realWidth / frame.realHeight);
-      const maxWidth = type === "tomato" ? 38 : type === "pineapple" ? 121.6 : 76;
+      // Pineapple Level 1 keeps its tuned base size; only its row perspective changes.
+      const baseHeight = type === "tomato" ? 32 : type === "pumpkin" ? 70 : type === "pineapple" ? 105.6 : 64;
+      const height = baseHeight * pineapplePerspectiveScale;
+      const width = height * (this.textures.getFrame(texture).realWidth / this.textures.getFrame(texture).realHeight);
+      const maxWidth = (type === "tomato" ? 38 : type === "pineapple" ? 121.6 : 76) * pineapplePerspectiveScale;
       if (type === "pineapple") {
         const pineapple = this.add.sprite(0, -height / 2 + 2, texture, 0).setDisplaySize(Math.min(width, maxWidth), height);
         pineapple.setData("pineappleThrowSprite", true);
@@ -2363,8 +2373,8 @@ export default class BattleScene extends Scene {
     let launchOffsetY = 0;
     if (plant.type === "pineapple") {
       const frame = this.textures.getFrame("pineapple-level-1");
-      const displayHeight = 105.6;
-      const displayWidth = Math.min(displayHeight * (frame.realWidth / frame.realHeight), 121.6);
+      const displayHeight = 105.6 * (plant.view?.getData?.("pineapplePerspectiveScale") || 1);
+      const displayWidth = Math.min(displayHeight * (frame.realWidth / frame.realHeight), 121.6 * (plant.view?.getData?.("pineapplePerspectiveScale") || 1));
       launchOffsetX = displayWidth / 2;
       // Raise the established launch point by another 20 pixels.
       launchOffsetY = -(displayHeight / 2) - 18;
