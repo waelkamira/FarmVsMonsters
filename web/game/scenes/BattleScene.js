@@ -625,15 +625,43 @@ export default class BattleScene extends Scene {
       align: "left"
     }).setOrigin(0, 0.5).setDepth(44);
 
-    // Seed packets sit in one evenly spaced row, like the PvZ seed bank.
-    this.radishCard = this.createPlantCard(164, "RADISH", "35", "radish", null, "radish-character", 76);
-    this.mushroomCard = this.createPlantCard(254, "MUSHROOM", "50", "mushroom", null, "mushroom-character", 76);
-    this.tomatoCard = this.createPlantCard(344, "TOMATO", String(TOMATO_CONFIG.cost), "tomato", null, "tomato-character", 76);
-    this.pumpkinCard = this.createPlantCard(434, "PUMPKIN", String(PUMPKIN_CONFIG.cost), "pumpkin", null, "pumpkin-character", 76);
-    this.onionCard = this.createPlantCard(524, "ONION", String(ONION_CONFIG.cost), "onion", null, "onion-character", 76);
-    this.pineappleCard = this.createPlantCard(614, "PINEAPPLE L1", String(PINEAPPLE_CONFIG.cost), "pineapple", null, "pineapple-level-1", 76);
-    this.hazelnutCard = this.createPlantCard(704, "HAZELNUT L1", String(HAZELNUT_CONFIG.cost), "hazelnut", null, "hazelnut-level-1", 76);
-    this.mangoCard = this.createPlantCard(794, "MANGO L1", String(MANGO_CONFIG.cost), "mango", null, "mango-level-1", 76);
+    // Build the seed bank from the player's pre-battle loadout.
+    const plantOptions = [
+      { type: "radish", title: "RADISH", cost: 35, image: "radish-character" },
+      { type: "mushroom", title: "MUSHROOM", cost: 50, image: "mushroom-character" },
+      { type: "tomato", title: "TOMATO", cost: TOMATO_CONFIG.cost, image: "tomato-character" },
+      { type: "pumpkin", title: "PUMPKIN", cost: PUMPKIN_CONFIG.cost, image: "pumpkin-character" },
+      { type: "onion", title: "ONION", cost: ONION_CONFIG.cost, image: "onion-character" },
+      { type: "pineapple", title: "PINEAPPLE L1", cost: PINEAPPLE_CONFIG.cost, image: "pineapple-level-1" },
+      { type: "hazelnut", title: "HAZELNUT L1", cost: HAZELNUT_CONFIG.cost, image: "hazelnut-level-1" },
+      { type: "mango", title: "MANGO L1", cost: MANGO_CONFIG.cost, image: "mango-level-1" }
+    ];
+    let selectedTypes = plantOptions.map((plant) => plant.type);
+    try {
+      const saved = JSON.parse(window.localStorage.getItem("farmVsMonsters.selectedPlants") || "null");
+      if (Array.isArray(saved)) {
+        const allowed = new Set(plantOptions.map((plant) => plant.type));
+        selectedTypes = [...new Set(saved.filter((type) => allowed.has(type)))];
+      }
+    } catch {
+      // A malformed or unavailable loadout falls back to the complete roster.
+    }
+    if (!selectedTypes.includes("mushroom")) selectedTypes.unshift("mushroom");
+    if (selectedTypes.length === 1) selectedTypes.push("radish");
+    this.plantCardsByType = {};
+    const packetStartX = 164;
+    const packetGap = 90;
+    plantOptions.filter((plant) => selectedTypes.includes(plant.type)).forEach((plant, index) => {
+      this.plantCardsByType[plant.type] = this.createPlantCard(
+        packetStartX + index * packetGap,
+        plant.title,
+        String(plant.cost),
+        plant.type,
+        null,
+        plant.image,
+        76
+      );
+    });
 
     this.messageText = this.add.text(560, 574, "", {
       fontFamily: "Arial", fontSize: "15px", color: "#ffffff", fontStyle: "bold",
@@ -701,14 +729,9 @@ export default class BattleScene extends Scene {
         return;
       }
       this.selectedPlant = type;
-      this.radishCard.setAlpha(type === "radish" ? 1 : 0.78);
-      this.mushroomCard.setAlpha(type === "mushroom" ? 1 : 0.78);
-      this.tomatoCard?.setAlpha(type === "tomato" ? 1 : 0.78);
-      this.pumpkinCard?.setAlpha(type === "pumpkin" ? 1 : 0.78);
-      this.onionCard?.setAlpha(type === "onion" ? 1 : 0.78);
-      this.pineappleCard?.setAlpha(type === "pineapple" ? 1 : 0.78);
-      this.hazelnutCard?.setAlpha(type === "hazelnut" ? 1 : 0.78);
-      this.mangoCard?.setAlpha(type === "mango" ? 1 : 0.78);
+      Object.entries(this.plantCardsByType || {}).forEach(([plantType, plantCard]) => {
+        plantCard.setAlpha(plantType === type ? 1 : 0.78);
+      });
       panel.setFillStyle(tint, 0.38);
       const plantHints = {
         radish: "Radish chosen. Fires thorn shots in its lane.",
