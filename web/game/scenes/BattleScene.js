@@ -2164,20 +2164,13 @@ export default class BattleScene extends Scene {
     sprite.setY(baseY).setAngle(0).setScale(1);
     // A more expressive planted idle: the pineapple gently rises, leans,
     // and settles back, without moving its soil-cell anchor.
+    sprite.setAngle(-7);
     this.tweens.add({
       targets: sprite,
       y: baseY - 7,
-      angle: -6,
+      angle: 7,
       scaleY: 1.07,
       duration: 520,
-      ease: "Sine.easeInOut",
-      yoyo: true,
-      repeat: -1
-    });
-    this.tweens.add({
-      targets: sprite,
-      angle: 6,
-      duration: 1040,
       ease: "Sine.easeInOut",
       yoyo: true,
       repeat: -1
@@ -2406,7 +2399,7 @@ export default class BattleScene extends Scene {
       if (throwSprite && this.anims.exists("pineapple-level-1-throw")) {
         plant.pineappleThrowing = true;
         this.tweens.killTweensOf(throwSprite);
-        throwSprite.setPosition(throwSprite.getData("pineappleIdleBaseY") ?? throwSprite.y, throwSprite.getData("pineappleIdleBaseY") ?? throwSprite.y);
+        throwSprite.setY(throwSprite.getData("pineappleIdleBaseY") ?? throwSprite.y);
         throwSprite.setAngle(0).setScale(1);
         throwSprite.stop();
         throwSprite.setTexture("pineapple-level-1", 0);
