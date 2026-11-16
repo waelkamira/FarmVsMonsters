@@ -8,7 +8,7 @@ function validPickupId(value) { return typeof value === "string" && /^pickup-\d+
 function normalizePayload(type, payload) {
   if (!payload || typeof payload !== "object" || Array.isArray(payload)) throw new TypeError("INVALID_COMBAT_EVENT_PAYLOAD");
   if (type === "plant_placed" || type === "plant_uprooted") {
-    if (!["radish", "mushroom", "tomato", "pumpkin", "onion", "pineapple"].includes(payload.type) || !validCell(payload)) throw new RangeError("INVALID_PLANT_EVENT");
+    if (!["radish", "mushroom", "tomato", "pumpkin", "onion", "pineapple", "hazelnut"].includes(payload.type) || !validCell(payload)) throw new RangeError("INVALID_PLANT_EVENT");
     return Object.freeze({ type: payload.type, col: payload.col, row: payload.row });
   }
   if (type === "energy_spawned") {
