@@ -132,18 +132,7 @@ export const STAGE_ONE_PLANTS = Object.freeze([
     energyCost: 130, coinPrice: 360, status: "planned", implemented: false, purchasable: false, image: null,
     stats: ["Lane-wide damage", "Rare plant"], statsAr: ["ضرر على كامل المسار", "نبتة نادرة"]
   },
-  {
-    id: "tomato",
-    assetPath: "/assets/plants/tomato.png",
-    name: "Tomato",
-    nameAr: "الطماطم",
-    role: "Lane projectile attacker",
-    roleAr: "مهاجم بمقذوفات ضمن المسار",
-    description: "Playtest prototype: fires miniature tomato shots at monsters in its own lane.",
-    descriptionAr: "نسخة تجريبية: تطلق حبات طماطم صغيرة على الوحوش الموجودة في مسارها فقط.",
-    energyCost: 55, coinPrice: 0, status: "active", implemented: true, purchasable: false, image: null,
-    stats: ["115 HP", "34 damage", "1850 ms cooldown"], statsAr: ["١١٥ صحة", "ضرر ٣٤", "فاصل هجوم ١٨٥٠ مللي ثانية"]
-  },
+
   {
     id: "pineapple",
     assetPath: "/assets/plants/pineapple-level-1.png",
@@ -156,18 +145,7 @@ export const STAGE_ONE_PLANTS = Object.freeze([
     energyCost: 70, coinPrice: 0, status: "active", implemented: true, purchasable: false, image: null,
     stats: ["140 HP", "42 damage", "2100 ms cooldown"], statsAr: ["١٤٠ صحة", "ضرر ٤٢", "فاصل هجوم ٢١٠٠ مللي ثانية"]
   },
-  {
-    id: "onion",
-    assetPath: "/assets/plants/Onion.png",
-    name: "Onion",
-    nameAr: "البصل",
-    role: "Heavy lane projectile attacker",
-    roleAr: "مهاجم بمقذوفات ثقيلة ضمن المسار",
-    description: "Playtest prototype: launches slower, stronger miniature onion shots at monsters in its own lane.",
-    descriptionAr: "نسخة تجريبية: يطلق حبات بصل صغيرة أبطأ وأقوى على الوحوش في مساره فقط.",
-    energyCost: 65, coinPrice: 0, status: "active", implemented: true, purchasable: false, image: null,
-    stats: ["135 HP", "48 damage", "2350 ms cooldown"], statsAr: ["١٣٥ صحة", "ضرر ٤٨", "فاصل هجوم ٢٣٥٠ مللي ثانية"]
-  },
+
   {
     id: "mango",
     assetPath: "/assets/plants/mango-level-1.png",
