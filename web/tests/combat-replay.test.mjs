@@ -58,11 +58,9 @@ test("replay validates the five-wave monster roster, archetypes and exact combat
  ]);
  const result=replayCombatEventLog(log); assert.equal(result.ok,true); assert.equal(result.state.monsters.length,4); assert.equal(result.state.currentWave,2); assert.equal(result.state.spawnedInWave,1);
 });
-test("replay accepts the explicitly enabled first-wave hyena playtest override", () => {
+test("replay rejects the temporary first-wave hyena playtest override", () => {
  const log=makeLog([ev(0,"monster_spawned",{monsterId:"monster-1",wave:1,spawnIndex:0,row:2,archetype:"dust-skitter",hp:36,speed:13.6,localX:238.4115})]);
- const result=replayCombatEventLog(log);
- assert.equal(result.ok,true);
- assert.equal(result.state.monsters[0].archetype,"dust-skitter");
+ assert.equal(replayCombatEventLog(log).reason,"INVALID_MONSTER_ARCHETYPE");
 });
 
 test("rejects forged monster identity, wave order, archetype and health", () => {
