@@ -2,9 +2,9 @@
 export const STAGE_ONE_PLANTS = Object.freeze([
   {
     id: "radish",
-    assetPath: "/assets/plants/radish.png",
-    name: "Radish Defender",
-    nameAr: "الفجل المدافع",
+    assetPath: "/assets/plants/radish-level-1.png",
+    name: "Radish Level 1",
+    nameAr: "الفجل المستوى الأول",
     role: "Lane defender",
     roleAr: "مدافع المسار",
     description: "Roots into a soil cell and automatically fires thorns at monsters in its lane.",
