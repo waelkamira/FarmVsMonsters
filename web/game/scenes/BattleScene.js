@@ -486,6 +486,27 @@ export default class BattleScene extends Scene {
     };
   }
 
+  pineappleLanePoint(localX, row) {
+    // Raise the pineapple's firing lane by half the actual height of the
+    // individual perspective cell at this horizontal position. Recalculate
+    // from that cell's own top and bottom edges so the offset follows depth
+    // and perspective instead of using one fixed screen-space distance.
+    const position = this.lanePoint(localX, row);
+    const safeRow = PhaserMath.Clamp(Math.floor(row), 0, LANES - 1);
+    const u = (localX + GRID_WIDTH / 2) / GRID_WIDTH;
+    const cellPosition = u * COLUMNS;
+    const col = PhaserMath.Clamp(Math.floor(cellPosition), 0, COLUMNS - 1);
+    const cellU = PhaserMath.Clamp(cellPosition - col, 0, 1);
+    const topLeft = GRID_NODES[safeRow][col];
+    const topRight = GRID_NODES[safeRow][col + 1];
+    const bottomLeft = GRID_NODES[safeRow + 1][col];
+    const bottomRight = GRID_NODES[safeRow + 1][col + 1];
+    const topY = PhaserMath.Linear(topLeft.y, topRight.y, cellU);
+    const bottomY = PhaserMath.Linear(bottomLeft.y, bottomRight.y, cellU);
+    position.y -= (bottomY - topY) / 2;
+    return position;
+  }
+
   monsterLanePoint(localX, row) {
     const position = this.lanePoint(localX, row);
     const safeRow = PhaserMath.Clamp(Math.floor(row), 0, LANES - 1);
@@ -2371,7 +2392,9 @@ export default class BattleScene extends Scene {
     const targetLocalX = Math.max(localX + 1, target.localX);
     // The pineapple bomb launches from the upper-right corner, lowered by
     // half a displayed pineapple height above the plant's ground-level line.
-    const laneOrigin = this.lanePoint(localX, row);
+    const laneOrigin = plant.type === "pineapple"
+      ? this.pineappleLanePoint(localX, row)
+      : this.lanePoint(localX, row);
     let launchOffsetX = 0;
     let launchOffsetY = 0;
     if (plant.type === "pineapple") {
@@ -2445,7 +2468,7 @@ export default class BattleScene extends Scene {
       : plant.type === "tomato" ? TOMATO_CONFIG
       : plant.type === "onion" ? ONION_CONFIG : RADISH_CONFIG;
     this.projectiles.push({
-      view, localX, row, startRow: row, targetRow, target,
+      view, localX, row, startRow: row, targetRow, target, plantType: plant.type,
       startLocalX: localX, targetLocalX,
       launchOffsetX, launchOffsetY,
       speed: projectileConfig.projectileSpeed,
@@ -3079,7 +3102,9 @@ export default class BattleScene extends Scene {
       shot.currentRow = shot.row;
       // Projectiles travel through the horizontal centerline of each
       // perspective soil cell; monster sprites use a separately lowered lane.
-      const position = this.lanePoint(shot.localX, shot.row);
+      const position = shot.plantType === "pineapple"
+        ? this.pineappleLanePoint(shot.localX, shot.row)
+        : this.lanePoint(shot.localX, shot.row);
       // Preserve the pineapple's upper-right launch height throughout flight.
       // The bomb advances horizontally with the lane perspective, without
       // falling toward the plant's foot-level centerline after it is fired.
