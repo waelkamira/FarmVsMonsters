@@ -62,6 +62,7 @@ export default function CatalogThumb({ id, label, className = "" }) {
         onError={(event) => {
           if (localIcon && !event.currentTarget.dataset.fallback) {
             event.currentTarget.dataset.fallback = "true";
+            event.currentTarget.className = "";
             event.currentTarget.src = `${TWEMOJI}/${safeCode}.png`;
             return;
           }
