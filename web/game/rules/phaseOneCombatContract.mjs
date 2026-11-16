@@ -39,7 +39,7 @@ export const PHASE_ONE_PLANTS = Object.freeze({
     projectileDamage: 25,
     projectileSpeed: 320,
     projectileCollisionRadius: 24,
-    plantingEnergyCost: 35,
+    plantingEnergyCost: 25,
     hp: 160,
     cooldownMs: 1450,
     range: 360
