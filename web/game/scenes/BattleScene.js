@@ -2184,10 +2184,11 @@ export default class BattleScene extends Scene {
     const laneGap = rowIndex < LANES - 1
       ? this.laneYs[rowIndex + 1] - this.laneYs[rowIndex]
       : this.laneYs[rowIndex] - this.laneYs[rowIndex - 1];
-    // Reverse the board's apparent depth scaling for pineapples: far rows
-    // (smaller lane gaps) get a larger plant, while near rows get a smaller one.
-    const pineapplePerspectiveScale = type === "pineapple"
-      ? PhaserMath.Clamp(laneGap / 54, 0.8, 1.2)
+    // The farthest row is smallest; each nearer row grows progressively.
+    // Apply the same perspective to Pineapple and Hazelnut so their projectiles
+    // can use the exact displayed plant scale when calculating launch offsets.
+    const pineapplePerspectiveScale = type === "pineapple" || type === "hazelnut"
+      ? PhaserMath.Clamp(0.8 + (rowIndex / Math.max(1, LANES - 1)) * 0.4, 0.8, 1.2)
       : 1;
     plant.setData("pineapplePerspectiveScale", pineapplePerspectiveScale);
     if (this.textures.exists(texture)) {
