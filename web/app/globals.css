@@ -1764,3 +1764,63 @@ select option {
 }
 .home-world-map-button:hover { transform:translateY(-2px); filter:brightness(1.12); }
 .home-world-map-button:focus-visible { outline:3px solid #fff; outline-offset:4px; }
+
+/* FarmVsMonsters campaign menu — playful, tactile garden-game interface. */
+.world-home{background:#72c8ec;color:#fff}
+.world-battlefield-image{filter:saturate(1.18) contrast(1.03) brightness(.9)}
+.world-battlefield-atmosphere{background:linear-gradient(90deg,rgba(13,48,35,.18),rgba(11,44,34,.05) 45%,rgba(16,47,38,.42)),linear-gradient(0deg,rgba(20,73,35,.55),transparent 55%)}
+.home-language-control{top:18px;inset-inline-end:20px}
+.farm-main-menu{position:absolute;z-index:12;top:50%;right:clamp(18px,7vw,110px);transform:translateY(-50%);width:min(510px,47vw);padding:clamp(18px,2.6vw,32px);border:7px solid #70401f;border-radius:28px;background:linear-gradient(155deg,#f8d99a 0%,#d69a55 45%,#a96835 100%);box-shadow:inset 0 0 0 3px #ffe8b5,inset 0 -10px 0 #88502b,0 10px 0 #61391f,0 24px 50px #102e2780;color:#542f19}
+.farm-main-menu:before{content:"";position:absolute;inset:9px;border:2px dashed #8c562d88;border-radius:17px;pointer-events:none}
+.farm-menu-brand{position:relative;display:flex;align-items:center;gap:14px;padding:6px 4px 17px;border-bottom:3px solid #8b552d66}
+.farm-menu-brand-mark{display:grid;place-items:center;flex:0 0 66px;width:66px;height:66px;border:4px solid #fff0c4;border-radius:22px;background:linear-gradient(145deg,#a7e76b,#4cae4d);box-shadow:0 5px 0 #32783c;font-size:37px}
+.farm-menu-kicker{font-size:10px;font-weight:1000;letter-spacing:.12em;color:#7b4827}
+.farm-main-menu .home-game-title{font-size:clamp(27px,3.4vw,43px);color:#fff8d8;text-shadow:0 3px 0 #81451f,0 5px 0 #5d321a;white-space:normal}
+.farm-main-menu .home-game-title span{color:#ffe36c;-webkit-text-stroke:0}
+.farm-main-menu .home-game-tagline{margin-top:7px;color:#60391f;font-size:clamp(12px,1.2vw,15px);text-shadow:none}
+.farm-menu-actions{position:relative;display:grid;grid-template-columns:1fr 1fr;gap:11px;padding:19px 2px 13px}
+.farm-menu-play{grid-column:1/-1;display:flex;align-items:center;gap:13px;min-height:76px;padding:10px 16px;border:3px solid #fff1bd;border-radius:17px;background:linear-gradient(180deg,#8bd84f,#399e42);box-shadow:0 5px 0 #286e34,inset 0 2px 0 #ffffff88;color:#fff;text-align:start;cursor:pointer}
+.farm-menu-play:disabled{opacity:.75;cursor:wait}
+.farm-menu-play>span:nth-child(2){display:grid;gap:3px;flex:1}
+.farm-menu-play strong{font-size:19px;font-weight:1000;text-shadow:0 2px 2px #245c2d}
+.farm-menu-play small{font-size:11px;font-weight:700;color:#efffdc}
+.farm-menu-play>b{font-size:26px}
+.farm-menu-action-icon{display:grid;place-items:center;width:48px;height:48px;border:2px solid #fff9;border-radius:14px;background:#ffffff28;font-size:26px}
+.farm-menu-option{display:grid;grid-template-columns:42px 1fr;grid-template-rows:auto auto;align-items:center;column-gap:9px;min-height:65px;padding:9px 11px;border:3px solid #fff0c5;border-radius:14px;background:linear-gradient(160deg,#fff0c9,#e6bd7b);box-shadow:0 4px 0 #9a6334,inset 0 1px 0 #fff;color:#60391f;transition:transform .15s,filter .15s}
+.farm-menu-option:hover{transform:translateY(-3px);filter:brightness(1.06)}
+.farm-menu-option>span{grid-row:1/3;display:grid;place-items:center;width:40px;height:40px;border-radius:12px;background:#ffffff9c;font-size:23px}
+.farm-menu-option strong{font-size:11px;font-weight:1000;letter-spacing:.025em}
+.farm-menu-option small{font-size:9px;font-weight:700;color:#80532f}
+.farm-menu-footer{position:relative;display:flex;justify-content:space-between;gap:10px;padding:12px 4px 0;border-top:2px solid #8b552d55;color:#754526;font-size:9px;font-weight:1000;letter-spacing:.07em}
+@media(max-width:760px){
+ .farm-main-menu{top:auto;bottom:18px;right:50%;transform:translateX(50%);width:min(520px,calc(100vw - 26px));padding:14px 15px;border-width:5px;border-radius:22px}
+ .farm-menu-brand{gap:10px;padding-bottom:10px}
+ .farm-menu-brand-mark{flex-basis:48px;width:48px;height:48px;border-radius:15px;font-size:27px}
+ .farm-main-menu .home-game-title{font-size:clamp(25px,7vw,36px)}
+ .farm-menu-kicker{font-size:8px}
+ .farm-main-menu .home-game-tagline{font-size:11px;margin-top:4px}
+ .farm-menu-actions{gap:8px;padding:12px 1px 9px}
+ .farm-menu-play{min-height:60px;padding:7px 10px}
+ .farm-menu-play strong{font-size:16px}
+ .farm-menu-play small{font-size:9px}
+ .farm-menu-action-icon{width:40px;height:40px;font-size:22px}
+ .farm-menu-option{min-height:53px;padding:6px 8px;grid-template-columns:34px 1fr;column-gap:7px}
+ .farm-menu-option>span{width:33px;height:33px;font-size:19px}
+ .farm-menu-option strong{font-size:10px}
+ .farm-menu-option small{font-size:8px}
+ .farm-menu-footer{font-size:8px;padding-top:8px}
+ .battlefield-farmer{left:4%;bottom:auto;top:16%;width:clamp(95px,25vw,145px)}
+ .battlefield-hyena-one{right:5%;bottom:auto;top:17%}
+ .battlefield-hyena-two{right:25%;bottom:auto;top:7%}
+ .battlefield-hyena-three{display:none}
+ .battlefield-plant-radish{left:5%;bottom:48%}
+ .battlefield-plant-mushroom{left:48%;bottom:46%}
+ .battlefield-plant-radish-small{right:4%;bottom:48%}
+}
+@media(max-height:650px) and (min-width:761px){
+ .farm-main-menu{padding:14px 20px}
+ .farm-menu-brand{padding-bottom:9px}
+ .farm-menu-actions{padding:11px 2px 8px;gap:8px}
+ .farm-menu-option{min-height:54px}
+ .farm-menu-play{min-height:60px}
+}
