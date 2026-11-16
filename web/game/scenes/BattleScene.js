@@ -2054,8 +2054,12 @@ export default class BattleScene extends Scene {
     const cellCenter = type === "pineapple"
       ? this.gridCellCenter(col, row)
       : this.plantingCellCenter(col, row);
+    const pineappleCellHeight = pineappleCell
+      ? (Math.abs(pineappleCell[3].y - pineappleCell[0].y) +
+         Math.abs(pineappleCell[2].y - pineappleCell[1].y)) / 2
+      : 0;
     const x = cellCenter.x + (type === "pineapple" ? pineappleCellWidth * 0.2 : 0);
-    const { y } = cellCenter;
+    const y = cellCenter.y + (type === "pineapple" ? pineappleCellHeight * 0.1 : 0);
     const plant = {
       ...placement.plant,
       x, y,
