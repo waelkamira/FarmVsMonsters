@@ -2332,11 +2332,14 @@ export default class BattleScene extends Scene {
         throwSprite.setTexture("pineapple-level-1", 0);
         throwSprite.play("pineapple-level-1-throw");
         throwSprite.once("animationcomplete", () => {
-          plant.pineappleThrowing = false;
           if (throwSprite.active) throwSprite.setTexture("pineapple-level-1", 0);
-          if (plant.alive && target?.alive && !this.gameOver) {
-            this.fireThornProjectile(plant, target);
-          }
+          // Add a short beat after the final throw pose before releasing the bomb.
+          this.time.delayedCall(150, () => {
+            plant.pineappleThrowing = false;
+            if (plant.alive && target?.alive && !this.gameOver) {
+              this.fireThornProjectile(plant, target);
+            }
+          });
         });
         return;
       }
@@ -2363,7 +2366,8 @@ export default class BattleScene extends Scene {
       const displayHeight = 105.6;
       const displayWidth = Math.min(displayHeight * (frame.realWidth / frame.realHeight), 121.6);
       launchOffsetX = displayWidth / 2;
-      launchOffsetY = -(displayHeight / 2) + 2;
+      // Raise the established launch point by another 20 pixels.
+      launchOffsetY = -(displayHeight / 2) - 18;
     }
     const launchX = laneOrigin.x + launchOffsetX;
     const launchY = laneOrigin.y + launchOffsetY;
