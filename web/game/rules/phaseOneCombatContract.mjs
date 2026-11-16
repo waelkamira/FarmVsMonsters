@@ -80,6 +80,13 @@ export const PHASE_ONE_PLANTS = Object.freeze({
   })
 });
 
+// Event-log plant IDs are derived from the canonical plant rules so adding a
+// configured plant automatically makes its placement/uproot events valid.
+// The energy-producing mushroom uses the gameplay/event ID "mushroom".
+export const PHASE_ONE_PLANT_EVENT_TYPES = Object.freeze(
+  Object.keys(PHASE_ONE_PLANTS).map((type) => type === "energyMushroom" ? "mushroom" : type)
+);
+
 export const PHASE_ONE_FARMER = Object.freeze({
   clubDamage: 42,
   clubReachPx: 112
