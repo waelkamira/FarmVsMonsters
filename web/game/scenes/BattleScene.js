@@ -2795,6 +2795,17 @@ export default class BattleScene extends Scene {
       }
       // Radish and Pumpkin plants block their own lane. Resource producers
       // and ranged attackers are passed by monsters.
+      const monsterHalfWidth = monster.hyenaSprite
+        ? monster.hyenaSprite.width * monster.hyenaSprite.scaleX * monster.view.scaleX * 0.5
+        : monster.view.getBounds().width * 0.5;
+      const widestBlockingPlantHalfWidth = this.plants.reduce((widest, plant) => {
+        if (!plant.alive || !["radish", "pumpkin"].includes(plant.type) ||
+            plant.row !== monster.row || !plant.view?.active) return widest;
+        return Math.max(widest, plant.view.getBounds().width * 0.5);
+      }, 0);
+      // Include a plant that the monster has just crossed by a few pixels.
+      // Without this overlap allowance, the strict "plant ahead" query drops
+      // the blocker and the monster walks straight through it.
       const blocker = selectLaneBlocker({
         plants: this.plants.map((plant) => ({
           plant,
@@ -2803,7 +2814,8 @@ export default class BattleScene extends Scene {
             : null
         })),
         row: monster.row,
-        monsterLocalX: monster.localX
+        monsterLocalX: monster.localX,
+        maxOvershoot: monsterHalfWidth + widestBlockingPlantHalfWidth + 10
       });
       const blockerLocalX = blocker ? this.worldToLane(blocker).localX : -Infinity;
       // Calculate a real visual clearance from both rendered bounds, then
@@ -2812,9 +2824,6 @@ export default class BattleScene extends Scene {
         ? Math.abs(this.monsterLanePoint(blockerLocalX + 1, monster.row).x -
           this.monsterLanePoint(blockerLocalX, monster.row).x)
         : 1;
-      const monsterHalfWidth = monster.hyenaSprite
-        ? monster.hyenaSprite.width * monster.hyenaSprite.scaleX * monster.view.scaleX * 0.5
-        : monster.view.getBounds().width * 0.5;
       const plantHalfWidth = blocker ? blocker.view.getBounds().width * 0.5 : 0;
       const biteReach = blocker
         ? (monsterHalfWidth + plantHalfWidth + 10) / Math.max(0.01, lanePixelStep)
