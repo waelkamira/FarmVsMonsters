@@ -2341,7 +2341,7 @@ export default class BattleScene extends Scene {
     const targetRow = plant.row;
     const targetLocalX = Math.max(localX + 1, target.localX);
     // The pineapple bomb launches from the upper-right corner, lowered by
-    // one full displayed pineapple height to the plant's ground-level line.
+    // half a displayed pineapple height above the plant's ground-level line.
     const laneOrigin = this.lanePoint(localX, row);
     let launchOffsetX = 0;
     let launchOffsetY = 0;
@@ -2350,13 +2350,13 @@ export default class BattleScene extends Scene {
       const displayHeight = 105.6;
       const displayWidth = Math.min(displayHeight * (frame.realWidth / frame.realHeight), 121.6);
       launchOffsetX = displayWidth / 2;
-      launchOffsetY = -displayHeight + 2 + displayHeight;
+      launchOffsetY = -(displayHeight / 2) + 2;
     }
     const launchX = laneOrigin.x + launchOffsetX;
     const launchY = laneOrigin.y + launchOffsetY;
     const view = this.add.container(launchX, launchY).setDepth(16);
-    // Keep the projectile on the exact height of the pineapple's upper-right
-    // launch point. Do not ease its vertical offset toward the lane center:
+    // Keep the projectile at the adjusted half-height launch point. Do not
+    // ease its vertical offset toward the lane center:
     // that creates the unwanted immediate downward drop.
 
     const halo = this.add.circle(0, 0, 18, 0xff7185, 0.13);
