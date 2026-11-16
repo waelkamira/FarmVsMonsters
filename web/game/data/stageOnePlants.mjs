@@ -179,7 +179,8 @@ export const STAGE_ONE_PLANTS = Object.freeze([
     descriptionAr: "يطلق قذيفة مانجو صغيرة بمسار منحنٍ وتهوي فوق الوحش الموجود في مساره.",
     energyCost: 70, coinPrice: 0, status: "active", implemented: true, purchasable: false, image: null,
     stats: ["130 HP", "40 damage", "2100 ms cooldown"], statsAr: ["١٣٠ صحة", "ضرر ٤٠", "فاصل هجوم ٢١٠٠ مللي ثانية"]
-  },);
+  }
+]);
 
 export const STAGE_ONE_PLANT_BY_ID = Object.freeze(
   Object.fromEntries(STAGE_ONE_PLANTS.map((plant) => [plant.id, plant]))
