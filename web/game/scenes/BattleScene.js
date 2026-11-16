@@ -107,7 +107,7 @@ export default class BattleScene extends Scene {
     this.load.spritesheet("hyena-idle", "/assets/characters/monsters/hyena/hyena-idle.png", { frameWidth: 360, frameHeight: 298 });
     this.load.spritesheet("hyena-walk", "/assets/characters/monsters/hyena/hyena-walk.png", { frameWidth: 360, frameHeight: 298 });
     this.load.spritesheet("hyena-run", "/assets/characters/monsters/hyena/hyena-run1.png", { frameWidth: 367, frameHeight: 298 });
-    this.load.spritesheet("hyena-bite", "/assets/characters/monsters/hyena/hyena-bite.png", { frameWidth: 360, frameHeight: 298 });
+    this.load.spritesheet("hyena-bite", "/assets/characters/monsters/hyena/hyena-bite.png", { frameWidth: 180, frameHeight: 180 });
     this.load.spritesheet("hyena-hit", "/assets/characters/monsters/hyena/hyena-hit.png", { frameWidth: 360, frameHeight: 894 });
     this.load.spritesheet("hyena-death", "/assets/characters/monsters/hyena/hyena-death.png", { frameWidth: 360, frameHeight: 447 });
     // The jump sheet has two different row layouts, so register it as an image
@@ -2486,7 +2486,7 @@ export default class BattleScene extends Scene {
       ["hyena-idle", 4, 5, -1],
       ["hyena-walk", 9, 9, -1],
       ["hyena-run", 7, 14, -1],
-      ["hyena-bite", 6, 9, -1]
+      ["hyena-bite", 8, 9, -1]
     ];
     const optionalDefinitions = [
       ["hyena-hit", 3, 12, 0],
@@ -2500,11 +2500,9 @@ export default class BattleScene extends Scene {
         if (!this.textures.exists(key)) throw new Error(`Missing required hyena sheet: ${key}.`);
         const texture = this.textures.get(key);
         const available = Object.keys(texture.frames).filter((name) => name !== "__BASE").length;
-        // The bite artwork is authored in the final row of its 3x3 sheet.
-        // Frames 0-5 are setup/transition poses; only 6-8 are the actual
-        // grounded chewing cycle. Playing the earlier frames made the hyena
-        // appear to sink or float while it was eating.
-        const startFrame = key === "hyena-bite" ? 6 : 0;
+        // The revised bite artwork is a single horizontal strip of eight
+        // 180x180 poses. All eight frames belong to the authored bite cycle.
+        const startFrame = 0;
         if (available <= startFrame) {
           throw new Error(`Invalid ${key} sheet: expected frames starting at ${startFrame}, found ${available}.`);
         }
