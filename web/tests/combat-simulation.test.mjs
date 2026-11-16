@@ -175,6 +175,15 @@ test("lane blocker selection chooses the nearest living radish behind the monste
     monsterLocalX: 0
   });
   assert.equal(result, nearest);
+  const justPassed = { type: "radish", row: 2, alive: true, id: "overlapped" };
+  assert.equal(selectLaneBlocker({
+    plants: [{ plant: justPassed, localX: 3 }],
+    row: 2, monsterLocalX: 0, maxOvershoot: 4
+  }), justPassed);
+  assert.equal(selectLaneBlocker({
+    plants: [{ plant: justPassed, localX: 5 }],
+    row: 2, monsterLocalX: 0, maxOvershoot: 4
+  }), null);
   assert.equal(selectLaneBlocker({ plants: [], row: 2, monsterLocalX: 0 }), null);
   assert.throws(() => selectLaneBlocker({ plants: [], row: 2, monsterLocalX: NaN }), /INVALID_LANE_BLOCKER_QUERY/);
 });
