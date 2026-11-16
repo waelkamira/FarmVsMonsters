@@ -1824,3 +1824,55 @@ select option {
  .farm-menu-option{min-height:54px}
  .farm-menu-play{min-height:60px}
 }
+
+/* Campaign world map: tactile garden board and winding PvZ-like level path. */
+.campaign-map-shell{
+  position:relative;isolation:isolate;min-height:100svh;overflow:hidden;padding:clamp(14px,3vw,34px);
+  background:linear-gradient(180deg,#72cdec 0%,#b5e8a0 48%,#55b95b 100%);color:#4d321c
+}
+.campaign-map-shell:before{content:"";position:fixed;z-index:-1;inset:0;pointer-events:none;background:radial-gradient(ellipse at 12% 12%,#fff8 0 5%,transparent 18%),radial-gradient(ellipse at 88% 18%,#fff7 0 4%,transparent 16%),linear-gradient(180deg,transparent 62%,#318f4a55)}
+.campaign-map-topbar{max-width:1180px;margin:0 auto 16px}
+.campaign-map-back,.campaign-map-secondary{border:3px solid #f8e4b5;border-radius:14px;background:linear-gradient(#f8d99a,#d69a55);box-shadow:0 4px 0 #80502c;color:#5a351d!important;text-shadow:none}
+.campaign-map-heading{max-width:1180px;margin:0 auto 16px;padding:clamp(18px,3vw,30px);border:6px solid #70401f;border-radius:25px;background:linear-gradient(155deg,#f8d99a,#d69a55 70%,#b8793e);box-shadow:inset 0 0 0 2px #fff0c3,0 7px 0 #734321,0 14px 28px #265b3b55;color:#59351e}
+.campaign-map-eyebrow{color:#80502b}
+.campaign-map-heading h1{color:#fff6d9;text-shadow:0 3px 0 #81451f,0 6px 0 #5d321a}
+.campaign-map-heading>p{color:#613b22;font-weight:750}
+.campaign-map-stats span{border:2px solid #fff0c5;border-radius:13px;background:linear-gradient(#fff0c9,#e6bd7b);color:#67401f;box-shadow:0 3px 0 #9a6334}
+.campaign-map-stats strong{color:#348a3d}
+.campaign-map-legend{max-width:1180px;margin:0 auto 18px;border:3px solid #f5e1b3;border-radius:15px;background:#fff1d2d9;color:#64401f}
+.campaign-world-list{display:grid;grid-template-columns:1fr;gap:20px;max-width:1180px;margin:0 auto}
+.campaign-world-card{--world-accent:#69bb4e;position:relative;overflow:hidden;padding:clamp(16px,2.5vw,25px);border:5px solid #754523;border-radius:25px;background:linear-gradient(145deg,#f6d79b,#d5a05e 75%,#bd8246);box-shadow:inset 0 0 0 2px #ffedbd,0 7px 0 #734321,0 15px 30px #24583c55;color:#57351e}
+.campaign-world-card:before{display:none}
+.campaign-world-card.world-is-locked{filter:saturate(.68);opacity:.9}
+.campaign-world-main{align-items:center}
+.campaign-world-emblem{flex-basis:76px;width:76px;height:76px;border:4px solid #fff0c5;border-radius:23px;background:linear-gradient(145deg,#a8e66a,#4cae4d);box-shadow:0 5px 0 #347c3b;font-size:38px}
+.campaign-world-kicker{color:#80502b}
+.campaign-world-kicker b{border:2px solid #fff0c5;border-radius:10px;background:linear-gradient(#fff0c9,#e6bd7b);color:#3c913e}
+.campaign-world-copy h2{color:#fff6d9;font-size:clamp(21px,3vw,29px);text-shadow:0 2px 0 #754523,0 4px 0 #5a351e}
+.campaign-world-subtitle{color:#704321!important}
+.campaign-world-description{color:#65401f!important}
+.campaign-mission-track{position:relative;margin-top:18px;padding:16px;border:3px solid #e9c887;border-radius:19px;background:linear-gradient(180deg,#8dcb5c,#4ba64c);box-shadow:inset 0 2px 0 #d9f79b,0 4px 0 #347c3b}
+.campaign-track-label{color:#fff7d9}
+.campaign-track-label small{color:#f1ffd8}
+.campaign-mission-nodes{grid-template-columns:repeat(10,minmax(0,1fr));gap:clamp(5px,1.2vw,13px);position:relative;padding:14px 2px 8px}
+.campaign-mission-nodes:before{content:"";position:absolute;z-index:0;left:4%;right:4%;top:50%;border-top:6px dotted #f8e5a5;filter:drop-shadow(0 2px 0 #347c3b)}
+.campaign-mission-node{position:relative;z-index:1;display:flex;flex-direction:column;gap:0;min-height:58px;aspect-ratio:1;padding:5px;border:4px solid #f8e7b9;border-radius:50%;background:linear-gradient(#d6e8a4,#8abf54);box-shadow:0 4px 0 #477d35,0 6px 10px #28552f66;color:#4e3a1f}
+.campaign-mission-number{font-size:clamp(11px,1.4vw,16px);font-weight:1000}
+.campaign-mission-state{font-size:clamp(9px,1vw,12px)}
+.campaign-mission-node.is-playable{border-color:#fff3b2;background:linear-gradient(#ffe86b,#f6a62f);box-shadow:0 0 0 4px #fff5a855,0 5px 0 #a75d25,0 0 20px #fff5a9;color:#653814;transform:translateY(-5px)}
+.campaign-mission-node.is-unlocked-preview{border-color:#e8f9c1;background:linear-gradient(#9ce85f,#4aa83f);box-shadow:0 4px 0 #2c7537;color:#fff}
+.campaign-mission-node.is-locked{border-color:#d5d0ad;background:linear-gradient(#aeb59c,#7e8b70);color:#f1ecd3;opacity:.78}
+.campaign-world-footnote{color:#fff7d9;font-weight:800}
+.campaign-map-footer{max-width:1180px;border:4px solid #754523;border-radius:20px;background:linear-gradient(145deg,#f6d79b,#d5a05e);box-shadow:0 6px 0 #734321;color:#59351e}
+.campaign-map-footer p{color:#65401f;font-weight:750}
+@media(max-width:700px){
+ .campaign-map-shell{padding:10px}
+ .campaign-world-card{padding:13px;border-radius:19px}
+ .campaign-world-emblem{flex-basis:58px;width:58px;height:58px;font-size:29px}
+ .campaign-mission-nodes{grid-template-columns:repeat(5,minmax(0,1fr));gap:10px 7px}
+ .campaign-mission-nodes:before{display:none}
+ .campaign-mission-node{min-height:47px;max-height:58px;width:100%;aspect-ratio:1;border-width:3px}
+ .campaign-mission-node.is-playable{transform:translateY(-2px)}
+ .campaign-world-kicker{font-size:9px}
+ .campaign-world-kicker b{font-size:9px}
+}
