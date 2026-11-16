@@ -12,7 +12,8 @@ const PLANT_RULES = Object.freeze({
   pumpkin: PHASE_ONE_PLANTS.pumpkin,
   onion: PHASE_ONE_PLANTS.onion,
   pineapple: PHASE_ONE_PLANTS.pineapple,
-  hazelnut: PHASE_ONE_PLANTS.hazelnut
+  hazelnut: PHASE_ONE_PLANTS.hazelnut,
+  mango: PHASE_ONE_PLANTS.mango
 });
 
 function validEnergy(value) {
