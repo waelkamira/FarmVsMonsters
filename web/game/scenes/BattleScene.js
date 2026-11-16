@@ -1793,7 +1793,9 @@ export default class BattleScene extends Scene {
     const addRow = (y, imageKey, title, detail, locked = false) => {
       content.add(this.add.rectangle(0, y, 660, 72, 0x8edcff, 0.18).setStrokeStyle(1, 0xffffff, 0.42));
       if (imageKey && this.textures.exists(imageKey)) {
-        const icon = this.add.image(-285, y, imageKey).setDisplaySize(54, 54);
+        const icon = imageKey === "radish-level-1"
+          ? this.add.sprite(-285, y, imageKey, 0).setDisplaySize(45.4, 54)
+          : this.add.image(-285, y, imageKey).setDisplaySize(54, 54);
         content.add(icon);
       } else {
         addLabel(-285, y, locked ? "🔒" : "❖", 27, "#ffffff");
@@ -1821,7 +1823,7 @@ export default class BattleScene extends Scene {
       addLabel(0, 435, locale === "ar" ? "ستُفتح المراحل التالية بعد إكمال المغامرات السابقة." : "Complete earlier adventures to unlock later stages.", 13, "#ffffff");
     } else if (this.collectionMenuTab === "plants") {
       addLabel(0, -8, locale === "ar" ? "النباتات المتاحة وأسعار الطاقة" : "Available plants and their energy costs", 17);
-      addRow(65, "radish-level-1", locale === "ar" ? "الفجل الدفاعي" : "Defensive Radish", "35 " + (locale === "ar" ? "طاقة" : "ENERGY"));
+      addRow(65, "radish-level-1", locale === "ar" ? "الفجل المستوى الأول" : "Radish Level 1", "35 " + (locale === "ar" ? "طاقة" : "ENERGY"));
       addRow(155, "mushroom-character", locale === "ar" ? "فطر الطاقة" : "Energy Mushroom", "50 " + (locale === "ar" ? "طاقة" : "ENERGY"));
       addLabel(0, 260, locale === "ar" ? "النباتات الجديدة ستظهر هنا لاحقاً مع سعر الشراء بالنقود." : "New plants and coin purchase prices will appear here later.", 14, "#ffffff");
       addLabel(0, 320, locale === "ar" ? "الشراء غير مفعّل حالياً؛ هذان النباتان متاحان للزراعة مباشرة." : "Purchases are not enabled yet; both plants are already available.", 13, "#ffffff");
