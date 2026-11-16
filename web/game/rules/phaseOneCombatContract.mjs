@@ -72,6 +72,11 @@ export const PHASE_ONE_PLANTS = Object.freeze({
   hazelnut: Object.freeze({
     projectileDamage: 38, projectileSpeed: 285, projectileCollisionRadius: 24,
     plantingEnergyCost: 65, hp: 130, cooldownMs: 1950, range: 360
+  }),
+  // Initial Mango Level 1 playtest values; tune after hands-on balancing.
+  mango: Object.freeze({
+    projectileDamage: 40, projectileSpeed: 275, projectileCollisionRadius: 24,
+    plantingEnergyCost: 70, hp: 130, cooldownMs: 2100, range: 360
   })
 });
 
