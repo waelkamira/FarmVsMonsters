@@ -46,19 +46,27 @@ export default function HomePage() {
 
       <div className="home-language-control"><LanguageToggle /></div>
 
-      <section className="home-title-card" aria-label={arabic ? "ابدأ اللعبة" : "Start game"}>
-        <div className="home-title-kicker">{arabic ? "مغامرة خيالية · عالم المزرعة" : "FANTASY ADVENTURE · FARM WORLD"}</div>
-        <h1 className="home-game-title">Farm <span>Vs</span> Monsters</h1>
-        <p className="home-game-tagline">{arabic ? "ازرع، دافع عن مزرعتك، وأنقذ الأميرة!" : "Grow your garden, defend your home, rescue the princess!"}</p>
-        <button className="home-start-button" type="button" onClick={startAdventure} disabled={starting}>
-          <span aria-hidden="true">⚔️</span>
-          {starting ? (arabic ? "جارٍ التحضير..." : "LOADING...") : (arabic ? "ابدأ" : "START")}
-          <span aria-hidden="true">➜</span>
-        </button>
-        <Link className="home-world-map-button" href="/stages">
-          <span aria-hidden="true">🗺️</span>
-          {arabic ? "خريطة العوالم" : "WORLD MAP"}
-        </Link>
+      <section className="farm-main-menu" aria-label={arabic ? "القائمة الرئيسية" : "Main menu"}>
+        <div className="farm-menu-brand">
+          <span className="farm-menu-brand-mark">🌱</span>
+          <div>
+            <div className="farm-menu-kicker">{arabic ? "مغامرة الدفاع عن المزرعة" : "THE FARM DEFENSE ADVENTURE"}</div>
+            <h1 className="home-game-title">Farm <span>Vs</span> Monsters</h1>
+            <p className="home-game-tagline">{arabic ? "ازرع جيشك، احمِ مزرعتك، وأنقذ الأميرة!" : "Grow your army. Defend your farm. Rescue the princess!"}</p>
+          </div>
+        </div>
+        <div className="farm-menu-actions">
+          <button className="farm-menu-play" type="button" onClick={startAdventure} disabled={starting}>
+            <span className="farm-menu-action-icon">⚔️</span>
+            <span><strong>{starting ? (arabic ? "جارٍ التحضير..." : "PREPARING...") : (arabic ? "مغامرة" : "ADVENTURE")}</strong><small>{arabic ? "تابع رحلتك في مواجهة الوحوش" : "Continue your fight against the monsters"}</small></span>
+            <b>➜</b>
+          </button>
+          <Link className="farm-menu-option" href="/stages"><span>🗺️</span><strong>{arabic ? "خريطة العوالم" : "WORLD MAP"}</strong><small>{arabic ? "اختر مرحلتك التالية" : "Choose your next stage"}</small></Link>
+          <Link className="farm-menu-option" href="/plants"><span>🌿</span><strong>{arabic ? "موسوعة النباتات" : "PLANT ALMANAC"}</strong><small>{arabic ? "تعرف على المدافعين" : "Meet your defenders"}</small></Link>
+          <Link className="farm-menu-option" href="/monsters"><span>👾</span><strong>{arabic ? "دليل الوحوش" : "MONSTER ALMANAC"}</strong><small>{arabic ? "تعرف على أعدائك" : "Know your enemies"}</small></Link>
+          <Link className="farm-menu-option" href="/settings"><span>⚙️</span><strong>{arabic ? "الإعدادات" : "OPTIONS"}</strong><small>{arabic ? "الصوت واللغة" : "Sound and language"}</small></Link>
+        </div>
+        <div className="farm-menu-footer"><span>🌻 {arabic ? "كل حديقة لها أبطالها" : "EVERY GARDEN HAS ITS HEROES"}</span><span>{arabic ? "اختر وجهتك وابدأ المغامرة" : "PICK YOUR PATH AND PLAY"}</span></div>
       </section>
     </main>
   );
