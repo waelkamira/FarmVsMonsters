@@ -569,18 +569,20 @@ export default class BattleScene extends Scene {
     this.add.rectangle(474, 69, 660, 72, 0x76502d, 0.96)
       .setStrokeStyle(1, 0xb88751, 0.9).setDepth(40);
 
-    // Sun counter / resource bank, styled as the original PvZ meter.
-    this.sunBank = this.add.container(62, 70).setDepth(43);
-    const sunOuter = this.add.rectangle(0, 0, 112, 96, 0x6b4929, 1)
+    // Mushroom energy counter, using the same mushroom artwork as its seed packet.
+    this.mushroomBank = this.add.container(62, 70).setDepth(43);
+    const mushroomOuter = this.add.rectangle(0, 0, 112, 96, 0x6b4929, 1)
       .setStrokeStyle(4, 0xd5a66a, 1);
-    const sunInner = this.add.rectangle(0, 0, 100, 84, 0x342719, 1)
+    const mushroomInner = this.add.rectangle(0, 0, 100, 84, 0x342719, 1)
       .setStrokeStyle(2, 0x9d7547, 1);
-    const sunIcon = this.add.text(0, -19, "☀️", { fontFamily: "Arial", fontSize: "30px" }).setOrigin(0.5);
-    this.sunValueText = this.add.text(0, 22, String(this.energy), {
+    const mushroomIcon = this.textures.exists("mushroom-character")
+      ? this.add.image(0, -17, "mushroom-character").setDisplaySize(43, 43)
+      : this.add.text(0, -19, "🍄", { fontFamily: "Arial", fontSize: "34px" }).setOrigin(0.5);
+    this.energyValueText = this.add.text(0, 22, String(this.energy), {
       fontFamily: "Arial", fontSize: "23px", color: "#fff2a8", fontStyle: "bold",
       stroke: "#39240f", strokeThickness: 3, resolution: 2
     }).setOrigin(0.5);
-    this.sunBank.add([sunOuter, sunInner, sunIcon, this.sunValueText]);
+    this.mushroomBank.add([mushroomOuter, mushroomInner, mushroomIcon, this.energyValueText]);
 
     // Secondary battle counters remain visible in a slim top information row.
     const counters = [
@@ -3726,7 +3728,7 @@ export default class BattleScene extends Scene {
       "🌱 " + this.livingPlantCount(),
       "👾 " + this.totalDefeatedMonsters + "/" + PHASE_ONE_TOTAL_MONSTERS,
     ];
-    if (this.sunValueText) this.sunValueText.setText(String(this.energy));
+    if (this.energyValueText) this.energyValueText.setText(String(this.energy));
     if (this.hudValueTexts) {
       this.hudValueTexts.forEach((text, index) => text.setText(values[index]));
     }
