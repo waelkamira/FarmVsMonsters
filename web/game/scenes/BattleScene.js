@@ -2126,9 +2126,9 @@ export default class BattleScene extends Scene {
     if (this.textures.exists(texture)) {
       const frame = this.textures.getFrame(texture);
       // Pineapple Level 1 is intentionally twice the previous in-world size.
-      const height = type === "tomato" ? 32 : type === "pumpkin" ? 70 : type === "pineapple" ? 132 : 64;
+      const height = type === "tomato" ? 32 : type === "pumpkin" ? 70 : type === "pineapple" ? 105.6 : 64;
       const width = height * (frame.realWidth / frame.realHeight);
-      const maxWidth = type === "tomato" ? 38 : type === "pineapple" ? 152 : 76;
+      const maxWidth = type === "tomato" ? 38 : type === "pineapple" ? 121.6 : 76;
       if (type === "pineapple") {
         const pineapple = this.add.sprite(0, -height / 2 + 2, texture, 0).setDisplaySize(Math.min(width, maxWidth), height);
         pineapple.setData("pineappleThrowSprite", true);
