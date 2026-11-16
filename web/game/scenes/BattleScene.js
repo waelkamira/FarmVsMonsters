@@ -17,6 +17,7 @@ import {
   PUMPKIN_CONFIG,
   ONION_CONFIG,
   PINEAPPLE_CONFIG,
+  HAZELNUT_CONFIG,
   collectEnergy,
   isWaveComplete,
   isPhaseOneVictory,
@@ -81,6 +82,9 @@ export default class BattleScene extends Scene {
     this.load.image("onion-character", "/assets/plants/Onion.png");
     // 1254×1254 artwork is a 3×3 sheet: nine 418×418 animation frames.
     this.load.spritesheet("pineapple-level-1", "/assets/plants/pineapple-level-1.png", { frameWidth: 418, frameHeight: 418, margin: 0, spacing: 0 });
+    // 1024×1024 artwork, 3×3 grid: use 341px integer cells; Phaser exposes 9 frames.
+    this.load.spritesheet("hazelnut-level-1", "/assets/plants/hazelnut-level-1.png", { frameWidth: 341, frameHeight: 341, margin: 0, spacing: 0 });
+    this.load.image("hazelnut-level-1-bomb", "/assets/plants/hazelnut-level-1-bomb.png");
     this.load.image("pineapple-level-1-bomb", "/assets/plants/pineapple-level-1-bomb.png");
     this.load.spritesheet("gold-coin", "/assets/items/currency/gold-coin.png", { frameWidth: 170, frameHeight: 170 });
     this.load.spritesheet("farmer-run", "/assets/characters/farmer/farmer-run.png", { frameWidth: 360, frameHeight: 430 });
@@ -207,6 +211,10 @@ export default class BattleScene extends Scene {
     this.hyenaAnimationsReady = this.createHyenaAnimations();
     if (this.textures.exists("pineapple-level-1") && !this.anims.exists("pineapple-level-1-throw")) {
       this.anims.create({ key: "pineapple-level-1-throw", frames: this.anims.generateFrameNumbers("pineapple-level-1", { start: 0, end: 8 }), frameRate: 14.78, repeat: 0 });
+    }
+    if (this.textures.exists("hazelnut-level-1") && !this.anims.exists("hazelnut-level-1-throw")) {
+      const available = Object.keys(this.textures.get("hazelnut-level-1").frames).filter((name) => name !== "__BASE").length;
+      if (available >= 9) this.anims.create({ key: "hazelnut-level-1-throw", frames: this.anims.generateFrameNumbers("hazelnut-level-1", { start: 0, end: 8 }), frameRate: 12, repeat: 0 });
     }
     const legacySoundSetting = this.registry.get("soundEnabled");
     const defaultSoundSetting = legacySoundSetting === undefined ? true : legacySoundSetting;
@@ -578,6 +586,7 @@ export default class BattleScene extends Scene {
     this.pumpkinCard = this.createPlantCard(312, "PUMPKIN", String(PUMPKIN_CONFIG.cost), "pumpkin", null, "pumpkin-character", 64);
     this.onionCard = this.createPlantCard(408, "ONION", String(ONION_CONFIG.cost), "onion", null, "onion-character", 64);
     this.pineappleCard = this.createPlantCard(504, "PINEAPPLE L1", String(PINEAPPLE_CONFIG.cost), "pineapple", null, "pineapple-level-1", 64);
+    this.hazelnutCard = this.createPlantCard(600, "HAZELNUT L1", String(HAZELNUT_CONFIG.cost), "hazelnut", null, "hazelnut-level-1", 64);
 
     this.messageText = this.add.text(560, 574, "", {
       fontFamily: "Arial", fontSize: "15px", color: "#ffffff", fontStyle: "bold",
@@ -646,13 +655,15 @@ export default class BattleScene extends Scene {
       this.pumpkinCard?.setAlpha(type === "pumpkin" ? 1 : 0.78);
       this.onionCard?.setAlpha(type === "onion" ? 1 : 0.78);
       this.pineappleCard?.setAlpha(type === "pineapple" ? 1 : 0.78);
+      this.hazelnutCard?.setAlpha(type === "hazelnut" ? 1 : 0.78);
       panel.setFillStyle(tint, 0.38);
       const plantHints = {
         radish: "Radish chosen. Fires thorn shots in its lane.",
         mushroom: "Mushroom chosen. Collect its energy when it appears.",
         tomato: "Tomato chosen. Fires tomato shots in its lane.",
         pumpkin: "Pumpkin chosen. A durable lane blocker.",
-        onion: "Onion chosen. Fires heavy onion shots in its lane."
+        onion: "Onion chosen. Fires heavy onion shots in its lane.",
+        hazelnut: "Hazelnut chosen. Fires hazelnut bombs in its lane."
       };
       this.setMessage(plantHints[type] || "Plant chosen.");
       this.refreshHud();
@@ -2023,7 +2034,7 @@ export default class BattleScene extends Scene {
 
   plantSelected(col, row, type, returnPosition = null) {
     if (this.gameOver) return;
-    if (!["radish", "mushroom", "tomato", "pumpkin", "onion", "pineapple"].includes(type)) return;
+    if (!["radish", "mushroom", "tomato", "pumpkin", "onion", "pineapple", "hazelnut"].includes(type)) return;
     const placement = resolvePlantPlacement({
       energy: this.energy,
       plants: this.plants,
@@ -2038,7 +2049,7 @@ export default class BattleScene extends Scene {
       return;
     }
     this.recordCombatEvent("plant_placed", { type, col, row });
-    const configs = { radish: RADISH_CONFIG, mushroom: MUSHROOM_CONFIG, tomato: TOMATO_CONFIG, pumpkin: PUMPKIN_CONFIG, onion: ONION_CONFIG, pineapple: PINEAPPLE_CONFIG };
+    const configs = { radish: RADISH_CONFIG, mushroom: MUSHROOM_CONFIG, tomato: TOMATO_CONFIG, pumpkin: PUMPKIN_CONFIG, onion: ONION_CONFIG, pineapple: PINEAPPLE_CONFIG, hazelnut: HAZELNUT_CONFIG };
     const config = configs[type];
     this.energy = placement.energy;
     this.farmerPlanting = true;
@@ -2111,7 +2122,8 @@ export default class BattleScene extends Scene {
       tomato: "Tomato planted! It fires tomato shots down this lane.",
       pumpkin: "Pumpkin planted! It blocks and absorbs bites.",
       onion: "Onion planted! It fires heavy onion shots down this lane.",
-      pineapple: "Pineapple Level 1 planted! It launches pineapple bombs down this lane."
+      pineapple: "Pineapple Level 1 planted! It launches pineapple bombs down this lane.",
+      hazelnut: "Hazelnut Level 1 planted! It fires hazelnut bombs down this lane."
     };
     this.setMessage(plantedMessages[type] || "Plant planted.");
   }
@@ -2163,7 +2175,7 @@ export default class BattleScene extends Scene {
 
   drawCatalogPlant(type, x, y, row = 2) {
     const plant = this.add.container(x, y).setDepth(11);
-    const texture = type === "tomato" ? "tomato-character" : type === "pumpkin" ? "pumpkin-character" : type === "pineapple" ? "pineapple-level-1" : "onion-character";
+    const texture = type === "tomato" ? "tomato-character" : type === "pumpkin" ? "pumpkin-character" : type === "pineapple" ? "pineapple-level-1" : type === "hazelnut" ? "hazelnut-level-1" : "onion-character";
     const rowIndex = PhaserMath.Clamp(row, 0, LANES - 1);
     const laneGap = rowIndex < LANES - 1
       ? this.laneYs[rowIndex + 1] - this.laneYs[rowIndex]
@@ -2176,14 +2188,14 @@ export default class BattleScene extends Scene {
     plant.setData("pineapplePerspectiveScale", pineapplePerspectiveScale);
     if (this.textures.exists(texture)) {
       // Pineapple Level 1 keeps its tuned base size; only its row perspective changes.
-      const baseHeight = type === "tomato" ? 32 : type === "pumpkin" ? 70 : type === "pineapple" ? 132 : 64;
+      const baseHeight = type === "tomato" ? 32 : type === "pumpkin" ? 70 : type === "pineapple" ? 132 : type === "hazelnut" ? 112 : 64;
       const height = baseHeight * pineapplePerspectiveScale;
       const width = height * (this.textures.getFrame(texture).realWidth / this.textures.getFrame(texture).realHeight);
-      const maxWidth = (type === "tomato" ? 38 : type === "pineapple" ? 152 : 76) * pineapplePerspectiveScale;
-      if (type === "pineapple") {
-        const pineapple = this.add.sprite(0, -height / 2 + 2, texture, 0).setDisplaySize(Math.min(width, maxWidth), height);
-        pineapple.setData("pineappleThrowSprite", true);
-        plant.add(pineapple);
+      const maxWidth = (type === "tomato" ? 38 : type === "pineapple" ? 152 : type === "hazelnut" ? 116 : 76) * pineapplePerspectiveScale;
+      if (type === "pineapple" || type === "hazelnut") {
+        const animatedPlant = this.add.sprite(0, -height / 2 + 2, texture, 0).setDisplaySize(Math.min(width, maxWidth), height);
+        animatedPlant.setData(type === "pineapple" ? "pineappleThrowSprite" : "hazelnutThrowSprite", true);
+        plant.add(animatedPlant);
       } else {
         plant.add(this.add.image(0, -height / 2 + 2, texture).setDisplaySize(Math.min(width, maxWidth), height));
       }
@@ -2250,7 +2262,7 @@ export default class BattleScene extends Scene {
         continue;
       }
       if (plant.type === "pumpkin") continue;
-      const configs = { radish: RADISH_CONFIG, tomato: TOMATO_CONFIG, onion: ONION_CONFIG, pineapple: PINEAPPLE_CONFIG };
+      const configs = { radish: RADISH_CONFIG, tomato: TOMATO_CONFIG, onion: ONION_CONFIG, pineapple: PINEAPPLE_CONFIG, hazelnut: HAZELNUT_CONFIG };
       const config = configs[plant.type];
       if (!config) continue;
       // Recover safely if a plant was created by an older or partial runtime
@@ -2374,19 +2386,22 @@ export default class BattleScene extends Scene {
   fireThorn(plant, target) {
     // Pineapple projectiles must not exist until the throw animation reaches
     // its final frame. This keeps the visual action and the actual launch in sync.
-    if (plant.type === "pineapple" && plant.view?.active) {
-      if (plant.pineappleThrowing) return;
-      const throwSprite = plant.view.list.find((child) => child?.getData?.("pineappleThrowSprite"));
-      if (throwSprite && this.anims.exists("pineapple-level-1-throw")) {
-        plant.pineappleThrowing = true;
+    if ((plant.type === "pineapple" || plant.type === "hazelnut") && plant.view?.active) {
+      const isHazelnut = plant.type === "hazelnut";
+      const throwingKey = isHazelnut ? "hazelnutThrowing" : "pineappleThrowing";
+      if (plant[throwingKey]) return;
+      const throwSprite = plant.view.list.find((child) => child?.getData?.(isHazelnut ? "hazelnutThrowSprite" : "pineappleThrowSprite"));
+      const animationKey = isHazelnut ? "hazelnut-level-1-throw" : "pineapple-level-1-throw";
+      const textureKey = isHazelnut ? "hazelnut-level-1" : "pineapple-level-1";
+      if (throwSprite && this.anims.exists(animationKey)) {
+        plant[throwingKey] = true;
         throwSprite.stop();
-        throwSprite.setTexture("pineapple-level-1", 0);
-        throwSprite.play("pineapple-level-1-throw");
+        throwSprite.setTexture(textureKey, 0);
+        throwSprite.play(animationKey);
         throwSprite.once("animationcomplete", () => {
-          if (throwSprite.active) throwSprite.setTexture("pineapple-level-1", 0);
-          // Add a short beat after the final throw pose before releasing the bomb.
+          if (throwSprite.active) throwSprite.setTexture(textureKey, 0);
           this.time.delayedCall(0, () => {
-            plant.pineappleThrowing = false;
+            plant[throwingKey] = false;
             if (plant.alive && target?.alive && !this.gameOver) {
               this.fireThornProjectile(plant, target);
             }
@@ -2435,12 +2450,13 @@ export default class BattleScene extends Scene {
     view.add([halo, outerGlow, innerGlow]);
 
     const projectileTexture = plant.type === "pineapple" ? "pineapple-level-1-bomb"
+      : plant.type === "hazelnut" ? "hazelnut-level-1-bomb"
       : plant.type === "tomato" ? "tomato-character"
       : plant.type === "onion" ? "onion-character" : "radish-character";
     if (this.textures.exists(projectileTexture)) {
       const plantProjectile = this.add.image(0, 0, projectileTexture);
-      if (plant.type === "pineapple") {
-        plantProjectile.setDisplaySize(34, 21);
+      if (plant.type === "pineapple" || plant.type === "hazelnut") {
+        plantProjectile.setDisplaySize(plant.type === "hazelnut" ? 31 : 34, plant.type === "hazelnut" ? 30 : 21);
       } else {
         const projectileSize = plant.type === "onion" ? 27 : 29;
         plantProjectile.setDisplaySize(projectileSize, projectileSize).setRotation(-Math.PI / 2);
@@ -2482,6 +2498,7 @@ export default class BattleScene extends Scene {
     });
 
     const projectileConfig = plant.type === "pineapple" ? PINEAPPLE_CONFIG
+      : plant.type === "hazelnut" ? HAZELNUT_CONFIG
       : plant.type === "tomato" ? TOMATO_CONFIG
       : plant.type === "onion" ? ONION_CONFIG : RADISH_CONFIG;
     this.projectiles.push({
