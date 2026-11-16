@@ -756,7 +756,7 @@ export default class BattleScene extends Scene {
       });
       panel.setFillStyle(tint, 0.38);
       const plantHints = {
-        radish: "Radish chosen. Fires thorn shots in its lane.",
+        radish: "Radish Level 1 chosen. Launches miniature radish bombs down its lane.",
         mushroom: "Mushroom chosen. Collect its energy when it appears.",
         tomato: "Tomato chosen. Fires tomato shots in its lane.",
         pumpkin: "Pumpkin chosen. A durable lane blocker.",
@@ -2245,7 +2245,7 @@ export default class BattleScene extends Scene {
     }
 
     const plantedMessages = {
-      radish: "Radish planted! It defends this lane.",
+      radish: "Radish Level 1 planted! It launches miniature radish bombs down this lane.",
       mushroom: "Energy Mushroom planted! It will produce collectible energy.",
       tomato: "Tomato planted! It fires tomato shots down this lane.",
       pumpkin: "Pumpkin planted! It blocks and absorbs bites.",
@@ -2310,7 +2310,7 @@ export default class BattleScene extends Scene {
       ? this.laneYs[rowIndex + 1] - this.laneYs[rowIndex]
       : this.laneYs[rowIndex] - this.laneYs[rowIndex - 1];
     // The farthest row is smallest; each nearer row grows progressively.
-    // Apply the same perspective to Pineapple and Hazelnut so their projectiles
+    // Apply the same perspective to Pineapple, Hazelnut and Mango so their projectiles
     // can use the exact displayed plant scale when calculating launch offsets.
     const pineapplePerspectiveScale = type === "pineapple" || type === "hazelnut" || type === "mango"
       ? PhaserMath.Clamp(0.8 + (rowIndex / Math.max(1, LANES - 1)) * 0.4, 0.8, 1.2)
@@ -2545,15 +2545,14 @@ export default class BattleScene extends Scene {
   }
 
   fireThornProjectile(plant, target) {
-    // The Radish fires a miniature copy of its own artwork, turned sideways
-    // so the root points toward incoming monsters. Keep the combat contract
-    // (lane, speed, damage and collision) unchanged.
+    // Radish Level 1 launches its dedicated miniature radish bomb from the
+    // forward hand pose. Keep the canonical lane, speed, damage and collision rules.
     const lane = this.worldToLane(plant);
     const localX = lane.localX;
     const row = plant.row;
     const targetRow = plant.row;
     const targetLocalX = Math.max(localX + 1, target.localX);
-    // Pineapple and Hazelnut travel on the same raised lane. Their launch
+    // Pineapple, Hazelnut and Mango travel on the same raised lane. Their launch
     // offsets are measured from that lane so the complete curved trajectory
     // retains the exact launch position instead of snapping on its first tick.
     const usesRaisedBombLane = ["pineapple", "hazelnut", "mango"].includes(plant.type);
@@ -2608,7 +2607,7 @@ export default class BattleScene extends Scene {
       : plant.type === "hazelnut" ? "hazelnut-level-1-bomb"
       : plant.type === "mango" ? "mango-level-1-bomb"
       : plant.type === "tomato" ? "tomato-character"
-      : plant.type === "onion" ? "onion-character" : "radish-level-1";
+      : plant.type === "onion" ? "onion-character" : "radish-level-1-bomb";
     if (this.textures.exists(projectileTexture)) {
       const plantProjectile = this.add.image(0, 0, projectileTexture);
       if (plant.type === "pineapple" || plant.type === "hazelnut" || plant.type === "mango") {
