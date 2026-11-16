@@ -2168,7 +2168,7 @@ export default class BattleScene extends Scene {
       const width = height * (this.textures.getFrame(texture).realWidth / this.textures.getFrame(texture).realHeight);
       const maxWidth = (type === "tomato" ? 38 : type === "pineapple" ? 121.6 : 76) * pineapplePerspectiveScale;
       if (type === "pineapple") {
-        const pineapple = this.add.sprite(0, 0, texture, 0).setDisplaySize(Math.min(width, maxWidth), height);
+        const pineapple = this.add.sprite(0, -height / 2 + 2, texture, 0).setDisplaySize(Math.min(width, maxWidth), height);
         pineapple.setData("pineappleThrowSprite", true);
         plant.add(pineapple);
       } else {
