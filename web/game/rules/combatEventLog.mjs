@@ -1,3 +1,6 @@
+import { PHASE_ONE_PLANT_EVENT_TYPES } from "./phaseOneCombatContract.mjs";
+
+const PLANT_EVENT_TYPES = new Set(PHASE_ONE_PLANT_EVENT_TYPES);
 const EVENT_TYPES = new Set(["plant_placed", "plant_uprooted", "energy_spawned", "energy_collected", "energy_discarded", "monster_spawned", "monster_bite", "monster_moved"]);
 const MAX_EVENTS = 10000;
 
@@ -8,7 +11,7 @@ function validPickupId(value) { return typeof value === "string" && /^pickup-\d+
 function normalizePayload(type, payload) {
   if (!payload || typeof payload !== "object" || Array.isArray(payload)) throw new TypeError("INVALID_COMBAT_EVENT_PAYLOAD");
   if (type === "plant_placed" || type === "plant_uprooted") {
-    if (!["radish", "mushroom", "tomato", "pumpkin", "onion", "pineapple", "hazelnut"].includes(payload.type) || !validCell(payload)) throw new RangeError("INVALID_PLANT_EVENT");
+    if (!PLANT_EVENT_TYPES.has(payload.type) || !validCell(payload)) throw new RangeError("INVALID_PLANT_EVENT");
     return Object.freeze({ type: payload.type, col: payload.col, row: payload.row });
   }
   if (type === "energy_spawned") {
