@@ -164,7 +164,6 @@ export function selectLaneBlocker({ plants, row, monsterLocalX, maxOvershoot = 0
   for (const candidate of plants) {
     if (
       !candidate?.plant?.alive ||
-      !["radish", "pumpkin"].includes(candidate.plant.type) ||
       candidate.plant.row !== row ||
       !Number.isFinite(candidate.localX) ||
       candidate.localX - monsterLocalX > maxOvershoot
