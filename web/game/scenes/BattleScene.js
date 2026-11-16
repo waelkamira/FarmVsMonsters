@@ -2130,7 +2130,7 @@ export default class BattleScene extends Scene {
     // Reverse the board's apparent depth scaling for pineapples: far rows
     // (smaller lane gaps) get a larger plant, while near rows get a smaller one.
     const pineapplePerspectiveScale = type === "pineapple"
-      ? PhaserMath.Clamp(54 / Math.max(laneGap, 1), 0.8, 1.2)
+      ? PhaserMath.Clamp(laneGap / 54, 0.8, 1.2)
       : 1;
     plant.setData("pineapplePerspectiveScale", pineapplePerspectiveScale);
     if (this.textures.exists(texture)) {
