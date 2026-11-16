@@ -167,8 +167,19 @@ export const STAGE_ONE_PLANTS = Object.freeze([
     descriptionAr: "نسخة تجريبية: يطلق حبات بصل صغيرة أبطأ وأقوى على الوحوش في مساره فقط.",
     energyCost: 65, coinPrice: 0, status: "active", implemented: true, purchasable: false, image: null,
     stats: ["135 HP", "48 damage", "2350 ms cooldown"], statsAr: ["١٣٥ صحة", "ضرر ٤٨", "فاصل هجوم ٢٣٥٠ مللي ثانية"]
-  }
-]);
+  },
+  {
+    id: "mango",
+    assetPath: "/assets/plants/mango-level-1.png",
+    name: "Mango Level 1",
+    nameAr: "المانجو المستوى الأول",
+    role: "Arcing bomb attacker",
+    roleAr: "مهاجم بقذائف منحنية",
+    description: "Launches its own miniature mango bomb in a curved path that drops onto a monster in its lane.",
+    descriptionAr: "يطلق قذيفة مانجو صغيرة بمسار منحنٍ وتهوي فوق الوحش الموجود في مساره.",
+    energyCost: 70, coinPrice: 0, status: "active", implemented: true, purchasable: false, image: null,
+    stats: ["130 HP", "40 damage", "2100 ms cooldown"], statsAr: ["١٣٠ صحة", "ضرر ٤٠", "فاصل هجوم ٢١٠٠ مللي ثانية"]
+  },);
 
 export const STAGE_ONE_PLANT_BY_ID = Object.freeze(
   Object.fromEntries(STAGE_ONE_PLANTS.map((plant) => [plant.id, plant]))
