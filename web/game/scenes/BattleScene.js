@@ -3120,6 +3120,14 @@ export default class BattleScene extends Scene {
 
       if (withinBiteRange) {
         const enteringBiteRange = !monster.isEating;
+        // Align the monster's visual center with the plant while chewing,
+        // instead of freezing with its head at the plant's outer edge.
+        monster.localX = blockerLocalX;
+        const bitePosition = this.monsterLanePoint(monster.localX, monster.row);
+        monster.x = bitePosition.x;
+        monster.y = bitePosition.y;
+        monster.view.setPosition(bitePosition.x, bitePosition.y);
+        if (monster.hyenaSprite?.active) monster.hyenaSprite.y = 0;
         monster.replayMoveElapsedMs += delta;
         const movementTick = Math.floor(this.combatClockMs);
         if (enteringBiteRange || monster.replayLastBlockerCol !== blocker.col || monster.replayMoveElapsedMs >= 500) {
