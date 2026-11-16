@@ -537,13 +537,14 @@ export default class BattleScene extends Scene {
     }).setOrigin(0, 0.5).setDepth(41);
 
     // Plant selection cells stay distinct and larger than the status counters.
+    // Double the plant selector cells while keeping their row and order intact.
     this.radishCard = this.createPlantCard(24, "RADISH", "35", "radish", null, "radish-character", 64);
-    this.mushroomCard = this.createPlantCard(72, "MUSHROOM", "50", "mushroom", null, "mushroom-character", 64);
+    this.mushroomCard = this.createPlantCard(120, "MUSHROOM", "50", "mushroom", null, "mushroom-character", 64);
     // New artwork is visible in the battle selector, but these plants stay
     // locked until their combat rules and planting implementations are ready.
-    this.tomatoCard = this.createPlantCard(120, "TOMATO", String(TOMATO_CONFIG.cost), "tomato", null, "tomato-character", 64);
-    this.pumpkinCard = this.createPlantCard(168, "PUMPKIN", String(PUMPKIN_CONFIG.cost), "pumpkin", null, "pumpkin-character", 64);
-    this.onionCard = this.createPlantCard(216, "ONION", String(ONION_CONFIG.cost), "onion", null, "onion-character", 64);
+    this.tomatoCard = this.createPlantCard(216, "TOMATO", String(TOMATO_CONFIG.cost), "tomato", null, "tomato-character", 64);
+    this.pumpkinCard = this.createPlantCard(312, "PUMPKIN", String(PUMPKIN_CONFIG.cost), "pumpkin", null, "pumpkin-character", 64);
+    this.onionCard = this.createPlantCard(408, "ONION", String(ONION_CONFIG.cost), "onion", null, "onion-character", 64);
 
     this.messageText = this.add.text(560, 574, "", {
       fontFamily: "Arial", fontSize: "15px", color: "#ffffff", fontStyle: "bold",
@@ -558,31 +559,31 @@ export default class BattleScene extends Scene {
     // Floating glass selector, positioned below the top resource/status strip.
     // A soft translucent white halo gives a light blur-like edge without a frame.
     const tint = locked ? 0xb7c4d3 : (type === "radish" ? 0x8ff0b0 : 0x9edfff);
-    const halo = this.add.rectangle(0, 1, 54, 44, 0xffffff, 0.10);
-    const panel = this.add.rectangle(0, 0, 48, 38, 0xffffff, locked ? 0.12 : 0.22)
+    const halo = this.add.rectangle(0, 1, 108, 88, 0xffffff, 0.10);
+    const panel = this.add.rectangle(0, 0, 96, 76, 0xffffff, locked ? 0.12 : 0.22)
       .setInteractive({ useHandCursor: true });
     panel.setStrokeStyle(0, 0xffffff, 0);
     let icon;
     if (imageKey && this.textures.exists(imageKey)) {
       const frameData = this.textures.getFrame(imageKey);
-      const iconHeight = 25;
+      const iconHeight = 50;
       const iconWidth = iconHeight * (frameData.realWidth / frameData.realHeight);
-      icon = this.add.image(0, -5, imageKey)
-        .setDisplaySize(Math.min(iconWidth, 34), iconHeight);
+      icon = this.add.image(0, -10, imageKey)
+        .setDisplaySize(Math.min(iconWidth, 68), iconHeight);
     } else {
       icon = this.add.graphics();
       if (drawIcon) drawIcon(icon);
     }
-    const cost = this.add.text(0, 13, "⚡" + costLabel, {
-      fontFamily: "Arial", fontSize: "9px", color: "#ffffff", fontStyle: "bold",
+    const cost = this.add.text(0, 26, "⚡" + costLabel, {
+      fontFamily: "Arial", fontSize: "18px", color: "#ffffff", fontStyle: "bold",
       stroke: "#536477", strokeThickness: 2, resolution: 2,
       align: "center"
     }).setOrigin(0.5, 0.5);
     if (locked) {
       icon.setAlpha(0.78);
       cost.setText("🔒");
-      const lockLabel = this.add.text(0, 26, title, {
-        fontFamily: "Arial", fontSize: "7px", color: "#ffffff", fontStyle: "bold",
+      const lockLabel = this.add.text(0, 52, title, {
+        fontFamily: "Arial", fontSize: "14px", color: "#ffffff", fontStyle: "bold",
         stroke: "#34445b", strokeThickness: 2, resolution: 2
       }).setOrigin(0.5, 0.5);
       card.add([halo, panel, icon, cost, lockLabel]);
@@ -2114,11 +2115,13 @@ export default class BattleScene extends Scene {
     const texture = type === "tomato" ? "tomato-character" : type === "pumpkin" ? "pumpkin-character" : "onion-character";
     if (this.textures.exists(texture)) {
       const frame = this.textures.getFrame(texture);
-      const height = type === "pumpkin" ? 70 : 64;
+      const height = type === "tomato" ? 32 : type === "pumpkin" ? 70 : 64;
       const width = height * (frame.realWidth / frame.realHeight);
-      plant.add(this.add.image(0, -height / 2 + 2, texture).setDisplaySize(Math.min(width, 76), height));
+      const maxWidth = type === "tomato" ? 38 : 76;
+      plant.add(this.add.image(0, -height / 2 + 2, texture).setDisplaySize(Math.min(width, maxWidth), height));
     } else {
-      const fallback = this.add.ellipse(0, -24, 42, 48,
+      const fallback = this.add.ellipse(0, type === "tomato" ? -12 : -24,
+        type === "tomato" ? 21 : 42, type === "tomato" ? 24 : 48,
         type === "tomato" ? 0xe85b55 : type === "pumpkin" ? 0xf39b32 : 0xe8e5d7, 1);
       plant.add(fallback);
     }
