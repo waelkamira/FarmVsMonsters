@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useLocale, LanguageToggle } from "../../../LocaleProvider";
 
 const PLANTS = [
-  { id: "radish", name: "Radish", ar: "الفجل", role: "Lane attacker", roleAr: "مهاجم للمسار", cost: 35, image: "/assets/plants/radish.png" },
+  { id: "radish", name: "Radish Level 1", ar: "الفجل المستوى الأول", role: "Lane attacker", roleAr: "مهاجم للمسار", cost: 35, image: "/assets/plants/radish-level-1.png" },
   { id: "mushroom", name: "Energy Mushroom", ar: "فطر الطاقة", role: "Energy producer · Required", roleAr: "منتج الطاقة · أساسي", cost: 50, image: "/assets/plants/mushroom.png", required: true },
   { id: "tomato", name: "Tomato", ar: "الطماطم", role: "Ranged attacker", roleAr: "مهاجم بعيد", cost: 55, image: "/assets/plants/tomato.png" },
   { id: "pumpkin", name: "Pumpkin", ar: "اليقطين", role: "Heavy blocker", roleAr: "حاجز دفاعي", cost: 75, image: "/assets/plants/pumpkin.png" },
@@ -86,7 +86,7 @@ export default function StageOneSeedSelectionPage() {
                 aria-label={(ar ? plant.ar : plant.name) + (active ? (ar ? " مختار" : " selected") : (ar ? " غير مختار" : " not selected"))}
               >
                 <span className="seed-select-check">{active ? "✓" : "+"}</span>
-                <span className="seed-select-art"><img src={plant.image} alt="" /></span>
+                <span className={"seed-select-art" + (plant.id === "radish" ? " is-sprite-sheet" : "")}><img src={plant.image} alt="" /></span>
                 <strong>{ar ? plant.ar : plant.name}</strong>
                 <small>{ar ? plant.roleAr : plant.role}</small>
                 <span className="seed-select-cost">🍄 {plant.cost}</span>
