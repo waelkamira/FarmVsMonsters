@@ -2334,7 +2334,7 @@ export default class BattleScene extends Scene {
         throwSprite.once("animationcomplete", () => {
           if (throwSprite.active) throwSprite.setTexture("pineapple-level-1", 0);
           // Add a short beat after the final throw pose before releasing the bomb.
-          this.time.delayedCall(10, () => {
+          this.time.delayedCall(0, () => {
             plant.pineappleThrowing = false;
             if (plant.alive && target?.alive && !this.gameOver) {
               this.fireThornProjectile(plant, target);
