@@ -1,6 +1,6 @@
 const TWEMOJI = "https://cdn.jsdelivr.net/gh/twitter/twemoji@15.1.0/assets/72x72";
 const LOCAL_PLANT_ICONS = {
-  radish: "/assets/plants/radish.png",
+  radish: "/assets/plants/radish-level-1.png",
   "energy-mushroom": "/assets/plants/mushroom.png",
   tomato: "/assets/plants/tomato.png",
   onion: "/assets/plants/Onion.png",
@@ -57,6 +57,7 @@ export default function CatalogThumb({ id, label, className = "" }) {
       <img
         src={localIcon || `${TWEMOJI}/${safeCode}.png`}
         alt=""
+        className={id === "radish" ? "catalog-thumb-radish-sheet" : undefined}
         loading="lazy"
         onError={(event) => {
           if (localIcon && !event.currentTarget.dataset.fallback) {
