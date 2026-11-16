@@ -2018,7 +2018,10 @@ export default class BattleScene extends Scene {
     this.energy = placement.energy;
     this.farmerPlanting = true;
     this.playFarmerAction("farmer-plant");
-    const { x, y } = this.plantingCellCenter(col, row);
+    // Pineapples are visually centered on the exact cell centroid on both axes.
+    const { x, y } = type === "pineapple"
+      ? this.gridCellCenter(col, row)
+      : this.plantingCellCenter(col, row);
     const plant = {
       ...placement.plant,
       x, y,
@@ -2140,7 +2143,7 @@ export default class BattleScene extends Scene {
       const width = height * (this.textures.getFrame(texture).realWidth / this.textures.getFrame(texture).realHeight);
       const maxWidth = (type === "tomato" ? 38 : type === "pineapple" ? 121.6 : 76) * pineapplePerspectiveScale;
       if (type === "pineapple") {
-        const pineapple = this.add.sprite(0, -height / 2 + 2, texture, 0).setDisplaySize(Math.min(width, maxWidth), height);
+        const pineapple = this.add.sprite(0, 0, texture, 0).setDisplaySize(Math.min(width, maxWidth), height);
         pineapple.setData("pineappleThrowSprite", true);
         plant.add(pineapple);
       } else {
