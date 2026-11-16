@@ -217,11 +217,15 @@ export default class BattleScene extends Scene {
       const mangoTexture = this.textures.get("mango-level-1");
       const mangoSource = mangoTexture.getSourceImage();
       // Split the 3x3 Mango Level 1 sheet using its actual loaded dimensions.
-      const frameWidth = mangoSource.width / 3;
-      const frameHeight = mangoSource.height / 3;
       for (let index = 0; index < 9; index += 1) {
+        const column = index % 3;
+        const row = Math.floor(index / 3);
+        const frameX = Math.floor((column * mangoSource.width) / 3);
+        const frameY = Math.floor((row * mangoSource.height) / 3);
+        const nextFrameX = Math.floor(((column + 1) * mangoSource.width) / 3);
+        const nextFrameY = Math.floor(((row + 1) * mangoSource.height) / 3);
         if (!mangoTexture.has(String(index))) {
-          mangoTexture.add(String(index), 0, (index % 3) * frameWidth, Math.floor(index / 3) * frameHeight, frameWidth, frameHeight);
+          mangoTexture.add(String(index), 0, frameX, frameY, nextFrameX - frameX, nextFrameY - frameY);
         }
       }
     }
@@ -652,13 +656,14 @@ export default class BattleScene extends Scene {
       .setInteractive({ useHandCursor: true });
     let icon;
     if (imageKey && this.textures.exists(imageKey)) {
-      const frameData = this.textures.getFrame(imageKey);
+      const frameData = this.textures.getFrame(imageKey, imageKey === "mango-level-1" ? 0 : undefined);
       // Use nearly the full packet face for the plant artwork while keeping
       // a dedicated strip below for the energy cost.
       const iconHeight = 58;
       const iconWidth = iconHeight * (frameData.realWidth / frameData.realHeight);
-      icon = this.add.image(0, -11, imageKey)
-        .setDisplaySize(Math.min(iconWidth, 64), iconHeight);
+      icon = imageKey === "mango-level-1"
+        ? this.add.sprite(0, -11, imageKey, 0).setDisplaySize(Math.min(iconWidth, 64), iconHeight)
+        : this.add.image(0, -11, imageKey).setDisplaySize(Math.min(iconWidth, 64), iconHeight);
     } else {
       icon = this.add.graphics();
       if (drawIcon) drawIcon(icon);
@@ -2262,7 +2267,7 @@ export default class BattleScene extends Scene {
     // The farthest row is smallest; each nearer row grows progressively.
     // Apply the same perspective to Pineapple and Hazelnut so their projectiles
     // can use the exact displayed plant scale when calculating launch offsets.
-    const pineapplePerspectiveScale = type === "pineapple" || type === "hazelnut"
+    const pineapplePerspectiveScale = type === "pineapple" || type === "hazelnut" || type === "mango"
       ? PhaserMath.Clamp(0.8 + (rowIndex / Math.max(1, LANES - 1)) * 0.4, 0.8, 1.2)
       : 1;
     plant.setData("pineapplePerspectiveScale", pineapplePerspectiveScale);
@@ -2522,7 +2527,7 @@ export default class BattleScene extends Scene {
       // Preserve the pineapple's already-tuned launch position.
       launchOffsetY = -(displayHeight / 2) - 8;
     } else if (plant.type === "hazelnut" || plant.type === "mango") {
-      const frame = this.textures.getFrame(`${plant.type}-level-1`);
+      const frame = this.textures.getFrame(`${plant.type}-level-1`, plant.type === "mango" ? 0 : undefined);
       const perspectiveScale = plant.view?.getData?.("pineapplePerspectiveScale") || 1;
       const displayHeight = 112 * perspectiveScale;
       const displayWidth = Math.min(
