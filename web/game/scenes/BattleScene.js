@@ -247,6 +247,7 @@ export default class BattleScene extends Scene {
     this.createHud();
     this.createAudioControls();
     this.createPauseControl();
+    this.createSettingsControl();
     this.createCollectionMenuControl();
     this.createQuickCollectionButtons();
     this.createCaveman();
@@ -1784,6 +1785,31 @@ export default class BattleScene extends Scene {
     background.on("pointerout", () => background.setFillStyle(0x8b65e8, 0.42));
     background.on("pointerdown", () => this.pauseGame());
     this.pauseControl = button;
+  }
+
+  createSettingsControl() {
+    const button = this.add.container(1084, 27).setDepth(48);
+    const background = this.add.rectangle(0, 0, 38, 30, 0x8b65e8, 0.48)
+      .setStrokeStyle(1, 0xffffff, 0.82).setInteractive({ useHandCursor: true });
+    const label = this.add.text(0, 0, "⚙", {
+      fontFamily: "Arial", fontSize: "20px", color: "#ffffff", fontStyle: "bold"
+    }).setOrigin(0.5);
+    button.add([background, label]);
+    background.on("pointerover", () => background.setFillStyle(0xa07df2, 0.78));
+    background.on("pointerout", () => background.setFillStyle(0x8b65e8, 0.48));
+    background.on("pointerdown", () => this.openSettingsMenu());
+    this.settingsControl = button;
+  }
+
+  openSettingsMenu() {
+    if (this.gameOver || this.isPaused || !this.scene.isActive()) return;
+    this.isPaused = true;
+    this.pauseGameAudio();
+    this.scene.launch("PauseScene");
+    const pauseScene = this.scene.get("PauseScene");
+    pauseScene.menuMode = "settings";
+    pauseScene.drawCurrentMenu();
+    this.scene.pause();
   }
 
   pauseGame() {
