@@ -151,6 +151,9 @@ export default class BattleScene extends Scene {
     this.isPaused = false;
     // Both uploaded artworks are 3x3 sheets. Register one Phaser frame per cell
     // so the battle renders a single pose instead of the complete nine-pose sheet.
+    // Use the same dimension-derived 3×3 crop path for Mango, Snow Thrower,
+    // and the frozen Hyena so every sheet gets identical frame boundaries.
+    this.registerThreeByThreeSheet("mango-level-1");
     this.registerThreeByThreeSheet("snow-thrower-level-1");
     this.registerThreeByThreeSheet("frozen-hyena-level-1");
     // Client-local deterministic seed for reproducible development sessions only.
@@ -219,22 +222,6 @@ export default class BattleScene extends Scene {
     this.princessActor = null;
     this.gameOver = false;
     this.hyenaAnimationsReady = this.createHyenaAnimations();
-    if (this.textures.exists("mango-level-1")) {
-      const mangoTexture = this.textures.get("mango-level-1");
-      const mangoSource = mangoTexture.getSourceImage();
-      // Split the 3x3 Mango Level 1 sheet using its actual loaded dimensions.
-      for (let index = 0; index < 9; index += 1) {
-        const column = index % 3;
-        const row = Math.floor(index / 3);
-        const frameX = Math.floor((column * mangoSource.width) / 3);
-        const frameY = Math.floor((row * mangoSource.height) / 3);
-        const nextFrameX = Math.floor(((column + 1) * mangoSource.width) / 3);
-        const nextFrameY = Math.floor(((row + 1) * mangoSource.height) / 3);
-        if (!mangoTexture.has(String(index))) {
-          mangoTexture.add(String(index), 0, frameX, frameY, nextFrameX - frameX, nextFrameY - frameY);
-        }
-      }
-    }
     if (this.textures.exists("radish-level-1")) {
       const radishTexture = this.textures.get("radish-level-1");
       const radishSource = radishTexture.getSourceImage();
@@ -2312,16 +2299,19 @@ export default class BattleScene extends Scene {
     const texture = this.textures.get(textureKey);
     const source = texture.getSourceImage();
     if (!source?.width || !source?.height) return false;
+
+    // Match Mango's proven crop method: calculate each cell edge from the
+    // actual source dimensions. This also handles dimensions not divisible by 3.
     for (let index = 0; index < 9; index += 1) {
       const column = index % 3;
       const row = Math.floor(index / 3);
-      const x = Math.floor((column * source.width) / 3);
-      const y = Math.floor((row * source.height) / 3);
-      const right = Math.floor(((column + 1) * source.width) / 3);
-      const bottom = Math.floor(((row + 1) * source.height) / 3);
+      const frameX = Math.floor((column * source.width) / 3);
+      const frameY = Math.floor((row * source.height) / 3);
+      const nextFrameX = Math.floor(((column + 1) * source.width) / 3);
+      const nextFrameY = Math.floor(((row + 1) * source.height) / 3);
       const frameName = String(index);
       if (!texture.has(frameName)) {
-        texture.add(frameName, 0, x, y, right - x, bottom - y);
+        texture.add(frameName, 0, frameX, frameY, nextFrameX - frameX, nextFrameY - frameY);
       }
     }
     return true;
