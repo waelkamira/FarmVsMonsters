@@ -53,7 +53,7 @@ var grid_nodes: Array = []
 var background_view: TextureRect
 var farmer_sprite: AnimatedSprite2D
 var attack_button: Button
-var has_planted_defender := false
+var has_planted_radish := false
 var farmer_is_moving := false
 var farmer_locomotion_animation := "idle"
 var planting_target: Dictionary = {}
@@ -633,7 +633,7 @@ func _farmer_can_attack() -> bool:
 		return false
 	if farmer_sprite != null and farmer_sprite.animation == "attack":
 		return false
-	if not has_planted_defender:
+	if not has_planted_radish:
 		return false
 	for plant in plants:
 		if plant.alive and plant.type == "radish":
@@ -809,7 +809,7 @@ func _complete_plant_placement(column: int, row: int, plant_type: String) -> voi
 	plants.append(plant)
 	energy = int(placement.energy)
 	if plant_type == "radish":
-		has_planted_defender = true
+		has_planted_radish = true
 	farmer_planting = true
 	farmer_locomotion_animation = "plant"
 	farmer_sprite.play("plant")
