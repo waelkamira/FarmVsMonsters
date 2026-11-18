@@ -61,6 +61,9 @@ var monster_sprite_frames: SpriteFrames
 func _ready() -> void:
 	rng.randomize()
 	_load_grid_calibration()
+	if grid_nodes.size() != Rules.BOARD_ROWS + 1:
+		push_error("Live battle cannot start without the approved perspective grid.")
+		return
 	_build_background()
 	_build_ui()
 	_create_farmer_sprite()
