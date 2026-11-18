@@ -31,6 +31,7 @@ export const PUMPKIN_CONFIG = Object.freeze({ label: "Pumpkin", ...PHASE_ONE_PLA
 export const PINEAPPLE_CONFIG = Object.freeze({ label: "Pineapple", ...PHASE_ONE_PLANTS.pineapple, cost: PHASE_ONE_PLANTS.pineapple.plantingEnergyCost });
 export const HAZELNUT_CONFIG = Object.freeze({ label: "Hazelnut", ...PHASE_ONE_PLANTS.hazelnut, cost: PHASE_ONE_PLANTS.hazelnut.plantingEnergyCost });
 export const MANGO_CONFIG = Object.freeze({ label: "Mango", ...PHASE_ONE_PLANTS.mango, cost: PHASE_ONE_PLANTS.mango.plantingEnergyCost });
+export const SNOW_THROWER_CONFIG = Object.freeze({ label: "Snow Thrower", ...PHASE_ONE_PLANTS.snowThrower, cost: PHASE_ONE_PLANTS.snowThrower.plantingEnergyCost });
 
 export const collectEnergy = resolveEnergyPickup;
 export function isWaveComplete(spawnedCount, waveSize, livingMonsterCount) {
