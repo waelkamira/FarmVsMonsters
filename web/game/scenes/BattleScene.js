@@ -3393,7 +3393,7 @@ export default class BattleScene extends Scene {
   restoreMonsterAfterFreeze(monster) {
     const sprite = monster?.hyenaSprite;
     if (sprite?.active) {
-      sprite.clearTint();
+      sprite.setTint(monster.tierTint ?? 0xffffff);
       sprite.setScale(0.918);
       sprite.setOrigin(0.5, 1);
       this.playHyenaAnimation(monster, monster.frozenAnimationKey || (monster.kind === "dust-skitter" ? "hyena-run" : "hyena-walk"), true);
@@ -3455,6 +3455,7 @@ export default class BattleScene extends Scene {
         continue;
       }
 
+      const previousShotLocalX = shot.localX;
       shot.localX = resolveProjectileLaneStep({ localX: shot.localX, speed: shot.speed, deltaSeconds: dt });
       // Keep every projectile in its plant's original lane. Aim follows the
       // live target, while pineapple bombs switch to a vertical head drop.
@@ -3503,12 +3504,28 @@ export default class BattleScene extends Scene {
       // A Radish projectile can damage monsters in its own lane only.
       let hit = null;
       let nearestHitDistance = Infinity;
+      let firstSnowHitLocalX = Infinity;
       for (const monster of this.monsters) {
         if (!monster?.alive || monster.row !== shot.row ||
             !Number.isFinite(monster.localX)) continue;
         const horizontalDistance = Math.abs(monster.localX - shot.localX);
         const hitRadius = (shot.collisionRadius || PHASE_ONE_PLANTS.radish.projectileCollisionRadius) * (monster.widthScale || 1);
-        if (horizontalDistance > hitRadius || horizontalDistance >= nearestHitDistance) continue;
+        if (horizontalDistance > hitRadius) continue;
+        if (shot.freeze) {
+          // Snow shots travel toward increasing lane X. If one update crosses
+          // more than one hyena, freeze the first one along the swept segment,
+          // not whichever happens to be closest to the projectile's final X.
+          const sweptStart = previousShotLocalX - hitRadius;
+          const sweptEnd = shot.localX + hitRadius;
+          if (monster.localX < sweptStart || monster.localX > sweptEnd ||
+              monster.localX >= firstSnowHitLocalX) continue;
+          hit = monster;
+          firstSnowHitLocalX = monster.localX;
+          continue;
+        }
+        // Preserve the existing nearest-hit behavior for Radish and other
+        // damage projectiles.
+        if (horizontalDistance >= nearestHitDistance) continue;
         hit = monster;
         nearestHitDistance = horizontalDistance;
       }
