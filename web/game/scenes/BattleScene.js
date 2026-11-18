@@ -17,6 +17,7 @@ import {
   PINEAPPLE_CONFIG,
   HAZELNUT_CONFIG,
   MANGO_CONFIG,
+  SNOW_THROWER_CONFIG,
   collectEnergy,
   isWaveComplete,
   isPhaseOneVictory,
@@ -80,6 +81,9 @@ export default class BattleScene extends Scene {
     this.load.image("pumpkin-character", "/assets/plants/pumpkin.png");
     this.load.image("mango-level-1", "/assets/plants/mango-level-1.png");
     this.load.image("mango-level-1-bomb", "/assets/plants/mango-level-1-bomb.png");
+    this.load.image("snow-thrower-level-1", "/assets/plants/Snow-thrower-level-1.png");
+    this.load.image("snow-thrower-bomb-level-1", "/assets/plants/Snow-thrower-bomb-level-1.png");
+    this.load.image("frozen-hyena-level-1", "/assets/characters/monsters/hyena/frozen-hyena-level-1.png");
     // 1254×1254 artwork is a 3×3 sheet: nine 418×418 animation frames.
     this.load.spritesheet("pineapple-level-1", "/assets/plants/pineapple-level-1.png", { frameWidth: 418, frameHeight: 418, margin: 0, spacing: 0 });
     // 1024×1024 artwork, 3×3 grid: use 341px integer cells; Phaser exposes 9 frames.
@@ -649,7 +653,8 @@ export default class BattleScene extends Scene {
       { type: "pumpkin", title: "PUMPKIN", cost: PUMPKIN_CONFIG.cost, image: "pumpkin-character" },
       { type: "pineapple", title: "PINEAPPLE L1", cost: PINEAPPLE_CONFIG.cost, image: "pineapple-level-1" },
       { type: "hazelnut", title: "HAZELNUT L1", cost: HAZELNUT_CONFIG.cost, image: "hazelnut-level-1" },
-      { type: "mango", title: "MANGO L1", cost: MANGO_CONFIG.cost, image: "mango-level-1" }
+      { type: "mango", title: "MANGO L1", cost: MANGO_CONFIG.cost, image: "mango-level-1" },
+      { type: "snow-thrower", title: "SNOW L1", cost: SNOW_THROWER_CONFIG.cost, image: "snow-thrower-level-1" }
     ];
     let selectedTypes = plantOptions.map((plant) => plant.type);
     try {
@@ -754,7 +759,8 @@ export default class BattleScene extends Scene {
         mushroom: "Mushroom chosen. Collect its energy when it appears.",
         pumpkin: "Pumpkin chosen. A durable lane blocker.",
         hazelnut: "Hazelnut chosen. Fires hazelnut bombs in its lane.",
-        mango: "Mango chosen. Launches a curved mango bomb onto monsters in its lane."
+        mango: "Mango chosen. Launches a curved mango bomb onto monsters in its lane.",
+        "snow-thrower": "Snow Thrower chosen. Freezes the first monster hit for 2.6 seconds."
       };
       this.setMessage(plantHints[type] || "Plant chosen.");
       this.refreshHud();
@@ -2156,7 +2162,7 @@ export default class BattleScene extends Scene {
 
   plantSelected(col, row, type, returnPosition = null) {
     if (this.gameOver) return;
-    if (!["radish", "mushroom", "pumpkin", "pineapple", "hazelnut", "mango"].includes(type)) return;
+    if (!["radish", "mushroom", "pumpkin", "pineapple", "hazelnut", "mango", "snow-thrower"].includes(type)) return;
     const placement = resolvePlantPlacement({
       energy: this.energy,
       plants: this.plants,
@@ -2171,7 +2177,7 @@ export default class BattleScene extends Scene {
       return;
     }
     this.recordCombatEvent("plant_placed", { type, col, row });
-    const configs = { radish: RADISH_CONFIG, mushroom: MUSHROOM_CONFIG, pumpkin: PUMPKIN_CONFIG, pineapple: PINEAPPLE_CONFIG, hazelnut: HAZELNUT_CONFIG, mango: MANGO_CONFIG };
+    const configs = { radish: RADISH_CONFIG, mushroom: MUSHROOM_CONFIG, pumpkin: PUMPKIN_CONFIG, pineapple: PINEAPPLE_CONFIG, hazelnut: HAZELNUT_CONFIG, mango: MANGO_CONFIG, "snow-thrower": SNOW_THROWER_CONFIG };
     const config = configs[type];
     this.energy = placement.energy;
     this.farmerPlanting = true;
@@ -2241,6 +2247,7 @@ export default class BattleScene extends Scene {
     const plantedMessages = {
       radish: "Radish Level 1 planted! It launches miniature radish bombs down this lane.",
       mushroom: "Energy Mushroom planted! It will produce collectible energy.",
+      "snow-thrower": "Snow Thrower planted! Its snow bombs freeze monsters for 2.6 seconds.",
       pumpkin: "Pumpkin planted! It blocks and absorbs bites.",
       pineapple: "Pineapple Level 1 planted! It launches pineapple bombs down this lane.",
       hazelnut: "Hazelnut Level 1 planted! It fires hazelnut bombs down this lane.",
@@ -2296,7 +2303,7 @@ export default class BattleScene extends Scene {
 
   drawCatalogPlant(type, x, y, row = 2) {
     const plant = this.add.container(x, y).setDepth(11);
-    const texture = type === "pumpkin" ? "pumpkin-character" : type === "pineapple" ? "pineapple-level-1" : type === "hazelnut" ? "hazelnut-level-1" : type === "mango" ? "mango-level-1" : "radish-level-1";
+    const texture = type === "pumpkin" ? "pumpkin-character" : type === "pineapple" ? "pineapple-level-1" : type === "hazelnut" ? "hazelnut-level-1" : type === "mango" ? "mango-level-1" : type === "snow-thrower" ? "snow-thrower-level-1" : "radish-level-1";
     const rowIndex = PhaserMath.Clamp(row, 0, LANES - 1);
     const laneGap = rowIndex < LANES - 1
       ? this.laneYs[rowIndex + 1] - this.laneYs[rowIndex]
@@ -2310,10 +2317,10 @@ export default class BattleScene extends Scene {
     plant.setData("pineapplePerspectiveScale", pineapplePerspectiveScale);
     if (this.textures.exists(texture)) {
       // Pineapple Level 1 keeps its tuned base size; only its row perspective changes.
-      const baseHeight = type === "pumpkin" ? 70 : type === "pineapple" ? 132 : type === "hazelnut" ? 112 : type === "mango" ? 112 : 64;
+      const baseHeight = type === "pumpkin" ? 70 : type === "pineapple" ? 132 : type === "hazelnut" ? 112 : type === "mango" ? 112 : type === "snow-thrower" ? 104 : 64;
       const height = baseHeight * pineapplePerspectiveScale;
       const width = height * (this.textures.getFrame(texture).realWidth / this.textures.getFrame(texture).realHeight);
-      const maxWidth = (type === "pineapple" ? 152 : type === "hazelnut" ? 116 : type === "mango" ? 116 : 76) * pineapplePerspectiveScale;
+      const maxWidth = (type === "pineapple" ? 152 : type === "hazelnut" ? 116 : type === "mango" ? 116 : type === "snow-thrower" ? 104 : 76) * pineapplePerspectiveScale;
       if (type === "pineapple" || type === "hazelnut" || type === "mango") {
         const animatedPlant = this.add.sprite(0, -height / 2 + 2, texture, 0).setDisplaySize(Math.min(width, maxWidth), height);
         animatedPlant.setData(type === "pineapple" ? "pineappleThrowSprite" : type === "hazelnut" ? "hazelnutThrowSprite" : "mangoThrowSprite", true);
@@ -2381,7 +2388,7 @@ export default class BattleScene extends Scene {
         continue;
       }
       if (plant.type === "pumpkin") continue;
-      const configs = { radish: RADISH_CONFIG, pineapple: PINEAPPLE_CONFIG, hazelnut: HAZELNUT_CONFIG, mango: MANGO_CONFIG };
+      const configs = { radish: RADISH_CONFIG, pineapple: PINEAPPLE_CONFIG, hazelnut: HAZELNUT_CONFIG, mango: MANGO_CONFIG, "snow-thrower": SNOW_THROWER_CONFIG };
       const config = configs[plant.type];
       if (!config) continue;
       // Recover safely if a plant was created by an older or partial runtime
@@ -2595,6 +2602,7 @@ export default class BattleScene extends Scene {
     const projectileTexture = plant.type === "radish" ? "radish-level-1-bomb"
       : plant.type === "pineapple" ? "pineapple-level-1-bomb"
       : plant.type === "hazelnut" ? "hazelnut-level-1-bomb"
+      : plant.type === "snow-thrower" ? "snow-thrower-bomb-level-1"
       : "mango-level-1-bomb";
     if (this.textures.exists(projectileTexture)) {
       const plantProjectile = this.add.image(0, 0, projectileTexture);
@@ -2651,13 +2659,28 @@ export default class BattleScene extends Scene {
       startLocalX: localX, targetLocalX,
       launchOffsetX, launchOffsetY,
       speed: projectileConfig.projectileSpeed,
-      damage: projectileConfig.projectileDamage,
+      damage: projectileConfig.projectileDamage || 0,
+      freeze: Boolean(projectileConfig.freezeProjectile),
+      freezeDurationMs: projectileConfig.freezeDurationMs || 0,
       collisionRadius: projectileConfig.projectileCollisionRadius,
       dropSpeed: Math.max(360, projectileConfig.projectileSpeed * 1.5),
       dropPhase: "horizontal",
       alive: true, trailTimer: 0
     });
     this.playThornSound();
+  }
+
+  createFreezeImpact(x, y) {
+    const burst = this.add.container(x, y).setDepth(25);
+    const core = this.add.circle(0, 0, 11, 0xe9fbff, 0.95);
+    const ring = this.add.circle(0, 0, 22, 0x72d9ff, 0.72).setStrokeStyle(3, 0xe6fbff, 0.95);
+    const shards = [];
+    for (let index = 0; index < 6; index += 1) {
+      const angle = index * Math.PI / 3;
+      shards.push(this.add.triangle(Math.cos(angle) * 22, Math.sin(angle) * 22, 0, -6, 5, 5, -5, 5, 0xc9f2ff, 0.95).setRotation(angle));
+    }
+    burst.add([ring, core, ...shards]);
+    this.tweens.add({ targets: burst, scale: 1.8, alpha: 0, duration: 320, ease: "Cubic.easeOut", onComplete: () => burst.destroy() });
   }
 
   createProjectileImpact(x, y) {
@@ -3022,7 +3045,7 @@ export default class BattleScene extends Scene {
       maxHp: hp,
       tierTint,
       hitFlashGraphic: g, hitFlashTimer: null, hyenaSprite, hitAnimUntil: 0,
-      attackCooldown: 0, alive: true, view, dustTimer: 0,
+      attackCooldown: 0, freezeRemainingMs: 0, frozenAnimationKey: null, alive: true, view,
       replayMoveElapsedMs: 0, replayMoveStartLocalX: SPAWN_LOCAL_X, replayLastMovementTick: Math.floor(this.combatClockMs), replayLastBlockerCol: null,
       knockedPlants: new Set(),
       voiceCooldown: PhaserMath.Between(4200, 8500)
@@ -3065,6 +3088,11 @@ export default class BattleScene extends Scene {
   updateMonsters(dt, delta) {
     for (const monster of this.monsters) {
       if (!monster.alive) continue;
+      if (monster.freezeRemainingMs > 0) {
+        monster.freezeRemainingMs = Math.max(0, monster.freezeRemainingMs - delta);
+        if (monster.freezeRemainingMs > 0) continue;
+        this.restoreMonsterAfterFreeze(monster);
+      }
       monster.attackCooldown = advanceCooldown(monster.attackCooldown, delta);
       if (monster.hyenaSprite && !this.gameOver) {
         monster.voiceCooldown -= delta;
@@ -3276,6 +3304,37 @@ export default class BattleScene extends Scene {
     this.monsters = this.monsters.filter((m) => m.alive);
   }
 
+  freezeMonster(monster, durationMs) {
+    if (!monster?.alive || !Number.isFinite(durationMs) || durationMs <= 0) return false;
+    monster.freezeRemainingMs = Math.max(monster.freezeRemainingMs || 0, durationMs);
+    monster.braced = false;
+    monster.isEating = false;
+    if (monster.braceCue?.active) monster.braceCue.setVisible(false);
+    const sprite = monster.hyenaSprite;
+    if (sprite?.active && this.textures.exists("frozen-hyena-level-1")) {
+      if (!monster.frozenAnimationKey) monster.frozenAnimationKey = sprite.anims.currentAnim?.key || (monster.kind === "dust-skitter" ? "hyena-run" : "hyena-walk");
+      sprite.stop();
+      sprite.setTexture("frozen-hyena-level-1");
+      sprite.setOrigin(0.5, 1);
+      sprite.setTint(0x94dcff);
+      const bounds = monster.view.getBounds();
+      sprite.setDisplaySize(Math.max(28, bounds.width * 0.72), Math.max(30, bounds.height * 0.72));
+    }
+    this.setMessage("SNOW HIT! The hyena is frozen for 2.6 seconds.");
+    return true;
+  }
+
+  restoreMonsterAfterFreeze(monster) {
+    const sprite = monster?.hyenaSprite;
+    if (sprite?.active) {
+      sprite.clearTint();
+      sprite.setScale(0.918);
+      sprite.setOrigin(0.5, 1);
+      this.playHyenaAnimation(monster, monster.frozenAnimationKey || (monster.kind === "dust-skitter" ? "hyena-run" : "hyena-walk"), true);
+    }
+    monster.frozenAnimationKey = null;
+  }
+
   updateProjectiles(dt) {
     for (const shot of this.projectiles) {
       if (!shot.alive) continue;
@@ -3381,6 +3440,13 @@ export default class BattleScene extends Scene {
       }
 
       if (hit) {
+        if (shot.freeze) {
+          this.createFreezeImpact(projectileX, projectileY);
+          this.freezeMonster(hit, shot.freezeDurationMs);
+          shot.alive = false;
+          shot.view.destroy();
+          continue;
+        }
         this.createProjectileImpact(projectileX, projectileY);
         this.playThornImpactSound();
         this.applyMonsterDamage(
