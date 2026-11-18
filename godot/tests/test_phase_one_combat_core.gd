@@ -19,6 +19,8 @@ func _test_contract_and_plant_costs() -> void:
 	assert(Rules.WAVE_SIZES == [3, 5, 6, 7, 9])
 	assert(Rules.total_stage_one_monsters() == 30)
 	assert(Rules.INITIAL_ENERGY == 150 and Rules.MAX_ENERGY == 300)
+	assert(Rules.FARMER_MAX_HP == 180)
+	assert(Rules.FARMER_DAMAGE_INVULNERABILITY_MS == 700.0)
 	assert(Rules.plant_cost("radish") == 35)
 	assert(Rules.plant_cost("mushroom") == 50)
 	assert(Rules.plant_cost("pumpkin") == 75)
@@ -79,6 +81,10 @@ func _test_plant_transactions() -> void:
 	assert(partial.energy == 300.0 and partial.collected == 5.0)
 	var damage: Dictionary = Rules.apply_hit_points_damage(10.0, 25.0)
 	assert(damage.hp == 0.0 and damage.damage_applied == 10.0 and damage.defeated)
+	var farmer_hit: Dictionary = Rules.apply_hit_points_damage(float(Rules.FARMER_MAX_HP), 23.0)
+	assert(farmer_hit.hp == 157.0 and farmer_hit.damage_applied == 23.0 and not farmer_hit.defeated)
+	var farmer_fallen: Dictionary = Rules.apply_hit_points_damage(23.0, 32.0)
+	assert(farmer_fallen.hp == 0.0 and farmer_fallen.defeated)
 
 func _test_lane_and_target_selection() -> void:
 	var step: Dictionary = Rules.resolve_monster_lane_step(120.0, 80.0, 0.5, 100.0, 12.0)
