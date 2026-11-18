@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
+import { PHASE_ONE_PLANTS } from "../game/rules/phaseOneCombatContract.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const localeProvider = readFileSync(resolve(here, "../app/LocaleProvider.jsx"), "utf8");
@@ -20,4 +21,10 @@ test("the How to Play screen explains that the Stage 1 dragon is separate from o
   assert.match(howToPlay, /30 ordinary monsters/);
   assert.match(howToPlay, /dragon.*counted separately as the boss/i);
   assert.match(howToPlay, /التنين.*بشكل منفصل عن الوحوش العادية/);
+});
+
+test("Radish planting cost stays aligned across combat rules and player instructions", () => {
+  assert.equal(PHASE_ONE_PLANTS.radish.plantingEnergyCost, 35);
+  assert.match(localeProvider, /Radish card \(35 energy\)/);
+  assert.match(howToPlay, /الفجل \(٣٥ طاقة\)/);
 });
