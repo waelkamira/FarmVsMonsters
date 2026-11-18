@@ -26,6 +26,7 @@ export const STAGE_ONE_PLANTS = Object.freeze([
     coinPrice: 0,
     status: "active",
     implemented: true,
+    stageOneAvailable: true,
     purchasable: false,
     image: null,
     stats: ["160 HP", "1450 ms attack cooldown", "360 range"],
@@ -44,6 +45,7 @@ export const STAGE_ONE_PLANTS = Object.freeze([
     coinPrice: 0,
     status: "active",
     implemented: true,
+    stageOneAvailable: true,
     purchasable: false,
     image: null,
     stats: ["85 HP", "+15 energy", "12 sec production"],
@@ -118,7 +120,8 @@ export const STAGE_ONE_PLANTS = Object.freeze([
     roleAr: "حاجز مدرّع للمسار",
     description: "Playtest prototype: absorbs monster bites and holds its lane with high durability.",
     descriptionAr: "نسخة تجريبية: يمتص عضّات الوحوش ويمنعها من التقدم بفضل تحمّله العالي.",
-    energyCost: 75, coinPrice: 0, status: "active", implemented: true, purchasable: false, image: null,
+    energyCost: 75, coinPrice: 0, status: "active", implemented: true,
+    stageOneAvailable: false, purchasable: false, image: null,
     stats: ["520 HP", "Blocks monsters", "No ranged attack"], statsAr: ["٥٢٠ صحة", "يوقف الوحوش", "لا يهاجم عن بُعد"]
   },
   {
@@ -155,7 +158,8 @@ export const STAGE_ONE_PLANTS = Object.freeze([
     roleAr: "مهاجم بمقذوفات ضمن المسار",
     description: "Prototype: plays its nine-frame throw animation and launches a miniature pineapple bomb down its own lane.",
     descriptionAr: "نسخة تجريبية: تشغّل أنيميشن القذف ذي الإطارات التسعة وتطلق قذيفة أناناس صغيرة ضمن مسارها فقط.",
-    energyCost: 70, coinPrice: 0, status: "active", implemented: true, purchasable: false, image: null,
+    energyCost: 70, coinPrice: 0, status: "active", implemented: true,
+    stageOneAvailable: false, purchasable: false, image: null,
     stats: ["140 HP", "42 damage", "2100 ms cooldown"], statsAr: ["١٤٠ صحة", "ضرر ٤٢", "فاصل هجوم ٢١٠٠ مللي ثانية"]
   },
 
@@ -168,7 +172,8 @@ export const STAGE_ONE_PLANTS = Object.freeze([
     roleAr: "مهاجم بقذائف منحنية",
     description: "Launches its own miniature mango bomb in a curved path that drops onto a monster in its lane.",
     descriptionAr: "يطلق قذيفة مانجو صغيرة بمسار منحنٍ وتهوي فوق الوحش الموجود في مساره.",
-    energyCost: 70, coinPrice: 0, status: "active", implemented: true, purchasable: false, image: null,
+    energyCost: 70, coinPrice: 0, status: "active", implemented: true,
+    stageOneAvailable: false, purchasable: false, image: null,
     stats: ["130 HP", "40 damage", "2100 ms cooldown"], statsAr: ["١٣٠ صحة", "ضرر ٤٠", "فاصل هجوم ٢١٠٠ مللي ثانية"]
   }
 ]);
