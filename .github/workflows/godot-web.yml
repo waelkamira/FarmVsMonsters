@@ -1,0 +1,55 @@
+name: Godot Web build and deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "godot/**"
+      - ".github/workflows/godot-web.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: godot-web-pages
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install Godot 4.4.1 and Web export templates
+        uses: chickensoft-games/setup-godot@v1
+        with:
+          version: 4.4.1
+          use-dotnet: false
+          include-templates: true
+
+      - name: Import project resources
+        run: godot --headless --editor --path godot --quit
+
+      - name: Export browser build
+        run: |
+          mkdir -p build
+          godot --headless --path godot --export-release "Web" build/index.html
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload browser build
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: build
+
+      - name: Deploy browser build
+        id: deployment
+        uses: actions/deploy-pages@v4
