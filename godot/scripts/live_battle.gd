@@ -1001,6 +1001,8 @@ func _update_farmer_visual_depth() -> void:
 
 
 func _update_spawning(delta_ms: float) -> void:
+	if snow_thrower_test_mode:
+		return
 	if spawned_this_wave >= Rules.WAVE_SIZES[wave - 1]:
 		return
 	if intermission_ms > 0.0:
@@ -1386,6 +1388,8 @@ func _update_projectiles(delta: float) -> void:
 	plants = plants.filter(func(item: Dictionary) -> bool: return item.alive)
 
 func _update_wave_progress() -> void:
+	if snow_thrower_test_mode:
+		return
 	if spawned_this_wave < Rules.WAVE_SIZES[wave - 1] or not monsters.is_empty():
 		return
 	if wave >= Rules.WAVE_SIZES.size():
