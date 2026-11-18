@@ -3312,6 +3312,7 @@ export default class BattleScene extends Scene {
     monster.freezeRemainingMs = Math.max(monster.freezeRemainingMs || 0, durationMs);
     monster.braced = false;
     monster.isEating = false;
+    if (monster.view?.active) this.tweens.killTweensOf(monster.view);
     if (monster.braceCue?.active) monster.braceCue.setVisible(false);
     const sprite = monster.hyenaSprite;
     if (sprite?.active && this.textures.exists("frozen-hyena-level-1")) {
@@ -3338,6 +3339,13 @@ export default class BattleScene extends Scene {
       sprite.setScale(0.918);
       sprite.setOrigin(0.5, 1);
       this.playHyenaAnimation(monster, monster.frozenAnimationKey || (monster.kind === "dust-skitter" ? "hyena-run" : "hyena-walk"), true);
+    }
+    if (monster.kind !== "dust-skitter" && monster.view?.active) {
+      this.tweens.add({
+        targets: monster.view, angle: { from: -2.5, to: 2.5 },
+        duration: monster.combatProfile.wobbleDurationMs, ease: "Sine.easeInOut",
+        yoyo: true, repeat: -1
+      });
     }
     monster.frozenAnimationKey = null;
     monster.frozenSpriteSize = null;
