@@ -119,7 +119,8 @@ func _setup_snow_thrower_test() -> void:
 	selected_plant = "snow-thrower"
 	_spawn_monster(2, "cave-brute")
 	spawned_this_wave = Rules.WAVE_SIZES[0]
-	_commit_plant(0, 2, "snow-thrower", farmer_sprite.position, signf(farmer_sprite.scale.x))
+	# Column 2 keeps the monster inside the Snow Thrower's 360-unit firing range.
+	_commit_plant(2, 2, "snow-thrower", farmer_sprite.position, signf(farmer_sprite.scale.x))
 	status_label.text = "SNOW TEST: watch the Snow Thrower freeze the Hyena for 2.6 seconds."
 	_refresh_hud()
 
