@@ -354,6 +354,7 @@ test("verified cloud restore never downgrades newer local campaign progress", as
     getItem: (key) => values.has(key) ? values.get(key) : null,
     setItem: (key, value) => values.set(key, value)
   };
+  saveCoins(storage, 73);
   const previousWindow = globalThis.window;
   const previousFetch = globalThis.fetch;
   globalThis.window = { localStorage: storage };
@@ -373,6 +374,7 @@ test("verified cloud restore never downgrades newer local campaign progress", as
     const restored = await restoreOrInitializeCloudProgress();
     assert.equal(restored.progress.unlockedStage, 4);
     assert.deepEqual(restored.progress.completedStages, [1, 2, 3]);
+    assert.equal(restored.progress.coins, 73, "unverified cloud coins must not replace the local wallet");
     assert.equal(loadUnlockedStage(storage), 4);
     assert.deepEqual(JSON.parse(values.get(CAMPAIGN_PROGRESS_KEY)).completedStages, [1, 2, 3]);
   } finally {
