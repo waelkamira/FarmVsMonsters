@@ -28,6 +28,7 @@ import {
   resolvePlantUproot,
   applyHitPointsDamage,
   resolveMonsterLaneStep,
+  resolveMonsterFreezeStep,
   resolveProjectileLaneStep,
   selectLaneBlocker,
   selectProjectileTarget,
@@ -3046,7 +3047,7 @@ export default class BattleScene extends Scene {
       maxHp: hp,
       tierTint,
       hitFlashGraphic: g, hitFlashTimer: null, hyenaSprite, hitAnimUntil: 0,
-      attackCooldown: 0, freezeRemainingMs: 0, frozenAnimationKey: null, alive: true, view,
+      attackCooldown: 0, freezeRemainingMs: 0, frozenAnimationKey: null, alive: true, view, dustTimer: 0,
       replayMoveElapsedMs: 0, replayMoveStartLocalX: SPAWN_LOCAL_X, replayLastMovementTick: Math.floor(this.combatClockMs), replayLastBlockerCol: null,
       knockedPlants: new Set(),
       voiceCooldown: PhaserMath.Between(4200, 8500)
@@ -3090,8 +3091,9 @@ export default class BattleScene extends Scene {
     for (const monster of this.monsters) {
       if (!monster.alive) continue;
       if (monster.freezeRemainingMs > 0) {
-        monster.freezeRemainingMs = Math.max(0, monster.freezeRemainingMs - delta);
-        if (monster.freezeRemainingMs > 0) continue;
+        const freezeStep = resolveMonsterFreezeStep(monster.freezeRemainingMs, delta);
+        monster.freezeRemainingMs = freezeStep.remainingMs;
+        if (freezeStep.isFrozen) continue;
         this.restoreMonsterAfterFreeze(monster);
       }
       monster.attackCooldown = advanceCooldown(monster.attackCooldown, delta);
