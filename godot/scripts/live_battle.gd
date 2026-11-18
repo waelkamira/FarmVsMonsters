@@ -21,6 +21,7 @@ var projectiles: Array[Dictionary] = []
 var wave := 1
 var spawned_this_wave := 0
 var defeated_total := 0
+var coins := 0
 var spawn_timer_ms := float(Rules.FIRST_MONSTER_SPAWN_DELAY_MS)
 var intermission_ms := 0.0
 var game_state := "running"
@@ -192,8 +193,8 @@ func _update_monsters(delta: float, delta_ms: float) -> void:
 		if not monster.alive:
 			continue
 		var blocker: Dictionary = _find_blocker(monster)
-		if not blocker.is_empty() and float(monster.x) >= float(blocker.x) - 38.0:
-			monster.x = maxf(float(monster.x), float(blocker.x) - 38.0)
+		if not blocker.is_empty() and float(monster.x) <= float(blocker.x) + 38.0:
+			monster.x = minf(float(monster.x), float(blocker.x) + 38.0)
 			monster.attack_cooldown_ms = float(monster.attack_cooldown_ms) - delta_ms
 			if monster.attack_cooldown_ms <= 0.0:
 				blocker.hp = Rules.apply_hit_points_damage(float(blocker.hp), float(monster.plant_damage)).hp
@@ -235,8 +236,8 @@ func _update_projectiles(delta: float) -> void:
 				if monster.hp <= 0.0:
 					monster.alive = false
 					defeated_total += 1
-					energy = int(Rules.resolve_energy_pickup(float(energy), 8.0).energy)
-					status_label.text = "%s defeated! +8 battle reward." % str(monster.kind).replace("-", " ").capitalize()
+					coins += Rules.ORDINARY_MONSTER_DEFEAT_COINS
+					status_label.text = "%s defeated! +%d coins." % [str(monster.kind).replace("-", " ").capitalize(), Rules.ORDINARY_MONSTER_DEFEAT_COINS]
 				break
 			if float(monster.x) > float(projectile.x) + hit_radius:
 				continue
@@ -261,7 +262,7 @@ func _update_wave_progress() -> void:
 
 func _refresh_hud() -> void:
 	if is_instance_valid(energy_label):
-		energy_label.text = "Energy: %d / %d" % [energy, Rules.MAX_ENERGY]
+		energy_label.text = "Energy: %d / %d   Coins: %d" % [energy, Rules.MAX_ENERGY, coins]
 	if is_instance_valid(wave_label):
 		wave_label.text = "Wave: %d / %d   Defeated: %d / 30" % [wave, Rules.WAVE_SIZES.size(), defeated_total]
 
