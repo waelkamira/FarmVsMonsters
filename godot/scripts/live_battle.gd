@@ -54,6 +54,7 @@ var attack_button: Button
 var has_planted_defender := false
 var farmer_is_moving := false
 var farmer_locomotion_animation := "idle"
+var farmer_action_animation := ""
 var farmer_touch_directions := {"left": false, "right": false, "up": false, "down": false}
 var sprite_frames_cache: Dictionary = {}
 var monster_sprite_frames: SpriteFrames
@@ -350,7 +351,8 @@ func _make_sheet_sprite(texture_path: String, columns: int, rows: int, fps: floa
 	return sprite
 
 func _append_sheet_animation(frames: SpriteFrames, animation_name: String,
-		texture_path: String, columns: int, rows: int, fps: float, loop_animation: bool) -> bool:
+		texture_path: String, columns: int, rows: int, fps: float, loop_animation: bool,
+		explicit_frame_size: Vector2 = Vector2.ZERO) -> bool:
 	var texture := load(texture_path) as Texture2D
 	if texture == null:
 		push_warning("Missing animation texture: %s" % texture_path)
@@ -358,7 +360,7 @@ func _append_sheet_animation(frames: SpriteFrames, animation_name: String,
 	frames.add_animation(animation_name)
 	frames.set_animation_speed(animation_name, fps)
 	frames.set_animation_loop(animation_name, loop_animation)
-	var cell_size := texture.get_size() / Vector2(float(columns), float(rows))
+	var cell_size: Vector2 = explicit_frame_size if explicit_frame_size.x > 0.0 and explicit_frame_size.y > 0.0 else texture.get_size() / Vector2(float(columns), float(rows))
 	for index in range(columns * rows):
 		var atlas := AtlasTexture.new()
 		atlas.atlas = texture
@@ -400,6 +402,12 @@ func _create_farmer_sprite() -> void:
 	_append_sheet_animation(frames, "walk", "res://assets/characters/farmer/farmer-walk.png", 8, 1, 6.0, true)
 	_append_sheet_animation(frames, "run", "res://assets/characters/farmer/farmer-run.png", 6, 1, 8.0, true)
 	_append_sheet_animation(frames, "attack", "res://assets/characters/farmer/farmer-attack.png", 6, 1, 8.0, false)
+	_append_sheet_animation(frames, "plant", "res://assets/characters/farmer/farmer-plant.png", 6, 1, 8.0, false, Vector2(360.0, 430.0))
+	_append_sheet_animation(frames, "uproot", "res://assets/characters/farmer/farmer-uproot.png", 6, 1, 8.0, false, Vector2(360.0, 430.0))
+	_append_sheet_animation(frames, "collect", "res://assets/characters/farmer/farmer-collect.png", 6, 1, 8.0, false, Vector2(180.0, 360.0))
+	_append_sheet_animation(frames, "jump", "res://assets/characters/farmer/farmer-jump.png", 5, 1, 6.0, false, Vector2(216.0, 720.0))
+	_append_sheet_animation(frames, "hit", "res://assets/characters/farmer/farmer-hit.png", 6, 1, 8.0, false, Vector2(152.0, 430.0))
+	_append_sheet_animation(frames, "death", "res://assets/characters/farmer/farmer-death.png", 6, 1, 6.0, false, Vector2(152.0, 430.0))
 	farmer_sprite = AnimatedSprite2D.new()
 	farmer_sprite.sprite_frames = frames
 	farmer_sprite.animation = "idle"
@@ -459,8 +467,18 @@ func _set_farmer_touch_direction(direction: String, pressed: bool) -> void:
 func _on_farmer_animation_finished() -> void:
 	if farmer_sprite == null or not is_instance_valid(farmer_sprite):
 		return
-	if farmer_sprite.animation == "attack":
+	if not farmer_action_animation.is_empty() and farmer_sprite.animation == farmer_action_animation:
+		farmer_action_animation = ""
 		farmer_sprite.play(farmer_locomotion_animation)
+
+func _play_farmer_action(animation_name: String) -> void:
+	if farmer_sprite == null or not is_instance_valid(farmer_sprite):
+		return
+	if not farmer_sprite.sprite_frames.has_animation(animation_name):
+		push_warning("Missing Farmer action animation: %s" % animation_name)
+		return
+	farmer_action_animation = animation_name
+	farmer_sprite.play(animation_name)
 
 func _update_farmer(delta: float) -> void:
 	if farmer_sprite == null or not is_instance_valid(farmer_sprite):
@@ -516,7 +534,7 @@ func _update_farmer(delta: float) -> void:
 	var visual_scale := 0.25 * _depth_scale(4, farmer_row)
 	farmer_sprite.scale = Vector2(absf(visual_scale) * facing, visual_scale)
 	farmer_sprite.z_index = int(farmer_sprite.position.y)
-	if farmer_sprite.animation != "attack" and farmer_sprite.animation != farmer_locomotion_animation:
+	if farmer_action_animation.is_empty() and farmer_sprite.animation != farmer_locomotion_animation:
 		farmer_sprite.play(farmer_locomotion_animation)
 
 func _farmer_can_attack() -> bool:
@@ -535,8 +553,7 @@ func _farmer_attack() -> void:
 	if not _farmer_can_attack():
 		status_label.text = "The club is an emergency defense. It unlocks after all planted Radishes are lost."
 		return
-	if farmer_sprite != null and is_instance_valid(farmer_sprite):
-		farmer_sprite.play("attack")
+	_play_farmer_action("attack")
 	var nearest_row := _nearest_row_at_screen_position(farmer_sprite.position)
 	var target: Variant = Rules.select_farmer_melee_target(
 		monsters, nearest_row, farmer_sprite.position.x, FARMER_CLUB_REACH * SCREEN_SCALE)
@@ -651,6 +668,7 @@ func _place_plant(column: int, row: int) -> void:
 		add_child(plant_sprite)
 	plant["sprite"] = plant_sprite
 	plants.append(plant)
+	_play_farmer_action("plant")
 	has_planted_defender = true
 	energy = int(placement.energy)
 	_play_sfx("plant-dig")
