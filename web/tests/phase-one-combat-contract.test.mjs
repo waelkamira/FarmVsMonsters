@@ -16,6 +16,10 @@ import {
   getMonsterCombatStats,
   getStonehideIncomingDamageMultiplier
 } from "../game/rules/phaseOneCombatContract.mjs";
+import {
+  canBeginPrincessRescue,
+  isPhaseOneVictory
+} from "../game/rules/phaseOneRules.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const scene = readFileSync(resolve(here, "../game/scenes/BattleScene.js"), "utf8");
@@ -105,4 +109,34 @@ test("Phaser uses the shared contract and has no duplicate monster balance table
   assert.doesNotMatch(scene, /const COMBAT_BALANCE\s*=/);
   assert.match(rules, /PHASE_ONE_REWARDS\.ordinaryMonsterDefeatCoins/);
   assert.match(rules, /PHASE_ONE_WAVE_SIZES/);
+});
+
+
+test("princess rescue waits for both the final ordinary monster and the dragon", () => {
+  const ready = {
+    storyState: "dragon",
+    wave: 5,
+    totalWaves: 5,
+    spawnedCount: 9,
+    waveSize: 9,
+    livingMonsterCount: 0,
+    dragonAlive: false
+  };
+  assert.equal(canBeginPrincessRescue(ready), true);
+
+  // Dragon falls first: remaining ordinary monsters must still be cleared.
+  assert.equal(canBeginPrincessRescue({ ...ready, livingMonsterCount: 1 }), false);
+  // Ordinary monsters fall first: the living boss still blocks the rescue.
+  assert.equal(canBeginPrincessRescue({ ...ready, dragonAlive: true }), false);
+  // A not-yet-spawned final-wave monster blocks the rescue too.
+  assert.equal(canBeginPrincessRescue({ ...ready, spawnedCount: 8 }), false);
+  assert.equal(canBeginPrincessRescue({ ...ready, storyState: "battle" }), false);
+  assert.equal(canBeginPrincessRescue({ ...ready, wave: 4 }), false);
+  assert.equal(canBeginPrincessRescue({ ...ready, dragonAlive: undefined }), false);
+});
+
+test("final wave completion alone is not the campaign victory when a dragon is present", () => {
+  assert.equal(isPhaseOneVictory(5, 5, 9, 9, 0), true);
+  assert.equal(isPhaseOneVictory(4, 5, 7, 7, 0), false);
+  assert.match(scene, /canBeginPrincessRescue\(/);
 });
