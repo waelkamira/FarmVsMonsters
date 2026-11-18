@@ -715,6 +715,8 @@ func _gui_input(event: InputEvent) -> void:
 	accept_event()
 
 func _request_plant(column: int, row: int) -> void:
+	if farmer_sprite == null or not is_instance_valid(farmer_sprite):
+		return
 	if not farmer_planting_target.is_empty() or not farmer_return_target.is_empty() or not farmer_action_animation.is_empty():
 		status_label.text = "The Farmer must finish the current action before planting again."
 		return
