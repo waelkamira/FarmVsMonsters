@@ -711,13 +711,13 @@ export default class BattleScene extends Scene {
     let icon;
     if (imageKey && this.textures.exists(imageKey)) {
       const usesGridSheet = imageKey === "mango-level-1" || imageKey === "radish-level-1" || imageKey === "snow-thrower-level-1";
-      const frameData = this.textures.getFrame(imageKey, usesGridSheet ? 0 : undefined);
+      const frameData = this.textures.getFrame(imageKey, usesGridSheet ? "0" : undefined);
       // Use nearly the full packet face for the plant artwork while keeping
       // a dedicated strip below for the energy cost.
       const iconHeight = 58;
       const iconWidth = iconHeight * (frameData.realWidth / frameData.realHeight);
       icon = usesGridSheet
-        ? this.add.sprite(0, -11, imageKey, 0).setDisplaySize(Math.min(iconWidth, 64), iconHeight)
+        ? this.add.sprite(0, -11, imageKey, "0").setDisplaySize(Math.min(iconWidth, 64), iconHeight)
         : this.add.image(0, -11, imageKey).setDisplaySize(Math.min(iconWidth, 64), iconHeight);
     } else {
       icon = this.add.graphics();
@@ -2348,10 +2348,11 @@ export default class BattleScene extends Scene {
       // Pineapple Level 1 keeps its tuned base size; only its row perspective changes.
       const baseHeight = type === "pumpkin" ? 70 : type === "pineapple" ? 132 : type === "hazelnut" ? 112 : type === "mango" ? 112 : type === "snow-thrower" ? 120 : 64;
       const height = baseHeight * pineapplePerspectiveScale;
-      const width = height * (this.textures.getFrame(texture).realWidth / this.textures.getFrame(texture).realHeight);
+      const plantFrame = this.textures.getFrame(texture, ["pineapple", "hazelnut", "mango", "snow-thrower"].includes(type) ? "0" : undefined);
+      const width = height * (plantFrame.realWidth / plantFrame.realHeight);
       const maxWidth = (type === "pineapple" ? 152 : type === "hazelnut" ? 116 : type === "mango" ? 116 : type === "snow-thrower" ? 120 : 76) * pineapplePerspectiveScale;
       if (["pineapple", "hazelnut", "mango", "snow-thrower"].includes(type)) {
-        const animatedPlant = this.add.sprite(0, -height / 2 + 2, texture, 0).setDisplaySize(Math.min(width, maxWidth), height);
+        const animatedPlant = this.add.sprite(0, -height / 2 + 2, texture, "0").setDisplaySize(Math.min(width, maxWidth), height);
         const animationDataKey = type === "pineapple" ? "pineappleThrowSprite"
           : type === "hazelnut" ? "hazelnutThrowSprite"
           : type === "mango" ? "mangoThrowSprite" : "snow-throwerThrowSprite";
@@ -3376,7 +3377,8 @@ export default class BattleScene extends Scene {
       // Use the upgraded frozen-hyena artwork in later waves. Both atlases
       // are registered as nine dimension-derived frames before the battle starts.
       // Frame zero is the authored frozen pose; never display the full atlas.
-      sprite.setTexture(frozenTexture, 0);
+      sprite.setTexture(frozenTexture);
+      sprite.setFrame("0");
       sprite.setOrigin(0.5, 1);
       if (monster.frozenSpriteSize?.width > 0 && monster.frozenSpriteSize?.height > 0) {
         sprite.setDisplaySize(monster.frozenSpriteSize.width, monster.frozenSpriteSize.height);
