@@ -45,3 +45,8 @@
 - [ ] Reconcile old roadmap requirements with the current Android-first release scope.
 - [x] Add the initial Godot 4 project foundation using Compatibility rendering and landscape canvas. Exact stable patch and Android export toolchain remain unpinned until an editor/export validation environment is available.
 - [ ] Agree a minimum Android OS/device profile using physical-device testing, not assumptions.
+
+
+## Combat contract parity correction
+
+During the GDScript port, the tracked JavaScript combat contract declared Radish planting cost as 25 energy while existing regression tests expected 35. The canonical value is corrected to **35** on this branch, matching the established regression expectations. Run the full JavaScript suite when a Node environment is available.
