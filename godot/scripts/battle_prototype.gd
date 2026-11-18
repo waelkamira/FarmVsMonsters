@@ -48,7 +48,7 @@ func _build_screen() -> void:
 	toolbar.add_child(energy_label)
 
 	var radish_button := Button.new()
-	radish_button.text = "Select Radish (25)"
+	radish_button.text = "Select Radish (35)"
 	radish_button.pressed.connect(_select_plant.bind("radish"))
 	toolbar.add_child(radish_button)
 
