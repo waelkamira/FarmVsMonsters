@@ -1,4 +1,4 @@
-name: Godot Web build and deploy
+name: Godot Web local test build
 
 on:
   push:
@@ -10,19 +10,14 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
-  group: godot-web-pages
+  group: godot-web-local-build
   cancel-in-progress: true
 
 jobs:
-  build-and-deploy:
+  build-local-browser:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -41,15 +36,18 @@ jobs:
         run: |
           mkdir -p build
           godot --headless --path godot --export-release "Web" build/index.html
+          test -s build/index.html
 
-      - name: Configure GitHub Pages
-        uses: actions/configure-pages@v5
+      - name: Package local browser build
+        run: |
+          cp godot/WEB_BUILD.md build/README-WEB-LOCAL.txt
+          cd build
+          zip -r ../farm-vs-monsters-web-local.zip .
 
-      - name: Upload browser build
-        uses: actions/upload-pages-artifact@v3
+      - name: Upload downloadable browser build
+        uses: actions/upload-artifact@v4
         with:
-          path: build
-
-      - name: Deploy browser build
-        id: deployment
-        uses: actions/deploy-pages@v4
+          name: farm-vs-monsters-web-local
+          path: farm-vs-monsters-web-local.zip
+          if-no-files-found: error
+          retention-days: 14
