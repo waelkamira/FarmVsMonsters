@@ -47,15 +47,20 @@ func _build_screen() -> void:
 	energy_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	toolbar.add_child(energy_label)
 
-	var radish_button := Button.new()
-	radish_button.text = "Select Radish (35)"
-	radish_button.pressed.connect(_select_plant.bind("radish"))
-	toolbar.add_child(radish_button)
-
-	var mushroom_button := Button.new()
-	mushroom_button.text = "Select Mushroom (50)"
-	mushroom_button.pressed.connect(_select_plant.bind("energy_mushroom"))
-	toolbar.add_child(mushroom_button)
+	var plant_options: Array[Dictionary] = [
+		{"id": "radish", "label": "Radish"},
+		{"id": "mushroom", "label": "Mushroom"},
+		{"id": "pumpkin", "label": "Pumpkin"},
+		{"id": "pineapple", "label": "Pineapple"},
+		{"id": "hazelnut", "label": "Hazelnut"},
+		{"id": "mango", "label": "Mango"}
+	]
+	for option: Dictionary in plant_options:
+		var plant_button := Button.new()
+		plant_button.text = "%s (%d)" % [option.label, Rules.plant_cost(option.id)]
+		plant_button.custom_minimum_size = Vector2(108, 48)
+		plant_button.pressed.connect(_select_plant.bind(option.id))
+		toolbar.add_child(plant_button)
 
 	var menu_button := Button.new()
 	menu_button.text = "Main Menu"
@@ -98,25 +103,31 @@ func _select_plant(plant_id: String) -> void:
 	feedback_label.text = "Selected: %s" % plant_id.replace("_", " ").capitalize()
 
 func _place_selected_plant(cell_index: int) -> void:
-	if occupied_cells.has(cell_index):
-		feedback_label.text = "That cell is already occupied."
+	var column: int = cell_index % Rules.BOARD_COLUMNS
+	var row: int = floori(float(cell_index) / float(Rules.BOARD_COLUMNS))
+	var current_plants: Array = []
+	for key in occupied_cells.keys():
+		var occupied_index: int = int(key)
+		current_plants.append({
+			"col": occupied_index % Rules.BOARD_COLUMNS,
+			"row": floori(float(occupied_index) / float(Rules.BOARD_COLUMNS)),
+			"alive": true
+		})
+
+	var placement: Dictionary = Rules.resolve_plant_placement(
+		float(energy), current_plants, selected_plant, column, row
+	)
+	if not placement.get("ok", false):
+		feedback_label.text = "Cannot plant: %s" % str(placement.get("reason", "unknown")).replace("_", " ").to_lower()
 		return
 
-	var cost: int = Rules.plant_cost(selected_plant)
-	if cost < 0:
-		feedback_label.text = "Unknown plant selection."
-		return
-	if energy < cost:
-		feedback_label.text = "Not enough energy."
-		return
-
-	energy = Rules.apply_energy_delta(energy, -cost)
+	energy = int(placement.energy)
 	occupied_cells[cell_index] = selected_plant
 	var cell: Button = board.get_child(cell_index) as Button
 	cell.text = selected_plant.replace("_", " ").capitalize()
 	cell.disabled = true
 	_update_hud()
-	feedback_label.text = "Placed %s in cell %d." % [selected_plant, cell_index + 1]
+	feedback_label.text = "Placed %s in row %d, column %d." % [selected_plant, row + 1, column + 1]
 
 func _update_hud() -> void:
 	if is_instance_valid(energy_label):
