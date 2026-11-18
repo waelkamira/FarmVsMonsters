@@ -337,7 +337,7 @@ func _plant_frame_width(plant_type: String) -> float:
 		"pineapple": return 418.0
 		"hazelnut": return 341.0
 		"mango": return 360.0
-		"snow-thrower": return 1080.0
+		"snow-thrower": return 360.0
 	return 300.0
 
 func _plant_half_width(plant: Dictionary) -> float:
