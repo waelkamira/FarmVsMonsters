@@ -6,10 +6,10 @@ All imported files are byte-for-byte copies of existing tracked assets. Their or
 |---|---|---|---|
 | `assets/characters/farmer/farmer-idle.png` | `characters/farmer/farmer-idle.png` | Farmer idle | 2×2, 4 frames; measured 1080×720 |
 | `assets/characters/monsters/hyena/hyena-idle.png` | `characters/monsters/hyena/hyena-idle.png` | Shared Stage 1 monster base | 3×1, 3 frames; measured 1080×298 |
-| `assets/monsters/hyena/hyena-walk.png` | `characters/monsters/hyena/hyena-walk.png` | Standard monster movement | 3×2, 6 frames; measured 1080×894 |
-| `assets/monsters/hyena/hyena-run.png` | `characters/monsters/hyena/hyena-run.png` | Dust Skitter movement | 3×2, 6 frames; measured 1080×889 |
+| `assets/monsters/hyena/hyena-walk.png` | `characters/monsters/hyena/hyena-walk.png` | Standard monster movement | 3×3, 9 frames; measured 1080×894 |
+| `assets/monsters/hyena/hyena-run.png` | `characters/monsters/hyena/hyena-run.png` | Dust Skitter movement | 3×3, 9 frames; measured 1080×889 |
 | `assets/monsters/hyena/hyena-bite.png` | `characters/monsters/hyena/hyena-bite.png` | Plant-biting attack | 3×2, 6 frames; measured 1080×894 |
-| `assets/monsters/hyena/hyena-hit.png` | `characters/monsters/hyena/hyena-hit.png` | Damage reaction | 3×2 assumed; measured 1080×894 |
+| `assets/monsters/hyena/hyena-hit.png` | `characters/monsters/hyena/hyena-hit.png` | Damage reaction | 3×1, 3 frames; measured 1080×894 |
 | `assets/monsters/hyena/hyena-death.png` | `characters/monsters/hyena/hyena-death.png` | Defeat animation | 3×2 assumed; measured 1080×894 |
 | `assets/plants/radish-level-1.png` | `plants/radish-level-1.png` | Radish idle/attack | 3×3, 9 frames; measured 908×1079 |
 | `assets/plants/mushroom.png` | `plants/mushroom.png` | Energy Mushroom | Static image; measured 353×400 |
