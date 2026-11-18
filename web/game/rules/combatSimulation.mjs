@@ -362,6 +362,7 @@ export function resolveMonsterArchetype(wave, spawnIndex) {
 
   if (wave >= 4 && (spawnIndex + 1) % 10 === 0) return "alpha-brute";
   if (wave >= 5 && (spawnIndex + 1) % 5 === 0) return "stonehide";
+  if (wave >= 4 && (spawnIndex + 1) % 7 === 3) return "frozen-hyena";
   if (wave >= 3 && spawnIndex % 3 === 1) return "dust-skitter";
   return "cave-brute";
 }
