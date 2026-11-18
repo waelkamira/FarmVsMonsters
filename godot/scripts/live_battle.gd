@@ -1,6 +1,6 @@
 extends Control
-## First playable Stage 1 combat loop. Temporary vector visuals are used until
-## approved character and plant sprite sheets are integrated.
+## First playable Stage 1 combat loop using the approved perspective board,
+## original character sheets and temporary archetype-specific monster tints.
 
 const Rules = preload("res://scripts/phase_one_rules.gd")
 const MENU_SCENE := "res://scenes/main.tscn"
@@ -93,14 +93,18 @@ func _load_grid_calibration() -> void:
 		push_error("Missing approved farm grid calibration JSON.")
 		return
 	var parsed: Variant = JSON.parse_string(file.get_as_text())
-	if parsed == null or not parsed.has("grid"):
+	if typeof(parsed) != TYPE_DICTIONARY:
 		push_error("Invalid farm grid calibration JSON.")
 		return
-	if int(parsed.grid.columns) != Rules.BOARD_COLUMNS or int(parsed.grid.rows) != Rules.BOARD_ROWS:
+	var grid_data: Dictionary = parsed.get("grid", {})
+	if grid_data.is_empty():
+		push_error("Farm grid calibration is missing its grid section.")
+		return
+	if int(grid_data.get("columns", 0)) != Rules.BOARD_COLUMNS or int(grid_data.get("rows", 0)) != Rules.BOARD_ROWS:
 		push_error("Farm grid calibration dimensions do not match the combat board.")
 		return
 	grid_nodes.clear()
-	for source_row in parsed.grid.controlPoints:
+	for source_row in grid_data.get("controlPoints", []):
 		if source_row.size() != Rules.BOARD_COLUMNS + 1:
 			push_error("Each farm grid calibration row must have nine control points.")
 			grid_nodes.clear()
@@ -116,6 +120,8 @@ func _load_grid_calibration() -> void:
 func _build_background() -> void:
 	background_view = TextureRect.new()
 	background_view.texture = load("res://assets/backgrounds/farm-battlefield.jpeg") as Texture2D
+	if background_view.texture == null:
+		push_warning("Battlefield background texture could not be loaded; using the fallback canvas.")
 	background_view.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	background_view.stretch_mode = TextureRect.STRETCH_SCALE
 	background_view.position = Vector2(SCREEN_OFFSET_X, BACKGROUND_TOP * SCREEN_SCALE)
