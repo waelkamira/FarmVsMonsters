@@ -53,6 +53,7 @@ func _process(delta: float) -> void:
 
 func _build_ui() -> void:
 	var margin := MarginContainer.new()
+	margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	margin.add_theme_constant_override("margin_left", 20)
 	margin.add_theme_constant_override("margin_right", 20)
@@ -60,6 +61,7 @@ func _build_ui() -> void:
 	margin.add_theme_constant_override("margin_bottom", 12)
 	add_child(margin)
 	var layout := VBoxContainer.new()
+	layout.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	layout.add_theme_constant_override("separation", 8)
 	margin.add_child(layout)
 	var top := HBoxContainer.new()
