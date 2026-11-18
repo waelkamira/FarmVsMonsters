@@ -27,6 +27,7 @@ import {
   loadUnlockedStage,
   unlockNextStage
 } from "../game/rules/phaseOneRules.mjs";
+import { restoreOrInitializeCloudProgress } from "../game/services/playerAccount.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const scene = readFileSync(resolve(here, "../game/scenes/BattleScene.js"), "utf8");
@@ -341,6 +342,44 @@ test("campaign progression unlocks the next stage only through a valid completio
   assert.equal(unlockNextStage(storage, CAMPAIGN_STAGE_COUNT), true);
   assert.equal(loadUnlockedStage(storage), CAMPAIGN_STAGE_COUNT);
   assert.equal(unlockNextStage(storage, CAMPAIGN_STAGE_COUNT + 1), false);
+});
+
+test("verified cloud restore never downgrades newer local campaign progress", async () => {
+  const values = new Map([[CAMPAIGN_PROGRESS_KEY, JSON.stringify({
+    version: 1,
+    unlockedStage: 4,
+    completedStages: [1, 2, 3]
+  })]]);
+  const storage = {
+    getItem: (key) => values.has(key) ? values.get(key) : null,
+    setItem: (key, value) => values.set(key, value)
+  };
+  const previousWindow = globalThis.window;
+  const previousFetch = globalThis.fetch;
+  globalThis.window = { localStorage: storage };
+  globalThis.fetch = async () => ({
+    ok: true,
+    json: async () => ({
+      progress: {
+        progress_verified: true,
+        unlocked_stage: 2,
+        completed_stages: [1],
+        coins_verified: false
+      }
+    })
+  });
+
+  try {
+    const restored = await restoreOrInitializeCloudProgress();
+    assert.equal(restored.progress.unlockedStage, 4);
+    assert.deepEqual(restored.progress.completedStages, [1, 2, 3]);
+    assert.equal(loadUnlockedStage(storage), 4);
+    assert.deepEqual(JSON.parse(values.get(CAMPAIGN_PROGRESS_KEY)).completedStages, [1, 2, 3]);
+  } finally {
+    if (previousWindow === undefined) delete globalThis.window;
+    else globalThis.window = previousWindow;
+    globalThis.fetch = previousFetch;
+  }
 });
 
 test("campaign progression safely falls back to stage one for corrupt or unavailable storage", () => {
