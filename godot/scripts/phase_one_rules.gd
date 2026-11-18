@@ -19,6 +19,10 @@ const MIN_MONSTER_SPAWN_INTERVAL_MS: int = 2300
 const MONSTER_SPAWN_INTERVAL_BASE_MS: int = 5200
 const MONSTER_SPAWN_INTERVAL_WAVE_REDUCTION_MS: int = 120
 const ORDINARY_MONSTER_DEFEAT_COINS: int = 8
+const FARMER_MAX_HP: int = 180
+const FARMER_DAMAGE_INVULNERABILITY_MS: float = 700.0
+const MONSTER_FREEZE_DURATION_MS: float = 2600.0
+const MONSTER_FREEZE_TINT := Color(0.58, 0.84, 1.0, 1.0)
 
 const PLANTS: Dictionary = {
 	"radish": {
@@ -41,6 +45,11 @@ const PLANTS: Dictionary = {
 	"mango": {
 		"projectile_damage": 40, "projectile_speed": 275.0, "projectile_collision_radius": 24.0,
 		"planting_energy_cost": 70, "hp": 130, "cooldown_ms": 2100.0, "range": 360.0
+	},
+	"snow-thrower": {
+		"freeze_projectile": true, "projectile_speed": 300.0, "projectile_collision_radius": 28.0,
+		"freeze_duration_ms": MONSTER_FREEZE_DURATION_MS,
+		"planting_energy_cost": 90, "hp": 150, "cooldown_ms": 3600.0, "range": 360.0
 	}
 }
 
@@ -169,6 +178,12 @@ static func resolve_energy_pickup(energy: float, requested_amount: float) -> Dic
 	var collected: float = minf(amount, MAX_ENERGY - current)
 	return {"energy": current + collected, "collected": collected}
 
+static func resolve_monster_freeze_step(remaining_ms: float, delta_ms: float) -> Dictionary:
+	if not is_finite(remaining_ms) or remaining_ms < 0.0 or not is_finite(delta_ms) or delta_ms < 0.0:
+		return {}
+	var next_remaining := maxf(0.0, remaining_ms - delta_ms)
+	return {"remaining_ms": next_remaining, "is_frozen": next_remaining > 0.0}
+
 static func apply_hit_points_damage(current_hp: float, damage: float) -> Dictionary:
 	if not is_finite(current_hp) or current_hp < 0.0 or not is_finite(damage) or damage < 0.0:
 		push_error("INVALID_HIT_POINTS_DAMAGE")
@@ -222,6 +237,24 @@ static func select_projectile_target(monsters: Array, row: int, local_x: float, 
 		if is_finite(x) and absf(x - local_x) <= collision_radius * float(monster.get("width_scale", 1.0)):
 			return monster
 	return null
+
+static func select_freeze_target(monsters: Array, row: int, projectile_local_x: float, collision_radius: float) -> Variant:
+	if not is_finite(projectile_local_x) or not is_finite(collision_radius) or collision_radius < 0.0:
+		return null
+	var target: Variant = null
+	var nearest_distance: float = INF
+	for monster in monsters:
+		if not (monster is Dictionary) or not monster.get("alive", false) or int(monster.get("row", -1)) != row:
+			continue
+		var x: float = float(monster.get("local_x", NAN))
+		var width_scale: float = float(monster.get("width_scale", 1.0))
+		if not is_finite(x) or not is_finite(width_scale) or width_scale <= 0.0:
+			continue
+		var distance: float = absf(x - projectile_local_x)
+		if distance <= collision_radius * width_scale and distance < nearest_distance:
+			target = monster
+			nearest_distance = distance
+	return target
 
 static func select_farmer_melee_target(monsters: Array, row: int, farmer_x: float, reach: float) -> Variant:
 	if not is_finite(farmer_x) or not is_finite(reach) or reach < 0.0:

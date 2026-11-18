@@ -11,31 +11,37 @@ const BACKGROUND_HEIGHT := 597.333
 const FARMER_MOVE_SPEED := 115.0
 const FARMER_CLUB_DAMAGE := 42.0
 const FARMER_CLUB_REACH := 112.0
-const PLANT_OPTIONS := ["radish", "mushroom", "pumpkin", "pineapple", "hazelnut", "mango"]
+const PLANT_OPTIONS := ["radish", "mushroom", "pumpkin", "pineapple", "hazelnut", "mango", "snow-thrower"]
 const PLANT_TEXTURES := {
 	"radish": "res://assets/plants/radish-level-1.png",
 	"mushroom": "res://assets/plants/mushroom.png",
 	"pumpkin": "res://assets/plants/pumpkin.png",
 	"pineapple": "res://assets/plants/pineapple-level-1.png",
 	"hazelnut": "res://assets/plants/hazelnut-level-1.png",
-	"mango": "res://assets/plants/mango-level-1.png"
+	"mango": "res://assets/plants/mango-level-1.png",
+	"snow-thrower": "res://assets/plants/snow-thrower-level-1.png"
 }
 const PLANT_PROJECTILES := {
 	"radish": "res://assets/projectiles/radish-bomb.png",
 	"pineapple": "res://assets/projectiles/pineapple-bomb.png",
 	"hazelnut": "res://assets/projectiles/hazelnut-bomb.png",
-	"mango": "res://assets/projectiles/mango-bomb.png"
+	"mango": "res://assets/projectiles/mango-bomb.png",
+	"snow-thrower": "res://assets/projectiles/snow-thrower-bomb-level-1.png"
 }
 const ANIMATED_PLANT_GRIDS := {
 	"radish": Vector2i(3, 3), "pineapple": Vector2i(3, 3),
-	"hazelnut": Vector2i(3, 3), "mango": Vector2i(3, 3)
+	"hazelnut": Vector2i(3, 3), "mango": Vector2i(3, 3),
+	"snow-thrower": Vector2i(3, 3)
 }
 
 var energy: int = Rules.INITIAL_ENERGY
+var farmer_hp: int = Rules.FARMER_MAX_HP
+var farmer_invulnerability_ms := 0.0
 var selected_plant := "radish"
 var plants: Array[Dictionary] = []
 var monsters: Array[Dictionary] = []
 var projectiles: Array[Dictionary] = []
+var energy_pickups: Array[Dictionary] = []
 var wave := 1
 var spawned_this_wave := 0
 var defeated_total := 0
@@ -45,12 +51,17 @@ var intermission_ms := 0.0
 var game_state := "running"
 var status_label: Label
 var energy_label: Label
+var farmer_hp_label: Label
 var wave_label: Label
+var plant_buttons: Dictionary = {}
 var rng := RandomNumberGenerator.new()
 var grid_nodes: Array = []
 var background_view: TextureRect
 var farmer_sprite: AnimatedSprite2D
 var attack_button: Button
+var jump_button: Button
+var uproot_button: Button
+var uproot_mode := false
 var has_planted_defender := false
 var farmer_is_moving := false
 var farmer_locomotion_animation := "idle"
@@ -82,8 +93,10 @@ func _process(delta: float) -> void:
 	if game_state != "running":
 		return
 	var delta_ms := delta * 1000.0
+	farmer_invulnerability_ms = maxf(0.0, farmer_invulnerability_ms - delta_ms)
 	_update_spawning(delta_ms)
 	_update_plants(delta_ms)
+	_update_energy_pickups(delta_ms)
 	_update_monsters(delta, delta_ms)
 	if game_state != "running":
 		_refresh_hud()
@@ -324,6 +337,7 @@ func _plant_frame_width(plant_type: String) -> float:
 		"pineapple": return 418.0
 		"hazelnut": return 341.0
 		"mango": return 360.0
+		"snow-thrower": return 360.0
 	return 300.0
 
 func _plant_half_width(plant: Dictionary) -> float:
@@ -334,45 +348,66 @@ func _build_ui() -> void:
 	var margin := MarginContainer.new()
 	margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	margin.add_theme_constant_override("margin_left", 20)
-	margin.add_theme_constant_override("margin_right", 20)
-	margin.add_theme_constant_override("margin_top", 12)
-	margin.add_theme_constant_override("margin_bottom", 12)
+	margin.add_theme_constant_override("margin_left", 14)
+	margin.add_theme_constant_override("margin_right", 14)
+	margin.add_theme_constant_override("margin_top", 10)
+	margin.add_theme_constant_override("margin_bottom", 10)
 	add_child(margin)
 	var layout := VBoxContainer.new()
 	layout.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	layout.add_theme_constant_override("separation", 8)
+	layout.add_theme_constant_override("separation", 6)
 	margin.add_child(layout)
 	var top := HBoxContainer.new()
-	top.add_theme_constant_override("separation", 12)
+	top.add_theme_constant_override("separation", 10)
 	layout.add_child(top)
 	var title := Label.new()
 	title.text = "FARM VS MONSTERS"
-	title.add_theme_font_size_override("font_size", 22)
+	title.add_theme_font_size_override("font_size", 19)
 	top.add_child(title)
 	energy_label = Label.new()
 	energy_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	energy_label.add_theme_font_size_override("font_size", 17)
 	top.add_child(energy_label)
+	farmer_hp_label = Label.new()
+	farmer_hp_label.add_theme_font_size_override("font_size", 17)
+	top.add_child(farmer_hp_label)
 	wave_label = Label.new()
+	wave_label.add_theme_font_size_override("font_size", 17)
 	top.add_child(wave_label)
-	var choices := HBoxContainer.new()
-	choices.add_theme_constant_override("separation", 7)
+	var choices := GridContainer.new()
+	choices.columns = 4
+	choices.add_theme_constant_override("h_separation", 7)
+	choices.add_theme_constant_override("v_separation", 5)
 	layout.add_child(choices)
+	plant_buttons.clear()
 	for plant_id in PLANT_OPTIONS:
 		var button := Button.new()
-		button.text = "%s  %d" % [plant_id.capitalize(), Rules.plant_cost(plant_id)]
-		button.custom_minimum_size = Vector2(132, 42)
+		button.text = "%s  %d" % [plant_id.replace("-", " ").capitalize(), Rules.plant_cost(plant_id)]
+		button.custom_minimum_size = Vector2(150, 40)
+		button.add_theme_font_size_override("font_size", 16)
+		button.toggle_mode = true
 		button.pressed.connect(_select_plant.bind(plant_id))
+		plant_buttons[plant_id] = button
 		choices.add_child(button)
+	uproot_button = Button.new()
+	uproot_button.text = "UPROOT"
+	uproot_button.toggle_mode = true
+	uproot_button.custom_minimum_size = Vector2(150, 40)
+	uproot_button.add_theme_font_size_override("font_size", 16)
+	uproot_button.toggled.connect(_set_uproot_mode)
+	choices.add_child(uproot_button)
 	var menu := Button.new()
-	menu.text = "Main Menu"
+	menu.text = "MAIN MENU"
+	menu.custom_minimum_size = Vector2(150, 40)
+	menu.add_theme_font_size_override("font_size", 16)
 	menu.pressed.connect(_return_to_menu)
 	choices.add_child(menu)
 	status_label = Label.new()
 	status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	status_label.add_theme_font_size_override("font_size", 15)
 	layout.add_child(status_label)
 	_refresh_hud()
-	status_label.text = "Choose a defender and tap a field cell. Move the Farmer with WASD, arrows or the D-pad; the club unlocks when all Radishes are lost."
+	status_label.text = "Choose a defender and tap a field cell. Use the D-pad, JUMP or CLUB to control the Farmer."
 	_build_farmer_controls()
 
 func _make_sheet_sprite(texture_path: String, columns: int, rows: int, fps: float,
@@ -495,15 +530,15 @@ func _position_farmer_at_start() -> void:
 func _build_farmer_controls() -> void:
 	var control_row := HBoxContainer.new()
 	control_row.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
-	control_row.offset_left = 18.0
-	control_row.offset_right = -18.0
-	control_row.offset_top = -62.0
+	control_row.offset_left = 14.0
+	control_row.offset_right = -14.0
+	control_row.offset_top = -78.0
 	control_row.offset_bottom = -8.0
-	control_row.add_theme_constant_override("separation", 8)
+	control_row.add_theme_constant_override("separation", 10)
 	control_row.z_index = 1000
 	add_child(control_row)
 	var directions := HBoxContainer.new()
-	directions.add_theme_constant_override("separation", 6)
+	directions.add_theme_constant_override("separation", 7)
 	control_row.add_child(directions)
 	var direction_buttons := [
 		["left", "◀"], ["up", "▲"], ["down", "▼"], ["right", "▶"]
@@ -512,25 +547,43 @@ func _build_farmer_controls() -> void:
 		var direction: String = item[0]
 		var button := Button.new()
 		button.text = item[1]
-		button.custom_minimum_size = Vector2(54.0, 48.0)
+		button.custom_minimum_size = Vector2(66.0, 62.0)
+		button.add_theme_font_size_override("font_size", 23)
 		button.button_down.connect(_set_farmer_touch_direction.bind(direction, true))
 		button.button_up.connect(_set_farmer_touch_direction.bind(direction, false))
+		button.focus_exited.connect(_clear_farmer_touch_directions)
 		directions.add_child(button)
 	var spacer := Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	control_row.add_child(spacer)
 	attack_button = Button.new()
 	attack_button.text = "CLUB"
-	attack_button.custom_minimum_size = Vector2(112.0, 48.0)
+	attack_button.custom_minimum_size = Vector2(126.0, 62.0)
+	attack_button.add_theme_font_size_override("font_size", 19)
 	attack_button.visible = false
 	attack_button.pressed.connect(_farmer_attack)
 	control_row.add_child(attack_button)
+	jump_button = Button.new()
+	jump_button.text = "JUMP"
+	jump_button.custom_minimum_size = Vector2(126.0, 62.0)
+	jump_button.add_theme_font_size_override("font_size", 19)
+	jump_button.pressed.connect(_start_farmer_jump)
+	control_row.add_child(jump_button)
+
+func _clear_farmer_touch_directions() -> void:
+	farmer_touch_directions = {"left": false, "right": false, "up": false, "down": false}
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_APPLICATION_FOCUS_OUT or what == NOTIFICATION_WM_WINDOW_FOCUS_OUT:
+		_clear_farmer_touch_directions()
 
 func _set_farmer_touch_direction(direction: String, pressed: bool) -> void:
 	farmer_touch_directions[direction] = pressed
 
 func _on_farmer_animation_finished() -> void:
 	if farmer_sprite == null or not is_instance_valid(farmer_sprite):
+		return
+	if farmer_action_animation == "death":
 		return
 	if not farmer_action_animation.is_empty() and farmer_sprite.animation == farmer_action_animation:
 		farmer_action_animation = ""
@@ -552,7 +605,7 @@ func _update_farmer(delta: float) -> void:
 	if not farmer_planting_target.is_empty():
 		_update_farmer_planting_movement(delta)
 		return
-	if farmer_action_animation == "plant":
+	if not farmer_action_animation.is_empty():
 		_update_farmer_visual_depth()
 		return
 	if not farmer_return_target.is_empty() and farmer_action_animation.is_empty():
@@ -608,6 +661,16 @@ func _update_farmer(delta: float) -> void:
 	if farmer_action_animation.is_empty() and farmer_sprite.animation != farmer_locomotion_animation:
 		farmer_sprite.play(farmer_locomotion_animation)
 
+
+func _start_farmer_jump() -> void:
+	if game_state != "running" or farmer_sprite == null or not is_instance_valid(farmer_sprite):
+		return
+	if not farmer_planting_target.is_empty() or not farmer_return_target.is_empty() or not farmer_action_animation.is_empty():
+		status_label.text = "The Farmer must finish the current action before jumping."
+		return
+	_play_farmer_action("jump")
+	status_label.text = "The Farmer jumps!"
+
 func _farmer_can_attack() -> bool:
 	if not has_planted_defender:
 		return false
@@ -616,10 +679,14 @@ func _farmer_can_attack() -> bool:
 			return false
 	return true
 
+
 func _farmer_attack() -> void:
 	if game_state != "running":
 		return
 	if farmer_sprite == null or not is_instance_valid(farmer_sprite):
+		return
+	if not farmer_planting_target.is_empty() or not farmer_return_target.is_empty() or not farmer_action_animation.is_empty():
+		status_label.text = "The Farmer must finish the current action before attacking."
 		return
 	if not _farmer_can_attack():
 		status_label.text = "The club is an emergency defense. It unlocks after all planted Radishes are lost."
@@ -683,14 +750,77 @@ func _create_projectile_sprite(plant_id: String) -> Sprite2D:
 	return sprite
 
 func _unhandled_key_input(event: InputEvent) -> void:
-	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_SPACE:
+	if not (event is InputEventKey) or not event.pressed or event.echo:
+		return
+	if event.keycode == KEY_SPACE:
 		_farmer_attack()
+	elif event.keycode == KEY_J:
+		_start_farmer_jump()
 
 func _select_plant(plant_id: String) -> void:
 	if game_state != "running":
 		return
 	selected_plant = plant_id
-	status_label.text = "Selected: %s — tap an empty cell." % plant_id.capitalize()
+	uproot_mode = false
+	for key in plant_buttons:
+		var plant_button: Button = plant_buttons[key]
+		plant_button.button_pressed = str(key) == plant_id
+	if is_instance_valid(uproot_button):
+		uproot_button.button_pressed = false
+	status_label.text = "Selected: %s — tap an empty cell." % plant_id.replace("-", " ").capitalize()
+
+func _set_uproot_mode(enabled: bool) -> void:
+	uproot_mode = enabled
+	if enabled:
+		status_label.text = "UPROOT mode: tap one of your planted defenders to recover its energy cost."
+	else:
+		status_label.text = "Planting mode: choose a defender and tap an empty field cell."
+
+func _find_plant_at_screen_position(point: Vector2) -> int:
+	var selected_index := -1
+	var nearest_distance := INF
+	for index in range(plants.size()):
+		var plant: Dictionary = plants[index]
+		if not bool(plant.get("alive", false)):
+			continue
+		var half_width := _plant_half_width(plant)
+		var hit_width := maxf(half_width, 30.0 * SCREEN_SCALE)
+		var hit_height := maxf(42.0 * SCREEN_SCALE, hit_width * 1.35)
+		var offset := point - Vector2(float(plant.x), float(plant.y))
+		if absf(offset.x) > hit_width or absf(offset.y) > hit_height:
+			continue
+		var distance := offset.length_squared()
+		if distance < nearest_distance:
+			nearest_distance = distance
+			selected_index = index
+	return selected_index
+
+func _request_uproot(point: Vector2) -> bool:
+	if not uproot_mode:
+		return false
+	if not farmer_planting_target.is_empty() or not farmer_return_target.is_empty() or not farmer_action_animation.is_empty():
+		status_label.text = "The Farmer must finish the current action before uprooting."
+		return true
+	var plant_index := _find_plant_at_screen_position(point)
+	if plant_index < 0:
+		status_label.text = "Tap directly on one of your planted defenders to uproot it."
+		return true
+	var plant: Dictionary = plants[plant_index]
+	var transaction := Rules.resolve_plant_uproot(float(energy), plant)
+	if not bool(transaction.get("ok", false)):
+		status_label.text = "Cannot uproot: %s" % str(transaction.get("reason", "unknown")).replace("_", " ").to_lower()
+		return true
+	energy = int(transaction.energy)
+	plant.alive = false
+	var plant_sprite: Variant = plant.get("sprite", null)
+	if plant_sprite != null and is_instance_valid(plant_sprite):
+		plant_sprite.queue_free()
+	plants.remove_at(plant_index)
+	_play_farmer_action("uproot")
+	_play_sfx("plant-rustle", 0.06)
+	status_label.text = "%s uprooted. +%d energy." % [str(plant.type).capitalize(), int(transaction.refund)]
+	_refresh_hud()
+	return true
 
 func _gui_input(event: InputEvent) -> void:
 	if game_state != "running":
@@ -707,6 +837,12 @@ func _gui_input(event: InputEvent) -> void:
 			return
 		tap_position = touch.position
 	else:
+		return
+	if _request_collect(tap_position):
+		accept_event()
+		return
+	if _request_uproot(tap_position):
+		accept_event()
 		return
 	var cell := _cell_at_screen_position(tap_position)
 	if cell.x < 0 or cell.y < 0:
@@ -879,6 +1015,7 @@ func _spawn_monster() -> void:
 			"stonehide": monster_sprite.modulate = Color("#a4b0b7")
 			"alpha-brute": monster_sprite.modulate = Color("#c47b69")
 		add_child(monster_sprite)
+	var monster_base_tint := monster_sprite.modulate if monster_sprite != null else Color.WHITE
 	monsters.append({
 		"sprite": monster_sprite,
 		"kind": archetype, "row": row, "local_x": local_x,
@@ -892,7 +1029,8 @@ func _spawn_monster() -> void:
 		"burst_speed_multiplier": float(profile.get("burst_speed_multiplier", 1.0)),
 		"burst_cooldown_min_ms": float(profile.get("burst_cooldown_min_ms", 0.0)),
 		"burst_cooldown_max_ms": float(profile.get("burst_cooldown_max_ms", 0.0)), "burst_fx_ms": 0.0,
-		"braced": false, "alive": true
+		"braced": false, "freeze_remaining_ms": 0.0,
+		"base_tint": monster_base_tint, "alive": true
 	})
 	status_label.text = "%s incoming — wave %d." % [archetype.replace("-", " ").capitalize(), wave]
 
@@ -909,13 +1047,19 @@ func _update_plants(delta_ms: float) -> void:
 		if plant.type == "mushroom":
 			plant.production_ms = float(plant.get("production_ms", 12000.0)) - delta_ms
 			if plant.production_ms <= 0.0:
-				var previous_energy := energy
-				energy = int(Rules.resolve_energy_pickup(float(energy), float(Rules.PLANTS.mushroom.energy_per_pickup)).energy)
-				if energy > previous_energy:
-					_play_sfx("coin-collect", 0.04)
+				var pickup_depth := float(plant.get("depth_scale", 1.0))
+				energy_pickups.append({
+					"x": float(plant.x) + 20.0 * pickup_depth,
+					"y": float(plant.y) - 42.0 * pickup_depth,
+					"base_y": float(plant.y) - 42.0 * pickup_depth,
+					"depth_scale": pickup_depth,
+					"amount": int(Rules.PLANTS.mushroom.energy_per_pickup),
+					"age_ms": 0.0,
+					"lifetime_ms": 18000.0
+				})
 				plant.production_ms = float(Rules.PLANTS.mushroom.production_interval_ms)
 			continue
-		if not Rules.PLANTS[plant.type].has("projectile_damage"):
+		if not Rules.PLANTS[plant.type].has("projectile_damage") and not Rules.PLANTS[plant.type].has("freeze_projectile"):
 			continue
 		plant.cooldown_ms = float(plant.cooldown_ms) - delta_ms
 		var target_found := false
@@ -943,15 +1087,65 @@ func _update_plants(delta_ms: float) -> void:
 				"row": int(plant.row), "speed": float(config.projectile_speed),
 				"radius": float(config.projectile_collision_radius),
 				"depth_scale": float(plant.depth_scale),
-				"damage": float(config.projectile_damage), "alive": true
+				"damage": float(config.get("projectile_damage", 0.0)),
+				"freeze": bool(config.get("freeze_projectile", false)),
+				"freeze_duration_ms": float(config.get("freeze_duration_ms", Rules.MONSTER_FREEZE_DURATION_MS)), "alive": true
 			})
 			plant.cooldown_ms = float(config.cooldown_ms)
+
+func _update_energy_pickups(delta_ms: float) -> void:
+	for pickup in energy_pickups:
+		pickup.age_ms = float(pickup.age_ms) + delta_ms
+		pickup.y = float(pickup.base_y) - sin(float(pickup.age_ms) / 420.0) * 7.0 * float(pickup.depth_scale)
+	energy_pickups = energy_pickups.filter(func(pickup: Dictionary) -> bool:
+		return float(pickup.age_ms) < float(pickup.lifetime_ms)
+	)
+
+func _find_energy_pickup_at_screen_position(point: Vector2) -> int:
+	var nearest_index := -1
+	var nearest_distance := INF
+	for index in range(energy_pickups.size()):
+		var pickup: Dictionary = energy_pickups[index]
+		var radius := 34.0 * float(pickup.depth_scale) * SCREEN_SCALE
+		var distance := point.distance_squared_to(Vector2(float(pickup.x), float(pickup.y)))
+		if distance <= radius * radius and distance < nearest_distance:
+			nearest_index = index
+			nearest_distance = distance
+	return nearest_index
+
+func _request_collect(point: Vector2) -> bool:
+	var pickup_index := _find_energy_pickup_at_screen_position(point)
+	if pickup_index < 0:
+		return false
+	if not farmer_planting_target.is_empty() or not farmer_return_target.is_empty() or not farmer_action_animation.is_empty():
+		status_label.text = "The Farmer must finish the current action before collecting energy."
+		return true
+	var pickup: Dictionary = energy_pickups[pickup_index]
+	var transaction := Rules.resolve_energy_pickup(float(energy), float(pickup.amount))
+	if float(transaction.collected) <= 0.0:
+		status_label.text = "Energy is full. Spend some energy before collecting another orb."
+		return true
+	energy = int(transaction.energy)
+	energy_pickups.remove_at(pickup_index)
+	_play_farmer_action("collect")
+	_play_sfx("coin-collect", 0.04)
+	status_label.text = "Energy collected: +%d." % int(transaction.collected)
+	_refresh_hud()
+	return true
 
 func _update_monsters(delta: float, delta_ms: float) -> void:
 	for monster in monsters:
 		if not monster.alive:
 			continue
 		monster.burst_fx_ms = maxf(0.0, float(monster.get("burst_fx_ms", 0.0)) - delta_ms)
+		var freeze_step := Rules.resolve_monster_freeze_step(float(monster.get("freeze_remaining_ms", 0.0)), delta_ms)
+		monster.freeze_remaining_ms = float(freeze_step.remaining_ms)
+		var frozen_sprite: Variant = monster.get("sprite", null)
+		if frozen_sprite != null and is_instance_valid(frozen_sprite):
+			frozen_sprite.modulate = Rules.MONSTER_FREEZE_TINT if bool(freeze_step.is_frozen) else monster.get("base_tint", Color.WHITE)
+		if bool(freeze_step.is_frozen):
+			monster.braced = false
+			continue
 		var row := int(monster.row)
 		var lane_step := absf(_to_screen(_lane_point(float(monster.local_x) + 1.0, row)).x - _to_screen(_lane_point(float(monster.local_x), row)).x)
 		var monster_half_width := 360.0 * 0.22 * float(monster.depth_scale) * float(monster.width_scale) * 0.5
@@ -991,6 +1185,22 @@ func _update_monsters(delta: float, delta_ms: float) -> void:
 						destroyed_sprite.queue_free()
 					status_label.text = "%s was destroyed!" % str(blocker.type).capitalize()
 			continue
+		if _monster_can_bite_farmer(monster):
+			monster.braced = false
+			monster.attack_cooldown_ms = float(monster.attack_cooldown_ms) - delta_ms
+			var attacking_sprite: Variant = monster.get("sprite", null)
+			if attacking_sprite != null and is_instance_valid(attacking_sprite) and attacking_sprite.animation != "bite":
+				attacking_sprite.play("bite")
+			if monster.attack_cooldown_ms <= 0.0:
+				monster.attack_cooldown_ms = float(monster.attack_interval_ms)
+				if farmer_action_animation == "jump":
+					status_label.text = "The Farmer dodged the monster's bite!"
+				else:
+					_damage_farmer(float(monster.plant_damage))
+					if game_state != "running":
+						return
+					_play_sfx("monster-bite", 0.05)
+			continue
 		monster.braced = false
 		monster.local_x = float(monster.local_x) - float(monster.speed) * movement_multiplier * delta
 		var monster_position := _to_screen(_lane_point(float(monster.local_x), row))
@@ -1008,6 +1218,59 @@ func _update_monsters(delta: float, delta_ms: float) -> void:
 			_play_sfx("defeat")
 			status_label.text = "The farmhouse has been overrun. Return to the main menu to start a new battle."
 			return
+
+
+func _freeze_projectile_target(row: int, projectile_local_x: float,
+		collision_radius: float, duration_ms: float = Rules.MONSTER_FREEZE_DURATION_MS) -> bool:
+	var target: Variant = Rules.select_freeze_target(monsters, row, projectile_local_x, collision_radius)
+	if target == null:
+		return false
+	return _apply_monster_freeze(target, duration_ms)
+
+func _apply_monster_freeze(monster: Dictionary, duration_ms: float = Rules.MONSTER_FREEZE_DURATION_MS) -> bool:
+	if not bool(monster.get("alive", false)) or not is_finite(duration_ms) or duration_ms <= 0.0:
+		return false
+	monster.freeze_remaining_ms = maxf(float(monster.get("freeze_remaining_ms", 0.0)), duration_ms)
+	monster.braced = false
+	var sprite: Variant = monster.get("sprite", null)
+	if sprite != null and is_instance_valid(sprite):
+		if not monster.has("base_tint"):
+			monster.base_tint = sprite.modulate
+		sprite.modulate = Rules.MONSTER_FREEZE_TINT
+	return true
+
+func _monster_can_bite_farmer(monster: Dictionary) -> bool:
+	if farmer_sprite == null or not is_instance_valid(farmer_sprite):
+		return false
+	if _nearest_row_at_screen_position(farmer_sprite.position) != int(monster.row):
+		return false
+	var monster_half_width := 360.0 * 0.22 * float(monster.depth_scale) * float(monster.width_scale) * 0.5
+	var farmer_half_width := 180.0 * absf(farmer_sprite.scale.x)
+	var bite_reach := monster_half_width + farmer_half_width + 14.0 * SCREEN_SCALE
+	return absf(float(monster.x) - farmer_sprite.position.x) <= bite_reach
+
+func _damage_farmer(damage: float) -> void:
+	if farmer_invulnerability_ms > 0.0 or farmer_hp <= 0:
+		return
+	if farmer_action_animation == "jump":
+		return
+	var result := Rules.apply_hit_points_damage(float(farmer_hp), damage)
+	if result.is_empty():
+		return
+	farmer_hp = int(result.hp)
+	farmer_invulnerability_ms = Rules.FARMER_DAMAGE_INVULNERABILITY_MS
+	if farmer_hp <= 0:
+		game_state = "defeat"
+		farmer_action_animation = "death"
+		farmer_sprite.play("death")
+		farmer_touch_directions = {"left": false, "right": false, "up": false, "down": false}
+		_play_sfx("defeat")
+		status_label.text = "The Farmer has fallen. The farm is lost."
+	else:
+		if farmer_action_animation.is_empty() and farmer_planting_target.is_empty() and farmer_return_target.is_empty():
+			_play_farmer_action("hit")
+		status_label.text = "The Farmer was hit! %d / %d HP remaining." % [farmer_hp, Rules.FARMER_MAX_HP]
+	_refresh_hud()
 
 func _update_dust_skitter_burst(monster: Dictionary, delta_ms: float) -> float:
 	if str(monster.kind) != "dust-skitter":
@@ -1065,6 +1328,14 @@ func _update_projectiles(delta: float) -> void:
 				continue
 			var hit_radius := float(projectile.radius) * float(monster.width_scale)
 			if absf(float(monster.local_x) - float(projectile.local_x)) <= hit_radius:
+				if bool(projectile.get("freeze", false)):
+					_freeze_projectile_target(int(projectile.row), float(projectile.local_x),
+						float(projectile.radius), float(projectile.get("freeze_duration_ms", Rules.MONSTER_FREEZE_DURATION_MS)))
+					projectile.alive = false
+					_play_sfx("monster-hit", 0.06)
+					if projectile_sprite != null and is_instance_valid(projectile_sprite):
+						projectile_sprite.queue_free()
+					break
 				var damage_multiplier := float(monster.incoming_damage_multiplier)
 				if str(monster.kind) == "stonehide" and bool(monster.braced):
 					damage_multiplier = Rules.stonehide_incoming_damage_multiplier(true)
@@ -1117,10 +1388,30 @@ func _refresh_hud() -> void:
 		wave_label.text = "Wave: %d / %d   Defeated: %d / 30" % [wave, Rules.WAVE_SIZES.size(), defeated_total]
 	if is_instance_valid(attack_button):
 		attack_button.visible = game_state == "running" and _farmer_can_attack()
+	if is_instance_valid(jump_button):
+		jump_button.disabled = game_state != "running" or not farmer_planting_target.is_empty() or not farmer_return_target.is_empty() or not farmer_action_animation.is_empty()
+	if is_instance_valid(farmer_hp_label):
+		farmer_hp_label.text = "FARMER %d%%" % roundi(100.0 * float(farmer_hp) / float(Rules.FARMER_MAX_HP))
+		farmer_hp_label.modulate = Color("#f08070") if farmer_hp <= Rules.FARMER_MAX_HP / 3 else Color("#f4f1df")
+	for key in plant_buttons:
+		var plant_button: Button = plant_buttons[key]
+		plant_button.button_pressed = str(key) == selected_plant
+		plant_button.disabled = game_state != "running" or energy < Rules.plant_cost(str(key))
+	if is_instance_valid(uproot_button):
+		uproot_button.disabled = game_state != "running" or plants.is_empty()
 
 func _draw() -> void:
 	if background_view == null or background_view.texture == null:
 		draw_rect(Rect2(Vector2.ZERO, get_viewport_rect().size), Color("#263b2e"), true)
+	if farmer_sprite != null and is_instance_valid(farmer_sprite) and farmer_hp > 0:
+		var farmer_bar_width := 66.0 * SCREEN_SCALE
+		var farmer_bar_height := 7.0 * SCREEN_SCALE
+		var farmer_bar_position := farmer_sprite.position + Vector2(-farmer_bar_width * 0.5, -72.0 * SCREEN_SCALE)
+		var farmer_hp_ratio := clampf(float(farmer_hp) / float(Rules.FARMER_MAX_HP), 0.0, 1.0)
+		var farmer_bar_color := Color("#71d47b") if farmer_hp_ratio > 0.5 else (Color("#efbd55") if farmer_hp_ratio > 0.25 else Color("#ed665d"))
+		draw_rect(Rect2(farmer_bar_position, Vector2(farmer_bar_width, farmer_bar_height)), Color("#263b2e"))
+		draw_rect(Rect2(farmer_bar_position, Vector2(farmer_bar_width * farmer_hp_ratio, farmer_bar_height)), farmer_bar_color)
+		draw_rect(Rect2(farmer_bar_position, Vector2(farmer_bar_width, farmer_bar_height)), Color("#f4f1df"), false, 1.0)
 	for plant in plants:
 		var depth_scale := float(plant.get("depth_scale", 1.0))
 		var bar_width := 48.0 * depth_scale
@@ -1128,6 +1419,14 @@ func _draw() -> void:
 		var plant_hp_max := float(Rules.PLANTS[plant.type].hp)
 		draw_rect(Rect2(plant.x - bar_width * 0.5, bar_y, bar_width, 5.0 * depth_scale), Color("#263b2e"), true)
 		draw_rect(Rect2(plant.x - bar_width * 0.5, bar_y, bar_width * float(plant.hp) / plant_hp_max, 5.0 * depth_scale), Color("#77d477"), true)
+	for pickup in energy_pickups:
+		var pickup_position := Vector2(float(pickup.x), float(pickup.y))
+		var pickup_scale := float(pickup.depth_scale) * SCREEN_SCALE
+		var pulse := 1.0 + 0.08 * sin(float(pickup.age_ms) / 180.0)
+		draw_circle(pickup_position, 17.0 * pickup_scale * pulse, Color(0.95, 0.75, 0.22, 0.22))
+		draw_circle(pickup_position, 11.0 * pickup_scale * pulse, Color("#f5c94f"))
+		draw_circle(pickup_position, 6.0 * pickup_scale, Color("#fff2a8"))
+		draw_string(get_theme_default_font(), pickup_position + Vector2(-4.0 * pickup_scale, 4.0 * pickup_scale), "+", HORIZONTAL_ALIGNMENT_LEFT, -1, maxi(10, roundi(13.0 * pickup_scale)), Color("#5b4217"))
 	for monster in monsters:
 		var depth_scale := float(monster.depth_scale)
 		if str(monster.kind) == "dust-skitter" and float(monster.get("burst_fx_ms", 0.0)) > 0.0:
