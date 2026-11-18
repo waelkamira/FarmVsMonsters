@@ -26,10 +26,12 @@ const REQUIRED_TEXTURES := [
 	"res://assets/plants/pineapple-level-1.png",
 	"res://assets/plants/hazelnut-level-1.png",
 	"res://assets/plants/mango-level-1.png",
+	"res://assets/plants/snow-thrower-level-1.png",
 	"res://assets/projectiles/radish-bomb.png",
 	"res://assets/projectiles/pineapple-bomb.png",
 	"res://assets/projectiles/hazelnut-bomb.png",
-	"res://assets/projectiles/mango-bomb.png"
+	"res://assets/projectiles/mango-bomb.png",
+	"res://assets/projectiles/snow-thrower-bomb-level-1.png"
 ]
 
 
