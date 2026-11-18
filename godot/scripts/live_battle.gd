@@ -176,6 +176,7 @@ func _make_monster_sprite(archetype: String, sprite_scale: float) -> AnimatedSpr
 	var sprite := AnimatedSprite2D.new()
 	sprite.sprite_frames = frames
 	sprite.animation = "run" if archetype == "dust-skitter" else "walk"
+	sprite.set_meta("archetype", archetype)
 	sprite.scale = Vector2.ONE * sprite_scale
 	sprite.play()
 	sprite.animation_finished.connect(_on_monster_animation_finished.bind(sprite))
@@ -185,7 +186,8 @@ func _on_monster_animation_finished(sprite: AnimatedSprite2D) -> void:
 	if not is_instance_valid(sprite):
 		return
 	if sprite.animation == "hit":
-		sprite.play("walk")
+		var archetype := str(sprite.get_meta("archetype", "cave-brute"))
+		sprite.play("run" if archetype == "dust-skitter" else "walk")
 	elif sprite.animation == "death":
 		sprite.queue_free()
 
