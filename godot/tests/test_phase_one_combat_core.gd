@@ -118,3 +118,13 @@ func _test_cooldowns_and_dust_skitter() -> void:
 	})
 	assert(burst.burst_started and burst.burst_remaining_ms == 400.0)
 	assert(burst.burst_cooldown_ms == 3300.0)
+	var burst_only: Dictionary = Rules.resolve_dust_skitter_motion_step({
+		"is_jumping": false, "enable_jump": false, "delta_ms": 50.0,
+		"burst_cooldown_ms": 10.0, "burst_remaining_ms": 0.0,
+		"burst_duration_ms": 420.0, "burst_speed_multiplier": 1.65,
+		"next_burst_cooldown_ms": 3300.0
+	})
+	assert(not burst_only.is_jumping and burst_only.jump_offset == 0.0)
+	assert(burst_only.burst_started and burst_only.burst_remaining_ms == 370.0)
+	assert(burst_only.burst_cooldown_ms == 3300.0)
+	assert(is_equal_approx(burst_only.movement_multiplier, 1.65))
