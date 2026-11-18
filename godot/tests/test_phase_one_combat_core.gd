@@ -84,7 +84,7 @@ func _test_lane_and_target_selection() -> void:
 	assert(blocker == near_plant)
 	var first: Dictionary = {"row": 1, "local_x": 1.1, "alive": true, "width_scale": 2.0}
 	var target: Variant = Rules.select_projectile_target([
-		{"row": 1, "local_x": 1.01, "alive": true}, first
+		{"row": 1, "local_x": 1.3, "alive": true}, first
 	], 1, 1.0, 0.1)
 	assert(target == first)
 	var melee: Dictionary = {"row": 2, "x": 105.0, "alive": true}
