@@ -774,6 +774,7 @@ func _update_monsters(delta: float, delta_ms: float) -> void:
 			var blocker_lane_step := absf(_to_screen(_lane_point(float(blocker.local_x) + 1.0, row)).x - _to_screen(_lane_point(float(blocker.local_x), row)).x)
 			var bite_reach := (monster_half_width + _plant_half_width(blocker) + 10.0 * SCREEN_SCALE) / maxf(0.01, blocker_lane_step)
 			within_bite_range = float(monster.local_x) - float(blocker.local_x) <= bite_reach
+		var movement_multiplier := _update_dust_skitter_burst(monster, delta_ms)
 		if within_bite_range:
 			monster.local_x = float(blocker.local_x)
 			monster.braced = str(monster.kind) == "stonehide"
@@ -799,7 +800,6 @@ func _update_monsters(delta: float, delta_ms: float) -> void:
 					status_label.text = "%s was destroyed!" % str(blocker.type).capitalize()
 			continue
 		monster.braced = false
-		var movement_multiplier := _update_dust_skitter_burst(monster, delta_ms)
 		monster.local_x = float(monster.local_x) - float(monster.speed) * movement_multiplier * delta
 		var monster_position := _to_screen(_lane_point(float(monster.local_x), row))
 		monster.x = monster_position.x
