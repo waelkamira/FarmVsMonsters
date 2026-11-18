@@ -382,7 +382,7 @@ func _build_ui() -> void:
 	plant_buttons.clear()
 	for plant_id in PLANT_OPTIONS:
 		var button := Button.new()
-		button.text = "%s  %d" % [plant_id.capitalize(), Rules.plant_cost(plant_id)]
+		button.text = "%s  %d" % [plant_id.replace("-", " ").capitalize(), Rules.plant_cost(plant_id)]
 		button.custom_minimum_size = Vector2(150, 40)
 		button.add_theme_font_size_override("font_size", 16)
 		button.toggle_mode = true
@@ -767,7 +767,7 @@ func _select_plant(plant_id: String) -> void:
 		plant_button.button_pressed = str(key) == plant_id
 	if is_instance_valid(uproot_button):
 		uproot_button.button_pressed = false
-	status_label.text = "Selected: %s — tap an empty cell." % plant_id.capitalize()
+	status_label.text = "Selected: %s — tap an empty cell." % plant_id.replace("-", " ").capitalize()
 
 func _set_uproot_mode(enabled: bool) -> void:
 	uproot_mode = enabled
