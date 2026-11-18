@@ -41,6 +41,21 @@ export function isPhaseOneVictory(wave, totalWaves, spawnedCount, waveSize, livi
   return wave === totalWaves && isWaveComplete(spawnedCount, waveSize, livingMonsterCount);
 }
 
+export function canBeginPrincessRescue({
+  storyState,
+  wave,
+  totalWaves,
+  spawnedCount,
+  waveSize,
+  livingMonsterCount,
+  dragonAlive
+} = {}) {
+  return storyState === "dragon" &&
+    wave === totalWaves &&
+    isWaveComplete(spawnedCount, waveSize, livingMonsterCount) &&
+    dragonAlive === false;
+}
+
 export const monsterArchetypeFor = resolveMonsterArchetype;
 
 
