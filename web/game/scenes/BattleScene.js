@@ -3356,7 +3356,18 @@ export default class BattleScene extends Scene {
     if (monster.view?.active) this.tweens.killTweensOf(monster.view);
     if (monster.braceCue?.active) monster.braceCue.setVisible(false);
     const sprite = monster.hyenaSprite;
-    if (sprite?.active && this.textures.exists("frozen-hyena-level-1")) {
+    const preferredFrozenTexture = this.wave >= 4
+      ? "frozen-hyena-level-2"
+      : "frozen-hyena-level-1";
+    const fallbackFrozenTexture = preferredFrozenTexture === "frozen-hyena-level-2"
+      ? "frozen-hyena-level-1"
+      : "frozen-hyena-level-2";
+    const frozenTexture = this.textures.exists(preferredFrozenTexture)
+      ? preferredFrozenTexture
+      : this.textures.exists(fallbackFrozenTexture)
+        ? fallbackFrozenTexture
+        : null;
+    if (sprite?.active && frozenTexture) {
       if (!monster.frozenAnimationKey) {
         monster.frozenAnimationKey = sprite.anims.currentAnim?.key || (monster.kind === "dust-skitter" ? "hyena-run" : "hyena-walk");
         monster.frozenSpriteSize = { width: sprite.displayWidth, height: sprite.displayHeight };
@@ -3365,9 +3376,6 @@ export default class BattleScene extends Scene {
       // Use the upgraded frozen-hyena artwork in later waves. Both atlases
       // are registered as nine dimension-derived frames before the battle starts.
       // Frame zero is the authored frozen pose; never display the full atlas.
-      const frozenTexture = this.wave >= 4 && this.textures.exists("frozen-hyena-level-2")
-        ? "frozen-hyena-level-2"
-        : "frozen-hyena-level-1";
       sprite.setTexture(frozenTexture, 0);
       sprite.setOrigin(0.5, 1);
       if (monster.frozenSpriteSize?.width > 0 && monster.frozenSpriteSize?.height > 0) {
