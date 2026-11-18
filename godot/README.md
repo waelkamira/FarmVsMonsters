@@ -23,10 +23,10 @@ must be pinned after a local editor/export validation pass.
 
 ## Rule smoke test
 
-Run with a Godot 4.x executable:
+Run both smoke-test scripts with a Godot 4.x executable:
 
 ```sh
-godot --headless --path godot --script res://tests/test_phase_one_rules.gd
+godot --headless --path godot --script res://tests/test_phase_one_rules.gd\ngodot --headless --path godot --script res://tests/test_phase_one_combat_core.gd
 ```
 
 The smoke test checks the initial Stage 1 board, wave-count, energy and placement
