@@ -494,6 +494,7 @@ func _make_monster_sprite(archetype: String, sprite_scale: float) -> AnimatedSpr
 		_append_sheet_animation(monster_sprite_frames, "bite", "res://assets/monsters/hyena/hyena-bite.png", 3, 2, 8.0, true)
 		_append_sheet_animation(monster_sprite_frames, "hit", "res://assets/monsters/hyena/hyena-hit.png", 3, 1, 12.0, false)
 		_append_sheet_animation(monster_sprite_frames, "death", "res://assets/monsters/hyena/hyena-death.png", 3, 2, 8.0, false)
+		_append_sheet_animation(monster_sprite_frames, "frozen", "res://assets/monsters/hyena/frozen-hyena-level-1.png", 1, 1, 1.0, false)
 	var sprite := AnimatedSprite2D.new()
 	sprite.sprite_frames = monster_sprite_frames
 	sprite.animation = "run" if archetype == "dust-skitter" else "walk"
@@ -1163,7 +1164,12 @@ func _update_monsters(delta: float, delta_ms: float) -> void:
 			frozen_sprite.modulate = Rules.MONSTER_FREEZE_TINT if bool(freeze_step.is_frozen) else monster.get("base_tint", Color.WHITE)
 		if bool(freeze_step.is_frozen):
 			monster.braced = false
+			if frozen_sprite != null and is_instance_valid(frozen_sprite) and frozen_sprite.sprite_frames.has_animation("frozen") and frozen_sprite.animation != "frozen":
+				frozen_sprite.play("frozen")
 			continue
+		if frozen_sprite != null and is_instance_valid(frozen_sprite) and frozen_sprite.animation == "frozen":
+			var thawed_animation := "run" if str(monster.kind) == "dust-skitter" else "walk"
+			frozen_sprite.play(thawed_animation)
 		var row := int(monster.row)
 		var lane_step := absf(_to_screen(_lane_point(float(monster.local_x) + 1.0, row)).x - _to_screen(_lane_point(float(monster.local_x), row)).x)
 		var monster_half_width := 360.0 * 0.22 * float(monster.depth_scale) * float(monster.width_scale) * 0.5
@@ -1258,6 +1264,8 @@ func _apply_monster_freeze(monster: Dictionary, duration_ms: float = Rules.MONST
 		if not monster.has("base_tint"):
 			monster.base_tint = sprite.modulate
 		sprite.modulate = Rules.MONSTER_FREEZE_TINT
+		if sprite.sprite_frames.has_animation("frozen"):
+			sprite.play("frozen")
 	return true
 
 func _monster_can_bite_farmer(monster: Dictionary) -> bool:
