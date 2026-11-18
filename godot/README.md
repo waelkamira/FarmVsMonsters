@@ -17,8 +17,8 @@ The original artwork remains in `web/public/assets/`; the Godot copies point to 
 
 ## Known visual limitations
 
-- The current lane board is still the temporary straight-grid prototype. The supplied farm battlefield background is not yet used because its visible perspective planting cells have not been calibrated against the current gameplay hit regions; overlaying a second grid would be incorrect.
-- The 3×3 frame layout for Pineapple and Hazelnut is provisional and must be checked in the Godot editor against the actual sheet dimensions before final animation approval.
+- The approved farm battlefield background and 8×5 perspective mesh are now used. Cell taps are resolved against the 40 calibrated soil polygons; plants, monsters and projectiles follow perspective lanes and scale with row depth.
+- The Pineapple and Hazelnut sheets use their exact Phaser frame contracts (418×418 and 341×341 respectively); the Godot visual result still needs runtime review.
 - Farmer planting travel/planting animation and Farmer hit/death states remain future integration work.
 - The same Hyena base art is temporarily reused for all four monster archetypes, with tint and size differences; this is not a final character-art pass.
 
