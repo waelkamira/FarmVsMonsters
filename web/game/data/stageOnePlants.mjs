@@ -1,4 +1,17 @@
 // Stage 1 plant roster. "implemented" means its gameplay behavior already exists in BattleScene.
+// Only these two plants are part of the approved Stage 1 battle loadout; other
+// implemented plants remain prototypes until a later stage enables them.
+export const STAGE_ONE_BATTLE_LOADOUT = Object.freeze(["radish", "mushroom"]);
+
+export function resolveStageOneLoadout(savedLoadout) {
+  const allowed = new Set(STAGE_ONE_BATTLE_LOADOUT);
+  const requested = Array.isArray(savedLoadout)
+    ? [...new Set(savedLoadout.filter((type) => allowed.has(type)))]
+    : [...STAGE_ONE_BATTLE_LOADOUT];
+  if (!requested.includes("mushroom")) requested.unshift("mushroom");
+  if (!requested.includes("radish")) requested.push("radish");
+  return requested;
+}
 export const STAGE_ONE_PLANTS = Object.freeze([
   {
     id: "radish",
