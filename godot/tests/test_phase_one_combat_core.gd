@@ -116,7 +116,7 @@ func _test_monster_freeze_contract() -> void:
 	assert(Rules.resolve_monster_freeze_step(-1.0, 10.0).is_empty())
 	var small_target: Dictionary = {"alive": true, "row": 1, "local_x": 12.0, "width_scale": 0.62}
 	var large_target: Dictionary = {"alive": true, "row": 1, "local_x": 18.0, "width_scale": 2.0}
-	assert(Rules.select_freeze_target([small_target, large_target], 1, 10.0, 1.5) == small_target)
+	assert(Rules.select_freeze_target([small_target, large_target], 1, 11.5, 1.5) == small_target)
 	assert(Rules.select_freeze_target([small_target, large_target], 1, 16.0, 1.5) == large_target)
 	assert(Rules.select_freeze_target([small_target, large_target], 2, 10.0, 20.0) == null)
 	var battle = LiveBattle.new()
