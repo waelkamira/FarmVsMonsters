@@ -2,7 +2,7 @@ extends SceneTree
 
 const REQUIRED_TEXTURES := [
 	"res://assets/characters/farmer/farmer-idle.png",
-	"res://assets/monsters/hyena/hyena-idle.png",
+	"res://assets/characters/monsters/hyena/hyena-idle.png",
 	"res://assets/monsters/hyena/hyena-walk.png",
 	"res://assets/monsters/hyena/hyena-run.png",
 	"res://assets/monsters/hyena/hyena-bite.png",
