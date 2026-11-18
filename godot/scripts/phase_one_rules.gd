@@ -21,6 +21,8 @@ const MONSTER_SPAWN_INTERVAL_WAVE_REDUCTION_MS: int = 120
 const ORDINARY_MONSTER_DEFEAT_COINS: int = 8
 const FARMER_MAX_HP: int = 180
 const FARMER_DAMAGE_INVULNERABILITY_MS: float = 700.0
+const MONSTER_FREEZE_DURATION_MS: float = 2600.0
+const MONSTER_FREEZE_TINT := Color(0.58, 0.84, 1.0, 1.0)
 
 const PLANTS: Dictionary = {
 	"radish": {
@@ -170,6 +172,12 @@ static func resolve_energy_pickup(energy: float, requested_amount: float) -> Dic
 	var amount: float = maxf(0.0, requested_amount) if is_finite(requested_amount) else 0.0
 	var collected: float = minf(amount, MAX_ENERGY - current)
 	return {"energy": current + collected, "collected": collected}
+
+static func resolve_monster_freeze_step(remaining_ms: float, delta_ms: float) -> Dictionary:
+	if not is_finite(remaining_ms) or remaining_ms < 0.0 or not is_finite(delta_ms) or delta_ms < 0.0:
+		return {}
+	var next_remaining := maxf(0.0, remaining_ms - delta_ms)
+	return {"remaining_ms": next_remaining, "is_frozen": next_remaining > 0.0}
 
 static func apply_hit_points_damage(current_hp: float, damage: float) -> Dictionary:
 	if not is_finite(current_hp) or current_hp < 0.0 or not is_finite(damage) or damage < 0.0:
