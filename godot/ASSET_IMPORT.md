@@ -10,7 +10,7 @@ All imported files are byte-for-byte copies of existing tracked assets. Their or
 | `assets/monsters/hyena/hyena-run.png` | `characters/monsters/hyena/hyena-run.png` | Dust Skitter movement | 3×3, 9 frames; measured 1080×889 |
 | `assets/monsters/hyena/hyena-bite.png` | `characters/monsters/hyena/hyena-bite.png` | Plant-biting attack | 3×2, 6 frames; measured 1080×894 |
 | `assets/monsters/hyena/hyena-hit.png` | `characters/monsters/hyena/hyena-hit.png` | Damage reaction | 3×1, 3 frames; measured 1080×894 |
-| `assets/monsters/hyena/hyena-death.png` | `characters/monsters/hyena/hyena-death.png` | Defeat animation | 3×2 assumed; measured 1080×894 |
+| `assets/monsters/hyena/hyena-death.png` | `characters/monsters/hyena/hyena-death.png` | Defeat animation | 3×2, 6 frames; measured 1080×894 |
 | `assets/plants/radish-level-1.png` | `plants/radish-level-1.png` | Radish idle/attack | 3×3, 9 frames; measured 908×1079 |
 | `assets/plants/mushroom.png` | `plants/mushroom.png` | Energy Mushroom | Static image; measured 353×400 |
 | `assets/plants/pumpkin.png` | `plants/pumpkin.png` | Pumpkin blocker | Static image; measured 500×500 |
