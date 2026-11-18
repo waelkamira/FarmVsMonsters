@@ -65,6 +65,7 @@ const MONSTER_TIER_TINTS = {
   "dust-skitter": 0xd7e1e8, // lighter scout: below standard durability
   "cave-brute": 0xffffff,  // standard hyena
   "stonehide": 0x579bff,   // reinforced hyena
+  "frozen-hyena": 0x83dfff, // frost-resistant raider
   "alpha-brute": 0xffc247  // giant alpha
 };
 const HOME_LOCAL_X = -300;
@@ -84,7 +85,10 @@ export default class BattleScene extends Scene {
     this.load.image("mango-level-1-bomb", "/assets/plants/mango-level-1-bomb.png");
     this.load.image("snow-thrower-level-1", "/assets/plants/Snow-thrower-level-1.png");
     this.load.image("snow-thrower-bomb-level-1", "/assets/plants/Snow-thrower-bomb-level-1.png");
+    // Keep the two authored frozen-hyena sheets available while their exact
+    // frame boundaries are verified; do not assign an uncropped atlas to a sprite.
     this.load.image("frozen-hyena-level-1", "/assets/characters/monsters/hyena/frozen-hyena-level-1.png");
+    this.load.image("frozen-hyena-level-2", "/assets/characters/monsters/hyena/frozen-hyena-level-2.png");
     // 1254×1254 artwork is a 3×3 sheet: nine 418×418 animation frames.
     this.load.spritesheet("pineapple-level-1", "/assets/plants/pineapple-level-1.png", { frameWidth: 418, frameHeight: 418, margin: 0, spacing: 0 });
     // 1024×1024 artwork, 3×3 grid: use 341px integer cells; Phaser exposes 9 frames.
@@ -2950,9 +2954,11 @@ export default class BattleScene extends Scene {
 
     const g = this.add.graphics();
     const bodyColor = archetype === "stonehide" ? 0x68675b
+      : archetype === "frozen-hyena" ? 0x5c9fb8
       : archetype === "alpha-brute" ? 0x4d3931
       : archetype === "dust-skitter" ? 0x895b3a : 0x765036;
     const headColor = archetype === "stonehide" ? 0x898578
+      : archetype === "frozen-hyena" ? 0xa8e4f3
       : archetype === "alpha-brute" ? 0x80604b
       : archetype === "dust-skitter" ? 0xb18154 : 0x9a7048;
 
@@ -3000,6 +3006,18 @@ export default class BattleScene extends Scene {
       g.fillStyle(0xd8b77c, 1);
       g.fillEllipse(-20, 21, 11, 5);
       g.fillEllipse(20, 21, 11, 5);
+    } else if (archetype === "frozen-hyena") {
+      // Icy ridges and pale frost markings distinguish this archetype in the
+      // battle silhouette until its dedicated atlas is cropped and animated.
+      g.fillStyle(0xd8f7ff, 1);
+      g.fillTriangle(-18, -38, -28, -55, -9, -43);
+      g.fillTriangle(18, -38, 28, -55, 9, -43);
+      g.fillStyle(0x75c9e8, 1);
+      g.fillEllipse(-20, 18, 12, 6);
+      g.fillEllipse(20, 18, 12, 6);
+      g.lineStyle(3, 0xe6fbff, 0.9);
+      g.lineBetween(-14, 8, -4, 18);
+      g.lineBetween(4, 18, 14, 8);
     } else if (archetype === "stonehide") {
       // Layered shale plates are a distinct defensive trait, not a copied
       // shield or costume from the genre reference.
@@ -3363,26 +3381,29 @@ export default class BattleScene extends Scene {
 
   freezeMonster(monster, durationMs) {
     if (!monster?.alive || !Number.isFinite(durationMs) || durationMs <= 0) return false;
-    monster.freezeRemainingMs = Math.max(monster.freezeRemainingMs || 0, durationMs);
+    // Frozen Hyenas are naturally adapted to ice and only receive 45% of the
+    // normal freeze duration. Never set a full sprite-sheet image as a frame:
+    // doing so displays the entire atlas instead of a properly cropped pose.
+    const resistance = PhaserMath.Clamp(monster.combatProfile?.freezeResistance || 0, 0, 0.9);
+    const effectiveDurationMs = durationMs * (1 - resistance);
+    if (effectiveDurationMs <= 0) return false;
+    monster.freezeRemainingMs = Math.max(monster.freezeRemainingMs || 0, effectiveDurationMs);
     monster.braced = false;
     monster.isEating = false;
     if (monster.view?.active) this.tweens.killTweensOf(monster.view);
     if (monster.braceCue?.active) monster.braceCue.setVisible(false);
     const sprite = monster.hyenaSprite;
-    if (sprite?.active && this.textures.exists("frozen-hyena-level-1")) {
+    if (sprite?.active) {
       if (!monster.frozenAnimationKey) {
         monster.frozenAnimationKey = sprite.anims.currentAnim?.key || (monster.kind === "dust-skitter" ? "hyena-run" : "hyena-walk");
-        monster.frozenSpriteSize = { width: sprite.displayWidth, height: sprite.displayHeight };
       }
       sprite.stop();
-      sprite.setTexture("frozen-hyena-level-1");
-      sprite.setOrigin(0.5, 1);
-      if (monster.frozenSpriteSize?.width > 0 && monster.frozenSpriteSize?.height > 0) {
-        sprite.setDisplaySize(monster.frozenSpriteSize.width, monster.frozenSpriteSize.height);
-      }
-      sprite.setTint(0x94dcff);
+      sprite.setTint(monster.kind === "frozen-hyena" ? 0x55bde8 : 0x94dcff);
     }
-    this.setMessage("SNOW HIT! The hyena is frozen for 2.6 seconds.");
+    const seconds = (effectiveDurationMs / 1000).toFixed(1);
+    this.setMessage(monster.kind === "frozen-hyena"
+      ? `FROST RESISTANCE! The Frozen Hyena is slowed for ${seconds} seconds.`
+      : `SNOW HIT! The hyena is frozen for ${seconds} seconds.`);
     return true;
   }
 
