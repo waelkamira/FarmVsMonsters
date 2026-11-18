@@ -156,6 +156,18 @@ export default class BattleScene extends Scene {
     this.registerThreeByThreeSheet("mango-level-1");
     this.registerThreeByThreeSheet("snow-thrower-level-1");
     this.registerThreeByThreeSheet("frozen-hyena-level-1");
+    this.registerThreeByThreeSheet("frozen-hyena-level-2");
+    if (this.textures.exists("snow-thrower-level-1") && !this.anims.exists("snow-thrower-level-1-throw")) {
+      const available = Object.keys(this.textures.get("snow-thrower-level-1").frames).filter((name) => name !== "__BASE").length;
+      if (available >= 9) {
+        this.anims.create({
+          key: "snow-thrower-level-1-throw",
+          frames: this.anims.generateFrameNumbers("snow-thrower-level-1", { start: 0, end: 8 }),
+          frameRate: 12,
+          repeat: 0
+        });
+      }
+    }
     // Client-local deterministic seed for reproducible development sessions only.
     // The authoritative server must issue and retain its own seed per game session.
     const seedBuffer = new Uint32Array(1);
@@ -3339,8 +3351,13 @@ export default class BattleScene extends Scene {
         monster.frozenSpriteSize = { width: sprite.displayWidth, height: sprite.displayHeight };
       }
       sprite.stop();
-      // Frame zero is the frozen pose; never display the full 3x3 artwork.
-      sprite.setTexture("frozen-hyena-level-1", 0);
+      // Use the upgraded frozen-hyena artwork in later waves. Both atlases
+      // are registered as nine dimension-derived frames before the battle starts.
+      // Frame zero is the authored frozen pose; never display the full atlas.
+      const frozenTexture = this.wave >= 4 && this.textures.exists("frozen-hyena-level-2")
+        ? "frozen-hyena-level-2"
+        : "frozen-hyena-level-1";
+      sprite.setTexture(frozenTexture, 0);
       sprite.setOrigin(0.5, 1);
       if (monster.frozenSpriteSize?.width > 0 && monster.frozenSpriteSize?.height > 0) {
         sprite.setDisplaySize(monster.frozenSpriteSize.width, monster.frozenSpriteSize.height);
