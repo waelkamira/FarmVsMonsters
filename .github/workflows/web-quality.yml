@@ -2,7 +2,7 @@ name: Web quality gate
 
 on:
   push:
-    branches: [main]
+    branches: [main, development/phase-one-consistency-2026-11]
     paths:
       - "web/**"
       - "Documentation/GAME_DEVELOPMENT_ROADMAP.md"
@@ -30,7 +30,7 @@ jobs:
         with:
           node-version: 22
       - name: Install dependencies
-        run: npm install
+        run: npm ci
       - name: Run Phase 1 gameplay tests
         run: npm test
       - name: Lint
