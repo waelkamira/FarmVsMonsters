@@ -30,17 +30,19 @@ All imported files are byte-for-byte copies of existing tracked assets. Their or
 | `assets/plants/pineapple-level-1.png` | `plants/pineapple-level-1.png` | Pineapple idle/attack | 3×3, 9 frames; 1254×1254 source, 418×418 cells |
 | `assets/plants/hazelnut-level-1.png` | `plants/hazelnut-level-1.png` | Hazelnut idle/attack | 3×3, 9 frames; 1024×1024 source, 341×341 cells |
 | `assets/plants/mango-level-1.png` | `plants/mango-level-1.png` | Mango idle/attack | 3×3, 9 frames; measured 1080×806 |
+| `assets/plants/snow-thrower-level-1.png` | `plants/Snow-thrower-level-1.png` | Snow Thrower idle/attack | 3×3 runtime atlas; measured 1080×869; frame edges/padding still need visual sign-off |
 | `assets/projectiles/radish-bomb.png` | `plants/radish-level-1-bomb.png` | Radish projectile | Static; 70×63 |
 | `assets/projectiles/pineapple-bomb.png` | `plants/pineapple-level-1-bomb.png` | Pineapple projectile | Static; 168×103 |
 | `assets/projectiles/hazelnut-bomb.png` | `plants/hazelnut-level-1-bomb.png` | Hazelnut projectile | Static; 97×94 |
 | `assets/projectiles/mango-bomb.png` | `plants/mango-level-1-bomb.png` | Mango projectile | Static; 163×90 |
+| `assets/projectiles/snow-thrower-bomb-level-1.png` | `plants/Snow-thrower-bomb-level-1.png` | Snow Thrower freeze projectile | Static; 142×174 |
 
 ## Integration notes
 
 - Atlas frames are generated at runtime with `AtlasTexture`; no source sheet is cropped or overwritten.
 - The first atlas cell is used as the resting pose. Remaining cells are played as the plant attack animation on projectile launch.
 - The imported hyena sheets are temporarily shared across monster archetypes. Cave Brute/Stonehide/Alpha Brute use walk, bite, hit and death states; Dust Skitter uses the faster run sheet. Archetype-specific tint/scale is only a visual placeholder, not a replacement character design.
-- Frozen Hyena level 1/2 source PNGs are now copied into `assets/monsters/hyena/` and required by the asset manifest. Their atlas/frame dimensions must be confirmed before using them as animated replacements; until then the combat freeze state preserves each monster's existing archetype scale and temporarily applies a frost tint without stretching the artwork. The generic freeze timer is implemented in the Godot combat layer, but no Snow Thrower plant is activated until its actual source artwork is located and its intended level/frame layout is verified.
+- Frozen Hyena level 1/2 source PNGs are now copied into `assets/monsters/hyena/` and required by the asset manifest. Their atlas/frame dimensions must be confirmed before using them as animated replacements; until then the combat freeze state preserves each monster's existing archetype scale and temporarily applies a frost tint without stretching the artwork. The generic freeze timer is implemented in the Godot combat layer, but the Snow Thrower is now wired as a provisional 3×3 plant atlas and fires a static freeze projectile. Verify the source sheet frame margins, pivot and visual scale in the Godot editor before production sign-off.
 - Pineapple uses exact 418×418 cells; Hazelnut uses the original 341×341 integer frame contract (one unused pixel at the far sheet edge).
 - The battlefield background is rendered with the Phaser-approved 1120×680 source-canvas transform and its original 8×5 piecewise-bilinear control-point mesh. Input tests the actual 40 cell polygons; plants, monsters and projectiles follow perspective lane points. The background already contains the soil grid, so no second grid is drawn.
 - Farmer movement uses the established 115 px/s keyboard speed and 0.78 touch-control speed factor; club combat unlocks only after the player has planted a defender and all Radishes have been destroyed. The club uses the canonical 42 damage and 112 px reach.
