@@ -541,12 +541,22 @@ func _select_plant(plant_id: String) -> void:
 	status_label.text = "Selected: %s — tap an empty cell." % plant_id.capitalize()
 
 func _gui_input(event: InputEvent) -> void:
-	if game_state != "running" or not (event is InputEventMouseButton):
+	if game_state != "running":
 		return
-	var mouse := event as InputEventMouseButton
-	if mouse.button_index != MOUSE_BUTTON_LEFT or not mouse.pressed:
+	var tap_position := Vector2.ZERO
+	if event is InputEventMouseButton:
+		var mouse := event as InputEventMouseButton
+		if mouse.button_index != MOUSE_BUTTON_LEFT or not mouse.pressed:
+			return
+		tap_position = mouse.position
+	elif event is InputEventScreenTouch:
+		var touch := event as InputEventScreenTouch
+		if not touch.pressed:
+			return
+		tap_position = touch.position
+	else:
 		return
-	var cell := _cell_at_screen_position(mouse.position)
+	var cell := _cell_at_screen_position(tap_position)
 	if cell.x < 0 or cell.y < 0:
 		return
 	_place_plant(cell.x, cell.y)
