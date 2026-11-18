@@ -51,6 +51,8 @@ var grid_nodes: Array = []
 var background_view: TextureRect
 var farmer_sprite: AnimatedSprite2D
 var attack_button: Button
+var uproot_button: Button
+var uproot_mode := false
 var has_planted_defender := false
 var farmer_is_moving := false
 var farmer_locomotion_animation := "idle"
@@ -364,6 +366,12 @@ func _build_ui() -> void:
 		button.custom_minimum_size = Vector2(132, 42)
 		button.pressed.connect(_select_plant.bind(plant_id))
 		choices.add_child(button)
+	uproot_button = Button.new()
+	uproot_button.text = "UPROOT"
+	uproot_button.toggle_mode = true
+	uproot_button.custom_minimum_size = Vector2(112, 42)
+	uproot_button.toggled.connect(_set_uproot_mode)
+	choices.add_child(uproot_button)
 	var menu := Button.new()
 	menu.text = "Main Menu"
 	menu.pressed.connect(_return_to_menu)
@@ -690,7 +698,63 @@ func _select_plant(plant_id: String) -> void:
 	if game_state != "running":
 		return
 	selected_plant = plant_id
+	uproot_mode = false
+	if is_instance_valid(uproot_button):
+		uproot_button.button_pressed = false
 	status_label.text = "Selected: %s — tap an empty cell." % plant_id.capitalize()
+
+func _set_uproot_mode(enabled: bool) -> void:
+	uproot_mode = enabled
+	if enabled:
+		status_label.text = "UPROOT mode: tap one of your planted defenders to recover its energy cost."
+	else:
+		status_label.text = "Planting mode: choose a defender and tap an empty field cell."
+
+func _find_plant_at_screen_position(point: Vector2) -> int:
+	var selected_index := -1
+	var nearest_distance := INF
+	for index in range(plants.size()):
+		var plant: Dictionary = plants[index]
+		if not bool(plant.get("alive", false)):
+			continue
+		var half_width := _plant_half_width(plant)
+		var hit_width := maxf(half_width, 30.0 * SCREEN_SCALE)
+		var hit_height := maxf(42.0 * SCREEN_SCALE, hit_width * 1.35)
+		var offset := point - Vector2(float(plant.x), float(plant.y))
+		if absf(offset.x) > hit_width or absf(offset.y) > hit_height:
+			continue
+		var distance := offset.length_squared()
+		if distance < nearest_distance:
+			nearest_distance = distance
+			selected_index = index
+	return selected_index
+
+func _request_uproot(point: Vector2) -> bool:
+	if not uproot_mode:
+		return false
+	if not farmer_planting_target.is_empty() or not farmer_return_target.is_empty() or not farmer_action_animation.is_empty():
+		status_label.text = "The Farmer must finish the current action before uprooting."
+		return true
+	var plant_index := _find_plant_at_screen_position(point)
+	if plant_index < 0:
+		status_label.text = "Tap directly on one of your planted defenders to uproot it."
+		return true
+	var plant: Dictionary = plants[plant_index]
+	var transaction := Rules.resolve_plant_uproot(float(energy), plant)
+	if not bool(transaction.get("ok", false)):
+		status_label.text = "Cannot uproot: %s" % str(transaction.get("reason", "unknown")).replace("_", " ").to_lower()
+		return true
+	energy = int(transaction.energy)
+	plant.alive = false
+	var plant_sprite: Variant = plant.get("sprite", null)
+	if plant_sprite != null and is_instance_valid(plant_sprite):
+		plant_sprite.queue_free()
+	plants.remove_at(plant_index)
+	_play_farmer_action("uproot")
+	_play_sfx("plant-rustle", 0.06)
+	status_label.text = "%s uprooted. +%d energy." % [str(plant.type).capitalize(), int(transaction.refund)]
+	_refresh_hud()
+	return true
 
 func _gui_input(event: InputEvent) -> void:
 	if game_state != "running":
@@ -707,6 +771,9 @@ func _gui_input(event: InputEvent) -> void:
 			return
 		tap_position = touch.position
 	else:
+		return
+	if _request_uproot(tap_position):
+		accept_event()
 		return
 	var cell := _cell_at_screen_position(tap_position)
 	if cell.x < 0 or cell.y < 0:
