@@ -197,7 +197,7 @@ static func select_lane_blocker(plants: Array, row: int, monster_local_x: float,
 	var nearest: Variant = null
 	var nearest_x: float = -INF
 	for candidate in plants:
-		if not candidate is Dictionary:
+		if not (candidate is Dictionary):
 			continue
 		var plant: Dictionary = candidate.get("plant", {})
 		var x: float = float(candidate.get("local_x", NAN))
@@ -212,7 +212,7 @@ static func select_projectile_target(monsters: Array, row: int, local_x: float, 
 	if not is_finite(local_x) or not is_finite(collision_radius) or collision_radius < 0.0:
 		return null
 	for monster in monsters:
-		if not monster is Dictionary or not monster.get("alive", false) or int(monster.get("row", -1)) != row:
+		if not (monster is Dictionary) or not monster.get("alive", false) or int(monster.get("row", -1)) != row:
 			continue
 		var x: float = float(monster.get("local_x", NAN))
 		if is_finite(x) and absf(x - local_x) <= collision_radius * float(monster.get("width_scale", 1.0)):
@@ -225,7 +225,7 @@ static func select_farmer_melee_target(monsters: Array, row: int, farmer_x: floa
 	var target: Variant = null
 	var nearest_distance: float = INF
 	for monster in monsters:
-		if not monster is Dictionary or not monster.get("alive", false) or int(monster.get("row", -1)) != row:
+		if not (monster is Dictionary) or not monster.get("alive", false) or int(monster.get("row", -1)) != row:
 			continue
 		var x: float = float(monster.get("x", NAN))
 		if not is_finite(x):
@@ -240,7 +240,7 @@ static func select_dragon_fireball_target(plants: Array) -> Variant:
 	var weakest: Variant = null
 	var lowest_hp: float = INF
 	for plant in plants:
-		if not plant is Dictionary or not plant.get("alive", false):
+		if not (plant is Dictionary) or not plant.get("alive", false):
 			continue
 		var hp: float = float(plant.get("hp", NAN))
 		if is_finite(hp) and hp < lowest_hp:
