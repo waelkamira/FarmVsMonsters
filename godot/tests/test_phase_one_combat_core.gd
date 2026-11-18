@@ -114,6 +114,11 @@ func _test_monster_freeze_contract() -> void:
 	var expired: Dictionary = Rules.resolve_monster_freeze_step(200.0, 250.0)
 	assert(not expired.is_frozen and expired.remaining_ms == 0.0)
 	assert(Rules.resolve_monster_freeze_step(-1.0, 10.0).is_empty())
+	var small_target: Dictionary = {"alive": true, "row": 1, "local_x": 12.0, "width_scale": 0.62}
+	var large_target: Dictionary = {"alive": true, "row": 1, "local_x": 18.0, "width_scale": 2.0}
+	assert(Rules.select_freeze_target([small_target, large_target], 1, 10.0, 1.5) == small_target)
+	assert(Rules.select_freeze_target([small_target, large_target], 1, 16.0, 1.5) == large_target)
+	assert(Rules.select_freeze_target([small_target, large_target], 2, 10.0, 20.0) == null)
 	var battle = LiveBattle.new()
 	for visual_scale in [Vector2(0.14, 0.14), Vector2(0.44, 0.44)]:
 		var sprite := Sprite2D.new()
@@ -124,6 +129,8 @@ func _test_monster_freeze_contract() -> void:
 		assert(not monster.braced)
 		assert(sprite.modulate == Rules.MONSTER_FREEZE_TINT)
 		assert(sprite.scale == visual_scale)
+		assert(battle._apply_monster_freeze(monster, 900.0))
+		assert(monster.freeze_remaining_ms == Rules.MONSTER_FREEZE_DURATION_MS)
 		sprite.free()
 	assert(not battle._apply_monster_freeze({"alive": false}))
 	battle.free()
