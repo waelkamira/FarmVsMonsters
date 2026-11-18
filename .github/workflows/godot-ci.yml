@@ -1,0 +1,37 @@
+name: Godot validation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "godot/**"
+      - ".github/workflows/godot-ci.yml"
+  workflow_dispatch:
+
+jobs:
+  godot-smoke-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install Godot 4.4.1
+        uses: chickensoft-games/setup-godot@v1
+        with:
+          version: 4.4.1
+          use-dotnet: false
+          include-templates: false
+
+      - name: Import project resources
+        run: godot --headless --editor --path godot --quit
+
+      - name: Validate art and perspective calibration
+        run: godot --headless --path godot --script res://tests/test_asset_manifest.gd
+
+      - name: Run phase-one rule tests
+        run: |
+          godot --headless --path godot --script res://tests/test_phase_one_rules.gd
+          godot --headless --path godot --script res://tests/test_phase_one_combat_core.gd
+
+      - name: Load live battle scene
+        run: godot --headless --path godot res://scenes/live_battle.tscn --quit-after 120
