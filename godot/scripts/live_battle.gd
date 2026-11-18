@@ -185,17 +185,13 @@ func _depth_scale(column: int, row: int) -> float:
 	var average_cell_height := (grid_nodes[Rules.BOARD_ROWS][0].y - grid_nodes[0][0].y) / float(Rules.BOARD_ROWS)
 	return clampf((bottom_y - top_y) / average_cell_height, 0.62, 1.42)
 
-func _local_x_for_screen(screen_x: float) -> float:
-	var source_x := (screen_x - SCREEN_OFFSET_X) / SCREEN_SCALE
-	return source_x - (grid_nodes[0][0].x + grid_nodes[0][Rules.BOARD_COLUMNS].x) * 0.5
-
 func _nearest_row_at_screen_position(screen_point: Vector2) -> int:
-	var local_x := _local_x_for_screen(screen_point.x)
+	var source_y := _to_source(screen_point).y
 	var nearest_row := 0
 	var nearest_distance := INF
 	for row in range(Rules.BOARD_ROWS):
-		var lane_screen := _to_screen(_lane_point(local_x, row))
-		var distance := absf(lane_screen.y - screen_point.y)
+		var lane_y := _grid_cell_center(0, row).y
+		var distance := absf(lane_y - source_y)
 		if distance < nearest_distance:
 			nearest_distance = distance
 			nearest_row = row
@@ -351,11 +347,20 @@ func _create_farmer_sprite() -> void:
 	farmer_sprite.sprite_frames = frames
 	farmer_sprite.animation = "idle"
 	farmer_sprite.scale = Vector2.ONE * 0.25
-	farmer_sprite.position = Vector2(112.0, 565.0)
+	farmer_sprite.position = Vector2.ZERO
 	farmer_sprite.z_index = 12
 	farmer_sprite.animation_finished.connect(_on_farmer_animation_finished)
 	add_child(farmer_sprite)
 	farmer_sprite.play("idle")
+
+func _position_farmer_at_start() -> void:
+	if farmer_sprite == null:
+		return
+	var source_position := Vector2(220.0, _grid_cell_center(0, 2).y)
+	farmer_sprite.position = _to_screen(source_position)
+	var scale_factor := 0.25 * _depth_scale(4, 2)
+	farmer_sprite.scale = Vector2.ONE * scale_factor
+	farmer_sprite.z_index = int(farmer_sprite.position.y)
 
 func _build_farmer_controls() -> void:
 	var control_row := HBoxContainer.new()
@@ -430,18 +435,26 @@ func _update_farmer(delta: float) -> void:
 		movement = movement.normalized()
 	farmer_is_moving = movement.length_squared() > 0.001
 	if farmer_is_moving:
-		var move_speed := FARMER_MOVE_SPEED * (0.78 if touch_moving else 1.0)
+		var move_speed := FARMER_MOVE_SPEED * SCREEN_SCALE * (0.78 if touch_moving else 1.0)
 		farmer_sprite.position += movement * move_speed * delta
-		farmer_sprite.position.x = clampf(farmer_sprite.position.x, 105.0, 1010.0)
-		farmer_sprite.position.y = clampf(farmer_sprite.position.y, LANE_Y[0] - 22.0, LANE_Y[4] + 22.0)
+		var min_x := _to_screen(Vector2(105.0, 0.0)).x
+		var max_x := _to_screen(Vector2(1010.0, 0.0)).x
+		var min_y := _to_screen(Vector2(0.0, _grid_cell_center(0, 0).y - 22.0)).y
+		var max_y := _to_screen(Vector2(0.0, _grid_cell_center(0, 4).y + 22.0)).y
+		farmer_sprite.position.x = clampf(farmer_sprite.position.x, min_x, max_x)
+		farmer_sprite.position.y = clampf(farmer_sprite.position.y, min_y, max_y)
 		if absf(movement.x) > 0.01:
 			farmer_sprite.scale.x = absf(farmer_sprite.scale.x) * signf(movement.x)
 		farmer_locomotion_animation = "walk" if touch_moving else "run"
 	else:
 		farmer_locomotion_animation = "idle"
-	if farmer_sprite.animation != "attack":
-		if farmer_sprite.animation != farmer_locomotion_animation:
-			farmer_sprite.play(farmer_locomotion_animation)
+	var farmer_row := _nearest_row_at_screen_position(farmer_sprite.position)
+	var facing := signf(farmer_sprite.scale.x)
+	var visual_scale := 0.25 * _depth_scale(4, farmer_row)
+	farmer_sprite.scale = Vector2(absf(visual_scale) * facing, visual_scale)
+	farmer_sprite.z_index = int(farmer_sprite.position.y)
+	if farmer_sprite.animation != "attack" and farmer_sprite.animation != farmer_locomotion_animation:
+		farmer_sprite.play(farmer_locomotion_animation)
 
 func _farmer_can_attack() -> bool:
 	if not has_planted_defender:
@@ -534,11 +547,10 @@ func _gui_input(event: InputEvent) -> void:
 	var mouse := event as InputEventMouseButton
 	if mouse.button_index != MOUSE_BUTTON_LEFT or not mouse.pressed:
 		return
-	var column := floori((mouse.position.x - GRID_LEFT) / CELL_WIDTH)
-	var row := floori((mouse.position.y - GRID_TOP) / 100.0)
-	if column < 0 or column >= Rules.BOARD_COLUMNS or row < 0 or row >= Rules.BOARD_ROWS:
+	var cell := _cell_at_screen_position(mouse.position)
+	if cell.x < 0 or cell.y < 0:
 		return
-	_place_plant(column, row)
+	_place_plant(cell.x, cell.y)
 	accept_event()
 
 func _place_plant(column: int, row: int) -> void:
@@ -547,13 +559,22 @@ func _place_plant(column: int, row: int) -> void:
 		status_label.text = "Cannot plant: %s" % str(placement.get("reason", "unknown")).replace("_", " ").to_lower()
 		return
 	var plant: Dictionary = placement.plant.duplicate(true)
-	plant["x"] = LANE_CENTER_X + Rules.plant_lane_local_x(column) * LANE_SCALE
-	plant["y"] = LANE_Y[row]
+	var source_position := _grid_cell_center(column, row)
+	if row < 3:
+		source_position.y -= 5.0
+	var screen_position := _to_screen(source_position)
+	var depth_scale := _depth_scale(column, row)
+	plant["x"] = screen_position.x
+	plant["y"] = screen_position.y
+	plant["local_x"] = Rules.plant_lane_local_x(column)
+	plant["depth_scale"] = depth_scale
 	plant["cooldown_ms"] = 450.0
 	plant["production_ms"] = float(Rules.PLANTS[selected_plant].get("production_interval_ms", 0.0))
 	var plant_sprite := _create_plant_sprite(selected_plant)
 	if plant_sprite != null:
-		plant_sprite.position = Vector2(plant.x, plant.y)
+		plant_sprite.position = screen_position
+		plant_sprite.scale *= depth_scale
+		plant_sprite.z_index = int(screen_position.y)
 		add_child(plant_sprite)
 	plant["sprite"] = plant_sprite
 	plants.append(plant)
@@ -579,10 +600,14 @@ func _spawn_monster() -> void:
 	var archetype := Rules.monster_archetype(wave, _global_spawn_index())
 	var profile := Rules.monster_combat_stats(archetype, wave)
 	var row := rng.randi_range(0, Rules.BOARD_ROWS - 1)
-	var monster_sprite := _make_monster_sprite(archetype, 0.22 * float(profile.width_scale))
+	var local_x := Rules.BOARD_SPAWN_LOCAL_X
+	var depth_scale := _depth_scale(4, row)
+	var screen_position := _to_screen(_lane_point(local_x, row))
+	var monster_sprite := _make_monster_sprite(archetype,
+		0.22 * float(profile.width_scale) * depth_scale)
 	if monster_sprite != null:
-		monster_sprite.position = Vector2(LANE_CENTER_X + Rules.BOARD_SPAWN_LOCAL_X * LANE_SCALE, LANE_Y[row])
-		monster_sprite.z_index = 11
+		monster_sprite.position = screen_position
+		monster_sprite.z_index = int(screen_position.y)
 		match archetype:
 			"dust-skitter": monster_sprite.modulate = Color("#b4d39c")
 			"stonehide": monster_sprite.modulate = Color("#a4b0b7")
@@ -590,12 +615,13 @@ func _spawn_monster() -> void:
 		add_child(monster_sprite)
 	monsters.append({
 		"sprite": monster_sprite,
-		"kind": archetype, "row": row, "x": LANE_CENTER_X + Rules.BOARD_SPAWN_LOCAL_X * LANE_SCALE,
-		"y": LANE_Y[row], "hp": float(profile.hp), "max_hp": float(profile.max_hp),
-		"speed": float(profile.speed) * LANE_SCALE, "width_scale": float(profile.width_scale),
+		"kind": archetype, "row": row, "local_x": local_x,
+		"x": screen_position.x, "y": screen_position.y, "depth_scale": depth_scale,
+		"hp": float(profile.hp), "max_hp": float(profile.max_hp),
+		"speed": float(profile.speed), "width_scale": float(profile.width_scale),
 		"plant_damage": float(profile.plant_damage), "attack_interval_ms": float(profile.attack_interval_ms),
 		"attack_cooldown_ms": 0.0, "incoming_damage_multiplier": float(profile.incoming_damage_multiplier),
-		"alive": true
+		"braced": false, "alive": true
 	})
 	status_label.text = "%s incoming — wave %d." % [archetype.replace("-", " ").capitalize(), wave]
 
