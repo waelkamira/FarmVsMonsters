@@ -248,6 +248,23 @@ export default class BattleScene extends Scene {
         }
       }
     }
+    if (this.textures.exists("snow-thrower-level-1")) {
+      const snowTexture = this.textures.get("snow-thrower-level-1");
+      const snowSource = snowTexture.getSourceImage();
+      // Snow Thrower is a 1080×869, 3×3 atlas. Its rows are 289/290px high,
+      // so calculate every edge independently instead of using a rounded cell size.
+      for (let index = 0; index < 9; index += 1) {
+        const column = index % 3;
+        const row = Math.floor(index / 3);
+        const frameX = Math.floor((column * snowSource.width) / 3);
+        const frameY = Math.floor((row * snowSource.height) / 3);
+        const nextFrameX = Math.floor(((column + 1) * snowSource.width) / 3);
+        const nextFrameY = Math.floor(((row + 1) * snowSource.height) / 3);
+        if (!snowTexture.has(String(index))) {
+          snowTexture.add(String(index), 0, frameX, frameY, nextFrameX - frameX, nextFrameY - frameY);
+        }
+      }
+    }
     if (this.textures.exists("mango-level-1") && !this.anims.exists("mango-level-1-throw")) {
       this.anims.create({ key: "mango-level-1-throw", frames: this.anims.generateFrameNumbers("mango-level-1", { start: 0, end: 8 }), frameRate: 12, repeat: 0 });
     }
@@ -260,6 +277,26 @@ export default class BattleScene extends Scene {
     if (this.textures.exists("hazelnut-level-1") && !this.anims.exists("hazelnut-level-1-throw")) {
       const available = Object.keys(this.textures.get("hazelnut-level-1").frames).filter((name) => name !== "__BASE").length;
       if (available >= 9) this.anims.create({ key: "hazelnut-level-1-throw", frames: this.anims.generateFrameNumbers("hazelnut-level-1", { start: 0, end: 8 }), frameRate: 12, repeat: 0 });
+    }
+    if (this.textures.exists("snow-thrower-level-1")) {
+      const snowTexture = this.textures.get("snow-thrower-level-1");
+      const snowFrames = Object.keys(snowTexture.frames).filter((name) => name !== "__BASE").length;
+      if (snowFrames >= 9 && !this.anims.exists("snow-thrower-level-1-idle")) {
+        this.anims.create({
+          key: "snow-thrower-level-1-idle",
+          frames: [{ key: "snow-thrower-level-1", frame: 0 }, { key: "snow-thrower-level-1", frame: 8 }],
+          frameRate: 2,
+          repeat: -1
+        });
+      }
+      if (snowFrames >= 9 && !this.anims.exists("snow-thrower-level-1-throw")) {
+        this.anims.create({
+          key: "snow-thrower-level-1-throw",
+          frames: this.anims.generateFrameNumbers("snow-thrower-level-1", { start: 1, end: 6 }),
+          frameRate: 12,
+          repeat: 0
+        });
+      }
     }
     const legacySoundSetting = this.registry.get("soundEnabled");
     const defaultSoundSetting = legacySoundSetting === undefined ? true : legacySoundSetting;
@@ -706,7 +743,7 @@ export default class BattleScene extends Scene {
       .setInteractive({ useHandCursor: true });
     let icon;
     if (imageKey && this.textures.exists(imageKey)) {
-      const usesGridSheet = imageKey === "mango-level-1" || imageKey === "radish-level-1";
+      const usesGridSheet = imageKey === "mango-level-1" || imageKey === "radish-level-1" || imageKey === "snow-thrower-level-1";
       const frameData = this.textures.getFrame(imageKey, usesGridSheet ? 0 : undefined);
       // Use nearly the full packet face for the plant artwork while keeping
       // a dedicated strip below for the energy cost.
@@ -2313,7 +2350,7 @@ export default class BattleScene extends Scene {
     // The farthest row is smallest; each nearer row grows progressively.
     // Apply the same perspective to Pineapple, Hazelnut and Mango so their projectiles
     // can use the exact displayed plant scale when calculating launch offsets.
-    const pineapplePerspectiveScale = type === "pineapple" || type === "hazelnut" || type === "mango"
+    const pineapplePerspectiveScale = type === "pineapple" || type === "hazelnut" || type === "mango" || type === "snow-thrower"
       ? PhaserMath.Clamp(0.8 + (rowIndex / Math.max(1, LANES - 1)) * 0.4, 0.8, 1.2)
       : 1;
     plant.setData("pineapplePerspectiveScale", pineapplePerspectiveScale);
@@ -2323,9 +2360,16 @@ export default class BattleScene extends Scene {
       const height = baseHeight * pineapplePerspectiveScale;
       const width = height * (this.textures.getFrame(texture).realWidth / this.textures.getFrame(texture).realHeight);
       const maxWidth = (type === "pineapple" ? 152 : type === "hazelnut" ? 116 : type === "mango" ? 116 : type === "snow-thrower" ? 104 : 76) * pineapplePerspectiveScale;
-      if (type === "pineapple" || type === "hazelnut" || type === "mango") {
+      if (type === "pineapple" || type === "hazelnut" || type === "mango" || type === "snow-thrower") {
         const animatedPlant = this.add.sprite(0, -height / 2 + 2, texture, 0).setDisplaySize(Math.min(width, maxWidth), height);
-        animatedPlant.setData(type === "pineapple" ? "pineappleThrowSprite" : type === "hazelnut" ? "hazelnutThrowSprite" : "mangoThrowSprite", true);
+        const throwDataKey = type === "pineapple" ? "pineappleThrowSprite"
+          : type === "hazelnut" ? "hazelnutThrowSprite"
+          : type === "mango" ? "mangoThrowSprite"
+          : "snow-throwerThrowSprite";
+        animatedPlant.setData(throwDataKey, true);
+        if (type === "snow-thrower" && this.anims.exists("snow-thrower-level-1-idle")) {
+          animatedPlant.play("snow-thrower-level-1-idle");
+        }
         plant.add(animatedPlant);
       } else {
         plant.add(this.add.image(0, -height / 2 + 2, texture).setDisplaySize(Math.min(width, maxWidth), height));
@@ -2516,7 +2560,7 @@ export default class BattleScene extends Scene {
   fireThorn(plant, target) {
     // Pineapple projectiles must not exist until the throw animation reaches
     // its final frame. This keeps the visual action and the actual launch in sync.
-    if (["radish", "pineapple", "hazelnut", "mango"].includes(plant.type) && plant.view?.active) {
+    if (["radish", "pineapple", "hazelnut", "mango", "snow-thrower"].includes(plant.type) && plant.view?.active) {
       const animationType = plant.type;
       const throwingKey = `${animationType}Throwing`;
       if (plant[throwingKey]) return;
@@ -2529,7 +2573,13 @@ export default class BattleScene extends Scene {
         throwSprite.setTexture(textureKey, 0);
         throwSprite.play(animationKey);
         throwSprite.once("animationcomplete", () => {
-          if (throwSprite.active) throwSprite.setTexture(textureKey, 0);
+          if (throwSprite.active) {
+            if (animationType === "snow-thrower" && this.anims.exists("snow-thrower-level-1-idle")) {
+              throwSprite.play("snow-thrower-level-1-idle");
+            } else {
+              throwSprite.setTexture(textureKey, 0);
+            }
+          }
           this.time.delayedCall(0, () => {
             plant[throwingKey] = false;
             if (plant.alive && target?.alive && !this.gameOver) {
@@ -2596,9 +2646,10 @@ export default class BattleScene extends Scene {
     // ease its vertical offset toward the lane center:
     // that creates the unwanted immediate downward drop.
 
-    const halo = this.add.circle(0, 0, 18, 0xff7185, 0.13);
-    const outerGlow = this.add.circle(0, 0, 13, 0x8bd66f, 0.2);
-    const innerGlow = this.add.circle(0, 0, 9, 0xffd5dc, 0.28);
+    const isFrostShot = plant.type === "snow-thrower";
+    const halo = this.add.circle(0, 0, 18, isFrostShot ? 0x69d9ff : 0xff7185, 0.13);
+    const outerGlow = this.add.circle(0, 0, 13, isFrostShot ? 0x9eeeff : 0x8bd66f, 0.2);
+    const innerGlow = this.add.circle(0, 0, 9, isFrostShot ? 0xe6fbff : 0xffd5dc, 0.28);
     view.add([halo, outerGlow, innerGlow]);
 
     const projectileTexture = plant.type === "radish" ? "radish-level-1-bomb"
@@ -2613,6 +2664,8 @@ export default class BattleScene extends Scene {
         plantProjectile.setDisplaySize(bombSize, plant.type === "hazelnut" ? 30 : plant.type === "mango" ? 30 : 21);
       } else if (plant.type === "radish") {
         plantProjectile.setDisplaySize(27, 31).setRotation(-Math.PI / 2);
+      } else if (plant.type === "snow-thrower") {
+        plantProjectile.setDisplaySize(28, 34);
       } else {
         plantProjectile.setDisplaySize(30, 30);
       }
@@ -2643,7 +2696,7 @@ export default class BattleScene extends Scene {
       repeat: -1
     });
 
-    const muzzleFlash = this.add.circle(launchX, launchY, 13, 0xffe28a, 0.8).setDepth(15);
+    const muzzleFlash = this.add.circle(launchX, launchY, 13, plant.type === "snow-thrower" ? 0x9cecff : 0xffe28a, 0.8).setDepth(15);
     this.tweens.add({
       targets: muzzleFlash,
       alpha: 0,
