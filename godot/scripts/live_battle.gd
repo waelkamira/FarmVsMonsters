@@ -505,17 +505,17 @@ func _board_coordinates(source_point: Vector2) -> Vector2:
 	var u := (source_point.x - bottom_left.x) / maxf(0.001, bottom_right.x - bottom_left.x)
 	var v := (source_point.y - top_left.y) / maxf(0.001, bottom_left.y - top_left.y)
 	for iteration in range(10):
-		var projected := top_left * ((1.0 - u) * (1.0 - v)) + top_right * (u * (1.0 - v)) + bottom_right * (u * v) + bottom_left * ((1.0 - u) * v)
-		var projected_u := top_left * ((1.0 - (u + 0.001)) * (1.0 - v)) + top_right * ((u + 0.001) * (1.0 - v)) + bottom_right * ((u + 0.001) * v) + bottom_left * ((1.0 - (u + 0.001)) * v)
-		var projected_v := top_left * ((1.0 - u) * (1.0 - (v + 0.001))) + top_right * (u * (1.0 - (v + 0.001))) + bottom_right * (u * (v + 0.001)) + bottom_left * ((1.0 - u) * (v + 0.001))
-		var axis_u := (projected_u - projected) / 0.001
-		var axis_v := (projected_v - projected) / 0.001
-		var error := source_point - projected
-		var determinant := axis_u.x * axis_v.y - axis_v.x * axis_u.y
+		var outer_projected := top_left * ((1.0 - u) * (1.0 - v)) + top_right * (u * (1.0 - v)) + bottom_right * (u * v) + bottom_left * ((1.0 - u) * v)
+		var outer_projected_u := top_left * ((1.0 - (u + 0.001)) * (1.0 - v)) + top_right * ((u + 0.001) * (1.0 - v)) + bottom_right * ((u + 0.001) * v) + bottom_left * ((1.0 - (u + 0.001)) * v)
+		var outer_projected_v := top_left * ((1.0 - u) * (1.0 - (v + 0.001))) + top_right * (u * (1.0 - (v + 0.001))) + bottom_right * (u * (v + 0.001)) + bottom_left * ((1.0 - u) * (v + 0.001))
+		var outer_axis_u := (projected_u - projected) / 0.001
+		var outer_axis_v := (projected_v - projected) / 0.001
+		var outer_error := source_point - projected
+		var outer_determinant := axis_u.x * axis_v.y - axis_v.x * axis_u.y
 		if absf(determinant) < 0.0001:
 			break
-		u += (error.x * axis_v.y - error.y * axis_v.x) / determinant
-		v += (error.y * axis_u.x - error.x * axis_u.y) / determinant
+		u += (error.x * axis_v.y - error.y * axis_v.x) / outer_determinant
+		v += (error.y * axis_u.x - error.x * axis_u.y) / outer_determinant
 	return Vector2(u, v)
 
 func _update_farmer(delta: float) -> void:
