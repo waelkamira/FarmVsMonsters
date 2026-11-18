@@ -93,12 +93,19 @@ export async function restoreOrInitializeCloudProgress() {
     };
   }
 
-  const unlockedStage = Math.min(10, Math.max(1, Number(cloud.unlocked_stage) || 1));
-  const completedStages = Array.isArray(cloud.completed_stages)
-    ? [...new Set(cloud.completed_stages.filter((stage) =>
+  // Progress is monotonic: an older verified cloud snapshot must never
+  // overwrite a newer campaign unlock already earned on this device.
+  const cloudUnlockedStage = Math.min(10, Math.max(1, Number(cloud.unlocked_stage) || 1));
+  const unlockedStage = Math.max(local.unlockedStage, cloudUnlockedStage);
+  const cloudCompletedStages = Array.isArray(cloud.completed_stages)
+    ? cloud.completed_stages.filter((stage) =>
         Number.isInteger(stage) && stage >= 1 && stage < unlockedStage
-      ))].sort((a, b) => a - b)
+      )
     : [];
+  const completedStages = [...new Set([
+    ...local.completedStages,
+    ...cloudCompletedStages
+  ].filter((stage) => stage < unlockedStage))].sort((a, b) => a - b);
   const coins = cloud.coins_verified === true
     ? (Number(cloud.coins) || 0)
     : local.coins;
