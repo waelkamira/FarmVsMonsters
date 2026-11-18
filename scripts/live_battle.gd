@@ -11,20 +11,22 @@ const BACKGROUND_HEIGHT := 597.333
 const FARMER_MOVE_SPEED := 115.0
 const FARMER_CLUB_DAMAGE := 42.0
 const FARMER_CLUB_REACH := 112.0
-const PLANT_OPTIONS := ["radish", "mushroom", "pumpkin", "pineapple", "hazelnut", "mango"]
+const PLANT_OPTIONS := ["radish", "mushroom", "pumpkin", "pineapple", "hazelnut", "mango", "snow-thrower"]
 const PLANT_TEXTURES := {
 	"radish": "res://assets/plants/radish-level-1.png",
 	"mushroom": "res://assets/plants/mushroom.png",
 	"pumpkin": "res://assets/plants/pumpkin.png",
 	"pineapple": "res://assets/plants/pineapple-level-1.png",
 	"hazelnut": "res://assets/plants/hazelnut-level-1.png",
-	"mango": "res://assets/plants/mango-level-1.png"
+	"mango": "res://assets/plants/mango-level-1.png",
+	"snow-thrower": "res://assets/plants/snow-thrower-level-1.png"
 }
 const PLANT_PROJECTILES := {
 	"radish": "res://assets/projectiles/radish-bomb.png",
 	"pineapple": "res://assets/projectiles/pineapple-bomb.png",
 	"hazelnut": "res://assets/projectiles/hazelnut-bomb.png",
-	"mango": "res://assets/projectiles/mango-bomb.png"
+	"mango": "res://assets/projectiles/mango-bomb.png",
+	"snow-thrower": "res://assets/projectiles/snow-thrower-bomb-level-1.png"
 }
 const ANIMATED_PLANT_GRIDS := {
 	"radish": Vector2i(3, 3), "pineapple": Vector2i(3, 3),
@@ -334,6 +336,7 @@ func _plant_frame_width(plant_type: String) -> float:
 		"pineapple": return 418.0
 		"hazelnut": return 341.0
 		"mango": return 360.0
+		"snow-thrower": return 1080.0
 	return 300.0
 
 func _plant_half_width(plant: Dictionary) -> float:
@@ -727,7 +730,7 @@ func _create_plant_sprite(plant_id: String) -> Node2D:
 		return animated
 	var sprite := Sprite2D.new()
 	sprite.texture = load(texture_path) as Texture2D
-	sprite.scale = Vector2(0.14, 0.14)
+	sprite.scale = Vector2(0.10, 0.10) if plant_id == "snow-thrower" else Vector2(0.14, 0.14)
 	sprite.z_index = 10
 	return sprite
 
@@ -1055,7 +1058,7 @@ func _update_plants(delta_ms: float) -> void:
 				})
 				plant.production_ms = float(Rules.PLANTS.mushroom.production_interval_ms)
 			continue
-		if not Rules.PLANTS[plant.type].has("projectile_damage"):
+		if not Rules.PLANTS[plant.type].has("projectile_damage") and not Rules.PLANTS[plant.type].has("freeze_projectile"):
 			continue
 		plant.cooldown_ms = float(plant.cooldown_ms) - delta_ms
 		var target_found := false
@@ -1083,7 +1086,9 @@ func _update_plants(delta_ms: float) -> void:
 				"row": int(plant.row), "speed": float(config.projectile_speed),
 				"radius": float(config.projectile_collision_radius),
 				"depth_scale": float(plant.depth_scale),
-				"damage": float(config.projectile_damage), "alive": true
+				"damage": float(config.get("projectile_damage", 0.0)),
+				"freeze": bool(config.get("freeze_projectile", false)),
+				"freeze_duration_ms": float(config.get("freeze_duration_ms", Rules.MONSTER_FREEZE_DURATION_MS)), "alive": true
 			})
 			plant.cooldown_ms = float(config.cooldown_ms)
 
@@ -1322,6 +1327,14 @@ func _update_projectiles(delta: float) -> void:
 				continue
 			var hit_radius := float(projectile.radius) * float(monster.width_scale)
 			if absf(float(monster.local_x) - float(projectile.local_x)) <= hit_radius:
+				if bool(projectile.get("freeze", false)):
+					_freeze_projectile_target(int(projectile.row), float(projectile.local_x),
+						float(projectile.radius), float(projectile.get("freeze_duration_ms", Rules.MONSTER_FREEZE_DURATION_MS)))
+					projectile.alive = false
+					_play_sfx("monster-hit", 0.06)
+					if projectile_sprite != null and is_instance_valid(projectile_sprite):
+						projectile_sprite.queue_free()
+					break
 				var damage_multiplier := float(monster.incoming_damage_multiplier)
 				if str(monster.kind) == "stonehide" and bool(monster.braced):
 					damage_multiplier = Rules.stonehide_incoming_damage_multiplier(true)
