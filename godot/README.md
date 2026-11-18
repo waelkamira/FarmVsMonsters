@@ -40,6 +40,8 @@ godot --headless --editor --path godot --quit
 godot --headless --path godot --script res://tests/test_asset_manifest.gd
 godot --headless --path godot --script res://tests/test_phase_one_rules.gd
 godot --headless --path godot --script res://tests/test_phase_one_combat_core.gd
+godot --headless --path godot --script res://tests/test_live_battle_geometry.gd
+godot --headless --path godot res://scenes/live_battle.tscn --quit-after 120
 ```
 
 Godot 4.x is not available in the current development environment, so these scripts and the live scene have not yet been executed here. No Android export or device test is claimed.
