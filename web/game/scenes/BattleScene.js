@@ -3510,11 +3510,10 @@ export default class BattleScene extends Scene {
             !Number.isFinite(monster.localX)) continue;
         const horizontalDistance = Math.abs(monster.localX - shot.localX);
         const hitRadius = (shot.collisionRadius || PHASE_ONE_PLANTS.radish.projectileCollisionRadius) * (monster.widthScale || 1);
-        if (horizontalDistance > hitRadius) continue;
         if (shot.freeze) {
-          // Snow shots travel toward increasing lane X. If one update crosses
-          // more than one hyena, freeze the first one along the swept segment,
-          // not whichever happens to be closest to the projectile's final X.
+          // Snow shots travel toward increasing lane X. Test the whole swept
+          // segment so a fast frame cannot skip a hyena between two positions.
+          // If it crosses more than one, freeze the first one along the path.
           const sweptStart = previousShotLocalX - hitRadius;
           const sweptEnd = shot.localX + hitRadius;
           if (monster.localX < sweptStart || monster.localX > sweptEnd ||
@@ -3525,7 +3524,7 @@ export default class BattleScene extends Scene {
         }
         // Preserve the existing nearest-hit behavior for Radish and other
         // damage projectiles.
-        if (horizontalDistance >= nearestHitDistance) continue;
+        if (horizontalDistance > hitRadius || horizontalDistance >= nearestHitDistance) continue;
         hit = monster;
         nearestHitDistance = horizontalDistance;
       }
