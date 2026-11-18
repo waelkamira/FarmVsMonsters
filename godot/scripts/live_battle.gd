@@ -482,7 +482,7 @@ func _farmer_attack() -> void:
 			nearest_lane_distance = lane_distance
 			nearest_row = row
 	var target: Variant = Rules.select_farmer_melee_target(
-		monsters, nearest_row, farmer_sprite.position.x, FARMER_CLUB_REACH)
+		monsters, nearest_row, farmer_sprite.position.x, FARMER_CLUB_REACH * SCREEN_SCALE)
 	if target == null:
 		status_label.text = "No monster is close enough for the club."
 		return
@@ -646,23 +646,29 @@ func _update_plants(delta_ms: float) -> void:
 		plant.cooldown_ms = float(plant.cooldown_ms) - delta_ms
 		var target_found := false
 		for monster in monsters:
-			if monster.alive and int(monster.row) == int(plant.row) and monster.x > plant.x and monster.x - plant.x <= float(Rules.PLANTS[plant.type].range) * LANE_SCALE:
+			if monster.alive and int(monster.row) == int(plant.row) and float(monster.local_x) > float(plant.local_x) and float(monster.local_x) - float(plant.local_x) <= float(Rules.PLANTS[plant.type].range):
 				target_found = true
 				break
 		if target_found and plant.cooldown_ms <= 0.0:
 			var config: Dictionary = Rules.PLANTS[plant.type]
+			var projectile_local_x := float(plant.local_x) + 8.0
+			var projectile_position := _to_screen(_lane_point(projectile_local_x, int(plant.row)))
 			var projectile_sprite := _create_projectile_sprite(str(plant.type))
 			if projectile_sprite != null:
-				projectile_sprite.position = Vector2(float(plant.x) + 24.0, float(plant.y) - 12.0)
+				projectile_sprite.position = projectile_position
+				projectile_sprite.scale *= float(plant.depth_scale)
+				projectile_sprite.z_index = int(projectile_position.y) + 2
 				add_child(projectile_sprite)
 			var plant_sprite: Variant = plant.get("sprite", null)
 			if plant_sprite is AnimatedSprite2D:
 				plant_sprite.play("attack")
 			projectiles.append({
-				"sprite": projectile_sprite, "x": float(plant.x) + 24.0, "y": float(plant.y) - 12.0,
-				"row": int(plant.row), "speed": float(config.projectile_speed) * LANE_SCALE,
-				"damage": float(config.projectile_damage), "radius": float(config.projectile_collision_radius) * LANE_SCALE,
-				"alive": true
+				"sprite": projectile_sprite, "local_x": projectile_local_x,
+				"x": projectile_position.x, "y": projectile_position.y,
+				"row": int(plant.row), "speed": float(config.projectile_speed),
+				"radius": float(config.projectile_collision_radius),
+				"depth_scale": float(plant.depth_scale),
+				"damage": float(config.projectile_damage), "alive": true
 			})
 			plant.cooldown_ms = float(config.cooldown_ms)
 
@@ -670,14 +676,32 @@ func _update_monsters(delta: float, delta_ms: float) -> void:
 	for monster in monsters:
 		if not monster.alive:
 			continue
-		var blocker: Dictionary = _find_blocker(monster)
-		if not blocker.is_empty() and float(monster.x) <= float(blocker.x) + 38.0:
-			monster.x = minf(float(monster.x), float(blocker.x) + 38.0)
-			var blocked_monster_sprite: Variant = monster.get("sprite", null)
-			if blocked_monster_sprite != null and is_instance_valid(blocked_monster_sprite):
-				blocked_monster_sprite.position.x = float(monster.x)
-				if blocked_monster_sprite.animation != "bite" and blocked_monster_sprite.animation != "hit" and blocked_monster_sprite.animation != "death":
-					blocked_monster_sprite.play("bite")
+		var row := int(monster.row)
+		var lane_step := absf(_to_screen(_lane_point(float(monster.local_x) + 1.0, row)).x - _to_screen(_lane_point(float(monster.local_x), row)).x)
+		var monster_half_width := 360.0 * 0.22 * float(monster.depth_scale) * float(monster.width_scale) * 0.5
+		var widest_plant_half_width := 0.0
+		for plant in plants:
+			if plant.alive and int(plant.row) == row:
+				widest_plant_half_width = maxf(widest_plant_half_width, _plant_half_width(plant))
+		var max_overshoot := (monster_half_width + widest_plant_half_width + 10.0 * SCREEN_SCALE) / maxf(0.01, lane_step)
+		var blocker: Dictionary = _find_blocker(monster, max_overshoot)
+		var within_bite_range := false
+		if not blocker.is_empty():
+			var blocker_lane_step := absf(_to_screen(_lane_point(float(blocker.local_x) + 1.0, row)).x - _to_screen(_lane_point(float(blocker.local_x), row)).x)
+			var bite_reach := (monster_half_width + _plant_half_width(blocker) + 10.0 * SCREEN_SCALE) / maxf(0.01, blocker_lane_step)
+			within_bite_range = float(monster.local_x) - float(blocker.local_x) <= bite_reach
+		if within_bite_range:
+			monster.local_x = float(blocker.local_x)
+			monster.braced = str(monster.kind) == "stonehide"
+			var bite_position := _to_screen(_lane_point(float(monster.local_x), row))
+			monster.x = bite_position.x
+			monster.y = bite_position.y
+			var blocked_sprite: Variant = monster.get("sprite", null)
+			if blocked_sprite != null and is_instance_valid(blocked_sprite):
+				blocked_sprite.position = bite_position
+				blocked_sprite.z_index = int(bite_position.y)
+				if blocked_sprite.animation != "bite" and blocked_sprite.animation != "hit" and blocked_sprite.animation != "death":
+					blocked_sprite.play("bite")
 			monster.attack_cooldown_ms = float(monster.attack_cooldown_ms) - delta_ms
 			if monster.attack_cooldown_ms <= 0.0:
 				blocker.hp = Rules.apply_hit_points_damage(float(blocker.hp), float(monster.plant_damage)).hp
@@ -689,44 +713,58 @@ func _update_monsters(delta: float, delta_ms: float) -> void:
 						destroyed_sprite.queue_free()
 					status_label.text = "%s was destroyed!" % str(blocker.type).capitalize()
 			continue
-		monster.x = float(monster.x) - float(monster.speed) * delta
+		monster.braced = false
+		monster.local_x = float(monster.local_x) - float(monster.speed) * delta
+		var monster_position := _to_screen(_lane_point(float(monster.local_x), row))
+		monster.x = monster_position.x
+		monster.y = monster_position.y
 		var monster_sprite: Variant = monster.get("sprite", null)
 		if monster_sprite != null and is_instance_valid(monster_sprite):
-			monster_sprite.position.x = float(monster.x)
+			monster_sprite.position = monster_position
+			monster_sprite.z_index = int(monster_position.y)
 			var moving_animation := "run" if str(monster.kind) == "dust-skitter" else "walk"
 			if monster_sprite.animation != moving_animation and monster_sprite.animation != "hit" and monster_sprite.animation != "death":
 				monster_sprite.play(moving_animation)
-		if float(monster.x) <= HOUSE_X:
+		if float(monster.local_x) <= Rules.BOARD_HOME_LOCAL_X:
 			game_state = "defeat"
 			status_label.text = "The farmhouse has been overrun. Return to the main menu to start a new battle."
 			return
 
-func _find_blocker(monster: Dictionary) -> Dictionary:
+func _find_blocker(monster: Dictionary, max_overshoot: float) -> Dictionary:
 	var nearest: Dictionary = {}
-	var nearest_x := -INF
+	var nearest_local_x := -INF
 	for plant in plants:
 		if not plant.alive or int(plant.row) != int(monster.row):
 			continue
-		if float(plant.x) <= float(monster.x) and float(plant.x) > nearest_x:
+		var candidate_local_x := float(plant.local_x)
+		if candidate_local_x - float(monster.local_x) > max_overshoot:
+			continue
+		if candidate_local_x > nearest_local_x:
 			nearest = plant
-			nearest_x = float(plant.x)
+			nearest_local_x = candidate_local_x
 	return nearest
 
 func _update_projectiles(delta: float) -> void:
 	for projectile in projectiles:
 		if not projectile.alive:
 			continue
-		projectile.x = float(projectile.x) + float(projectile.speed) * delta
+		projectile.local_x = float(projectile.local_x) + float(projectile.speed) * delta
+		var projectile_position := _to_screen(_lane_point(float(projectile.local_x), int(projectile.row)))
+		projectile.x = projectile_position.x
+		projectile.y = projectile_position.y
 		var projectile_sprite: Variant = projectile.get("sprite", null)
 		if projectile_sprite != null and is_instance_valid(projectile_sprite):
-			projectile_sprite.position.x = float(projectile.x)
+			projectile_sprite.position = projectile_position
+			projectile_sprite.z_index = int(projectile_position.y) + 2
 		for monster in monsters:
 			if not monster.alive or int(monster.row) != int(projectile.row):
 				continue
 			var hit_radius := float(projectile.radius) * float(monster.width_scale)
-			if absf(float(monster.x) - float(projectile.x)) <= hit_radius:
-				var damage := float(projectile.damage) * float(monster.incoming_damage_multiplier)
-				monster.hp = Rules.apply_hit_points_damage(float(monster.hp), damage).hp
+			if absf(float(monster.local_x) - float(projectile.local_x)) <= hit_radius:
+				var damage_multiplier := float(monster.incoming_damage_multiplier)
+				if str(monster.kind) == "stonehide" and bool(monster.braced):
+					damage_multiplier = Rules.stonehide_incoming_damage_multiplier(true)
+				monster.hp = Rules.apply_hit_points_damage(float(monster.hp), float(projectile.damage) * damage_multiplier).hp
 				projectile.alive = false
 				if projectile_sprite != null and is_instance_valid(projectile_sprite):
 					projectile_sprite.queue_free()
@@ -741,9 +779,9 @@ func _update_projectiles(delta: float) -> void:
 				elif hit_sprite != null and is_instance_valid(hit_sprite):
 					hit_sprite.play("hit")
 				break
-			if float(monster.x) > float(projectile.x) + hit_radius:
+			if float(monster.local_x) > float(projectile.local_x) + hit_radius:
 				continue
-		if float(projectile.x) > 1160.0:
+		if float(projectile.local_x) > Rules.BOARD_SPAWN_LOCAL_X + 50.0:
 			projectile.alive = false
 			if projectile_sprite != null and is_instance_valid(projectile_sprite):
 				projectile_sprite.queue_free()
@@ -773,23 +811,19 @@ func _refresh_hud() -> void:
 		attack_button.visible = game_state == "running" and _farmer_can_attack()
 
 func _draw() -> void:
-	draw_rect(Rect2(Vector2.ZERO, get_viewport_rect().size), Color("#263b2e"), true)
-	draw_rect(Rect2(205.0, 128.0, 900.0, 510.0), Color("#38583d"), true)
-	for row in range(Rules.BOARD_ROWS):
-		for column in range(Rules.BOARD_COLUMNS):
-			var cell := Rect2(GRID_LEFT + float(column) * CELL_WIDTH, GRID_TOP + float(row) * 100.0, CELL_WIDTH, 100.0)
-			draw_rect(cell, Color("#a5bd83"), false, 2.0)
-		draw_line(Vector2(90.0, LANE_Y[row] + 36.0), Vector2(1140.0, LANE_Y[row] + 36.0), Color("#263c2c"), 2.0)
-	draw_rect(Rect2(42.0, 145.0, 42.0, 485.0), Color("#a56b3f"), true)
-	draw_string(get_theme_default_font(), Vector2(35.0, 132.0), "FARM", HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color.WHITE)
+	if background_view == null:
+		draw_rect(Rect2(Vector2.ZERO, get_viewport_rect().size), Color("#263b2e"), true)
 	for plant in plants:
+		var depth_scale := float(plant.get("depth_scale", 1.0))
+		var bar_width := 48.0 * depth_scale
+		var bar_y := float(plant.y) + 31.0 * depth_scale
 		var plant_hp_max := float(Rules.PLANTS[plant.type].hp)
-		draw_rect(Rect2(plant.x - 24.0, plant.y + 31.0, 48.0, 5.0), Color("#263b2e"), true)
-		draw_rect(Rect2(plant.x - 24.0, plant.y + 31.0, 48.0 * float(plant.hp) / plant_hp_max, 5.0), Color("#77d477"), true)
+		draw_rect(Rect2(plant.x - bar_width * 0.5, bar_y, bar_width, 5.0 * depth_scale), Color("#263b2e"), true)
+		draw_rect(Rect2(plant.x - bar_width * 0.5, bar_y, bar_width * float(plant.hp) / plant_hp_max, 5.0 * depth_scale), Color("#77d477"), true)
 	for monster in monsters:
-		var radius := 34.0 * float(monster.width_scale)
-		draw_rect(Rect2(monster.x - radius, monster.y - radius - 12.0, 2.0 * radius, 5.0), Color("#263b2e"), true)
-		draw_rect(Rect2(monster.x - radius, monster.y - radius - 12.0, 2.0 * radius * float(monster.hp) / float(monster.max_hp), 5.0), Color("#e66b61"), true)
+		var radius := 34.0 * float(monster.width_scale) * float(monster.depth_scale)
+		draw_rect(Rect2(monster.x - radius, monster.y - radius - 12.0 * float(monster.depth_scale), 2.0 * radius, 5.0 * float(monster.depth_scale)), Color("#263b2e"), true)
+		draw_rect(Rect2(monster.x - radius, monster.y - radius - 12.0 * float(monster.depth_scale), 2.0 * radius * float(monster.hp) / float(monster.max_hp), 5.0 * float(monster.depth_scale)), Color("#e66b61"), true)
 	if game_state != "running":
 		draw_rect(Rect2(360.0, 300.0, 560.0, 100.0), Color("#17241d"))
 		draw_string(get_theme_default_font(), Vector2(505.0, 360.0), "BATTLE " + game_state.to_upper(), HORIZONTAL_ALIGNMENT_LEFT, -1, 32, Color.WHITE)
