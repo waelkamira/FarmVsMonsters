@@ -480,7 +480,6 @@ func _board_coordinates(source_point: Vector2) -> Vector2:
 				continue
 			var local_u := 0.5
 			var local_v := 0.5
-			var polygon := _cell_polygon(column, row)
 			for iteration in range(10):
 				var projected := _interpolate_cell(column, row, local_u, local_v)
 				var projected_u := _interpolate_cell(column, row, local_u + 0.001, local_v)
@@ -499,8 +498,8 @@ func _board_coordinates(source_point: Vector2) -> Vector2:
 	var top_right: Vector2 = grid_nodes[0][Rules.BOARD_COLUMNS]
 	var bottom_right: Vector2 = grid_nodes[Rules.BOARD_ROWS][Rules.BOARD_COLUMNS]
 	var bottom_left: Vector2 = grid_nodes[Rules.BOARD_ROWS][0]
-	var u := (source_point.x - bottom_left.x) / (bottom_right.x - bottom_left.x if absf(bottom_right.x - bottom_left.x) > 0.000001 else 1.0)
-	var v := (source_point.y - top_left.y) / (bottom_left.y - top_left.y if absf(bottom_left.y - top_left.y) > 0.000001 else 1.0)
+	var u := (source_point.x - bottom_left.x) / maxf(0.001, bottom_right.x - bottom_left.x)
+	var v := (source_point.y - top_left.y) / maxf(0.001, bottom_left.y - top_left.y)
 	for iteration in range(10):
 		var projected := top_left * ((1.0 - u) * (1.0 - v)) + top_right * (u * (1.0 - v)) + bottom_right * (u * v) + bottom_left * ((1.0 - u) * v)
 		var projected_u := top_left * ((1.0 - (u + 0.001)) * (1.0 - v)) + top_right * ((u + 0.001) * (1.0 - v)) + bottom_right * ((u + 0.001) * v) + bottom_left * ((1.0 - (u + 0.001)) * v)
@@ -520,7 +519,14 @@ func _update_farmer(delta: float) -> void:
 		return
 	if not planting_target.is_empty():
 		_update_planting_movement(delta)
-		farmer_locomotion_animation = "walk" if not planting_target.is_empty() else ("plant" if farmer_planting else "idle")
+		if not planting_target.is_empty():
+			farmer_locomotion_animation = "walk"
+		elif not return_target.is_empty():
+			farmer_locomotion_animation = "run"
+		elif farmer_planting:
+			farmer_locomotion_animation = "plant"
+		else:
+			farmer_locomotion_animation = "idle"
 	elif not return_target.is_empty():
 		_update_return_movement(delta)
 		farmer_locomotion_animation = "run" if not return_target.is_empty() else "idle"
