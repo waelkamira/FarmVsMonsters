@@ -93,12 +93,22 @@ func _load_grid_calibration() -> void:
 	if parsed == null or not parsed.has("grid"):
 		push_error("Invalid farm grid calibration JSON.")
 		return
+	if int(parsed.grid.columns) != Rules.BOARD_COLUMNS or int(parsed.grid.rows) != Rules.BOARD_ROWS:
+		push_error("Farm grid calibration dimensions do not match the combat board.")
+		return
 	grid_nodes.clear()
 	for source_row in parsed.grid.controlPoints:
+		if source_row.size() != Rules.BOARD_COLUMNS + 1:
+			push_error("Each farm grid calibration row must have nine control points.")
+			grid_nodes.clear()
+			return
 		var row: Array = []
 		for point in source_row:
 			row.append(Vector2(float(point.x), float(point.y)))
 		grid_nodes.append(row)
+	if grid_nodes.size() != Rules.BOARD_ROWS + 1:
+		push_error("Farm grid calibration must have six control-point rows.")
+		grid_nodes.clear()
 
 func _build_background() -> void:
 	background_view = TextureRect.new()
@@ -485,8 +495,11 @@ func _farmer_attack() -> void:
 	if target == null:
 		status_label.text = "No monster is close enough for the club."
 		return
+	var club_multiplier := float(target.incoming_damage_multiplier)
+	if str(target.kind) == "stonehide" and bool(target.braced):
+		club_multiplier = Rules.stonehide_incoming_damage_multiplier(true)
 	target.hp = Rules.apply_hit_points_damage(
-		float(target.hp), FARMER_CLUB_DAMAGE * float(target.incoming_damage_multiplier)).hp
+		float(target.hp), FARMER_CLUB_DAMAGE * club_multiplier).hp
 	var target_sprite: Variant = target.get("sprite", null)
 	if target.hp <= 0.0:
 		target.alive = false
