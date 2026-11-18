@@ -11,6 +11,9 @@ const GRID_TOP := 140.0
 const CELL_WIDTH := 105.0
 const LANE_Y := [190.0, 290.0, 390.0, 490.0, 590.0]
 const HOUSE_X := 76.0
+const FARMER_MOVE_SPEED := 115.0
+const FARMER_CLUB_DAMAGE := 42.0
+const FARMER_CLUB_REACH := 112.0
 const PLANT_OPTIONS := ["radish", "mushroom", "pumpkin", "pineapple", "hazelnut", "mango"]
 const PLANT_TEXTURES := {
 	"radish": "res://assets/plants/radish-level-1.png",
@@ -48,6 +51,11 @@ var energy_label: Label
 var wave_label: Label
 var rng := RandomNumberGenerator.new()
 var farmer_sprite: AnimatedSprite2D
+var attack_button: Button
+var has_planted_defender := false
+var farmer_is_moving := false
+var farmer_locomotion_animation := "idle"
+var farmer_touch_directions := {"left": false, "right": false, "up": false, "down": false}
 var sprite_frames_cache: Dictionary = {}
 var monster_sprite_frames: SpriteFrames
 
@@ -69,6 +77,7 @@ func _process(delta: float) -> void:
 		queue_redraw()
 		return
 	_update_projectiles(delta)
+	_update_farmer(delta)
 	_update_wave_progress()
 	_refresh_hud()
 	queue_redraw()
@@ -115,7 +124,8 @@ func _build_ui() -> void:
 	status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	layout.add_child(status_label)
 	_refresh_hud()
-	status_label.text = "Choose a defender, then tap a field cell. Survive all five waves."
+	status_label.text = "Choose a defender and tap a field cell. Move the Farmer with WASD, arrows or the D-pad; the club unlocks when all Radishes are lost."
+	_build_farmer_controls()
 
 func _make_sheet_sprite(texture_path: String, columns: int, rows: int, fps: float,
 		sprite_scale: float, animate_all_frames: bool = false) -> AnimatedSprite2D:
@@ -199,12 +209,150 @@ func _on_monster_animation_finished(sprite: AnimatedSprite2D) -> void:
 		sprite.queue_free()
 
 func _create_farmer_sprite() -> void:
-	farmer_sprite = _make_sheet_sprite(
-		"res://assets/characters/farmer/farmer-idle.png", 2, 2, 3.0, 0.25, true)
-	if farmer_sprite != null:
-		farmer_sprite.position = Vector2(112.0, 565.0)
-		farmer_sprite.z_index = 12
-		add_child(farmer_sprite)
+	var frames := SpriteFrames.new()
+	_append_sheet_animation(frames, "idle", "res://assets/characters/farmer/farmer-idle.png", 2, 2, 1.5, true)
+	_append_sheet_animation(frames, "walk", "res://assets/characters/farmer/farmer-walk.png", 8, 1, 6.0, true)
+	_append_sheet_animation(frames, "run", "res://assets/characters/farmer/farmer-run.png", 6, 1, 8.0, true)
+	_append_sheet_animation(frames, "attack", "res://assets/characters/farmer/farmer-attack.png", 6, 1, 8.0, false)
+	farmer_sprite = AnimatedSprite2D.new()
+	farmer_sprite.sprite_frames = frames
+	farmer_sprite.animation = "idle"
+	farmer_sprite.scale = Vector2.ONE * 0.25
+	farmer_sprite.position = Vector2(112.0, 565.0)
+	farmer_sprite.z_index = 12
+	farmer_sprite.animation_finished.connect(_on_farmer_animation_finished)
+	add_child(farmer_sprite)
+	farmer_sprite.play("idle")
+
+func _build_farmer_controls() -> void:
+	var control_row := HBoxContainer.new()
+	control_row.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
+	control_row.offset_left = 18.0
+	control_row.offset_right = -18.0
+	control_row.offset_top = -62.0
+	control_row.offset_bottom = -8.0
+	control_row.add_theme_constant_override("separation", 8)
+	add_child(control_row)
+	var directions := HBoxContainer.new()
+	directions.add_theme_constant_override("separation", 6)
+	control_row.add_child(directions)
+	var direction_buttons := [
+		["left", "◀"], ["up", "▲"], ["down", "▼"], ["right", "▶"]
+	]
+	for item in direction_buttons:
+		var direction: String = item[0]
+		var button := Button.new()
+		button.text = item[1]
+		button.custom_minimum_size = Vector2(54.0, 48.0)
+		button.button_down.connect(_set_farmer_touch_direction.bind(direction, true))
+		button.button_up.connect(_set_farmer_touch_direction.bind(direction, false))
+		directions.add_child(button)
+	var spacer := Control.new()
+	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	control_row.add_child(spacer)
+	attack_button = Button.new()
+	attack_button.text = "CLUB"
+	attack_button.custom_minimum_size = Vector2(112.0, 48.0)
+	attack_button.visible = false
+	attack_button.pressed.connect(_farmer_attack)
+	control_row.add_child(attack_button)
+
+func _set_farmer_touch_direction(direction: String, pressed: bool) -> void:
+	farmer_touch_directions[direction] = pressed
+
+func _on_farmer_animation_finished() -> void:
+	if farmer_sprite == null or not is_instance_valid(farmer_sprite):
+		return
+	if farmer_sprite.animation == "attack":
+		farmer_sprite.play(farmer_locomotion_animation)
+
+func _update_farmer(delta: float) -> void:
+	if farmer_sprite == null or not is_instance_valid(farmer_sprite):
+		return
+	var horizontal := 0.0
+	var vertical := 0.0
+	if Input.is_key_pressed(KEY_A) or Input.is_key_pressed(KEY_LEFT):
+		horizontal -= 1.0
+	if Input.is_key_pressed(KEY_D) or Input.is_key_pressed(KEY_RIGHT):
+		horizontal += 1.0
+	if Input.is_key_pressed(KEY_W) or Input.is_key_pressed(KEY_UP):
+		vertical -= 1.0
+	if Input.is_key_pressed(KEY_S) or Input.is_key_pressed(KEY_DOWN):
+		vertical += 1.0
+	var touch_moving := false
+	if farmer_touch_directions.left:
+		horizontal -= 1.0
+		touch_moving = true
+	if farmer_touch_directions.right:
+		horizontal += 1.0
+		touch_moving = true
+	if farmer_touch_directions.up:
+		vertical -= 1.0
+		touch_moving = true
+	if farmer_touch_directions.down:
+		vertical += 1.0
+		touch_moving = true
+	var movement := Vector2(horizontal, vertical)
+	if movement.length_squared() > 1.0:
+		movement = movement.normalized()
+	farmer_is_moving = movement.length_squared() > 0.001
+	if farmer_is_moving:
+		var move_speed := FARMER_MOVE_SPEED * (0.78 if touch_moving else 1.0)
+		farmer_sprite.position += movement * move_speed * delta
+		farmer_sprite.position.x = clampf(farmer_sprite.position.x, 105.0, 1010.0)
+		farmer_sprite.position.y = clampf(farmer_sprite.position.y, LANE_Y[0] - 22.0, LANE_Y[4] + 22.0)
+		if absf(movement.x) > 0.01:
+			farmer_sprite.scale.x = absf(farmer_sprite.scale.x) * signf(movement.x)
+		farmer_locomotion_animation = "walk" if touch_moving else "run"
+	else:
+		farmer_locomotion_animation = "idle"
+	if farmer_sprite.animation != "attack":
+		if farmer_sprite.animation != farmer_locomotion_animation:
+			farmer_sprite.play(farmer_locomotion_animation)
+
+func _farmer_can_attack() -> bool:
+	if not has_planted_defender:
+		return false
+	for plant in plants:
+		if plant.alive and plant.type == "radish":
+			return false
+	return true
+
+func _farmer_attack() -> void:
+	if game_state != "running":
+		return
+	if farmer_sprite == null or not is_instance_valid(farmer_sprite):
+		return
+	if not _farmer_can_attack():
+		status_label.text = "The club is an emergency defense. It unlocks after all planted Radishes are lost."
+		return
+	if farmer_sprite != null and is_instance_valid(farmer_sprite):
+		farmer_sprite.play("attack")
+	var nearest_row := 0
+	var nearest_lane_distance := INF
+	for row in range(Rules.BOARD_ROWS):
+		var lane_distance := absf(float(LANE_Y[row]) - farmer_sprite.position.y)
+		if lane_distance < nearest_lane_distance:
+			nearest_lane_distance = lane_distance
+			nearest_row = row
+	var target: Variant = Rules.select_farmer_melee_target(
+		monsters, nearest_row, farmer_sprite.position.x, FARMER_CLUB_REACH)
+	if target == null:
+		status_label.text = "No monster is close enough for the club."
+		return
+	target.hp = Rules.apply_hit_points_damage(
+		float(target.hp), FARMER_CLUB_DAMAGE * float(target.incoming_damage_multiplier)).hp
+	var target_sprite: Variant = target.get("sprite", null)
+	if target.hp <= 0.0:
+		target.alive = false
+		if target_sprite != null and is_instance_valid(target_sprite):
+			target_sprite.play("death")
+		defeated_total += 1
+		coins += Rules.ORDINARY_MONSTER_DEFEAT_COINS
+		status_label.text = "Club strike defeated a monster! +%d coins." % Rules.ORDINARY_MONSTER_DEFEAT_COINS
+	elif target_sprite != null and is_instance_valid(target_sprite):
+		target_sprite.play("hit")
+		status_label.text = "Club hit!"
 
 func _create_plant_sprite(plant_id: String) -> Node2D:
 	var texture_path: String = PLANT_TEXTURES.get(plant_id, "")
@@ -236,6 +384,10 @@ func _create_projectile_sprite(plant_id: String) -> Sprite2D:
 	sprite.scale = Vector2(0.32, 0.32)
 	sprite.z_index = 14
 	return sprite
+
+func _unhandled_key_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_SPACE:
+		_farmer_attack()
 
 func _select_plant(plant_id: String) -> void:
 	if game_state != "running":
@@ -272,6 +424,7 @@ func _place_plant(column: int, row: int) -> void:
 		add_child(plant_sprite)
 	plant["sprite"] = plant_sprite
 	plants.append(plant)
+	has_planted_defender = true
 	energy = int(placement.energy)
 	status_label.text = "%s planted in lane %d." % [selected_plant.capitalize(), row + 1]
 	_refresh_hud()
@@ -457,6 +610,8 @@ func _refresh_hud() -> void:
 		energy_label.text = "Energy: %d / %d   Coins: %d" % [energy, Rules.MAX_ENERGY, coins]
 	if is_instance_valid(wave_label):
 		wave_label.text = "Wave: %d / %d   Defeated: %d / 30" % [wave, Rules.WAVE_SIZES.size(), defeated_total]
+	if is_instance_valid(attack_button):
+		attack_button.visible = game_state == "running" and _farmer_can_attack()
 
 func _draw() -> void:
 	draw_rect(Rect2(Vector2.ZERO, get_viewport_rect().size), Color("#263b2e"), true)
