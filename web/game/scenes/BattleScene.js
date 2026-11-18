@@ -2647,6 +2647,16 @@ export default class BattleScene extends Scene {
         plantProjectile.setDisplaySize(30, 30);
       }
       view.add(plantProjectile);
+    } else if (plant.type === "snow-thrower") {
+      // Keep a snow-colored fallback if the uploaded projectile texture fails.
+      const snowball = this.add.circle(0, 0, 12, 0xb9efff, 1)
+        .setStrokeStyle(2, 0xf4fdff, 1);
+      const glint = this.add.circle(-4, -4, 3, 0xffffff, 0.95);
+      const snowflake = this.add.text(0, 0, "❄", {
+        fontFamily: "Arial", fontSize: "15px", color: "#267ca8",
+        stroke: "#e9fbff", strokeThickness: 1
+      }).setOrigin(0.5);
+      view.add([snowball, glint, snowflake]);
     } else {
       // Visible fallback only if the Radish artwork failed to load.
       const fallback = this.add.ellipse(0, 0, 23, 13, 0xff7185, 1)
