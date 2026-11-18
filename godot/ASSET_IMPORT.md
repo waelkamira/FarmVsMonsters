@@ -5,7 +5,7 @@ All imported files are byte-for-byte copies of existing tracked assets. Their or
 | Godot path | Original source | Use | Frame contract |
 |---|---|---|---|
 | `assets/characters/farmer/farmer-idle.png` | `characters/farmer/farmer-idle.png` | Farmer idle | 2×2, 4 frames; measured 1080×720 |
-| `assets/monsters/hyena/hyena-idle.png` | `characters/monsters/hyena/hyena-idle.png` | Shared Stage 1 monster base | 3×1, 3 frames; measured 1080×298 |
+| `assets/characters/monsters/hyena/hyena-idle.png` | `characters/monsters/hyena/hyena-idle.png` | Shared Stage 1 monster base | 3×1, 3 frames; measured 1080×298 |
 | `assets/monsters/hyena/hyena-walk.png` | `characters/monsters/hyena/hyena-walk.png` | Standard monster movement | 3×2, 6 frames; measured 1080×894 |
 | `assets/monsters/hyena/hyena-run.png` | `characters/monsters/hyena/hyena-run.png` | Dust Skitter movement | 3×2, 6 frames; measured 1080×889 |
 | `assets/monsters/hyena/hyena-bite.png` | `characters/monsters/hyena/hyena-bite.png` | Plant-biting attack | 3×2, 6 frames; measured 1080×894 |
