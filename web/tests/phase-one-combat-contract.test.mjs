@@ -37,7 +37,8 @@ test("active Stage 1 plant encyclopedia matches combat costs and available artwo
     "pumpkin-guard": "pumpkin",
     pineapple: "pineapple",
     hazelnut: "hazelnut",
-    mango: "mango"
+    mango: "mango",
+    "snow-thrower": "snowThrower"
   };
   const activePlants = STAGE_ONE_PLANTS.filter((plant) => plant.implemented);
   assert.deepEqual(
