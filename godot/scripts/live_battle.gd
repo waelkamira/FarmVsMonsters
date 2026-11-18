@@ -127,6 +127,7 @@ func _build_background() -> void:
 	background_view.position = Vector2(SCREEN_OFFSET_X, BACKGROUND_TOP * SCREEN_SCALE)
 	background_view.size = Vector2(1120.0 * SCREEN_SCALE, BACKGROUND_HEIGHT * SCREEN_SCALE)
 	background_view.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	background_view.show_behind_parent = true
 	background_view.z_index = -100
 	add_child(background_view)
 
