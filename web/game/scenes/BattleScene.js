@@ -3465,7 +3465,7 @@ export default class BattleScene extends Scene {
       }
 
       shot.currentRow = shot.row;
-      const position = ["pineapple", "hazelnut", "mango"].includes(shot.plantType)
+      const position = ["pineapple", "hazelnut", "mango", "snow-thrower"].includes(shot.plantType)
         ? this.pineappleLanePoint(shot.localX, shot.row)
         : this.lanePoint(shot.localX, shot.row);
       const projectileX = position.x + (shot.launchOffsetX || 0);
