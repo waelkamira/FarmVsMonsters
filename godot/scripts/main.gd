@@ -1,6 +1,6 @@
 extends Control
 
-const BATTLE_SCENE: String = "res://scenes/battle_prototype.tscn"
+const BATTLE_SCENE: String = "res://scenes/live_battle.tscn"
 
 func _ready() -> void:
 	_build_menu()
@@ -33,13 +33,13 @@ func _build_menu() -> void:
 	content.add_child(subtitle)
 
 	var start_button := Button.new()
-	start_button.text = "Open Battle Board Prototype"
+	start_button.text = "Start Stage 1 — Live Combat"
 	start_button.custom_minimum_size = Vector2(0, 64)
 	start_button.pressed.connect(_open_battle)
 	content.add_child(start_button)
 
 	var note := Label.new()
-	note.text = "Foundation build — combat, art and progression are not ported yet."
+	note.text = "Playable combat prototype • Five waves • 30 enemies"
 	note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	content.add_child(note)
@@ -47,4 +47,4 @@ func _build_menu() -> void:
 func _open_battle() -> void:
 	var error: Error = get_tree().change_scene_to_file(BATTLE_SCENE)
 	if error != OK:
-		push_error("Could not open battle prototype. Error: %s" % error)
+		push_error("Could not open live battle. Error: %s" % error)
