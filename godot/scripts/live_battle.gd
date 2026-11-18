@@ -370,6 +370,7 @@ func _build_farmer_controls() -> void:
 	control_row.offset_top = -62.0
 	control_row.offset_bottom = -8.0
 	control_row.add_theme_constant_override("separation", 8)
+	control_row.z_index = 1000
 	add_child(control_row)
 	var directions := HBoxContainer.new()
 	directions.add_theme_constant_override("separation", 6)
@@ -474,13 +475,7 @@ func _farmer_attack() -> void:
 		return
 	if farmer_sprite != null and is_instance_valid(farmer_sprite):
 		farmer_sprite.play("attack")
-	var nearest_row := 0
-	var nearest_lane_distance := INF
-	for row in range(Rules.BOARD_ROWS):
-		var lane_distance := absf(float(LANE_Y[row]) - farmer_sprite.position.y)
-		if lane_distance < nearest_lane_distance:
-			nearest_lane_distance = lane_distance
-			nearest_row = row
+	var nearest_row := _nearest_row_at_screen_position(farmer_sprite.position)
 	var target: Variant = Rules.select_farmer_melee_target(
 		monsters, nearest_row, farmer_sprite.position.x, FARMER_CLUB_REACH * SCREEN_SCALE)
 	if target == null:
@@ -811,7 +806,7 @@ func _refresh_hud() -> void:
 		attack_button.visible = game_state == "running" and _farmer_can_attack()
 
 func _draw() -> void:
-	if background_view == null:
+	if background_view == null or background_view.texture == null:
 		draw_rect(Rect2(Vector2.ZERO, get_viewport_rect().size), Color("#263b2e"), true)
 	for plant in plants:
 		var depth_scale := float(plant.get("depth_scale", 1.0))
