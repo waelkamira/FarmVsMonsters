@@ -32,6 +32,8 @@ const ANIMATED_PLANT_GRIDS := {
 }
 
 var energy: int = Rules.INITIAL_ENERGY
+var farmer_hp: int = Rules.FARMER_MAX_HP
+var farmer_invulnerability_ms := 0.0
 var selected_plant := "radish"
 var plants: Array[Dictionary] = []
 var monsters: Array[Dictionary] = []
@@ -46,6 +48,7 @@ var intermission_ms := 0.0
 var game_state := "running"
 var status_label: Label
 var energy_label: Label
+var farmer_hp_label: Label
 var wave_label: Label
 var rng := RandomNumberGenerator.new()
 var grid_nodes: Array = []
@@ -86,6 +89,7 @@ func _process(delta: float) -> void:
 	if game_state != "running":
 		return
 	var delta_ms := delta * 1000.0
+	farmer_invulnerability_ms = maxf(0.0, farmer_invulnerability_ms - delta_ms)
 	_update_spawning(delta_ms)
 	_update_plants(delta_ms)
 	_update_energy_pickups(delta_ms)
@@ -358,6 +362,8 @@ func _build_ui() -> void:
 	energy_label = Label.new()
 	energy_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top.add_child(energy_label)
+	farmer_hp_label = Label.new()
+	top.add_child(farmer_hp_label)
 	wave_label = Label.new()
 	top.add_child(wave_label)
 	var choices := HBoxContainer.new()
@@ -547,6 +553,8 @@ func _set_farmer_touch_direction(direction: String, pressed: bool) -> void:
 
 func _on_farmer_animation_finished() -> void:
 	if farmer_sprite == null or not is_instance_valid(farmer_sprite):
+		return
+	if farmer_action_animation == "death":
 		return
 	if not farmer_action_animation.is_empty() and farmer_sprite.animation == farmer_action_animation:
 		farmer_action_animation = ""
@@ -1133,6 +1141,21 @@ func _update_monsters(delta: float, delta_ms: float) -> void:
 						destroyed_sprite.queue_free()
 					status_label.text = "%s was destroyed!" % str(blocker.type).capitalize()
 			continue
+		if _monster_can_bite_farmer(monster):
+			monster.attack_cooldown_ms = float(monster.attack_cooldown_ms) - delta_ms
+			var attacking_sprite: Variant = monster.get("sprite", null)
+			if attacking_sprite != null and is_instance_valid(attacking_sprite) and attacking_sprite.animation != "bite":
+				attacking_sprite.play("bite")
+			if monster.attack_cooldown_ms <= 0.0:
+				monster.attack_cooldown_ms = float(monster.attack_interval_ms)
+				if farmer_action_animation == "jump":
+					status_label.text = "The Farmer dodged the monster's bite!"
+				else:
+					_damage_farmer(float(monster.plant_damage))
+					if game_state != "running":
+						return
+					_play_sfx("monster-bite", 0.05)
+			continue
 		monster.braced = false
 		monster.local_x = float(monster.local_x) - float(monster.speed) * movement_multiplier * delta
 		var monster_position := _to_screen(_lane_point(float(monster.local_x), row))
@@ -1150,6 +1173,40 @@ func _update_monsters(delta: float, delta_ms: float) -> void:
 			_play_sfx("defeat")
 			status_label.text = "The farmhouse has been overrun. Return to the main menu to start a new battle."
 			return
+
+
+func _monster_can_bite_farmer(monster: Dictionary) -> bool:
+	if farmer_sprite == null or not is_instance_valid(farmer_sprite):
+		return false
+	if _nearest_row_at_screen_position(farmer_sprite.position) != int(monster.row):
+		return false
+	var monster_half_width := 360.0 * 0.22 * float(monster.depth_scale) * float(monster.width_scale) * 0.5
+	var farmer_half_width := 180.0 * absf(farmer_sprite.scale.x)
+	var bite_reach := monster_half_width + farmer_half_width + 14.0 * SCREEN_SCALE
+	return absf(float(monster.x) - farmer_sprite.position.x) <= bite_reach
+
+func _damage_farmer(damage: float) -> void:
+	if farmer_invulnerability_ms > 0.0 or farmer_hp <= 0:
+		return
+	if farmer_action_animation == "jump":
+		return
+	var result := Rules.apply_hit_points_damage(float(farmer_hp), damage)
+	if result.is_empty():
+		return
+	farmer_hp = int(result.hp)
+	farmer_invulnerability_ms = Rules.FARMER_DAMAGE_INVULNERABILITY_MS
+	if farmer_hp <= 0:
+		game_state = "defeat"
+		farmer_action_animation = "death"
+		farmer_sprite.play("death")
+		farmer_touch_directions = {"left": false, "right": false, "up": false, "down": false}
+		_play_sfx("defeat")
+		status_label.text = "The Farmer has fallen. The farm is lost."
+	else:
+		if farmer_action_animation.is_empty() and farmer_planting_target.is_empty() and farmer_return_target.is_empty():
+			_play_farmer_action("hit")
+		status_label.text = "The Farmer was hit! %d / %d HP remaining." % [farmer_hp, Rules.FARMER_MAX_HP]
+	_refresh_hud()
 
 func _update_dust_skitter_burst(monster: Dictionary, delta_ms: float) -> float:
 	if str(monster.kind) != "dust-skitter":
@@ -1261,6 +1318,9 @@ func _refresh_hud() -> void:
 		attack_button.visible = game_state == "running" and _farmer_can_attack()
 	if is_instance_valid(jump_button):
 		jump_button.disabled = game_state != "running" or not farmer_planting_target.is_empty() or not farmer_return_target.is_empty() or not farmer_action_animation.is_empty()
+	if is_instance_valid(farmer_hp_label):
+		farmer_hp_label.text = "Farmer HP: %d / %d" % [farmer_hp, Rules.FARMER_MAX_HP]
+		farmer_hp_label.modulate = Color("#f08070") if farmer_hp <= Rules.FARMER_MAX_HP / 3 else Color.WHITE
 
 func _draw() -> void:
 	if background_view == null or background_view.texture == null:
