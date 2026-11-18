@@ -5,6 +5,9 @@ All imported files are byte-for-byte copies of existing tracked assets. Their or
 | Godot path | Original source | Use | Frame contract |
 |---|---|---|---|
 | `assets/characters/farmer/farmer-idle.png` | `characters/farmer/farmer-idle.png` | Farmer idle | 2×2, 4 frames; measured 1080×720 |
+| `assets/characters/farmer/farmer-walk.png` | `characters/farmer/farmer-walk.png` | Farmer movement on touch controls | 8×1, 8 frames; measured 2880×430 |
+| `assets/characters/farmer/farmer-run.png` | `characters/farmer/farmer-run.png` | Farmer keyboard movement | 6×1, 6 frames; measured 2160×430 |
+| `assets/characters/farmer/farmer-attack.png` | `characters/farmer/farmer-attack.png` | Emergency club attack | 6×1, 6 frames; measured 1080×360 |
 | `assets/characters/monsters/hyena/hyena-idle.png` | `characters/monsters/hyena/hyena-idle.png` | Shared Stage 1 monster base | 3×1, 3 frames; measured 1080×298 |
 | `assets/monsters/hyena/hyena-walk.png` | `characters/monsters/hyena/hyena-walk.png` | Standard monster movement | 3×3, 9 frames; measured 1080×894 |
 | `assets/monsters/hyena/hyena-run.png` | `characters/monsters/hyena/hyena-run.png` | Dust Skitter movement | 3×3, 9 frames; measured 1080×889 |
@@ -29,4 +32,5 @@ All imported files are byte-for-byte copies of existing tracked assets. Their or
 - The imported hyena sheets are temporarily shared across monster archetypes. Cave Brute/Stonehide/Alpha Brute use walk, bite, hit and death states; Dust Skitter uses the faster run sheet. Archetype-specific tint/scale is only a visual placeholder, not a replacement character design.
 - Pineapple and Hazelnut frame slicing is provisional until their sheet dimensions, spacing and frame boundaries are verified in the editor.
 - The farm battlefield image is deliberately not imported into the active scene yet: the current straight-grid input coordinates do not match its perspective soil cells. Calibrate the board mapping before using that background.
+- Farmer movement uses the established 115 px/s keyboard speed and 0.78 touch-control speed factor; club combat unlocks only after the player has planted a defender and all Radishes have been destroyed. The club uses the canonical 42 damage and 112 px reach.
 - Re-check frame margins, transparent padding, pivots/baselines, filtering and visual scale before final production sign-off.
