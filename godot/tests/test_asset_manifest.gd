@@ -43,9 +43,28 @@ func _initialize() -> void:
 		if calibration == null or int(calibration.grid.columns) != 8 or int(calibration.grid.rows) != 5 or calibration.grid.controlPoints.size() != 6:
 			push_error("Perspective calibration dimensions are invalid.")
 			failures += 1
-		elif calibration.grid.controlPoints[0].size() != 9:
-			push_error("Perspective calibration must contain nine control points per row.")
-			failures += 1
+		else:
+			for control_row in calibration.grid.controlPoints:
+				if control_row.size() != 9:
+					push_error("Perspective calibration must contain nine control points per row.")
+					failures += 1
+					break
+			for row in range(5):
+				for column in range(8):
+					var polygon: Array = [
+						calibration.grid.controlPoints[row][column],
+						calibration.grid.controlPoints[row][column + 1],
+						calibration.grid.controlPoints[row + 1][column + 1],
+						calibration.grid.controlPoints[row + 1][column]
+					]
+					var twice_area := 0.0
+					for index in range(4):
+						var current: Dictionary = polygon[index]
+						var next: Dictionary = polygon[(index + 1) % 4]
+						twice_area += float(current.x) * float(next.y) - float(next.x) * float(current.y)
+					if twice_area <= 1.0:
+						push_error("Perspective cell polygon has invalid area at row %d, column %d." % [row, column])
+						failures += 1
 	if failures == 0:
 		print("ASSET_MANIFEST_OK: %d textures and the 8x5 calibration are loadable." % REQUIRED_TEXTURES.size())
 	else:
