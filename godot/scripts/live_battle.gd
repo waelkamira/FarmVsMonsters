@@ -174,7 +174,7 @@ func _append_sheet_animation(frames: SpriteFrames, animation_name: String,
 func _make_monster_sprite(archetype: String, sprite_scale: float) -> AnimatedSprite2D:
 	if monster_sprite_frames == null:
 		monster_sprite_frames = SpriteFrames.new()
-		_append_sheet_animation(monster_sprite_frames, "idle", "res://assets/monsters/hyena/hyena-idle.png", 3, 1, 4.0, true)
+		_append_sheet_animation(monster_sprite_frames, "idle", "res://assets/characters/monsters/hyena/hyena-idle.png", 3, 1, 4.0, true)
 		_append_sheet_animation(monster_sprite_frames, "walk", "res://assets/monsters/hyena/hyena-walk.png", 3, 2, 8.0, true)
 		_append_sheet_animation(monster_sprite_frames, "run", "res://assets/monsters/hyena/hyena-run.png", 3, 2, 12.0, true)
 		_append_sheet_animation(monster_sprite_frames, "bite", "res://assets/monsters/hyena/hyena-bite.png", 3, 2, 8.0, true)
