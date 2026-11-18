@@ -44,7 +44,7 @@ godot --headless --path godot --script res://tests/test_phase_one_rules.gd
 godot --headless --path godot --script res://tests/test_phase_one_combat_core.gd
 ```
 
-The GitHub Actions workflow runs these checks on Godot pull requests and pushes to main. Godot 4.x is not available in the current development environment, so no local engine run or Android export/device test is claimed.
+The GitHub Actions workflow runs these checks on Godot pull requests and pushes to `main` or `migration/**` branches. Godot 4.x is not available in the current development environment, so no local engine run or Android export/device test is claimed.
 
 ## Audio and future art
 
