@@ -1142,6 +1142,7 @@ func _update_monsters(delta: float, delta_ms: float) -> void:
 					status_label.text = "%s was destroyed!" % str(blocker.type).capitalize()
 			continue
 		if _monster_can_bite_farmer(monster):
+			monster.braced = false
 			monster.attack_cooldown_ms = float(monster.attack_cooldown_ms) - delta_ms
 			var attacking_sprite: Variant = monster.get("sprite", null)
 			if attacking_sprite != null and is_instance_valid(attacking_sprite) and attacking_sprite.animation != "bite":
