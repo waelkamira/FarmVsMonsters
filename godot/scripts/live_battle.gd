@@ -1,4 +1,6 @@
 extends Control
+
+@export var snow_thrower_test_mode := false
 ## First playable Stage 1 combat loop using the approved perspective board,
 ## original character sheets and temporary archetype-specific monster tints.
 
@@ -87,6 +89,8 @@ func _ready() -> void:
 	_build_ui()
 	_create_farmer_sprite()
 	_position_farmer_at_start()
+	if snow_thrower_test_mode:
+		_setup_snow_thrower_test()
 	queue_redraw()
 
 func _process(delta: float) -> void:
@@ -107,6 +111,17 @@ func _process(delta: float) -> void:
 	_update_wave_progress()
 	_refresh_hud()
 	queue_redraw()
+
+func _setup_snow_thrower_test() -> void:
+	# A controlled lane test: one guaranteed Hyena and one Snow Thrower.
+	# The standard wave spawner is disabled so the interaction is easy to inspect.
+	energy = Rules.MAX_ENERGY
+	selected_plant = "snow-thrower"
+	_spawn_monster(2, "cave-brute")
+	spawned_this_wave = Rules.WAVE_SIZES[0]
+	_commit_plant(0, 2, "snow-thrower", farmer_sprite.position, signf(farmer_sprite.scale.x))
+	status_label.text = "SNOW TEST: watch the Snow Thrower freeze the Hyena for 2.6 seconds."
+	_refresh_hud()
 
 func _build_audio() -> void:
 	for index in range(8):
@@ -998,10 +1013,10 @@ func _update_spawning(delta_ms: float) -> void:
 		spawned_this_wave += 1
 		spawn_timer_ms = Rules.monster_spawn_interval_ms(wave)
 
-func _spawn_monster() -> void:
-	var archetype := Rules.monster_archetype(wave, _global_spawn_index())
+func _spawn_monster(forced_row: int = -1, forced_archetype: String = "") -> void:
+	var archetype := forced_archetype if not forced_archetype.is_empty() else Rules.monster_archetype(wave, _global_spawn_index())
 	var profile := Rules.monster_combat_stats(archetype, wave)
-	var row := rng.randi_range(0, Rules.BOARD_ROWS - 1)
+	var row := clampi(forced_row, 0, Rules.BOARD_ROWS - 1) if forced_row >= 0 else rng.randi_range(0, Rules.BOARD_ROWS - 1)
 	var local_x := Rules.BOARD_SPAWN_LOCAL_X
 	var depth_scale := _depth_scale(4, row)
 	var screen_position := _to_screen(_lane_point(local_x, row))
@@ -1225,7 +1240,10 @@ func _freeze_projectile_target(row: int, projectile_local_x: float,
 	var target: Variant = Rules.select_freeze_target(monsters, row, projectile_local_x, collision_radius)
 	if target == null:
 		return false
-	return _apply_monster_freeze(target, duration_ms)
+	var applied := _apply_monster_freeze(target, duration_ms)
+	if applied and is_instance_valid(status_label):
+		status_label.text = "SNOW HIT! Hyena frozen for %.1f seconds." % (duration_ms / 1000.0)
+	return applied
 
 func _apply_monster_freeze(monster: Dictionary, duration_ms: float = Rules.MONSTER_FREEZE_DURATION_MS) -> bool:
 	if not bool(monster.get("alive", false)) or not is_finite(duration_ms) or duration_ms <= 0.0:
