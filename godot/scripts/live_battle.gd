@@ -152,8 +152,11 @@ func _point_in_polygon(point: Vector2, polygon: Array) -> bool:
 	for current in range(polygon.size()):
 		var a: Vector2 = polygon[current]
 		var b: Vector2 = polygon[previous]
-		var crosses := ((a.y > point.y) != (b.y > point.y)) and (
-			point.x < ((b.x - a.x) * (point.y - a.y)) / (b.y - a.y if absf(b.y - a.y) > 0.000001 else 0.000001) + a.x)
+		var denominator := b.y - a.y
+		if absf(denominator) < 0.000001:
+			denominator = 0.000001
+		var intersection_x := ((b.x - a.x) * (point.y - a.y)) / denominator + a.x
+		var crosses := ((a.y > point.y) != (b.y > point.y)) and point.x < intersection_x
 		if crosses:
 			inside = not inside
 		previous = current
