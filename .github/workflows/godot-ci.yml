@@ -19,10 +19,10 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Install Godot 4.4.1
+      - name: Install Godot 4.7.2
         uses: chickensoft-games/setup-godot@v1
         with:
-          version: 4.4.1
+          version: 4.7.2
           use-dotnet: false
           include-templates: false
 
