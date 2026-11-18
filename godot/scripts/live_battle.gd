@@ -312,6 +312,9 @@ func _update_monsters(delta: float, delta_ms: float) -> void:
 		var blocker: Dictionary = _find_blocker(monster)
 		if not blocker.is_empty() and float(monster.x) <= float(blocker.x) + 38.0:
 			monster.x = minf(float(monster.x), float(blocker.x) + 38.0)
+			var blocked_monster_sprite: Variant = monster.get("sprite", null)
+			if blocked_monster_sprite != null and is_instance_valid(blocked_monster_sprite):
+				blocked_monster_sprite.position.x = float(monster.x)
 			monster.attack_cooldown_ms = float(monster.attack_cooldown_ms) - delta_ms
 			if monster.attack_cooldown_ms <= 0.0:
 				blocker.hp = Rules.apply_hit_points_damage(float(blocker.hp), float(monster.plant_damage)).hp
