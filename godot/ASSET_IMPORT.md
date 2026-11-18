@@ -10,6 +10,7 @@ All imported files are byte-for-byte copies of existing tracked assets. Their or
 | `assets/characters/farmer/farmer-walk.png` | `characters/farmer/farmer-walk.png` | Farmer movement on touch controls | 8×1, 8 frames; measured 2880×430 |
 | `assets/characters/farmer/farmer-run.png` | `characters/farmer/farmer-run.png` | Farmer keyboard movement | 6×1, 6 frames; measured 2160×430 |
 | `assets/characters/farmer/farmer-attack.png` | `characters/farmer/farmer-attack.png` | Emergency club attack | 6×1, 6 frames; measured 1080×360 |
+| `assets/characters/farmer/farmer-plant.png` | `characters/farmer/farmer-plant.png` | Planting action | 6×1, 6 frames; measured 2160×430 |
 | `assets/characters/monsters/hyena/hyena-idle.png` | `characters/monsters/hyena/hyena-idle.png` | Shared Stage 1 monster base | 3×1, 3 frames; measured 1080×298 |
 | `assets/monsters/hyena/hyena-walk.png` | `characters/monsters/hyena/hyena-walk.png` | Standard monster movement | 3×3, 9 frames; measured 1080×894 |
 | `assets/monsters/hyena/hyena-run.png` | `characters/monsters/hyena/hyena-run.png` | Dust Skitter movement | 3×3, 9 frames; measured 1080×889 |
@@ -34,5 +35,5 @@ All imported files are byte-for-byte copies of existing tracked assets. Their or
 - The imported hyena sheets are temporarily shared across monster archetypes. Cave Brute/Stonehide/Alpha Brute use walk, bite, hit and death states; Dust Skitter uses the faster run sheet. Archetype-specific tint/scale is only a visual placeholder, not a replacement character design.
 - Pineapple uses exact 418×418 cells; Hazelnut uses the original 341×341 integer frame contract (one unused pixel at the far sheet edge).
 - The battlefield background is rendered with the Phaser-approved 1120×680 source-canvas transform and its original 8×5 piecewise-bilinear control-point mesh. Input tests the actual 40 cell polygons; plants, monsters and projectiles follow perspective lane points. The background already contains the soil grid, so no second grid is drawn.
-- Farmer movement uses the established 115 px/s keyboard speed and 0.78 touch-control speed factor; club combat unlocks only after the player has planted a defender and all Radishes have been destroyed. The club uses the canonical 42 damage and 112 px reach.
+- Farmer movement uses the established 115 px/s keyboard speed and 0.78 touch-control speed factor. Planting trips use the Phaser board-coordinate route at 320 px/s, the 6-frame plant action, and a 420 px/s return sprint. Tapping an occupied cell uproots that plant and refunds its full energy cost. Club combat unlocks only after a Radish has been planted and all living Radishes have been lost. The club uses the canonical 42 damage and 112 px reach.
 - Re-check frame margins, transparent padding, pivots/baselines, filtering and visual scale before final production sign-off.
