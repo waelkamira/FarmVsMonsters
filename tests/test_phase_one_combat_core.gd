@@ -125,6 +125,7 @@ func _test_monster_freeze_contract() -> void:
 	assert(Rules.select_freeze_target([small_target, large_target], 1, 16.0, 1.5) == large_target)
 	assert(Rules.select_freeze_target([small_target, large_target], 2, 10.0, 20.0) == null)
 	var battle = LiveBattle.new()
+	assert(is_equal_approx(battle._plant_frame_width("snow-thrower"), 360.0))
 	for visual_scale in [Vector2(0.14, 0.14), Vector2(0.44, 0.44)]:
 		var sprite := Sprite2D.new()
 		sprite.scale = visual_scale
