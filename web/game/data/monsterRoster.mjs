@@ -95,8 +95,8 @@ export const STAGE_ONE_MONSTERS = Object.freeze([
 ]);
 
 export const FUTURE_MONSTERS = Object.freeze(
-  Array.from({ length: 96 }, (_, index) => {
-    const number = index + 5;
+  Array.from({ length: 95 }, (_, index) => {
+    const number = index + 6;
     const padded = String(number).padStart(3, "0");
     return Object.freeze({
       id: `future-monster-${padded}`,
