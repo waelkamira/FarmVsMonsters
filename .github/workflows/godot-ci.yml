@@ -6,7 +6,7 @@ on:
       - "godot/**"
       - ".github/workflows/godot-ci.yml"
   push:
-    branches: [main]
+    branches: [main, "migration/**"]
     paths:
       - "godot/**"
       - ".github/workflows/godot-ci.yml"
