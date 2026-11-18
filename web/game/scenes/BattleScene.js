@@ -85,6 +85,7 @@ export default class BattleScene extends Scene {
     this.load.image("snow-thrower-level-1", "/assets/plants/Snow-thrower-level-1.png");
     this.load.image("snow-thrower-bomb-level-1", "/assets/plants/Snow-thrower-bomb-level-1.png");
     this.load.image("frozen-hyena-level-1", "/assets/characters/monsters/hyena/frozen-hyena-level-1.png");
+    this.load.image("frozen-hyena-level-2", "/assets/characters/monsters/hyena/frozen-hyena-level-2.png");
     // 1254×1254 artwork is a 3×3 sheet: nine 418×418 animation frames.
     this.load.spritesheet("pineapple-level-1", "/assets/plants/pineapple-level-1.png", { frameWidth: 418, frameHeight: 418, margin: 0, spacing: 0 });
     // 1024×1024 artwork, 3×3 grid: use 341px integer cells; Phaser exposes 9 frames.
