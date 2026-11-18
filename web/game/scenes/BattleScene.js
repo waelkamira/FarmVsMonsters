@@ -21,6 +21,7 @@ import {
   collectEnergy,
   isWaveComplete,
   isPhaseOneVictory,
+  canBeginPrincessRescue,
   unlockNextStage
 } from "../rules/phaseOneRules.mjs";
 import {
@@ -1169,13 +1170,16 @@ export default class BattleScene extends Scene {
   }
 
   tryFinishPhaseOne() {
-    if (
-      this.phaseOneStoryState !== "dragon" ||
-      this.wave !== this.totalWaves ||
-      this.spawnedThisWave < this.waveSize ||
-      this.monsters.some((monster) => monster.alive) ||
-      this.dragonBoss?.alive
-    ) return;
+    const canRescue = canBeginPrincessRescue({
+      storyState: this.phaseOneStoryState,
+      wave: this.wave,
+      totalWaves: this.totalWaves,
+      spawnedCount: this.spawnedThisWave,
+      waveSize: this.waveSize,
+      livingMonsterCount: this.monsters.filter((monster) => monster.alive).length,
+      dragonAlive: this.dragonBoss?.alive
+    });
+    if (!canRescue) return;
     this.beginPrincessRescue();
   }
 
