@@ -51,10 +51,6 @@ func _process(delta: float) -> void:
 	queue_redraw()
 
 func _build_ui() -> void:
-	var background := ColorRect.new()
-	background.color = Color("#263b2e")
-	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	add_child(background)
 	var margin := MarginContainer.new()
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	margin.add_theme_constant_override("margin_left", 20)
@@ -270,6 +266,7 @@ func _refresh_hud() -> void:
 		wave_label.text = "Wave: %d / %d   Defeated: %d / 30" % [wave, Rules.WAVE_SIZES.size(), defeated_total]
 
 func _draw() -> void:
+	draw_rect(Rect2(Vector2.ZERO, get_viewport_rect().size), Color("#263b2e"), true)
 	draw_rect(Rect2(205.0, 128.0, 900.0, 510.0), Color("#38583d"), true)
 	for row in range(Rules.BOARD_ROWS):
 		for column in range(Rules.BOARD_COLUMNS):
