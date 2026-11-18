@@ -1,6 +1,6 @@
 # Godot Migration Audit — Source-to-Target Matrix
 
-**Audit status:** Initial source review in progress.
+**Audit status:** Initial source and path inventory completed; visual/semantic asset review and runtime parity remain in progress.
 **Branch:** `migration/godot4-android`
 **Rule:** This matrix records known source files and intended Godot destinations. It is not a claim that any row has already been ported or tested.
 
@@ -38,10 +38,10 @@
 
 ## Open audit checklist
 
-- [ ] Enumerate all current art/audio files and their dimensions, frame grids, and approval status.
-- [ ] Identify the exact legacy Unity project root and inspect its scene/script inventory.
-- [ ] Read the full Stage 1 combat contract and all related tests; record every value and edge case.
+- [x] Enumerate tracked art/audio paths and record the initial inventory in `Documentation/GODOT_ASSET_INVENTORY.md`; image dimensions, frame grids, licensing and approval review remain open.
+- [x] Inspect the tracked legacy `Assets/` source footprint. The tree contains C# source files but no tracked `.unity`, `.prefab`, `.asset`, `ProjectSettings/` or `Packages/manifest.json`; a complete Unity editor project is not established by the current tree.
+- [x] Read the complete Stage 1 contract exports and identify the related JavaScript regression tests. Full field-by-field port and edge-case parity are still pending.
 - [ ] Review campaign, save, settings, and localization data contracts.
 - [ ] Reconcile old roadmap requirements with the current Android-first release scope.
-- [ ] Pin the Godot 4.x stable patch and Android export toolchain at project bootstrap.
+- [x] Add the initial Godot 4 project foundation using Compatibility rendering and landscape canvas. Exact stable patch and Android export toolchain remain unpinned until an editor/export validation environment is available.
 - [ ] Agree a minimum Android OS/device profile using physical-device testing, not assumptions.
