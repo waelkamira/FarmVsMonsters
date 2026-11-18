@@ -52,6 +52,7 @@ var grid_nodes: Array = []
 var background_view: TextureRect
 var farmer_sprite: AnimatedSprite2D
 var attack_button: Button
+var jump_button: Button
 var uproot_button: Button
 var uproot_mode := false
 var has_planted_defender := false
@@ -535,6 +536,11 @@ func _build_farmer_controls() -> void:
 	attack_button.visible = false
 	attack_button.pressed.connect(_farmer_attack)
 	control_row.add_child(attack_button)
+	jump_button = Button.new()
+	jump_button.text = "JUMP"
+	jump_button.custom_minimum_size = Vector2(112.0, 48.0)
+	jump_button.pressed.connect(_start_farmer_jump)
+	control_row.add_child(jump_button)
 
 func _set_farmer_touch_direction(direction: String, pressed: bool) -> void:
 	farmer_touch_directions[direction] = pressed
@@ -618,6 +624,16 @@ func _update_farmer(delta: float) -> void:
 	if farmer_action_animation.is_empty() and farmer_sprite.animation != farmer_locomotion_animation:
 		farmer_sprite.play(farmer_locomotion_animation)
 
+
+func _start_farmer_jump() -> void:
+	if game_state != "running" or farmer_sprite == null or not is_instance_valid(farmer_sprite):
+		return
+	if not farmer_planting_target.is_empty() or not farmer_return_target.is_empty() or not farmer_action_animation.is_empty():
+		status_label.text = "The Farmer must finish the current action before jumping."
+		return
+	_play_farmer_action("jump")
+	status_label.text = "The Farmer jumps!"
+
 func _farmer_can_attack() -> bool:
 	if not has_planted_defender:
 		return false
@@ -626,10 +642,14 @@ func _farmer_can_attack() -> bool:
 			return false
 	return true
 
+
 func _farmer_attack() -> void:
 	if game_state != "running":
 		return
 	if farmer_sprite == null or not is_instance_valid(farmer_sprite):
+		return
+	if not farmer_planting_target.is_empty() or not farmer_return_target.is_empty() or not farmer_action_animation.is_empty():
+		status_label.text = "The Farmer must finish the current action before attacking."
 		return
 	if not _farmer_can_attack():
 		status_label.text = "The club is an emergency defense. It unlocks after all planted Radishes are lost."
@@ -693,8 +713,12 @@ func _create_projectile_sprite(plant_id: String) -> Sprite2D:
 	return sprite
 
 func _unhandled_key_input(event: InputEvent) -> void:
-	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_SPACE:
+	if not (event is InputEventKey) or not event.pressed or event.echo:
+		return
+	if event.keycode == KEY_SPACE:
 		_farmer_attack()
+	elif event.keycode == KEY_J:
+		_start_farmer_jump()
 
 func _select_plant(plant_id: String) -> void:
 	if game_state != "running":
@@ -1235,6 +1259,8 @@ func _refresh_hud() -> void:
 		wave_label.text = "Wave: %d / %d   Defeated: %d / 30" % [wave, Rules.WAVE_SIZES.size(), defeated_total]
 	if is_instance_valid(attack_button):
 		attack_button.visible = game_state == "running" and _farmer_can_attack()
+	if is_instance_valid(jump_button):
+		jump_button.disabled = game_state != "running" or not farmer_planting_target.is_empty() or not farmer_return_target.is_empty() or not farmer_action_animation.is_empty()
 
 func _draw() -> void:
 	if background_view == null or background_view.texture == null:
