@@ -321,6 +321,8 @@ func _farmer_can_attack() -> bool:
 func _farmer_attack() -> void:
 	if game_state != "running":
 		return
+	if farmer_sprite == null or not is_instance_valid(farmer_sprite):
+		return
 	if not _farmer_can_attack():
 		status_label.text = "The club is an emergency defense. It unlocks after all planted Radishes are lost."
 		return
@@ -382,6 +384,10 @@ func _create_projectile_sprite(plant_id: String) -> Sprite2D:
 	sprite.scale = Vector2(0.32, 0.32)
 	sprite.z_index = 14
 	return sprite
+
+func _unhandled_key_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_SPACE:
+		_farmer_attack()
 
 func _select_plant(plant_id: String) -> void:
 	if game_state != "running":
