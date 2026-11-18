@@ -2584,7 +2584,7 @@ export default class BattleScene extends Scene {
     // Pineapple, Hazelnut and Mango travel on the same raised lane. Their launch
     // offsets are measured from that lane so the complete curved trajectory
     // retains the exact launch position instead of snapping on its first tick.
-    const usesRaisedBombLane = ["pineapple", "hazelnut", "mango"].includes(plant.type);
+    const usesRaisedBombLane = ["pineapple", "hazelnut", "mango", "snow-thrower"].includes(plant.type);
     const laneOrigin = usesRaisedBombLane
       ? this.pineappleLanePoint(localX, row)
       : this.lanePoint(localX, row);
