@@ -9,7 +9,7 @@ export const STAGE_ONE_PLANTS = Object.freeze([
     roleAr: "مدافع المسار",
     description: "Roots into a soil cell, performs its nine-frame attack animation, and launches miniature Radish Level 1 bombs at monsters in its lane.",
     descriptionAr: "يثبت في خلية ترابية، وينفذ حركة هجوم من تسعة إطارات، ثم يطلق قذائف فجل صغيرة على الوحوش في مساره.",
-    energyCost: 25,
+    energyCost: 35,
     coinPrice: 0,
     status: "active",
     implemented: true,
@@ -144,6 +144,19 @@ export const STAGE_ONE_PLANTS = Object.freeze([
     descriptionAr: "نسخة تجريبية: تشغّل أنيميشن القذف ذي الإطارات التسعة وتطلق قذيفة أناناس صغيرة ضمن مسارها فقط.",
     energyCost: 70, coinPrice: 0, status: "active", implemented: true, purchasable: false, image: null,
     stats: ["140 HP", "42 damage", "2100 ms cooldown"], statsAr: ["١٤٠ صحة", "ضرر ٤٢", "فاصل هجوم ٢١٠٠ مللي ثانية"]
+  },
+
+  {
+    id: "hazelnut",
+    assetPath: "/assets/plants/hazelnut-level-1.png",
+    name: "Hazelnut Level 1",
+    nameAr: "البندق المستوى الأول",
+    role: "Lane projectile attacker",
+    roleAr: "مهاجم بمقذوفات ضمن المسار",
+    description: "Launches miniature Hazelnut bombs down its own lane to damage incoming monsters.",
+    descriptionAr: "يطلق قذائف بندق صغيرة ضمن مساره لإلحاق الضرر بالوحوش القادمة.",
+    energyCost: 65, coinPrice: 0, status: "active", implemented: true, purchasable: false, image: null,
+    stats: ["130 HP", "38 damage", "1950 ms cooldown"], statsAr: ["١٣٠ صحة", "ضرر ٣٨", "فاصل هجوم ١٩٥٠ مللي ثانية"]
   },
 
   {
