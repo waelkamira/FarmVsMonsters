@@ -2354,7 +2354,7 @@ export default class BattleScene extends Scene {
         const animatedPlant = this.add.sprite(0, -height / 2 + 2, texture, 0).setDisplaySize(Math.min(width, maxWidth), height);
         const animationDataKey = type === "pineapple" ? "pineappleThrowSprite"
           : type === "hazelnut" ? "hazelnutThrowSprite"
-          : type === "mango" ? "mangoThrowSprite" : "snowThrowerSprite";
+          : type === "mango" ? "mangoThrowSprite" : "snow-throwerThrowSprite";
         animatedPlant.setData(animationDataKey, true);
         plant.add(animatedPlant);
       } else {
@@ -2546,7 +2546,7 @@ export default class BattleScene extends Scene {
   fireThorn(plant, target) {
     // Pineapple projectiles must not exist until the throw animation reaches
     // its final frame. This keeps the visual action and the actual launch in sync.
-    if (["radish", "pineapple", "hazelnut", "mango"].includes(plant.type) && plant.view?.active) {
+    if (["radish", "pineapple", "hazelnut", "mango", "snow-thrower"].includes(plant.type) && plant.view?.active) {
       const animationType = plant.type;
       const throwingKey = `${animationType}Throwing`;
       if (plant[throwingKey]) return;
@@ -3363,7 +3363,10 @@ export default class BattleScene extends Scene {
       if (monster.frozenSpriteSize?.width > 0 && monster.frozenSpriteSize?.height > 0) {
         sprite.setDisplaySize(monster.frozenSpriteSize.width, monster.frozenSpriteSize.height);
       }
-      sprite.setTint(0x94dcff);
+      // The frozen atlas already contains its authored ice colors and highlights.
+      // Do not apply a full-sprite blue tint: it obscures the hyena artwork and
+      // creates the flat blue silhouette seen in battle screenshots.
+      sprite.clearTint();
     }
     this.setMessage("SNOW HIT! The hyena is frozen for 2.6 seconds.");
     return true;
