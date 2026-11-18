@@ -68,15 +68,16 @@ func _initialize() -> void:
 		if texture == null:
 			push_error("Could not load Godot texture: %s" % path)
 			failures += 1
-	for path in REQUIRED_AUDIO:
 	for contract in FARMER_SHEET_CONTRACTS:
 		var sheet := load(str(contract.path)) as Texture2D
-		if sheet == null or sheet.get_size() != Vector2(contract.size):
+		var expected_size := Vector2(float(contract.size.x), float(contract.size.y))
+		if sheet == null or sheet.get_size() != expected_size:
 			push_error("Farmer sheet dimensions changed: %s" % str(contract.path))
 			failures += 1
 		elif int(contract.frame_size.x) * int(contract.frames) > int(sheet.get_width()):
 			push_error("Farmer frame contract exceeds sheet width: %s" % str(contract.path))
 			failures += 1
+	for path in REQUIRED_AUDIO:
 		if not ResourceLoader.exists(path):
 			push_error("Missing Godot audio resource: %s" % path)
 			failures += 1
