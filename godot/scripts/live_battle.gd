@@ -48,6 +48,8 @@ var energy_label: Label
 var wave_label: Label
 var rng := RandomNumberGenerator.new()
 var farmer_sprite: AnimatedSprite2D
+var sprite_frames_cache: Dictionary = {}
+var monster_sprite_frames: SpriteFrames
 
 func _ready() -> void:
 	rng.randomize()
@@ -117,35 +119,84 @@ func _build_ui() -> void:
 
 func _make_sheet_sprite(texture_path: String, columns: int, rows: int, fps: float,
 		sprite_scale: float, animate_all_frames: bool = false) -> AnimatedSprite2D:
-	var texture := load(texture_path) as Texture2D
-	if texture == null:
-		push_warning("Missing sprite texture: %s" % texture_path)
-		return null
-	var frames := SpriteFrames.new()
-	frames.add_animation("idle")
-	frames.set_animation_speed("idle", fps)
-	frames.set_animation_loop("idle", true)
-	frames.add_animation("attack")
-	frames.set_animation_speed("attack", fps)
-	frames.set_animation_loop("attack", false)
-	var cell_size := texture.get_size() / Vector2(float(columns), float(rows))
-	for index in range(columns * rows):
-		var atlas := AtlasTexture.new()
-		atlas.atlas = texture
-		atlas.region = Rect2(Vector2(float(index % columns) * cell_size.x,
-			float(index / columns) * cell_size.y), cell_size)
-		if animate_all_frames:
-			frames.add_frame("idle", atlas)
-		elif index == 0:
-			frames.add_frame("idle", atlas)
-		else:
-			frames.add_frame("attack", atlas)
+	var cache_key := "%s|%d|%d|%s|%s" % [texture_path, columns, rows, str(fps), str(animate_all_frames)]
+	var frames: SpriteFrames = sprite_frames_cache.get(cache_key)
+	if frames == null:
+		var texture := load(texture_path) as Texture2D
+		if texture == null:
+			push_warning("Missing sprite texture: %s" % texture_path)
+			return null
+		frames = SpriteFrames.new()
+		frames.add_animation("idle")
+		frames.set_animation_speed("idle", fps)
+		frames.set_animation_loop("idle", true)
+		frames.add_animation("attack")
+		frames.set_animation_speed("attack", fps)
+		frames.set_animation_loop("attack", false)
+		var cell_size := texture.get_size() / Vector2(float(columns), float(rows))
+		for index in range(columns * rows):
+			var atlas := AtlasTexture.new()
+			atlas.atlas = texture
+			atlas.region = Rect2(Vector2(float(index % columns) * cell_size.x,
+				float(index / columns) * cell_size.y), cell_size)
+			if animate_all_frames:
+				frames.add_frame("idle", atlas)
+			elif index == 0:
+				frames.add_frame("idle", atlas)
+			else:
+				frames.add_frame("attack", atlas)
+		sprite_frames_cache[cache_key] = frames
 	var sprite := AnimatedSprite2D.new()
 	sprite.sprite_frames = frames
 	sprite.animation = "idle"
 	sprite.scale = Vector2.ONE * sprite_scale
 	sprite.play("idle")
 	return sprite
+
+func _append_sheet_animation(frames: SpriteFrames, animation_name: String,
+		texture_path: String, columns: int, rows: int, fps: float, loop_animation: bool) -> bool:
+	var texture := load(texture_path) as Texture2D
+	if texture == null:
+		push_warning("Missing animation texture: %s" % texture_path)
+		return false
+	frames.add_animation(animation_name)
+	frames.set_animation_speed(animation_name, fps)
+	frames.set_animation_loop(animation_name, loop_animation)
+	var cell_size := texture.get_size() / Vector2(float(columns), float(rows))
+	for index in range(columns * rows):
+		var atlas := AtlasTexture.new()
+		atlas.atlas = texture
+		atlas.region = Rect2(Vector2(float(index % columns) * cell_size.x,
+			float(index / columns) * cell_size.y), cell_size)
+		frames.add_frame(animation_name, atlas)
+	return true
+
+func _make_monster_sprite(archetype: String, sprite_scale: float) -> AnimatedSprite2D:
+	if monster_sprite_frames == null:
+		monster_sprite_frames = SpriteFrames.new()
+		_append_sheet_animation(monster_sprite_frames, "idle", "res://assets/characters/monsters/hyena/hyena-idle.png", 3, 1, 4.0, true)
+		_append_sheet_animation(monster_sprite_frames, "walk", "res://assets/monsters/hyena/hyena-walk.png", 3, 3, 8.0, true)
+		_append_sheet_animation(monster_sprite_frames, "run", "res://assets/monsters/hyena/hyena-run.png", 3, 3, 12.0, true)
+		_append_sheet_animation(monster_sprite_frames, "bite", "res://assets/monsters/hyena/hyena-bite.png", 3, 2, 8.0, true)
+		_append_sheet_animation(monster_sprite_frames, "hit", "res://assets/monsters/hyena/hyena-hit.png", 3, 1, 12.0, false)
+		_append_sheet_animation(monster_sprite_frames, "death", "res://assets/monsters/hyena/hyena-death.png", 3, 2, 8.0, false)
+	var sprite := AnimatedSprite2D.new()
+	sprite.sprite_frames = monster_sprite_frames
+	sprite.animation = "run" if archetype == "dust-skitter" else "walk"
+	sprite.set_meta("archetype", archetype)
+	sprite.scale = Vector2.ONE * sprite_scale
+	sprite.play()
+	sprite.animation_finished.connect(_on_monster_animation_finished.bind(sprite))
+	return sprite
+
+func _on_monster_animation_finished(sprite: AnimatedSprite2D) -> void:
+	if not is_instance_valid(sprite):
+		return
+	if sprite.animation == "hit":
+		var archetype := str(sprite.get_meta("archetype", "cave-brute"))
+		sprite.play("run" if archetype == "dust-skitter" else "walk")
+	elif sprite.animation == "death":
+		sprite.queue_free()
 
 func _create_farmer_sprite() -> void:
 	farmer_sprite = _make_sheet_sprite(
@@ -242,9 +293,7 @@ func _spawn_monster() -> void:
 	var archetype := Rules.monster_archetype(wave, _global_spawn_index())
 	var profile := Rules.monster_combat_stats(archetype, wave)
 	var row := rng.randi_range(0, Rules.BOARD_ROWS - 1)
-	var monster_sprite := _make_sheet_sprite(
-		"res://assets/monsters/hyena/hyena-idle.png", 3, 1, 4.0,
-		0.22 * float(profile.width_scale), true)
+	var monster_sprite := _make_monster_sprite(archetype, 0.22 * float(profile.width_scale))
 	if monster_sprite != null:
 		monster_sprite.position = Vector2(LANE_CENTER_X + Rules.BOARD_SPAWN_LOCAL_X * LANE_SCALE, LANE_Y[row])
 		monster_sprite.z_index = 11
@@ -315,6 +364,8 @@ func _update_monsters(delta: float, delta_ms: float) -> void:
 			var blocked_monster_sprite: Variant = monster.get("sprite", null)
 			if blocked_monster_sprite != null and is_instance_valid(blocked_monster_sprite):
 				blocked_monster_sprite.position.x = float(monster.x)
+				if blocked_monster_sprite.animation != "bite" and blocked_monster_sprite.animation != "hit" and blocked_monster_sprite.animation != "death":
+					blocked_monster_sprite.play("bite")
 			monster.attack_cooldown_ms = float(monster.attack_cooldown_ms) - delta_ms
 			if monster.attack_cooldown_ms <= 0.0:
 				blocker.hp = Rules.apply_hit_points_damage(float(blocker.hp), float(monster.plant_damage)).hp
@@ -330,6 +381,9 @@ func _update_monsters(delta: float, delta_ms: float) -> void:
 		var monster_sprite: Variant = monster.get("sprite", null)
 		if monster_sprite != null and is_instance_valid(monster_sprite):
 			monster_sprite.position.x = float(monster.x)
+			var moving_animation := "run" if str(monster.kind) == "dust-skitter" else "walk"
+			if monster_sprite.animation != moving_animation and monster_sprite.animation != "hit" and monster_sprite.animation != "death":
+				monster_sprite.play(moving_animation)
 		if float(monster.x) <= HOUSE_X:
 			game_state = "defeat"
 			status_label.text = "The farmhouse has been overrun. Return to the main menu to start a new battle."
@@ -364,14 +418,16 @@ func _update_projectiles(delta: float) -> void:
 				projectile.alive = false
 				if projectile_sprite != null and is_instance_valid(projectile_sprite):
 					projectile_sprite.queue_free()
+				var hit_sprite: Variant = monster.get("sprite", null)
 				if monster.hp <= 0.0:
 					monster.alive = false
-					var defeated_sprite: Variant = monster.get("sprite", null)
-					if defeated_sprite != null and is_instance_valid(defeated_sprite):
-						defeated_sprite.queue_free()
+					if hit_sprite != null and is_instance_valid(hit_sprite):
+						hit_sprite.play("death")
 					defeated_total += 1
 					coins += Rules.ORDINARY_MONSTER_DEFEAT_COINS
 					status_label.text = "%s defeated! +%d coins." % [str(monster.kind).replace("-", " ").capitalize(), Rules.ORDINARY_MONSTER_DEFEAT_COINS]
+				elif hit_sprite != null and is_instance_valid(hit_sprite):
+					hit_sprite.play("hit")
 				break
 			if float(monster.x) > float(projectile.x) + hit_radius:
 				continue
