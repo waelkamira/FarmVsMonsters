@@ -4,6 +4,7 @@ import { createSeededRandom } from "../rules/seededRandom.mjs";
 import { createCombatEventLog, appendCombatEvent } from "../rules/combatEventLog.mjs";
 import gridCalibration from "../data/farm-grid-calibration.json";
 import soundAssets from "../data/sound-assets.json";
+import { resolveStageOneLoadout } from "../data/stageOnePlants.mjs";
 import {
   PHASE_ONE_WAVE_SIZES,
   PHASE_ONE_TOTAL_MONSTERS,
@@ -642,27 +643,20 @@ export default class BattleScene extends Scene {
       align: "left"
     }).setOrigin(0, 0.5).setDepth(44);
 
-    // Build the seed bank from the player's pre-battle loadout.
+    // Stage 1 intentionally exposes only its approved core loop:
+    // Radish defends the lane; Mushroom generates collectible energy.
+    // Other implemented plants remain prototypes for later stages.
     const plantOptions = [
       { type: "radish", title: "RADISH L1", cost: RADISH_CONFIG.cost, image: "radish-level-1" },
-      { type: "mushroom", title: "MUSHROOM", cost: 50, image: "mushroom-character" },
-      { type: "pumpkin", title: "PUMPKIN", cost: PUMPKIN_CONFIG.cost, image: "pumpkin-character" },
-      { type: "pineapple", title: "PINEAPPLE L1", cost: PINEAPPLE_CONFIG.cost, image: "pineapple-level-1" },
-      { type: "hazelnut", title: "HAZELNUT L1", cost: HAZELNUT_CONFIG.cost, image: "hazelnut-level-1" },
-      { type: "mango", title: "MANGO L1", cost: MANGO_CONFIG.cost, image: "mango-level-1" }
+      { type: "mushroom", title: "MUSHROOM", cost: MUSHROOM_CONFIG.cost, image: "mushroom-character" }
     ];
-    let selectedTypes = plantOptions.map((plant) => plant.type);
+    let savedLoadout = null;
     try {
-      const saved = JSON.parse(window.localStorage.getItem("farmVsMonsters.selectedPlants") || "null");
-      if (Array.isArray(saved)) {
-        const allowed = new Set(plantOptions.map((plant) => plant.type));
-        selectedTypes = [...new Set(saved.filter((type) => allowed.has(type)))];
-      }
+      savedLoadout = JSON.parse(window.localStorage.getItem("farmVsMonsters.selectedPlants") || "null");
     } catch {
-      // A malformed or unavailable loadout falls back to the complete roster.
+      // A malformed or unavailable saved loadout falls back to the Stage 1 core.
     }
-    if (!selectedTypes.includes("mushroom")) selectedTypes.unshift("mushroom");
-    if (selectedTypes.length === 1) selectedTypes.push("radish");
+    const selectedTypes = resolveStageOneLoadout(savedLoadout);
     this.plantCardsByType = {};
     const packetStartX = 164;
     const packetGap = 90;
