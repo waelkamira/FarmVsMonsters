@@ -459,60 +459,61 @@ func _planting_cell_center(column: int, row: int) -> Vector2:
 	return center
 
 func _board_point(u: float, v: float) -> Vector2:
-	var scaled_u := u * float(Rules.BOARD_COLUMNS)
-	var scaled_v := v * float(Rules.BOARD_ROWS)
-	var column := floori(scaled_u)
-	var row := floori(scaled_v)
-	var local_u := scaled_u - float(column)
-	var local_v := scaled_v - float(row)
-	if column < 0:
-		column = 0
-		local_u = scaled_u
-	elif column >= Rules.BOARD_COLUMNS:
-		column = Rules.BOARD_COLUMNS - 1
-		local_u = scaled_u - float(column)
-	if row < 0:
-		row = 0
-		local_v = scaled_v
-	elif row >= Rules.BOARD_ROWS:
-		row = Rules.BOARD_ROWS - 1
-		local_v = scaled_v - float(row)
+	if u < 0.0 or u > 1.0 or v < 0.0 or v > 1.0:
+		var top_left: Vector2 = grid_nodes[0][0]
+		var top_right: Vector2 = grid_nodes[0][Rules.BOARD_COLUMNS]
+		var bottom_right: Vector2 = grid_nodes[Rules.BOARD_ROWS][Rules.BOARD_COLUMNS]
+		var bottom_left: Vector2 = grid_nodes[Rules.BOARD_ROWS][0]
+		return top_left * ((1.0 - u) * (1.0 - v)) + top_right * (u * (1.0 - v)) + bottom_right * (u * v) + bottom_left * ((1.0 - u) * v)
+	var safe_u := minf(u, 1.0 - 0.0000001)
+	var safe_v := minf(v, 1.0 - 0.0000001)
+	var column := mini(Rules.BOARD_COLUMNS - 1, floori(safe_u * float(Rules.BOARD_COLUMNS)))
+	var row := mini(Rules.BOARD_ROWS - 1, floori(safe_v * float(Rules.BOARD_ROWS)))
+	var local_u := safe_u * float(Rules.BOARD_COLUMNS) - float(column)
+	var local_v := safe_v * float(Rules.BOARD_ROWS) - float(row)
 	return _interpolate_cell(column, row, local_u, local_v)
 
 func _board_coordinates(source_point: Vector2) -> Vector2:
-	var row := 0
-	while row < Rules.BOARD_ROWS - 1 and source_point.y > float(grid_nodes[row + 1][0].y):
-		row += 1
-	var top_y := float(grid_nodes[row][0].y)
-	var bottom_y := float(grid_nodes[row + 1][0].y)
-	var local_v := (source_point.y - top_y) / maxf(0.001, bottom_y - top_y)
-	var boundary_xs: Array[float] = []
-	for column in range(Rules.BOARD_COLUMNS + 1):
-		boundary_xs.append(lerpf(float(grid_nodes[row][column].x),
-			float(grid_nodes[row + 1][column].x), local_v))
-	var cell_column := 0
-	while cell_column < Rules.BOARD_COLUMNS - 1 and source_point.x > boundary_xs[cell_column + 1]:
-		cell_column += 1
-	var local_u := (source_point.x - boundary_xs[cell_column]) / maxf(
-		0.001, boundary_xs[cell_column + 1] - boundary_xs[cell_column])
-	var polygon := _cell_polygon(cell_column, row)
-	for iteration in range(8):
-		var projected := _interpolate_cell(cell_column, row, local_u, local_v)
-		var du := (polygon[1] - polygon[0]) * (1.0 - local_v) + (polygon[2] - polygon[3]) * local_v
-		var dv := (polygon[3] - polygon[0]) * (1.0 - local_u) + (polygon[2] - polygon[1]) * local_u
+	for row in range(Rules.BOARD_ROWS):
+		for column in range(Rules.BOARD_COLUMNS):
+			if not _point_in_polygon(source_point, _cell_polygon(column, row)):
+				continue
+			var local_u := 0.5
+			var local_v := 0.5
+			var polygon := _cell_polygon(column, row)
+			for iteration in range(10):
+				var projected := _interpolate_cell(column, row, local_u, local_v)
+				var projected_u := _interpolate_cell(column, row, local_u + 0.001, local_v)
+				var projected_v := _interpolate_cell(column, row, local_u, local_v + 0.001)
+				var axis_u := (projected_u - projected) / 0.001
+				var axis_v := (projected_v - projected) / 0.001
+				var error := source_point - projected
+				var determinant := axis_u.x * axis_v.y - axis_v.x * axis_u.y
+				if absf(determinant) < 0.0001:
+					break
+				local_u += (error.x * axis_v.y - error.y * axis_v.x) / determinant
+				local_v += (error.y * axis_u.x - error.x * axis_u.y) / determinant
+			return Vector2((float(column) + local_u) / float(Rules.BOARD_COLUMNS),
+				(float(row) + local_v) / float(Rules.BOARD_ROWS))
+	var top_left: Vector2 = grid_nodes[0][0]
+	var top_right: Vector2 = grid_nodes[0][Rules.BOARD_COLUMNS]
+	var bottom_right: Vector2 = grid_nodes[Rules.BOARD_ROWS][Rules.BOARD_COLUMNS]
+	var bottom_left: Vector2 = grid_nodes[Rules.BOARD_ROWS][0]
+	var u := (source_point.x - bottom_left.x) / (bottom_right.x - bottom_left.x if absf(bottom_right.x - bottom_left.x) > 0.000001 else 1.0)
+	var v := (source_point.y - top_left.y) / (bottom_left.y - top_left.y if absf(bottom_left.y - top_left.y) > 0.000001 else 1.0)
+	for iteration in range(10):
+		var projected := top_left * ((1.0 - u) * (1.0 - v)) + top_right * (u * (1.0 - v)) + bottom_right * (u * v) + bottom_left * ((1.0 - u) * v)
+		var projected_u := top_left * ((1.0 - (u + 0.001)) * (1.0 - v)) + top_right * ((u + 0.001) * (1.0 - v)) + bottom_right * ((u + 0.001) * v) + bottom_left * ((1.0 - (u + 0.001)) * v)
+		var projected_v := top_left * ((1.0 - u) * (1.0 - (v + 0.001))) + top_right * (u * (1.0 - (v + 0.001))) + bottom_right * (u * (v + 0.001)) + bottom_left * ((1.0 - u) * (v + 0.001))
+		var axis_u := (projected_u - projected) / 0.001
+		var axis_v := (projected_v - projected) / 0.001
 		var error := source_point - projected
-		var determinant := du.x * dv.y - dv.x * du.y
-		if absf(determinant) < 0.000001:
+		var determinant := axis_u.x * axis_v.y - axis_v.x * axis_u.y
+		if absf(determinant) < 0.0001:
 			break
-		var delta_u := (error.x * dv.y - error.y * dv.x) / determinant
-		var delta_v := (du.x * error.y - du.y * error.x) / determinant
-		local_u += delta_u
-		local_v += delta_v
-		if absf(delta_u) + absf(delta_v) < 0.0001:
-			break
-	return Vector2((float(cell_column) + local_u) / float(Rules.BOARD_COLUMNS),
-		(float(row) + local_v) / float(Rules.BOARD_ROWS))
-
+		u += (error.x * axis_v.y - error.y * axis_v.x) / determinant
+		v += (error.y * axis_u.x - error.x * axis_u.y) / determinant
+	return Vector2(u, v)
 
 func _update_farmer(delta: float) -> void:
 	if farmer_sprite == null or not is_instance_valid(farmer_sprite):
