@@ -668,8 +668,8 @@ export default class BattleScene extends Scene {
       // A malformed or unavailable loadout falls back to the complete roster.
     }
     if (!selectedTypes.includes("mushroom")) selectedTypes.unshift("mushroom");
-    if (!selectedTypes.includes("snow-thrower")) selectedTypes.push("snow-thrower");
     if (selectedTypes.length === 1) selectedTypes.push("radish");
+    if (!selectedTypes.includes("snow-thrower")) selectedTypes.push("snow-thrower");
     this.plantCardsByType = {};
     const packetStartX = 164;
     const packetGap = 90;
@@ -2063,7 +2063,7 @@ export default class BattleScene extends Scene {
       return;
     }
     if (!this.selectedPlant) { this.setMessage("Choose a plant card first."); return; }
-    const plantConfigs = { radish: RADISH_CONFIG, mushroom: MUSHROOM_CONFIG, pumpkin: PUMPKIN_CONFIG, pineapple: PINEAPPLE_CONFIG, hazelnut: HAZELNUT_CONFIG, mango: MANGO_CONFIG };
+    const plantConfigs = { radish: RADISH_CONFIG, mushroom: MUSHROOM_CONFIG, pumpkin: PUMPKIN_CONFIG, pineapple: PINEAPPLE_CONFIG, hazelnut: HAZELNUT_CONFIG, mango: MANGO_CONFIG, "snow-thrower": SNOW_THROWER_CONFIG };
     const plantConfig = plantConfigs[this.selectedPlant];
     if (!plantConfig) {
       this.setMessage("This plant is not available yet: " + this.selectedPlant + ".");
@@ -2655,6 +2655,7 @@ export default class BattleScene extends Scene {
     const projectileConfig = plant.type === "pineapple" ? PINEAPPLE_CONFIG
       : plant.type === "hazelnut" ? HAZELNUT_CONFIG
       : plant.type === "mango" ? MANGO_CONFIG
+      : plant.type === "snow-thrower" ? SNOW_THROWER_CONFIG
       : RADISH_CONFIG;
     this.projectiles.push({
       view, localX, row, startRow: row, targetRow, target, plantType: plant.type,
@@ -3501,7 +3502,7 @@ export default class BattleScene extends Scene {
   }
 
   flashMonsterOnHit(monster) {
-    if (!monster || !monster.alive) return;
+    if (!monster || !monster.alive || monster.freezeRemainingMs > 0) return;
 
     // Keep the hyena grounded and on its original lane. Strengthen the flash
     // by about 30%, then add a tiny horizontal recoil on the sprite only.
