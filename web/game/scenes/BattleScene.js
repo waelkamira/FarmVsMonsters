@@ -667,6 +667,7 @@ export default class BattleScene extends Scene {
       // A malformed or unavailable loadout falls back to the complete roster.
     }
     if (!selectedTypes.includes("mushroom")) selectedTypes.unshift("mushroom");
+    if (!selectedTypes.includes("snow-thrower")) selectedTypes.push("snow-thrower");
     if (selectedTypes.length === 1) selectedTypes.push("radish");
     this.plantCardsByType = {};
     const packetStartX = 164;
