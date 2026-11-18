@@ -1214,6 +1214,13 @@ func _update_monsters(delta: float, delta_ms: float) -> void:
 			return
 
 
+func _freeze_projectile_target(row: int, projectile_local_x: float,
+		collision_radius: float, duration_ms: float = Rules.MONSTER_FREEZE_DURATION_MS) -> bool:
+	var target: Variant = Rules.select_freeze_target(monsters, row, projectile_local_x, collision_radius)
+	if target == null:
+		return false
+	return _apply_monster_freeze(target, duration_ms)
+
 func _apply_monster_freeze(monster: Dictionary, duration_ms: float = Rules.MONSTER_FREEZE_DURATION_MS) -> bool:
 	if not bool(monster.get("alive", false)) or not is_finite(duration_ms) or duration_ms <= 0.0:
 		return false
