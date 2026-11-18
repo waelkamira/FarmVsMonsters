@@ -467,11 +467,13 @@ func _board_point(u: float, v: float) -> Vector2:
 	var local_v := scaled_v - float(row)
 	if column < 0:
 		column = 0
+		local_u = scaled_u
 	elif column >= Rules.BOARD_COLUMNS:
 		column = Rules.BOARD_COLUMNS - 1
 		local_u = scaled_u - float(column)
 	if row < 0:
 		row = 0
+		local_v = scaled_v
 	elif row >= Rules.BOARD_ROWS:
 		row = Rules.BOARD_ROWS - 1
 		local_v = scaled_v - float(row)
