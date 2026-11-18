@@ -149,6 +149,10 @@ export default class BattleScene extends Scene {
 
   create() {
     this.isPaused = false;
+    // Both uploaded artworks are 3x3 sheets. Register one Phaser frame per cell
+    // so the battle renders a single pose instead of the complete nine-pose sheet.
+    this.registerThreeByThreeSheet("snow-thrower-level-1");
+    this.registerThreeByThreeSheet("frozen-hyena-level-1");
     // Client-local deterministic seed for reproducible development sessions only.
     // The authoritative server must issue and retain its own seed per game session.
     const seedBuffer = new Uint32Array(1);
@@ -2303,6 +2307,26 @@ export default class BattleScene extends Scene {
     return plant;
   }
 
+  registerThreeByThreeSheet(textureKey) {
+    if (!this.textures.exists(textureKey)) return false;
+    const texture = this.textures.get(textureKey);
+    const source = texture.getSourceImage();
+    if (!source?.width || !source?.height) return false;
+    for (let index = 0; index < 9; index += 1) {
+      const column = index % 3;
+      const row = Math.floor(index / 3);
+      const x = Math.floor((column * source.width) / 3);
+      const y = Math.floor((row * source.height) / 3);
+      const right = Math.floor(((column + 1) * source.width) / 3);
+      const bottom = Math.floor(((row + 1) * source.height) / 3);
+      const frameName = String(index);
+      if (!texture.has(frameName)) {
+        texture.add(frameName, 0, x, y, right - x, bottom - y);
+      }
+    }
+    return true;
+  }
+
   drawCatalogPlant(type, x, y, row = 2) {
     const plant = this.add.container(x, y).setDepth(11);
     const texture = type === "pumpkin" ? "pumpkin-character" : type === "pineapple" ? "pineapple-level-1" : type === "hazelnut" ? "hazelnut-level-1" : type === "mango" ? "mango-level-1" : type === "snow-thrower" ? "snow-thrower-level-1" : "radish-level-1";
@@ -2323,9 +2347,12 @@ export default class BattleScene extends Scene {
       const height = baseHeight * pineapplePerspectiveScale;
       const width = height * (this.textures.getFrame(texture).realWidth / this.textures.getFrame(texture).realHeight);
       const maxWidth = (type === "pineapple" ? 152 : type === "hazelnut" ? 116 : type === "mango" ? 116 : type === "snow-thrower" ? 104 : 76) * pineapplePerspectiveScale;
-      if (type === "pineapple" || type === "hazelnut" || type === "mango") {
+      if (["pineapple", "hazelnut", "mango", "snow-thrower"].includes(type)) {
         const animatedPlant = this.add.sprite(0, -height / 2 + 2, texture, 0).setDisplaySize(Math.min(width, maxWidth), height);
-        animatedPlant.setData(type === "pineapple" ? "pineappleThrowSprite" : type === "hazelnut" ? "hazelnutThrowSprite" : "mangoThrowSprite", true);
+        const animationDataKey = type === "pineapple" ? "pineappleThrowSprite"
+          : type === "hazelnut" ? "hazelnutThrowSprite"
+          : type === "mango" ? "mangoThrowSprite" : "snowThrowerSprite";
+        animatedPlant.setData(animationDataKey, true);
         plant.add(animatedPlant);
       } else {
         plant.add(this.add.image(0, -height / 2 + 2, texture).setDisplaySize(Math.min(width, maxWidth), height));
@@ -3322,7 +3349,8 @@ export default class BattleScene extends Scene {
         monster.frozenSpriteSize = { width: sprite.displayWidth, height: sprite.displayHeight };
       }
       sprite.stop();
-      sprite.setTexture("frozen-hyena-level-1");
+      // Frame zero is the frozen pose; never display the full 3x3 artwork.
+      sprite.setTexture("frozen-hyena-level-1", 0);
       sprite.setOrigin(0.5, 1);
       if (monster.frozenSpriteSize?.width > 0 && monster.frozenSpriteSize?.height > 0) {
         sprite.setDisplaySize(monster.frozenSpriteSize.width, monster.frozenSpriteSize.height);
