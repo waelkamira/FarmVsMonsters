@@ -130,6 +130,12 @@ func _test_monster_freeze_contract() -> void:
 	var frozen_monster := {"alive": true, "freeze_remaining_ms": 0.0, "braced": true, "sprite": frozen_sprite, "base_tint": Color.WHITE}
 	assert(battle._apply_monster_freeze(frozen_monster))
 	assert(frozen_sprite.animation == "frozen")
+	battle._set_monster_freeze_visual(frozen_sprite, "cave-brute", false)
+	assert(frozen_sprite.animation == "walk")
+	battle._set_monster_freeze_visual(frozen_sprite, "dust-skitter", true)
+	assert(frozen_sprite.animation == "frozen")
+	battle._set_monster_freeze_visual(frozen_sprite, "dust-skitter", false)
+	assert(frozen_sprite.animation == "run")
 	frozen_sprite.free()
 	assert(is_equal_approx(battle._plant_frame_width("snow-thrower"), 360.0))
 	for visual_scale in [Vector2(0.14, 0.14), Vector2(0.44, 0.44)]:
