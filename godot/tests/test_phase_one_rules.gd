@@ -12,7 +12,7 @@ func _initialize() -> void:
 	assert(Rules.is_valid_cell(7, 4))
 	assert(not Rules.is_valid_cell(8, 4))
 	assert(not Rules.is_valid_cell(0, 5))
-	assert(Rules.plant_cost("radish") == 25)
+	assert(Rules.plant_cost("radish") == 35)
 	assert(Rules.plant_cost("energy_mushroom") == 50)
 	assert(Rules.plant_cost("unknown") == -1)
 	assert(Rules.apply_energy_delta(150, -25) == 125)
