@@ -69,6 +69,8 @@ func _test_plant_transactions() -> void:
 	var refund: Dictionary = Rules.resolve_plant_uproot(290.0, {"type": "radish", "alive": true, "energy_cost": 35})
 	assert(refund.ok and refund.energy == 325.0 and refund.refund == 35)
 	assert(Rules.resolve_plant_uproot(100.0, {"type": "radish", "alive": true, "energy_cost": 999}).reason == "PLANT_COST_MISMATCH")
+	assert(Rules.resolve_plant_uproot(100.0, {"type": "radish", "alive": false, "energy_cost": 35}).reason == "INVALID_UPROOT_STATE")
+	assert(Rules.resolve_plant_uproot(100.0, {}).reason == "INVALID_UPROOT_STATE")
 	var pickup: Dictionary = Rules.resolve_energy_pickup(290.0, 15.0)
 	assert(pickup.energy == 300.0 and pickup.collected == 10.0)
 	var damage: Dictionary = Rules.apply_hit_points_damage(10.0, 25.0)
