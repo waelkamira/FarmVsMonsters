@@ -18,6 +18,8 @@ const REQUIRED_TEXTURES := [
 	"res://assets/monsters/hyena/hyena-bite.png",
 	"res://assets/monsters/hyena/hyena-hit.png",
 	"res://assets/monsters/hyena/hyena-death.png",
+	"res://assets/monsters/hyena/frozen-hyena-level-1.png",
+	"res://assets/monsters/hyena/frozen-hyena-level-2.png",
 	"res://assets/plants/radish-level-1.png",
 	"res://assets/plants/mushroom.png",
 	"res://assets/plants/pumpkin.png",
