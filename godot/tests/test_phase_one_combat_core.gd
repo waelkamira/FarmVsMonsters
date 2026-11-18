@@ -104,6 +104,10 @@ func _test_farmer_planting_route_geometry() -> void:
 	var battle = LiveBattle.new()
 	battle._load_grid_calibration()
 	assert(battle.grid_nodes.size() == Rules.BOARD_ROWS + 1)
+	battle._create_farmer_sprite()
+	assert(battle.farmer_sprite.sprite_frames.has_animation("jump"))
+	assert(battle.farmer_sprite.sprite_frames.has_animation("hit"))
+	assert(battle.farmer_sprite.sprite_frames.has_animation("death"))
 	var samples := [
 		Vector2(0.08, 0.12), Vector2(0.5, 0.5), Vector2(0.92, 0.88),
 		Vector2(-0.32, 0.5), Vector2(1.18, 0.72)
