@@ -36,6 +36,7 @@ var selected_plant := "radish"
 var plants: Array[Dictionary] = []
 var monsters: Array[Dictionary] = []
 var projectiles: Array[Dictionary] = []
+var energy_pickups: Array[Dictionary] = []
 var wave := 1
 var spawned_this_wave := 0
 var defeated_total := 0
@@ -86,6 +87,7 @@ func _process(delta: float) -> void:
 	var delta_ms := delta * 1000.0
 	_update_spawning(delta_ms)
 	_update_plants(delta_ms)
+	_update_energy_pickups(delta_ms)
 	_update_monsters(delta, delta_ms)
 	if game_state != "running":
 		_refresh_hud()
@@ -772,6 +774,9 @@ func _gui_input(event: InputEvent) -> void:
 		tap_position = touch.position
 	else:
 		return
+	if _request_collect(tap_position):
+		accept_event()
+		return
 	if _request_uproot(tap_position):
 		accept_event()
 		return
@@ -976,10 +981,17 @@ func _update_plants(delta_ms: float) -> void:
 		if plant.type == "mushroom":
 			plant.production_ms = float(plant.get("production_ms", 12000.0)) - delta_ms
 			if plant.production_ms <= 0.0:
-				var previous_energy := energy
-				energy = int(Rules.resolve_energy_pickup(float(energy), float(Rules.PLANTS.mushroom.energy_per_pickup)).energy)
-				if energy > previous_energy:
-					_play_sfx("coin-collect", 0.04)
+				var pickup_depth := float(plant.get("depth_scale", 1.0))
+				energy_pickups.append({
+					"x": float(plant.x) + 20.0 * pickup_depth,
+					"y": float(plant.y) - 42.0 * pickup_depth,
+					"base_y": float(plant.y) - 42.0 * pickup_depth,
+					"depth_scale": pickup_depth,
+					"amount": int(Rules.PLANTS.mushroom.energy_per_pickup),
+					"age_ms": 0.0,
+					"lifetime_ms": 18000.0
+				})
+				_play_sfx("coin-collect", 0.04)
 				plant.production_ms = float(Rules.PLANTS.mushroom.production_interval_ms)
 			continue
 		if not Rules.PLANTS[plant.type].has("projectile_damage"):
@@ -1013,6 +1025,46 @@ func _update_plants(delta_ms: float) -> void:
 				"damage": float(config.projectile_damage), "alive": true
 			})
 			plant.cooldown_ms = float(config.cooldown_ms)
+
+func _update_energy_pickups(delta_ms: float) -> void:
+	for pickup in energy_pickups:
+		pickup.age_ms = float(pickup.age_ms) + delta_ms
+		pickup.y = float(pickup.base_y) - sin(float(pickup.age_ms) / 420.0) * 7.0 * float(pickup.depth_scale)
+	energy_pickups = energy_pickups.filter(func(pickup: Dictionary) -> bool:
+		return float(pickup.age_ms) < float(pickup.lifetime_ms)
+	)
+
+func _find_energy_pickup_at_screen_position(point: Vector2) -> int:
+	var nearest_index := -1
+	var nearest_distance := INF
+	for index in range(energy_pickups.size()):
+		var pickup: Dictionary = energy_pickups[index]
+		var radius := 34.0 * float(pickup.depth_scale) * SCREEN_SCALE
+		var distance := point.distance_squared_to(Vector2(float(pickup.x), float(pickup.y)))
+		if distance <= radius * radius and distance < nearest_distance:
+			nearest_index = index
+			nearest_distance = distance
+	return nearest_index
+
+func _request_collect(point: Vector2) -> bool:
+	var pickup_index := _find_energy_pickup_at_screen_position(point)
+	if pickup_index < 0:
+		return false
+	if not farmer_planting_target.is_empty() or not farmer_return_target.is_empty() or not farmer_action_animation.is_empty():
+		status_label.text = "The Farmer must finish the current action before collecting energy."
+		return true
+	var pickup: Dictionary = energy_pickups[pickup_index]
+	var transaction := Rules.resolve_energy_pickup(float(energy), float(pickup.amount))
+	if float(transaction.collected) <= 0.0:
+		status_label.text = "Energy is full. Spend some energy before collecting another orb."
+		return true
+	energy = int(transaction.energy)
+	energy_pickups.remove_at(pickup_index)
+	_play_farmer_action("collect")
+	_play_sfx("coin-collect", 0.04)
+	status_label.text = "Energy collected: +%d." % int(transaction.collected)
+	_refresh_hud()
+	return true
 
 func _update_monsters(delta: float, delta_ms: float) -> void:
 	for monster in monsters:
@@ -1195,6 +1247,14 @@ func _draw() -> void:
 		var plant_hp_max := float(Rules.PLANTS[plant.type].hp)
 		draw_rect(Rect2(plant.x - bar_width * 0.5, bar_y, bar_width, 5.0 * depth_scale), Color("#263b2e"), true)
 		draw_rect(Rect2(plant.x - bar_width * 0.5, bar_y, bar_width * float(plant.hp) / plant_hp_max, 5.0 * depth_scale), Color("#77d477"), true)
+	for pickup in energy_pickups:
+		var pickup_position := Vector2(float(pickup.x), float(pickup.y))
+		var pickup_scale := float(pickup.depth_scale) * SCREEN_SCALE
+		var pulse := 1.0 + 0.08 * sin(float(pickup.age_ms) / 180.0)
+		draw_circle(pickup_position, 17.0 * pickup_scale * pulse, Color(0.95, 0.75, 0.22, 0.22))
+		draw_circle(pickup_position, 11.0 * pickup_scale * pulse, Color("#f5c94f"))
+		draw_circle(pickup_position, 6.0 * pickup_scale, Color("#fff2a8"))
+		draw_string(get_theme_default_font(), pickup_position + Vector2(-4.0 * pickup_scale, 4.0 * pickup_scale), "+", HORIZONTAL_ALIGNMENT_LEFT, -1, maxi(10, roundi(13.0 * pickup_scale)), Color("#5b4217"))
 	for monster in monsters:
 		var depth_scale := float(monster.depth_scale)
 		if str(monster.kind) == "dust-skitter" and float(monster.get("burst_fx_ms", 0.0)) > 0.0:
