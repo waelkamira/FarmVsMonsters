@@ -9,6 +9,8 @@ const SCREEN_OFFSET_X := (1280.0 - 1120.0 * SCREEN_SCALE) * 0.5
 const BACKGROUND_TOP := 41.333
 const BACKGROUND_HEIGHT := 597.333
 const FARMER_MOVE_SPEED := 115.0
+const FARMER_PLANT_SPEED := 320.0
+const FARMER_RETURN_SPEED := 420.0
 const FARMER_CLUB_DAMAGE := 42.0
 const FARMER_CLUB_REACH := 112.0
 const PLANT_OPTIONS := ["radish", "mushroom", "pumpkin", "pineapple", "hazelnut", "mango"]
@@ -54,6 +56,10 @@ var attack_button: Button
 var has_planted_defender := false
 var farmer_is_moving := false
 var farmer_locomotion_animation := "idle"
+var planting_target: Dictionary = {}
+var return_target: Dictionary = {}
+var pending_farmer_return: Dictionary = {}
+var farmer_planting := false
 var farmer_touch_directions := {"left": false, "right": false, "up": false, "down": false}
 var sprite_frames_cache: Dictionary = {}
 var monster_sprite_frames: SpriteFrames
@@ -370,6 +376,7 @@ func _create_farmer_sprite() -> void:
 	_append_sheet_animation(frames, "walk", "res://assets/characters/farmer/farmer-walk.png", 8, 1, 6.0, true)
 	_append_sheet_animation(frames, "run", "res://assets/characters/farmer/farmer-run.png", 6, 1, 8.0, true)
 	_append_sheet_animation(frames, "attack", "res://assets/characters/farmer/farmer-attack.png", 6, 1, 8.0, false)
+	_append_sheet_animation(frames, "plant", "res://assets/characters/farmer/farmer-plant.png", 6, 1, 8.0, false)
 	farmer_sprite = AnimatedSprite2D.new()
 	farmer_sprite.sprite_frames = frames
 	farmer_sprite.animation = "idle"
@@ -429,60 +436,184 @@ func _set_farmer_touch_direction(direction: String, pressed: bool) -> void:
 func _on_farmer_animation_finished() -> void:
 	if farmer_sprite == null or not is_instance_valid(farmer_sprite):
 		return
-	if farmer_sprite.animation == "attack":
+	if farmer_sprite.animation == "plant":
+		_begin_farmer_return()
+	elif farmer_sprite.animation == "attack":
 		farmer_sprite.play(farmer_locomotion_animation)
+
+func _begin_farmer_return() -> void:
+	farmer_planting = false
+	if not pending_farmer_return.is_empty():
+		return_target = pending_farmer_return.duplicate(true)
+		pending_farmer_return.clear()
+		farmer_locomotion_animation = "run"
+		farmer_sprite.play("run")
+	else:
+		farmer_locomotion_animation = "idle"
+		farmer_sprite.play("idle")
+
+func _planting_cell_center(column: int, row: int) -> Vector2:
+	var center := _grid_cell_center(column, row)
+	if row < 3:
+		center.y -= 5.0
+	return center
+
+func _board_point(u: float, v: float) -> Vector2:
+	var scaled_u := u * float(Rules.BOARD_COLUMNS)
+	var scaled_v := v * float(Rules.BOARD_ROWS)
+	var column := floori(scaled_u)
+	var row := floori(scaled_v)
+	var local_u := scaled_u - float(column)
+	var local_v := scaled_v - float(row)
+	if column < 0:
+		column = 0
+	elif column >= Rules.BOARD_COLUMNS:
+		column = Rules.BOARD_COLUMNS - 1
+		local_u = scaled_u - float(column)
+	if row < 0:
+		row = 0
+	elif row >= Rules.BOARD_ROWS:
+		row = Rules.BOARD_ROWS - 1
+		local_v = scaled_v - float(row)
+	return _interpolate_cell(column, row, local_u, local_v)
+
+func _board_coordinates(source_point: Vector2) -> Vector2:
+	var row := 0
+	while row < Rules.BOARD_ROWS - 1 and source_point.y > float(grid_nodes[row + 1][0].y):
+		row += 1
+	var top_y := float(grid_nodes[row][0].y)
+	var bottom_y := float(grid_nodes[row + 1][0].y)
+	var local_v := (source_point.y - top_y) / maxf(0.001, bottom_y - top_y)
+	var boundary_xs: Array[float] = []
+	for column in range(Rules.BOARD_COLUMNS + 1):
+		boundary_xs.append(lerpf(float(grid_nodes[row][column].x),
+			float(grid_nodes[row + 1][column].x), local_v))
+	var cell_column := 0
+	while cell_column < Rules.BOARD_COLUMNS - 1 and source_point.x > boundary_xs[cell_column + 1]:
+		cell_column += 1
+	var local_u := (source_point.x - boundary_xs[cell_column]) / maxf(
+		0.001, boundary_xs[cell_column + 1] - boundary_xs[cell_column])
+	var polygon := _cell_polygon(cell_column, row)
+	for iteration in range(8):
+		var projected := _interpolate_cell(cell_column, row, local_u, local_v)
+		var du := (polygon[1] - polygon[0]) * (1.0 - local_v) + (polygon[2] - polygon[3]) * local_v
+		var dv := (polygon[3] - polygon[0]) * (1.0 - local_u) + (polygon[2] - polygon[1]) * local_u
+		var error := source_point - projected
+		var determinant := du.x * dv.y - dv.x * du.y
+		if absf(determinant) < 0.000001:
+			break
+		var delta_u := (error.x * dv.y - error.y * dv.x) / determinant
+		var delta_v := (du.x * error.y - du.y * error.x) / determinant
+		local_u += delta_u
+		local_v += delta_v
+		if absf(delta_u) + absf(delta_v) < 0.0001:
+			break
+	return Vector2((float(cell_column) + local_u) / float(Rules.BOARD_COLUMNS),
+		(float(row) + local_v) / float(Rules.BOARD_ROWS))
+
 
 func _update_farmer(delta: float) -> void:
 	if farmer_sprite == null or not is_instance_valid(farmer_sprite):
 		return
-	var horizontal := 0.0
-	var vertical := 0.0
-	if Input.is_key_pressed(KEY_A) or Input.is_key_pressed(KEY_LEFT):
-		horizontal -= 1.0
-	if Input.is_key_pressed(KEY_D) or Input.is_key_pressed(KEY_RIGHT):
-		horizontal += 1.0
-	if Input.is_key_pressed(KEY_W) or Input.is_key_pressed(KEY_UP):
-		vertical -= 1.0
-	if Input.is_key_pressed(KEY_S) or Input.is_key_pressed(KEY_DOWN):
-		vertical += 1.0
-	var touch_moving := false
-	if farmer_touch_directions.left:
-		horizontal -= 1.0
-		touch_moving = true
-	if farmer_touch_directions.right:
-		horizontal += 1.0
-		touch_moving = true
-	if farmer_touch_directions.up:
-		vertical -= 1.0
-		touch_moving = true
-	if farmer_touch_directions.down:
-		vertical += 1.0
-		touch_moving = true
-	var movement := Vector2(horizontal, vertical)
-	if movement.length_squared() > 1.0:
-		movement = movement.normalized()
-	farmer_is_moving = movement.length_squared() > 0.001
-	if farmer_is_moving:
-		var move_speed := FARMER_MOVE_SPEED * SCREEN_SCALE * (0.78 if touch_moving else 1.0)
-		farmer_sprite.position += movement * move_speed * delta
-		var min_x := _to_screen(Vector2(105.0, 0.0)).x
-		var max_x := _to_screen(Vector2(1010.0, 0.0)).x
-		var min_y := _to_screen(Vector2(0.0, _grid_cell_center(0, 0).y - 22.0)).y
-		var max_y := _to_screen(Vector2(0.0, _grid_cell_center(0, 4).y + 22.0)).y
-		farmer_sprite.position.x = clampf(farmer_sprite.position.x, min_x, max_x)
-		farmer_sprite.position.y = clampf(farmer_sprite.position.y, min_y, max_y)
-		if absf(movement.x) > 0.01:
-			farmer_sprite.scale.x = absf(farmer_sprite.scale.x) * signf(movement.x)
-		farmer_locomotion_animation = "walk" if touch_moving else "run"
+	if not planting_target.is_empty():
+		_update_planting_movement(delta)
+		farmer_locomotion_animation = "walk"
+	elif not return_target.is_empty():
+		_update_return_movement(delta)
+		farmer_locomotion_animation = "run"
+	elif farmer_planting:
+		farmer_locomotion_animation = "plant"
 	else:
-		farmer_locomotion_animation = "idle"
+		var horizontal := 0.0
+		var vertical := 0.0
+		if Input.is_key_pressed(KEY_A) or Input.is_key_pressed(KEY_LEFT):
+			horizontal -= 1.0
+		if Input.is_key_pressed(KEY_D) or Input.is_key_pressed(KEY_RIGHT):
+			horizontal += 1.0
+		if Input.is_key_pressed(KEY_W) or Input.is_key_pressed(KEY_UP):
+			vertical -= 1.0
+		if Input.is_key_pressed(KEY_S) or Input.is_key_pressed(KEY_DOWN):
+			vertical += 1.0
+		var touch_moving := false
+		if farmer_touch_directions.left:
+			horizontal -= 1.0
+			touch_moving = true
+		if farmer_touch_directions.right:
+			horizontal += 1.0
+			touch_moving = true
+		if farmer_touch_directions.up:
+			vertical -= 1.0
+			touch_moving = true
+		if farmer_touch_directions.down:
+			vertical += 1.0
+			touch_moving = true
+		var movement := Vector2(horizontal, vertical)
+		if movement.length_squared() > 1.0:
+			movement = movement.normalized()
+		farmer_is_moving = movement.length_squared() > 0.001
+		if farmer_is_moving:
+			var move_speed := FARMER_MOVE_SPEED * SCREEN_SCALE * (0.78 if touch_moving else 1.0)
+			farmer_sprite.position += movement * move_speed * delta
+			var min_x := _to_screen(Vector2(105.0, 0.0)).x
+			var max_x := _to_screen(Vector2(1010.0, 0.0)).x
+			var min_y := _to_screen(Vector2(0.0, _grid_cell_center(0, 0).y - 22.0)).y
+			var max_y := _to_screen(Vector2(0.0, _grid_cell_center(0, 4).y + 22.0)).y
+			farmer_sprite.position.x = clampf(farmer_sprite.position.x, min_x, max_x)
+			farmer_sprite.position.y = clampf(farmer_sprite.position.y, min_y, max_y)
+			if absf(movement.x) > 0.01:
+				farmer_sprite.scale.x = absf(farmer_sprite.scale.x) * signf(movement.x)
+			farmer_locomotion_animation = "walk" if touch_moving else "run"
+		else:
+			farmer_locomotion_animation = "idle"
 	var farmer_row := _nearest_row_at_screen_position(farmer_sprite.position)
 	var facing := signf(farmer_sprite.scale.x)
 	var visual_scale := 0.25 * _depth_scale(4, farmer_row)
 	farmer_sprite.scale = Vector2(absf(visual_scale) * facing, visual_scale)
 	farmer_sprite.z_index = int(farmer_sprite.position.y)
-	if farmer_sprite.animation != "attack" and farmer_sprite.animation != farmer_locomotion_animation:
+	if farmer_sprite.animation != "attack" and farmer_sprite.animation != "plant" and farmer_sprite.animation != farmer_locomotion_animation:
 		farmer_sprite.play(farmer_locomotion_animation)
+
+func _update_planting_movement(delta: float) -> void:
+	if planting_target.is_empty():
+		return
+	planting_target.progress = minf(1.0,
+		float(planting_target.progress) + (FARMER_PLANT_SPEED * delta) / float(planting_target.route_length))
+	var u := lerpf(float(planting_target.start_u), float(planting_target.target_u), float(planting_target.progress))
+	var v := lerpf(float(planting_target.start_v), float(planting_target.target_v), float(planting_target.progress))
+	farmer_sprite.position = _to_screen(_board_point(u, v))
+	farmer_sprite.z_index = int(farmer_sprite.position.y)
+	var horizontal_direction := float(planting_target.target_screen.x) - farmer_sprite.position.x
+	if absf(horizontal_direction) > 0.5:
+		farmer_sprite.scale.x = absf(farmer_sprite.scale.x) * signf(horizontal_direction)
+	if float(planting_target.progress) < 1.0:
+		return
+	var completed: Dictionary = planting_target.duplicate(true)
+	planting_target.clear()
+	farmer_sprite.position = completed.target_screen
+	pending_farmer_return = {"position": completed.start_position, "facing": completed.start_facing}
+	_complete_plant_placement(int(completed.column), int(completed.row), str(completed.plant_type))
+
+func _update_return_movement(delta: float) -> void:
+	if return_target.is_empty():
+		return
+	var target_position: Vector2 = return_target.position
+	var offset := target_position - farmer_sprite.position
+	var distance := offset.length()
+	if distance <= 5.0 * SCREEN_SCALE:
+		farmer_sprite.position = target_position
+		var target_facing := float(return_target.facing)
+		return_target.clear()
+		farmer_sprite.scale.x = absf(farmer_sprite.scale.x) * target_facing
+		farmer_locomotion_animation = "idle"
+		farmer_sprite.play("idle")
+		status_label.text = "The Farmer returned to his starting position."
+		return
+	var step := minf(distance, FARMER_RETURN_SPEED * SCREEN_SCALE * delta)
+	farmer_sprite.position += offset / distance * step
+	if absf(offset.x) > 0.01:
+		farmer_sprite.scale.x = absf(farmer_sprite.scale.x) * signf(offset.x)
+	farmer_sprite.z_index = int(farmer_sprite.position.y)
+
 
 func _farmer_can_attack() -> bool:
 	if not has_planted_defender:
