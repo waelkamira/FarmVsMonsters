@@ -4,13 +4,10 @@ extends Control
 
 const Rules = preload("res://scripts/phase_one_rules.gd")
 const MENU_SCENE := "res://scenes/main.tscn"
-const LANE_CENTER_X := 640.0
-const LANE_SCALE := 2.0
-const GRID_LEFT := 220.0
-const GRID_TOP := 140.0
-const CELL_WIDTH := 105.0
-const LANE_Y := [190.0, 290.0, 390.0, 490.0, 590.0]
-const HOUSE_X := 76.0
+const SCREEN_SCALE := 720.0 / 680.0
+const SCREEN_OFFSET_X := (1280.0 - 1120.0 * SCREEN_SCALE) * 0.5
+const BACKGROUND_TOP := 41.333
+const BACKGROUND_HEIGHT := 597.333
 const FARMER_MOVE_SPEED := 115.0
 const FARMER_CLUB_DAMAGE := 42.0
 const FARMER_CLUB_REACH := 112.0
@@ -50,6 +47,8 @@ var status_label: Label
 var energy_label: Label
 var wave_label: Label
 var rng := RandomNumberGenerator.new()
+var grid_nodes: Array = []
+var background_view: TextureRect
 var farmer_sprite: AnimatedSprite2D
 var attack_button: Button
 var has_planted_defender := false
@@ -61,8 +60,11 @@ var monster_sprite_frames: SpriteFrames
 
 func _ready() -> void:
 	rng.randomize()
+	_load_grid_calibration()
+	_build_background()
 	_build_ui()
 	_create_farmer_sprite()
+	_position_farmer_at_start()
 	queue_redraw()
 
 func _process(delta: float) -> void:
@@ -81,6 +83,137 @@ func _process(delta: float) -> void:
 	_update_wave_progress()
 	_refresh_hud()
 	queue_redraw()
+
+func _load_grid_calibration() -> void:
+	var file := FileAccess.open("res://data/farm_grid_calibration.json", FileAccess.READ)
+	if file == null:
+		push_error("Missing approved farm grid calibration JSON.")
+		return
+	var parsed: Variant = JSON.parse_string(file.get_as_text())
+	if parsed == null or not parsed.has("grid"):
+		push_error("Invalid farm grid calibration JSON.")
+		return
+	grid_nodes.clear()
+	for source_row in parsed.grid.controlPoints:
+		var row: Array = []
+		for point in source_row:
+			row.append(Vector2(float(point.x), float(point.y)))
+		grid_nodes.append(row)
+
+func _build_background() -> void:
+	background_view = TextureRect.new()
+	background_view.texture = load("res://assets/backgrounds/farm-battlefield.jpeg") as Texture2D
+	background_view.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	background_view.stretch_mode = TextureRect.STRETCH_SCALE
+	background_view.position = Vector2(SCREEN_OFFSET_X, BACKGROUND_TOP * SCREEN_SCALE)
+	background_view.size = Vector2(1120.0 * SCREEN_SCALE, BACKGROUND_HEIGHT * SCREEN_SCALE)
+	background_view.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	background_view.z_index = -100
+	add_child(background_view)
+
+func _to_screen(source_point: Vector2) -> Vector2:
+	return Vector2(SCREEN_OFFSET_X + source_point.x * SCREEN_SCALE,
+		source_point.y * SCREEN_SCALE)
+
+func _to_source(screen_point: Vector2) -> Vector2:
+	return Vector2((screen_point.x - SCREEN_OFFSET_X) / SCREEN_SCALE,
+		screen_point.y / SCREEN_SCALE)
+
+func _cell_polygon(column: int, row: int) -> Array:
+	return [
+		grid_nodes[row][column],
+		grid_nodes[row][column + 1],
+		grid_nodes[row + 1][column + 1],
+		grid_nodes[row + 1][column]
+	]
+
+func _point_in_polygon(point: Vector2, polygon: Array) -> bool:
+	var inside := false
+	var previous := polygon.size() - 1
+	for current in range(polygon.size()):
+		var a: Vector2 = polygon[current]
+		var b: Vector2 = polygon[previous]
+		var crosses := ((a.y > point.y) != (b.y > point.y)) and (
+			point.x < ((b.x - a.x) * (point.y - a.y)) / (b.y - a.y if absf(b.y - a.y) > 0.000001 else 0.000001) + a.x)
+		if crosses:
+			inside = not inside
+		previous = current
+	return inside
+
+func _grid_cell_center(column: int, row: int) -> Vector2:
+	var polygon := _cell_polygon(column, row)
+	var twice_area := 0.0
+	var center_x := 0.0
+	var center_y := 0.0
+	for index in range(polygon.size()):
+		var current: Vector2 = polygon[index]
+		var next: Vector2 = polygon[(index + 1) % polygon.size()]
+		var cross := current.x * next.y - next.x * current.y
+		twice_area += cross
+		center_x += (current.x + next.x) * cross
+		center_y += (current.y + next.y) * cross
+	if absf(twice_area) < 0.0001:
+		return _interpolate_cell(column, row, 0.5, 0.5)
+	return Vector2(center_x, center_y) / (3.0 * twice_area)
+
+func _interpolate_cell(column: int, row: int, u: float, v: float) -> Vector2:
+	var polygon := _cell_polygon(column, row)
+	return polygon[0] * (1.0 - u) * (1.0 - v) + polygon[1] * u * (1.0 - v) + polygon[2] * u * v + polygon[3] * (1.0 - u) * v
+
+func _lane_point(local_x: float, row: int) -> Vector2:
+	var width := Rules.BOARD_LANE_WIDTH
+	var center_index := ((local_x + width * 0.5) / width) * float(Rules.BOARD_COLUMNS) - 0.5
+	var left_column := floori(center_index)
+	var first_column := clampi(left_column, 0, Rules.BOARD_COLUMNS - 2)
+	var blend := center_index - float(first_column)
+	var first := _grid_cell_center(first_column, row)
+	var second := _grid_cell_center(first_column + 1, row)
+	return first.lerp(second, blend)
+
+func _cell_at_screen_position(screen_point: Vector2) -> Vector2i:
+	var source_point := _to_source(screen_point)
+	for row in range(Rules.BOARD_ROWS):
+		for column in range(Rules.BOARD_COLUMNS):
+			if _point_in_polygon(source_point, _cell_polygon(column, row)):
+				return Vector2i(column, row)
+	return Vector2i(-1, -1)
+
+func _depth_scale(column: int, row: int) -> float:
+	var polygon := _cell_polygon(column, row)
+	var top_y := (polygon[0].y + polygon[1].y) * 0.5
+	var bottom_y := (polygon[2].y + polygon[3].y) * 0.5
+	var average_cell_height := (grid_nodes[Rules.BOARD_ROWS][0].y - grid_nodes[0][0].y) / float(Rules.BOARD_ROWS)
+	return clampf((bottom_y - top_y) / average_cell_height, 0.62, 1.42)
+
+func _local_x_for_screen(screen_x: float) -> float:
+	var source_x := (screen_x - SCREEN_OFFSET_X) / SCREEN_SCALE
+	return source_x - (grid_nodes[0][0].x + grid_nodes[0][Rules.BOARD_COLUMNS].x) * 0.5
+
+func _nearest_row_at_screen_position(screen_point: Vector2) -> int:
+	var local_x := _local_x_for_screen(screen_point.x)
+	var nearest_row := 0
+	var nearest_distance := INF
+	for row in range(Rules.BOARD_ROWS):
+		var lane_screen := _to_screen(_lane_point(local_x, row))
+		var distance := absf(lane_screen.y - screen_point.y)
+		if distance < nearest_distance:
+			nearest_distance = distance
+			nearest_row = row
+	return nearest_row
+
+func _plant_frame_width(plant_type: String) -> float:
+	match plant_type:
+		"radish": return 908.0 / 3.0
+		"mushroom": return 353.0
+		"pumpkin": return 500.0
+		"pineapple": return 418.0
+		"hazelnut": return 341.0
+		"mango": return 360.0
+	return 300.0
+
+func _plant_half_width(plant: Dictionary) -> float:
+	var base_scale := 0.15 if ANIMATED_PLANT_GRIDS.has(str(plant.type)) else 0.14
+	return _plant_frame_width(str(plant.type)) * base_scale * float(plant.get("depth_scale", 1.0)) * 0.5
 
 func _build_ui() -> void:
 	var margin := MarginContainer.new()
