@@ -12,6 +12,24 @@ const CELL_WIDTH := 105.0
 const LANE_Y := [190.0, 290.0, 390.0, 490.0, 590.0]
 const HOUSE_X := 76.0
 const PLANT_OPTIONS := ["radish", "mushroom", "pumpkin", "pineapple", "hazelnut", "mango"]
+const PLANT_TEXTURES := {
+	"radish": "res://assets/plants/radish-level-1.png",
+	"mushroom": "res://assets/plants/mushroom.png",
+	"pumpkin": "res://assets/plants/pumpkin.png",
+	"pineapple": "res://assets/plants/pineapple-level-1.png",
+	"hazelnut": "res://assets/plants/hazelnut-level-1.png",
+	"mango": "res://assets/plants/mango-level-1.png"
+}
+const PLANT_PROJECTILES := {
+	"radish": "res://assets/projectiles/radish-bomb.png",
+	"pineapple": "res://assets/projectiles/pineapple-bomb.png",
+	"hazelnut": "res://assets/projectiles/hazelnut-bomb.png",
+	"mango": "res://assets/projectiles/mango-bomb.png"
+}
+const ANIMATED_PLANT_GRIDS := {
+	"radish": Vector2i(3, 3), "pineapple": Vector2i(3, 3),
+	"hazelnut": Vector2i(3, 3), "mango": Vector2i(3, 3)
+}
 
 var energy: int = Rules.INITIAL_ENERGY
 var selected_plant := "radish"
@@ -29,10 +47,12 @@ var status_label: Label
 var energy_label: Label
 var wave_label: Label
 var rng := RandomNumberGenerator.new()
+var farmer_sprite: AnimatedSprite2D
 
 func _ready() -> void:
 	rng.randomize()
 	_build_ui()
+	_create_farmer_sprite()
 	queue_redraw()
 
 func _process(delta: float) -> void:
@@ -95,6 +115,77 @@ func _build_ui() -> void:
 	_refresh_hud()
 	status_label.text = "Choose a defender, then tap a field cell. Survive all five waves."
 
+func _make_sheet_sprite(texture_path: String, columns: int, rows: int, fps: float,
+		sprite_scale: float, animate_all_frames: bool = false) -> AnimatedSprite2D:
+	var texture := load(texture_path) as Texture2D
+	if texture == null:
+		push_warning("Missing sprite texture: %s" % texture_path)
+		return null
+	var frames := SpriteFrames.new()
+	frames.add_animation("idle")
+	frames.set_animation_speed("idle", fps)
+	frames.set_animation_loop("idle", true)
+	frames.add_animation("attack")
+	frames.set_animation_speed("attack", fps)
+	frames.set_animation_loop("attack", false)
+	var cell_size := texture.get_size() / Vector2(float(columns), float(rows))
+	for index in range(columns * rows):
+		var atlas := AtlasTexture.new()
+		atlas.atlas = texture
+		atlas.region = Rect2(Vector2(float(index % columns) * cell_size.x,
+			float(index / columns) * cell_size.y), cell_size)
+		if animate_all_frames:
+			frames.add_frame("idle", atlas)
+		elif index == 0:
+			frames.add_frame("idle", atlas)
+		else:
+			frames.add_frame("attack", atlas)
+	var sprite := AnimatedSprite2D.new()
+	sprite.sprite_frames = frames
+	sprite.animation = "idle"
+	sprite.scale = Vector2.ONE * sprite_scale
+	sprite.play("idle")
+	return sprite
+
+func _create_farmer_sprite() -> void:
+	farmer_sprite = _make_sheet_sprite(
+		"res://assets/characters/farmer/farmer-idle.png", 2, 2, 3.0, 0.25, true)
+	if farmer_sprite != null:
+		farmer_sprite.position = Vector2(112.0, 565.0)
+		farmer_sprite.z_index = 12
+		add_child(farmer_sprite)
+
+func _create_plant_sprite(plant_id: String) -> Node2D:
+	var texture_path: String = PLANT_TEXTURES.get(plant_id, "")
+	if texture_path.is_empty():
+		return null
+	if ANIMATED_PLANT_GRIDS.has(plant_id):
+		var grid: Vector2i = ANIMATED_PLANT_GRIDS[plant_id]
+		var animated := _make_sheet_sprite(texture_path, grid.x, grid.y, 9.0, 0.15)
+		if animated != null:
+			animated.animation_finished.connect(_on_plant_animation_finished.bind(animated))
+			animated.z_index = 10
+		return animated
+	var sprite := Sprite2D.new()
+	sprite.texture = load(texture_path) as Texture2D
+	sprite.scale = Vector2(0.14, 0.14)
+	sprite.z_index = 10
+	return sprite
+
+func _on_plant_animation_finished(sprite: AnimatedSprite2D) -> void:
+	if is_instance_valid(sprite):
+		sprite.play("idle")
+
+func _create_projectile_sprite(plant_id: String) -> Sprite2D:
+	var texture_path: String = PLANT_PROJECTILES.get(plant_id, "")
+	if texture_path.is_empty():
+		return null
+	var sprite := Sprite2D.new()
+	sprite.texture = load(texture_path) as Texture2D
+	sprite.scale = Vector2(0.32, 0.32)
+	sprite.z_index = 14
+	return sprite
+
 func _select_plant(plant_id: String) -> void:
 	if game_state != "running":
 		return
@@ -124,6 +215,11 @@ func _place_plant(column: int, row: int) -> void:
 	plant["y"] = LANE_Y[row]
 	plant["cooldown_ms"] = 450.0
 	plant["production_ms"] = float(Rules.PLANTS[selected_plant].get("production_interval_ms", 0.0))
+	var plant_sprite := _create_plant_sprite(selected_plant)
+	if plant_sprite != null:
+		plant_sprite.position = Vector2(plant.x, plant.y)
+		add_child(plant_sprite)
+	plant["sprite"] = plant_sprite
 	plants.append(plant)
 	energy = int(placement.energy)
 	status_label.text = "%s planted in lane %d." % [selected_plant.capitalize(), row + 1]
@@ -146,7 +242,19 @@ func _spawn_monster() -> void:
 	var archetype := Rules.monster_archetype(wave, _global_spawn_index())
 	var profile := Rules.monster_combat_stats(archetype, wave)
 	var row := rng.randi_range(0, Rules.BOARD_ROWS - 1)
+	var monster_sprite := _make_sheet_sprite(
+		"res://assets/monsters/hyena/hyena-idle.png", 3, 1, 4.0,
+		0.22 * float(profile.width_scale), true)
+	if monster_sprite != null:
+		monster_sprite.position = Vector2(LANE_CENTER_X + Rules.BOARD_SPAWN_LOCAL_X * LANE_SCALE, LANE_Y[row])
+		monster_sprite.z_index = 11
+		match archetype:
+			"dust-skitter": monster_sprite.modulate = Color("#b4d39c")
+			"stonehide": monster_sprite.modulate = Color("#a4b0b7")
+			"alpha-brute": monster_sprite.modulate = Color("#c47b69")
+		add_child(monster_sprite)
 	monsters.append({
+		"sprite": monster_sprite,
 		"kind": archetype, "row": row, "x": LANE_CENTER_X + Rules.BOARD_SPAWN_LOCAL_X * LANE_SCALE,
 		"y": LANE_Y[row], "hp": float(profile.hp), "max_hp": float(profile.max_hp),
 		"speed": float(profile.speed) * LANE_SCALE, "width_scale": float(profile.width_scale),
@@ -182,8 +290,15 @@ func _update_plants(delta_ms: float) -> void:
 				break
 		if target_found and plant.cooldown_ms <= 0.0:
 			var config: Dictionary = Rules.PLANTS[plant.type]
+			var projectile_sprite := _create_projectile_sprite(str(plant.type))
+			if projectile_sprite != null:
+				projectile_sprite.position = Vector2(float(plant.x) + 24.0, float(plant.y) - 12.0)
+				add_child(projectile_sprite)
+			var plant_sprite: Variant = plant.get("sprite", null)
+			if plant_sprite is AnimatedSprite2D:
+				plant_sprite.play("attack")
 			projectiles.append({
-				"x": float(plant.x) + 24.0, "y": float(plant.y) - 12.0,
+				"sprite": projectile_sprite, "x": float(plant.x) + 24.0, "y": float(plant.y) - 12.0,
 				"row": int(plant.row), "speed": float(config.projectile_speed) * LANE_SCALE,
 				"damage": float(config.projectile_damage), "radius": float(config.projectile_collision_radius) * LANE_SCALE,
 				"alive": true
@@ -203,9 +318,15 @@ func _update_monsters(delta: float, delta_ms: float) -> void:
 				monster.attack_cooldown_ms = float(monster.attack_interval_ms)
 				if blocker.hp <= 0.0:
 					blocker.alive = false
+					var destroyed_sprite: Variant = blocker.get("sprite", null)
+					if destroyed_sprite != null and is_instance_valid(destroyed_sprite):
+						destroyed_sprite.queue_free()
 					status_label.text = "%s was destroyed!" % str(blocker.type).capitalize()
 			continue
 		monster.x = float(monster.x) - float(monster.speed) * delta
+		var monster_sprite: Variant = monster.get("sprite", null)
+		if monster_sprite != null and is_instance_valid(monster_sprite):
+			monster_sprite.position.x = float(monster.x)
 		if float(monster.x) <= HOUSE_X:
 			game_state = "defeat"
 			status_label.text = "The farmhouse has been overrun. Return to the main menu to start a new battle."
@@ -227,6 +348,9 @@ func _update_projectiles(delta: float) -> void:
 		if not projectile.alive:
 			continue
 		projectile.x = float(projectile.x) + float(projectile.speed) * delta
+		var projectile_sprite: Variant = projectile.get("sprite", null)
+		if projectile_sprite != null and is_instance_valid(projectile_sprite):
+			projectile_sprite.position.x = float(projectile.x)
 		for monster in monsters:
 			if not monster.alive or int(monster.row) != int(projectile.row):
 				continue
@@ -235,8 +359,13 @@ func _update_projectiles(delta: float) -> void:
 				var damage := float(projectile.damage) * float(monster.incoming_damage_multiplier)
 				monster.hp = Rules.apply_hit_points_damage(float(monster.hp), damage).hp
 				projectile.alive = false
+				if projectile_sprite != null and is_instance_valid(projectile_sprite):
+					projectile_sprite.queue_free()
 				if monster.hp <= 0.0:
 					monster.alive = false
+					var defeated_sprite: Variant = monster.get("sprite", null)
+					if defeated_sprite != null and is_instance_valid(defeated_sprite):
+						defeated_sprite.queue_free()
 					defeated_total += 1
 					coins += Rules.ORDINARY_MONSTER_DEFEAT_COINS
 					status_label.text = "%s defeated! +%d coins." % [str(monster.kind).replace("-", " ").capitalize(), Rules.ORDINARY_MONSTER_DEFEAT_COINS]
@@ -245,6 +374,8 @@ func _update_projectiles(delta: float) -> void:
 				continue
 		if float(projectile.x) > 1160.0:
 			projectile.alive = false
+			if projectile_sprite != null and is_instance_valid(projectile_sprite):
+				projectile_sprite.queue_free()
 	monsters = monsters.filter(func(item: Dictionary) -> bool: return item.alive)
 	projectiles = projectiles.filter(func(item: Dictionary) -> bool: return item.alive)
 	plants = plants.filter(func(item: Dictionary) -> bool: return item.alive)
@@ -279,31 +410,13 @@ func _draw() -> void:
 	draw_rect(Rect2(42.0, 145.0, 42.0, 485.0), Color("#a56b3f"), true)
 	draw_string(get_theme_default_font(), Vector2(35.0, 132.0), "FARM", HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color.WHITE)
 	for plant in plants:
-		var tint := Color("#e6b94f")
-		match str(plant.type):
-			"radish": tint = Color("#e97872")
-			"mushroom": tint = Color("#b58bd6")
-			"pumpkin": tint = Color("#df8c35")
-			"pineapple": tint = Color("#e6c34b")
-			"hazelnut": tint = Color("#9c744c")
-			"mango": tint = Color("#ed9b45")
-		draw_circle(Vector2(plant.x, plant.y), 25.0, tint)
-		draw_circle(Vector2(plant.x - 7.0, plant.y - 5.0), 4.0, Color("#263b2e"))
-		draw_circle(Vector2(plant.x + 7.0, plant.y - 5.0), 4.0, Color("#263b2e"))
-		draw_rect(Rect2(plant.x - 23.0, plant.y + 31.0, 46.0 * float(plant.hp) / float(Rules.PLANTS[plant.type].hp), 5.0), Color("#77d477"), true)
+		var plant_hp_max := float(Rules.PLANTS[plant.type].hp)
+		draw_rect(Rect2(plant.x - 24.0, plant.y + 31.0, 48.0, 5.0), Color("#263b2e"), true)
+		draw_rect(Rect2(plant.x - 24.0, plant.y + 31.0, 48.0 * float(plant.hp) / plant_hp_max, 5.0), Color("#77d477"), true)
 	for monster in monsters:
-		var tint := Color("#9a8a70")
-		match str(monster.kind):
-			"dust-skitter": tint = Color("#91b77b")
-			"stonehide": tint = Color("#77838a")
-			"alpha-brute": tint = Color("#a95d4f")
-		var radius := 21.0 * float(monster.width_scale)
-		draw_circle(Vector2(monster.x, monster.y), radius, tint)
-		draw_circle(Vector2(monster.x - 7.0, monster.y - 5.0), 4.0, Color("#241e1b"))
-		draw_circle(Vector2(monster.x + 7.0, monster.y - 5.0), 4.0, Color("#241e1b"))
-		draw_rect(Rect2(monster.x - radius, monster.y - radius - 10.0, 2.0 * radius * float(monster.hp) / float(monster.max_hp), 5.0), Color("#e66b61"), true)
-	for projectile in projectiles:
-		draw_circle(Vector2(projectile.x, projectile.y), 8.0, Color("#f6e7a0"))
+		var radius := 34.0 * float(monster.width_scale)
+		draw_rect(Rect2(monster.x - radius, monster.y - radius - 12.0, 2.0 * radius, 5.0), Color("#263b2e"), true)
+		draw_rect(Rect2(monster.x - radius, monster.y - radius - 12.0, 2.0 * radius * float(monster.hp) / float(monster.max_hp), 5.0), Color("#e66b61"), true)
 	if game_state != "running":
 		draw_rect(Rect2(360.0, 300.0, 560.0, 100.0), Color("#17241d"))
 		draw_string(get_theme_default_font(), Vector2(505.0, 360.0), "BATTLE " + game_state.to_upper(), HORIZONTAL_ALIGNMENT_LEFT, -1, 32, Color.WHITE)
