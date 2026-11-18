@@ -21,15 +21,6 @@ export const STAGE_ONE_MONSTERS = Object.freeze([
     status: "implemented"
   },
   {
-    id: "frozen-hyena", icon: "frozen-hyena", name: "Frozen Hyena", nameAr: "الضبع المتجمد",
-    role: "Frozen state", roleAr: "حالة تجميد",
-    description: "A hyena temporarily immobilized by the Snow Thrower's ice bomb.",
-    descriptionAr: "ضبع يتوقف مؤقتاً عن الحركة والهجوم بعد إصابته بقذيفة قاذف الثلج.",
-    stats: "2.6 sec immobilization", statsAr: "توقف لمدة ٢٫٦ ثانية",
-    spawnNote: "Created by Snow Thrower", spawnNoteAr: "ينتج عن إصابة قاذف الثلج",
-    implemented: true, playable: false, purchasable: false, status: "implemented"
-  },
-  {
     id: "dust-skitter",
     icon: "dust-skitter",
     name: "Dust Skitter",
