@@ -6,7 +6,7 @@ Android-first, offline, single-player Godot 4 project. The Phaser client and leg
 
 The project has a first playable Stage 1 combat loop and now imports approved source artwork into `godot/assets/` without modifying the originals:
 
-- Farmer idle sprite sheet (2×2 atlas) is displayed beside the farmhouse.
+- Farmer idle, walk, run and club-attack sheets are connected. The Farmer can move with WASD/arrow keys or the on-screen D-pad; touch movement uses the slower walk animation. The club button appears only after at least one defender has been planted and every living Radish has been lost.
 - Hyena idle, walk, run, bite, hit and death sheets are connected as animation states. Dust Skitter uses the faster run sheet; the other archetypes use walk. Monsters switch to bite when stopped at a plant, play hit reactions on damage and play their defeat animation before removal.
 - Radish, Pineapple, Hazelnut and Mango sheets are sliced into a resting frame plus an attack sequence. The attack sequence plays when the plant launches a projectile.
 - Mushroom and Pumpkin use their approved static character artwork.
@@ -19,7 +19,7 @@ The original artwork remains in `web/public/assets/`; the Godot copies point to 
 
 - The current lane board is still the temporary straight-grid prototype. The supplied farm battlefield background is not yet used because its visible perspective planting cells have not been calibrated against the current gameplay hit regions; overlaying a second grid would be incorrect.
 - The 3×3 frame layout for Pineapple and Hazelnut is provisional and must be checked in the Godot editor against the actual sheet dimensions before final animation approval.
-- Farmer movement/combat controls and Farmer attack animation are future integration work.
+- Farmer planting travel/planting animation and Farmer hit/death states remain future integration work.
 - The same Hyena base art is temporarily reused for all four monster archetypes, with tint and size differences; this is not a final character-art pass.
 
 ## Open in Godot
