@@ -710,7 +710,7 @@ export default class BattleScene extends Scene {
       .setInteractive({ useHandCursor: true });
     let icon;
     if (imageKey && this.textures.exists(imageKey)) {
-      const usesGridSheet = imageKey === "mango-level-1" || imageKey === "radish-level-1";
+      const usesGridSheet = imageKey === "mango-level-1" || imageKey === "radish-level-1" || imageKey === "snow-thrower-level-1";
       const frameData = this.textures.getFrame(imageKey, usesGridSheet ? 0 : undefined);
       // Use nearly the full packet face for the plant artwork while keeping
       // a dedicated strip below for the energy cost.
