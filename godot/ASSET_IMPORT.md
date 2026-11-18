@@ -36,3 +36,8 @@ All imported files are byte-for-byte copies of existing tracked assets. Their or
 - The battlefield background is rendered with the Phaser-approved 1120×680 source-canvas transform and its original 8×5 piecewise-bilinear control-point mesh. Input tests the actual 40 cell polygons; plants, monsters and projectiles follow perspective lane points. The background already contains the soil grid, so no second grid is drawn.
 - Farmer movement uses the established 115 px/s keyboard speed and 0.78 touch-control speed factor; club combat unlocks only after the player has planted a defender and all Radishes have been destroyed. The club uses the canonical 42 damage and 112 px reach.
 - Re-check frame margins, transparent padding, pivots/baselines, filtering and visual scale before final production sign-off.
+
+
+## Audio import
+
+The fourteen OGG files under `assets/audio/sfx/` are byte-for-byte copies of the CC0-1.0 source files under `web/public/assets/audio/sfx/`. They are loaded at runtime by the shared eight-voice SFX pool. Event routing: plant-dig for planting; grass-step-01/02 for Farmer movement; monster-bite for bites; monster-hit for projectile/club impacts; monster-defeat for kills; thorn-launch for plant shots; coin-collect for Mushroom energy and coin rewards; victory/defeat for battle outcomes. The remaining monster-jump, monster-land and plant-rustle files are imported for the next special-movement/uprooting integration pass. See `assets/audio/sfx/LICENSES.md` for CC0 source details.

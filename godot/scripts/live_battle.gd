@@ -57,6 +57,10 @@ var farmer_locomotion_animation := "idle"
 var farmer_touch_directions := {"left": false, "right": false, "up": false, "down": false}
 var sprite_frames_cache: Dictionary = {}
 var monster_sprite_frames: SpriteFrames
+var audio_players: Array[AudioStreamPlayer] = []
+var audio_stream_cache: Dictionary = {}
+var audio_player_cursor := 0
+var footstep_timer := 0.0
 
 func _ready() -> void:
 	rng.randomize()
@@ -65,6 +69,7 @@ func _ready() -> void:
 		push_error("Live battle cannot start without the approved perspective grid.")
 		return
 	_build_background()
+	_build_audio()
 	_build_ui()
 	_create_farmer_sprite()
 	_position_farmer_at_start()
@@ -86,6 +91,31 @@ func _process(delta: float) -> void:
 	_update_wave_progress()
 	_refresh_hud()
 	queue_redraw()
+
+func _build_audio() -> void:
+	for index in range(8):
+		var player := AudioStreamPlayer.new()
+		player.name = "SfxVoice%d" % index
+		player.volume_db = -5.0
+		add_child(player)
+		audio_players.append(player)
+
+func _play_sfx(sound_id: String, pitch_variation: float = 0.0) -> void:
+	if audio_players.is_empty():
+		return
+	var stream: AudioStream = audio_stream_cache.get(sound_id)
+	if stream == null:
+		stream = load("res://assets/audio/sfx/%s.ogg" % sound_id) as AudioStream
+		if stream == null:
+			push_warning("Missing sound effect: %s" % sound_id)
+			return
+		audio_stream_cache[sound_id] = stream
+	var player: AudioStreamPlayer = audio_players[audio_player_cursor]
+	audio_player_cursor = (audio_player_cursor + 1) % audio_players.size()
+	player.stop()
+	player.stream = stream
+	player.pitch_scale = 1.0 + rng.randf_range(-pitch_variation, pitch_variation)
+	player.play()
 
 func _load_grid_calibration() -> void:
 	var file := FileAccess.open("res://data/farm_grid_calibration.json", FileAccess.READ)
@@ -474,8 +504,13 @@ func _update_farmer(delta: float) -> void:
 		if absf(movement.x) > 0.01:
 			farmer_sprite.scale.x = absf(farmer_sprite.scale.x) * signf(movement.x)
 		farmer_locomotion_animation = "walk" if touch_moving else "run"
+		footstep_timer -= delta
+		if footstep_timer <= 0.0:
+			_play_sfx("grass-step-01" if rng.randi_range(0, 1) == 0 else "grass-step-02", 0.06)
+			footstep_timer = 0.36 if touch_moving else 0.28
 	else:
 		farmer_locomotion_animation = "idle"
+		footstep_timer = 0.0
 	var farmer_row := _nearest_row_at_screen_position(farmer_sprite.position)
 	var facing := signf(farmer_sprite.scale.x)
 	var visual_scale := 0.25 * _depth_scale(4, farmer_row)
@@ -511,6 +546,7 @@ func _farmer_attack() -> void:
 	var club_multiplier := float(target.incoming_damage_multiplier)
 	if str(target.kind) == "stonehide" and bool(target.braced):
 		club_multiplier = Rules.stonehide_incoming_damage_multiplier(true)
+	_play_sfx("monster-hit", 0.08)
 	target.hp = Rules.apply_hit_points_damage(
 		float(target.hp), FARMER_CLUB_DAMAGE * club_multiplier).hp
 	var target_sprite: Variant = target.get("sprite", null)
@@ -520,6 +556,8 @@ func _farmer_attack() -> void:
 			target_sprite.play("death")
 		defeated_total += 1
 		coins += Rules.ORDINARY_MONSTER_DEFEAT_COINS
+		_play_sfx("monster-defeat")
+		_play_sfx("coin-collect", 0.04)
 		status_label.text = "Club strike defeated a monster! +%d coins." % Rules.ORDINARY_MONSTER_DEFEAT_COINS
 	elif target_sprite != null and is_instance_valid(target_sprite):
 		target_sprite.play("hit")
@@ -615,6 +653,7 @@ func _place_plant(column: int, row: int) -> void:
 	plants.append(plant)
 	has_planted_defender = true
 	energy = int(placement.energy)
+	_play_sfx("plant-dig")
 	status_label.text = "%s planted in lane %d." % [selected_plant.capitalize(), row + 1]
 	_refresh_hud()
 
@@ -673,7 +712,10 @@ func _update_plants(delta_ms: float) -> void:
 		if plant.type == "mushroom":
 			plant.production_ms = float(plant.get("production_ms", 12000.0)) - delta_ms
 			if plant.production_ms <= 0.0:
+				var previous_energy := energy
 				energy = int(Rules.resolve_energy_pickup(float(energy), float(Rules.PLANTS.mushroom.energy_per_pickup)).energy)
+				if energy > previous_energy:
+					_play_sfx("coin-collect", 0.04)
 				plant.production_ms = float(Rules.PLANTS.mushroom.production_interval_ms)
 			continue
 		if not Rules.PLANTS[plant.type].has("projectile_damage"):
@@ -697,8 +739,9 @@ func _update_plants(delta_ms: float) -> void:
 			var plant_sprite: Variant = plant.get("sprite", null)
 			if plant_sprite is AnimatedSprite2D:
 				plant_sprite.play("attack")
+			_play_sfx("thorn-launch", 0.06)
 			projectiles.append({
-				"sprite": projectile_sprite, "local_x": projectile_local_x,
+				"sprite": projectile_sprite, "plant_type": str(plant.type), "local_x": projectile_local_x,
 				"x": projectile_position.x, "y": projectile_position.y,
 				"row": int(plant.row), "speed": float(config.projectile_speed),
 				"radius": float(config.projectile_collision_radius),
@@ -739,6 +782,7 @@ func _update_monsters(delta: float, delta_ms: float) -> void:
 					blocked_sprite.play("bite")
 			monster.attack_cooldown_ms = float(monster.attack_cooldown_ms) - delta_ms
 			if monster.attack_cooldown_ms <= 0.0:
+				_play_sfx("monster-bite", 0.05)
 				blocker.hp = Rules.apply_hit_points_damage(float(blocker.hp), float(monster.plant_damage)).hp
 				monster.attack_cooldown_ms = float(monster.attack_interval_ms)
 				if blocker.hp <= 0.0:
@@ -762,6 +806,7 @@ func _update_monsters(delta: float, delta_ms: float) -> void:
 				monster_sprite.play(moving_animation)
 		if float(monster.local_x) <= Rules.BOARD_HOME_LOCAL_X:
 			game_state = "defeat"
+			_play_sfx("defeat")
 			status_label.text = "The farmhouse has been overrun. Return to the main menu to start a new battle."
 			return
 
@@ -801,6 +846,7 @@ func _update_projectiles(delta: float) -> void:
 					damage_multiplier = Rules.stonehide_incoming_damage_multiplier(true)
 				monster.hp = Rules.apply_hit_points_damage(float(monster.hp), float(projectile.damage) * damage_multiplier).hp
 				projectile.alive = false
+				_play_sfx("thorn-impact" if str(projectile.plant_type) == "radish" else "monster-hit", 0.08)
 				if projectile_sprite != null and is_instance_valid(projectile_sprite):
 					projectile_sprite.queue_free()
 				var hit_sprite: Variant = monster.get("sprite", null)
@@ -810,6 +856,8 @@ func _update_projectiles(delta: float) -> void:
 						hit_sprite.play("death")
 					defeated_total += 1
 					coins += Rules.ORDINARY_MONSTER_DEFEAT_COINS
+					_play_sfx("monster-defeat")
+					_play_sfx("coin-collect", 0.04)
 					status_label.text = "%s defeated! +%d coins." % [str(monster.kind).replace("-", " ").capitalize(), Rules.ORDINARY_MONSTER_DEFEAT_COINS]
 				elif hit_sprite != null and is_instance_valid(hit_sprite):
 					hit_sprite.play("hit")
@@ -829,6 +877,7 @@ func _update_wave_progress() -> void:
 		return
 	if wave >= Rules.WAVE_SIZES.size():
 		game_state = "victory"
+		_play_sfx("victory")
 		status_label.text = "VICTORY! All 30 Stage 1 monsters have been defeated."
 		return
 	wave += 1

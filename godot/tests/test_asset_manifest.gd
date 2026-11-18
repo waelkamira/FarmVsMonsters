@@ -24,6 +24,23 @@ const REQUIRED_TEXTURES := [
 	"res://assets/projectiles/mango-bomb.png"
 ]
 
+const REQUIRED_AUDIO := [
+	"res://assets/audio/sfx/coin-collect.ogg",
+	"res://assets/audio/sfx/defeat.ogg",
+	"res://assets/audio/sfx/grass-step-01.ogg",
+	"res://assets/audio/sfx/grass-step-02.ogg",
+	"res://assets/audio/sfx/monster-bite.ogg",
+	"res://assets/audio/sfx/monster-defeat.ogg",
+	"res://assets/audio/sfx/monster-hit.ogg",
+	"res://assets/audio/sfx/monster-jump.ogg",
+	"res://assets/audio/sfx/monster-land.ogg",
+	"res://assets/audio/sfx/plant-dig.ogg",
+	"res://assets/audio/sfx/plant-rustle.ogg",
+	"res://assets/audio/sfx/thorn-impact.ogg",
+	"res://assets/audio/sfx/thorn-launch.ogg",
+	"res://assets/audio/sfx/victory.ogg"
+]
+
 func _initialize() -> void:
 	var failures := 0
 	for path in REQUIRED_TEXTURES:
@@ -34,6 +51,15 @@ func _initialize() -> void:
 		var texture := load(path) as Texture2D
 		if texture == null:
 			push_error("Could not load Godot texture: %s" % path)
+			failures += 1
+	for path in REQUIRED_AUDIO:
+		if not ResourceLoader.exists(path):
+			push_error("Missing Godot audio resource: %s" % path)
+			failures += 1
+			continue
+		var stream := load(path) as AudioStream
+		if stream == null:
+			push_error("Could not load Godot audio resource: %s" % path)
 			failures += 1
 	if not FileAccess.file_exists("res://data/farm_grid_calibration.json"):
 		push_error("Missing approved 8x5 perspective calibration JSON.")
@@ -69,7 +95,7 @@ func _initialize() -> void:
 							push_error("Perspective cell polygon has invalid area at row %d, column %d." % [row, column])
 							failures += 1
 	if failures == 0:
-		print("ASSET_MANIFEST_OK: %d textures and the 8x5 calibration are loadable." % REQUIRED_TEXTURES.size())
+		print("ASSET_MANIFEST_OK: %d textures, %d audio streams and the 8x5 calibration are loadable." % [REQUIRED_TEXTURES.size(), REQUIRED_AUDIO.size()])
 	else:
 		push_error("ASSET_MANIFEST_FAILED: %d resource errors." % failures)
 	quit(1 if failures > 0 else 0)

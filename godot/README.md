@@ -15,6 +15,8 @@ The project has a first playable Stage 1 combat loop and now imports approved so
 
 The original artwork remains in `web/public/assets/`; the Godot copies point to the same Git blob contents. See `ASSET_IMPORT.md` for source mapping and frame assumptions.
 
+- Fourteen CC0 OGG sound effects are imported unchanged and played through an eight-voice SFX pool: planting, footsteps, monster bites/hits/defeat, projectile launch, energy/coin reward, and battle outcomes. Their source and license notes are retained under `assets/audio/sfx/LICENSES.md`.
+
 ## Known visual limitations
 
 - The approved farm battlefield background and 8×5 perspective mesh are now used. Cell taps are resolved against the 40 calibrated soil polygons; plants, monsters and projectiles follow perspective lanes and scale with row depth.
@@ -42,8 +44,8 @@ godot --headless --path godot --script res://tests/test_phase_one_rules.gd
 godot --headless --path godot --script res://tests/test_phase_one_combat_core.gd
 ```
 
-Godot 4.x is not available in the current development environment, so these scripts and the live scene have not yet been executed here. No Android export or device test is claimed.
+The GitHub Actions workflow runs these checks on Godot pull requests and pushes to main. Godot 4.x is not available in the current development environment, so no local engine run or Android export/device test is claimed.
 
 ## Audio and future art
 
-Review `web/public/assets/audio/sfx/LICENSES.md` before importing any sound. Add audio in a separate pass with attribution/license records. Do not assume every design contract has a matching production-ready image file.
+The imported sound effects are CC0-1.0; see `assets/audio/sfx/LICENSES.md` for the source packs and license record. The OGG payloads are copied unchanged. Do not assume every design contract has a matching production-ready image file.
