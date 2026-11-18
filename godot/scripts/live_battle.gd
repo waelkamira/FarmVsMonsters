@@ -55,6 +55,8 @@ var has_planted_defender := false
 var farmer_is_moving := false
 var farmer_locomotion_animation := "idle"
 var farmer_action_animation := ""
+var farmer_planting_target: Dictionary = {}
+var farmer_return_target: Dictionary = {}
 var farmer_touch_directions := {"left": false, "right": false, "up": false, "down": false}
 var sprite_frames_cache: Dictionary = {}
 var monster_sprite_frames: SpriteFrames
@@ -213,6 +215,69 @@ func _grid_cell_center(column: int, row: int) -> Vector2:
 func _interpolate_cell(column: int, row: int, u: float, v: float) -> Vector2:
 	var polygon := _cell_polygon(column, row)
 	return polygon[0] * (1.0 - u) * (1.0 - v) + polygon[1] * u * (1.0 - v) + polygon[2] * u * v + polygon[3] * (1.0 - u) * v
+
+func _interpolate_outer_board(u: float, v: float) -> Vector2:
+	var top_left: Vector2 = grid_nodes[0][0]
+	var top_right: Vector2 = grid_nodes[0][Rules.BOARD_COLUMNS]
+	var bottom_right: Vector2 = grid_nodes[Rules.BOARD_ROWS][Rules.BOARD_COLUMNS]
+	var bottom_left: Vector2 = grid_nodes[Rules.BOARD_ROWS][0]
+	return top_left * (1.0 - u) * (1.0 - v) + top_right * u * (1.0 - v) + bottom_right * u * v + bottom_left * (1.0 - u) * v
+
+func _board_coordinates(point: Vector2) -> Vector2:
+	for row in range(Rules.BOARD_ROWS):
+		for column in range(Rules.BOARD_COLUMNS):
+			if not _point_in_polygon(point, _cell_polygon(column, row)):
+				continue
+			var local_u := 0.5
+			var local_v := 0.5
+			for iteration in range(10):
+				var current := _interpolate_cell(column, row, local_u, local_v)
+				var along_u := _interpolate_cell(column, row, local_u + 0.001, local_v)
+				var along_v := _interpolate_cell(column, row, local_u, local_v + 0.001)
+				var ax := (along_u.x - current.x) / 0.001
+				var ay := (along_u.y - current.y) / 0.001
+				var bx := (along_v.x - current.x) / 0.001
+				var by := (along_v.y - current.y) / 0.001
+				var error := point - current
+				var determinant := ax * by - bx * ay
+				if absf(determinant) < 0.0001:
+					break
+				local_u += (error.x * by - error.y * bx) / determinant
+				local_v += (error.y * ax - error.x * ay) / determinant
+			return Vector2((float(column) + local_u) / float(Rules.BOARD_COLUMNS),
+				(float(row) + local_v) / float(Rules.BOARD_ROWS))
+	var top_left: Vector2 = grid_nodes[0][0]
+	var top_right: Vector2 = grid_nodes[0][Rules.BOARD_COLUMNS]
+	var bottom_right: Vector2 = grid_nodes[Rules.BOARD_ROWS][Rules.BOARD_COLUMNS]
+	var bottom_left: Vector2 = grid_nodes[Rules.BOARD_ROWS][0]
+	var u := (point.x - bottom_left.x) / maxf(0.0001, bottom_right.x - bottom_left.x)
+	var v := (point.y - top_left.y) / maxf(0.0001, bottom_left.y - top_left.y)
+	for iteration in range(10):
+		var current := _interpolate_outer_board(u, v)
+		var along_u := _interpolate_outer_board(u + 0.001, v)
+		var along_v := _interpolate_outer_board(u, v + 0.001)
+		var ax := (along_u.x - current.x) / 0.001
+		var ay := (along_u.y - current.y) / 0.001
+		var bx := (along_v.x - current.x) / 0.001
+		var by := (along_v.y - current.y) / 0.001
+		var error := point - current
+		var determinant := ax * by - bx * ay
+		if absf(determinant) < 0.0001:
+			break
+		u += (error.x * by - error.y * bx) / determinant
+		v += (error.y * ax - error.x * ay) / determinant
+	return Vector2(u, v)
+
+func _board_point(u: float, v: float) -> Vector2:
+	if u < 0.0 or u > 1.0 or v < 0.0 or v > 1.0:
+		return _interpolate_outer_board(u, v)
+	var safe_u := minf(u, 1.0 - 0.000001)
+	var safe_v := minf(v, 1.0 - 0.000001)
+	var column := clampi(floori(safe_u * float(Rules.BOARD_COLUMNS)), 0, Rules.BOARD_COLUMNS - 1)
+	var row := clampi(floori(safe_v * float(Rules.BOARD_ROWS)), 0, Rules.BOARD_ROWS - 1)
+	var local_u := safe_u * float(Rules.BOARD_COLUMNS) - float(column)
+	var local_v := safe_v * float(Rules.BOARD_ROWS) - float(row)
+	return _interpolate_cell(column, row, local_u, local_v)
 
 func _lane_point(local_x: float, row: int) -> Vector2:
 	var width := Rules.BOARD_LANE_WIDTH
@@ -469,6 +534,7 @@ func _on_farmer_animation_finished() -> void:
 		return
 	if not farmer_action_animation.is_empty() and farmer_sprite.animation == farmer_action_animation:
 		farmer_action_animation = ""
+		farmer_locomotion_animation = "run" if not farmer_return_target.is_empty() else farmer_locomotion_animation
 		farmer_sprite.play(farmer_locomotion_animation)
 
 func _play_farmer_action(animation_name: String) -> void:
@@ -482,6 +548,15 @@ func _play_farmer_action(animation_name: String) -> void:
 
 func _update_farmer(delta: float) -> void:
 	if farmer_sprite == null or not is_instance_valid(farmer_sprite):
+		return
+	if not farmer_planting_target.is_empty():
+		_update_farmer_planting_movement(delta)
+		return
+	if farmer_action_animation == "plant":
+		_update_farmer_visual_depth()
+		return
+	if not farmer_return_target.is_empty() and farmer_action_animation.is_empty():
+		_update_farmer_return_movement(delta)
 		return
 	var horizontal := 0.0
 	var vertical := 0.0
@@ -529,11 +604,7 @@ func _update_farmer(delta: float) -> void:
 	else:
 		farmer_locomotion_animation = "idle"
 		footstep_timer = 0.0
-	var farmer_row := _nearest_row_at_screen_position(farmer_sprite.position)
-	var facing := signf(farmer_sprite.scale.x)
-	var visual_scale := 0.25 * _depth_scale(4, farmer_row)
-	farmer_sprite.scale = Vector2(absf(visual_scale) * facing, visual_scale)
-	farmer_sprite.z_index = int(farmer_sprite.position.y)
+	_update_farmer_visual_depth()
 	if farmer_action_animation.is_empty() and farmer_sprite.animation != farmer_locomotion_animation:
 		farmer_sprite.play(farmer_locomotion_animation)
 
@@ -640,13 +711,79 @@ func _gui_input(event: InputEvent) -> void:
 	var cell := _cell_at_screen_position(tap_position)
 	if cell.x < 0 or cell.y < 0:
 		return
-	_place_plant(cell.x, cell.y)
+	_request_plant(cell.x, cell.y)
 	accept_event()
 
-func _place_plant(column: int, row: int) -> void:
+func _request_plant(column: int, row: int) -> void:
+	if farmer_sprite == null or not is_instance_valid(farmer_sprite):
+		return
+	if not farmer_planting_target.is_empty() or not farmer_return_target.is_empty() or not farmer_action_animation.is_empty():
+		status_label.text = "The Farmer must finish the current action before planting again."
+		return
 	var placement := Rules.resolve_plant_placement(float(energy), plants, selected_plant, column, row)
 	if not placement.get("ok", false):
 		status_label.text = "Cannot plant: %s" % str(placement.get("reason", "unknown")).replace("_", " ").to_lower()
+		return
+	var target_source := _grid_cell_center(column, row)
+	if row < 3:
+		target_source.y -= 5.0
+	var start_screen := farmer_sprite.position if farmer_sprite != null else _to_screen(Vector2(220.0, _grid_cell_center(0, 2).y))
+	var start_source := _to_source(start_screen)
+	var start_board := _board_coordinates(start_source)
+	var target_board := _board_coordinates(target_source)
+	var board_width := grid_nodes[0][Rules.BOARD_COLUMNS].x - grid_nodes[0][0].x
+	var board_height := grid_nodes[Rules.BOARD_ROWS][0].y - grid_nodes[0][0].y
+	var route_length := Vector2((target_board.x - start_board.x) * board_width,
+		(target_board.y - start_board.y) * board_height).length()
+	farmer_planting_target = {
+		"column": column, "row": row, "plant_type": selected_plant,
+		"start_screen": start_screen, "start_facing": signf(farmer_sprite.scale.x),
+		"start_board": start_board, "target_board": target_board,
+		"target_source": target_source, "progress": 0.0,
+		"route_length": maxf(route_length, 1.0)
+	}
+	farmer_locomotion_animation = "walk"
+	farmer_sprite.play("walk")
+	var direction := signf(_to_screen(target_source).x - farmer_sprite.position.x)
+	if direction != 0.0:
+		farmer_sprite.scale.x = absf(farmer_sprite.scale.x) * direction
+	status_label.text = "The Farmer is walking to the selected soil cell..."
+
+func _update_farmer_planting_movement(delta: float) -> void:
+	if farmer_planting_target.is_empty():
+		return
+	var target := farmer_planting_target
+	target.progress = minf(1.0, float(target.progress) + (320.0 * delta) / float(target.route_length))
+	var board_position: Vector2 = target.start_board.lerp(target.target_board, float(target.progress))
+	var source_position := _board_point(board_position.x, board_position.y)
+	farmer_sprite.position = _to_screen(source_position)
+	var horizontal_direction := float(_to_screen(target.target_source).x - farmer_sprite.position.x)
+	if absf(horizontal_direction) > 0.5:
+		farmer_sprite.scale.x = absf(farmer_sprite.scale.x) * signf(horizontal_direction)
+	farmer_locomotion_animation = "walk"
+	if farmer_sprite.animation != "walk":
+		farmer_sprite.play("walk")
+	footstep_timer -= delta
+	if footstep_timer <= 0.0:
+		_play_sfx("grass-step-01" if rng.randi_range(0, 1) == 0 else "grass-step-02", 0.06)
+		footstep_timer = 0.36
+	_update_farmer_visual_depth()
+	if float(target.progress) < 1.0:
+		return
+	var completed_target := farmer_planting_target.duplicate(true)
+	farmer_planting_target.clear()
+	farmer_sprite.position = _to_screen(completed_target.target_source)
+	_commit_plant(int(completed_target.column), int(completed_target.row),
+		str(completed_target.plant_type), completed_target.start_screen, float(completed_target.start_facing))
+
+func _commit_plant(column: int, row: int, plant_type: String,
+		return_position: Vector2, return_facing: float) -> void:
+	var placement := Rules.resolve_plant_placement(float(energy), plants, plant_type, column, row)
+	if not placement.get("ok", false):
+		status_label.text = "Planting cancelled: %s" % str(placement.get("reason", "unknown")).replace("_", " ").to_lower()
+		farmer_return_target = {"position": return_position, "facing": return_facing}
+		farmer_locomotion_animation = "run"
+		farmer_sprite.play("run")
 		return
 	var plant: Dictionary = placement.plant.duplicate(true)
 	var source_position := _grid_cell_center(column, row)
@@ -659,8 +796,8 @@ func _place_plant(column: int, row: int) -> void:
 	plant["local_x"] = Rules.plant_lane_local_x(column)
 	plant["depth_scale"] = depth_scale
 	plant["cooldown_ms"] = 450.0
-	plant["production_ms"] = float(Rules.PLANTS[selected_plant].get("production_interval_ms", 0.0))
-	var plant_sprite := _create_plant_sprite(selected_plant)
+	plant["production_ms"] = float(Rules.PLANTS[plant_type].get("production_interval_ms", 0.0))
+	var plant_sprite := _create_plant_sprite(plant_type)
 	if plant_sprite != null:
 		plant_sprite.position = screen_position
 		plant_sprite.scale *= depth_scale
@@ -668,12 +805,49 @@ func _place_plant(column: int, row: int) -> void:
 		add_child(plant_sprite)
 	plant["sprite"] = plant_sprite
 	plants.append(plant)
-	_play_farmer_action("plant")
 	has_planted_defender = true
 	energy = int(placement.energy)
+	farmer_return_target = {"position": return_position, "facing": return_facing}
+	_play_farmer_action("plant")
 	_play_sfx("plant-dig")
-	status_label.text = "%s planted in lane %d." % [selected_plant.capitalize(), row + 1]
+	status_label.text = "%s planted in lane %d." % [plant_type.capitalize(), row + 1]
 	_refresh_hud()
+
+func _update_farmer_return_movement(delta: float) -> void:
+	if farmer_return_target.is_empty() or not farmer_action_animation.is_empty():
+		return
+	var target_position: Vector2 = farmer_return_target.position
+	var difference := target_position - farmer_sprite.position
+	var distance := difference.length()
+	if distance <= 5.0:
+		farmer_sprite.position = target_position
+		farmer_sprite.scale.x = absf(farmer_sprite.scale.x) * float(farmer_return_target.facing)
+		farmer_return_target.clear()
+		farmer_locomotion_animation = "idle"
+		footstep_timer = 0.0
+		farmer_sprite.play("idle")
+		_update_farmer_visual_depth()
+		return
+	farmer_locomotion_animation = "run"
+	if farmer_sprite.animation != "run":
+		farmer_sprite.play("run")
+	var step := minf(distance, 420.0 * SCREEN_SCALE * delta)
+	farmer_sprite.position += difference / distance * step
+	if absf(difference.x) > 0.5:
+		farmer_sprite.scale.x = absf(farmer_sprite.scale.x) * signf(difference.x)
+	footstep_timer -= delta
+	if footstep_timer <= 0.0:
+		_play_sfx("grass-step-01" if rng.randi_range(0, 1) == 0 else "grass-step-02", 0.06)
+		footstep_timer = 0.28
+	_update_farmer_visual_depth()
+
+func _update_farmer_visual_depth() -> void:
+	var farmer_row := _nearest_row_at_screen_position(farmer_sprite.position)
+	var facing := signf(farmer_sprite.scale.x)
+	var visual_scale := 0.25 * _depth_scale(4, farmer_row)
+	farmer_sprite.scale = Vector2(absf(visual_scale) * facing, visual_scale)
+	farmer_sprite.z_index = int(farmer_sprite.position.y)
+
 
 func _update_spawning(delta_ms: float) -> void:
 	if spawned_this_wave >= Rules.WAVE_SIZES[wave - 1]:
