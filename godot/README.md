@@ -5,10 +5,13 @@ and legacy Unity source remain intact as migration references.
 
 ## Current status
 
-The project currently contains a minimal Godot foundation and a board-placement
-sandbox. It is **not yet a complete battle game**: monster movement, combat,
-projectiles, wave progression, art integration, saves, audio and Android export
-still need to be implemented and tested.
+The project currently contains a minimal Godot foundation, a six-defender board-placement
+sandbox and a GDScript mirror of the Stage 1 pure combat rules (placement/refunds,
+energy pickups, damage, lane movement, target selection, cooldowns, monster profiles,
+Dust Skitter movement and wave scheduling). It is **not yet a complete battle game**:
+those simulation functions are not yet connected to live monster/projectile entities,
+and wave orchestration, art integration, saves, audio and Android export still need
+to be implemented and tested.
 
 ## Open in Godot
 
