@@ -4,17 +4,23 @@ Android-first, offline, single-player Godot 4 project. The Phaser client and leg
 
 ## Current status
 
-The project now has a first playable Stage 1 live-combat loop in `scenes/live_battle.tscn`:
+The project has a first playable Stage 1 combat loop and now imports approved source artwork into `godot/assets/` without modifying the originals:
 
-- Place all six Stage 1 defenders on the 8×5 board with the mirrored energy costs.
-- Radish, Pineapple, Hazelnut and Mango automatically fire lane projectiles using their configured damage, speed, range and cooldown.
-- Mushroom generates energy on its configured production interval; Pumpkin acts as a high-health blocker.
-- All four Stage 1 monster archetypes spawn with their configured health, speed, size, damage and attack cadence.
-- Monsters move along five lanes, stop to bite the nearest plant, destroy it when its health reaches zero, and breach the farmhouse if they reach the left edge.
-- Projectiles collide with monsters, apply the configured damage modifiers, and award the existing 8-point defeat reward.
-- Five waves spawn the canonical 3/5/6/7/9 enemies, followed by victory or defeat.
+- Farmer idle sprite sheet (2×2 atlas) is displayed beside the farmhouse.
+- Hyena idle sheet (3×1 atlas) is used for moving Stage 1 monsters; Dust Skitter, Stonehide and Alpha Brute retain distinct scale/tint treatment until their own approved art is available.
+- Radish, Pineapple, Hazelnut and Mango sheets are sliced into a resting frame plus an attack sequence. The attack sequence plays when the plant launches a projectile.
+- Mushroom and Pumpkin use their approved static character artwork.
+- Radish, Pineapple, Hazelnut and Mango projectile textures are connected to their matching plant launchers.
+- Existing gameplay remains: 8×5 placement, configured energy costs, plant firing/production, projectile damage, monster movement and biting, five waves, rewards, victory and defeat.
 
-The current battlefield uses temporary vector shapes and simplified lane positioning. It is a gameplay prototype, not the final art-integrated game. The current prototype automatically credits Mushroom production and defeat rewards to keep the first combat loop playable; authored pickup interactions, detailed Dust Skitter jump/burst presentation, Stonehide bracing visuals, Dragon boss/story sequence, Farmer melee, and production sprite animations are not yet ported.
+The original artwork remains in `web/public/assets/`; the Godot copies point to the same Git blob contents. See `ASSET_IMPORT.md` for source mapping and frame assumptions.
+
+## Known visual limitations
+
+- The current lane board is still the temporary straight-grid prototype. The supplied farm battlefield background is not yet used because its visible perspective planting cells have not been calibrated against the current gameplay hit regions; overlaying a second grid would be incorrect.
+- The 3×3 frame layout for Pineapple and Hazelnut is provisional and must be checked in the Godot editor against the actual sheet dimensions before final animation approval.
+- Only the Farmer idle sheet and the Hyena idle sheet are currently connected. Farmer movement/combat and monster bite/hit/death animations are future integration work.
+- The same Hyena base art is temporarily reused for all four monster archetypes, with tint and size differences; this is not a final character-art pass.
 
 ## Open in Godot
 
@@ -25,17 +31,19 @@ The current battlefield uses temporary vector shapes and simplified lane positio
 
 The project is configured for a 1280×720 landscape canvas and the Compatibility renderer. The exact Godot patch version and Android export template/toolchain still need a local validation pass.
 
-## Rule smoke tests
+## Tests
 
-Run both existing smoke-test scripts with a Godot 4.x executable:
+Run the resource import once, then the asset and rule smoke tests:
 
 ```sh
+godot --headless --editor --path godot --quit
+godot --headless --path godot --script res://tests/test_asset_manifest.gd
 godot --headless --path godot --script res://tests/test_phase_one_rules.gd
 godot --headless --path godot --script res://tests/test_phase_one_combat_core.gd
 ```
 
-These tests cover the mirrored rules. The live combat scene itself has not yet been executed in the Godot engine in the current development environment.
+Godot 4.x is not available in the current development environment, so these scripts and the live scene have not yet been executed here. No Android export or device test is claimed.
 
-## Art workflow
+## Audio and future art
 
-Keep source art in the existing repository until the asset inventory and approval pass is complete. Import approved PNG sprite sheets into Godot with explicit frame dimensions, spacing, margins, anchors and filtering. Do not assume that every design contract has a matching production-ready image file.
+Review `web/public/assets/audio/sfx/LICENSES.md` before importing any sound. Add audio in a separate pass with attribution/license records. Do not assume every design contract has a matching production-ready image file.
