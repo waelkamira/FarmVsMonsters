@@ -48,6 +48,8 @@ var energy_label: Label
 var wave_label: Label
 var rng := RandomNumberGenerator.new()
 var farmer_sprite: AnimatedSprite2D
+var sprite_frames_cache: Dictionary = {}
+var monster_sprite_frames: SpriteFrames
 
 func _ready() -> void:
 	rng.randomize()
@@ -117,29 +119,33 @@ func _build_ui() -> void:
 
 func _make_sheet_sprite(texture_path: String, columns: int, rows: int, fps: float,
 		sprite_scale: float, animate_all_frames: bool = false) -> AnimatedSprite2D:
-	var texture := load(texture_path) as Texture2D
-	if texture == null:
-		push_warning("Missing sprite texture: %s" % texture_path)
-		return null
-	var frames := SpriteFrames.new()
-	frames.add_animation("idle")
-	frames.set_animation_speed("idle", fps)
-	frames.set_animation_loop("idle", true)
-	frames.add_animation("attack")
-	frames.set_animation_speed("attack", fps)
-	frames.set_animation_loop("attack", false)
-	var cell_size := texture.get_size() / Vector2(float(columns), float(rows))
-	for index in range(columns * rows):
-		var atlas := AtlasTexture.new()
-		atlas.atlas = texture
-		atlas.region = Rect2(Vector2(float(index % columns) * cell_size.x,
-			float(index / columns) * cell_size.y), cell_size)
-		if animate_all_frames:
-			frames.add_frame("idle", atlas)
-		elif index == 0:
-			frames.add_frame("idle", atlas)
-		else:
-			frames.add_frame("attack", atlas)
+	var cache_key := "%s|%d|%d|%s|%s" % [texture_path, columns, rows, str(fps), str(animate_all_frames)]
+	var frames: SpriteFrames = sprite_frames_cache.get(cache_key)
+	if frames == null:
+		var texture := load(texture_path) as Texture2D
+		if texture == null:
+			push_warning("Missing sprite texture: %s" % texture_path)
+			return null
+		frames = SpriteFrames.new()
+		frames.add_animation("idle")
+		frames.set_animation_speed("idle", fps)
+		frames.set_animation_loop("idle", true)
+		frames.add_animation("attack")
+		frames.set_animation_speed("attack", fps)
+		frames.set_animation_loop("attack", false)
+		var cell_size := texture.get_size() / Vector2(float(columns), float(rows))
+		for index in range(columns * rows):
+			var atlas := AtlasTexture.new()
+			atlas.atlas = texture
+			atlas.region = Rect2(Vector2(float(index % columns) * cell_size.x,
+				float(index / columns) * cell_size.y), cell_size)
+			if animate_all_frames:
+				frames.add_frame("idle", atlas)
+			elif index == 0:
+				frames.add_frame("idle", atlas)
+			else:
+				frames.add_frame("attack", atlas)
+		sprite_frames_cache[cache_key] = frames
 	var sprite := AnimatedSprite2D.new()
 	sprite.sprite_frames = frames
 	sprite.animation = "idle"
@@ -166,15 +172,16 @@ func _append_sheet_animation(frames: SpriteFrames, animation_name: String,
 	return true
 
 func _make_monster_sprite(archetype: String, sprite_scale: float) -> AnimatedSprite2D:
-	var frames := SpriteFrames.new()
-	_append_sheet_animation(frames, "idle", "res://assets/monsters/hyena/hyena-idle.png", 3, 1, 4.0, true)
-	_append_sheet_animation(frames, "walk", "res://assets/monsters/hyena/hyena-walk.png", 3, 2, 8.0, true)
-	_append_sheet_animation(frames, "run", "res://assets/monsters/hyena/hyena-run.png", 3, 2, 12.0, true)
-	_append_sheet_animation(frames, "bite", "res://assets/monsters/hyena/hyena-bite.png", 3, 2, 8.0, true)
-	_append_sheet_animation(frames, "hit", "res://assets/monsters/hyena/hyena-hit.png", 3, 2, 12.0, false)
-	_append_sheet_animation(frames, "death", "res://assets/monsters/hyena/hyena-death.png", 3, 2, 8.0, false)
+	if monster_sprite_frames == null:
+		monster_sprite_frames = SpriteFrames.new()
+		_append_sheet_animation(monster_sprite_frames, "idle", "res://assets/monsters/hyena/hyena-idle.png", 3, 1, 4.0, true)
+		_append_sheet_animation(monster_sprite_frames, "walk", "res://assets/monsters/hyena/hyena-walk.png", 3, 2, 8.0, true)
+		_append_sheet_animation(monster_sprite_frames, "run", "res://assets/monsters/hyena/hyena-run.png", 3, 2, 12.0, true)
+		_append_sheet_animation(monster_sprite_frames, "bite", "res://assets/monsters/hyena/hyena-bite.png", 3, 2, 8.0, true)
+		_append_sheet_animation(monster_sprite_frames, "hit", "res://assets/monsters/hyena/hyena-hit.png", 3, 2, 12.0, false)
+		_append_sheet_animation(monster_sprite_frames, "death", "res://assets/monsters/hyena/hyena-death.png", 3, 2, 8.0, false)
 	var sprite := AnimatedSprite2D.new()
-	sprite.sprite_frames = frames
+	sprite.sprite_frames = monster_sprite_frames
 	sprite.animation = "run" if archetype == "dust-skitter" else "walk"
 	sprite.set_meta("archetype", archetype)
 	sprite.scale = Vector2.ONE * sprite_scale
