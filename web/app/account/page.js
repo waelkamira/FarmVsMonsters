@@ -112,11 +112,11 @@ export default function AccountPage() {
         <h1>{ar ? "احفظ مغامرتك" : "Save Your Adventure"}</h1>
         <p className="account-intro">
           {ar
-            ? "يمكنك اللعب فوراً كضيف دون تسجيل الدخول. سيُحفظ تقدمك على هذا الجهاز. الحساب اختياري، لكن المزامنة السحابية متوقفة مؤقتاً حتى نؤمّن حفظ المراحل والعملات من التلاعب."
-            : "You can play immediately as a guest without signing in. Your progress stays on this device. Accounts are optional; cloud sync is temporarily paused while stage and coin saving are secured against tampering."}
+            ? "يمكنك اللعب فوراً كضيف دون تسجيل الدخول. تقدم اللعب محفوظ محلياً على هذا الجهاز ومشترك بين جلسات المستخدمين في هذا المتصفح، وليس منفصلاً لكل حساب. الحساب اختياري، والمزامنة السحابية متوقفة مؤقتاً حتى نؤمّن حفظ المراحل والعملات."
+            : "You can play immediately as a guest without signing in. Gameplay progress is stored locally on this device and is shared by users of this browser, not isolated per account. Accounts are optional; cloud sync is paused while stage and coin saving are secured."}
         </p>
 
-        <div className="guest-play-panel"><strong>{ar ? "لا تحتاج إلى حساب للعب!" : "No account needed to play!"}</strong><p>{ar ? "تقدم الضيف يُحفظ محلياً تلقائياً. التسجيل مطلوب فقط للمزامنة السحابية." : "Guest progress is saved locally automatically. Sign-in is only needed for cloud sync."}</p><Link className="primary-link" href="/stages">{ar ? "متابعة اللعب كضيف" : "Continue as Guest"}</Link></div>
+        <div className="guest-play-panel"><strong>{ar ? "لا تحتاج إلى حساب للعب!" : "No account needed to play!"}</strong><p>{ar ? "تقدم الضيف يُحفظ محلياً تلقائياً في مساحة هذا المتصفح المشتركة، ولا يُنسب إلى حساب محدد حالياً." : "Guest progress is saved automatically in this browser’s shared local storage; it is not assigned to an individual account yet."}</p><Link className="primary-link" href="/stages">{ar ? "متابعة اللعب كضيف" : "Continue as Guest"}</Link></div>
 
         {loading ? (
           <div className="account-status">{ar ? "جارٍ التحقق من الحساب..." : "Checking account..."}</div>
@@ -125,7 +125,7 @@ export default function AccountPage() {
             <div className="account-avatar" aria-hidden="true">✦</div>
             <strong>{ar ? "أنت مسجل الدخول" : "You are signed in"}</strong>
             <span className="account-email">{user.email}</span>
-            <p>{ar ? "الحساب متصل، لكن مزامنة تقدم اللعب متوقفة مؤقتاً. يستمر الحفظ المحلي دون انقطاع." : "Your account is connected, but gameplay progress sync is temporarily paused. Local saving continues."}</p>
+            <p>{ar ? "الحساب متصل، لكن تقدم اللعب ما زال في مساحة الجهاز المشتركة وليس مساحة خاصة بهذا الحساب. المزامنة السحابية متوقفة مؤقتاً." : "Your account is connected, but gameplay progress still lives in this device’s shared browser storage, not in an account-specific save. Cloud sync remains paused."}</p>
             <button className="account-submit" type="button" onClick={logout} disabled={busy}>
               {busy ? (ar ? "لحظة..." : "Please wait...") : (ar ? "تسجيل الخروج" : "Sign out")}
             </button>
