@@ -5,6 +5,12 @@ const REQUIRED_TEXTURES := [
 	"res://assets/characters/farmer/farmer-walk.png",
 	"res://assets/characters/farmer/farmer-run.png",
 	"res://assets/characters/farmer/farmer-attack.png",
+	"res://assets/characters/farmer/farmer-jump.png",
+	"res://assets/characters/farmer/farmer-plant.png",
+	"res://assets/characters/farmer/farmer-uproot.png",
+	"res://assets/characters/farmer/farmer-collect.png",
+	"res://assets/characters/farmer/farmer-hit.png",
+	"res://assets/characters/farmer/farmer-death.png",
 	"res://assets/backgrounds/farm-battlefield.jpeg",
 	"res://assets/characters/monsters/hyena/hyena-idle.png",
 	"res://assets/monsters/hyena/hyena-walk.png",
@@ -22,6 +28,16 @@ const REQUIRED_TEXTURES := [
 	"res://assets/projectiles/pineapple-bomb.png",
 	"res://assets/projectiles/hazelnut-bomb.png",
 	"res://assets/projectiles/mango-bomb.png"
+]
+
+
+const FARMER_SHEET_CONTRACTS := [
+	{"path": "res://assets/characters/farmer/farmer-jump.png", "size": Vector2i(1080, 720), "frame_size": Vector2i(216, 720), "frames": 5},
+	{"path": "res://assets/characters/farmer/farmer-plant.png", "size": Vector2i(2160, 430), "frame_size": Vector2i(360, 430), "frames": 6},
+	{"path": "res://assets/characters/farmer/farmer-uproot.png", "size": Vector2i(2160, 430), "frame_size": Vector2i(360, 430), "frames": 6},
+	{"path": "res://assets/characters/farmer/farmer-collect.png", "size": Vector2i(1080, 360), "frame_size": Vector2i(180, 360), "frames": 6},
+	{"path": "res://assets/characters/farmer/farmer-hit.png", "size": Vector2i(914, 430), "frame_size": Vector2i(152, 430), "frames": 6},
+	{"path": "res://assets/characters/farmer/farmer-death.png", "size": Vector2i(914, 430), "frame_size": Vector2i(152, 430), "frames": 6}
 ]
 
 const REQUIRED_AUDIO := [
@@ -51,6 +67,15 @@ func _initialize() -> void:
 		var texture := load(path) as Texture2D
 		if texture == null:
 			push_error("Could not load Godot texture: %s" % path)
+			failures += 1
+	for contract in FARMER_SHEET_CONTRACTS:
+		var sheet := load(str(contract.path)) as Texture2D
+		var expected_size := Vector2(float(contract.size.x), float(contract.size.y))
+		if sheet == null or sheet.get_size() != expected_size:
+			push_error("Farmer sheet dimensions changed: %s" % str(contract.path))
+			failures += 1
+		elif int(contract.frame_size.x) * int(contract.frames) > int(sheet.get_width()) or int(contract.frame_size.y) > int(sheet.get_height()):
+			push_error("Farmer frame contract exceeds sheet width: %s" % str(contract.path))
 			failures += 1
 	for path in REQUIRED_AUDIO:
 		if not ResourceLoader.exists(path):
