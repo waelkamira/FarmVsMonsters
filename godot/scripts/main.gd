@@ -1,6 +1,7 @@
 extends Control
 
 const BATTLE_SCENE: String = "res://scenes/live_battle.tscn"
+const SNOW_TEST_SCENE: String = "res://scenes/snow_thrower_test.tscn"
 
 func _ready() -> void:
 	_build_menu()
@@ -38,11 +39,22 @@ func _build_menu() -> void:
 	start_button.pressed.connect(_open_battle)
 	content.add_child(start_button)
 
+	var snow_test_button := Button.new()
+	snow_test_button.text = "Test Snow Thrower vs Frozen Hyena"
+	snow_test_button.custom_minimum_size = Vector2(0, 58)
+	snow_test_button.pressed.connect(_open_snow_test)
+	content.add_child(snow_test_button)
+
 	var note := Label.new()
 	note.text = "Playable combat prototype • Five waves • 30 enemies"
 	note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	content.add_child(note)
+
+func _open_snow_test() -> void:
+	var error: Error = get_tree().change_scene_to_file(SNOW_TEST_SCENE)
+	if error != OK:
+		push_error("Could not open Snow Thrower test. Error: %s" % error)
 
 func _open_battle() -> void:
 	var error: Error = get_tree().change_scene_to_file(BATTLE_SCENE)

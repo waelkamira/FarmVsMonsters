@@ -4,6 +4,9 @@ Android-first, offline, single-player Godot 4 project. The Phaser client and leg
 
 ## Current status
 
+A dedicated **Test Snow Thrower vs Frozen Hyena** entry is available from the main menu. It starts a controlled single-lane encounter with full energy, automatically places the Snow Thrower, and spawns one guaranteed Hyena in the same lane so the freeze projectile can be observed without waiting for a random wave.
+
+
 The project has a first playable Stage 1 combat loop and now imports approved source artwork into `godot/assets/` without modifying the originals:
 
 - Farmer idle, walk, run, planting, uproot, jump, hit, death and club-attack sheets are connected. Press J or tap JUMP to play the original five-frame jump when the Farmer is free; the jump also avoids a monster bite during its animation. The Farmer has 180 HP; monsters can bite him when they reach him in the same lane, hits grant 700 ms of damage protection, the original hit reaction plays when available, and lethal damage triggers the death animation and defeat. The UPROOT mode lets the player tap a planted defender, play the original uproot animation and recover its configured planting-energy cost. A successful planting action plays the original six-frame bend/recovery animation and returns to the current locomotion state when it finishes. The Farmer can move with WASD/arrow keys or the enlarged on-screen D-pad; touch movement uses the slower walk animation. The landscape battle HUD uses a two-row plant selector with a visible selected state, compact resource/wave readouts, and a Farmer health percentage plus an overhead health bar. Touch direction state is cleared when the app/window loses focus so a held movement input cannot remain stuck. Press Space or the on-screen CLUB button for emergency melee after at least one defender has been planted and every living Radish has been lost.
@@ -23,6 +26,15 @@ The original artwork remains in `web/public/assets/`; the Godot copies point to 
 - The Pineapple and Hazelnut sheets use their exact Phaser frame contracts (418×418 and 341×341 respectively); the Godot visual result still needs runtime review.
 - Farmer planting now follows the Phaser-style walk-to-cell route across the calibrated perspective mesh, plays the authored planting action, then runs back to the exact starting position and facing. The route geometry is covered by round-trip tests for points inside and outside the board. Jump, hit and death interactions are now wired into the Godot runtime; Farmer health and monster-bite lane detection still require hands-on gameplay balancing. Mushroom energy orbs expire after 18 seconds if left uncollected. The Phaser version remains the reference for those mechanics.
 - The same Hyena base art is temporarily reused for all four monster archetypes, with tint and size differences; this is not a final character-art pass. Frozen Hyena level 1/2 PNG sources are imported but their atlas layout has not yet been confirmed, so the current freeze effect uses a temporary tint rather than substituting an unverified animation sheet. Snow Thrower source art is provisionally treated as a 3×3 atlas based on its 1080 px sheet width; verify frame margins, pivot and visual scale in the Godot editor before production sign-off. Monster-jump and monster-land audio are imported but unused while canonical jumping is disabled; plant-rustle now plays during manual uprooting.
+
+## Platform delivery plan
+
+1. Continue feature development and gameplay review through a free browser-hosted Web build while keeping this GitHub repository private. Cloudflare Pages is the intended host; the current GitHub Pages workflow is retained as an optional route but cannot publish this private repository on its current plan.
+2. Keep the Godot project and gameplay systems shared between Web and Android. Browser builds are for frequent review, not a separate game implementation.
+3. Complete mobile touch, landscape layout, performance, offline behavior and device validation.
+4. At release, export and sign a complete Android APK from this same Godot project using the matching Android export templates and signing credentials.
+
+The dedicated Snow Thrower test uses the current temporary blue freeze tint. The imported frozen-hyena Level 1/2 images remain source assets only until their frame layout is visually verified; they are not yet used as an animated replacement in combat.
 
 ## Open in Godot
 
