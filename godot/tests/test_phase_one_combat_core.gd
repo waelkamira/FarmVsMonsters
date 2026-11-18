@@ -9,6 +9,7 @@ func _initialize() -> void:
 	_test_plant_transactions()
 	_test_lane_and_target_selection()
 	_test_cooldowns_and_dust_skitter()
+	_test_monster_freeze_contract()
 	_test_farmer_planting_route_geometry()
 	print("Godot Stage 1 combat-core smoke tests passed.")
 	quit(0)
@@ -105,6 +106,24 @@ func _test_lane_and_target_selection() -> void:
 	assert(Rules.select_farmer_melee_target([melee], 2, 100.0, 10.0) == melee)
 	var weak: Dictionary = {"hp": 12.0, "alive": true}
 	assert(Rules.select_dragon_fireball_target([{"hp": 30.0, "alive": true}, weak]) == weak)
+
+func _test_monster_freeze_contract() -> void:
+	assert(Rules.MONSTER_FREEZE_DURATION_MS == 2600.0)
+	var active: Dictionary = Rules.resolve_monster_freeze_step(2600.0, 400.0)
+	assert(active.is_frozen and active.remaining_ms == 2200.0)
+	var expired: Dictionary = Rules.resolve_monster_freeze_step(200.0, 250.0)
+	assert(not expired.is_frozen and expired.remaining_ms == 0.0)
+	assert(Rules.resolve_monster_freeze_step(-1.0, 10.0).is_empty())
+	var battle = LiveBattle.new()
+	var sprite := Sprite2D.new()
+	var monster := {"alive": true, "freeze_remaining_ms": 0.0, "braced": true, "sprite": sprite, "base_tint": Color.WHITE}
+	assert(battle._apply_monster_freeze(monster))
+	assert(monster.freeze_remaining_ms == Rules.MONSTER_FREEZE_DURATION_MS)
+	assert(not monster.braced)
+	assert(sprite.modulate == Rules.MONSTER_FREEZE_TINT)
+	assert(not battle._apply_monster_freeze({"alive": false}))
+	sprite.free()
+	battle.free()
 
 func _test_farmer_planting_route_geometry() -> void:
 	var battle = LiveBattle.new()
