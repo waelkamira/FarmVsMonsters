@@ -73,6 +73,24 @@ export const STAGE_ONE_MONSTERS = Object.freeze([
     playable: true,
     purchasable: false,
     status: "implemented"
+  },
+  {
+    id: "frozen-hyena",
+    icon: "frozen-hyena",
+    name: "Frozen Hyena",
+    nameAr: "الضبع المتجمد",
+    role: "Frost-resistant raider",
+    roleAr: "مهاجم مقاوم للتجميد",
+    description: "A heavier icy hyena that advances more slowly and resists part of incoming freeze duration.",
+    descriptionAr: "ضبع جليدي أثقل وأبطأ، يقاوم جزءاً من مدة تأثير التجميد.",
+    stats: "135% standard durability · 55% freeze resistance",
+    statsAr: "١٣٥٪ من صحة الضبع العادي · مقاومة ٥٥٪ للتجميد",
+    spawnNote: "From Wave 4",
+    spawnNoteAr: "من الموجة الرابعة",
+    implemented: true,
+    playable: true,
+    purchasable: false,
+    status: "implemented"
   }
 ]);
 
