@@ -33,5 +33,8 @@ jobs:
           godot --headless --path godot --script res://tests/test_phase_one_rules.gd
           godot --headless --path godot --script res://tests/test_phase_one_combat_core.gd
 
+      - name: Validate live perspective geometry
+        run: godot --headless --path godot --script res://tests/test_live_battle_geometry.gd
+
       - name: Load live battle scene
         run: godot --headless --path godot res://scenes/live_battle.tscn --quit-after 120
