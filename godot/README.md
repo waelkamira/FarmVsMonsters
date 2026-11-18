@@ -29,8 +29,8 @@ The original artwork remains in `web/public/assets/`; the Godot copies point to 
 
 ## Platform delivery plan
 
-1. Continue feature development and gameplay review through a free browser-hosted Web build while keeping this GitHub repository private. Cloudflare Pages is the intended host; the current GitHub Pages workflow is retained as an optional route but cannot publish this private repository on its current plan.
-2. Keep the Godot project and gameplay systems shared between Web and Android. Browser builds are for frequent review, not a separate game implementation.
+1. Continue feature development and test a locally exported Web build on the user's own computer in Chrome/Edge via localhost. Do not publish or deploy the game online during development; keep the GitHub repository private.
+2. Keep the Godot project and gameplay systems shared between Web and Android. Local browser builds are for frequent review, not a separate game implementation. No hosting service is used during development.
 3. Complete mobile touch, landscape layout, performance, offline behavior and device validation.
 4. At release, export and sign a complete Android APK from this same Godot project using the matching Android export templates and signing credentials.
 
