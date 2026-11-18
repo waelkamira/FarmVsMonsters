@@ -1,8 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
+import { STAGE_ONE_PLANTS } from "../game/data/stageOnePlants.mjs";
 import {
   PHASE_ONE_COMBAT_CONTRACT_VERSION,
   PHASE_ONE_WAVE_SIZES,
@@ -27,6 +28,27 @@ test("combat contract version, wave roster, and reward policy are explicit", () 
   assert.equal(PHASE_ONE_WAVE_SIZES.reduce((sum, size) => sum + size, 0), 30);
   assert.deepEqual(PHASE_ONE_ENERGY, { initial: 150, maximum: 300 });
   assert.equal(PHASE_ONE_REWARDS.ordinaryMonsterDefeatCoins, 8);
+});
+
+test("active Stage 1 plant encyclopedia matches combat costs and available artwork", () => {
+  const contractKeyByPlantId = {
+    radish: "radish",
+    "energy-mushroom": "energyMushroom",
+    "pumpkin-guard": "pumpkin",
+    pineapple: "pineapple",
+    hazelnut: "hazelnut",
+    mango: "mango"
+  };
+  const activePlants = STAGE_ONE_PLANTS.filter((plant) => plant.implemented);
+  assert.deepEqual(
+    activePlants.map((plant) => plant.id).sort(),
+    Object.keys(contractKeyByPlantId).sort()
+  );
+  for (const plant of activePlants) {
+    const contractPlant = PHASE_ONE_PLANTS[contractKeyByPlantId[plant.id]];
+    assert.equal(plant.energyCost, contractPlant.plantingEnergyCost, plant.id + " encyclopedia cost must match the combat contract");
+    assert.ok(existsSync(resolve(here, "../public", plant.assetPath.slice(1))), plant.id + " art file must exist");
+  }
 });
 
 test("radish, mushroom and dragon combat values preserve the current tuning", () => {
