@@ -10,6 +10,12 @@ All imported files are byte-for-byte copies of existing tracked assets. Their or
 | `assets/characters/farmer/farmer-walk.png` | `characters/farmer/farmer-walk.png` | Farmer movement on touch controls | 8×1, 8 frames; measured 2880×430 |
 | `assets/characters/farmer/farmer-run.png` | `characters/farmer/farmer-run.png` | Farmer keyboard movement | 6×1, 6 frames; measured 2160×430 |
 | `assets/characters/farmer/farmer-attack.png` | `characters/farmer/farmer-attack.png` | Emergency club attack | 6×1, 6 frames; measured 1080×360 |
+| `assets/characters/farmer/farmer-plant.png` | `characters/farmer/farmer-plant.png` | Planting action | 6×1, 6 frames at 8 FPS; 360×430 cells, measured 2160×430 |
+| `assets/characters/farmer/farmer-uproot.png` | `characters/farmer/farmer-uproot.png` | Uproot action (source bytes currently identical to the plant sheet) | 6×1, 6 frames at 8 FPS; 360×430 cells, measured 2160×430 |
+| `assets/characters/farmer/farmer-collect.png` | `characters/farmer/farmer-collect.png` | Energy collection action | 6×1, 6 frames at 8 FPS; 180×360 cells, measured 1080×360 |
+| `assets/characters/farmer/farmer-jump.png` | `characters/farmer/farmer-jump.png` | Jump action | 5×1, 5 frames at 6 FPS; 216×720 cells, measured 1080×720 |
+| `assets/characters/farmer/farmer-hit.png` | `characters/farmer/farmer-hit.png` | Damage reaction | 6×1, 6 frames at 8 FPS; exact 152×430 cells, measured 914×430 (2 px trailing remainder intentionally unused) |
+| `assets/characters/farmer/farmer-death.png` | `characters/farmer/farmer-death.png` | Death action | 6×1, 6 frames at 6 FPS; exact 152×430 cells, measured 914×430 (2 px trailing remainder intentionally unused) |
 | `assets/characters/monsters/hyena/hyena-idle.png` | `characters/monsters/hyena/hyena-idle.png` | Shared Stage 1 monster base | 3×1, 3 frames; measured 1080×298 |
 | `assets/monsters/hyena/hyena-walk.png` | `characters/monsters/hyena/hyena-walk.png` | Standard monster movement | 3×3, 9 frames; measured 1080×894 |
 | `assets/monsters/hyena/hyena-run.png` | `characters/monsters/hyena/hyena-run.png` | Dust Skitter movement | 3×3, 9 frames; measured 1080×889 |
