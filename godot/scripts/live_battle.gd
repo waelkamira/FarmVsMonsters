@@ -991,7 +991,6 @@ func _update_plants(delta_ms: float) -> void:
 					"age_ms": 0.0,
 					"lifetime_ms": 18000.0
 				})
-				_play_sfx("coin-collect", 0.04)
 				plant.production_ms = float(Rules.PLANTS.mushroom.production_interval_ms)
 			continue
 		if not Rules.PLANTS[plant.type].has("projectile_damage"):
