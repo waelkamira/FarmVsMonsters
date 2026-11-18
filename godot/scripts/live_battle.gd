@@ -446,6 +446,10 @@ func _begin_farmer_return() -> void:
 	if not pending_farmer_return.is_empty():
 		return_target = pending_farmer_return.duplicate(true)
 		pending_farmer_return.clear()
+		var return_position: Vector2 = return_target.position
+		var return_direction := return_position.x - farmer_sprite.position.x
+		if absf(return_direction) > 0.5:
+			farmer_sprite.scale.x = absf(farmer_sprite.scale.x) * signf(return_direction)
 		farmer_locomotion_animation = "run"
 		farmer_sprite.play("run")
 	else:
