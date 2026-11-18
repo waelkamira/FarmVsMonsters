@@ -517,10 +517,10 @@ func _update_farmer(delta: float) -> void:
 		return
 	if not planting_target.is_empty():
 		_update_planting_movement(delta)
-		farmer_locomotion_animation = "walk"
+		farmer_locomotion_animation = "walk" if not planting_target.is_empty() else ("plant" if farmer_planting else "idle")
 	elif not return_target.is_empty():
 		_update_return_movement(delta)
-		farmer_locomotion_animation = "run"
+		farmer_locomotion_animation = "run" if not return_target.is_empty() else "idle"
 	elif farmer_planting:
 		farmer_locomotion_animation = "plant"
 	else:
@@ -616,6 +616,8 @@ func _update_return_movement(delta: float) -> void:
 
 
 func _farmer_can_attack() -> bool:
+	if not planting_target.is_empty() or not return_target.is_empty() or farmer_planting:
+		return false
 	if not has_planted_defender:
 		return false
 	for plant in plants:
@@ -627,6 +629,9 @@ func _farmer_attack() -> void:
 	if game_state != "running":
 		return
 	if farmer_sprite == null or not is_instance_valid(farmer_sprite):
+		return
+	if not planting_target.is_empty() or not return_target.is_empty() or farmer_planting:
+		status_label.text = "The Farmer must finish planting and returning before attacking."
 		return
 	if not _farmer_can_attack():
 		status_label.text = "The club is an emergency defense. It unlocks after all planted Radishes are lost."
@@ -716,27 +721,68 @@ func _gui_input(event: InputEvent) -> void:
 	var cell := _cell_at_screen_position(tap_position)
 	if cell.x < 0 or cell.y < 0:
 		return
-	_place_plant(cell.x, cell.y)
+	_request_plant(cell.x, cell.y)
 	accept_event()
 
-func _place_plant(column: int, row: int) -> void:
+func _request_plant(column: int, row: int) -> void:
+	for plant in plants:
+		if plant.alive and int(plant.col) == column and int(plant.row) == row:
+			_uproot_plant(plant)
+			return
+	if not planting_target.is_empty() or not return_target.is_empty() or farmer_planting:
+		status_label.text = "The Farmer must finish his current planting trip before moving again."
+		return
 	var placement := Rules.resolve_plant_placement(float(energy), plants, selected_plant, column, row)
 	if not placement.get("ok", false):
 		status_label.text = "Cannot plant: %s" % str(placement.get("reason", "unknown")).replace("_", " ").to_lower()
 		return
+	var target_source := _planting_cell_center(column, row)
+	var target_screen := _to_screen(target_source)
+	var start_screen := farmer_sprite.position
+	var start_board := _board_coordinates(_to_source(start_screen))
+	var target_board := _board_coordinates(target_source)
+	var grid_height := float(grid_nodes[Rules.BOARD_ROWS][0].y) - float(grid_nodes[0][0].y)
+	var route_length := sqrt(
+		pow((target_board.x - start_board.x) * Rules.BOARD_LANE_WIDTH, 2.0) +
+		pow((target_board.y - start_board.y) * grid_height, 2.0))
+	planting_target = {
+		"column": column, "row": row, "plant_type": selected_plant,
+		"target_source": target_source, "target_screen": target_screen,
+		"start_position": start_screen, "start_facing": signf(farmer_sprite.scale.x),
+		"start_u": start_board.x, "start_v": start_board.y,
+		"target_u": target_board.x, "target_v": target_board.y,
+		"route_length": maxf(route_length, 1.0), "progress": 0.0
+	}
+	farmer_locomotion_animation = "walk"
+	farmer_sprite.scale.x = absf(farmer_sprite.scale.x) * (1.0 if target_screen.x >= start_screen.x else -1.0)
+	farmer_sprite.play("walk")
+	status_label.text = "The Farmer is walking to the selected soil cell."
+
+func _complete_plant_placement(column: int, row: int, plant_type: String) -> void:
+	var placement := Rules.resolve_plant_placement(float(energy), plants, plant_type, column, row)
+	if not placement.get("ok", false):
+		status_label.text = "Planting cancelled: this cell is no longer available."
+		_begin_farmer_return()
+		return
 	var plant: Dictionary = placement.plant.duplicate(true)
-	var source_position := _grid_cell_center(column, row)
-	if row < 3:
-		source_position.y -= 5.0
+	var cell_center := _grid_cell_center(column, row)
+	var source_position := _planting_cell_center(column, row)
+	var local_x := Rules.plant_lane_local_x(column)
+	if plant_type == "pineapple":
+		var polygon := _cell_polygon(column, row)
+		var cell_width := ((polygon[1].x - polygon[0].x) + (polygon[2].x - polygon[3].x)) * 0.5
+		var cell_height := (absf(polygon[3].y - polygon[0].y) + absf(polygon[2].y - polygon[1].y)) * 0.5
+		source_position = cell_center + Vector2(cell_width * 0.2, cell_height * 0.1)
+		local_x += Rules.BOARD_LANE_WIDTH / float(Rules.BOARD_COLUMNS) * 0.2
 	var screen_position := _to_screen(source_position)
 	var depth_scale := _depth_scale(column, row)
 	plant["x"] = screen_position.x
 	plant["y"] = screen_position.y
-	plant["local_x"] = Rules.plant_lane_local_x(column)
+	plant["local_x"] = local_x
 	plant["depth_scale"] = depth_scale
 	plant["cooldown_ms"] = 450.0
-	plant["production_ms"] = float(Rules.PLANTS[selected_plant].get("production_interval_ms", 0.0))
-	var plant_sprite := _create_plant_sprite(selected_plant)
+	plant["production_ms"] = float(Rules.PLANTS[plant_type].get("production_interval_ms", 0.0))
+	var plant_sprite := _create_plant_sprite(plant_type)
 	if plant_sprite != null:
 		plant_sprite.position = screen_position
 		plant_sprite.scale *= depth_scale
@@ -744,10 +790,27 @@ func _place_plant(column: int, row: int) -> void:
 		add_child(plant_sprite)
 	plant["sprite"] = plant_sprite
 	plants.append(plant)
-	has_planted_defender = true
 	energy = int(placement.energy)
-	status_label.text = "%s planted in lane %d." % [selected_plant.capitalize(), row + 1]
+	if plant_type == "radish":
+		has_planted_defender = true
+	farmer_planting = true
+	farmer_locomotion_animation = "plant"
+	farmer_sprite.play("plant")
+	status_label.text = "%s planted in lane %d." % [plant_type.capitalize(), row + 1]
 	_refresh_hud()
+
+func _uproot_plant(plant: Dictionary) -> void:
+	var uproot := Rules.resolve_plant_uproot(float(energy), plant)
+	if not uproot.get("ok", false):
+		return
+	plant.alive = false
+	var plant_sprite: Variant = plant.get("sprite", null)
+	if plant_sprite != null and is_instance_valid(plant_sprite):
+		plant_sprite.queue_free()
+	energy = int(uproot.energy)
+	status_label.text = "Plant uprooted. Full energy cost refunded."
+	_refresh_hud()
+
 
 func _update_spawning(delta_ms: float) -> void:
 	if spawned_this_wave >= Rules.WAVE_SIZES[wave - 1]:
