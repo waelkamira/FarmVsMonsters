@@ -3315,10 +3315,16 @@ export default class BattleScene extends Scene {
     if (monster.braceCue?.active) monster.braceCue.setVisible(false);
     const sprite = monster.hyenaSprite;
     if (sprite?.active && this.textures.exists("frozen-hyena-level-1")) {
-      if (!monster.frozenAnimationKey) monster.frozenAnimationKey = sprite.anims.currentAnim?.key || (monster.kind === "dust-skitter" ? "hyena-run" : "hyena-walk");
+      if (!monster.frozenAnimationKey) {
+        monster.frozenAnimationKey = sprite.anims.currentAnim?.key || (monster.kind === "dust-skitter" ? "hyena-run" : "hyena-walk");
+        monster.frozenSpriteSize = { width: sprite.displayWidth, height: sprite.displayHeight };
+      }
       sprite.stop();
       sprite.setTexture("frozen-hyena-level-1");
       sprite.setOrigin(0.5, 1);
+      if (monster.frozenSpriteSize?.width > 0 && monster.frozenSpriteSize?.height > 0) {
+        sprite.setDisplaySize(monster.frozenSpriteSize.width, monster.frozenSpriteSize.height);
+      }
       sprite.setTint(0x94dcff);
     }
     this.setMessage("SNOW HIT! The hyena is frozen for 2.6 seconds.");
@@ -3334,6 +3340,7 @@ export default class BattleScene extends Scene {
       this.playHyenaAnimation(monster, monster.frozenAnimationKey || (monster.kind === "dust-skitter" ? "hyena-run" : "hyena-walk"), true);
     }
     monster.frozenAnimationKey = null;
+    monster.frozenSpriteSize = null;
   }
 
   updateProjectiles(dt) {
