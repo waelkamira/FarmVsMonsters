@@ -6,6 +6,12 @@ const SNOW_TEST_SCENE: String = "res://scenes/snow_thrower_test.tscn"
 func _ready() -> void:
 	_build_menu()
 
+func _unhandled_key_input(event: InputEvent) -> void:
+	# Keep the focused combat test available to developers without exposing it
+	# as a second, confusing option on the player-facing title screen.
+	if OS.is_debug_build() and event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_F8:
+		_open_snow_test()
+
 func _build_menu() -> void:
 	var background := ColorRect.new()
 	background.color = Color("#243b2b")
@@ -38,12 +44,6 @@ func _build_menu() -> void:
 	start_button.custom_minimum_size = Vector2(0, 64)
 	start_button.pressed.connect(_open_battle)
 	content.add_child(start_button)
-
-	var snow_test_button := Button.new()
-	snow_test_button.text = "Test Snow Thrower vs Frozen Hyena"
-	snow_test_button.custom_minimum_size = Vector2(0, 58)
-	snow_test_button.pressed.connect(_open_snow_test)
-	content.add_child(snow_test_button)
 
 	var note := Label.new()
 	note.text = "Playable combat prototype • Five waves • 30 enemies"
