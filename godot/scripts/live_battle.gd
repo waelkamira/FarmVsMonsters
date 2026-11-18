@@ -627,6 +627,8 @@ func _update_return_movement(delta: float) -> void:
 func _farmer_can_attack() -> bool:
 	if not planting_target.is_empty() or not return_target.is_empty() or farmer_planting:
 		return false
+	if farmer_sprite != null and farmer_sprite.animation == "attack":
+		return false
 	if not has_planted_defender:
 		return false
 	for plant in plants:
@@ -638,6 +640,8 @@ func _farmer_attack() -> void:
 	if game_state != "running":
 		return
 	if farmer_sprite == null or not is_instance_valid(farmer_sprite):
+		return
+	if farmer_sprite.animation == "attack":
 		return
 	if not planting_target.is_empty() or not return_target.is_empty() or farmer_planting:
 		status_label.text = "The Farmer must finish planting and returning before attacking."
@@ -738,8 +742,8 @@ func _request_plant(column: int, row: int) -> void:
 		if plant.alive and int(plant.col) == column and int(plant.row) == row:
 			_uproot_plant(plant)
 			return
-	if not planting_target.is_empty() or not return_target.is_empty() or farmer_planting:
-		status_label.text = "The Farmer must finish his current planting trip before moving again."
+	if not planting_target.is_empty() or not return_target.is_empty() or farmer_planting or farmer_sprite.animation == "attack":
+		status_label.text = "The Farmer must finish his current action before moving again."
 		return
 	var placement := Rules.resolve_plant_placement(float(energy), plants, selected_plant, column, row)
 	if not placement.get("ok", false):
