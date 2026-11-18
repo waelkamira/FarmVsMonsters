@@ -233,6 +233,24 @@ static func select_projectile_target(monsters: Array, row: int, local_x: float, 
 			return monster
 	return null
 
+static func select_freeze_target(monsters: Array, row: int, projectile_local_x: float, collision_radius: float) -> Variant:
+	if not is_finite(projectile_local_x) or not is_finite(collision_radius) or collision_radius < 0.0:
+		return null
+	var target: Variant = null
+	var nearest_distance: float = INF
+	for monster in monsters:
+		if not (monster is Dictionary) or not monster.get("alive", false) or int(monster.get("row", -1)) != row:
+			continue
+		var x: float = float(monster.get("local_x", NAN))
+		var width_scale: float = float(monster.get("width_scale", 1.0))
+		if not is_finite(x) or not is_finite(width_scale) or width_scale <= 0.0:
+			continue
+		var distance: float = absf(x - projectile_local_x)
+		if distance <= collision_radius * width_scale and distance < nearest_distance:
+			target = monster
+			nearest_distance = distance
+	return target
+
 static func select_farmer_melee_target(monsters: Array, row: int, farmer_x: float, reach: float) -> Variant:
 	if not is_finite(farmer_x) or not is_finite(reach) or reach < 0.0:
 		return null
