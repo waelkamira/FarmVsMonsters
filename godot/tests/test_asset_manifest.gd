@@ -74,7 +74,7 @@ func _initialize() -> void:
 		if sheet == null or sheet.get_size() != expected_size:
 			push_error("Farmer sheet dimensions changed: %s" % str(contract.path))
 			failures += 1
-		elif int(contract.frame_size.x) * int(contract.frames) > int(sheet.get_width()):
+		elif int(contract.frame_size.x) * int(contract.frames) > int(sheet.get_width()) or int(contract.frame_size.y) > int(sheet.get_height()):
 			push_error("Farmer frame contract exceeds sheet width: %s" % str(contract.path))
 			failures += 1
 	for path in REQUIRED_AUDIO:
