@@ -83,7 +83,7 @@ export const PHASE_ONE_PLANTS = Object.freeze({
 // configured plant automatically makes its placement/uproot events valid.
 // The energy-producing mushroom uses the gameplay/event ID "mushroom".
 export const PHASE_ONE_PLANT_EVENT_TYPES = Object.freeze(
-  Object.keys(PHASE_ONE_PLANTS).map((type) => type === "energyMushroom" ? "mushroom" : type)
+  Object.keys(PHASE_ONE_PLANTS).map((type) => type === "energyMushroom" ? "mushroom" : type === "snowThrower" ? "snow-thrower" : type)
 );
 
 export const PHASE_ONE_FARMER = Object.freeze({
