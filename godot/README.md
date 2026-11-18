@@ -11,7 +11,7 @@ The project has a first playable Stage 1 combat loop and now imports approved so
 - Radish, Pineapple, Hazelnut and Mango sheets are sliced into a resting frame plus an attack sequence. The attack sequence plays when the plant launches a projectile.
 - Mushroom and Pumpkin use their approved static character artwork.
 - Radish, Pineapple, Hazelnut and Mango projectile textures are connected to their matching plant launchers.
-- Existing gameplay remains: 8×5 placement, configured energy costs, plant firing/production, projectile damage, monster movement and biting, five waves, rewards, victory and defeat.
+- Existing gameplay remains: 8×5 placement, configured energy costs, plant firing, visible Mushroom energy-orb production and touch collection with the Farmer’s six-frame collect animation, projectile damage, monster movement and biting, five waves, rewards, victory and defeat.
 
 The original artwork remains in `web/public/assets/`; the Godot copies point to the same Git blob contents. See `ASSET_IMPORT.md` for source mapping and frame assumptions.
 
@@ -21,7 +21,7 @@ The original artwork remains in `web/public/assets/`; the Godot copies point to 
 
 - The approved farm battlefield background and 8×5 perspective mesh are now used. Cell taps are resolved against the 40 calibrated soil polygons; plants, monsters and projectiles follow perspective lanes and scale with row depth.
 - The Pineapple and Hazelnut sheets use their exact Phaser frame contracts (418×418 and 341×341 respectively); the Godot visual result still needs runtime review.
-- Farmer planting now follows the Phaser-style walk-to-cell route across the calibrated perspective mesh, plays the authored planting action, then runs back to the exact starting position and facing. The route geometry is covered by round-trip tests for points inside and outside the board. Collect, jump, hit and death sheets are imported and frame-registered but remain inactive until their corresponding gameplay interactions (energy pickup objects, jump control and Farmer health/damage) exist in the Godot runtime. The Phaser version remains the reference for those mechanics.
+- Farmer planting now follows the Phaser-style walk-to-cell route across the calibrated perspective mesh, plays the authored planting action, then runs back to the exact starting position and facing. The route geometry is covered by round-trip tests for points inside and outside the board. Jump, hit and death sheets are imported and frame-registered but remain inactive until their corresponding gameplay interactions (jump control and Farmer health/damage) exist in the Godot runtime. Mushroom energy orbs expire after 18 seconds if left uncollected. The Phaser version remains the reference for those mechanics.
 - The same Hyena base art is temporarily reused for all four monster archetypes, with tint and size differences; this is not a final character-art pass. Monster-jump and monster-land audio are imported but unused while canonical jumping is disabled; plant-rustle now plays during manual uprooting.
 
 ## Open in Godot
