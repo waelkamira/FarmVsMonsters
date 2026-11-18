@@ -9,6 +9,7 @@ import {
   resolveEnergyPickup,
   applyHitPointsDamage,
   resolveMonsterLaneStep,
+  resolveMonsterFreezeStep,
   resolveProjectileLaneStep,
   selectLaneBlocker,
   selectProjectileTarget,
@@ -397,4 +398,29 @@ test("spawn composition stays fixed and validates only campaign-wide spawn indic
   assert.equal(resolveMonsterArchetype(5, 4), "stonehide");
   assert.equal(resolveMonsterArchetype(5, 1), "dust-skitter");
   assert.throws(() => resolveMonsterArchetype(1, 30), /INVALID_MONSTER_SPAWN_INDEX/);
+});
+
+
+test("Snow Thrower placement uses its approved cost, health and lane rules", () => {
+  const result = resolvePlantPlacement({
+    energy: 150, plants: [], type: "snow-thrower", col: 2, row: 3, columns: 8, rows: 5
+  });
+  assert.equal(result.ok, true);
+  assert.equal(result.energy, 60);
+  assert.equal(result.plant.hp, 150);
+  assert.equal(result.plant.energyCost, 90);
+});
+
+test("monster freeze timer immobilizes for 2600ms and then thaws", () => {
+  assert.deepEqual(resolveMonsterFreezeStep(2600, 1000), { remainingMs: 1600, isFrozen: true });
+  assert.deepEqual(resolveMonsterFreezeStep(100, 100), { remainingMs: 0, isFrozen: false });
+  assert.throws(() => resolveMonsterFreezeStep(100, -1), /INVALID_MONSTER_FREEZE_STEP/);
+});
+
+test("Phaser registers Snow Thrower assets and freezes monsters without HP damage", () => {
+  assert.match(scene, /snow-thrower-level-1/);
+  assert.match(scene, /snow-thrower-bomb-level-1/);
+  assert.match(scene, /frozen-hyena-level-1/);
+  assert.match(scene, /freezeMonster\(hit, shot\.freezeDurationMs\)/);
+  assert.match(scene, /restoreMonsterAfterFreeze/);
 });
