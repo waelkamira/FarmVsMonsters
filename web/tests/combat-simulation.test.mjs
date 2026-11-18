@@ -419,7 +419,7 @@ test("monster freeze timer immobilizes for 2600ms and then thaws", () => {
 
 test("Phaser registers Snow Thrower assets and freezes monsters without HP damage", () => {
   assert.match(scene, /snow-thrower-level-1/);
-  assert.match(scene, /Snow-thrower-bomb-level-1\\.png/);
+  assert.match(scene, /Snow-thrower-bomb-level-1\.png/);
   assert.match(scene, /frozen-hyena-level-1/);
   assert.match(scene, /freezeMonster\(hit, shot\.freezeDurationMs\)/);
   assert.match(scene, /restoreMonsterAfterFreeze/);
