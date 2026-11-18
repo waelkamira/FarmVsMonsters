@@ -22,7 +22,7 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Install Godot 4.4.1 and Web export templates
+      - name: Install Godot 4.7.2 and Web export templates
         uses: chickensoft-games/setup-godot@v1
         with:
           version: 4.7.2
