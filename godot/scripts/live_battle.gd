@@ -273,6 +273,10 @@ func _make_sheet_sprite(texture_path: String, columns: int, rows: int, fps: floa
 		frames.set_animation_speed("attack", fps)
 		frames.set_animation_loop("attack", false)
 		var cell_size := texture.get_size() / Vector2(float(columns), float(rows))
+		if texture_path.ends_with("pineapple-level-1.png"):
+			cell_size = Vector2(418.0, 418.0)
+		elif texture_path.ends_with("hazelnut-level-1.png"):
+			cell_size = Vector2(341.0, 341.0)
 		for index in range(columns * rows):
 			var atlas := AtlasTexture.new()
 			atlas.atlas = texture
