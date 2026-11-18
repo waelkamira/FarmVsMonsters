@@ -1,39 +1,30 @@
-# Local browser testing (Windows / Chrome / Edge)
+# Local browser testing (Windows / Google Chrome)
 
-## Current testing policy
+## Development rule
 
-The game is **not to be published or deployed online during development**. Keep the GitHub repository private. Do not use GitHub Pages, Cloudflare Pages, or another public hosting service.
+Develop the game in this Godot project. Test every gameplay change in Google Chrome on the Windows computer using a Web export from this same project. Do not publish the game online. Do not create an APK until the game is complete and browser-tested.
 
-The browser build is exported from this same Godot project. The final Android APK will also be exported from this project after gameplay, touch controls, landscape layout, offline behavior and device performance have been validated. Do not create a separate browser-only game implementation.
+## One-time setup
 
-## Download the prebuilt browser package
+1. Install the Godot version used by this project and its matching Web export templates. In Godot, use **Editor > Manage Export Templates** and install the templates matching the editor version.
+2. Open this project by selecting the `godot` folder (the folder containing `project.godot`).
+3. Open **Project > Export**. Select the existing **Web** preset. If the preset is missing, add a Web preset.
+4. Export the project to `godot/build/index.html`. Keep the default preset options, including single-threaded Web export.
 
-The GitHub Actions workflow `.github/workflows/godot-web.yml` builds the Web export and stores it as a private workflow artifact named `farm-vs-monsters-web-local`.
+## Each time you want to test an updated game
 
-1. Sign in to GitHub and open the private repository's **Actions** tab.
-2. Open the latest successful **Godot Web local test build** run for the current `main` branch.
-3. In the run's **Artifacts** section, download `farm-vs-monsters-web-local`.
-4. Extract `farm-vs-monsters-web-local.zip` into a folder on the Windows computer. The extracted folder should contain `index.html` and the Godot Web export files.
+1. Pull the latest changes from the repository's `main` branch.
+2. Open the `godot` project in Godot and allow the editor to finish importing resources.
+3. Choose **Project > Export**, select **Web**, and export to `build/index.html`, replacing the previous export.
+4. Double-click `OPEN_IN_CHROME.bat` in the `godot` folder.
+5. Chrome opens `http://127.0.0.1:8000`. The game is served only from your own computer. Keep the command window open while testing; close it to stop the local server.
 
-If the run is queued or failed, or the Artifacts section is empty, no browser package is available yet. Do not try to open a missing or incomplete export.
+The batch file expects Python's Windows launcher (`py`) to be installed. It checks that the Web export exists before starting the server. Do not open `index.html` directly from File Explorer; Web exports must be served over HTTP.
 
-## Run locally
+## Automated browser artifact (optional)
 
-1. Install Python 3 if it is not already available. Godot is **not** required on the Windows computer when using the prebuilt artifact.
-2. Open PowerShell in the extracted folder (the folder containing `index.html`).
-3. Run:
+The private GitHub Actions workflow can also create a downloadable artifact named `farm-vs-monsters-web-local`. Use it only when a successful run has actually produced an artifact. A failed or blocked run does not provide a build.
 
-   ```powershell
-   py -m http.server 8000
-   ```
+## Android release
 
-4. Open `http://localhost:8000` in Chrome or Edge.
-5. Keep the PowerShell window open while testing. Stop the server with Ctrl+C.
-
-Do not open `index.html` directly from File Explorer; Godot Web exports must be served over HTTP. This is a local-only test and does not publish the game to the internet.
-
-## Build and release path
-
-The automated workflow uses Godot 4.4.1 and the Web export preset. If a build fails before producing an artifact, inspect the GitHub Actions run and resolve the runner/build problem before claiming the package is ready.
-
-When the game is complete, validate Android touch input, landscape orientation, performance, offline operation and device compatibility, then export and sign the complete APK from this same Godot project. No online browser deployment is part of the current development plan.
+Do not create an APK during normal development. After gameplay and browser testing are complete, validate Android controls, landscape layout, offline behavior and performance, then export and sign the APK from this same Godot project.
