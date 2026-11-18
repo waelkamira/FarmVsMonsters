@@ -68,6 +68,13 @@ test("menus and account controls use high-contrast text and visible focus states
 });
 
 
+test("account UI clearly explains that current local progress is shared on this browser, not account-isolated", () => {
+  assert.match(accountPage, /مشترك بين جلسات المستخدمين/);
+  assert.match(accountPage, /shared by users of this browser/);
+  assert.match(accountPage, /مساحة الجهاز المشتركة/);
+  assert.match(accountPage, /shared browser storage/);
+});
+
 test("playing as a guest never requires authentication and keeps local progress", () => {
   assert.match(home, /href="\/stages"/);
   assert.match(home, /اختياري|Optional/);
