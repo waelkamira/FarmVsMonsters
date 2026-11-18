@@ -1,6 +1,7 @@
 extends SceneTree
 
 const Rules = preload("res://scripts/phase_one_rules.gd")
+const LiveBattle = preload("res://scripts/live_battle.gd")
 
 func _initialize() -> void:
 	_test_contract_and_plant_costs()
@@ -8,6 +9,7 @@ func _initialize() -> void:
 	_test_plant_transactions()
 	_test_lane_and_target_selection()
 	_test_cooldowns_and_dust_skitter()
+	_test_farmer_planting_route_geometry()
 	print("Godot Stage 1 combat-core smoke tests passed.")
 	quit(0)
 
@@ -91,6 +93,21 @@ func _test_lane_and_target_selection() -> void:
 	assert(Rules.select_farmer_melee_target([melee], 2, 100.0, 10.0) == melee)
 	var weak: Dictionary = {"hp": 12.0, "alive": true}
 	assert(Rules.select_dragon_fireball_target([{"hp": 30.0, "alive": true}, weak]) == weak)
+
+func _test_farmer_planting_route_geometry() -> void:
+	var battle = LiveBattle.new()
+	battle._load_grid_calibration()
+	assert(battle.grid_nodes.size() == Rules.BOARD_ROWS + 1)
+	var samples := [
+		Vector2(0.08, 0.12), Vector2(0.5, 0.5), Vector2(0.92, 0.88),
+		Vector2(-0.32, 0.5), Vector2(1.18, 0.72)
+	]
+	for coordinate in samples:
+		var source_point: Vector2 = battle._board_point(coordinate.x, coordinate.y)
+		var recovered: Vector2 = battle._board_coordinates(source_point)
+		assert(absf(recovered.x - coordinate.x) < 0.002)
+		assert(absf(recovered.y - coordinate.y) < 0.002)
+	battle.free()
 
 func _test_cooldowns_and_dust_skitter() -> void:
 	var bite: Dictionary = Rules.resolve_bite_attack(40.0, 50.0, 900.0)
