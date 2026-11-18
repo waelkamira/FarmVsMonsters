@@ -1936,3 +1936,197 @@ select option {
 .seed-select-start { background:linear-gradient(#d8f08d,#7fb44d); color:#203315; }
 @media(max-width:760px) { .seed-select-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:11px; } .seed-select-card { min-height:180px; } }
 @media(max-width:380px) { .seed-select-panel { padding:18px 12px; } .seed-select-card { min-height:165px; padding:10px 6px; } .seed-select-art { width:70px; height:68px; } .seed-select-card strong { font-size:13px; } }
+
+
+/* =========================================================
+   FARM VS MONSTERS — unified timber / stone / parchment skin
+   Applied across menus, collections, campaign map and setup UI.
+   Gameplay canvas remains untouched.
+   ========================================================= */
+:root {
+  --fv-ink:#3e240c;
+  --fv-ink-soft:#684523;
+  --fv-parchment:#f6eedc;
+  --fv-parchment-deep:#dfc99f;
+  --fv-wood:#8b5a2b;
+  --fv-wood-deep:#3e240c;
+  --fv-wood-mid:#6b421c;
+  --fv-stone:#7c7d78;
+  --fv-stone-deep:#323330;
+  --fv-leaf:#4f8d2e;
+  --fv-gold:#f4d58b;
+}
+html,body {
+  background-color:#2b2117;
+}
+body {
+  background:
+    radial-gradient(ellipse at 50% -18%,#9b7547 0,transparent 48%),
+    repeating-linear-gradient(132deg,#2b2117 0 13px,#302519 13px 26px);
+}
+:where(.info-shell,.stages-card,.stage-intro-card,.account-card,.collection-shell,.seed-select-shell) {
+  color:var(--fv-ink);
+}
+:where(.info-card,.stages-card,.stage-intro-card,.account-card,.collection-panel,.collection-wallet,.seed-select-panel) {
+  border:6px solid var(--fv-wood-deep);
+  border-radius:19px;
+  background:
+    radial-gradient(ellipse at 50% 0,#fff9e9aa,transparent 75%),
+    linear-gradient(145deg,#f6eedc 0%,#e8d8b8 58%,#d6bd91 100%);
+  color:var(--fv-ink);
+  box-shadow:inset 0 2px 0 #fff9e8,inset 0 0 0 3px #b98a51,inset 0 0 24px #8b653822,0 10px 0 #29180d,0 20px 48px #120b0788;
+}
+:where(.info-card h1,.info-card h2,.stages-card h1,.stage-intro-card h1,.account-card h1,.collection-panel h1,.seed-select-panel h1) {
+  color:#60391b;
+  text-shadow:0 1px 0 #fff4d8;
+}
+:where(.info-card p,.info-card li,.collection-intro,.account-intro,.seed-select-intro) {
+  color:#604426;
+  text-shadow:none;
+}
+:where(.info-card .eyebrow,.collection-intro strong) { color:#80552b; }
+:where(.farm-main-menu,.campaign-map-heading,.campaign-world-card,.campaign-map-footer) {
+  border:6px solid var(--fv-wood-deep);
+  border-radius:20px;
+  background:
+    repeating-linear-gradient(4deg,transparent 0 22px,#3e240c0c 22px 24px),
+    linear-gradient(180deg,#a97845 0%,#80512d 48%,#5a351d 100%);
+  color:#fff0cf;
+  box-shadow:inset 0 2px 0 #f6d69b88,inset 0 -5px 0 #321d0d88,0 8px 0 #29180d,0 18px 35px #160d08aa;
+}
+.farm-main-menu:before { border-color:#e4c18b88; }
+.farm-menu-brand { border-bottom-color:#f2d39b66; }
+.farm-menu-kicker,.farm-menu-footer { color:#ffe7b8; }
+.farm-main-menu .home-game-title { color:#fff6df; }
+.farm-main-menu .home-game-title span { color:#f9d36f; }
+.farm-main-menu .home-game-tagline { color:#fff0d1; }
+.farm-menu-option {
+  border:3px solid #3e240c;
+  border-radius:12px;
+  background:linear-gradient(180deg,#f6eedc,#d8c096);
+  color:#4a2e12;
+  box-shadow:inset 0 2px 0 #fff9e8,0 4px 0 #38210e;
+}
+.farm-menu-option small { color:#76502c; }
+.farm-menu-option>span { background:#fff8e6; }
+.farm-menu-play {
+  border:3px solid #234719;
+  background:linear-gradient(180deg,#82c94d,#3f842e);
+  box-shadow:inset 0 2px 0 #ffffff88,0 5px 0 #24491b;
+}
+:where(.campaign-map-heading,.campaign-world-card,.campaign-map-footer) {
+  background:
+    repeating-linear-gradient(90deg,transparent 0 36px,#6a41110a 36px 38px),
+    linear-gradient(145deg,#f6eedc,#dfc99f 72%,#c9aa76);
+  color:#4a2e12;
+}
+.campaign-map-heading h1,.campaign-world-copy h2 { color:#fff3d4; text-shadow:0 2px 0 #68401e,0 4px 0 #3e240c; }
+.campaign-map-heading>p,.campaign-world-subtitle,.campaign-world-description,.campaign-map-footer p { color:#604426!important; }
+.campaign-world-kicker { color:#80552b; }
+.campaign-mission-track {
+  border:4px solid #3e240c;
+  background:linear-gradient(180deg,#789d4d,#426b32);
+  box-shadow:inset 0 2px 0 #d9efaa,0 5px 0 #2c4c24;
+}
+.campaign-mission-node {
+  border-color:#6b421c;
+  background:linear-gradient(145deg,#fff6df,#d9bd88);
+  color:#4a2e12;
+  box-shadow:inset 0 2px 0 #fff,0 4px 0 #543419;
+}
+.campaign-mission-node.is-playable {
+  border-color:#fff0b7;
+  background:linear-gradient(#ffe98a,#e4a83d);
+  color:#59320e;
+}
+.campaign-mission-node.is-locked {
+  background:linear-gradient(#aaa9a0,#686a64);
+  color:#fff;
+}
+.campaign-map-legend {
+  border:3px solid #6b421c;
+  background:linear-gradient(#f6eedc,#dfc99f);
+  color:#4a2e12;
+}
+:where(.seed-select-panel,.seed-select-loadout) {
+  border-color:#3e240c;
+  background:linear-gradient(145deg,#9b6b3c,#694321 60%,#4b2e19);
+  color:#fff0cf;
+}
+.seed-select-panel h1 { color:#fff0cf; text-shadow:0 3px 0 #3e240c; }
+.seed-select-intro,.seed-select-kicker { color:#fff0cf; }
+.seed-select-status {
+  border-color:#3e240c;
+  background:linear-gradient(145deg,#5d3b21,#382414);
+  color:#ffe9b8;
+  box-shadow:inset 0 2px 0 #d5ae7180,0 4px 0 #29180d;
+}
+.seed-select-card {
+  border:3px solid #70451f;
+  border-radius:12px;
+  background:linear-gradient(145deg,#fff8e7,#dfc99f);
+  color:#3e240c;
+  box-shadow:inset 0 2px 0 #fff, inset 0 -3px 0 #b28a53,0 5px 0 #3e240c,0 9px 14px #160d0866;
+}
+.seed-select-card.is-selected {
+  border-color:#3e6d28;
+  background:linear-gradient(145deg,#fff8df,#e8d7a8);
+  box-shadow:inset 0 0 0 2px #fff,0 0 0 3px #7eb34a,0 5px 0 #3e240c;
+}
+.seed-select-card strong { color:#4a2e12; }
+.seed-select-card small { color:#76502c; }
+.seed-select-loadout { border:3px solid #321e0e; background:linear-gradient(#4c301b,#2d1b10); }
+.seed-select-loadout span { border-color:#9b713e; background:#f0dfbd; color:#4a2e12; }
+:where(.primary-link,.secondary-link,.language-toggle,.game-retry-button,.seed-select-secondary,.account-submit) {
+  border:3px solid #3e240c;
+  border-radius:10px;
+  background:linear-gradient(180deg,#f4d99e,#b88950);
+  color:#3e240c;
+  box-shadow:inset 0 2px 0 #fff5d8,0 5px 0 #29180d,0 9px 16px #160d0866;
+  text-shadow:none;
+}
+:where(.primary-link,.secondary-link,.language-toggle,.game-retry-button,.seed-select-secondary,.account-submit):active {
+  transform:translateY(3px);
+  box-shadow:inset 0 2px 0 #fff5d8,0 2px 0 #29180d;
+}
+:where(.stage-tile,.collection-card,.stage-cast-placeholder,.stage-briefing div) {
+  border:3px solid #70451f;
+  border-radius:13px;
+  background:linear-gradient(145deg,#fff4d9,#d9c096);
+  color:#4a2e12;
+  box-shadow:inset 0 2px 0 #fff,0 4px 0 #3e240c;
+}
+.stage-tile h2,.stage-tile p,.stage-number,.stage-briefing strong,.stage-briefing span { color:#4a2e12; text-shadow:none; }
+.stage-art-placeholder,.stage-intro-emblem {
+  border:3px dashed #8b5a2b;
+  border-radius:13px;
+  background:radial-gradient(ellipse,#f8efd9,#cbb184);
+  color:#70451f;
+}
+:where(.collection-wallet,.collection-card) { color:#4a2e12; }
+:where(.account-form input,.account-signed-in,.account-feedback,.account-security,.account-status) {
+  border-color:#8b5a2b;
+  background:linear-gradient(145deg,#fff8e8,#e4d1aa);
+  color:#3e240c;
+}
+.account-form label,.account-signed-in strong,.account-signed-in p,.account-email { color:#4a2e12; }
+.account-form input::placeholder { color:#8b7354; }
+:where(.game-header,.game-panel) {
+  border-color:#3e240c;
+  background:linear-gradient(180deg,#8b5a2b,#57371f);
+  box-shadow:inset 0 2px 0 #e8c68b,0 7px 0 #29180d,0 14px 28px #0008;
+}
+.game-header .wordmark { color:#fff0cf; }
+.game-panel { border-radius:14px; }
+:where(button,a,[role="button"],input,select):focus-visible {
+  outline:3px solid #f5d98f;
+  outline-offset:3px;
+}
+@media(max-width:760px) {
+  .farm-main-menu { border-width:5px; }
+  .campaign-map-heading,.campaign-world-card,.campaign-map-footer { border-width:4px; }
+  .seed-select-panel { border-width:5px; }
+}
+@media(prefers-reduced-motion:reduce) {
+  *,*::before,*::after { scroll-behavior:auto!important; transition-duration:.01ms!important; animation-duration:.01ms!important; animation-iteration-count:1!important; }
+}
