@@ -208,7 +208,7 @@ func _update_monsters(delta: float, delta_ms: float) -> void:
 		monster.x = float(monster.x) - float(monster.speed) * delta
 		if float(monster.x) <= HOUSE_X:
 			game_state = "defeat"
-			status_label.text = "The farmhouse has been overrun. Restart the battle to try again."
+			status_label.text = "The farmhouse has been overrun. Return to the main menu to start a new battle."
 			return
 
 func _find_blocker(monster: Dictionary) -> Dictionary:
