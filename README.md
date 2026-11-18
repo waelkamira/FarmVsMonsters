@@ -1,47 +1,51 @@
-# Farm Vs Monsters
+# FARM VS MONSTERS — Godot project
 
-لعبة دفاع ومزرعة **ثنائية الأبعاد فقط (2D)** بأسلوب كرتوني مرسوم يدوياً وشخصيات أصلية.
+Android-first, offline, single-player Godot 4 project. The Phaser client and legacy Unity source remain intact as migration references.
 
-## الاتجاه التقني المعتمد — 2026-11-18
+## Current status
 
-- **المحرك المعتمد للنسخة النهائية:** Godot 4.x باستخدام GDScript.
-- **المنصة الأولى:** Android، مع تشغيل كامل دون اتصال بالإنترنت (Offline Single-Player).
-- **اتجاه العرض:** أفقي (Landscape)، مع دعم نسب شاشات الهواتف المختلفة ومناطق الأمان.
-- **خطة الترحيل:** [GODOT_ANDROID_MIGRATION_PLAN.md](Documentation/GODOT_ANDROID_MIGRATION_PLAN.md).
-- **النسخة الحالية من الويب:** Next.js + React + Phaser 3 داخل `web/`؛ مرجع مؤقت لقواعد اللعب والسلوك والواجهات والأصول أثناء الترحيل، وليست محرك الإصدار النهائي.
-- **نسخة Unity القديمة:** محفوظة كمرجع إضافي. لا نحذف أو نعدّل النسخ المرجعية بشكل هدّام قبل نقل الأنظمة والتحقق منها في Godot.
+The project has a first playable Stage 1 combat loop and now imports approved source artwork into `godot/assets/` without modifying the originals:
 
-تتم عملية الانتقال تدريجياً على فرع `migration/godot4-android`، مع إبقاء `main` والنسخ القديمة سليمة حتى تثبت النسخة الجديدة تكافؤها الوظيفي.
+- Farmer idle, walk, run, planting, uproot, jump, hit, death and club-attack sheets are connected. Press J or tap JUMP to play the original five-frame jump when the Farmer is free; the jump also avoids a monster bite during its animation. The Farmer has 180 HP; monsters can bite him when they reach him in the same lane, hits grant 700 ms of damage protection, the original hit reaction plays when available, and lethal damage triggers the death animation and defeat. The UPROOT mode lets the player tap a planted defender, play the original uproot animation and recover its configured planting-energy cost. A successful planting action plays the original six-frame bend/recovery animation and returns to the current locomotion state when it finishes. The Farmer can move with WASD/arrow keys or the enlarged on-screen D-pad; touch movement uses the slower walk animation. The landscape battle HUD uses a two-row plant selector with a visible selected state, compact resource/wave readouts, and a Farmer health percentage plus an overhead health bar. Touch direction state is cleared when the app/window loses focus so a held movement input cannot remain stuck. Press Space or the on-screen CLUB button for emergency melee after at least one defender has been planted and every living Radish has been lost.
+- Hyena idle, walk, run, bite, hit and death sheets are connected as animation states. Dust Skitter uses the faster run sheet and now performs the canonical short speed bursts with trailing dust puffs; jumping remains disabled, matching the active Phaser runtime. Stonehide displays a shale brace ring while biting and retains its reduced incoming-damage multiplier. Monsters switch to bite when stopped at a plant, play hit reactions on damage and play their defeat animation before removal. A reusable freeze status now pauses a monster's movement and attacks for 2.6 seconds, restores its original tint on expiry, and selects projectile targets using each monster's width scale so small and large bodies get appropriate collision reach; the Snow Thrower is not yet wired because its source asset has not been identified.
+- Radish, Pineapple, Hazelnut and Mango sheets are sliced into a resting frame plus an attack sequence. The attack sequence plays when the plant launches a projectile.
+- Mushroom and Pumpkin use their approved static character artwork.
+- Radish, Pineapple, Hazelnut and Mango projectile textures are connected to their matching plant launchers.
+- Existing gameplay remains: 8×5 placement, configured energy costs, plant firing, visible Mushroom energy-orb production and touch collection with the Farmer’s six-frame collect animation, projectile damage, monster movement and biting, five waves, rewards, victory and defeat.
 
-## خارطة التطوير ومراحل الإنجاز
+The original artwork remains in `web/public/assets/`; the Godot copies point to the same Git blob contents. See `ASSET_IMPORT.md` for source mapping and frame assumptions.
 
-المرجع الاستراتيجي الأعلى لبناء اللعبة وعوامل النجاح العشرة ومراحلها الكاملة هو [GLOBAL_GAME_SUCCESS_MASTER_PLAN.md](Documentation/GLOBAL_GAME_SUCCESS_MASTER_PLAN.md). أما تفاصيل مراحل الترحيل ومعايير قبول Android فتوجد في [GODOT_ANDROID_MIGRATION_PLAN.md](Documentation/GODOT_ANDROID_MIGRATION_PLAN.md). وتبقى [GAME_DEVELOPMENT_ROADMAP.md](Documentation/GAME_DEVELOPMENT_ROADMAP.md) و[NEW_GAMEPLAY_RULES_2D.md](Documentation/NEW_GAMEPLAY_RULES_2D.md) مرجعين لمتطلبات اللعبة وقواعدها، على أن تكون أولوية المحرك والمنصة لخطة Godot الأحدث ولقرارات مالك المشروع الأخيرة. لا تُعد أي مرحلة منتهية قبل اجتياز معايير قبولها واختبارها فعلياً.
+- Fourteen CC0 OGG sound effects are imported unchanged and played through an eight-voice SFX pool: planting, footsteps, monster bites/hits/defeat, projectile launch, energy/coin reward, and battle outcomes. Their source and license notes are retained under `assets/audio/sfx/LICENSES.md`.
 
-## قواعد اللعب المعتمدة
+## Known visual limitations
 
-- النباتات ثابتة في خلاياها؛ تتنفس بهدوء وتهاجم من موضعها وفق طبيعتها، ولا تمشي أبداً.
-- الوحوش هي التي تتقدم عبر المسارات. حركتها الأولى بطيئة وثقيلة ومتعرجة، وتزداد سرعتها تدريجياً مع المراحل.
-- رجل الكهف يزرع النباتات ويرعى المزرعة. لا يهاجم الوحوش ما دامت هناك نبتة مدافعة حية.
-- عند موت آخر نبتة مدافعة يبدأ وضع الطوارئ، ويقاتل رجل الكهف بالعصا فقط.
-- إذا زُرعت نبتة جديدة بنجاح، يعود الدفاع النباتي ويتوقف قتال رجل الكهف.
-- المنزل والأميرة في نهاية المزرعة المحمية، والوحوش تدخل من الطرف المقابل.
+- The approved farm battlefield background and 8×5 perspective mesh are now used. Cell taps are resolved against the 40 calibrated soil polygons; plants, monsters and projectiles follow perspective lanes and scale with row depth.
+- The Pineapple and Hazelnut sheets use their exact Phaser frame contracts (418×418 and 341×341 respectively); the Godot visual result still needs runtime review.
+- Farmer planting now follows the Phaser-style walk-to-cell route across the calibrated perspective mesh, plays the authored planting action, then runs back to the exact starting position and facing. The route geometry is covered by round-trip tests for points inside and outside the board. Jump, hit and death interactions are now wired into the Godot runtime; Farmer health and monster-bite lane detection still require hands-on gameplay balancing. Mushroom energy orbs expire after 18 seconds if left uncollected. The Phaser version remains the reference for those mechanics.
+- The same Hyena base art is temporarily reused for all four monster archetypes, with tint and size differences; this is not a final character-art pass. Frozen Hyena level 1/2 PNG sources are imported but their atlas layout has not yet been confirmed, so the current freeze effect uses a temporary tint rather than substituting an unverified animation sheet. Monster-jump and monster-land audio are imported but unused while canonical jumping is disabled; plant-rustle now plays during manual uprooting.
 
-التفاصيل الملزمة في `Documentation/NEW_GAMEPLAY_RULES_2D.md`، مع مراعاة أي قرار أحدث صادر عن مالك المشروع.
+## Open in Godot
 
-## النسخة المرجعية الحالية
+1. Install a stable Godot 4.x editor.
+2. Import this folder by selecting `project.godot`.
+3. Run the project to open the main menu.
+4. Select **Start Stage 1 — Live Combat**.
 
-لتشغيل نموذج الويب المرجعي (ليس إصدار اللعبة المستهدف):
+The project is configured for a 1280×720 landscape canvas and the Compatibility renderer. The exact Godot patch version and Android export template/toolchain still need a local validation pass.
 
-```bash
-cd web
-npm install
-npm run dev
+## Tests
+
+Run the resource import once, then the asset and rule smoke tests:
+
+```sh
+godot --headless --editor --path godot --quit
+godot --headless --path godot --script res://tests/test_asset_manifest.gd
+godot --headless --path godot --script res://tests/test_phase_one_rules.gd
+godot --headless --path godot --script res://tests/test_phase_one_combat_core.gd
 ```
 
-ثم افتح `http://localhost:3000`.
+The GitHub Actions workflow runs these checks on Godot pull requests and pushes to `main` or `migration/**` branches. Godot 4.x is not available in the current development environment, so no local engine run or Android export/device test is claimed.
 
-النموذج الحالي يستخدم Next.js وPhaser 3 للتحقق من أجزاء من منطق اللعب. تبقى قواعده وأصوله مرجعاً عند نقل الأنظمة إلى Godot، ولا يُعد بديلاً عن اختبار نسخة Android النهائية.
+## Audio and future art
 
-## سياسة الحفاظ على النسخ القديمة
-
-توجد أنظمة Phaser/JavaScript وUnity/C# سابقة في المستودع. تستخدم كمرجع للبيانات والسلوك والأصول والاختبارات. لا تحذف أو تستبدل ملفاتها أثناء الترحيل قبل توثيق النظام المقابل في Godot والتحقق منه عملياً.
+The imported sound effects are CC0-1.0; see `assets/audio/sfx/LICENSES.md` for the source packs and license record. The OGG payloads are copied unchanged. Do not assume every design contract has a matching production-ready image file.
