@@ -45,6 +45,11 @@ const PLANTS: Dictionary = {
 	"mango": {
 		"projectile_damage": 40, "projectile_speed": 275.0, "projectile_collision_radius": 24.0,
 		"planting_energy_cost": 70, "hp": 130, "cooldown_ms": 2100.0, "range": 360.0
+	},
+	"snow-thrower": {
+		"freeze_projectile": true, "projectile_speed": 300.0, "projectile_collision_radius": 28.0,
+		"freeze_duration_ms": MONSTER_FREEZE_DURATION_MS,
+		"planting_energy_cost": 90, "hp": 150, "cooldown_ms": 3600.0, "range": 360.0
 	}
 }
 
