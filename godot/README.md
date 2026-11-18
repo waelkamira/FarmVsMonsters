@@ -19,7 +19,7 @@ The original artwork remains in `web/public/assets/`; the Godot copies point to 
 
 - The approved farm battlefield background and 8×5 perspective mesh are now used. Cell taps are resolved against the 40 calibrated soil polygons; plants, monsters and projectiles follow perspective lanes and scale with row depth.
 - The Pineapple and Hazelnut sheets use their exact Phaser frame contracts (418×418 and 341×341 respectively); the Godot visual result still needs runtime review.
-- Farmer hit/death reactions and the dedicated uproot animation remain future integration work; uprooting currently follows the Phaser instant-removal behavior.
+- Farmer hit/death reactions and a dedicated uproot animation remain future integration work; uprooting currently removes the plant immediately and refunds its full energy cost.
 - The same Hyena base art is temporarily reused for all four monster archetypes, with tint and size differences; this is not a final character-art pass.
 
 ## Open in Godot
