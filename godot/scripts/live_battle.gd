@@ -695,6 +695,11 @@ func _spawn_monster() -> void:
 		"speed": float(profile.speed), "width_scale": float(profile.width_scale),
 		"plant_damage": float(profile.plant_damage), "attack_interval_ms": float(profile.attack_interval_ms),
 		"attack_cooldown_ms": 0.0, "incoming_damage_multiplier": float(profile.incoming_damage_multiplier),
+		"burst_cooldown_ms": rng.randf_range(float(profile.get("initial_burst_cooldown_min_ms", 0.0)), float(profile.get("initial_burst_cooldown_max_ms", 0.0))) if archetype == "dust-skitter" else 0.0,
+		"burst_remaining_ms": 0.0, "burst_duration_ms": float(profile.get("burst_duration_ms", 0.0)),
+		"burst_speed_multiplier": float(profile.get("burst_speed_multiplier", 1.0)),
+		"burst_cooldown_min_ms": float(profile.get("burst_cooldown_min_ms", 0.0)),
+		"burst_cooldown_max_ms": float(profile.get("burst_cooldown_max_ms", 0.0)), "burst_fx_ms": 0.0,
 		"braced": false, "alive": true
 	})
 	status_label.text = "%s incoming — wave %d." % [archetype.replace("-", " ").capitalize(), wave]
@@ -754,6 +759,7 @@ func _update_monsters(delta: float, delta_ms: float) -> void:
 	for monster in monsters:
 		if not monster.alive:
 			continue
+		monster.burst_fx_ms = maxf(0.0, float(monster.get("burst_fx_ms", 0.0)) - delta_ms)
 		var row := int(monster.row)
 		var lane_step := absf(_to_screen(_lane_point(float(monster.local_x) + 1.0, row)).x - _to_screen(_lane_point(float(monster.local_x), row)).x)
 		var monster_half_width := 360.0 * 0.22 * float(monster.depth_scale) * float(monster.width_scale) * 0.5
@@ -793,7 +799,8 @@ func _update_monsters(delta: float, delta_ms: float) -> void:
 					status_label.text = "%s was destroyed!" % str(blocker.type).capitalize()
 			continue
 		monster.braced = false
-		monster.local_x = float(monster.local_x) - float(monster.speed) * delta
+		var movement_multiplier := _update_dust_skitter_burst(monster, delta_ms)
+		monster.local_x = float(monster.local_x) - float(monster.speed) * movement_multiplier * delta
 		var monster_position := _to_screen(_lane_point(float(monster.local_x), row))
 		monster.x = monster_position.x
 		monster.y = monster_position.y
@@ -809,6 +816,31 @@ func _update_monsters(delta: float, delta_ms: float) -> void:
 			_play_sfx("defeat")
 			status_label.text = "The farmhouse has been overrun. Return to the main menu to start a new battle."
 			return
+
+func _update_dust_skitter_burst(monster: Dictionary, delta_ms: float) -> float:
+	if str(monster.kind) != "dust-skitter":
+		return 1.0
+	var burst_will_start := float(monster.burst_cooldown_ms) - delta_ms <= 0.0 and float(monster.burst_remaining_ms) <= 0.0
+	var next_burst_cooldown: Variant = null
+	if burst_will_start:
+		next_burst_cooldown = rng.randf_range(float(monster.burst_cooldown_min_ms), float(monster.burst_cooldown_max_ms))
+	var motion := Rules.resolve_dust_skitter_motion_step({
+		"is_jumping": false,
+		"enable_jump": false,
+		"delta_ms": delta_ms,
+		"burst_cooldown_ms": float(monster.burst_cooldown_ms),
+		"burst_remaining_ms": float(monster.burst_remaining_ms),
+		"burst_duration_ms": float(monster.burst_duration_ms),
+		"burst_speed_multiplier": float(monster.burst_speed_multiplier),
+		"next_burst_cooldown_ms": next_burst_cooldown
+	})
+	if motion.is_empty():
+		return 1.0
+	monster.burst_cooldown_ms = float(motion.burst_cooldown_ms)
+	monster.burst_remaining_ms = float(motion.burst_remaining_ms)
+	if bool(motion.burst_started):
+		monster.burst_fx_ms = 300.0
+	return float(motion.movement_multiplier)
 
 func _find_blocker(monster: Dictionary, max_overshoot: float) -> Dictionary:
 	var nearest: Dictionary = {}
@@ -905,7 +937,16 @@ func _draw() -> void:
 		draw_rect(Rect2(plant.x - bar_width * 0.5, bar_y, bar_width, 5.0 * depth_scale), Color("#263b2e"), true)
 		draw_rect(Rect2(plant.x - bar_width * 0.5, bar_y, bar_width * float(plant.hp) / plant_hp_max, 5.0 * depth_scale), Color("#77d477"), true)
 	for monster in monsters:
-		var radius := 34.0 * float(monster.width_scale) * float(monster.depth_scale)
+		var depth_scale := float(monster.depth_scale)
+		if str(monster.kind) == "dust-skitter" and float(monster.get("burst_fx_ms", 0.0)) > 0.0:
+			var dust_alpha := clampf(float(monster.burst_fx_ms) / 300.0, 0.0, 1.0) * 0.55
+			draw_circle(Vector2(monster.x - 18.0 * depth_scale, monster.y + 12.0 * depth_scale), 10.0 * depth_scale, Color(0.82, 0.78, 0.66, dust_alpha))
+			draw_circle(Vector2(monster.x - 32.0 * depth_scale, monster.y + 15.0 * depth_scale), 6.0 * depth_scale, Color(0.82, 0.78, 0.66, dust_alpha * 0.8))
+		if str(monster.kind) == "stonehide" and bool(monster.braced):
+			var brace_radius := 44.0 * depth_scale * float(monster.width_scale)
+			draw_arc(Vector2(monster.x, monster.y + 6.0 * depth_scale), brace_radius, deg_to_rad(198.0), deg_to_rad(342.0), 28, Color("#d8d0b5"), 3.0 * depth_scale, true)
+			draw_arc(Vector2(monster.x, monster.y + 6.0 * depth_scale), brace_radius + 5.0 * depth_scale, deg_to_rad(205.0), deg_to_rad(335.0), 24, Color("#a9a18b"), 2.0 * depth_scale, true)
+		var radius := 34.0 * float(monster.width_scale) * depth_scale
 		draw_rect(Rect2(monster.x - radius, monster.y - radius - 12.0 * float(monster.depth_scale), 2.0 * radius, 5.0 * float(monster.depth_scale)), Color("#263b2e"), true)
 		draw_rect(Rect2(monster.x - radius, monster.y - radius - 12.0 * float(monster.depth_scale), 2.0 * radius * float(monster.hp) / float(monster.max_hp), 5.0 * float(monster.depth_scale)), Color("#e66b61"), true)
 	if game_state != "running":
