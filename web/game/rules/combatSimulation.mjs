@@ -145,6 +145,18 @@ export function resolveMonsterLaneStep({
   });
 }
 
+export function resolveMonsterFreezeStep(remainingMs, deltaMs) {
+  if (!Number.isFinite(remainingMs) || remainingMs < 0 ||
+      !Number.isFinite(deltaMs) || deltaMs < 0) {
+    throw new RangeError("INVALID_MONSTER_FREEZE_STEP");
+  }
+  const nextRemainingMs = Math.max(0, remainingMs - deltaMs);
+  return Object.freeze({
+    remainingMs: nextRemainingMs,
+    isFrozen: nextRemainingMs > 0
+  });
+}
+
 export function resolveProjectileLaneStep({ localX, speed, deltaSeconds } = {}) {
   if (
     !Number.isFinite(localX) ||
