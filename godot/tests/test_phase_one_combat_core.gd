@@ -73,6 +73,10 @@ func _test_plant_transactions() -> void:
 	assert(Rules.resolve_plant_uproot(100.0, {}).reason == "INVALID_UPROOT_STATE")
 	var pickup: Dictionary = Rules.resolve_energy_pickup(290.0, 15.0)
 	assert(pickup.energy == 300.0 and pickup.collected == 10.0)
+	var no_capacity: Dictionary = Rules.resolve_energy_pickup(300.0, 15.0)
+	assert(no_capacity.energy == 300.0 and no_capacity.collected == 0.0)
+	var partial: Dictionary = Rules.resolve_energy_pickup(295.0, 15.0)
+	assert(partial.energy == 300.0 and partial.collected == 5.0)
 	var damage: Dictionary = Rules.apply_hit_points_damage(10.0, 25.0)
 	assert(damage.hp == 0.0 and damage.damage_applied == 10.0 and damage.defeated)
 
