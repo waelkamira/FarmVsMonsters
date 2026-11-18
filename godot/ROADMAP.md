@@ -4,8 +4,9 @@
 
 - Keep the source repository private.
 - Continue development in Godot 4.
-- Publish browser review builds on a free host that supports private GitHub repositories; Cloudflare Pages is the planned host.
-- Use the browser build for frequent gameplay review during development.
+- Do not publish or deploy the game during development.
+- Build and run the Web export locally on the user's own computer, then test it in a local browser (Chrome/Edge) over localhost.
+- Keep all review builds local and the GitHub source repository private.
 - Maintain one shared Godot project for browser and Android; do not rebuild gameplay separately for APK.
 - Before release, validate Android touch input, landscape orientation, performance, offline operation and device compatibility.
 - Produce and sign the complete Android APK from the same Godot project after the game is complete.
@@ -21,6 +22,6 @@
 
 1. Controlled combat tests and visual asset verification.
 2. Complete the remaining plants, monsters, waves, effects, audio and UI.
-3. Browser builds and iterative review.
+3. Local browser builds and iterative review on the user's computer (no hosting or public deployment).
 4. Android device testing and optimization.
 5. Signed APK release.
