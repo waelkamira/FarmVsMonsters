@@ -298,7 +298,7 @@ export default class BattleScene extends Scene {
     });
     this.refreshHud();
     this.setMessage(this.textures.exists("farm-battlefield")
-      ? "Choose a plant card, then click an empty soil cell. Radish, Pineapple, Hazelnut and Mango attack; Pumpkin blocks."
+      ? "Choose Radish or Energy Mushroom, then click an empty soil cell. Radish defends its lane; Mushroom produces collectible energy."
       : "Temporary farm art active. Choose a plant card, then click an empty soil cell.");
   }
 
