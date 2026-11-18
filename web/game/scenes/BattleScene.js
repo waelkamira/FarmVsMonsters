@@ -3317,8 +3317,6 @@ export default class BattleScene extends Scene {
       sprite.setTexture("frozen-hyena-level-1");
       sprite.setOrigin(0.5, 1);
       sprite.setTint(0x94dcff);
-      const bounds = monster.view.getBounds();
-      sprite.setDisplaySize(Math.max(28, bounds.width * 0.72), Math.max(30, bounds.height * 0.72));
     }
     this.setMessage("SNOW HIT! The hyena is frozen for 2.6 seconds.");
     return true;
