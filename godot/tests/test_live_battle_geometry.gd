@@ -1,5 +1,6 @@
 extends SceneTree
 
+
 var failures := 0
 
 func _initialize() -> void:
@@ -33,7 +34,8 @@ func _run_geometry_checks() -> void:
 			_expect(reconstructed.distance_to(planting_center) < 0.1,
 				"Planting route coordinates must round-trip at row %d, column %d." % [row, column])
 
-	var farmer_start := Vector2(220.0, (battle.call("_grid_cell_center", 0, 2) as Vector2).y)
+	var farmer_lane_center: Vector2 = battle.call("_grid_cell_center", 0, 2)
+	var farmer_start := Vector2(220.0, farmer_lane_center.y)
 	var start_uv: Vector2 = battle.call("_board_coordinates", farmer_start)
 	var reconstructed_start: Vector2 = battle.call("_board_point", start_uv.x, start_uv.y)
 	_expect(reconstructed_start.distance_to(farmer_start) < 0.1,
