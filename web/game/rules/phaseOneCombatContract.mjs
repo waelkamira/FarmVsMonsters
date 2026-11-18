@@ -71,6 +71,11 @@ export const PHASE_ONE_PLANTS = Object.freeze({
   mango: Object.freeze({
     projectileDamage: 40, projectileSpeed: 275, projectileCollisionRadius: 24,
     plantingEnergyCost: 70, hp: 130, cooldownMs: 2100, range: 360
+  }),
+  snowThrower: Object.freeze({
+    freezeProjectile: true, projectileSpeed: 300, projectileCollisionRadius: 28,
+    freezeDurationMs: 2600, plantingEnergyCost: 90, hp: 150,
+    cooldownMs: 3600, range: 360
   })
 });
 
@@ -78,7 +83,7 @@ export const PHASE_ONE_PLANTS = Object.freeze({
 // configured plant automatically makes its placement/uproot events valid.
 // The energy-producing mushroom uses the gameplay/event ID "mushroom".
 export const PHASE_ONE_PLANT_EVENT_TYPES = Object.freeze(
-  Object.keys(PHASE_ONE_PLANTS).map((type) => type === "energyMushroom" ? "mushroom" : type)
+  Object.keys(PHASE_ONE_PLANTS).map((type) => type === "energyMushroom" ? "mushroom" : type === "snowThrower" ? "snow-thrower" : type)
 );
 
 export const PHASE_ONE_FARMER = Object.freeze({

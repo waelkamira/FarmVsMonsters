@@ -134,6 +134,15 @@ export const STAGE_ONE_PLANTS = Object.freeze([
   },
 
   {
+    id: "snow-thrower", assetPath: "/assets/plants/Snow-thrower-level-1.png",
+    name: "Snow Thrower Level 1", nameAr: "قاذف الثلج المستوى الأول",
+    role: "Freeze support", roleAr: "دعم بالتجميد",
+    description: "Launches a snow bomb down its lane, freezing the first monster it hits for 2.6 seconds.",
+    descriptionAr: "يطلق قذيفة ثلجية في مساره وتجمّد أول وحش تصيبه لمدة ٢٫٦ ثانية.",
+    energyCost: 90, coinPrice: 0, status: "active", implemented: true, purchasable: false, image: null,
+    stats: ["150 HP", "2.6 sec freeze", "3600 ms cooldown"], statsAr: ["١٥٠ صحة", "تجميد ٢٫٦ ثانية", "فاصل إطلاق ٣٦٠٠ مللي ثانية"]
+  },
+  {
     id: "pineapple",
     assetPath: "/assets/plants/pineapple-level-1.png",
     name: "Pineapple Level 1",

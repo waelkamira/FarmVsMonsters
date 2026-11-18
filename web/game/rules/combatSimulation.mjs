@@ -11,7 +11,8 @@ const PLANT_RULES = Object.freeze({
   pumpkin: PHASE_ONE_PLANTS.pumpkin,
   pineapple: PHASE_ONE_PLANTS.pineapple,
   hazelnut: PHASE_ONE_PLANTS.hazelnut,
-  mango: PHASE_ONE_PLANTS.mango
+  mango: PHASE_ONE_PLANTS.mango,
+  "snow-thrower": PHASE_ONE_PLANTS.snowThrower
 });
 
 function validEnergy(value) {
@@ -141,6 +142,18 @@ export function resolveMonsterLaneStep({
   return Object.freeze({
     localX: nextLocalX,
     stoppedByPlant: nextLocalX === stopLocalX
+  });
+}
+
+export function resolveMonsterFreezeStep(remainingMs, deltaMs) {
+  if (!Number.isFinite(remainingMs) || remainingMs < 0 ||
+      !Number.isFinite(deltaMs) || deltaMs < 0) {
+    throw new RangeError("INVALID_MONSTER_FREEZE_STEP");
+  }
+  const nextRemainingMs = Math.max(0, remainingMs - deltaMs);
+  return Object.freeze({
+    remainingMs: nextRemainingMs,
+    isFrozen: nextRemainingMs > 0
   });
 }
 

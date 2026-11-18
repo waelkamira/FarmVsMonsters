@@ -11,10 +11,11 @@ const PLANTS = [
   { id: "pumpkin", name: "Pumpkin", ar: "اليقطين", role: "Heavy blocker", roleAr: "حاجز دفاعي", cost: 75, image: "/assets/plants/pumpkin.png" },
   { id: "pineapple", name: "Pineapple L1", ar: "الأناناس L1", role: "Arcing bomb attacker", roleAr: "قاذف قنابل مقوسة", cost: 70, image: "/assets/plants/pineapple-level-1.png" },
   { id: "hazelnut", name: "Hazelnut L1", ar: "البندق L1", role: "Arcing bomb attacker", roleAr: "قاذف قنابل مقوسة", cost: 65, image: "/assets/plants/hazelnut-level-1.png" },
-  { id: "mango", name: "Mango L1", ar: "المانجو L1", role: "Arcing bomb attacker", roleAr: "قاذف قنابل مقوسة", cost: 70, image: "/assets/plants/mango-level-1.png" }
+  { id: "mango", name: "Mango L1", ar: "المانجو L1", role: "Arcing bomb attacker", roleAr: "قاذف قنابل مقوسة", cost: 70, image: "/assets/plants/mango-level-1.png" },
+  { id: "snow-thrower", name: "Snow Thrower L1", ar: "قاذف الثلج L1", role: "Freeze support", roleAr: "دعم بالتجميد", cost: 90, image: "/assets/plants/Snow-thrower-level-1.png" }
 ];
 
-const DEFAULT_LOADOUT = ["radish", "mushroom", "pumpkin", "pineapple", "hazelnut", "mango"];
+const DEFAULT_LOADOUT = ["radish", "mushroom", "pumpkin", "pineapple", "hazelnut", "mango", "snow-thrower"];
 const MAX_SEEDS = 7;
 
 export default function StageOneSeedSelectionPage() {
