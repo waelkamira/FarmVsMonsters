@@ -169,6 +169,18 @@ export const PHASE_ONE_MONSTERS = Object.freeze({
     widthScale: 2,
     heightScale: 2,
     wobbleDurationMs: 900
+  }),
+  "frozen-hyena": Object.freeze({
+    hpMultiplier: 1.35,
+    speedMultiplier: 0.78,
+    maxSpeed: 22,
+    plantDamage: 19,
+    attackIntervalMs: 1250,
+    incomingDamageMultiplier: 0.9,
+    freezeResistance: 0.55,
+    widthScale: 1.12,
+    heightScale: 1.08,
+    wobbleDurationMs: 680
   })
 });
 
