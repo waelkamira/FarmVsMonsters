@@ -1,5 +1,6 @@
 extends SceneTree
 
+const Rules = preload("res://scripts/phase_one_rules.gd")
 
 var failures := 0
 
@@ -55,4 +56,3 @@ func _expect(condition: bool, message: String) -> void:
 		failures += 1
 		push_error(message)
 
-const Rules = preload("res://scripts/phase_one_rules.gd")
