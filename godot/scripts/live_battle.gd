@@ -327,10 +327,16 @@ func _cell_at_screen_position(screen_point: Vector2) -> Vector2i:
 	return Vector2i(-1, -1)
 
 func _depth_scale(column: int, row: int) -> float:
-	var polygon := _cell_polygon(column, row)
-	var top_y := (polygon[0].y + polygon[1].y) * 0.5
-	var bottom_y := (polygon[2].y + polygon[3].y) * 0.5
-	var average_cell_height := (grid_nodes[Rules.BOARD_ROWS][0].y - grid_nodes[0][0].y) / float(Rules.BOARD_ROWS)
+	var polygon: Array = _cell_polygon(column, row)
+	var top_left: Vector2 = polygon[0]
+	var top_right: Vector2 = polygon[1]
+	var bottom_right: Vector2 = polygon[2]
+	var bottom_left: Vector2 = polygon[3]
+	var top_y: float = (top_left.y + top_right.y) * 0.5
+	var bottom_y: float = (bottom_right.y + bottom_left.y) * 0.5
+	var board_top_left: Vector2 = grid_nodes[0][0]
+	var board_bottom_left: Vector2 = grid_nodes[Rules.BOARD_ROWS][0]
+	var average_cell_height: float = (board_bottom_left.y - board_top_left.y) / float(Rules.BOARD_ROWS)
 	return clampf((bottom_y - top_y) / average_cell_height, 0.62, 1.42)
 
 func _nearest_row_at_screen_position(screen_point: Vector2) -> int:
