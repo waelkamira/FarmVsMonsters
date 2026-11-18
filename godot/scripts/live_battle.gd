@@ -124,7 +124,7 @@ func _build_ui() -> void:
 	status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	layout.add_child(status_label)
 	_refresh_hud()
-	status_label.text = "Choose a defender, then tap a field cell. Survive all five waves."
+	status_label.text = "Choose a defender and tap a field cell. Move the Farmer with WASD, arrows or the D-pad; the club unlocks when all Radishes are lost."
 	_build_farmer_controls()
 
 func _make_sheet_sprite(texture_path: String, columns: int, rows: int, fps: float,
