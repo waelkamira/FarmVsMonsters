@@ -30,7 +30,8 @@ const PLANT_PROJECTILES := {
 }
 const ANIMATED_PLANT_GRIDS := {
 	"radish": Vector2i(3, 3), "pineapple": Vector2i(3, 3),
-	"hazelnut": Vector2i(3, 3), "mango": Vector2i(3, 3)
+	"hazelnut": Vector2i(3, 3), "mango": Vector2i(3, 3),
+	"snow-thrower": Vector2i(3, 3)
 }
 
 var energy: int = Rules.INITIAL_ENERGY
@@ -730,7 +731,7 @@ func _create_plant_sprite(plant_id: String) -> Node2D:
 		return animated
 	var sprite := Sprite2D.new()
 	sprite.texture = load(texture_path) as Texture2D
-	sprite.scale = Vector2(0.10, 0.10) if plant_id == "snow-thrower" else Vector2(0.14, 0.14)
+	sprite.scale = Vector2(0.14, 0.14)
 	sprite.z_index = 10
 	return sprite
 
