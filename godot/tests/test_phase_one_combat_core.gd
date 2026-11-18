@@ -115,14 +115,17 @@ func _test_monster_freeze_contract() -> void:
 	assert(not expired.is_frozen and expired.remaining_ms == 0.0)
 	assert(Rules.resolve_monster_freeze_step(-1.0, 10.0).is_empty())
 	var battle = LiveBattle.new()
-	var sprite := Sprite2D.new()
-	var monster := {"alive": true, "freeze_remaining_ms": 0.0, "braced": true, "sprite": sprite, "base_tint": Color.WHITE}
-	assert(battle._apply_monster_freeze(monster))
-	assert(monster.freeze_remaining_ms == Rules.MONSTER_FREEZE_DURATION_MS)
-	assert(not monster.braced)
-	assert(sprite.modulate == Rules.MONSTER_FREEZE_TINT)
+	for visual_scale in [Vector2(0.14, 0.14), Vector2(0.44, 0.44)]:
+		var sprite := Sprite2D.new()
+		sprite.scale = visual_scale
+		var monster := {"alive": true, "freeze_remaining_ms": 0.0, "braced": true, "sprite": sprite, "base_tint": Color.WHITE}
+		assert(battle._apply_monster_freeze(monster))
+		assert(monster.freeze_remaining_ms == Rules.MONSTER_FREEZE_DURATION_MS)
+		assert(not monster.braced)
+		assert(sprite.modulate == Rules.MONSTER_FREEZE_TINT)
+		assert(sprite.scale == visual_scale)
+		sprite.free()
 	assert(not battle._apply_monster_freeze({"alive": false}))
-	sprite.free()
 	battle.free()
 
 func _test_farmer_planting_route_geometry() -> void:
