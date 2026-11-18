@@ -50,6 +50,7 @@ var status_label: Label
 var energy_label: Label
 var farmer_hp_label: Label
 var wave_label: Label
+var plant_buttons: Dictionary = {}
 var rng := RandomNumberGenerator.new()
 var grid_nodes: Array = []
 var background_view: TextureRect
@@ -343,53 +344,66 @@ func _build_ui() -> void:
 	var margin := MarginContainer.new()
 	margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	margin.add_theme_constant_override("margin_left", 20)
-	margin.add_theme_constant_override("margin_right", 20)
-	margin.add_theme_constant_override("margin_top", 12)
-	margin.add_theme_constant_override("margin_bottom", 12)
+	margin.add_theme_constant_override("margin_left", 14)
+	margin.add_theme_constant_override("margin_right", 14)
+	margin.add_theme_constant_override("margin_top", 10)
+	margin.add_theme_constant_override("margin_bottom", 10)
 	add_child(margin)
 	var layout := VBoxContainer.new()
 	layout.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	layout.add_theme_constant_override("separation", 8)
+	layout.add_theme_constant_override("separation", 6)
 	margin.add_child(layout)
 	var top := HBoxContainer.new()
-	top.add_theme_constant_override("separation", 12)
+	top.add_theme_constant_override("separation", 10)
 	layout.add_child(top)
 	var title := Label.new()
 	title.text = "FARM VS MONSTERS"
-	title.add_theme_font_size_override("font_size", 22)
+	title.add_theme_font_size_override("font_size", 19)
 	top.add_child(title)
 	energy_label = Label.new()
 	energy_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	energy_label.add_theme_font_size_override("font_size", 17)
 	top.add_child(energy_label)
 	farmer_hp_label = Label.new()
+	farmer_hp_label.add_theme_font_size_override("font_size", 17)
 	top.add_child(farmer_hp_label)
 	wave_label = Label.new()
+	wave_label.add_theme_font_size_override("font_size", 17)
 	top.add_child(wave_label)
-	var choices := HBoxContainer.new()
-	choices.add_theme_constant_override("separation", 7)
+	var choices := GridContainer.new()
+	choices.columns = 4
+	choices.add_theme_constant_override("h_separation", 7)
+	choices.add_theme_constant_override("v_separation", 5)
 	layout.add_child(choices)
+	plant_buttons.clear()
 	for plant_id in PLANT_OPTIONS:
 		var button := Button.new()
 		button.text = "%s  %d" % [plant_id.capitalize(), Rules.plant_cost(plant_id)]
-		button.custom_minimum_size = Vector2(132, 42)
+		button.custom_minimum_size = Vector2(150, 40)
+		button.add_theme_font_size_override("font_size", 16)
+		button.toggle_mode = true
 		button.pressed.connect(_select_plant.bind(plant_id))
+		plant_buttons[plant_id] = button
 		choices.add_child(button)
 	uproot_button = Button.new()
 	uproot_button.text = "UPROOT"
 	uproot_button.toggle_mode = true
-	uproot_button.custom_minimum_size = Vector2(112, 42)
+	uproot_button.custom_minimum_size = Vector2(150, 40)
+	uproot_button.add_theme_font_size_override("font_size", 16)
 	uproot_button.toggled.connect(_set_uproot_mode)
 	choices.add_child(uproot_button)
 	var menu := Button.new()
-	menu.text = "Main Menu"
+	menu.text = "MAIN MENU"
+	menu.custom_minimum_size = Vector2(150, 40)
+	menu.add_theme_font_size_override("font_size", 16)
 	menu.pressed.connect(_return_to_menu)
 	choices.add_child(menu)
 	status_label = Label.new()
 	status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	status_label.add_theme_font_size_override("font_size", 15)
 	layout.add_child(status_label)
 	_refresh_hud()
-	status_label.text = "Choose a defender and tap a field cell. Move with WASD, arrows or the D-pad; press J or JUMP to leap. The club unlocks when all Radishes are lost."
+	status_label.text = "Choose a defender and tap a field cell. Use the D-pad, JUMP or CLUB to control the Farmer."
 	_build_farmer_controls()
 
 func _make_sheet_sprite(texture_path: String, columns: int, rows: int, fps: float,
@@ -512,15 +526,15 @@ func _position_farmer_at_start() -> void:
 func _build_farmer_controls() -> void:
 	var control_row := HBoxContainer.new()
 	control_row.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
-	control_row.offset_left = 18.0
-	control_row.offset_right = -18.0
-	control_row.offset_top = -62.0
+	control_row.offset_left = 14.0
+	control_row.offset_right = -14.0
+	control_row.offset_top = -78.0
 	control_row.offset_bottom = -8.0
-	control_row.add_theme_constant_override("separation", 8)
+	control_row.add_theme_constant_override("separation", 10)
 	control_row.z_index = 1000
 	add_child(control_row)
 	var directions := HBoxContainer.new()
-	directions.add_theme_constant_override("separation", 6)
+	directions.add_theme_constant_override("separation", 7)
 	control_row.add_child(directions)
 	var direction_buttons := [
 		["left", "◀"], ["up", "▲"], ["down", "▼"], ["right", "▶"]
@@ -529,24 +543,35 @@ func _build_farmer_controls() -> void:
 		var direction: String = item[0]
 		var button := Button.new()
 		button.text = item[1]
-		button.custom_minimum_size = Vector2(54.0, 48.0)
+		button.custom_minimum_size = Vector2(66.0, 62.0)
+		button.add_theme_font_size_override("font_size", 23)
 		button.button_down.connect(_set_farmer_touch_direction.bind(direction, true))
 		button.button_up.connect(_set_farmer_touch_direction.bind(direction, false))
+		button.focus_exited.connect(_clear_farmer_touch_directions)
 		directions.add_child(button)
 	var spacer := Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	control_row.add_child(spacer)
 	attack_button = Button.new()
 	attack_button.text = "CLUB"
-	attack_button.custom_minimum_size = Vector2(112.0, 48.0)
+	attack_button.custom_minimum_size = Vector2(126.0, 62.0)
+	attack_button.add_theme_font_size_override("font_size", 19)
 	attack_button.visible = false
 	attack_button.pressed.connect(_farmer_attack)
 	control_row.add_child(attack_button)
 	jump_button = Button.new()
 	jump_button.text = "JUMP"
-	jump_button.custom_minimum_size = Vector2(112.0, 48.0)
+	jump_button.custom_minimum_size = Vector2(126.0, 62.0)
+	jump_button.add_theme_font_size_override("font_size", 19)
 	jump_button.pressed.connect(_start_farmer_jump)
 	control_row.add_child(jump_button)
+
+func _clear_farmer_touch_directions() -> void:
+	farmer_touch_directions = {"left": false, "right": false, "up": false, "down": false}
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_APPLICATION_FOCUS_OUT or what == NOTIFICATION_WM_WINDOW_FOCUS_OUT:
+		_clear_farmer_touch_directions()
 
 func _set_farmer_touch_direction(direction: String, pressed: bool) -> void:
 	farmer_touch_directions[direction] = pressed
@@ -733,6 +758,9 @@ func _select_plant(plant_id: String) -> void:
 		return
 	selected_plant = plant_id
 	uproot_mode = false
+	for key in plant_buttons:
+		var plant_button: Button = plant_buttons[key]
+		plant_button.button_pressed = str(key) == plant_id
 	if is_instance_valid(uproot_button):
 		uproot_button.button_pressed = false
 	status_label.text = "Selected: %s — tap an empty cell." % plant_id.capitalize()
@@ -1320,12 +1348,27 @@ func _refresh_hud() -> void:
 	if is_instance_valid(jump_button):
 		jump_button.disabled = game_state != "running" or not farmer_planting_target.is_empty() or not farmer_return_target.is_empty() or not farmer_action_animation.is_empty()
 	if is_instance_valid(farmer_hp_label):
-		farmer_hp_label.text = "Farmer HP: %d / %d" % [farmer_hp, Rules.FARMER_MAX_HP]
-		farmer_hp_label.modulate = Color("#f08070") if farmer_hp <= Rules.FARMER_MAX_HP / 3 else Color.WHITE
+		farmer_hp_label.text = "FARMER %d%%" % roundi(100.0 * float(farmer_hp) / float(Rules.FARMER_MAX_HP))
+		farmer_hp_label.modulate = Color("#f08070") if farmer_hp <= Rules.FARMER_MAX_HP / 3 else Color("#f4f1df")
+	for key in plant_buttons:
+		var plant_button: Button = plant_buttons[key]
+		plant_button.button_pressed = str(key) == selected_plant
+		plant_button.disabled = game_state != "running" or energy < Rules.plant_cost(str(key))
+	if is_instance_valid(uproot_button):
+		uproot_button.disabled = game_state != "running" or plants.is_empty()
 
 func _draw() -> void:
 	if background_view == null or background_view.texture == null:
 		draw_rect(Rect2(Vector2.ZERO, get_viewport_rect().size), Color("#263b2e"), true)
+	if farmer_sprite != null and is_instance_valid(farmer_sprite) and farmer_hp > 0:
+		var farmer_bar_width := 66.0 * SCREEN_SCALE
+		var farmer_bar_height := 7.0 * SCREEN_SCALE
+		var farmer_bar_position := farmer_sprite.position + Vector2(-farmer_bar_width * 0.5, -72.0 * SCREEN_SCALE)
+		var farmer_hp_ratio := clampf(float(farmer_hp) / float(Rules.FARMER_MAX_HP), 0.0, 1.0)
+		var farmer_bar_color := Color("#71d47b") if farmer_hp_ratio > 0.5 else (Color("#efbd55") if farmer_hp_ratio > 0.25 else Color("#ed665d"))
+		draw_rect(Rect2(farmer_bar_position, Vector2(farmer_bar_width, farmer_bar_height)), Color("#263b2e"))
+		draw_rect(Rect2(farmer_bar_position, Vector2(farmer_bar_width * farmer_hp_ratio, farmer_bar_height)), farmer_bar_color)
+		draw_rect(Rect2(farmer_bar_position, Vector2(farmer_bar_width, farmer_bar_height)), Color("#f4f1df"), false, 1.0)
 	for plant in plants:
 		var depth_scale := float(plant.get("depth_scale", 1.0))
 		var bar_width := 48.0 * depth_scale
