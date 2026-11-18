@@ -504,7 +504,7 @@ func _board_coordinates(source_point: Vector2) -> Vector2:
 	var bottom_left: Vector2 = grid_nodes[Rules.BOARD_ROWS][0]
 	var u := (source_point.x - bottom_left.x) / maxf(0.001, bottom_right.x - bottom_left.x)
 	var v := (source_point.y - top_left.y) / maxf(0.001, bottom_left.y - top_left.y)
-	for iteration in range(10):
+	for outer_iteration in range(10):
 		var outer_projected := top_left * ((1.0 - u) * (1.0 - v)) + top_right * (u * (1.0 - v)) + bottom_right * (u * v) + bottom_left * ((1.0 - u) * v)
 		var outer_projected_u := top_left * ((1.0 - (u + 0.001)) * (1.0 - v)) + top_right * ((u + 0.001) * (1.0 - v)) + bottom_right * ((u + 0.001) * v) + bottom_left * ((1.0 - (u + 0.001)) * v)
 		var outer_projected_v := top_left * ((1.0 - u) * (1.0 - (v + 0.001))) + top_right * (u * (1.0 - (v + 0.001))) + bottom_right * (u * (v + 0.001)) + bottom_left * ((1.0 - u) * (v + 0.001))
