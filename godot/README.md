@@ -6,7 +6,7 @@ Android-first, offline, single-player Godot 4 project. The Phaser client and leg
 
 The project has a first playable Stage 1 combat loop and now imports approved source artwork into `godot/assets/` without modifying the originals:
 
-- Farmer idle, walk, run and club-attack sheets are connected. The Farmer can move with WASD/arrow keys or the on-screen D-pad; touch movement uses the slower walk animation. Press Space or the on-screen CLUB button for emergency melee after at least one defender has been planted and every living Radish has been lost.
+- Farmer idle, walk, run and club-attack sheets are connected. The Farmer can move with WASD/arrow keys or the on-screen D-pad; touch movement uses the slower walk animation. When a soil cell is selected, the Farmer walks there, plays the planting animation, then sprints back to his starting point. Tapping an occupied cell uproots that plant and refunds its full energy cost. Press Space or the on-screen CLUB button for emergency melee after a Radish has been planted and every living Radish has been lost.
 - Hyena idle, walk, run, bite, hit and death sheets are connected as animation states. Dust Skitter uses the faster run sheet; the other archetypes use walk. Monsters switch to bite when stopped at a plant, play hit reactions on damage and play their defeat animation before removal.
 - Radish, Pineapple, Hazelnut and Mango sheets are sliced into a resting frame plus an attack sequence. The attack sequence plays when the plant launches a projectile.
 - Mushroom and Pumpkin use their approved static character artwork.
@@ -19,7 +19,7 @@ The original artwork remains in `web/public/assets/`; the Godot copies point to 
 
 - The approved farm battlefield background and 8×5 perspective mesh are now used. Cell taps are resolved against the 40 calibrated soil polygons; plants, monsters and projectiles follow perspective lanes and scale with row depth.
 - The Pineapple and Hazelnut sheets use their exact Phaser frame contracts (418×418 and 341×341 respectively); the Godot visual result still needs runtime review.
-- Farmer planting travel/planting animation and Farmer hit/death states remain future integration work.
+- Farmer hit/death reactions and the dedicated uproot animation remain future integration work; uprooting currently follows the Phaser instant-removal behavior.
 - The same Hyena base art is temporarily reused for all four monster archetypes, with tint and size differences; this is not a final character-art pass.
 
 ## Open in Godot
