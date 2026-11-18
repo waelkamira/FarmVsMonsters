@@ -1011,6 +1011,7 @@ func _spawn_monster() -> void:
 			"stonehide": monster_sprite.modulate = Color("#a4b0b7")
 			"alpha-brute": monster_sprite.modulate = Color("#c47b69")
 		add_child(monster_sprite)
+	var monster_base_tint := monster_sprite.modulate if monster_sprite != null else Color.WHITE
 	monsters.append({
 		"sprite": monster_sprite,
 		"kind": archetype, "row": row, "local_x": local_x,
@@ -1024,7 +1025,8 @@ func _spawn_monster() -> void:
 		"burst_speed_multiplier": float(profile.get("burst_speed_multiplier", 1.0)),
 		"burst_cooldown_min_ms": float(profile.get("burst_cooldown_min_ms", 0.0)),
 		"burst_cooldown_max_ms": float(profile.get("burst_cooldown_max_ms", 0.0)), "burst_fx_ms": 0.0,
-		"braced": false, "alive": true
+		"braced": false, "freeze_remaining_ms": 0.0,
+		"base_tint": monster_base_tint, "alive": true
 	})
 	status_label.text = "%s incoming — wave %d." % [archetype.replace("-", " ").capitalize(), wave]
 
@@ -1130,6 +1132,14 @@ func _update_monsters(delta: float, delta_ms: float) -> void:
 		if not monster.alive:
 			continue
 		monster.burst_fx_ms = maxf(0.0, float(monster.get("burst_fx_ms", 0.0)) - delta_ms)
+		var freeze_step := Rules.resolve_monster_freeze_step(float(monster.get("freeze_remaining_ms", 0.0)), delta_ms)
+		monster.freeze_remaining_ms = float(freeze_step.remaining_ms)
+		var frozen_sprite: Variant = monster.get("sprite", null)
+		if frozen_sprite != null and is_instance_valid(frozen_sprite):
+			frozen_sprite.modulate = Rules.MONSTER_FREEZE_TINT if bool(freeze_step.is_frozen) else monster.get("base_tint", Color.WHITE)
+		if bool(freeze_step.is_frozen):
+			monster.braced = false
+			continue
 		var row := int(monster.row)
 		var lane_step := absf(_to_screen(_lane_point(float(monster.local_x) + 1.0, row)).x - _to_screen(_lane_point(float(monster.local_x), row)).x)
 		var monster_half_width := 360.0 * 0.22 * float(monster.depth_scale) * float(monster.width_scale) * 0.5
@@ -1203,6 +1213,18 @@ func _update_monsters(delta: float, delta_ms: float) -> void:
 			status_label.text = "The farmhouse has been overrun. Return to the main menu to start a new battle."
 			return
 
+
+func _apply_monster_freeze(monster: Dictionary, duration_ms: float = Rules.MONSTER_FREEZE_DURATION_MS) -> bool:
+	if not bool(monster.get("alive", false)) or not is_finite(duration_ms) or duration_ms <= 0.0:
+		return false
+	monster.freeze_remaining_ms = maxf(float(monster.get("freeze_remaining_ms", 0.0)), duration_ms)
+	monster.braced = false
+	var sprite: Variant = monster.get("sprite", null)
+	if sprite != null and is_instance_valid(sprite):
+		if not monster.has("base_tint"):
+			monster.base_tint = sprite.modulate
+		sprite.modulate = Rules.MONSTER_FREEZE_TINT
+	return true
 
 func _monster_can_bite_farmer(monster: Dictionary) -> bool:
 	if farmer_sprite == null or not is_instance_valid(farmer_sprite):
