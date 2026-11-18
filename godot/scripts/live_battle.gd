@@ -560,7 +560,7 @@ func _update_farmer(delta: float) -> void:
 	if not farmer_planting_target.is_empty():
 		_update_farmer_planting_movement(delta)
 		return
-	if farmer_action_animation == "plant":
+	if not farmer_action_animation.is_empty():
 		_update_farmer_visual_depth()
 		return
 	if not farmer_return_target.is_empty() and farmer_action_animation.is_empty():
