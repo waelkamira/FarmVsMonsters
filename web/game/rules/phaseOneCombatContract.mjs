@@ -71,6 +71,11 @@ export const PHASE_ONE_PLANTS = Object.freeze({
   mango: Object.freeze({
     projectileDamage: 40, projectileSpeed: 275, projectileCollisionRadius: 24,
     plantingEnergyCost: 70, hp: 130, cooldownMs: 2100, range: 360
+  }),
+  snowThrower: Object.freeze({
+    freezeProjectile: true, projectileSpeed: 300, projectileCollisionRadius: 28,
+    freezeDurationMs: 2600, plantingEnergyCost: 90, hp: 150,
+    cooldownMs: 3600, range: 360
   })
 });
 
