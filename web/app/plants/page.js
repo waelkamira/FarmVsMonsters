@@ -25,7 +25,8 @@ export default function PlantsPage() {
     };
   }, []);
 
-  const activePlants = STAGE_ONE_PLANTS.filter((plant) => plant.implemented);
+  const activePlants = STAGE_ONE_PLANTS.filter((plant) => plant.stageOneAvailable);
+  const prototypePlants = STAGE_ONE_PLANTS.filter((plant) => plant.implemented && !plant.stageOneAvailable);
   const plannedPlants = STAGE_ONE_PLANTS.filter((plant) => !plant.implemented);
 
   return (
@@ -38,8 +39,8 @@ export default function PlantsPage() {
         <h1>{ar ? "موسوعة النباتات" : "Plant Encyclopedia"}</h1>
         <p className="collection-intro">
           {ar
-            ? "جهزت قائمة النباتات المقترحة للمرحلة الأولى. النباتات المفعّلة تعمل داخل المعركة، أما النباتات المقفلة فهي خطة المحتوى القادم وسنضيف صورها وآلياتها تباعاً."
-            : "The Stage 1 plant roster is now planned. Active plants already work in battle; locked plants are the upcoming roster and will be implemented as their artwork and gameplay are added."}
+            ? "تعرض الموسوعة نباتات المرحلة الأولى المتاحة، والنماذج التجريبية المنفذة برمجياً لكنها غير مفعّلة في هذه المرحلة، ثم التصاميم المخطط تنفيذها."
+            : "This encyclopedia separates plants available in Stage 1, implemented gameplay prototypes that are not enabled in this stage, and designs still planned for development."}
         </p>
         <div className="collection-wallet">
           <strong>{ar ? "رصيد العملات على هذا الجهاز" : "Coins saved on this device"}</strong>
@@ -48,7 +49,8 @@ export default function PlantsPage() {
 
         <div className="collection-summary">
           <span>{ar ? "النباتات المفعّلة" : "ACTIVE"}: <strong>{activePlants.length}</strong></span>
-          <span>{ar ? "قيد التجهيز" : "IN DEVELOPMENT"}: <strong>{plannedPlants.length}</strong></span>
+          <span>{ar ? "نماذج تجريبية غير مفعّلة" : "PROTOTYPES · NOT IN STAGE 1"}: <strong>{prototypePlants.length}</strong></span>
+          <span>{ar ? "قيد التطوير" : "IN DEVELOPMENT"}: <strong>{plannedPlants.length}</strong></span>
           <span>{ar ? "الإجمالي" : "TOTAL"}: <strong>{STAGE_ONE_PLANTS.length}</strong></span>
           <span>{ar ? "قابل للشراء الآن" : "BUYABLE NOW"}: <strong>{STAGE_ONE_PLANTS.filter((plant) => plant.purchasable).length}</strong></span>
         </div>
@@ -68,6 +70,35 @@ export default function PlantsPage() {
             </article>
           ))}
         </div>
+
+        {prototypePlants.length > 0 && (
+          <>
+            <h2 className="collection-section-title">{ar ? "نماذج تجريبية — غير متاحة في المرحلة الأولى" : "Implemented prototypes — not available in Stage 1"}</h2>
+            <p className="collection-intro">
+              {ar
+                ? "توجد لهذه النباتات آليات لعب تجريبية بالفعل، لكنها مستبعدة من تشكيلة المرحلة الأولى ولم تُعتمد للعب أو الشراء بعد."
+                : "These plants already have prototype gameplay code, but they are deliberately excluded from the Stage 1 battle loadout and are not approved for play or purchase yet."}
+            </p>
+            <div className="collection-grid">
+              {prototypePlants.map((plant) => (
+                <article className="collection-card is-locked" key={plant.id}>
+                  <CatalogThumb id={plant.id} label={ar ? plant.nameAr : plant.name} className="plant-thumb is-planned" />
+                  <h2>{ar ? plant.nameAr : plant.name}</h2>
+                  <span className="collection-status">{ar ? "⚙ نموذج تجريبي — غير متاح" : "⚙ PROTOTYPE · NOT AVAILABLE"}</span>
+                  <p><strong>{ar ? plant.roleAr : plant.role}</strong></p>
+                  <p>{ar ? plant.descriptionAr : plant.description}</p>
+                  <div className="collection-meta">
+                    <span>{ar ? "تكلفة زراعة تجريبية" : "Prototype planting cost"}: {plant.energyCost} {ar ? "طاقة" : "energy"}</span>
+                    {(ar ? plant.statsAr : plant.stats).map((stat) => <span key={stat}>{stat}</span>)}
+                  </div>
+                  <button className="plant-locked-button" type="button" disabled>
+                    {ar ? "غير متاح في المرحلة الأولى" : "Not available in Stage 1"}
+                  </button>
+                </article>
+              ))}
+            </div>
+          </>
+        )}
 
         <h2 className="collection-section-title">{ar ? "النباتات القادمة — غير مفعّلة بعد" : "Upcoming plants — not active yet"}</h2>
         <p className="collection-intro">
