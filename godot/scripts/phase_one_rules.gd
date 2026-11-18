@@ -86,7 +86,11 @@ static func is_valid_cell(column: int, row: int) -> bool:
 	return column >= 0 and column < BOARD_COLUMNS and row >= 0 and row < BOARD_ROWS
 
 static func plant_cost(plant_id: String) -> int:
-	return int(PLANTS.get(plant_id, {}).get("planting_energy_cost", -1))
+	var normalized_id: String = "mushroom" if plant_id == "energy_mushroom" else plant_id
+	return int(PLANTS.get(normalized_id, {}).get("planting_energy_cost", -1))
+
+static func apply_energy_delta(current: int, delta: int) -> int:
+	return clampi(current + delta, 0, MAX_ENERGY)
 
 static func total_stage_one_monsters() -> int:
 	var total := 0
