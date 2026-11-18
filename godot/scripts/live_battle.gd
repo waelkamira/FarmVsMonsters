@@ -1164,12 +1164,9 @@ func _update_monsters(delta: float, delta_ms: float) -> void:
 			frozen_sprite.modulate = Rules.MONSTER_FREEZE_TINT if bool(freeze_step.is_frozen) else monster.get("base_tint", Color.WHITE)
 		if bool(freeze_step.is_frozen):
 			monster.braced = false
-			if frozen_sprite != null and is_instance_valid(frozen_sprite) and frozen_sprite.sprite_frames.has_animation("frozen") and frozen_sprite.animation != "frozen":
-				frozen_sprite.play("frozen")
+			_set_monster_freeze_visual(frozen_sprite, str(monster.kind), true)
 			continue
-		if frozen_sprite != null and is_instance_valid(frozen_sprite) and frozen_sprite.animation == "frozen":
-			var thawed_animation := "run" if str(monster.kind) == "dust-skitter" else "walk"
-			frozen_sprite.play(thawed_animation)
+		_set_monster_freeze_visual(frozen_sprite, str(monster.kind), false)
 		var row := int(monster.row)
 		var lane_step := absf(_to_screen(_lane_point(float(monster.local_x) + 1.0, row)).x - _to_screen(_lane_point(float(monster.local_x), row)).x)
 		var monster_half_width := 360.0 * 0.22 * float(monster.depth_scale) * float(monster.width_scale) * 0.5
@@ -1264,9 +1261,17 @@ func _apply_monster_freeze(monster: Dictionary, duration_ms: float = Rules.MONST
 		if not monster.has("base_tint"):
 			monster.base_tint = sprite.modulate
 		sprite.modulate = Rules.MONSTER_FREEZE_TINT
-		if sprite.sprite_frames.has_animation("frozen"):
-			sprite.play("frozen")
+		_set_monster_freeze_visual(sprite, str(monster.get("kind", "cave-brute")), true)
 	return true
+
+func _set_monster_freeze_visual(sprite: AnimatedSprite2D, archetype: String, is_frozen: bool) -> void:
+	if sprite == null or not is_instance_valid(sprite):
+		return
+	if is_frozen:
+		if sprite.sprite_frames.has_animation("frozen") and sprite.animation != "frozen":
+			sprite.play("frozen")
+	elif sprite.animation == "frozen":
+		sprite.play("run" if archetype == "dust-skitter" else "walk")
 
 func _monster_can_bite_farmer(monster: Dictionary) -> bool:
 	if farmer_sprite == null or not is_instance_valid(farmer_sprite):
