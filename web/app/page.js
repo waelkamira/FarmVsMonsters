@@ -81,7 +81,7 @@ export default function HomePage() {
             </div>
           </section>
           <section className="codex-home-utility-row">
-            <Link href="/help" className="codex-utility-card"><span>📜</span><strong>{arabic ? "دليل اللعب" : "FIELD GUIDE"}</strong><small>{arabic ? "تعلم أساسيات الدفاع" : "Learn the basics"}</small></Link>
+            <Link href="/how-to-play" className="codex-utility-card"><span>📜</span><strong>{arabic ? "دليل اللعب" : "FIELD GUIDE"}</strong><small>{arabic ? "تعلم أساسيات الدفاع" : "Learn the basics"}</small></Link>
             <Link href="/account" className="codex-utility-card"><span>☁️</span><strong>{arabic ? "الحساب والحفظ" : "ACCOUNT & SAVE"}</strong><small>{arabic ? "حفظ تقدمك" : "Keep your progress"}</small></Link>
           </section>
         </div>
