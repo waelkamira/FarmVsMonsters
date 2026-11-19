@@ -217,6 +217,7 @@ export default class BattleScene extends Scene {
     this.waveIntermissionMs = 0;
     this.selectedPlant = null;
     this.plants = [];
+    this.seedPacketCooldowns = new Map();
     this.monsters = [];
     this.projectiles = [];
     this.energyPickups = [];
@@ -311,6 +312,7 @@ export default class BattleScene extends Scene {
     this.setMessage(this.textures.exists("farm-battlefield")
       ? "Choose a plant card, then click an empty soil cell. Radish, Pineapple, Hazelnut and Mango attack; Pumpkin blocks."
       : "Temporary farm art active. Choose a plant card, then click an empty soil cell.");
+    this.showWaveAnnouncement(1);
   }
 
   drawField() {
@@ -670,10 +672,27 @@ export default class BattleScene extends Scene {
       .setStrokeStyle(1, 0x9d7547, 1).setDepth(44);
     this.waveProgressFill = this.add.rectangle(640, 17, 2, 7, 0xa8d65b, 1)
       .setOrigin(0, 0.5).setDepth(45);
-    this.waveProgressLabel = this.add.text(716, 39, "WAVE 1", {
+    this.waveProgressLabel = this.add.text(716, 39, "DEFEATED 0/2", {
       fontFamily: "Arial", fontSize: "10px", color: "#ffe8b5", fontStyle: "bold",
       stroke: "#392719", strokeThickness: 2, resolution: 2
     }).setOrigin(0.5).setDepth(44);
+
+    // Short PvZ-style announcement banner. It is reused between waves instead
+    // of allocating new display objects every time a wave begins.
+    this.waveBanner = this.add.container(560, 150).setDepth(52).setAlpha(0).setVisible(false);
+    const bannerFrame = this.add.rectangle(0, 0, 430, 82, 0x3c2818, 0.96)
+      .setStrokeStyle(4, 0xe2b968, 1);
+    const bannerInset = this.add.rectangle(0, 0, 416, 68, 0x76502d, 1)
+      .setStrokeStyle(2, 0xf3d59a, 0.9);
+    this.waveBannerTitle = this.add.text(0, -13, "WAVE 1", {
+      fontFamily: "Arial", fontSize: "25px", color: "#fff4c8", fontStyle: "bold",
+      stroke: "#392719", strokeThickness: 5, resolution: 2
+    }).setOrigin(0.5);
+    this.waveBannerSubtitle = this.add.text(0, 19, "GET READY!", {
+      fontFamily: "Arial", fontSize: "13px", color: "#ffffff", fontStyle: "bold",
+      stroke: "#392719", strokeThickness: 3, resolution: 2
+    }).setOrigin(0.5);
+    this.waveBanner.add([bannerFrame, bannerInset, this.waveBannerTitle, this.waveBannerSubtitle]);
 
     // Build the seed bank from the player's pre-battle loadout.
     const plantOptions = [
@@ -754,7 +773,16 @@ export default class BattleScene extends Scene {
       icon = this.add.graphics();
       if (drawIcon) drawIcon(icon);
     }
-    const cost = this.add.text(0, 29, "☀ " + costLabel, {
+    const cooldownOverlay = this.add.rectangle(0, -1, 68, 80, 0x1a160f, 0.72).setVisible(false);
+    const cooldownLabel = this.add.text(0, -1, "", {
+      fontFamily: "Arial", fontSize: "20px", color: "#fff4d6", fontStyle: "bold",
+      stroke: "#382312", strokeThickness: 4, resolution: 2
+    }).setOrigin(0.5).setVisible(false);
+    panel.setData("cooldownOverlay", cooldownOverlay);
+    panel.setData("cooldownLabel", cooldownLabel);
+    card.setData("cooldownOverlay", cooldownOverlay);
+    card.setData("cooldownLabel", cooldownLabel);
+    const cost = this.add.text(0, 29, "🍄 " + costLabel, {
       fontFamily: "Arial", fontSize: "14px", color: "#fff0bd", fontStyle: "bold",
       stroke: "#3d2817", strokeThickness: 2, resolution: 2,
       align: "center"
@@ -766,10 +794,10 @@ export default class BattleScene extends Scene {
         fontFamily: "Arial", fontSize: "14px", color: "#ffffff", fontStyle: "bold",
         stroke: "#34445b", strokeThickness: 2, resolution: 2
       }).setOrigin(0.5, 0.5);
-      card.add([halo, packetFrame, packetRim, panel, icon, costPlate, cost, lockLabel]);
+      card.add([halo, packetFrame, packetRim, panel, icon, costPlate, cost, lockLabel, cooldownOverlay, cooldownLabel]);
       card.setAlpha(0.78);
     } else {
-      card.add([halo, packetFrame, packetRim, panel, icon, costPlate, cost]);
+      card.add([halo, packetFrame, packetRim, panel, icon, costPlate, cost, cooldownOverlay, cooldownLabel]);
     }
 
     panel.on("pointerover", () => {
@@ -784,6 +812,10 @@ export default class BattleScene extends Scene {
       if (this.gameOver) return;
       if (locked) {
         this.setMessage(title + " is coming soon. Its combat ability is not ready yet.");
+        return;
+      }
+      if (this.getSeedPacketCooldownRemaining(type) > 0) {
+        this.setMessage("This seed packet is recharging. Wait for it to recover.");
         return;
       }
       this.selectedPlant = type;
@@ -1172,23 +1204,42 @@ export default class BattleScene extends Scene {
       const targetPlant = selectDragonFireballTarget(this.plants);
       const targetX = targetPlant ? targetPlant.x : 92;
       const targetY = targetPlant ? targetPlant.y - 18 : 490;
-      const fireball = this.add.circle(boss.sprite?.x ?? 930, (boss.sprite?.y ?? 145) - 38, 15, 0xff762e, 1)
-        .setStrokeStyle(3, 0xffd16c, 1).setDepth(53);
+
+      // Telegraph the chosen impact point before the projectile is launched.
+      // The marker is visual only; damage and target resolution remain unchanged.
+      const warning = this.add.circle(targetX, targetY, 24, 0xff5b32, 0.18)
+        .setStrokeStyle(4, 0xffc15c, 0.98).setDepth(54);
+      const warningCore = this.add.circle(targetX, targetY, 8, 0xffe39a, 0.75)
+        .setDepth(54);
       this.tweens.add({
-        targets: fireball, x: targetX, y: targetY, scale: 1.45,
-        duration: PHASE_ONE_DRAGON.fireballTravelMs, ease: "Quad.easeIn",
+        targets: [warning, warningCore],
+        scale: 1.45,
+        alpha: 0,
+        duration: 520,
+        ease: "Cubic.easeOut",
         onComplete: () => {
-          if (fireball.active) fireball.destroy();
-          if (this.gameOver || this.storySequenceActive || this.collectionMenuOpen) return;
-          if (targetPlant?.alive) {
-            targetPlant.hp = applyHitPointsDamage(targetPlant.hp, PHASE_ONE_DRAGON.fireballDamageToPlant).hp;
-            this.flashEatenPlant(targetPlant);
-            if (targetPlant.hp <= 0) this.destroyPlant(targetPlant);
-          } else {
-            this.houseHealth = Math.max(0, this.houseHealth - PHASE_ONE_DRAGON.fireballDamageToFarm);
-            if (this.houseHealth <= 0) this.endGame(false);
-            this.refreshHud();
-          }
+          if (warning.active) warning.destroy();
+          if (warningCore.active) warningCore.destroy();
+          if (this.gameOver || this.storySequenceActive || this.collectionMenuOpen || !boss.alive) return;
+          const fireball = this.add.circle(boss.sprite?.x ?? 930, (boss.sprite?.y ?? 145) - 38, 15, 0xff762e, 1)
+            .setStrokeStyle(3, 0xffd16c, 1).setDepth(53);
+          this.tweens.add({
+            targets: fireball, x: targetX, y: targetY, scale: 1.45,
+            duration: PHASE_ONE_DRAGON.fireballTravelMs, ease: "Quad.easeIn",
+            onComplete: () => {
+              if (fireball.active) fireball.destroy();
+              if (this.gameOver || this.storySequenceActive || this.collectionMenuOpen) return;
+              if (targetPlant?.alive) {
+                targetPlant.hp = applyHitPointsDamage(targetPlant.hp, PHASE_ONE_DRAGON.fireballDamageToPlant).hp;
+                this.flashEatenPlant(targetPlant);
+                if (targetPlant.hp <= 0) this.destroyPlant(targetPlant);
+              } else {
+                this.houseHealth = Math.max(0, this.houseHealth - PHASE_ONE_DRAGON.fireballDamageToFarm);
+                if (this.houseHealth <= 0) this.endGame(false);
+                this.refreshHud();
+              }
+            }
+          });
         }
       });
     }
@@ -1978,6 +2029,7 @@ export default class BattleScene extends Scene {
     const deltaMs = Number.isFinite(delta) ? Math.max(0, delta) : 0;
     const dt = deltaMs / 1000;
     this.elapsedBattleMs += deltaMs;
+    this.updateSeedPacketCooldowns(deltaMs);
     if (this.storySequenceActive) {
       this.refreshHud();
       return;
@@ -2031,8 +2083,63 @@ export default class BattleScene extends Scene {
     this.refreshHud();
   }
 
+  showWaveAnnouncement(wave) {
+    if (!this.waveBanner || !this.waveBannerTitle || !this.waveBannerSubtitle) return;
+    const locale = typeof window !== "undefined"
+      ? window.localStorage.getItem("farmVsMonsters.language") || "ar"
+      : "ar";
+    const majorWave = wave >= 4;
+    const title = locale === "ar" ? "الموجة " + wave : "WAVE " + wave;
+    const subtitles = locale === "ar"
+      ? {
+          1: "استعدوا! الوحوش تقترب",
+          2: "موجة جديدة قادمة",
+          3: "الهجوم يشتد!",
+          4: "تحذير: وحش سريع ينضم للهجوم!",
+          5: "تحذير: المدرع الثقيل قادم!"
+        }
+      : {
+          1: "GET READY! MONSTERS APPROACH",
+          2: "A NEW WAVE IS COMING",
+          3: "THE ATTACK IS INTENSIFYING!",
+          4: "WARNING: A FAST SCOUT JOINS!",
+          5: "WARNING: ARMOURED BRUTE INCOMING!"
+        };
+    this.waveBannerTitle.setText(title);
+    this.waveBannerSubtitle.setText(subtitles[wave] || (locale === "ar" ? "استعدوا للدفاع!" : "PREPARE YOUR DEFENCE!"));
+    const frame = this.waveBanner.list?.[0];
+    if (frame?.setFillStyle) frame.setFillStyle(majorWave ? 0x713322 : 0x3c2818, 0.97);
+    this.tweens.killTweensOf(this.waveBanner);
+    this.waveBanner.setVisible(true).setAlpha(0).setScale(0.82);
+    this.tweens.add({
+      targets: this.waveBanner,
+      alpha: 1,
+      scale: 1,
+      duration: 260,
+      ease: "Back.Out",
+      hold: 1450,
+      yoyo: true,
+      onComplete: () => {
+        if (this.waveBanner?.active) this.waveBanner.setVisible(false);
+      }
+    });
+  }
+
   // Sort world characters by their ground position: lower screen Y is
   // farther away, while larger screen Y must render in front.
+  getSeedPacketCooldownRemaining(type) {
+    return Math.max(0, this.seedPacketCooldowns?.get(type) || 0);
+  }
+
+  updateSeedPacketCooldowns(deltaMs) {
+    if (!this.seedPacketCooldowns?.size) return;
+    for (const [type, remaining] of this.seedPacketCooldowns) {
+      const next = Math.max(0, remaining - deltaMs);
+      if (next === 0) this.seedPacketCooldowns.delete(type);
+      else this.seedPacketCooldowns.set(type, next);
+    }
+  }
+
   updateDepthSorting() {
     const depthForY = (y) => 10 + y / 1000;
     for (const plant of this.plants) {
@@ -2102,6 +2209,10 @@ export default class BattleScene extends Scene {
     if (!this.selectedPlant) { this.setMessage("Choose a plant card first."); return; }
     const plantConfigs = { radish: RADISH_CONFIG, mushroom: MUSHROOM_CONFIG, pumpkin: PUMPKIN_CONFIG, pineapple: PINEAPPLE_CONFIG, hazelnut: HAZELNUT_CONFIG, mango: MANGO_CONFIG, "snow-thrower": SNOW_THROWER_CONFIG };
     const plantConfig = plantConfigs[this.selectedPlant];
+    if (this.getSeedPacketCooldownRemaining(this.selectedPlant) > 0) {
+      this.setMessage("This seed packet is recharging. Wait for it to recover.");
+      return;
+    }
     if (!plantConfig) {
       this.setMessage("This plant is not available yet: " + this.selectedPlant + ".");
       return;
@@ -2223,6 +2334,7 @@ export default class BattleScene extends Scene {
     const configs = { radish: RADISH_CONFIG, mushroom: MUSHROOM_CONFIG, pumpkin: PUMPKIN_CONFIG, pineapple: PINEAPPLE_CONFIG, hazelnut: HAZELNUT_CONFIG, mango: MANGO_CONFIG, "snow-thrower": SNOW_THROWER_CONFIG };
     const config = configs[type];
     this.energy = placement.energy;
+    this.seedPacketCooldowns.set(type, config.seedPacketRechargeMs);
     this.farmerPlanting = true;
     this.playFarmerAction("farmer-plant");
     // Pineapples sit slightly forward within their own cell. Measure the
@@ -2965,6 +3077,49 @@ export default class BattleScene extends Scene {
     sprite.play(key);
   }
 
+  createMonsterArrivalEffect(spawn, laneGap, archetype) {
+    const accent = archetype === "stonehide" ? 0x8fb9ff
+      : archetype === "dust-skitter" ? 0xb9e7f4
+      : archetype === "alpha-brute" ? 0xffc45e
+      : 0xd6b27a;
+    const scale = PhaserMath.Clamp(laneGap / 108, 0.28, 0.62);
+    const cue = this.add.container(spawn.x + 4, spawn.y + 2).setDepth(9 + spawn.y / 1000);
+    const shadow = this.add.ellipse(0, 0, 54 * scale, 16 * scale, 0x20180f, 0.36);
+    const outer = this.add.ellipse(0, -4 * scale, 58 * scale, 25 * scale, accent, 0);
+    outer.setStrokeStyle(Math.max(2, 4 * scale), accent, 0.92);
+    const inner = this.add.ellipse(0, -4 * scale, 38 * scale, 15 * scale, 0xffffff, 0);
+    inner.setStrokeStyle(Math.max(1, 2 * scale), 0xfff0c7, 0.8);
+    cue.add([shadow, outer, inner]);
+    cue.setAlpha(0.95).setScale(0.45);
+    this.tweens.add({
+      targets: cue,
+      scale: 1.5,
+      alpha: 0,
+      duration: archetype === "dust-skitter" ? 280 : 420,
+      ease: "Cubic.easeOut",
+      onComplete: () => cue.destroy()
+    });
+
+    // A few inexpensive dust puffs sell the arrival without loading new art.
+    for (let i = 0; i < 3; i += 1) {
+      const puff = this.add.ellipse(
+        spawn.x + PhaserMath.Between(-12, 12) * scale,
+        spawn.y - PhaserMath.Between(0, 8) * scale,
+        10 * scale, 6 * scale, accent, 0.5
+      ).setDepth(9 + spawn.y / 1000);
+      this.tweens.add({
+        targets: puff,
+        x: puff.x + PhaserMath.Between(-22, 22) * scale,
+        y: puff.y - PhaserMath.Between(10, 24) * scale,
+        alpha: 0,
+        scale: 0.2,
+        duration: 300 + i * 45,
+        ease: "Quad.easeOut",
+        onComplete: () => puff.destroy()
+      });
+    }
+  }
+
   spawnMonster(spawnIndex = this.spawnedThisWave) {
     const row = this.simulationRandom.nextInt(0, LANES - 1);
     const archetype = this.monsterArchetypeFor(spawnIndex);
@@ -2974,14 +3129,25 @@ export default class BattleScene extends Scene {
     const speed = profile.speed;
     const spawn = this.monsterLanePoint(SPAWN_LOCAL_X, row);
     const view = this.add.container(spawn.x, spawn.y).setDepth(10 + spawn.y / 1000);
+    view.setAlpha(0);
 
     // Scale each creature against the measured gap of its perspective lane.
     const laneGap = row < LANES - 1
       ? this.laneYs[row + 1] - this.laneYs[row]
       : this.laneYs[row] - this.laneYs[row - 1];
     const monsterScale = PhaserMath.Clamp(laneGap / 108, 0.28, 0.62);
-    view.setScale(monsterScale * profile.widthScale, monsterScale * profile.heightScale);
-    view.setPosition(spawn.x, spawn.y);
+    const finalScaleX = monsterScale * profile.widthScale;
+    const finalScaleY = monsterScale * profile.heightScale;
+    view.setScale(finalScaleX * 0.72, finalScaleY * 0.72);
+    this.createMonsterArrivalEffect(spawn, laneGap, archetype);
+    this.tweens.add({
+      targets: view,
+      alpha: 1,
+      scaleX: finalScaleX,
+      scaleY: finalScaleY,
+      duration: archetype === "dust-skitter" ? 260 : archetype === "stonehide" ? 520 : 400,
+      ease: archetype === "dust-skitter" ? "Cubic.easeOut" : "Back.Out"
+    });
 
     const g = this.add.graphics();
     const bodyColor = archetype === "stonehide" ? 0x68675b
@@ -3897,6 +4063,7 @@ export default class BattleScene extends Scene {
       "Wave " + clearedWave + " cleared. Prepare for wave " + this.wave +
       ": " + this.waveSize + " monsters in 5 seconds."
     );
+    this.showWaveAnnouncement(this.wave);
   }
 
   playVictoryMusic() {
@@ -4108,10 +4275,23 @@ export default class BattleScene extends Scene {
       this.waveText.setText("🌊 " + Math.min(this.wave, this.totalWaves) + "/" + this.totalWaves);
     }
     if (this.waveProgressFill && this.waveProgressTrack) {
-      const progress = this.waveSize > 0 ? PhaserMath.Clamp(this.spawnedThisWave / this.waveSize, 0, 1) : 0;
+      // Progress reflects defeated enemies, not merely how many have spawned.
+      // This makes the tracker represent actual battlefield progress.
+      const defeated = Math.min(this.waveDefeatedMonsters || 0, this.waveSize);
+      const progress = this.waveSize > 0 ? PhaserMath.Clamp(defeated / this.waveSize, 0, 1) : 0;
       const trackWidth = 154;
       this.waveProgressFill.setSize(Math.max(2, trackWidth * progress), 7);
-      this.waveProgressLabel?.setText("WAVE " + Math.min(this.wave, this.totalWaves) + " · " + this.spawnedThisWave + "/" + this.waveSize);
+      this.waveProgressLabel?.setText("DEFEATED " + defeated + "/" + this.waveSize);
+    }
+    for (const [type, panel] of Object.entries(this.plantCardsByType || {})) {
+      const remaining = this.getSeedPacketCooldownRemaining(type);
+      const overlay = panel.getData("cooldownOverlay");
+      const label = panel.getData("cooldownLabel");
+      if (overlay?.active) overlay.setVisible(remaining > 0);
+      if (label?.active) {
+        label.setVisible(remaining > 0);
+        if (remaining > 0) label.setText(String(Math.ceil(remaining / 1000)));
+      }
     }
   }
 }

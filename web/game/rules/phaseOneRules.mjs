@@ -26,6 +26,7 @@ export const RADISH_CONFIG = Object.freeze({
 export const MUSHROOM_CONFIG = Object.freeze({
   label: "Energy Mushroom",
   cost: PHASE_ONE_PLANTS.energyMushroom.plantingEnergyCost,
+  seedPacketRechargeMs: PHASE_ONE_PLANTS.energyMushroom.seedPacketRechargeMs,
   hp: PHASE_ONE_PLANTS.energyMushroom.hp,
   energy: PHASE_ONE_PLANTS.energyMushroom.energyPerPickup,
   productionInterval: PHASE_ONE_PLANTS.energyMushroom.productionIntervalMs
