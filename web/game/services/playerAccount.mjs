@@ -1,6 +1,7 @@
 import {
   CAMPAIGN_PROGRESS_KEY,
   loadUnlockedStage,
+  loadUnlockedPlantIds,
   loadSavedCoins,
   saveCoins
 } from "../rules/phaseOneRules.mjs";
@@ -42,7 +43,9 @@ export function applyRemotePlayerProgress(progress, storage = window.localStorag
     storage.setItem(CAMPAIGN_PROGRESS_KEY, JSON.stringify({
       version: 1,
       unlockedStage,
-      completedStages
+      completedStages,
+      // Cloud progress currently has no plant-reward field; preserve local rewards.
+      unlockedPlantIds: loadUnlockedPlantIds(storage)
     }));
     if (progress.coins_verified === true) saveCoins(storage, progress.coins);
     return true;
