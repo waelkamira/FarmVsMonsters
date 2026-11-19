@@ -681,10 +681,10 @@ export default class BattleScene extends Scene {
       ? this.add.image(0, 0, "mushroom-card").setDisplaySize(112, 96)
       : null;
     const mushroomIcon = this.textures.exists("mushroom-character")
-      ? this.add.image(0, -12, "mushroom-character").setDisplaySize(43, 43)
+      ? this.add.image(0, -12, "mushroom-character").setDisplaySize(38.7, 38.7)
       : this.add.text(0, -14, "🍄", { fontFamily: "Arial", fontSize: "34px" }).setOrigin(0.5);
     this.energyValueText = this.add.text(0, 32, String(this.energy), {
-      fontFamily: "Arial", fontSize: "20.7px", color: "#fff2a8", fontStyle: "bold",
+      fontFamily: "Arial", fontSize: "17.6px", color: "#fff2a8", fontStyle: "bold",
       stroke: "#39240f", strokeThickness: 3, resolution: 2
     }).setOrigin(0.5);
     this.mushroomBank.add([...(mushroomCard ? [mushroomCard] : []), mushroomIcon, this.energyValueText]);
@@ -863,7 +863,7 @@ export default class BattleScene extends Scene {
     }
     // Preserve the frame-fit scale; applying 0.95 as an absolute scale here
     // would enlarge 341–418px source frames to nearly their original size.
-    icon.setScale(iconScale * 0.95);
+    icon.setScale(iconScale * 0.95 * 0.95);
     const cost = this.add.text(0, 33, locked ? "🔒" : "🍄" + costLabel, {
       fontFamily: "Arial", fontSize: "13px", color: "#fff0bd", fontStyle: "bold",
       stroke: "#3d2817", strokeThickness: 2, resolution: 2, align: "center"
