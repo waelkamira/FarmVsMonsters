@@ -6,6 +6,13 @@ import { useRouter } from "next/navigation";
 import { useLocale, LanguageToggle } from "./LocaleProvider";
 import { getPlayerSession, restoreOrInitializeCloudProgress } from "../game/services/playerAccount.mjs";
 
+const destinations = [
+  { href: "/stages", icon: "🗺️", en: "WORLD MAP", ar: "خريطة العوالم", subEn: "Explore the campaign", subAr: "استكشف رحلة الحملة", tone: "leaf" },
+  { href: "/plants", icon: "🌱", en: "PLANT INVENTORY", ar: "موسوعة النباتات", subEn: "Your garden defenders", subAr: "المدافعون عن حديقتك", tone: "sun" },
+  { href: "/monsters", icon: "🐾", en: "ENEMY BESTIARY", ar: "موسوعة الوحوش", subEn: "Know your enemies", subAr: "اكتشف خصومك", tone: "stone" },
+  { href: "/settings", icon: "⚙️", en: "OPTIONS", ar: "الإعدادات", subEn: "Sound and language", subAr: "الصوت واللغة", tone: "wood" }
+];
+
 export default function HomePage() {
   const { locale } = useLocale();
   const arabic = locale === "ar";
@@ -24,13 +31,13 @@ export default function HomePage() {
         return;
       }
     } catch {
-      // Account service may be unavailable; keep guest play immediately accessible.
+      // Guest play remains available if the account service is offline.
     }
     router.push("/game");
   }
 
   return (
-    <main className="world-home" dir={arabic ? "rtl" : "ltr"}>
+    <main className="world-home codex-home" dir={arabic ? "rtl" : "ltr"}>
       <div className="world-battlefield-showcase" aria-hidden="true">
         <img className="world-battlefield-image" src="/assets/backgrounds/farm-battlefield.jpeg" alt="" />
         <div className="world-battlefield-atmosphere" />
@@ -44,30 +51,42 @@ export default function HomePage() {
         <div className="battlefield-ground-glow" />
       </div>
 
-      <div className="home-language-control"><LanguageToggle /></div>
+      <div className="codex-home-topbar">
+        <div className="codex-home-brand"><span className="codex-brand-seal">🌿</span><span>FARM <b>VS</b> MONSTERS</span></div>
+        <div className="codex-home-top-actions"><span className="codex-world-label">{arabic ? "موسم المغامرة الأولى" : "SEASON ONE · THE FIRST GARDEN"}</span><LanguageToggle /></div>
+      </div>
 
-      <section className="farm-main-menu" aria-label={arabic ? "القائمة الرئيسية" : "Main menu"}>
-        <div className="farm-menu-brand">
-          <span className="farm-menu-brand-mark">🌱</span>
-          <div>
-            <div className="farm-menu-kicker">{arabic ? "مغامرة الدفاع عن المزرعة" : "THE FARM DEFENSE ADVENTURE"}</div>
-            <h1 className="home-game-title">Farm <span>Vs</span> Monsters</h1>
-            <p className="home-game-tagline">{arabic ? "ازرع جيشك، احمِ مزرعتك، وأنقذ الأميرة!" : "Grow your army. Defend your farm. Rescue the princess!"}</p>
-          </div>
-        </div>
-        <div className="farm-menu-actions">
-          <button className="farm-menu-play" type="button" onClick={startAdventure} disabled={starting}>
-            <span className="farm-menu-action-icon">⚔️</span>
-            <span><strong>{starting ? (arabic ? "جارٍ التحضير..." : "PREPARING...") : (arabic ? "مغامرة" : "ADVENTURE")}</strong><small>{arabic ? "تابع رحلتك في مواجهة الوحوش" : "Continue your fight against the monsters"}</small></span>
-            <b>➜</b>
+      <section className="codex-home-layout">
+        <div className="codex-home-story">
+          <span className="codex-ribbon">{arabic ? "مغامرة الدفاع عن المزرعة" : "THE FARM DEFENSE ADVENTURE"}</span>
+          <h1>{arabic ? <>ازرع جيشك،<br/><em>واحْمِ المزرعة!</em></> : <>Grow your army.<br/><em>Defend your farm.</em></>}</h1>
+          <p>{arabic ? "الوحوش تقترب من موطن القبيلة. اجمع نباتاتك، جهّز دفاعاتك، وانطلق في رحلة إنقاذ الأميرة." : "Monsters are closing in on the tribe's home. Gather your plants, prepare your defenses, and begin the rescue campaign."}</p>
+          <button className="codex-adventure-button" type="button" onClick={startAdventure} disabled={starting}>
+            <span className="codex-adventure-icon">⚔️</span>
+            <span><strong>{starting ? (arabic ? "جارٍ تجهيز المغامرة..." : "PREPARING ADVENTURE...") : (arabic ? "ابدأ المغامرة" : "START ADVENTURE")}</strong><small>{arabic ? "تابع رحلتك في مواجهة الوحوش" : "Enter the battlefield"}</small></span>
+            <b aria-hidden="true">➜</b>
           </button>
-          <Link className="farm-menu-option" href="/stages"><span>🗺️</span><strong>{arabic ? "خريطة العوالم" : "WORLD MAP"}</strong><small>{arabic ? "اختر مرحلتك التالية" : "Choose your next stage"}</small></Link>
-          <Link className="farm-menu-option" href="/plants"><span>🌿</span><strong>{arabic ? "موسوعة النباتات" : "PLANT ALMANAC"}</strong><small>{arabic ? "تعرف على المدافعين" : "Meet your defenders"}</small></Link>
-          <Link className="farm-menu-option" href="/monsters"><span>👾</span><strong>{arabic ? "دليل الوحوش" : "MONSTER ALMANAC"}</strong><small>{arabic ? "تعرف على أعدائك" : "Know your enemies"}</small></Link>
-          <Link className="farm-menu-option" href="/settings"><span>⚙️</span><strong>{arabic ? "الإعدادات" : "OPTIONS"}</strong><small>{arabic ? "الصوت واللغة" : "Sound and language"}</small></Link>
+          <div className="codex-home-note"><span>🌻</span>{arabic ? "كل حديقة لها أبطالها" : "EVERY GARDEN HAS ITS HEROES"}</div>
         </div>
-        <div className="farm-menu-footer"><span>🌻 {arabic ? "كل حديقة لها أبطالها" : "EVERY GARDEN HAS ITS HEROES"}</span><span>{arabic ? "اختر وجهتك وابدأ المغامرة" : "PICK YOUR PATH AND PLAY"}</span></div>
+
+        <div className="codex-home-boards">
+          <section className="codex-board codex-destinations-board">
+            <header className="codex-board-heading"><span>🍃</span><div><small>{arabic ? "دفتر المغامرة" : "YOUR ADVENTURE JOURNAL"}</small><h2>{arabic ? "استكشف عالمك" : "EXPLORE YOUR WORLD"}</h2></div></header>
+            <div className="codex-destination-grid">
+              {destinations.map((item) => <Link href={item.href} className={`codex-destination-card tone-${item.tone}`} key={item.href}>
+                <span className="codex-destination-icon">{item.icon}</span>
+                <span className="codex-destination-copy"><strong>{arabic ? item.ar : item.en}</strong><small>{arabic ? item.subAr : item.subEn}</small></span>
+                <b className="codex-destination-arrow">›</b>
+              </Link>)}
+            </div>
+          </section>
+          <section className="codex-home-utility-row">
+            <Link href="/help" className="codex-utility-card"><span>📜</span><strong>{arabic ? "دليل اللعب" : "FIELD GUIDE"}</strong><small>{arabic ? "تعلم أساسيات الدفاع" : "Learn the basics"}</small></Link>
+            <Link href="/account" className="codex-utility-card"><span>☁️</span><strong>{arabic ? "الحساب والحفظ" : "ACCOUNT & SAVE"}</strong><small>{arabic ? "حفظ تقدمك" : "Keep your progress"}</small></Link>
+          </section>
+        </div>
       </section>
+      <footer className="codex-home-footer"><span>FARM VS MONSTERS</span><span>{arabic ? "ازرع · دافع · انتصر" : "PLANT · DEFEND · CONQUER"}</span></footer>
     </main>
   );
 }
