@@ -762,6 +762,8 @@ export default class BattleScene extends Scene {
     }).setOrigin(0.5).setVisible(false);
     panel.setData("cooldownOverlay", cooldownOverlay);
     panel.setData("cooldownLabel", cooldownLabel);
+    card.setData("cooldownOverlay", cooldownOverlay);
+    card.setData("cooldownLabel", cooldownLabel);
     const cost = this.add.text(0, 29, "🍄 " + costLabel, {
       fontFamily: "Arial", fontSize: "14px", color: "#fff0bd", fontStyle: "bold",
       stroke: "#3d2817", strokeThickness: 2, resolution: 2,
