@@ -131,8 +131,14 @@ export function loadUnlockedStage(storage) {
     const raw = storage.getItem(CAMPAIGN_PROGRESS_KEY);
     if (!raw) return 1;
     const data = JSON.parse(raw);
-    if (!data || data.version !== 1 || !Number.isInteger(data.unlockedStage)) return 1;
-    return Math.min(CAMPAIGN_STAGE_COUNT, Math.max(1, data.unlockedStage));
+    if (
+      !data ||
+      data.version !== PROGRESSION_DATA_VERSION ||
+      !Number.isInteger(data.unlockedStage) ||
+      data.unlockedStage < 1 ||
+      data.unlockedStage > CAMPAIGN_STAGE_COUNT
+    ) return 1;
+    return data.unlockedStage;
   } catch {
     return 1;
   }
@@ -144,8 +150,14 @@ export function loadCompletedStages(storage) {
     const raw = storage.getItem(CAMPAIGN_PROGRESS_KEY);
     if (!raw) return [];
     const data = JSON.parse(raw);
-    if (!data || data.version !== PROGRESSION_DATA_VERSION || !Number.isInteger(data.unlockedStage)) return [];
-    const unlockedStage = Math.min(CAMPAIGN_STAGE_COUNT, Math.max(1, data.unlockedStage));
+    if (
+      !data ||
+      data.version !== PROGRESSION_DATA_VERSION ||
+      !Number.isInteger(data.unlockedStage) ||
+      data.unlockedStage < 1 ||
+      data.unlockedStage > CAMPAIGN_STAGE_COUNT
+    ) return [];
+    const unlockedStage = data.unlockedStage;
     const completedStages = new Set(
       Array.from({ length: unlockedStage - 1 }, (_, index) => index + 1)
     );
