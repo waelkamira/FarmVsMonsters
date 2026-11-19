@@ -1,12 +1,15 @@
 import { PHASE_ONE_PLANTS, PHASE_ONE_REWARDS, PHASE_ONE_WAVE_SIZES, PHASE_ONE_ENERGY } from "./phaseOneCombatContract.mjs";
 import { resolveEnergyPickup, resolveMonsterArchetype } from "./combatSimulation.mjs";
 
-// Thirty ordinary monsters across five gentle-to-challenging waves. The dragon boss is separate.
+// Twenty ordinary monsters across five guided onboarding waves. The dragon boss is separate.
 export { PHASE_ONE_WAVE_SIZES };
 export const PHASE_ONE_TOTAL_MONSTERS = PHASE_ONE_WAVE_SIZES.reduce((sum, count) => sum + count, 0);
 export const CAMPAIGN_STAGE_COUNT = 10;
+const CAMPAIGN_STAGE_MONSTER_COUNTS = Object.freeze([20, 25, 30, 36, 42, 48, 55, 62, 70, 80]);
 export const ordinaryMonsterCountForStage = (stage) =>
-  Number.isInteger(stage) && stage >= 1 && stage <= CAMPAIGN_STAGE_COUNT ? 29 + stage : 0;
+  Number.isInteger(stage) && stage >= 1 && stage <= CAMPAIGN_STAGE_COUNT
+    ? CAMPAIGN_STAGE_MONSTER_COUNTS[stage - 1]
+    : 0;
 
 export const INITIAL_ENERGY = PHASE_ONE_ENERGY.initial;
 export const MAX_ENERGY = PHASE_ONE_ENERGY.maximum;
