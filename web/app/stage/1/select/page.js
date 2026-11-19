@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale, LanguageToggle } from "../../../LocaleProvider";
+import { loadUnlockedPlantIds } from "../../../../game/rules/phaseOneRules.mjs";
 
 const PLANTS = [
   { id: "radish", name: "Radish Level 1", ar: "الفجل المستوى الأول", role: "Lane attacker", roleAr: "مهاجم للمسار", cost: 35, image: "/assets/plants/radish-level-1.png" },
@@ -15,18 +16,43 @@ const PLANTS = [
   { id: "snow-thrower", name: "Snow Thrower L1", ar: "قاذف الثلج L1", role: "Freeze support", roleAr: "دعم بالتجميد", cost: 90, image: "/assets/plants/Snow-thrower-level-1.png" }
 ];
 
-const DEFAULT_LOADOUT = ["radish", "mushroom", "pumpkin", "pineapple", "hazelnut", "mango", "snow-thrower"];
+const STARTER_LOADOUT = ["radish", "mushroom"];
 const MAX_SEEDS = 7;
 
 export default function StageOneSeedSelectionPage() {
   const { locale } = useLocale();
   const ar = locale === "ar";
   const router = useRouter();
-  const [selected, setSelected] = useState(DEFAULT_LOADOUT);
+  const [unlockedIds, setUnlockedIds] = useState(STARTER_LOADOUT);
+  const [selected, setSelected] = useState(STARTER_LOADOUT);
   const [notice, setNotice] = useState("");
-  const selectedPlants = useMemo(() => PLANTS.filter((plant) => selected.includes(plant.id)), [selected]);
+  const selectedPlants = useMemo(() => PLANTS.filter((plant) => unlockedIds.includes(plant.id) && selected.includes(plant.id)), [selected, unlockedIds]);
+
+  useEffect(() => {
+    let unlocked = STARTER_LOADOUT;
+    try {
+      unlocked = loadUnlockedPlantIds(window.localStorage);
+    } catch {
+      // Keep the starter loadout if browser storage is unavailable.
+    }
+    const safeUnlocked = [...new Set([...STARTER_LOADOUT, ...unlocked])];
+    setUnlockedIds(safeUnlocked);
+    try {
+      const saved = JSON.parse(window.localStorage.getItem("farmVsMonsters.selectedPlants") || "null");
+      const validSaved = Array.isArray(saved)
+        ? saved.filter((id) => safeUnlocked.includes(id) && PLANTS.some((plant) => plant.id === id))
+        : [];
+      setSelected([...new Set([...STARTER_LOADOUT, ...validSaved])].slice(0, MAX_SEEDS));
+    } catch {
+      setSelected(STARTER_LOADOUT);
+    }
+  }, []);
 
   function togglePlant(plant) {
+    if (!unlockedIds.includes(plant.id)) {
+      setNotice(ar ? "هذه النبتة لم تُفتح بعد. أكمل المراحل للحصول عليها." : "This seed is locked. Complete campaign stages to unlock it.");
+      return;
+    }
     if (plant.required) return;
     setNotice("");
     if (selected.includes(plant.id)) {
@@ -74,22 +100,25 @@ export default function StageOneSeedSelectionPage() {
 
         <div className="seed-select-grid">
           {PLANTS.map((plant) => {
-            const active = selected.includes(plant.id);
+            const unlocked = unlockedIds.includes(plant.id);
+            const active = selected.includes(plant.id) && unlocked;
             return (
               <button
                 type="button"
                 key={plant.id}
-                className={"seed-select-card" + (active ? " is-selected" : "") + (plant.required ? " is-required" : "")}
+                className={"seed-select-card" + (active ? " is-selected" : "") + (plant.required ? " is-required" : "") + (!unlocked ? " is-locked" : "")}
                 onClick={() => togglePlant(plant)}
                 aria-pressed={active}
+                aria-disabled={!unlocked}
                 aria-label={(ar ? plant.ar : plant.name) + (active ? (ar ? " مختار" : " selected") : (ar ? " غير مختار" : " not selected"))}
               >
-                <span className="seed-select-check">{active ? "✓" : "+"}</span>
+                <span className="seed-select-check">{!unlocked ? "🔒" : active ? "✓" : "+"}</span>
                 <span className={"seed-select-art" + (plant.id === "radish" ? " is-sprite-sheet" : "")}><img src={plant.image} alt="" /></span>
                 <strong>{ar ? plant.ar : plant.name}</strong>
                 <small>{ar ? plant.roleAr : plant.role}</small>
                 <span className="seed-select-cost">🍄 {plant.cost}</span>
                 {plant.required && <em>{ar ? "أساسي" : "REQUIRED"}</em>}
+                {!unlocked && <em className="seed-select-locked-label">{ar ? "مقفلة" : "LOCKED"}</em>}
               </button>
             );
           })}
