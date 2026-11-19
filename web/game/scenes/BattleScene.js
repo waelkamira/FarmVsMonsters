@@ -85,6 +85,7 @@ export default class BattleScene extends Scene {
     this.load.image("snow-thrower-level-1", "/assets/plants/Snow-thrower-level-1.png");
     this.load.image("snow-thrower-bomb-level-1", "/assets/plants/Snow-thrower-bomb-level-1.png");
     this.load.image("frozen-hyena-level-1", "/assets/characters/monsters/hyena/frozen-hyena-level-1.png");
+    this.load.image("frozen-hyena-level-2", "/assets/characters/monsters/hyena/frozen-hyena-level-2.png");
     // 1254×1254 artwork is a 3×3 sheet: nine 418×418 animation frames.
     this.load.spritesheet("pineapple-level-1", "/assets/plants/pineapple-level-1.png", { frameWidth: 418, frameHeight: 418, margin: 0, spacing: 0 });
     // 1024×1024 artwork, 3×3 grid: use 341px integer cells; Phaser exposes 9 frames.
@@ -149,6 +150,25 @@ export default class BattleScene extends Scene {
 
   create() {
     this.isPaused = false;
+    // Both uploaded artworks are 3x3 sheets. Register one Phaser frame per cell
+    // so the battle renders a single pose instead of the complete nine-pose sheet.
+    // Use the same dimension-derived 3×3 crop path for Mango, Snow Thrower,
+    // and the frozen Hyena so every sheet gets identical frame boundaries.
+    this.registerThreeByThreeSheet("mango-level-1");
+    this.registerThreeByThreeSheet("snow-thrower-level-1");
+    this.registerThreeByThreeSheet("frozen-hyena-level-1");
+    this.registerThreeByThreeSheet("frozen-hyena-level-2");
+    if (this.textures.exists("snow-thrower-level-1") && !this.anims.exists("snow-thrower-level-1-throw")) {
+      const available = Object.keys(this.textures.get("snow-thrower-level-1").frames).filter((name) => name !== "__BASE").length;
+      if (available >= 9) {
+        this.anims.create({
+          key: "snow-thrower-level-1-throw",
+          frames: this.anims.generateFrameNumbers("snow-thrower-level-1", { start: 0, end: 8 }),
+          frameRate: 12,
+          repeat: 0
+        });
+      }
+    }
     // Client-local deterministic seed for reproducible development sessions only.
     // The authoritative server must issue and retain its own seed per game session.
     const seedBuffer = new Uint32Array(1);
@@ -215,22 +235,6 @@ export default class BattleScene extends Scene {
     this.princessActor = null;
     this.gameOver = false;
     this.hyenaAnimationsReady = this.createHyenaAnimations();
-    if (this.textures.exists("mango-level-1")) {
-      const mangoTexture = this.textures.get("mango-level-1");
-      const mangoSource = mangoTexture.getSourceImage();
-      // Split the 3x3 Mango Level 1 sheet using its actual loaded dimensions.
-      for (let index = 0; index < 9; index += 1) {
-        const column = index % 3;
-        const row = Math.floor(index / 3);
-        const frameX = Math.floor((column * mangoSource.width) / 3);
-        const frameY = Math.floor((row * mangoSource.height) / 3);
-        const nextFrameX = Math.floor(((column + 1) * mangoSource.width) / 3);
-        const nextFrameY = Math.floor(((row + 1) * mangoSource.height) / 3);
-        if (!mangoTexture.has(String(index))) {
-          mangoTexture.add(String(index), 0, frameX, frameY, nextFrameX - frameX, nextFrameY - frameY);
-        }
-      }
-    }
     if (this.textures.exists("radish-level-1")) {
       const radishTexture = this.textures.get("radish-level-1");
       const radishSource = radishTexture.getSourceImage();
@@ -706,14 +710,14 @@ export default class BattleScene extends Scene {
       .setInteractive({ useHandCursor: true });
     let icon;
     if (imageKey && this.textures.exists(imageKey)) {
-      const usesGridSheet = imageKey === "mango-level-1" || imageKey === "radish-level-1";
-      const frameData = this.textures.getFrame(imageKey, usesGridSheet ? 0 : undefined);
+      const usesGridSheet = imageKey === "mango-level-1" || imageKey === "radish-level-1" || imageKey === "snow-thrower-level-1";
+      const frameData = this.textures.getFrame(imageKey, usesGridSheet ? "0" : undefined);
       // Use nearly the full packet face for the plant artwork while keeping
       // a dedicated strip below for the energy cost.
       const iconHeight = 58;
       const iconWidth = iconHeight * (frameData.realWidth / frameData.realHeight);
       icon = usesGridSheet
-        ? this.add.sprite(0, -11, imageKey, 0).setDisplaySize(Math.min(iconWidth, 64), iconHeight)
+        ? this.add.sprite(0, -11, imageKey, "0").setDisplaySize(Math.min(iconWidth, 64), iconHeight)
         : this.add.image(0, -11, imageKey).setDisplaySize(Math.min(iconWidth, 64), iconHeight);
     } else {
       icon = this.add.graphics();
@@ -2303,6 +2307,29 @@ export default class BattleScene extends Scene {
     return plant;
   }
 
+  registerThreeByThreeSheet(textureKey) {
+    if (!this.textures.exists(textureKey)) return false;
+    const texture = this.textures.get(textureKey);
+    const source = texture.getSourceImage();
+    if (!source?.width || !source?.height) return false;
+
+    // Match Mango's proven crop method: calculate each cell edge from the
+    // actual source dimensions. This also handles dimensions not divisible by 3.
+    for (let index = 0; index < 9; index += 1) {
+      const column = index % 3;
+      const row = Math.floor(index / 3);
+      const frameX = Math.floor((column * source.width) / 3);
+      const frameY = Math.floor((row * source.height) / 3);
+      const nextFrameX = Math.floor(((column + 1) * source.width) / 3);
+      const nextFrameY = Math.floor(((row + 1) * source.height) / 3);
+      const frameName = String(index);
+      if (!texture.has(frameName)) {
+        texture.add(frameName, 0, frameX, frameY, nextFrameX - frameX, nextFrameY - frameY);
+      }
+    }
+    return true;
+  }
+
   drawCatalogPlant(type, x, y, row = 2) {
     const plant = this.add.container(x, y).setDepth(11);
     const texture = type === "pumpkin" ? "pumpkin-character" : type === "pineapple" ? "pineapple-level-1" : type === "hazelnut" ? "hazelnut-level-1" : type === "mango" ? "mango-level-1" : type === "snow-thrower" ? "snow-thrower-level-1" : "radish-level-1";
@@ -2313,19 +2340,23 @@ export default class BattleScene extends Scene {
     // The farthest row is smallest; each nearer row grows progressively.
     // Apply the same perspective to Pineapple, Hazelnut and Mango so their projectiles
     // can use the exact displayed plant scale when calculating launch offsets.
-    const pineapplePerspectiveScale = type === "pineapple" || type === "hazelnut" || type === "mango"
+    const pineapplePerspectiveScale = type === "pineapple" || type === "hazelnut" || type === "mango" || type === "snow-thrower"
       ? PhaserMath.Clamp(0.8 + (rowIndex / Math.max(1, LANES - 1)) * 0.4, 0.8, 1.2)
       : 1;
     plant.setData("pineapplePerspectiveScale", pineapplePerspectiveScale);
     if (this.textures.exists(texture)) {
       // Pineapple Level 1 keeps its tuned base size; only its row perspective changes.
-      const baseHeight = type === "pumpkin" ? 70 : type === "pineapple" ? 132 : type === "hazelnut" ? 112 : type === "mango" ? 112 : type === "snow-thrower" ? 104 : 64;
+      const baseHeight = type === "pumpkin" ? 70 : type === "pineapple" ? 132 : type === "hazelnut" ? 112 : type === "mango" ? 112 : type === "snow-thrower" ? 120 : 64;
       const height = baseHeight * pineapplePerspectiveScale;
-      const width = height * (this.textures.getFrame(texture).realWidth / this.textures.getFrame(texture).realHeight);
-      const maxWidth = (type === "pineapple" ? 152 : type === "hazelnut" ? 116 : type === "mango" ? 116 : type === "snow-thrower" ? 104 : 76) * pineapplePerspectiveScale;
-      if (type === "pineapple" || type === "hazelnut" || type === "mango") {
-        const animatedPlant = this.add.sprite(0, -height / 2 + 2, texture, 0).setDisplaySize(Math.min(width, maxWidth), height);
-        animatedPlant.setData(type === "pineapple" ? "pineappleThrowSprite" : type === "hazelnut" ? "hazelnutThrowSprite" : "mangoThrowSprite", true);
+      const plantFrame = this.textures.getFrame(texture, ["pineapple", "hazelnut", "mango", "snow-thrower"].includes(type) ? "0" : undefined);
+      const width = height * (plantFrame.realWidth / plantFrame.realHeight);
+      const maxWidth = (type === "pineapple" ? 152 : type === "hazelnut" ? 116 : type === "mango" ? 116 : type === "snow-thrower" ? 120 : 76) * pineapplePerspectiveScale;
+      if (["pineapple", "hazelnut", "mango", "snow-thrower"].includes(type)) {
+        const animatedPlant = this.add.sprite(0, -height / 2 + 2, texture, "0").setDisplaySize(Math.min(width, maxWidth), height);
+        const animationDataKey = type === "pineapple" ? "pineappleThrowSprite"
+          : type === "hazelnut" ? "hazelnutThrowSprite"
+          : type === "mango" ? "mangoThrowSprite" : "snow-throwerThrowSprite";
+        animatedPlant.setData(animationDataKey, true);
         plant.add(animatedPlant);
       } else {
         plant.add(this.add.image(0, -height / 2 + 2, texture).setDisplaySize(Math.min(width, maxWidth), height));
@@ -2516,7 +2547,7 @@ export default class BattleScene extends Scene {
   fireThorn(plant, target) {
     // Pineapple projectiles must not exist until the throw animation reaches
     // its final frame. This keeps the visual action and the actual launch in sync.
-    if (["radish", "pineapple", "hazelnut", "mango"].includes(plant.type) && plant.view?.active) {
+    if (["radish", "pineapple", "hazelnut", "mango", "snow-thrower"].includes(plant.type) && plant.view?.active) {
       const animationType = plant.type;
       const throwingKey = `${animationType}Throwing`;
       if (plant[throwingKey]) return;
@@ -2554,7 +2585,7 @@ export default class BattleScene extends Scene {
     // Pineapple, Hazelnut and Mango travel on the same raised lane. Their launch
     // offsets are measured from that lane so the complete curved trajectory
     // retains the exact launch position instead of snapping on its first tick.
-    const usesRaisedBombLane = ["pineapple", "hazelnut", "mango"].includes(plant.type);
+    const usesRaisedBombLane = ["pineapple", "hazelnut", "mango", "snow-thrower"].includes(plant.type);
     const laneOrigin = usesRaisedBombLane
       ? this.pineappleLanePoint(localX, row)
       : this.lanePoint(localX, row);
@@ -2617,6 +2648,16 @@ export default class BattleScene extends Scene {
         plantProjectile.setDisplaySize(30, 30);
       }
       view.add(plantProjectile);
+    } else if (plant.type === "snow-thrower") {
+      // Keep a snow-colored fallback if the uploaded projectile texture fails.
+      const snowball = this.add.circle(0, 0, 12, 0xb9efff, 1)
+        .setStrokeStyle(2, 0xf4fdff, 1);
+      const glint = this.add.circle(-4, -4, 3, 0xffffff, 0.95);
+      const snowflake = this.add.text(0, 0, "❄", {
+        fontFamily: "Arial", fontSize: "15px", color: "#267ca8",
+        stroke: "#e9fbff", strokeThickness: 1
+      }).setOrigin(0.5);
+      view.add([snowball, glint, snowflake]);
     } else {
       // Visible fallback only if the Radish artwork failed to load.
       const fallback = this.add.ellipse(0, 0, 23, 13, 0xff7185, 1)
@@ -3316,18 +3357,36 @@ export default class BattleScene extends Scene {
     if (monster.view?.active) this.tweens.killTweensOf(monster.view);
     if (monster.braceCue?.active) monster.braceCue.setVisible(false);
     const sprite = monster.hyenaSprite;
-    if (sprite?.active && this.textures.exists("frozen-hyena-level-1")) {
+    const preferredFrozenTexture = this.wave >= 4
+      ? "frozen-hyena-level-2"
+      : "frozen-hyena-level-1";
+    const fallbackFrozenTexture = preferredFrozenTexture === "frozen-hyena-level-2"
+      ? "frozen-hyena-level-1"
+      : "frozen-hyena-level-2";
+    const frozenTexture = this.textures.exists(preferredFrozenTexture)
+      ? preferredFrozenTexture
+      : this.textures.exists(fallbackFrozenTexture)
+        ? fallbackFrozenTexture
+        : null;
+    if (sprite?.active && frozenTexture) {
       if (!monster.frozenAnimationKey) {
         monster.frozenAnimationKey = sprite.anims.currentAnim?.key || (monster.kind === "dust-skitter" ? "hyena-run" : "hyena-walk");
         monster.frozenSpriteSize = { width: sprite.displayWidth, height: sprite.displayHeight };
       }
       sprite.stop();
-      sprite.setTexture("frozen-hyena-level-1");
+      // Use the upgraded frozen-hyena artwork in later waves. Both atlases
+      // are registered as nine dimension-derived frames before the battle starts.
+      // Frame zero is the authored frozen pose; never display the full atlas.
+      sprite.setTexture(frozenTexture);
+      sprite.setFrame("0");
       sprite.setOrigin(0.5, 1);
       if (monster.frozenSpriteSize?.width > 0 && monster.frozenSpriteSize?.height > 0) {
         sprite.setDisplaySize(monster.frozenSpriteSize.width, monster.frozenSpriteSize.height);
       }
-      sprite.setTint(0x94dcff);
+      // The frozen atlas already contains its authored ice colors and highlights.
+      // Do not apply a full-sprite blue tint: it obscures the hyena artwork and
+      // creates the flat blue silhouette seen in battle screenshots.
+      sprite.clearTint();
     }
     this.setMessage("SNOW HIT! The hyena is frozen for 2.6 seconds.");
     return true;
@@ -3336,7 +3395,7 @@ export default class BattleScene extends Scene {
   restoreMonsterAfterFreeze(monster) {
     const sprite = monster?.hyenaSprite;
     if (sprite?.active) {
-      sprite.clearTint();
+      sprite.setTint(monster.tierTint ?? 0xffffff);
       sprite.setScale(0.918);
       sprite.setOrigin(0.5, 1);
       this.playHyenaAnimation(monster, monster.frozenAnimationKey || (monster.kind === "dust-skitter" ? "hyena-run" : "hyena-walk"), true);
@@ -3398,6 +3457,7 @@ export default class BattleScene extends Scene {
         continue;
       }
 
+      const previousShotLocalX = shot.localX;
       shot.localX = resolveProjectileLaneStep({ localX: shot.localX, speed: shot.speed, deltaSeconds: dt });
       // Keep every projectile in its plant's original lane. Aim follows the
       // live target, while pineapple bombs switch to a vertical head drop.
@@ -3407,7 +3467,7 @@ export default class BattleScene extends Scene {
       }
 
       shot.currentRow = shot.row;
-      const position = ["pineapple", "hazelnut", "mango"].includes(shot.plantType)
+      const position = ["pineapple", "hazelnut", "mango", "snow-thrower"].includes(shot.plantType)
         ? this.pineappleLanePoint(shot.localX, shot.row)
         : this.lanePoint(shot.localX, shot.row);
       const projectileX = position.x + (shot.launchOffsetX || 0);
@@ -3446,11 +3506,26 @@ export default class BattleScene extends Scene {
       // A Radish projectile can damage monsters in its own lane only.
       let hit = null;
       let nearestHitDistance = Infinity;
+      let firstSnowHitLocalX = Infinity;
       for (const monster of this.monsters) {
         if (!monster?.alive || monster.row !== shot.row ||
             !Number.isFinite(monster.localX)) continue;
         const horizontalDistance = Math.abs(monster.localX - shot.localX);
         const hitRadius = (shot.collisionRadius || PHASE_ONE_PLANTS.radish.projectileCollisionRadius) * (monster.widthScale || 1);
+        if (shot.freeze) {
+          // Snow shots travel toward increasing lane X. Test the whole swept
+          // segment so a fast frame cannot skip a hyena between two positions.
+          // If it crosses more than one, freeze the first one along the path.
+          const sweptStart = previousShotLocalX - hitRadius;
+          const sweptEnd = shot.localX + hitRadius;
+          if (monster.localX < sweptStart || monster.localX > sweptEnd ||
+              monster.localX >= firstSnowHitLocalX) continue;
+          hit = monster;
+          firstSnowHitLocalX = monster.localX;
+          continue;
+        }
+        // Preserve the existing nearest-hit behavior for Radish and other
+        // damage projectiles.
         if (horizontalDistance > hitRadius || horizontalDistance >= nearestHitDistance) continue;
         hit = monster;
         nearestHitDistance = horizontalDistance;
