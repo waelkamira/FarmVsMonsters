@@ -38,7 +38,7 @@ export default function HomePage() {
       <section className="codex-home-center">
         <img className="farm-game-logo farm-game-logo-center" src="/assets/items/ui/logo.png" alt="Farm Vs Monsters" />
         <button className="codex-adventure-button codex-play-only codex-start-image-button" type="button" onClick={startAdventure} disabled={starting} aria-label={starting ? (arabic ? "جارٍ التحضير" : "Getting ready") : (arabic ? "ابدأ" : "Start")}>
-          <img src="/assets/items/ui/start-button.jpeg" alt="" />
+          <img src="/assets/items/ui/start-button.png" alt="" />
           {starting && <span className="codex-start-loading">{arabic ? "جارٍ التحضير..." : "GETTING READY..."}</span>}
         </button>
       </section>
