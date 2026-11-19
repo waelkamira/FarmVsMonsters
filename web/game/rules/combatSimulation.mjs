@@ -360,9 +360,12 @@ export function resolveMonsterArchetype(wave, spawnIndex) {
     spawnIndex >= PHASE_ONE_WAVE_SIZES.reduce((sum, count) => sum + count, 0)
   ) throw new RangeError("INVALID_MONSTER_SPAWN_INDEX");
 
-  if (wave >= 4 && (spawnIndex + 1) % 10 === 0) return "alpha-brute";
-  if (wave >= 5 && (spawnIndex + 1) % 5 === 0) return "stonehide";
-  if (wave >= 3 && spawnIndex % 3 === 1) return "dust-skitter";
+  // Stage 1 teaches one enemy at a time. The first three waves contain
+  // only the baseline cave brute; wave 4 demonstrates one fast scout, and
+  // wave 5 introduces one armoured stonehide. Alpha brutes are reserved
+  // for a later campaign stage.
+  if (wave === 5 && spawnIndex === PHASE_ONE_WAVE_SIZES[4] - 1) return "stonehide";
+  if (wave === 4 && spawnIndex === PHASE_ONE_WAVE_SIZES[3] - 1) return "dust-skitter";
   return "cave-brute";
 }
 
