@@ -619,8 +619,10 @@ export default class BattleScene extends Scene {
     this.plantingPreviewCell = null;
     if (
       !pointer ||
-      !pointer.isDown && pointer.wasTouch &&
-      (this.gameOver || this.isPaused || this.collectionMenuOpen || this.storySequenceActive)
+      this.gameOver ||
+      this.isPaused ||
+      this.collectionMenuOpen ||
+      this.storySequenceActive
     ) return;
 
     const { col, row } = this.worldToGrid(pointer.x, pointer.y);
