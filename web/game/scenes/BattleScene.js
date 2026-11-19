@@ -3058,6 +3058,49 @@ export default class BattleScene extends Scene {
     sprite.play(key);
   }
 
+  createMonsterArrivalEffect(spawn, laneGap, archetype) {
+    const accent = archetype === "stonehide" ? 0x8fb9ff
+      : archetype === "dust-skitter" ? 0xb9e7f4
+      : archetype === "alpha-brute" ? 0xffc45e
+      : 0xd6b27a;
+    const scale = PhaserMath.Clamp(laneGap / 108, 0.28, 0.62);
+    const cue = this.add.container(spawn.x + 4, spawn.y + 2).setDepth(9 + spawn.y / 1000);
+    const shadow = this.add.ellipse(0, 0, 54 * scale, 16 * scale, 0x20180f, 0.36);
+    const outer = this.add.ellipse(0, -4 * scale, 58 * scale, 25 * scale, accent, 0);
+    outer.setStrokeStyle(Math.max(2, 4 * scale), accent, 0.92);
+    const inner = this.add.ellipse(0, -4 * scale, 38 * scale, 15 * scale, 0xffffff, 0);
+    inner.setStrokeStyle(Math.max(1, 2 * scale), 0xfff0c7, 0.8);
+    cue.add([shadow, outer, inner]);
+    cue.setAlpha(0.95).setScale(0.45);
+    this.tweens.add({
+      targets: cue,
+      scale: 1.5,
+      alpha: 0,
+      duration: archetype === "dust-skitter" ? 280 : 420,
+      ease: "Cubic.easeOut",
+      onComplete: () => cue.destroy()
+    });
+
+    // A few inexpensive dust puffs sell the arrival without loading new art.
+    for (let i = 0; i < 3; i += 1) {
+      const puff = this.add.ellipse(
+        spawn.x + PhaserMath.Between(-12, 12) * scale,
+        spawn.y - PhaserMath.Between(0, 8) * scale,
+        10 * scale, 6 * scale, accent, 0.5
+      ).setDepth(9 + spawn.y / 1000);
+      this.tweens.add({
+        targets: puff,
+        x: puff.x + PhaserMath.Between(-22, 22) * scale,
+        y: puff.y - PhaserMath.Between(10, 24) * scale,
+        alpha: 0,
+        scale: 0.2,
+        duration: 300 + i * 45,
+        ease: "Quad.easeOut",
+        onComplete: () => puff.destroy()
+      });
+    }
+  }
+
   spawnMonster(spawnIndex = this.spawnedThisWave) {
     const row = this.simulationRandom.nextInt(0, LANES - 1);
     const archetype = this.monsterArchetypeFor(spawnIndex);
@@ -3066,15 +3109,27 @@ export default class BattleScene extends Scene {
     const hp = profile.hp;
     const speed = profile.speed;
     const spawn = this.monsterLanePoint(SPAWN_LOCAL_X, row);
-    const view = this.add.container(spawn.x, spawn.y).setDepth(10 + spawn.y / 1000);
+    const view = this.add.container(spawn.x + 42, spawn.y).setDepth(10 + spawn.y / 1000);
+    view.setAlpha(0);
 
     // Scale each creature against the measured gap of its perspective lane.
     const laneGap = row < LANES - 1
       ? this.laneYs[row + 1] - this.laneYs[row]
       : this.laneYs[row] - this.laneYs[row - 1];
     const monsterScale = PhaserMath.Clamp(laneGap / 108, 0.28, 0.62);
-    view.setScale(monsterScale * profile.widthScale, monsterScale * profile.heightScale);
-    view.setPosition(spawn.x, spawn.y);
+    const finalScaleX = monsterScale * profile.widthScale;
+    const finalScaleY = monsterScale * profile.heightScale;
+    view.setScale(finalScaleX * 0.72, finalScaleY * 0.72);
+    this.createMonsterArrivalEffect(spawn, laneGap, archetype);
+    this.tweens.add({
+      targets: view,
+      x: spawn.x,
+      alpha: 1,
+      scaleX: finalScaleX,
+      scaleY: finalScaleY,
+      duration: archetype === "dust-skitter" ? 260 : archetype === "stonehide" ? 520 : 400,
+      ease: archetype === "dust-skitter" ? "Cubic.easeOut" : "Back.Out"
+    });
 
     const g = this.add.graphics();
     const bodyColor = archetype === "stonehide" ? 0x68675b
