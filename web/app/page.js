@@ -31,16 +31,15 @@ export default function HomePage() {
   return (
     <main className="world-home codex-home codex-home-minimal" dir={arabic ? "rtl" : "ltr"}>
       <div className="world-battlefield-showcase" aria-hidden="true">
-        <img className="world-battlefield-image" src="/assets/backgrounds/farm-battlefield.jpeg" alt="" />
+        <img className="world-battlefield-image" src="/assets/items/ui/background.jpeg" alt="" />
         <div className="world-battlefield-atmosphere" />
         <div className="battlefield-ground-glow" />
       </div>
       <section className="codex-home-center">
         <img className="farm-game-logo farm-game-logo-center" src="/assets/items/ui/logo.png" alt="Farm Vs Monsters" />
-        <button className="codex-adventure-button codex-play-only" type="button" onClick={startAdventure} disabled={starting}>
-          <span className="codex-adventure-icon" aria-hidden="true">⚔️</span>
-          <span><strong>{starting ? (arabic ? "جارٍ التحضير..." : "GETTING READY...") : (arabic ? "العب فقط" : "PLAY")}</strong></span>
-          <b aria-hidden="true">➜</b>
+        <button className="codex-adventure-button codex-play-only codex-start-image-button" type="button" onClick={startAdventure} disabled={starting} aria-label={starting ? (arabic ? "جارٍ التحضير" : "Getting ready") : (arabic ? "ابدأ" : "Start")}>
+          <img src="/assets/items/ui/start-button.jpeg" alt="" />
+          {starting && <span className="codex-start-loading">{arabic ? "جارٍ التحضير..." : "GETTING READY..."}</span>}
         </button>
       </section>
       <a className="codex-home-settings-link" href="/settings" aria-label={arabic ? "الإعدادات" : "Settings"}>⚙️</a>
