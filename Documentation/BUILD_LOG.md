@@ -1043,3 +1043,10 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - Loaded `ui-seed-card-fram.png` from the confirmed UI asset directory and applied it to the battle seed packets, including locked packets.
 - Preserved the source image aspect ratio within the existing packet bounds; the existing plant icon, energy cost, selection interaction, and cooldown overlay remain layered above the frame.
 - Added source-level regression assertions for asset loading and frame rendering. Runtime visual verification and the Node suite remain pending.
+
+
+## 2026-11-19 — Locked seed card and empty seed slots
+- Loaded the newly uploaded `ui-seed-card-locked.png` and `ui-seed-slot-empty.png` UI assets in the battle scene.
+- Empty slot artwork now fills unused positions in the seven-slot seed tray, behind selectable packets.
+- Locked-card artwork is used for locked plant entries in the collection and as the card artwork when a locked packet is rendered; its aspect ratio is preserved.
+- Added source-level regression tests for both assets and their placement. Node tests, production build, and runtime visual verification remain pending.
