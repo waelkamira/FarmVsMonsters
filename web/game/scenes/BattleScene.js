@@ -1204,23 +1204,42 @@ export default class BattleScene extends Scene {
       const targetPlant = selectDragonFireballTarget(this.plants);
       const targetX = targetPlant ? targetPlant.x : 92;
       const targetY = targetPlant ? targetPlant.y - 18 : 490;
-      const fireball = this.add.circle(boss.sprite?.x ?? 930, (boss.sprite?.y ?? 145) - 38, 15, 0xff762e, 1)
-        .setStrokeStyle(3, 0xffd16c, 1).setDepth(53);
+
+      // Telegraph the chosen impact point before the projectile is launched.
+      // The marker is visual only; damage and target resolution remain unchanged.
+      const warning = this.add.circle(targetX, targetY, 24, 0xff5b32, 0.18)
+        .setStrokeStyle(4, 0xffc15c, 0.98).setDepth(54);
+      const warningCore = this.add.circle(targetX, targetY, 8, 0xffe39a, 0.75)
+        .setDepth(54);
       this.tweens.add({
-        targets: fireball, x: targetX, y: targetY, scale: 1.45,
-        duration: PHASE_ONE_DRAGON.fireballTravelMs, ease: "Quad.easeIn",
+        targets: [warning, warningCore],
+        scale: 1.45,
+        alpha: 0,
+        duration: 520,
+        ease: "Cubic.easeOut",
         onComplete: () => {
-          if (fireball.active) fireball.destroy();
-          if (this.gameOver || this.storySequenceActive || this.collectionMenuOpen) return;
-          if (targetPlant?.alive) {
-            targetPlant.hp = applyHitPointsDamage(targetPlant.hp, PHASE_ONE_DRAGON.fireballDamageToPlant).hp;
-            this.flashEatenPlant(targetPlant);
-            if (targetPlant.hp <= 0) this.destroyPlant(targetPlant);
-          } else {
-            this.houseHealth = Math.max(0, this.houseHealth - PHASE_ONE_DRAGON.fireballDamageToFarm);
-            if (this.houseHealth <= 0) this.endGame(false);
-            this.refreshHud();
-          }
+          if (warning.active) warning.destroy();
+          if (warningCore.active) warningCore.destroy();
+          if (this.gameOver || this.storySequenceActive || this.collectionMenuOpen || !boss.alive) return;
+          const fireball = this.add.circle(boss.sprite?.x ?? 930, (boss.sprite?.y ?? 145) - 38, 15, 0xff762e, 1)
+            .setStrokeStyle(3, 0xffd16c, 1).setDepth(53);
+          this.tweens.add({
+            targets: fireball, x: targetX, y: targetY, scale: 1.45,
+            duration: PHASE_ONE_DRAGON.fireballTravelMs, ease: "Quad.easeIn",
+            onComplete: () => {
+              if (fireball.active) fireball.destroy();
+              if (this.gameOver || this.storySequenceActive || this.collectionMenuOpen) return;
+              if (targetPlant?.alive) {
+                targetPlant.hp = applyHitPointsDamage(targetPlant.hp, PHASE_ONE_DRAGON.fireballDamageToPlant).hp;
+                this.flashEatenPlant(targetPlant);
+                if (targetPlant.hp <= 0) this.destroyPlant(targetPlant);
+              } else {
+                this.houseHealth = Math.max(0, this.houseHealth - PHASE_ONE_DRAGON.fireballDamageToFarm);
+                if (this.houseHealth <= 0) this.endGame(false);
+                this.refreshHud();
+              }
+            }
+          });
         }
       });
     }
