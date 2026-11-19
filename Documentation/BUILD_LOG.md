@@ -975,3 +975,13 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - Updated seed packet energy labels to use the Mushroom energy icon rather than the old sun symbol, and documented recharge behavior in the field guide with Arabic translation.
 - Added Node tests that verify all seven plant recharge values are present, positive, and match the approved balance table.
 - Verification status: source-level read-back completed. The new tests and Phaser gameplay still need to be run locally in Chrome; no browser/runtime success is claimed yet.
+
+
+## 2026-11-19 — Pre-battle seed packet selection
+- Added a pre-battle loadout screen to the existing ` /game ` route. Players now choose their seed packets before Phaser initializes the battlefield.
+- The selection screen reads campaign unlocks, persists the chosen loadout in browser storage, supports Arabic and English, and shows each plant's role and energy cost.
+- The loadout is limited to six packets. Radish and Energy Mushroom remain mandatory starter choices; locked plants cannot be selected.
+- Added pure loadout normalization/default-selection rules and Node tests for starter retention, locked/unknown IDs, duplicate IDs, and the six-packet limit.
+- Connected the selected loadout to the existing BattleScene seed-bank reader without changing the battle grid, combat rules, or art assets.
+- Fixed the cooldown indicator references so the HUD refresh reads the recharge overlay/countdown from the seed-card container.
+- Verification status: GitHub source read-back and branch comparison completed. Automated tests, Next.js build, and browser playtest have not been run in this environment; do not merge until they pass locally.
