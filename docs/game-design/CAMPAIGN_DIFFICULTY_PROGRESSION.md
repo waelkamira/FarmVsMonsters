@@ -119,3 +119,45 @@ These counts are ordinary enemies per stage; they are pacing targets for the 10-
 - A failed attempt feels recoverable: the player can identify what to improve rather than feeling overwhelmed.
 - Do not raise monster HP, movement speed, and spawn frequency together in one stage.
 - Tune after real playtests; the numeric targets above are a starting balance, not a substitute for observed win rates and player comprehension.
+
+
+## Plant unlocks and stage rewards (DESIGN PLAN)
+
+The seed bank currently exposes the existing plant roster in the battle scene. The following is the intended campaign reward schedule; it must be connected to the stage-selection/loadout flow before it is treated as live progression.
+
+### Starting loadout
+
+Available from the beginning:
+- **Radish Level 1** — the basic lane shooter; the player learns the core attack loop with it.
+- **Energy Mushroom** — the basic resource generator; teach the player to collect its energy.
+- Keep the first stage's tutorial loadout intentionally small. Do not require the player to understand every advanced plant before the first win.
+
+### Reward schedule
+
+| Campaign milestone | Unlock reward | Why this timing |
+|---|---|---|
+| Complete Stage 1 | **Pumpkin** | Introduces a defensive blocker after the player has learned basic shooting and energy |
+| Complete Stage 2 | **Pineapple** | Introduces a heavier, slower projectile as a clear offensive alternative |
+| Complete Stage 3 | **Hazelnut** | Adds a balanced attack option after the player has practised choosing between offence and defence |
+| Complete Stage 4 | **Mango** | Adds a more specialised curved/aimed projectile after the player has mastered lane targeting |
+| Complete Stage 5 | **Snow Thrower** | Introduces crowd control only after the player has enough experience to understand timing and freeze value |
+| Complete Stage 6 | Plant upgrade / level-up material | Shift rewards from roster breadth toward mastery |
+| Complete Stage 7 | Advanced plant variant or cosmetic | Reward mastery while introducing the Alpha Brute threat |
+| Complete Stage 8 | Additional upgrade material | Prepare the player for endurance |
+| Complete Stage 9 | Premium-looking cosmetic / bonus currency | Give a meaningful pre-finale reward without trivialising the final challenge |
+| Complete Stage 10 | Final evolution / campaign trophy | Long-term completion reward |
+
+### Reward rules
+
+- Unlocks are permanent and saved in campaign progression; replaying a completed stage must not remove or duplicate them.
+- A reward is granted only after the full stage victory condition is met, including its boss/story completion where applicable.
+- Show the newly unlocked plant, its role, its energy cost, and a short one-line usage tip on the victory screen.
+- A newly unlocked plant should be available in the next stage's loadout, not silently inserted into the current battle.
+- Do not force a fixed loadout after the tutorial: once unlocked, let the player choose a limited number of seed packets before battle.
+- Locked seed packets should be visibly distinguishable and should explain the exact stage needed to unlock them.
+- Never unlock a plant merely because a player opened a stage or reached a wave; grant it only on a confirmed stage completion.
+- The player should always retain a viable starter loadout. No progression reward may make the basic campaign unwinnable if skipped or if local storage is unavailable.
+
+### Implementation gate
+
+Before connecting these rewards to gameplay, inspect the campaign map and loadout pages and unify their persistence with `CAMPAIGN_PROGRESS_KEY`. The battle scene currently calls `unlockNextStage(..., 1)` on victory, while the seed bank currently loads a saved selection and defaults to the full plant option list. Do not implement plant locks by changing only the card visuals: the authoritative selection/placement path must also reject locked plant IDs, and the stage reward must be persisted exactly once.
