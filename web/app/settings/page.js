@@ -1,16 +1,21 @@
 "use client";
+
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useLocale, LanguageToggle } from "../LocaleProvider";
+
 const controls = [
-  { key: "musicVolume", label: "Background music", initial: 70 },
-  { key: "effectsVolume", label: "Sound effects", initial: 80 },
-  { key: "projectileVolume", label: "Projectile sounds", initial: 65 }
+  { key: "musicVolume", label: "Background music", labelAr: "الموسيقى الخلفية", icon: "🎵", initial: 70 },
+  { key: "effectsVolume", label: "Sound effects", labelAr: "المؤثرات الصوتية", icon: "🔊", initial: 80 },
+  { key: "projectileVolume", label: "Projectile sounds", labelAr: "أصوات المقذوفات", icon: "💥", initial: 65 }
 ];
+
 export default function SettingsPage() {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
+  const ar = locale === "ar";
   const [values, setValues] = useState({ musicVolume: 70, effectsVolume: 80, projectileVolume: 65 });
   const [ready, setReady] = useState(false);
+
   useEffect(() => {
     const next = {};
     controls.forEach(({ key, initial }) => {
@@ -18,19 +23,41 @@ export default function SettingsPage() {
       const stored = Number(raw);
       next[key] = raw !== null && Number.isFinite(stored) ? Math.max(0, Math.min(100, stored)) : initial;
     });
-    setValues(next); setReady(true);
+    setValues(next);
+    setReady(true);
   }, []);
+
   function changeVolume(key, value) {
     const volume = Number(value);
     setValues((current) => ({ ...current, [key]: volume }));
     window.localStorage.setItem("farmVsMonsters.audio." + key, String(volume));
   }
-  return <main className="info-shell"><section className="info-card">
-    <LanguageToggle />
-    <p className="eyebrow">{t("GAME PREFERENCES")}</p><h1>{t("Settings")}</h1>
-    <p>{t("Adjust each sound channel independently. Changes are saved in this browser and will be used when the next battle starts.")}</p>
-    {controls.map(({key,label}) => <label className="settings-row" key={key}><span>{t(label)}</span><input aria-label={t(label)} type="range" min="0" max="100" step="1" value={values[key]} disabled={!ready} onChange={e=>changeVolume(key,e.target.value)}/><output>{values[key]}%</output></label>)}
-    <p>{t("Set a slider to 0% to mute that channel. These preferences use the same browser storage keys as the battle audio controls.")}</p>
-    <nav className="info-nav"><Link className="primary-link" href="/game">{t("Return to Battle")}</Link><Link className="secondary-link" href="/">{t("Main Menu")}</Link></nav>
-  </section></main>;
+
+  return (
+    <main className="info-shell codex-settings-shell" dir={ar ? "rtl" : "ltr"}>
+      <section className="info-card codex-settings-page">
+        <header className="codex-page-heading">
+          <div><span className="eyebrow">{ar ? "دفتر المزرعة" : "FARM JOURNAL"}</span><h1>{ar ? "الإعدادات" : "Game Options"}</h1></div>
+          <LanguageToggle />
+        </header>
+        <p className="codex-settings-intro">{ar ? "اضبط أصوات عالمك كما تحب. تُحفظ التغييرات في هذا المتصفح وتُستخدم عند بدء المعركة التالية." : "Tune the sounds of your world. Changes are saved in this browser and used when your next battle begins."}</p>
+        <div className="codex-settings-board">
+          <h2>{ar ? "مستويات الصوت" : "SOUND MIXER"}</h2>
+          {controls.map(({key,label,labelAr,icon}) => (
+            <label className="codex-volume-row" key={key}>
+              <span className="codex-volume-icon" aria-hidden="true">{icon}</span>
+              <span className="codex-volume-copy"><strong>{ar ? labelAr : t(label)}</strong><small>{values[key] === 0 ? (ar ? "صامت" : "Muted") : (ar ? "مستوى الصوت" : "Volume level")}</small></span>
+              <input aria-label={ar ? labelAr : t(label)} type="range" min="0" max="100" step="1" value={values[key]} disabled={!ready} onChange={(e) => changeVolume(key,e.target.value)} />
+              <output>{values[key]}%</output>
+            </label>
+          ))}
+        </div>
+        <p className="codex-settings-footnote">{ar ? "اجعل أي شريط عند 0٪ لكتم قناته الصوتية. تستخدم هذه الخيارات مفاتيح التخزين نفسها التي تعتمد عليها أصوات المعركة." : "Set any slider to 0% to mute its channel. These options use the same browser storage keys as the battle audio controls."}</p>
+        <nav className="info-nav codex-settings-nav">
+          <Link className="primary-link" href="/how-to-play">{ar ? "📜 دليل اللعب" : "📜 Field Guide"}</Link>
+          <Link className="secondary-link" href="/">{ar ? "العودة إلى القائمة" : "Main Menu"}</Link>
+        </nav>
+      </section>
+    </main>
+  );
 }
