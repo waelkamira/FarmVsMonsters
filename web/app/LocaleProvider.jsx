@@ -73,7 +73,21 @@ const translations = {
   "All 5 waves cleared": "تم اجتياز الموجات الخمس", "The caveman is walking to the selected soil cell...": "رجل الكهف يتجه إلى خلية التربة المختارة...",
   "The caveman is back at his starting position.": "عاد رجل الكهف إلى نقطة انطلاقه.",
   "A new radish is planted. The caveman stops fighting; the plant defends again.": "تمت زراعة فجل جديد. يتوقف رجل الكهف عن القتال وتعود النبتة للدفاع.",
-  "This seed packet is recharging. Wait for it to recover.": "بطاقة البذور قيد إعادة الشحن. انتظر حتى تصبح جاهزة مجدداً."
+  "This seed packet is recharging. Wait for it to recover.": "بطاقة البذور قيد إعادة الشحن. انتظر حتى تصبح جاهزة مجدداً.",
+  "Prepare your seed packets before entering the battlefield": "جهّز بطاقات البذور قبل دخول ساحة المعركة",
+  "BEFORE THE BATTLE": "قبل المعركة",
+  "Choose your seed packets": "اختر بطاقات البذور",
+  "Build your battle loadout. You can bring up to six plants, and your two starter packets must stay selected.": "جهّز تشكيلتك للمعركة. يمكنك اصطحاب ست نباتات كحد أقصى، ويجب إبقاء بطاقتي البداية ضمن التشكيلة.",
+  "YOUR SEED BANK": "بطاقات البذور المختارة",
+  "Selected": "محدد",
+  "Not selected": "غير محدد",
+  "STARTER": "أساسية",
+  "Unlock through campaign": "تُفتح عبر الحملة",
+  "Tip: bring an attacker, an energy producer, and a mix of support plants.": "نصيحة: اصطحب نباتاً مهاجماً، ونباتاً لإنتاج الطاقة، ومجموعة من نباتات الدعم.",
+  "Enter the battlefield": "ادخل ساحة المعركة",
+  "Could not save your loadout. Check browser storage and try again.": "تعذر حفظ تشكيلتك. تحقق من مساحة التخزين في المتصفح وحاول مجدداً.",
+  "Choose a plant card · Click an empty soil plot to plant · Collect Mushroom energy": "اختر بطاقة نبات · انقر على تربة فارغة للزراعة · اجمع طاقة الفطر",
+  "Choose a plant card · Click an empty soil plot to plant · Collect glowing Mushroom energy · WASD / arrows to move · SPACE: emergency club": "اختر بطاقة نبات · انقر على تربة فارغة للزراعة · اجمع طاقة الفطر · تحرك باستخدام WASD أو الأسهم · المسافة: الهراوة للطوارئ"
 
 };
 
