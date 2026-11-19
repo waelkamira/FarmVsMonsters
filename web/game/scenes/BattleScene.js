@@ -3099,7 +3099,7 @@ export default class BattleScene extends Scene {
       tierTint,
       hitFlashGraphic: g, hitFlashTimer: null, hyenaSprite, hitAnimUntil: 0,
       attackCooldown: 0, freezeRemainingMs: 0, freezeStage: 0, freezeFrameIndex: 0,
-      freezeFullHoldMs: 0, freezeRecoveryMs: 0, frozenTextureKey: null,
+      freezeFullHoldMs: 0, freezeRecoveryMs: 0, iceBiteCooldownMs: 3600, frozenTextureKey: null,
       frozenAnimationKey: null, frozenSpriteSize: null, alive: true, view, dustTimer: 0,
       replayMoveElapsedMs: 0, replayMoveStartLocalX: SPAWN_LOCAL_X, replayLastMovementTick: Math.floor(this.combatClockMs), replayLastBlockerCol: null,
       knockedPlants: new Set(),
@@ -3141,10 +3141,53 @@ export default class BattleScene extends Scene {
   }
 
   updateMonsters(dt, delta) {
+    // A living hyena directly behind a fully frozen friend stops to chew the
+    // ice. Each bite removes one freeze layer at the Snow Thrower's 3.6s rate.
+    const iceEaters = new Map();
+    for (const frozen of this.monsters) {
+      if (!frozen.alive || frozen.freezeStage < 1) continue;
+      const eater = this.monsters
+        .filter((candidate) => candidate.alive && candidate !== frozen &&
+          candidate.freezeStage === 0 && candidate.row === frozen.row &&
+          candidate.localX > frozen.localX &&
+          candidate.localX - frozen.localX <= 92)
+        .sort((a, b) => a.localX - b.localX)[0];
+      if (eater) iceEaters.set(eater, frozen);
+    }
+
+    for (const [eater, frozen] of iceEaters) {
+      eater.isEatingIce = true;
+      eater.iceTargetId = frozen.combatId;
+      eater.attackCooldown = 0;
+      if (eater.hyenaSprite?.active) this.playHyenaAnimation(eater, "hyena-bite");
+      frozen.iceBiteCooldownMs = (frozen.iceBiteCooldownMs ?? 0) - delta;
+      if (frozen.iceBiteCooldownMs <= 0) {
+        frozen.freezeStage = Math.max(0, frozen.freezeStage - 1);
+        frozen.freezeFrameIndex = frozen.freezeStage > 0 ? (frozen.freezeStage - 1) * 2 : 0;
+        if (frozen.hyenaSprite?.active && frozen.frozenTextureKey) {
+          frozen.hyenaSprite.setFrame(String(frozen.freezeFrameIndex));
+        }
+        frozen.iceBiteCooldownMs = 3600;
+        if (frozen.freezeStage === 0) {
+          this.restoreMonsterAfterFreeze(frozen);
+          frozen.iceBiteCooldownMs = 0;
+        } else {
+          // Friend-assisted thawing replaces the normal 30s hold and slow melt.
+          frozen.freezeFullHoldMs = 0;
+          frozen.freezeRecoveryMs = 0;
+        }
+      }
+    }
+
     for (const monster of this.monsters) {
       if (!monster.alive) continue;
+      if (!iceEaters.has(monster)) {
+        monster.isEatingIce = false;
+        monster.iceTargetId = null;
+      }
+      if (monster.isEatingIce) continue;
       if (monster.freezeStage > 0) {
-        if (monster.freezeStage >= 5) {
+        if (monster.freezeStage >= 5 && !iceEaters.size) {
           if (monster.freezeFullHoldMs > 0) {
             monster.freezeFullHoldMs = Math.max(0, monster.freezeFullHoldMs - delta);
             if (monster.freezeFullHoldMs === 0) monster.freezeRecoveryMs = 10000;
