@@ -966,3 +966,12 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - Radish projectiles travel horizontally within their firing lane; they no longer interpolate toward adjacent lanes.
 - Projectile collision is restricted to monsters whose lane exactly matches the projectile's lane, preventing cross-lane damage.
 - Verification: source updated on `main`; browser gameplay and build/tests have not been run in this change.
+
+
+## 2026-11-19 — PvZ-inspired seed packet recharge
+- Added individual seed packet recharge times to the canonical Stage 1 plant contract: Radish 5s, Energy Mushroom 8s, Hazelnut 9s, Pineapple 10s, Mango 12s, Snow Thrower 18s, and Pumpkin 20s.
+- A successful planting starts that plant's packet recharge. The packet receives a dark overlay and a seconds countdown; it cannot be selected or planted again until ready.
+- Recharge time advances with the battle simulation delta, so pause stops the recharge along with the rest of the battle.
+- Updated seed packet energy labels to use the Mushroom energy icon rather than the old sun symbol, and documented recharge behavior in the field guide with Arabic translation.
+- Added Node tests that verify all seven plant recharge values are present, positive, and match the approved balance table.
+- Verification status: source-level read-back completed. The new tests and Phaser gameplay still need to be run locally in Chrome; no browser/runtime success is claimed yet.
