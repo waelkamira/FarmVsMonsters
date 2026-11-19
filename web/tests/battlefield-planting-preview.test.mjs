@@ -9,7 +9,7 @@ test("battlefield hover preview follows the calibrated perspective cell polygon"
   assert.match(scene, /const polygon = this\.cellPolygon\(col, row\)/);
   assert.match(scene, /this\.plantingPreview\.fillPoints\(polygon, true\)/);
   assert.match(scene, /this\.plantingPreview\.strokePoints\(polygon, true\)/);
-  assert.match(scene, /this\.plantingPreview\.setDepth\(9\.7\)/);
+  assert.match(scene, /this\.add\.graphics\(\)\.setDepth\(9\.7\)/);
 });
 
 test("planting preview communicates valid, occupied, and unavailable cells without replacing the authored grid", () => {
