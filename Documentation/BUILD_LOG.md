@@ -985,3 +985,12 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - Connected the selected loadout to the existing BattleScene seed-bank reader without changing the battle grid, combat rules, or art assets.
 - Fixed the cooldown indicator references so the HUD refresh reads the recharge overlay/countdown from the seed-card container.
 - Verification status: GitHub source read-back and branch comparison completed. Automated tests, Next.js build, and browser playtest have not been run in this environment; do not merge until they pass locally.
+
+
+## 2026-11-19 — PvZ wave announcements and live defeat progress
+- Added a reusable animated wave announcement banner to the battle HUD. It appears at the start of Stage 1 and whenever the next wave is unlocked, without creating new Phaser display objects on every transition.
+- Added distinct warning styling and copy for wave 4 (the fast Dust Skitter scout) and wave 5 (the armoured Stonehide). Arabic and English announcement text are included.
+- Corrected the wave progress bar semantics: it now tracks monsters actually defeated in the current wave, rather than monsters merely spawned. This makes the bar reflect real combat progress.
+- Preserved the existing five-wave roster, spawn intervals, five-second intermission, archetype schedule, and dragon trigger.
+- Added focused source-integration tests for announcement coverage, late-wave warnings, reusable banner lifecycle, and defeated-monster progress.
+- Verification status: GitHub source read-back only. Node tests, Next.js build, and browser gameplay still need to be run locally; no runtime success is claimed.
