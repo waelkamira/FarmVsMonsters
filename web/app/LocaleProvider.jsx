@@ -72,7 +72,8 @@ const translations = {
   "FARM LOST": "خسرت المزرعة", "VICTORY!": "انتصار!", "PLAY AGAIN": "العب مجدداً", "RETRY": "إعادة المحاولة", "CAMPAIGN MAP": "خريطة المراحل",
   "All 5 waves cleared": "تم اجتياز الموجات الخمس", "The caveman is walking to the selected soil cell...": "رجل الكهف يتجه إلى خلية التربة المختارة...",
   "The caveman is back at his starting position.": "عاد رجل الكهف إلى نقطة انطلاقه.",
-  "A new radish is planted. The caveman stops fighting; the plant defends again.": "تمت زراعة فجل جديد. يتوقف رجل الكهف عن القتال وتعود النبتة للدفاع."
+  "A new radish is planted. The caveman stops fighting; the plant defends again.": "تمت زراعة فجل جديد. يتوقف رجل الكهف عن القتال وتعود النبتة للدفاع.",
+  "This seed packet is recharging. Wait for it to recover.": "بطاقة البذور قيد إعادة الشحن. انتظر حتى تصبح جاهزة مجدداً."
 
 };
 
