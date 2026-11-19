@@ -1,6 +1,7 @@
 import {
   CAMPAIGN_PROGRESS_KEY,
   loadUnlockedStage,
+  loadCompletedStages,
   loadSavedCoins,
   saveCoins
 } from "../rules/phaseOneRules.mjs";
@@ -18,16 +19,9 @@ async function requestJson(url, options = {}) {
 }
 
 export function readLocalPlayerProgress(storage = window.localStorage) {
-  let completedStages = [];
-  try {
-    const campaign = JSON.parse(storage.getItem(CAMPAIGN_PROGRESS_KEY) || "{}");
-    if (Array.isArray(campaign.completedStages)) {
-      completedStages = campaign.completedStages.filter((value) => Number.isInteger(value) && value >= 1 && value <= 10);
-    }
-  } catch { /* Use the safe default below. */ }
   return {
     unlockedStage: loadUnlockedStage(storage),
-    completedStages,
+    completedStages: loadCompletedStages(storage),
     coins: loadSavedCoins(storage)
   };
 }
@@ -35,8 +29,12 @@ export function readLocalPlayerProgress(storage = window.localStorage) {
 export function applyRemotePlayerProgress(progress, storage = window.localStorage) {
   if (!progress || !storage) return false;
   const unlockedStage = Math.min(10, Math.max(1, Number(progress.unlocked_stage) || 1));
+  const isCompletedStage = (stage) =>
+    Number.isInteger(stage) &&
+    stage >= 1 &&
+    (stage < unlockedStage || (stage === 10 && unlockedStage === 10));
   const completedStages = Array.isArray(progress.completed_stages)
-    ? progress.completed_stages.filter((value) => Number.isInteger(value) && value >= 1 && value < unlockedStage)
+    ? [...new Set(progress.completed_stages.filter(isCompletedStage))].sort((a, b) => a - b)
     : [];
   try {
     storage.setItem(CAMPAIGN_PROGRESS_KEY, JSON.stringify({
@@ -97,15 +95,17 @@ export async function restoreOrInitializeCloudProgress() {
   // overwrite a newer campaign unlock already earned on this device.
   const cloudUnlockedStage = Math.min(10, Math.max(1, Number(cloud.unlocked_stage) || 1));
   const unlockedStage = Math.max(local.unlockedStage, cloudUnlockedStage);
+  const isCompletedStage = (stage) =>
+    Number.isInteger(stage) &&
+    stage >= 1 &&
+    (stage < unlockedStage || (stage === 10 && unlockedStage === 10));
   const cloudCompletedStages = Array.isArray(cloud.completed_stages)
-    ? cloud.completed_stages.filter((stage) =>
-        Number.isInteger(stage) && stage >= 1 && stage < unlockedStage
-      )
+    ? cloud.completed_stages.filter(isCompletedStage)
     : [];
   const completedStages = [...new Set([
     ...local.completedStages,
     ...cloudCompletedStages
-  ].filter((stage) => stage < unlockedStage))].sort((a, b) => a - b);
+  ].filter(isCompletedStage))].sort((a, b) => a - b);
   const coins = cloud.coins_verified === true
     ? (Number(cloud.coins) || 0)
     : local.coins;
