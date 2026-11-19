@@ -138,15 +138,45 @@ export function loadUnlockedStage(storage) {
   }
 }
 
+export function loadCompletedStages(storage) {
+  if (!storage || typeof storage.getItem !== "function") return [];
+  try {
+    const raw = storage.getItem(CAMPAIGN_PROGRESS_KEY);
+    if (!raw) return [];
+    const data = JSON.parse(raw);
+    if (!data || data.version !== PROGRESSION_DATA_VERSION || !Number.isInteger(data.unlockedStage)) return [];
+    const unlockedStage = Math.min(CAMPAIGN_STAGE_COUNT, Math.max(1, data.unlockedStage));
+    const completedStages = new Set(
+      Array.from({ length: unlockedStage - 1 }, (_, index) => index + 1)
+    );
+    // The final stage has no successor to encode its completion in unlockedStage.
+    if (
+      unlockedStage === CAMPAIGN_STAGE_COUNT &&
+      Array.isArray(data.completedStages) &&
+      data.completedStages.includes(CAMPAIGN_STAGE_COUNT)
+    ) {
+      completedStages.add(CAMPAIGN_STAGE_COUNT);
+    }
+    return [...completedStages].sort((a, b) => a - b);
+  } catch {
+    return [];
+  }
+}
+
 export function unlockNextStage(storage, completedStage) {
   if (!storage || typeof storage.getItem !== "function" || typeof storage.setItem !== "function") return false;
   if (!Number.isInteger(completedStage) || completedStage < 1 || completedStage > CAMPAIGN_STAGE_COUNT) return false;
-  const unlockedStage = Math.min(CAMPAIGN_STAGE_COUNT, Math.max(loadUnlockedStage(storage), completedStage + 1));
+  const currentUnlockedStage = loadUnlockedStage(storage);
+  // A result may replay an already-unlocked stage, but it cannot skip campaign gates.
+  if (completedStage > currentUnlockedStage) return false;
+  const unlockedStage = Math.min(CAMPAIGN_STAGE_COUNT, Math.max(currentUnlockedStage, completedStage + 1));
+  const completedStages = new Set(loadCompletedStages(storage));
+  completedStages.add(completedStage);
   try {
     storage.setItem(CAMPAIGN_PROGRESS_KEY, JSON.stringify({
-      version: 1,
+      version: PROGRESSION_DATA_VERSION,
       unlockedStage,
-      completedStages: Array.from({ length: unlockedStage - 1 }, (_, index) => index + 1)
+      completedStages: [...completedStages].sort((a, b) => a - b)
     }));
     return true;
   } catch {
