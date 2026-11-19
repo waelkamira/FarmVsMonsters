@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { useLocale, LanguageToggle } from "../LocaleProvider";
+import { PHASE_ONE_WAVE_SIZES } from "../../game/rules/phaseOneCombatContract.mjs";
 
 export default function HowToPlayPage() {
   const { t, locale } = useLocale();
   const arabic = locale === "ar";
+  const ordinaryMonsterCount = PHASE_ONE_WAVE_SIZES.reduce((total, count) => total + count, 0);
 
   return (
     <main className="info-shell">
@@ -15,8 +17,8 @@ export default function HowToPlayPage() {
         <h1>{t("How to Play")}</h1>
         <p>
           {arabic
-            ? "دافع عن المزرعة والأميرة خلال خمس موجات. تضم المرحلة الأولى ٣٠ وحشاً عادياً موزعين على الموجات: ٣، ٥، ٦، ٧، ٩. يظهر التنين في الموجة الخامسة ويُحسب كزعيم مستقل عن الوحوش العادية."
-            : "Defend the farmhouse and princess through five waves. Stage 1 has 30 ordinary monsters across the waves: 3, 5, 6, 7, and 9. The dragon appears in Wave 5 and is counted separately as the boss."}
+            ? "دافع عن المزرعة والأميرة خلال خمس موجات. تضم المرحلة الأولى {ordinaryMonsterCount} وحشاً عادياً موزعين على الموجات: {PHASE_ONE_WAVE_SIZES.join("، ")}. يظهر التنين في الموجة الخامسة ويُحسب كزعيم مستقل عن الوحوش العادية."
+            : "Defend the farmhouse and princess through five waves. Stage 1 has {ordinaryMonsterCount} ordinary monsters across the waves: {PHASE_ONE_WAVE_SIZES.join(", ")}. The dragon appears in Wave 5 and is counted separately as the boss."}
         </p>
 
         <h2>{t("1. Choose your plant")}</h2>
