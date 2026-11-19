@@ -25,9 +25,14 @@ import {
   CAMPAIGN_PROGRESS_KEY,
   CAMPAIGN_STAGE_COUNT,
   loadUnlockedStage,
+  loadCompletedStages,
   unlockNextStage
 } from "../game/rules/phaseOneRules.mjs";
-import { restoreOrInitializeCloudProgress } from "../game/services/playerAccount.mjs";
+import {
+  readLocalPlayerProgress,
+  applyRemotePlayerProgress,
+  restoreOrInitializeCloudProgress
+} from "../game/services/playerAccount.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const scene = readFileSync(resolve(here, "../game/scenes/BattleScene.js"), "utf8");
@@ -322,7 +327,7 @@ test("player guidance and roadmap match the current Phase 1 balance", () => {
 });
 
 
-test("campaign progression unlocks the next stage only through a valid completion write", () => {
+test("campaign progression rejects skipped stages and records the final stage completion", () => {
   const values = new Map();
   const storage = {
     getItem: (key) => values.has(key) ? values.get(key) : null,
@@ -330,7 +335,9 @@ test("campaign progression unlocks the next stage only through a valid completio
   };
 
   assert.equal(loadUnlockedStage(storage), 1);
+  assert.equal(loadCompletedStages(storage).length, 0);
   assert.equal(unlockNextStage(storage, 0), false);
+  assert.equal(unlockNextStage(storage, CAMPAIGN_STAGE_COUNT), false);
   assert.equal(unlockNextStage(storage, 1), true);
   assert.equal(loadUnlockedStage(storage), 2);
   assert.deepEqual(JSON.parse(values.get(CAMPAIGN_PROGRESS_KEY)), {
@@ -338,10 +345,54 @@ test("campaign progression unlocks the next stage only through a valid completio
     unlockedStage: 2,
     completedStages: [1]
   });
+  assert.deepEqual(loadCompletedStages(storage), [1]);
+  assert.equal(unlockNextStage(storage, 2), true);
+  assert.equal(loadUnlockedStage(storage), 3);
+  assert.deepEqual(loadCompletedStages(storage), [1, 2]);
+  assert.equal(unlockNextStage(storage, CAMPAIGN_STAGE_COUNT), false);
+  assert.equal(loadUnlockedStage(storage), 3, "a skipped result must not change saved unlocks");
 
-  assert.equal(unlockNextStage(storage, CAMPAIGN_STAGE_COUNT), true);
-  assert.equal(loadUnlockedStage(storage), CAMPAIGN_STAGE_COUNT);
-  assert.equal(unlockNextStage(storage, CAMPAIGN_STAGE_COUNT + 1), false);
+  const finalValues = new Map([[CAMPAIGN_PROGRESS_KEY, JSON.stringify({
+    version: 1,
+    unlockedStage: CAMPAIGN_STAGE_COUNT,
+    completedStages: Array.from({ length: CAMPAIGN_STAGE_COUNT - 1 }, (_, index) => index + 1)
+  })]]);
+  const finalStorage = {
+    getItem: (key) => finalValues.get(key) ?? null,
+    setItem: (key, value) => finalValues.set(key, value)
+  };
+  assert.equal(unlockNextStage(finalStorage, CAMPAIGN_STAGE_COUNT), true);
+  assert.equal(loadUnlockedStage(finalStorage), CAMPAIGN_STAGE_COUNT);
+  assert.deepEqual(loadCompletedStages(finalStorage), Array.from({ length: CAMPAIGN_STAGE_COUNT }, (_, index) => index + 1));
+  assert.equal(unlockNextStage(finalStorage, CAMPAIGN_STAGE_COUNT + 1), false);
+});
+
+test("legacy campaign unlocks infer prior completions and storage failures stay recoverable", () => {
+  const legacy = {
+    getItem: () => JSON.stringify({ version: 1, unlockedStage: 4 })
+  };
+  assert.deepEqual(loadCompletedStages(legacy), [1, 2, 3]);
+  assert.deepEqual(loadCompletedStages(null), []);
+  assert.deepEqual(loadCompletedStages({ getItem: () => "not-json" }), []);
+  assert.equal(unlockNextStage({ getItem: () => null, setItem: () => { throw new Error("quota"); } }, 1), false);
+});
+
+test("local and verified remote progress preserve the completed final stage", () => {
+  const values = new Map([[CAMPAIGN_PROGRESS_KEY, JSON.stringify({
+    version: 1,
+    unlockedStage: CAMPAIGN_STAGE_COUNT,
+    completedStages: Array.from({ length: CAMPAIGN_STAGE_COUNT }, (_, index) => index + 1)
+  })]]);
+  const storage = {
+    getItem: (key) => values.get(key) ?? null,
+    setItem: (key, value) => values.set(key, value)
+  };
+  assert.deepEqual(readLocalPlayerProgress(storage).completedStages, Array.from({ length: CAMPAIGN_STAGE_COUNT }, (_, index) => index + 1));
+  assert.equal(applyRemotePlayerProgress({
+    unlocked_stage: CAMPAIGN_STAGE_COUNT,
+    completed_stages: Array.from({ length: CAMPAIGN_STAGE_COUNT }, (_, index) => index + 1)
+  }, storage), true);
+  assert.deepEqual(loadCompletedStages(storage), Array.from({ length: CAMPAIGN_STAGE_COUNT }, (_, index) => index + 1));
 });
 
 test("verified cloud restore never downgrades newer local campaign progress", async () => {
