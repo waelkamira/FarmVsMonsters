@@ -683,7 +683,7 @@ export default class BattleScene extends Scene {
     const mushroomIcon = this.textures.exists("mushroom-character")
       ? this.add.image(0, -17, "mushroom-character").setDisplaySize(43, 43)
       : this.add.text(0, -19, "🍄", { fontFamily: "Arial", fontSize: "34px" }).setOrigin(0.5);
-    this.energyValueText = this.add.text(0, 22, String(this.energy), {
+    this.energyValueText = this.add.text(0, 26, String(this.energy), {
       fontFamily: "Arial", fontSize: "23px", color: "#fff2a8", fontStyle: "bold",
       stroke: "#39240f", strokeThickness: 3, resolution: 2
     }).setOrigin(0.5);
@@ -827,7 +827,7 @@ export default class BattleScene extends Scene {
       icon = this.add.graphics();
       if (drawIcon) drawIcon(icon);
     }
-    const cost = this.add.text(0, 29, locked ? "🔒" : "🍄 " + costLabel, {
+    const cost = this.add.text(0, 33, locked ? "🔒" : "🍄 " + costLabel, {
       fontFamily: "Arial", fontSize: "13px", color: "#fff0bd", fontStyle: "bold",
       stroke: "#3d2817", strokeThickness: 2, resolution: 2, align: "center"
     }).setOrigin(0.5);
