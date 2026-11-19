@@ -3096,7 +3096,7 @@ export default class BattleScene extends Scene {
       maxHp: hp,
       tierTint,
       hitFlashGraphic: g, hitFlashTimer: null, hyenaSprite, hitAnimUntil: 0,
-      attackCooldown: 0, freezeRemainingMs: 0, freezeStage: 0,
+      attackCooldown: 0, freezeRemainingMs: 0, freezeStage: 0, freezeFrameIndex: 0,
       freezeFullHoldMs: 0, freezeRecoveryMs: 0, frozenTextureKey: null,
       frozenAnimationKey: null, frozenSpriteSize: null, alive: true, view, dustTimer: 0,
       replayMoveElapsedMs: 0, replayMoveStartLocalX: SPAWN_LOCAL_X, replayLastMovementTick: Math.floor(this.combatClockMs), replayLastBlockerCol: null,
@@ -3149,9 +3149,14 @@ export default class BattleScene extends Scene {
           } else if (monster.freezeRecoveryMs > 0) {
             monster.freezeRecoveryMs -= delta;
             if (monster.freezeRecoveryMs <= 0) {
-              monster.freezeStage = Math.max(0, monster.freezeStage - 1);
-              if (monster.freezeStage > 0) { monster.hyenaSprite?.setFrame(String(monster.freezeStage - 1)); monster.freezeRecoveryMs = 10000; }
-              else this.restoreMonsterAfterFreeze(monster);
+              // Thaw one atlas frame at a time, walking backwards from frame 9.
+              monster.freezeFrameIndex = Math.max(0, (monster.freezeFrameIndex ?? 8) - 1);
+              if (monster.hyenaSprite?.active) monster.hyenaSprite.setFrame(String(monster.freezeFrameIndex));
+              if (monster.freezeFrameIndex > 0) monster.freezeRecoveryMs = 10000;
+              else {
+                monster.freezeStage = 0;
+                this.restoreMonsterAfterFreeze(monster);
+              }
             }
           }
         }
@@ -3387,7 +3392,8 @@ export default class BattleScene extends Scene {
       sprite.stop();
       if (monster.frozenTextureKey) {
         sprite.setTexture(monster.frozenTextureKey);
-        sprite.setFrame(String(monster.freezeStage - 1));
+        monster.freezeFrameIndex = (monster.freezeStage - 1) * 2;
+        sprite.setFrame(String(monster.freezeFrameIndex));
         sprite.setOrigin(0.5, 1);
         if (monster.frozenSpriteSize?.width > 0 && monster.frozenSpriteSize?.height > 0) sprite.setDisplaySize(monster.frozenSpriteSize.width, monster.frozenSpriteSize.height);
         sprite.clearTint();
@@ -3421,6 +3427,7 @@ export default class BattleScene extends Scene {
     monster.frozenTextureKey = null;
     monster.freezeFullHoldMs = 0;
     monster.freezeRecoveryMs = 0;
+    monster.freezeFrameIndex = 0;
     monster.freezeRemainingMs = 0;
   }
 
