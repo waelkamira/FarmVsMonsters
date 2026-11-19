@@ -115,3 +115,11 @@ a,button{ -webkit-tap-highlight-color:transparent }
 .codex-settings-footnote{font-size:12px;color:#80603d!important}
 .codex-settings-nav{margin-top:20px}
 @media(max-width:560px){.codex-volume-row{grid-template-columns:40px minmax(0,1fr) 48px;gap:8px;padding:9px}.codex-volume-icon{width:36px;height:36px;font-size:19px}.codex-volume-row input{grid-column:2/4;grid-row:2}.codex-volume-row output{grid-column:3;grid-row:1}.codex-page-heading{align-items:flex-start}}
+
+
+.codex-enemy-silhouette{position:relative;display:grid;place-items:center;background:radial-gradient(ellipse,#77766d,#343a35)!important;border-color:#4d4b43!important}
+.codex-enemy-silhouette:before{content:"";position:absolute;inset:12%;border-radius:50%;background:#101713;filter:blur(14px);opacity:.7}
+.codex-enemy-silhouette span{position:relative;z-index:1;color:#e6dcc5;font-size:clamp(48px,7vw,76px);font-weight:1000;text-shadow:0 4px 8px #000}
+.codex-enemy-silhouette b{position:absolute;right:9px;bottom:8px;z-index:2;font-size:20px}
+.codex-unknown-enemy{background:linear-gradient(145deg,#bdb8a9,#858276)!important;border-color:#625e52!important}
+.codex-unknown-enemy h2,.codex-unknown-enemy p{color:#4e4b42!important}
