@@ -312,6 +312,7 @@ export default class BattleScene extends Scene {
     this.setMessage(this.textures.exists("farm-battlefield")
       ? "Choose a plant card, then click an empty soil cell. Radish, Pineapple, Hazelnut and Mango attack; Pumpkin blocks."
       : "Temporary farm art active. Choose a plant card, then click an empty soil cell.");
+    this.showWaveAnnouncement(1);
   }
 
   drawField() {
@@ -671,10 +672,27 @@ export default class BattleScene extends Scene {
       .setStrokeStyle(1, 0x9d7547, 1).setDepth(44);
     this.waveProgressFill = this.add.rectangle(640, 17, 2, 7, 0xa8d65b, 1)
       .setOrigin(0, 0.5).setDepth(45);
-    this.waveProgressLabel = this.add.text(716, 39, "WAVE 1", {
+    this.waveProgressLabel = this.add.text(716, 39, "DEFEATED 0/2", {
       fontFamily: "Arial", fontSize: "10px", color: "#ffe8b5", fontStyle: "bold",
       stroke: "#392719", strokeThickness: 2, resolution: 2
     }).setOrigin(0.5).setDepth(44);
+
+    // Short PvZ-style announcement banner. It is reused between waves instead
+    // of allocating new display objects every time a wave begins.
+    this.waveBanner = this.add.container(560, 150).setDepth(52).setAlpha(0).setVisible(false);
+    const bannerFrame = this.add.rectangle(0, 0, 430, 82, 0x3c2818, 0.96)
+      .setStrokeStyle(4, 0xe2b968, 1);
+    const bannerInset = this.add.rectangle(0, 0, 416, 68, 0x76502d, 1)
+      .setStrokeStyle(2, 0xf3d59a, 0.9);
+    this.waveBannerTitle = this.add.text(0, -13, "WAVE 1", {
+      fontFamily: "Arial", fontSize: "25px", color: "#fff4c8", fontStyle: "bold",
+      stroke: "#392719", strokeThickness: 5, resolution: 2
+    }).setOrigin(0.5);
+    this.waveBannerSubtitle = this.add.text(0, 19, "GET READY!", {
+      fontFamily: "Arial", fontSize: "13px", color: "#ffffff", fontStyle: "bold",
+      stroke: "#392719", strokeThickness: 3, resolution: 2
+    }).setOrigin(0.5);
+    this.waveBanner.add([bannerFrame, bannerInset, this.waveBannerTitle, this.waveBannerSubtitle]);
 
     // Build the seed bank from the player's pre-battle loadout.
     const plantOptions = [
@@ -2044,6 +2062,48 @@ export default class BattleScene extends Scene {
     this.updateProjectiles(dt);
     this.checkWaveProgress();
     this.refreshHud();
+  }
+
+  showWaveAnnouncement(wave) {
+    if (!this.waveBanner || !this.waveBannerTitle || !this.waveBannerSubtitle) return;
+    const locale = typeof window !== "undefined"
+      ? window.localStorage.getItem("farmVsMonsters.language") || "ar"
+      : "ar";
+    const majorWave = wave >= 4;
+    const title = locale === "ar" ? "الموجة " + wave : "WAVE " + wave;
+    const subtitles = locale === "ar"
+      ? {
+          1: "استعدوا! الوحوش تقترب",
+          2: "موجة جديدة قادمة",
+          3: "الهجوم يشتد!",
+          4: "تحذير: وحش سريع ينضم للهجوم!",
+          5: "تحذير: المدرع الثقيل قادم!"
+        }
+      : {
+          1: "GET READY! MONSTERS APPROACH",
+          2: "A NEW WAVE IS COMING",
+          3: "THE ATTACK IS INTENSIFYING!",
+          4: "WARNING: A FAST SCOUT JOINS!",
+          5: "WARNING: ARMOURED BRUTE INCOMING!"
+        };
+    this.waveBannerTitle.setText(title);
+    this.waveBannerSubtitle.setText(subtitles[wave] || (locale === "ar" ? "استعدوا للدفاع!" : "PREPARE YOUR DEFENCE!"));
+    const frame = this.waveBanner.list?.[0];
+    if (frame?.setFillStyle) frame.setFillStyle(majorWave ? 0x713322 : 0x3c2818, 0.97);
+    this.tweens.killTweensOf(this.waveBanner);
+    this.waveBanner.setVisible(true).setAlpha(0).setScale(0.82);
+    this.tweens.add({
+      targets: this.waveBanner,
+      alpha: 1,
+      scale: 1,
+      duration: 260,
+      ease: "Back.Out",
+      hold: 1450,
+      yoyo: true,
+      onComplete: () => {
+        if (this.waveBanner?.active) this.waveBanner.setVisible(false);
+      }
+    });
   }
 
   // Sort world characters by their ground position: lower screen Y is
@@ -3930,6 +3990,7 @@ export default class BattleScene extends Scene {
       "Wave " + clearedWave + " cleared. Prepare for wave " + this.wave +
       ": " + this.waveSize + " monsters in 5 seconds."
     );
+    this.showWaveAnnouncement(this.wave);
   }
 
   playVictoryMusic() {
@@ -4141,10 +4202,13 @@ export default class BattleScene extends Scene {
       this.waveText.setText("🌊 " + Math.min(this.wave, this.totalWaves) + "/" + this.totalWaves);
     }
     if (this.waveProgressFill && this.waveProgressTrack) {
-      const progress = this.waveSize > 0 ? PhaserMath.Clamp(this.spawnedThisWave / this.waveSize, 0, 1) : 0;
+      // Progress reflects defeated enemies, not merely how many have spawned.
+      // This makes the tracker represent actual battlefield progress.
+      const defeated = Math.min(this.waveDefeatedMonsters || 0, this.waveSize);
+      const progress = this.waveSize > 0 ? PhaserMath.Clamp(defeated / this.waveSize, 0, 1) : 0;
       const trackWidth = 154;
       this.waveProgressFill.setSize(Math.max(2, trackWidth * progress), 7);
-      this.waveProgressLabel?.setText("WAVE " + Math.min(this.wave, this.totalWaves) + " · " + this.spawnedThisWave + "/" + this.waveSize);
+      this.waveProgressLabel?.setText("DEFEATED " + defeated + "/" + this.waveSize);
     }
     for (const [type, panel] of Object.entries(this.plantCardsByType || {})) {
       const remaining = this.getSeedPacketCooldownRemaining(type);
