@@ -994,3 +994,12 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - Preserved the existing five-wave roster, spawn intervals, five-second intermission, archetype schedule, and dragon trigger.
 - Added focused source-integration tests for announcement coverage, late-wave warnings, reusable banner lifecycle, and defeated-monster progress.
 - Verification status: GitHub source read-back only. Node tests, Next.js build, and browser gameplay still need to be run locally; no runtime success is claimed.
+
+
+## 2026-11-19 — Monster arrival presentation
+- Added a small Phaser-only arrival cue for each ordinary monster: a tier-colored ground ring expands and fades while a few lightweight dust puffs disperse.
+- Arrival colors distinguish the Dust Skitter scout, Stonehide armoured monster, Alpha Brute, and standard cave brute without changing their combat stats or artwork.
+- Monsters now reveal with a short scale/opacity entrance animation. The logical spawn coordinates and lane movement remain unchanged; the entrance tween deliberately avoids controlling position because the movement system owns each monster's position every simulation update.
+- Effects self-destroy after their short animation to avoid accumulating display objects.
+- Added focused source-integration assertions for tier colors, cleanup, and preservation of logical spawn coordinates.
+- Verification: GitHub source read-back only. Node tests, Next.js build, and in-browser Phaser gameplay remain unexecuted in this environment.
