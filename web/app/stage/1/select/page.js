@@ -113,7 +113,14 @@ export default function StageOneSeedSelectionPage() {
                 aria-label={(ar ? plant.ar : plant.name) + (active ? (ar ? " مختار" : " selected") : (ar ? " غير مختار" : " not selected"))}
               >
                 <span className="seed-select-check">{!unlocked ? "🔒" : active ? "✓" : "+"}</span>
-                <span className={"seed-select-art" + (plant.id === "radish" ? " is-sprite-sheet" : "")}><img src={plant.image} alt="" /></span>
+                <span
+                  className={"seed-select-art" + (["radish", "pineapple", "hazelnut", "mango", "snow-thrower"].includes(plant.id) ? " is-sprite-sheet" : "")}
+                  style={["radish", "pineapple", "hazelnut", "mango", "snow-thrower"].includes(plant.id)
+                    ? { aspectRatio: plant.id === "radish" ? "302 / 359" : "1 / 1" }
+                    : undefined}
+                >
+                  <img src={plant.image} alt="" />
+                </span>
                 <strong>{ar ? plant.ar : plant.name}</strong>
                 <small>{ar ? plant.roleAr : plant.role}</small>
                 <span className="seed-select-cost">🍄 {plant.cost}</span>
