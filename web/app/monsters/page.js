@@ -12,12 +12,12 @@ export default function MonstersPage() {
 
   return (
     <main className="info-shell">
-      <section className="info-card">
+      <section className="info-card codex-bestiary-page">
         <div className="stages-top">
           <span className="eyebrow">{ar ? "دليل أعداء المرحلة الأولى" : "STAGE ONE ENEMY GUIDE"}</span>
           <LanguageToggle />
         </div>
-        <h1>{ar ? "قائمة الوحوش" : "Monster Collection"}</h1>
+        <h1>{ar ? "موسوعة الوحوش" : "Enemy Bestiary"}</h1>
         <p className="collection-intro">
           {ar
             ? "تضم الموسوعة ١٠٠ خانة للوحوش. الأنواع المنفّذة فقط تظهر كأعداء جاهزين؛ أما بقية الخانات فمعلّمة بوضوح بأنها تصاميم مستقبلية وليست قابلة للعب أو الشراء."
@@ -28,7 +28,7 @@ export default function MonstersPage() {
           <span>{ar ? "تصاميم مستقبلية" : "PLANNED"}: <strong>{FUTURE_MONSTERS.length}</strong></span>
           <span>{ar ? "إجمالي الخانات" : "TOTAL ENTRIES"}: <strong>{MONSTER_ROSTER_TOTAL}</strong></span>
         </div>
-        <h2 className="collection-section-title">{ar ? "الوحوش المنفّذة في المرحلة الأولى" : "Implemented Stage 1 enemies"}</h2>
+        <h2 className="collection-section-title">{ar ? "الوحوش المعروفة في المرحلة الأولى" : "Known Stage 1 enemies"}</h2>
         <div className="collection-grid">
           {STAGE_ONE_MONSTERS.map((monster) => (
             <article className="collection-card is-active" key={monster.id}>
@@ -44,7 +44,7 @@ export default function MonstersPage() {
             </article>
           ))}
         </div>
-        <h2 className="collection-section-title">{ar ? "خانات الوحوش المستقبلية" : "Future monster entries"}</h2>
+        <h2 className="collection-section-title">{ar ? "الوحوش المجهولة" : "Unknown enemies"}</h2>
         <p className="collection-intro">
           {ar
             ? "هذه الخانات تحجز مكان الأنواع القادمة في خطة اللعبة. لم نعتمد أسماءها أو قدراتها أو صورها بعد، ولن تظهر في المعركة حتى يكتمل تنفيذها واختبارها."
