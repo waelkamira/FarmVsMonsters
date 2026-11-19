@@ -676,7 +676,7 @@ export default class BattleScene extends Scene {
 
     // Use the uploaded mushroom card artwork as the energy counter backdrop.
     // No brown CSS/Phaser panels are drawn behind the mushroom.
-    this.mushroomBank = this.add.container(62, 70).setDepth(43);
+    this.mushroomBank = this.add.container(62, 56).setDepth(43);
     const mushroomCard = this.textures.exists("mushroom-card")
       ? this.add.image(0, 0, "mushroom-card").setDisplaySize(112, 96)
       : null;
@@ -778,7 +778,7 @@ export default class BattleScene extends Scene {
     // Render the same uploaded seed-card artwork in every empty slot.
     if (this.textures.exists("seed-card")) {
       const cardSource = this.textures.get("seed-card").getSourceImage();
-      const cardScale = Math.min(80 / cardSource.width, 92 / cardSource.height);
+      const cardScale = Math.min(88 / cardSource.width, 101.2 / cardSource.height);
       for (let index = 0; index < packetSlotCount; index += 1) {
         if (selectedTypes[index]) continue;
         this.add.image(packetStartX + index * packetGap, 76, "seed-card")
@@ -812,7 +812,7 @@ export default class BattleScene extends Scene {
     let seedFrame = null;
     if (this.textures.exists(cardArtworkKey)) {
       const source = this.textures.get(cardArtworkKey).getSourceImage();
-      const scale = Math.min(80 / source.width, 92 / source.height);
+      const scale = Math.min(88 / source.width, 101.2 / source.height);
       seedFrame = this.add.image(0, 0, cardArtworkKey).setDisplaySize(source.width * scale, source.height * scale);
     }
     const plantHeight = 46;
