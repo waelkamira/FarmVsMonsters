@@ -93,14 +93,16 @@ export default function PlantsPage() {
                 <p><strong>{ar ? plant.roleAr : plant.role}</strong></p>
                 <p>{ar ? plant.descriptionAr : plant.description}</p>
                 <div className="collection-meta">
-                  <span>{ar ? "سعر مقترح" : "Proposed price"}: 🪙 {price}</span>
-                  <span>{ar ? "تكلفة زراعة مقترحة" : "Proposed planting cost"}: {plant.energyCost} {ar ? "طاقة" : "energy"}</span>
+                  {plant.implemented
+                    ? <span>{ar ? "مكافأة إنهاء المرحلة الأولى" : "Reward for completing Stage 1"}</span>
+                    : <span>{ar ? "سعر مقترح" : "Proposed price"}: 🪙 {price}</span>}
+                  <span>{ar ? "تكلفة الزراعة" : "Planting cost"}: {plant.energyCost} {ar ? "طاقة" : "energy"}</span>
                   {(ar ? plant.statsAr : plant.stats).map((stat) => <span key={stat}>{stat}</span>)}
                 </div>
-                <button className="plant-locked-button" type="button" disabled title={ar ? "سيتم تفعيل الشراء بعد اكتمال الصورة والبرمجة" : "Purchases unlock after artwork and gameplay implementation"}>
-                  {canAfford
-                    ? (ar ? "متاح لاحقاً — لم يُفعّل الشراء" : "Affordable later · purchase disabled")
-                    : (ar ? "رصيدك لا يكفي بعد" : "Not enough coins yet")}
+                <button className="plant-locked-button" type="button" disabled title={plant.implemented ? (ar ? "أكمل المرحلة الأولى لفتح هذه النبتة" : "Complete Stage 1 to unlock this plant") : (ar ? "لم يكتمل تنفيذ هذه النبتة بعد" : "This plant is not implemented yet")}>
+                  {plant.implemented
+                    ? (ar ? "مقفلة — أكمل المرحلة الأولى" : "LOCKED · COMPLETE STAGE 1")
+                    : (canAfford ? (ar ? "غير متاحة للشراء حالياً" : "Not available for purchase") : (ar ? "قيد التطوير" : "IN DEVELOPMENT"))}
                 </button>
               </article>
             );
