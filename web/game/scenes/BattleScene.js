@@ -775,17 +775,44 @@ export default class BattleScene extends Scene {
     const packetStartX = 164;
     const packetGap = 90;
     const packetSlotCount = 7;
-    // Render the same uploaded seed-card artwork in every empty slot.
-    if (this.textures.exists("seed-card")) {
-      const cardSource = this.textures.get("seed-card").getSourceImage();
-      const cardScale = Math.min(88 / cardSource.width, 101.2 / cardSource.height);
-      for (let index = 0; index < packetSlotCount; index += 1) {
-        if (selectedTypes[index]) continue;
-        this.add.image(packetStartX + index * packetGap, 72, "seed-card")
-          .setDisplaySize(cardSource.width * cardScale, cardSource.height * cardScale)
-          .setDepth(44);
+    // Fill unused seed slots with previews of implemented plants that are
+    // not in the current loadout. Their artwork is intentionally dimmed and
+    // non-interactive so the player can see upcoming choices without selecting them.
+    const inactivePlants = plantOptions.filter((plant) =>
+      !selectedTypes.includes(plant.type) && plant.type !== "mushroom"
+    );
+    const inactiveSlots = Math.max(0, packetSlotCount - selectedTypes.length);
+    const cardSource = this.textures.exists("seed-card")
+      ? this.textures.get("seed-card").getSourceImage()
+      : null;
+    const cardScale = cardSource ? Math.min(88 / cardSource.width, 101.2 / cardSource.height) : 1;
+    inactivePlants.slice(0, inactiveSlots).forEach((plant, index) => {
+      const x = packetStartX + (selectedTypes.length + index) * packetGap;
+      const preview = this.add.container(x, 72).setDepth(45);
+      if (cardSource) {
+        preview.add(this.add.image(0, 0, "seed-card")
+          .setDisplaySize(cardSource.width * cardScale, cardSource.height * cardScale));
       }
-    }
+      if (this.textures.exists(plant.image)) {
+        const texture = this.textures.get(plant.image);
+        const isSheet = ["pineapple-level-1", "hazelnut-level-1", "mango-level-1", "snow-thrower-level-1", "radish-level-1"].includes(plant.image);
+        const frame = isSheet ? texture.getFrame("0") : texture.getFrame();
+        const ratio = frame.realWidth / frame.realHeight;
+        const height = 46;
+        const width = Math.min(54, height * ratio);
+        const thumbnail = isSheet
+          ? this.add.sprite(0, -8, plant.image, "0").setDisplaySize(width, height)
+          : this.add.image(0, -8, plant.image).setDisplaySize(width, height);
+        preview.add(thumbnail);
+        // Darken only the plant thumbnail, leaving the seed-card artwork clean.
+        preview.add(this.add.rectangle(0, -8, 56, 48, 0x000000, 0.68));
+        preview.add(this.add.text(0, -8, "🔒", {
+          fontFamily: "Arial", fontSize: "17px", color: "#ffffff",
+          stroke: "#17120d", strokeThickness: 3, resolution: 2
+        }).setOrigin(0.5));
+      }
+      preview.setData("inactivePlantType", plant.type);
+    });
     plantOptions.filter((plant) => selectedTypes.includes(plant.type)).forEach((plant, index) => {
       this.plantCardsByType[plant.type] = this.createPlantCard(
         packetStartX + index * packetGap,
