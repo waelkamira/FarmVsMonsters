@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale, LanguageToggle } from "../../../LocaleProvider";
 import { loadUnlockedPlantIds } from "../../../../game/rules/phaseOneRules.mjs";
