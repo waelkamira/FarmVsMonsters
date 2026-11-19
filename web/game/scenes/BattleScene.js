@@ -671,14 +671,7 @@ export default class BattleScene extends Scene {
     // Classic PvZ-inspired seed bank: sun meter on the left, wooden packet tray
     // across the center, compact battle information above it, and collection
     // shortcuts kept at the far right.
-    const trayShadow = this.add.rectangle(474, 73, 700, 104, 0x17100a, 0.30)
-      .setStrokeStyle(3, 0x3c2414, 0.9).setDepth(39);
-    const tray = this.add.rectangle(474, 69, 692, 100, 0x9a6334, 0.98)
-      .setStrokeStyle(4, 0xd8ad70, 1).setDepth(40);
-    const trayInset = this.add.rectangle(474, 69, 674, 84, 0x57391f, 0.98)
-      .setStrokeStyle(2, 0x3c2818, 1).setDepth(40);
-    this.add.rectangle(474, 69, 660, 72, 0x76502d, 0.96)
-      .setStrokeStyle(1, 0xb88751, 0.9).setDepth(40);
+    // Seed cards now sit directly on the battlefield HUD: no brown CSS/Phaser tray background.
 
     // Mushroom energy counter, using the same mushroom artwork as its seed packet.
     this.mushroomBank = this.add.container(62, 70).setDepth(43);
