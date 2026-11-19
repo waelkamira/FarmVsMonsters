@@ -681,8 +681,8 @@ export default class BattleScene extends Scene {
       ? this.add.image(0, 0, "mushroom-card").setDisplaySize(112, 96)
       : null;
     const mushroomIcon = this.textures.exists("mushroom-character")
-      ? this.add.image(0, -12, "mushroom-character").setDisplaySize(38.7, 38.7)
-      : this.add.text(0, -14, "🍄", { fontFamily: "Arial", fontSize: "34px" }).setOrigin(0.5);
+      ? this.add.image(0, -9.6, "mushroom-character").setDisplaySize(38.7, 38.7)
+      : this.add.text(0, -11.2, "🍄", { fontFamily: "Arial", fontSize: "34px" }).setOrigin(0.5);
     this.energyValueText = this.add.text(0, 33.6, String(this.energy), {
       fontFamily: "Arial", fontSize: "17.6px", color: "#fff2a8", fontStyle: "bold",
       stroke: "#39240f", strokeThickness: 3, resolution: 2
@@ -791,7 +791,7 @@ export default class BattleScene extends Scene {
       const preview = this.add.container(x, 72).setDepth(45);
       if (cardSource) {
         preview.add(this.add.image(0, 0, "seed-card")
-          .setDisplaySize(cardSource.width * cardScale, cardSource.height * cardScale));
+          .setDisplaySize(cardSource.width * cardScale * 0.8, cardSource.height * cardScale * 0.8));
       }
       if (this.textures.exists(plant.image)) {
         const texture = this.textures.get(plant.image);
@@ -809,7 +809,7 @@ export default class BattleScene extends Scene {
         // Keep inactive plant previews recognizable with a lighter dark overlay.
         preview.add(this.add.rectangle(0, -8, 56, 48, 0x000000, 0.32));
         // Show the plant's energy cost even while it is not in the active loadout.
-        preview.add(this.add.text(0, 33, "🍄" + plant.cost, {
+        preview.add(this.add.text(0, 26.4, "🍄" + plant.cost, {
           fontFamily: "Arial", fontSize: "13px", color: "#fff0bd", fontStyle: "bold",
           stroke: "#3d2817", strokeThickness: 2, resolution: 2, align: "center"
         }).setOrigin(0.5).setScale(0.95));
@@ -843,7 +843,7 @@ export default class BattleScene extends Scene {
     if (this.textures.exists(cardArtworkKey)) {
       const source = this.textures.get(cardArtworkKey).getSourceImage();
       const scale = Math.min(88 / source.width, 101.2 / source.height);
-      seedFrame = this.add.image(0, 0, cardArtworkKey).setDisplaySize(source.width * scale, source.height * scale);
+      seedFrame = this.add.image(0, 0, cardArtworkKey).setDisplaySize(source.width * scale * 0.8, source.height * scale * 0.8);
     }
     const plantHeight = 46;
     let icon;
@@ -865,7 +865,7 @@ export default class BattleScene extends Scene {
     // Preserve the frame-fit scale; applying 0.95 as an absolute scale here
     // would enlarge 341–418px source frames to nearly their original size.
     icon.setScale(iconScale * 0.95 * 0.95);
-    const cost = this.add.text(0, 33, locked ? "🔒" : "🍄" + costLabel, {
+    const cost = this.add.text(0, 26.4, locked ? "🔒" : "🍄" + costLabel, {
       fontFamily: "Arial", fontSize: "13px", color: "#fff0bd", fontStyle: "bold",
       stroke: "#3d2817", strokeThickness: 2, resolution: 2, align: "center"
     }).setOrigin(0.5).setScale(0.95);
