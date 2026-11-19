@@ -200,3 +200,31 @@ export function unlockNextStage(storage, completedStage) {
     return false;
   }
 }
+
+
+export const CAMPAIGN_MONSTER_IDS = Object.freeze(["cave-brute", "dust-skitter", "stonehide", "alpha-brute"]);
+
+export function loadDiscoveredMonsterIds(storage) {
+  const data = readCampaignProgress(storage);
+  if (!Array.isArray(data.discoveredMonsterIds)) return [];
+  return [...new Set(data.discoveredMonsterIds.filter((id) => CAMPAIGN_MONSTER_IDS.includes(id)))];
+}
+
+export function recordMonsterDiscovery(storage, monsterId) {
+  if (!CAMPAIGN_MONSTER_IDS.includes(monsterId) || !storage || typeof storage.getItem !== "function" || typeof storage.setItem !== "function") return false;
+  const current = readCampaignProgress(storage);
+  const discoveredMonsterIds = [...new Set([...loadDiscoveredMonsterIds(storage), monsterId])];
+  try {
+    storage.setItem(CAMPAIGN_PROGRESS_KEY, JSON.stringify({
+      ...current,
+      version: 1,
+      unlockedStage: loadUnlockedStage(storage),
+      completedStages: Array.isArray(current.completedStages) ? current.completedStages : [],
+      unlockedPlantIds: loadUnlockedPlantIds(storage),
+      discoveredMonsterIds
+    }));
+    return true;
+  } catch {
+    return false;
+  }
+}
