@@ -781,15 +781,14 @@ export default class BattleScene extends Scene {
     const packetStartX = 164;
     const packetGap = 90;
     const packetSlotCount = 7;
-    // Empty seed slots show the available loadout capacity without drawing a second tray.
-    if (this.textures.exists("seed-slot-empty")) {
-      const slotSource = this.textures.get("seed-slot-empty").getSourceImage();
-      const slotScale = Math.min(80 / slotSource.width, 92 / slotSource.height);
+    // Render the same uploaded seed-card artwork in every empty slot.
+    if (this.textures.exists("seed-card")) {
+      const cardSource = this.textures.get("seed-card").getSourceImage();
+      const cardScale = Math.min(80 / cardSource.width, 92 / cardSource.height);
       for (let index = 0; index < packetSlotCount; index += 1) {
-        const type = selectedTypes[index];
-        if (type) continue;
-        this.add.image(packetStartX + index * packetGap, 76, "seed-slot-empty")
-          .setDisplaySize(slotSource.width * slotScale, slotSource.height * slotScale)
+        if (selectedTypes[index]) continue;
+        this.add.image(packetStartX + index * packetGap, 76, "seed-card")
+          .setDisplaySize(cardSource.width * cardScale, cardSource.height * cardScale)
           .setDepth(44);
       }
     }
@@ -815,109 +814,48 @@ export default class BattleScene extends Scene {
 
   createPlantCard(x, title, costLabel, type, drawIcon, imageKey = null, y = 619, locked = false) {
     const card = this.add.container(x, y).setDepth(45);
-    // Individual seed packets: warm parchment face, dark border and a clear
-    // selected state, matching the compact packet proportions of PvZ.
-    const tint = locked ? 0x9aa0a6 : (type === "radish" ? 0x8ff0b0 : 0xffdf8a);
-    const halo = this.add.rectangle(0, 2, 86, 98, 0x1b1008, 0.38);
-    const packetFrame = this.add.rectangle(0, 0, 80, 92, 0x4a2d18, 1)
-      .setStrokeStyle(3, locked ? 0x625b50 : 0x2b1a0d, 1);
-    const packetRim = this.add.rectangle(0, 0, 74, 86, locked ? 0x77766f : 0xb9874e, 1)
-      .setStrokeStyle(2, locked ? 0xaaa69a : 0xf0cf91, 1);
-    const panel = this.add.rectangle(0, -1, 68, 80, locked ? 0x858585 : 0xf0ddb5, 1)
-      .setStrokeStyle(2, locked ? 0x626262 : 0xfff0ce, 1)
-      .setInteractive({ useHandCursor: true });
-    // Overlay the uploaded seed-card artwork while keeping its original aspect ratio.
+    const cardArtworkKey = locked && this.textures.exists("seed-card-locked") ? "seed-card-locked" : "seed-card";
     let seedFrame = null;
-    const cardArtworkKey = locked && this.textures.exists("seed-card-locked")
-      ? "seed-card-locked"
-      : (this.textures.exists("seed-card") ? "seed-card" : "seed-card-frame");
     if (this.textures.exists(cardArtworkKey)) {
-      const frameSource = this.textures.get(cardArtworkKey).getSourceImage();
-      const frameScale = Math.min(86 / frameSource.width, 98 / frameSource.height);
-      seedFrame = this.add.image(0, 0, cardArtworkKey)
-        .setDisplaySize(frameSource.width * frameScale, frameSource.height * frameScale);
+      const source = this.textures.get(cardArtworkKey).getSourceImage();
+      const scale = Math.min(80 / source.width, 92 / source.height);
+      seedFrame = this.add.image(0, 0, cardArtworkKey).setDisplaySize(source.width * scale, source.height * scale);
     }
-    const costPlate = this.add.rectangle(0, 29, 62, 19, locked ? 0x55534e : 0x6b4929, 1)
-      .setStrokeStyle(1, locked ? 0x88857b : 0x3d2817, 1);
+    const plantHeight = 46;
     let icon;
     if (imageKey && this.textures.exists(imageKey)) {
-      const usesGridSheet = imageKey === "mango-level-1" || imageKey === "radish-level-1" || imageKey === "snow-thrower-level-1";
-      const frameData = this.textures.getFrame(imageKey, usesGridSheet ? "0" : undefined);
-      // Use nearly the full packet face for the plant artwork while keeping
-      // a dedicated strip below for the energy cost.
-      const iconHeight = 58;
-      const iconWidth = iconHeight * (frameData.realWidth / frameData.realHeight);
-      icon = usesGridSheet
-        ? this.add.sprite(0, -11, imageKey, "0").setDisplaySize(Math.min(iconWidth, 64), iconHeight)
-        : this.add.image(0, -11, imageKey).setDisplaySize(Math.min(iconWidth, 64), iconHeight);
+      const gridSheet = imageKey === "mango-level-1" || imageKey === "radish-level-1" || imageKey === "snow-thrower-level-1";
+      const frame = this.textures.getFrame(imageKey, gridSheet ? "0" : undefined);
+      const ratio = frame.realWidth / frame.realHeight;
+      const width = Math.min(54, plantHeight * ratio);
+      icon = gridSheet ? this.add.sprite(0, -8, imageKey, "0").setDisplaySize(width, plantHeight) : this.add.image(0, -8, imageKey).setDisplaySize(width, plantHeight);
     } else {
       icon = this.add.graphics();
       if (drawIcon) drawIcon(icon);
     }
-    const cooldownOverlay = this.add.rectangle(0, -1, 68, 80, 0x1a160f, 0.72).setVisible(false);
-    const cooldownLabel = this.add.text(0, -1, "", {
-      fontFamily: "Arial", fontSize: "20px", color: "#fff4d6", fontStyle: "bold",
-      stroke: "#382312", strokeThickness: 4, resolution: 2
-    }).setOrigin(0.5).setVisible(false);
-    panel.setData("cooldownOverlay", cooldownOverlay);
-    panel.setData("cooldownLabel", cooldownLabel);
-    card.setData("cooldownOverlay", cooldownOverlay);
-    card.setData("cooldownLabel", cooldownLabel);
-    const cost = this.add.text(0, 29, "🍄 " + costLabel, {
-      fontFamily: "Arial", fontSize: "14px", color: "#fff0bd", fontStyle: "bold",
-      stroke: "#3d2817", strokeThickness: 2, resolution: 2,
-      align: "center"
-    }).setOrigin(0.5, 0.5);
-    if (locked) {
-      icon.setAlpha(0.78);
-      cost.setText("🔒");
-      const lockLabel = this.add.text(0, 52, title, {
-        fontFamily: "Arial", fontSize: "14px", color: "#ffffff", fontStyle: "bold",
-        stroke: "#34445b", strokeThickness: 2, resolution: 2
-      }).setOrigin(0.5, 0.5);
-      card.add([halo, packetFrame, packetRim, panel, ...(seedFrame ? [seedFrame] : []), icon, costPlate, cost, lockLabel, cooldownOverlay, cooldownLabel]);
-      card.setAlpha(0.78);
-    } else {
-      card.add([halo, packetFrame, packetRim, panel, ...(seedFrame ? [seedFrame] : []), icon, costPlate, cost, cooldownOverlay, cooldownLabel]);
-    }
-
-    panel.on("pointerover", () => {
-      if (!locked && this.selectedPlant !== type) panel.setFillStyle(tint, 0.34);
-      card.setScale(1.04);
-    });
-    panel.on("pointerout", () => {
-      panel.setFillStyle(locked ? 0x858585 : 0xf0ddb5, 1);
-      card.setScale(1);
-    });
+    const cost = this.add.text(0, 29, locked ? "🔒" : "🍄 " + costLabel, {
+      fontFamily: "Arial", fontSize: "13px", color: "#fff0bd", fontStyle: "bold",
+      stroke: "#3d2817", strokeThickness: 2, resolution: 2, align: "center"
+    }).setOrigin(0.5);
+    const cooldownOverlay = this.add.rectangle(0, -1, 64, 72, 0x1a160f, 0.72).setVisible(false);
+    const cooldownLabel = this.add.text(0, -1, "", { fontFamily: "Arial", fontSize: "20px", color: "#fff4d6", fontStyle: "bold", stroke: "#382312", strokeThickness: 4, resolution: 2 }).setOrigin(0.5).setVisible(false);
+    card.setData("cooldownOverlay", cooldownOverlay); card.setData("cooldownLabel", cooldownLabel);
+    const panel = this.add.rectangle(0, 0, 80, 92, 0xffffff, 0).setInteractive({ useHandCursor: true });
+    panel.setData("cooldownOverlay", cooldownOverlay); panel.setData("cooldownLabel", cooldownLabel);
+    card.add([...(seedFrame ? [seedFrame] : []), panel, icon, cost, cooldownOverlay, cooldownLabel]);
+    if (locked) card.setAlpha(0.78);
+    panel.on("pointerover", () => { card.setScale(1.04); });
+    panel.on("pointerout", () => { card.setScale(1); });
     panel.on("pointerdown", () => {
       if (this.gameOver) return;
-      if (locked) {
-        this.setMessage(title + " is coming soon. Its combat ability is not ready yet.");
-        return;
-      }
-      if (this.getSeedPacketCooldownRemaining(type) > 0) {
-        this.setMessage("This seed packet is recharging. Wait for it to recover.");
-        return;
-      }
+      if (locked) { this.setMessage(title + " is coming soon. Its combat ability is not ready yet."); return; }
+      if (this.getSeedPacketCooldownRemaining(type) > 0) { this.setMessage("This seed packet is recharging. Wait for it to recover."); return; }
       this.selectedPlant = type;
-      Object.entries(this.plantCardsByType || {}).forEach(([plantType, plantCard]) => {
-        plantCard.setAlpha(plantType === type ? 1 : 0.9);
-        const face = plantCard.list?.find((item) => item.type === "Rectangle" && item.width === 68);
-        if (face) face.setStrokeStyle(plantType === type ? 4 : 2, plantType === type ? 0x8fbd4c : 0xfff0ce, 1);
-      });
-      panel.setFillStyle(tint, 1);
-      const plantHints = {
-        radish: "Radish Level 1 chosen. Launches miniature radish bombs down its lane.",
-        mushroom: "Mushroom chosen. Collect its energy when it appears.",
-        pumpkin: "Pumpkin chosen. A durable lane blocker.",
-        hazelnut: "Hazelnut chosen. Fires hazelnut bombs in its lane.",
-        mango: "Mango chosen. Launches a curved mango bomb onto monsters in its lane.",
-        "snow-thrower": "Snow Thrower chosen. Freezes the first monster hit for 2.6 seconds."
-      };
-      this.setMessage(plantHints[type] || "Plant chosen.");
-      this.refreshHud();
+      Object.entries(this.plantCardsByType || {}).forEach(([plantType, plantCard]) => plantCard.setAlpha(plantType === type ? 1 : 0.9));
+      const hints = { radish: "Radish Level 1 chosen. Launches miniature radish bombs down its lane.", mushroom: "Mushroom chosen. Collect its energy when it appears.", pumpkin: "Pumpkin chosen. A durable lane blocker.", hazelnut: "Hazelnut chosen. Fires hazelnut bombs in its lane.", mango: "Mango chosen. Launches a curved mango bomb onto monsters in its lane.", "snow-thrower": "Snow Thrower chosen. Freezes the first monster hit for 2.6 seconds." };
+      this.setMessage(hints[type] || "Plant chosen."); this.refreshHud();
     });
-    return panel;
+    return card;
   }
 
   createCaveman() {
