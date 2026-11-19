@@ -681,10 +681,10 @@ export default class BattleScene extends Scene {
       ? this.add.image(0, 0, "mushroom-card").setDisplaySize(112, 96)
       : null;
     const mushroomIcon = this.textures.exists("mushroom-character")
-      ? this.add.image(0, -17, "mushroom-character").setDisplaySize(43, 43)
-      : this.add.text(0, -19, "🍄", { fontFamily: "Arial", fontSize: "34px" }).setOrigin(0.5);
-    this.energyValueText = this.add.text(0, 26, String(this.energy), {
-      fontFamily: "Arial", fontSize: "23px", color: "#fff2a8", fontStyle: "bold",
+      ? this.add.image(0, -12, "mushroom-character").setDisplaySize(43, 43)
+      : this.add.text(0, -14, "🍄", { fontFamily: "Arial", fontSize: "34px" }).setOrigin(0.5);
+    this.energyValueText = this.add.text(0, 32, String(this.energy), {
+      fontFamily: "Arial", fontSize: "20.7px", color: "#fff2a8", fontStyle: "bold",
       stroke: "#39240f", strokeThickness: 3, resolution: 2
     }).setOrigin(0.5);
     this.mushroomBank.add([...(mushroomCard ? [mushroomCard] : []), mushroomIcon, this.energyValueText]);
