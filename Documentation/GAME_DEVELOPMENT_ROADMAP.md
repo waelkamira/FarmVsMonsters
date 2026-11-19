@@ -248,6 +248,13 @@ Run from `web/` with `npm test`. GitHub Actions is configured to run the suite, 
 
 
 
+## 2026-11-19 — Campaign progression integrity
+- Campaign completion writes now reject results for stages beyond the currently unlocked stage; replaying an already-unlocked stage remains safe.
+- Invalid or out-of-range local unlock values fall back to Stage 1 instead of being clamped to Stage 10.
+- Earlier completed stages are reconstructed from the sequential unlock state, while Stage 10 completion is stored explicitly because there is no Stage 11 unlock to represent it.
+- Local account progress and verified remote restores preserve Stage 10 completion and reject malformed remote stage numbers.
+- Regression coverage now includes skipped-stage attempts, legacy saves, invalid local/remote unlock values, and final-stage completion. The latest GitHub Actions attempt did not allocate a runner, so this revision has no new test or build result yet.
+
 ## 2026-11-15 — Stage 1 balance and in-game field guide
 - Replaced the obsolete 100-monster prototype schedule with five waves of 3 / 5 / 6 / 7 / 9 ordinary monsters (30 total). The dragon remains a separate boss.
 - Added a ten-stage campaign count helper: Stage N contains 29 + N ordinary monsters (Stage 1 = 30 through Stage 10 = 39).
