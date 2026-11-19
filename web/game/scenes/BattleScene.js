@@ -762,7 +762,7 @@ export default class BattleScene extends Scene {
     }).setOrigin(0.5).setVisible(false);
     panel.setData("cooldownOverlay", cooldownOverlay);
     panel.setData("cooldownLabel", cooldownLabel);
-    const cost = this.add.text(0, 29, "☀ " + costLabel, {
+    const cost = this.add.text(0, 29, "🍄 " + costLabel, {
       fontFamily: "Arial", fontSize: "14px", color: "#fff0bd", fontStyle: "bold",
       stroke: "#3d2817", strokeThickness: 2, resolution: 2,
       align: "center"
@@ -795,7 +795,7 @@ export default class BattleScene extends Scene {
         return;
       }
       if (this.getSeedPacketCooldownRemaining(type) > 0) {
-        this.setMessage(title + " is recharging. Wait for its seed packet to recover.");
+        this.setMessage("This seed packet is recharging. Wait for it to recover.");
         return;
       }
       this.selectedPlant = type;
@@ -2129,7 +2129,7 @@ export default class BattleScene extends Scene {
     const plantConfigs = { radish: RADISH_CONFIG, mushroom: MUSHROOM_CONFIG, pumpkin: PUMPKIN_CONFIG, pineapple: PINEAPPLE_CONFIG, hazelnut: HAZELNUT_CONFIG, mango: MANGO_CONFIG, "snow-thrower": SNOW_THROWER_CONFIG };
     const plantConfig = plantConfigs[this.selectedPlant];
     if (this.getSeedPacketCooldownRemaining(this.selectedPlant) > 0) {
-      this.setMessage("This seed packet is still recharging. Choose another plant or wait.");
+      this.setMessage("This seed packet is recharging. Wait for it to recover.");
       return;
     }
     if (!plantConfig) {
