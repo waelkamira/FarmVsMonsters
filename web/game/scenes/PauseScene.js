@@ -8,14 +8,14 @@ const AUDIO_CHANNELS = [
 ];
 
 const GLASS = {
-  panel: 0x315b91,
-  panelGlow: 0x35bceb,
-  green: 0x42c96b,
-  blue: 0x35bceb,
-  violet: 0x8b65e8,
-  coral: 0xff7185,
-  gold: 0xffca45,
-  white: 0xffffff
+  panel: 0xe8d2a6,
+  panelGlow: 0xb88950,
+  green: 0x6f9b43,
+  blue: 0xc99a56,
+  violet: 0x8b704b,
+  coral: 0xa95c42,
+  gold: 0xe6bd68,
+  white: 0xfff1d1
 };
 
 export default class PauseScene extends Scene {
@@ -56,17 +56,20 @@ export default class PauseScene extends Scene {
   }
 
   drawPanel(title, height = 420) {
-    this.add.rectangle(560, 340, 1120, 680, 0x142b50, 0.58).setDepth(-1);
-    this.add.rectangle(560, 340, 526, height + 22, GLASS.violet, 0.18)
-      .setStrokeStyle(1, GLASS.white, 0.5);
-    this.add.rectangle(560, 340, 508, height, GLASS.panel, 0.64)
-      .setStrokeStyle(1, GLASS.white, 0.72);
-    this.add.rectangle(560, 340, 488, height - 20, GLASS.blue, 0.12)
-      .setStrokeStyle(1, GLASS.lime || 0xa7e84f, 0.38);
-    this.add.rectangle(560, 340 - height / 2 + 12, 472, 5, GLASS.white, 0.28);
+    // Parchment notice board mounted on a carved timber frame.
+    this.add.rectangle(560, 340, 1120, 680, 0x172313, 0.66).setDepth(-1);
+    this.add.rectangle(560, 340, 548, height + 30, 0x382315, 0.98)
+      .setStrokeStyle(5, 0x241509, 1);
+    this.add.rectangle(560, 340, 528, height + 10, 0xb88950, 1)
+      .setStrokeStyle(3, 0xe3c18a, 1);
+    this.add.rectangle(560, 340, 506, height - 12, 0xf0dfbb, 1)
+      .setStrokeStyle(3, 0x8d6538, 1);
+    this.add.rectangle(560, 340, 488, height - 30, 0xe5d0a6, 1)
+      .setStrokeStyle(1, 0xc3a16b, 1);
+    this.add.rectangle(560, 340 - height / 2 + 12, 474, 6, 0x9a7042, 1);
     this.add.text(560, 340 - height / 2 + 58, this.tr(title), {
-      fontFamily: "Arial", fontSize: "32px", color: "#ffffff",
-      fontStyle: "bold", stroke: "#24365d", strokeThickness: 5, resolution: 2
+      fontFamily: "Arial", fontSize: "32px", color: "#59391e",
+      fontStyle: "bold", stroke: "#fff0ce", strokeThickness: 2, resolution: 2
     }).setOrigin(0.5);
   }
 
