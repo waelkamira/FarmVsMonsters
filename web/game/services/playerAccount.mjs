@@ -1,10 +1,16 @@
 import {
   CAMPAIGN_PROGRESS_KEY,
+  CAMPAIGN_STAGE_COUNT,
   loadUnlockedStage,
   loadCompletedStages,
   loadSavedCoins,
   saveCoins
 } from "../rules/phaseOneRules.mjs";
+
+function normalizeCampaignStage(value) {
+  const stage = Number(value);
+  return Number.isInteger(stage) && stage >= 1 && stage <= CAMPAIGN_STAGE_COUNT ? stage : 1;
+}
 
 async function requestJson(url, options = {}) {
   const response = await fetch(url, {
@@ -28,11 +34,11 @@ export function readLocalPlayerProgress(storage = window.localStorage) {
 
 export function applyRemotePlayerProgress(progress, storage = window.localStorage) {
   if (!progress || !storage) return false;
-  const unlockedStage = Math.min(10, Math.max(1, Number(progress.unlocked_stage) || 1));
+  const unlockedStage = normalizeCampaignStage(progress.unlocked_stage);
   const isCompletedStage = (stage) =>
     Number.isInteger(stage) &&
     stage >= 1 &&
-    (stage < unlockedStage || (stage === 10 && unlockedStage === 10));
+    (stage < unlockedStage || (stage === CAMPAIGN_STAGE_COUNT && unlockedStage === CAMPAIGN_STAGE_COUNT));
   const completedStages = Array.isArray(progress.completed_stages)
     ? [...new Set(progress.completed_stages.filter(isCompletedStage))].sort((a, b) => a - b)
     : [];
@@ -93,12 +99,12 @@ export async function restoreOrInitializeCloudProgress() {
 
   // Progress is monotonic: an older verified cloud snapshot must never
   // overwrite a newer campaign unlock already earned on this device.
-  const cloudUnlockedStage = Math.min(10, Math.max(1, Number(cloud.unlocked_stage) || 1));
+  const cloudUnlockedStage = normalizeCampaignStage(cloud.unlocked_stage);
   const unlockedStage = Math.max(local.unlockedStage, cloudUnlockedStage);
   const isCompletedStage = (stage) =>
     Number.isInteger(stage) &&
     stage >= 1 &&
-    (stage < unlockedStage || (stage === 10 && unlockedStage === 10));
+    (stage < unlockedStage || (stage === CAMPAIGN_STAGE_COUNT && unlockedStage === CAMPAIGN_STAGE_COUNT));
   const cloudCompletedStages = Array.isArray(cloud.completed_stages)
     ? cloud.completed_stages.filter(isCompletedStage)
     : [];
