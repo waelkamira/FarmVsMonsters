@@ -23,7 +23,8 @@ import {
   isPhaseOneVictory,
   unlockNextStage,
   loadUnlockedPlantIds,
-  unlockPlantReward
+  unlockPlantReward,
+  recordMonsterDiscovery
 } from "../rules/phaseOneRules.mjs";
 import {
   resolvePlantPlacement,
@@ -2940,6 +2941,7 @@ export default class BattleScene extends Scene {
   spawnMonster(spawnIndex = this.spawnedThisWave) {
     const row = this.simulationRandom.nextInt(0, LANES - 1);
     const archetype = this.monsterArchetypeFor(spawnIndex);
+    try { recordMonsterDiscovery(window.localStorage, archetype); } catch { /* Bestiary tracking must never interrupt battle. */ }
     const profile = getMonsterCombatStats(archetype, this.wave);
     const hp = profile.hp;
     const speed = profile.speed;
