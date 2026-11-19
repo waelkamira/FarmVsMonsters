@@ -127,15 +127,73 @@ export function loadUnlockedStage(storage) {
   }
 }
 
+export const STARTING_PLANT_IDS = Object.freeze(["radish", "mushroom"]);
+export const CAMPAIGN_PLANT_REWARDS = Object.freeze({
+  1: "pumpkin",
+  2: "pineapple",
+  3: "hazelnut",
+  4: "mango",
+  5: "snow-thrower"
+});
+
+function readCampaignProgress(storage) {
+  if (!storage || typeof storage.getItem !== "function") return {};
+  try {
+    const data = JSON.parse(storage.getItem(CAMPAIGN_PROGRESS_KEY) || "{}");
+    return data && data.version === 1 ? data : {};
+  } catch {
+    return {};
+  }
+}
+
+export function loadUnlockedPlantIds(storage) {
+  const data = readCampaignProgress(storage);
+  const unlocked = new Set(STARTING_PLANT_IDS);
+  if (Array.isArray(data.unlockedPlantIds)) {
+    data.unlockedPlantIds.forEach((id) => {
+      if (typeof id === "string" && id.trim()) unlocked.add(id);
+    });
+  } else if (Number.isInteger(data.unlockedStage) && data.unlockedStage >= 2) {
+    // Backward compatibility: old saves that opened Stage 2 completed Stage 1.
+    unlocked.add("pumpkin");
+  }
+  return [...unlocked];
+}
+
+export function unlockPlantReward(storage, completedStage) {
+  const plantId = CAMPAIGN_PLANT_REWARDS[completedStage];
+  if (!plantId || !storage || typeof storage.getItem !== "function" || typeof storage.setItem !== "function") return false;
+  const current = readCampaignProgress(storage);
+  const unlockedPlantIds = [...new Set([...loadUnlockedPlantIds(storage), plantId])];
+  try {
+    storage.setItem(CAMPAIGN_PROGRESS_KEY, JSON.stringify({
+      ...current,
+      version: 1,
+      unlockedStage: loadUnlockedStage(storage),
+      completedStages: Array.isArray(current.completedStages) ? current.completedStages : [],
+      unlockedPlantIds
+    }));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function unlockNextStage(storage, completedStage) {
   if (!storage || typeof storage.getItem !== "function" || typeof storage.setItem !== "function") return false;
   if (!Number.isInteger(completedStage) || completedStage < 1 || completedStage > CAMPAIGN_STAGE_COUNT) return false;
+  const current = readCampaignProgress(storage);
   const unlockedStage = Math.min(CAMPAIGN_STAGE_COUNT, Math.max(loadUnlockedStage(storage), completedStage + 1));
   try {
     storage.setItem(CAMPAIGN_PROGRESS_KEY, JSON.stringify({
+      ...current,
       version: 1,
       unlockedStage,
-      completedStages: Array.from({ length: unlockedStage - 1 }, (_, index) => index + 1)
+      completedStages: [...new Set([
+        ...(Array.isArray(current.completedStages) ? current.completedStages : []),
+        ...Array.from({ length: unlockedStage - 1 }, (_, index) => index + 1)
+      ])].sort((a, b) => a - b),
+      unlockedPlantIds: loadUnlockedPlantIds(storage)
     }));
     return true;
   } catch {
