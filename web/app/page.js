@@ -52,7 +52,7 @@ export default function HomePage() {
       </div>
 
       <div className="codex-home-topbar">
-        <div className="codex-home-brand"><span className="codex-brand-seal">🌿</span><span>FARM <b>VS</b> MONSTERS</span></div>
+        <div className="codex-home-brand"><img className="farm-game-logo farm-game-logo-home" src="/assets/items/ui/logo.png" alt="Farm Vs Monsters" /></div>
         <div className="codex-home-top-actions"><span className="codex-world-label">{arabic ? "موسم المغامرة الأولى" : "SEASON ONE · THE FIRST GARDEN"}</span><LanguageToggle /></div>
       </div>
 

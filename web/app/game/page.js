@@ -71,7 +71,7 @@ export default function GamePage() {
 
   return <main className="game-shell" dir={arabic ? "rtl" : "ltr"}>
     <header className="game-header">
-      <Link href="/" className="wordmark">Farm <span>Vs</span> Monsters</Link>
+      <Link href="/" className="wordmark farm-game-logo-link" aria-label="Farm Vs Monsters home"><img className="farm-game-logo farm-game-logo-header" src="/assets/items/ui/logo.png" alt="Farm Vs Monsters" /></Link>
       <div className="control-hint">{battleStarted
         ? t("Choose a plant card · Click an empty soil plot to plant · Collect Mushroom energy")
         : t("Prepare your seed packets before entering the battlefield")}</div>

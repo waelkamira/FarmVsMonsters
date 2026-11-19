@@ -152,3 +152,12 @@ a,button{ -webkit-tap-highlight-color:transparent }
  .game-panel{border-width:3px!important;border-radius:9px!important}
  .prototype-note{font-size:11px;line-height:1.5}
 }
+
+
+/* Official FarmVsMonsters logo integration */
+.farm-game-logo{display:block;object-fit:contain;max-width:100%;height:auto}
+.farm-game-logo-home{width:clamp(150px,19vw,238px);max-height:76px;filter:drop-shadow(0 3px 2px #3d261b55)}
+.codex-home-brand{min-width:0}
+.farm-game-logo-link{display:flex;align-items:center;flex:0 0 auto;line-height:0}
+.farm-game-logo-header{width:clamp(118px,15vw,176px);max-height:58px}
+@media(max-width:520px){.farm-game-logo-home{width:clamp(128px,38vw,178px);max-height:58px}.farm-game-logo-header{width:116px;max-height:44px}}
