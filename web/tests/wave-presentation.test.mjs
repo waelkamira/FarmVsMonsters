@@ -49,3 +49,12 @@ test("arrival animation does not alter monster logical spawn coordinates", () =>
   assert.match(scene, /monsterRecord = \{/);
   assert.match(scene, /row, x: spawn\.x, y: spawn\.y, localX: SPAWN_LOCAL_X/);
 });
+
+test("dragon fireballs telegraph their impact point before launching", () => {
+  assert.match(scene, /Telegraph the chosen impact point before the projectile is launched/);
+  assert.match(scene, /const warning = this\.add\.circle\(targetX, targetY, 24/);
+  assert.match(scene, /const warningCore = this\.add\.circle\(targetX, targetY, 8/);
+  assert.match(scene, /duration: 520/);
+  assert.match(scene, /if \(this\.gameOver \|\| this\.storySequenceActive \|\| this\.collectionMenuOpen \|\| !boss\.alive\) return/);
+  assert.match(scene, /duration: PHASE_ONE_DRAGON\.fireballTravelMs/);
+});
