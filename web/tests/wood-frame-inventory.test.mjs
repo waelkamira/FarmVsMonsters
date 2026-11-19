@@ -43,3 +43,19 @@ test("the uploaded seed-card frame is loaded and rendered on every battle seed p
   assert.match(scene, /\.\.\.\(seedFrame \? \[seedFrame\] : \[\]\)/);
   assert.match(scene, /card\.add\(\[halo, packetFrame, packetRim, panel, \.\.\.\(seedFrame \? \[seedFrame\] : \[\]\), icon/);
 });
+
+
+test("the uploaded locked seed-card artwork is used for locked plant cards and collection entries", () => {
+  assert.match(scene, /seed-card-locked", "\/assets\/items\/ui\/ui-seed-card-locked\.png"/);
+  assert.match(scene, /locked && this\.textures\.exists\("seed-card-locked"\)/);
+  assert.match(scene, /cardArtworkKey/);
+  assert.match(scene, /!unlocked && this\.textures\.exists\("seed-card-locked"\)/);
+});
+
+test("the uploaded empty seed-slot artwork fills unused loadout positions", () => {
+  assert.match(scene, /seed-slot-empty", "\/assets\/items\/ui\/ui-seed-slot-empty\.png"/);
+  assert.match(scene, /const packetSlotCount = 7/);
+  assert.match(scene, /if \(type\) continue/);
+  assert.match(scene, /"seed-slot-empty"\)/);
+  assert.match(scene, /\.setDepth\(44\)/);
+});
