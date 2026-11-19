@@ -827,7 +827,7 @@ export default class BattleScene extends Scene {
       icon = this.add.graphics();
       if (drawIcon) drawIcon(icon);
     }
-    const cost = this.add.text(0, 33, locked ? "🔒" : "🍄 " + costLabel, {
+    const cost = this.add.text(0, 33, locked ? "🔒" : "🍄" + costLabel, {
       fontFamily: "Arial", fontSize: "13px", color: "#fff0bd", fontStyle: "bold",
       stroke: "#3d2817", strokeThickness: 2, resolution: 2, align: "center"
     }).setOrigin(0.5);
