@@ -781,7 +781,7 @@ export default class BattleScene extends Scene {
       const cardScale = Math.min(88 / cardSource.width, 101.2 / cardSource.height);
       for (let index = 0; index < packetSlotCount; index += 1) {
         if (selectedTypes[index]) continue;
-        this.add.image(packetStartX + index * packetGap, 76, "seed-card")
+        this.add.image(packetStartX + index * packetGap, 72, "seed-card")
           .setDisplaySize(cardSource.width * cardScale, cardSource.height * cardScale)
           .setDepth(44);
       }
@@ -794,7 +794,7 @@ export default class BattleScene extends Scene {
         plant.type,
         null,
         plant.image,
-        76
+        72
       );
     });
 
