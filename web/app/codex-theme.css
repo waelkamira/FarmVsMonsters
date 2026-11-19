@@ -175,3 +175,39 @@ a,button{ -webkit-tap-highlight-color:transparent }
 .codex-settings-links a{display:flex;align-items:center;min-height:48px;padding:10px 13px;border:3px solid #70431f;border-radius:12px;background:linear-gradient(#fff8e8,#dfc69a);color:#4d3019;font-weight:900;text-decoration:none;box-shadow:inset 0 2px #fff,0 4px #513119}
 .codex-settings-links a:hover{filter:brightness(1.06);transform:translateY(-2px)}
 @media(max-width:520px){.farm-game-logo-center{width:min(82vw,380px)}.codex-home-settings-link{inset-inline-end:14px;bottom:14px;width:46px;height:46px}.codex-settings-links{grid-template-columns:1fr}}
+
+
+/* Main menu: large centered official logo with a premium glass treatment. */
+.codex-home-center {
+  width: min(920px, 100%);
+  gap: clamp(20px, 3.5vh, 34px);
+}
+.farm-game-logo-center {
+  display: block;
+  width: clamp(300px, 62vw, 760px);
+  max-width: min(88vw, 760px);
+  max-height: 55svh;
+  height: auto;
+  padding: clamp(12px, 2vw, 24px);
+  border: 1px solid rgba(255,255,255,.68);
+  border-radius: clamp(20px, 3vw, 34px);
+  background:
+    linear-gradient(135deg, rgba(255,255,255,.34), rgba(220,245,255,.12) 48%, rgba(255,255,255,.2));
+  -webkit-backdrop-filter: blur(16px) saturate(155%);
+  backdrop-filter: blur(16px) saturate(155%);
+  box-shadow:
+    inset 0 2px 0 rgba(255,255,255,.72),
+    inset 0 -2px 0 rgba(255,255,255,.16),
+    0 18px 46px rgba(9,34,25,.34),
+    0 0 0 5px rgba(255,255,255,.09);
+  filter: drop-shadow(0 10px 9px rgba(12,35,24,.42));
+}
+@media (max-width: 520px) {
+  .codex-home-center { width: 100%; gap: 22px; }
+  .farm-game-logo-center {
+    width: min(90vw, 520px);
+    max-height: 46svh;
+    padding: 10px;
+    border-radius: 20px;
+  }
+}
