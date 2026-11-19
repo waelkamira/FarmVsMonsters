@@ -41,13 +41,6 @@ export default function HomePage() {
       <div className="world-battlefield-showcase" aria-hidden="true">
         <img className="world-battlefield-image" src="/assets/backgrounds/farm-battlefield.jpeg" alt="" />
         <div className="world-battlefield-atmosphere" />
-        <div className="battlefield-farmer"><img src="/assets/characters/farmer/farmer-idle.png" alt="" /></div>
-        <div className="battlefield-hyena battlefield-hyena-one"><img src="/assets/characters/monsters/hyena/hyena-idle.png" alt="" /></div>
-        <div className="battlefield-hyena battlefield-hyena-two"><img src="/assets/characters/monsters/hyena/hyena-idle.png" alt="" /></div>
-        <div className="battlefield-hyena battlefield-hyena-three"><img src="/assets/characters/monsters/hyena/hyena-idle.png" alt="" /></div>
-        <div className="battlefield-plant battlefield-plant-radish"><img src="/assets/plants/radish.png" alt="" /></div>
-        <div className="battlefield-plant battlefield-plant-mushroom"><img src="/assets/plants/mushroom.png" alt="" /></div>
-        <div className="battlefield-plant battlefield-plant-radish-small"><img src="/assets/plants/radish.png" alt="" /></div>
         <div className="battlefield-ground-glow" />
       </div>
 
