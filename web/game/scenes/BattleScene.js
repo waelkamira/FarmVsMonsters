@@ -812,7 +812,7 @@ export default class BattleScene extends Scene {
         preview.add(this.add.text(0, 26.4, "🍄" + plant.cost, {
           fontFamily: "Arial", fontSize: "13px", color: "#fff0bd", fontStyle: "bold",
           stroke: "#3d2817", strokeThickness: 2, resolution: 2, align: "center"
-        }).setOrigin(0.5).setScale(0.95));
+        }).setOrigin(0.5).setScale(0.855));
       }
       preview.setData("inactivePlantType", plant.type);
     });
@@ -868,7 +868,7 @@ export default class BattleScene extends Scene {
     const cost = this.add.text(0, 26.4, locked ? "🔒" : "🍄" + costLabel, {
       fontFamily: "Arial", fontSize: "13px", color: "#fff0bd", fontStyle: "bold",
       stroke: "#3d2817", strokeThickness: 2, resolution: 2, align: "center"
-    }).setOrigin(0.5).setScale(0.95);
+    }).setOrigin(0.5).setScale(0.855);
     const cooldownOverlay = this.add.rectangle(0, -1, 64, 72, 0x1a160f, 0.72).setVisible(false);
     const cooldownLabel = this.add.text(0, -1, "", { fontFamily: "Arial", fontSize: "20px", color: "#fff4d6", fontStyle: "bold", stroke: "#382312", strokeThickness: 4, resolution: 2 }).setOrigin(0.5).setVisible(false);
     card.setData("cooldownOverlay", cooldownOverlay); card.setData("cooldownLabel", cooldownLabel);
