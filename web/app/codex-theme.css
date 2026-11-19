@@ -298,3 +298,47 @@ a,button{ -webkit-tap-highlight-color:transparent }
 .codex-home-minimal .codex-play-only:active {
   transform: translate(-50%, 3px);
 }
+
+
+/* Use the newly uploaded illustrated START button and main-menu background. */
+.codex-home-minimal .codex-start-image-button {
+  display: block;
+  width: min(340px, 76vw);
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  text-shadow: none;
+  overflow: visible;
+  line-height: 0;
+}
+.codex-home-minimal .codex-start-image-button img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 19svh;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 8px rgba(31,22,10,.38));
+}
+.codex-home-minimal .codex-start-image-button:hover {
+  filter: brightness(1.06);
+}
+.codex-home-minimal .codex-start-image-button:active {
+  filter: brightness(.96);
+}
+.codex-home-minimal .codex-start-image-button:disabled {
+  opacity: .78;
+  cursor: wait;
+}
+.codex-home-minimal .codex-start-loading {
+  display: block;
+  position: absolute;
+  inset: 0;
+  align-content: center;
+  color: #fff8df;
+  font-weight: 900;
+  line-height: 1.2;
+  text-shadow: 0 2px 4px #38200f;
+}
