@@ -1012,3 +1012,11 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - The delayed launch is cancelled if the boss dies or the battle enters a terminal/story/menu state before the warning completes.
 - Added focused source-integration assertions for the warning marker, lead time, and cancellation guard.
 - Verification: GitHub source read-back only. Node tests, Next.js build, and actual browser playtest remain unexecuted.
+
+
+## 2026-11-19 — First-frame artwork on pre-battle seed cards
+- Updated the Stage 1 pre-battle seed selection cards to display only the first (top-left) frame for every current 3×3 plant sheet: Radish, Pineapple, Hazelnut, Mango, and Snow Thrower.
+- Kept single-image plant assets (Energy Mushroom and Pumpkin) displayed as complete images without cropping.
+- Used a clipped 3×3 viewport anchored at the top-left of each sheet, with per-artwork frame aspect ratios so the complete first cell is visible instead of a middle frame or neighboring animation frames.
+- No source artwork, animation sheets, combat behavior, or battle HUD assets were modified.
+- Verification: source-level changes and GitHub read-back only; Node tests, Next.js build, and visual browser verification have not been run.
