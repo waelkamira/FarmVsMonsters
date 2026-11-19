@@ -28,7 +28,6 @@ import {
   resolvePlantUproot,
   applyHitPointsDamage,
   resolveMonsterLaneStep,
-  resolveMonsterFreezeStep,
   resolveProjectileLaneStep,
   selectLaneBlocker,
   selectProjectileTarget,
@@ -3592,7 +3591,7 @@ export default class BattleScene extends Scene {
   }
 
   flashMonsterOnHit(monster) {
-    if (!monster || !monster.alive || monster.freezeRemainingMs > 0) return;
+    if (!monster || !monster.alive || monster.freezeStage > 0) return;
 
     // Keep the hyena grounded and on its original lane. Strengthen the flash
     // by about 30%, then add a tiny horizontal recoil on the sprite only.
