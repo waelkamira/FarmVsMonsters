@@ -181,7 +181,7 @@ export function getMonsterCombatStats(archetype, wave) {
 
   const hp = profile.hitsToDefeat
     ? PHASE_ONE_PLANTS.radish.projectileDamage * profile.hitsToDefeat + (wave - 1) * 8
-    : Math.round((PHASE_ONE_PLANTS.radish.projectileDamage * profile.hitsToDefeat) + (wave - 1) * 8) * profile.hpMultiplier;
+    : Math.round((PHASE_ONE_MONSTER_SCALING.baseHp + Math.floor(wave * PHASE_ONE_MONSTER_SCALING.hpPerWave)) * profile.hpMultiplier);
   const baseSpeed = Math.min(PHASE_ONE_MONSTER_SCALING.maxBaseSpeed, PHASE_ONE_MONSTER_SCALING.baseSpeed + (wave - 1) * PHASE_ONE_MONSTER_SCALING.speedPerWave);
 
   return Object.freeze({
