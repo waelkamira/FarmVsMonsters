@@ -1,4 +1,5 @@
 import "./globals.css";
+import "./codex-theme.css";
 import { LocaleProvider } from "./LocaleProvider";
 
 export const metadata = {
