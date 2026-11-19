@@ -121,9 +121,11 @@ These counts are ordinary enemies per stage; they are pacing targets for the 10-
 - Tune after real playtests; the numeric targets above are a starting balance, not a substitute for observed win rates and player comprehension.
 
 
-## Plant unlocks and stage rewards (DESIGN PLAN)
+## Plant unlocks and stage rewards (PARTIALLY IMPLEMENTED)
 
-The seed bank currently exposes the existing plant roster in the battle scene. The following is the intended campaign reward schedule; it must be connected to the stage-selection/loadout flow before it is treated as live progression.
+Stage 1 → Pumpkin is now wired to the victory path and persisted in `CAMPAIGN_PROGRESS_KEY`. The battle seed bank filters the saved loadout against unlocked plant IDs, and the planting function independently rejects locked IDs. New saves start with Radish and Energy Mushroom. Existing saves that already unlocked Stage 2 are treated as having completed Stage 1 and receive Pumpkin through backward-compatible unlock resolution.
+
+The later reward schedule remains a design plan until the corresponding stages and rewards are implemented. The seed bank no longer forces Snow Thrower into the starting loadout.
 
 ### Starting loadout
 
@@ -160,4 +162,4 @@ Available from the beginning:
 
 ### Implementation gate
 
-Before connecting these rewards to gameplay, inspect the campaign map and loadout pages and unify their persistence with `CAMPAIGN_PROGRESS_KEY`. The battle scene currently calls `unlockNextStage(..., 1)` on victory, while the seed bank currently loads a saved selection and defaults to the full plant option list. Do not implement plant locks by changing only the card visuals: the authoritative selection/placement path must also reject locked plant IDs, and the stage reward must be persisted exactly once.
+The campaign map continues to use `CAMPAIGN_PROGRESS_KEY` for stage access. The first reward now uses that same record. The cloud progress API does not yet carry a plant-reward field, so local plant unlocks are explicitly preserved when verified cloud stage progress is restored. Future rewards must follow the same rule and should become cloud-backed only after the server progress contract is extended.
