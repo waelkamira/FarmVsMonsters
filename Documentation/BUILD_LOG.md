@@ -1003,3 +1003,12 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - Effects self-destroy after their short animation to avoid accumulating display objects.
 - Added focused source-integration assertions for tier colors, cleanup, and preservation of logical spawn coordinates.
 - Verification: GitHub source read-back only. Node tests, Next.js build, and in-browser Phaser gameplay remain unexecuted in this environment.
+
+
+## 2026-11-19 — Dragon boss attack telegraph
+- Added a visible impact warning at the dragon's selected target before each fireball launches: an expanding outer ring and bright center marker remain visible for 520ms.
+- The warning is placed on the currently selected plant, or at the farmhouse impact point when no valid plant target exists, giving the player a readable reaction window.
+- Fireball travel duration, damage, target selection, boss attack interval, and defeat/rescue conditions are unchanged. The telegraph is presentation-only and uses the existing Phaser scene clock/tween lifecycle.
+- The delayed launch is cancelled if the boss dies or the battle enters a terminal/story/menu state before the warning completes.
+- Added focused source-integration assertions for the warning marker, lead time, and cancellation guard.
+- Verification: GitHub source read-back only. Node tests, Next.js build, and actual browser playtest remain unexecuted.
