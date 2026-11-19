@@ -100,13 +100,13 @@ export default class PauseScene extends Scene {
       this.add.rectangle(560, y + 10, 390, 66, GLASS.white, 0.09)
         .setStrokeStyle(1, GLASS.white, 0.32);
       this.add.text(560, y - 23, this.tr(channel.label), {
-        fontFamily: "Arial", fontSize: "19px", color: "#ffffff",
-        fontStyle: "bold", stroke: "#24365d", strokeThickness: 3, resolution: 2
+        fontFamily: "Arial", fontSize: "19px", color: "#51351d",
+        fontStyle: "bold", stroke: "#fff0ce", strokeThickness: 1, resolution: 2
       }).setOrigin(0.5);
       this.addVolumeButton(420, y + 14, "−", () => this.changeVolume(channel, -5), GLASS.blue);
       this.add.text(560, y + 14, value + "%", {
-        fontFamily: "Arial", fontSize: "22px", color: "#ffffff",
-        fontStyle: "bold", stroke: "#24365d", strokeThickness: 3, resolution: 2
+        fontFamily: "Arial", fontSize: "22px", color: "#51351d",
+        fontStyle: "bold", stroke: "#fff0ce", strokeThickness: 1, resolution: 2
       }).setOrigin(0.5);
       this.addVolumeButton(700, y + 14, "+", () => this.changeVolume(channel, 5), GLASS.green);
     });
@@ -128,8 +128,8 @@ export default class PauseScene extends Scene {
     this.add.rectangle(x, y, 46, 34, color, 0.62)
       .setStrokeStyle(1, GLASS.white, 0.62);
     this.add.text(x, y - 1, label, {
-      fontFamily: "Arial", fontSize: "28px", color: "#ffffff",
-      fontStyle: "bold", stroke: "#24365d", strokeThickness: 3, resolution: 2
+      fontFamily: "Arial", fontSize: "28px", color: "#51351d",
+      fontStyle: "bold", stroke: "#fff0ce", strokeThickness: 1, resolution: 2
     }).setOrigin(0.5);
     bg.on("pointerover", () => bg.setScale(1.06));
     bg.on("pointerout", () => bg.setScale(1));
@@ -142,8 +142,8 @@ export default class PauseScene extends Scene {
     this.add.rectangle(560, y, 240, 44, color, 0.72)
       .setStrokeStyle(1, GLASS.white, 0.76);
     this.add.text(560, y, this.tr(label), {
-      fontFamily: "Arial", fontSize: "18px", color: "#ffffff",
-      fontStyle: "bold", stroke: "#24365d", strokeThickness: 3, resolution: 2
+      fontFamily: "Arial", fontSize: "18px", color: "#51351d",
+      fontStyle: "bold", stroke: "#fff0ce", strokeThickness: 1, resolution: 2
     }).setOrigin(0.5);
     bg.on("pointerover", () => bg.setFillStyle(GLASS.blue, 0.72).setScale(1.04));
     bg.on("pointerout", () => bg.setFillStyle(GLASS.blue, 0.28).setScale(1));
