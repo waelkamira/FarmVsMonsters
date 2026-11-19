@@ -1029,3 +1029,17 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - The overlay clears when the pointer leaves the game canvas and stays below plant/monster depth sorting.
 - Added source-level regression tests for perspective polygon rendering, validity states, and cleanup.
 - Verification: GitHub source read-back only. Node tests, lint, production build, and visual browser playtest have not been executed; the preview still requires in-browser confirmation.
+
+
+## 2026-11-19 — Wood-framed battle inventory
+- Loaded the uploaded `ui-inventory-wood-fram.png` from its confirmed web asset path and preserved its native 355×386 aspect ratio when rendering the inventory window.
+- Added a dedicated inventory button and a separate modal, keeping the existing Farm Journal tabs and controls unchanged.
+- The Plants tab reads persistent unlocks and the saved seed-bar selection, shows live field counts, and marks locked plants without pretending they are owned. The Resources tab shows the current coin balance, battle energy, living plants, and defeated monsters.
+- Inventory is read-only in this milestone: it does not introduce unapproved shop prices, purchases, item consumption, or a second currency system. Opening it pauses battle simulation and blocks clicks from reaching the battlefield.
+- Verification: added source-level Node tests for asset wiring, progression/resource display, pause/click isolation, and read-only behavior. Tests and the Next.js production build have not yet been executed in this environment.
+
+
+## 2026-11-19 — Uploaded seed-card frame
+- Loaded `ui-seed-card-fram.png` from the confirmed UI asset directory and applied it to the battle seed packets, including locked packets.
+- Preserved the source image aspect ratio within the existing packet bounds; the existing plant icon, energy cost, selection interaction, and cooldown overlay remain layered above the frame.
+- Added source-level regression assertions for asset loading and frame rendering. Runtime visual verification and the Node suite remain pending.

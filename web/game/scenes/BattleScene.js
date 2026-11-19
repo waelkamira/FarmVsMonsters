@@ -78,6 +78,8 @@ export default class BattleScene extends Scene {
 
   preload() {
     this.load.image("farm-battlefield", "/assets/backgrounds/farm-battlefield.jpeg");
+    this.load.image("seed-card-frame", "/assets/items/ui/ui-seed-card-fram.png");
+    this.load.image("inventory-wood-frame", "/assets/items/ui/ui-inventory-wood-fram.png");
     this.load.image("radish-level-1", "/assets/plants/radish-level-1.png");
     this.load.image("radish-level-1-bomb", "/assets/plants/radish-level-1-bomb.png");
     this.load.image("mushroom-character", "/assets/plants/mushroom.png");
@@ -301,6 +303,7 @@ export default class BattleScene extends Scene {
     this.createPauseControl();
     this.createSettingsControl();
     this.createCollectionMenuControl();
+    this.createInventoryControl();
     this.createQuickCollectionButtons();
     this.createCaveman();
     this.bindInput();
@@ -622,6 +625,7 @@ export default class BattleScene extends Scene {
       this.gameOver ||
       this.isPaused ||
       this.collectionMenuOpen ||
+      this.inventoryOpen ||
       this.storySequenceActive
     ) return;
 
@@ -642,6 +646,7 @@ export default class BattleScene extends Scene {
       !this.gameOver &&
       !this.isPaused &&
       !this.collectionMenuOpen &&
+      !this.inventoryOpen &&
       !this.storySequenceActive &&
       !this.plantingTarget &&
       !this.returnTarget &&
@@ -805,6 +810,14 @@ export default class BattleScene extends Scene {
     const panel = this.add.rectangle(0, -1, 68, 80, locked ? 0x858585 : 0xf0ddb5, 1)
       .setStrokeStyle(2, locked ? 0x626262 : 0xfff0ce, 1)
       .setInteractive({ useHandCursor: true });
+    // Overlay the uploaded seed-card artwork while keeping its original aspect ratio.
+    let seedFrame = null;
+    if (this.textures.exists("seed-card-frame")) {
+      const frameSource = this.textures.get("seed-card-frame").getSourceImage();
+      const frameScale = Math.min(86 / frameSource.width, 98 / frameSource.height);
+      seedFrame = this.add.image(0, 0, "seed-card-frame")
+        .setDisplaySize(frameSource.width * frameScale, frameSource.height * frameScale);
+    }
     const costPlate = this.add.rectangle(0, 29, 62, 19, locked ? 0x55534e : 0x6b4929, 1)
       .setStrokeStyle(1, locked ? 0x88857b : 0x3d2817, 1);
     let icon;
@@ -843,10 +856,10 @@ export default class BattleScene extends Scene {
         fontFamily: "Arial", fontSize: "14px", color: "#ffffff", fontStyle: "bold",
         stroke: "#34445b", strokeThickness: 2, resolution: 2
       }).setOrigin(0.5, 0.5);
-      card.add([halo, packetFrame, packetRim, panel, icon, costPlate, cost, lockLabel, cooldownOverlay, cooldownLabel]);
+      card.add([halo, packetFrame, packetRim, panel, ...(seedFrame ? [seedFrame] : []), icon, costPlate, cost, lockLabel, cooldownOverlay, cooldownLabel]);
       card.setAlpha(0.78);
     } else {
-      card.add([halo, packetFrame, packetRim, panel, icon, costPlate, cost, cooldownOverlay, cooldownLabel]);
+      card.add([halo, packetFrame, packetRim, panel, ...(seedFrame ? [seedFrame] : []), icon, costPlate, cost, cooldownOverlay, cooldownLabel]);
     }
 
     panel.on("pointerover", () => {
@@ -1853,8 +1866,28 @@ export default class BattleScene extends Scene {
     this.collectionMenuOpen = false;
   }
 
+  createInventoryControl() {
+    const button = this.add.container(930, 27).setDepth(49);
+    const plate = this.add.rectangle(0, 0, 38, 36, 0xe6c58c, 1)
+      .setStrokeStyle(3, 0x4a2d18, 1).setInteractive({ useHandCursor: true });
+    const icon = this.add.graphics();
+    icon.lineStyle(2.4, 0x4b2e16, 1);
+    icon.strokeRoundedRect(-9, -7, 18, 18, 4);
+    icon.lineBetween(-5, -7, -3, -13);
+    icon.lineBetween(-3, -13, 3, -13);
+    icon.lineBetween(3, -13, 5, -7);
+    icon.lineBetween(-4, 0, 4, 0);
+    button.add([plate, icon]);
+    plate.on("pointerover", () => plate.setFillStyle(0xffdf8a, 1).setScale(1.05));
+    plate.on("pointerout", () => plate.setFillStyle(0xe6c58c, 1).setScale(1));
+    plate.on("pointerdown", () => this.openInventory());
+    this.inventoryControl = button;
+    this.inventoryOpen = false;
+  }
+
   toggleCollectionMenu() {
     if (this.gameOver) return;
+    if (this.inventoryOpen) this.closeInventory();
     if (this.collectionMenuOpen) {
       this.closeCollectionMenu();
       return;
@@ -1983,6 +2016,198 @@ export default class BattleScene extends Scene {
     }
   }
 
+  openInventory() {
+    if (this.gameOver || this.isPaused || this.inventoryOpen) return;
+    if (this.collectionMenuOpen) this.closeCollectionMenu();
+    this.inventoryOpen = true;
+    this.inventoryTab = "plants";
+    this.inventorySelectedPlant = "radish";
+    this.inventoryLayer = this.add.container(560, 340).setDepth(110);
+    this.inventoryLayer.add(
+      this.add.rectangle(0, 0, 1120, 680, 0x101a13, 0.68).setInteractive()
+    );
+
+    // The uploaded wood frame is kept at its original aspect ratio. A parchment
+    // panel sits behind it, while all inventory content stays inside its border.
+    this.inventoryLayer.add(
+      this.add.rectangle(0, 0, 500, 548, 0xe9d7ad, 1)
+        .setStrokeStyle(4, 0x754a25, 1)
+    );
+    if (this.textures.exists("inventory-wood-frame")) {
+      this.inventoryLayer.add(
+        this.add.image(0, 0, "inventory-wood-frame").setDisplaySize(570, 620)
+      );
+    } else {
+      this.inventoryLayer.add(
+        this.add.rectangle(0, 0, 570, 620, 0x754a25, 0.18)
+          .setStrokeStyle(12, 0x754a25, 1)
+      );
+    }
+
+    this.inventoryLayer.add(this.add.text(0, -267, "حقيبة المزرعة  ·  INVENTORY", {
+      fontFamily: "Arial", fontSize: "20px", color: "#fff1cf", fontStyle: "bold",
+      stroke: "#4a2b16", strokeThickness: 5, align: "center"
+    }).setOrigin(0.5));
+    const close = this.add.text(230, -266, "✕", {
+      fontFamily: "Arial", fontSize: "22px", color: "#fff4d8",
+      backgroundColor: "#a94736", padding: { x: 8, y: 3 },
+      stroke: "#4a2b16", strokeThickness: 2
+    }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+    close.on("pointerover", () => close.setScale(1.08));
+    close.on("pointerout", () => close.setScale(1));
+    close.on("pointerdown", () => this.closeInventory());
+    this.inventoryLayer.add(close);
+
+    this.inventoryTabs = this.add.container(0, -215);
+    this.inventoryContent = this.add.container(0, -60);
+    this.inventoryLayer.add([this.inventoryTabs, this.inventoryContent]);
+    this.renderInventory();
+  }
+
+  closeInventory() {
+    this.inventoryOpen = false;
+    if (this.inventoryLayer) this.inventoryLayer.destroy(true);
+    this.inventoryLayer = null;
+    this.inventoryTabs = null;
+    this.inventoryContent = null;
+  }
+
+  renderInventory() {
+    if (!this.inventoryLayer || !this.inventoryTabs || !this.inventoryContent) return;
+    this.inventoryTabs.removeAll(true);
+    this.inventoryContent.removeAll(true);
+    const locale = typeof window !== "undefined"
+      ? window.localStorage.getItem("farmVsMonsters.language") || "ar"
+      : "ar";
+    const isArabic = locale === "ar";
+    const tabSpecs = [
+      ["plants", isArabic ? "النباتات" : "PLANTS", -100],
+      ["resources", isArabic ? "الموارد" : "RESOURCES", 100]
+    ];
+    tabSpecs.forEach(([id, label, x]) => {
+      const active = this.inventoryTab === id;
+      const plate = this.add.rectangle(x, 0, 184, 40,
+        active ? 0x6c9d45 : 0x9b7449, active ? 1 : 0.82)
+        .setStrokeStyle(3, active ? 0x365324 : 0x70431f, 1)
+        .setInteractive({ useHandCursor: true });
+      const text = this.add.text(x, 0, label, {
+        fontFamily: "Arial", fontSize: "16px", color: "#fff3d5",
+        fontStyle: "bold", stroke: "#4a2b16", strokeThickness: 3
+      }).setOrigin(0.5);
+      plate.on("pointerover", () => plate.setScale(1.035));
+      plate.on("pointerout", () => plate.setScale(1));
+      plate.on("pointerdown", () => {
+        this.inventoryTab = id;
+        this.renderInventory();
+      });
+      this.inventoryTabs.add([plate, text]);
+    });
+
+    const content = this.inventoryContent;
+    const addText = (x, y, value, size = 15, color = "#51351e") => {
+      content.add(this.add.text(x, y, value, {
+        fontFamily: "Arial", fontSize: size + "px", color,
+        fontStyle: "bold", align: "center", stroke: "#f5e8c9",
+        strokeThickness: 1, wordWrap: { width: 145 }
+      }).setOrigin(0.5));
+    };
+
+    if (this.inventoryTab === "plants") {
+      let unlockedIds = ["radish", "mushroom"];
+      let selectedTypes = ["radish", "mushroom"];
+      try {
+        unlockedIds = loadUnlockedPlantIds(window.localStorage);
+        const saved = JSON.parse(window.localStorage.getItem("farmVsMonsters.selectedPlants") || "null");
+        if (Array.isArray(saved)) selectedTypes = saved;
+        else selectedTypes = unlockedIds;
+      } catch {
+        // Starter plants remain visible if browser storage is unavailable.
+      }
+      const catalog = [
+        { id: "radish", title: isArabic ? "الفجل" : "Radish", image: "radish-level-1", config: RADISH_CONFIG },
+        { id: "mushroom", title: isArabic ? "فطر الطاقة" : "Energy Mushroom", image: "mushroom-character", config: MUSHROOM_CONFIG },
+        { id: "pumpkin", title: isArabic ? "اليقطين" : "Pumpkin", image: "pumpkin-character", config: PUMPKIN_CONFIG },
+        { id: "pineapple", title: isArabic ? "الأناناس" : "Pineapple", image: "pineapple-level-1", config: PINEAPPLE_CONFIG },
+        { id: "hazelnut", title: isArabic ? "البندق" : "Hazelnut", image: "hazelnut-level-1", config: HAZELNUT_CONFIG },
+        { id: "mango", title: isArabic ? "المانجو" : "Mango", image: "mango-level-1", config: MANGO_CONFIG },
+        { id: "snow-thrower", title: isArabic ? "قاذف الثلج" : "Snow Thrower", image: "snow-thrower-level-1", config: SNOW_THROWER_CONFIG }
+      ];
+      const selected = catalog.find((plant) => plant.id === this.inventorySelectedPlant) || catalog[0];
+      addText(0, -112, isArabic
+        ? "مجموعتك الدائمة من النباتات — النباتات المفتوحة محفوظة بين الجولات"
+        : "Your permanent plant collection — unlocked plants persist between battles", 13);
+
+      catalog.forEach((plant, index) => {
+        const col = index % 3;
+        const row = Math.floor(index / 3);
+        const x = -148 + col * 148;
+        const y = -38 + row * 112;
+        const unlocked = unlockedIds.includes(plant.id);
+        const active = selectedTypes.includes(plant.id);
+        const plantedCount = this.plants.filter((item) => item.alive && item.type === plant.id).length;
+        const card = this.add.rectangle(x, y, 136, 102,
+          plant.id === selected.id ? 0xf6e5bd : 0xd9c49b, 1)
+          .setStrokeStyle(plant.id === selected.id ? 4 : 2,
+            plant.id === selected.id ? 0x4c8b39 : 0x8a6339, 1)
+          .setInteractive({ useHandCursor: true });
+        content.add(card);
+        if (unlocked && this.textures.exists(plant.image)) {
+          const sheet = ["radish-level-1", "pineapple-level-1", "hazelnut-level-1", "mango-level-1", "snow-thrower-level-1"].includes(plant.image);
+          const icon = sheet
+            ? this.add.sprite(x, y - 12, plant.image, 0).setDisplaySize(48, 48)
+            : this.add.image(x, y - 12, plant.image).setDisplaySize(48, 48);
+          content.add(icon);
+        } else {
+          addText(x, y - 12, unlocked ? "✿" : "🔒", 25, "#7b4b2a");
+        }
+        addText(x, y + 27, plant.title, 12);
+        addText(x, y + 43, unlocked
+          ? (isArabic ? (active ? "ضمن شريط البذور" : "مفتوح") : (active ? "IN SEED BAR" : "UNLOCKED"))
+          : (isArabic ? "مغلق" : "LOCKED"), 10,
+          unlocked ? "#356b32" : "#8b3b2d");
+        card.on("pointerover", () => card.setScale(1.035));
+        card.on("pointerout", () => card.setScale(1));
+        card.on("pointerdown", () => {
+          this.inventorySelectedPlant = plant.id;
+          this.renderInventory();
+        });
+        if (plantedCount > 0) {
+          addText(x + 48, y - 37, "×" + plantedCount, 10, "#315c2c");
+        }
+      });
+
+      const selectedUnlocked = unlockedIds.includes(selected.id);
+      const selectedCount = this.plants.filter((item) => item.alive && item.type === selected.id).length;
+      content.add(this.add.rectangle(0, 318, 426, 68, 0xb88a50, 0.92)
+        .setStrokeStyle(2, 0x70431f, 1));
+      addText(-135, 301, selected.title, 15, "#fff4d9");
+      addText(-135, 326, selectedUnlocked
+        ? (isArabic ? "تكلفة الزراعة: " : "Plant cost: ") + selected.config.cost + (isArabic ? " طاقة" : " energy")
+        : (isArabic ? "أكمل المرحلة المطلوبة لفتحها" : "Complete the required stage to unlock"), 11, "#fff4d9");
+      addText(105, 301, isArabic ? "المزروع الآن" : "ON FIELD", 12, "#fff4d9");
+      addText(105, 326, String(selectedCount), 19, "#fff4d9");
+    } else {
+      addText(0, -100, isArabic ? "مواردك الحالية في هذه المغامرة" : "Your current adventure resources", 16);
+      const stats = [
+        { label: isArabic ? "العملات الذهبية" : "GOLD COINS", value: this.coins.toLocaleString(), icon: "🪙" },
+        { label: isArabic ? "الطاقة المتاحة" : "AVAILABLE ENERGY", value: String(this.energy), icon: "✦" },
+        { label: isArabic ? "النباتات الحية" : "LIVING PLANTS", value: String(this.plants.filter((plant) => plant.alive).length), icon: "🌱" },
+        { label: isArabic ? "الوحوش المهزومة" : "MONSTERS DEFEATED", value: String(this.totalDefeatedMonsters), icon: "★" }
+      ];
+      stats.forEach((stat, index) => {
+        const x = index % 2 === 0 ? -112 : 112;
+        const y = Math.floor(index / 2) * 142 + 5;
+        content.add(this.add.rectangle(x, y, 205, 112, 0xe1c99d, 1)
+          .setStrokeStyle(3, 0x93673c, 1));
+        addText(x, y - 29, stat.icon + "  " + stat.label, 12);
+        addText(x, y + 18, stat.value, 25, "#6b421f");
+      });
+      addText(0, 265, isArabic
+        ? "العملات محفوظة محلياً وتُمنح عند هزيمة الوحوش. الطاقة تخص المعركة الحالية."
+        : "Coins are saved locally and earned by defeating monsters. Energy belongs to this battle.", 12);
+    }
+  }
+
   createPauseControl() {
     const button = this.add.container(1035, 27).setDepth(46);
     const background = this.add.rectangle(0, 0, 42, 36, 0xe6c58c, 1)
@@ -2070,14 +2295,14 @@ export default class BattleScene extends Scene {
         this.audioMenuDismissedOnPointerDown = false;
         return;
       }
-      if (this.gameOver || this.storySequenceActive) return;
+      if (this.gameOver || this.storySequenceActive || this.inventoryOpen) return;
       const { col, row } = this.worldToGrid(pointer.x, pointer.y);
       if (row >= 0 && row < LANES && col >= 0 && col < COLUMNS) this.requestPlant(col, row);
     });
   }
 
   update(_time, delta) {
-    if (this.gameOver || this.isPaused || this.collectionMenuOpen) return;
+    if (this.gameOver || this.isPaused || this.collectionMenuOpen || this.inventoryOpen) return;
     // Phaser can produce a non-finite or negative frame delta during unusual
     // tab visibility/resume transitions. Never pass that into combat rules.
     const deltaMs = Number.isFinite(delta) ? Math.max(0, delta) : 0;
