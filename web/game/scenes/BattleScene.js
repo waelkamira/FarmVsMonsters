@@ -163,7 +163,8 @@ export default class BattleScene extends Scene {
         this.anims.create({
           key: "snow-thrower-level-1-throw",
           frames: this.anims.generateFrameNumbers("snow-thrower-level-1", { start: 0, end: 8 }),
-          frameRate: 12,
+          // Shorten the throw animation by 200ms (750ms → 550ms).
+          frameRate: 16.36,
           repeat: 0
         });
       }
@@ -2613,7 +2614,7 @@ export default class BattleScene extends Scene {
       const displayWidth = Math.min(displayHeight * (frame.realWidth / frame.realHeight), 84 * perspectiveScale);
       launchOffsetX = displayWidth / 2;
       // Lower the snow bomb by half the plant's displayed height from its previous launch point.
-      launchOffsetY = -(displayHeight * 0.4);
+      launchOffsetY = -(displayHeight * 0.35);
     } else if (plant.type === "hazelnut" || plant.type === "mango") {
       const frame = this.textures.getFrame(`${plant.type}-level-1`, plant.type === "mango" ? 0 : undefined);
       const perspectiveScale = plant.view?.getData?.("pineapplePerspectiveScale") || 1;
