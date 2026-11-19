@@ -217,6 +217,7 @@ export default class BattleScene extends Scene {
     this.waveIntermissionMs = 0;
     this.selectedPlant = null;
     this.plants = [];
+    this.seedPacketCooldowns = new Map();
     this.monsters = [];
     this.projectiles = [];
     this.energyPickups = [];
@@ -754,6 +755,13 @@ export default class BattleScene extends Scene {
       icon = this.add.graphics();
       if (drawIcon) drawIcon(icon);
     }
+    const cooldownOverlay = this.add.rectangle(0, -1, 68, 80, 0x1a160f, 0.72).setVisible(false);
+    const cooldownLabel = this.add.text(0, -1, "", {
+      fontFamily: "Arial", fontSize: "20px", color: "#fff4d6", fontStyle: "bold",
+      stroke: "#382312", strokeThickness: 4, resolution: 2
+    }).setOrigin(0.5).setVisible(false);
+    panel.setData("cooldownOverlay", cooldownOverlay);
+    panel.setData("cooldownLabel", cooldownLabel);
     const cost = this.add.text(0, 29, "☀ " + costLabel, {
       fontFamily: "Arial", fontSize: "14px", color: "#fff0bd", fontStyle: "bold",
       stroke: "#3d2817", strokeThickness: 2, resolution: 2,
@@ -766,10 +774,10 @@ export default class BattleScene extends Scene {
         fontFamily: "Arial", fontSize: "14px", color: "#ffffff", fontStyle: "bold",
         stroke: "#34445b", strokeThickness: 2, resolution: 2
       }).setOrigin(0.5, 0.5);
-      card.add([halo, packetFrame, packetRim, panel, icon, costPlate, cost, lockLabel]);
+      card.add([halo, packetFrame, packetRim, panel, icon, costPlate, cost, lockLabel, cooldownOverlay, cooldownLabel]);
       card.setAlpha(0.78);
     } else {
-      card.add([halo, packetFrame, packetRim, panel, icon, costPlate, cost]);
+      card.add([halo, packetFrame, packetRim, panel, icon, costPlate, cost, cooldownOverlay, cooldownLabel]);
     }
 
     panel.on("pointerover", () => {
@@ -784,6 +792,10 @@ export default class BattleScene extends Scene {
       if (this.gameOver) return;
       if (locked) {
         this.setMessage(title + " is coming soon. Its combat ability is not ready yet.");
+        return;
+      }
+      if (this.getSeedPacketCooldownRemaining(type) > 0) {
+        this.setMessage(title + " is recharging. Wait for its seed packet to recover.");
         return;
       }
       this.selectedPlant = type;
@@ -1978,6 +1990,7 @@ export default class BattleScene extends Scene {
     const deltaMs = Number.isFinite(delta) ? Math.max(0, delta) : 0;
     const dt = deltaMs / 1000;
     this.elapsedBattleMs += deltaMs;
+    this.updateSeedPacketCooldowns(deltaMs);
     if (this.storySequenceActive) {
       this.refreshHud();
       return;
@@ -2033,6 +2046,19 @@ export default class BattleScene extends Scene {
 
   // Sort world characters by their ground position: lower screen Y is
   // farther away, while larger screen Y must render in front.
+  getSeedPacketCooldownRemaining(type) {
+    return Math.max(0, this.seedPacketCooldowns?.get(type) || 0);
+  }
+
+  updateSeedPacketCooldowns(deltaMs) {
+    if (!this.seedPacketCooldowns?.size) return;
+    for (const [type, remaining] of this.seedPacketCooldowns) {
+      const next = Math.max(0, remaining - deltaMs);
+      if (next === 0) this.seedPacketCooldowns.delete(type);
+      else this.seedPacketCooldowns.set(type, next);
+    }
+  }
+
   updateDepthSorting() {
     const depthForY = (y) => 10 + y / 1000;
     for (const plant of this.plants) {
@@ -2102,6 +2128,10 @@ export default class BattleScene extends Scene {
     if (!this.selectedPlant) { this.setMessage("Choose a plant card first."); return; }
     const plantConfigs = { radish: RADISH_CONFIG, mushroom: MUSHROOM_CONFIG, pumpkin: PUMPKIN_CONFIG, pineapple: PINEAPPLE_CONFIG, hazelnut: HAZELNUT_CONFIG, mango: MANGO_CONFIG, "snow-thrower": SNOW_THROWER_CONFIG };
     const plantConfig = plantConfigs[this.selectedPlant];
+    if (this.getSeedPacketCooldownRemaining(this.selectedPlant) > 0) {
+      this.setMessage("This seed packet is still recharging. Choose another plant or wait.");
+      return;
+    }
     if (!plantConfig) {
       this.setMessage("This plant is not available yet: " + this.selectedPlant + ".");
       return;
@@ -2223,6 +2253,7 @@ export default class BattleScene extends Scene {
     const configs = { radish: RADISH_CONFIG, mushroom: MUSHROOM_CONFIG, pumpkin: PUMPKIN_CONFIG, pineapple: PINEAPPLE_CONFIG, hazelnut: HAZELNUT_CONFIG, mango: MANGO_CONFIG, "snow-thrower": SNOW_THROWER_CONFIG };
     const config = configs[type];
     this.energy = placement.energy;
+    this.seedPacketCooldowns.set(type, config.seedPacketRechargeMs);
     this.farmerPlanting = true;
     this.playFarmerAction("farmer-plant");
     // Pineapples sit slightly forward within their own cell. Measure the
@@ -4112,6 +4143,16 @@ export default class BattleScene extends Scene {
       const trackWidth = 154;
       this.waveProgressFill.setSize(Math.max(2, trackWidth * progress), 7);
       this.waveProgressLabel?.setText("WAVE " + Math.min(this.wave, this.totalWaves) + " · " + this.spawnedThisWave + "/" + this.waveSize);
+    }
+    for (const [type, panel] of Object.entries(this.plantCardsByType || {})) {
+      const remaining = this.getSeedPacketCooldownRemaining(type);
+      const overlay = panel.getData("cooldownOverlay");
+      const label = panel.getData("cooldownLabel");
+      if (overlay?.active) overlay.setVisible(remaining > 0);
+      if (label?.active) {
+        label.setVisible(remaining > 0);
+        if (remaining > 0) label.setText(String(Math.ceil(remaining / 1000)));
+      }
     }
   }
 }
