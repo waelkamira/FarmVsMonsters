@@ -2346,11 +2346,11 @@ export default class BattleScene extends Scene {
     plant.setData("pineapplePerspectiveScale", pineapplePerspectiveScale);
     if (this.textures.exists(texture)) {
       // Pineapple Level 1 keeps its tuned base size; only its row perspective changes.
-      const baseHeight = type === "pumpkin" ? 70 : type === "pineapple" ? 132 : type === "hazelnut" ? 112 : type === "mango" ? 112 : type === "snow-thrower" ? 120 : 64;
+      const baseHeight = type === "pumpkin" ? 70 : type === "pineapple" ? 132 : type === "hazelnut" ? 112 : type === "mango" ? 112 : type === "snow-thrower" ? 84 : 64;
       const height = baseHeight * pineapplePerspectiveScale;
       const plantFrame = this.textures.getFrame(texture, ["pineapple", "hazelnut", "mango", "snow-thrower"].includes(type) ? "0" : undefined);
       const width = height * (plantFrame.realWidth / plantFrame.realHeight);
-      const maxWidth = (type === "pineapple" ? 152 : type === "hazelnut" ? 116 : type === "mango" ? 116 : type === "snow-thrower" ? 120 : 76) * pineapplePerspectiveScale;
+      const maxWidth = (type === "pineapple" ? 152 : type === "hazelnut" ? 116 : type === "mango" ? 116 : type === "snow-thrower" ? 84 : 76) * pineapplePerspectiveScale;
       if (["pineapple", "hazelnut", "mango", "snow-thrower"].includes(type)) {
         const animatedPlant = this.add.sprite(0, -height / 2 + 2, texture, "0").setDisplaySize(Math.min(width, maxWidth), height);
         const animationDataKey = type === "pineapple" ? "pineappleThrowSprite"
@@ -2434,6 +2434,7 @@ export default class BattleScene extends Scene {
       const target = this.monsters
         .filter((monster) => monster.alive && monster.row === plant.row &&
           Number.isFinite(monster.localX) &&
+          !(plant.type === "snow-thrower" && monster.freezeStage >= 5) &&
           // Start firing the instant the monster crosses the lawn's far/right edge.
           // Keep targeting only monsters ahead of this plant in the same lane.
           monster.localX <= GRID_WIDTH / 2 && monster.localX > plantLaneX)
@@ -2606,6 +2607,13 @@ export default class BattleScene extends Scene {
       launchOffsetX = displayWidth / 2;
       // Preserve the pineapple's already-tuned launch position.
       launchOffsetY = -(displayHeight / 2) - 8;
+    } else if (plant.type === "snow-thrower") {
+      const frame = this.textures.getFrame("snow-thrower-level-1", "0");
+      const perspectiveScale = plant.view?.getData?.("pineapplePerspectiveScale") || 1;
+      const displayHeight = 84 * perspectiveScale;
+      const displayWidth = Math.min(displayHeight * (frame.realWidth / frame.realHeight), 84 * perspectiveScale);
+      launchOffsetX = displayWidth / 2;
+      launchOffsetY = -(displayHeight * 0.9);
     } else if (plant.type === "hazelnut" || plant.type === "mango") {
       const frame = this.textures.getFrame(`${plant.type}-level-1`, plant.type === "mango" ? 0 : undefined);
       const perspectiveScale = plant.view?.getData?.("pineapplePerspectiveScale") || 1;
@@ -3089,7 +3097,9 @@ export default class BattleScene extends Scene {
       maxHp: hp,
       tierTint,
       hitFlashGraphic: g, hitFlashTimer: null, hyenaSprite, hitAnimUntil: 0,
-      attackCooldown: 0, freezeRemainingMs: 0, frozenAnimationKey: null, alive: true, view, dustTimer: 0,
+      attackCooldown: 0, freezeRemainingMs: 0, freezeStage: 0,
+      freezeFullHoldMs: 0, freezeRecoveryMs: 0, frozenTextureKey: null,
+      frozenAnimationKey: null, frozenSpriteSize: null, alive: true, view, dustTimer: 0,
       replayMoveElapsedMs: 0, replayMoveStartLocalX: SPAWN_LOCAL_X, replayLastMovementTick: Math.floor(this.combatClockMs), replayLastBlockerCol: null,
       knockedPlants: new Set(),
       voiceCooldown: PhaserMath.Between(4200, 8500)
@@ -3132,11 +3142,21 @@ export default class BattleScene extends Scene {
   updateMonsters(dt, delta) {
     for (const monster of this.monsters) {
       if (!monster.alive) continue;
-      if (monster.freezeRemainingMs > 0) {
-        const freezeStep = resolveMonsterFreezeStep(monster.freezeRemainingMs, delta);
-        monster.freezeRemainingMs = freezeStep.remainingMs;
-        if (freezeStep.isFrozen) continue;
-        this.restoreMonsterAfterFreeze(monster);
+      if (monster.freezeStage > 0) {
+        if (monster.freezeStage >= 5) {
+          if (monster.freezeFullHoldMs > 0) {
+            monster.freezeFullHoldMs = Math.max(0, monster.freezeFullHoldMs - delta);
+            if (monster.freezeFullHoldMs === 0) monster.freezeRecoveryMs = 10000;
+          } else if (monster.freezeRecoveryMs > 0) {
+            monster.freezeRecoveryMs -= delta;
+            if (monster.freezeRecoveryMs <= 0) {
+              monster.freezeStage = Math.max(0, monster.freezeStage - 1);
+              if (monster.freezeStage > 0) { monster.hyenaSprite?.setFrame(String(monster.freezeStage - 1)); monster.freezeRecoveryMs = 10000; }
+              else this.restoreMonsterAfterFreeze(monster);
+            }
+          }
+        }
+        if (monster.freezeStage > 0) continue;
       }
       monster.attackCooldown = advanceCooldown(monster.attackCooldown, delta);
       if (monster.hyenaSprite && !this.gameOver) {
@@ -3349,46 +3369,36 @@ export default class BattleScene extends Scene {
     this.monsters = this.monsters.filter((m) => m.alive);
   }
 
-  freezeMonster(monster, durationMs) {
-    if (!monster?.alive || !Number.isFinite(durationMs) || durationMs <= 0) return false;
-    monster.freezeRemainingMs = Math.max(monster.freezeRemainingMs || 0, durationMs);
+  freezeMonster(monster) {
+    if (!monster?.alive || monster.freezeStage >= 5) return false;
+    monster.freezeStage = Math.min(5, (monster.freezeStage || 0) + 1);
     monster.braced = false;
     monster.isEating = false;
     if (monster.view?.active) this.tweens.killTweensOf(monster.view);
     if (monster.braceCue?.active) monster.braceCue.setVisible(false);
     const sprite = monster.hyenaSprite;
-    const preferredFrozenTexture = this.wave >= 4
-      ? "frozen-hyena-level-2"
-      : "frozen-hyena-level-1";
-    const fallbackFrozenTexture = preferredFrozenTexture === "frozen-hyena-level-2"
-      ? "frozen-hyena-level-1"
-      : "frozen-hyena-level-2";
-    const frozenTexture = this.textures.exists(preferredFrozenTexture)
-      ? preferredFrozenTexture
-      : this.textures.exists(fallbackFrozenTexture)
-        ? fallbackFrozenTexture
-        : null;
-    if (sprite?.active && frozenTexture) {
-      if (!monster.frozenAnimationKey) {
+    if (sprite?.active) {
+      if (!monster.frozenTextureKey) {
+        const preferred = this.wave >= 4 ? "frozen-hyena-level-2" : "frozen-hyena-level-1";
+        const fallback = preferred === "frozen-hyena-level-2" ? "frozen-hyena-level-1" : "frozen-hyena-level-2";
+        monster.frozenTextureKey = this.textures.exists(preferred) ? preferred : this.textures.exists(fallback) ? fallback : null;
         monster.frozenAnimationKey = sprite.anims.currentAnim?.key || (monster.kind === "dust-skitter" ? "hyena-run" : "hyena-walk");
         monster.frozenSpriteSize = { width: sprite.displayWidth, height: sprite.displayHeight };
       }
       sprite.stop();
-      // Use the upgraded frozen-hyena artwork in later waves. Both atlases
-      // are registered as nine dimension-derived frames before the battle starts.
-      // Frame zero is the authored frozen pose; never display the full atlas.
-      sprite.setTexture(frozenTexture);
-      sprite.setFrame("0");
-      sprite.setOrigin(0.5, 1);
-      if (monster.frozenSpriteSize?.width > 0 && monster.frozenSpriteSize?.height > 0) {
-        sprite.setDisplaySize(monster.frozenSpriteSize.width, monster.frozenSpriteSize.height);
+      if (monster.frozenTextureKey) {
+        sprite.setTexture(monster.frozenTextureKey);
+        sprite.setFrame(String(monster.freezeStage - 1));
+        sprite.setOrigin(0.5, 1);
+        if (monster.frozenSpriteSize?.width > 0 && monster.frozenSpriteSize?.height > 0) sprite.setDisplaySize(monster.frozenSpriteSize.width, monster.frozenSpriteSize.height);
+        sprite.clearTint();
       }
-      // The frozen atlas already contains its authored ice colors and highlights.
-      // Do not apply a full-sprite blue tint: it obscures the hyena artwork and
-      // creates the flat blue silhouette seen in battle screenshots.
-      sprite.clearTint();
     }
-    this.setMessage("SNOW HIT! The hyena is frozen for 2.6 seconds.");
+    if (monster.freezeStage === 5) {
+      monster.freezeFullHoldMs = 30000;
+      monster.freezeRecoveryMs = 0;
+      this.setMessage("The hyena is completely frozen. It will begin thawing in 30 seconds.");
+    } else this.setMessage("SNOW HIT! Freeze stage " + monster.freezeStage + " of 5.");
     return true;
   }
 
@@ -3409,6 +3419,10 @@ export default class BattleScene extends Scene {
     }
     monster.frozenAnimationKey = null;
     monster.frozenSpriteSize = null;
+    monster.frozenTextureKey = null;
+    monster.freezeFullHoldMs = 0;
+    monster.freezeRecoveryMs = 0;
+    monster.freezeRemainingMs = 0;
   }
 
   updateProjectiles(dt) {
@@ -3510,6 +3524,7 @@ export default class BattleScene extends Scene {
       for (const monster of this.monsters) {
         if (!monster?.alive || monster.row !== shot.row ||
             !Number.isFinite(monster.localX)) continue;
+        if (shot.freeze && monster.freezeStage >= 5) continue;
         const horizontalDistance = Math.abs(monster.localX - shot.localX);
         const hitRadius = (shot.collisionRadius || PHASE_ONE_PLANTS.radish.projectileCollisionRadius) * (monster.widthScale || 1);
         if (shot.freeze) {
@@ -3534,7 +3549,7 @@ export default class BattleScene extends Scene {
       if (hit) {
         if (shot.freeze) {
           this.createFreezeImpact(projectileX, projectileY);
-          this.freezeMonster(hit, shot.freezeDurationMs);
+          this.freezeMonster(hit);
           shot.alive = false;
           shot.view.destroy();
           continue;
