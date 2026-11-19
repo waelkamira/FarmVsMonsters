@@ -257,3 +257,35 @@ a,button{ -webkit-tap-highlight-color:transparent }
     bottom: max(24px, env(safe-area-inset-bottom));
   }
 }
+
+
+/* Main menu PLAY button: warm orange gradient matching the official game logo. */
+.codex-home-minimal .codex-play-only {
+  border: 3px solid #8f3f12;
+  background: linear-gradient(180deg, #ffd45a 0%, #ff9d24 48%, #ed6418 100%);
+  color: #fffdf2;
+  box-shadow:
+    inset 0 2px 0 rgba(255,255,255,.62),
+    inset 0 -3px 0 rgba(126,48,10,.2),
+    0 6px 0 #8f3f12,
+    0 12px 22px rgba(63,30,8,.42);
+  text-shadow: 0 2px 2px rgba(112,48,8,.45);
+}
+.codex-home-minimal .codex-play-only:hover {
+  filter: brightness(1.1) saturate(1.08);
+}
+.codex-home-minimal .codex-play-only:active {
+  box-shadow:
+    inset 0 2px 0 rgba(255,255,255,.5),
+    0 2px 0 #8f3f12,
+    0 5px 12px rgba(63,30,8,.35);
+}
+.codex-home-minimal .codex-play-only .codex-adventure-icon {
+  border: 2px solid #a84d12;
+  background: linear-gradient(180deg, #fff1bf, #ffc35a);
+  color: #8b3c0d;
+  box-shadow: inset 0 2px 0 rgba(255,255,255,.75);
+}
+.codex-home-minimal .codex-play-only small {
+  color: #fff2d6;
+}
