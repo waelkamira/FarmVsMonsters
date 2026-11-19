@@ -604,10 +604,57 @@ export default class BattleScene extends Scene {
   }
 
   drawPlantingGrid() {
-    // The planting mesh is a logical interaction surface only.
-    // The background artwork already contains the visible soil grid,
-    // so never draw a second grid, tint, debug node, or centroid marker.
+    // The background artwork owns the visible soil grid. This lightweight
+    // overlay only previews the one cell currently under the pointer.
+    // It follows the calibrated perspective polygon and never draws a second
+    // grid over the authored battlefield.
     this.plantingGrid = null;
+    this.plantingPreview = this.add.graphics().setDepth(9.7);
+    this.plantingPreviewCell = null;
+  }
+
+  updatePlantingPreview(pointer) {
+    if (!this.plantingPreview?.active) return;
+    this.plantingPreview.clear();
+    this.plantingPreviewCell = null;
+    if (
+      !pointer ||
+      !pointer.isDown && pointer.wasTouch &&
+      (this.gameOver || this.isPaused || this.collectionMenuOpen || this.storySequenceActive)
+    ) return;
+
+    const { col, row } = this.worldToGrid(pointer.x, pointer.y);
+    if (col < 0 || row < 0 || col >= COLUMNS || row >= LANES) return;
+
+    const polygon = this.cellPolygon(col, row);
+    const occupied = this.plants.some((plant) => plant.alive && plant.col === col && plant.row === row);
+    const configs = {
+      radish: RADISH_CONFIG, mushroom: MUSHROOM_CONFIG, pumpkin: PUMPKIN_CONFIG,
+      pineapple: PINEAPPLE_CONFIG, hazelnut: HAZELNUT_CONFIG, mango: MANGO_CONFIG,
+      "snow-thrower": SNOW_THROWER_CONFIG
+    };
+    const config = configs[this.selectedPlant];
+    const canPlant = Boolean(
+      !occupied &&
+      config &&
+      !this.gameOver &&
+      !this.isPaused &&
+      !this.collectionMenuOpen &&
+      !this.storySequenceActive &&
+      !this.plantingTarget &&
+      !this.returnTarget &&
+      !this.farmerPlanting &&
+      this.getSeedPacketCooldownRemaining(this.selectedPlant) <= 0 &&
+      this.energy >= config.cost
+    );
+    const fill = occupied ? 0xe45b4f : canPlant ? 0x9be66b : 0xf3c66b;
+    const stroke = occupied ? 0xffb1a6 : canPlant ? 0xe6ffc0 : 0xffedb2;
+
+    this.plantingPreview.fillStyle(fill, occupied ? 0.2 : 0.15);
+    this.plantingPreview.fillPoints(polygon, true);
+    this.plantingPreview.lineStyle(3, stroke, 0.92);
+    this.plantingPreview.strokePoints(polygon, true);
+    this.plantingPreviewCell = { col, row, occupied, canPlant };
   }
 
   createHud() {
@@ -2006,6 +2053,11 @@ export default class BattleScene extends Scene {
     });
     this.input.keyboard.on("keydown-P", this.pauseGame, this);
     this.events.once("shutdown", () => this.input.keyboard.off("keydown-P", this.pauseGame, this));
+    this.input.on("pointermove", (pointer) => this.updatePlantingPreview(pointer));
+    this.input.on("gameout", () => {
+      this.plantingPreview?.clear();
+      this.plantingPreviewCell = null;
+    });
     this.input.on("pointerdown", (pointer) => {
       this.resumeGameAudio();
       if (this.collectingEnergyToken) {
