@@ -342,3 +342,13 @@ a,button{ -webkit-tap-highlight-color:transparent }
   line-height: 1.2;
   text-shadow: 0 2px 4px #38200f;
 }
+
+/* Lower the illustrated START button slightly on the main menu. */
+.codex-home-minimal .codex-play-only {
+  bottom: clamp(8px, 3vh, 32px);
+}
+@media (max-width: 520px) {
+  .codex-home-minimal .codex-play-only {
+    bottom: max(8px, env(safe-area-inset-bottom));
+  }
+}
