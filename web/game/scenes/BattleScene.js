@@ -806,12 +806,13 @@ export default class BattleScene extends Scene {
           ? this.add.sprite(0, -8, plant.image, "0").setScale(thumbnailScale)
           : this.add.image(0, -8, plant.image).setScale(thumbnailScale);
         preview.add(thumbnail);
-        // Darken only the plant thumbnail, leaving the seed-card artwork clean.
-        preview.add(this.add.rectangle(0, -8, 56, 48, 0x000000, 0.68));
-        preview.add(this.add.text(0, -8, "🔒", {
-          fontFamily: "Arial", fontSize: "17px", color: "#ffffff",
-          stroke: "#17120d", strokeThickness: 3, resolution: 2
-        }).setOrigin(0.5));
+        // Keep inactive plant previews recognizable with a lighter dark overlay.
+        preview.add(this.add.rectangle(0, -8, 56, 48, 0x000000, 0.32));
+        // Show the plant's energy cost even while it is not in the active loadout.
+        preview.add(this.add.text(0, 33, "🍄" + plant.cost, {
+          fontFamily: "Arial", fontSize: "13px", color: "#fff0bd", fontStyle: "bold",
+          stroke: "#3d2817", strokeThickness: 2, resolution: 2, align: "center"
+        }).setOrigin(0.5).setScale(0.95));
       }
       preview.setData("inactivePlantType", plant.type);
     });
