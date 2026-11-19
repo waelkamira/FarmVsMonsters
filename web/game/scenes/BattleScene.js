@@ -796,7 +796,7 @@ export default class BattleScene extends Scene {
       if (this.textures.exists(plant.image)) {
         const texture = this.textures.get(plant.image);
         const isSheet = ["pineapple-level-1", "hazelnut-level-1", "mango-level-1", "snow-thrower-level-1", "radish-level-1"].includes(plant.image);
-        const frame = isSheet ? texture.getFrame("0") : texture.getFrame();
+        const frame = isSheet ? texture.get("0") : texture.get();
         const ratio = frame.realWidth / frame.realHeight;
         const height = 46;
         const width = Math.min(54, height * ratio);
