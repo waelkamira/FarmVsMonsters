@@ -1020,4 +1020,12 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - Used a clipped 3×3 viewport anchored at the top-left of each sheet, with per-artwork frame aspect ratios so the complete first cell is visible instead of a middle frame or neighboring animation frames.
 - No source artwork, animation sheets, combat behavior, or battle HUD assets were modified.
 - Verification: source-level changes and GitHub read-back only; Node tests, Next.js build, and visual browser verification have not been run.
-\n\n## 2026-11-19 — Perspective-aware planting cell preview\n- Added a lightweight hover preview over the exact calibrated soil-cell polygon; it does not draw a replacement grid over the authored battlefield.\n- Green indicates a currently valid planting target, amber indicates a target that cannot currently accept the selected seed (for example, no seed, cooldown, or insufficient energy), and red indicates an occupied cell that can be clicked to uproot.\n- Preview validation reflects live occupancy, selected plant cost, packet cooldown, farmer action locks, pause/menu/story state, and battle completion.\n- The overlay clears when the pointer leaves the game canvas and stays below plant/monster depth sorting.\n- Added source-level regression tests for perspective polygon rendering, validity states, and cleanup.\n- Verification: GitHub source read-back only. Node tests, lint, production build, and visual browser playtest have not been executed; the preview still requires in-browser confirmation.\n
+
+
+## 2026-11-19 — Perspective-aware planting cell preview
+- Added a lightweight hover preview over the exact calibrated soil-cell polygon; it does not draw a replacement grid over the authored battlefield.
+- Green indicates a currently valid planting target, amber indicates a target that cannot currently accept the selected seed (for example, no seed, cooldown, or insufficient energy), and red indicates an occupied cell that can be clicked to uproot.
+- Preview validation reflects live occupancy, selected plant cost, packet cooldown, farmer action locks, pause/menu/story state, and battle completion.
+- The overlay clears when the pointer leaves the game canvas and stays below plant/monster depth sorting.
+- Added source-level regression tests for perspective polygon rendering, validity states, and cleanup.
+- Verification: GitHub source read-back only. Node tests, lint, production build, and visual browser playtest have not been executed; the preview still requires in-browser confirmation.
