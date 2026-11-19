@@ -643,10 +643,18 @@ export default class BattleScene extends Scene {
       { x: 365, icon: "🌱" },
       { x: 460, icon: "👾" },
     ];
-    this.hudValueTexts = counters.map((counter) => this.add.text(counter.x, 15, counter.icon + " 0", {
-      fontFamily: "Arial", fontSize: "15px", color: "#fff8e8", fontStyle: "bold",
-      stroke: "#392719", strokeThickness: 3, resolution: 2
-    }).setOrigin(0, 0.5).setDepth(44));
+    this.hudValueTexts = counters.map((counter, index) => {
+      const widths = [82, 82, 82, 92];
+      const width = widths[index];
+      this.add.rectangle(counter.x + width / 2 - 2, 16, width, 27, 0x4a2d18, 0.98)
+        .setStrokeStyle(2, 0xd1a66b, 1).setDepth(42);
+      this.add.rectangle(counter.x + width / 2 - 2, 16, width - 7, 20, 0xead7ad, 1)
+        .setStrokeStyle(1, 0x9a7042, 1).setDepth(43);
+      return this.add.text(counter.x + 3, 16, counter.icon + " 0", {
+        fontFamily: "Arial", fontSize: "13px", color: "#52351d", fontStyle: "bold",
+        resolution: 2
+      }).setOrigin(0, 0.5).setDepth(44);
+    });
 
     this.waveText = this.add.text(565, 15, "🌊 1/5", {
       fontFamily: "Arial", fontSize: "15px", color: "#fff8e8", fontStyle: "bold",
