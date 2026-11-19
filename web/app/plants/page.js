@@ -32,6 +32,7 @@ export default function PlantsPage() {
   }, []);
 
   const activePlants = STAGE_ONE_PLANTS.filter((plant) => plant.implemented && unlockedIds.includes(plant.id));
+  const plannedPlants = STAGE_ONE_PLANTS.filter((plant) => !plant.implemented);
   const lockedPlants = STAGE_ONE_PLANTS.filter((plant) => !unlockedIds.includes(plant.id));
 
   return (
