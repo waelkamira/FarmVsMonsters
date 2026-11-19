@@ -721,12 +721,16 @@ export default class BattleScene extends Scene {
     // Individual seed packets: warm parchment face, dark border and a clear
     // selected state, matching the compact packet proportions of PvZ.
     const tint = locked ? 0x9aa0a6 : (type === "radish" ? 0x8ff0b0 : 0xffdf8a);
-    const halo = this.add.rectangle(0, 1, 84, 96, 0x1b1008, 0.35);
-    const packetFrame = this.add.rectangle(0, 0, 78, 90, 0x4a2d18, 1)
-      .setStrokeStyle(3, 0x24170e, 1);
-    const panel = this.add.rectangle(0, 0, 70, 82, locked ? 0x858585 : 0xe6c58c, 1)
-      .setStrokeStyle(2, locked ? 0x626262 : 0xf7e5bd, 1)
+    const halo = this.add.rectangle(0, 2, 86, 98, 0x1b1008, 0.38);
+    const packetFrame = this.add.rectangle(0, 0, 80, 92, 0x4a2d18, 1)
+      .setStrokeStyle(3, locked ? 0x625b50 : 0x2b1a0d, 1);
+    const packetRim = this.add.rectangle(0, 0, 74, 86, locked ? 0x77766f : 0xb9874e, 1)
+      .setStrokeStyle(2, locked ? 0xaaa69a : 0xf0cf91, 1);
+    const panel = this.add.rectangle(0, -1, 68, 80, locked ? 0x858585 : 0xf0ddb5, 1)
+      .setStrokeStyle(2, locked ? 0x626262 : 0xfff0ce, 1)
       .setInteractive({ useHandCursor: true });
+    const costPlate = this.add.rectangle(0, 29, 62, 19, locked ? 0x55534e : 0x6b4929, 1)
+      .setStrokeStyle(1, locked ? 0x88857b : 0x3d2817, 1);
     let icon;
     if (imageKey && this.textures.exists(imageKey)) {
       const usesGridSheet = imageKey === "mango-level-1" || imageKey === "radish-level-1" || imageKey === "snow-thrower-level-1";
@@ -743,8 +747,8 @@ export default class BattleScene extends Scene {
       if (drawIcon) drawIcon(icon);
     }
     const cost = this.add.text(0, 29, "☀ " + costLabel, {
-      fontFamily: "Arial", fontSize: "16px", color: "#4b2e16", fontStyle: "bold",
-      stroke: "#f8e7c6", strokeThickness: 1, resolution: 2,
+      fontFamily: "Arial", fontSize: "14px", color: "#fff0bd", fontStyle: "bold",
+      stroke: "#3d2817", strokeThickness: 2, resolution: 2,
       align: "center"
     }).setOrigin(0.5, 0.5);
     if (locked) {
@@ -754,10 +758,10 @@ export default class BattleScene extends Scene {
         fontFamily: "Arial", fontSize: "14px", color: "#ffffff", fontStyle: "bold",
         stroke: "#34445b", strokeThickness: 2, resolution: 2
       }).setOrigin(0.5, 0.5);
-      card.add([halo, packetFrame, panel, icon, cost, lockLabel]);
+      card.add([halo, packetFrame, packetRim, panel, icon, costPlate, cost, lockLabel]);
       card.setAlpha(0.78);
     } else {
-      card.add([halo, packetFrame, panel, icon, cost]);
+      card.add([halo, packetFrame, packetRim, panel, icon, costPlate, cost]);
     }
 
     panel.on("pointerover", () => {
@@ -765,7 +769,7 @@ export default class BattleScene extends Scene {
       card.setScale(1.04);
     });
     panel.on("pointerout", () => {
-      panel.setFillStyle(0xffffff, locked ? 0.12 : 0.22);
+      panel.setFillStyle(locked ? 0x858585 : 0xf0ddb5, 1);
       card.setScale(1);
     });
     panel.on("pointerdown", () => {
@@ -776,9 +780,11 @@ export default class BattleScene extends Scene {
       }
       this.selectedPlant = type;
       Object.entries(this.plantCardsByType || {}).forEach(([plantType, plantCard]) => {
-        plantCard.setAlpha(plantType === type ? 1 : 0.78);
+        plantCard.setAlpha(plantType === type ? 1 : 0.9);
+        const face = plantCard.list?.find((item) => item.type === "Rectangle" && item.width === 68);
+        if (face) face.setStrokeStyle(plantType === type ? 4 : 2, plantType === type ? 0x8fbd4c : 0xfff0ce, 1);
       });
-      panel.setFillStyle(tint, 0.38);
+      panel.setFillStyle(tint, 1);
       const plantHints = {
         radish: "Radish Level 1 chosen. Launches miniature radish bombs down its lane.",
         mushroom: "Mushroom chosen. Collect its energy when it appears.",
