@@ -79,6 +79,7 @@ export default class BattleScene extends Scene {
   preload() {
     this.load.image("farm-battlefield", "/assets/backgrounds/farm-battlefield.jpeg");
     this.load.image("seed-card", "/assets/items/ui/ui-seed-card.png");
+    this.load.image("mushroom-card", "/assets/items/ui/ui-mushroom-card.png");
     this.load.image("seed-card-frame", "/assets/items/ui/ui-seed-card-fram.png");
     this.load.image("seed-card-locked", "/assets/items/ui/ui-seed-card-locked.png");
     this.load.image("seed-slot-empty", "/assets/items/ui/ui-seed-slot-empty.png");
@@ -673,12 +674,12 @@ export default class BattleScene extends Scene {
     // shortcuts kept at the far right.
     // Seed cards now sit directly on the battlefield HUD: no brown CSS/Phaser tray background.
 
-    // Mushroom energy counter, using the same mushroom artwork as its seed packet.
+    // Use the uploaded mushroom card artwork as the energy counter backdrop.
+    // No brown CSS/Phaser panels are drawn behind the mushroom.
     this.mushroomBank = this.add.container(62, 70).setDepth(43);
-    const mushroomOuter = this.add.rectangle(0, 0, 112, 96, 0x6b4929, 1)
-      .setStrokeStyle(4, 0xd5a66a, 1);
-    const mushroomInner = this.add.rectangle(0, 0, 100, 84, 0x342719, 1)
-      .setStrokeStyle(2, 0x9d7547, 1);
+    const mushroomCard = this.textures.exists("mushroom-card")
+      ? this.add.image(0, 0, "mushroom-card").setDisplaySize(112, 96)
+      : null;
     const mushroomIcon = this.textures.exists("mushroom-character")
       ? this.add.image(0, -17, "mushroom-character").setDisplaySize(43, 43)
       : this.add.text(0, -19, "🍄", { fontFamily: "Arial", fontSize: "34px" }).setOrigin(0.5);
@@ -686,7 +687,7 @@ export default class BattleScene extends Scene {
       fontFamily: "Arial", fontSize: "23px", color: "#fff2a8", fontStyle: "bold",
       stroke: "#39240f", strokeThickness: 3, resolution: 2
     }).setOrigin(0.5);
-    this.mushroomBank.add([mushroomOuter, mushroomInner, mushroomIcon, this.energyValueText]);
+    this.mushroomBank.add([...(mushroomCard ? [mushroomCard] : []), mushroomIcon, this.energyValueText]);
 
     // Secondary battle counters remain visible in a slim top information row.
     const counters = [
