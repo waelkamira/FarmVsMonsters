@@ -21,7 +21,9 @@ import {
   collectEnergy,
   isWaveComplete,
   isPhaseOneVictory,
-  unlockNextStage
+  unlockNextStage,
+  loadUnlockedPlantIds,
+  unlockPlantReward
 } from "../rules/phaseOneRules.mjs";
 import {
   resolvePlantPlacement,
@@ -661,19 +663,22 @@ export default class BattleScene extends Scene {
       { type: "mango", title: "MANGO L1", cost: MANGO_CONFIG.cost, image: "mango-level-1" },
       { type: "snow-thrower", title: "SNOW L1", cost: SNOW_THROWER_CONFIG.cost, image: "snow-thrower-level-1" }
     ];
-    let selectedTypes = plantOptions.map((plant) => plant.type);
+    let selectedTypes = ["radish", "mushroom"];
     try {
+      const unlocked = new Set(loadUnlockedPlantIds(window.localStorage));
+      const availableTypes = new Set(plantOptions.map((plant) => plant.type).filter((type) => unlocked.has(type)));
       const saved = JSON.parse(window.localStorage.getItem("farmVsMonsters.selectedPlants") || "null");
       if (Array.isArray(saved)) {
-        const allowed = new Set(plantOptions.map((plant) => plant.type));
-        selectedTypes = [...new Set(saved.filter((type) => allowed.has(type)))];
+        selectedTypes = [...new Set(saved.filter((type) => availableTypes.has(type)))];
+      } else {
+        selectedTypes = [...availableTypes];
       }
     } catch {
-      // A malformed or unavailable loadout falls back to the complete roster.
+      // Storage failures keep the starter loadout playable.
+      selectedTypes = ["radish", "mushroom"];
     }
     if (!selectedTypes.includes("mushroom")) selectedTypes.unshift("mushroom");
-    if (selectedTypes.length === 1) selectedTypes.push("radish");
-    if (!selectedTypes.includes("snow-thrower")) selectedTypes.push("snow-thrower");
+    if (!selectedTypes.includes("radish")) selectedTypes.push("radish");
     this.plantCardsByType = {};
     const packetStartX = 164;
     const packetGap = 90;
@@ -2169,6 +2174,10 @@ export default class BattleScene extends Scene {
   plantSelected(col, row, type, returnPosition = null) {
     if (this.gameOver) return;
     if (!["radish", "mushroom", "pumpkin", "pineapple", "hazelnut", "mango", "snow-thrower"].includes(type)) return;
+    if (!loadUnlockedPlantIds(window.localStorage).includes(type)) {
+      this.setMessage("This plant is locked. Complete its campaign stage to unlock it.");
+      return;
+    }
     const placement = resolvePlantPlacement({
       energy: this.energy,
       plants: this.plants,
@@ -3887,7 +3896,14 @@ export default class BattleScene extends Scene {
     this.farmerPlanting = false;
     const locale = typeof window !== "undefined" ? window.localStorage.getItem("farmVsMonsters.language") || "ar" : "ar";
     this.setMessage(won ? "VICTORY! The farm is safe." : "GAME OVER — The monsters reached the final line.");
-    if (won) { try { unlockNextStage(window.localStorage, 1); } catch { /* Keep the local game result even if storage is unavailable. */ } }
+    if (won) {
+      try {
+        unlockNextStage(window.localStorage, 1);
+        unlockPlantReward(window.localStorage, 1);
+      } catch {
+        // The victory remains valid even if local progression storage is unavailable.
+      }
+    }
     this.add.rectangle(560, 340, 1120, 680, 0x10170f, 0.72).setDepth(60);
     if (won) {
       this.stopBackgroundMusic();
@@ -3936,7 +3952,7 @@ export default class BattleScene extends Scene {
       const seconds = String(elapsedSeconds % 60).padStart(2, "0");
       this.add.rectangle(560, 355, 360, 34, 0x42c96b, 0.62)
         .setStrokeStyle(1, 0xffffff, 0.76).setDepth(63);
-      this.add.text(560, 355, locale === "ar" ? "تم فتح المرحلة الثانية!" : "STAGE 2 UNLOCKED!", {
+      this.add.text(560, 355, locale === "ar" ? "تم فتح المرحلة الثانية ونبتة Pumpkin!" : "STAGE 2 + PUMPKIN UNLOCKED!", {
         fontFamily: "Arial", fontSize: locale === "ar" ? "16px" : "15px",
         color: "#ffffff", fontStyle: "bold", stroke: "#14523d", strokeThickness: 3
       }).setOrigin(0.5).setDepth(64);
