@@ -24,7 +24,7 @@ export default function StageOneIntroPage() {
           <CatalogThumb id="princess" label={ar ? "الأميرة الأسيرة" : "Captive princess"} className="stage-cast-thumb" />
         </div>
         <div className="stage-briefing">
-          <div><strong>{ar ? "الأعداء" : "ENEMIES"}</strong><span>{ar ? "٣٠ ضبعاً عادياً + تنين الزعيم" : "30 ordinary hyenas + dragon boss"}</span></div>
+          <div><strong>{ar ? "الأعداء" : "ENEMIES"}</strong><span>{ar ? "٢٠ ضبعاً عادياً + تنين الزعيم" : "20 ordinary hyenas + dragon boss"}</span></div>
           <div><strong>{ar ? "الموجات" : "WAVES"}</strong><span>{ar ? "٥ موجات متصاعدة الصعوبة" : "5 increasingly difficult waves"}</span></div>
           <div><strong>{ar ? "المهمة" : "OBJECTIVE"}</strong><span>{ar ? "احمِ المزرعة وأنقذ الأميرة" : "Defend the farm and rescue the princess"}</span></div>
         </div>
