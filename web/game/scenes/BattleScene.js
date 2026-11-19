@@ -2612,7 +2612,8 @@ export default class BattleScene extends Scene {
       const displayHeight = 84 * perspectiveScale;
       const displayWidth = Math.min(displayHeight * (frame.realWidth / frame.realHeight), 84 * perspectiveScale);
       launchOffsetX = displayWidth / 2;
-      launchOffsetY = -(displayHeight * 0.9);
+      // Lower the snow bomb by half the plant's displayed height from its previous launch point.
+      launchOffsetY = -(displayHeight * 0.4);
     } else if (plant.type === "hazelnut" || plant.type === "mango") {
       const frame = this.textures.getFrame(`${plant.type}-level-1`, plant.type === "mango" ? 0 : undefined);
       const perspectiveScale = plant.view?.getData?.("pineapplePerspectiveScale") || 1;
