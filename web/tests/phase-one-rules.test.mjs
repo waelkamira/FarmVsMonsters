@@ -439,7 +439,10 @@ test("campaign progression safely falls back to stage one for corrupt or unavail
   assert.equal(loadUnlockedStage(null), 1);
   assert.equal(loadUnlockedStage({ getItem: () => "not-json" }), 1);
   assert.equal(loadUnlockedStage({ getItem: () => JSON.stringify({ version: 9, unlockedStage: 8 }) }), 1);
-  assert.equal(loadUnlockedStage({ getItem: () => JSON.stringify({ version: 1, unlockedStage: 999 }) }), CAMPAIGN_STAGE_COUNT);
+  assert.equal(loadUnlockedStage({ getItem: () => JSON.stringify({ version: 1, unlockedStage: 999 }) }), 1);
+  assert.equal(loadUnlockedStage({ getItem: () => JSON.stringify({ version: 1, unlockedStage: 0 }) }), 1);
+  assert.equal(loadUnlockedStage({ getItem: () => JSON.stringify({ version: 1, unlockedStage: 2.5 }) }), 1);
+  assert.equal(loadCompletedStages({ getItem: () => JSON.stringify({ version: 1, unlockedStage: 999, completedStages: [1, 2, 3] }) }).length, 0);
   assert.equal(unlockNextStage({ getItem: () => null, setItem: () => { throw new Error("quota"); } }, 1), false);
 });
 
