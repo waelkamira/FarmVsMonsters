@@ -97,8 +97,8 @@ export default class PauseScene extends Scene {
     AUDIO_CHANNELS.forEach((channel, index) => {
       const y = 270 + index * 92;
       const value = this.readVolume(channel.key, channel.initial);
-      this.add.rectangle(560, y + 10, 390, 66, GLASS.white, 0.09)
-        .setStrokeStyle(1, GLASS.white, 0.32);
+      this.add.rectangle(560, y + 10, 390, 66, 0xfff4dc, 0.98)
+        .setStrokeStyle(2, 0x9a7042, 0.95);
       this.add.text(560, y - 23, this.tr(channel.label), {
         fontFamily: "Arial", fontSize: "19px", color: "#51351d",
         fontStyle: "bold", stroke: "#fff0ce", strokeThickness: 1, resolution: 2
@@ -123,10 +123,10 @@ export default class PauseScene extends Scene {
   }
 
   addVolumeButton(x, y, label, action, color) {
-    const bg = this.add.rectangle(x, y, 54, 42, GLASS.blue, 0.3)
-      .setStrokeStyle(1, GLASS.white, 0.78).setInteractive({ useHandCursor: true });
-    this.add.rectangle(x, y, 46, 34, color, 0.62)
-      .setStrokeStyle(1, GLASS.white, 0.62);
+    const bg = this.add.rectangle(x, y, 54, 42, 0x4b2e18, 1)
+      .setStrokeStyle(2, 0x241509, 1).setInteractive({ useHandCursor: true });
+    this.add.rectangle(x, y, 46, 34, color, 1)
+      .setStrokeStyle(1, 0xffe9bd, 1);
     this.add.text(x, y - 1, label, {
       fontFamily: "Arial", fontSize: "28px", color: "#51351d",
       fontStyle: "bold", stroke: "#fff0ce", strokeThickness: 1, resolution: 2
@@ -137,16 +137,16 @@ export default class PauseScene extends Scene {
   }
 
   addMenuButton(y, label, color, action) {
-    const bg = this.add.rectangle(560, y, 250, 52, GLASS.blue, 0.28)
-      .setStrokeStyle(1, GLASS.white, 0.82).setInteractive({ useHandCursor: true });
-    this.add.rectangle(560, y, 240, 44, color, 0.72)
-      .setStrokeStyle(1, GLASS.white, 0.76);
+    const bg = this.add.rectangle(560, y, 250, 52, 0x4b2e18, 1)
+      .setStrokeStyle(2, 0x241509, 1).setInteractive({ useHandCursor: true });
+    this.add.rectangle(560, y, 240, 44, color, 1)
+      .setStrokeStyle(2, 0xffe9bd, 1);
     this.add.text(560, y, this.tr(label), {
       fontFamily: "Arial", fontSize: "18px", color: "#51351d",
       fontStyle: "bold", stroke: "#fff0ce", strokeThickness: 1, resolution: 2
     }).setOrigin(0.5);
-    bg.on("pointerover", () => bg.setFillStyle(GLASS.blue, 0.72).setScale(1.04));
-    bg.on("pointerout", () => bg.setFillStyle(GLASS.blue, 0.28).setScale(1));
+    bg.on("pointerover", () => bg.setScale(1.04));
+    bg.on("pointerout", () => bg.setScale(1));
     bg.on("pointerdown", action);
   }
 
