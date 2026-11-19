@@ -211,3 +211,49 @@ a,button{ -webkit-tap-highlight-color:transparent }
     border-radius: 20px;
   }
 }
+
+
+/* True viewport-centered home logo: center independently from the PLAY button. */
+.codex-home-minimal {
+  position: relative;
+  min-height: 100svh;
+  overflow: hidden;
+}
+.codex-home-minimal > .codex-home-center {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: block;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  pointer-events: none;
+}
+.codex-home-minimal .farm-game-logo-center {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: clamp(300px, 62vw, 760px);
+  max-width: min(88vw, 760px);
+  max-height: 55svh;
+  margin: 0;
+  pointer-events: auto;
+}
+.codex-home-minimal .codex-play-only {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(24px, 6vh, 64px);
+  transform: translateX(-50%);
+  margin: 0;
+  pointer-events: auto;
+}
+@media (max-width: 520px) {
+  .codex-home-minimal .farm-game-logo-center {
+    width: min(90vw, 520px);
+    max-height: 46svh;
+  }
+  .codex-home-minimal .codex-play-only {
+    bottom: max(24px, env(safe-area-inset-bottom));
+  }
+}
