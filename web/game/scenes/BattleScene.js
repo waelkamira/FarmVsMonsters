@@ -654,6 +654,19 @@ export default class BattleScene extends Scene {
       align: "left"
     }).setOrigin(0, 0.5).setDepth(44);
 
+    // A compact parchment progress tracker makes wave pacing legible without
+    // covering the battlefield or changing its coordinate system.
+    this.waveProgressFrame = this.add.rectangle(716, 17, 166, 20, 0x4a2d18, 1)
+      .setStrokeStyle(2, 0xd8ad70, 1).setDepth(43);
+    this.waveProgressTrack = this.add.rectangle(716, 17, 154, 10, 0x332416, 1)
+      .setStrokeStyle(1, 0x9d7547, 1).setDepth(44);
+    this.waveProgressFill = this.add.rectangle(640, 17, 2, 7, 0xa8d65b, 1)
+      .setOrigin(0, 0.5).setDepth(45);
+    this.waveProgressLabel = this.add.text(716, 39, "WAVE 1", {
+      fontFamily: "Arial", fontSize: "10px", color: "#ffe8b5", fontStyle: "bold",
+      stroke: "#392719", strokeThickness: 2, resolution: 2
+    }).setOrigin(0.5).setDepth(44);
+
     // Build the seed bank from the player's pre-battle loadout.
     const plantOptions = [
       { type: "radish", title: "RADISH L1", cost: RADISH_CONFIG.cost, image: "radish-level-1" },
@@ -4079,6 +4092,12 @@ export default class BattleScene extends Scene {
     }
     if (this.waveText) {
       this.waveText.setText("🌊 " + Math.min(this.wave, this.totalWaves) + "/" + this.totalWaves);
+    }
+    if (this.waveProgressFill && this.waveProgressTrack) {
+      const progress = this.waveSize > 0 ? PhaserMath.Clamp(this.spawnedThisWave / this.waveSize, 0, 1) : 0;
+      const trackWidth = 154;
+      this.waveProgressFill.setSize(Math.max(2, trackWidth * progress), 7);
+      this.waveProgressLabel?.setText("WAVE " + Math.min(this.wave, this.totalWaves) + " · " + this.spawnedThisWave + "/" + this.waveSize);
     }
   }
 }
