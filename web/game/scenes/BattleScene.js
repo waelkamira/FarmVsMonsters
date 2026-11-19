@@ -3109,7 +3109,7 @@ export default class BattleScene extends Scene {
     const hp = profile.hp;
     const speed = profile.speed;
     const spawn = this.monsterLanePoint(SPAWN_LOCAL_X, row);
-    const view = this.add.container(spawn.x + 42, spawn.y).setDepth(10 + spawn.y / 1000);
+    const view = this.add.container(spawn.x, spawn.y).setDepth(10 + spawn.y / 1000);
     view.setAlpha(0);
 
     // Scale each creature against the measured gap of its perspective lane.
@@ -3123,7 +3123,6 @@ export default class BattleScene extends Scene {
     this.createMonsterArrivalEffect(spawn, laneGap, archetype);
     this.tweens.add({
       targets: view,
-      x: spawn.x,
       alpha: 1,
       scaleX: finalScaleX,
       scaleY: finalScaleY,
