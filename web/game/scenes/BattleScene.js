@@ -797,12 +797,14 @@ export default class BattleScene extends Scene {
         const texture = this.textures.get(plant.image);
         const isSheet = ["pineapple-level-1", "hazelnut-level-1", "mango-level-1", "snow-thrower-level-1", "radish-level-1"].includes(plant.image);
         const frame = isSheet ? texture.get("0") : texture.get();
-        const ratio = frame.realWidth / frame.realHeight;
-        const height = 46;
-        const width = Math.min(54, height * ratio);
+        // Use the actual frame rectangle and a single bounded scale so a
+        // source sheet's full-image dimensions can never enlarge the preview.
+        const frameWidth = Math.max(1, frame.cutWidth || frame.width || 1);
+        const frameHeight = Math.max(1, frame.cutHeight || frame.height || 1);
+        const thumbnailScale = Math.min(54 / frameWidth, 46 / frameHeight);
         const thumbnail = isSheet
-          ? this.add.sprite(0, -8, plant.image, "0").setDisplaySize(width, height)
-          : this.add.image(0, -8, plant.image).setDisplaySize(width, height);
+          ? this.add.sprite(0, -8, plant.image, "0").setScale(thumbnailScale)
+          : this.add.image(0, -8, plant.image).setScale(thumbnailScale);
         preview.add(thumbnail);
         // Darken only the plant thumbnail, leaving the seed-card artwork clean.
         preview.add(this.add.rectangle(0, -8, 56, 48, 0x000000, 0.68));
@@ -847,9 +849,13 @@ export default class BattleScene extends Scene {
     if (imageKey && this.textures.exists(imageKey)) {
       const gridSheet = imageKey === "mango-level-1" || imageKey === "radish-level-1" || imageKey === "snow-thrower-level-1";
       const frame = this.textures.getFrame(imageKey, gridSheet ? "0" : undefined);
-      const ratio = frame.realWidth / frame.realHeight;
-      const width = Math.min(54, plantHeight * ratio);
-      icon = gridSheet ? this.add.sprite(0, -8, imageKey, "0").setDisplaySize(width, plantHeight) : this.add.image(0, -8, imageKey).setDisplaySize(width, plantHeight);
+      // Bound every seed icon by both dimensions using its frame rectangle.
+      const frameWidth = Math.max(1, frame.cutWidth || frame.width || 1);
+      const frameHeight = Math.max(1, frame.cutHeight || frame.height || 1);
+      const iconScale = Math.min(54 / frameWidth, plantHeight / frameHeight);
+      icon = gridSheet
+        ? this.add.sprite(0, -8, imageKey, "0").setScale(iconScale)
+        : this.add.image(0, -8, imageKey).setScale(iconScale);
     } else {
       icon = this.add.graphics();
       if (drawIcon) drawIcon(icon);
