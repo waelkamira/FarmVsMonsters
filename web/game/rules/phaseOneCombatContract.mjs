@@ -41,12 +41,14 @@ export const PHASE_ONE_PLANTS = Object.freeze({
     projectileSpeed: 320,
     projectileCollisionRadius: 24,
     plantingEnergyCost: 35,
+    seedPacketRechargeMs: 5000,
     hp: 160,
     cooldownMs: 1450,
     range: 360
   }),
   energyMushroom: Object.freeze({
     plantingEnergyCost: 50,
+    seedPacketRechargeMs: 8000,
     hp: 85,
     energyPerPickup: 15,
     productionIntervalMs: 12000,
@@ -55,27 +57,27 @@ export const PHASE_ONE_PLANTS = Object.freeze({
   // Temporary playtest values; tune after hands-on balancing.
 
   pumpkin: Object.freeze({
-    plantingEnergyCost: 75, hp: 520
+    plantingEnergyCost: 75, seedPacketRechargeMs: 20000, hp: 520
   }),
 
   // Temporary pineapple prototype values for the first visual/combat playtest.
   pineapple: Object.freeze({
     projectileDamage: 42, projectileSpeed: 270, projectileCollisionRadius: 24,
-    plantingEnergyCost: 70, hp: 140, cooldownMs: 2100, range: 360
+    plantingEnergyCost: 70, seedPacketRechargeMs: 10000, hp: 140, cooldownMs: 2100, range: 360
   }),
   // Initial Hazelnut Level 1 playtest values; tune after hands-on testing.
   hazelnut: Object.freeze({
     projectileDamage: 38, projectileSpeed: 285, projectileCollisionRadius: 24,
-    plantingEnergyCost: 65, hp: 130, cooldownMs: 1950, range: 360
+    plantingEnergyCost: 65, seedPacketRechargeMs: 9000, hp: 130, cooldownMs: 1950, range: 360
   }),
   // Initial Mango Level 1 playtest values; tune after hands-on balancing.
   mango: Object.freeze({
     projectileDamage: 40, projectileSpeed: 275, projectileCollisionRadius: 24,
-    plantingEnergyCost: 70, hp: 130, cooldownMs: 2100, range: 360
+    plantingEnergyCost: 70, seedPacketRechargeMs: 12000, hp: 130, cooldownMs: 2100, range: 360
   }),
   snowThrower: Object.freeze({
     freezeProjectile: true, projectileSpeed: 300, projectileCollisionRadius: 28,
-    freezeDurationMs: 2600, plantingEnergyCost: 90, hp: 150,
+    freezeDurationMs: 2600, plantingEnergyCost: 90, seedPacketRechargeMs: 18000, hp: 150,
     cooldownMs: 3600, range: 360
   })
 });
