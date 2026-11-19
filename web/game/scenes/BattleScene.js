@@ -79,6 +79,8 @@ export default class BattleScene extends Scene {
   preload() {
     this.load.image("farm-battlefield", "/assets/backgrounds/farm-battlefield.jpeg");
     this.load.image("seed-card-frame", "/assets/items/ui/ui-seed-card-fram.png");
+    this.load.image("seed-card-locked", "/assets/items/ui/ui-seed-card-locked.png");
+    this.load.image("seed-slot-empty", "/assets/items/ui/ui-seed-slot-empty.png");
     this.load.image("inventory-wood-frame", "/assets/items/ui/ui-inventory-wood-fram.png");
     this.load.image("radish-level-1", "/assets/plants/radish-level-1.png");
     this.load.image("radish-level-1-bomb", "/assets/plants/radish-level-1-bomb.png");
@@ -777,6 +779,19 @@ export default class BattleScene extends Scene {
     this.plantCardsByType = {};
     const packetStartX = 164;
     const packetGap = 90;
+    const packetSlotCount = 7;
+    // Empty seed slots show the available loadout capacity without drawing a second tray.
+    if (this.textures.exists("seed-slot-empty")) {
+      const slotSource = this.textures.get("seed-slot-empty").getSourceImage();
+      const slotScale = Math.min(80 / slotSource.width, 92 / slotSource.height);
+      for (let index = 0; index < packetSlotCount; index += 1) {
+        const type = selectedTypes[index];
+        if (type) continue;
+        this.add.image(packetStartX + index * packetGap, 76, "seed-slot-empty")
+          .setDisplaySize(slotSource.width * slotScale, slotSource.height * slotScale)
+          .setDepth(44);
+      }
+    }
     plantOptions.filter((plant) => selectedTypes.includes(plant.type)).forEach((plant, index) => {
       this.plantCardsByType[plant.type] = this.createPlantCard(
         packetStartX + index * packetGap,
@@ -812,10 +827,13 @@ export default class BattleScene extends Scene {
       .setInteractive({ useHandCursor: true });
     // Overlay the uploaded seed-card artwork while keeping its original aspect ratio.
     let seedFrame = null;
-    if (this.textures.exists("seed-card-frame")) {
-      const frameSource = this.textures.get("seed-card-frame").getSourceImage();
+    const cardArtworkKey = locked && this.textures.exists("seed-card-locked")
+      ? "seed-card-locked"
+      : "seed-card-frame";
+    if (this.textures.exists(cardArtworkKey)) {
+      const frameSource = this.textures.get(cardArtworkKey).getSourceImage();
       const frameScale = Math.min(86 / frameSource.width, 98 / frameSource.height);
-      seedFrame = this.add.image(0, 0, "seed-card-frame")
+      seedFrame = this.add.image(0, 0, cardArtworkKey)
         .setDisplaySize(frameSource.width * frameScale, frameSource.height * frameScale);
     }
     const costPlate = this.add.rectangle(0, 29, 62, 19, locked ? 0x55534e : 0x6b4929, 1)
@@ -2157,6 +2175,11 @@ export default class BattleScene extends Scene {
             ? this.add.sprite(x, y - 12, plant.image, 0).setDisplaySize(48, 48)
             : this.add.image(x, y - 12, plant.image).setDisplaySize(48, 48);
           content.add(icon);
+        } else if (!unlocked && this.textures.exists("seed-card-locked")) {
+          const lockedSource = this.textures.get("seed-card-locked").getSourceImage();
+          const lockedScale = Math.min(88 / lockedSource.width, 72 / lockedSource.height);
+          content.add(this.add.image(x, y - 12, "seed-card-locked")
+            .setDisplaySize(lockedSource.width * lockedScale, lockedSource.height * lockedScale));
         } else {
           addText(x, y - 12, unlocked ? "✿" : "🔒", 25, "#7b4b2a");
         }
