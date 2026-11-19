@@ -41,6 +41,16 @@ export default function SettingsPage() {
           <LanguageToggle />
         </header>
         <p className="codex-settings-intro">{ar ? "اضبط أصوات عالمك كما تحب. تُحفظ التغييرات في هذا المتصفح وتُستخدم عند بدء المعركة التالية." : "Tune the sounds of your world. Changes are saved in this browser and used when your next battle begins."}</p>
+        <div className="codex-settings-board codex-settings-navigation">
+          <h2>{ar ? "القائمة" : "GAME MENU"}</h2>
+          <div className="codex-settings-links">
+            <Link href="/stages">{ar ? "🗺️ خريطة العوالم" : "🗺️ World Map"}</Link>
+            <Link href="/plants">{ar ? "🌱 موسوعة النباتات" : "🌱 Plant Inventory"}</Link>
+            <Link href="/monsters">{ar ? "🐾 موسوعة الوحوش" : "🐾 Enemy Bestiary"}</Link>
+            <Link href="/how-to-play">{ar ? "📜 دليل اللعب" : "📜 Field Guide"}</Link>
+            <Link href="/account">{ar ? "☁️ الحساب والحفظ" : "☁️ Account & Save"}</Link>
+          </div>
+        </div>
         <div className="codex-settings-board">
           <h2>{ar ? "مستويات الصوت" : "SOUND MIXER"}</h2>
           {controls.map(({key,label,labelAr,icon}) => (
@@ -54,8 +64,7 @@ export default function SettingsPage() {
         </div>
         <p className="codex-settings-footnote">{ar ? "اجعل أي شريط عند 0٪ لكتم قناته الصوتية. تستخدم هذه الخيارات مفاتيح التخزين نفسها التي تعتمد عليها أصوات المعركة." : "Set any slider to 0% to mute its channel. These options use the same browser storage keys as the battle audio controls."}</p>
         <nav className="info-nav codex-settings-nav">
-          <Link className="primary-link" href="/how-to-play">{ar ? "📜 دليل اللعب" : "📜 Field Guide"}</Link>
-          <Link className="secondary-link" href="/">{ar ? "العودة إلى القائمة" : "Main Menu"}</Link>
+          <Link className="secondary-link" href="/">{ar ? "العودة إلى القائمة الرئيسية" : "Main Menu"}</Link>
         </nav>
       </section>
     </main>
