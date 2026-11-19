@@ -393,6 +393,18 @@ test("local and verified remote progress preserve the completed final stage", ()
     completed_stages: Array.from({ length: CAMPAIGN_STAGE_COUNT }, (_, index) => index + 1)
   }, storage), true);
   assert.deepEqual(loadCompletedStages(storage), Array.from({ length: CAMPAIGN_STAGE_COUNT }, (_, index) => index + 1));
+
+  const invalidValues = new Map();
+  const invalidStorage = {
+    getItem: (key) => invalidValues.get(key) ?? null,
+    setItem: (key, value) => invalidValues.set(key, value)
+  };
+  assert.equal(applyRemotePlayerProgress({
+    unlocked_stage: 999,
+    completed_stages: Array.from({ length: CAMPAIGN_STAGE_COUNT }, (_, index) => index + 1)
+  }, invalidStorage), true);
+  assert.equal(loadUnlockedStage(invalidStorage), 1);
+  assert.deepEqual(loadCompletedStages(invalidStorage), []);
 });
 
 test("verified cloud restore never downgrades newer local campaign progress", async () => {
