@@ -78,6 +78,7 @@ export default class BattleScene extends Scene {
 
   preload() {
     this.load.image("farm-battlefield", "/assets/backgrounds/farm-battlefield.jpeg");
+    this.load.image("seed-card", "/assets/items/ui/ui-seed-card.png");
     this.load.image("seed-card-frame", "/assets/items/ui/ui-seed-card-fram.png");
     this.load.image("seed-card-locked", "/assets/items/ui/ui-seed-card-locked.png");
     this.load.image("seed-slot-empty", "/assets/items/ui/ui-seed-slot-empty.png");
@@ -829,7 +830,7 @@ export default class BattleScene extends Scene {
     let seedFrame = null;
     const cardArtworkKey = locked && this.textures.exists("seed-card-locked")
       ? "seed-card-locked"
-      : "seed-card-frame";
+      : (this.textures.exists("seed-card") ? "seed-card" : "seed-card-frame");
     if (this.textures.exists(cardArtworkKey)) {
       const frameSource = this.textures.get(cardArtworkKey).getSourceImage();
       const frameScale = Math.min(86 / frameSource.width, 98 / frameSource.height);
