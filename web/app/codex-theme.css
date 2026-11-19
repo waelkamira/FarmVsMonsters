@@ -289,3 +289,12 @@ a,button{ -webkit-tap-highlight-color:transparent }
 .codex-home-minimal .codex-play-only small {
   color: #fff2d6;
 }
+
+
+/* Keep the PLAY button anchored while its hover/press animation runs. */
+.codex-home-minimal .codex-play-only:hover {
+  transform: translate(-50%, -3px);
+}
+.codex-home-minimal .codex-play-only:active {
+  transform: translate(-50%, 3px);
+}
