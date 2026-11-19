@@ -32,3 +32,20 @@ test("wave announcement uses one reusable Phaser container with a bounded tween"
   assert.match(scene, /duration: 260/);
   assert.match(scene, /hold: 1450/);
 });
+
+test("monster arrivals use lightweight tier-colored Phaser effects", () => {
+  assert.match(scene, /createMonsterArrivalEffect\(spawn, laneGap, archetype\)/);
+  assert.match(scene, /archetype === "stonehide" \? 0x8fb9ff/);
+  assert.match(scene, /archetype === "dust-skitter" \? 0xb9e7f4/);
+  assert.match(scene, /archetype === "alpha-brute" \? 0xffc45e/);
+  assert.match(scene, /A few inexpensive dust puffs/);
+  assert.match(scene, /onComplete: \(\) => cue\.destroy\(\)/);
+});
+
+test("arrival animation does not alter monster logical spawn coordinates", () => {
+  assert.match(scene, /const view = this\.add\.container\(spawn\.x, spawn\.y\)/);
+  assert.match(scene, /const finalScaleX = monsterScale \* profile\.widthScale/);
+  assert.match(scene, /scaleX: finalScaleX/);
+  assert.match(scene, /monsterRecord = \{/);
+  assert.match(scene, /row, x: spawn\.x, y: spawn\.y, localX: SPAWN_LOCAL_X/);
+});
