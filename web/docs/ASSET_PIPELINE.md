@@ -12,11 +12,11 @@ From the `web` directory:
 npm run assets:manifest
 ```
 
-This scans `public/assets`, writes `public/assets/asset-manifest.json`, and reports:
+This scans `public/assets`, writes `public/assets/asset-manifest.json` and `public/assets/asset-audit.json`, and reports:
 - file count and total bytes;
 - logical groups based on asset families (for example `plants`, `backgrounds`, `characters/farmer`, and `characters/monsters`);
 - image dimensions where supported;
-- SHA-256 hashes and byte-identical duplicate candidates.
+- SHA-256 hashes and byte-identical duplicate candidates.\n- files above advisory size thresholds (1.5 MiB images, 3 MiB audio), plus grouped byte totals.
 
 The generator is read-only with respect to source art. It does not resize, recompress, rename, or delete files.
 
