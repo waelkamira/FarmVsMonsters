@@ -38,13 +38,32 @@ export class VFXManager {
         ease: "Cubic.easeOut",
         onComplete: () => this.#release(visual)
       });
-    } else if (this.scene.add?.particles) {
-      const particle = this.scene.add.particles(x, y, config.particleTexture || "__WHITE");
-      particle.setDepth?.(config.depth ?? 30);
-      particle.explode(config.count ?? 7, x, y);
-      visual = particle;
-      const timer = this.scene.time?.delayedCall(config.durationMs ?? this.limits.burstLifetimeMs, () => this.#release(visual));
-      if (timer) visual.__vfxTimer = timer;
+    } else if (this.scene.add?.container && this.scene.add?.circle) {
+      const burst = this.scene.add.container(x, y);
+      const count = Math.max(1, Math.min(16, config.count ?? 7));
+      const color = config.tint ?? 0xffffff;
+      for (let index = 0; index < count; index += 1) {
+        const angle = (Math.PI * 2 * index) / count;
+        const radius = config.kind === "trail" ? 2 : 5;
+        const dot = this.scene.add.circle(
+          Math.cos(angle) * radius,
+          Math.sin(angle) * radius,
+          config.kind === "trail" ? 2 : 3,
+          color,
+          0.9
+        );
+        burst.add(dot);
+      }
+      burst.setDepth(config.depth ?? 30);
+      visual = burst;
+      this.scene.tweens.add({
+        targets: burst,
+        alpha: 0,
+        scale: config.endScale ?? 2,
+        duration: config.durationMs ?? this.limits.burstLifetimeMs,
+        ease: "Cubic.easeOut",
+        onComplete: () => this.#release(visual)
+      });
     }
 
     if (visual) this.active.add(visual);
