@@ -7,7 +7,6 @@ import { getProjectileVFXProfile } from "../game/vfx/ProjectileVFXProfiles.mjs";
 import { VFXManager } from "../game/vfx/VFXManager.mjs";
 import { VFXEventBus } from "../game/vfx/core/VFXEventBus.mjs";
 import { createVFXConfig } from "../game/vfx/core/VFXConfig.mjs";
-import { VFXObjectPool } from "../game/vfx/core/VFXObjectPool.mjs";
 
 test("VFXRegistry registers, retrieves, and rejects duplicate effect IDs", () => {
   const registry = new VFXRegistry();
