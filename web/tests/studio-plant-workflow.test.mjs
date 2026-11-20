@@ -44,6 +44,9 @@ test("seed selection and Phaser runtime load the live authenticated Studio testi
   assert.match(selector, /api\/studio\/assets\?catalog=testing/);
   assert.match(battleScene, /studio-plant-catalog\.json/);
   assert.match(battleScene, /api\/studio\/assets\?catalog=testing/);
+  assert.match(battleScene, /const testingTypes = \(this\.studioPlants \|\| \[\]\)/);
+  assert.match(battleScene, /\.filter\(\(plant\) => plant\.testOnly\)/);
+  assert.match(battleScene, /\.slice\(0, 7\)/);
   assert.match(battleScene, /studioPlantsByType/);
   assert.match(battleScene, /spawnStudioEnergy/);
   assert.match(battleScene, /fireThornProjectile/);
