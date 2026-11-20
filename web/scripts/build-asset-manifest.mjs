@@ -151,7 +151,7 @@ const spritesheets = assets.filter((asset) => asset.type === "spritesheet").map(
 }));
 const audit = {
   schemaVersion: 1,
-  generatedAt: manifest.generatedAt,
+  generatedAt: new Date().toISOString(),
   assetCount: assets.length,
   totalBytes,
   groups: groupSummary,
@@ -159,7 +159,7 @@ const audit = {
   largeFiles,
   spritesheets
 };
-await writeFile(auditPath, JSON.stringify(audit, null, 2) + "\\n");
+await writeFile(auditPath, JSON.stringify(audit, null, 2) + "\n");
 
 const manifest = {
   schemaVersion: 1,
