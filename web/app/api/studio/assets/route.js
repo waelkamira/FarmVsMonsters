@@ -117,6 +117,7 @@ export async function POST(req){
    await saveLocalRegistry(next);
   }else return NextResponse.json({error:"Production uploads require STUDIO_STORAGE_DRIVER=github and a configured GitHub token."},{status:503});
  return NextResponse.json({success:true,asset:record,storage:driver,operation:existing?"replaced":"created"});
+ }catch(error){return NextResponse.json({error:error.message||"Asset save failed."},{status:500});}
 }
 export async function PATCH(req){
  if(!authorized(req))return NextResponse.json({error:"Unauthorized."},{status:401});
