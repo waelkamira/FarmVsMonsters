@@ -5,6 +5,7 @@ import { VFXManager } from "../vfx/VFXManager.mjs";
 import { createDefaultVFXRegistry } from "../vfx/createDefaultVFXRegistry.mjs";
 import { getPlantVFXProfile } from "../vfx/PlantVFXProfiles.mjs";
 import { getProjectileVFXProfile } from "../vfx/ProjectileVFXProfiles.mjs";
+import { getMonsterReactionProfile } from "../visuals/PlantMonsterVisualProfiles.mjs";
 
 // TEMPORARY: expose every implemented plant for VFX playtesting. Set false to restore campaign unlocks.
 const PLAYTEST_ALL_PLANTS = true;
@@ -4260,8 +4261,9 @@ export default class BattleScene extends Scene {
     // glow traces only its silhouette; recoil and squash are reduced by half.
     const sprite = monster.hyenaSprite;
     const hitColor = getProjectileVFXProfile(plantType)?.tint ?? 0x9bdc72;
+    const reaction = getMonsterReactionProfile(monster.kind);
     if (sprite?.active) {
-      monster.hitAnimUntil = this.time.now + 200;
+      monster.hitAnimUntil = this.time.now + reaction.hitDurationMs;
       this.playHyenaAnimation(monster, "hyena-idle", true);
 
       if (monster.hitGlowEffect && sprite.postFX?.remove) {
@@ -4269,7 +4271,7 @@ export default class BattleScene extends Scene {
         monster.hitGlowEffect = null;
       }
       if (sprite.postFX?.addGlow) {
-        monster.hitGlowEffect = sprite.postFX.addGlow(hitColor, 2.4, 0, false, 0.1, 12);
+        monster.hitGlowEffect = sprite.postFX.addGlow(hitColor, reaction.glowRadius, 0, false, 0.1, 12);
       }
 
       this.tweens.killTweensOf(sprite);
@@ -4279,10 +4281,10 @@ export default class BattleScene extends Scene {
       sprite.setScale(0.918);
       this.tweens.add({
         targets: sprite,
-        x: baseX + 5,
-        scaleX: 1.01,
-        scaleY: 0.88,
-        duration: 55,
+        x: baseX + reaction.recoilPx,
+        scaleX: reaction.squashX,
+        scaleY: reaction.squashY,
+        duration: Math.max(45, Math.round(reaction.hitDurationMs * 0.32)),
         ease: "Quad.easeOut",
         yoyo: true,
         onComplete: () => {
