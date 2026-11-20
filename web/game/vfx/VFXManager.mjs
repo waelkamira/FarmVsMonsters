@@ -26,6 +26,7 @@ export class VFXManager {
     this.eventBus = eventBus || new VFXEventBus();
     this.ownsEventBus = !eventBus;
     this.active = new Set();
+    this.activeTweens = new Map();
     this.destroyed = false;
     this.unsubscribers = [
       this.eventBus.on("vfx:play", (request) => {
@@ -87,14 +88,21 @@ export class VFXManager {
     const duration = config.durationMs ?? this.limits.burstLifetimeMs;
     this.eventBus.emit("vfx:started", { effectId, visual, x, y, duration });
 
-    this.scene.tweens.add({
-      targets: visual,
-      alpha: 0,
-      scale: (config.scale ?? 1) * (config.endScale ?? (texture ? 1.45 : 2)),
-      duration,
-      ease: "Cubic.easeOut",
-      onComplete: () => this.#release(visual, effectId)
-    });
+    try {
+      const tween = this.scene.tweens.add({
+        targets: visual,
+        alpha: 0,
+        scale: (config.scale ?? 1) * (config.endScale ?? (texture ? 1.45 : 2)),
+        duration,
+        ease: "Cubic.easeOut",
+        onComplete: () => this.#release(visual, effectId, { stopTween: false })
+      });
+      if (this.active.has(visual) && tween) this.activeTweens.set(visual, tween);
+    } catch (error) {
+      this.#release(visual, effectId);
+      this.eventBus.emit("vfx:rejected", { effectId, reason: "tween-unavailable", error });
+      return null;
+    }
 
     return visual;
   }
@@ -112,11 +120,25 @@ export class VFXManager {
     for (const visual of [...this.active]) this.#release(visual, null);
   }
 
-  #release(visual, effectId) {
+  #release(visual, effectId, { stopTween = true } = {}) {
     if (!visual || !this.active.has(visual)) return;
     this.active.delete(visual);
-    visual.__vfxTimer?.remove?.(false);
-    if (visual.active) visual.destroy();
+
+    const tween = this.activeTweens.get(visual);
+    this.activeTweens.delete(visual);
+    if (stopTween && tween) {
+      try {
+        tween.stop?.();
+      } catch {
+        // A failed cosmetic tween stop must not block visual cleanup.
+      }
+    }
+
+    try {
+      if (visual.active) visual.destroy();
+    } catch {
+      // A failed display-object destroy must not interrupt other VFX cleanup.
+    }
     this.eventBus.emit("vfx:completed", { effectId, visual });
   }
 
