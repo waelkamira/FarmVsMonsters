@@ -5,6 +5,7 @@ import {createHmac,timingSafeEqual} from "node:crypto";
 import {STUDIO_ASSET_TYPES,STUDIO_ID_PATTERN,STUDIO_MAX_UPLOAD_BYTES,STUDIO_RESERVED_PLANT_IDS} from "../../../../game/studio/assetTypes.mjs";
 import {createStudioPlantCombatProfile} from "../../../../game/studio/plantProfiles.mjs";
 import {assertExpectedContentSha} from "../../../../game/studio/registryConcurrency.mjs";
+import {createImmutableAssetPath} from "../../../../game/studio/immutableAssetPath.mjs";
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
 const COOKIE="fvm_studio_session";
@@ -17,6 +18,7 @@ function githubUrl(filePath){return "https://api.github.com/repos/"+(process.env
 async function githubGetDocument(filePath,token,branch){const response=await fetch(githubUrl(filePath)+"?ref="+encodeURIComponent(branch),{headers:githubHeaders(token)});if(response.status===404)return null;if(!response.ok)throw Error("GitHub read failed ("+response.status+").");const data=await response.json();return {content:Buffer.from(data.content||"","base64").toString("utf8"),sha:data.sha};}
 async function githubGet(filePath,token,branch){const document=await githubGetDocument(filePath,token,branch);return document?.content??null;}
 async function githubGetBytes(filePath,token,branch){const response=await fetch(githubUrl(filePath)+"?ref="+encodeURIComponent(branch),{headers:{...githubHeaders(token),Accept:"application/vnd.github.raw"}});if(response.status===404)throw Error("Asset not found in staging branch: "+filePath);if(!response.ok)throw Error("GitHub asset read failed ("+response.status+").");return Buffer.from(await response.arrayBuffer());}
+async function githubPutImmutable(filePath,bytes,message,token,branch){const api=githubUrl(filePath),headers=githubHeaders(token);const verify=async()=>{const response=await fetch(api+"?ref="+encodeURIComponent(branch),{headers:{...headers,Accept:"application/vnd.github.raw"}});if(response.status===404)return false;if(!response.ok)throw Error("GitHub immutable asset lookup failed ("+response.status+").");return Buffer.from(await response.arrayBuffer()).equals(bytes);};if(await verify())return;const saved=await fetch(api,{method:"PUT",headers:{...headers,"Content-Type":"application/json"},body:JSON.stringify({message,branch,content:Buffer.from(bytes).toString("base64")})});if(saved.ok)return;if(saved.status===409&&await verify())return;const data=await saved.json().catch(()=>({}));throw Error(data.message||"GitHub immutable asset save failed ("+saved.status+").");}
 async function githubPut(filePath,bytes,message,token,branch,expectedSha){const api=githubUrl(filePath),headers=githubHeaders(token);const check=await fetch(api+"?ref="+encodeURIComponent(branch),{headers});let sha=null;if(check.ok)sha=(await check.json()).sha;else if(check.status!==404)throw Error("GitHub lookup failed ("+check.status+").");assertExpectedContentSha(expectedSha,sha);const saved=await fetch(api,{method:"PUT",headers:{...headers,"Content-Type":"application/json"},body:JSON.stringify({message,branch,content:Buffer.from(bytes).toString("base64"),...(sha?{sha}:{})})});if(!saved.ok){const data=await saved.json().catch(()=>({}));throw Error(data.message||"GitHub save failed ("+saved.status+").");}}
 async function localRegistry(){try{return JSON.parse(await readFile(path.join(process.cwd(),"game/data/studioAssetRegistry.json"),"utf8"));}catch(error){if(error.code==="ENOENT")return {version:1,assets:[]};throw error;}}
 async function saveLocalRegistry(registry){const target=path.join(process.cwd(),"game/data/studioAssetRegistry.json");await mkdir(path.dirname(target),{recursive:true});await writeFile(target,JSON.stringify(registry,null,2)+"\n","utf8");}
@@ -92,9 +94,10 @@ export async function POST(req){
   const behavior=String(form.get("behavior")||"");
   if(!behavior)return NextResponse.json({error:"اختر نظام النبتة يدوياً قبل حفظها."},{status:400});
   if(hasProjectile&&behavior!=="projectile")return NextResponse.json({error:"اختر نظام إطلاق المقذوفات لاستخدام ملف القذيفة، أو أزل ملف القذيفة."},{status:400});
+  const projectileBytes=hasProjectile?Buffer.from(await projectileFile.arrayBuffer()):null;
   const currentProjectile=behavior==="projectile"
     ?(hasProjectile
-      ?{id:id+"-projectile",filename:id+"-projectile"+ext(projectileFile.type),path:"/assets/projectiles/plants/"+id+"-projectile"+ext(projectileFile.type)}
+      ?{id:id+"-projectile",filename:path.basename(createImmutableAssetPath("projectiles/plants",id+"-projectile",ext(projectileFile.type),projectileBytes)),path:"/assets/"+createImmutableAssetPath("projectiles/plants",id+"-projectile",ext(projectileFile.type),projectileBytes)}
       :(removeProjectile?null:(existing?.combat?.mode==="projectile"?existing.combat.projectile:null)))
     :null;
   try{combatProfile=readCombatForm(form,currentProjectile,existing);}catch(error){return NextResponse.json({error:error.message},{status:400});}
@@ -102,20 +105,20 @@ export async function POST(req){
  }
  const extension=hasFile?ext(file.type):(existing?.filename?path.extname(existing.filename):path.extname(existing?.path||""));
  if(!extension)return NextResponse.json({error:"Unknown file extension."},{status:415});
- const relative=hasFile?config.folder+"/"+id+extension:(existing?.path||"").replace(/^\/assets\//,"");
- const now=new Date().toISOString();
- const record={...(existing||{}),id,type,name:String(form.get("name")||id).trim().slice(0,80),filename:hasFile?id+extension:existing.filename,path:hasFile?"/assets/"+relative:existing.path,rows,columns,spriteSheet:config.spriteSheet,status:"draft",createdAt:existing?.createdAt||now,updatedAt:now,...(type==="plant"?{combat:combatProfile}:{})};
- const next={...old,version:1,assets:existing?old.assets.map((a,i)=>i===index?record:a):[...old.assets,record]};
  const bytes=hasFile?Buffer.from(await file.arrayBuffer()):null;
+ const relative=hasFile?createImmutableAssetPath(config.folder,id,extension,bytes):(existing?.path||"").replace(/^\/assets\//,"");
+ const now=new Date().toISOString();
+ const record={...(existing||{}),id,type,name:String(form.get("name")||id).trim().slice(0,80),filename:hasFile?path.basename(relative):existing.filename,path:hasFile?"/assets/"+relative:existing.path,rows,columns,spriteSheet:config.spriteSheet,status:"draft",createdAt:existing?.createdAt||now,updatedAt:now,...(type==="plant"?{combat:combatProfile}:{})};
+ const next={...old,version:1,assets:existing?old.assets.map((a,i)=>i===index?record:a):[...old.assets,record]};
  try{
   if(driver==="github"){
    const token=process.env.STUDIO_GITHUB_TOKEN,branch=process.env.STUDIO_GITHUB_BRANCH||"studio/assets";
-   if(hasFile)await githubPut("web/public/assets/"+relative,bytes,"studio: "+(existing?"replace ":"add ")+type+" "+id,token,branch);
-   if(hasProjectile){await githubPut("web/public/"+record.combat.projectile.path.replace(/^\//,""),Buffer.from(await projectileFile.arrayBuffer()),"studio: attach projectile to "+id,token,branch);}
+   if(hasFile)await githubPutImmutable("web/public/assets/"+relative,bytes,"studio: "+(existing?"replace ":"add ")+type+" "+id,token,branch);
+   if(hasProjectile){await githubPutImmutable("web/public/"+record.combat.projectile.path.replace(/^\//,""),projectileBytes,"studio: attach projectile to "+id,token,branch);}
    await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(next,null,2)+"\n"),"studio: "+(existing?"update ":"register ")+id,token,branch,registrySha);
   }else if(driver==="local"&&process.env.NODE_ENV!=="production"){
    if(hasFile){const target=path.join(process.cwd(),"public/assets",relative);await mkdir(path.dirname(target),{recursive:true});await writeFile(target,bytes);}
-   if(hasProjectile){const pTarget=path.join(process.cwd(),"public",record.combat.projectile.path.replace(/^\//,""));await mkdir(path.dirname(pTarget),{recursive:true});await writeFile(pTarget,Buffer.from(await projectileFile.arrayBuffer()));}
+   if(hasProjectile){const pTarget=path.join(process.cwd(),"public",record.combat.projectile.path.replace(/^\//,""));await mkdir(path.dirname(pTarget),{recursive:true});await writeFile(pTarget,projectileBytes);}
    await saveLocalRegistry(next);
   }else return NextResponse.json({error:"Production uploads require STUDIO_STORAGE_DRIVER=github and a configured GitHub token."},{status:503});
  return NextResponse.json({success:true,asset:record,storage:driver,operation:existing?"replaced":"created"});
