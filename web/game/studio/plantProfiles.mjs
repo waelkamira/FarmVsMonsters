@@ -9,7 +9,7 @@ const LIMITS = Object.freeze({
   energyCost: [0, 250],
   hp: [1, 5000],
   cooldownMs: [250, 30000],
-  damage: [0, 1000],
+  damage: [1, 1000],
   range: [24, 500],
   projectileSpeed: [60, 1200],
   projectileCollisionRadius: [4, 100],
