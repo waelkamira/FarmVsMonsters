@@ -62,3 +62,37 @@ test("asset groups and audit summary match the generated inventory", () => {
     assert.ok(sheet.frameConfig);
   }
 });
+
+test("known Stage 1 animation sheets keep the exact Phaser frame dimensions", () => {
+  const manifest = readGeneratedJson(manifestPath);
+  const expected = {
+    "pineapple-level-1": [418, 418],
+    "hazelnut-level-1": [341, 341],
+    "gold-coin": [170, 170],
+    "farmer-run": [360, 430],
+    "farmer-walk": [360, 430],
+    "farmer-jump": [216, 720],
+    "farmer-idle": [540, 360],
+    "farmer-plant": [360, 430],
+    "farmer-collect": [180, 360],
+    "farmer-uproot": [360, 430],
+    "farmer-attack": [180, 360],
+    "farmer-hit": [152, 430],
+    "farmer-death": [152, 430],
+    "hyena-idle": [360, 298],
+    "hyena-walk": [360, 298],
+    "hyena-run": [367, 298],
+    "hyena-bite": [360, 447],
+    "hyena-hit": [360, 894],
+    "hyena-death": [360, 447]
+  };
+  const byKey = new Map(manifest.assets.map((asset) => [asset.key, asset]));
+  for (const [key, [frameWidth, frameHeight]] of Object.entries(expected)) {
+    const asset = byKey.get(key);
+    assert.ok(asset, `missing animation asset: ${key}`);
+    assert.equal(asset.type, "spritesheet", `${key} must be registered as a spritesheet`);
+    assert.deepEqual(asset.frameConfig, { frameWidth, frameHeight, margin: 0, spacing: 0 });
+    assert.ok(Number.isInteger(asset.width) && asset.width >= frameWidth);
+    assert.ok(Number.isInteger(asset.height) && asset.height >= frameHeight);
+  }
+});
