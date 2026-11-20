@@ -1,4 +1,5 @@
 import {NextResponse} from "next/server";
+import {timingSafeEqual} from "node:crypto";
 import {createStudioSession,verifyStudioSession,STUDIO_SESSION_TTL_MS} from "../../../../game/studio/signedSession.mjs";
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
