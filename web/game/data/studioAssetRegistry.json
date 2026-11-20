@@ -35,7 +35,7 @@
       "rows": 3,
       "columns": 3,
       "spriteSheet": true,
-      "status": "testing",
+      "status": "published",
       "createdAt": "2026-11-20T16:34:22.262Z",
       "updatedAt": "2026-11-20T20:37:26.840Z",
       "combat": {
@@ -51,7 +51,8 @@
         "energyAmount": 15,
         "energyIntervalMs": 12000
       },
-      "testingAt": "2026-11-20T20:37:50.889Z"
+      "testingAt": "2026-11-20T20:37:50.889Z",
+      "publishedAt": "2026-11-20T20:40:49.469Z"
     }
   ]
 }
