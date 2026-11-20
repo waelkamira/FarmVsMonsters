@@ -4111,6 +4111,7 @@ export default class BattleScene extends Scene {
         : this.lanePoint(shot.localX, shot.row);
       const projectileX = position.x + (shot.launchOffsetX || 0);
       const projectileY = position.y + (shot.launchOffsetY || 0);
+      let trailPositionY = projectileY;
 
       // Give the outgoing pineapple bomb a smooth launch arc. Progress is
       // measured along its lane, while the arc height adapts to travel distance.
@@ -4123,6 +4124,7 @@ export default class BattleScene extends Scene {
         const launchScreenY = launchPosition.y + (shot.launchOffsetY || 0);
         const arcHeight = Math.max(34, Math.min(90, Math.abs(targetBounds.centerX - launchScreenX) * 0.18));
         const arcedY = projectileY - Math.sin(Math.PI * arcProgress) * arcHeight;
+        trailPositionY = arcedY;
         if (projectileX >= targetBounds.centerX - 4) {
           shot.dropPhase = "dropping";
           shot.dropStartX = projectileX;
@@ -4138,7 +4140,7 @@ export default class BattleScene extends Scene {
 
       shot.trailTimer -= dt * 1000;
       if (shot.trailTimer <= 0) {
-        this.createProjectileTrail(projectileX - 5, projectileY, shot.plantType);
+        this.createProjectileTrail(projectileX - 5, trailPositionY, shot.plantType);
         shot.trailTimer = 48;
       }
 
