@@ -71,20 +71,20 @@ export async function POST(req){
  const id=String(form.get("id")||"").trim().toLowerCase(),type=String(form.get("type")||""),config=STUDIO_ASSET_TYPES[type],file=form.get("file"),projectileFile=form.get("projectileFile"),rows=Number(form.get("rows")||1),columns=Number(form.get("columns")||1),replace=String(form.get("replace")||"false")==="true";
  if(!config||!STUDIO_ID_PATTERN.test(id)||id.length>64)return NextResponse.json({error:"Invalid category or ID. Use a lowercase slug up to 64 characters."},{status:400});
  if(type==="plant"&&STUDIO_RESERVED_PLANT_IDS.includes(id))return NextResponse.json({error:"هذا المعرّف محجوز لنبتة أساسية في اللعبة. اختر معرّفاً جديداً."},{status:409});
- if(!file||typeof file.arrayBuffer!=="function"||file.size<1||file.size>STUDIO_MAX_UPLOAD_BYTES)return NextResponse.json({error:"Choose a file up to 8 MB."},{status:413});
- if(!config.accepts.includes(file.type))return NextResponse.json({error:"Unsupported media type."},{status:415});
- if(config.spriteSheet&&(!Number.isInteger(rows)||!Number.isInteger(columns)||rows<1||columns<1||rows*columns>100))return NextResponse.json({error:"Invalid sprite grid."},{status:400});
+ const hasFile=Boolean(file&&typeof file.arrayBuffer==="function"&&file.size>0);
  const hasProjectile=Boolean(projectileFile&&typeof projectileFile.arrayBuffer==="function"&&projectileFile.size>0);
  const removeProjectile=String(form.get("removeProjectile")||"false")==="true";
- if(hasProjectile&&removeProjectile)return NextResponse.json({error:"Choose a new projectile or remove the existing projectile, not both."},{status:400});
- if(hasProjectile&&(!STUDIO_ASSET_TYPES.plant.accepts.includes(file.type)||!STUDIO_ASSET_TYPES.plantProjectile.accepts.includes(projectileFile.type)||projectileFile.size>STUDIO_MAX_UPLOAD_BYTES))return NextResponse.json({error:"Projectile must be a supported PNG/WebP/GIF file up to 8 MB."},{status:415});
- if(hasProjectile&&type!=="plant")return NextResponse.json({error:"A projectile can only be attached to a plant upload."},{status:400});
  const driver=process.env.STUDIO_STORAGE_DRIVER||"local";let old;
  try{if(driver==="github"){const token=process.env.STUDIO_GITHUB_TOKEN,branch=process.env.STUDIO_GITHUB_BRANCH||"studio/assets";if(!token)return NextResponse.json({error:"STUDIO_GITHUB_TOKEN is required."},{status:503});const raw=await githubGet(REGISTRY_PATH,token,branch);old=raw?JSON.parse(raw):{version:1,assets:[]};}else old=await localRegistry();}catch(error){return NextResponse.json({error:error.message},{status:502});}
  const index=old.assets.findIndex(a=>a.id===id),existing=index>=0?old.assets[index]:null;
- if(existing&&!replace)return NextResponse.json({error:"Asset ID already exists. اختر الأصل من المكتبة واستخدم زر الاستبدال."},{status:409});
- if(!existing&&replace)return NextResponse.json({error:"الأصل المطلوب استبداله غير موجود في المكتبة."},{status:404});
- if(existing&&existing.type!==type)return NextResponse.json({error:"لا يمكن تغيير فئة الأصل أثناء الاستبدال."},{status:409});
+ if(existing&&!replace)return NextResponse.json({error:"Asset ID already exists. اختر الأصل من المكتبة واستخدم زر التعديل."},{status:409});
+ if(!existing&&replace)return NextResponse.json({error:"الأصل المطلوب تعديله غير موجود في المكتبة."},{status:404});
+ if(existing&&existing.type!==type)return NextResponse.json({error:"لا يمكن تغيير فئة الأصل أثناء التعديل."},{status:409});
+ if(!hasFile&&(!replace||!existing))return NextResponse.json({error:"Choose a file for a new asset."},{status:400});
+ if(hasFile&&(file.size>STUDIO_MAX_UPLOAD_BYTES||!config.accepts.includes(file.type)))return NextResponse.json({error:"Choose a supported file up to 8 MB."},{status:415});
+ if(config.spriteSheet&&(!Number.isInteger(rows)||!Number.isInteger(columns)||rows<1||columns<1||rows*columns>100))return NextResponse.json({error:"Invalid sprite grid."},{status:400});
+ if(hasProjectile&&removeProjectile)return NextResponse.json({error:"Choose a new projectile or remove the existing projectile, not both."},{status:400});
+ if(hasProjectile&&(type!=="plant"||!STUDIO_ASSET_TYPES.plantProjectile.accepts.includes(projectileFile.type)||projectileFile.size>STUDIO_MAX_UPLOAD_BYTES))return NextResponse.json({error:"Projectile must be a supported PNG/WebP/GIF file up to 8 MB and can only be attached to a plant."},{status:415});
  let combatProfile=null;
  if(type==="plant"){
   const behavior=String(form.get("behavior")||"");
@@ -98,23 +98,24 @@ export async function POST(req){
   try{combatProfile=readCombatForm(form,currentProjectile,existing);}catch(error){return NextResponse.json({error:error.message},{status:400});}
   if(combatProfile.mode==="projectile"&&!currentProjectile)return NextResponse.json({error:"ارفع ملف القذيفة مع النبتة أو اختر سلوكاً بديلاً."},{status:400});
  }
- const extension=ext(file.type);if(!extension)return NextResponse.json({error:"Unknown file extension."},{status:415});
- const relative=config.folder+"/"+id+extension,now=new Date().toISOString();
- const record={...(existing||{}),id,type,name:String(form.get("name")||id).trim().slice(0,80),filename:id+extension,path:"/assets/"+relative,rows,columns,spriteSheet:config.spriteSheet,status:"draft",createdAt:existing?.createdAt||now,updatedAt:now,...(type==="plant"?{combat:combatProfile}:{})};
+ const extension=hasFile?ext(file.type):(existing?.filename?path.extname(existing.filename):path.extname(existing?.path||""));
+ if(!extension)return NextResponse.json({error:"Unknown file extension."},{status:415});
+ const relative=hasFile?config.folder+"/"+id+extension:(existing?.path||"").replace(/^\/assets\//,"");
+ const now=new Date().toISOString();
+ const record={...(existing||{}),id,type,name:String(form.get("name")||id).trim().slice(0,80),filename:hasFile?id+extension:existing.filename,path:hasFile?"/assets/"+relative:existing.path,rows,columns,spriteSheet:config.spriteSheet,status:"draft",createdAt:existing?.createdAt||now,updatedAt:now,...(type==="plant"?{combat:combatProfile}:{})};
  const next={...old,version:1,assets:existing?old.assets.map((a,i)=>i===index?record:a):[...old.assets,record]};
- const bytes=Buffer.from(await file.arrayBuffer());
+ const bytes=hasFile?Buffer.from(await file.arrayBuffer()):null;
  try{
   if(driver==="github"){
    const token=process.env.STUDIO_GITHUB_TOKEN,branch=process.env.STUDIO_GITHUB_BRANCH||"studio/assets";
-   await githubPut("web/public/assets/"+relative,bytes,"studio: "+(existing?"replace ":"add ")+type+" "+id,token,branch);
+   if(hasFile)await githubPut("web/public/assets/"+relative,bytes,"studio: "+(existing?"replace ":"add ")+type+" "+id,token,branch);
    if(hasProjectile){await githubPut("web/public/"+record.combat.projectile.path.replace(/^\//,""),Buffer.from(await projectileFile.arrayBuffer()),"studio: attach projectile to "+id,token,branch);}
    await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(next,null,2)+"\n"),"studio: "+(existing?"update ":"register ")+id,token,branch);
   }else if(driver==="local"&&process.env.NODE_ENV!=="production"){
-   const target=path.join(process.cwd(),"public/assets",relative);await mkdir(path.dirname(target),{recursive:true});await writeFile(target,bytes);
+   if(hasFile){const target=path.join(process.cwd(),"public/assets",relative);await mkdir(path.dirname(target),{recursive:true});await writeFile(target,bytes);}
    if(hasProjectile){const pTarget=path.join(process.cwd(),"public",record.combat.projectile.path.replace(/^\//,""));await mkdir(path.dirname(pTarget),{recursive:true});await writeFile(pTarget,Buffer.from(await projectileFile.arrayBuffer()));}
    await saveLocalRegistry(next);
   }else return NextResponse.json({error:"Production uploads require STUDIO_STORAGE_DRIVER=github and a configured GitHub token."},{status:503});
- }catch(error){return NextResponse.json({error:error.message||"Save failed."},{status:500});}
  return NextResponse.json({success:true,asset:record,storage:driver,operation:existing?"replaced":"created"});
 }
 export async function PATCH(req){
