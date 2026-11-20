@@ -61,3 +61,13 @@ test("testing catalog is served directly from the Studio staging branch with pro
   assert.match(studioPage, /متاحة الآن للاختبار مباشرة داخل اللعبة/);
   assert.doesNotMatch(studioPage, /شغّل npm run studio:sync لمزامنتها/);
 });
+
+test("every registered asset can be opened for editing and metadata-only edits keep the current file", () => {
+  assert.match(studioPage, /onClick=\{\(\)=>beginReplace\(a\)\}>تعديل<\/button>/);
+  assert.match(studioPage, /required=\{!editing\}/);
+  assert.match(studioPage, /if\(file\)form\.set\("file",file\)/);
+  assert.match(assetsRoute, /const hasFile=Boolean\(file&&typeof file\.arrayBuffer/);
+  assert.match(assetsRoute, /if\(!hasFile&&\(!replace\|\|!existing\)\)/);
+  assert.match(assetsRoute, /path:hasFile\?"\/assets\/\+relative:existing\.path/);
+  assert.match(assetsRoute, /if\(hasFile\)await githubPut/);
+});
