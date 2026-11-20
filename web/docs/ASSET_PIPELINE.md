@@ -48,3 +48,24 @@ Groups are reference-counted. Releasing a group removes only assets that this ma
 ## Initial repository baseline
 
 The initial inventory contained 88 supported assets totaling approximately 22.96 MiB (24,072,112 bytes). This is a measured repository snapshot, not a runtime-memory estimate. Decoded texture memory can be much larger than the files on disk.
+
+
+## Additional asset audit guidance
+
+The active browser game uses Next.js and Phaser 3. Existing `BattleScene.preload()` calls remain supported. `PhaserAssetManager` observes those legacy loads and also exposes grouped loading for gradual migration.
+## Generate an inventory and audit
+This scans `public/assets` and writes both `public/assets/asset-manifest.json` and `public/assets/asset-audit.json`.
+The manifest records:
+- asset keys, URLs, types, logical groups, and byte sizes;
+- explicit frame metadata for known sprite sheets.
+The audit report records:
+- total asset count and bytes;
+- per-group counts and byte totals;
+- SHA-256 duplicate candidates;
+- image files larger than 1.5 MiB and audio files larger than 3 MiB;
+- sprite-sheet paths and their explicit frame configuration.
+The generator is read-only with respect to source art. It does not resize, recompress, rename, or delete files. The audit thresholds are advisory, not automatic rejection rules.
+import { PhaserAssetManager } from "../game/services/assetManager.mjs";
+Manifest entries use explicit keys, URLs, and types. Known Phaser spritesheets used by the current battle scene have explicit frame metadata overrides in the generator. For any newly added spritesheet, add its exact `frameConfig` override before loading it. Inspect the source image dimensions and frame layout; never infer frame dimensions from filenames or force a universal crop.
+## Historical baseline
+An earlier repository snapshot contained 88 supported assets totaling approximately 22.96 MiB (24,072,112 bytes). This is a historical file-size measurement, not a current inventory or runtime-memory estimate. Decoded texture memory can be much larger than the files on disk.
