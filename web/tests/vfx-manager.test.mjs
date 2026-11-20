@@ -38,7 +38,7 @@ test("manager respects its concurrent effect cap", () => {
   };
   const manager = new VFXManager(scene, { quality: "performance" });
   manager.performance.current = "performance";
-  manager.performance.profile.maxConcurrentEffects = 0;
+  for (let index = 0; index < manager.performance.profile.maxConcurrentEffects; index += 1) manager.active.add({});
   assert.equal(manager.play("impact.plant", { x: 10, y: 20 }), null);
   manager.destroy();
 });
