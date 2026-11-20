@@ -136,6 +136,31 @@ for (const asset of assets) (groups[asset.group] ||= []).push({
   ...(asset.frameConfig ? { frameConfig: asset.frameConfig } : {})
 });
 
+
+const largeFiles = assets.filter((asset) => {
+  const limit = asset.type === "audio" ? 3 * 1024 * 1024 : 1.5 * 1024 * 1024;
+  return asset.bytes > limit;
+}).map((asset) => ({ key: asset.key, url: asset.url, type: asset.type, bytes: asset.bytes }));
+
+const groupSummary = Object.fromEntries(Object.entries(groups).map(([name, entries]) => [name, {
+  assetCount: entries.length,
+  totalBytes: assets.filter((asset) => asset.group === name).reduce((sum, asset) => sum + asset.bytes, 0)
+}]));
+const spritesheets = assets.filter((asset) => asset.type === "spritesheet").map((asset) => ({
+  key: asset.key, url: asset.url, bytes: asset.bytes, frameConfig: asset.frameConfig
+}));
+const audit = {
+  schemaVersion: 1,
+  generatedAt: manifest.generatedAt,
+  assetCount: assets.length,
+  totalBytes,
+  groups: groupSummary,
+  exactDuplicates: duplicates,
+  largeFiles,
+  spritesheets
+};
+await writeFile(auditPath, JSON.stringify(audit, null, 2) + "\\n");
+
 const manifest = {
   schemaVersion: 1,
   generatedAt: new Date().toISOString(),
