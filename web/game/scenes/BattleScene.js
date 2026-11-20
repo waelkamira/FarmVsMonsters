@@ -1,5 +1,6 @@
 import { Scene, Input, Math as PhaserMath } from "phaser";
 import { translate } from "../../app/LocaleProvider";
+import { PhaserAssetManager } from "../services/assetManager.mjs";
 import { createSeededRandom } from "../rules/seededRandom.mjs";
 import { createCombatEventLog, appendCombatEvent } from "../rules/combatEventLog.mjs";
 import gridCalibration from "../data/farm-grid-calibration.json";
@@ -75,6 +76,12 @@ export default class BattleScene extends Scene {
   constructor() { super("BattleScene"); }
 
   preload() {
+    // Observe existing Phaser loads without changing asset keys or frame boundaries.
+    this.assetManager = new PhaserAssetManager(this);
+    this.events.once("shutdown", () => {
+      this.assetManager?.destroy();
+      this.assetManager = null;
+    });
     this.load.image("farm-battlefield", "/assets/backgrounds/farm-battlefield.jpeg");
     this.load.image("radish-level-1", "/assets/plants/radish-level-1.png");
     this.load.image("radish-level-1-bomb", "/assets/plants/radish-level-1-bomb.png");

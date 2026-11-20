@@ -5,3 +5,5 @@ build/
 coverage/
 .env*
 !.env.example
+/public/assets/asset-manifest.json
+/public/assets/asset-audit.json

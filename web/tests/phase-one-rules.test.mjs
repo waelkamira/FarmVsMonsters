@@ -496,3 +496,12 @@ test("stage two intro restores signed-in cloud progress before redirecting", () 
   assert.match(stageTwoPage, /return \(\) => \{\s*active = false;/);
   assert.match(stageTwoPage, /battle waves are still being developed|موجات القتال ما زال قيد التطوير/);
 });
+
+
+test("BattleScene tracks legacy preload assets and releases telemetry listeners on shutdown", () => {
+  assert.ok(scene.includes('import { PhaserAssetManager } from "../services/assetManager.mjs";'));
+  assert.ok(scene.includes("this.assetManager = new PhaserAssetManager(this);"));
+  assert.ok(scene.includes('this.events.once("shutdown", () => {'));
+  assert.ok(scene.includes("this.assetManager?.destroy();"));
+  assert.ok(scene.includes("this.assetManager = null;"));
+});
