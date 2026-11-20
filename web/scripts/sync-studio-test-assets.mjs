@@ -58,7 +58,7 @@ for(const plant of plants){
   }
   output.push({...plant,projectile});
 }
-const manifestPath=path.join(root,"public/assets/.studio-test/plant-catalog.json");
+const manifestPath=path.join(root,"public/assets/studio-test/plant-catalog.json");
 await mkdir(path.dirname(manifestPath),{recursive:true});
 await writeFile(manifestPath,JSON.stringify({version:1,generatedAt:new Date().toISOString(),plants:output},null,2)+"\n","utf8");
 console.log(JSON.stringify({branch,plants:output.map(plant=>plant.id),downloadedFiles,totalMiB:Number((totalBytes/1024/1024).toFixed(2)),manifest:"public/assets/.studio-test/plant-catalog.json"},null,2));
