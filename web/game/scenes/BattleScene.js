@@ -4214,8 +4214,105 @@ export default class BattleScene extends Scene {
     return monster.kind === 'stonehide' ? getStonehideIncomingDamageMultiplier(monster.braced) : armorMultiplier;
   }
 
+  updateMonsterBurningEffect(monster) {
+    if (!monster?.view?.active || monster.freezeStage > 0) return;
+
+    const bounds = monster.view.getBounds();
+    if (!bounds?.width || !bounds?.height) return;
+
+    monster.burnStacks = Math.min(5, (monster.burnStacks || 0) + 1);
+    const intensity = monster.burnStacks / 5;
+    const width = bounds.width + 14 + intensity * 10;
+    const height = bounds.height + 14 + intensity * 10;
+    const x = bounds.centerX - width / 2;
+    const y = bounds.centerY - height / 2;
+
+    let outline = monster.burningOutline;
+    if (!outline?.active) {
+      outline = this.add.graphics();
+      monster.burningOutline = outline;
+    } else {
+      this.tweens.killTweensOf(outline);
+      outline.clear();
+    }
+
+    outline.setPosition(x, y);
+    outline.setDepth((monster.view.depth ?? 0) + 3);
+    outline.setBlendMode(1);
+    outline.lineStyle(2 + intensity * 2.5, 0xff3218, 0.42 + intensity * 0.42);
+    outline.strokeRoundedRect(0, 0, width, height, Math.min(22, height * 0.22));
+    outline.lineStyle(1.5 + intensity, 0xffb02e, 0.24 + intensity * 0.38);
+    outline.strokeRoundedRect(4, 4, width - 8, height - 8, Math.min(18, height * 0.18));
+
+    this.tweens.add({
+      targets: outline,
+      alpha: 0.72 + intensity * 0.28,
+      duration: 110 + (5 - monster.burnStacks) * 12,
+      yoyo: true,
+      repeat: -1,
+      ease: "Sine.easeInOut"
+    });
+
+    if (monster.burningResetTimer) monster.burningResetTimer.remove(false);
+    monster.burningResetTimer = this.time.delayedCall(1550, () => {
+      if (monster.burningOutline?.active) {
+        this.tweens.killTweensOf(monster.burningOutline);
+        this.tweens.add({
+          targets: monster.burningOutline,
+          alpha: 0,
+          duration: 260,
+          onComplete: () => {
+            monster.burningOutline?.destroy();
+            monster.burningOutline = null;
+          }
+        });
+      }
+      monster.burnStacks = 0;
+      monster.burningResetTimer = null;
+    });
+  }
+
+  createMonsterBurningBurst(monster) {
+    const bounds = monster?.view?.getBounds?.();
+    if (!bounds) return;
+    const x = bounds.centerX;
+    const y = bounds.centerY;
+    const depth = (monster.view.depth ?? 0) + 5;
+    const flash = this.add.circle(x, y, Math.max(bounds.width, bounds.height) * 0.16, 0xfff0a0, 0.95);
+    flash.setDepth(depth);
+    this.tweens.add({
+      targets: flash,
+      scale: 4.2,
+      alpha: 0,
+      duration: 300,
+      ease: "Cubic.easeOut",
+      onComplete: () => flash.destroy()
+    });
+
+    const colors = [0xff3218, 0xff7626, 0xffc044, 0xffe7a0];
+    const count = 14;
+    for (let i = 0; i < count; i += 1) {
+      const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.22;
+      const distance = Math.max(bounds.width, bounds.height) * (0.45 + Math.random() * 0.42);
+      const spark = this.add.circle(x, y, 2 + Math.random() * 2.5, colors[i % colors.length], 0.95);
+      spark.setDepth(depth + 1);
+      this.tweens.add({
+        targets: spark,
+        x: x + Math.cos(angle) * distance,
+        y: y + Math.sin(angle) * distance - 12,
+        alpha: 0,
+        scale: 0.15,
+        duration: 280 + Math.random() * 170,
+        ease: "Cubic.easeOut",
+        onComplete: () => spark.destroy()
+      });
+    }
+  }
+
   flashMonsterOnHit(monster) {
     if (!monster || !monster.alive || monster.freezeStage > 0) return;
+
+    this.updateMonsterBurningEffect(monster);
 
     // Keep the hyena grounded and on its original lane. Strengthen the flash
     // by about 30%, then add a tiny horizontal recoil on the sprite only.
@@ -4224,8 +4321,6 @@ export default class BattleScene extends Scene {
     const sprite = monster.hyenaSprite;
     if (sprite?.active) {
       monster.hitAnimUntil = this.time.now + 260;
-      // The authored hit sheet has an upward hop; use the grounded idle pose
-      // and communicate impact with tint + a brief horizontal recoil instead.
       this.playHyenaAnimation(monster, "hyena-idle", true);
       sprite.setTint(0xffcf70);
       this.tweens.killTweensOf(sprite);
@@ -4250,7 +4345,6 @@ export default class BattleScene extends Scene {
     if (monster.hitFlashTimer) monster.hitFlashTimer.remove(false);
     monster.hitFlashTimer = this.time.delayedCall(125, () => {
       if (sprite?.active) {
-        // Restore the creature's rarity color after the temporary hit flash.
         sprite.setTint(monster.tierTint ?? 0xffffff);
         if (Number.isFinite(monster.hitRecoilBaseX)) sprite.x = monster.hitRecoilBaseX;
       }
@@ -4275,7 +4369,17 @@ export default class BattleScene extends Scene {
       monster.hitFlashTimer.remove(false);
       monster.hitFlashTimer = null;
     }
+    if (monster.burningResetTimer) {
+      monster.burningResetTimer.remove(false);
+      monster.burningResetTimer = null;
+    }
+    if (monster.burningOutline?.active) {
+      this.tweens.killTweensOf(monster.burningOutline);
+      monster.burningOutline.destroy();
+      monster.burningOutline = null;
+    }
     this.createMonsterDefeatBurst(monster.x, monster.y, monster.view && monster.view.scaleY);
+    this.createMonsterBurningBurst(monster);
     this.playMonsterDefeatSound();
     if (monster.hyenaSprite) this.playHyenaVoice("yelp", 0.88);
     this.playCoinRewardSound();
@@ -4285,11 +4389,28 @@ export default class BattleScene extends Scene {
       this.tweens.killTweensOf(monster.view);
       if (monster.hyenaSprite && monster.hyenaSprite.active) {
         this.playHyenaAnimation(monster, "hyena-death", true);
-        this.time.delayedCall(760, () => {
-          if (monster.view && monster.view.active) monster.view.destroy(true);
+        this.tweens.add({
+          targets: monster.view,
+          alpha: 0,
+          scale: (monster.view.scaleX || 1) * 0.82,
+          duration: 760,
+          delay: 120,
+          ease: "Cubic.easeIn",
+          onComplete: () => {
+            if (monster.view && monster.view.active) monster.view.destroy(true);
+          }
         });
       } else {
-        monster.view.destroy(true);
+        this.tweens.add({
+          targets: monster.view,
+          alpha: 0,
+          scale: (monster.view.scaleX || 1) * 0.82,
+          duration: 430,
+          ease: "Cubic.easeIn",
+          onComplete: () => {
+            if (monster.view && monster.view.active) monster.view.destroy(true);
+          }
+        });
       }
     }
     this.coins += PHASE_ONE_REWARDS.ordinaryMonsterDefeatCoins;
