@@ -108,6 +108,11 @@ export class PhaserAssetManager {
         return { group: groupName, loaded: 0, skipped: entries.length };
       }
 
+      for (const entry of entries) {
+        if (entry.type === "spritesheet" && !entry.frameConfig) {
+          throw new Error(`Spritesheet "${entry.key}" has no frameConfig`);
+        }
+      }
       const pending = entries.filter((entry) => !this.hasAsset(entry.key, entry.type));
       this.metrics.requested += pending.length;
       const loader = this.scene.load;
@@ -116,7 +121,6 @@ export class PhaserAssetManager {
         if (loader.isLoading()) {
           await new Promise((resolve) => loader.once("complete", resolve));
         }
-        const failuresBefore = this.metrics.failed;
         await new Promise((resolve, reject) => {
           let settled = false;
           const finish = (error) => {
@@ -126,10 +130,15 @@ export class PhaserAssetManager {
             loader.off("loaderror", onError);
             error ? reject(error) : resolve();
           };
-          const onComplete = () => finish();
+          const errors = [];
+          const onComplete = () => {
+            if (errors.length && options.failOnError !== false) {
+              finish(new Error(`Failed to load ${errors.length} asset(s) in group "${groupName}"`));
+            } else finish();
+          };
           const onError = (file) => {
             // Phaser emits loaderror per file and continues loading the queue.
-            if (options.failOnError) finish(new Error(`Failed to load asset: ${file?.key || "unknown"}`));
+            errors.push(file?.key || file?.src || "unknown");
           };
           loader.once("complete", onComplete);
           loader.on("loaderror", onError);
@@ -141,9 +150,6 @@ export class PhaserAssetManager {
             finish(error);
           }
         });
-        if (options.failOnError && this.metrics.failed > failuresBefore) {
-          throw new Error(`One or more assets in group "${groupName}" failed to load`);
-        }
       }
 
       const keys = entries.map((entry) => entry.key);
