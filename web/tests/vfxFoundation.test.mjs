@@ -81,10 +81,17 @@ function createMockScene() {
     add: {
       image: () => ({
         active: true,
-        setScale() {},
-        setTint() {},
-        setDepth() {},
-        destroy() { this.active = false; }
+        visible: true,
+        destroyed: false,
+        setPosition(x, y) { this.x = x; this.y = y; },
+        setActive(value) { this.active = value; },
+        setVisible(value) { this.visible = value; },
+        setAlpha(value) { this.alpha = value; },
+        setScale(value) { this.scale = value; },
+        setTint(value) { this.tint = value; },
+        clearTint() { this.tint = null; },
+        setDepth(value) { this.depth = value; },
+        destroy() { this.active = false; this.destroyed = true; }
       }),
       container: () => ({
         active: true,
@@ -232,4 +239,32 @@ test("VFXObjectPool isolates reset and destroy failures and rejects work after d
   pool.destroy();
   assert.equal(pool.acquire("spark", () => ({})), null);
   assert.equal(pool.release("spark", {}), false);
+});
+
+
+test("VFXManager reuses pooled texture visuals after completion and destroys idle visuals on teardown", () => {
+  const scene = createMockScene();
+  const manager = new VFXManager(scene, { registry: createDefaultVFXRegistry() });
+  const first = manager.play("radish-impact", 10, 10);
+  const firstTween = scene.tweenRecords[0];
+  assert.ok(first);
+  assert.equal(first.visible, true);
+  firstTween.config.onComplete();
+
+  assert.equal(first.destroyed, false);
+  assert.equal(first.visible, false);
+  assert.equal(first.active, false);
+  assert.equal(manager.pool.getStats().idle, 1);
+
+  const second = manager.play("radish-impact", 30, 40);
+  assert.equal(second, first);
+  assert.equal(second.x, 30);
+  assert.equal(second.y, 40);
+  assert.equal(second.visible, true);
+  assert.equal(second.active, true);
+  assert.equal(manager.pool.getStats().idle, 0);
+
+  manager.destroy();
+  assert.equal(second.destroyed, true);
+  assert.equal(manager.pool.getStats().destroyed, true);
 });
