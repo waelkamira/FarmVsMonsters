@@ -73,7 +73,6 @@ export class VFXManager {
       const count = Math.max(1, Math.min(qualityCount, config.count ?? 7));
       const kind = config.kind === "trail" ? "trail" : "burst";
       poolKey = `container:${kind}:${count}`;
-      const color = config.tint ?? 0xffffff;
       visual = this.pool.acquire(
         poolKey,
         () => this.renderer.createProceduralVisual(x, y, config, count, kind),
