@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { EventEmitter } from "node:events";
 import { PhaserAssetManager } from "../game/services/assetManager.mjs";
 
-function createScene() {
+function createScene(game = {}, sharedTextures = null) {
   const loader = new EventEmitter();
   loader.queue = [];
   loader.isLoading = () => false;
@@ -18,13 +18,15 @@ function createScene() {
     loader.emit("progress", 1);
     loader.emit("complete");
   };
+  const textures = sharedTextures || {
+    keys: new Set(),
+    exists(key) { return this.keys.has(key); },
+    remove(key) { this.keys.delete(key); }
+  };
   const scene = {
+    game,
     load: loader,
-    textures: {
-      keys: new Set(),
-      exists(key) { return this.keys.has(key); },
-      remove(key) { this.keys.delete(key); }
-    },
+    textures,
     cache: { audio: { exists: () => false, remove() {} } }
   };
   return scene;
@@ -82,4 +84,28 @@ test("requires frame metadata for spritesheets", async () => {
 
   await assert.rejects(manager.loadGroup("animations"), /has no frameConfig/);
   manager.destroy();
+});
+
+test("keeps a texture alive while another scene manager still references it", async () => {
+  const game = {};
+  const textures = {
+    keys: new Set(),
+    exists(key) { return this.keys.has(key); },
+    remove(key) { this.keys.delete(key); }
+  };
+  const manifest = { groups: { shared: [{ key: "farm-ui", url: "/assets/ui/farm.png", type: "image" }] } };
+  const firstScene = createScene(game, textures);
+  const secondScene = createScene(game, textures);
+  const firstManager = new PhaserAssetManager(firstScene, { manifest });
+  const secondManager = new PhaserAssetManager(secondScene, { manifest });
+
+  await firstManager.loadGroup("shared");
+  await secondManager.loadGroup("shared");
+  firstManager.releaseGroup("shared");
+  assert.equal(textures.exists("farm-ui"), true);
+  secondManager.releaseGroup("shared");
+  assert.equal(textures.exists("farm-ui"), false);
+
+  firstManager.destroy();
+  secondManager.destroy();
 });
