@@ -4258,39 +4258,59 @@ export default class BattleScene extends Scene {
   flashMonsterOnHit(monster) {
     if (!monster || !monster.alive || monster.freezeStage > 0) return;
 
-    // Keep the hyena grounded and on its original lane. Strengthen the flash
-    // by about 30%, then add a tiny horizontal recoil on the sprite only.
-    // The monster record/container position is never changed, so its route,
-    // collision lane, and movement progress remain untouched.
+    // Make damage unmistakable without adding an outline or changing combat
+    // position: use a brief full-sprite red-orange flash, a compact squash,
+    // and a bright impact ring around the monster.
     const sprite = monster.hyenaSprite;
     if (sprite?.active) {
       monster.hitAnimUntil = this.time.now + 260;
       this.playHyenaAnimation(monster, "hyena-idle", true);
-      sprite.setTint(0xffcf70);
+      sprite.setTintFill(0xff4328);
       this.tweens.killTweensOf(sprite);
       const baseX = Number.isFinite(monster.hitRecoilBaseX) ? monster.hitRecoilBaseX : sprite.x;
       monster.hitRecoilBaseX = baseX;
       sprite.x = baseX;
+      sprite.setScale(0.918);
       this.tweens.add({
         targets: sprite,
-        x: baseX + 9,
+        x: baseX + 10,
+        scaleX: 1.035,
+        scaleY: 0.84,
         duration: 65,
         ease: "Quad.easeOut",
         yoyo: true,
         onComplete: () => {
-          if (sprite.active) sprite.x = baseX;
+          if (sprite.active) {
+            sprite.x = baseX;
+            sprite.setScale(0.918);
+          }
         }
       });
     }
+
+    const ringX = monster.x;
+    const ringY = monster.y - 34;
+    const ring = this.add.circle(ringX, ringY, 19, 0xff6a32, 0)
+      .setStrokeStyle(5, 0xff7a35, 0.95)
+      .setDepth((monster.view?.depth ?? 8) + 5);
+    this.tweens.add({
+      targets: ring,
+      scale: 2.35,
+      alpha: 0,
+      duration: 190,
+      ease: "Cubic.easeOut",
+      onComplete: () => ring.destroy()
+    });
 
     const graphic = monster.hitFlashGraphic;
     if (graphic?.active) graphic.setBlendMode(1);
 
     if (monster.hitFlashTimer) monster.hitFlashTimer.remove(false);
-    monster.hitFlashTimer = this.time.delayedCall(125, () => {
+    monster.hitFlashTimer = this.time.delayedCall(175, () => {
       if (sprite?.active) {
         sprite.setTint(monster.tierTint ?? 0xffffff);
         if (Number.isFinite(monster.hitRecoilBaseX)) sprite.x = monster.hitRecoilBaseX;
+        sprite.setScale(0.918);
       }
       if (graphic?.active) graphic.setBlendMode(0);
       monster.hitFlashTimer = null;
