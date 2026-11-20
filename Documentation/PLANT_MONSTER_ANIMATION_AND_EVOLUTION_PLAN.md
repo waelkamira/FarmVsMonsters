@@ -87,7 +87,7 @@ Prioritize Stonehide armor damage stages, Dust Skitter speed readability, Cave B
 - [x] Add focused profile coverage tests.
 - [x] Wire monster reaction profiles into the live Phaser hit response.
 - [ ] Audit every current sprite sheet and map real frames to states.
-- [x] Add a subtle per-plant attack anticipation motion without changing approved artwork.\n- [ ] Add staggered idle motion and verify complete recovery behavior in Chrome.
+- [x] Add a subtle per-plant attack anticipation motion without changing approved artwork.\n- [x] Add staggered, profile-driven idle breathing for all living plants (runtime wiring complete; Chrome visual review pending).\n- [ ] Verify idle/attack/recovery coexistence and complete recovery behavior in Chrome.
 
 ### Next vertical slice
 Use Radish + Cave Brute as the first end-to-end reference pair. Verify idle → anticipation → attack → projectile → impact → monster reaction → recovery. Then validate Snow Thrower + Stonehide for elemental accumulation/freeze and armor response. Expand only after both are visually approved in Chrome.
