@@ -149,11 +149,11 @@ export async function PATCH(req){
   const safeAssetPath=(value)=>typeof value==="string"&&value.startsWith("/assets/")&&!value.includes("..");
   if(!safeAssetPath(asset.path))return NextResponse.json({error:"Invalid plant asset path."},{status:400});
   const plantBytes=await githubGetBytes("web/public"+asset.path,token,storageBranch);
-  await githubPut("web/public"+asset.path,plantBytes,"publish plant artwork "+id,token,targetBranch);
+  await githubPutImmutable("web/public"+asset.path,plantBytes,"publish plant artwork "+id,token,targetBranch);
   if(asset.combat.mode==="projectile"){
    if(!safeAssetPath(asset.combat.projectile?.path))return NextResponse.json({error:"The linked projectile asset is missing."},{status:409});
    const projectileBytes=await githubGetBytes("web/public"+asset.combat.projectile.path,token,storageBranch);
-   await githubPut("web/public"+asset.combat.projectile.path,projectileBytes,"publish plant projectile "+id,token,targetBranch);
+   await githubPutImmutable("web/public"+asset.combat.projectile.path,projectileBytes,"publish plant projectile "+id,token,targetBranch);
   }
   const catalogDocument=await githubGetDocument(PUBLISHED_CATALOG_PATH,token,targetBranch);
   const catalog=catalogDocument?JSON.parse(catalogDocument.content):{version:1,plants:[]};
