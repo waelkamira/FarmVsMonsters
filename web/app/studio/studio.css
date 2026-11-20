@@ -21,3 +21,13 @@
 .studio-toast-error{background:#451f20f5;border-color:#a65353;color:#ffe0df}
 .studio-toast-error>span{background:#792f32;color:#ffd0ce}
 @keyframes studio-toast-in{from{opacity:0;transform:translate(-50%,-8px)}to{opacity:1;transform:translate(-50%,0)}}
+
+.studio-combat-settings{display:grid;gap:12px;padding:15px;border:1px solid #7a6239;background:#17170f;border-radius:12px}
+.studio-combat-settings h3{margin:0;color:#f1cc7e;font-size:16px}
+.studio-combat-settings>p{margin:0;color:#b9aa86;font-size:12px;line-height:1.6}
+.studio-combat-settings select{width:100%;background:#17160f;border:1px solid #655333;color:#fff1ce;padding:11px;border-radius:8px}
+.studio-projectile-drop{padding:14px}
+.studio-behavior-auto{margin:0;padding:9px 11px;border:1px solid #527d4b;border-radius:8px;background:#1d3822;color:#b9f0ad;font-size:12px}
+.studio-combat-settings .studio-grid label{font-size:12px}
+.studio-asset-row button{white-space:nowrap}
+.studio-asset-row button:nth-last-child(1){border-color:#719b65;background:#294126;color:#d8f3c8}
