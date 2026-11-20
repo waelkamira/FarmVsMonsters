@@ -59,8 +59,12 @@ export class VFXEventBus {
       try {
         listener(payload);
       } catch (error) {
-        this.lastErrors.push({ eventName, error });
-        this.onListenerError?.(error, eventName);
+        this.lastErrors.push({ eventName, error, source: "listener" });
+        try {
+          this.onListenerError?.(error, eventName);
+        } catch (handlerError) {
+          this.lastErrors.push({ eventName, error: handlerError, source: "onListenerError" });
+        }
       }
     }
     return listeners.length;
