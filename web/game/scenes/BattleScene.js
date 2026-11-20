@@ -3138,11 +3138,11 @@ export default class BattleScene extends Scene {
     const innerGlow = this.add.circle(0, 0, 9, projectileTint, 0.28);
     view.add([halo, outerGlow, innerGlow]);
 
-    const projectileTexture = plant.type === "radish" ? "radish-level-1-bomb"
+    const projectileTexture = projectileVFX?.texture || (plant.type === "radish" ? "radish-level-1-bomb"
       : plant.type === "pineapple" ? "pineapple-level-1-bomb"
       : plant.type === "hazelnut" ? "hazelnut-level-1-bomb"
       : plant.type === "snow-thrower" ? "snow-thrower-bomb-level-1"
-      : "mango-level-1-bomb";
+      : "mango-level-1-bomb");
     if (this.textures.exists(projectileTexture)) {
       const plantProjectile = this.add.image(0, 0, projectileTexture);
       if (plant.type === "pineapple" || plant.type === "hazelnut" || plant.type === "mango") {
