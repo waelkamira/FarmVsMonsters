@@ -1323,6 +1323,7 @@ export default class BattleScene extends Scene {
             onComplete: () => {
               if (fireball.active) fireball.destroy();
               if (this.gameOver || this.storySequenceActive || this.collectionMenuOpen) return;
+              this.vfxManager?.play("element.fire", { x: targetX, y: targetY }, { depth: 26, intensity: 1.25 });
               if (targetPlant?.alive) {
                 targetPlant.hp = applyHitPointsDamage(targetPlant.hp, PHASE_ONE_DRAGON.fireballDamageToPlant).hp;
                 this.flashEatenPlant(targetPlant);
