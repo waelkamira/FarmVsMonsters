@@ -6,6 +6,7 @@ import {
   PLANT_EVOLUTION_PROFILES,
   MONSTER_EVOLUTION_PROFILES,
   getPlantAnimationProfile,
+  getPlantIdleMotionTransform,
   getMonsterReactionProfile,
   getPlantEvolutionProfile,
   getMonsterEvolutionProfile
@@ -48,4 +49,16 @@ test("unknown plants fail closed and unknown monsters use the standard reaction"
   assert.equal(getPlantEvolutionProfile("unknown"), null);
   assert.equal(getMonsterEvolutionProfile("unknown"), null);
   assert.equal(getMonsterReactionProfile("unknown"), MONSTER_REACTION_PROFILES["cave-brute"]);
+});
+
+
+test("plant idle breathing stays subtle, deterministic, and preserves base scale", () => {
+  for (const id of plantIds) {
+    const first = getPlantIdleMotionTransform(id, 500, 120, 0.8, 1.1);
+    const second = getPlantIdleMotionTransform(id, 500, 120, 0.8, 1.1);
+    assert.deepEqual(first, second, id);
+    assert.ok(first.scaleX > 0.78 && first.scaleX < 0.82, id);
+    assert.ok(first.scaleY > 1.06 && first.scaleY < 1.14, id);
+  }
+  assert.equal(getPlantIdleMotionTransform("unknown", 100), null);
 });
