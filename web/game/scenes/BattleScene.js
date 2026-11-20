@@ -5,7 +5,7 @@ import { VFXManager } from "../vfx/VFXManager.mjs";
 import { createDefaultVFXRegistry } from "../vfx/createDefaultVFXRegistry.mjs";
 import { getPlantVFXProfile } from "../vfx/PlantVFXProfiles.mjs";
 import { getProjectileVFXProfile } from "../vfx/ProjectileVFXProfiles.mjs";
-import { getMonsterReactionProfile } from "../visuals/PlantMonsterVisualProfiles.mjs";
+import { getMonsterReactionProfile, getPlantAnimationProfile } from "../visuals/PlantMonsterVisualProfiles.mjs";
 
 // TEMPORARY: expose every implemented plant for VFX playtesting. Set false to restore campaign unlocks.
 const PLAYTEST_ALL_PLANTS = true;
@@ -3063,6 +3063,23 @@ export default class BattleScene extends Scene {
       const textureKey = `${animationType}-level-1`;
       if (throwSprite && this.anims.exists(animationKey)) {
         plant[throwingKey] = true;
+        const motion = getPlantAnimationProfile(plant.type);
+        if (motion && Number.isFinite(plant.view.y)) {
+          const baseY = plant.view.y;
+          plant.preAttackTween?.stop?.();
+          plant.preAttackTween = this.tweens.add({
+            targets: plant.view,
+            y: baseY - motion.anticipationPx,
+            duration: Math.max(50, Math.round(motion.anticipationMs * 0.45)),
+            ease: "Sine.easeOut",
+            yoyo: true,
+            hold: Math.max(0, Math.round(motion.anticipationMs * 0.1)),
+            onComplete: () => {
+              if (plant.view?.active) plant.view.y = baseY;
+              plant.preAttackTween = null;
+            }
+          });
+        }
         throwSprite.stop();
         throwSprite.setTexture(textureKey, 0);
         throwSprite.play(animationKey);
