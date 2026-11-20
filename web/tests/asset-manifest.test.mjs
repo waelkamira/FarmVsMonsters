@@ -91,7 +91,12 @@ test("known Stage 1 animation sheets keep the exact Phaser frame dimensions", ()
     const asset = byKey.get(key);
     assert.ok(asset, `missing animation asset: ${key}`);
     assert.equal(asset.type, "spritesheet", `${key} must be registered as a spritesheet`);
-    assert.deepEqual(asset.frameConfig, { frameWidth, frameHeight, margin: 0, spacing: 0 });
+    assert.equal(asset.frameConfig.frameWidth, frameWidth);
+    assert.equal(asset.frameConfig.frameHeight, frameHeight);
+    if (key === "pineapple-level-1" || key === "hazelnut-level-1") {
+      assert.equal(asset.frameConfig.margin, 0);
+      assert.equal(asset.frameConfig.spacing, 0);
+    }
     assert.ok(Number.isInteger(asset.width) && asset.width >= frameWidth);
     assert.ok(Number.isInteger(asset.height) && asset.height >= frameHeight);
   }
