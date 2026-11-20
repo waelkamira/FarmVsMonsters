@@ -13,7 +13,8 @@ const PLANT_RULES = Object.freeze({
   hazelnut: PHASE_ONE_PLANTS.hazelnut,
   mango: PHASE_ONE_PLANTS.mango,
   "snow-thrower": PHASE_ONE_PLANTS.snowThrower,
-  "electric-mushroom": PHASE_ONE_PLANTS["electric-mushroom"]
+  "electric-mushroom": PHASE_ONE_PLANTS["electric-mushroom"],
+  "fire-pepper": PHASE_ONE_PLANTS["fire-pepper"]
 });
 
 function validEnergy(value) {
