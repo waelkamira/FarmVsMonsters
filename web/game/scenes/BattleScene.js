@@ -2721,6 +2721,12 @@ export default class BattleScene extends Scene {
         : type === "radish" ? this.drawRadish(x, y)
         : this.drawCatalogPlant(type, x, y, row)
     };
+    const idleProfile = getPlantAnimationProfile(type)?.idle;
+    if (plant.view?.active && idleProfile?.loop) {
+      plant.idleBaseScaleX = plant.view.scaleX || 1;
+      plant.idleBaseScaleY = plant.view.scaleY || 1;
+      plant.idlePhaseMs = ((col * 137) + (row * 223)) % Math.max(1, idleProfile.durationMs);
+    }
     this.plants.push(plant);
     this.totalPlantsPlanted += 1;
     if (type === "radish") this.hasPlantedDefender = true;
@@ -2914,10 +2920,25 @@ export default class BattleScene extends Scene {
     return plant;
   }
 
+  updatePlantIdleMotion(plant, deltaMs) {
+    const profile = getPlantAnimationProfile(plant.type)?.idle;
+    if (!profile?.loop || !plant.view?.active ||
+        !Number.isFinite(plant.idleBaseScaleX) || !Number.isFinite(plant.idleBaseScaleY)) return;
+    const duration = Math.max(1, profile.durationMs);
+    const phase = ((this.combatClockMs || 0) + (plant.idlePhaseMs || 0)) % duration;
+    const breathing = Math.sin((phase / duration) * Math.PI * 2) * profile.breathing;
+    const horizontal = 1 - breathing * 0.35;
+    plant.view.setScale(
+      plant.idleBaseScaleX * horizontal,
+      plant.idleBaseScaleY * (1 + breathing)
+    );
+  }
+
   updatePlants(delta) {
     const deltaMs = Number.isFinite(delta) ? Math.max(0, delta) : 0;
     for (const plant of this.plants) {
       if (!plant.alive) continue;
+      this.updatePlantIdleMotion(plant, deltaMs);
       if (plant.type === "mushroom") {
         plant.productionTimer -= delta;
         if (plant.productionTimer <= 0) {
