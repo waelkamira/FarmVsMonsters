@@ -10,12 +10,15 @@ Plant upload includes the plant image/sprite sheet, rows and columns, cost, heal
 
 ### Combat profile rule
 
-- If a projectile image is attached in the same plant form, Studio automatically selects `projectile` mode and stores the projectile path inside the plant's combat profile.
-- If no projectile is attached, the author must choose one supported behavior:
-  - `melee`: damage the nearest monster in the same lane and within configured range.
-  - `contact`: damage a monster while it is stopped and biting the plant.
-  - `blocker`: absorb bites and block the lane without attacking.
-  - `energy`: generate collectible energy on a configured interval.
+The plant behavior is always selected manually in Studio. Attaching a projectile image never changes the selected behavior.
+
+- `projectile`: requires an attached or previously linked projectile; the projectile path is stored in the plant's combat profile.
+- `melee`: damages the nearest monster in the same lane and within configured range.
+- `contact`: damages a monster while it is stopped and biting the plant.
+- `blocker`: absorbs bites and blocks the lane without attacking.
+- `energy`: generates collectible energy on a configured interval.
+
+A projectile is linked only when `projectile` is selected. Choosing another behavior removes the projectile association from the plant profile.
 
 The profile stores bounded values for energy cost, health, cooldown, damage, range, projectile speed/radius, and energy production.
 
@@ -27,7 +30,7 @@ A projectile upload is associated with the plant record. It is not registered as
 
 The Studio action `prepare-test` changes the plant status to `testing` on the Studio branch. It does not publish the plant.
 
-From `web/`, run:
+From the `web/` directory of the feature branch that contains the Studio lifecycle implementation, run:
 
 ```powershell
 npm run studio:sync
@@ -39,6 +42,8 @@ The script reads `STUDIO_GITHUB_TOKEN` and `STUDIO_GITHUB_BRANCH` from `.env.loc
 
 The generated local test catalog is ignored by Git. Refresh/restart the local game after syncing. Test plants appear in Stage 1 seed selection and use their configured behavior in battle.
 
+**Important:** `npm run studio:sync` and the game runtime catalog integration are part of the Studio feature branch. They are not available on `main` until the Studio feature PR is merged. Pulling `main` alone cannot add Studio plants to a game build whose runtime does not yet read the Studio catalog.
+
 ## 3. Publish
 
 The Studio `publish` action is allowed only after a plant is `testing`.
@@ -47,9 +52,9 @@ It copies the plant image and its attached projectile (when applicable) from the
 
 `web/public/assets/studio-plant-catalog.json`
 
-Finally, the Studio registry record is marked `published`. The live game reads this catalog and adds published plants to the seed selection and Phaser runtime.
+Finally, the Studio registry record is marked `published`. The Studio-enabled game runtime reads this catalog and adds published plants to Stage 1 seed selection and the Phaser battle runtime.
 
-This action updates the target Git branch; the hosting environment still needs to build/deploy that commit before the production website serves the new catalog and image files. The feature code itself must be merged to the target branch before using this workflow in production.
+This action updates the target Git branch; the hosting environment still needs to build/deploy that commit before the production website serves the new catalog and image files. **The feature code itself must be merged to the target branch before published plants can appear in that branch's game runtime.**
 
 ## Status transitions
 
@@ -61,6 +66,6 @@ Editing/replacing a plant returns it to `draft`, requiring a fresh local test be
 
 - Plant and projectile assets are limited to the supported image formats and 8 MB per file.
 - Plant IDs are lowercase slugs and remain stable during replacement.
-- Plant images and projectile images are copied before the published catalog is updated, so the catalog does not intentionally point to a not-yet-copied asset.
-- GitHub Contents API writes are separate commits rather than one atomic transaction. A failed operation may leave an unreferenced file blob; the registry/catalog remains the source of truth.
+- Plant and projectile images are copied before the published catalog is updated, so the catalog does not intentionally point to a not-yet-copied asset.
+- GitHub Contents API writes are separate commits rather than one atomic multi-file transaction. A failed operation may leave an unreferenced file blob; the registry/catalog remains the source of truth.
 - Local test images and catalog are intentionally not committed from the developer's working tree.
