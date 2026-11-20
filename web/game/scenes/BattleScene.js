@@ -172,12 +172,13 @@ export default class BattleScene extends Scene {
     const queueStudioCatalog = (catalogKey) => {
       this.load.once("filecomplete-json-" + catalogKey, () => {
         const entries = this.cache.json.get(catalogKey)?.plants || [];
+        const variant = catalogKey === "studio-test-catalog" ? "testing" : "published";
         for (const entry of entries) {
           if (!entry || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(entry.id || "") ||
               typeof entry.path !== "string" || !entry.path.startsWith("/assets/")) continue;
-          this.load.image("studio-plant-" + entry.id, entry.path);
+          this.load.image("studio-plant-" + variant + "-" + entry.id, entry.path);
           if (entry.combat?.mode === "projectile" && entry.combat.projectile?.path?.startsWith("/assets/")) {
-            this.load.image("studio-projectile-" + entry.id, entry.combat.projectile.path);
+            this.load.image("studio-projectile-" + variant + "-" + entry.id, entry.combat.projectile.path);
           }
         }
       });
@@ -221,16 +222,26 @@ export default class BattleScene extends Scene {
     const publishedStudioPlants = this.cache.json.get("studio-published-catalog")?.plants || [];
     const testStudioPlants = this.cache.json.get("studio-test-catalog")?.plants || [];
     const studioPlantMap = new Map();
-    for (const entry of [...publishedStudioPlants, ...testStudioPlants]) {
-      if (!entry || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(entry.id || "") ||
-          typeof entry.path !== "string" || !entry.path.startsWith("/assets/") ||
-          !entry.combat?.mode) continue;
-      studioPlantMap.set(entry.id, { ...entry, testOnly: testStudioPlants.some((item) => item.id === entry.id) });
-    }
+    const addStudioPlants = (entries, testOnly) => {
+      for (const entry of entries) {
+        if (!entry || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(entry.id || "") ||
+            typeof entry.path !== "string" || !entry.path.startsWith("/assets/") ||
+            !entry.combat?.mode) continue;
+        const variant = testOnly ? "testing" : "published";
+        studioPlantMap.set(entry.id, {
+          ...entry,
+          testOnly,
+          textureKey: "studio-plant-" + variant + "-" + entry.id,
+          projectileTextureKey: "studio-projectile-" + variant + "-" + entry.id
+        });
+      }
+    };
+    addStudioPlants(publishedStudioPlants, false);
+    addStudioPlants(testStudioPlants, true);
     this.studioPlants = [...studioPlantMap.values()];
     this.studioPlantsByType = Object.fromEntries(this.studioPlants.map((plant) => [plant.id, plant]));
     for (const plant of this.studioPlants) {
-      const textureKey = "studio-plant-" + plant.id;
+      const textureKey = plant.textureKey;
       const frameCount = Math.max(1, (Number(plant.rows) || 1) * (Number(plant.columns) || 1));
       if (plant.spriteSheet && frameCount > 0 && this.registerStudioGridSheet(textureKey, plant.rows, plant.columns) && frameCount > 1) {
         const animationKey = "studio-" + plant.id + "-attack";
@@ -856,7 +867,7 @@ export default class BattleScene extends Scene {
         type: studioPlant.id,
         title: String(studioPlant.name || studioPlant.id).toUpperCase().slice(0, 18),
         cost: studioPlant.combat.energyCost,
-        image: "studio-plant-" + studioPlant.id,
+        image: studioPlant.textureKey,
         studioPlant
       });
     }
@@ -2922,7 +2933,7 @@ export default class BattleScene extends Scene {
   }
 
   drawStudioCatalogPlant(studioPlant, x, y, row = 2) {
-    const textureKey = "studio-plant-" + studioPlant.id;
+    const textureKey = studioPlant.textureKey || "studio-plant-published-" + studioPlant.id;
     const container = this.add.container(x, y).setDepth(11);
     const rowIndex = PhaserMath.Clamp(row, 0, LANES - 1);
     const laneGap = rowIndex < LANES - 1
@@ -3296,7 +3307,7 @@ export default class BattleScene extends Scene {
       const profile = plant.studioPlant.combat;
       const laneOrigin = this.lanePoint(localX, row);
       const view = this.add.container(laneOrigin.x + 14, laneOrigin.y - 30).setDepth(16);
-      const textureKey = "studio-projectile-" + plant.studioPlant.id;
+      const textureKey = plant.studioPlant.projectileTextureKey || "studio-projectile-published-" + plant.studioPlant.id;
       if (this.textures.exists(textureKey)) {
         const frame = this.textures.getFrame(textureKey);
         const width = Math.min(38, 28 * (frame.realWidth / frame.realHeight));
