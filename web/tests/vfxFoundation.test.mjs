@@ -35,7 +35,11 @@ test("default registry contains profile effects without duplicate registration",
 test("VFXManager safely ignores unknown effects and enforces active burst cap", () => {
   const scene = {
     textures: { exists: () => true },
-    add: { image: () => ({ active: true, setScale() {}, setTint() {}, destroy() { this.active = false; } }) },
+    add: {
+      image: () => ({ active: true, setScale() {}, setTint() {}, destroy() { this.active = false; } }),
+      container: () => ({ active: true, add() {}, setDepth() {}, destroy() { this.active = false; } }),
+      circle: () => ({})
+    },
     tweens: { add: () => {} }
   };
   const manager = new VFXManager(scene, { registry: createDefaultVFXRegistry(), limits: { maxActiveBursts: 1 } });
