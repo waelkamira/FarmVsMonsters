@@ -881,7 +881,14 @@ export default class BattleScene extends Scene {
       if (PLAYTEST_ALL_PLANTS) {
         selectedTypes = [...availableTypes];
       } else if (Array.isArray(saved)) {
-        selectedTypes = [...new Set(saved.filter((type) => availableTypes.has(type)))];
+        // Always reserve seed-bank space for plants currently in Studio testing.
+        // A previously saved loadout must not silently hide a newly prepared plant.
+        const testingTypes = (this.studioPlants || [])
+          .filter((plant) => plant.testOnly)
+          .map((plant) => plant.id)
+          .filter((type) => availableTypes.has(type));
+        selectedTypes = [...new Set(["mushroom", "radish", ...testingTypes,
+          ...saved.filter((type) => availableTypes.has(type))])].slice(0, 7);
       } else {
         selectedTypes = [...availableTypes];
       }
