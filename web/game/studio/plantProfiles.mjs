@@ -1,4 +1,5 @@
 export const STUDIO_PLANT_BEHAVIORS = Object.freeze({
+  projectile: Object.freeze({ label: "إطلاق مقذوفات", description: "يطلق قذيفة مرتبطة بهذه النبتة." }),
   blocker: Object.freeze({ label: "حاجز دفاعي", description: "يمتص عضّات الوحوش ويوقف تقدمها دون إطلاق مقذوفات." }),
   melee: Object.freeze({ label: "هجوم قريب", description: "يضرب أقرب وحش في المسار عندما يدخل نطاق الهجوم." }),
   contact: Object.freeze({ label: "ضرر تلامسي", description: "يلحق الضرر بالوحش أثناء توقفه لعض النبتة." }),
@@ -39,7 +40,7 @@ export function createStudioPlantCombatProfile({
   energyAmount = 15,
   energyIntervalMs = 12000
 } = {}) {
-  const mode = projectile ? "projectile" : behavior;
+  const mode = behavior;
   if (mode !== "projectile" && !Object.hasOwn(STUDIO_PLANT_BEHAVIORS, mode)) {
     throw new RangeError("Choose a supported attack or defense behavior for this plant.");
   }
