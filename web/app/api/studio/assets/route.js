@@ -21,13 +21,13 @@ async function githubPut(filePath,bytes,message,token,branch){
  const saved=await fetch(api,{method:"PUT",headers:{...headers,"Content-Type":"application/json"},body:JSON.stringify({message,branch,content:Buffer.from(bytes).toString("base64"),...(sha?{sha}:{})})});
  if(!saved.ok){const data=await saved.json().catch(()=>({}));throw Error(data.message||"GitHub save failed ("+saved.status+").");}
 }
-async function localRegistry(){try{return JSON.parse(await readFile(path.join(process.cwd(),"game/data/studioAssetRegistry.json"),"utf8"));}catch{return {version:1,assets:[]};}}
+async function localRegistry(){try{return JSON.parse(await readFile(path.join(process.cwd(),"game/data/studioAssetRegistry.json"),"utf8"));}catch{return {version:1,assets:[]};}}\nfunction addPreviewUrls(registry,branch){const repository=process.env.STUDIO_GITHUB_REPOSITORY||"waelkamira/FarmVsMonsters";return {...registry,assets:(registry.assets||[]).map(asset=>({...asset,previewUrl:"https://raw.githubusercontent.com/"+repository+"/"+encodeURIComponent(branch)+"/web/public"+asset.path.replace(/^\\/assets/,"/assets")}))};}
 export async function GET(req){
  if(!authorized(req))return NextResponse.json({error:"Unauthorized. Configure STUDIO_ADMIN_TOKEN."},{status:401});
  if(process.env.STUDIO_STORAGE_DRIVER==="github"){
   const token=process.env.STUDIO_GITHUB_TOKEN,branch=process.env.STUDIO_GITHUB_BRANCH||"studio/assets";
   if(!token)return NextResponse.json({error:"STUDIO_GITHUB_TOKEN is required."},{status:503});
-  try{const raw=await githubGet("web/game/data/studioAssetRegistry.json",token,branch);return NextResponse.json(raw?JSON.parse(raw):{version:1,assets:[]});}
+  try{const raw=await githubGet("web/game/data/studioAssetRegistry.json",token,branch);return NextResponse.json(addPreviewUrls(raw?JSON.parse(raw):{version:1,assets:[]},branch));}
   catch(error){return NextResponse.json({error:error.message},{status:502});}
  }
  return NextResponse.json(await localRegistry());
