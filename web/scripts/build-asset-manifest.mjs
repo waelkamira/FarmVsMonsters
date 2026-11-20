@@ -57,6 +57,8 @@ async function walk(directory) {
 }
 
 const SPRITESHEET_OVERRIDES = {
+  "plants/pineapple-level-1.png": { key: "pineapple-level-1", type: "spritesheet", frameConfig: { frameWidth: 418, frameHeight: 418, margin: 0, spacing: 0 } },
+  "plants/hazelnut-level-1.png": { key: "hazelnut-level-1", type: "spritesheet", frameConfig: { frameWidth: 341, frameHeight: 341, margin: 0, spacing: 0 } },
   "items/currency/gold-coin.png": { key: "gold-coin", type: "spritesheet", frameConfig: { frameWidth: 170, frameHeight: 170 } },
   "characters/farmer/farmer-run.png": { key: "farmer-run", type: "spritesheet", frameConfig: { frameWidth: 360, frameHeight: 430 } },
   "characters/farmer/farmer-walk.png": { key: "farmer-walk", type: "spritesheet", frameConfig: { frameWidth: 360, frameHeight: 430 } },
@@ -103,7 +105,9 @@ for (const absolutePath of paths) {
   const info = await stat(absolutePath);
   const override = SPRITESHEET_OVERRIDES[relativePath] || {};
   const type = override.type || (AUDIO_EXTENSIONS.has(extension) ? "audio" : extension === ".svg" ? "svg" : "image");
-  const key = override.key || assetKey(relativePath);
+  const fileName = path.basename(relativePath, extension);
+  const defaultKey = type === "audio" && relativePath.startsWith("audio/sfx/") ? `sfx-${fileName}` : assetKey(relativePath);
+  const key = override.key || defaultKey;
   if (keys.has(key)) throw new Error(`Asset key collision: "${key}" is used by both "${keys.get(key)}" and "${relativePath}"`);
   keys.set(key, relativePath);
   const dimensions = type === "audio" ? null : imageDimensions(buffer, extension);
