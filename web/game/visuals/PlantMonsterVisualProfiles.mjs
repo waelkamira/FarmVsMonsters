@@ -9,7 +9,8 @@ export const PLANT_ANIMATION_PROFILES = freeze({
   pineapple: freeze({ idle: freeze({ loop: true, breathing: 0.022, durationMs: 2100 }), chargeMs: 360, attackMs: 550, recoveryMs: 300, anticipationPx: 3.5, anticipationMs: 210, personality: "heavy-and-proud" }),
   hazelnut: freeze({ idle: freeze({ loop: true, breathing: 0.02, durationMs: 2400 }), chargeMs: 240, attackMs: 620, recoveryMs: 260, anticipationPx: 2, anticipationMs: 165, personality: "compact-and-sturdy" }),
   mango: freeze({ idle: freeze({ loop: true, breathing: 0.03, durationMs: 2200 }), chargeMs: 260, attackMs: 750, recoveryMs: 280, anticipationPx: 3, anticipationMs: 180, personality: "swinging-and-playful" }),
-  "snow-thrower": freeze({ idle: freeze({ loop: true, breathing: 0.02, durationMs: 2500 }), chargeMs: 320, attackMs: 550, recoveryMs: 340, anticipationPx: 2.5, anticipationMs: 200, personality: "calm-and-precise" })
+  "snow-thrower": freeze({ idle: freeze({ loop: true, breathing: 0.02, durationMs: 2500 }), chargeMs: 320, attackMs: 550, recoveryMs: 340, anticipationPx: 2.5, anticipationMs: 200, personality: "calm-and-precise" }),
+  "electric-mushroom": freeze({ idle: freeze({ loop: true, breathing: 0.04, durationMs: 1950 }), chargeMs: 210, attackMs: 480, recoveryMs: 250, anticipationPx: 3, anticipationMs: 175, personality: "bright-and-sparky" })
 });
 
 export const MONSTER_REACTION_PROFILES = freeze({
@@ -56,6 +57,11 @@ export const PLANT_EVOLUTION_PROFILES = freeze({
     freeze({ level: 1, title: "Snow Thrower", visual: "single cold projectile and clear frost hit", unlock: "base" }),
     freeze({ level: 2, title: "Frost Keeper", visual: "visible frost accumulation and stronger freeze tell", unlock: "visual-upgrade" }),
     freeze({ level: 3, title: "Winter Warden", visual: "signature chained freeze", unlock: "signature-ability" })
+  ]) }),
+  "electric-mushroom": freeze({ stages: freeze([
+    freeze({ level: 1, title: "Sparkcap", visual: "electric mushroom silhouette with a bright cyan charge and bolt", unlock: "base" }),
+    freeze({ level: 2, title: "Stormcap", visual: "stronger electric veins and a branching impact arc", unlock: "visual-upgrade" }),
+    freeze({ level: 3, title: "Thunder Bloom", visual: "signature chain lightning burst", unlock: "signature-ability" })
   ]) })
 });
 
