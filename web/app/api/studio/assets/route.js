@@ -61,6 +61,8 @@ export async function POST(req){
  if(!config.accepts.includes(file.type))return NextResponse.json({error:"Unsupported media type."},{status:415});
  if(config.spriteSheet&&(!Number.isInteger(rows)||!Number.isInteger(columns)||rows<1||columns<1||rows*columns>100))return NextResponse.json({error:"Invalid sprite grid."},{status:400});
  const hasProjectile=Boolean(projectileFile&&typeof projectileFile.arrayBuffer==="function"&&projectileFile.size>0);
+ const removeProjectile=String(form.get("removeProjectile")||"false")==="true";
+ if(hasProjectile&&removeProjectile)return NextResponse.json({error:"Choose a new projectile or remove the existing projectile, not both."},{status:400});
  if(hasProjectile&&(!STUDIO_ASSET_TYPES.plant.accepts.includes(file.type)||!STUDIO_ASSET_TYPES.plantProjectile.accepts.includes(projectileFile.type)||projectileFile.size>STUDIO_MAX_UPLOAD_BYTES))return NextResponse.json({error:"Projectile must be a supported PNG/WebP/GIF file up to 8 MB."},{status:415});
  if(hasProjectile&&type!=="plant")return NextResponse.json({error:"A projectile can only be attached to a plant upload."},{status:400});
  const driver=process.env.STUDIO_STORAGE_DRIVER||"local";let old;
@@ -69,14 +71,17 @@ export async function POST(req){
  if(existing&&!replace)return NextResponse.json({error:"Asset ID already exists. اختر الأصل من المكتبة واستخدم زر الاستبدال."},{status:409});
  if(!existing&&replace)return NextResponse.json({error:"الأصل المطلوب استبداله غير موجود في المكتبة."},{status:404});
  if(existing&&existing.type!==type)return NextResponse.json({error:"لا يمكن تغيير فئة الأصل أثناء الاستبدال."},{status:409});
+ let combatProfile=null;
  if(type==="plant"){
-  const currentProjectile=hasProjectile?{id:id+"-projectile",filename:id+"-projectile"+ext(projectileFile.type),path:"/assets/projectiles/plants/"+id+"-projectile"+ext(projectileFile.type)}:(existing?.combat?.mode==="projectile"?existing.combat.projectile:null);
-  try{form.combatProfile=readCombatForm(form,currentProjectile,existing);}catch(error){return NextResponse.json({error:error.message},{status:400});}
-  if(form.combatProfile.mode==="projectile"&&!currentProjectile)return NextResponse.json({error:"ارفع ملف القذيفة مع النبتة أو اختر سلوكاً بديلاً."},{status:400});
+  const currentProjectile=hasProjectile
+    ?{id:id+"-projectile",filename:id+"-projectile"+ext(projectileFile.type),path:"/assets/projectiles/plants/"+id+"-projectile"+ext(projectileFile.type)}
+    :(removeProjectile?null:(existing?.combat?.mode==="projectile"?existing.combat.projectile:null));
+  try{combatProfile=readCombatForm(form,currentProjectile,existing);}catch(error){return NextResponse.json({error:error.message},{status:400});}
+  if(combatProfile.mode==="projectile"&&!currentProjectile)return NextResponse.json({error:"ارفع ملف القذيفة مع النبتة أو اختر سلوكاً بديلاً."},{status:400});
  }
  const extension=ext(file.type);if(!extension)return NextResponse.json({error:"Unknown file extension."},{status:415});
  const relative=config.folder+"/"+id+extension,now=new Date().toISOString();
- const record={...(existing||{}),id,type,name:String(form.get("name")||id).trim().slice(0,80),filename:id+extension,path:"/assets/"+relative,rows,columns,spriteSheet:config.spriteSheet,status:"draft",createdAt:existing?.createdAt||now,updatedAt:now,...(type==="plant"?{combat:form.combatProfile}:{})};
+ const record={...(existing||{}),id,type,name:String(form.get("name")||id).trim().slice(0,80),filename:id+extension,path:"/assets/"+relative,rows,columns,spriteSheet:config.spriteSheet,status:"draft",createdAt:existing?.createdAt||now,updatedAt:now,...(type==="plant"?{combat:combatProfile}:{})};
  const next={...old,version:1,assets:existing?old.assets.map((a,i)=>i===index?record:a):[...old.assets,record]};
  const bytes=Buffer.from(await file.arrayBuffer());
  try{
