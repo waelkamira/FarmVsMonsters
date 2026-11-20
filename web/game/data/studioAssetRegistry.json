@@ -35,7 +35,7 @@
       "rows": 3,
       "columns": 3,
       "spriteSheet": true,
-      "status": "draft",
+      "status": "testing",
       "createdAt": "2026-11-20T16:34:22.262Z",
       "updatedAt": "2026-11-20T20:37:26.840Z",
       "combat": {
@@ -50,7 +50,8 @@
         "projectileCollisionRadius": 22,
         "energyAmount": 15,
         "energyIntervalMs": 12000
-      }
+      },
+      "testingAt": "2026-11-20T20:37:50.889Z"
     }
   ]
 }
