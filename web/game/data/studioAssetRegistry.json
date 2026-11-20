@@ -12,6 +12,18 @@
       "spriteSheet": true,
       "status": "draft",
       "createdAt": "2026-11-20T16:17:16.849Z"
+    },
+    {
+      "id": "pepper-flamethrower-level-1-bomb",
+      "type": "plantProjectile",
+      "name": "Pepper-flamethrower-level-1-bomb",
+      "filename": "pepper-flamethrower-level-1-bomb.png",
+      "path": "/assets/projectiles/plants/pepper-flamethrower-level-1-bomb.png",
+      "rows": 3,
+      "columns": 3,
+      "spriteSheet": false,
+      "status": "draft",
+      "createdAt": "2026-11-20T16:17:42.668Z"
     }
   ]
 }
