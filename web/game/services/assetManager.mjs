@@ -1,3 +1,15 @@
+const sharedResourcesByGame = new WeakMap();
+
+function getSharedResourceState(scene) {
+  const owner = scene.game || scene.textures;
+  let state = sharedResourcesByGame.get(owner);
+  if (!state) {
+    state = new Map();
+    sharedResourcesByGame.set(owner, state);
+  }
+  return state;
+}
+
 /**
  * Phaser 3 asset lifecycle manager.
  *
@@ -25,8 +37,8 @@ export class PhaserAssetManager {
       completedAt: null
     };
     this.groups = new Map();
-    this.keyReferences = new Map();
-    this.ownedKeys = new Set();
+    this.sharedResources = getSharedResourceState(scene);
+    this.localResources = new Set();
     this.listeners = [];
     this.loadQueue = Promise.resolve();
     this.destroyed = false;
@@ -152,12 +164,22 @@ export class PhaserAssetManager {
         });
       }
 
-      const keys = entries.map((entry) => entry.key);
-      for (const key of keys) {
-        this.keyReferences.set(key, (this.keyReferences.get(key) || 0) + 1);
-        if (pending.some((entry) => entry.key === key)) this.ownedKeys.add(key);
+      for (const entry of entries) {
+        const resourceId = (entry.type || "image") + ":" + entry.key;
+        let resource = this.sharedResources.get(resourceId);
+        if (!resource) {
+          resource = {
+            key: entry.key,
+            type: entry.type || "image",
+            references: 0,
+            owned: pending.some((item) => item.key === entry.key && (item.type || "image") === (entry.type || "image"))
+          };
+          this.sharedResources.set(resourceId, resource);
+        }
+        resource.references += 1;
+        this.localResources.add(resourceId);
       }
-      this.groups.set(groupName, { keys, references: 1 });
+      this.groups.set(groupName, { entries, references: 1 });
       if (typeof options.onProgress === "function") options.onProgress(1);
       return { group: groupName, loaded: pending.length, skipped: entries.length - pending.length };
     });
@@ -188,22 +210,24 @@ export class PhaserAssetManager {
     if (group.references > 0) return { group: groupName, released: 0 };
 
     let released = 0;
-    for (const key of group.keys) {
-      const count = (this.keyReferences.get(key) || 1) - 1;
-      if (count > 0) {
-        this.keyReferences.set(key, count);
-        continue;
+    for (const entry of group.entries) {
+      const resourceId = (entry.type || "image") + ":" + entry.key;
+      const resource = this.sharedResources.get(resourceId);
+      if (!resource) continue;
+      resource.references -= 1;
+      this.localResources.delete(resourceId);
+      if (resource.references > 0) continue;
+
+      if (resource.owned) {
+        if (resource.type === "audio" && this.scene.cache?.audio?.exists?.(resource.key)) {
+          this.scene.cache.audio.remove(resource.key);
+          released += 1;
+        } else if (this.scene.textures.exists(resource.key)) {
+          this.scene.textures.remove(resource.key);
+          released += 1;
+        }
       }
-      this.keyReferences.delete(key);
-      if (!this.ownedKeys.has(key)) continue;
-      if (this.scene.textures.exists(key)) {
-        this.scene.textures.remove(key);
-        released += 1;
-      } else if (this.scene.cache?.audio?.exists?.(key)) {
-        this.scene.cache.audio.remove(key);
-        released += 1;
-      }
-      this.ownedKeys.delete(key);
+      this.sharedResources.delete(resourceId);
     }
     this.groups.delete(groupName);
     return { group: groupName, released };
@@ -215,7 +239,7 @@ export class PhaserAssetManager {
       loadedKeys: [...this.metrics.loadedKeys],
       failedKeys: [...this.metrics.failedKeys],
       activeGroups: [...this.groups.keys()],
-      referencedAssets: this.keyReferences.size
+      referencedAssets: this.localResources.size
     };
   }
 
@@ -224,10 +248,20 @@ export class PhaserAssetManager {
     this.destroyed = true;
     for (const [event, handler] of this.listeners) this.scene.load.off(event, handler);
     this.listeners = [];
-    if (options.unload === true) {
-      for (const groupName of [...this.groups.keys()]) {
-        const group = this.groups.get(groupName);
-        if (group) group.references = 1;
+    for (const groupName of [...this.groups.keys()]) {
+      const group = this.groups.get(groupName);
+      if (group) group.references = 1;
+      if (options.unload === false) {
+        for (const entry of group?.entries || []) {
+          const resourceId = (entry.type || "image") + ":" + entry.key;
+          const resource = this.sharedResources.get(resourceId);
+          if (!resource) continue;
+          resource.references -= 1;
+          if (resource.references <= 0) this.sharedResources.delete(resourceId);
+          this.localResources.delete(resourceId);
+        }
+        this.groups.delete(groupName);
+      } else {
         this.releaseGroup(groupName);
       }
     }
