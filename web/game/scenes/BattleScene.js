@@ -957,7 +957,7 @@ export default class BattleScene extends Scene {
       if (this.getSeedPacketCooldownRemaining(type) > 0) { this.setMessage("This seed packet is recharging. Wait for it to recover."); return; }
       this.selectedPlant = type;
       Object.entries(this.plantCardsByType || {}).forEach(([plantType, plantCard]) => plantCard.setAlpha(plantType === type ? 1 : 0.9));
-      const hints = { radish: "Radish Level 1 chosen. Launches miniature radish bombs down its lane.", mushroom: "Mushroom chosen. Collect its energy when it appears.", pumpkin: "Pumpkin chosen. A durable lane blocker.", hazelnut: "Hazelnut chosen. Fires hazelnut bombs in its lane.", mango: "Mango chosen. Launches a curved mango bomb onto monsters in its lane.", "snow-thrower": "Snow Thrower chosen. Freezes the first monster hit for 2.6 seconds." };
+      const hints = { radish: "Radish Level 1 chosen. Launches miniature radish bombs down its lane.", mushroom: "Mushroom chosen. Collect its energy when it appears.", pumpkin: "Pumpkin chosen. A durable lane blocker.", hazelnut: "Hazelnut chosen. Fires hazelnut bombs in its lane.", mango: "Mango chosen. Launches a curved mango bomb onto monsters in its lane.", "snow-thrower": "Snow Thrower chosen. Freezes the first monster hit for 2.6 seconds.", "electric-mushroom": "Electric Mushroom chosen. Fires cyan electric bolts down its lane." };
       this.setMessage(hints[type] || "Plant chosen."); this.refreshHud();
     });
     return card;
@@ -2194,7 +2194,8 @@ export default class BattleScene extends Scene {
         { id: "pineapple", title: isArabic ? "الأناناس" : "Pineapple", image: "pineapple-level-1", config: PINEAPPLE_CONFIG },
         { id: "hazelnut", title: isArabic ? "البندق" : "Hazelnut", image: "hazelnut-level-1", config: HAZELNUT_CONFIG },
         { id: "mango", title: isArabic ? "المانجو" : "Mango", image: "mango-level-1", config: MANGO_CONFIG },
-        { id: "snow-thrower", title: isArabic ? "قاذف الثلج" : "Snow Thrower", image: "snow-thrower-level-1", config: SNOW_THROWER_CONFIG }
+        { id: "snow-thrower", title: isArabic ? "قاذف الثلج" : "Snow Thrower", image: "snow-thrower-level-1", config: SNOW_THROWER_CONFIG },
+        { id: "electric-mushroom", title: isArabic ? "الفطر الكهربائي" : "Electric Mushroom", image: "electric-mushroom-level-1", config: ELECTRIC_MUSHROOM_CONFIG }
       ];
       const selected = catalog.find((plant) => plant.id === this.inventorySelectedPlant) || catalog[0];
       addText(0, -112, isArabic
