@@ -83,7 +83,7 @@ export async function POST(req){
   if(driver==="github"){
    const token=process.env.STUDIO_GITHUB_TOKEN,branch=process.env.STUDIO_GITHUB_BRANCH||"studio/assets";
    await githubPut("web/public/assets/"+relative,bytes,"studio: "+(existing?"replace ":"add ")+type+" "+id,token,branch);
-   if(hasProjectile){await githubPut("web/public/assets/"+record.combat.projectile.path.replace(/^\//,""),Buffer.from(await projectileFile.arrayBuffer()),"studio: attach projectile to "+id,token,branch);}
+   if(hasProjectile){await githubPut("web/public/"+record.combat.projectile.path.replace(/^\//,""),Buffer.from(await projectileFile.arrayBuffer()),"studio: attach projectile to "+id,token,branch);}
    await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(next,null,2)+"\n"),"studio: "+(existing?"update ":"register ")+id,token,branch);
   }else if(driver==="local"&&process.env.NODE_ENV!=="production"){
    const target=path.join(process.cwd(),"public/assets",relative);await mkdir(path.dirname(target),{recursive:true});await writeFile(target,bytes);
