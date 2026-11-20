@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "assets": [
+    {
+      "id": "pepper-flamethrower-level-1",
+      "type": "plant",
+      "name": "Pepper-flamethrower-level-1",
+      "filename": "pepper-flamethrower-level-1.png",
+      "path": "/assets/plants/pepper-flamethrower-level-1.png",
+      "rows": 3,
+      "columns": 3,
+      "spriteSheet": true,
+      "status": "draft",
+      "createdAt": "2026-11-20T16:17:16.849Z"
+    }
+  ]
+}
