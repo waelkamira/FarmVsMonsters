@@ -7,7 +7,7 @@ import { getPlantVFXProfile } from "../vfx/PlantVFXProfiles.mjs";
 import { getProjectileVFXProfile } from "../vfx/ProjectileVFXProfiles.mjs";
 
 // TEMPORARY: expose every implemented plant for VFX playtesting. Set false to restore campaign unlocks.
-const PLAYTEST_ALL_PLANTS = true;
+const PLAYTEST_ALL_PLANTS = false;
 const ALL_PLAYTEST_PLANT_IDS = Object.freeze(["radish", "mushroom", "pumpkin", "pineapple", "hazelnut", "mango", "snow-thrower"]);
 import { createSeededRandom } from "../rules/seededRandom.mjs";
 import { createCombatEventLog, appendCombatEvent } from "../rules/combatEventLog.mjs";
@@ -864,7 +864,7 @@ export default class BattleScene extends Scene {
     }
     let selectedTypes = ["radish", "mushroom"];
     try {
-      const unlocked = new Set(loadUnlockedPlantIds(window.localStorage));
+      const unlocked = new Set([...loadUnlockedPlantIds(window.localStorage), ...(this.studioPlants || []).map((plant) => plant.id)]);
       const availableTypes = new Set(plantOptions.map((plant) => plant.type).filter((type) =>
         PLAYTEST_ALL_PLANTS || unlocked.has(type)
       ));
@@ -2724,7 +2724,7 @@ export default class BattleScene extends Scene {
     if (this.gameOver) return;
     const studioPlant = this.studioPlantsByType?.[type] || null;
     if (!["radish", "mushroom", "pumpkin", "pineapple", "hazelnut", "mango", "snow-thrower"].includes(type) && !studioPlant) return;
-    if (!PLAYTEST_ALL_PLANTS && !loadUnlockedPlantIds(window.localStorage).includes(type)) {
+    if (!PLAYTEST_ALL_PLANTS && !studioPlant && !loadUnlockedPlantIds(window.localStorage).includes(type)) {
       this.setMessage("This plant is locked. Complete its campaign stage to unlock it.");
       return;
     }
