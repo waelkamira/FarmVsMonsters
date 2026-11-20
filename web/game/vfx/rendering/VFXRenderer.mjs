@@ -33,18 +33,42 @@ export class VFXRenderer {
     if (this.destroyed || !this.scene?.add?.container || !this.scene?.add?.circle) return null;
     const color = config.tint ?? 0xffffff;
     const burst = this.scene.add.container(x, y);
+
     for (let index = 0; index < count; index += 1) {
-      const angle = (Math.PI * 2 * index) / count;
-      const radius = kind === "trail" ? 2 : 5;
+      let particleX = 0;
+      let particleY = 0;
+      let radius = 3;
+      let particleSize = 3;
+
+      if (kind === "trail") {
+        const progress = count <= 1 ? 0 : index / (count - 1);
+        particleX = (progress - 0.5) * 18;
+        particleY = Math.sin(progress * Math.PI) * 2;
+        radius = 2.5 - progress * 1.1;
+        particleSize = 2;
+      } else if (index === 0) {
+        // A bright central flash anchors the impact before the sparks expand.
+        radius = 0;
+        particleSize = 5;
+      } else {
+        const angle = (Math.PI * 2 * (index - 1)) / Math.max(1, count - 1);
+        const distance = 12 + ((index * 7) % 13);
+        particleX = Math.cos(angle) * distance;
+        particleY = Math.sin(angle) * distance;
+        radius = 2.5 + (index % 3) * 0.8;
+        particleSize = 2 + (index % 2);
+      }
+
       const dot = this.scene.add.circle(
-        Math.cos(angle) * radius,
-        Math.sin(angle) * radius,
-        kind === "trail" ? 2 : 3,
+        particleX,
+        particleY,
+        particleSize,
         color,
-        0.9
+        kind === "trail" ? 0.72 : 0.96
       );
       burst.add(dot);
     }
+
     this.resetProceduralVisual(burst, x, y, config);
     return burst;
   }
@@ -61,9 +85,9 @@ export class VFXRenderer {
     for (const dot of burst.list || []) {
       dot.setActive?.(true);
       dot.setVisible?.(true);
-      dot.setAlpha?.(0.9);
+      dot.setAlpha?.(0.96);
       dot.setScale?.(1);
-      dot.setFillStyle?.(color, 0.9);
+      dot.setFillStyle?.(color, 0.96);
     }
     return true;
   }
