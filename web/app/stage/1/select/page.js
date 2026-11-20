@@ -42,7 +42,7 @@ export default function StageOneSeedSelectionPage() {
     (async () => {
       const [published, testing] = await Promise.all([
         readCatalog("/assets/studio-plant-catalog.json"),
-        readCatalog("/assets/studio-test/plant-catalog.json")
+        readCatalog("/api/studio/assets?catalog=testing")
       ]);
       if (!active) return;
       const studioPlants = [...published, ...testing].map((plant) => ({
