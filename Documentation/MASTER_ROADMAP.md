@@ -26,6 +26,8 @@ Target content (subject to inventory audit): up to 10 usable plants, 6 monster a
 - Monster lanes, targeting, attacks, damage, death, wave completion, victory/defeat.
 - Reward screen and meaningful next action.
 - Difficulty curve, sound, hit feedback, readable HUD, pause/retry.
+- Hybrid VFX system: authored Sprite Sheets for signature actions, bounded Particles for sparks/embers/dust, and optional renderer-safe Shaders/Post-FX for glow and distortion.
+- Adaptive VFX quality (Ultra/High/Performance) driven by rolling frame-time samples, concurrent-effect caps, and reduced particle budgets on slower devices.
 - Save and restore stage unlocks and essential progress.
 
 **Exit gate:** a new tester can start, understand, complete multiple battles, receive rewards, upgrade or unlock something, and return to play without developer assistance. No critical gameplay or save-loss bugs.
