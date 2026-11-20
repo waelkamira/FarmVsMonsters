@@ -84,6 +84,20 @@ export default class BattleScene extends Scene {
     this.load.image("seed-card-locked", "/assets/items/ui/ui-seed-card-locked.png");
     this.load.image("seed-slot-empty", "/assets/items/ui/ui-seed-slot-empty.png");
     this.load.image("inventory-wood-frame", "/assets/items/ui/ui-inventory-wood-fram.png");
+    // FarmVsMonsters top HUD artwork. The dedicated mushroom currency icon
+    // was not included in the uploaded files, so the existing mushroom plant
+    // artwork remains the icon until that separate asset is added.
+    this.load.image("hud-currency-frame", "/assets/items/ui/Mushroom currency counter frame.png");
+    this.load.image("hud-wave-frame", "/assets/items/ui/Wooden attack-wave progress bar frame.png");
+    this.load.image("hud-wave-fill", "/assets/items/ui/Golden-orange progress fill segment.png");
+    this.load.image("hud-wave-marker", "/assets/items/ui/Small wave progress marker.png");
+    this.load.image("hud-wave-icon", "/assets/items/ui/Cute monster-wave indicator icon.png");
+    this.load.image("hud-wave-badge", "/assets/items/ui/Empty wooden wave-number badge.png");
+    this.load.image("hud-pause-button", "/assets/items/ui/Round wooden pause button with pause symbol.png");
+    this.load.image("hud-settings-button", "/assets/items/ui/Round wooden settings button with golden gear.png");
+    this.load.image("hud-speed-button", "/assets/items/ui/Round wooden speed button with fast-forward symbol.png");
+    this.load.image("hud-health-icon", "/assets/items/ui/Cute farm-house health icon.png");
+    this.load.image("hud-decorations", "/assets/items/ui/Decorative fantasy leaves, mushrooms and golden ornaments as one grouped asset.png");
     this.load.image("radish-level-1", "/assets/plants/radish-level-1.png");
     this.load.image("radish-level-1-bomb", "/assets/plants/radish-level-1-bomb.png");
     this.load.image("mushroom-character", "/assets/plants/mushroom.png");
@@ -306,6 +320,7 @@ export default class BattleScene extends Scene {
     this.createAudioControls();
     this.createPauseControl();
     this.createSettingsControl();
+    this.createSpeedControl();
     this.createCollectionMenuControl();
     this.createInventoryControl();
     this.createQuickCollectionButtons();
@@ -674,27 +689,28 @@ export default class BattleScene extends Scene {
     // shortcuts kept at the far right.
     // Seed cards now sit directly on the battlefield HUD: no brown CSS/Phaser tray background.
 
-    // Use the uploaded mushroom card artwork as the energy counter backdrop.
-    // No brown CSS/Phaser panels are drawn behind the mushroom.
-    this.mushroomBank = this.add.container(62, 56).setDepth(43);
-    const mushroomCard = this.textures.exists("mushroom-card")
-      ? this.add.image(0, 0, "mushroom-card").setDisplaySize(112, 96)
-      : null;
+    // Mushroom energy counter: use the new carved-wood frame and keep
+    // the live energy number as text so it remains crisp at every resolution.
+    this.mushroomBank = this.add.container(83, 31).setDepth(43);
+    const mushroomFrame = this.textures.exists("hud-currency-frame")
+      ? this.add.image(0, 0, "hud-currency-frame").setDisplaySize(150, 58)
+      : this.add.image(0, 0, "mushroom-card").setDisplaySize(112, 96);
     const mushroomIcon = this.textures.exists("mushroom-character")
-      ? this.add.image(0, 0.4, "mushroom-character").setDisplaySize(38.7, 38.7)
-      : this.add.text(0, -11.2, "🍄", { fontFamily: "Arial", fontSize: "34px" }).setOrigin(0.5);
-    this.energyValueText = this.add.text(0, 33.6, String(this.energy), {
-      fontFamily: "Arial", fontSize: "17.6px", color: "#fff2a8", fontStyle: "bold",
+      ? this.add.image(-48, 0, "mushroom-character").setDisplaySize(27, 27)
+      : this.add.text(-48, 0, "🍄", { fontFamily: "Arial", fontSize: "25px" }).setOrigin(0.5);
+    this.energyValueText = this.add.text(15, 0, String(this.energy), {
+      fontFamily: "Arial", fontSize: "20px", color: "#fff2a8", fontStyle: "bold",
       stroke: "#39240f", strokeThickness: 3, resolution: 2
     }).setOrigin(0.5);
-    this.mushroomBank.add([...(mushroomCard ? [mushroomCard] : []), mushroomIcon, this.energyValueText]);
+    this.mushroomBank.add([mushroomFrame, mushroomIcon, this.energyValueText]);
 
-    // Secondary battle counters remain visible in a slim top information row.
+    // Compact secondary counters. The farmhouse health counter uses its
+    // dedicated uploaded icon; all values remain live Phaser text objects.
     const counters = [
-      { x: 178, icon: "🪙" },
-      { x: 270, icon: "🏡" },
-      { x: 365, icon: "🌱" },
-      { x: 460, icon: "👾" },
+      { x: 178, icon: "🪙", textX: 181 },
+      { x: 270, icon: "", textX: 299, texture: "hud-health-icon" },
+      { x: 365, icon: "🌱", textX: 368 },
+      { x: 460, icon: "👾", textX: 463 },
     ];
     this.hudValueTexts = counters.map((counter, index) => {
       const widths = [82, 82, 82, 92];
@@ -703,32 +719,48 @@ export default class BattleScene extends Scene {
         .setStrokeStyle(2, 0xd1a66b, 1).setDepth(42);
       this.add.rectangle(counter.x + width / 2 - 2, 16, width - 7, 20, 0xead7ad, 1)
         .setStrokeStyle(1, 0x9a7042, 1).setDepth(43);
-      return this.add.text(counter.x + 3, 16, counter.icon + " 0", {
+      if (counter.texture && this.textures.exists(counter.texture)) {
+        this.add.image(counter.x + 15, 16, counter.texture)
+          .setDisplaySize(22, 22).setDepth(44);
+      }
+      return this.add.text(counter.textX, 16, (counter.icon ? counter.icon + " " : "") + "0", {
         fontFamily: "Arial", fontSize: "13px", color: "#52351d", fontStyle: "bold",
         resolution: 2
       }).setOrigin(0, 0.5).setDepth(44);
     });
 
-    this.waveText = this.add.text(565, 15, "🌊 1/5", {
-      fontFamily: "Arial", fontSize: "15px", color: "#fff8e8", fontStyle: "bold",
+    // Wave identity: monster-wave artwork, wooden number badge and live count.
+    this.waveIcon = this.add.image(544, 25, "hud-wave-icon")
+      .setDisplaySize(34, 34).setDepth(44);
+    this.waveBadge = this.add.image(586, 25, "hud-wave-badge")
+      .setDisplaySize(48, 44).setDepth(43);
+    this.waveText = this.add.text(586, 25, "1/5", {
+      fontFamily: "Arial", fontSize: "13px", color: "#fff4c8", fontStyle: "bold",
       stroke: "#392719", strokeThickness: 3, resolution: 2,
-      align: "left"
-    }).setOrigin(0, 0.5).setDepth(44);
+      align: "center"
+    }).setOrigin(0.5).setDepth(45);
 
-    // A compact parchment progress tracker makes wave pacing legible without
-    // covering the battlefield or changing its coordinate system.
-    this.waveProgressFrame = this.add.rectangle(716, 17, 166, 20, 0x4a2d18, 1)
-      .setStrokeStyle(2, 0xd8ad70, 1).setDepth(43);
-    this.waveProgressTrack = this.add.rectangle(716, 17, 154, 10, 0x332416, 1)
-      .setStrokeStyle(1, 0x9d7547, 1).setDepth(44);
-    this.waveProgressFill = this.add.rectangle(640, 17, 2, 7, 0xa8d65b, 1)
-      .setOrigin(0, 0.5).setDepth(45);
-    this.waveProgressLabel = this.add.text(716, 39, "DEFEATED 0/2", {
+    // Layer the live progress fill and marker inside the uploaded wooden frame.
+    this.waveProgressFrame = this.add.image(766, 25, "hud-wave-frame")
+      .setDisplaySize(218, 43).setDepth(42);
+    this.waveProgressTrack = this.add.rectangle(766, 25, 174, 11, 0x392719, 0.72)
+      .setStrokeStyle(1, 0x8e6338, 0.8).setDepth(43);
+    this.waveProgressFill = this.add.image(679, 25, "hud-wave-fill")
+      .setOrigin(0, 0.5).setDisplaySize(2, 10).setDepth(44);
+    this.waveProgressMarker = this.add.image(679, 25, "hud-wave-marker")
+      .setDisplaySize(20, 20).setDepth(45);
+    this.waveProgressLabel = this.add.text(766, 52, "DEFEATED 0/2", {
       fontFamily: "Arial", fontSize: "10px", color: "#ffe8b5", fontStyle: "bold",
       stroke: "#392719", strokeThickness: 2, resolution: 2
     }).setOrigin(0.5).setDepth(44);
 
-    // Short PvZ-style announcement banner. It is reused between waves instead
+    // The grouped ornament is intentionally small and kept outside the playfield.
+    if (this.textures.exists("hud-decorations")) {
+      this.add.image(886, 54, "hud-decorations")
+        .setDisplaySize(72, 38).setDepth(41).setAlpha(0.9);
+    }
+
+        // Short PvZ-style announcement banner. It is reused between waves instead
     // of allocating new display objects every time a wave begins.
     this.waveBanner = this.add.container(560, 150).setDepth(52).setAlpha(0).setVisible(false);
     const bannerFrame = this.add.rectangle(0, 0, 430, 82, 0x3c2818, 0.96)
@@ -2203,31 +2235,54 @@ export default class BattleScene extends Scene {
   }
 
   createPauseControl() {
-    const button = this.add.container(1035, 27).setDepth(46);
-    const background = this.add.rectangle(0, 0, 42, 36, 0xe6c58c, 1)
-      .setStrokeStyle(3, 0x4a2d18, 1).setInteractive({ useHandCursor: true });
-    const label = this.add.text(0, 0, "Ⅱ", {
-      fontFamily: "Arial", fontSize: "19px", color: "#4b2e16", fontStyle: "bold"
-    }).setOrigin(0.5);
-    button.add([background, label]);
-    background.on("pointerover", () => background.setFillStyle(0xffdf8a, 1));
-    background.on("pointerout", () => background.setFillStyle(0xe6c58c, 1));
-    background.on("pointerdown", () => this.pauseGame());
+    const button = this.add.container(968, 27).setDepth(46);
+    const artwork = this.textures.exists("hud-pause-button")
+      ? this.add.image(0, 0, "hud-pause-button").setDisplaySize(42, 42)
+      : this.add.circle(0, 0, 19, 0xe6c58c, 1).setStrokeStyle(3, 0x4a2d18, 1);
+    artwork.setInteractive({ useHandCursor: true });
+    button.add(artwork);
+    artwork.on("pointerover", () => button.setScale(1.07));
+    artwork.on("pointerout", () => button.setScale(1));
+    artwork.on("pointerdown", () => this.pauseGame());
     this.pauseControl = button;
   }
 
   createSettingsControl() {
-    const button = this.add.container(1084, 27).setDepth(48);
-    const background = this.add.rectangle(0, 0, 36, 36, 0xe6c58c, 1)
-      .setStrokeStyle(3, 0x4a2d18, 1).setInteractive({ useHandCursor: true });
-    const label = this.add.text(0, 0, "⚙", {
-      fontFamily: "Arial", fontSize: "20px", color: "#4b2e16", fontStyle: "bold"
-    }).setOrigin(0.5);
-    button.add([background, label]);
-    background.on("pointerover", () => background.setFillStyle(0xffdf8a, 1));
-    background.on("pointerout", () => background.setFillStyle(0xe6c58c, 1));
-    background.on("pointerdown", () => this.openSettingsMenu());
+    const button = this.add.container(1018, 27).setDepth(48);
+    const artwork = this.textures.exists("hud-settings-button")
+      ? this.add.image(0, 0, "hud-settings-button").setDisplaySize(42, 42)
+      : this.add.circle(0, 0, 19, 0xe6c58c, 1).setStrokeStyle(3, 0x4a2d18, 1);
+    artwork.setInteractive({ useHandCursor: true });
+    button.add(artwork);
+    artwork.on("pointerover", () => button.setScale(1.07));
+    artwork.on("pointerout", () => button.setScale(1));
+    artwork.on("pointerdown", () => this.openSettingsMenu());
     this.settingsControl = button;
+  }
+
+  createSpeedControl() {
+    this.gameSpeed = 1;
+    const button = this.add.container(918, 27).setDepth(47);
+    const artwork = this.textures.exists("hud-speed-button")
+      ? this.add.image(0, 0, "hud-speed-button").setDisplaySize(42, 42)
+      : this.add.circle(0, 0, 19, 0xe6c58c, 1).setStrokeStyle(3, 0x4a2d18, 1);
+    const speedLabel = this.add.text(0, 25, "1×", {
+      fontFamily: "Arial", fontSize: "10px", color: "#fff4c8", fontStyle: "bold",
+      stroke: "#392719", strokeThickness: 2
+    }).setOrigin(0.5).setDepth(49);
+    artwork.setInteractive({ useHandCursor: true });
+    button.add([artwork, speedLabel]);
+    artwork.on("pointerover", () => button.setScale(1.07));
+    artwork.on("pointerout", () => button.setScale(1));
+    artwork.on("pointerdown", () => {
+      this.gameSpeed = this.gameSpeed === 1 ? 1.5 : 1;
+      if (this.game?.loop) this.game.loop.timeScale = this.gameSpeed;
+      speedLabel.setText(this.gameSpeed === 1 ? "1×" : "1.5×");
+    });
+    this.speedControl = button;
+    this.events.once("shutdown", () => {
+      if (this.game?.loop) this.game.loop.timeScale = 1;
+    });
   }
 
   openSettingsMenu() {
@@ -4536,7 +4591,7 @@ export default class BattleScene extends Scene {
   refreshHud() {
     const values = [
       "🪙 " + this.coins,
-      "🏡 " + this.houseHealth + "%",
+      this.houseHealth + "%",
       "🌱 " + this.livingPlantCount(),
       "👾 " + this.totalDefeatedMonsters + "/" + PHASE_ONE_TOTAL_MONSTERS,
     ];
@@ -4545,15 +4600,16 @@ export default class BattleScene extends Scene {
       this.hudValueTexts.forEach((text, index) => text.setText(values[index]));
     }
     if (this.waveText) {
-      this.waveText.setText("🌊 " + Math.min(this.wave, this.totalWaves) + "/" + this.totalWaves);
+      this.waveText.setText(Math.min(this.wave, this.totalWaves) + "/" + this.totalWaves);
     }
     if (this.waveProgressFill && this.waveProgressTrack) {
       // Progress reflects defeated enemies, not merely how many have spawned.
-      // This makes the tracker represent actual battlefield progress.
       const defeated = Math.min(this.waveDefeatedMonsters || 0, this.waveSize);
       const progress = this.waveSize > 0 ? PhaserMath.Clamp(defeated / this.waveSize, 0, 1) : 0;
-      const trackWidth = 154;
-      this.waveProgressFill.setSize(Math.max(2, trackWidth * progress), 7);
+      const trackWidth = 174;
+      const fillWidth = Math.max(2, trackWidth * progress);
+      this.waveProgressFill.setDisplaySize(fillWidth, 10);
+      this.waveProgressMarker?.setX(679 + trackWidth * progress);
       this.waveProgressLabel?.setText("DEFEATED " + defeated + "/" + this.waveSize);
     }
     for (const [type, panel] of Object.entries(this.plantCardsByType || {})) {
