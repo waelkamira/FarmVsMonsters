@@ -89,12 +89,12 @@ export async function POST(req){
  if(config.spriteSheet&&(!Number.isInteger(rows)||!Number.isInteger(columns)||rows<1||columns<1||rows*columns>100))return NextResponse.json({error:"Invalid sprite grid."},{status:400});
  if(hasProjectile&&removeProjectile)return NextResponse.json({error:"Choose a new projectile or remove the existing projectile, not both."},{status:400});
  if(hasProjectile&&(type!=="plant"||!STUDIO_ASSET_TYPES.plantProjectile.accepts.includes(projectileFile.type)||projectileFile.size>STUDIO_MAX_UPLOAD_BYTES))return NextResponse.json({error:"Projectile must be a supported PNG/WebP/GIF file up to 8 MB and can only be attached to a plant."},{status:415});
+ const projectileBytes=hasProjectile?Buffer.from(await projectileFile.arrayBuffer()):null;
  let combatProfile=null;
  if(type==="plant"){
   const behavior=String(form.get("behavior")||"");
   if(!behavior)return NextResponse.json({error:"اختر نظام النبتة يدوياً قبل حفظها."},{status:400});
   if(hasProjectile&&behavior!=="projectile")return NextResponse.json({error:"اختر نظام إطلاق المقذوفات لاستخدام ملف القذيفة، أو أزل ملف القذيفة."},{status:400});
-  const projectileBytes=hasProjectile?Buffer.from(await projectileFile.arrayBuffer()):null;
   const currentProjectile=behavior==="projectile"
     ?(hasProjectile
       ?{id:id+"-projectile",filename:path.basename(createImmutableAssetPath("projectiles/plants",id+"-projectile",ext(projectileFile.type),projectileBytes)),path:"/assets/"+createImmutableAssetPath("projectiles/plants",id+"-projectile",ext(projectileFile.type),projectileBytes)}
