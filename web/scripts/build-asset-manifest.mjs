@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { readdir, readFile, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { buildAssetAudit } from "./asset-audit-utils.mjs";
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const webRoot = path.resolve(scriptDir, "..");
@@ -52,7 +53,7 @@ async function walk(directory) {
   for (const entry of entries) {
     const absolute = path.join(directory, entry.name);
     if (entry.isDirectory()) files.push(...await walk(absolute));
-    else if (entry.isFile() && absolute !== outputPath) files.push(absolute);
+    else if (entry.isFile() && absolute !== outputPath && absolute !== auditPath) files.push(absolute);
   }
   return files;
 }
@@ -136,34 +137,17 @@ for (const asset of assets) (groups[asset.group] ||= []).push({
   ...(asset.frameConfig ? { frameConfig: asset.frameConfig } : {})
 });
 
-
-const largeFiles = assets.filter((asset) => {
-  const limit = asset.type === "audio" ? 3 * 1024 * 1024 : 1.5 * 1024 * 1024;
-  return asset.bytes > limit;
-}).map((asset) => ({ key: asset.key, url: asset.url, type: asset.type, bytes: asset.bytes }));
-
-const groupSummary = Object.fromEntries(Object.entries(groups).map(([name, entries]) => [name, {
-  assetCount: entries.length,
-  totalBytes: assets.filter((asset) => asset.group === name).reduce((sum, asset) => sum + asset.bytes, 0)
-}]));
+const generatedAt = new Date().toISOString();
 const spritesheets = assets.filter((asset) => asset.type === "spritesheet").map((asset) => ({
-  key: asset.key, url: asset.url, bytes: asset.bytes, frameConfig: asset.frameConfig
+  key: asset.key,
+  url: asset.url,
+  bytes: asset.bytes,
+  frameConfig: asset.frameConfig
 }));
-const audit = {
-  schemaVersion: 1,
-  generatedAt: new Date().toISOString(),
-  assetCount: assets.length,
-  totalBytes,
-  groups: groupSummary,
-  exactDuplicates: duplicates,
-  largeFiles,
-  spritesheets
-};
-await writeFile(auditPath, JSON.stringify(audit, null, 2) + "\n");
-
+const audit = buildAssetAudit({ generatedAt, assets, duplicates, spritesheets });
 const manifest = {
   schemaVersion: 1,
-  generatedAt: new Date().toISOString(),
+  generatedAt,
   assetCount: assets.length,
   totalBytes,
   groups,
@@ -171,12 +155,14 @@ const manifest = {
 };
 
 await writeFile(outputPath, JSON.stringify(manifest, null, 2) + "\n");
+await writeFile(auditPath, JSON.stringify(audit, null, 2) + "\n");
+
 console.log(JSON.stringify({
   manifest: path.relative(webRoot, outputPath),
   audit: path.relative(webRoot, auditPath),
-  largeFiles: largeFiles.length,
+  largeFiles: audit.largeFiles.length,
   assetCount: assets.length,
   totalMiB: Number((totalBytes / 1024 / 1024).toFixed(2)),
-  groups: Object.fromEntries(Object.entries(groups).map(([name, entries]) => [name, entries.length])),
+  groups: audit.groups,
   exactDuplicates: duplicates
 }, null, 2));
