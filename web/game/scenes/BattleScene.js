@@ -9,7 +9,7 @@ import { getMonsterReactionProfile, getPlantAnimationProfile } from "../visuals/
 
 // TEMPORARY: expose every implemented plant for VFX playtesting. Set false to restore campaign unlocks.
 const PLAYTEST_ALL_PLANTS = true;
-const ALL_PLAYTEST_PLANT_IDS = Object.freeze(["radish", "mushroom", "pumpkin", "pineapple", "hazelnut", "mango", "snow-thrower"]);
+const ALL_PLAYTEST_PLANT_IDS = Object.freeze(["radish", "mushroom", "pumpkin", "pineapple", "hazelnut", "mango", "snow-thrower", "electric-mushroom"]);
 import { createSeededRandom } from "../rules/seededRandom.mjs";
 import { createCombatEventLog, appendCombatEvent } from "../rules/combatEventLog.mjs";
 import gridCalibration from "../data/farm-grid-calibration.json";
@@ -28,6 +28,7 @@ import {
   HAZELNUT_CONFIG,
   MANGO_CONFIG,
   SNOW_THROWER_CONFIG,
+  ELECTRIC_MUSHROOM_CONFIG,
   collectEnergy,
   isWaveComplete,
   isPhaseOneVictory,
@@ -119,6 +120,7 @@ export default class BattleScene extends Scene {
     this.load.image("radish-level-1", "/assets/plants/radish-level-1.png");
     this.load.image("radish-level-1-bomb", "/assets/plants/radish-level-1-bomb.png");
     this.load.image("mushroom-character", "/assets/plants/mushroom.png");
+    this.load.image("electric-mushroom-level-1", "/assets/plants/Electric-mushroom-level-1.png");
     this.load.image("pumpkin-character", "/assets/plants/pumpkin.png");
     this.load.image("mango-level-1", "/assets/plants/mango-level-1.png");
     this.load.image("mango-level-1-bomb", "/assets/plants/mango-level-1-bomb.png");
@@ -808,7 +810,8 @@ export default class BattleScene extends Scene {
       { type: "pineapple", title: "PINEAPPLE L1", cost: PINEAPPLE_CONFIG.cost, image: "pineapple-level-1" },
       { type: "hazelnut", title: "HAZELNUT L1", cost: HAZELNUT_CONFIG.cost, image: "hazelnut-level-1" },
       { type: "mango", title: "MANGO L1", cost: MANGO_CONFIG.cost, image: "mango-level-1" },
-      { type: "snow-thrower", title: "SNOW L1", cost: SNOW_THROWER_CONFIG.cost, image: "snow-thrower-level-1" }
+      { type: "snow-thrower", title: "SNOW L1", cost: SNOW_THROWER_CONFIG.cost, image: "snow-thrower-level-1" },
+      { type: "electric-mushroom", title: "ELECTRIC MUSHROOM", cost: ELECTRIC_MUSHROOM_CONFIG.cost, image: "electric-mushroom-level-1" }
     ];
     let selectedTypes = ["radish", "mushroom"];
     try {
@@ -833,7 +836,7 @@ export default class BattleScene extends Scene {
     this.plantCardsByType = {};
     const packetStartX = 164;
     const packetGap = 90;
-    const packetSlotCount = 7;
+    const packetSlotCount = 8;
     // Fill unused seed slots with previews of implemented plants that are
     // not in the current loadout. Their artwork is intentionally dimmed and
     // non-interactive so the player can see upcoming choices without selecting them.
@@ -2669,7 +2672,7 @@ export default class BattleScene extends Scene {
 
   plantSelected(col, row, type, returnPosition = null) {
     if (this.gameOver) return;
-    if (!["radish", "mushroom", "pumpkin", "pineapple", "hazelnut", "mango", "snow-thrower"].includes(type)) return;
+    if (!["radish", "mushroom", "pumpkin", "pineapple", "hazelnut", "mango", "snow-thrower", "electric-mushroom"].includes(type)) return;
     if (!PLAYTEST_ALL_PLANTS && !loadUnlockedPlantIds(window.localStorage).includes(type)) {
       this.setMessage("This plant is locked. Complete its campaign stage to unlock it.");
       return;
@@ -2688,7 +2691,7 @@ export default class BattleScene extends Scene {
       return;
     }
     this.recordCombatEvent("plant_placed", { type, col, row });
-    const configs = { radish: RADISH_CONFIG, mushroom: MUSHROOM_CONFIG, pumpkin: PUMPKIN_CONFIG, pineapple: PINEAPPLE_CONFIG, hazelnut: HAZELNUT_CONFIG, mango: MANGO_CONFIG, "snow-thrower": SNOW_THROWER_CONFIG };
+    const configs = { radish: RADISH_CONFIG, mushroom: MUSHROOM_CONFIG, pumpkin: PUMPKIN_CONFIG, pineapple: PINEAPPLE_CONFIG, hazelnut: HAZELNUT_CONFIG, mango: MANGO_CONFIG, "snow-thrower": SNOW_THROWER_CONFIG, "electric-mushroom": ELECTRIC_MUSHROOM_CONFIG };
     const config = configs[type];
     this.energy = placement.energy;
     this.seedPacketCooldowns.set(type, config.seedPacketRechargeMs);
@@ -2769,7 +2772,8 @@ export default class BattleScene extends Scene {
       pumpkin: "Pumpkin planted! It blocks and absorbs bites.",
       pineapple: "Pineapple Level 1 planted! It launches pineapple bombs down this lane.",
       hazelnut: "Hazelnut Level 1 planted! It fires hazelnut bombs down this lane.",
-      mango: "Mango Level 1 planted! It launches curved mango bombs onto monsters in this lane."
+      mango: "Mango Level 1 planted! It launches curved mango bombs onto monsters in this lane.",
+      "electric-mushroom": "Electric Mushroom planted! It fires bright electric bolts down this lane."
     };
     this.setMessage(plantedMessages[type] || "Plant planted.");
   }
@@ -2844,7 +2848,7 @@ export default class BattleScene extends Scene {
 
   drawCatalogPlant(type, x, y, row = 2) {
     const plant = this.add.container(x, y).setDepth(11);
-    const texture = type === "pumpkin" ? "pumpkin-character" : type === "pineapple" ? "pineapple-level-1" : type === "hazelnut" ? "hazelnut-level-1" : type === "mango" ? "mango-level-1" : type === "snow-thrower" ? "snow-thrower-level-1" : "radish-level-1";
+    const texture = type === "pumpkin" ? "pumpkin-character" : type === "pineapple" ? "pineapple-level-1" : type === "hazelnut" ? "hazelnut-level-1" : type === "mango" ? "mango-level-1" : type === "snow-thrower" ? "snow-thrower-level-1" : type === "electric-mushroom" ? "electric-mushroom-level-1" : "radish-level-1";
     const rowIndex = PhaserMath.Clamp(row, 0, LANES - 1);
     const laneGap = rowIndex < LANES - 1
       ? this.laneYs[rowIndex + 1] - this.laneYs[rowIndex]
@@ -2852,17 +2856,17 @@ export default class BattleScene extends Scene {
     // The farthest row is smallest; each nearer row grows progressively.
     // Apply the same perspective to Pineapple, Hazelnut and Mango so their projectiles
     // can use the exact displayed plant scale when calculating launch offsets.
-    const pineapplePerspectiveScale = type === "pineapple" || type === "hazelnut" || type === "mango" || type === "snow-thrower"
+    const pineapplePerspectiveScale = type === "pineapple" || type === "hazelnut" || type === "mango" || type === "snow-thrower" || type === "electric-mushroom"
       ? PhaserMath.Clamp(0.8 + (rowIndex / Math.max(1, LANES - 1)) * 0.4, 0.8, 1.2)
       : 1;
     plant.setData("pineapplePerspectiveScale", pineapplePerspectiveScale);
     if (this.textures.exists(texture)) {
       // Pineapple Level 1 keeps its tuned base size; only its row perspective changes.
-      const baseHeight = type === "pumpkin" ? 70 : type === "pineapple" ? 132 : type === "hazelnut" ? 112 : type === "mango" ? 112 : type === "snow-thrower" ? 84 : 64;
+      const baseHeight = type === "pumpkin" ? 70 : type === "pineapple" ? 132 : type === "hazelnut" ? 112 : type === "mango" ? 112 : type === "snow-thrower" ? 84 : type === "electric-mushroom" ? 96 : 64;
       const height = baseHeight * pineapplePerspectiveScale;
       const plantFrame = this.textures.getFrame(texture, ["pineapple", "hazelnut", "mango", "snow-thrower"].includes(type) ? "0" : undefined);
       const width = height * (plantFrame.realWidth / plantFrame.realHeight);
-      const maxWidth = (type === "pineapple" ? 152 : type === "hazelnut" ? 116 : type === "mango" ? 116 : type === "snow-thrower" ? 84 : 76) * pineapplePerspectiveScale;
+      const maxWidth = (type === "pineapple" ? 152 : type === "hazelnut" ? 116 : type === "mango" ? 116 : type === "snow-thrower" ? 84 : type === "electric-mushroom" ? 104 : 76) * pineapplePerspectiveScale;
       if (["pineapple", "hazelnut", "mango", "snow-thrower"].includes(type)) {
         const animatedPlant = this.add.sprite(0, -height / 2 + 2, texture, "0").setDisplaySize(Math.min(width, maxWidth), height);
         const animationDataKey = type === "pineapple" ? "pineappleThrowSprite"
@@ -2948,7 +2952,7 @@ export default class BattleScene extends Scene {
         continue;
       }
       if (plant.type === "pumpkin") continue;
-      const configs = { radish: RADISH_CONFIG, pineapple: PINEAPPLE_CONFIG, hazelnut: HAZELNUT_CONFIG, mango: MANGO_CONFIG, "snow-thrower": SNOW_THROWER_CONFIG };
+      const configs = { radish: RADISH_CONFIG, pineapple: PINEAPPLE_CONFIG, hazelnut: HAZELNUT_CONFIG, mango: MANGO_CONFIG, "snow-thrower": SNOW_THROWER_CONFIG, "electric-mushroom": ELECTRIC_MUSHROOM_CONFIG };
       const config = configs[plant.type];
       if (!config) continue;
       // Recover safely if a plant was created by an older or partial runtime
@@ -3187,12 +3191,12 @@ export default class BattleScene extends Scene {
     const innerGlow = this.add.circle(0, 0, 9, projectileTint, 0.28);
     view.add([halo, outerGlow, innerGlow]);
 
-    const projectileTexture = projectileVFX?.texture || (plant.type === "radish" ? "radish-level-1-bomb"
+    const projectileTexture = plant.type === "electric-mushroom" ? null : projectileVFX?.texture || (plant.type === "radish" ? "radish-level-1-bomb"
       : plant.type === "pineapple" ? "pineapple-level-1-bomb"
       : plant.type === "hazelnut" ? "hazelnut-level-1-bomb"
       : plant.type === "snow-thrower" ? "snow-thrower-bomb-level-1"
       : "mango-level-1-bomb");
-    if (this.textures.exists(projectileTexture)) {
+    if (projectileTexture && this.textures.exists(projectileTexture)) {
       const plantProjectile = this.add.image(0, 0, projectileTexture);
       if (plant.type === "pineapple" || plant.type === "hazelnut" || plant.type === "mango") {
         const bombSize = plant.type === "hazelnut" ? 31 : plant.type === "mango" ? 30 : 34;
@@ -3203,6 +3207,19 @@ export default class BattleScene extends Scene {
         plantProjectile.setDisplaySize(30, 30);
       }
       view.add(plantProjectile);
+    } else if (plant.type === "electric-mushroom") {
+      // A compact lightning glyph keeps the projectile readable without borrowing another plant's art.
+      const electricGlow = this.add.circle(0, 0, 12, 0x65d9ff, 0.24);
+      const bolt = this.add.graphics();
+      bolt.lineStyle(8, 0x35bfff, 0.72);
+      bolt.beginPath();
+      bolt.moveTo(-5, 11); bolt.lineTo(2, 2); bolt.lineTo(-2, -1); bolt.lineTo(7, -12);
+      bolt.strokePath();
+      bolt.lineStyle(3, 0xf1fdff, 1);
+      bolt.beginPath();
+      bolt.moveTo(-5, 11); bolt.lineTo(2, 2); bolt.lineTo(-2, -1); bolt.lineTo(7, -12);
+      bolt.strokePath();
+      view.add([electricGlow, bolt]);
     } else if (plant.type === "snow-thrower") {
       // Keep a snow-colored fallback if the uploaded projectile texture fails.
       const snowball = this.add.circle(0, 0, 12, 0xb9efff, 1)
@@ -3258,6 +3275,7 @@ export default class BattleScene extends Scene {
       : plant.type === "hazelnut" ? HAZELNUT_CONFIG
       : plant.type === "mango" ? MANGO_CONFIG
       : plant.type === "snow-thrower" ? SNOW_THROWER_CONFIG
+      : plant.type === "electric-mushroom" ? ELECTRIC_MUSHROOM_CONFIG
       : RADISH_CONFIG;
     this.projectiles.push({
       view, localX, row, startRow: row, targetRow, target, plantType: plant.type,
