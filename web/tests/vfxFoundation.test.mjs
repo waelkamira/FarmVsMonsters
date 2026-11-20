@@ -50,6 +50,21 @@ test("VFXEventBus supports subscribe, once, unsubscribe, and listener isolation"
   assert.equal(bus.emit("test:event"), 0);
 });
 
+test("VFXEventBus isolates failures thrown by its listener-error handler", () => {
+  const bus = new VFXEventBus({
+    onListenerError: () => { throw new Error("error-handler-failed"); }
+  });
+  let laterListenerCalled = false;
+  bus.on("test:error-handler", () => { throw new Error("listener-failed"); });
+  bus.on("test:error-handler", () => { laterListenerCalled = true; });
+
+  assert.equal(bus.emit("test:error-handler"), 2);
+  assert.equal(laterListenerCalled, true);
+  assert.equal(bus.lastErrors.length, 2);
+  assert.equal(bus.lastErrors[0].source, "listener");
+  assert.equal(bus.lastErrors[1].source, "onListenerError");
+});
+
 test("VFX config validates limits and selects a quality profile", () => {
   const config = createVFXConfig({ quality: "low", limits: { maxActiveBursts: 4 } });
   assert.equal(config.quality, "low");
@@ -59,7 +74,9 @@ test("VFX config validates limits and selects a quality profile", () => {
 });
 
 function createMockScene() {
-  return {
+  const tweens = [];
+  const scene = {
+    tweenRecords: tweens,
     textures: { exists: () => true },
     add: {
       image: () => ({
@@ -77,8 +94,19 @@ function createMockScene() {
       }),
       circle: () => ({})
     },
-    tweens: { add: () => {} }
   };
+  scene.tweens = {
+    add(config) {
+      const tween = {
+        config,
+        stopped: false,
+        stop() { this.stopped = true; }
+      };
+      tweens.push(tween);
+      return tween;
+    }
+  };
+  return scene;
 }
 
 test("VFXManager safely ignores unknown effects and enforces active burst cap", () => {
@@ -110,4 +138,44 @@ test("VFXManager accepts event-bus play requests and keeps the legacy play API",
   manager.destroy();
   assert.equal(bus.listenerCount("vfx:play"), 0);
   bus.destroy();
+});
+
+
+test("VFXManager stops tracked tweens when stopAll or destroy is called", () => {
+  const scene = createMockScene();
+  const manager = new VFXManager(scene, { registry: createDefaultVFXRegistry() });
+
+  const first = manager.play("radish-impact", 10, 10);
+  const second = manager.play("mango-impact", 20, 20);
+  assert.ok(first);
+  assert.ok(second);
+  assert.equal(scene.tweenRecords.length, 2);
+  assert.equal(manager.activeTweens.size, 2);
+
+  manager.stopAll();
+  assert.equal(scene.tweenRecords.every((tween) => tween.stopped), true);
+  assert.equal(manager.active.size, 0);
+  assert.equal(manager.activeTweens.size, 0);
+
+  const third = manager.play("radish-impact", 30, 30);
+  assert.ok(third);
+  const thirdTween = scene.tweenRecords[2];
+  manager.destroy();
+  assert.equal(thirdTween.stopped, true);
+  assert.equal(manager.active.size, 0);
+  assert.equal(manager.activeTweens.size, 0);
+});
+
+test("VFXManager completion releases the visual without stopping a completed tween", () => {
+  const scene = createMockScene();
+  const manager = new VFXManager(scene, { registry: createDefaultVFXRegistry() });
+  const visual = manager.play("radish-impact", 10, 10);
+  const tween = scene.tweenRecords[0];
+
+  tween.config.onComplete();
+
+  assert.equal(manager.active.has(visual), false);
+  assert.equal(manager.activeTweens.has(visual), false);
+  assert.equal(tween.stopped, false);
+  manager.destroy();
 });
