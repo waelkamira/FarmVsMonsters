@@ -1,118 +1,94 @@
 # خارطة التنفيذ المرحلية — FarmVsMonsters وStudio
 
-**قاعدة إلزامية:** نعمل على مرحلة واحدة فقط. لا يبدأ أي عمل من المرحلة التالية حتى تُغلق بوابة قبول المرحلة الحالية وتُوثق نتائجها.
+**الحالة:** خارطة مقترحة للتطوير والمراجعة؛ المرحلة 0 ما تزال الحالية وغير مكتملة. لا بدء للمرحلة 1 دون إغلاق بوابة المرحلة 0 واعتمادها.
 
-## المرحلة 0 — التدقيق وتثبيت الأساس
-
-- جرد المستودع والفروع وطلبات الدمج.
-- جرد صفحات اللعبة وStudio وواجهات API.
-- جرد مصادر بيانات النباتات والوحوش والمقذوفات والخرائط والمراحل والموجات والاقتصاد.
-- جرد الأصول والأنيميشنات والاختبارات.
-- رسم خريطة التبعيات End-to-End.
-- مراجعة الأمان والتخزين والنشر الحالي.
-- تنفيذ أو تنسيق تحقق فعلي للاختبارات والبناء والمتصفح.
-- إعداد قائمة فجوات مرتبة حسب الخطورة.
-
-**بوابة الخروج:** خريطة مصدرية كاملة، نتائج تحقق فعلية أو قيود موثقة، عيوب قابلة لإعادة الإنتاج، ومسار آمن للتعامل مع الفروع وطلبات الدمج.
-
-## المرحلة 1 — أساس Studio الموحد
-
-- تثبيت عقود أنواع المحتوى والمعرفات والعلاقات.
-- Registry موحد وإصدارات للمحتوى.
-- طبقة تخزين قابلة للتبديل.
-- API وخدمات وتحقق موحد.
-- مصادقة وصلاحيات وسجل تدقيق.
-- واجهة مكتبة ولوحة عمليات.
-- مسودات ومعاينة وفحص تبعيات.
-
-**بوابة الخروج:** يمكن إنشاء وتعديل وحفظ وقراءة محتوى تجريبي من Studio، وتصل البيانات إلى طبقة التشغيل دون لمس الملفات يدويًا.
-
-## المرحلة 2 — Plant Studio كامل
-
-- إكمال دورة حياة النبات.
-- إدارة المستويات والسلوك والأرقام والمقذوفات.
-- إدارة الأصول والمعاينة.
-- اختبار منفرد واختبار داخل المعركة.
-- نشر واسترجاع موثوقان.
-
-**بوابة الخروج:** إنشاء نبات جديد من Studio، اختباره فعليًا، نشره، ثم استرجاع إصدار سابق دون كسر اللعبة.
-
-## المرحلة 3 — Monster & Projectile Studio
-
-- إدارة الوحوش وقدراتها وإحصاءاتها.
-- إدارة المقذوفات وربطها.
-- اختبار المواجهات.
-- إدارة الزعماء ومراحلهم.
-
-**بوابة الخروج:** إنشاء وحش ومقذوف وتعديلهما واختبارهما ونشرهما من Studio.
-
-## المرحلة 4 — Asset & Animation Studio
-
-- محرر Sprite Sheet.
-- معاينة الإطارات والأنيميشن.
-- إدارة الصوت والمؤثرات.
-- استبدال آمن وفحص الملفات والتبعيات.
-
-**بوابة الخروج:** دورة أصل كاملة من الرفع حتى المعاينة والتشغيل والاسترجاع.
-
-## المرحلة 5 — Map Editor
-
-- إنشاء خريطة بصريًا.
-- تحرير الشبكة والمسارات والعوائق ونقاط الدخول والخروج.
-- معاينة واختبار.
-
-**بوابة الخروج:** خريطة جديدة قابلة للتشغيل من بيانات Studio.
-
-## المرحلة 6 — Level & Wave Builder
-
-- بناء المراحل وربط الخرائط.
-- إنشاء الموجات وتوقيتها وتشكيل الوحوش.
-- شروط الفوز والخسارة والمكافآت.
-- اختبار ومحاكاة المرحلة.
-
-**بوابة الخروج:** مرحلة كاملة جديدة يمكن إنشاؤها واختبارها ونشرها من Studio.
-
-## المرحلة 7 — Economy & Progression
-
-- الموارد والعملات والأسعار والتكاليف.
-- المخزون والترقيات والفتح والتقدم.
-- المهام والإنجازات والحفظ.
-- اختبارات سلامة البيانات والاقتصاد.
-
-**بوابة الخروج:** التحكم في القيم الاقتصادية والتقدم من Studio مع سلامة حفظ بيانات اللاعب.
-
-## المرحلة 8 — Simulation & Balance Lab
-
-- اختبارات فردية وتفاعلية.
-- محاكاة المراحل.
-- مقارنة الإصدارات.
-- تقارير التوازن والأداء.
-
-**بوابة الخروج:** تقارير موثوقة تساعد على اتخاذ قرار النشر قبل إطلاق التعديل.
-
-## المرحلة 9 — Release Manager
-
-- بيئات النشر.
-- حزم إصدارات متماسكة.
-- اعتماد ونشر ومراقبة.
-- استرجاع آمن.
-- سجل إصدارات شامل.
-
-**بوابة الخروج:** نشر إصدار لعبة/محتوى من Studio واستعادته دون عمليات Terminal يومية.
-
-## المرحلة 10 — Analytics & Live Operations
-
-- تحليلات اللعب والأداء.
-- تقارير الأخطاء.
-- قياس الصعوبة والاحتفاظ.
-- أدوات تشغيل وتحديثات المحتوى.
-
-**بوابة الخروج:** تشغيل اللعبة ومراقبتها وتطوير محتواها باستمرار عبر Studio.
-
-## قواعد التسليم
-
-- لا نبدأ المرحلة التالية قبل إغلاق بوابة الحالية.
-- كل ميزة تتبع: تصميم → تنفيذ → ربط API/بيانات → Runtime → اختبارات → تحقق متصفح → توثيق.
-- لا تُحسب الملفات أو الواجهات الموجودة دليلًا على اكتمال الميزة.
-- لا يُدّعى نجاح اختبار لم يُنفذ.
+## قواعد التنفيذ
+- مرحلة واحدة قيد التنفيذ في كل وقت، مع استثناء الأعمال التوثيقية/التحضيرية التي لا تتجاوز بوابة المرحلة.
+- كل ميزة: تصميم → تنفيذ → API/Validation/Storage → Runtime → اختبار → تحقق متصفح → توثيق.
 - لا دمج إلى main دون موافقة صريحة.
+- لا خدمات مدفوعة دون موافقة.
+- لا Terminal للعمليات اليومية.
+- لا ادعاء نتائج غير متحققة.
+- المسار النشط Next.js/React/Phaser داخل web/؛ لا Rewrite شامل ولا نقل إلى المشاريع التاريخية.
+
+## المرحلة 0 — Audit & Baseline (الحالية)
+- تدقيق المستودع والفروع وPRs، الصفحات وAPI.
+- جرد مصادر بيانات المحتوى والأصول والأنيميشن والاختبارات.
+- مصفوفة Studio→API→Service→Storage→Runtime→Engine.
+- اختبار Browser/Chrome ومسارات اللعب وأصول Bamboo Throwing.
+- تحقق Node tests، ESLint، Production Build في Runner أو Windows.
+- تحديد الفجوات والخطوات القابلة لإعادة الإنتاج.
+**بوابة الخروج:** خريطة موثوقة، نتائج تحقق فعلية أو قيود موثقة، مراجعة PRs المتراكبة ومسار آمن، عيوب أولويات وخطوات reproduction، ونقطة أساس. لا تزال هذه البوابة مفتوحة.
+
+## المرحلة 1 — Studio Foundation & Game Architecture
+- Content Registry، contracts، IDs، relations، versioning.
+- API/services/validation/auth/permissions/audit.
+- Draft/Testing/Approved/Published/Disabled/Archived lifecycle.
+- dependency & compatibility analysis، safe deletion، recovery.
+- storage abstraction، runtime adapters، publication bundles/atomic activation.
+- Capability Extension architecture، event/interaction contracts.
+- UI foundation، search/library، drafts، preview، save/recovery.
+**بوابة:** دورة محتوى نموذجية End-to-End، اختبار، سجل، صلاحيات وتبعيات وإصدار واسترجاع، وصول فعلي للمحرك.
+
+## المرحلة 2 — Content Creation Core
+- Plant Studio.
+- Monster Studio.
+- Projectile & Weapon Studio.
+- Ability/Effect/Interaction framework.
+- Gameplay AI profiles supported by engine.
+**بوابة:** إنشاء/نسخ/تعديل محتوى جديد، اختبار منفرد وتفاعلي، نشر واسترجاع مع runtime proof.
+
+## المرحلة 3 — Assets & Presentation
+- Asset library، Sprite Sheet editor، animation/audio/VFX.
+- فحص النوع والأبعاد، preview، استبدال آمن، dependencies.
+**بوابة:** رفع ومعاينة وربط وتشغيل واسترجاع أصل من Studio.
+
+## المرحلة 4 — World Construction
+- World/Map Editor، grid، terrain، paths، entry/exit، obstacles، environment.
+**بوابة:** خريطة جديدة تعمل من بيانات Studio.
+
+## المرحلة 5 — Game Construction
+- Level/Wave builder، objective/victory/defeat/event/difficulty.
+- Game Mode framework وفق الأولوية.
+**بوابة:** مرحلة وموجات قابلة للإنشاء والاختبار والمحاكاة والنشر.
+
+## المرحلة 6 — Player & Progression
+- player data، save، inventory، resources، unlocks، upgrades، tasks، achievements، rewards، migrations.
+**بوابة:** تقدم محفوظ وموثوق، اختبار سلامة، تحكم Studio.
+
+## المرحلة 7 — Economy & Monetization
+- اقتصاد، متجر، أسعار، عملات، عروض، عناصر تجميلية، purchase validation، simulation.
+**بوابة:** تغييرات اقتصادية آمنة قابلة للمحاكاة والتدقيق؛ لا خدمات دفع دون موافقة.
+
+## المرحلة 8 — Simulation, Testing & Balance
+- sandbox، unit/content/interaction/level tests، performance، compatibility، balance reports، regression.
+**بوابة:** نتائج موثوقة، reproducible، لا نشر عند فشل شروط إلزامية.
+
+## المرحلة 9 — Player Experience & Expansion
+- tutorial، loops، challenges، replayability، collection، social/viral readiness، additional modes.
+**بوابة:** تجربة لاعب واضحة واختبارات/تحليلات وفق نطاق كل ميزة.
+
+## المرحلة 10 — Localization, Accessibility & Platform Readiness
+- localization، RTL، Arabic، missing strings، accessibility options، responsive/mobile/touch، device compatibility.
+**بوابة:** تحقق تجربة لكل نطاق لغة/جهاز ضمن المعلن، لا ادعاء دعم غير مختبر.
+
+## المرحلة 11 — Release & Operations
+- environments، release bundles، staging، production، monitoring، incident handling، rollback، live operations، analytics، scheduling.
+**بوابة:** نشر متماسك، مراقبة واسترجاع وإجراءات incident موثقة.
+
+## المرحلة 12 — AI-Assisted Studio & Continuous Expansion
+- conversational change workflow، impact analysis، proposals، code/content assistance، test generation، diagnostics.
+- يبدأ تصميم التكامل الآمن من مراحل الأساس، ويكتمل تدريجيًا؛ لا يفترض API مدفوع أو نشر تلقائي.
+**بوابة:** سير عمل آمن، قابل للمراجعة، موثق، ويعرض نتائج الاختبارات الفعلية.
+
+## التبعيات الحاكمة
+- Dependency/versioning قبل نشر المحتوى المركب.
+- Map data قبل Level Builder.
+- Engine capabilities قبل سلوك غير موجود.
+- Save/data integrity قبل progression/economy.
+- test/simulation قبل releases.
+- releases/monitoring قبل Live Ops واسعة.
+- AI workflow يبنى فوق مراجعة آمنة وversion control وtests.
+
+## الأولويات
+P0: blockers، أمان، فقد بيانات، أخطاء تشغيل أو نشر، بوابة المرحلة. P1: متطلبات المرحلة. P2: تحسينات. P3: توسعات مستقبلية (Multiplayer، منصات إضافية، اجتماعي واسع). لا يشتت P2/P3 المرحلة الحالية دون مبرر.
