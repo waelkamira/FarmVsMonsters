@@ -23,7 +23,7 @@ function readCombatForm(form,projectile,existing){
  const previous=existing?.combat;
  return createStudioPlantCombatProfile({
   projectile:projectile||null,
-  behavior:String(form.get("behavior")||previous?.mode||"melee"),
+  behavior:String(form.get("behavior")||(previous?.mode&&previous.mode!=="projectile"?previous.mode:"")),
   energyCost:form.get("energyCost")??previous?.energyCost??60,
   hp:form.get("hp")??previous?.hp??150,
   cooldownMs:form.get("cooldownMs")??previous?.cooldownMs??1800,
