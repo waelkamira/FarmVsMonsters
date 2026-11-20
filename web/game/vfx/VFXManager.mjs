@@ -70,7 +70,17 @@ export class VFXManager {
         if (config.tint != null) image.setTint?.(config.tint);
         if (config.depth != null) image.setDepth?.(config.depth);
       });
-      if (visual && !this.activePoolKeys.has(visual)) this.activePoolKeys.set(visual, poolKey);
+      if (visual) {
+        visual.setPosition?.(x, y);
+        visual.setActive?.(true);
+        visual.setVisible?.(true);
+        visual.setAlpha?.(1);
+        visual.setScale?.(config.scale ?? 0.25);
+        visual.clearTint?.();
+        if (config.tint != null) visual.setTint?.(config.tint);
+        if (config.depth != null) visual.setDepth?.(config.depth);
+        if (!this.activePoolKeys.has(visual)) this.activePoolKeys.set(visual, poolKey);
+      }
     } else if (this.scene.add?.container && this.scene.add?.circle) {
       const burst = this.scene.add.container(x, y);
       const qualityCount = this.config.qualityProfile.maxParticlesPerEffect;
