@@ -4218,39 +4218,37 @@ export default class BattleScene extends Scene {
     return monster.kind === 'stonehide' ? getStonehideIncomingDamageMultiplier(monster.braced) : armorMultiplier;
   }
 
-  createMonsterBurningBurst(monster) {
+  createMonsterDefeatMotes(monster) {
     const bounds = monster?.view?.getBounds?.();
     if (!bounds) return;
     const x = bounds.centerX;
     const y = bounds.centerY;
     const depth = (monster.view.depth ?? 0) + 5;
-    const flash = this.add.circle(x, y, Math.max(bounds.width, bounds.height) * 0.08, 0xfff0a0, 0.95);
-    flash.setDepth(depth);
-    this.tweens.add({
-      targets: flash,
-      scale: 2.1,
-      alpha: 0,
-      duration: 300,
-      ease: "Cubic.easeOut",
-      onComplete: () => flash.destroy()
-    });
+    const colors = [0xb9e879, 0xe6d98a, 0xffd477, 0xf4efc0];
+    const count = 8;
 
-    const colors = [0xff3218, 0xff7626, 0xffc044, 0xffe7a0];
-    const count = 14;
+    // Gentle upward-drifting motes replace the fiery death explosion.
     for (let i = 0; i < count; i += 1) {
-      const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.22;
-      const distance = Math.max(bounds.width, bounds.height) * (0.225 + Math.random() * 0.21);
-      const spark = this.add.circle(x, y, 1 + Math.random() * 1.25, colors[i % colors.length], 0.95);
-      spark.setDepth(depth + 1);
+      const startX = x + (Math.random() - 0.5) * bounds.width * 0.48;
+      const startY = y + (Math.random() - 0.5) * bounds.height * 0.28;
+      const mote = this.add.circle(
+        startX,
+        startY,
+        1.2 + Math.random() * 1.2,
+        colors[i % colors.length],
+        0.78
+      );
+      mote.setDepth(depth);
       this.tweens.add({
-        targets: spark,
-        x: x + Math.cos(angle) * distance,
-        y: y + Math.sin(angle) * distance - 12,
+        targets: mote,
+        x: startX + (Math.random() - 0.5) * 22,
+        y: startY - 18 - Math.random() * 22,
         alpha: 0,
-        scale: 0.15,
-        duration: 280 + Math.random() * 170,
-        ease: "Cubic.easeOut",
-        onComplete: () => spark.destroy()
+        scale: 0.25,
+        duration: 480 + Math.random() * 220,
+        delay: i * 24,
+        ease: "Sine.easeOut",
+        onComplete: () => mote.destroy()
       });
     }
   }
@@ -4331,7 +4329,7 @@ export default class BattleScene extends Scene {
       monster.hitFlashTimer = null;
     }
     this.createMonsterDefeatBurst(monster.x, monster.y, monster.view && monster.view.scaleY);
-    this.createMonsterBurningBurst(monster);
+    this.createMonsterDefeatMotes(monster);
     this.playMonsterDefeatSound();
     if (monster.hyenaSprite) this.playHyenaVoice("yelp", 0.88);
     this.playCoinRewardSound();
