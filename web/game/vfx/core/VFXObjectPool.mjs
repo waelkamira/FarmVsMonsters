@@ -51,12 +51,8 @@ export class VFXObjectPool {
       return false;
     }
 
-    let bucket = this.buckets.get(key);
-    if (!bucket) {
-      bucket = [];
-      this.buckets.set(key, bucket);
-    }
-    if (bucket.length >= this.maxPerKey || this.idleCount >= this.maxTotal) {
+    const existingBucket = this.buckets.get(key);
+    if ((existingBucket?.length ?? 0) >= this.maxPerKey || this.idleCount >= this.maxTotal) {
       destroyItem();
       return false;
     }
@@ -69,6 +65,8 @@ export class VFXObjectPool {
       return false;
     }
 
+    const bucket = existingBucket ?? [];
+    if (!existingBucket) this.buckets.set(key, bucket);
     bucket.push(item);
     this.idleCount += 1;
     return true;
