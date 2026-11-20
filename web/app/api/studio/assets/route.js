@@ -23,7 +23,7 @@ function readCombatForm(form,projectile,existing){
  const previous=existing?.combat;
  return createStudioPlantCombatProfile({
   projectile:projectile||null,
-  behavior:String(form.get("behavior")||(previous?.mode&&previous.mode!=="projectile"?previous.mode:"")),
+  behavior:String(form.get("behavior")||""),
   energyCost:form.get("energyCost")??previous?.energyCost??60,
   hp:form.get("hp")??previous?.hp??150,
   cooldownMs:form.get("cooldownMs")??previous?.cooldownMs??1800,
@@ -74,9 +74,14 @@ export async function POST(req){
  if(existing&&existing.type!==type)return NextResponse.json({error:"لا يمكن تغيير فئة الأصل أثناء الاستبدال."},{status:409});
  let combatProfile=null;
  if(type==="plant"){
-  const currentProjectile=hasProjectile
-    ?{id:id+"-projectile",filename:id+"-projectile"+ext(projectileFile.type),path:"/assets/projectiles/plants/"+id+"-projectile"+ext(projectileFile.type)}
-    :(removeProjectile?null:(existing?.combat?.mode==="projectile"?existing.combat.projectile:null));
+  const behavior=String(form.get("behavior")||"");
+  if(!behavior)return NextResponse.json({error:"اختر نظام النبتة يدوياً قبل حفظها."},{status:400});
+  if(hasProjectile&&behavior!=="projectile")return NextResponse.json({error:"اختر نظام إطلاق المقذوفات لاستخدام ملف القذيفة، أو أزل ملف القذيفة."},{status:400});
+  const currentProjectile=behavior==="projectile"
+    ?(hasProjectile
+      ?{id:id+"-projectile",filename:id+"-projectile"+ext(projectileFile.type),path:"/assets/projectiles/plants/"+id+"-projectile"+ext(projectileFile.type)}
+      :(removeProjectile?null:(existing?.combat?.mode==="projectile"?existing.combat.projectile:null)))
+    :null;
   try{combatProfile=readCombatForm(form,currentProjectile,existing);}catch(error){return NextResponse.json({error:error.message},{status:400});}
   if(combatProfile.mode==="projectile"&&!currentProjectile)return NextResponse.json({error:"ارفع ملف القذيفة مع النبتة أو اختر سلوكاً بديلاً."},{status:400});
  }
