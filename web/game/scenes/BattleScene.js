@@ -3316,7 +3316,7 @@ export default class BattleScene extends Scene {
         view.add(this.add.circle(0, 0, 11, 0xffc247, 1).setStrokeStyle(2, 0xffefc2, 1));
       }
       this.projectiles.push({
-        view, localX, row, startLocalX: localX, targetLocalX: Math.max(localX + 1, target.localX),
+        view, localX, row, target, startLocalX: localX, targetLocalX: Math.max(localX + 1, target.localX),
         launchOffsetX: 14, launchOffsetY: -30, speed: profile.projectileSpeed,
         damage: profile.damage, freeze: false, freezeDurationMs: 0,
         collisionRadius: profile.projectileCollisionRadius, dropSpeed: profile.projectileSpeed * 1.5,
@@ -4447,7 +4447,7 @@ export default class BattleScene extends Scene {
         continue;
       }
 
-      if (shot.localX > shot.targetLocalX + PHASE_ONE_PLANTS.radish.projectileCollisionRadius ||
+      if (shot.localX > shot.targetLocalX + (shot.collisionRadius || PHASE_ONE_PLANTS.radish.projectileCollisionRadius) ||
           shot.localX > SPAWN_LOCAL_X + 80) {
         shot.alive = false;
         shot.view.destroy();
