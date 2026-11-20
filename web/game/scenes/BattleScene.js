@@ -197,11 +197,10 @@ export default class BattleScene extends Scene {
       this.vfxManager?.destroy();
       this.vfxManager = null;
     });
-    // Both uploaded artworks are 3x3 sheets. Register one Phaser frame per cell
-    // so the battle renders a single pose instead of the complete nine-pose sheet.
-    // Use the same dimension-derived 3×3 crop path for Mango, Snow Thrower,
-    // and the frozen Hyena so every sheet gets identical frame boundaries.
+    // Uploaded 3×3 plant/monster sheets are cropped using source dimensions,
+    // exactly like Mango: nine named Phaser frames, with no assumed cell size.
     this.registerThreeByThreeSheet("mango-level-1");
+    this.registerThreeByThreeSheet("electric-mushroom-level-1");
     this.registerThreeByThreeSheet("snow-thrower-level-1");
     this.registerThreeByThreeSheet("frozen-hyena-level-1");
     this.registerThreeByThreeSheet("frozen-hyena-level-2");
@@ -303,6 +302,18 @@ export default class BattleScene extends Scene {
     }
     if (this.textures.exists("mango-level-1") && !this.anims.exists("mango-level-1-throw")) {
       this.anims.create({ key: "mango-level-1-throw", frames: this.anims.generateFrameNumbers("mango-level-1", { start: 0, end: 8 }), frameRate: 12, repeat: 0 });
+    }
+    if (this.textures.exists("electric-mushroom-level-1") && !this.anims.exists("electric-mushroom-level-1-throw")) {
+      const available = Object.keys(this.textures.get("electric-mushroom-level-1").frames)
+        .filter((name) => name !== "__BASE").length;
+      if (available >= 9) {
+        this.anims.create({
+          key: "electric-mushroom-level-1-throw",
+          frames: this.anims.generateFrameNumbers("electric-mushroom-level-1", { start: 0, end: 8 }),
+          frameRate: 12,
+          repeat: 0
+        });
+      }
     }
     if (this.textures.exists("radish-level-1") && !this.anims.exists("radish-level-1-throw")) {
       this.anims.create({ key: "radish-level-1-throw", frames: this.anims.generateFrameNumbers("radish-level-1", { start: 0, end: 8 }), frameRate: 12, repeat: 0 });
@@ -2864,14 +2875,15 @@ export default class BattleScene extends Scene {
       // Pineapple Level 1 keeps its tuned base size; only its row perspective changes.
       const baseHeight = type === "pumpkin" ? 70 : type === "pineapple" ? 132 : type === "hazelnut" ? 112 : type === "mango" ? 112 : type === "snow-thrower" ? 84 : type === "electric-mushroom" ? 96 : 64;
       const height = baseHeight * pineapplePerspectiveScale;
-      const plantFrame = this.textures.getFrame(texture, ["pineapple", "hazelnut", "mango", "snow-thrower"].includes(type) ? "0" : undefined);
+      const plantFrame = this.textures.getFrame(texture, ["pineapple", "hazelnut", "mango", "snow-thrower", "electric-mushroom"].includes(type) ? "0" : undefined);
       const width = height * (plantFrame.realWidth / plantFrame.realHeight);
       const maxWidth = (type === "pineapple" ? 152 : type === "hazelnut" ? 116 : type === "mango" ? 116 : type === "snow-thrower" ? 84 : type === "electric-mushroom" ? 104 : 76) * pineapplePerspectiveScale;
-      if (["pineapple", "hazelnut", "mango", "snow-thrower"].includes(type)) {
+      if (["pineapple", "hazelnut", "mango", "snow-thrower", "electric-mushroom"].includes(type)) {
         const animatedPlant = this.add.sprite(0, -height / 2 + 2, texture, "0").setDisplaySize(Math.min(width, maxWidth), height);
         const animationDataKey = type === "pineapple" ? "pineappleThrowSprite"
           : type === "hazelnut" ? "hazelnutThrowSprite"
-          : type === "mango" ? "mangoThrowSprite" : "snow-throwerThrowSprite";
+          : type === "mango" ? "mangoThrowSprite"
+          : type === "electric-mushroom" ? "electric-mushroomThrowSprite" : "snow-throwerThrowSprite";
         animatedPlant.setData(animationDataKey, true);
         plant.add(animatedPlant);
       } else {
@@ -3098,7 +3110,7 @@ export default class BattleScene extends Scene {
     }
     // Pineapple projectiles must not exist until the throw animation reaches
     // its final frame. This keeps the visual action and the actual launch in sync.
-    if (["radish", "pineapple", "hazelnut", "mango", "snow-thrower"].includes(plant.type) && plant.view?.active) {
+    if (["radish", "pineapple", "hazelnut", "mango", "snow-thrower", "electric-mushroom"].includes(plant.type) && plant.view?.active) {
       const animationType = plant.type;
       const throwingKey = `${animationType}Throwing`;
       if (plant[throwingKey]) return;
@@ -3197,7 +3209,7 @@ export default class BattleScene extends Scene {
       launchOffsetY = midpointY - laneOrigin.y;
     } else if (plant.type === "electric-mushroom") {
       const frame = this.textures.exists("electric-mushroom-level-1")
-        ? this.textures.getFrame("electric-mushroom-level-1")
+        ? this.textures.getFrame("electric-mushroom-level-1", "0")
         : null;
       const perspectiveScale = plant.view?.getData?.("pineapplePerspectiveScale") || 1;
       const displayHeight = 96 * perspectiveScale;
