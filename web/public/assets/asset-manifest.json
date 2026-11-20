@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-20T13:17:27.914Z",
+  "generatedAt": "2026-11-20T14:17:57.097Z",
   "assetCount": 89,
   "totalBytes": 24438194,
   "groups": {
@@ -455,80 +455,13 @@
     ],
     "plants": [
       {
-        "key": "hazelnut-level-1",
-        "url": "/assets/plants/hazelnut-level-1.png",
-        "type": "spritesheet",
-        "frameConfig": {
-          "frameWidth": 341,
-          "frameHeight": 341,
-          "margin": 0,
-          "spacing": 0
-        }
-      },
-      {
-        "key": "pineapple-level-1",
-        "url": "/assets/plants/pineapple-level-1.png",
-        "type": "spritesheet",
-        "frameConfig": {
-          "frameWidth": 418,
-          "frameHeight": 418,
-          "margin": 0,
-          "spacing": 0
-        }
-      },
-      {
         "key": "plants-electric-mushroom-level-1",
         "url": "/assets/plants/Electric-mushroom-level-1.png",
         "type": "image"
       },
       {
-        "key": "plants-hazelnut-level-1-bomb",
-        "url": "/assets/plants/hazelnut-level-1-bomb.png",
-        "type": "image"
-      },
-      {
-        "key": "plants-mango-level-1",
-        "url": "/assets/plants/mango-level-1.png",
-        "type": "image"
-      },
-      {
-        "key": "plants-mango-level-1-bomb",
-        "url": "/assets/plants/mango-level-1-bomb.png",
-        "type": "image"
-      },
-      {
-        "key": "plants-mushroom",
-        "url": "/assets/plants/mushroom.png",
-        "type": "image"
-      },
-      {
         "key": "plants-onion",
         "url": "/assets/plants/Onion.png",
-        "type": "image"
-      },
-      {
-        "key": "plants-pineapple-level-1-bomb",
-        "url": "/assets/plants/pineapple-level-1-bomb.png",
-        "type": "image"
-      },
-      {
-        "key": "plants-pumpkin",
-        "url": "/assets/plants/pumpkin.png",
-        "type": "image"
-      },
-      {
-        "key": "plants-radish",
-        "url": "/assets/plants/radish.png",
-        "type": "image"
-      },
-      {
-        "key": "plants-radish-level-1",
-        "url": "/assets/plants/radish-level-1.png",
-        "type": "image"
-      },
-      {
-        "key": "plants-radish-level-1-bomb",
-        "url": "/assets/plants/radish-level-1-bomb.png",
         "type": "image"
       },
       {
@@ -542,6 +475,73 @@
         "type": "image"
       },
       {
+        "key": "plants-hazelnut-level-1-bomb",
+        "url": "/assets/plants/hazelnut-level-1-bomb.png",
+        "type": "image"
+      },
+      {
+        "key": "hazelnut-level-1",
+        "url": "/assets/plants/hazelnut-level-1.png",
+        "type": "spritesheet",
+        "frameConfig": {
+          "frameWidth": 341,
+          "frameHeight": 341,
+          "margin": 0,
+          "spacing": 0
+        }
+      },
+      {
+        "key": "plants-mango-level-1-bomb",
+        "url": "/assets/plants/mango-level-1-bomb.png",
+        "type": "image"
+      },
+      {
+        "key": "plants-mango-level-1",
+        "url": "/assets/plants/mango-level-1.png",
+        "type": "image"
+      },
+      {
+        "key": "plants-mushroom",
+        "url": "/assets/plants/mushroom.png",
+        "type": "image"
+      },
+      {
+        "key": "plants-pineapple-level-1-bomb",
+        "url": "/assets/plants/pineapple-level-1-bomb.png",
+        "type": "image"
+      },
+      {
+        "key": "pineapple-level-1",
+        "url": "/assets/plants/pineapple-level-1.png",
+        "type": "spritesheet",
+        "frameConfig": {
+          "frameWidth": 418,
+          "frameHeight": 418,
+          "margin": 0,
+          "spacing": 0
+        }
+      },
+      {
+        "key": "plants-pumpkin",
+        "url": "/assets/plants/pumpkin.png",
+        "type": "image"
+      },
+      {
+        "key": "plants-radish-level-1-bomb",
+        "url": "/assets/plants/radish-level-1-bomb.png",
+        "type": "image"
+      },
+      {
+        "key": "plants-radish-level-1",
+        "url": "/assets/plants/radish-level-1.png",
+        "type": "image"
+      },
+      {
+        "key": "plants-radish",
+        "url": "/assets/plants/radish.png",
+        "type": "image"
+      },
+      {
         "key": "plants-tomato",
         "url": "/assets/plants/tomato.png",
         "type": "image"
@@ -549,6 +549,118 @@
     ]
   },
   "assets": [
+    {
+      "key": "sfx-coin-collect",
+      "url": "/assets/audio/sfx/coin-collect.ogg",
+      "type": "audio",
+      "group": "audio",
+      "bytes": 25394,
+      "sha256": "8a91f969e932df709df80ee124d86a51389eed9b67f22e5e716bc2bbf60d8dab"
+    },
+    {
+      "key": "sfx-defeat",
+      "url": "/assets/audio/sfx/defeat.ogg",
+      "type": "audio",
+      "group": "audio",
+      "bytes": 9215,
+      "sha256": "eba17ecb2a426bfd4a8a6acff5f8a86202b6424a77af0fd842e37809a1ab6d81"
+    },
+    {
+      "key": "sfx-grass-step-01",
+      "url": "/assets/audio/sfx/grass-step-01.ogg",
+      "type": "audio",
+      "group": "audio",
+      "bytes": 8290,
+      "sha256": "9d49497777405d78d7cf7f2888e28277f3a23192300cfd1d79d54876b20f479f"
+    },
+    {
+      "key": "sfx-grass-step-02",
+      "url": "/assets/audio/sfx/grass-step-02.ogg",
+      "type": "audio",
+      "group": "audio",
+      "bytes": 8313,
+      "sha256": "fb28781bd22b2eefdc14077f1adf5c94d7fe9c3a130194633b55f3e0d39d9f04"
+    },
+    {
+      "key": "sfx-monster-bite",
+      "url": "/assets/audio/sfx/monster-bite.ogg",
+      "type": "audio",
+      "group": "audio",
+      "bytes": 20870,
+      "sha256": "480ee82b690136ea9db6966a3c3033356b8274752795c4e37afd6b6defcfacff"
+    },
+    {
+      "key": "sfx-monster-defeat",
+      "url": "/assets/audio/sfx/monster-defeat.ogg",
+      "type": "audio",
+      "group": "audio",
+      "bytes": 11617,
+      "sha256": "b33a8f14068aec24ec69ba85e5e87fdc41228975f6a1a3e44a6e7d6fc3d9f8d8"
+    },
+    {
+      "key": "sfx-monster-hit",
+      "url": "/assets/audio/sfx/monster-hit.ogg",
+      "type": "audio",
+      "group": "audio",
+      "bytes": 8800,
+      "sha256": "486988aa2d6440ffc4c62a0e8ccf3c23673ba84424bd4723378d451b7255eb5c"
+    },
+    {
+      "key": "sfx-monster-jump",
+      "url": "/assets/audio/sfx/monster-jump.ogg",
+      "type": "audio",
+      "group": "audio",
+      "bytes": 6872,
+      "sha256": "d28d1b07397de1cd7db2058facae0930372f31d6d945f08303ba996b37ebf06d"
+    },
+    {
+      "key": "sfx-monster-land",
+      "url": "/assets/audio/sfx/monster-land.ogg",
+      "type": "audio",
+      "group": "audio",
+      "bytes": 6575,
+      "sha256": "1723a9fd25103ed41af06054814e84e65f4a772bac86ab2dc927da93d9592ff5"
+    },
+    {
+      "key": "sfx-plant-dig",
+      "url": "/assets/audio/sfx/plant-dig.ogg",
+      "type": "audio",
+      "group": "audio",
+      "bytes": 9370,
+      "sha256": "d00c2b3c9fff07e376145c8c8c45c90e5084ec192f6ce0387db233f7b86f1486"
+    },
+    {
+      "key": "sfx-plant-rustle",
+      "url": "/assets/audio/sfx/plant-rustle.ogg",
+      "type": "audio",
+      "group": "audio",
+      "bytes": 16508,
+      "sha256": "ddb93a3671233f95da0e0b10367f082f7eb42fa6caaddcf776410aa8833c747d"
+    },
+    {
+      "key": "sfx-thorn-impact",
+      "url": "/assets/audio/sfx/thorn-impact.ogg",
+      "type": "audio",
+      "group": "audio",
+      "bytes": 5827,
+      "sha256": "f0e982611e97512fee5f777986b67e8b435434b601f94992ec044f7e89fb5acb"
+    },
+    {
+      "key": "sfx-thorn-launch",
+      "url": "/assets/audio/sfx/thorn-launch.ogg",
+      "type": "audio",
+      "group": "audio",
+      "bytes": 15532,
+      "sha256": "4cd96dc630bed9840c15f1dd2306da2cc56a4da26a5d3f1a03c5a7265ac5e54f"
+    },
+    {
+      "key": "sfx-victory",
+      "url": "/assets/audio/sfx/victory.ogg",
+      "type": "audio",
+      "group": "audio",
+      "bytes": 14169,
+      "sha256": "33b17a9a9a2397c62b285c52c33a907fdffb476909c99e42dde603f6a7a8b12c"
+    },
     {
       "key": "backgrounds-farm-battlefield",
       "url": "/assets/backgrounds/farm-battlefield.jpeg",
@@ -558,46 +670,6 @@
       "sha256": "f8fdb783dcbf3a1bfb026dd1242fa2530203d3cc43270c061fc48ff9f21acc85",
       "width": 1080,
       "height": 599
-    },
-    {
-      "key": "characters-monsters-hyena-frozen-hyena-level-1",
-      "url": "/assets/characters/monsters/hyena/frozen-hyena-level-1.png",
-      "type": "image",
-      "group": "characters/monsters",
-      "bytes": 1308722,
-      "sha256": "60e3762a36d5ff36635132357d7ab2b63f3c097c021bf0fb631a35dd87c848a8",
-      "width": 1024,
-      "height": 1024
-    },
-    {
-      "key": "characters-monsters-hyena-frozen-hyena-level-2",
-      "url": "/assets/characters/monsters/hyena/frozen-hyena-level-2.png",
-      "type": "image",
-      "group": "characters/monsters",
-      "bytes": 1818631,
-      "sha256": "85c12d901577ce91c1586d2d5b534f71ee551ec096b5e03523de82c4d0d20050",
-      "width": 1416,
-      "height": 1119
-    },
-    {
-      "key": "characters-monsters-hyena-hyena-jump",
-      "url": "/assets/characters/monsters/hyena/hyena-jump.png",
-      "type": "image",
-      "group": "characters/monsters",
-      "bytes": 507809,
-      "sha256": "b17e339f1ee106a1cd091f81f28f9985a93e6bfecb7013f94a6f5a4e24ae3eff",
-      "width": 1080,
-      "height": 894
-    },
-    {
-      "key": "characters-monsters-hyena-hyena-run",
-      "url": "/assets/characters/monsters/hyena/hyena-run.png",
-      "type": "image",
-      "group": "characters/monsters",
-      "bytes": 981151,
-      "sha256": "8dcffb491c0bc50d4de4393634127e92903d74b2bc35f2a6ff48ef255135d5c1",
-      "width": 1080,
-      "height": 889
     },
     {
       "key": "farmer-attack",
@@ -740,34 +812,24 @@
       "height": 430
     },
     {
-      "key": "gold-coin",
-      "url": "/assets/items/currency/gold-coin.png",
-      "type": "spritesheet",
-      "group": "items/currency",
-      "bytes": 345442,
-      "sha256": "15c0f5cda17a24582250fe1770b0a5acb219f20cea486781459d2d7a6d3e9e14",
-      "frameConfig": {
-        "frameWidth": 170,
-        "frameHeight": 170
-      },
-      "width": 500,
-      "height": 500
-    },
-    {
-      "key": "hazelnut-level-1",
-      "url": "/assets/plants/hazelnut-level-1.png",
-      "type": "spritesheet",
-      "group": "plants",
-      "bytes": 1115104,
-      "sha256": "bb4f13c4fb621a1bc6df25f56d49d234017af56b32cdf7fbf86bca35aabec307",
-      "frameConfig": {
-        "frameWidth": 341,
-        "frameHeight": 341,
-        "margin": 0,
-        "spacing": 0
-      },
+      "key": "characters-monsters-hyena-frozen-hyena-level-1",
+      "url": "/assets/characters/monsters/hyena/frozen-hyena-level-1.png",
+      "type": "image",
+      "group": "characters/monsters",
+      "bytes": 1308722,
+      "sha256": "60e3762a36d5ff36635132357d7ab2b63f3c097c021bf0fb631a35dd87c848a8",
       "width": 1024,
       "height": 1024
+    },
+    {
+      "key": "characters-monsters-hyena-frozen-hyena-level-2",
+      "url": "/assets/characters/monsters/hyena/frozen-hyena-level-2.png",
+      "type": "image",
+      "group": "characters/monsters",
+      "bytes": 1818631,
+      "sha256": "85c12d901577ce91c1586d2d5b534f71ee551ec096b5e03523de82c4d0d20050",
+      "width": 1416,
+      "height": 1119
     },
     {
       "key": "hyena-bite",
@@ -826,6 +888,26 @@
       "height": 298
     },
     {
+      "key": "characters-monsters-hyena-hyena-jump",
+      "url": "/assets/characters/monsters/hyena/hyena-jump.png",
+      "type": "image",
+      "group": "characters/monsters",
+      "bytes": 507809,
+      "sha256": "b17e339f1ee106a1cd091f81f28f9985a93e6bfecb7013f94a6f5a4e24ae3eff",
+      "width": 1080,
+      "height": 894
+    },
+    {
+      "key": "characters-monsters-hyena-hyena-run",
+      "url": "/assets/characters/monsters/hyena/hyena-run.png",
+      "type": "image",
+      "group": "characters/monsters",
+      "bytes": 981151,
+      "sha256": "8dcffb491c0bc50d4de4393634127e92903d74b2bc35f2a6ff48ef255135d5c1",
+      "width": 1080,
+      "height": 889
+    },
+    {
       "key": "hyena-run",
       "url": "/assets/characters/monsters/hyena/hyena-run1.png",
       "type": "spritesheet",
@@ -864,14 +946,18 @@
       "height": 707
     },
     {
-      "key": "items-ui-background",
-      "url": "/assets/items/ui/background.jpeg",
-      "type": "image",
-      "group": "items/ui",
-      "bytes": 73910,
-      "sha256": "3f80ad055aa9b4307a826a329bec11918619cef7a3a01702fe0dc11a568deb76",
-      "width": 1080,
-      "height": 602
+      "key": "gold-coin",
+      "url": "/assets/items/currency/gold-coin.png",
+      "type": "spritesheet",
+      "group": "items/currency",
+      "bytes": 345442,
+      "sha256": "15c0f5cda17a24582250fe1770b0a5acb219f20cea486781459d2d7a6d3e9e14",
+      "frameConfig": {
+        "frameWidth": 170,
+        "frameHeight": 170
+      },
+      "width": 500,
+      "height": 500
     },
     {
       "key": "items-ui-cute-farm-house-health-icon",
@@ -924,16 +1010,6 @@
       "height": 216
     },
     {
-      "key": "items-ui-logo",
-      "url": "/assets/items/ui/logo.png",
-      "type": "image",
-      "group": "items/ui",
-      "bytes": 1181343,
-      "sha256": "ee4d4ba27c0d0bbc167d0526a8be495e27151a935302697de84222eaf53db1d5",
-      "width": 1080,
-      "height": 720
-    },
-    {
       "key": "items-ui-mushroom-currency-counter-frame",
       "url": "/assets/items/ui/Mushroom currency counter frame.png",
       "type": "image",
@@ -984,6 +1060,36 @@
       "height": 146
     },
     {
+      "key": "items-ui-wooden-attack-wave-progress-bar-frame",
+      "url": "/assets/items/ui/Wooden attack-wave progress bar frame.png",
+      "type": "image",
+      "group": "items/ui",
+      "bytes": 162336,
+      "sha256": "884e6d5d97e00f6f799d19dfbb1a5039ab8eb2b352390e43000a2f4fd9720b6f",
+      "width": 1041,
+      "height": 153
+    },
+    {
+      "key": "items-ui-background",
+      "url": "/assets/items/ui/background.jpeg",
+      "type": "image",
+      "group": "items/ui",
+      "bytes": 73910,
+      "sha256": "3f80ad055aa9b4307a826a329bec11918619cef7a3a01702fe0dc11a568deb76",
+      "width": 1080,
+      "height": 602
+    },
+    {
+      "key": "items-ui-logo",
+      "url": "/assets/items/ui/logo.png",
+      "type": "image",
+      "group": "items/ui",
+      "bytes": 1181343,
+      "sha256": "ee4d4ba27c0d0bbc167d0526a8be495e27151a935302697de84222eaf53db1d5",
+      "width": 1080,
+      "height": 720
+    },
+    {
       "key": "items-ui-start-button",
       "url": "/assets/items/ui/start-button.png",
       "type": "image",
@@ -1024,16 +1130,6 @@
       "height": 286
     },
     {
-      "key": "items-ui-ui-seed-card",
-      "url": "/assets/items/ui/ui-seed-card.png",
-      "type": "image",
-      "group": "items/ui",
-      "bytes": 112485,
-      "sha256": "880f4dcc8a433b3c97924b59bfb9ba66dfcca3fb98c13e6037f381ab8527343c",
-      "width": 270,
-      "height": 281
-    },
-    {
       "key": "items-ui-ui-seed-card-fram",
       "url": "/assets/items/ui/ui-seed-card-fram.png",
       "type": "image",
@@ -1054,6 +1150,16 @@
       "height": 173
     },
     {
+      "key": "items-ui-ui-seed-card",
+      "url": "/assets/items/ui/ui-seed-card.png",
+      "type": "image",
+      "group": "items/ui",
+      "bytes": 112485,
+      "sha256": "880f4dcc8a433b3c97924b59bfb9ba66dfcca3fb98c13e6037f381ab8527343c",
+      "width": 270,
+      "height": 281
+    },
+    {
       "key": "items-ui-ui-seed-slot-empty",
       "url": "/assets/items/ui/ui-seed-slot-empty.png",
       "type": "image",
@@ -1062,16 +1168,6 @@
       "sha256": "d60ae6ec308eb027e414a848a56372d8ecdf4614c4cbf1576a15eaacd0fa1f91",
       "width": 165,
       "height": 203
-    },
-    {
-      "key": "items-ui-wooden-attack-wave-progress-bar-frame",
-      "url": "/assets/items/ui/Wooden attack-wave progress bar frame.png",
-      "type": "image",
-      "group": "items/ui",
-      "bytes": 162336,
-      "sha256": "884e6d5d97e00f6f799d19dfbb1a5039ab8eb2b352390e43000a2f4fd9720b6f",
-      "width": 1041,
-      "height": 153
     },
     {
       "key": "monster-icons-alpha-brute",
@@ -1122,22 +1218,6 @@
       "sha256": "f6c87077f8af09d9fb5da4bc9e03e1e5c26f42358200639f20532f08f459de00",
       "width": 64,
       "height": 64
-    },
-    {
-      "key": "pineapple-level-1",
-      "url": "/assets/plants/pineapple-level-1.png",
-      "type": "spritesheet",
-      "group": "plants",
-      "bytes": 1910895,
-      "sha256": "f04f8c2359dbe73dbde055fdade1651af6cb4d5a227bec1d64302649b9bc822f",
-      "frameConfig": {
-        "frameWidth": 418,
-        "frameHeight": 418,
-        "margin": 0,
-        "spacing": 0
-      },
-      "width": 1254,
-      "height": 1254
     },
     {
       "key": "plant-icons-double-radish",
@@ -1245,49 +1325,9 @@
       "type": "image",
       "group": "plants",
       "bytes": 366074,
-      "sha256": "b8652e81d15fb7c81560906e105636b968cde3542edb491b8453ae326d1839b4",
+      "sha256": "22d8f60a35bac3067319880ae8d98be0ba8ac017aaabbbdff8a677ca3d6574a2",
       "width": 512,
       "height": 512
-    },
-    {
-      "key": "plants-hazelnut-level-1-bomb",
-      "url": "/assets/plants/hazelnut-level-1-bomb.png",
-      "type": "image",
-      "group": "plants",
-      "bytes": 12727,
-      "sha256": "4aa90bd07adc316ec99df8259f3d820332d512b7214d7fd42bae5ad966145614",
-      "width": 97,
-      "height": 94
-    },
-    {
-      "key": "plants-mango-level-1",
-      "url": "/assets/plants/mango-level-1.png",
-      "type": "image",
-      "group": "plants",
-      "bytes": 555859,
-      "sha256": "86222bcaf66e1504d625d4cb61f6ff6472176eef5039fa6beeed62e45102a49c",
-      "width": 1080,
-      "height": 806
-    },
-    {
-      "key": "plants-mango-level-1-bomb",
-      "url": "/assets/plants/mango-level-1-bomb.png",
-      "type": "image",
-      "group": "plants",
-      "bytes": 13603,
-      "sha256": "1c03b4cd9d7ed56f49662e0b43b5bea6ccf5ca87b998c688577e1e99fe68d21c",
-      "width": 163,
-      "height": 90
-    },
-    {
-      "key": "plants-mushroom",
-      "url": "/assets/plants/mushroom.png",
-      "type": "image",
-      "group": "plants",
-      "bytes": 198036,
-      "sha256": "b7b663d22535a851018b6831c009615490187a5da06e33c31cee11da850158fa",
-      "width": 353,
-      "height": 400
     },
     {
       "key": "plants-onion",
@@ -1298,56 +1338,6 @@
       "sha256": "9633b9828c5999489ab0a84b161de5e8a69b85cd1c29f67bd3eebb517a61e2a6",
       "width": 340,
       "height": 500
-    },
-    {
-      "key": "plants-pineapple-level-1-bomb",
-      "url": "/assets/plants/pineapple-level-1-bomb.png",
-      "type": "image",
-      "group": "plants",
-      "bytes": 17728,
-      "sha256": "7048ba180547511daf0373977b3f2719f9fe2b1cab34c2c79b474f63fc003427",
-      "width": 168,
-      "height": 103
-    },
-    {
-      "key": "plants-pumpkin",
-      "url": "/assets/plants/pumpkin.png",
-      "type": "image",
-      "group": "plants",
-      "bytes": 255083,
-      "sha256": "8556d9594e3ef6e40aa60dfa8e4aa37798cea4844d18f6d38a88523fe9621523",
-      "width": 500,
-      "height": 500
-    },
-    {
-      "key": "plants-radish",
-      "url": "/assets/plants/radish.png",
-      "type": "image",
-      "group": "plants",
-      "bytes": 210248,
-      "sha256": "8ad43555fcf47177114004b54aa92a216b4453f2fee7aa13a94752e42e442dd0",
-      "width": 331,
-      "height": 451
-    },
-    {
-      "key": "plants-radish-level-1",
-      "url": "/assets/plants/radish-level-1.png",
-      "type": "image",
-      "group": "plants",
-      "bytes": 622722,
-      "sha256": "e346e54712f6b219411977f1b6804f2a422de4712aff0d033fbab32f057d310b",
-      "width": 908,
-      "height": 1079
-    },
-    {
-      "key": "plants-radish-level-1-bomb",
-      "url": "/assets/plants/radish-level-1-bomb.png",
-      "type": "image",
-      "group": "plants",
-      "bytes": 5292,
-      "sha256": "eed33cde592cba25c165b1d53a277b765c129083e8a2984063c31876c6ce27de",
-      "width": 70,
-      "height": 63
     },
     {
       "key": "plants-snow-thrower-bomb-level-1",
@@ -1370,6 +1360,128 @@
       "height": 869
     },
     {
+      "key": "plants-hazelnut-level-1-bomb",
+      "url": "/assets/plants/hazelnut-level-1-bomb.png",
+      "type": "image",
+      "group": "plants",
+      "bytes": 12727,
+      "sha256": "4aa90bd07adc316ec99df8259f3d820332d512b7214d7fd42bae5ad966145614",
+      "width": 97,
+      "height": 94
+    },
+    {
+      "key": "hazelnut-level-1",
+      "url": "/assets/plants/hazelnut-level-1.png",
+      "type": "spritesheet",
+      "group": "plants",
+      "bytes": 1115104,
+      "sha256": "bb4f13c4fb621a1bc6df25f56d49d234017af56b32cdf7fbf86bca35aabec307",
+      "frameConfig": {
+        "frameWidth": 341,
+        "frameHeight": 341,
+        "margin": 0,
+        "spacing": 0
+      },
+      "width": 1024,
+      "height": 1024
+    },
+    {
+      "key": "plants-mango-level-1-bomb",
+      "url": "/assets/plants/mango-level-1-bomb.png",
+      "type": "image",
+      "group": "plants",
+      "bytes": 13603,
+      "sha256": "1c03b4cd9d7ed56f49662e0b43b5bea6ccf5ca87b998c688577e1e99fe68d21c",
+      "width": 163,
+      "height": 90
+    },
+    {
+      "key": "plants-mango-level-1",
+      "url": "/assets/plants/mango-level-1.png",
+      "type": "image",
+      "group": "plants",
+      "bytes": 555859,
+      "sha256": "86222bcaf66e1504d625d4cb61f6ff6472176eef5039fa6beeed62e45102a49c",
+      "width": 1080,
+      "height": 806
+    },
+    {
+      "key": "plants-mushroom",
+      "url": "/assets/plants/mushroom.png",
+      "type": "image",
+      "group": "plants",
+      "bytes": 198036,
+      "sha256": "b7b663d22535a851018b6831c009615490187a5da06e33c31cee11da850158fa",
+      "width": 353,
+      "height": 400
+    },
+    {
+      "key": "plants-pineapple-level-1-bomb",
+      "url": "/assets/plants/pineapple-level-1-bomb.png",
+      "type": "image",
+      "group": "plants",
+      "bytes": 17728,
+      "sha256": "7048ba180547511daf0373977b3f2719f9fe2b1cab34c2c79b474f63fc003427",
+      "width": 168,
+      "height": 103
+    },
+    {
+      "key": "pineapple-level-1",
+      "url": "/assets/plants/pineapple-level-1.png",
+      "type": "spritesheet",
+      "group": "plants",
+      "bytes": 1910895,
+      "sha256": "f04f8c2359dbe73dbde055fdade1651af6cb4d5a227bec1d64302649b9bc822f",
+      "frameConfig": {
+        "frameWidth": 418,
+        "frameHeight": 418,
+        "margin": 0,
+        "spacing": 0
+      },
+      "width": 1254,
+      "height": 1254
+    },
+    {
+      "key": "plants-pumpkin",
+      "url": "/assets/plants/pumpkin.png",
+      "type": "image",
+      "group": "plants",
+      "bytes": 255083,
+      "sha256": "8556d9594e3ef6e40aa60dfa8e4aa37798cea4844d18f6d38a88523fe9621523",
+      "width": 500,
+      "height": 500
+    },
+    {
+      "key": "plants-radish-level-1-bomb",
+      "url": "/assets/plants/radish-level-1-bomb.png",
+      "type": "image",
+      "group": "plants",
+      "bytes": 5292,
+      "sha256": "eed33cde592cba25c165b1d53a277b765c129083e8a2984063c31876c6ce27de",
+      "width": 70,
+      "height": 63
+    },
+    {
+      "key": "plants-radish-level-1",
+      "url": "/assets/plants/radish-level-1.png",
+      "type": "image",
+      "group": "plants",
+      "bytes": 622722,
+      "sha256": "e346e54712f6b219411977f1b6804f2a422de4712aff0d033fbab32f057d310b",
+      "width": 908,
+      "height": 1079
+    },
+    {
+      "key": "plants-radish",
+      "url": "/assets/plants/radish.png",
+      "type": "image",
+      "group": "plants",
+      "bytes": 210248,
+      "sha256": "8ad43555fcf47177114004b54aa92a216b4453f2fee7aa13a94752e42e442dd0",
+      "width": 331,
+      "height": 451
+    },
+    {
       "key": "plants-tomato",
       "url": "/assets/plants/tomato.png",
       "type": "image",
@@ -1378,118 +1490,6 @@
       "sha256": "3155502e591aefd9bde4bde5ee623442789168fa99c646f651e79aa441a12005",
       "width": 500,
       "height": 500
-    },
-    {
-      "key": "sfx-coin-collect",
-      "url": "/assets/audio/sfx/coin-collect.ogg",
-      "type": "audio",
-      "group": "audio",
-      "bytes": 25394,
-      "sha256": "8a91f969e932df709df80ee124d86a51389eed9b67f22e5e716bc2bbf60d8dab"
-    },
-    {
-      "key": "sfx-defeat",
-      "url": "/assets/audio/sfx/defeat.ogg",
-      "type": "audio",
-      "group": "audio",
-      "bytes": 9215,
-      "sha256": "eba17ecb2a426bfd4a8a6acff5f8a86202b6424a77af0fd842e37809a1ab6d81"
-    },
-    {
-      "key": "sfx-grass-step-01",
-      "url": "/assets/audio/sfx/grass-step-01.ogg",
-      "type": "audio",
-      "group": "audio",
-      "bytes": 8290,
-      "sha256": "9d49497777405d78d7cf7f2888e28277f3a23192300cfd1d79d54876b20f479f"
-    },
-    {
-      "key": "sfx-grass-step-02",
-      "url": "/assets/audio/sfx/grass-step-02.ogg",
-      "type": "audio",
-      "group": "audio",
-      "bytes": 8313,
-      "sha256": "fb28781bd22b2eefdc14077f1adf5c94d7fe9c3a130194633b55f3e0d39d9f04"
-    },
-    {
-      "key": "sfx-monster-bite",
-      "url": "/assets/audio/sfx/monster-bite.ogg",
-      "type": "audio",
-      "group": "audio",
-      "bytes": 20870,
-      "sha256": "480ee82b690136ea9db6966a3c3033356b8274752795c4e37afd6b6defcfacff"
-    },
-    {
-      "key": "sfx-monster-defeat",
-      "url": "/assets/audio/sfx/monster-defeat.ogg",
-      "type": "audio",
-      "group": "audio",
-      "bytes": 11617,
-      "sha256": "b33a8f14068aec24ec69ba85e5e87fdc41228975f6a1a3e44a6e7d6fc3d9f8d8"
-    },
-    {
-      "key": "sfx-monster-hit",
-      "url": "/assets/audio/sfx/monster-hit.ogg",
-      "type": "audio",
-      "group": "audio",
-      "bytes": 8800,
-      "sha256": "486988aa2d6440ffc4c62a0e8ccf3c23673ba84424bd4723378d451b7255eb5c"
-    },
-    {
-      "key": "sfx-monster-jump",
-      "url": "/assets/audio/sfx/monster-jump.ogg",
-      "type": "audio",
-      "group": "audio",
-      "bytes": 6872,
-      "sha256": "d28d1b07397de1cd7db2058facae0930372f31d6d945f08303ba996b37ebf06d"
-    },
-    {
-      "key": "sfx-monster-land",
-      "url": "/assets/audio/sfx/monster-land.ogg",
-      "type": "audio",
-      "group": "audio",
-      "bytes": 6575,
-      "sha256": "1723a9fd25103ed41af06054814e84e65f4a772bac86ab2dc927da93d9592ff5"
-    },
-    {
-      "key": "sfx-plant-dig",
-      "url": "/assets/audio/sfx/plant-dig.ogg",
-      "type": "audio",
-      "group": "audio",
-      "bytes": 9370,
-      "sha256": "d00c2b3c9fff07e376145c8c8c45c90e5084ec192f6ce0387db233f7b86f1486"
-    },
-    {
-      "key": "sfx-plant-rustle",
-      "url": "/assets/audio/sfx/plant-rustle.ogg",
-      "type": "audio",
-      "group": "audio",
-      "bytes": 16508,
-      "sha256": "ddb93a3671233f95da0e0b10367f082f7eb42fa6caaddcf776410aa8833c747d"
-    },
-    {
-      "key": "sfx-thorn-impact",
-      "url": "/assets/audio/sfx/thorn-impact.ogg",
-      "type": "audio",
-      "group": "audio",
-      "bytes": 5827,
-      "sha256": "f0e982611e97512fee5f777986b67e8b435434b601f94992ec044f7e89fb5acb"
-    },
-    {
-      "key": "sfx-thorn-launch",
-      "url": "/assets/audio/sfx/thorn-launch.ogg",
-      "type": "audio",
-      "group": "audio",
-      "bytes": 15532,
-      "sha256": "4cd96dc630bed9840c15f1dd2306da2cc56a4da26a5d3f1a03c5a7265ac5e54f"
-    },
-    {
-      "key": "sfx-victory",
-      "url": "/assets/audio/sfx/victory.ogg",
-      "type": "audio",
-      "group": "audio",
-      "bytes": 14169,
-      "sha256": "33b17a9a9a2397c62b285c52c33a907fdffb476909c99e42dde603f6a7a8b12c"
     }
   ]
 }
