@@ -1,4 +1,4 @@
-import { VFX_PRESETS } from "./VFXPresets.mjs";
+import { VFXRegistry } from "./VFXRegistry.mjs";
 import { VFXPerformance } from "./VFXPerformance.mjs";
 
 export class VFXManager {
@@ -6,6 +6,7 @@ export class VFXManager {
     if (!scene?.add || !scene?.tweens) throw new TypeError("VFXManager requires a Phaser Scene");
     this.scene = scene;
     this.performance = new VFXPerformance(options);
+    this.registry = options.registry || new VFXRegistry();
     this.active = new Set();
     this.destroyed = false;
     this.onUpdate = (_time, delta) => this.performance.sample(delta);
@@ -15,7 +16,7 @@ export class VFXManager {
 
   play(name, position = {}, options = {}) {
     if (this.destroyed || this.active.size >= this.performance.profile.maxConcurrentEffects) return null;
-    const preset = VFX_PRESETS[name];
+    const preset = this.registry.get(name);
     if (!preset) return null;
     const x = Number(position.x), y = Number(position.y);
     if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
