@@ -3295,7 +3295,8 @@ export default class BattleScene extends Scene {
       const localX = lane.localX;
       const row = plant.row;
       const profile = plant.studioPlant.combat;
-      const view = this.add.container(lane.x + 14, lane.y - 30).setDepth(16);
+      const laneOrigin = this.lanePoint(localX, row);
+      const view = this.add.container(laneOrigin.x + 14, laneOrigin.y - 30).setDepth(16);
       const textureKey = "studio-projectile-" + plant.studioPlant.id;
       if (this.textures.exists(textureKey)) {
         const frame = this.textures.getFrame(textureKey);
