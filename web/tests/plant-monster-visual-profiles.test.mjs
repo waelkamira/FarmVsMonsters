@@ -12,7 +12,7 @@ import {
   getMonsterEvolutionProfile
 } from "../game/visuals/PlantMonsterVisualProfiles.mjs";
 
-const plantIds = ["radish", "mushroom", "pumpkin", "pineapple", "hazelnut", "mango", "snow-thrower"];
+const plantIds = ["radish", "mushroom", "pumpkin", "pineapple", "hazelnut", "mango", "snow-thrower", "electric-mushroom"];
 const monsterIds = ["dust-skitter", "cave-brute", "stonehide", "alpha-brute"];
 
 test("every playable plant has an animation profile and three visual evolution stages", () => {
