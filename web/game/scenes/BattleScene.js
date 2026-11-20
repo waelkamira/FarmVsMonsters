@@ -1,5 +1,6 @@
 import { Scene, Input, Math as PhaserMath } from "phaser";
 import { translate } from "../../app/LocaleProvider";
+import { PhaserAssetManager } from "../services/assetManager.mjs";
 import { createSeededRandom } from "../rules/seededRandom.mjs";
 import { createCombatEventLog, appendCombatEvent } from "../rules/combatEventLog.mjs";
 import gridCalibration from "../data/farm-grid-calibration.json";
@@ -77,6 +78,14 @@ export default class BattleScene extends Scene {
   constructor() { super("BattleScene"); }
 
   preload() {
+    // Observe the existing preload queue without changing asset keys, URLs,
+    // spritesheet frame boundaries, or load order. Optional groups can migrate
+    // to loadGroup() incrementally after their dependencies are documented.
+    this.assetManager = new PhaserAssetManager(this);
+    this.events.once("shutdown", () => {
+      this.assetManager?.destroy();
+      this.assetManager = null;
+    });
     this.load.image("farm-battlefield", "/assets/backgrounds/farm-battlefield.jpeg");
     this.load.image("seed-card", "/assets/items/ui/ui-seed-card.png");
     this.load.image("mushroom-card", "/assets/items/ui/ui-mushroom-card.png");
