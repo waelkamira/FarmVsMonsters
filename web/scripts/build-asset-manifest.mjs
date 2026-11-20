@@ -7,6 +7,7 @@ const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const webRoot = path.resolve(scriptDir, "..");
 const assetsRoot = path.join(webRoot, "public", "assets");
 const outputPath = path.join(assetsRoot, "asset-manifest.json");
+const auditPath = path.join(assetsRoot, "asset-audit.json");
 
 const IMAGE_EXTENSIONS = new Set([".png", ".jpg", ".jpeg", ".webp", ".svg", ".avif"]);
 const AUDIO_EXTENSIONS = new Set([".ogg", ".mp3", ".wav", ".m4a"]);
@@ -147,6 +148,8 @@ const manifest = {
 await writeFile(outputPath, JSON.stringify(manifest, null, 2) + "\n");
 console.log(JSON.stringify({
   manifest: path.relative(webRoot, outputPath),
+  audit: path.relative(webRoot, auditPath),
+  largeFiles: largeFiles.length,
   assetCount: assets.length,
   totalMiB: Number((totalBytes / 1024 / 1024).toFixed(2)),
   groups: Object.fromEntries(Object.entries(groups).map(([name, entries]) => [name, entries.length])),
