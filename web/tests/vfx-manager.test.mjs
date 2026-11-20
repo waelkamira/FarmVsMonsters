@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { EventEmitter } from "node:events";
 import { VFXManager } from "../game/vfx/VFXManager.mjs";
 import { VFXPerformance } from "../game/vfx/VFXPerformance.mjs";
+import { VFXRegistry } from "../game/vfx/VFXRegistry.mjs";
 
 test("adaptive quality moves down under sustained frame pressure and recovers", () => {
   const monitor = new VFXPerformance({ initialQuality: "ultra", sampleLimit: 15 });
@@ -41,4 +42,13 @@ test("manager respects its concurrent effect cap", () => {
   for (let index = 0; index < manager.performance.profile.maxConcurrentEffects; index += 1) manager.active.add({});
   assert.equal(manager.play("impact.plant", { x: 10, y: 20 }), null);
   manager.destroy();
+});
+
+
+test("registry accepts validated named presets and rejects invalid configurations", () => {
+  const registry = new VFXRegistry({});
+  registry.register("custom.spark", { radius: 8, duration: 120, kind: "impact" });
+  assert.equal(registry.has("custom.spark"), true);
+  assert.equal(registry.get("custom.spark").radius, 8);
+  assert.throws(() => registry.register("broken", { radius: 0, duration: 20 }), /positive radius and duration/);
 });
