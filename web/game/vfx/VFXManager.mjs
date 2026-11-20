@@ -1,6 +1,7 @@
 import { VFXRegistry } from "./VFXRegistry.mjs";
 import { VFXEventBus } from "./core/VFXEventBus.mjs";
 import { createVFXConfig } from "./core/VFXConfig.mjs";
+import { VFXObjectPool } from "./core/VFXObjectPool.mjs";
 
 const DEFAULT_LIMITS = Object.freeze({ maxActiveBursts: 24, burstLifetimeMs: 360 });
 
@@ -13,7 +14,8 @@ export class VFXManager {
     registry = new VFXRegistry(),
     limits = {},
     config = {},
-    eventBus = null
+    eventBus = null,
+    poolLimits = {}
   } = {}) {
     if (!scene) throw new TypeError("VFXManager requires a Phaser scene");
     this.scene = scene;
@@ -27,6 +29,8 @@ export class VFXManager {
     this.ownsEventBus = !eventBus;
     this.active = new Set();
     this.activeTweens = new Map();
+    this.pool = new VFXObjectPool({ maxPerKey: 8, maxTotal: 24, ...poolLimits });
+    this.activePoolKeys = new Map();
     this.destroyed = false;
     this.unsubscribers = [
       this.eventBus.on("vfx:play", (request) => {
@@ -53,11 +57,20 @@ export class VFXManager {
     const texture = config.texture;
     let visual = null;
 
+    let poolKey = null;
     if (texture && this.scene.textures?.exists(texture)) {
-      visual = this.scene.add.image(x, y, texture);
-      visual.setScale(config.scale ?? 0.25);
-      if (config.tint != null) visual.setTint(config.tint);
-      if (config.depth != null) visual.setDepth(config.depth);
+      poolKey = `image:${texture}`;
+      visual = this.pool.acquire(poolKey, () => this.scene.add.image(x, y, texture), (image) => {
+        image.setPosition?.(x, y);
+        image.setActive?.(true);
+        image.setVisible?.(true);
+        image.setAlpha?.(1);
+        image.setScale?.(config.scale ?? 0.25);
+        image.clearTint?.();
+        if (config.tint != null) image.setTint?.(config.tint);
+        if (config.depth != null) image.setDepth?.(config.depth);
+      });
+      if (visual && !this.activePoolKeys.has(visual)) this.activePoolKeys.set(visual, poolKey);
     } else if (this.scene.add?.container && this.scene.add?.circle) {
       const burst = this.scene.add.container(x, y);
       const qualityCount = this.config.qualityProfile.maxParticlesPerEffect;
@@ -87,6 +100,7 @@ export class VFXManager {
     this.active.add(visual);
     const duration = config.durationMs ?? this.limits.burstLifetimeMs;
     this.eventBus.emit("vfx:started", { effectId, visual, x, y, duration });
+    if (!this.active.has(visual)) return null;
 
     try {
       const tween = this.scene.tweens.add({
@@ -134,10 +148,24 @@ export class VFXManager {
       }
     }
 
-    try {
-      if (visual.active) visual.destroy();
-    } catch {
-      // A failed display-object destroy must not interrupt other VFX cleanup.
+    const poolKey = this.activePoolKeys.get(visual);
+    this.activePoolKeys.delete(visual);
+    if (poolKey) {
+      this.pool.release(poolKey, visual, {
+        reset: (image) => {
+          image.setAlpha?.(1);
+          image.setScale?.(1);
+          image.clearTint?.();
+          image.setVisible?.(false);
+          image.setActive?.(false);
+        }
+      });
+    } else {
+      try {
+        if (visual.active) visual.destroy();
+      } catch {
+        // A failed display-object destroy must not interrupt other VFX cleanup.
+      }
     }
     this.eventBus.emit("vfx:completed", { effectId, visual });
   }
@@ -145,6 +173,7 @@ export class VFXManager {
   destroy() {
     if (this.destroyed) return;
     this.stopAll();
+    this.pool.destroy();
     this.destroyed = true;
     for (const unsubscribe of this.unsubscribers) unsubscribe();
     this.unsubscribers = [];
