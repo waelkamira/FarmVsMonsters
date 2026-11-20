@@ -2163,7 +2163,9 @@ export default class BattleScene extends Scene {
       let unlockedIds = ["radish", "mushroom"];
       let selectedTypes = ["radish", "mushroom"];
       try {
-        unlockedIds = PLAYTEST_ALL_PLANTS\n          ? [...new Set([...loadUnlockedPlantIds(window.localStorage), ...ALL_PLAYTEST_PLANT_IDS])]\n          : loadUnlockedPlantIds(window.localStorage);
+        unlockedIds = PLAYTEST_ALL_PLANTS
+          ? [...new Set([...loadUnlockedPlantIds(window.localStorage), ...ALL_PLAYTEST_PLANT_IDS])]
+          : loadUnlockedPlantIds(window.localStorage);
         const saved = JSON.parse(window.localStorage.getItem("farmVsMonsters.selectedPlants") || "null");
         if (Array.isArray(saved)) selectedTypes = saved;
         else selectedTypes = unlockedIds;
@@ -4214,64 +4216,6 @@ export default class BattleScene extends Scene {
     return monster.kind === 'stonehide' ? getStonehideIncomingDamageMultiplier(monster.braced) : armorMultiplier;
   }
 
-  updateMonsterBurningEffect(monster) {
-    if (!monster?.view?.active || monster.freezeStage > 0) return;
-
-    const bounds = monster.view.getBounds();
-    if (!bounds?.width || !bounds?.height) return;
-
-    monster.burnStacks = Math.min(5, (monster.burnStacks || 0) + 1);
-    const intensity = monster.burnStacks / 5;
-    const width = bounds.width + 14 + intensity * 10;
-    const height = bounds.height + 14 + intensity * 10;
-    const x = bounds.centerX - width / 2;
-    const y = bounds.centerY - height / 2;
-
-    let outline = monster.burningOutline;
-    if (!outline?.active) {
-      outline = this.add.graphics();
-      monster.burningOutline = outline;
-    } else {
-      this.tweens.killTweensOf(outline);
-      outline.clear();
-    }
-
-    outline.setPosition(x, y);
-    outline.setDepth((monster.view.depth ?? 0) + 3);
-    outline.setBlendMode(1);
-    outline.lineStyle(2 + intensity * 2.5, 0xff3218, 0.42 + intensity * 0.42);
-    outline.strokeRoundedRect(0, 0, width, height, Math.min(22, height * 0.22));
-    outline.lineStyle(1.5 + intensity, 0xffb02e, 0.24 + intensity * 0.38);
-    outline.strokeRoundedRect(4, 4, width - 8, height - 8, Math.min(18, height * 0.18));
-
-    this.tweens.add({
-      targets: outline,
-      alpha: 0.72 + intensity * 0.28,
-      duration: 110 + (5 - monster.burnStacks) * 12,
-      yoyo: true,
-      repeat: -1,
-      ease: "Sine.easeInOut"
-    });
-
-    if (monster.burningResetTimer) monster.burningResetTimer.remove(false);
-    monster.burningResetTimer = this.time.delayedCall(1550, () => {
-      if (monster.burningOutline?.active) {
-        this.tweens.killTweensOf(monster.burningOutline);
-        this.tweens.add({
-          targets: monster.burningOutline,
-          alpha: 0,
-          duration: 260,
-          onComplete: () => {
-            monster.burningOutline?.destroy();
-            monster.burningOutline = null;
-          }
-        });
-      }
-      monster.burnStacks = 0;
-      monster.burningResetTimer = null;
-    });
-  }
-
   createMonsterBurningBurst(monster) {
     const bounds = monster?.view?.getBounds?.();
     if (!bounds) return;
@@ -4311,8 +4255,6 @@ export default class BattleScene extends Scene {
 
   flashMonsterOnHit(monster) {
     if (!monster || !monster.alive || monster.freezeStage > 0) return;
-
-    this.updateMonsterBurningEffect(monster);
 
     // Keep the hyena grounded and on its original lane. Strengthen the flash
     // by about 30%, then add a tiny horizontal recoil on the sprite only.
@@ -4368,15 +4310,6 @@ export default class BattleScene extends Scene {
     if (monster.hitFlashTimer) {
       monster.hitFlashTimer.remove(false);
       monster.hitFlashTimer = null;
-    }
-    if (monster.burningResetTimer) {
-      monster.burningResetTimer.remove(false);
-      monster.burningResetTimer = null;
-    }
-    if (monster.burningOutline?.active) {
-      this.tweens.killTweensOf(monster.burningOutline);
-      monster.burningOutline.destroy();
-      monster.burningOutline = null;
     }
     this.createMonsterDefeatBurst(monster.x, monster.y, monster.view && monster.view.scaleY);
     this.createMonsterBurningBurst(monster);
