@@ -18,6 +18,7 @@ test("plants without projectile assets require a supported non-projectile behavi
 test("behavior settings are bounded to safe gameplay ranges",()=>{
   assert.equal(validateStudioPlantCombatProfile({behavior:"melee",hp:0}).valid,false);
   assert.equal(validateStudioPlantCombatProfile({behavior:"contact",cooldownMs:10}).valid,false);
+  assert.equal(validateStudioPlantCombatProfile({behavior:"melee",damage:0}).valid,false);
   assert.equal(validateStudioPlantCombatProfile({behavior:"energy",energyIntervalMs:2000,energyAmount:20}).valid,true);
 });
 test("blocker and energy templates do not receive combat damage defaults",()=>{
