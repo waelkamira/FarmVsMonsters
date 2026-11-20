@@ -310,7 +310,7 @@ export default class BattleScene extends Scene {
         this.anims.create({
           key: "electric-mushroom-level-1-throw",
           frames: this.anims.generateFrameNumbers("electric-mushroom-level-1", { start: 0, end: 8 }),
-          frameRate: 12,
+          frameRate: 18.75,
           repeat: 0
         });
       }
