@@ -1,6 +1,7 @@
 import { Scene, Input, Math as PhaserMath } from "phaser";
 import { translate } from "../../app/LocaleProvider";
 import { PhaserAssetManager } from "../services/assetManager.mjs";
+import { VFXManager } from "../vfx/VFXManager.mjs";
 import { createSeededRandom } from "../rules/seededRandom.mjs";
 import { createCombatEventLog, appendCombatEvent } from "../rules/combatEventLog.mjs";
 import gridCalibration from "../data/farm-grid-calibration.json";
@@ -181,6 +182,7 @@ export default class BattleScene extends Scene {
 
   create() {
     this.isPaused = false;
+    this.vfxManager = new VFXManager(this);
     // Both uploaded artworks are 3x3 sheets. Register one Phaser frame per cell
     // so the battle renders a single pose instead of the complete nine-pose sheet.
     // Use the same dimension-derived 3×3 crop path for Mango, Snow Thrower,
@@ -3210,6 +3212,10 @@ export default class BattleScene extends Scene {
   }
 
   createFreezeImpact(x, y) {
+    if (this.vfxManager) {
+      this.vfxManager.play("element.ice", { x, y }, { depth: 25, intensity: 1.05 });
+      return;
+    }
     const burst = this.add.container(x, y).setDepth(25);
     const core = this.add.circle(0, 0, 11, 0xe9fbff, 0.95);
     const ring = this.add.circle(0, 0, 22, 0x72d9ff, 0.72).setStrokeStyle(3, 0xe6fbff, 0.95);
@@ -3223,6 +3229,10 @@ export default class BattleScene extends Scene {
   }
 
   createProjectileImpact(x, y) {
+    if (this.vfxManager) {
+      this.vfxManager.play("impact.plant", { x, y }, { depth: 24 });
+      return;
+    }
     const burst = this.add.container(x, y).setDepth(24);
     const flash = this.add.circle(0, 0, 10, 0xfff4f7, 0.96);
     const sparks = [];
