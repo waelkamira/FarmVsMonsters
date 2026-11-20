@@ -41,6 +41,11 @@ export const ELECTRIC_MUSHROOM_CONFIG = Object.freeze({
   ...PHASE_ONE_PLANTS["electric-mushroom"],
   cost: PHASE_ONE_PLANTS["electric-mushroom"].plantingEnergyCost
 });
+export const FIRE_PEPPER_CONFIG = Object.freeze({
+  label: "Fire Pepper",
+  ...PHASE_ONE_PLANTS["fire-pepper"],
+  cost: PHASE_ONE_PLANTS["fire-pepper"].plantingEnergyCost
+});
 
 export const collectEnergy = resolveEnergyPickup;
 export function isWaveComplete(spawnedCount, waveSize, livingMonsterCount) {
