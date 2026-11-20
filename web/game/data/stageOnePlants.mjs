@@ -122,15 +122,15 @@ export const STAGE_ONE_PLANTS = Object.freeze([
   },
   {
     id: "fire-pepper",
-    assetPath: "/assets/plants/fire-pepper.png",
-    name: "Fire Pepper",
-    nameAr: "فلفل النار",
+    assetPath: "/assets/plants/Pepper-flamethrower-level-1.png",
+    name: "Fire Pepper Level 1",
+    nameAr: "فلفل النار المستوى الأول",
     role: "Lane-clearing special",
     roleAr: "سلاح خاص لتنظيف المسار",
-    description: "Creates a line of fire that damages every monster crossing its lane.",
-    descriptionAr: "يشعل خطاً نارياً يلحق الضرر بكل وحش يعبر مساره.",
-    energyCost: 130, coinPrice: 360, status: "planned", implemented: false, purchasable: false, image: null,
-    stats: ["Lane-wide damage", "Rare plant"], statsAr: ["ضرر على كامل المسار", "نبتة نادرة"]
+    description: "Plays its nine-frame flamethrower animation, then scorches every monster ahead in its lane.",
+    descriptionAr: "ينفذ حركة قاذف اللهب ذات الإطارات التسعة ثم يحرق جميع الوحوش أمامه في مساره.",
+    energyCost: 130, coinPrice: 360, status: "active", implemented: true, purchasable: false, image: null,
+    stats: ["44 lane damage", "9000 ms cooldown"], statsAr: ["ضرر ٤٤ على المسار", "فاصل هجوم ٩٠٠٠ مللي ثانية"]
   },
 
   {
