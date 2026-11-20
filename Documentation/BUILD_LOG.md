@@ -1051,7 +1051,6 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - Locked-card artwork is used for locked plant entries in the collection and as the card artwork when a locked packet is rendered; its aspect ratio is preserved.
 - Added source-level regression tests for both assets and their placement. Node tests, production build, and runtime visual verification remain pending.
 
-
 ## 2026-11-20 — Strategy reset and Phase 0 source audit
 - Approved product direction: a connected farm-and-battle world, with rapid organic discovery as the primary growth priority.
 - Added `GAME_VISION.md`, `MASTER_ROADMAP.md`, `GAME_SYSTEMS_ARCHITECTURE.md`, and `PHASE_ZERO_AUDIT.md`.
