@@ -3190,14 +3190,20 @@ export default class BattleScene extends Scene {
       repeat: -1
     });
 
-    const muzzleFlash = this.add.circle(launchX, launchY, 13, 0xffe28a, 0.8).setDepth(15);
-    this.tweens.add({
-      targets: muzzleFlash,
-      alpha: 0,
-      scale: 2.1,
-      duration: 135,
-      onComplete: () => muzzleFlash.destroy()
+    const chargeEffectId = getPlantVFXProfile(plant.type)?.charge;
+    const chargePlayed = chargeEffectId && this.vfxManager?.play(chargeEffectId, launchX, launchY, {
+      tint: projectileTint, count: 6, durationMs: 135, endScale: 1.8, depth: 15
     });
+    if (!chargePlayed) {
+      const muzzleFlash = this.add.circle(launchX, launchY, 13, projectileTint, 0.8).setDepth(15);
+      this.tweens.add({
+        targets: muzzleFlash,
+        alpha: 0,
+        scale: 2.1,
+        duration: 135,
+        onComplete: () => muzzleFlash.destroy()
+      });
+    }
 
     const projectileConfig = plant.type === "pineapple" ? PINEAPPLE_CONFIG
       : plant.type === "hazelnut" ? HAZELNUT_CONFIG
