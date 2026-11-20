@@ -730,33 +730,33 @@ export default class BattleScene extends Scene {
     });
 
     // Wave identity: monster-wave artwork, wooden number badge and live count.
-    this.waveIcon = this.add.image(544, 25, "hud-wave-icon")
+    this.waveIcon = this.add.image(568, 25, "hud-wave-icon")
       .setDisplaySize(34, 34).setDepth(44);
-    this.waveBadge = this.add.image(586, 25, "hud-wave-badge")
+    this.waveBadge = this.add.image(610, 25, "hud-wave-badge")
       .setDisplaySize(48, 44).setDepth(43);
-    this.waveText = this.add.text(586, 25, "1/5", {
+    this.waveText = this.add.text(610, 25, "1/5", {
       fontFamily: "Arial", fontSize: "13px", color: "#fff4c8", fontStyle: "bold",
       stroke: "#392719", strokeThickness: 3, resolution: 2,
       align: "center"
     }).setOrigin(0.5).setDepth(45);
 
     // Layer the live progress fill and marker inside the uploaded wooden frame.
-    this.waveProgressFrame = this.add.image(766, 25, "hud-wave-frame")
+    this.waveProgressFrame = this.add.image(772, 25, "hud-wave-frame")
       .setDisplaySize(218, 43).setDepth(42);
-    this.waveProgressTrack = this.add.rectangle(766, 25, 174, 11, 0x392719, 0.72)
+    this.waveProgressTrack = this.add.rectangle(772, 25, 174, 11, 0x392719, 0.72)
       .setStrokeStyle(1, 0x8e6338, 0.8).setDepth(43);
-    this.waveProgressFill = this.add.image(679, 25, "hud-wave-fill")
+    this.waveProgressFill = this.add.image(685, 25, "hud-wave-fill")
       .setOrigin(0, 0.5).setDisplaySize(2, 10).setDepth(44);
-    this.waveProgressMarker = this.add.image(679, 25, "hud-wave-marker")
+    this.waveProgressMarker = this.add.image(685, 25, "hud-wave-marker")
       .setDisplaySize(20, 20).setDepth(45);
-    this.waveProgressLabel = this.add.text(766, 52, "DEFEATED 0/2", {
+    this.waveProgressLabel = this.add.text(772, 52, "DEFEATED 0/2", {
       fontFamily: "Arial", fontSize: "10px", color: "#ffe8b5", fontStyle: "bold",
       stroke: "#392719", strokeThickness: 2, resolution: 2
     }).setOrigin(0.5).setDepth(44);
 
     // The grouped ornament is intentionally small and kept outside the playfield.
     if (this.textures.exists("hud-decorations")) {
-      this.add.image(886, 54, "hud-decorations")
+      this.add.image(886, 68, "hud-decorations")
         .setDisplaySize(72, 38).setDepth(41).setAlpha(0.9);
     }
 
@@ -4609,7 +4609,7 @@ export default class BattleScene extends Scene {
       const trackWidth = 174;
       const fillWidth = Math.max(2, trackWidth * progress);
       this.waveProgressFill.setDisplaySize(fillWidth, 10);
-      this.waveProgressMarker?.setX(679 + trackWidth * progress);
+      this.waveProgressMarker?.setX(685 + trackWidth * progress);
       this.waveProgressLabel?.setText("DEFEATED " + defeated + "/" + this.waveSize);
     }
     for (const [type, panel] of Object.entries(this.plantCardsByType || {})) {
