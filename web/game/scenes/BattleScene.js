@@ -4138,7 +4138,7 @@ export default class BattleScene extends Scene {
 
       shot.trailTimer -= dt * 1000;
       if (shot.trailTimer <= 0) {
-        this.createProjectileTrail(projectileX - 5, (["pineapple", "hazelnut", "mango"].includes(shot.plantType) && pineappleTarget) ? (projectileY - Math.sin(Math.PI * Phaser.Math.Clamp((shot.localX - shot.startLocalX) / Math.max(1, shot.targetLocalX - shot.startLocalX), 0, 1)) * Math.max(34, Math.min(90, Math.abs(shot.target.view.getBounds().centerX - (this.pineappleLanePoint(shot.startLocalX, shot.row).x + (shot.launchOffsetX || 0))) * 0.18))) : projectileY, shot.plantType);
+        this.createProjectileTrail(projectileX - 5, projectileY, shot.plantType);
         shot.trailTimer = 48;
       }
 
@@ -4216,52 +4216,41 @@ export default class BattleScene extends Scene {
     return monster.kind === 'stonehide' ? getStonehideIncomingDamageMultiplier(monster.braced) : armorMultiplier;
   }
 
-  createMonsterHitEffect(monster, plantType = "radish") {
-    if (!monster?.view?.active || monster.freezeStage > 0) return;
-
-    const bounds = monster.view.getBounds();
+  createMonsterBurningBurst(monster) {
+    const bounds = monster?.view?.getBounds?.();
+    if (!bounds) return;
     const x = bounds.centerX;
     const y = bounds.centerY;
-
-    const palettes = {
-      radish: [0x8cff75, 0xffffff, 0x45d9a0],
-      pineapple: [0xffa52f, 0xffdf75, 0xff6b27],
-      hazelnut: [0x9b633b, 0xe8bd70, 0xffffff],
-      mango: [0xffd34e, 0xffa52f, 0xfff1a6],
-      "snow-thrower": [0x9ceaff, 0xffffff, 0x58c9ff],
-      club: [0xffffff, 0xffd18a, 0xffa45c]
-    };
-
-    const colors = palettes[plantType] || palettes.radish;
-    const depth = (monster.view.depth ?? 0) + 1;
-
-    colors.forEach((color, index) => {
-      const angle = (Math.PI * 2 * index) / colors.length;
-      const distance = 20 + (index % 2) * 8;
-
-      const particle = this.add.circle(
-        x,
-        y,
-        3 + (index % 2),
-        color,
-        0.95
-      );
-
-      particle.setDepth(depth);
-
-      this.tweens.add({
-        targets: particle,
-        x: x + Math.cos(angle) * distance,
-        y: y + Math.sin(angle) * distance,
-        alpha: 0,
-        scale: 0.25,
-        duration: 230,
-        ease: "Quad.easeOut",
-        onComplete: () => {
-          if (particle.active) particle.destroy();
-        }
-      });
+    const depth = (monster.view.depth ?? 0) + 5;
+    const flash = this.add.circle(x, y, Math.max(bounds.width, bounds.height) * 0.16, 0xfff0a0, 0.95);
+    flash.setDepth(depth);
+    this.tweens.add({
+      targets: flash,
+      scale: 4.2,
+      alpha: 0,
+      duration: 300,
+      ease: "Cubic.easeOut",
+      onComplete: () => flash.destroy()
     });
+
+    const colors = [0xff3218, 0xff7626, 0xffc044, 0xffe7a0];
+    const count = 14;
+    for (let i = 0; i < count; i += 1) {
+      const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.22;
+      const distance = Math.max(bounds.width, bounds.height) * (0.45 + Math.random() * 0.42);
+      const spark = this.add.circle(x, y, 2 + Math.random() * 2.5, colors[i % colors.length], 0.95);
+      spark.setDepth(depth + 1);
+      this.tweens.add({
+        targets: spark,
+        x: x + Math.cos(angle) * distance,
+        y: y + Math.sin(angle) * distance - 12,
+        alpha: 0,
+        scale: 0.15,
+        duration: 280 + Math.random() * 170,
+        ease: "Cubic.easeOut",
+        onComplete: () => spark.destroy()
+      });
+    }
   }
 
   flashMonsterOnHit(monster) {
@@ -4274,8 +4263,6 @@ export default class BattleScene extends Scene {
     const sprite = monster.hyenaSprite;
     if (sprite?.active) {
       monster.hitAnimUntil = this.time.now + 260;
-      // The authored hit sheet has an upward hop; use the grounded idle pose
-      // and communicate impact with tint + a brief horizontal recoil instead.
       this.playHyenaAnimation(monster, "hyena-idle", true);
       sprite.setTint(0xffcf70);
       this.tweens.killTweensOf(sprite);
@@ -4300,7 +4287,6 @@ export default class BattleScene extends Scene {
     if (monster.hitFlashTimer) monster.hitFlashTimer.remove(false);
     monster.hitFlashTimer = this.time.delayedCall(125, () => {
       if (sprite?.active) {
-        // Restore the creature's rarity color after the temporary hit flash.
         sprite.setTint(monster.tierTint ?? 0xffffff);
         if (Number.isFinite(monster.hitRecoilBaseX)) sprite.x = monster.hitRecoilBaseX;
       }
@@ -4326,6 +4312,7 @@ export default class BattleScene extends Scene {
       monster.hitFlashTimer = null;
     }
     this.createMonsterDefeatBurst(monster.x, monster.y, monster.view && monster.view.scaleY);
+    this.createMonsterBurningBurst(monster);
     this.playMonsterDefeatSound();
     if (monster.hyenaSprite) this.playHyenaVoice("yelp", 0.88);
     this.playCoinRewardSound();
@@ -4335,11 +4322,28 @@ export default class BattleScene extends Scene {
       this.tweens.killTweensOf(monster.view);
       if (monster.hyenaSprite && monster.hyenaSprite.active) {
         this.playHyenaAnimation(monster, "hyena-death", true);
-        this.time.delayedCall(760, () => {
-          if (monster.view && monster.view.active) monster.view.destroy(true);
+        this.tweens.add({
+          targets: monster.view,
+          alpha: 0,
+          scale: (monster.view.scaleX || 1) * 0.82,
+          duration: 760,
+          delay: 120,
+          ease: "Cubic.easeIn",
+          onComplete: () => {
+            if (monster.view && monster.view.active) monster.view.destroy(true);
+          }
         });
       } else {
-        monster.view.destroy(true);
+        this.tweens.add({
+          targets: monster.view,
+          alpha: 0,
+          scale: (monster.view.scaleX || 1) * 0.82,
+          duration: 430,
+          ease: "Cubic.easeIn",
+          onComplete: () => {
+            if (monster.view && monster.view.active) monster.view.destroy(true);
+          }
+        });
       }
     }
     this.coins += PHASE_ONE_REWARDS.ordinaryMonsterDefeatCoins;
