@@ -90,7 +90,7 @@ Prioritize Stonehide armor damage stages, Dust Skitter speed readability, Cave B
 - [ ] Audit every current sprite sheet and map real frames to states.
 - [x] Add a subtle per-plant attack anticipation motion without changing approved artwork.\n- [x] Add staggered, profile-driven idle breathing for all living plants (runtime wiring complete; Chrome visual review pending).\n- [ ] Verify idle/attack/recovery coexistence and complete recovery behavior in Chrome.
 
-- [x] Register Electric Mushroom as a temporary eighth seed-bank playtest option with its own 512×512 artwork, combat config, cyan projectile glyph, charge/trail/impact VFX profile, and hit-glow tint. Visual tuning remains pending hands-on Chrome review.
+- [x] Register Electric Mushroom as a temporary eighth seed-bank playtest option with its 512×512 3×3 artwork. Reuse Mango's dimension-derived crop helper to register nine Phaser frames, render frame 0 while idle, and play frames 0–8 on each attack. Add it to the Stage 1 plant encyclopedia, combat rules, cyan projectile, and electric charge/trail/impact VFX profile. Visual tuning remains pending hands-on Chrome review.
 
 ### Next vertical slice
 Use Radish + Cave Brute as the first end-to-end reference pair. Verify idle → anticipation → attack → projectile → impact → monster reaction → recovery. Then validate Snow Thrower + Stonehide for elemental accumulation/freeze and armor response. Expand only after both are visually approved in Chrome.
