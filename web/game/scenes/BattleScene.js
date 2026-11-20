@@ -233,8 +233,7 @@ export default class BattleScene extends Scene {
     for (const plant of this.studioPlants) {
       const textureKey = "studio-plant-" + plant.id;
       const frameCount = Math.max(1, (Number(plant.rows) || 1) * (Number(plant.columns) || 1));
-      if (plant.spriteSheet && frameCount > 1 && this.registerStudioGridSheet(textureKey, plant.rows, plant.columns) &&
-          plant.combat.mode === "projectile") {
+      if (plant.spriteSheet && frameCount > 1 && this.registerStudioGridSheet(textureKey, plant.rows, plant.columns)) {
         const animationKey = "studio-" + plant.id + "-attack";
         if (!this.anims.exists(animationKey)) {
           this.anims.create({
@@ -3078,9 +3077,26 @@ export default class BattleScene extends Scene {
       if (!target) continue;
       if (studioProfile?.mode === "melee" || studioProfile?.mode === "contact") {
         if (studioProfile.mode === "contact" && !target.isEating) continue;
-        this.applyMonsterDamage(target, studioProfile.damage, plant.type);
-        this.createProjectileImpact(target.view?.x ?? plant.x, target.view?.y ?? plant.y - 22, plant.type);
-        this.damageMonsterIfNeeded(target);
+        const attackSprite = plant.view?.list?.find((child) => child?.getData?.("studioPlantSprite"));
+        const animationKey = "studio-" + plant.studioPlant.id + "-attack";
+        const applyStudioHit = () => {
+          if (!plant.alive || !target.alive || (studioProfile.mode === "contact" && !target.isEating) || this.gameOver) return;
+          this.applyMonsterDamage(target, studioProfile.damage, plant.type);
+          this.createProjectileImpact(target.view?.x ?? plant.x, target.view?.y ?? plant.y - 22, plant.type);
+          this.damageMonsterIfNeeded(target);
+        };
+        if (attackSprite?.active && this.anims.exists(animationKey)) {
+          if (plant.studioAttacking) continue;
+          plant.studioAttacking = true;
+          attackSprite.play(animationKey);
+          attackSprite.once("animationcomplete", () => {
+            if (attackSprite.active) attackSprite.setFrame("0");
+            plant.studioAttacking = false;
+            applyStudioHit();
+          });
+        } else {
+          applyStudioHit();
+        }
       } else {
         this.fireThorn(plant, target);
       }
@@ -3091,7 +3107,8 @@ export default class BattleScene extends Scene {
   spawnStudioEnergy(plant, amount) {
     const pickupId = "pickup-" + this.nextEnergyPickupId++;
     const token = this.add.container(plant.x, plant.y - 64).setDepth(35);
-    token.setSize(42, 42).setInteractive({ useHandCursor: true });
+    token.setSize(42, 42).setInteractive();
+    if (token.input) token.input.cursor = "pointer";
     token.add([
       this.add.circle(0, 0, 17, 0x8fce70, 0.96).setStrokeStyle(3, 0xffefb0, 1),
       this.add.text(0, 0, "+" + amount, { fontFamily: "Arial", fontSize: "13px", color: "#fff8d7", fontStyle: "bold", stroke: "#38502b", strokeThickness: 3 }).setOrigin(0.5)
