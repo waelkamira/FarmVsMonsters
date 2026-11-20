@@ -233,7 +233,7 @@ export default class BattleScene extends Scene {
     for (const plant of this.studioPlants) {
       const textureKey = "studio-plant-" + plant.id;
       const frameCount = Math.max(1, (Number(plant.rows) || 1) * (Number(plant.columns) || 1));
-      if (plant.spriteSheet && frameCount > 1 && this.registerStudioGridSheet(textureKey, plant.rows, plant.columns)) {
+      if (plant.spriteSheet && frameCount > 0 && this.registerStudioGridSheet(textureKey, plant.rows, plant.columns) && frameCount > 1) {
         const animationKey = "studio-" + plant.id + "-attack";
         if (!this.anims.exists(animationKey)) {
           this.anims.create({
