@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "plants": [
+    {
+      "id": "bamboo-level-1",
+      "name": "bamboo-level-1",
+      "path": "/assets/plants/bamboo-level-1.png",
+      "rows": 3,
+      "columns": 3,
+      "spriteSheet": true,
+      "combat": {
+        "mode": "melee",
+        "projectile": null,
+        "energyCost": 30,
+        "hp": 150,
+        "cooldownMs": 1800,
+        "damage": 30,
+        "range": 180,
+        "projectileSpeed": 280,
+        "projectileCollisionRadius": 22,
+        "energyAmount": 15,
+        "energyIntervalMs": 12000
+      },
+      "publishedAt": "2026-11-20T20:40:49.469Z"
+    }
+  ]
+}
