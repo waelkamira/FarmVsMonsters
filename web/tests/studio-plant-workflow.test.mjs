@@ -39,12 +39,22 @@ test("local sync downloads only testing plants and writes the exact local runtim
   assert.match(syncScript, /web\/game\/data\/studioAssetRegistry\.json/);
 });
 
-test("seed selection and Phaser runtime load both published and local testing catalogs", () => {
+test("seed selection and Phaser runtime load the live authenticated Studio testing catalog", () => {
   assert.match(selector, /studio-plant-catalog\.json/);
-  assert.match(selector, /studio-test\/plant-catalog\.json/);
+  assert.match(selector, /api\/studio\/assets\?catalog=testing/);
   assert.match(battleScene, /studio-plant-catalog\.json/);
-  assert.match(battleScene, /studio-test\/plant-catalog\.json/);
+  assert.match(battleScene, /api\/studio\/assets\?catalog=testing/);
   assert.match(battleScene, /studioPlantsByType/);
   assert.match(battleScene, /spawnStudioEnergy/);
   assert.match(battleScene, /fireThornProjectile/);
+});
+
+
+test("testing catalog is served directly from the Studio staging branch with proxied plant and projectile assets", () => {
+  assert.match(assetsRoute, /catalog==="testing"/);
+  assert.match(assetsRoute, /asset\.status==="testing"/);
+  assert.match(assetsRoute, /api\/studio\/assets\?preview=/);
+  assert.match(assetsRoute, /Cache-Control.*private, no-store/);
+  assert.match(studioPage, /متاحة الآن للاختبار مباشرة داخل اللعبة/);
+  assert.doesNotMatch(studioPage, /شغّل npm run studio:sync لمزامنتها/);
 });
