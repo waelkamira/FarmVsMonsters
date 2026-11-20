@@ -1061,3 +1061,12 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - Reviewed the active BattleScene imports and preload path. Preserve existing asset keys, frame metadata, and approved artwork while further testing.
 - Verification limitation: this was a GitHub source review only. `npm test`, `npm run lint`, `npm run build`, and Chrome runtime playtesting have not yet been executed.
 - Next gate: run the local checks on Windows and record concrete failures before extending gameplay systems.
+
+
+## 2026-11-20 — Hybrid adaptive VFX foundation
+- Approved a hybrid combat-effects architecture: Sprite Sheets for authored signature animations, Particles for sparks/embers/dust, and optional shader/Post-FX accents with procedural fallbacks.
+- Added `VFXManager`, named effect presets, and a rolling frame-time quality monitor with Ultra/High/Performance budgets and fixed-quality override support.
+- Connected the manager to BattleScene and routed existing plant projectile and ice impacts through the new VFX presets; combat damage/status rules remain untouched.
+- Added focused Node tests for adaptive quality, fixed quality, invalid inputs, and concurrency caps.
+- Current implementation uses Phaser procedural geometry and the built-in white particle texture when available. Sprite-sheet playback is supported by explicit keys but still needs authored effect sheets and registry metadata; renderer-specific shader pipelines remain an optional follow-up after compatibility testing.
+- Verification: GitHub source edits only. Tests, lint, production build, and Chrome/Windows visual/performance profiling have not been executed; do not treat runtime integration as verified.
