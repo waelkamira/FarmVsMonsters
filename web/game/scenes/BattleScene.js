@@ -2146,7 +2146,7 @@ export default class BattleScene extends Scene {
       let unlockedIds = ["radish", "mushroom"];
       let selectedTypes = ["radish", "mushroom"];
       try {
-        unlockedIds = loadUnlockedPlantIds(window.localStorage);
+        unlockedIds = [...new Set([...loadUnlockedPlantIds(window.localStorage), "radish", "mushroom", "pumpkin", "pineapple", "hazelnut", "mango", "snow-thrower"])];
         const saved = JSON.parse(window.localStorage.getItem("farmVsMonsters.selectedPlants") || "null");
         if (Array.isArray(saved)) selectedTypes = saved;
         else selectedTypes = unlockedIds;
@@ -2650,10 +2650,7 @@ export default class BattleScene extends Scene {
   plantSelected(col, row, type, returnPosition = null) {
     if (this.gameOver) return;
     if (!["radish", "mushroom", "pumpkin", "pineapple", "hazelnut", "mango", "snow-thrower"].includes(type)) return;
-    if (!loadUnlockedPlantIds(window.localStorage).includes(type)) {
-      this.setMessage("This plant is locked. Complete its campaign stage to unlock it.");
-      return;
-    }
+    // All implemented plants are available on main for open playtesting.
     const placement = resolvePlantPlacement({
       energy: this.energy,
       plants: this.plants,
