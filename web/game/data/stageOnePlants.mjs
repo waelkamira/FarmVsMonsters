@@ -179,6 +179,19 @@ export const STAGE_ONE_PLANTS = Object.freeze([
     descriptionAr: "يطلق قذيفة مانجو صغيرة بمسار منحنٍ وتهوي فوق الوحش الموجود في مساره.",
     energyCost: 70, coinPrice: 0, status: "active", implemented: true, purchasable: false, image: null,
     stats: ["130 HP", "40 damage", "2100 ms cooldown"], statsAr: ["١٣٠ صحة", "ضرر ٤٠", "فاصل هجوم ٢١٠٠ مللي ثانية"]
+  },
+
+  {
+    id: "electric-mushroom",
+    assetPath: "/assets/plants/Electric-mushroom-level-1.png",
+    name: "Electric Mushroom Level 1",
+    nameAr: "الفطر الكهربائي المستوى الأول",
+    role: "Electric lane attacker",
+    roleAr: "مهاجم كهربائي للمسار",
+    description: "Uses a nine-frame electric charge animation before firing a cyan lightning bolt at monsters in its lane.",
+    descriptionAr: "ينفذ حركة شحن كهربائية من تسعة إطارات قبل إطلاق صاعقة سماوية على الوحوش في مساره.",
+    energyCost: 80, coinPrice: 0, status: "active", implemented: true, purchasable: false, image: null,
+    stats: ["115 HP", "22 damage", "1850 ms cooldown"], statsAr: ["١١٥ صحة", "ضرر ٢٢", "فاصل هجوم ١٨٥٠ مللي ثانية"]
   }
 ]);
 
