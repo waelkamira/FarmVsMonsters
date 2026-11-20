@@ -4088,7 +4088,7 @@ export default class BattleScene extends Scene {
         if (t >= 1) {
           this.createProjectileImpact(endX, bounds.top, shot.plantType);
           this.playThornImpactSound();
-          this.applyMonsterDamage(shot.target, shot.damage * this.incomingMonsterDamageMultiplier(shot.target));
+          this.applyMonsterDamage(shot.target, shot.damage * this.incomingMonsterDamageMultiplier(shot.target), shot.plantType);
           this.damageMonsterIfNeeded(shot.target);
           shot.alive = false;
           shot.view.destroy();
@@ -4184,7 +4184,7 @@ export default class BattleScene extends Scene {
         this.createProjectileImpact(projectileX, projectileY, shot.plantType);
         this.playThornImpactSound();
         this.applyMonsterDamage(
-          hit, shot.damage * this.incomingMonsterDamageMultiplier(hit)
+          hit, shot.damage * this.incomingMonsterDamageMultiplier(hit), shot.plantType
         );
         if (hit.view && hit.view.active) {
           this.tweens.add({
@@ -4255,17 +4255,25 @@ export default class BattleScene extends Scene {
     }
   }
 
-  flashMonsterOnHit(monster) {
+  flashMonsterOnHit(monster, plantType = "radish") {
     if (!monster || !monster.alive || monster.freezeStage > 0) return;
 
-    // Make damage unmistakable without adding an outline or changing combat
-    // position: use a brief full-sprite red-orange flash, a compact squash,
-    // and a bright impact ring around the monster.
+    // Keep the monster artwork unchanged. A restrained projectile-colored
+    // glow traces only its silhouette; recoil and squash are reduced by half.
     const sprite = monster.hyenaSprite;
+    const hitColor = getProjectileVFXProfile(plantType)?.tint ?? 0x9bdc72;
     if (sprite?.active) {
-      monster.hitAnimUntil = this.time.now + 260;
+      monster.hitAnimUntil = this.time.now + 180;
       this.playHyenaAnimation(monster, "hyena-idle", true);
-      sprite.setTintFill(0xff4328);
+
+      if (monster.hitGlowEffect && sprite.postFX?.remove) {
+        sprite.postFX.remove(monster.hitGlowEffect);
+        monster.hitGlowEffect = null;
+      }
+      if (sprite.postFX?.addGlow) {
+        monster.hitGlowEffect = sprite.postFX.addGlow(hitColor, 0.65, 0, false, 0.1, 4);
+      }
+
       this.tweens.killTweensOf(sprite);
       const baseX = Number.isFinite(monster.hitRecoilBaseX) ? monster.hitRecoilBaseX : sprite.x;
       monster.hitRecoilBaseX = baseX;
@@ -4273,10 +4281,10 @@ export default class BattleScene extends Scene {
       sprite.setScale(0.918);
       this.tweens.add({
         targets: sprite,
-        x: baseX + 10,
-        scaleX: 1.035,
-        scaleY: 0.84,
-        duration: 65,
+        x: baseX + 5,
+        scaleX: 1.01,
+        scaleY: 0.88,
+        duration: 55,
         ease: "Quad.easeOut",
         yoyo: true,
         onComplete: () => {
@@ -4288,27 +4296,16 @@ export default class BattleScene extends Scene {
       });
     }
 
-    const ringX = monster.x;
-    const ringY = monster.y - 34;
-    const ring = this.add.circle(ringX, ringY, 19, 0xff6a32, 0)
-      .setStrokeStyle(5, 0xff7a35, 0.95)
-      .setDepth((monster.view?.depth ?? 8) + 5);
-    this.tweens.add({
-      targets: ring,
-      scale: 2.35,
-      alpha: 0,
-      duration: 190,
-      ease: "Cubic.easeOut",
-      onComplete: () => ring.destroy()
-    });
-
     const graphic = monster.hitFlashGraphic;
     if (graphic?.active) graphic.setBlendMode(1);
 
     if (monster.hitFlashTimer) monster.hitFlashTimer.remove(false);
-    monster.hitFlashTimer = this.time.delayedCall(175, () => {
+    monster.hitFlashTimer = this.time.delayedCall(105, () => {
       if (sprite?.active) {
-        sprite.setTint(monster.tierTint ?? 0xffffff);
+        if (monster.hitGlowEffect && sprite.postFX?.remove) {
+          sprite.postFX.remove(monster.hitGlowEffect);
+          monster.hitGlowEffect = null;
+        }
         if (Number.isFinite(monster.hitRecoilBaseX)) sprite.x = monster.hitRecoilBaseX;
         sprite.setScale(0.918);
       }
@@ -4317,12 +4314,12 @@ export default class BattleScene extends Scene {
     });
   }
 
-  applyMonsterDamage(monster, amount) {
+  applyMonsterDamage(monster, amount, plantType = "radish") {
     if (!monster || !monster.alive || amount <= 0) return;
     monster.hp = applyHitPointsDamage(monster.hp, amount).hp;
     this.playMonsterHitSound();
     if (monster.hyenaSprite) this.playHyenaVoice("yelp", 0.82);
-    this.flashMonsterOnHit(monster);
+    this.flashMonsterOnHit(monster, plantType);
     this.damageMonsterIfNeeded(monster);
   }
 
