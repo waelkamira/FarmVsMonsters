@@ -19,6 +19,8 @@ Plant upload includes the plant image/sprite sheet, rows and columns, cost, heal
 
 The profile stores bounded values for energy cost, health, cooldown, damage, range, projectile speed/radius, and energy production.
 
+A legacy Studio plant record without a combat profile (for example an older Bamboo draft) must be replaced/saved once in the updated form and assigned a behavior or linked projectile before it can be prepared for testing. Built-in gameplay IDs are reserved and cannot be shadowed by custom Studio plants.
+
 A projectile upload is associated with the plant record. It is not registered as a separate unlinked projectile record.
 
 ## 2. Prepare local test
