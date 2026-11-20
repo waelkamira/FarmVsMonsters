@@ -36,7 +36,21 @@
       "columns": 3,
       "spriteSheet": true,
       "status": "draft",
-      "createdAt": "2026-11-20T16:34:22.262Z"
+      "createdAt": "2026-11-20T16:34:22.262Z",
+      "updatedAt": "2026-11-20T20:37:26.840Z",
+      "combat": {
+        "mode": "melee",
+        "projectile": null,
+        "energyCost": 30,
+        "hp": 150,
+        "cooldownMs": 1800,
+        "damage": 30,
+        "range": 180,
+        "projectileSpeed": 280,
+        "projectileCollisionRadius": 22,
+        "energyAmount": 15,
+        "energyIntervalMs": 12000
+      }
     }
   ]
 }
