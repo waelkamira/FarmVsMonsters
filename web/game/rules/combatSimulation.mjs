@@ -26,12 +26,20 @@ export function resolvePlantPlacement({
   col,
   row,
   columns,
-  rows
+  rows,
+  customConfig = null
 } = {}) {
   if (!validEnergy(energy) || !Array.isArray(plants)) {
     return { ok: false, reason: "INVALID_PLACEMENT_STATE" };
   }
-  const config = PLANT_RULES[type];
+  const config = PLANT_RULES[type] || (
+    Number.isFinite(customConfig?.plantingEnergyCost) &&
+    customConfig.plantingEnergyCost >= 0 &&
+    Number.isFinite(customConfig?.hp) &&
+    customConfig.hp > 0
+      ? customConfig
+      : null
+  );
   if (!config) return { ok: false, reason: "UNKNOWN_PLANT_TYPE" };
   if (
     !Number.isInteger(col) || !Number.isInteger(row) ||
@@ -67,7 +75,8 @@ export function resolvePlantUproot({ energy, plant } = {}) {
   if (!validEnergy(energy) || !plant || plant.alive !== true) {
     return { ok: false, reason: "INVALID_UPROOT_STATE" };
   }
-  const configuredCost = PLANT_RULES[plant.type]?.plantingEnergyCost;
+  const configuredCost = PLANT_RULES[plant.type]?.plantingEnergyCost ??
+    (Number.isFinite(plant.energyCost) && plant.energyCost >= 0 ? plant.energyCost : null);
   if (!Number.isFinite(configuredCost)) {
     return { ok: false, reason: "UNKNOWN_PLANT_TYPE" };
   }
