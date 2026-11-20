@@ -97,3 +97,17 @@ export function getPlantEvolutionProfile(plantId) {
 export function getMonsterEvolutionProfile(monsterId) {
   return MONSTER_EVOLUTION_PROFILES[monsterId] || null;
 }
+
+
+// Pure transform helper keeps the idle breathing envelope deterministic and testable.
+export function getPlantIdleMotionTransform(plantId, elapsedMs, phaseMs = 0, baseScaleX = 1, baseScaleY = 1) {
+  const idle = getPlantAnimationProfile(plantId)?.idle;
+  if (!idle?.loop) return null;
+  const duration = Math.max(1, idle.durationMs);
+  const phase = ((Number.isFinite(elapsedMs) ? elapsedMs : 0) + (Number.isFinite(phaseMs) ? phaseMs : 0)) % duration;
+  const breathing = Math.sin((phase / duration) * Math.PI * 2) * idle.breathing;
+  return Object.freeze({
+    scaleX: baseScaleX * (1 - breathing * 0.35),
+    scaleY: baseScaleY * (1 + breathing)
+  });
+}
