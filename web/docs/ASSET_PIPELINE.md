@@ -14,7 +14,7 @@ npm run assets:manifest
 
 This scans `public/assets`, writes `public/assets/asset-manifest.json`, and reports:
 - file count and total bytes;
-- logical groups based on the first directory under `public/assets`;
+- logical groups based on asset families (for example `plants`, `backgrounds`, `characters/farmer`, and `characters/monsters`);
 - image dimensions where supported;
 - SHA-256 hashes and byte-identical duplicate candidates.
 
@@ -32,7 +32,7 @@ this.assetManager.releaseGroup("plants");
 console.table(this.assetManager.getStats());
 ```
 
-Manifest entries use explicit keys, URLs, and types. For spritesheets, add a `frameConfig` to the relevant manifest entry before loading it. Do not infer frame dimensions from filenames.
+Manifest entries use explicit keys, URLs, and types. Known Phaser spritesheets used by the current battle scene have explicit frame metadata overrides in the generator. For any newly added spritesheet, add its exact `frameConfig` override before loading it. Do not infer frame dimensions from filenames.
 
 Groups are reference-counted. Releasing a group removes only assets that this manager loaded and only after their final group reference is released. Call `releaseGroup` only after scene objects using those textures have been destroyed. Existing assets loaded by a scene's normal preload are not claimed or removed by the manager.
 
