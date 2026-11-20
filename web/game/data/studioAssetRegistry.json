@@ -24,6 +24,18 @@
       "spriteSheet": false,
       "status": "draft",
       "createdAt": "2026-11-20T16:17:42.668Z"
+    },
+    {
+      "id": "bamboo-level-1",
+      "type": "plant",
+      "name": "bamboo-level-1",
+      "filename": "bamboo-level-1.png",
+      "path": "/assets/plants/bamboo-level-1.png",
+      "rows": 3,
+      "columns": 3,
+      "spriteSheet": true,
+      "status": "draft",
+      "createdAt": "2026-11-20T16:34:22.262Z"
     }
   ]
 }
