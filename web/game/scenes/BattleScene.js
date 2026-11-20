@@ -3212,9 +3212,9 @@ export default class BattleScene extends Scene {
     this.playThornSound();
   }
 
-  createFreezeImpact(x, y) {
+  createFreezeImpact(x, y, target = null) {
     if (this.vfxManager) {
-      this.vfxManager.play("element.ice", { x, y }, { depth: 25, intensity: 1.05 });
+      this.vfxManager.play("element.ice", { x, y }, { depth: 25, intensity: 1.05, target });
       return;
     }
     const burst = this.add.container(x, y).setDepth(25);
@@ -3229,9 +3229,9 @@ export default class BattleScene extends Scene {
     this.tweens.add({ targets: burst, scale: 1.8, alpha: 0, duration: 320, ease: "Cubic.easeOut", onComplete: () => burst.destroy() });
   }
 
-  createProjectileImpact(x, y) {
+  createProjectileImpact(x, y, target = null) {
     if (this.vfxManager) {
-      this.vfxManager.play("impact.plant", { x, y }, { depth: 24 });
+      this.vfxManager.play("impact.plant", { x, y }, { depth: 24, target });
       return;
     }
     const burst = this.add.container(x, y).setDepth(24);
@@ -4064,7 +4064,7 @@ export default class BattleScene extends Scene {
           shot.trailTimer = 48;
         }
         if (t >= 1) {
-          this.createProjectileImpact(endX, bounds.top);
+          this.createProjectileImpact(endX, bounds.top, shot.target?.hyenaSprite);
           this.playThornImpactSound();
           this.applyMonsterDamage(shot.target, shot.damage * this.incomingMonsterDamageMultiplier(shot.target));
           this.damageMonsterIfNeeded(shot.target);
@@ -4151,13 +4151,13 @@ export default class BattleScene extends Scene {
 
       if (hit) {
         if (shot.freeze) {
-          this.createFreezeImpact(projectileX, projectileY);
+          this.createFreezeImpact(projectileX, projectileY, hit.hyenaSprite);
           this.freezeMonster(hit);
           shot.alive = false;
           shot.view.destroy();
           continue;
         }
-        this.createProjectileImpact(projectileX, projectileY);
+        this.createProjectileImpact(projectileX, projectileY, hit.hyenaSprite);
         this.playThornImpactSound();
         this.applyMonsterDamage(
           hit, shot.damage * this.incomingMonsterDamageMultiplier(hit)
