@@ -4,6 +4,7 @@ import { PhaserAssetManager } from "../services/assetManager.mjs";
 import { VFXManager } from "../vfx/VFXManager.mjs";
 import { createDefaultVFXRegistry } from "../vfx/createDefaultVFXRegistry.mjs";
 import { getPlantVFXProfile } from "../vfx/PlantVFXProfiles.mjs";
+import { getProjectileVFXProfile } from "../vfx/ProjectileVFXProfiles.mjs";
 import { createSeededRandom } from "../rules/seededRandom.mjs";
 import { createCombatEventLog, appendCombatEvent } from "../rules/combatEventLog.mjs";
 import gridCalibration from "../data/farm-grid-calibration.json";
@@ -3126,13 +3127,15 @@ export default class BattleScene extends Scene {
     const launchX = laneOrigin.x + launchOffsetX;
     const launchY = laneOrigin.y + launchOffsetY;
     const view = this.add.container(launchX, launchY).setDepth(16);
+    const projectileVFX = getProjectileVFXProfile(plant.type);
+    const projectileTint = projectileVFX?.tint ?? 0xffc247;
     // Keep the projectile at the adjusted half-height launch point. Do not
     // ease its vertical offset toward the lane center:
     // that creates the unwanted immediate downward drop.
 
-    const halo = this.add.circle(0, 0, 18, 0xff7185, 0.13);
-    const outerGlow = this.add.circle(0, 0, 13, 0x8bd66f, 0.2);
-    const innerGlow = this.add.circle(0, 0, 9, 0xffd5dc, 0.28);
+    const halo = this.add.circle(0, 0, 18, projectileTint, 0.13);
+    const outerGlow = this.add.circle(0, 0, 13, projectileTint, 0.2);
+    const innerGlow = this.add.circle(0, 0, 9, projectileTint, 0.28);
     view.add([halo, outerGlow, innerGlow]);
 
     const projectileTexture = plant.type === "radish" ? "radish-level-1-bomb"
