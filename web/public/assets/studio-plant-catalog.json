@@ -22,6 +22,32 @@
         "energyIntervalMs": 12000
       },
       "publishedAt": "2026-11-20T20:40:49.469Z"
+    },
+    {
+      "id": "bamboo-throwing-level-1",
+      "name": "bamboo-throwing-level-1",
+      "path": "/assets/plants/bamboo-throwing-level-1.png",
+      "rows": 3,
+      "columns": 3,
+      "spriteSheet": true,
+      "combat": {
+        "mode": "projectile",
+        "projectile": {
+          "id": "bamboo-throwing-level-1-projectile",
+          "path": "/assets/projectiles/plants/bamboo-throwing-level-1-projectile.png",
+          "filename": "bamboo-throwing-level-1-projectile.png"
+        },
+        "energyCost": 60,
+        "hp": 150,
+        "cooldownMs": 1800,
+        "damage": 30,
+        "range": 500,
+        "projectileSpeed": 280,
+        "projectileCollisionRadius": 22,
+        "energyAmount": 15,
+        "energyIntervalMs": 12000
+      },
+      "publishedAt": "2026-11-20T22:52:19.606Z"
     }
   ]
 }
