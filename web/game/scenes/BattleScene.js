@@ -186,7 +186,7 @@ export default class BattleScene extends Scene {
     queueStudioCatalog("studio-published-catalog");
     queueStudioCatalog("studio-test-catalog");
     this.load.json("studio-published-catalog", "/assets/studio-plant-catalog.json");
-    this.load.json("studio-test-catalog", "/assets/studio-test/plant-catalog.json");
+    this.load.json("studio-test-catalog", "/api/studio/assets?catalog=testing");
     this.load.on("loaderror", (file) => {
       if (file.key === "farm-battlefield") this.backgroundAssetFailed = true;
       if (file.key === "radish-level-1") this.radishAssetFailed = true;
