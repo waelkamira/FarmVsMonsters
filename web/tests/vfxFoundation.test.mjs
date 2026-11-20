@@ -95,11 +95,25 @@ function createMockScene() {
       }),
       container: () => ({
         active: true,
-        add() {},
-        setDepth() {},
-        destroy() { this.active = false; }
+        visible: true,
+        list: [],
+        add(child) { this.list.push(child); },
+        setPosition(x, y) { this.x = x; this.y = y; },
+        setActive(value) { this.active = value; },
+        setVisible(value) { this.visible = value; },
+        setAlpha(value) { this.alpha = value; },
+        setScale(value) { this.scale = value; },
+        setDepth(value) { this.depth = value; },
+        destroy() { this.active = false; this.destroyed = true; }
       }),
-      circle: () => ({})
+      circle: (x, y, radius, color, alpha) => ({
+        x, y, radius, color, alpha,
+        setActive(value) { this.active = value; },
+        setVisible(value) { this.visible = value; },
+        setAlpha(value) { this.alpha = value; },
+        setScale(value) { this.scale = value; },
+        setFillStyle(fillColor, fillAlpha) { this.color = fillColor; this.alpha = fillAlpha; }
+      })
     },
   };
   scene.tweens = {
@@ -267,4 +281,31 @@ test("VFXManager reuses pooled texture visuals after completion and destroys idl
   manager.destroy();
   assert.equal(second.destroyed, true);
   assert.equal(manager.pool.getStats().destroyed, true);
+});
+
+test("VFXManager pools procedural container visuals and resets their children before reuse", () => {
+  const scene = createMockScene();
+  const manager = new VFXManager(scene, { registry: createDefaultVFXRegistry() });
+  const first = manager.play("radish-impact", 10, 10, { tint: 0xff0000, count: 4 });
+  const firstTween = scene.tweenRecords[0];
+
+  assert.ok(first);
+  assert.equal(first.list.length, 4);
+  assert.equal(first.visible, true);
+  firstTween.config.onComplete();
+
+  assert.equal(first.visible, false);
+  assert.equal(first.active, false);
+  assert.equal(first.list.every((child) => child.visible === false && child.active === false), true);
+  assert.equal(manager.pool.getStats().idle, 1);
+
+  const second = manager.play("radish-impact", 30, 40, { tint: 0x00ff00, count: 4 });
+  assert.equal(second, first);
+  assert.equal(second.x, 30);
+  assert.equal(second.y, 40);
+  assert.equal(second.visible, true);
+  assert.equal(second.list.every((child) => child.visible === true && child.active === true && child.color === 0x00ff00), true);
+
+  manager.destroy();
+  assert.equal(second.destroyed, true);
 });
