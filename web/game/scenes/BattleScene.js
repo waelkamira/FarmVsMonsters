@@ -2163,7 +2163,9 @@ export default class BattleScene extends Scene {
       let unlockedIds = ["radish", "mushroom"];
       let selectedTypes = ["radish", "mushroom"];
       try {
-        unlockedIds = PLAYTEST_ALL_PLANTS\n          ? [...new Set([...loadUnlockedPlantIds(window.localStorage), ...ALL_PLAYTEST_PLANT_IDS])]\n          : loadUnlockedPlantIds(window.localStorage);
+        unlockedIds = PLAYTEST_ALL_PLANTS
+          ? [...new Set([...loadUnlockedPlantIds(window.localStorage), ...ALL_PLAYTEST_PLANT_IDS])]
+          : loadUnlockedPlantIds(window.localStorage);
         const saved = JSON.parse(window.localStorage.getItem("farmVsMonsters.selectedPlants") || "null");
         if (Array.isArray(saved)) selectedTypes = saved;
         else selectedTypes = unlockedIds;
@@ -4136,7 +4138,7 @@ export default class BattleScene extends Scene {
 
       shot.trailTimer -= dt * 1000;
       if (shot.trailTimer <= 0) {
-        this.createProjectileTrail(projectileX - 5, projectileY, shot.plantType);
+        this.createProjectileTrail(projectileX - 5, (["pineapple", "hazelnut", "mango"].includes(shot.plantType) && pineappleTarget) ? (projectileY - Math.sin(Math.PI * Phaser.Math.Clamp((shot.localX - shot.startLocalX) / Math.max(1, shot.targetLocalX - shot.startLocalX), 0, 1)) * Math.max(34, Math.min(90, Math.abs(shot.target.view.getBounds().centerX - (this.pineappleLanePoint(shot.startLocalX, shot.row).x + (shot.launchOffsetX || 0))) * 0.18))) : projectileY, shot.plantType);
         shot.trailTimer = 48;
       }
 
@@ -4212,6 +4214,54 @@ export default class BattleScene extends Scene {
     // Bracing cuts a further 45% from incoming hits, but only while the
     // Stonehide is stationary and actively biting a plant.
     return monster.kind === 'stonehide' ? getStonehideIncomingDamageMultiplier(monster.braced) : armorMultiplier;
+  }
+
+  createMonsterHitEffect(monster, plantType = "radish") {
+    if (!monster?.view?.active || monster.freezeStage > 0) return;
+
+    const bounds = monster.view.getBounds();
+    const x = bounds.centerX;
+    const y = bounds.centerY;
+
+    const palettes = {
+      radish: [0x8cff75, 0xffffff, 0x45d9a0],
+      pineapple: [0xffa52f, 0xffdf75, 0xff6b27],
+      hazelnut: [0x9b633b, 0xe8bd70, 0xffffff],
+      mango: [0xffd34e, 0xffa52f, 0xfff1a6],
+      "snow-thrower": [0x9ceaff, 0xffffff, 0x58c9ff],
+      club: [0xffffff, 0xffd18a, 0xffa45c]
+    };
+
+    const colors = palettes[plantType] || palettes.radish;
+    const depth = (monster.view.depth ?? 0) + 1;
+
+    colors.forEach((color, index) => {
+      const angle = (Math.PI * 2 * index) / colors.length;
+      const distance = 20 + (index % 2) * 8;
+
+      const particle = this.add.circle(
+        x,
+        y,
+        3 + (index % 2),
+        color,
+        0.95
+      );
+
+      particle.setDepth(depth);
+
+      this.tweens.add({
+        targets: particle,
+        x: x + Math.cos(angle) * distance,
+        y: y + Math.sin(angle) * distance,
+        alpha: 0,
+        scale: 0.25,
+        duration: 230,
+        ease: "Quad.easeOut",
+        onComplete: () => {
+          if (particle.active) particle.destroy();
+        }
+      });
+    });
   }
 
   flashMonsterOnHit(monster) {
