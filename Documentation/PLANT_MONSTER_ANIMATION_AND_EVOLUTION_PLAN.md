@@ -11,7 +11,7 @@ This plan is additive. Preserve approved artwork, the current Phaser 3 runtime, 
 - The active game is Phaser 3 in `web/`; Godot is archived/experimental.
 - `BattleScene.js` already registers several authored plant throw animations and hyena idle/walk/run/bite/hit/death animations.
 - The hybrid VFX runtime is in `web/game/vfx/`, with a registry, event bus, renderer, object pool, and plant/projectile profiles.
-- Current playable plant set: radish, mushroom, pumpkin, pineapple, hazelnut, mango, snow-thrower.
+- Current playtest plant set: radish, energy mushroom, electric mushroom, pumpkin, pineapple, hazelnut, mango, snow-thrower.
 - Current implemented monster set: dust-skitter, cave-brute, stonehide, alpha-brute.
 - Monster hit response already uses a restrained projectile-colored edge glow and reduced recoil. Preserve this approved treatment; do not restore large white flashes or oversized death explosions.
 - Existing hyena-run1 crop and animation is approved and must remain unchanged unless explicitly requested.
@@ -70,6 +70,7 @@ Prioritize Stonehide armor damage stages, Dust Skitter speed readability, Cave B
 | Hazelnut | compact and sturdy | piercing shot |
 | Mango | swinging and playful | radiant splash |
 | Snow Thrower | calm and precise | chained freeze |
+| Electric Mushroom | bright and sparky | branching electric impact and chain lightning |
 
 | Monster | Reaction personality | Evolution direction |
 |---|---|---|
@@ -81,13 +82,15 @@ Prioritize Stonehide armor damage stages, Dust Skitter speed readability, Cave B
 ## Implementation status
 
 ### Foundation slice — in progress
-- [x] Add data-driven animation personality profiles for all seven playable plants.
+- [x] Add data-driven animation personality profiles for all eight playable plants, including Electric Mushroom.
 - [x] Add archetype-specific hit-reaction profiles for all four implemented monsters.
-- [x] Define three-stage visual evolution paths for current plants and monsters.
+- [x] Define three-stage visual evolution paths for current plants and monsters, including Electric Mushroom.
 - [x] Add focused profile coverage tests.
 - [x] Wire monster reaction profiles into the live Phaser hit response.
 - [ ] Audit every current sprite sheet and map real frames to states.
 - [x] Add a subtle per-plant attack anticipation motion without changing approved artwork.\n- [x] Add staggered, profile-driven idle breathing for all living plants (runtime wiring complete; Chrome visual review pending).\n- [ ] Verify idle/attack/recovery coexistence and complete recovery behavior in Chrome.
+
+- [x] Register Electric Mushroom as a temporary eighth seed-bank playtest option with its own 512×512 artwork, combat config, cyan projectile glyph, charge/trail/impact VFX profile, and hit-glow tint. Visual tuning remains pending hands-on Chrome review.
 
 ### Next vertical slice
 Use Radish + Cave Brute as the first end-to-end reference pair. Verify idle → anticipation → attack → projectile → impact → monster reaction → recovery. Then validate Snow Thrower + Stonehide for elemental accumulation/freeze and armor response. Expand only after both are visually approved in Chrome.
