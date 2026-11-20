@@ -25,27 +25,64 @@ export default function StageOneSeedSelectionPage() {
   const router = useRouter();
   const [unlockedIds, setUnlockedIds] = useState(STARTER_LOADOUT);
   const [selected, setSelected] = useState(STARTER_LOADOUT);
+  const [plantCatalog, setPlantCatalog] = useState(PLANTS);
   const [notice, setNotice] = useState("");
-  const selectedPlants = useMemo(() => PLANTS.filter((plant) => unlockedIds.includes(plant.id) && selected.includes(plant.id)), [selected, unlockedIds]);
+  const selectedPlants = useMemo(() => plantCatalog.filter((plant) => unlockedIds.includes(plant.id) && selected.includes(plant.id)), [plantCatalog, selected, unlockedIds]);
 
   useEffect(() => {
-    let unlocked = STARTER_LOADOUT;
-    try {
-      unlocked = loadUnlockedPlantIds(window.localStorage);
-    } catch {
-      // Keep the starter loadout if browser storage is unavailable.
-    }
-    const safeUnlocked = [...new Set([...STARTER_LOADOUT, ...unlocked])];
-    setUnlockedIds(safeUnlocked);
-    try {
-      const saved = JSON.parse(window.localStorage.getItem("farmVsMonsters.selectedPlants") || "null");
-      const validSaved = Array.isArray(saved)
-        ? saved.filter((id) => safeUnlocked.includes(id) && PLANTS.some((plant) => plant.id === id))
-        : [];
-      setSelected([...new Set([...STARTER_LOADOUT, ...validSaved])].slice(0, MAX_SEEDS));
-    } catch {
-      setSelected(STARTER_LOADOUT);
-    }
+    let active = true;
+    const readCatalog = async (url) => {
+      try {
+        const response = await fetch(url, { cache: "no-store" });
+        if (!response.ok) return [];
+        const data = await response.json();
+        return Array.isArray(data.plants) ? data.plants : [];
+      } catch { return []; }
+    };
+    (async () => {
+      const [published, testing] = await Promise.all([
+        readCatalog("/assets/studio-plant-catalog.json"),
+        readCatalog("/assets/.studio-test/plant-catalog.json")
+      ]);
+      if (!active) return;
+      const studioPlants = [...published, ...testing].map((plant) => ({
+        id: plant.id,
+        name: plant.name || plant.id,
+        ar: plant.nameAr || plant.name || plant.id,
+        role: plant.combat?.mode === "projectile" ? "Projectile attacker"
+          : plant.combat?.mode === "blocker" ? "Defensive blocker"
+          : plant.combat?.mode === "energy" ? "Energy producer"
+          : plant.combat?.mode === "contact" ? "Contact defender" : "Close-range attacker",
+        roleAr: plant.combat?.mode === "projectile" ? "مهاجم بالمقذوفات"
+          : plant.combat?.mode === "blocker" ? "حاجز دفاعي"
+          : plant.combat?.mode === "energy" ? "منتج للطاقة"
+          : plant.combat?.mode === "contact" ? "مدافع بضرر تلامسي" : "مهاجم قريب",
+        cost: plant.combat?.energyCost ?? 60,
+        image: plant.path,
+        spriteSheet: Boolean(plant.spriteSheet),
+        studio: true,
+        testing: testing.some((candidate) => candidate.id === plant.id)
+      }));
+      const plantMap = new Map([...PLANTS, ...studioPlants].map((plant) => [plant.id, plant]));
+      const nextPlants = [...plantMap.values()];
+      setPlantCatalog(nextPlants);
+      let unlocked = STARTER_LOADOUT;
+      try { unlocked = loadUnlockedPlantIds(window.localStorage); } catch { /* Starter seeds remain available. */ }
+      const studioIds = studioPlants.map((plant) => plant.id);
+      const safeUnlocked = [...new Set([...STARTER_LOADOUT, ...unlocked, ...studioIds])];
+      setUnlockedIds(safeUnlocked);
+      try {
+        const saved = JSON.parse(window.localStorage.getItem("farmVsMonsters.selectedPlants") || "null");
+        const validSaved = Array.isArray(saved)
+          ? saved.filter((id) => safeUnlocked.includes(id) && nextPlants.some((plant) => plant.id === id))
+          : [];
+        const defaultTesting = studioPlants.filter((plant) => plant.testing).map((plant) => plant.id);
+        setSelected([...new Set([...STARTER_LOADOUT, ...defaultTesting, ...validSaved])].slice(0, MAX_SEEDS));
+      } catch {
+        setSelected([...STARTER_LOADOUT, ...studioPlants.filter((plant) => plant.testing).map((plant) => plant.id)].slice(0, MAX_SEEDS));
+      }
+    })();
+    return () => { active = false; };
   }, []);
 
   function togglePlant(plant) {
@@ -99,7 +136,7 @@ export default function StageOneSeedSelectionPage() {
         </div>
 
         <div className="seed-select-grid">
-          {PLANTS.map((plant) => {
+          {plantCatalog.map((plant) => {
             const unlocked = unlockedIds.includes(plant.id);
             const active = selected.includes(plant.id) && unlocked;
             return (
@@ -114,8 +151,8 @@ export default function StageOneSeedSelectionPage() {
               >
                 <span className="seed-select-check">{!unlocked ? "🔒" : active ? "✓" : "+"}</span>
                 <span
-                  className={"seed-select-art" + (["radish", "pineapple", "hazelnut", "mango", "snow-thrower"].includes(plant.id) ? " is-sprite-sheet" : "")}
-                  style={["radish", "pineapple", "hazelnut", "mango", "snow-thrower"].includes(plant.id)
+                  className={"seed-select-art" + ((["radish", "pineapple", "hazelnut", "mango", "snow-thrower"].includes(plant.id) || plant.spriteSheet) ? " is-sprite-sheet" : "")}
+                  style={(["radish", "pineapple", "hazelnut", "mango", "snow-thrower"].includes(plant.id) || plant.spriteSheet)
                     ? { aspectRatio: plant.id === "radish" ? "302 / 359" : "1 / 1" }
                     : undefined}
                 >
@@ -124,7 +161,7 @@ export default function StageOneSeedSelectionPage() {
                 <strong>{ar ? plant.ar : plant.name}</strong>
                 <small>{ar ? plant.roleAr : plant.role}</small>
                 <span className="seed-select-cost">🍄 {plant.cost}</span>
-                {plant.required && <em>{ar ? "أساسي" : "REQUIRED"}</em>}
+                {plant.required && <em>{ar ? "أساسي" : "REQUIRED"}</em>}{plant.testing && <em className="seed-select-testing">{ar ? "اختبار محلي" : "LOCAL TEST"}</em>}
                 {!unlocked && <em className="seed-select-locked-label">{ar ? "مقفلة" : "LOCKED"}</em>}
               </button>
             );
