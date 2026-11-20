@@ -56,8 +56,30 @@ async function walk(directory) {
   return files;
 }
 
+const SPRITESHEET_OVERRIDES = {
+  "items/currency/gold-coin.png": { key: "gold-coin", type: "spritesheet", frameConfig: { frameWidth: 170, frameHeight: 170 } },
+  "characters/farmer/farmer-run.png": { key: "farmer-run", type: "spritesheet", frameConfig: { frameWidth: 360, frameHeight: 430 } },
+  "characters/farmer/farmer-walk.png": { key: "farmer-walk", type: "spritesheet", frameConfig: { frameWidth: 360, frameHeight: 430 } },
+  "characters/farmer/farmer-jump.png": { key: "farmer-jump", type: "spritesheet", frameConfig: { frameWidth: 216, frameHeight: 720 } },
+  "characters/farmer/farmer-idle.png": { key: "farmer-idle", type: "spritesheet", frameConfig: { frameWidth: 540, frameHeight: 360 } },
+  "characters/farmer/farmer-plant.png": { key: "farmer-plant", type: "spritesheet", frameConfig: { frameWidth: 360, frameHeight: 430 } },
+  "characters/farmer/farmer-collect.png": { key: "farmer-collect", type: "spritesheet", frameConfig: { frameWidth: 180, frameHeight: 360 } },
+  "characters/farmer/farmer-uproot.png": { key: "farmer-uproot", type: "spritesheet", frameConfig: { frameWidth: 360, frameHeight: 430 } },
+  "characters/farmer/farmer-attack.png": { key: "farmer-attack", type: "spritesheet", frameConfig: { frameWidth: 180, frameHeight: 360 } },
+  "characters/farmer/farmer-hit.png": { key: "farmer-hit", type: "spritesheet", frameConfig: { frameWidth: 152, frameHeight: 430 } },
+  "characters/farmer/farmer-death.png": { key: "farmer-death", type: "spritesheet", frameConfig: { frameWidth: 152, frameHeight: 430 } },
+  "characters/monsters/dragon/dragon-boss.png": { key: "dragon-boss", type: "spritesheet", frameConfig: { frameWidth: 512, frameHeight: 512 } },
+  "characters/monsters/hyena/hyena-idle.png": { key: "hyena-idle", type: "spritesheet", frameConfig: { frameWidth: 360, frameHeight: 298 } },
+  "characters/monsters/hyena/hyena-walk.png": { key: "hyena-walk", type: "spritesheet", frameConfig: { frameWidth: 360, frameHeight: 298 } },
+  "characters/monsters/hyena/hyena-run1.png": { key: "hyena-run", type: "spritesheet", frameConfig: { frameWidth: 367, frameHeight: 298 } },
+  "characters/monsters/hyena/hyena-bite.png": { key: "hyena-bite", type: "spritesheet", frameConfig: { frameWidth: 360, frameHeight: 447 } },
+  "characters/monsters/hyena/hyena-hit.png": { key: "hyena-hit", type: "spritesheet", frameConfig: { frameWidth: 360, frameHeight: 894 } },
+  "characters/monsters/hyena/hyena-death.png": { key: "hyena-death", type: "spritesheet", frameConfig: { frameWidth: 360, frameHeight: 447 } }
+};
+
 function groupFor(relativePath) {
-  const parts = relativePath.split(path.sep);
+  const parts = relativePath.split("/");
+  if (parts[0] === "characters" || parts[0] === "items") return parts.slice(0, 2).join("/");
   return parts.length > 1 ? parts[0] : "misc";
 }
 
@@ -68,6 +90,7 @@ function assetKey(relativePath) {
 const paths = (await walk(assetsRoot)).sort();
 const assets = [];
 const hashes = new Map();
+const keys = new Map();
 const duplicates = [];
 let totalBytes = 0;
 
@@ -78,15 +101,20 @@ for (const absolutePath of paths) {
   const relativePath = path.relative(assetsRoot, absolutePath).split(path.sep).join("/");
   const digest = createHash("sha256").update(buffer).digest("hex");
   const info = await stat(absolutePath);
-  const type = AUDIO_EXTENSIONS.has(extension) ? "audio" : extension === ".svg" ? "svg" : "image";
+  const override = SPRITESHEET_OVERRIDES[relativePath] || {};
+  const type = override.type || (AUDIO_EXTENSIONS.has(extension) ? "audio" : extension === ".svg" ? "svg" : "image");
+  const key = override.key || assetKey(relativePath);
+  if (keys.has(key)) throw new Error(`Asset key collision: "${key}" is used by both "${keys.get(key)}" and "${relativePath}"`);
+  keys.set(key, relativePath);
   const dimensions = type === "audio" ? null : imageDimensions(buffer, extension);
   const entry = {
-    key: assetKey(relativePath),
+    key,
     url: `/assets/${relativePath}`,
     type,
     group: groupFor(relativePath),
     bytes: info.size,
     sha256: digest,
+    ...(override.frameConfig ? { frameConfig: override.frameConfig } : {}),
     ...(dimensions ? dimensions : {})
   };
   assets.push(entry);
@@ -99,7 +127,8 @@ const groups = {};
 for (const asset of assets) (groups[asset.group] ||= []).push({
   key: asset.key,
   url: asset.url,
-  type: asset.type
+  type: asset.type,
+  ...(asset.frameConfig ? { frameConfig: asset.frameConfig } : {})
 });
 
 const manifest = {
