@@ -26,23 +26,20 @@ A legacy Studio plant record without a combat profile (for example an older Bamb
 
 A projectile upload is associated with the plant record. It is not registered as a separate unlinked projectile record.
 
-## 2. Prepare local test
+## 2. Prepare and test
 
-The Studio action `prepare-test` changes the plant status to `testing` on the Studio branch. It does not publish the plant.
+The Studio action `prepare-test` changes the plant status to `testing` on the Studio storage branch. It does not publish the plant.
 
-From the `web/` directory of the feature branch that contains the Studio lifecycle implementation, run:
+The authenticated game runtime requests `/api/studio/assets?catalog=testing` directly. The API reads the testing registry from `STUDIO_GITHUB_BRANCH` and proxies the plant and linked projectile images through the signed Studio session. No terminal sync command, manual file copy, or generated local catalog is required.
 
-```powershell
-npm run studio:sync
-```
-
-The script reads `STUDIO_GITHUB_TOKEN` and `STUDIO_GITHUB_BRANCH` from `.env.local`, downloads all plants marked `testing` (including attached projectile images), and writes a local-only catalog to:
-
-`public/assets/studio-test/plant-catalog.json`
-
-The generated local test catalog is ignored by Git. Refresh/restart the local game after syncing. Test plants appear in Stage 1 seed selection and use their configured behavior in battle.
+After preparing the plant, refresh the game page and open Stage 1 seed selection in the same authenticated browser session. Testing plants appear in the seed bank and use their saved combat profile in battle. Test the actual attack range, target selection, animation timing, projectile movement, collision, and damage before publishing.
 
 **Important:** `npm run studio:sync` and the game runtime catalog integration are part of the Studio feature branch. They are not available on `main` until the Studio feature PR is merged. Pulling `main` alone cannot add Studio plants to a game build whose runtime does not yet read the Studio catalog.
+
+
+## Editing an existing asset
+
+Selecting `تعديل` on a registered asset opens the same editor with its current metadata. A replacement file is optional: leaving the file input empty preserves the existing image/audio file while saving metadata or plant combat-profile changes. Every saved edit returns the asset to `draft`; it must be prepared and tested again before publishing.
 
 ## 3. Publish
 
