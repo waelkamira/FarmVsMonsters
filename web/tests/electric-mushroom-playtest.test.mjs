@@ -5,6 +5,7 @@ import { PHASE_ONE_PLANT_EVENT_TYPES } from "../game/rules/phaseOneCombatContrac
 import { resolvePlantPlacement, resolvePlantUproot } from "../game/rules/combatSimulation.mjs";
 import { getPlantVFXProfile } from "../game/vfx/PlantVFXProfiles.mjs";
 import { getProjectileVFXProfile } from "../game/vfx/ProjectileVFXProfiles.mjs";
+import { createDefaultVFXRegistry } from "../game/vfx/createDefaultVFXRegistry.mjs";
 
 test("Electric Mushroom is a valid, refundable playtest plant", () => {
   const placement = resolvePlantPlacement({
@@ -34,4 +35,10 @@ test("Electric Mushroom uses its own electric projectile and VFX identity", () =
   assert.equal(projectile.tint, 0x65d9ff);
   assert.equal(projectile.trail, "electric-trail");
   assert.equal(projectile.impact, "electric-impact");
+
+  const registry = createDefaultVFXRegistry();
+  for (const effectId of ["electric-charge", "electric-projectile", "electric-trail", "electric-impact"]) {
+    assert.ok(registry.has(effectId), effectId);
+    assert.equal(registry.get(effectId).tint, 0x65d9ff, effectId);
+  }
 });
