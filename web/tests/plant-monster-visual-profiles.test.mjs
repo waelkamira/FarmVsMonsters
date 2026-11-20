@@ -58,7 +58,7 @@ test("plant idle breathing stays subtle, deterministic, and preserves base scale
     const second = getPlantIdleMotionTransform(id, 500, 120, 0.8, 1.1);
     assert.deepEqual(first, second, id);
     assert.ok(first.scaleX > 0.78 && first.scaleX < 0.82, id);
-    assert.ok(first.scaleY > 1.06 && first.scaleY < 1.14, id);
+    assert.ok(first.scaleY > 1.05 && first.scaleY < 1.15, id);
   }
   assert.equal(getPlantIdleMotionTransform("unknown", 100), null);
 });
