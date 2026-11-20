@@ -47,4 +47,4 @@ Groups are reference-counted. Releasing a group removes only assets that this ma
 
 ## Initial repository baseline
 
-The initial inventory contained 91 supported assets totaling approximately 22.96 MiB (24,075,116 bytes). This is a measured repository snapshot, not a runtime-memory estimate. Decoded texture memory can be much larger than the files on disk.
+The initial inventory contained 88 supported assets totaling approximately 22.96 MiB (24,072,112 bytes). This is a measured repository snapshot, not a runtime-memory estimate. Decoded texture memory can be much larger than the files on disk.
