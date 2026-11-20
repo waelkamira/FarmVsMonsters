@@ -245,7 +245,7 @@ test("VFXObjectPool isolates reset and destroy failures and rejects work after d
 test("VFXManager reuses pooled texture visuals after completion and destroys idle visuals on teardown", () => {
   const scene = createMockScene();
   const manager = new VFXManager(scene, { registry: createDefaultVFXRegistry() });
-  const first = manager.play("radish-impact", 10, 10);
+  const first = manager.play("radish-projectile", 10, 10);
   const firstTween = scene.tweenRecords[0];
   assert.ok(first);
   assert.equal(first.visible, true);
@@ -256,7 +256,7 @@ test("VFXManager reuses pooled texture visuals after completion and destroys idl
   assert.equal(first.active, false);
   assert.equal(manager.pool.getStats().idle, 1);
 
-  const second = manager.play("radish-impact", 30, 40);
+  const second = manager.play("radish-projectile", 30, 40);
   assert.equal(second, first);
   assert.equal(second.x, 30);
   assert.equal(second.y, 40);
