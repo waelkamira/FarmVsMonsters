@@ -1,0 +1,37 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { ELECTRIC_MUSHROOM_CONFIG } from "../game/rules/phaseOneRules.mjs";
+import { PHASE_ONE_PLANT_EVENT_TYPES } from "../game/rules/phaseOneCombatContract.mjs";
+import { resolvePlantPlacement, resolvePlantUproot } from "../game/rules/combatSimulation.mjs";
+import { getPlantVFXProfile } from "../game/vfx/PlantVFXProfiles.mjs";
+import { getProjectileVFXProfile } from "../game/vfx/ProjectileVFXProfiles.mjs";
+
+test("Electric Mushroom is a valid, refundable playtest plant", () => {
+  const placement = resolvePlantPlacement({
+    energy: 100, plants: [], type: "electric-mushroom",
+    col: 2, row: 1, columns: 8, rows: 5
+  });
+  assert.equal(placement.ok, true);
+  assert.equal(placement.energy, 100 - ELECTRIC_MUSHROOM_CONFIG.cost);
+  assert.equal(placement.plant.hp, ELECTRIC_MUSHROOM_CONFIG.hp);
+  assert.ok(PHASE_ONE_PLANT_EVENT_TYPES.includes("electric-mushroom"));
+
+  const uproot = resolvePlantUproot({ energy: placement.energy, plant: placement.plant });
+  assert.equal(uproot.ok, true);
+  assert.equal(uproot.refund, ELECTRIC_MUSHROOM_CONFIG.cost);
+});
+
+test("Electric Mushroom uses its own electric projectile and VFX identity", () => {
+  const plant = getPlantVFXProfile("electric-mushroom");
+  const projectile = getProjectileVFXProfile("electric-mushroom");
+  assert.deepEqual(plant, {
+    charge: "electric-charge",
+    projectile: "electric-projectile",
+    trail: "electric-trail",
+    impact: "electric-impact"
+  });
+  assert.equal(projectile.texture, null);
+  assert.equal(projectile.tint, 0x65d9ff);
+  assert.equal(projectile.trail, "electric-trail");
+  assert.equal(projectile.impact, "electric-impact");
+});
