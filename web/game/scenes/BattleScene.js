@@ -1,6 +1,9 @@
 import { Scene, Input, Math as PhaserMath } from "phaser";
 import { translate } from "../../app/LocaleProvider";
 import { PhaserAssetManager } from "../services/assetManager.mjs";
+import { VFXManager } from "../vfx/VFXManager.mjs";
+import { createDefaultVFXRegistry } from "../vfx/createDefaultVFXRegistry.mjs";
+import { getPlantVFXProfile } from "../vfx/PlantVFXProfiles.mjs";
 import { createSeededRandom } from "../rules/seededRandom.mjs";
 import { createCombatEventLog, appendCombatEvent } from "../rules/combatEventLog.mjs";
 import gridCalibration from "../data/farm-grid-calibration.json";
@@ -181,6 +184,11 @@ export default class BattleScene extends Scene {
 
   create() {
     this.isPaused = false;
+    this.vfxManager = new VFXManager(this, { registry: createDefaultVFXRegistry(), limits: { maxActiveBursts: 24 } });
+    this.events.once("shutdown", () => {
+      this.vfxManager?.destroy();
+      this.vfxManager = null;
+    });
     // Both uploaded artworks are 3x3 sheets. Register one Phaser frame per cell
     // so the battle renders a single pose instead of the complete nine-pose sheet.
     // Use the same dimension-derived 3×3 crop path for Mango, Snow Thrower,
@@ -3209,7 +3217,9 @@ export default class BattleScene extends Scene {
     this.playThornSound();
   }
 
-  createFreezeImpact(x, y) {
+  createFreezeImpact(x, y, plantType = "snow-thrower") {
+    const effectId = getPlantVFXProfile(plantType)?.impact;
+    if (effectId && this.vfxManager?.play(effectId, x, y, { tint: 0xbcecff, count: 9, durationMs: 320, endScale: 1.8 })) return;
     const burst = this.add.container(x, y).setDepth(25);
     const core = this.add.circle(0, 0, 11, 0xe9fbff, 0.95);
     const ring = this.add.circle(0, 0, 22, 0x72d9ff, 0.72).setStrokeStyle(3, 0xe6fbff, 0.95);
@@ -3222,7 +3232,9 @@ export default class BattleScene extends Scene {
     this.tweens.add({ targets: burst, scale: 1.8, alpha: 0, duration: 320, ease: "Cubic.easeOut", onComplete: () => burst.destroy() });
   }
 
-  createProjectileImpact(x, y) {
+  createProjectileImpact(x, y, plantType = "radish") {
+    const effectId = getPlantVFXProfile(plantType)?.impact;
+    if (effectId && this.vfxManager?.play(effectId, x, y, { count: 8, durationMs: 220, endScale: 2.1 })) return;
     const burst = this.add.container(x, y).setDepth(24);
     const flash = this.add.circle(0, 0, 10, 0xfff4f7, 0.96);
     const sparks = [];
@@ -3243,7 +3255,9 @@ export default class BattleScene extends Scene {
     });
   }
 
-  createProjectileTrail(x, y) {
+  createProjectileTrail(x, y, plantType = "radish") {
+    const effectId = getPlantVFXProfile(plantType)?.trail;
+    if (effectId && this.vfxManager?.playProjectileTrail(effectId, x, y, { count: 3, durationMs: 180, endScale: 1.6 })) return;
     const spark = this.add.circle(x, y, PhaserMath.Between(2, 4), 0xffc247, 0.72).setDepth(14);
     this.tweens.add({
       targets: spark,
@@ -4049,11 +4063,11 @@ export default class BattleScene extends Scene {
         shot.localX = shot.target.localX;
         shot.trailTimer -= dt * 1000;
         if (shot.trailTimer <= 0) {
-          this.createProjectileTrail(nextX - 5, nextY);
+          this.createProjectileTrail(nextX - 5, nextY, shot.plantType);
           shot.trailTimer = 48;
         }
         if (t >= 1) {
-          this.createProjectileImpact(endX, bounds.top);
+          this.createProjectileImpact(endX, bounds.top, shot.plantType);
           this.playThornImpactSound();
           this.applyMonsterDamage(shot.target, shot.damage * this.incomingMonsterDamageMultiplier(shot.target));
           this.damageMonsterIfNeeded(shot.target);
@@ -4105,7 +4119,7 @@ export default class BattleScene extends Scene {
 
       shot.trailTimer -= dt * 1000;
       if (shot.trailTimer <= 0) {
-        this.createProjectileTrail(projectileX - 5, projectileY);
+        this.createProjectileTrail(projectileX - 5, projectileY, shot.plantType);
         shot.trailTimer = 48;
       }
 
@@ -4140,13 +4154,13 @@ export default class BattleScene extends Scene {
 
       if (hit) {
         if (shot.freeze) {
-          this.createFreezeImpact(projectileX, projectileY);
+          this.createFreezeImpact(projectileX, projectileY, shot.plantType);
           this.freezeMonster(hit);
           shot.alive = false;
           shot.view.destroy();
           continue;
         }
-        this.createProjectileImpact(projectileX, projectileY);
+        this.createProjectileImpact(projectileX, projectileY, shot.plantType);
         this.playThornImpactSound();
         this.applyMonsterDamage(
           hit, shot.damage * this.incomingMonsterDamageMultiplier(hit)
