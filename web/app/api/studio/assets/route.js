@@ -2,7 +2,7 @@ import {NextResponse} from "next/server";
 import {mkdir,readFile,writeFile} from "node:fs/promises";
 import path from "node:path";
 import {createHmac,timingSafeEqual} from "node:crypto";
-import {STUDIO_ASSET_TYPES,STUDIO_ID_PATTERN,STUDIO_MAX_UPLOAD_BYTES} from "../../../../game/studio/assetTypes.mjs";
+import {STUDIO_ASSET_TYPES,STUDIO_ID_PATTERN,STUDIO_MAX_UPLOAD_BYTES,STUDIO_RESERVED_PLANT_IDS} from "../../../../game/studio/assetTypes.mjs";
 import {createStudioPlantCombatProfile} from "../../../../game/studio/plantProfiles.mjs";
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
@@ -56,7 +56,8 @@ export async function POST(req){
  if(!authorized(req))return NextResponse.json({error:"Unauthorized."},{status:401});
  let form;try{form=await req.formData();}catch{return NextResponse.json({error:"Invalid multipart upload."},{status:400});}
  const id=String(form.get("id")||"").trim().toLowerCase(),type=String(form.get("type")||""),config=STUDIO_ASSET_TYPES[type],file=form.get("file"),projectileFile=form.get("projectileFile"),rows=Number(form.get("rows")||1),columns=Number(form.get("columns")||1),replace=String(form.get("replace")||"false")==="true";
- if(!config||!STUDIO_ID_PATTERN.test(id))return NextResponse.json({error:"Invalid category or ID."},{status:400});
+ if(!config||!STUDIO_ID_PATTERN.test(id)||id.length>64)return NextResponse.json({error:"Invalid category or ID. Use a lowercase slug up to 64 characters."},{status:400});
+ if(type==="plant"&&STUDIO_RESERVED_PLANT_IDS.includes(id))return NextResponse.json({error:"هذا المعرّف محجوز لنبتة أساسية في اللعبة. اختر معرّفاً جديداً."},{status:409});
  if(!file||typeof file.arrayBuffer!=="function"||file.size<1||file.size>STUDIO_MAX_UPLOAD_BYTES)return NextResponse.json({error:"Choose a file up to 8 MB."},{status:413});
  if(!config.accepts.includes(file.type))return NextResponse.json({error:"Unsupported media type."},{status:415});
  if(config.spriteSheet&&(!Number.isInteger(rows)||!Number.isInteger(columns)||rows<1||columns<1||rows*columns>100))return NextResponse.json({error:"Invalid sprite grid."},{status:400});
