@@ -16,7 +16,7 @@ test("Studio offers a linked projectile upload or an explicit alternative plant 
   for (const behavior of ["melee", "contact", "blocker", "energy"]) {
     assert.ok(studioPage.includes('value="' + behavior + '"'));
   }
-  assert.match(assetsRoute, /hasProjectile\?\{/);
+  assert.match(assetsRoute, /currentProjectile=hasProjectile\\s*\\?\\{/);
   assert.match(assetsRoute, /createStudioPlantCombatProfile/);
   assert.match(assetsRoute, /removeProjectile/);
 });
