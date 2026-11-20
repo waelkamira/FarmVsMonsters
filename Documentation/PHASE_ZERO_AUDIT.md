@@ -1,90 +1,183 @@
-# FarmVsMonsters — Phase 0 Audit
+# تدقيق المرحلة صفر — FarmVsMonsters وStudio
 
-**Audit date:** 2026-11-20  
-**Scope:** source-level inspection of the current `main` branch through GitHub file reads.  
-**Important:** this is not a local execution report. No Windows browser session, Node install, test run, lint run, or production build was executed during this source review.
+**تاريخ التدقيق:** 2026-11-21  
+**المستودع:** `waelkamira/FarmVsMonsters`  
+**الفرع الأساسي وقت التدقيق:** `main`  
+**Commit:** `a97a5dc4b598d95aafcf0de79931daa17264f17d`
 
-## Confirmed project direction
+> هذا تدقيق للمصدر والفروع وبيانات GitHub. لم يتم تشغيل المشروع على جهاز Windows الخاص بالمطور، ولم تُنفذ اختبارات Node أو ESLint أو Production Build محليًا. لا يُعد وجود الملفات أو نجاح قراءة GitHub دليلًا على نجاح التشغيل.
 
-- Root README identifies `web/` as the active project: Next.js + React + Phaser 3.
-- `godot/` is explicitly paused and retained as a reference.
-- The active game is a 2D cartoon farm-defense game.
-- Local development and playtesting are expected in Chrome on Windows.
-- Android packaging is deferred until the browser game is complete.
+## 1. القرار التقني المعتمد
 
-## Source files inspected
+- التطبيق النشط: Next.js + React + Phaser 3 داخل `web/`.
+- Phaser مسؤول عن حلقة اللعب الفعلية، المشاهد، التصادم، الأنيميشن، والحركة.
+- Next.js مسؤول عن واجهات التطبيق وStudio وواجهات API.
+- مشروع Godot محفوظ كمرجع متوقف مؤقتًا، ولا يُنقل إليه التطوير النشط.
+- توجد أيضًا ملفات ومجلدات Unity تاريخية في المستودع؛ لا تُعامل على أنها المسار النشط.
+- تجربة المطور المستهدفة: Windows + Chrome محليًا. التغليف إلى Android مؤجل حتى استقرار نسخة المتصفح.
 
-- `web/package.json`
-- `web/scripts/build-asset-manifest.mjs`
-- `web/game/scenes/BattleScene.js`
-- `web/tests/asset-manager.test.mjs`
-- `web/README.md`
-- `README.md`
-- `Documentation/GAME_DESIGN_DOCUMENT.md`
-- `Documentation/BUILD_LOG.md`
+## 2. حالة الفروع وطلبات الدمج
 
-## Findings
+| العنصر | الحالة وقت التدقيق | الملاحظة |
+|---|---|---|
+| `main` | موجود | لا يحتوي بعد على صفحة Studio أو Studio API |
+| PR #51 `feat/admin-asset-studio-foundation` | مفتوح ومسودة | أساس إدارة الأصول، مبني مباشرة فوق main |
+| PR #52 `feat/studio-asset-management-session` | مفتوح ومسودة | مبني فوق PR #51 وليس فوق main |
+| `studio/assets` | موجود | فرع بيانات وأصول منفصل، وليس فرع كود Studio |
 
-### 1. Asset manifest generator
+يجب الحفاظ على ترتيب الاعتماد: مراجعة أساس #51 أولًا، ثم مراجعة امتدادات #52 فوقه. لا يُدمج أي منهما تلقائيًا، ولا يُدمج إلى `main` دون موافقة صريحة.
 
-The current `web/scripts/build-asset-manifest.mjs` source already:
-- Recursively scans `web/public/assets`.
-- Computes SHA-256 hashes and reports exact duplicate files.
-- Detects duplicate asset keys and stops with an error.
-- Collects image dimensions when supported by its parser.
-- Builds grouped asset metadata and spritesheet metadata.
-- Defines `largeFiles` before using it.
-- Writes both `asset-audit.json` and `asset-manifest.json`.
+### نطاق PR #51
 
-**Correction to an earlier review note:** the claim that `largeFiles` was undefined and that the audit file was not written is not supported by the current `main` source. The current file contains both the declaration and the audit write. Do not make a speculative patch to this script. Runtime verification is still required.
+- صفحة `/studio` أولية.
+- API لرفع الأصول وعرضها.
+- أنواع أصول: نبات، وحش، مقذوف نبات، مقذوف وحش، مؤثر، عنصر، صوت.
+- سجل أصول أولي.
+- تخزين محلي أثناء التطوير أو GitHub Contents API للتخزين البعيد.
+- لا يحقق وحده دورة اختبار وربط ونشر كاملة.
 
-### 2. Asset manager tests
+### نطاق PR #52
 
-`web/tests/asset-manager.test.mjs` includes coverage for:
-- Loading a manifest group once and skipping cached textures.
-- Releasing manager-owned textures after their final reference.
-- Preserving textures that existed before manager loading.
-- Requiring frame metadata for spritesheets.
-- Keeping shared textures alive while another scene manager references them.
+- جلسة مسؤول موقعة عبر Cookie.
+- ملفات تعريف سلوك النباتات.
+- حالات مسودة/اختبار/منشور.
+- ربط مقذوف بالنبتة عند اختيار سلوك المقذوفات.
+- كتالوج اختبار يُقرأ مباشرة من Studio API.
+- تكامل كتالوج النباتات مع اختيار بذور المرحلة الأولى وPhaser.
+- نشر النبات والمقذوف والكتالوج إلى فرع اللعبة.
+- تحرير بيانات الأصل مع إمكانية إبقاء الملف الحالي.
 
-These are useful foundations, but do not by themselves prove the full manifest generator, BattleScene, or game runtime works.
+## 3. نتائج CI
 
-### 3. BattleScene integration
+أُعيد تشغيل Job التحقق في PR #51 وPR #52 خلال هذا التدقيق. انتهت المحاولتان بالفشل قبل تنفيذ أي خطوة:
 
-`web/game/scenes/BattleScene.js` imports the Phaser asset manager, seeded random helper, combat event log, phase-one rules, combat simulation, and phase-one combat contract. It also contains direct preload declarations for battlefield UI, plant, farmer, dragon, and hyena assets.
+- `runner_id = 0`
+- `steps = []`
 
-The scene is substantial and should be changed incrementally. Preserve existing asset keys and frame configurations unless the actual image dimensions and runtime behavior prove a correction is needed.
+إذًا لم تُنفذ خطوات تثبيت الحزم أو الاختبارات أو lint أو build. لا يمكن استنتاج وجود خطأ برمجي من هذه النتيجة، كما لا يمكن اعتبار CI ناجحًا. يجب معالجة سبب عدم تخصيص Runner أو إجراء تحقق فعلي في بيئة Windows.
 
-### 4. Documentation drift
+## 4. الوضع الحالي في main
 
-The existing `Documentation/GAME_DESIGN_DOCUMENT.md` describes a stylized 3D isometric Unity prototype and lists a different character roster. This conflicts with the current root README and active Phaser browser-game decision.
+### 4.1 Studio
 
-Update the design document to describe the active 2D Phaser implementation and the newly approved farm-world direction. Keep historical Unity/Godot material only where clearly labeled as archived context.
+- لا يوجد `web/app/studio` في main.
+- لا توجد `web/app/api/studio` في main.
+- توجد واجهات API للاعب في `web/app/api/player`.
+- صفحة Studio وكود API الخاص بها موجودان في فروع PR #51/#52 فقط.
 
-## Verification still required on the developer's Windows machine
+### 4.2 المحرك والبيانات
 
-Run from `web/`:
+المجلد النشط يحتوي على:
+- `web/game/scenes`
+- `web/game/rules`
+- `web/game/services`
+- `web/game/data`
+- `web/game/vfx`
 
-```bash
-npm ci
-npm test
-npm run lint
-npm run build
-npm run assets:manifest
-```
+لا تظهر حاليًا طبقات مستقلة مكتملة باسم entities أو systems كما تقترح بعض وثائق التصميم. ويتركز قدر كبير من سلوك المعركة داخل `BattleScene.js`، لذلك يجب تفكيكه تدريجيًا دون إعادة كتابة كبيرة أو كسر السلوك المعتمد.
 
-Then open the game using `OPEN_IN_CHROME.bat` and verify:
-- No asset load failures or console errors.
-- Plant cards and battlefield sizing remain correct.
-- Plant placement, targeting, attacks, monster movement, wave completion, rewards, and progression work end-to-end.
-- No regression in approved hyena-run1 animation or plant sprite crops.
-- Repeated scene transitions do not leak or prematurely destroy textures.
+### 4.3 مصادر البيانات الحالية
 
-## Phase 0 status
+توجد بيانات أساسية في ملفات مستقلة، منها:
+- `stageOnePlants.mjs`
+- `monsterRoster.mjs`
+- `campaignWorlds.mjs`
+- `projectileDesigns.mjs`
+- `sound-assets.json`
+- `farm-grid-calibration.json`
 
-**Source review:** started.  
-**Asset manager unit coverage:** confirmed present.  
-**Manifest generator:** source appears to generate both outputs; runtime not yet verified.  
-**Gameplay runtime:** not executed in this audit.  
-**Lint/build/test status:** not executed in this audit.  
-**Next action:** run the listed checks locally and resolve verified failures before adding the farm hub.
+كما يحتوي `BattleScene.js` على قوائم وإعدادات وأرقام خاصة بالنباتات والوحوش والموجات وبعض واجهات اللعب. لذلك فإن تعديل كل قيمة من Studio غير ممكن حاليًا؛ نحتاج إلى جرد كل مصدر قيمة ثم نقل القيم المتغيرة إلى نماذج محتوى موحدة.
+
+### 4.4 الأصول
+
+- يوجد مولد Manifest/Audit للأصول.
+- يحتوي المولد على إعدادات Sprite Sheet ثابتة لبعض الملفات في الكود.
+- يوجد Asset Manager واختبارات وحدات له.
+- إدارة Sprite Sheets من Studio تحتاج فحص الأبعاد الفعلية، وعدد الإطارات، والمعاينة قبل اعتماد إعدادات القص.
+- يجب الحفاظ على الأصول والقصاصات والأنيميشنات المعتمدة وعدم استبدالها دون طلب أو دليل واضح.
+
+## 5. نتائج فحص Studio على فرع الميزة
+
+### ما هو موجود
+
+- تسجيل دخول مسؤول وجلسة Cookie موقعة.
+- سجل أصول على فرع `studio/assets`.
+- رفع أصول إلى GitHub storage.
+- واجهة نباتات تتضمن اختيار السلوك وبعض خصائص القتال.
+- سلوكيات نبات مدعومة: projectile وmelee وcontact وblocker وenergy.
+- تحرير بيانات الأصل دون إعادة رفع الصورة في بعض الحالات.
+- تجهيز النبات للاختبار، ثم نشره بعد الاختبار.
+- اختبار مباشر لكتالوج النباتات من خلال جلسة Studio.
+
+### الفجوات المؤكدة
+
+1. واجهة Studio الحالية ليست محررًا عامًا لكل أنواع المحتوى؛ تحرير خصائص القتال مخصص للنباتات.
+2. لا توجد دورة حياة عامة مكتملة للوحوش والمقذوفات والمؤثرات والعناصر والصوتيات.
+3. لا يوجد محرر خرائط بصري.
+4. لا يوجد منشئ مراحل وموجات بصري متكامل.
+5. لا يوجد نظام عام لإدارة الاقتصاد والتقدم والمهام من Studio.
+6. API الحالية تدعم `GET` و`POST` و`PATCH`، ولا تظهر عملية `DELETE` عامة.
+7. عمليات PATCH الحالية تركز على `prepare-test` و`publish`؛ لا يوجد نظام عام موحد للتعطيل والأرشفة والاسترجاع.
+8. لا يوجد سجل إصدارات عام مع مقارنة واستعادة لأي نوع محتوى.
+9. GitHub Contents API تنفذ عمليات حفظ متعددة على شكل commits منفصلة؛ ليست معاملة ذرية واحدة. يجب تصميم نشر أكثر أمانًا قبل توسيع النشر إلى حزم محتوى مترابطة.
+10. التحقق من نوع الملف والحجم وبعض إعدادات الشبكة موجود، لكن فحص أبعاد الصور والإطارات والمعاينة البصرية ليست دورة كاملة بعد.
+11. يوجد في `web/package.json` على فرع #52 أمر `studio:sync`، بينما توثيق دورة الاختبار يصف الاختبار المباشر دون مزامنة. يجب حسم هذا التعارض وإزالة أي اعتماد يومي على أوامر Terminal من تجربة المستخدم.
+12. يجب أن تظل بيانات المسودة منفصلة عن الإصدار المنشور، وألا يؤدي فشل عملية جزئية إلى كتالوج يشير إلى ملفات ناقصة.
+
+## 6. حالة Bamboo من سجل الأصول
+
+سجل `studio/assets` والكتالوج المنشور في main يحتويان على:
+- `bamboo-level-1`: سلوك melee، ومدى 180.
+- `bamboo-throwing-level-1`: سلوك projectile، ومدى 500، ومقذوف مرتبط.
+
+هذا يثبت أن البيانات المسجلة والكتالوج تحتوي قيمة المدى 500. لكنه لا يثبت أن إطلاق المقذوف يحدث في المسافة الصحيحة داخل اللعبة. كما أن تكامل كتالوج Studio مع محرك اللعبة موجود في PR #52 وليس في main؛ لذلك لا يجوز افتراض أن main وحده يشغل هذه الإضافات.
+
+## 7. حالة الاختبارات
+
+### الموجود في المصدر
+- اختبارات قواعد القتال.
+- اختبارات المحاكاة وسجل الأحداث.
+- اختبارات إدارة الأصول.
+- اختبارات اختيار البذور والتقدم.
+- اختبارات Studio الخاصة بأنواع الأصول وملفات تعريف النباتات ودورة حياة النبات على فرع #52.
+
+### غير المتحقق منه
+- لم تُشغّل الاختبارات محليًا في هذه المراجعة.
+- لم يُشغّل ESLint محليًا.
+- لم يُنفذ Production Build محليًا.
+- لم يُنفذ اختبار متصفح End-to-End في جلسة المستخدم.
+- لم يُثبت بعد مسار Studio → اختبار داخل المعركة → نشر → ظهور الإصدار في نسخة اللعبة المنشورة.
+
+## 8. قرارات المرحلة صفر
+
+- عدم دمج PR #51 أو #52 أثناء التدقيق.
+- عدم تعديل الأصول المعتمدة أو الأنيميشنات الحالية.
+- عدم الانتقال إلى بناء محررات جديدة قبل تثبيت خريطة مصادر البيانات والعلاقات.
+- اعتبار PR #51 و#52 أساسًا قيد المراجعة، لا نظامًا مكتملًا.
+- اعتماد Registry بعقود بيانات ومعرفات ثابتة، مع طبقة تخزين قابلة للتبديل.
+- فصل بيانات المحتوى عن منطق المحرك؛ القيم المتغيرة تصبح بيانات، والسلوك العام يبقى في أنظمة المحرك.
+- لا يُسمح بتغيير إصدار Production عند تحرير Draft.
+- كل حذف يكون آمنًا وقابلًا للاسترجاع حيث يلزم، مع فحص التبعيات.
+- كل نشر يجب أن يكون قابلاً للتحقق والتراجع.
+- لا تُطلب من المستخدم أوامر Terminal للعمليات اليومية.
+
+## 9. ما تبقى لإغلاق المرحلة صفر
+
+1. إجراء تحقق فعلي من اختبارات Node وESLint وProduction Build في بيئة Windows/Node، أو توفير Runner CI يعمل وينفذ الخطوات.
+2. فتح اللعبة في Chrome والتحقق من أهم مسارات اللعب الحالية وعدم وجود أخطاء تحميل أصول.
+3. التحقق من سلوك Bamboo Throwing داخل المعركة، دون اعتبار قيمة 500 وحدها دليلًا على حل المشكلة.
+4. استكمال مصفوفة مصادر البيانات: النباتات، الوحوش، المقذوفات، المراحل، الموجات، الخرائط، الاقتصاد، التقدم، الصوت، والواجهات.
+5. استكمال خريطة التبعيات بين Studio UI وAPI والخدمات والتخزين ومحرك اللعبة.
+6. تسجيل نتائج التحقق الفعلية وتحديد الأعطال ذات الأولوية.
+
+## 10. بوابة الخروج من المرحلة صفر
+
+لا تُعلن المرحلة صفر مكتملة حتى:
+- تُحفظ خريطة الوضع الحالي ومصادر البيانات والتبعيات.
+- تُراجع طلبات الدمج المتراكبة ويُحدد مسار دمج آمن دون تنفيذ دمج غير مصرح.
+- تُسجل نتائج الاختبارات الفعلية أو القيود التي تمنع تشغيلها بوضوح.
+- تُوثق العيوب ذات الأولوية وخطوات إعادة إنتاجها.
+- تُعتمد نقطة أساس يمكن البناء عليها.
+
+**الحالة الحالية: التدقيق المصدري متقدم، لكن المرحلة صفر غير مكتملة.**  
+**المرحلة التالية ممنوعة حتى إغلاق بوابة الخروج أعلاه.**
