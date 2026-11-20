@@ -4224,11 +4224,11 @@ export default class BattleScene extends Scene {
     const x = bounds.centerX;
     const y = bounds.centerY;
     const depth = (monster.view.depth ?? 0) + 5;
-    const flash = this.add.circle(x, y, Math.max(bounds.width, bounds.height) * 0.16, 0xfff0a0, 0.95);
+    const flash = this.add.circle(x, y, Math.max(bounds.width, bounds.height) * 0.08, 0xfff0a0, 0.95);
     flash.setDepth(depth);
     this.tweens.add({
       targets: flash,
-      scale: 4.2,
+      scale: 2.1,
       alpha: 0,
       duration: 300,
       ease: "Cubic.easeOut",
@@ -4239,8 +4239,8 @@ export default class BattleScene extends Scene {
     const count = 14;
     for (let i = 0; i < count; i += 1) {
       const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.22;
-      const distance = Math.max(bounds.width, bounds.height) * (0.45 + Math.random() * 0.42);
-      const spark = this.add.circle(x, y, 2 + Math.random() * 2.5, colors[i % colors.length], 0.95);
+      const distance = Math.max(bounds.width, bounds.height) * (0.225 + Math.random() * 0.21);
+      const spark = this.add.circle(x, y, 1 + Math.random() * 1.25, colors[i % colors.length], 0.95);
       spark.setDepth(depth + 1);
       this.tweens.add({
         targets: spark,
