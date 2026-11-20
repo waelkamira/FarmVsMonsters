@@ -5,6 +5,10 @@ import { VFXManager } from "../vfx/VFXManager.mjs";
 import { createDefaultVFXRegistry } from "../vfx/createDefaultVFXRegistry.mjs";
 import { getPlantVFXProfile } from "../vfx/PlantVFXProfiles.mjs";
 import { getProjectileVFXProfile } from "../vfx/ProjectileVFXProfiles.mjs";
+
+// TEMPORARY: expose every implemented plant for VFX playtesting. Set false to restore campaign unlocks.
+const PLAYTEST_ALL_PLANTS = true;
+const ALL_PLAYTEST_PLANT_IDS = Object.freeze(["radish", "mushroom", "pumpkin", "pineapple", "hazelnut", "mango", "snow-thrower"]);
 import { createSeededRandom } from "../rules/seededRandom.mjs";
 import { createCombatEventLog, appendCombatEvent } from "../rules/combatEventLog.mjs";
 import gridCalibration from "../data/farm-grid-calibration.json";
@@ -808,9 +812,13 @@ export default class BattleScene extends Scene {
     let selectedTypes = ["radish", "mushroom"];
     try {
       const unlocked = new Set(loadUnlockedPlantIds(window.localStorage));
-      const availableTypes = new Set(plantOptions.map((plant) => plant.type).filter((type) => unlocked.has(type)));
+      const availableTypes = new Set(plantOptions.map((plant) => plant.type).filter((type) =>
+        PLAYTEST_ALL_PLANTS || unlocked.has(type)
+      ));
       const saved = JSON.parse(window.localStorage.getItem("farmVsMonsters.selectedPlants") || "null");
-      if (Array.isArray(saved)) {
+      if (PLAYTEST_ALL_PLANTS) {
+        selectedTypes = [...availableTypes];
+      } else if (Array.isArray(saved)) {
         selectedTypes = [...new Set(saved.filter((type) => availableTypes.has(type)))];
       } else {
         selectedTypes = [...availableTypes];
@@ -2155,7 +2163,7 @@ export default class BattleScene extends Scene {
       let unlockedIds = ["radish", "mushroom"];
       let selectedTypes = ["radish", "mushroom"];
       try {
-        unlockedIds = loadUnlockedPlantIds(window.localStorage);
+        unlockedIds = PLAYTEST_ALL_PLANTS\n          ? [...new Set([...loadUnlockedPlantIds(window.localStorage), ...ALL_PLAYTEST_PLANT_IDS])]\n          : loadUnlockedPlantIds(window.localStorage);
         const saved = JSON.parse(window.localStorage.getItem("farmVsMonsters.selectedPlants") || "null");
         if (Array.isArray(saved)) selectedTypes = saved;
         else selectedTypes = unlockedIds;
@@ -2659,7 +2667,7 @@ export default class BattleScene extends Scene {
   plantSelected(col, row, type, returnPosition = null) {
     if (this.gameOver) return;
     if (!["radish", "mushroom", "pumpkin", "pineapple", "hazelnut", "mango", "snow-thrower"].includes(type)) return;
-    if (!loadUnlockedPlantIds(window.localStorage).includes(type)) {
+    if (!PLAYTEST_ALL_PLANTS && !loadUnlockedPlantIds(window.localStorage).includes(type)) {
       this.setMessage("This plant is locked. Complete its campaign stage to unlock it.");
       return;
     }
