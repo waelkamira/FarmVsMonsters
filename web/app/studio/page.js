@@ -1,13 +1,13 @@
 "use client";
-import {useEffect,useMemo,useState} from "react";
+import {useCallback,useEffect,useMemo,useState} from "react";
 import "./studio.css";
 const TYPES=[["plant","نبات","🌱"],["monster","وحش","👾"],["plantProjectile","قذيفة نبات","🔥"],["monsterProjectile","قذيفة وحش","☄️"],["effect","مؤثر","✨"],["item","عنصر","🎒"],["audio","صوت","🔊"]];
 export default function StudioPage(){
  const [token,setToken]=useState(""),[authenticated,setAuthenticated]=useState(false),[checking,setChecking]=useState(true),[type,setType]=useState("plant"),[id,setId]=useState(""),[name,setName]=useState(""),[rows,setRows]=useState(3),[columns,setColumns]=useState(3),[file,setFile]=useState(null),[assets,setAssets]=useState([]),[message,setMessage]=useState(""),[loginMessage,setLoginMessage]=useState(""),[busy,setBusy]=useState(false),[storage,setStorage]=useState(""),[editing,setEditing]=useState(false);
  const previewUrl=useMemo(()=>file&&file.type.startsWith("image/")?URL.createObjectURL(file):"",[file]);
  useEffect(()=>()=>{if(previewUrl)URL.revokeObjectURL(previewUrl);},[previewUrl]);
- async function load(){const r=await fetch("/api/studio/assets",{cache:"no-store",credentials:"same-origin"}),d=await r.json();if(!r.ok)throw Error(d.error||"تعذر تحميل المكتبة");setAssets(d.assets||[]);if(d.storage)setStorage(d.storage);}
- useEffect(()=>{let active=true;(async()=>{try{const r=await fetch("/api/studio/session",{cache:"no-store",credentials:"same-origin"});if(!r.ok)throw Error("no-session");const d=await r.json();if(!active)return;setAuthenticated(true);setStorage(d.storage||"");await load();}catch{if(active)setAuthenticated(false);}finally{if(active)setChecking(false);}})();return()=>{active=false};},[]);
+ const load=useCallback(async()=>{const r=await fetch("/api/studio/assets",{cache:"no-store",credentials:"same-origin"}),d=await r.json();if(!r.ok)throw Error(d.error||"تعذر تحميل المكتبة");setAssets(d.assets||[]);if(d.storage)setStorage(d.storage);},[]);
+ useEffect(()=>{let active=true;(async()=>{try{const r=await fetch("/api/studio/session",{cache:"no-store",credentials:"same-origin"});if(!r.ok)throw Error("no-session");const d=await r.json();if(!active)return;setAuthenticated(true);setStorage(d.storage||"");await load();}catch{if(active)setAuthenticated(false);}finally{if(active)setChecking(false);}})();return()=>{active=false};},[load]);
  async function connect(){setLoginMessage("");setBusy(true);try{const r=await fetch("/api/studio/session",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"same-origin",body:JSON.stringify({token})}),d=await r.json();if(!r.ok)throw Error(d.error||"فشل تسجيل الدخول");setAuthenticated(true);setToken("");await load();setLoginMessage("✓ تم تسجيل الدخول بنجاح إلى FarmVsMonsters Studio.");}catch(err){setLoginMessage(err.message);}finally{setBusy(false);}}
  async function logout(){await fetch("/api/studio/session",{method:"DELETE",credentials:"same-origin"});setAuthenticated(false);setAssets([]);setLoginMessage("تم تسجيل الخروج.");}
  function beginReplace(asset){setType(asset.type);setId(asset.id);setName(asset.name);setRows(asset.rows||3);setColumns(asset.columns||3);setFile(null);setEditing(true);setMessage("وضع الاستبدال: اختر الملف الجديد للأصل "+asset.id);window.scrollTo({top:0,behavior:"smooth"});}
