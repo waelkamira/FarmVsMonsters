@@ -6,6 +6,11 @@ import { resolvePlantPlacement, resolvePlantUproot } from "../game/rules/combatS
 import { getPlantVFXProfile } from "../game/vfx/PlantVFXProfiles.mjs";
 import { getProjectileVFXProfile } from "../game/vfx/ProjectileVFXProfiles.mjs";
 import { createDefaultVFXRegistry } from "../game/vfx/createDefaultVFXRegistry.mjs";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname, resolve } from "node:path";
+
+const sceneSource = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../game/scenes/BattleScene.js"), "utf8");
 
 test("Electric Mushroom is a valid, refundable playtest plant", () => {
   const placement = resolvePlantPlacement({
@@ -41,4 +46,10 @@ test("Electric Mushroom uses its own electric projectile and VFX identity", () =
     assert.ok(registry.has(effectId), effectId);
     assert.equal(registry.get(effectId).tint, 0x65d9ff, effectId);
   }
+});
+
+test("Electric Mushroom is available in the plant collection and its seed selection feedback", () => {
+  assert.match(sceneSource, /id: "electric-mushroom", title: isArabic \? "الفطر الكهربائي" : "Electric Mushroom", image: "electric-mushroom-level-1", config: ELECTRIC_MUSHROOM_CONFIG/);
+  assert.match(sceneSource, /"electric-mushroom": "Electric Mushroom chosen\. Fires cyan electric bolts down its lane\."/);
+  assert.match(sceneSource, /"electric-mushroom": ELECTRIC_MUSHROOM_CONFIG/);
 });
