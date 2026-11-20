@@ -1050,3 +1050,23 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - Empty slot artwork now fills unused positions in the seven-slot seed tray, behind selectable packets.
 - Locked-card artwork is used for locked plant entries in the collection and as the card artwork when a locked packet is rendered; its aspect ratio is preserved.
 - Added source-level regression tests for both assets and their placement. Node tests, production build, and runtime visual verification remain pending.
+
+## 2026-11-20 — Strategy reset and Phase 0 source audit
+- Approved product direction: a connected farm-and-battle world, with rapid organic discovery as the primary growth priority.
+- Added `GAME_VISION.md`, `MASTER_ROADMAP.md`, `GAME_SYSTEMS_ARCHITECTURE.md`, and `PHASE_ZERO_AUDIT.md`.
+- Updated the design document to reflect the active Next.js + React + Phaser 3 browser game; older Unity/Godot-first design assumptions are no longer active.
+- Source review confirmed `web/scripts/build-asset-manifest.mjs` currently defines `largeFiles` and writes both `asset-audit.json` and `asset-manifest.json`. An earlier note claiming these were missing was incorrect; no speculative code change was made.
+- Confirmed existing asset manager tests cover manifest group loading, cache skipping, owned texture release, spritesheet frame metadata, and shared texture references.
+- Reviewed the active BattleScene imports and preload path. Preserve existing asset keys, frame metadata, and approved artwork while further testing.
+- Verification limitation: this was a GitHub source review only. `npm test`, `npm run lint`, `npm run build`, and Chrome runtime playtesting have not yet been executed.
+- Next gate: run the local checks on Windows and record concrete failures before extending gameplay systems.
+
+
+## 2026-11-20 — Hybrid adaptive VFX foundation
+- Approved a hybrid combat-effects architecture: Sprite Sheets for authored signature animations, Particles for sparks/embers/dust, and optional shader/Post-FX accents with procedural fallbacks.
+- Added `VFXManager`, named effect presets, and a rolling frame-time quality monitor with Ultra/High/Performance budgets and fixed-quality override support.
+- Connected the manager to BattleScene and routed existing plant projectile and ice impacts through the new VFX presets; combat damage/status rules remain untouched.
+- Added a named VFX registry and focused Node tests for adaptive quality, fixed quality, invalid inputs, and concurrency caps.
+- Added the first dragon fireball impact cue; it remains presentation-only and does not alter target selection or damage.
+- Current implementation uses Phaser procedural geometry and the built-in white particle texture when available. Sprite-sheet playback is supported by explicit keys but still needs authored effect sheets and registry metadata; renderer-specific shader pipelines remain an optional follow-up after compatibility testing.
+- Verification: GitHub source edits only. Tests, lint, production build, and Chrome/Windows visual/performance profiling have not been executed; do not treat runtime integration as verified.
