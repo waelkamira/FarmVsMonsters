@@ -32,9 +32,9 @@ export class VFXManager {
     const flash = this.scene.add.circle(0, 0, radius * 0.2, 0xffffff, 0.9);
     root.add([ring, flash]);
 
-    if (profile.glow && this.scene.add.particles && profile.maxParticlesPerEffect > 0) {
+    if (profile.glow && this.scene.add.particles && this.scene.textures?.exists?.("__WHITE") && profile.maxParticlesPerEffect > 0) {
       const count = Math.min(profile.maxParticlesPerEffect, Math.ceil(preset.sparks * profile.particleScale));
-      const particles = this.scene.add.particles(x, y, {
+      const particles = this.scene.add.particles(x, y, "__WHITE", {
         emitting: false,
         lifespan: duration * 0.72,
         speed: { min: 22 * scale, max: 95 * scale },
@@ -47,6 +47,18 @@ export class VFXManager {
       particles.setDepth(root.depth + 0.1);
       particles.explode(count, 0, 0);
       this.scene.time?.delayedCall?.(duration + 80, () => { if (particles.active) particles.destroy(); });
+    }
+
+    // Authored effect sheets can be plugged in by key without changing the
+    // procedural fallback or forcing every device to load every VFX asset.
+    if (options.spriteKey && this.scene.textures?.exists?.(options.spriteKey)) {
+      const sprite = this.scene.add.sprite(0, 0, options.spriteKey, options.frame ?? 0);
+      sprite.setScale(scale);
+      if (options.animationKey && this.scene.anims?.exists?.(options.animationKey)) {
+        sprite.play(options.animationKey);
+        sprite.once("animationcomplete", () => { if (sprite.active) sprite.destroy(); });
+      }
+      root.add(sprite);
     }
 
     if (preset.kind === "electric") {
