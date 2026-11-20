@@ -109,3 +109,19 @@ test("keeps a texture alive while another scene manager still references it", as
   firstManager.destroy();
   secondManager.destroy();
 });
+
+ 
+test("destroy removes loader observers and is safe to call more than once", () => {
+  const scene = createScene();
+  const manager = new PhaserAssetManager(scene);
+  for (const event of ["progress", "filecomplete", "loaderror", "complete"]) {
+    assert.equal(scene.load.listenerCount(event), 1);
+  }
+
+  manager.destroy();
+  for (const event of ["progress", "filecomplete", "loaderror", "complete"]) {
+    assert.equal(scene.load.listenerCount(event), 0);
+  }
+  manager.destroy();
+  assert.equal(scene.load.listenerCount("progress"), 0);
+});
