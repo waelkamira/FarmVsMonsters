@@ -1,0 +1,242 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-11-20T04:29:21.217Z",
+  "assetCount": 88,
+  "totalBytes": 24072120,
+  "groups": {
+    "audio": {
+      "assetCount": 14,
+      "totalBytes": 167352
+    },
+    "backgrounds": {
+      "assetCount": 1,
+      "totalBytes": 56081
+    },
+    "characters/farmer": {
+      "assetCount": 10,
+      "totalBytes": 5918254
+    },
+    "characters/monsters": {
+      "assetCount": 10,
+      "totalBytes": 7930236
+    },
+    "items/currency": {
+      "assetCount": 2,
+      "totalBytes": 604713
+    },
+    "items/ui": {
+      "assetCount": 21,
+      "totalBytes": 3010548
+    },
+    "monster-icons": {
+      "assetCount": 5,
+      "totalBytes": 3561
+    },
+    "plant-icons": {
+      "assetCount": 10,
+      "totalBytes": 5906
+    },
+    "plants": {
+      "assetCount": 15,
+      "totalBytes": 6375469
+    }
+  },
+  "exactDuplicates": [
+    {
+      "file": "characters/farmer/farmer-uproot.png",
+      "identicalTo": "characters/farmer/farmer-plant.png",
+      "bytes": 632940
+    }
+  ],
+  "largeFiles": [
+    {
+      "key": "characters-monsters-hyena-frozen-hyena-level-2",
+      "url": "/assets/characters/monsters/hyena/frozen-hyena-level-2.png",
+      "type": "image",
+      "bytes": 1818631
+    },
+    {
+      "key": "pineapple-level-1",
+      "url": "/assets/plants/pineapple-level-1.png",
+      "type": "spritesheet",
+      "bytes": 1910895
+    }
+  ],
+  "spritesheets": [
+    {
+      "key": "farmer-attack",
+      "url": "/assets/characters/farmer/farmer-attack.png",
+      "bytes": 460124,
+      "frameConfig": {
+        "frameWidth": 180,
+        "frameHeight": 360
+      }
+    },
+    {
+      "key": "farmer-collect",
+      "url": "/assets/characters/farmer/farmer-collect.png",
+      "bytes": 598589,
+      "frameConfig": {
+        "frameWidth": 180,
+        "frameHeight": 360
+      }
+    },
+    {
+      "key": "farmer-death",
+      "url": "/assets/characters/farmer/farmer-death.png",
+      "bytes": 388574,
+      "frameConfig": {
+        "frameWidth": 152,
+        "frameHeight": 430
+      }
+    },
+    {
+      "key": "farmer-hit",
+      "url": "/assets/characters/farmer/farmer-hit.png",
+      "bytes": 475771,
+      "frameConfig": {
+        "frameWidth": 152,
+        "frameHeight": 430
+      }
+    },
+    {
+      "key": "farmer-idle",
+      "url": "/assets/characters/farmer/farmer-idle.png",
+      "bytes": 492063,
+      "frameConfig": {
+        "frameWidth": 540,
+        "frameHeight": 360
+      }
+    },
+    {
+      "key": "farmer-jump",
+      "url": "/assets/characters/farmer/farmer-jump.png",
+      "bytes": 602627,
+      "frameConfig": {
+        "frameWidth": 216,
+        "frameHeight": 720
+      }
+    },
+    {
+      "key": "farmer-plant",
+      "url": "/assets/characters/farmer/farmer-plant.png",
+      "bytes": 632940,
+      "frameConfig": {
+        "frameWidth": 360,
+        "frameHeight": 430
+      }
+    },
+    {
+      "key": "farmer-run",
+      "url": "/assets/characters/farmer/farmer-run.png",
+      "bytes": 702835,
+      "frameConfig": {
+        "frameWidth": 360,
+        "frameHeight": 430
+      }
+    },
+    {
+      "key": "farmer-uproot",
+      "url": "/assets/characters/farmer/farmer-uproot.png",
+      "bytes": 632940,
+      "frameConfig": {
+        "frameWidth": 360,
+        "frameHeight": 430
+      }
+    },
+    {
+      "key": "farmer-walk",
+      "url": "/assets/characters/farmer/farmer-walk.png",
+      "bytes": 931791,
+      "frameConfig": {
+        "frameWidth": 360,
+        "frameHeight": 430
+      }
+    },
+    {
+      "key": "hyena-bite",
+      "url": "/assets/characters/monsters/hyena/hyena-bite.png",
+      "bytes": 647180,
+      "frameConfig": {
+        "frameWidth": 360,
+        "frameHeight": 447
+      }
+    },
+    {
+      "key": "hyena-death",
+      "url": "/assets/characters/monsters/hyena/hyena-death.png",
+      "bytes": 511996,
+      "frameConfig": {
+        "frameWidth": 360,
+        "frameHeight": 447
+      }
+    },
+    {
+      "key": "hyena-hit",
+      "url": "/assets/characters/monsters/hyena/hyena-hit.png",
+      "bytes": 263467,
+      "frameConfig": {
+        "frameWidth": 360,
+        "frameHeight": 894
+      }
+    },
+    {
+      "key": "hyena-idle",
+      "url": "/assets/characters/monsters/hyena/hyena-idle.png",
+      "bytes": 340460,
+      "frameConfig": {
+        "frameWidth": 360,
+        "frameHeight": 298
+      }
+    },
+    {
+      "key": "hyena-run",
+      "url": "/assets/characters/monsters/hyena/hyena-run1.png",
+      "bytes": 702079,
+      "frameConfig": {
+        "frameWidth": 367,
+        "frameHeight": 298
+      }
+    },
+    {
+      "key": "hyena-walk",
+      "url": "/assets/characters/monsters/hyena/hyena-walk.png",
+      "bytes": 848741,
+      "frameConfig": {
+        "frameWidth": 360,
+        "frameHeight": 298
+      }
+    },
+    {
+      "key": "gold-coin",
+      "url": "/assets/items/currency/gold-coin.png",
+      "bytes": 345442,
+      "frameConfig": {
+        "frameWidth": 170,
+        "frameHeight": 170
+      }
+    },
+    {
+      "key": "hazelnut-level-1",
+      "url": "/assets/plants/hazelnut-level-1.png",
+      "bytes": 1115104,
+      "frameConfig": {
+        "frameWidth": 341,
+        "frameHeight": 341,
+        "margin": 0,
+        "spacing": 0
+      }
+    },
+    {
+      "key": "pineapple-level-1",
+      "url": "/assets/plants/pineapple-level-1.png",
+      "bytes": 1910895,
+      "frameConfig": {
+        "frameWidth": 418,
+        "frameHeight": 418,
+        "margin": 0,
+        "spacing": 0
+      }
+    }
+  ]
+}

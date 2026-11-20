@@ -1,6 +1,14 @@
 import { Scene, Input, Math as PhaserMath } from "phaser";
 import { translate } from "../../app/LocaleProvider";
 import { PhaserAssetManager } from "../services/assetManager.mjs";
+import { VFXManager } from "../vfx/VFXManager.mjs";
+import { createDefaultVFXRegistry } from "../vfx/createDefaultVFXRegistry.mjs";
+import { getPlantVFXProfile } from "../vfx/PlantVFXProfiles.mjs";
+import { getProjectileVFXProfile } from "../vfx/ProjectileVFXProfiles.mjs";
+
+// TEMPORARY: expose every implemented plant for VFX playtesting. Set false to restore campaign unlocks.
+const PLAYTEST_ALL_PLANTS = true;
+const ALL_PLAYTEST_PLANT_IDS = Object.freeze(["radish", "mushroom", "pumpkin", "pineapple", "hazelnut", "mango", "snow-thrower"]);
 import { createSeededRandom } from "../rules/seededRandom.mjs";
 import { createCombatEventLog, appendCombatEvent } from "../rules/combatEventLog.mjs";
 import gridCalibration from "../data/farm-grid-calibration.json";
@@ -181,6 +189,11 @@ export default class BattleScene extends Scene {
 
   create() {
     this.isPaused = false;
+    this.vfxManager = new VFXManager(this, { registry: createDefaultVFXRegistry(), limits: { maxActiveBursts: 24 } });
+    this.events.once("shutdown", () => {
+      this.vfxManager?.destroy();
+      this.vfxManager = null;
+    });
     // Both uploaded artworks are 3x3 sheets. Register one Phaser frame per cell
     // so the battle renders a single pose instead of the complete nine-pose sheet.
     // Use the same dimension-derived 3×3 crop path for Mango, Snow Thrower,
@@ -799,9 +812,13 @@ export default class BattleScene extends Scene {
     let selectedTypes = ["radish", "mushroom"];
     try {
       const unlocked = new Set(loadUnlockedPlantIds(window.localStorage));
-      const availableTypes = new Set(plantOptions.map((plant) => plant.type).filter((type) => unlocked.has(type)));
+      const availableTypes = new Set(plantOptions.map((plant) => plant.type).filter((type) =>
+        PLAYTEST_ALL_PLANTS || unlocked.has(type)
+      ));
       const saved = JSON.parse(window.localStorage.getItem("farmVsMonsters.selectedPlants") || "null");
-      if (Array.isArray(saved)) {
+      if (PLAYTEST_ALL_PLANTS) {
+        selectedTypes = [...availableTypes];
+      } else if (Array.isArray(saved)) {
         selectedTypes = [...new Set(saved.filter((type) => availableTypes.has(type)))];
       } else {
         selectedTypes = [...availableTypes];
@@ -2146,7 +2163,9 @@ export default class BattleScene extends Scene {
       let unlockedIds = ["radish", "mushroom"];
       let selectedTypes = ["radish", "mushroom"];
       try {
-        unlockedIds = [...new Set([...loadUnlockedPlantIds(window.localStorage), "radish", "mushroom", "pumpkin", "pineapple", "hazelnut", "mango", "snow-thrower"])];
+        unlockedIds = PLAYTEST_ALL_PLANTS
+          ? [...new Set([...loadUnlockedPlantIds(window.localStorage), ...ALL_PLAYTEST_PLANT_IDS])]
+          : loadUnlockedPlantIds(window.localStorage);
         const saved = JSON.parse(window.localStorage.getItem("farmVsMonsters.selectedPlants") || "null");
         if (Array.isArray(saved)) selectedTypes = saved;
         else selectedTypes = unlockedIds;
@@ -2650,7 +2669,10 @@ export default class BattleScene extends Scene {
   plantSelected(col, row, type, returnPosition = null) {
     if (this.gameOver) return;
     if (!["radish", "mushroom", "pumpkin", "pineapple", "hazelnut", "mango", "snow-thrower"].includes(type)) return;
-    // All implemented plants are available on main for open playtesting.
+    if (!PLAYTEST_ALL_PLANTS && !loadUnlockedPlantIds(window.localStorage).includes(type)) {
+      this.setMessage("This plant is locked. Complete its campaign stage to unlock it.");
+      return;
+    }
     const placement = resolvePlantPlacement({
       energy: this.energy,
       plants: this.plants,
@@ -3115,20 +3137,22 @@ export default class BattleScene extends Scene {
     const launchX = laneOrigin.x + launchOffsetX;
     const launchY = laneOrigin.y + launchOffsetY;
     const view = this.add.container(launchX, launchY).setDepth(16);
+    const projectileVFX = getProjectileVFXProfile(plant.type);
+    const projectileTint = projectileVFX?.tint ?? 0xffc247;
     // Keep the projectile at the adjusted half-height launch point. Do not
     // ease its vertical offset toward the lane center:
     // that creates the unwanted immediate downward drop.
 
-    const halo = this.add.circle(0, 0, 18, 0xff7185, 0.13);
-    const outerGlow = this.add.circle(0, 0, 13, 0x8bd66f, 0.2);
-    const innerGlow = this.add.circle(0, 0, 9, 0xffd5dc, 0.28);
+    const halo = this.add.circle(0, 0, 18, projectileTint, 0.13);
+    const outerGlow = this.add.circle(0, 0, 13, projectileTint, 0.2);
+    const innerGlow = this.add.circle(0, 0, 9, projectileTint, 0.28);
     view.add([halo, outerGlow, innerGlow]);
 
-    const projectileTexture = plant.type === "radish" ? "radish-level-1-bomb"
+    const projectileTexture = projectileVFX?.texture || (plant.type === "radish" ? "radish-level-1-bomb"
       : plant.type === "pineapple" ? "pineapple-level-1-bomb"
       : plant.type === "hazelnut" ? "hazelnut-level-1-bomb"
       : plant.type === "snow-thrower" ? "snow-thrower-bomb-level-1"
-      : "mango-level-1-bomb";
+      : "mango-level-1-bomb");
     if (this.textures.exists(projectileTexture)) {
       const plantProjectile = this.add.image(0, 0, projectileTexture);
       if (plant.type === "pineapple" || plant.type === "hazelnut" || plant.type === "mango") {
@@ -3176,14 +3200,20 @@ export default class BattleScene extends Scene {
       repeat: -1
     });
 
-    const muzzleFlash = this.add.circle(launchX, launchY, 13, 0xffe28a, 0.8).setDepth(15);
-    this.tweens.add({
-      targets: muzzleFlash,
-      alpha: 0,
-      scale: 2.1,
-      duration: 135,
-      onComplete: () => muzzleFlash.destroy()
+    const chargeEffectId = getPlantVFXProfile(plant.type)?.charge;
+    const chargePlayed = chargeEffectId && this.vfxManager?.play(chargeEffectId, launchX, launchY, {
+      tint: projectileTint, count: 6, durationMs: 135, endScale: 1.8, depth: 15
     });
+    if (!chargePlayed) {
+      const muzzleFlash = this.add.circle(launchX, launchY, 13, projectileTint, 0.8).setDepth(15);
+      this.tweens.add({
+        targets: muzzleFlash,
+        alpha: 0,
+        scale: 2.1,
+        duration: 135,
+        onComplete: () => muzzleFlash.destroy()
+      });
+    }
 
     const projectileConfig = plant.type === "pineapple" ? PINEAPPLE_CONFIG
       : plant.type === "hazelnut" ? HAZELNUT_CONFIG
@@ -3206,7 +3236,9 @@ export default class BattleScene extends Scene {
     this.playThornSound();
   }
 
-  createFreezeImpact(x, y) {
+  createFreezeImpact(x, y, plantType = "snow-thrower") {
+    const effectId = getPlantVFXProfile(plantType)?.impact;
+    if (effectId && this.vfxManager?.play(effectId, x, y, { tint: 0xbcecff, count: 9, durationMs: 320, endScale: 1.8 })) return;
     const burst = this.add.container(x, y).setDepth(25);
     const core = this.add.circle(0, 0, 11, 0xe9fbff, 0.95);
     const ring = this.add.circle(0, 0, 22, 0x72d9ff, 0.72).setStrokeStyle(3, 0xe6fbff, 0.95);
@@ -3219,7 +3251,9 @@ export default class BattleScene extends Scene {
     this.tweens.add({ targets: burst, scale: 1.8, alpha: 0, duration: 320, ease: "Cubic.easeOut", onComplete: () => burst.destroy() });
   }
 
-  createProjectileImpact(x, y) {
+  createProjectileImpact(x, y, plantType = "radish") {
+    const effectId = getPlantVFXProfile(plantType)?.impact;
+    if (effectId && this.vfxManager?.play(effectId, x, y, { count: 8, durationMs: 220, endScale: 2.1 })) return;
     const burst = this.add.container(x, y).setDepth(24);
     const flash = this.add.circle(0, 0, 10, 0xfff4f7, 0.96);
     const sparks = [];
@@ -3240,7 +3274,9 @@ export default class BattleScene extends Scene {
     });
   }
 
-  createProjectileTrail(x, y) {
+  createProjectileTrail(x, y, plantType = "radish") {
+    const effectId = getPlantVFXProfile(plantType)?.trail;
+    if (effectId && this.vfxManager?.playProjectileTrail(effectId, x, y, { count: 3, durationMs: 180, endScale: 1.6 })) return;
     const spark = this.add.circle(x, y, PhaserMath.Between(2, 4), 0xffc247, 0.72).setDepth(14);
     this.tweens.add({
       targets: spark,
@@ -4046,13 +4082,13 @@ export default class BattleScene extends Scene {
         shot.localX = shot.target.localX;
         shot.trailTimer -= dt * 1000;
         if (shot.trailTimer <= 0) {
-          this.createProjectileTrail(nextX - 5, nextY);
+          this.createProjectileTrail(nextX - 5, nextY, shot.plantType);
           shot.trailTimer = 48;
         }
         if (t >= 1) {
-          this.createProjectileImpact(endX, bounds.top);
+          this.createProjectileImpact(endX, bounds.top, shot.plantType);
           this.playThornImpactSound();
-          this.applyMonsterDamage(shot.target, shot.damage * this.incomingMonsterDamageMultiplier(shot.target));
+          this.applyMonsterDamage(shot.target, shot.damage * this.incomingMonsterDamageMultiplier(shot.target), shot.plantType);
           this.damageMonsterIfNeeded(shot.target);
           shot.alive = false;
           shot.view.destroy();
@@ -4075,6 +4111,7 @@ export default class BattleScene extends Scene {
         : this.lanePoint(shot.localX, shot.row);
       const projectileX = position.x + (shot.launchOffsetX || 0);
       const projectileY = position.y + (shot.launchOffsetY || 0);
+      let trailPositionY = projectileY;
 
       // Give the outgoing pineapple bomb a smooth launch arc. Progress is
       // measured along its lane, while the arc height adapts to travel distance.
@@ -4087,6 +4124,7 @@ export default class BattleScene extends Scene {
         const launchScreenY = launchPosition.y + (shot.launchOffsetY || 0);
         const arcHeight = Math.max(34, Math.min(90, Math.abs(targetBounds.centerX - launchScreenX) * 0.18));
         const arcedY = projectileY - Math.sin(Math.PI * arcProgress) * arcHeight;
+        trailPositionY = arcedY;
         if (projectileX >= targetBounds.centerX - 4) {
           shot.dropPhase = "dropping";
           shot.dropStartX = projectileX;
@@ -4102,7 +4140,7 @@ export default class BattleScene extends Scene {
 
       shot.trailTimer -= dt * 1000;
       if (shot.trailTimer <= 0) {
-        this.createProjectileTrail(projectileX - 5, projectileY);
+        this.createProjectileTrail(projectileX - 5, trailPositionY, shot.plantType);
         shot.trailTimer = 48;
       }
 
@@ -4137,16 +4175,16 @@ export default class BattleScene extends Scene {
 
       if (hit) {
         if (shot.freeze) {
-          this.createFreezeImpact(projectileX, projectileY);
+          this.createFreezeImpact(projectileX, projectileY, shot.plantType);
           this.freezeMonster(hit);
           shot.alive = false;
           shot.view.destroy();
           continue;
         }
-        this.createProjectileImpact(projectileX, projectileY);
+        this.createProjectileImpact(projectileX, projectileY, shot.plantType);
         this.playThornImpactSound();
         this.applyMonsterDamage(
-          hit, shot.damage * this.incomingMonsterDamageMultiplier(hit)
+          hit, shot.damage * this.incomingMonsterDamageMultiplier(hit), shot.plantType
         );
         if (hit.view && hit.view.active) {
           this.tweens.add({
@@ -4180,32 +4218,78 @@ export default class BattleScene extends Scene {
     return monster.kind === 'stonehide' ? getStonehideIncomingDamageMultiplier(monster.braced) : armorMultiplier;
   }
 
-  flashMonsterOnHit(monster) {
+  createMonsterDefeatMotes(monster) {
+    const bounds = monster?.view?.getBounds?.();
+    if (!bounds) return;
+    const x = bounds.centerX;
+    const y = bounds.centerY;
+    const depth = (monster.view.depth ?? 0) + 5;
+    const colors = [0xb9e879, 0xe6d98a, 0xffd477, 0xf4efc0];
+    const count = 8;
+
+    // Gentle upward-drifting motes replace the fiery death explosion.
+    for (let i = 0; i < count; i += 1) {
+      const startX = x + (Math.random() - 0.5) * bounds.width * 0.48;
+      const startY = y + (Math.random() - 0.5) * bounds.height * 0.28;
+      const mote = this.add.circle(
+        startX,
+        startY,
+        1.2 + Math.random() * 1.2,
+        colors[i % colors.length],
+        0.78
+      );
+      mote.setDepth(depth);
+      this.tweens.add({
+        targets: mote,
+        x: startX + (Math.random() - 0.5) * 22,
+        y: startY - 18 - Math.random() * 22,
+        alpha: 0,
+        scale: 0.25,
+        duration: 480 + Math.random() * 220,
+        delay: i * 24,
+        ease: "Sine.easeOut",
+        onComplete: () => mote.destroy()
+      });
+    }
+  }
+
+  flashMonsterOnHit(monster, plantType = "radish") {
     if (!monster || !monster.alive || monster.freezeStage > 0) return;
 
-    // Keep the hyena grounded and on its original lane. Strengthen the flash
-    // by about 30%, then add a tiny horizontal recoil on the sprite only.
-    // The monster record/container position is never changed, so its route,
-    // collision lane, and movement progress remain untouched.
+    // Keep the monster artwork unchanged. A restrained projectile-colored
+    // glow traces only its silhouette; recoil and squash are reduced by half.
     const sprite = monster.hyenaSprite;
+    const hitColor = getProjectileVFXProfile(plantType)?.tint ?? 0x9bdc72;
     if (sprite?.active) {
-      monster.hitAnimUntil = this.time.now + 260;
-      // The authored hit sheet has an upward hop; use the grounded idle pose
-      // and communicate impact with tint + a brief horizontal recoil instead.
+      monster.hitAnimUntil = this.time.now + 200;
       this.playHyenaAnimation(monster, "hyena-idle", true);
-      sprite.setTint(0xffcf70);
+
+      if (monster.hitGlowEffect && sprite.postFX?.remove) {
+        sprite.postFX.remove(monster.hitGlowEffect);
+        monster.hitGlowEffect = null;
+      }
+      if (sprite.postFX?.addGlow) {
+        monster.hitGlowEffect = sprite.postFX.addGlow(hitColor, 2.4, 0, false, 0.1, 12);
+      }
+
       this.tweens.killTweensOf(sprite);
       const baseX = Number.isFinite(monster.hitRecoilBaseX) ? monster.hitRecoilBaseX : sprite.x;
       monster.hitRecoilBaseX = baseX;
       sprite.x = baseX;
+      sprite.setScale(0.918);
       this.tweens.add({
         targets: sprite,
-        x: baseX + 9,
-        duration: 65,
+        x: baseX + 5,
+        scaleX: 1.01,
+        scaleY: 0.88,
+        duration: 55,
         ease: "Quad.easeOut",
         yoyo: true,
         onComplete: () => {
-          if (sprite.active) sprite.x = baseX;
+          if (sprite.active) {
+            sprite.x = baseX;
+            sprite.setScale(0.918);
+          }
         }
       });
     }
@@ -4214,23 +4298,26 @@ export default class BattleScene extends Scene {
     if (graphic?.active) graphic.setBlendMode(1);
 
     if (monster.hitFlashTimer) monster.hitFlashTimer.remove(false);
-    monster.hitFlashTimer = this.time.delayedCall(125, () => {
+    monster.hitFlashTimer = this.time.delayedCall(150, () => {
       if (sprite?.active) {
-        // Restore the creature's rarity color after the temporary hit flash.
-        sprite.setTint(monster.tierTint ?? 0xffffff);
+        if (monster.hitGlowEffect && sprite.postFX?.remove) {
+          sprite.postFX.remove(monster.hitGlowEffect);
+          monster.hitGlowEffect = null;
+        }
         if (Number.isFinite(monster.hitRecoilBaseX)) sprite.x = monster.hitRecoilBaseX;
+        sprite.setScale(0.918);
       }
       if (graphic?.active) graphic.setBlendMode(0);
       monster.hitFlashTimer = null;
     });
   }
 
-  applyMonsterDamage(monster, amount) {
+  applyMonsterDamage(monster, amount, plantType = "radish") {
     if (!monster || !monster.alive || amount <= 0) return;
     monster.hp = applyHitPointsDamage(monster.hp, amount).hp;
     this.playMonsterHitSound();
     if (monster.hyenaSprite) this.playHyenaVoice("yelp", 0.82);
-    this.flashMonsterOnHit(monster);
+    this.flashMonsterOnHit(monster, plantType);
     this.damageMonsterIfNeeded(monster);
   }
 
@@ -4242,6 +4329,7 @@ export default class BattleScene extends Scene {
       monster.hitFlashTimer = null;
     }
     this.createMonsterDefeatBurst(monster.x, monster.y, monster.view && monster.view.scaleY);
+    this.createMonsterDefeatMotes(monster);
     this.playMonsterDefeatSound();
     if (monster.hyenaSprite) this.playHyenaVoice("yelp", 0.88);
     this.playCoinRewardSound();
@@ -4251,11 +4339,28 @@ export default class BattleScene extends Scene {
       this.tweens.killTweensOf(monster.view);
       if (monster.hyenaSprite && monster.hyenaSprite.active) {
         this.playHyenaAnimation(monster, "hyena-death", true);
-        this.time.delayedCall(760, () => {
-          if (monster.view && monster.view.active) monster.view.destroy(true);
+        this.tweens.add({
+          targets: monster.view,
+          alpha: 0,
+          scale: (monster.view.scaleX || 1) * 0.82,
+          duration: 760,
+          delay: 120,
+          ease: "Cubic.easeIn",
+          onComplete: () => {
+            if (monster.view && monster.view.active) monster.view.destroy(true);
+          }
         });
       } else {
-        monster.view.destroy(true);
+        this.tweens.add({
+          targets: monster.view,
+          alpha: 0,
+          scale: (monster.view.scaleX || 1) * 0.82,
+          duration: 430,
+          ease: "Cubic.easeIn",
+          onComplete: () => {
+            if (monster.view && monster.view.active) monster.view.destroy(true);
+          }
+        });
       }
     }
     this.coins += PHASE_ONE_REWARDS.ordinaryMonsterDefeatCoins;
