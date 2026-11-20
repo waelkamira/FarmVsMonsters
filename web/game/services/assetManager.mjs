@@ -1,5 +1,9 @@
 const sharedResourcesByGame = new WeakMap();
 
+function resourceIdFor(entry) {
+  return (entry.type === "audio" ? "audio:" : "texture:") + entry.key;
+}
+
 function getSharedResourceState(scene) {
   const owner = scene.game || scene.textures;
   let state = sharedResourcesByGame.get(owner);
@@ -38,7 +42,7 @@ export class PhaserAssetManager {
     };
     this.groups = new Map();
     this.sharedResources = getSharedResourceState(scene);
-    this.localResources = new Set();
+    this.localResources = new Map();
     this.listeners = [];
     this.loadQueue = Promise.resolve();
     this.destroyed = false;
@@ -165,7 +169,7 @@ export class PhaserAssetManager {
       }
 
       for (const entry of entries) {
-        const resourceId = (entry.type || "image") + ":" + entry.key;
+        const resourceId = resourceIdFor(entry);
         let resource = this.sharedResources.get(resourceId);
         if (!resource) {
           resource = {
@@ -177,7 +181,7 @@ export class PhaserAssetManager {
           this.sharedResources.set(resourceId, resource);
         }
         resource.references += 1;
-        this.localResources.add(resourceId);
+        this.localResources.set(resourceId, (this.localResources.get(resourceId) || 0) + 1);
       }
       this.groups.set(groupName, { entries, references: 1 });
       if (typeof options.onProgress === "function") options.onProgress(1);
@@ -211,11 +215,13 @@ export class PhaserAssetManager {
 
     let released = 0;
     for (const entry of group.entries) {
-      const resourceId = (entry.type || "image") + ":" + entry.key;
+      const resourceId = resourceIdFor(entry);
       const resource = this.sharedResources.get(resourceId);
       if (!resource) continue;
       resource.references -= 1;
-      this.localResources.delete(resourceId);
+      const localCount = (this.localResources.get(resourceId) || 1) - 1;
+      if (localCount > 0) this.localResources.set(resourceId, localCount);
+      else this.localResources.delete(resourceId);
       if (resource.references > 0) continue;
 
       if (resource.owned) {
@@ -253,12 +259,14 @@ export class PhaserAssetManager {
       if (group) group.references = 1;
       if (options.unload === false) {
         for (const entry of group?.entries || []) {
-          const resourceId = (entry.type || "image") + ":" + entry.key;
+          const resourceId = resourceIdFor(entry);
           const resource = this.sharedResources.get(resourceId);
           if (!resource) continue;
           resource.references -= 1;
           if (resource.references <= 0) this.sharedResources.delete(resourceId);
-          this.localResources.delete(resourceId);
+          const localCount = (this.localResources.get(resourceId) || 1) - 1;
+          if (localCount > 0) this.localResources.set(resourceId, localCount);
+          else this.localResources.delete(resourceId);
         }
         this.groups.delete(groupName);
       } else {
