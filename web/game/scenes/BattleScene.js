@@ -4263,7 +4263,7 @@ export default class BattleScene extends Scene {
     const sprite = monster.hyenaSprite;
     const hitColor = getProjectileVFXProfile(plantType)?.tint ?? 0x9bdc72;
     if (sprite?.active) {
-      monster.hitAnimUntil = this.time.now + 180;
+      monster.hitAnimUntil = this.time.now + 200;
       this.playHyenaAnimation(monster, "hyena-idle", true);
 
       if (monster.hitGlowEffect && sprite.postFX?.remove) {
@@ -4271,7 +4271,7 @@ export default class BattleScene extends Scene {
         monster.hitGlowEffect = null;
       }
       if (sprite.postFX?.addGlow) {
-        monster.hitGlowEffect = sprite.postFX.addGlow(hitColor, 0.65, 0, false, 0.1, 4);
+        monster.hitGlowEffect = sprite.postFX.addGlow(hitColor, 2.4, 0, false, 0.1, 12);
       }
 
       this.tweens.killTweensOf(sprite);
@@ -4300,7 +4300,7 @@ export default class BattleScene extends Scene {
     if (graphic?.active) graphic.setBlendMode(1);
 
     if (monster.hitFlashTimer) monster.hitFlashTimer.remove(false);
-    monster.hitFlashTimer = this.time.delayedCall(105, () => {
+    monster.hitFlashTimer = this.time.delayedCall(150, () => {
       if (sprite?.active) {
         if (monster.hitGlowEffect && sprite.postFX?.remove) {
           sprite.postFX.remove(monster.hitGlowEffect);
