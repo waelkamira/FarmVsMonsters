@@ -58,8 +58,8 @@ export class VFXManager {
     const config = { ...definition, ...overrides };
     const texture = config.texture;
     let visual = null;
-
     let poolKey = null;
+
     if (texture && this.scene.textures?.exists(texture)) {
       poolKey = `image:${texture}`;
       visual = this.pool.acquire(
@@ -78,7 +78,6 @@ export class VFXManager {
         () => this.renderer.createProceduralVisual(x, y, config, count, kind),
         (burst) => this.renderer.resetProceduralVisual(burst, x, y, config)
       );
-
       if (visual) this.activePoolKeys.set(visual, poolKey);
     }
 
@@ -93,10 +92,14 @@ export class VFXManager {
     if (!this.active.has(visual)) return null;
 
     try {
+      const isTexture = Boolean(texture && this.scene.textures?.exists(texture));
+      const targetScale = isTexture
+        ? (config.scale ?? 0.25) * (config.endScale ?? 1.45)
+        : (config.endScale ?? (kindScale(config.kind)));
       const tween = this.scene.tweens.add({
         targets: visual,
         alpha: 0,
-        scale: (config.scale ?? 1) * (config.endScale ?? (texture ? 1.45 : 2)),
+        scale: targetScale,
         duration,
         ease: "Cubic.easeOut",
         onComplete: () => this.#release(visual, effectId, { stopTween: false })
@@ -112,7 +115,7 @@ export class VFXManager {
   }
 
   playProjectileTrail(effectId, x, y, overrides = {}) {
-    return this.play(effectId, x, y, { count: 3, durationMs: 180, ...overrides });
+    return this.play(effectId, x, y, { count: 3, durationMs: 180, endScale: 0.9, ...overrides });
   }
 
   dispatch(request) {
@@ -166,6 +169,10 @@ export class VFXManager {
     this.eventBus = null;
     this.scene = null;
   }
+}
+
+function kindScale(kind) {
+  return kind === "trail" ? 0.9 : 2.4;
 }
 
 export default VFXManager;
