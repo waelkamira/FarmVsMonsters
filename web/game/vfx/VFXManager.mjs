@@ -82,24 +82,32 @@ export class VFXManager {
         if (!this.activePoolKeys.has(visual)) this.activePoolKeys.set(visual, poolKey);
       }
     } else if (this.scene.add?.container && this.scene.add?.circle) {
-      const burst = this.scene.add.container(x, y);
       const qualityCount = this.config.qualityProfile.maxParticlesPerEffect;
       const count = Math.max(1, Math.min(qualityCount, config.count ?? 7));
+      const kind = config.kind === "trail" ? "trail" : "burst";
+      poolKey = `container:${kind}:${count}`;
       const color = config.tint ?? 0xffffff;
-      for (let index = 0; index < count; index += 1) {
-        const angle = (Math.PI * 2 * index) / count;
-        const radius = config.kind === "trail" ? 2 : 5;
-        const dot = this.scene.add.circle(
-          Math.cos(angle) * radius,
-          Math.sin(angle) * radius,
-          config.kind === "trail" ? 2 : 3,
-          color,
-          0.9
-        );
-        burst.add(dot);
+      visual = this.pool.acquire(poolKey, () => {
+        const burst = this.scene.add.container(x, y);
+        for (let index = 0; index < count; index += 1) {
+          const angle = (Math.PI * 2 * index) / count;
+          const radius = kind === "trail" ? 2 : 5;
+          const dot = this.scene.add.circle(
+            Math.cos(angle) * radius,
+            Math.sin(angle) * radius,
+            kind === "trail" ? 2 : 3,
+            color,
+            0.9
+          );
+          burst.add(dot);
+        }
+        return burst;
+      }, (burst) => this.#resetProceduralBurst(burst, x, y, color, config.depth ?? 30));
+
+      if (visual) {
+        this.#resetProceduralBurst(visual, x, y, color, config.depth ?? 30);
+        this.activePoolKeys.set(visual, poolKey);
       }
-      burst.setDepth(config.depth ?? 30);
-      visual = burst;
     }
 
     if (!visual) {
@@ -129,6 +137,22 @@ export class VFXManager {
     }
 
     return visual;
+  }
+
+  #resetProceduralBurst(burst, x, y, color, depth) {
+    burst.setPosition?.(x, y);
+    burst.setActive?.(true);
+    burst.setVisible?.(true);
+    burst.setAlpha?.(1);
+    burst.setScale?.(1);
+    burst.setDepth?.(depth);
+    for (const dot of burst.list || []) {
+      dot.setActive?.(true);
+      dot.setVisible?.(true);
+      dot.setAlpha?.(0.9);
+      dot.setScale?.(1);
+      dot.setFillStyle?.(color, 0.9);
+    }
   }
 
   playProjectileTrail(effectId, x, y, overrides = {}) {
@@ -162,12 +186,18 @@ export class VFXManager {
     this.activePoolKeys.delete(visual);
     if (poolKey) {
       this.pool.release(poolKey, visual, {
-        reset: (image) => {
-          image.setAlpha?.(1);
-          image.setScale?.(1);
-          image.clearTint?.();
-          image.setVisible?.(false);
-          image.setActive?.(false);
+        reset: (pooledVisual) => {
+          pooledVisual.setAlpha?.(1);
+          pooledVisual.setScale?.(1);
+          pooledVisual.setVisible?.(false);
+          pooledVisual.setActive?.(false);
+          if (typeof pooledVisual.clearTint === "function") pooledVisual.clearTint();
+          for (const child of pooledVisual.list || []) {
+            child.setAlpha?.(1);
+            child.setScale?.(1);
+            child.setVisible?.(false);
+            child.setActive?.(false);
+          }
         }
       });
     } else {
