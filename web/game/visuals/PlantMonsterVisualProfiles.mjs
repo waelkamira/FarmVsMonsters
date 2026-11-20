@@ -3,13 +3,13 @@
 const freeze = (value) => Object.freeze(value);
 
 export const PLANT_ANIMATION_PROFILES = freeze({
-  radish: freeze({ idle: freeze({ loop: true, breathing: 0.025, durationMs: 1800 }), chargeMs: 180, attackMs: 550, recoveryMs: 220, personality: "quick-and-bouncy" }),
-  mushroom: freeze({ idle: freeze({ loop: true, breathing: 0.035, durationMs: 2300 }), chargeMs: 300, attackMs: 620, recoveryMs: 300, personality: "soft-and-magical" }),
-  pumpkin: freeze({ idle: freeze({ loop: true, breathing: 0.018, durationMs: 2600 }), chargeMs: 260, attackMs: 420, recoveryMs: 360, personality: "steady-and-protective" }),
-  pineapple: freeze({ idle: freeze({ loop: true, breathing: 0.022, durationMs: 2100 }), chargeMs: 360, attackMs: 550, recoveryMs: 300, personality: "heavy-and-proud" }),
-  hazelnut: freeze({ idle: freeze({ loop: true, breathing: 0.02, durationMs: 2400 }), chargeMs: 240, attackMs: 620, recoveryMs: 260, personality: "compact-and-sturdy" }),
-  mango: freeze({ idle: freeze({ loop: true, breathing: 0.03, durationMs: 2200 }), chargeMs: 260, attackMs: 750, recoveryMs: 280, personality: "swinging-and-playful" }),
-  "snow-thrower": freeze({ idle: freeze({ loop: true, breathing: 0.02, durationMs: 2500 }), chargeMs: 320, attackMs: 550, recoveryMs: 340, personality: "calm-and-precise" })
+  radish: freeze({ idle: freeze({ loop: true, breathing: 0.025, durationMs: 1800 }), chargeMs: 180, attackMs: 550, recoveryMs: 220, anticipationPx: 2.5, anticipationMs: 150, personality: "quick-and-bouncy" }),
+  mushroom: freeze({ idle: freeze({ loop: true, breathing: 0.035, durationMs: 2300 }), chargeMs: 300, attackMs: 620, recoveryMs: 300, anticipationPx: 2, anticipationMs: 180, personality: "soft-and-magical" }),
+  pumpkin: freeze({ idle: freeze({ loop: true, breathing: 0.018, durationMs: 2600 }), chargeMs: 260, attackMs: 420, recoveryMs: 360, anticipationPx: 1.5, anticipationMs: 190, personality: "steady-and-protective" }),
+  pineapple: freeze({ idle: freeze({ loop: true, breathing: 0.022, durationMs: 2100 }), chargeMs: 360, attackMs: 550, recoveryMs: 300, anticipationPx: 3.5, anticipationMs: 210, personality: "heavy-and-proud" }),
+  hazelnut: freeze({ idle: freeze({ loop: true, breathing: 0.02, durationMs: 2400 }), chargeMs: 240, attackMs: 620, recoveryMs: 260, anticipationPx: 2, anticipationMs: 165, personality: "compact-and-sturdy" }),
+  mango: freeze({ idle: freeze({ loop: true, breathing: 0.03, durationMs: 2200 }), chargeMs: 260, attackMs: 750, recoveryMs: 280, anticipationPx: 3, anticipationMs: 180, personality: "swinging-and-playful" }),
+  "snow-thrower": freeze({ idle: freeze({ loop: true, breathing: 0.02, durationMs: 2500 }), chargeMs: 320, attackMs: 550, recoveryMs: 340, anticipationPx: 2.5, anticipationMs: 200, personality: "calm-and-precise" })
 });
 
 export const MONSTER_REACTION_PROFILES = freeze({
