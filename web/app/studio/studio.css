@@ -11,3 +11,13 @@
 .studio-asset-row button,.studio-cancel{border:1px solid #9b7b45;border-radius:8px;padding:8px 11px;background:#3b3020;color:#f5d99d;cursor:pointer;font-weight:700}
 .studio-cancel{width:100%;background:transparent}
 @media(max-width:560px){.studio-asset-row{flex-wrap:wrap}.studio-asset-meta{min-width:calc(100% - 80px)}.studio-asset-row em{margin-right:auto}}
+
+.studio-toast{position:fixed;z-index:1000;top:18px;left:50%;transform:translateX(-50%);width:min(560px,calc(100vw - 28px));display:flex;align-items:center;gap:12px;padding:13px 15px;border:1px solid;border-radius:12px;box-shadow:0 14px 40px #0008;backdrop-filter:blur(12px);animation:studio-toast-in .2s ease-out}
+.studio-toast p{flex:1;margin:0;font-size:14px;line-height:1.55}
+.studio-toast>span{width:25px;height:25px;display:grid;place-items:center;flex:0 0 25px;border-radius:50%;font-weight:900}
+.studio-toast button{border:0;background:transparent;color:inherit;font-size:22px;cursor:pointer;line-height:1}
+.studio-toast-success{background:#183a27f2;border-color:#4e9a68;color:#d5ffe0}
+.studio-toast-success>span{background:#28643d;color:#baffca}
+.studio-toast-error{background:#451f20f5;border-color:#a65353;color:#ffe0df}
+.studio-toast-error>span{background:#792f32;color:#ffd0ce}
+@keyframes studio-toast-in{from{opacity:0;transform:translate(-50%,-8px)}to{opacity:1;transform:translate(-50%,0)}}
