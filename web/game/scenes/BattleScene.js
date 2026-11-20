@@ -3319,6 +3319,22 @@ export default class BattleScene extends Scene {
   createProjectileImpact(x, y, plantType = "radish") {
     const effectId = getPlantVFXProfile(plantType)?.impact;
     if (effectId && this.vfxManager?.play(effectId, x, y, { count: 8, durationMs: 220, endScale: 2.1 })) return;
+    if (plantType === "electric-mushroom") {
+      const burst = this.add.container(x, y).setDepth(24);
+      const ring = this.add.circle(0, 0, 13, 0x65d9ff, 0.22).setStrokeStyle(2, 0xc9f7ff, 0.95);
+      const arc = this.add.graphics();
+      arc.lineStyle(3, 0x7ce6ff, 0.95);
+      arc.beginPath();
+      arc.moveTo(-15, -5); arc.lineTo(-5, -11); arc.lineTo(1, -2); arc.lineTo(10, -12);
+      arc.moveTo(-12, 10); arc.lineTo(-3, 3); arc.lineTo(5, 11); arc.lineTo(15, 4);
+      arc.strokePath();
+      burst.add([ring, arc]);
+      this.tweens.add({
+        targets: burst, alpha: 0, scale: 1.65, duration: 210,
+        ease: "Cubic.easeOut", onComplete: () => burst.destroy()
+      });
+      return;
+    }
     const burst = this.add.container(x, y).setDepth(24);
     const flash = this.add.circle(0, 0, 10, 0xfff4f7, 0.96);
     const sparks = [];
@@ -3342,7 +3358,8 @@ export default class BattleScene extends Scene {
   createProjectileTrail(x, y, plantType = "radish") {
     const effectId = getPlantVFXProfile(plantType)?.trail;
     if (effectId && this.vfxManager?.playProjectileTrail(effectId, x, y, { count: 3, durationMs: 180, endScale: 1.6 })) return;
-    const spark = this.add.circle(x, y, PhaserMath.Between(2, 4), 0xffc247, 0.72).setDepth(14);
+    const trailTint = getProjectileVFXProfile(plantType)?.tint ?? 0xffc247;
+    const spark = this.add.circle(x, y, PhaserMath.Between(2, 4), trailTint, 0.72).setDepth(14);
     this.tweens.add({
       targets: spark,
       x: x - PhaserMath.Between(5, 12),
