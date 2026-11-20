@@ -7,6 +7,7 @@ import { getProjectileVFXProfile } from "../game/vfx/ProjectileVFXProfiles.mjs";
 import { VFXManager } from "../game/vfx/VFXManager.mjs";
 import { VFXEventBus } from "../game/vfx/core/VFXEventBus.mjs";
 import { createVFXConfig } from "../game/vfx/core/VFXConfig.mjs";
+import { VFXObjectPool } from "../game/vfx/core/VFXObjectPool.mjs";
 
 test("VFXRegistry registers, retrieves, and rejects duplicate effect IDs", () => {
   const registry = new VFXRegistry();
@@ -178,4 +179,58 @@ test("VFXManager completion releases the visual without stopping a completed twe
   assert.equal(manager.activeTweens.has(visual), false);
   assert.equal(tween.stopped, false);
   manager.destroy();
+});
+
+
+test("VFXObjectPool reuses keyed objects and resets them on acquire and release", async () => {
+  const { VFXObjectPool } = await import("../game/vfx/core/VFXObjectPool.mjs");
+  const pool = new VFXObjectPool({ maxPerKey: 2, maxTotal: 3 });
+  let created = 0;
+  const factory = () => ({ id: ++created, state: "new" });
+  const reset = (item) => { item.state = "ready"; };
+
+  const first = pool.acquire("spark", factory, reset);
+  assert.equal(first.id, 1);
+  assert.equal(pool.release("spark", first, { reset }), true);
+  assert.equal(first.state, "ready");
+
+  const reused = pool.acquire("spark", factory, reset);
+  assert.equal(reused, first);
+  assert.equal(created, 1);
+  assert.equal(pool.getStats().idle, 0);
+  pool.destroy();
+});
+
+test("VFXObjectPool enforces per-key and total idle caps and destroys overflow", async () => {
+  const { VFXObjectPool } = await import("../game/vfx/core/VFXObjectPool.mjs");
+  const pool = new VFXObjectPool({ maxPerKey: 1, maxTotal: 1 });
+  const destroyed = [];
+  const make = (id) => ({ id, destroy() { destroyed.push(id); } });
+
+  assert.equal(pool.release("spark", make(1)), true);
+  assert.equal(pool.release("spark", make(2)), false);
+  assert.equal(pool.release("burst", make(3)), false);
+  assert.deepEqual(destroyed, [2, 3]);
+  assert.deepEqual(pool.getStats(), {
+    keys: 1, idle: 1, maxPerKey: 1, maxTotal: 1, destroyed: false
+  });
+  pool.clear();
+  assert.deepEqual(destroyed, [2, 3, 1]);
+  assert.equal(pool.getStats().idle, 0);
+  pool.destroy();
+});
+
+test("VFXObjectPool isolates reset and destroy failures and rejects work after destroy", async () => {
+  const { VFXObjectPool } = await import("../game/vfx/core/VFXObjectPool.mjs");
+  const errors = [];
+  const pool = new VFXObjectPool({ onError: (error, details) => errors.push(details.phase) });
+  const item = { destroy() { throw new Error("destroy-failed"); } };
+
+  assert.equal(pool.release("spark", item, {
+    reset() { throw new Error("reset-failed"); }
+  }), false);
+  assert.deepEqual(errors, ["release-reset", "destroy"]);
+  pool.destroy();
+  assert.equal(pool.acquire("spark", () => ({})), null);
+  assert.equal(pool.release("spark", {}), false);
 });
