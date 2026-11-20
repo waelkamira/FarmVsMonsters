@@ -175,9 +175,9 @@ export default class BattleScene extends Scene {
         const variant = catalogKey === "studio-test-catalog" ? "testing" : "published";
         for (const entry of entries) {
           if (!entry || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(entry.id || "") ||
-              typeof entry.path !== "string" || !entry.path.startsWith("/assets/")) continue;
+              typeof entry.path !== "string" || !(entry.path.startsWith("/assets/") || entry.path.startsWith("/api/studio/assets?preview="))) continue;
           this.load.image("studio-plant-" + variant + "-" + entry.id, entry.path);
-          if (entry.combat?.mode === "projectile" && entry.combat.projectile?.path?.startsWith("/assets/")) {
+          if (entry.combat?.mode === "projectile" && entry.combat.projectile?.path && (entry.combat.projectile.path.startsWith("/assets/") || entry.combat.projectile.path.startsWith("/api/studio/assets?preview="))) {
             this.load.image("studio-projectile-" + variant + "-" + entry.id, entry.combat.projectile.path);
           }
         }
@@ -225,7 +225,7 @@ export default class BattleScene extends Scene {
     const addStudioPlants = (entries, testOnly) => {
       for (const entry of entries) {
         if (!entry || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(entry.id || "") ||
-            typeof entry.path !== "string" || !entry.path.startsWith("/assets/") ||
+            typeof entry.path !== "string" || !(entry.path.startsWith("/assets/") || entry.path.startsWith("/api/studio/assets?preview=")) ||
             !entry.combat?.mode) continue;
         const variant = testOnly ? "testing" : "published";
         studioPlantMap.set(entry.id, {
