@@ -41,6 +41,19 @@ export async function GET(req){
  if(driver==="github"){
   const token=process.env.STUDIO_GITHUB_TOKEN,branch=process.env.STUDIO_GITHUB_BRANCH||"studio/assets";
   if(!token)return NextResponse.json({error:"STUDIO_GITHUB_TOKEN is required."},{status:503});
+  const catalog=req.nextUrl.searchParams.get("catalog");
+  if(catalog==="testing"){
+   try{
+    const raw=await githubGet(REGISTRY_PATH,token,branch);
+    const registry=raw?JSON.parse(raw):{version:1,assets:[]};
+    const plants=(registry.assets||[]).filter(asset=>asset.type==="plant"&&asset.status==="testing").map(asset=>({
+     ...asset,
+     path:"/api/studio/assets?preview="+encodeURIComponent(asset.path),
+     ...(asset.combat?.projectile?{combat:{...asset.combat,projectile:{...asset.combat.projectile,path:"/api/studio/assets?preview="+encodeURIComponent(asset.combat.projectile.path)}}}:{})
+    }));
+    return NextResponse.json({version:1,plants},{headers:{"Cache-Control":"private, no-store"}});
+   }catch(error){return NextResponse.json({error:error.message||"Could not load testing catalog."},{status:502});}
+  }
   const preview=req.nextUrl.searchParams.get("preview");
   if(preview!==null){
    const allowedTypes={".png":"image/png",".webp":"image/webp",".gif":"image/gif",".mp3":"audio/mpeg",".wav":"audio/wav",".ogg":"audio/ogg",".m4a":"audio/mp4"};
