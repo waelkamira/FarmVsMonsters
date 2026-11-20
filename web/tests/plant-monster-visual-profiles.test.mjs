@@ -21,6 +21,7 @@ test("every playable plant has an animation profile and three visual evolution s
     assert.ok(animation, id);
     assert.ok(animation.idle.loop, id);
     assert.ok(animation.chargeMs > 0 && animation.attackMs > 0 && animation.recoveryMs > 0, id);
+    assert.ok(animation.anticipationPx > 0 && animation.anticipationMs > 0, id);
     assert.equal(evolution.stages.length, 3, id);
     assert.deepEqual(evolution.stages.map((stage) => stage.level), [1, 2, 3]);
   }
