@@ -170,6 +170,23 @@ export default class BattleScene extends Scene {
     for (const asset of soundAssets.assets) {
       this.load.audio(asset.key, asset.path);
     }
+    const queueStudioCatalog = (catalogKey) => {
+      this.load.once("filecomplete-json-" + catalogKey, () => {
+        const entries = this.cache.json.get(catalogKey)?.plants || [];
+        for (const entry of entries) {
+          if (!entry || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(entry.id || "") ||
+              typeof entry.path !== "string" || !entry.path.startsWith("/assets/")) continue;
+          this.load.image("studio-plant-" + entry.id, entry.path);
+          if (entry.combat?.mode === "projectile" && entry.combat.projectile?.path?.startsWith("/assets/")) {
+            this.load.image("studio-projectile-" + entry.id, entry.combat.projectile.path);
+          }
+        }
+      });
+    };
+    queueStudioCatalog("studio-published-catalog");
+    queueStudioCatalog("studio-test-catalog");
+    this.load.json("studio-published-catalog", "/assets/studio-plant-catalog.json");
+    this.load.json("studio-test-catalog", "/assets/.studio-test/plant-catalog.json");
     this.load.on("loaderror", (file) => {
       if (file.key === "farm-battlefield") this.backgroundAssetFailed = true;
       if (file.key === "radish-level-1") this.radishAssetFailed = true;
@@ -202,6 +219,33 @@ export default class BattleScene extends Scene {
     this.registerThreeByThreeSheet("snow-thrower-level-1");
     this.registerThreeByThreeSheet("frozen-hyena-level-1");
     this.registerThreeByThreeSheet("frozen-hyena-level-2");
+    const publishedStudioPlants = this.cache.json.get("studio-published-catalog")?.plants || [];
+    const testStudioPlants = this.cache.json.get("studio-test-catalog")?.plants || [];
+    const studioPlantMap = new Map();
+    for (const entry of [...publishedStudioPlants, ...testStudioPlants]) {
+      if (!entry || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(entry.id || "") ||
+          typeof entry.path !== "string" || !entry.path.startsWith("/assets/") ||
+          !entry.combat?.mode) continue;
+      studioPlantMap.set(entry.id, { ...entry, testOnly: testStudioPlants.some((item) => item.id === entry.id) });
+    }
+    this.studioPlants = [...studioPlantMap.values()];
+    this.studioPlantsByType = Object.fromEntries(this.studioPlants.map((plant) => [plant.id, plant]));
+    for (const plant of this.studioPlants) {
+      const textureKey = "studio-plant-" + plant.id;
+      const frameCount = Math.max(1, (Number(plant.rows) || 1) * (Number(plant.columns) || 1));
+      if (plant.spriteSheet && frameCount > 1 && this.registerStudioGridSheet(textureKey, plant.rows, plant.columns) &&
+          plant.combat.mode === "projectile") {
+        const animationKey = "studio-" + plant.id + "-attack";
+        if (!this.anims.exists(animationKey)) {
+          this.anims.create({
+            key: animationKey,
+            frames: this.anims.generateFrameNumbers(textureKey, { start: 0, end: frameCount - 1 }),
+            frameRate: 12,
+            repeat: 0
+          });
+        }
+      }
+    }
     if (this.textures.exists("snow-thrower-level-1") && !this.anims.exists("snow-thrower-level-1-throw")) {
       const available = Object.keys(this.textures.get("snow-thrower-level-1").frames).filter((name) => name !== "__BASE").length;
       if (available >= 9) {
@@ -809,6 +853,15 @@ export default class BattleScene extends Scene {
       { type: "mango", title: "MANGO L1", cost: MANGO_CONFIG.cost, image: "mango-level-1" },
       { type: "snow-thrower", title: "SNOW L1", cost: SNOW_THROWER_CONFIG.cost, image: "snow-thrower-level-1" }
     ];
+    for (const studioPlant of this.studioPlants || []) {
+      plantOptions.push({
+        type: studioPlant.id,
+        title: String(studioPlant.name || studioPlant.id).toUpperCase().slice(0, 18),
+        cost: studioPlant.combat.energyCost,
+        image: "studio-plant-" + studioPlant.id,
+        studioPlant
+      });
+    }
     let selectedTypes = ["radish", "mushroom"];
     try {
       const unlocked = new Set(loadUnlockedPlantIds(window.localStorage));
@@ -831,8 +884,8 @@ export default class BattleScene extends Scene {
     if (!selectedTypes.includes("radish")) selectedTypes.push("radish");
     this.plantCardsByType = {};
     const packetStartX = 164;
-    const packetGap = 90;
-    const packetSlotCount = 7;
+    const packetGap = selectedTypes.length > 7 ? 78 : 90;
+    const packetSlotCount = Math.max(7, selectedTypes.length);
     // Fill unused seed slots with previews of implemented plants that are
     // not in the current loadout. Their artwork is intentionally dimmed and
     // non-interactive so the player can see upcoming choices without selecting them.
@@ -853,7 +906,7 @@ export default class BattleScene extends Scene {
       }
       if (this.textures.exists(plant.image)) {
         const texture = this.textures.get(plant.image);
-        const isSheet = ["pineapple-level-1", "hazelnut-level-1", "mango-level-1", "snow-thrower-level-1", "radish-level-1"].includes(plant.image);
+        const isSheet = ["pineapple-level-1", "hazelnut-level-1", "mango-level-1", "snow-thrower-level-1", "radish-level-1"].includes(plant.image) || Boolean(plant.studioPlant?.spriteSheet);
         const frame = isSheet ? texture.get("0") : texture.get();
         // Use the actual frame rectangle and a single bounded scale so a
         // source sheet's full-image dimensions can never enlarge the preview.
@@ -907,7 +960,7 @@ export default class BattleScene extends Scene {
     let icon;
     let iconScale = 1;
     if (imageKey && this.textures.exists(imageKey)) {
-      const gridSheet = imageKey === "mango-level-1" || imageKey === "radish-level-1" || imageKey === "snow-thrower-level-1";
+      const gridSheet = imageKey === "mango-level-1" || imageKey === "radish-level-1" || imageKey === "snow-thrower-level-1" || Boolean(this.studioPlantsByType?.[type]?.spriteSheet);
       const frame = this.textures.getFrame(imageKey, gridSheet ? "0" : undefined);
       // Bound every seed icon by both dimensions using its frame rectangle.
       const frameWidth = Math.max(1, frame.cutWidth || frame.width || 1);
@@ -2564,7 +2617,8 @@ export default class BattleScene extends Scene {
     }
     if (!this.selectedPlant) { this.setMessage("Choose a plant card first."); return; }
     const plantConfigs = { radish: RADISH_CONFIG, mushroom: MUSHROOM_CONFIG, pumpkin: PUMPKIN_CONFIG, pineapple: PINEAPPLE_CONFIG, hazelnut: HAZELNUT_CONFIG, mango: MANGO_CONFIG, "snow-thrower": SNOW_THROWER_CONFIG };
-    const plantConfig = plantConfigs[this.selectedPlant];
+    const studioPlant = this.studioPlantsByType?.[this.selectedPlant] || null;
+    const plantConfig = plantConfigs[this.selectedPlant] || (studioPlant ? { cost: studioPlant.combat.energyCost, seedPacketRechargeMs: studioPlant.combat.cooldownMs } : null);
     if (this.getSeedPacketCooldownRemaining(this.selectedPlant) > 0) {
       this.setMessage("This seed packet is recharging. Wait for it to recover.");
       return;
@@ -2668,7 +2722,8 @@ export default class BattleScene extends Scene {
 
   plantSelected(col, row, type, returnPosition = null) {
     if (this.gameOver) return;
-    if (!["radish", "mushroom", "pumpkin", "pineapple", "hazelnut", "mango", "snow-thrower"].includes(type)) return;
+    const studioPlant = this.studioPlantsByType?.[type] || null;
+    if (!["radish", "mushroom", "pumpkin", "pineapple", "hazelnut", "mango", "snow-thrower"].includes(type) && !studioPlant) return;
     if (!PLAYTEST_ALL_PLANTS && !loadUnlockedPlantIds(window.localStorage).includes(type)) {
       this.setMessage("This plant is locked. Complete its campaign stage to unlock it.");
       return;
@@ -2680,7 +2735,8 @@ export default class BattleScene extends Scene {
       col,
       row,
       columns: COLUMNS,
-      rows: LANES
+      rows: LANES,
+      customConfig: studioPlant ? { plantingEnergyCost: studioPlant.combat.energyCost, hp: studioPlant.combat.hp } : null
     });
     if (!placement.ok) {
       this.setMessage("Planting cancelled: this cell is no longer available.");
@@ -2688,7 +2744,19 @@ export default class BattleScene extends Scene {
     }
     this.recordCombatEvent("plant_placed", { type, col, row });
     const configs = { radish: RADISH_CONFIG, mushroom: MUSHROOM_CONFIG, pumpkin: PUMPKIN_CONFIG, pineapple: PINEAPPLE_CONFIG, hazelnut: HAZELNUT_CONFIG, mango: MANGO_CONFIG, "snow-thrower": SNOW_THROWER_CONFIG };
-    const config = configs[type];
+    const studioProfile = studioPlant?.combat;
+    const config = configs[type] || (studioProfile ? {
+      cost: studioProfile.energyCost,
+      plantingEnergyCost: studioProfile.energyCost,
+      seedPacketRechargeMs: studioProfile.cooldownMs,
+      hp: studioProfile.hp,
+      cooldownMs: studioProfile.cooldownMs,
+      projectileDamage: studioProfile.damage,
+      projectileSpeed: studioProfile.projectileSpeed,
+      projectileCollisionRadius: studioProfile.projectileCollisionRadius,
+      productionInterval: studioProfile.energyIntervalMs,
+      energy: studioProfile.energyAmount
+    } : null);
     this.energy = placement.energy;
     this.seedPacketCooldowns.set(type, config.seedPacketRechargeMs);
     this.farmerPlanting = true;
@@ -2714,8 +2782,9 @@ export default class BattleScene extends Scene {
       ...placement.plant,
       x, y,
       cooldown: 0,
-      productionTimer: type === "mushroom" ? config.productionInterval : undefined,
+      productionTimer: type === "mushroom" || studioProfile?.mode === "energy" ? config.productionInterval : undefined,
       productionCount: 0,
+      ...(studioPlant ? { studioPlant } : {}),
       view: type === "mushroom" ? this.drawEnergyMushroom(x, y, row)
         : type === "radish" ? this.drawRadish(x, y)
         : this.drawCatalogPlant(type, x, y, row)
@@ -2812,6 +2881,25 @@ export default class BattleScene extends Scene {
     return plant;
   }
 
+  registerStudioGridSheet(textureKey, rows = 3, columns = 3) {
+    if (!this.textures.exists(textureKey)) return false;
+    const texture = this.textures.get(textureKey);
+    const source = texture.getSourceImage();
+    const rowCount = Number(rows), columnCount = Number(columns);
+    if (!source?.width || !source?.height || !Number.isInteger(rowCount) || !Number.isInteger(columnCount) ||
+        rowCount < 1 || columnCount < 1 || rowCount * columnCount > 100) return false;
+    for (let index = 0; index < rowCount * columnCount; index += 1) {
+      const column = index % columnCount;
+      const row = Math.floor(index / columnCount);
+      const frameX = Math.floor((column * source.width) / columnCount);
+      const frameY = Math.floor((row * source.height) / rowCount);
+      const nextFrameX = Math.floor(((column + 1) * source.width) / columnCount);
+      const nextFrameY = Math.floor(((row + 1) * source.height) / rowCount);
+      if (!texture.has(String(index))) texture.add(String(index), 0, frameX, frameY, nextFrameX - frameX, nextFrameY - frameY);
+    }
+    return true;
+  }
+
   registerThreeByThreeSheet(textureKey) {
     if (!this.textures.exists(textureKey)) return false;
     const texture = this.textures.get(textureKey);
@@ -2835,7 +2923,34 @@ export default class BattleScene extends Scene {
     return true;
   }
 
+  drawStudioCatalogPlant(studioPlant, x, y, row = 2) {
+    const textureKey = "studio-plant-" + studioPlant.id;
+    const container = this.add.container(x, y).setDepth(11);
+    const rowIndex = PhaserMath.Clamp(row, 0, LANES - 1);
+    const laneGap = rowIndex < LANES - 1
+      ? this.laneYs[rowIndex + 1] - this.laneYs[rowIndex]
+      : this.laneYs[rowIndex] - this.laneYs[rowIndex - 1];
+    const perspective = PhaserMath.Clamp(laneGap / 54, 0.62, 1.08);
+    if (this.textures.exists(textureKey)) {
+      const sheet = Boolean(studioPlant.spriteSheet);
+      const frame = this.textures.getFrame(textureKey, sheet ? "0" : undefined);
+      const height = 88 * perspective;
+      const width = Math.min(height * (frame.realWidth / frame.realHeight), 100 * perspective);
+      const artwork = sheet
+        ? this.add.sprite(0, -height / 2 + 2, textureKey, "0").setDisplaySize(width, height)
+        : this.add.image(0, -height / 2 + 2, textureKey).setDisplaySize(width, height);
+      artwork.setData("studioPlantSprite", true);
+      container.add(artwork);
+    }
+    container.setData("studioPlantId", studioPlant.id);
+    container.setData("studioBehavior", studioPlant.combat.mode);
+    this.tweens.add({ targets: container, scaleY: 1.025, duration: 1450, ease: "Sine.easeInOut", yoyo: true, repeat: -1 });
+    return container;
+  }
+
   drawCatalogPlant(type, x, y, row = 2) {
+    const studioPlant = this.studioPlantsByType?.[type];
+    if (studioPlant) return this.drawStudioCatalogPlant(studioPlant, x, y, row);
     const plant = this.add.container(x, y).setDepth(11);
     const texture = type === "pumpkin" ? "pumpkin-character" : type === "pineapple" ? "pineapple-level-1" : type === "hazelnut" ? "hazelnut-level-1" : type === "mango" ? "mango-level-1" : type === "snow-thrower" ? "snow-thrower-level-1" : "radish-level-1";
     const rowIndex = PhaserMath.Clamp(row, 0, LANES - 1);
@@ -2926,8 +3041,23 @@ export default class BattleScene extends Scene {
         continue;
       }
       if (plant.type === "pumpkin") continue;
+      const studioProfile = plant.studioPlant?.combat || null;
+      if (studioProfile?.mode === "blocker") continue;
+      if (studioProfile?.mode === "energy") {
+        plant.productionTimer = Math.max(0, (plant.productionTimer ?? studioProfile.energyIntervalMs) - deltaMs);
+        if (plant.productionTimer <= 0) {
+          plant.productionTimer += studioProfile.energyIntervalMs;
+          this.spawnStudioEnergy(plant, studioProfile.energyAmount);
+        }
+        continue;
+      }
       const configs = { radish: RADISH_CONFIG, pineapple: PINEAPPLE_CONFIG, hazelnut: HAZELNUT_CONFIG, mango: MANGO_CONFIG, "snow-thrower": SNOW_THROWER_CONFIG };
-      const config = configs[plant.type];
+      const config = configs[plant.type] || (studioProfile ? {
+        cooldownMs: studioProfile.cooldownMs,
+        cooldown: studioProfile.cooldownMs,
+        range: studioProfile.range,
+        projectileDamage: studioProfile.damage
+      } : null);
       if (!config) continue;
       // Recover safely if a plant was created by an older or partial runtime
       // state that did not initialize its firing timer.
@@ -2939,15 +3069,62 @@ export default class BattleScene extends Scene {
       const target = this.monsters
         .filter((monster) => monster.alive && monster.row === plant.row &&
           Number.isFinite(monster.localX) &&
+          monster.localX - plantLaneX <= (studioProfile?.range ?? GRID_WIDTH) &&
           !(plant.type === "snow-thrower" && monster.freezeStage >= 5) &&
           // Start firing the instant the monster crosses the lawn's far/right edge.
           // Keep targeting only monsters ahead of this plant in the same lane.
           monster.localX <= GRID_WIDTH / 2 && monster.localX > plantLaneX)
         .sort((a, b) => a.localX - b.localX)[0];
       if (!target) continue;
-      this.fireThorn(plant, target);
+      if (studioProfile?.mode === "melee" || studioProfile?.mode === "contact") {
+        if (studioProfile.mode === "contact" && !target.isEating) continue;
+        this.applyMonsterDamage(target, studioProfile.damage, plant.type);
+        this.createProjectileImpact(target.view?.x ?? plant.x, target.view?.y ?? plant.y - 22, plant.type);
+        this.damageMonsterIfNeeded(target);
+      } else {
+        this.fireThorn(plant, target);
+      }
       plant.cooldown = Number.isFinite(config.cooldownMs) ? config.cooldownMs : config.cooldown;
     }
+  }
+
+  spawnStudioEnergy(plant, amount) {
+    const pickupId = "pickup-" + this.nextEnergyPickupId++;
+    const token = this.add.container(plant.x, plant.y - 64).setDepth(35);
+    token.setSize(42, 42).setInteractive({ useHandCursor: true });
+    token.add([
+      this.add.circle(0, 0, 17, 0x8fce70, 0.96).setStrokeStyle(3, 0xffefb0, 1),
+      this.add.text(0, 0, "+" + amount, { fontFamily: "Arial", fontSize: "13px", color: "#fff8d7", fontStyle: "bold", stroke: "#38502b", strokeThickness: 3 }).setOrigin(0.5)
+    ]);
+    token.studioPickupId = pickupId;
+    this.energyPickups.push(token);
+    token.on("pointerdown", () => {
+      if (!token.active || token.studioConsumed) return;
+      token.studioConsumed = true;
+      const collection = collectEnergy(this.energy, amount);
+      this.energy = collection.energy;
+      if (collection.collected > 0) {
+        this.recordCombatEvent("energy_collected", { pickupId, amount: collection.collected });
+        this.playEnergyCollectSound();
+        this.setMessage("Collected " + collection.collected + " energy from " + (plant.studioPlant.name || plant.type) + ".");
+      } else {
+        this.recordCombatEvent("energy_discarded", { pickupId });
+        this.setMessage("Energy is full. Spend energy before collecting more.");
+      }
+      this.energyPickups = this.energyPickups.filter((pickup) => pickup !== token);
+      if (token.expiryTimer) token.expiryTimer.remove(false);
+      token.destroy();
+      this.refreshHud();
+    });
+    this.tweens.add({ targets: token, y: token.y - 9, duration: 700, ease: "Sine.easeInOut", yoyo: true, repeat: -1 });
+    token.expiryTimer = this.time.delayedCall(MUSHROOM_PICKUP_TTL_MS, () => {
+      if (token.active) {
+        this.energyPickups = this.energyPickups.filter((pickup) => pickup !== token);
+        this.recordCombatEvent("energy_discarded", { pickupId });
+        token.destroy();
+      }
+    });
+    this.recordCombatEvent("energy_spawned", { sourceCol: plant.col, sourceRow: plant.row, pickupId, amount });
   }
 
   spawnMushroomEnergy(plant) {
@@ -3051,6 +3228,21 @@ export default class BattleScene extends Scene {
   }
 
   fireThorn(plant, target) {
+    if (plant.studioPlant) {
+      const animationKey = "studio-" + plant.studioPlant.id + "-attack";
+      const sprite = plant.view?.list?.find((child) => child?.getData?.("studioPlantSprite"));
+      if (sprite?.active && this.anims.exists(animationKey)) {
+        if (plant.studioThrowing) return;
+        plant.studioThrowing = true;
+        sprite.play(animationKey);
+        sprite.once("animationcomplete", () => {
+          if (sprite.active) sprite.setFrame("0");
+          plant.studioThrowing = false;
+          if (plant.alive && target?.alive && !this.gameOver) this.fireThornProjectile(plant, target);
+        });
+      } else this.fireThornProjectile(plant, target);
+      return;
+    }
     // Pineapple projectiles must not exist until the throw animation reaches
     // its final frame. This keeps the visual action and the actual launch in sync.
     if (["radish", "pineapple", "hazelnut", "mango", "snow-thrower"].includes(plant.type) && plant.view?.active) {
@@ -3081,6 +3273,31 @@ export default class BattleScene extends Scene {
   }
 
   fireThornProjectile(plant, target) {
+    if (plant.studioPlant?.combat?.mode === "projectile") {
+      const lane = this.worldToLane(plant);
+      const localX = lane.localX;
+      const row = plant.row;
+      const profile = plant.studioPlant.combat;
+      const view = this.add.container(lane.x + 14, lane.y - 30).setDepth(16);
+      const textureKey = "studio-projectile-" + plant.studioPlant.id;
+      if (this.textures.exists(textureKey)) {
+        const frame = this.textures.getFrame(textureKey);
+        const width = Math.min(38, 28 * (frame.realWidth / frame.realHeight));
+        view.add(this.add.image(0, 0, textureKey).setDisplaySize(width, 28));
+      } else {
+        view.add(this.add.circle(0, 0, 11, 0xffc247, 1).setStrokeStyle(2, 0xffefc2, 1));
+      }
+      this.projectiles.push({
+        view, localX, row, startLocalX: localX, targetLocalX: Math.max(localX + 1, target.localX),
+        launchOffsetX: 14, launchOffsetY: -30, speed: profile.projectileSpeed,
+        damage: profile.damage, freeze: false, freezeDurationMs: 0,
+        collisionRadius: profile.projectileCollisionRadius, dropSpeed: profile.projectileSpeed * 1.5,
+        dropPhase: "horizontal", alive: true, trailTimer: 0,
+        plantType: plant.type, studioPlantId: plant.studioPlant.id
+      });
+      this.playThornSound();
+      return;
+    }
     // Radish Level 1 launches its dedicated miniature radish bomb from the
     // forward hand pose. Keep the canonical lane, speed, damage and collision rules.
     const lane = this.worldToLane(plant);
