@@ -3176,6 +3176,14 @@ export default class BattleScene extends Scene {
       const midpointY = plant.y - displayHeight / 2 + 2;
       launchOffsetX = displayWidth / 2;
       launchOffsetY = midpointY - laneOrigin.y;
+    } else if (plant.type === "electric-mushroom") {
+      const frame = this.textures.getFrame("electric-mushroom-level-1");
+      const perspectiveScale = plant.view?.getData?.("pineapplePerspectiveScale") || 1;
+      const displayHeight = 96 * perspectiveScale;
+      const displayWidth = Math.min(displayHeight * (frame.realWidth / frame.realHeight), 104 * perspectiveScale);
+      // Launch the electric bolt from the cap's forward upper edge.
+      launchOffsetX = displayWidth * 0.28;
+      launchOffsetY = -(displayHeight * 0.68);
     }
     const launchX = laneOrigin.x + launchOffsetX;
     const launchY = laneOrigin.y + launchOffsetY;
