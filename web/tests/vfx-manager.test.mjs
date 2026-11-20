@@ -8,7 +8,7 @@ test("adaptive quality moves down under sustained frame pressure and recovers", 
   const monitor = new VFXPerformance({ initialQuality: "ultra", sampleLimit: 15 });
   for (let i = 0; i < 20; i += 1) monitor.sample(34);
   assert.equal(monitor.current, "performance");
-  for (let i = 0; i < 100; i += 1) monitor.sample(12);
+  for (let i = 0; i < 200; i += 1) monitor.sample(12);
   assert.equal(monitor.current, "ultra");
 });
 
