@@ -3076,7 +3076,26 @@ export default class BattleScene extends Scene {
     });
   }
 
-  fireThorn(plant, target) {
+  fireThorn(plant, target, electricCharged = false) {
+    // Electric Mushroom compresses and releases its cap before the bolt is created.
+    // The short vertical anticipation is kept separate from idle scale breathing.
+    if (plant.type === "electric-mushroom" && !electricCharged && plant.view?.active) {
+      const baseY = plant.view.y;
+      plant.preAttackTween?.stop?.();
+      plant.preAttackTween = this.tweens.add({
+        targets: plant.view,
+        y: baseY - 3,
+        duration: 95,
+        ease: "Sine.easeOut",
+        yoyo: true,
+        onComplete: () => {
+          if (plant.view?.active) plant.view.y = baseY;
+          plant.preAttackTween = null;
+          if (plant.alive && target?.alive && !this.gameOver) this.fireThorn(plant, target, true);
+        }
+      });
+      return;
+    }
     // Pineapple projectiles must not exist until the throw animation reaches
     // its final frame. This keeps the visual action and the actual launch in sync.
     if (["radish", "pineapple", "hazelnut", "mango", "snow-thrower"].includes(plant.type) && plant.view?.active) {
@@ -3177,10 +3196,14 @@ export default class BattleScene extends Scene {
       launchOffsetX = displayWidth / 2;
       launchOffsetY = midpointY - laneOrigin.y;
     } else if (plant.type === "electric-mushroom") {
-      const frame = this.textures.getFrame("electric-mushroom-level-1");
+      const frame = this.textures.exists("electric-mushroom-level-1")
+        ? this.textures.getFrame("electric-mushroom-level-1")
+        : null;
       const perspectiveScale = plant.view?.getData?.("pineapplePerspectiveScale") || 1;
       const displayHeight = 96 * perspectiveScale;
-      const displayWidth = Math.min(displayHeight * (frame.realWidth / frame.realHeight), 104 * perspectiveScale);
+      const displayWidth = frame
+        ? Math.min(displayHeight * (frame.realWidth / frame.realHeight), 104 * perspectiveScale)
+        : 96 * perspectiveScale;
       // Launch the electric bolt from the cap's forward upper edge.
       launchOffsetX = displayWidth * 0.28;
       launchOffsetY = -(displayHeight * 0.68);
