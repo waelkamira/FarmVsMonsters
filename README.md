@@ -34,3 +34,14 @@
 - `Documentation/`: مواصفات اللعبة وسجلات القرارات والتصميم.
 
 لا تحذف أو تستبدل الأصول الأصلية أثناء التطوير. اختبر التغييرات الفعلية في Chrome قبل اعتبار أي ميزة مكتملة.
+
+
+## Current product strategy
+
+The active strategy is a connected farm-and-battle world, with polished core gameplay and organic player discovery as the first growth priority. The current execution plan is documented here:
+
+- [Game vision](Documentation/GAME_VISION.md)
+- [Master roadmap](Documentation/MASTER_ROADMAP.md)
+- [Game systems architecture](Documentation/GAME_SYSTEMS_ARCHITECTURE.md)
+- [Phase 0 source audit](Documentation/PHASE_ZERO_AUDIT.md)
+- [Game design document](Documentation/GAME_DESIGN_DOCUMENT.md)
