@@ -5,6 +5,7 @@ import { createDefaultVFXRegistry } from "../game/vfx/createDefaultVFXRegistry.m
 import { getPlantVFXProfile } from "../game/vfx/PlantVFXProfiles.mjs";
 import { getProjectileVFXProfile } from "../game/vfx/ProjectileVFXProfiles.mjs";
 import { VFXManager } from "../game/vfx/VFXManager.mjs";
+import { VFXRenderer } from "../game/vfx/rendering/VFXRenderer.mjs";
 import { VFXEventBus } from "../game/vfx/core/VFXEventBus.mjs";
 import { createVFXConfig } from "../game/vfx/core/VFXConfig.mjs";
 
@@ -308,4 +309,45 @@ test("VFXManager pools procedural container visuals and resets their children be
 
   manager.destroy();
   assert.equal(second.destroyed, true);
+});
+
+
+test("VFXRenderer creates and resets texture and procedural visuals", () => {
+  const scene = createMockScene();
+  const renderer = new VFXRenderer(scene);
+
+  const image = renderer.createTextureVisual(12, 18, "radish", { scale: 0.5, tint: 0xff0000, depth: 9 });
+  assert.equal(image.x, 12);
+  assert.equal(image.y, 18);
+  assert.equal(image.scale, 0.5);
+  assert.equal(image.tint, 0xff0000);
+  assert.equal(image.depth, 9);
+
+  renderer.resetTextureVisual(image, 20, 30, { scale: 0.75, tint: 0x00ff00 });
+  assert.equal(image.x, 20);
+  assert.equal(image.y, 30);
+  assert.equal(image.scale, 0.75);
+  assert.equal(image.tint, 0x00ff00);
+
+  const burst = renderer.createProceduralVisual(5, 6, { tint: 0x123456, depth: 14 }, 3, "burst");
+  assert.equal(burst.list.length, 3);
+  assert.equal(burst.x, 5);
+  assert.equal(burst.depth, 14);
+  assert.equal(burst.list.every((dot) => dot.color === 0x123456), true);
+
+  renderer.deactivate(burst);
+  assert.equal(burst.active, false);
+  assert.equal(burst.visible, false);
+  assert.equal(burst.list.every((dot) => dot.active === false && dot.visible === false), true);
+
+  renderer.resetProceduralVisual(burst, 40, 50, { tint: 0xabcdef, depth: 16 });
+  assert.equal(burst.active, true);
+  assert.equal(burst.visible, true);
+  assert.equal(burst.x, 40);
+  assert.equal(burst.y, 50);
+  assert.equal(burst.depth, 16);
+  assert.equal(burst.list.every((dot) => dot.color === 0xabcdef && dot.active && dot.visible), true);
+
+  renderer.destroy();
+  assert.equal(renderer.createTextureVisual(0, 0, "radish"), null);
 });
