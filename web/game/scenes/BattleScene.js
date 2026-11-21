@@ -321,6 +321,7 @@ export default class BattleScene extends Scene {
     this.studioMonstersById = Object.fromEntries(this.studioMonsters.map((monster) => [monster.id, monster]));
     for (const monster of this.studioMonsters) {
       if (!monster.spriteSheet || !this.registerStudioGridSheet(monster.textureKey, monster.rows, monster.columns)) continue;
+      monster.runtimeReady = true;
       for (const [clipName, clip] of [["idle", monster.animationProfile.idle], ["attack", monster.animationProfile.attack]]) {
         if (clip.endFrame <= clip.startFrame) continue;
         const animationKey = "studio-monster-" + monster.id + "-" + clipName;
@@ -3890,7 +3891,7 @@ export default class BattleScene extends Scene {
 
   selectStudioMonsterForSpawn() {
     return selectWeightedStudioMonster(
-      this.studioMonsters || [],
+      (this.studioMonsters || []).filter((monster) => monster.runtimeReady && this.textures.exists(monster.textureKey)),
       this.wave,
       (min, max) => this.simulationRandom.nextInt(min, max)
     );
