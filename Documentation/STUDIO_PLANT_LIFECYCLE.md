@@ -63,6 +63,10 @@ Editing/replacing a plant returns it to `draft`, requiring a fresh local test be
 
 - Plant and projectile assets are limited to the supported image formats and 8 MB per file.
 - Plant IDs are lowercase slugs and remain stable during replacement.
+- Plant and projectile file storage paths are immutable SHA-256 content-addressed revisions. Replacing a file changes the registry path to a new content hash; the user-facing filename remains readable and stable.
+- GitHub-backed image writes verify existing content-addressed paths before reuse and never overwrite a different file at the same immutable path.
+- Registry and published-catalog writes compare the original blob SHA with the current GitHub blob and reject stale snapshots with HTTP 409. This prevents silent lost updates, but does not make the multi-file publish sequence atomic.
+- Old image revisions and unreferenced uploads are retained until a future cleanup process can prove they are not referenced by any published catalog or rollback.
 - Plant and projectile images are copied before the published catalog is updated, so the catalog does not intentionally point to a not-yet-copied asset.
 - GitHub Contents API writes are separate commits rather than one atomic multi-file transaction. A failed operation may leave an unreferenced file blob; the registry/catalog remains the source of truth.
 - Local test images and catalog are intentionally not committed from the developer's working tree.
