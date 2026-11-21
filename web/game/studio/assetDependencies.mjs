@@ -28,13 +28,20 @@ function declaredDependencies(asset, byId) {
 }
 function collectFileUses(assets) {
   const uses = new Map();
+  const byId = new Map(asList(assets).filter((asset) => asset?.id).map((asset) => [String(asset.id), asset]));
   const add = (asset, role, path) => {
     const normalized = normalizePath(path);
     if (!normalized) return;
     if (!uses.has(normalized)) uses.set(normalized, []);
     uses.get(normalized).push({ assetId: asset.id, assetName: asset.name || asset.id, role });
   };
-  for (const asset of assets) { add(asset, "primary", asset.path); add(asset, "projectile", asset.combat?.projectile?.path); }
+  for (const asset of assets) {
+    add(asset, "primary", asset.path);
+    const projectile = asset.combat?.projectile;
+    const managedTarget = projectile?.id ? byId.get(String(projectile.id)) : null;
+    const managed = projectile?.managed === true || managedTarget?.type === "plantProjectile";
+    if (!managed) add(asset, "projectile", projectile?.path);
+  }
   return uses;
 }
 export function buildAssetDependencyReport(assets, assetId) {
