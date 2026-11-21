@@ -62,6 +62,7 @@ export function cloneStudioAsset(asset, newId, newName, timestamp = new Date().t
   if (!asset?.path || !asset?.type) throw new TypeError("لا يمكن نسخ أصل غير مكتمل.");
   return {
     ...asset,
+    combat: copyCombat(asset.combat),
     id,
     name: String(newName || `${asset.name || asset.id} (نسخة)`).trim().slice(0, 80),
     revision: 1,
