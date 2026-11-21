@@ -14,7 +14,8 @@ export function snapshotStudioAsset(asset, versionNumber) {
     rows: asset.rows,
     columns: asset.columns,
     spriteSheet: asset.spriteSheet,
-    combat: copyCombat(asset.combat)
+    combat: copyCombat(asset.combat),
+    animation: asset.animation ? JSON.parse(JSON.stringify(asset.animation)) : null
   };
 }
 
@@ -44,6 +45,7 @@ export function restoreStudioAssetRevision(asset, versionNumber, timestamp = new
     columns: target.columns,
     spriteSheet: target.spriteSheet,
     combat: copyCombat(target.combat),
+    animation: target.animation ? JSON.parse(JSON.stringify(target.animation)) : null,
     revision: currentRevision + 1,
     versions: [...versions, currentSnapshot],
     status: "draft",
@@ -63,6 +65,7 @@ export function cloneStudioAsset(asset, newId, newName, timestamp = new Date().t
   return {
     ...asset,
     combat: copyCombat(asset.combat),
+    animation: asset.animation ? JSON.parse(JSON.stringify(asset.animation)) : null,
     id,
     name: String(newName || `${asset.name || asset.id} (نسخة)`).trim().slice(0, 80) || id,
     revision: 1,
