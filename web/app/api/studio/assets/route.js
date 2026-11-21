@@ -203,7 +203,7 @@ export async function PATCH(req){
    try{updated=transitionStudioAssetStatus(candidate,operation);}
    catch(error){return NextResponse.json({error:error.message},{status:409});}
    registry.assets[index]=updated;
-   await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(registry,null,2)+"\\n"),"studio: "+operation+" plant "+id,token,storageBranch,registrySha);
+   await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(registry,null,2)+"\n"),"studio: "+operation+" plant "+id,token,storageBranch,registrySha);
    return NextResponse.json({success:true,operation,asset:updated,message:operation==="archive"?"تمت أرشفة النبتة مع الاحتفاظ بملفاتها.":"تمت استعادة النبتة كمسودة."});
   }
   if(!asset.combat?.mode)return NextResponse.json({error:"يجب تعيين سلوك قتالي للنبتة أولاً."},{status:409});
