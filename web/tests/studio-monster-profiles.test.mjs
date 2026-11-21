@@ -36,4 +36,6 @@ test("weighted spawn selection respects first wave and zero-weight disabled mons
   assert.equal(selectWeightedStudioMonster(monsters, 4, () => 3).id, "late");
   assert.equal(selectWeightedStudioMonster(monsters, 1, () => 1).id, "early");
   assert.equal(selectWeightedStudioMonster(monsters, 0, () => 1), null);
+  const chanceRolls = [99];
+  assert.equal(selectWeightedStudioMonster(monsters, 2, () => chanceRolls.shift()), null);
 });
