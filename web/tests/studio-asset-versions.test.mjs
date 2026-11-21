@@ -34,7 +34,7 @@ test("restores an older version as a new draft revision without deleting history
 test("rejects a version number that is not in the asset history", () => {
   assert.throws(() => restoreStudioAssetRevision({ id: "radish", revision: 2, versions: [] }, 1), /الإصدار المطلوب غير موجود/);
 });
-\n
+
 test("clones any registered asset as a clean draft while preserving its immutable source path", () => {
   const source = { id: "fire-pepper", type: "plant", name: "Fire Pepper", path: "/assets/plants/fire-pepper-v1.png", revision: 4, versions: [{ versionNumber: 3 }], status: "published", releaseRequest: { number: 12 }, combat: { mode: "projectile", projectile: { id: "fire-pepper-projectile", path: "/assets/projectiles/fire-pepper.png" } } };
   const clone = cloneStudioAsset(source, "ice-pepper", "Ice Pepper", "2026-11-21T15:00:00.000Z");
