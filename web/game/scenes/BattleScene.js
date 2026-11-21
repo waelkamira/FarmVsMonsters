@@ -3573,7 +3573,8 @@ export default class BattleScene extends Scene {
         launchOffsetX: Number(profile.projectileLaunchOffsetX ?? 14), launchOffsetY: Number(profile.projectileLaunchOffsetY ?? -30), speed: profile.projectileSpeed,
         projectileTrajectoryType: profile.projectileTrajectoryType || "arc",
         projectileCurveX: Number(profile.projectileCurveX) || 0, projectileCurveY: Number(profile.projectileCurveY) || 110,
-        projectileTargetOffsetX: Number(profile.projectileTargetOffsetX) || 0, projectileTargetOffsetY: Number(profile.projectileTargetOffsetY) || 0,\n        projectilePathPoints: Array.isArray(profile.projectilePathPoints) ? profile.projectilePathPoints : null,
+        projectileTargetOffsetX: Number(profile.projectileTargetOffsetX) || 0, projectileTargetOffsetY: Number(profile.projectileTargetOffsetY) || 0,
+        projectilePathPoints: Array.isArray(profile.projectilePathPoints) ? profile.projectilePathPoints : null,
         damage: profile.damage, freeze: false, freezeDurationMs: 0,
         collisionRadius: profile.projectileCollisionRadius, dropSpeed: profile.projectileSpeed * 1.5,
         projectileHeight: profile.projectileHeight || 0, projectileEffectColor: effectColor,
@@ -5245,8 +5246,10 @@ export default class BattleScene extends Scene {
     const minutes = Math.floor(elapsedSeconds / 60);
     const seconds = String(elapsedSeconds % 60).padStart(2, "0");
     const summary = locale === "ar"
-      ? ["وصلت إلى الموجة " + Math.min(this.wave, this.totalWaves) + " من " + this.totalWaves, "الوحوش المهزومة: " + this.totalDefeatedMonsters, "النباتات المزروعة: " + this.totalPlantsPlanted, "الطاقة المجموعة: " + this.energyCollected, "العملات: " + this.coins, "مدة الصمود: " + minutes + ":" + seconds].join("\n")
-      : ["Reached wave " + Math.min(this.wave, this.totalWaves) + " of " + this.totalWaves, this.totalDefeatedMonsters + " monsters defeated", this.totalPlantsPlanted + " plants planted", "Energy collected: " + this.energyCollected, "Coins: " + this.coins, "Time survived: " + minutes + ":" + seconds].join("\n");
+      ? ["وصلت إلى الموجة " + Math.min(this.wave, this.totalWaves) + " من " + this.totalWaves, "الوحوش المهزومة: " + this.totalDefeatedMonsters, "النباتات المزروعة: " + this.totalPlantsPlanted, "الطاقة المجموعة: " + this.energyCollected, "العملات: " + this.coins, "مدة الصمود: " + minutes + ":" + seconds].join("
+")
+      : ["Reached wave " + Math.min(this.wave, this.totalWaves) + " of " + this.totalWaves, this.totalDefeatedMonsters + " monsters defeated", this.totalPlantsPlanted + " plants planted", "Energy collected: " + this.energyCollected, "Coins: " + this.coins, "Time survived: " + minutes + ":" + seconds].join("
+");
     this.add.text(560, 355, summary, {
       fontFamily: "Arial", fontSize: "18px", color: "#ffffff",
       align: "center", lineSpacing: 7, fontStyle: "bold"
