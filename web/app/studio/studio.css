@@ -158,3 +158,17 @@
  .studio-asset-actions>button,.studio-asset-actions>.studio-asset-details-link{flex:1 1 calc(50% - 6px)}
  .studio-asset-actions .studio-version-tools{flex-basis:100%}
 }
+
+
+/* Larger asset thumbnails make plant identification immediate in the library. */
+.studio-list .studio-asset-row{grid-template-columns:112px minmax(0,1fr);column-gap:14px;row-gap:12px}
+.studio-list .studio-asset-row>.studio-thumb,
+.studio-list .studio-asset-row>.studio-thumb-fallback{width:112px;height:112px;min-width:112px;min-height:112px;flex:0 0 112px;border-radius:12px;object-fit:contain;background:#242d21;border:1px solid #66784e}
+.studio-list .studio-asset-row>.studio-thumb-audio,
+.studio-list .studio-asset-row>.studio-thumb-fallback{font-size:34px}
+.studio-list .studio-asset-row>.studio-asset-meta{align-self:center}
+@media(max-width:560px){
+ .studio-list .studio-asset-row{grid-template-columns:88px minmax(0,1fr);column-gap:10px}
+ .studio-list .studio-asset-row>.studio-thumb,
+ .studio-list .studio-asset-row>.studio-thumb-fallback{width:88px;height:88px;min-width:88px;min-height:88px;flex-basis:88px}
+}
