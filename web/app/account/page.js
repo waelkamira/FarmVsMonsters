@@ -47,6 +47,7 @@ export default function AccountPage() {
   const oauthError = googleError
     ? (oauthErrorMessages[googleError] || (ar ? "حدث خطأ أثناء تسجيل الدخول." : "Google sign-in failed."))
     : "";
+  const hasOAuthFeedback = Boolean(googleError || params.get("google") === "connected");
 
   useEffect(() => {
     let active = true;
@@ -57,18 +58,18 @@ export default function AccountPage() {
         if (current) {
           try {
             await restoreOrInitializeCloudProgress();
-            if (active) setMessage(ar ? "تم التحقق من حسابك؛ تقدم اللعب محفوظ محلياً حالياً." : "Your account is connected; gameplay progress is currently saved locally.");
+            if (active && !hasOAuthFeedback) setMessage(ar ? "تم التحقق من حسابك؛ تقدم اللعب محفوظ محلياً حالياً." : "Your account is connected; gameplay progress is currently saved locally.");
           } catch (reason) {
-            if (active) setError(reason.message);
+            if (active && !hasOAuthFeedback) setError(reason.message);
           }
         }
       })
       .catch((reason) => {
-        if (active && !String(reason.message).includes("Failed to fetch")) setError(reason.message);
+        if (active && !hasOAuthFeedback && !String(reason.message).includes("Failed to fetch")) setError(reason.message);
       })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, [ar]);
+  }, [ar, hasOAuthFeedback]);
 
   async function submit(event) {
     event.preventDefault();
