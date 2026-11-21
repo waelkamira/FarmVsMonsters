@@ -124,7 +124,7 @@ export default function GamePage() {
         <div className="seed-selection-tip"><span>🌱</span>{t("Tip: bring an attacker, an energy producer, and a mix of support plants.")}</div>
         <div className="seed-selection-actions">
           <Link href="/" className="secondary-link">{t("Main Menu")}</Link>
-          <button type="button" className="seed-start-button" onClick={enterBattle} disabled={!ready || selected.length < 2}>
+          <button type="button" className="seed-start-button" onClick={enterBattle} disabled={!ready || activeSelected.length < 2}>
             <span>⚔️</span>{t("Enter the battlefield")}
           </button>
         </div>
