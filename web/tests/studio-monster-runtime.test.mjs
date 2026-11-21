@@ -11,6 +11,7 @@ const detailsPage = readFileSync(path.join(root, "app/studio/assets/[id]/page.js
 
 test("Studio monster profile controls and lifecycle are connected to the asset API", () => {
   assert.match(studioPage, /studio-monster-settings/);
+  assert.match(studioPage, /حركة التنقل/);
   assert.match(studioPage, /monsterProfile:JSON\.stringify\(monsterProfile\)/);
   assert.match(studioPage, /اختبار الوحش داخل اللعبة/);
   assert.match(studioPage, /طلب مراجعة نشر الوحش/);
@@ -28,6 +29,7 @@ test("Phaser loads Studio monster catalogs and uses saved profiles for real wave
   assert.match(battleScene, /selectWeightedStudioMonster/);
   assert.match(battleScene, /resolveStudioMonsterRuntimeProfile/);
   assert.match(battleScene, /customMonsterTexture/);
+  assert.match(battleScene, /\["move", monster\.animationProfile\.move\]/);
   assert.match(battleScene, /const animationKey = "studio-monster-" \+ monster\.id \+ "-" \+ clipName/);
   assert.match(battleScene, /studioMonster,/);
 });
