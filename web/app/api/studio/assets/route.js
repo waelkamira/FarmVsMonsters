@@ -78,7 +78,11 @@ export async function GET(req){
    try{
     const raw=await githubGet(REGISTRY_PATH,token,branch);
     const registry=raw?JSON.parse(raw):{version:1,assets:[]};
-    const plants=(registry.assets||[]).filter(asset=>asset.type==="plant"&&asset.status==="testing"&&!asset.releaseRequest).map(asset=>({
+    const candidates=await Promise.all((registry.assets||[]).filter(asset=>asset.type==="plant"&&asset.status==="testing").map(async asset=>{
+     if(!asset.releaseRequest?.number)return asset;
+     try{return resolveStudioReleaseAsset(asset,await githubGetPullRequest(asset.releaseRequest.number,token));}catch{return asset;}
+    }));
+    const plants=candidates.filter(asset=>asset.status==="testing").map(asset=>({
      ...asset,
      path:"/api/studio/assets?preview="+encodeURIComponent(asset.path),
      ...(asset.combat?.projectile?{combat:{...asset.combat,projectile:{...asset.combat.projectile,path:"/api/studio/assets?preview="+encodeURIComponent(asset.combat.projectile.path)}}}:{})
