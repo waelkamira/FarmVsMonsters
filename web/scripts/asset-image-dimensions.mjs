@@ -15,16 +15,16 @@ export function imageDimensions(buffer, extension) {
   }
   if (extension === ".svg") {
     const source = buffer.toString("utf8", 0, Math.min(buffer.length, 4096));
-    const rootTag = source.match(/<svg\\b[^>]*>/i)?.[0] || source;
-    const viewBox = rootTag.match(/\\bviewBox=["']\\s*[-+]?(?:\\d*\\.)?\\d+\\s+[-+]?(?:\\d*\\.)?\\d+\\s+([-+]?(?:\\d*\\.)?\\d+)\\s+([-+]?(?:\\d*\\.)?\\d+)["']/i);
+    const rootTag = source.match(/<svg\b[^>]*>/i)?.[0] || source;
+    const viewBox = rootTag.match(/\bviewBox=["']\s*[-+]?(?:\d*\.)?\d+\s+[-+]?(?:\d*\.)?\d+\s+([-+]?(?:\d*\.)?\d+)\s+([-+]?(?:\d*\.)?\d+)["']/i);
     if (viewBox) {
       const width = positiveDimension(viewBox[1]);
       const height = positiveDimension(viewBox[2]);
       if (width && height) return { width, height };
     }
 
-    const widthAttribute = rootTag.match(/(?:^|\\s)width\\s*=\\s*["']([^"']+)["']/i);
-    const heightAttribute = rootTag.match(/(?:^|\\s)height\\s*=\\s*["']([^"']+)["']/i);
+    const widthAttribute = rootTag.match(/(?:^|\s)width\s*=\s*["']([^"']+)["']/i);
+    const heightAttribute = rootTag.match(/(?:^|\s)height\s*=\s*["']([^"']+)["']/i);
     if (widthAttribute && heightAttribute) {
       const width = positiveDimension(Number.parseFloat(widthAttribute[1]));
       const height = positiveDimension(Number.parseFloat(heightAttribute[1]));
