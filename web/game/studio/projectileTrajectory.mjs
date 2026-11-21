@@ -63,3 +63,15 @@ export function getProjectileTrajectoryOffset({type="arc",progress=0,height=0,cu
   if(type==="bezier")return {x:targetOffset.x+bend*(Number(curveX)||0),y:targetOffset.y+bend*(Number(curveY)||0)};
   return {x:targetOffset.x,y:targetOffset.y+Math.sin(Math.PI*t)*(Number(height)||0)};
 }
+
+
+/**
+ * Resolve the projectile's world-space muzzle point from the same lane anchor
+ * and pixel offsets in both Studio and the Phaser battle runtime.
+ */
+export function getProjectileLaunchPoint({ laneX = 0, laneY = 0, offsetX = 0, offsetY = 0 } = {}) {
+  return {
+    x: Number(laneX || 0) + Number(offsetX || 0),
+    y: Number(laneY || 0) + Number(offsetY || 0)
+  };
+}
