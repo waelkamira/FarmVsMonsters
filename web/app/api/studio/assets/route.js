@@ -52,8 +52,7 @@ async function githubGetPullRequest(number,token){
 }
 async function githubPut(filePath,bytes,message,token,branch,expectedSha){const api=githubUrl(filePath),headers=githubHeaders(token);const check=await fetch(api+"?ref="+encodeURIComponent(branch),{headers});let sha=null;if(check.ok)sha=(await check.json()).sha;else if(check.status!==404)throw Error("GitHub lookup failed ("+check.status+").");assertExpectedContentSha(expectedSha,sha);const saved=await fetch(api,{method:"PUT",headers:{...headers,"Content-Type":"application/json"},body:JSON.stringify({message,branch,content:Buffer.from(bytes).toString("base64"),...(sha?{sha}:{})})});if(!saved.ok){const data=await saved.json().catch(()=>({}));throw Error(data.message||"GitHub save failed ("+saved.status+").");}}
 async function localRegistry(){try{return JSON.parse(await readFile(path.join(process.cwd(),"game/data/studioAssetRegistry.json"),"utf8"));}catch(error){if(error.code==="ENOENT")return {version:1,assets:[]};throw error;}}
-async function saveLocalRegistry(registry){const target=path.join(process.cwd(),"game/data/studioAssetRegistry.json");await mkdir(path.dirname(target),{recursive:true});await writeFile(target,JSON.stringify(registry,null,2)+"
-","utf8");}
+async function saveLocalRegistry(registry){const target=path.join(process.cwd(),"game/data/studioAssetRegistry.json");await mkdir(path.dirname(target),{recursive:true});await writeFile(target,JSON.stringify(registry,null,2)+"\n","utf8");}
 function addPreviewUrls(registry){const github=process.env.STUDIO_STORAGE_DRIVER==="github";return {...registry,storage:process.env.STUDIO_STORAGE_DRIVER||"local",assets:(registry.assets||[]).map(asset=>({...asset,previewUrl:github?"/api/studio/assets?preview="+encodeURIComponent(asset.path):asset.path,...(asset.combat?.projectile?{combat:{...asset.combat,projectile:{...asset.combat.projectile,frameCount:asset.combat.projectile.frameCount??1,rows:asset.combat.projectile.rows??1,columns:asset.combat.projectile.columns??1,previewUrl:github?"/api/studio/assets?preview="+encodeURIComponent(asset.combat.projectile.path):asset.combat.projectile.path}}}:{})}))};}
 function readCombatForm(form,projectile,existing){
  const previous=existing?.combat;
@@ -231,8 +230,7 @@ export async function POST(req){
    const token=process.env.STUDIO_GITHUB_TOKEN,branch=process.env.STUDIO_GITHUB_BRANCH||"studio/assets";
    if(hasFile)await githubPutImmutable("web/public/assets/"+relative,bytes,"studio: "+(existing?"replace ":"add ")+type+" "+id,token,branch);
    if(hasProjectile){await githubPutImmutable("web/public/"+record.combat.projectile.path.replace(/^\//,""),projectileBytes,"studio: attach projectile to "+id,token,branch);}
-   await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(next,null,2)+"
-"),"studio: "+(existing?"update ":"register ")+id,token,branch,registrySha);
+   await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(next,null,2)+"\n"),"studio: "+(existing?"update ":"register ")+id,token,branch,registrySha);
   }else if(driver==="local"&&process.env.NODE_ENV!=="production"){
    if(hasFile){const target=path.join(process.cwd(),"public/assets",relative);await mkdir(path.dirname(target),{recursive:true});await writeFile(target,bytes);}
    if(hasProjectile){const pTarget=path.join(process.cwd(),"public",record.combat.projectile.path.replace(/^\//,""));await mkdir(path.dirname(pTarget),{recursive:true});await writeFile(pTarget,projectileBytes);}
@@ -287,8 +285,7 @@ export async function PATCH(req){
    if(asset.type==="plant"&&STUDIO_RESERVED_PLANT_IDS.includes(newId))return NextResponse.json({error:"هذا المعرّف محجوز لنبتة أساسية."},{status:409});
    const clone=cloneStudioAsset(asset,newId,body.newName);
    registry.assets.push(clone);
-   await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(registry,null,2)+"
-"),"studio: clone "+id+" as "+newId,token,storageBranch,registrySha);
+   await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(registry,null,2)+"\n"),"studio: clone "+id+" as "+newId,token,storageBranch,registrySha);
    return NextResponse.json({success:true,operation,asset:clone,message:"تم إنشاء نسخة جديدة كمسودة مستقلة."});
   }
   if(operation==="restore-version"){
@@ -308,8 +305,7 @@ export async function PATCH(req){
    try{updated=restoreStudioAssetRevision(asset,body.versionNumber);}
    catch(error){return NextResponse.json({error:error.message},{status:409});}
    registry.assets[index]=updated;
-   await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(registry,null,2)+"
-"),"studio: restore "+id+" version "+body.versionNumber,token,storageBranch,registrySha);
+   await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(registry,null,2)+"\n"),"studio: restore "+id+" version "+body.versionNumber,token,storageBranch,registrySha);
    return NextResponse.json({success:true,operation,asset:updated,message:"تمت استعادة الإصدار كمسودة جديدة؛ يجب اختبارها قبل طلب النشر."});
   }
   if(operation==="archive"){
@@ -327,8 +323,7 @@ export async function PATCH(req){
    try{updated=transitionStudioAssetStatus(candidate,operation);}
    catch(error){return NextResponse.json({error:error.message},{status:409});}
    registry.assets[index]=updated;
-   await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(registry,null,2)+"
-"),"studio: "+operation+" asset "+id,token,storageBranch,registrySha);
+   await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(registry,null,2)+"\n"),"studio: "+operation+" asset "+id,token,storageBranch,registrySha);
    return NextResponse.json({success:true,operation,asset:updated,message:operation==="archive"?"تمت أرشفة الأصل مع الاحتفاظ بملفاته.":"تمت استعادة الأصل كمسودة."});
   }
   if(asset.type!=="plant"&&asset.type!=="monster")return NextResponse.json({error:"هذه العملية متاحة للنباتات والوحوش فقط."},{status:409});
@@ -337,8 +332,7 @@ export async function PATCH(req){
   if(operation==="prepare-test"){
    const updated={...asset,status:"testing",testingAt:new Date().toISOString(),releaseRequest:null};
    registry.assets[index]=updated;
-   await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(registry,null,2)+"
-"),"studio: prepare "+asset.type+" test "+id,token,storageBranch,registrySha);
+   await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(registry,null,2)+"\n"),"studio: prepare "+asset.type+" test "+id,token,storageBranch,registrySha);
    return NextResponse.json({success:true,operation,asset:updated,message:asset.type==="monster"?"الوحش جاهز للمزامنة والاختبار المحلي.":"النبتة جاهزة للمزامنة والاختبار المحلي."});
   }
   if(operation!=="publish")return NextResponse.json({error:"عملية Studio غير معروفة."},{status:400});
@@ -362,21 +356,11 @@ export async function PATCH(req){
    const existingIndex=(catalog.monsters||[]).findIndex(monster=>monster.id===id);
    catalog.monsters=existingIndex>=0?catalog.monsters.map((monster,i)=>i===existingIndex?publishedMonster:monster):[...(catalog.monsters||[]),publishedMonster];
    catalog.version=1;
-   await githubPut(PUBLISHED_MONSTER_CATALOG_PATH,Buffer.from(JSON.stringify(catalog,null,2)+"
-"),"stage monster catalog release "+id,token,releaseBranch,catalogSha);
-   const pr=await githubCreatePullRequest(releaseBranch,targetBranch,"Publish monster: "+asset.name+" ("+id+")","## Studio monster release
-
-- Monster: "+id+"
-- Base archetype: "+asset.monsterProfile.baseArchetype+"
-- Includes the monster artwork, saved idle/move/attack animation profile, and monster combat profile.
-- Spawn weight: "+asset.monsterProfile.spawnWeight+"; first wave: "+asset.monsterProfile.firstWave+".
-- Complete manual gameplay verification before merging this release.
-
-Merge this pull request to activate the monster in the target game branch.",token);
+   await githubPut(PUBLISHED_MONSTER_CATALOG_PATH,Buffer.from(JSON.stringify(catalog,null,2)+"\n"),"stage monster catalog release "+id,token,releaseBranch,catalogSha);
+   const pr=await githubCreatePullRequest(releaseBranch,targetBranch,"Publish monster: "+asset.name+" ("+id+")","## Studio monster release\n\n- Monster: "+id+"\n- Base archetype: "+asset.monsterProfile.baseArchetype+"\n- Includes the monster artwork, saved idle/move/attack animation profile, and monster combat profile.\n- Spawn weight: "+asset.monsterProfile.spawnWeight+"; first wave: "+asset.monsterProfile.firstWave+".\n- Complete manual gameplay verification before merging this release.\n\nMerge this pull request to activate the monster in the target game branch.",token);
    const requested={...asset,releaseRequest:{number:pr.number,url:pr.url,branch:releaseBranch,createdAt:new Date().toISOString()}};
    registry.assets[index]=requested;
-   try{await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(registry,null,2)+"
-"),"studio: request monster release "+id,token,storageBranch,registrySha);}
+   try{await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(registry,null,2)+"\n"),"studio: request monster release "+id,token,storageBranch,registrySha);}
    catch(error){return NextResponse.json({success:true,operation:"publish-requested",asset:requested,reviewUrl:pr.url,reviewNumber:pr.number,releaseBranch,registrySyncWarning:error.message,message:"تم إنشاء طلب مراجعة نشر الوحش، لكن تعذر تحديث حالة الطلب في مكتبة Studio. احتفظ برابط المراجعة."});}
    return NextResponse.json({success:true,operation:"publish-requested",asset:requested,reviewUrl:pr.url,reviewNumber:pr.number,releaseBranch,message:"تم إنشاء طلب مراجعة نشر الوحش. لن يتغير فرع اللعبة الأساسي حتى تتم مراجعة الطلب ودمجه."});
   }
@@ -384,8 +368,7 @@ Merge this pull request to activate the monster in the target game branch.",toke
   if(operation==="prepare-test"){
    const updated={...asset,status:"testing",testingAt:new Date().toISOString(),releaseRequest:null};
    registry.assets[index]=updated;
-   await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(registry,null,2)+"
-"),"studio: prepare plant test "+id,token,storageBranch,registrySha);
+   await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(registry,null,2)+"\n"),"studio: prepare plant test "+id,token,storageBranch,registrySha);
    return NextResponse.json({success:true,operation,asset:updated,message:"النبتة جاهزة للمزامنة والاختبار المحلي."});
   }
   if(asset.status!=="testing")return NextResponse.json({error:"يجب تجهيز النبتة للاختبار أولاً قبل طلب النشر."},{status:409});
@@ -412,20 +395,11 @@ Merge this pull request to activate the monster in the target game branch.",toke
   const existingIndex=(catalog.plants||[]).findIndex(plant=>plant.id===id);
   catalog.plants=existingIndex>=0?catalog.plants.map((plant,i)=>i===existingIndex?publishedPlant:plant):[...(catalog.plants||[]),publishedPlant];
   catalog.version=1;
-  await githubPut(PUBLISHED_CATALOG_PATH,Buffer.from(JSON.stringify(catalog,null,2)+"
-"),"stage plant catalog release "+id,token,releaseBranch,catalogSha);
-  const pr=await githubCreatePullRequest(releaseBranch,targetBranch,"Publish plant: "+asset.name+" ("+id+")","## Studio plant release
-
-- Plant: "+id+"
-- Behavior: "+asset.combat.mode+"
-- Includes the plant asset, linked projectile when applicable, and the published plant catalog update.
-- Prepared in FarmVsMonsters Studio; complete manual gameplay verification before merging this release.
-
-Merge this pull request to activate the plant in the target game branch.",token);
+  await githubPut(PUBLISHED_CATALOG_PATH,Buffer.from(JSON.stringify(catalog,null,2)+"\n"),"stage plant catalog release "+id,token,releaseBranch,catalogSha);
+  const pr=await githubCreatePullRequest(releaseBranch,targetBranch,"Publish plant: "+asset.name+" ("+id+")","## Studio plant release\n\n- Plant: "+id+"\n- Behavior: "+asset.combat.mode+"\n- Includes the plant asset, linked projectile when applicable, and the published plant catalog update.\n- Prepared in FarmVsMonsters Studio; complete manual gameplay verification before merging this release.\n\nMerge this pull request to activate the plant in the target game branch.",token);
   const requested={...asset,releaseRequest:{number:pr.number,url:pr.url,branch:releaseBranch,createdAt:new Date().toISOString()}};
   registry.assets[index]=requested;
-  try{await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(registry,null,2)+"
-"),"studio: request plant release "+id,token,storageBranch,registrySha);}
+  try{await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(registry,null,2)+"\n"),"studio: request plant release "+id,token,storageBranch,registrySha);}
   catch(error){return NextResponse.json({success:true,operation:"publish-requested",asset:requested,reviewUrl:pr.url,reviewNumber:pr.number,releaseBranch,registrySyncWarning:error.message,message:"تم إنشاء طلب مراجعة النشر، لكن تعذر تحديث حالة الطلب في مكتبة Studio. احتفظ برابط المراجعة."});}
   return NextResponse.json({success:true,operation:"publish-requested",asset:requested,reviewUrl:pr.url,reviewNumber:pr.number,releaseBranch,message:"تم إنشاء طلب مراجعة النشر. لن يتغير فرع اللعبة الأساسي حتى تتم مراجعة الطلب ودمجه."});
  }catch(error){return NextResponse.json({error:error.message||"Studio action failed."},{status:error.code==="STUDIO_WRITE_CONFLICT"?409:502});}
