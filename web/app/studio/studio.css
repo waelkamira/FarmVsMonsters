@@ -172,3 +172,40 @@
  .studio-list .studio-asset-row>.studio-thumb,
  .studio-list .studio-asset-row>.studio-thumb-fallback{width:88px;height:88px;min-width:88px;min-height:88px;flex-basis:88px}
 }
+
+
+/* Studio form usability: larger targets, readable values, and clear keyboard focus. */
+.studio-shell input:not([type="file"]),.studio-shell select,.studio-shell textarea{
+  box-sizing:border-box;min-width:0;max-width:100%;min-height:46px;width:100%;
+  padding:11px 13px;border:1px solid #796746;border-radius:10px;
+  background:#12140f;color:#fff4d8;font:inherit;font-size:15px;line-height:1.4;
+  transition:border-color .15s ease,box-shadow .15s ease,background .15s ease;
+}
+.studio-shell input:not([type="file"]):focus,.studio-shell select:focus,.studio-shell textarea:focus{
+  outline:none;border-color:#f0c66e;background:#191b14;
+  box-shadow:0 0 0 3px #e8bd6533;
+}
+.studio-shell input::placeholder,.studio-shell textarea::placeholder{color:#988d72;opacity:1}
+.studio-shell input[type="number"]{
+  direction:ltr;text-align:left;font-variant-numeric:tabular-nums;
+  font-size:16px;font-weight:700;letter-spacing:.02em;
+}
+.studio-shell input[type="number"]::-webkit-inner-spin-button,
+.studio-shell input[type="number"]::-webkit-outer-spin-button{opacity:1;min-height:24px}
+.studio-shell input[type="range"]{accent-color:#e8bd65;cursor:pointer;min-height:30px}
+.studio-shell input[type="checkbox"],.studio-shell input[type="radio"]{width:20px;height:20px;accent-color:#e8bd65}
+.studio-shell label{min-width:0}
+.studio-shell .studio-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr));gap:14px}
+.studio-shell .studio-panel form{gap:16px}
+.studio-shell .studio-panel label{gap:9px;line-height:1.5}
+.studio-shell .studio-trajectory-editor input:not([type="range"]),
+.studio-shell .studio-trajectory-editor select{min-height:48px;font-size:16px}
+.studio-shell .studio-motion-settings{grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr))}
+.studio-shell button{min-height:40px}
+.studio-shell button:focus-visible,.studio-shell a:focus-visible{
+  outline:3px solid #f0c66e;outline-offset:2px
+}
+@media(max-width:560px){
+  .studio-shell input:not([type="file"]),.studio-shell select,.studio-shell textarea{min-height:48px;font-size:16px}
+  .studio-shell .studio-grid{grid-template-columns:1fr}
+}
