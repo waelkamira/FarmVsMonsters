@@ -65,7 +65,8 @@ function readCombatForm(form,projectile,existing){
   projectileRotation:form.get("projectileRotation")??previous?.projectileRotation??0,
   projectileCollisionRadius:form.get("projectileCollisionRadius")??previous?.projectileCollisionRadius??22,
   energyAmount:form.get("energyAmount")??previous?.energyAmount??15,
-  energyIntervalMs:form.get("energyIntervalMs")??previous?.energyIntervalMs??12000
+  energyIntervalMs:form.get("energyIntervalMs")??previous?.energyIntervalMs??12000,
+  sizePercent:form.get("sizePercent")??previous?.sizePercent??100
  });
 }
 export async function GET(req){
