@@ -39,10 +39,14 @@ export function auditStudioAssetRegistry(input) {
         projectile: combat.projectile || null
       });
       if (!validation.valid) validation.errors.forEach((message) => errors.push("إعدادات النبتة: " + message));
+      if (combat.mode !== "projectile" && combat.projectile) errors.push("يوجد رابط قذيفة رغم أن سلوك النبتة لا يطلق مقذوفات.");
+      if (combat.projectile && !safeAssetPath(combat.projectile.path)) errors.push("مسار القذيفة المرتبطة غير صالح أو غير آمن.");
       if (combat.projectile?.managed === true) {
         const linked = assets.find((candidate) => candidate?.id === combat.projectile.id && candidate.type === "plantProjectile");
         if (!linked) errors.push("القذيفة المُدارة المرتبطة غير موجودة في مكتبة الأصول.");
         else if (linked.status === "archived") errors.push("القذيفة المرتبطة مؤرشفة ولا يمكن استخدامها.");
+        else if (!safeAssetPath(linked.path)) errors.push("مسار أصل القذيفة المُدارة غير صالح أو غير آمن.");
+        else if (linked.path !== combat.projectile.path) errors.push("مسار القذيفة المحفوظ في النبتة لا يطابق مسار أصل القذيفة الحالي.");
       }
     }
     if (type === "monster") {
