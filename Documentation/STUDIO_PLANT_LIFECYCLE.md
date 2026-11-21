@@ -58,6 +58,12 @@ The GitHub token must have **Contents: Read and write** and **Pull requests: Rea
 
 All release files and the catalog change are collected on one release branch and enter the target branch through one pull-request merge. Failed staging can leave an unreferenced release branch or immutable files, but it cannot partially update the target branch.
 
+## 4. Archive and restore
+
+The Studio library offers a reversible archive action for draft and testing plants. Archiving changes the registry status to `archived` and hides the plant from the testing catalog; it does not delete the plant image, projectile, or metadata. The restore action returns the plant to `draft`, after which it must be prepared and tested again.
+
+A plant with an open release request cannot be archived until that request is closed. A plant whose release request has been merged is already published and cannot be archived through this action; removing it from the live catalog requires a separate reviewed release change. Hard deletion is intentionally not exposed in this workflow.
+
 ## Status transitions
 
 `draft -> testing -> approved -> published`
