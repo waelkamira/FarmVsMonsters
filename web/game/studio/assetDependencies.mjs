@@ -14,7 +14,7 @@ function declaredDependencies(asset, byId) {
     } else if (projectile.managed === false) {
       dependencies.push({ kind: "embedded-file", relation: "projectile", targetId: null, targetName: projectile.filename || projectileId || "ملف القذيفة", targetType: "plantProjectile", path: normalizePath(projectile.path), resolved: Boolean(projectile.path), managedWithOwner: true });
     } else {
-      dependencies.push(target && target.id !== asset.id
+      dependencies.push(target?.type === "plantProjectile" && target.id !== asset.id
         ? { kind: "asset", relation: "projectile", targetId: target.id, targetName: target.name || target.id, targetType: target.type, path: normalizePath(projectile.path || target.path), resolved: true }
         : { kind: "embedded-file", relation: "projectile", targetId: null, targetName: projectile.filename || projectileId || "ملف القذيفة", targetType: "plantProjectile", path: normalizePath(projectile.path), resolved: Boolean(projectile.path), managedWithOwner: true });
     }
