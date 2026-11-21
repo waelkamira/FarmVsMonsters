@@ -121,19 +121,6 @@ export const STAGE_ONE_PLANTS = Object.freeze([
     stats: ["Area burst", "Single use"], statsAr: ["انفجار جماعي", "استخدام واحد"]
   },
   {
-    id: "fire-pepper",
-    assetPath: "/assets/plants/Pepper-flamethrower-level-1.png",
-    name: "Fire Pepper Level 1",
-    nameAr: "فلفل النار المستوى الأول",
-    role: "Lane-clearing special",
-    roleAr: "سلاح خاص لتنظيف المسار",
-    description: "Plays its nine-frame flamethrower animation, then scorches every monster ahead in its lane.",
-    descriptionAr: "ينفذ حركة قاذف اللهب ذات الإطارات التسعة ثم يحرق جميع الوحوش أمامه في مساره.",
-    energyCost: 130, coinPrice: 360, status: "active", implemented: true, purchasable: false, image: null,
-    stats: ["44 lane damage", "9000 ms cooldown"], statsAr: ["ضرر ٤٤ على المسار", "فاصل هجوم ٩٠٠٠ مللي ثانية"]
-  },
-
-  {
     id: "snow-thrower", assetPath: "/assets/plants/Snow-thrower-level-1.png",
     name: "Snow Thrower Level 1", nameAr: "قاذف الثلج المستوى الأول",
     role: "Freeze support", roleAr: "دعم بالتجميد",
