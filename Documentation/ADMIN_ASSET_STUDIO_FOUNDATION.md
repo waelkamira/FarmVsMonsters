@@ -20,7 +20,7 @@ Set a long random STUDIO_ADMIN_TOKEN on the server and enter it in the studio. N
 Set STUDIO_STORAGE_DRIVER=local and run Next.js in development. Files are written to web/public/assets/ and metadata to the registry. Local-disk uploads are intentionally disabled in production.
 
 ## Online mode
-Set STUDIO_STORAGE_DRIVER=github, STUDIO_GITHUB_TOKEN, STUDIO_GITHUB_REPOSITORY, and STUDIO_GITHUB_BRANCH. A dedicated studio/assets branch is created from main. The fine-grained token needs repository Contents read/write permission only. Uploads become versioned commits on that branch; review/merge the asset branch through a PR before production assets change. Do not point routine uploads directly at main.
+Set STUDIO_STORAGE_DRIVER=github, STUDIO_GITHUB_TOKEN, STUDIO_GITHUB_REPOSITORY, and STUDIO_GITHUB_BRANCH. A dedicated studio/assets branch is created from main. The fine-grained token needs repository Contents read/write and Pull requests read/write permissions. Uploads become versioned commits on the Studio branch. Plant publishing creates a dedicated release branch and a pull request to the configured target branch; Studio never writes published assets or catalogs directly to main. Merge the release PR only after review.
 
 The remote adapter has an 8 MB per-file limit and is suitable for small assets. A CDN/object-store adapter should replace it as the library grows.
 

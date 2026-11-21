@@ -41,23 +41,28 @@ After preparing the plant, refresh the game page and open Stage 1 seed selection
 
 Selecting `تعديل` on a registered asset opens the same editor with its current metadata. A replacement file is optional: leaving the file input empty preserves the existing image/audio file while saving metadata or plant combat-profile changes. Every saved edit returns the asset to `draft`; it must be prepared and tested again before publishing.
 
-## 3. Publish
+## 3. Request a reviewed release
 
-The Studio `publish` action is allowed only after a plant is `testing`.
+The Studio `publish` action is available only after a plant is `testing`. It does **not** write to the target branch directly.
 
-It copies the plant image and its attached projectile (when applicable) from the Studio branch to `STUDIO_PUBLISH_BRANCH` (defaults to `main`), then upserts the plant into:
+The action:
+1. Creates a dedicated release branch from `STUDIO_PUBLISH_BRANCH` (defaults to `main`): `studio/release/<plant-id>-<suffix>`.
+2. Copies the immutable plant image and linked projectile (when applicable) from the Studio storage branch into that release branch.
+3. Updates `web/public/assets/studio-plant-catalog.json` on the release branch.
+4. Opens a GitHub pull request targeting `STUDIO_PUBLISH_BRANCH`.
+5. Saves the pull-request number, URL, and release branch in the Studio registry.
 
-`web/public/assets/studio-plant-catalog.json`
+The Studio library shows the request as **approved / awaiting review** and provides a direct link. The target branch and live catalog remain unchanged until a reviewer merges the pull request. After merge, Studio reads the pull-request state and displays the plant as **published**. If the pull request is closed without merging, the plant returns to **testing** so another request can be made.
 
-Finally, the Studio registry record is marked `published`. The Studio-enabled game runtime reads this catalog and adds published plants to Stage 1 seed selection and the Phaser battle runtime.
+The GitHub token must have **Contents: Read and write** and **Pull requests: Read and write** permissions. If pull-request permission is missing, Studio reports the required permission instead of writing to the target branch.
 
-This action updates the target Git branch; the hosting environment still needs to build/deploy that commit before the production website serves the new catalog and image files. **The feature code itself must be merged to the target branch before published plants can appear in that branch's game runtime.**
+All release files and the catalog change are collected on one release branch and enter the target branch through one pull-request merge. Failed staging can leave an unreferenced release branch or immutable files, but it cannot partially update the target branch.
 
 ## Status transitions
 
-`draft -> testing -> published`
+`draft -> testing -> approved -> published`
 
-Editing/replacing a plant returns it to `draft`, requiring a fresh local test before it can be published again.
+Closing an unmerged release request returns the asset to `testing`. Editing/replacing a plant clears its old release request and returns it to `draft`, requiring a fresh test and a new review request.
 
 ## Safety and operational notes
 
