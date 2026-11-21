@@ -48,32 +48,6 @@
         "energyIntervalMs": 12000
       },
       "publishedAt": "2026-11-21T00:28:42.201Z"
-    },
-    {
-      "id": "pepper-flamethrower-level-1",
-      "name": "Pepper-flamethrower-level-1",
-      "path": "/assets/plants/pepper-flamethrower-level-1.png",
-      "rows": 3,
-      "columns": 3,
-      "spriteSheet": true,
-      "combat": {
-        "mode": "projectile",
-        "projectile": {
-          "id": "pepper-flamethrower-level-1-projectile",
-          "path": "/assets/projectiles/plants/pepper-flamethrower-level-1-projectile-30572f40a67eec42f4ceec6b79ed9017a0313f2a524dcf916a2226301990a207.png",
-          "filename": "pepper-flamethrower-level-1-projectile.png"
-        },
-        "energyCost": 60,
-        "hp": 150,
-        "cooldownMs": 1800,
-        "damage": 30,
-        "range": 500,
-        "projectileSpeed": 280,
-        "projectileCollisionRadius": 22,
-        "energyAmount": 15,
-        "energyIntervalMs": 12000
-      },
-      "publishedAt": "2026-11-21T00:33:24.320Z"
     }
   ]
 }
