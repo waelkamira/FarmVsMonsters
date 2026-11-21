@@ -19,7 +19,7 @@ The generator scans `public/assets` and writes two generated files:
 - `public/assets/asset-manifest.json`: asset keys, URLs, types, groups, file sizes, SHA-256 hashes, supported image dimensions, and explicit spritesheet frame metadata.
 - `public/assets/asset-audit.json`: total size, group totals, byte-identical duplicate candidates, large files, and spritesheet summaries.
 
-It also rejects duplicate runtime keys before a manifest can be produced. The generator does not resize, recompress, rename, or delete source art. Both generated JSON files are ignored by Git because they are derived from the checked-out asset set.
+It also rejects duplicate runtime keys before a manifest can be produced. The generator does not resize, recompress, rename, or delete source art. Both generated JSON files are ignored by Git because they are derived from the checked-out asset set. SVG dimensions are read from the root `viewBox` when available; otherwise the root `width` and `height` attributes are parsed independently.
 
 The manifest is generated automatically before `npm run dev`, `npm test`, and `npm run build`. The test suite checks that every manifest entry points to an existing file, its recorded byte size matches the source, keys are unique, group summaries agree, and spritesheets have explicit positive frame dimensions.
 
