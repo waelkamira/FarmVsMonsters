@@ -11,23 +11,14 @@ import {
   restoreOrInitializeCloudProgress
 } from "../../game/services/playerAccount.mjs";
 
-let observedLocationSearch;
-
 function subscribeToLocation(callback) {
   if (typeof window === "undefined") return () => {};
-  const onPopState = () => {
-    observedLocationSearch = window.location.search;
-    callback();
-  };
-  window.addEventListener("popstate", onPopState);
-  return () => window.removeEventListener("popstate", onPopState);
+  window.addEventListener("popstate", callback);
+  return () => window.removeEventListener("popstate", callback);
 }
 
 function getLocationSearch() {
-  if (observedLocationSearch === undefined) {
-    observedLocationSearch = window.location.search;
-  }
-  return observedLocationSearch;
+  return window.location.search;
 }
 
 export default function AccountPage() {
@@ -56,13 +47,6 @@ export default function AccountPage() {
   const oauthError = googleError
     ? (oauthErrorMessages[googleError] || (ar ? "حدث خطأ أثناء تسجيل الدخول." : "Google sign-in failed."))
     : "";
-
-  useEffect(() => {
-    const currentParams = new URLSearchParams(search);
-    if (currentParams.has("google") || currentParams.has("google_error")) {
-      window.history.replaceState({}, "", window.location.pathname);
-    }
-  }, [search]);
 
   useEffect(() => {
     let active = true;
