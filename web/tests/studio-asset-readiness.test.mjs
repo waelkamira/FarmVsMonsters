@@ -107,5 +107,6 @@ test("Testing Lab page runs the audit and renders readiness outcomes", () => {
   assert.match(pageSource, /report\.blocked/);
   assert.match(pageSource, /report\.assets\.map/);
   assert.match(pageSource, /report\.note/);
+  assert.match(pageSource, /import "\.\.\/studio\.css"/);
   assert.match(pageSource, /stage\/1\/select/);
 });
