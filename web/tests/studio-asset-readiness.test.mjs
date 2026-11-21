@@ -141,6 +141,10 @@ test("physical file audit blocks missing files and warns when storage cannot be 
   assert.equal(report.fileAudit.present, 1);
   assert.equal(report.fileAudit.missing, 1);
   assert.equal(report.fileAudit.unknown, 1);
+  assert.equal(report.total, 2);
+  assert.equal(report.blocked, 1);
+  assert.equal(report.warning, 1);
+  assert.equal(report.ready, 0);
   assert.equal(report.assets.find((asset) => asset.id === "thorn-plant").readiness, "blocked");
   assert.ok(report.assets.find((asset) => asset.id === "thorn-plant").errors.some((message) => message.includes("غير موجود فعلياً")));
   assert.equal(report.assets.find((asset) => asset.id === "cave-scout").readiness, "warning");
