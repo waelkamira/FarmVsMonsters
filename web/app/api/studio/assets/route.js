@@ -5,6 +5,7 @@ import {randomUUID} from "node:crypto";
 import {verifyStudioSession} from "../../../../game/studio/signedSession.mjs";
 import {STUDIO_ASSET_TYPES,STUDIO_ID_PATTERN,STUDIO_MAX_UPLOAD_BYTES,STUDIO_RESERVED_PLANT_IDS} from "../../../../game/studio/assetTypes.mjs";
 import {createStudioPlantCombatProfile} from "../../../../game/studio/plantProfiles.mjs";
+import {createStudioAnimationProfile} from "../../../../game/studio/animationProfiles.mjs";
 import {assertExpectedContentSha} from "../../../../game/studio/registryConcurrency.mjs";
 import {createImmutableAssetPath} from "../../../../game/studio/immutableAssetPath.mjs";
 import {createStudioReleaseBranchName,resolveStudioReleaseAsset,transitionStudioAssetStatus} from "../../../../game/studio/releaseLifecycle.mjs";
@@ -153,12 +154,26 @@ export async function POST(req){
   try{combatProfile=readCombatForm(form,currentProjectile,existing);}catch(error){return NextResponse.json({error:error.message},{status:400});}
   if(combatProfile.mode==="projectile"&&!currentProjectile)return NextResponse.json({error:"ارفع ملف القذيفة مع النبتة أو اختر سلوكاً بديلاً."},{status:400});
  }
+ let animationProfile=null;
+ if(type==="plant"&&config.spriteSheet){
+  try{
+   animationProfile=createStudioAnimationProfile({
+    idleStartFrame:form.get("idleStartFrame")??existing?.animation?.idle?.startFrame??0,
+    idleEndFrame:form.get("idleEndFrame")??existing?.animation?.idle?.endFrame??0,
+    idleFps:form.get("idleFps")??existing?.animation?.idle?.fps??6,
+    idleLoop:String(form.get("idleLoop")??existing?.animation?.idle?.loop??"true")==="true",
+    attackStartFrame:form.get("attackStartFrame")??existing?.animation?.attack?.startFrame??0,
+    attackEndFrame:form.get("attackEndFrame")??existing?.animation?.attack?.endFrame??(rows*columns-1),
+    attackFps:form.get("attackFps")??existing?.animation?.attack?.fps??12
+   },rows*columns);
+  }catch(error){return NextResponse.json({error:error.message},{status:400});}
+ }
  const extension=hasFile?ext(file.type):(existing?.filename?path.extname(existing.filename):path.extname(existing?.path||""));
  if(!extension)return NextResponse.json({error:"Unknown file extension."},{status:415});
  const bytes=hasFile?Buffer.from(await file.arrayBuffer()):null;
  const relative=hasFile?createImmutableAssetPath(config.folder,id,extension,bytes):(existing?.path||"").replace(/^\/assets\//,"");
  const now=new Date().toISOString();
- const record=createStudioAssetRevision(existing,{...(existing||{}),id,type,name:String(form.get("name")||id).trim().slice(0,80),filename:hasFile?id+extension:existing.filename,path:hasFile?"/assets/"+relative:existing.path,rows,columns,spriteSheet:config.spriteSheet,status:"draft",releaseRequest:null,createdAt:existing?.createdAt||now,updatedAt:now,...(type==="plant"?{combat:combatProfile}:{})});
+ const record=createStudioAssetRevision(existing,{...(existing||{}),id,type,name:String(form.get("name")||id).trim().slice(0,80),filename:hasFile?id+extension:existing.filename,path:hasFile?"/assets/"+relative:existing.path,rows,columns,spriteSheet:config.spriteSheet,status:"draft",releaseRequest:null,createdAt:existing?.createdAt||now,updatedAt:now,...(type==="plant"?{combat:combatProfile,animation:animationProfile}:{})});
  const next={...old,version:1,assets:existing?old.assets.map((a,i)=>i===index?record:a):[...old.assets,record]};
  try{
   if(driver==="github"){
@@ -284,7 +299,7 @@ export async function PATCH(req){
   const catalogDocument=await githubGetDocument(PUBLISHED_CATALOG_PATH,token,targetBranch);
   const catalog=catalogDocument?JSON.parse(catalogDocument.content):{version:1,plants:[]};
   const catalogSha=catalogDocument?.sha??null;
-  const publishedPlant={id:asset.id,name:asset.name,path:asset.path,rows:asset.rows,columns:asset.columns,spriteSheet:asset.spriteSheet,combat:asset.combat,publishedAt:new Date().toISOString()};
+  const publishedPlant={id:asset.id,name:asset.name,path:asset.path,rows:asset.rows,columns:asset.columns,spriteSheet:asset.spriteSheet,combat:asset.combat,animation:asset.animation||null,publishedAt:new Date().toISOString()};
   const existingIndex=(catalog.plants||[]).findIndex(plant=>plant.id===id);
   catalog.plants=existingIndex>=0?catalog.plants.map((plant,i)=>i===existingIndex?publishedPlant:plant):[...(catalog.plants||[]),publishedPlant];
   catalog.version=1;
