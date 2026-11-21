@@ -11,11 +11,13 @@ import {createStudioReleaseBranchName,resolveStudioReleaseAsset,transitionStudio
 import {cloneStudioAsset,createStudioAssetRevision,restoreStudioAssetRevision} from "../../../../game/studio/assetVersions.mjs";
 import {getAssetDependents} from "../../../../game/studio/assetDependencies.mjs";
 import {createStudioAnimationProfile} from "../../../../game/studio/animationProfiles.mjs";
+import {createStudioMonsterProfile} from "../../../../game/studio/monsterProfiles.mjs";
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
 const COOKIE="fvm_studio_session";
 const REGISTRY_PATH="web/game/data/studioAssetRegistry.json";
 const PUBLISHED_CATALOG_PATH="web/public/assets/studio-plant-catalog.json";
+const PUBLISHED_MONSTER_CATALOG_PATH="web/public/assets/studio-monster-catalog.json";
 function authorized(req){return verifyStudioSession(process.env.STUDIO_ADMIN_TOKEN||"",req.cookies.get(COOKIE)?.value||"");}
 function ext(type){return {"image/png":".png","image/webp":".webp","image/gif":".gif","audio/mpeg":".mp3","audio/wav":".wav","audio/ogg":".ogg","audio/mp4":".m4a"}[type]||"";}
 function githubHeaders(token){return {Authorization:"Bearer "+token,Accept:"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28"};}
@@ -78,6 +80,18 @@ export async function GET(req){
   const token=process.env.STUDIO_GITHUB_TOKEN,branch=process.env.STUDIO_GITHUB_BRANCH||"studio/assets";
   if(!token)return NextResponse.json({error:"STUDIO_GITHUB_TOKEN is required."},{status:503});
   const catalog=req.nextUrl.searchParams.get("catalog");
+  if(catalog==="testing-monsters"){
+   try{
+    const raw=await githubGet(REGISTRY_PATH,token,branch);
+    const registry=raw?JSON.parse(raw):{version:1,assets:[]};
+    const candidates=await Promise.all((registry.assets||[]).filter(asset=>asset.type==="monster"&&asset.status==="testing").map(async asset=>{
+     if(!asset.releaseRequest?.number)return asset;
+     try{return resolveStudioReleaseAsset(asset,await githubGetPullRequest(asset.releaseRequest.number,token));}catch{return asset;}
+    }));
+    const monsters=candidates.filter(asset=>asset.status==="testing").map(asset=>({...asset,path:"/api/studio/assets?preview="+encodeURIComponent(asset.path)}));
+    return NextResponse.json({version:1,monsters},{headers:{"Cache-Control":"private, no-store"}});
+   }catch(error){return NextResponse.json({error:error.message||"Could not load testing monster catalog."},{status:502});}
+  }
   if(catalog==="testing"){
    try{
     const raw=await githubGet(REGISTRY_PATH,token,branch);
@@ -139,7 +153,7 @@ export async function POST(req){
  if(hasFile&&(file.size>STUDIO_MAX_UPLOAD_BYTES||!config.accepts.includes(file.type)))return NextResponse.json({error:"Choose a supported file up to 8 MB."},{status:415});
  if(config.spriteSheet&&(!Number.isInteger(rows)||!Number.isInteger(columns)||rows<1||columns<1||rows*columns>100))return NextResponse.json({error:"Invalid sprite grid."},{status:400});
  let animationProfile=null;
- if(config.spriteSheet&&type==="plant"){
+ if(config.spriteSheet&&(type==="plant"||type==="monster")){
   try{
    const rawProfile=String(form.get("animationProfile")||"");
    const submittedProfile=rawProfile?JSON.parse(rawProfile):(existing?.animationProfile||null);
@@ -162,12 +176,19 @@ export async function POST(req){
   try{combatProfile=readCombatForm(form,currentProjectile,existing);}catch(error){return NextResponse.json({error:error.message},{status:400});}
   if(combatProfile.mode==="projectile"&&!currentProjectile)return NextResponse.json({error:"ارفع ملف القذيفة مع النبتة أو اختر سلوكاً بديلاً."},{status:400});
  }
+ let monsterProfile=null;
+ if(type==="monster"){
+  try{
+   const rawMonsterProfile=String(form.get("monsterProfile")||"");
+   monsterProfile=createStudioMonsterProfile(rawMonsterProfile?JSON.parse(rawMonsterProfile):(existing?.monsterProfile||{}));
+  }catch(error){return NextResponse.json({error:error.message||"Invalid monster profile."},{status:400});}
+ }
  const extension=hasFile?ext(file.type):(existing?.filename?path.extname(existing.filename):path.extname(existing?.path||""));
  if(!extension)return NextResponse.json({error:"Unknown file extension."},{status:415});
  const bytes=hasFile?Buffer.from(await file.arrayBuffer()):null;
  const relative=hasFile?createImmutableAssetPath(config.folder,id,extension,bytes):(existing?.path||"").replace(/^\/assets\//,"");
  const now=new Date().toISOString();
- const record=createStudioAssetRevision(existing,{...(existing||{}),id,type,name:String(form.get("name")||id).trim().slice(0,80),filename:hasFile?id+extension:existing.filename,path:hasFile?"/assets/"+relative:existing.path,rows,columns,spriteSheet:config.spriteSheet,status:"draft",releaseRequest:null,createdAt:existing?.createdAt||now,updatedAt:now,...(type==="plant"?{combat:combatProfile}:{}),...(config.spriteSheet&&type==="plant"?{animationProfile}:{})});
+ const record=createStudioAssetRevision(existing,{...(existing||{}),id,type,name:String(form.get("name")||id).trim().slice(0,80),filename:hasFile?id+extension:existing.filename,path:hasFile?"/assets/"+relative:existing.path,rows,columns,spriteSheet:config.spriteSheet,status:"draft",releaseRequest:null,createdAt:existing?.createdAt||now,updatedAt:now,...(type==="plant"?{combat:combatProfile}:{}),...(type==="monster"?{monsterProfile}:{}),...(config.spriteSheet&&(type==="plant"||type==="monster")?{animationProfile}:{})});
  const next={...old,version:1,assets:existing?old.assets.map((a,i)=>i===index?record:a):[...old.assets,record]};
  try{
   if(driver==="github"){
@@ -263,8 +284,44 @@ export async function PATCH(req){
    await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(registry,null,2)+"\n"),"studio: "+operation+" asset "+id,token,storageBranch,registrySha);
    return NextResponse.json({success:true,operation,asset:updated,message:operation==="archive"?"تمت أرشفة الأصل مع الاحتفاظ بملفاته.":"تمت استعادة الأصل كمسودة."});
   }
-  if(asset.type!=="plant")return NextResponse.json({error:"هذه العملية متاحة للنباتات فقط."},{status:409});
-  if(!asset.combat?.mode)return NextResponse.json({error:"يجب تعيين سلوك قتالي للنبتة أولاً."},{status:409});
+  if(asset.type!=="plant"&&asset.type!=="monster")return NextResponse.json({error:"هذه العملية متاحة للنباتات والوحوش فقط."},{status:409});
+  if(asset.type==="plant"&&!asset.combat?.mode)return NextResponse.json({error:"يجب تعيين سلوك قتالي للنبتة أولاً."},{status:409});
+  if(asset.type==="monster"&&!asset.monsterProfile)return NextResponse.json({error:"يجب ضبط خصائص الوحش أولاً."},{status:409});
+  if(operation==="prepare-test"){
+   const updated={...asset,status:"testing",testingAt:new Date().toISOString(),releaseRequest:null};
+   registry.assets[index]=updated;
+   await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(registry,null,2)+"\n"),"studio: prepare "+asset.type+" test "+id,token,storageBranch,registrySha);
+   return NextResponse.json({success:true,operation,asset:updated,message:asset.type==="monster"?"الوحش جاهز للمزامنة والاختبار المحلي.":"النبتة جاهزة للمزامنة والاختبار المحلي."});
+  }
+  if(asset.status!=="testing")return NextResponse.json({error:"يجب تجهيز الأصل للاختبار أولاً قبل طلب النشر."},{status:409});
+  if(asset.releaseRequest?.number){
+   const previousRequest=await githubGetPullRequest(asset.releaseRequest.number,token);
+   if(previousRequest?.state==="open")return NextResponse.json({success:true,operation:"publish-requested",asset,reviewUrl:previousRequest.url,reviewNumber:previousRequest.number,releaseBranch:asset.releaseRequest.branch,alreadyRequested:true,message:"يوجد طلب مراجعة مفتوح لهذا الأصل بالفعل."});
+   if(previousRequest?.merged)return NextResponse.json({success:true,operation:"published",asset:{...asset,status:"published"},reviewUrl:previousRequest.url,reviewNumber:previousRequest.number,alreadyPublished:true,message:"تم دمج طلب النشر مسبقاً."});
+  }
+  const safeAssetPath=(value)=>typeof value==="string"&&value.startsWith("/assets/")&&!value.includes("..");
+  if(!safeAssetPath(asset.path))return NextResponse.json({error:"Invalid asset path."},{status:400});
+  if(asset.type==="monster"){
+   const releaseBranch=createStudioReleaseBranchName(id,randomUUID().slice(0,8));
+   await githubCreateBranch(releaseBranch,targetBranch,token);
+   const monsterBytes=await githubGetBytes("web/public"+asset.path,token,storageBranch);
+   await githubPutImmutable("web/public"+asset.path,monsterBytes,"stage monster artwork for release "+id,token,releaseBranch);
+   const catalogDocument=await githubGetDocument(PUBLISHED_MONSTER_CATALOG_PATH,token,targetBranch);
+   const catalog=catalogDocument?JSON.parse(catalogDocument.content):{version:1,monsters:[]};
+   const catalogSha=catalogDocument?.sha??null;
+   const publishedMonster={id:asset.id,name:asset.name,path:asset.path,rows:asset.rows,columns:asset.columns,spriteSheet:asset.spriteSheet,animationProfile:asset.animationProfile||null,monsterProfile:asset.monsterProfile,publishedAt:new Date().toISOString()};
+   const existingIndex=(catalog.monsters||[]).findIndex(monster=>monster.id===id);
+   catalog.monsters=existingIndex>=0?catalog.monsters.map((monster,i)=>i===existingIndex?publishedMonster:monster):[...(catalog.monsters||[]),publishedMonster];
+   catalog.version=1;
+   await githubPut(PUBLISHED_MONSTER_CATALOG_PATH,Buffer.from(JSON.stringify(catalog,null,2)+"\n"),"stage monster catalog release "+id,token,releaseBranch,catalogSha);
+   const pr=await githubCreatePullRequest(releaseBranch,targetBranch,"Publish monster: "+asset.name+" ("+id+")","## Studio monster release\n\n- Monster: "+id+"\n- Base archetype: "+asset.monsterProfile.baseArchetype+"\n- Includes the monster artwork, saved idle/attack animation profile, and monster combat profile.\n- Spawn weight: "+asset.monsterProfile.spawnWeight+"; first wave: "+asset.monsterProfile.firstWave+".\n- Complete manual gameplay verification before merging this release.\n\nMerge this pull request to activate the monster in the target game branch.",token);
+   const requested={...asset,releaseRequest:{number:pr.number,url:pr.url,branch:releaseBranch,createdAt:new Date().toISOString()}};
+   registry.assets[index]=requested;
+   try{await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(registry,null,2)+"\n"),"studio: request monster release "+id,token,storageBranch,registrySha);}
+   catch(error){return NextResponse.json({success:true,operation:"publish-requested",asset:requested,reviewUrl:pr.url,reviewNumber:pr.number,releaseBranch,registrySyncWarning:error.message,message:"تم إنشاء طلب مراجعة نشر الوحش، لكن تعذر تحديث حالة الطلب في مكتبة Studio. احتفظ برابط المراجعة."});}
+   return NextResponse.json({success:true,operation:"publish-requested",asset:requested,reviewUrl:pr.url,reviewNumber:pr.number,releaseBranch,message:"تم إنشاء طلب مراجعة نشر الوحش. لن يتغير فرع اللعبة الأساسي حتى تتم مراجعة الطلب ودمجه."});
+  }
+
   if(operation==="prepare-test"){
    const updated={...asset,status:"testing",testingAt:new Date().toISOString(),releaseRequest:null};
    registry.assets[index]=updated;
