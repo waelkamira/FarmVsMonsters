@@ -7,6 +7,7 @@ import {STUDIO_ASSET_TYPES,STUDIO_ID_PATTERN,STUDIO_MAX_UPLOAD_BYTES,STUDIO_RESE
 import {createStudioPlantCombatProfile} from "../../../../game/studio/plantProfiles.mjs";
 import {assertExpectedContentSha} from "../../../../game/studio/registryConcurrency.mjs";
 import {createImmutableAssetPath} from "../../../../game/studio/immutableAssetPath.mjs";
+import {createStudioReleaseBranchName,resolveStudioReleaseAsset} from "../../../../game/studio/releaseLifecycle.mjs";
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
 const COOKIE="fvm_studio_session";
@@ -99,10 +100,7 @@ export async function GET(req){
     if(!asset.releaseRequest?.number)return asset;
     try{
      const pr=await githubGetPullRequest(asset.releaseRequest.number,token);
-     if(!pr)return {...asset,status:"testing",releaseRequest:null};
-     if(pr.merged)return {...asset,status:"published",publishedAt:pr.mergedAt||asset.publishedAt,releaseRequest:{...asset.releaseRequest,state:"merged"}};
-     if(pr.state==="open")return {...asset,status:"approved",releaseRequest:{...asset.releaseRequest,state:"open"}};
-     return {...asset,status:"testing",releaseRequest:null};
+     return resolveStudioReleaseAsset(asset,pr);
     }catch{return {...asset,status:"approved",releaseRequest:{...asset.releaseRequest,state:"unknown"}};}
    }));
    return NextResponse.json(addPreviewUrls({...registry,assets}));
@@ -195,7 +193,7 @@ export async function PATCH(req){
   const safeAssetPath=(value)=>typeof value==="string"&&value.startsWith("/assets/")&&!value.includes("..");
   if(!safeAssetPath(asset.path))return NextResponse.json({error:"Invalid plant asset path."},{status:400});
   if(asset.combat.mode==="projectile"&&!safeAssetPath(asset.combat.projectile?.path))return NextResponse.json({error:"The linked projectile asset is missing."},{status:409});
-  const releaseBranch="studio/release/"+id+"-"+randomUUID().slice(0,8);
+  const releaseBranch=createStudioReleaseBranchName(id,randomUUID().slice(0,8));
   await githubCreateBranch(releaseBranch,targetBranch,token);
   const plantBytes=await githubGetBytes("web/public"+asset.path,token,storageBranch);
   await githubPutImmutable("web/public"+asset.path,plantBytes,"stage plant artwork for release "+id,token,releaseBranch);
@@ -211,7 +209,7 @@ export async function PATCH(req){
   catalog.plants=existingIndex>=0?catalog.plants.map((plant,i)=>i===existingIndex?publishedPlant:plant):[...(catalog.plants||[]),publishedPlant];
   catalog.version=1;
   await githubPut(PUBLISHED_CATALOG_PATH,Buffer.from(JSON.stringify(catalog,null,2)+"\n"),"stage plant catalog release "+id,token,releaseBranch,catalogSha);
-  const pr=await githubCreatePullRequest(releaseBranch,targetBranch,"Publish plant: "+asset.name+" ("+id+")","## Studio plant release\n\n- Plant: "+id+"\n- Behavior: "+asset.combat.mode+"\n- Includes the plant asset, linked projectile when applicable, and the published plant catalog update.\n- Prepared and tested through FarmVsMonsters Studio before requesting this review.\n\nMerge this pull request to activate the plant in the target game branch.",token);
+  const pr=await githubCreatePullRequest(releaseBranch,targetBranch,"Publish plant: "+asset.name+" ("+id+")","## Studio plant release\n\n- Plant: "+id+"\n- Behavior: "+asset.combat.mode+"\n- Includes the plant asset, linked projectile when applicable, and the published plant catalog update.\n- Prepared in FarmVsMonsters Studio; complete manual gameplay verification before merging this release.\n\nMerge this pull request to activate the plant in the target game branch.",token);
   const requested={...asset,releaseRequest:{number:pr.number,url:pr.url,branch:releaseBranch,createdAt:new Date().toISOString()}};
   registry.assets[index]=requested;
   try{await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(registry,null,2)+"\n"),"studio: request plant release "+id,token,storageBranch,registrySha);}
