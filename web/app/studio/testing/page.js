@@ -48,7 +48,11 @@ export default function StudioTestingPage() {
         <article><small>متوافق</small><b>{report.ready}</b></article>
         <article><small>تحذيرات</small><b>{report.warning}</b></article>
         <article><small>مشكلات مانعة</small><b>{report.blocked}</b></article>
-        <article><small>مستبعد / مؤرشف</small><b>{report.excluded}</b></article>\n        <article><small>ملفات تم فحصها</small><b>{report.fileAudit?.checked ?? 0}</b></article>\n        <article><small>ملفات موجودة</small><b>{report.fileAudit?.present ?? 0}</b></article>\n        <article><small>ملفات مفقودة</small><b>{report.fileAudit?.missing ?? 0}</b></article>\n        <article><small>ملفات غير مؤكدة</small><b>{report.fileAudit?.unknown ?? 0}</b></article>
+        <article><small>مستبعد / مؤرشف</small><b>{report.excluded}</b></article>
+        <article><small>ملفات تم فحصها</small><b>{report.fileAudit?.checked ?? 0}</b></article>
+        <article><small>ملفات موجودة</small><b>{report.fileAudit?.present ?? 0}</b></article>
+        <article><small>ملفات مفقودة</small><b>{report.fileAudit?.missing ?? 0}</b></article>
+        <article><small>ملفات غير مؤكدة</small><b>{report.fileAudit?.unknown ?? 0}</b></article>
       </section>
       <section className="studio-testing-report">
         <div className="studio-testing-report-head"><div><h2>نتيجة الفحص</h2><small>{new Date(report.checkedAt).toLocaleString()} · التخزين: {report.storage}</small></div><span>{report.blocked === 0 ? "لا توجد أخطاء مانعة" : "توجد أصول تحتاج إلى إصلاح"}</span></div>
