@@ -97,6 +97,7 @@ test("Testing Lab API is session-protected and labels its limited audit scope", 
   assert.match(apiSource, /auditStudioAssetRegistry/);
   assert.match(apiSource, /registry-and-runtime-contracts/);
   assert.match(apiSource, /لا يشغّل معركة Phaser/);
+  assert.match(apiSource, /لا يفحص وجود بايتات الملفات الفعلية/);
   assert.match(apiSource, /Cache-Control.*private, no-store/);
 });
 
