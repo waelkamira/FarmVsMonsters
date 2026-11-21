@@ -8,7 +8,7 @@ const DEFAULT_POINTS=[{progress:0,x:0,y:0},{progress:.5,x:0,y:110},{progress:1,x
 export default function ProjectileTrajectoryEditor({
  imageUrl,plantUrl,frameCount=1,rows=1,columns=1,
  plantFrameCount=1,plantRows=1,plantColumns=1,plantSizePercent=100,
- path,setPath,points=DEFAULT_POINTS,setPoints,plantFps=8,
+ path,setPath,points=DEFAULT_POINTS,setPoints,plantFps=8,targetX=0,targetY=0,plantFps=8,
  launchX,setLaunchX,launchY,setLaunchY,
  speed,setSpeed,collisionRadius,setCollisionRadius,height,setHeight,
  rotation,setRotation,playing,setPlaying
@@ -33,7 +33,7 @@ export default function ProjectileTrajectoryEditor({
  const end={x:760,y:300};
  const baseAt=t=>({x:start.x+(end.x-start.x)*t,y:start.y+(end.y-start.y)*t});
  const normalizedPoints=useMemo(()=>Array.isArray(points)&&points.length>=2?points:DEFAULT_POINTS,[points]);
- const offsetAt=t=>getProjectileTrajectoryOffset({type:"custom",progress:t,points:normalizedPoints});
+ const offsetAt=t=>getProjectileTrajectoryOffset({type:"custom",progress:t,points:normalizedPoints,height,targetX,targetY});
  const pointAt=t=>{const base=baseAt(t),offset=offsetAt(t);return{x:base.x+offset.x*.55,y:base.y-offset.y*.55};};
  const pathD=useMemo(()=>Array.from({length:101},(_,i)=>pointAt(i/100)).map((p,i)=>(i?"L":"M")+p.x.toFixed(1)+","+p.y.toFixed(1)).join(" "),[normalizedPoints,launchX,launchY]);
  const current=pointAt(progress);
