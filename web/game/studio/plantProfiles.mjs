@@ -60,7 +60,8 @@ export function createStudioPlantCombatProfile({
     projectile: mode === "projectile" ? Object.freeze({
       id: String(projectile.id),
       path: String(projectile.path),
-      filename: String(projectile.filename || "")
+      filename: String(projectile.filename || ""),
+      managed: projectile.managed === true
     }) : null,
     energyCost: boundedNumber(energyCost, "energyCost", 60),
     hp: boundedNumber(hp, "hp", 150),
