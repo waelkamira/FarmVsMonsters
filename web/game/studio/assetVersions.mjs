@@ -3,7 +3,7 @@ function copyJson(value) {
 }
 
 function copyCombat(combat) {
-  return copyJson(combat);
+  return combat ? copyJson(combat) : null;
 }
 
 export function snapshotStudioAsset(asset, versionNumber) {
