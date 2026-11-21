@@ -1,5 +1,3 @@
-const SVG_NUMBER = "[-+]?(?:\\d*\\.)?\\d+";
-
 function positiveDimension(value) {
   const dimension = Number(value);
   return Number.isFinite(dimension) && dimension > 0 ? dimension : null;
@@ -18,11 +16,7 @@ export function imageDimensions(buffer, extension) {
   if (extension === ".svg") {
     const source = buffer.toString("utf8", 0, Math.min(buffer.length, 4096));
     const rootTag = source.match(/<svg\\b[^>]*>/i)?.[0] || source;
-    const viewBoxPattern = new RegExp(
-      `\\\\bviewBox=["']\\\\s*${SVG_NUMBER}\\\\s+${SVG_NUMBER}\\\\s+(${SVG_NUMBER})\\\\s+(${SVG_NUMBER})["']`,
-      "i"
-    );
-    const viewBox = rootTag.match(viewBoxPattern);
+    const viewBox = rootTag.match(/\\bviewBox=["']\\s*[-+]?(?:\\d*\\.)?\\d+\\s+[-+]?(?:\\d*\\.)?\\d+\\s+([-+]?(?:\\d*\\.)?\\d+)\\s+([-+]?(?:\\d*\\.)?\\d+)["']/i);
     if (viewBox) {
       const width = positiveDimension(viewBox[1]);
       const height = positiveDimension(viewBox[2]);
