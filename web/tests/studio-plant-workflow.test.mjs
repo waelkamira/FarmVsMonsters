@@ -158,3 +158,16 @@ test("published Studio plants are included in the default seven-slot loadout",()
   assert.match(selector,/STARTER_LOADOUT, \.\.\.defaultStudioPlants/);
   assert.match(selector,/MAX_SEEDS = 7/);
 });
+
+test("Studio persists validated idle and attack animation profiles into Phaser runtime",()=>{
+  assert.match(studioPage,/animationProfile:JSON\.stringify\(animationProfile\)/);
+  assert.match(studioPage,/studio-animation-profile-editor/);
+  assert.match(studioPage,/أول إطار للهجوم/);
+  assert.match(assetsRoute,/createStudioAnimationProfile/);
+  assert.match(assetsRoute,/animationProfile:asset\.animationProfile/);
+  assert.match(battleScene,/createStudioAnimationProfile\(plant\.animationProfile,frameCount\)/);
+  assert.match(battleScene,/clip\.fps/);
+  assert.match(battleScene,/studio-\" \+ plant\.id \+ \"-idle/);
+  assert.match(battleScene,/studio-\" \+ plant\.id \+ \"-attack/);
+  assert.match(battleScene,/plant\.studioPlant\.animationProfile\?\.idle\?\.startFrame/);
+});
