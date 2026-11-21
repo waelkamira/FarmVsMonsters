@@ -134,7 +134,7 @@ export async function GET(req){
 export async function POST(req){
  if(!authorized(req))return NextResponse.json({error:"Unauthorized."},{status:401});
  let form;try{form=await req.formData();}catch{return NextResponse.json({error:"Invalid multipart upload."},{status:400});}
- const id=String(form.get("id")||"").trim().toLowerCase(),type=String(form.get("type")||""),config=STUDIO_ASSET_TYPES[type],file=form.get("file"),projectileFile=form.get("projectileFile"),rows=Number(form.get("rows")||1),columns=Number(form.get("columns")||1),replace=String(form.get("replace")||"false")==="true";
+ const id=String(form.get("id")||"").trim().toLowerCase(),type=String(form.get("type")||""),config=STUDIO_ASSET_TYPES[type],file=form.get("file"),projectileFile=form.get("projectileFile"),rows=Number(form.get("rows")||1),columns=Number(form.get("columns")||1),frameCount=Number(form.get("frameCount")||9),replace=String(form.get("replace")||"false")==="true";
  if(!config||!STUDIO_ID_PATTERN.test(id)||id.length>64)return NextResponse.json({error:"Invalid category or ID. Use a lowercase slug up to 64 characters."},{status:400});
  if(type==="plant"&&STUDIO_RESERVED_PLANT_IDS.includes(id))return NextResponse.json({error:"هذا المعرّف محجوز لنبتة أساسية في اللعبة. اختر معرّفاً جديداً."},{status:409});
  const hasFile=Boolean(file&&typeof file.arrayBuffer==="function"&&file.size>0);
@@ -169,7 +169,7 @@ export async function POST(req){
  if(existing&&existing.type!==type)return NextResponse.json({error:"لا يمكن تغيير فئة الأصل أثناء التعديل."},{status:409});
  if(!hasFile&&(!replace||!existing))return NextResponse.json({error:"Choose a file for a new asset."},{status:400});
  if(hasFile&&(file.size>STUDIO_MAX_UPLOAD_BYTES||!config.accepts.includes(file.type)))return NextResponse.json({error:"Choose a supported file up to 8 MB."},{status:415});
- if(config.spriteSheet&&(!Number.isInteger(rows)||!Number.isInteger(columns)||rows<1||columns<1||rows*columns>100))return NextResponse.json({error:"Invalid sprite grid."},{status:400});
+ if(config.spriteSheet&&(!Number.isInteger(frameCount)||frameCount<1||frameCount>24||!Number.isInteger(rows)||!Number.isInteger(columns)||rows<1||columns<1||rows*columns!==frameCount))return NextResponse.json({error:"عدد الإطارات يجب أن يكون من 1 إلى 24، ويجب أن يطابق حاصل ضرب الصفوف والأعمدة."},{status:400});
  let animationProfile=null;
  if(config.spriteSheet&&(type==="plant"||type==="monster")){
   try{
@@ -211,7 +211,7 @@ export async function POST(req){
  const bytes=hasFile?Buffer.from(await file.arrayBuffer()):null;
  const relative=hasFile?createImmutableAssetPath(config.folder,id,extension,bytes):(existing?.path||"").replace(/^\/assets\//,"");
  const now=new Date().toISOString();
- const record=createStudioAssetRevision(existing,{...(existing||{}),id,type,name:String(form.get("name")||id).trim().slice(0,80),filename:hasFile?id+extension:existing.filename,path:hasFile?"/assets/"+relative:existing.path,rows,columns,spriteSheet:config.spriteSheet,status:"draft",releaseRequest:null,publishedAt:null,testingAt:null,archivedAt:null,restoredFromVersion:null,createdAt:existing?.createdAt||now,updatedAt:now,...(type==="plant"?{combat:combatProfile}:{}),...(type==="monster"?{monsterProfile}:{}),...(config.spriteSheet&&(type==="plant"||type==="monster")?{animationProfile}:{})});
+ const record=createStudioAssetRevision(existing,{...(existing||{}),id,type,name:String(form.get("name")||id).trim().slice(0,80),filename:hasFile?id+extension:existing.filename,path:hasFile?"/assets/"+relative:existing.path,rows,columns,frameCount:config.spriteSheet?frameCount:1,spriteSheet:config.spriteSheet,status:"draft",releaseRequest:null,publishedAt:null,testingAt:null,archivedAt:null,restoredFromVersion:null,createdAt:existing?.createdAt||now,updatedAt:now,...(type==="plant"?{combat:combatProfile}:{}),...(type==="monster"?{monsterProfile}:{}),...(config.spriteSheet&&(type==="plant"||type==="monster")?{animationProfile}:{})});
  const next={...old,version:1,assets:existing?old.assets.map((a,i)=>i===index?record:a):[...old.assets,record]};
  try{
   if(driver==="github"){
