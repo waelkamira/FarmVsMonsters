@@ -8,7 +8,7 @@ import {createStudioPlantCombatProfile} from "../../../../game/studio/plantProfi
 import {assertExpectedContentSha} from "../../../../game/studio/registryConcurrency.mjs";
 import {createImmutableAssetPath} from "../../../../game/studio/immutableAssetPath.mjs";
 import {createStudioReleaseBranchName,resolveStudioReleaseAsset,transitionStudioAssetStatus} from "../../../../game/studio/releaseLifecycle.mjs";
-import {createStudioAssetRevision,restoreStudioAssetRevision} from "../../../../game/studio/assetVersions.mjs";
+import {cloneStudioAsset,createStudioAssetRevision,restoreStudioAssetRevision} from "../../../../game/studio/assetVersions.mjs";
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
 const COOKIE="fvm_studio_session";
@@ -173,13 +173,22 @@ export async function PATCH(req){
  if(!authorized(req))return NextResponse.json({error:"Unauthorized."},{status:401});
  let body;try{body=await req.json();}catch{return NextResponse.json({error:"Invalid Studio action."},{status:400});}
  const id=String(body.id||"").trim(),operation=String(body.operation||"");
- if(!STUDIO_ID_PATTERN.test(id)||!["prepare-test","publish","archive","restore","restore-version"].includes(operation))return NextResponse.json({error:"Invalid asset or operation."},{status:400});
+ if(!STUDIO_ID_PATTERN.test(id)||!["prepare-test","publish","archive","restore","restore-version","clone"].includes(operation))return NextResponse.json({error:"Invalid asset or operation."},{status:400});
  const driver=process.env.STUDIO_STORAGE_DRIVER||"local";
  if(driver!=="github"){
-  if(operation!=="archive"&&operation!=="restore"&&operation!=="restore-version")return NextResponse.json({error:"Testing preparation and publishing require GitHub storage."},{status:503});
+  if(operation!=="archive"&&operation!=="restore"&&operation!=="restore-version"&&operation!=="clone")return NextResponse.json({error:"Testing preparation and publishing require GitHub storage."},{status:503});
   try{
    const registry=await localRegistry(),index=registry.assets.findIndex(asset=>asset.id===id);
    if(index<0)return NextResponse.json({error:"لم يتم العثور على الأصل في مكتبة Studio."},{status:404});
+   if(operation==="clone"){
+    const newId=String(body.newId||"").trim().toLowerCase();
+    if(!STUDIO_ID_PATTERN.test(newId)||newId.length>64)return NextResponse.json({error:"معرّف النسخة غير صالح."},{status:400});
+    if(registry.assets.some(asset=>asset.id===newId))return NextResponse.json({error:"يوجد أصل بهذا المعرّف بالفعل."},{status:409});
+    if(registry.assets[index].type==="plant"&&STUDIO_RESERVED_PLANT_IDS.includes(newId))return NextResponse.json({error:"هذا المعرّف محجوز لنبتة أساسية."},{status:409});
+    const clone=cloneStudioAsset(registry.assets[index],newId,body.newName);
+    registry.assets.push(clone);await saveLocalRegistry(registry);
+    return NextResponse.json({success:true,operation,asset:clone,message:"تم إنشاء نسخة جديدة كمسودة مستقلة."});
+   }
    let updated;
    try{updated=operation==="restore-version"?restoreStudioAssetRevision(registry.assets[index],body.versionNumber):transitionStudioAssetStatus(registry.assets[index],operation);}
    catch(error){return NextResponse.json({error:error.message},{status:409});}
@@ -194,6 +203,16 @@ export async function PATCH(req){
   const index=registry.assets.findIndex(asset=>asset.id===id)
   if(index<0)return NextResponse.json({error:"لم يتم العثور على النبتة في مكتبة Studio."},{status:404});
   const asset=registry.assets[index];
+  if(operation==="clone"){
+   const newId=String(body.newId||"").trim().toLowerCase();
+   if(!STUDIO_ID_PATTERN.test(newId)||newId.length>64)return NextResponse.json({error:"معرّف النسخة غير صالح."},{status:400});
+   if(registry.assets.some(item=>item.id===newId))return NextResponse.json({error:"يوجد أصل بهذا المعرّف بالفعل."},{status:409});
+   if(asset.type==="plant"&&STUDIO_RESERVED_PLANT_IDS.includes(newId))return NextResponse.json({error:"هذا المعرّف محجوز لنبتة أساسية."},{status:409});
+   const clone=cloneStudioAsset(asset,newId,body.newName);
+   registry.assets.push(clone);
+   await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(registry,null,2)+"\\n"),"studio: clone "+id+" as "+newId,token,storageBranch,registrySha);
+   return NextResponse.json({success:true,operation,asset:clone,message:"تم إنشاء نسخة جديدة كمسودة مستقلة."});
+  }
   if(operation==="restore-version"){
    let candidate=asset;
    if(asset.releaseRequest?.number){
