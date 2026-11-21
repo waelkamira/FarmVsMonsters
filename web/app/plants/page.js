@@ -31,9 +31,10 @@ export default function PlantsPage() {
     };
   }, []);
 
-  const activePlants = STAGE_ONE_PLANTS.filter((plant) => plant.implemented && unlockedIds.includes(plant.id));
+  // The full plant encyclopedia is open during the current development/playtest period.
+  const activePlants = STAGE_ONE_PLANTS;
   const plannedPlants = STAGE_ONE_PLANTS.filter((plant) => !plant.implemented);
-  const lockedPlants = STAGE_ONE_PLANTS.filter((plant) => !unlockedIds.includes(plant.id));
+  const lockedPlants = [];
 
   return (
     <main className="info-shell">
@@ -45,8 +46,8 @@ export default function PlantsPage() {
         <h1>{ar ? "موسوعة النباتات" : "Plant Encyclopedia"}</h1>
         <p className="collection-intro">
           {ar
-            ? "جهزت قائمة النباتات المقترحة للمرحلة الأولى. النباتات المفعّلة تعمل داخل المعركة، أما النباتات المقفلة فهي خطة المحتوى القادم وسنضيف صورها وآلياتها تباعاً."
-            : "The Stage 1 plant roster is now planned. Active plants already work in battle; locked plants are the upcoming roster and will be implemented as their artwork and gameplay are added."}
+            ? "جميع نباتات القائمة مفتوحة حاليًا للعرض والاختيار حيثما كانت آلياتها منفذة. النباتات التي ما زالت قيد التطوير تظهر بوضوح دون ادعاء أنها جاهزة للمعركة."
+            : "All plants are currently visible in the roster. Plants with implemented gameplay can be selected for battle; concepts still in development remain clearly marked."}
         </p>
         <div className="collection-wallet">
           <strong>{ar ? "رصيد العملات على هذا الجهاز" : "Coins saved on this device"}</strong>
@@ -66,7 +67,7 @@ export default function PlantsPage() {
             <article className="collection-card is-active" key={plant.id}>
               <CatalogThumb id={plant.id} label={ar ? plant.nameAr : plant.name} className="plant-thumb active-plant-thumb" />
               <h2>{ar ? plant.nameAr : plant.name}</h2>
-              <span className="collection-status">{ar ? "✓ مفعّل في اللعبة" : "✓ ACTIVE IN GAME"}</span>
+              <span className="collection-status">{plant.implemented ? (ar ? "✓ مفتوحة ومتاحة" : "✓ UNLOCKED") : (ar ? "◷ مفتوحة في القائمة · قيد التنفيذ" : "◷ VISIBLE · IN DEVELOPMENT")}</span>
               <p>{ar ? plant.descriptionAr : plant.description}</p>
               <div className="collection-meta">
                 <span>{ar ? "تكلفة الزراعة" : "Planting cost"}: {plant.energyCost} {ar ? "طاقة" : "energy"}</span>
@@ -76,13 +77,13 @@ export default function PlantsPage() {
           ))}
         </div>
 
-        <h2 className="collection-section-title">{ar ? "النباتات المقفلة" : "Locked plants"}</h2>
+        {lockedPlants.length > 0 && <h2 className="collection-section-title">{ar ? "النباتات المقفلة" : "Locked plants"}</h2>}
         <p className="collection-intro">
           {ar
             ? "هذه النباتات جزء من قائمة التصميم. وضعت لها أدواراً وأسعاراً مبدئية بالعملات، لكنها لن تُشترى أو تظهر في ساحة القتال حتى نضيف صورها ونبرمج قدراتها ونختبر توازنها."
             : "These are planned designs with proposed coin prices and gameplay roles. They will not be purchasable or appear in battle until their artwork, abilities, and balance are implemented."}
         </p>
-        <div className="collection-grid">
+        {lockedPlants.length > 0 && <div className="collection-grid">
           {lockedPlants.map((plant) => {
             const price = plant.coinPrice;
             const canAfford = coins >= price;
@@ -108,11 +109,11 @@ export default function PlantsPage() {
               </article>
             );
           })}
-        </div>
+        </div>}
 
         <div className="collection-empty collection-note">
           {ar
-            ? "النباتات التي تتطلب مكافأة حملة ستظهر هنا مقفلة حتى تحقق شرط فتحها. أما التصاميم غير المنفذة فتبقى للعرض فقط ولا يمكن شراؤها."
+            ? "جميع النباتات ظاهرة الآن. النباتات قيد التطوير ليست بالضرورة قابلة للاستخدام داخل المعركة حتى تكتمل برمجتها."
             : "Campaign-reward plants remain locked until their unlock condition is met. Unimplemented concepts are informational only and cannot be purchased."}
         </div>
 
