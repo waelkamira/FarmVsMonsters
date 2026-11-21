@@ -973,10 +973,14 @@ export default class BattleScene extends Scene {
         .filter((plant) => plant.testOnly)
         .map((plant) => plant.id)
         .filter((type) => availableTypes.has(type));
-      const preferredLoadout = Array.isArray(saved)
-        ? ["mushroom", "radish", ...testingTypes, ...saved.filter((type) => availableTypes.has(type))]
-        : [...availableTypes];
-      selectedTypes = [...new Set(preferredLoadout.filter((type) => availableTypes.has(type)))].slice(0, 7);
+      // Playtest mode equips every available built-in and Studio plant so each can be tested.
+      // Ignore an older saved loadout here; normal campaign unlock/save data remains untouched.
+      const preferredLoadout = PLAYTEST_ALL_PLANTS
+        ? [...availableTypes]
+        : Array.isArray(saved)
+          ? ["mushroom", "radish", ...testingTypes, ...saved.filter((type) => availableTypes.has(type))]
+          : [...availableTypes];
+      selectedTypes = [...new Set(preferredLoadout.filter((type) => availableTypes.has(type)))];
     } catch {
       // Storage failures keep the starter loadout playable.
       selectedTypes = ["radish", "mushroom"];
