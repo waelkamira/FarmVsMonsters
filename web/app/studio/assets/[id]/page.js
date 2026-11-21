@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { buildAssetDependencyReport } from "../../../../game/studio/assetDependencies.mjs";
-import "../studio.css";
+import "../../studio.css";
 
 const TYPE_LABELS = { plant: "نبات", monster: "وحش", plantProjectile: "قذيفة نبات", monsterProjectile: "قذيفة وحش", effect: "مؤثر", item: "عنصر", audio: "صوت" };
 const STATUS_LABELS = { draft: "مسودة", testing: "جاهز للاختبار", approved: "بانتظار المراجعة", published: "منشور", archived: "مؤرشف" };
