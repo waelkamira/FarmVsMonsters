@@ -8,10 +8,12 @@ export function subscribeToBrowserStorage(callback) {
 
   window.addEventListener("storage", onStorage);
   window.addEventListener("farm-storage-change", onLocalStorageChange);
+  window.addEventListener("farm-language-change", onLocalStorageChange);
 
   return () => {
     window.removeEventListener("storage", onStorage);
     window.removeEventListener("farm-storage-change", onLocalStorageChange);
+    window.removeEventListener("farm-language-change", onLocalStorageChange);
   };
 }
 
