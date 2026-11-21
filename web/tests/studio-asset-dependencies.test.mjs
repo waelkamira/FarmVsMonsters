@@ -22,7 +22,8 @@ test("explicit inline projectile remains an inline file even when its id matches
   assert.equal(report.sharedFiles.some((entry) => entry.path === "/assets/projectiles/inline-shot.png"), false);
   assert.equal(buildAssetDependencyReport(assets, "thorn-shot").dependents.length, 0);
 });
-\ntest("reports registered projectile assets as explicit dependencies and reverse references", () => {
+
+test("reports registered projectile assets as explicit dependencies and reverse references", () => {
   const assets = [
     { id: "fire", type: "plant", name: "Fire", path: "/assets/plants/fire.png", combat: { projectile: { id: "fire-shot", path: "/assets/projectiles/fire-shot.png" } } },
     { id: "fire-shot", type: "plantProjectile", name: "Fire Shot", path: "/assets/projectiles/fire-shot.png", status: "draft" }
@@ -45,7 +46,8 @@ test("does not resolve a managed projectile ID to an asset of the wrong type", (
   assert.equal(report.dependencies[0].resolved, false);
   assert.equal(report.unresolved.length, 1);
 });
-\n
+
+
 test("legacy projectile IDs that collide with non-projectile assets remain embedded", () => {
   const assets = [
     { id: "thorn", type: "plant", path: "/assets/plants/thorn.png", combat: { projectile: { id: "collision", path: "/assets/projectiles/inline.png" } } },
@@ -56,7 +58,8 @@ test("legacy projectile IDs that collide with non-projectile assets remain embed
   assert.equal(report.dependencies[0].resolved, true);
   assert.equal(report.dependents.length, 0);
 });
-\ntest("reports a missing managed projectile asset as an unresolved dependency", () => {
+
+test("reports a missing managed projectile asset as an unresolved dependency", () => {
   const assets = [{ id: "thorn", type: "plant", path: "/assets/plants/thorn.png", combat: { projectile: { id: "missing-shot", path: "/assets/projectiles/missing-shot.png", managed: true } } }];
   const report = buildAssetDependencyReport(assets, "thorn");
   assert.equal(report.dependencies[0].kind, "asset");
