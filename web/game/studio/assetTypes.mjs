@@ -24,3 +24,20 @@ export function validateStudioAsset({id,type,file,rows=3,columns=3}){
  if(config?.spriteSheet&&(!Number.isInteger(Number(rows))||!Number.isInteger(Number(columns))||Number(rows)<1||Number(columns)<1||Number(rows)*Number(columns)>100))errors.push("Invalid sprite grid.");
  return {valid:errors.length===0,errors,config};
 }
+export function validateStudioAssetBytes(type, bytes) {
+ if (!Buffer.isBuffer(bytes) || bytes.length < 4) return { valid: false, reason: "الملف فارغ أو أقصر من ترويسة صيغة معروفة." };
+ const starts = (...values) => values.every((value, index) => bytes[index] === value);
+ const ascii = (offset, value) => bytes.subarray(offset, offset + value.length).toString("ascii") === value;
+ const signatures = {
+  "image/png": () => bytes.length >= 8 && starts(0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a),
+  "image/webp": () => bytes.length >= 12 && ascii(0, "RIFF") && ascii(8, "WEBP"),
+  "image/gif": () => bytes.length >= 6 && (ascii(0, "GIF87a") || ascii(0, "GIF89a")),
+  "audio/mpeg": () => ascii(0, "ID3") || (bytes[0] === 0xff && (bytes[1] & 0xe0) === 0xe0),
+  "audio/wav": () => bytes.length >= 12 && ascii(0, "RIFF") && ascii(8, "WAVE"),
+  "audio/ogg": () => ascii(0, "OggS"),
+  "audio/mp4": () => bytes.length >= 12 && ascii(4, "ftyp")
+ };
+ const check = signatures[type];
+ if (!check) return { valid: false, reason: "نوع الملف غير مدعوم للتحقق من ترويسة المحتوى." };
+ return check() ? { valid: true, reason: null } : { valid: false, reason: "محتوى الملف لا يطابق نوعه المعلن (" + type + ")." };
+}
