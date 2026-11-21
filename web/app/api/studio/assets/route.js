@@ -293,6 +293,7 @@ export async function PATCH(req){
    await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(registry,null,2)+"\n"),"studio: prepare "+asset.type+" test "+id,token,storageBranch,registrySha);
    return NextResponse.json({success:true,operation,asset:updated,message:asset.type==="monster"?"الوحش جاهز للمزامنة والاختبار المحلي.":"النبتة جاهزة للمزامنة والاختبار المحلي."});
   }
+  if(operation!=="publish")return NextResponse.json({error:"عملية Studio غير معروفة."},{status:400});
   if(asset.status!=="testing")return NextResponse.json({error:"يجب تجهيز الأصل للاختبار أولاً قبل طلب النشر."},{status:409});
   if(asset.releaseRequest?.number){
    const previousRequest=await githubGetPullRequest(asset.releaseRequest.number,token);
