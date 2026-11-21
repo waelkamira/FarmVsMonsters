@@ -57,7 +57,7 @@ export default function StudioTestingPage() {
             <div className="studio-testing-relations"><span>تبعيات: {asset.dependencyCount}</span><span>أصول تعتمد عليه: {asset.dependentCount}</span><span>{asset.canArchive ? "يمكن أرشفته" : "الأرشفة محمية"}</span><span>{asset.canReplace ? "يمكن استبداله" : "الاستبدال محمي"}</span></div>
             {asset.errors.length > 0 && <div className="studio-testing-messages studio-testing-errors"><b>أخطاء مانعة</b><ul>{asset.errors.map((message,index)=><li key={index}>{message}</li>)}</ul></div>}
             {asset.warnings.length > 0 && <div className="studio-testing-messages studio-testing-warnings"><b>تنبيهات</b><ul>{asset.warnings.map((message,index)=><li key={index}>{message}</li>)}</ul></div>}
-            {asset.id && <Link href={"/studio/assets/"+encodeURIComponent(asset.id)}>فتح تفاصيل الأصل ↗</Link>{(asset.type === "plant" || asset.type === "monster") && asset.status === "testing" && asset.readiness !== "blocked" && <Link href="/stage/1/select">اختبار داخل اللعبة ↗</Link>}}
+            {asset.id && <><Link href={"/studio/assets/"+encodeURIComponent(asset.id)}>فتح تفاصيل الأصل ↗</Link>{(asset.type === "plant" || asset.type === "monster") && asset.status === "testing" && asset.readiness !== "blocked" && <Link href="/stage/1/select">اختبار داخل اللعبة ↗</Link>}</>}
           </article>)}
         </div>}
       </section>
