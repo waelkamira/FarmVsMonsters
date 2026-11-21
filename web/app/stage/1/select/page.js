@@ -15,7 +15,6 @@ const PLANTS = [
   { id: "mango", name: "Mango L1", ar: "المانجو L1", role: "Arcing bomb attacker", roleAr: "قاذف قنابل مقوسة", cost: 70, image: "/assets/plants/mango-level-1.png" },
   { id: "snow-thrower", name: "Snow Thrower L1", ar: "قاذف الثلج L1", role: "Freeze support", roleAr: "دعم بالتجميد", cost: 90, image: "/assets/plants/Snow-thrower-level-1.png" },
   { id: "electric-mushroom", name: "Electric Mushroom L1", ar: "الفطر الكهربائي L1", role: "Electric lane attacker", roleAr: "مهاجم كهربائي للمسار", cost: 85, image: "/assets/plants/Electric-mushroom-level-1.png", spriteSheet: true },
-  { id: "fire-pepper", name: "Fire Pepper L1", ar: "فلفل النار L1", role: "Lane-clearing special", roleAr: "هجوم ناري للمسار", cost: 130, image: "/assets/plants/pepper-flamethrower-level-1.png", spriteSheet: true }
 ];
 
 const STARTER_LOADOUT = ["radish", "mushroom"];
