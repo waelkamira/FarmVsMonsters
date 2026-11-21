@@ -19,7 +19,7 @@ test("preserves the previous metadata and immutable asset path when editing", ()
 });
 
 test("restores an older version as a new draft revision without deleting history", () => {
-  const current = { id: "radish", type: "plant", name: "Radish v3", path: "/assets/plants/radish-v3.png", revision: 3, status: "published", versions: [{ versionNumber: 1, savedAt: "2026-11-19T10:00:00.000Z", name: "Radish v1", filename: "radish.png", path: "/assets/plants/radish-v1.png", rows: 3, columns: 3, spriteSheet: true, combat: { mode: "melee" } }, { versionNumber: 2, savedAt: "2026-11-20T10:00:00.000Z", name: "Radish v2", filename: "radish.png", path: "/assets/plants/radish-v2.png", rows: 3, columns: 3, spriteSheet: true, combat: { mode: "projectile" } }] };
+  const current = { id: "radish", type: "plant", name: "Radish v3", path: "/assets/plants/radish-v3.png", revision: 3, status: "published", publishedAt: "2026-11-20T12:00:00.000Z", testingAt: "2026-11-20T11:00:00.000Z", versions: [{ versionNumber: 1, savedAt: "2026-11-19T10:00:00.000Z", name: "Radish v1", filename: "radish.png", path: "/assets/plants/radish-v1.png", rows: 3, columns: 3, spriteSheet: true, combat: { mode: "melee" } }, { versionNumber: 2, savedAt: "2026-11-20T10:00:00.000Z", name: "Radish v2", filename: "radish.png", path: "/assets/plants/radish-v2.png", rows: 3, columns: 3, spriteSheet: true, combat: { mode: "projectile" } }] };
   const restored = restoreStudioAssetRevision(current, 1, "2026-11-21T12:00:00.000Z");
   assert.equal(restored.name, "Radish v1");
   assert.equal(restored.path, "/assets/plants/radish-v1.png");
