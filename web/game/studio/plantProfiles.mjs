@@ -17,7 +17,8 @@ const LIMITS = Object.freeze({
   projectileRotation: [0, 360],
   projectileCollisionRadius: [4, 100],
   energyAmount: [1, 100],
-  energyIntervalMs: [1000, 120000]
+  energyIntervalMs: [1000, 120000],
+  sizePercent: [25, 200]
 });
 
 function boundedNumber(value, field, fallback) {
@@ -43,7 +44,8 @@ export function createStudioPlantCombatProfile({
   projectileRotation = 0,
   projectileCollisionRadius = 22,
   energyAmount = 15,
-  energyIntervalMs = 12000
+  energyIntervalMs = 12000,
+  sizePercent = 100
 } = {}) {
   const mode = behavior;
   if (mode !== "projectile" && !Object.hasOwn(STUDIO_PLANT_BEHAVIORS, mode)) {
@@ -73,7 +75,8 @@ export function createStudioPlantCombatProfile({
     projectileRotation: boundedNumber(projectileRotation, "projectileRotation", 0),
     projectileCollisionRadius: boundedNumber(projectileCollisionRadius, "projectileCollisionRadius", 22),
     energyAmount: boundedNumber(energyAmount, "energyAmount", 15),
-    energyIntervalMs: boundedNumber(energyIntervalMs, "energyIntervalMs", 12000)
+    energyIntervalMs: boundedNumber(energyIntervalMs, "energyIntervalMs", 12000),
+    sizePercent: boundedNumber(sizePercent, "sizePercent", 100)
   });
 }
 
