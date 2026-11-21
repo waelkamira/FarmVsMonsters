@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useSyncExternalStore, useState } from "react";
 import PhaserGame from "../../game/PhaserGame";
 import { loadUnlockedPlantIds } from "../../game/rules/phaseOneRules.mjs";
 import {
@@ -11,6 +11,7 @@ import {
   SEED_LOADOUT_STORAGE_KEY
 } from "../../game/rules/seedLoadout.mjs";
 import { useLocale, LanguageToggle } from "../LocaleProvider";
+import { readStorageSnapshot, subscribeToBrowserStorage } from "../../game/hooks/browserStorage.mjs";
 
 const PLANT_PACKETS = [
   { id: "radish", image: "/assets/plants/radish-level-1.png", en: "Radish", ar: "الفجل", cost: 35, roleEn: "Lane attacker", roleAr: "مهاجم المسار" },
@@ -22,34 +23,38 @@ const PLANT_PACKETS = [
   { id: "snow-thrower", image: "/assets/plants/Snow-thrower-level-1.png", en: "Snow Thrower", ar: "قاذف الثلج", cost: 90, roleEn: "Freezes monsters", roleAr: "يجمد الوحوش" }
 ];
 
+
+const LOADOUT_SERVER_SNAPSHOT = JSON.stringify({ ready: false, unlocked: ["radish", "mushroom"], selected: ["radish", "mushroom"] });
+
+function getLoadoutSnapshot() {
+  let unlocked = ["radish", "mushroom"];
+  try {
+    unlocked = loadUnlockedPlantIds(window.localStorage);
+    const raw = readStorageSnapshot(SEED_LOADOUT_STORAGE_KEY, null);
+    const saved = raw ? JSON.parse(raw) : null;
+    const selected = Array.isArray(saved)
+      ? normalizeSeedLoadout(saved, unlocked)
+      : createDefaultSeedLoadout(unlocked);
+    return JSON.stringify({ ready: true, unlocked, selected });
+  } catch {
+    return JSON.stringify({ ready: true, unlocked, selected: ["radish", "mushroom"] });
+  }
+}
+
 export default function GamePage() {
   const { t, locale } = useLocale();
   const arabic = locale === "ar";
-  const [unlocked, setUnlocked] = useState([]);
-  const [selected, setSelected] = useState([]);
-  const [ready, setReady] = useState(false);
+  const loadoutSnapshot = useSyncExternalStore(subscribeToBrowserStorage, getLoadoutSnapshot, () => LOADOUT_SERVER_SNAPSHOT);
+  const { unlocked, selected, ready } = JSON.parse(loadoutSnapshot);
+  const [selectedOverride, setSelectedOverride] = useState(null);
+  const activeSelected = selectedOverride ?? selected;
   const [battleStarted, setBattleStarted] = useState(false);
   const [saveError, setSaveError] = useState(false);
 
-  useEffect(() => {
-    let unlockedIds = ["radish", "mushroom"];
-    try {
-      unlockedIds = loadUnlockedPlantIds(window.localStorage);
-      const raw = window.localStorage.getItem(SEED_LOADOUT_STORAGE_KEY);
-      const saved = raw ? JSON.parse(raw) : null;
-      setSelected(Array.isArray(saved)
-        ? normalizeSeedLoadout(saved, unlockedIds)
-        : createDefaultSeedLoadout(unlockedIds));
-    } catch {
-      setSelected(["radish", "mushroom"]);
-    }
-    setUnlocked(unlockedIds);
-    setReady(true);
-  }, []);
-
   function togglePacket(id) {
     if (!unlocked.includes(id) || id === "radish" || id === "mushroom") return;
-    setSelected((current) => {
+    setSelectedOverride((currentValue) => {
+      const current = currentValue ?? selected;
       if (current.includes(id)) return current.filter((item) => item !== id);
       if (current.length >= MAX_SEED_PACKETS) return current;
       return normalizeSeedLoadout([...current, id], unlocked);
@@ -57,7 +62,7 @@ export default function GamePage() {
   }
 
   function enterBattle() {
-    const safeLoadout = normalizeSeedLoadout(selected, unlocked);
+    const safeLoadout = normalizeSeedLoadout(activeSelected, unlocked);
     try {
       window.localStorage.setItem(SEED_LOADOUT_STORAGE_KEY, JSON.stringify(safeLoadout));
       setSaveError(false);
@@ -65,7 +70,7 @@ export default function GamePage() {
       setSaveError(true);
       return;
     }
-    setSelected(safeLoadout);
+    setSelectedOverride(safeLoadout);
     setBattleStarted(true);
   }
 
@@ -87,13 +92,13 @@ export default function GamePage() {
 
       <div className="seed-selection-status">
         <span>{t("YOUR SEED BANK")}</span>
-        <strong>{selected.length} / {MAX_SEED_PACKETS}</strong>
+        <strong>{activeSelected.length} / {MAX_SEED_PACKETS}</strong>
       </div>
 
       <div className="seed-packet-grid">
         {PLANT_PACKETS.map((plant) => {
           const isUnlocked = unlocked.includes(plant.id);
-          const isSelected = selected.includes(plant.id);
+          const isSelected = activeSelected.includes(plant.id);
           const isRequired = plant.id === "radish" || plant.id === "mushroom";
           return <button
             type="button"
