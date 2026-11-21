@@ -22,7 +22,7 @@ A projectile is linked only when `projectile` is selected. Choosing another beha
 
 The profile stores bounded values for energy cost, health, cooldown, damage, range, projectile speed/radius, and energy production.
 
-A legacy Studio plant record without a combat profile (for example an older Bamboo draft) must be replaced/saved once in the updated form and assigned a behavior or linked projectile before it can be prepared for testing. Built-in gameplay IDs are reserved and cannot be shadowed by custom Studio plants.
+Any legacy Studio plant record without a combat profile must be edited and saved once in the updated form, with a behavior or linked projectile assigned, before it can be prepared for testing. Built-in gameplay IDs are reserved and cannot be shadowed by custom Studio plants.
 
 A projectile upload is associated with the plant record. It is not registered as a separate unlinked projectile record.
 
