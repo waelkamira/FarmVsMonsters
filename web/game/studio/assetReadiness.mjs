@@ -4,7 +4,7 @@ import { validateStudioAnimationProfile } from "./animationProfiles.mjs";
 import { createStudioMonsterProfile } from "./monsterProfiles.mjs";
 import { buildAssetDependencyReport } from "./assetDependencies.mjs";
 
-function safeAssetPath(value) {
+export function safeAssetPath(value) {
   if (typeof value !== "string" || !value.startsWith("/assets/")) return false;
   if (/[?#\\\x00-\x1f\x7f]/.test(value) || /%(?:2f|5c)/i.test(value)) return false;
   let decoded;
