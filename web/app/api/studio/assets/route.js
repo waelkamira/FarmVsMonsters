@@ -177,7 +177,7 @@ export async function PATCH(req){
  if(driver!=="github"){
   if(operation!=="archive"&&operation!=="restore"&&operation!=="restore-version")return NextResponse.json({error:"Testing preparation and publishing require GitHub storage."},{status:503});
   try{
-   const registry=await localRegistry(),index=registry.assets.findIndex(asset=>asset.id===id&&asset.type==="plant");
+   const registry=await localRegistry(),index=registry.assets.findIndex(asset=>asset.id===id&&(operation==="restore-version"||asset.type==="plant"));
    if(index<0)return NextResponse.json({error:"لم يتم العثور على النبتة في مكتبة Studio."},{status:404});
    let updated;
    try{updated=operation==="restore-version"?restoreStudioAssetRevision(registry.assets[index],body.versionNumber):transitionStudioAssetStatus(registry.assets[index],operation);}
@@ -190,7 +190,7 @@ export async function PATCH(req){
  if(!token)return NextResponse.json({error:"STUDIO_GITHUB_TOKEN is required."},{status:503});
  try{
   const registryDocument=await githubGetDocument(REGISTRY_PATH,token,storageBranch),registry=registryDocument?JSON.parse(registryDocument.content):{version:1,assets:[]},registrySha=registryDocument?.sha??null;
-  const index=registry.assets.findIndex(asset=>asset.id===id&&asset.type==="plant");
+  const index=registry.assets.findIndex(asset=>asset.id===id&&(operation==="restore-version"||asset.type==="plant"));
   if(index<0)return NextResponse.json({error:"لم يتم العثور على النبتة في مكتبة Studio."},{status:404});
   const asset=registry.assets[index];
   if(operation==="restore-version"){
