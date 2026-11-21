@@ -1,0 +1,86 @@
+export const STUDIO_PLANT_BEHAVIORS = Object.freeze({
+  projectile: Object.freeze({ label: "إطلاق مقذوفات", description: "يطلق قذيفة مرتبطة بهذه النبتة." }),
+  blocker: Object.freeze({ label: "حاجز دفاعي", description: "يمتص عضّات الوحوش ويوقف تقدمها دون إطلاق مقذوفات." }),
+  melee: Object.freeze({ label: "هجوم قريب", description: "يضرب أقرب وحش في المسار عندما يدخل نطاق الهجوم." }),
+  contact: Object.freeze({ label: "ضرر تلامسي", description: "يلحق الضرر بالوحش أثناء توقفه لعض النبتة." }),
+  energy: Object.freeze({ label: "منتج طاقة", description: "ينتج وحدات طاقة قابلة للجمع على فترات محددة." })
+});
+
+const LIMITS = Object.freeze({
+  energyCost: [0, 250],
+  hp: [1, 5000],
+  cooldownMs: [250, 30000],
+  damage: [1, 1000],
+  range: [24, 500],
+  projectileSpeed: [60, 1200],
+  projectileHeight: [0, 300],
+  projectileRotation: [0, 360],
+  projectileCollisionRadius: [4, 100],
+  energyAmount: [1, 100],
+  energyIntervalMs: [1000, 120000]
+});
+
+function boundedNumber(value, field, fallback) {
+  const numeric = Number(value ?? fallback);
+  const [min, max] = LIMITS[field];
+  if (!Number.isFinite(numeric) || numeric < min || numeric > max) {
+    throw new RangeError(`Invalid plant setting: ${field} must be between ${min} and ${max}.`);
+  }
+  return Math.round(numeric);
+}
+
+export function createStudioPlantCombatProfile({
+  projectile = null,
+  behavior = "melee",
+  energyCost = 60,
+  hp = 150,
+  cooldownMs = 1800,
+  damage = 30,
+  range = 180,
+  projectileSpeed = 280,
+  projectileHeight = 0,
+  projectileEffectColor = "#ffc247",
+  projectileRotation = 0,
+  projectileCollisionRadius = 22,
+  energyAmount = 15,
+  energyIntervalMs = 12000
+} = {}) {
+  const mode = behavior;
+  if (mode !== "projectile" && !Object.hasOwn(STUDIO_PLANT_BEHAVIORS, mode)) {
+    throw new RangeError("Choose a supported attack or defense behavior for this plant.");
+  }
+  if (mode === "projectile" && (!projectile?.path || !projectile?.id)) {
+    throw new RangeError("A projectile plant must have an associated projectile asset.");
+  }
+
+  return Object.freeze({
+    mode,
+    projectile: mode === "projectile" ? Object.freeze({
+      id: String(projectile.id),
+      path: String(projectile.path),
+      filename: String(projectile.filename || "")
+    }) : null,
+    energyCost: boundedNumber(energyCost, "energyCost", 60),
+    hp: boundedNumber(hp, "hp", 150),
+    cooldownMs: boundedNumber(cooldownMs, "cooldownMs", 1800),
+    damage: mode === "blocker" || mode === "energy"
+      ? 0
+      : boundedNumber(damage, "damage", 30),
+    range: boundedNumber(range, "range", 180),
+    projectileSpeed: boundedNumber(projectileSpeed, "projectileSpeed", 280),
+    projectileHeight: boundedNumber(projectileHeight, "projectileHeight", 0),
+    projectileEffectColor: (() => { const color = String(projectileEffectColor ?? "#ffc247").trim().toLowerCase(); if (!/^#[0-9a-f]{6}$/.test(color)) throw new RangeError("Invalid plant setting: projectileEffectColor must be a six-digit hex color."); return color; })(),
+    projectileRotation: boundedNumber(projectileRotation, "projectileRotation", 0),
+    projectileCollisionRadius: boundedNumber(projectileCollisionRadius, "projectileCollisionRadius", 22),
+    energyAmount: boundedNumber(energyAmount, "energyAmount", 15),
+    energyIntervalMs: boundedNumber(energyIntervalMs, "energyIntervalMs", 12000)
+  });
+}
+
+export function validateStudioPlantCombatProfile(input) {
+  try {
+    return { valid: true, profile: createStudioPlantCombatProfile(input), errors: [] };
+  } catch (error) {
+    return { valid: false, profile: null, errors: [error.message] };
+  }
+}
