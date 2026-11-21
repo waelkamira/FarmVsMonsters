@@ -55,7 +55,10 @@ export function getProjectileTrajectoryOffset({type="arc",progress=0,height=0,cu
   const targetOffset={x:(Number(targetX)||0)*t,y:(Number(targetY)||0)*t};
   if (Array.isArray(points) && points.length >= 2) {
     const offset = sampleControlPoints(points, t);
-    return { x: targetOffset.x + offset.x, y: targetOffset.y + offset.y + Math.sin(Math.PI*t)*(Number(height)||0) };
+    // Control-point coordinates are relative to the muzzle, so the first
+    // authored point defines zero offset and can never move the launch origin.
+    const origin = points[0] || { x: 0, y: 0 };
+    return { x: targetOffset.x + offset.x - Number(origin.x || 0), y: targetOffset.y + offset.y - Number(origin.y || 0) + Math.sin(Math.PI*t)*(Number(height)||0) };
   }
   const bend=2*t*(1-t);
   if(type==="straight")return targetOffset;
