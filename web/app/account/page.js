@@ -3,6 +3,13 @@
 import Link from "next/link";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { LanguageToggle, useLocale } from "../LocaleProvider";
+import {
+  getPlayerSession,
+  signInPlayer,
+  signUpPlayer,
+  signOutPlayer,
+  restoreOrInitializeCloudProgress
+} from "../../game/services/playerAccount.mjs";
 
 function subscribeToLocation(callback) {
   if (typeof window === "undefined") return () => {};
@@ -13,13 +20,6 @@ function subscribeToLocation(callback) {
 function getLocationSearch() {
   return window.location.search;
 }
-import {
-  getPlayerSession,
-  signInPlayer,
-  signUpPlayer,
-  signOutPlayer,
-  restoreOrInitializeCloudProgress
-} from "../../game/services/playerAccount.mjs";
 
 export default function AccountPage() {
   const { locale } = useLocale();
@@ -49,7 +49,8 @@ export default function AccountPage() {
     : "";
 
   useEffect(() => {
-    if (params.has("google") || params.has("google_error")) {
+    const currentParams = new URLSearchParams(search);
+    if (currentParams.has("google") || currentParams.has("google_error")) {
       window.history.replaceState({}, "", window.location.pathname);
     }
   }, [search]);
