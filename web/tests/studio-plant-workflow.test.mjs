@@ -34,6 +34,8 @@ test("Studio can preview a selected Sprite Sheet row with adjustable playback sp
   assert.match(studioPage,/animationRow/);
   assert.match(studioPage,/animationFps/);
   assert.match(studioPage,/animationPlaying/);
+  assert.match(studioPage,/animationFps/);
+  assert.match(studioPage,/setAnimationPlaying\(value=>!value\)/);
   assert.match(studioPage,/studio-sprite-play/);
   assert.match(studioPage,/steps\(\$\{columns\}\)/);
 });
