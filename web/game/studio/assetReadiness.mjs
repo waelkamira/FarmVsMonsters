@@ -13,7 +13,7 @@ export function safeAssetPath(value) {
   if (!decoded.startsWith("/assets/") || /[?#\\\x00-\x1f\x7f]/.test(decoded)) return false;
   const segments = decoded.slice("/assets/".length).split("/");
   return segments.length > 0 && segments.every((segment) => segment.length > 0 && segment !== "." && segment !== "..");
-}export function applyStudioAssetFileAudit(report, assets, statusByPath = {}) {
+}\n\nexport function applyStudioAssetFileAudit(report, assets, statusByPath = {}) {
   const sourceById = new Map((Array.isArray(assets) ? assets : []).filter((asset) => asset?.id).map((asset) => [String(asset.id), asset]));
   const checkedPaths = new Set();
   const counts = { present: 0, missing: 0, unknown: 0 };
