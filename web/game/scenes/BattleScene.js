@@ -250,12 +250,29 @@ export default class BattleScene extends Scene {
       const textureKey = plant.textureKey;
       const frameCount = Math.max(1, (Number(plant.rows) || 1) * (Number(plant.columns) || 1));
       if (plant.spriteSheet && frameCount > 0 && this.registerStudioGridSheet(textureKey, plant.rows, plant.columns) && frameCount > 1) {
-        const animationKey = "studio-" + plant.id + "-attack";
-        if (!this.anims.exists(animationKey)) {
-          this.anims.create({
-            key: animationKey,
-            frames: this.anims.generateFrameNumbers(textureKey, { start: 0, end: frameCount - 1 }),
-            frameRate: 12,
+        const profile = plant.animation || {};
+        const idle = profile.idle || {};
+        const attack = profile.attack || {};
+        const safeFrame = (value, fallback) => PhaserMath.Clamp(Number.isInteger(Number(value)) ? Number(value) : fallback, 0, frameCount - 1);
+        const idleStart = safeFrame(idle.startFrame, 0);
+        const idleEnd = Math.max(idleStart, safeFrame(idle.endFrame, idleStart));
+        const attackStart = safeFrame(attack.startFrame, 0);
+        const attackEnd = Math.max(attackStart, safeFrame(attack.endFrame, frameCount - 1));
+        if (idleEnd > idleStart) {
+          const idleKey = "studio-" + plant.id + "-idle";
+          if (!this.anims.exists(idleKey)) this.anims.create({
+            key: idleKey,
+            frames: this.anims.generateFrameNumbers(textureKey, { start: idleStart, end: idleEnd }),
+            frameRate: PhaserMath.Clamp(Number(idle.fps) || 6, 1, 30),
+            repeat: idle.loop === false ? 0 : -1
+          });
+        }
+        if (attackEnd > attackStart) {
+          const attackKey = "studio-" + plant.id + "-attack";
+          if (!this.anims.exists(attackKey)) this.anims.create({
+            key: attackKey,
+            frames: this.anims.generateFrameNumbers(textureKey, { start: attackStart, end: attackEnd }),
+            frameRate: PhaserMath.Clamp(Number(attack.fps) || 12, 1, 30),
             repeat: 0
           });
         }
@@ -2990,6 +3007,9 @@ export default class BattleScene extends Scene {
         ? this.add.sprite(0, -height / 2 + 2, textureKey, "0").setDisplaySize(width, height)
         : this.add.image(0, -height / 2 + 2, textureKey).setDisplaySize(width, height);
       artwork.setData("studioPlantSprite", true);
+      const idleKey = "studio-" + studioPlant.id + "-idle";
+      if (sheet && this.anims.exists(idleKey)) artwork.play(idleKey);
+      else if (sheet) artwork.setFrame(String(studioPlant.animation?.idle?.startFrame ?? 0));
       container.add(artwork);
     }
     container.setData("studioPlantId", studioPlant.id);
@@ -3143,7 +3163,11 @@ export default class BattleScene extends Scene {
           plant.studioAttacking = true;
           attackSprite.play(animationKey);
           attackSprite.once("animationcomplete", () => {
-            if (attackSprite.active) attackSprite.setFrame("0");
+            if (attackSprite.active) {
+              const idleKey = "studio-" + plant.studioPlant.id + "-idle";
+              if (this.anims.exists(idleKey)) attackSprite.play(idleKey);
+              else attackSprite.setFrame(String(plant.studioPlant.animation?.idle?.startFrame ?? 0));
+            }
             plant.studioAttacking = false;
             applyStudioHit();
           });
@@ -3347,7 +3371,11 @@ export default class BattleScene extends Scene {
         plant.studioThrowing = true;
         sprite.play(animationKey);
         sprite.once("animationcomplete", () => {
-          if (sprite.active) sprite.setFrame("0");
+          if (sprite.active) {
+            const idleKey = "studio-" + plant.studioPlant.id + "-idle";
+            if (this.anims.exists(idleKey)) sprite.play(idleKey);
+            else sprite.setFrame(String(plant.studioPlant.animation?.idle?.startFrame ?? 0));
+          }
           plant.studioThrowing = false;
           if (plant.alive && target?.alive && !this.gameOver) this.fireThornProjectile(plant, target);
         });
