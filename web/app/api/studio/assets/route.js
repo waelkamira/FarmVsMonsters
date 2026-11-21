@@ -200,7 +200,7 @@ export async function PATCH(req){
  if(!token)return NextResponse.json({error:"STUDIO_GITHUB_TOKEN is required."},{status:503});
  try{
   const registryDocument=await githubGetDocument(REGISTRY_PATH,token,storageBranch),registry=registryDocument?JSON.parse(registryDocument.content):{version:1,assets:[]},registrySha=registryDocument?.sha??null;
-  const index=registry.assets.findIndex(asset=>asset.id===id)
+  const index=registry.assets.findIndex(asset=>asset.id===id);
   if(index<0)return NextResponse.json({error:"لم يتم العثور على الأصل في مكتبة Studio."},{status:404});
   const asset=registry.assets[index];
   if(operation==="clone"){
@@ -238,7 +238,7 @@ export async function PATCH(req){
    try{updated=transitionStudioAssetStatus(candidate,operation);}
    catch(error){return NextResponse.json({error:error.message},{status:409});}
    registry.assets[index]=updated;
-   await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(registry,null,2)+"\n"),"studio: "+operation+" plant "+id,token,storageBranch,registrySha);
+   await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(registry,null,2)+"\n"),"studio: "+operation+" asset "+id,token,storageBranch,registrySha);
    return NextResponse.json({success:true,operation,asset:updated,message:operation==="archive"?"تمت أرشفة الأصل مع الاحتفاظ بملفاته.":"تمت استعادة الأصل كمسودة."});
   }
   if(!asset.combat?.mode)return NextResponse.json({error:"يجب تعيين سلوك قتالي للنبتة أولاً."},{status:409});
