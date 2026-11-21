@@ -34,8 +34,8 @@ function sampleControlPoints(points, progress) {
   const span = Math.max(0.000001, p2.progress - p1.progress);
   const u = Math.min(1, Math.max(0, (t - p1.progress) / span));
   const interpolate = key => {
-    const m1 = (p2[key] - p0[key]) * 0.5;
-    const m2 = (p3[key] - p1[key]) * 0.5;
+    const m1 = ((p2[key] - p0[key]) / Math.max(0.000001, p2.progress - p0.progress)) * span;
+    const m2 = ((p3[key] - p1[key]) / Math.max(0.000001, p3.progress - p1.progress)) * span;
     const u2 = u * u, u3 = u2 * u;
     return (2*u3-3*u2+1)*p1[key] + (u3-2*u2+u)*m1 + (-2*u3+3*u2)*p2[key] + (u3-u2)*m2;
   };
