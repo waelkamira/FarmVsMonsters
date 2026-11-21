@@ -7,6 +7,7 @@ import { getPlantVFXProfile } from "../vfx/PlantVFXProfiles.mjs";
 import { getProjectileVFXProfile } from "../vfx/ProjectileVFXProfiles.mjs";
 import { getMonsterReactionProfile, getPlantAnimationProfile } from "../visuals/PlantMonsterVisualProfiles.mjs";
 import { createStudioAnimationProfile } from "../studio/animationProfiles.mjs";
+import { getSpriteFrameRectangles } from "../studio/spriteSheetGrid.mjs";
 import { createStudioMonsterProfile, resolveStudioMonsterRuntimeProfile, selectWeightedStudioMonster } from "../studio/monsterProfiles.mjs";
 
 // Temporary playtest mode exposes every implemented built-in plant; campaign progression data remains intact.
@@ -3028,14 +3029,11 @@ export default class BattleScene extends Scene {
     const rowCount = Number(rows), columnCount = Number(columns);
     if (!source?.width || !source?.height || !Number.isInteger(rowCount) || !Number.isInteger(columnCount) ||
         rowCount < 1 || columnCount < 1 || rowCount * columnCount > 100) return false;
-    for (let index = 0; index < rowCount * columnCount; index += 1) {
-      const column = index % columnCount;
-      const row = Math.floor(index / columnCount);
-      const frameX = Math.floor((column * source.width) / columnCount);
-      const frameY = Math.floor((row * source.height) / rowCount);
-      const nextFrameX = Math.floor(((column + 1) * source.width) / columnCount);
-      const nextFrameY = Math.floor(((row + 1) * source.height) / rowCount);
-      if (!texture.has(String(index))) texture.add(String(index), 0, frameX, frameY, nextFrameX - frameX, nextFrameY - frameY);
+    const frames = getSpriteFrameRectangles(source.width, source.height, rowCount, columnCount);
+    for (const frame of frames) {
+      if (!texture.has(String(frame.index))) {
+        texture.add(String(frame.index), 0, frame.x, frame.y, frame.width, frame.height);
+      }
     }
     return true;
   }
