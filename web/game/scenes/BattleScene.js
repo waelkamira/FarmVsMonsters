@@ -3728,8 +3728,8 @@ export default class BattleScene extends Scene {
       ease: "Cubic.easeOut",
       onComplete: () => burst.destroy()
     });
+    }
   }
-
 
   createProjectileTrail(x, y, plantType = "radish", customTint = null) {
     const effectId = getPlantVFXProfile(plantType)?.trail;
