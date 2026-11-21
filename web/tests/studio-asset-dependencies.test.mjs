@@ -50,8 +50,8 @@ test("Studio API guards replacement, archive and version restore when direct dep
   assert.match(routeSource, /dependents\.length\)return NextResponse\.json/);
   const githubRestoreStart = routeSource.indexOf('if(operation==="restore-version"){', routeSource.indexOf("const token=process.env.STUDIO_GITHUB_TOKEN"));
   const githubRestoreGuard = routeSource.indexOf("getAssetDependents(registry.assets,id)", githubRestoreStart);
-  const githubRestoreAction = routeSource.indexOf("restoreStudioAssetRevision(candidate,body.versionNumber)", githubRestoreStart);
-  assert.ok(githubRestoreStart >= 0 && githubRestoreGuard > githubRestoreStart && githubRestoreGuard < githubRestoreAction, "GitHub version restore must check reverse dependencies before restoring");
+  const githubRestoreAction = routeSource.indexOf("restoreStudioAssetRevision(", githubRestoreStart);
+  assert.ok(githubRestoreStart >= 0 && githubRestoreGuard > githubRestoreStart && githubRestoreGuard < githubRestoreAction, "GitHub restore must check reverse dependencies before restoring");
 });
 test("asset detail route imports the shared Studio stylesheet from the correct directory", () => {
   assert.match(detailsSource, /import "\.\.\/\.\.\/studio\.css"/);
