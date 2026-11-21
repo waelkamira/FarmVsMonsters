@@ -92,6 +92,7 @@ test("plant projectile references resolve to a managed projectile asset and bloc
   assert.match(routeSource, /getAssetDependents/);
   assert.match(routeSource, /managed:true/);
   assert.match(routeSource, /managed:false/);
+  assert.match(routeSource, /managed:old\.assets\.some/);
 });
 
 test("allows archive analysis after a merged release request has been cleared from the workflow", () => {
