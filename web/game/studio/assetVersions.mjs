@@ -64,7 +64,7 @@ export function cloneStudioAsset(asset, newId, newName, timestamp = new Date().t
     ...asset,
     combat: copyCombat(asset.combat),
     id,
-    name: String(newName || `${asset.name || asset.id} (نسخة)`).trim().slice(0, 80),
+    name: String(newName || `${asset.name || asset.id} (نسخة)`).trim().slice(0, 80) || id,
     revision: 1,
     versions: [],
     status: "draft",
