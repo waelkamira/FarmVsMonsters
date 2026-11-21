@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createStudioReleaseBranchName, resolveStudioReleaseAsset } from "../game/studio/releaseLifecycle.mjs";
+import { createStudioReleaseBranchName, resolveStudioReleaseAsset, transitionStudioAssetStatus } from "../game/studio/releaseLifecycle.mjs";
 
 const asset = { id: "test-plant", status: "testing", releaseRequest: { number: 123, url: "https://github.com/example/repo/pull/123", branch: "studio/release/test-plant-abcdef12" } };
 
@@ -33,4 +33,29 @@ test("returns a closed unmerged release request to testing", () => {
 test("does not alter assets without a release request", () => {
   const draft = { id: "draft-plant", status: "draft" };
   assert.equal(resolveStudioReleaseAsset(draft, null), draft);
+});
+
+test("archives drafts without deleting their asset files", () => {
+  const draft = { id: "draft-plant", status: "draft", path: "/assets/plants/draft.png" };
+  const result = transitionStudioAssetStatus(draft, "archive", "2026-11-21T11:00:00.000Z");
+  assert.equal(result.status, "archived");
+  assert.equal(result.path, draft.path);
+  assert.equal(result.archivedAt, "2026-11-21T11:00:00.000Z");
+});
+
+test("restores archived plants as drafts that must be tested again", () => {
+  const archived = { id: "old-plant", status: "archived", archivedAt: "2026-11-20T10:00:00.000Z" };
+  const result = transitionStudioAssetStatus(archived, "restore", "2026-11-21T11:00:00.000Z");
+  assert.equal(result.status, "draft");
+  assert.equal(result.archivedAt, null);
+  assert.equal(result.updatedAt, "2026-11-21T11:00:00.000Z");
+});
+
+test("does not archive published or review-pending plants", () => {
+  assert.throws(() => transitionStudioAssetStatus({ id: "live", status: "published" }, "archive"), /لا يمكن أرشفة/);
+  assert.throws(() => transitionStudioAssetStatus({ id: "pending", status: "testing", releaseRequest: { number: 7 } }, "archive"), /لا يمكن أرشفة/);
+});
+
+test("rejects restoring an asset that is not archived", () => {
+  assert.throws(() => transitionStudioAssetStatus({ id: "draft", status: "draft" }, "restore"), /لا يمكن استعادة/);
 });

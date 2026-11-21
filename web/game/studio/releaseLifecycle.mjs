@@ -19,3 +19,21 @@ export function resolveStudioReleaseAsset(asset, pullRequest) {
   }
   return { ...asset, status: "testing", releaseRequest: null };
 }
+
+export function transitionStudioAssetStatus(asset, operation, timestamp = new Date().toISOString()) {
+  if (operation === "archive") {
+    if (asset.status === "archived") return asset;
+    if (asset.status === "published" || asset.status === "approved" || asset.releaseRequest?.number) {
+      throw new Error("لا يمكن أرشفة أصل منشور أو له طلب مراجعة مفتوح. أزل النشر عبر طلب إصدار مخصص أولاً.");
+    }
+    if (asset.status !== "draft" && asset.status !== "testing") {
+      throw new Error("لا يمكن أرشفة الأصل من حالته الحالية.");
+    }
+    return { ...asset, status: "archived", archivedAt: timestamp, updatedAt: timestamp, releaseRequest: null };
+  }
+  if (operation === "restore") {
+    if (asset.status !== "archived") throw new Error("لا يمكن استعادة أصل غير مؤرشف.");
+    return { ...asset, status: "draft", archivedAt: null, updatedAt: timestamp, releaseRequest: null };
+  }
+  throw new Error("Unsupported Studio asset lifecycle action.");
+}
