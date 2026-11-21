@@ -204,7 +204,7 @@ export async function PATCH(req){
    try{updated=restoreStudioAssetRevision(candidate,body.versionNumber);}
    catch(error){return NextResponse.json({error:error.message},{status:409});}
    registry.assets[index]=updated;
-   await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(registry,null,2)+"\\n"),"studio: restore "+id+" version "+body.versionNumber,token,storageBranch,registrySha);
+   await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(registry,null,2)+"\n"),"studio: restore "+id+" version "+body.versionNumber,token,storageBranch,registrySha);
    return NextResponse.json({success:true,operation,asset:updated,message:"تمت استعادة الإصدار كمسودة جديدة؛ يجب اختبارها قبل طلب النشر."});
   }
   if(operation==="archive"||operation==="restore"){
