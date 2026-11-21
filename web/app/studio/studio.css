@@ -31,3 +31,5 @@
 .studio-combat-settings .studio-grid label{font-size:12px}
 .studio-asset-row button{white-space:nowrap}
 .studio-asset-row button:nth-last-child(1){border-color:#719b65;background:#294126;color:#d8f3c8}
+
+.studio-field-help{display:block;color:#b9aa86;font-size:11px;line-height:1.55;font-weight:400}.studio-combat-settings label>span{color:#f1e4c5;font-weight:700}.studio-combat-settings input[type=color]{width:100%;min-height:42px;padding:4px;border:1px solid #655333;border-radius:8px;background:#17160f;cursor:pointer}.studio-combat-settings input[type=number]{width:100%;min-width:0}
