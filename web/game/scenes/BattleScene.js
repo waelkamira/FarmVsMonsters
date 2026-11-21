@@ -3322,11 +3322,16 @@ export default class BattleScene extends Scene {
       } else {
         view.add(this.add.circle(0, 0, 11, 0xffc247, 1).setStrokeStyle(2, 0xffefc2, 1));
       }
+      const effectColor = /^#[0-9a-f]{6}$/i.test(profile.projectileEffectColor || "")
+        ? Number.parseInt(profile.projectileEffectColor.slice(1), 16)
+        : 0xffc247;
+      view.setRotation((Number(profile.projectileRotation) || 0) * Math.PI / 180);
       this.projectiles.push({
         view, localX, row, target, startLocalX: localX, targetLocalX: Math.max(localX + 1, target.localX),
         launchOffsetX: 14, launchOffsetY: -30, speed: profile.projectileSpeed,
         damage: profile.damage, freeze: false, freezeDurationMs: 0,
         collisionRadius: profile.projectileCollisionRadius, dropSpeed: profile.projectileSpeed * 1.5,
+        projectileHeight: profile.projectileHeight || 0, projectileEffectColor: effectColor,
         dropPhase: "horizontal", alive: true, trailTimer: 0,
         plantType: plant.type, studioPlantId: plant.studioPlant.id
       });
@@ -3503,13 +3508,14 @@ export default class BattleScene extends Scene {
     this.tweens.add({ targets: burst, scale: 1.8, alpha: 0, duration: 320, ease: "Cubic.easeOut", onComplete: () => burst.destroy() });
   }
 
-  createProjectileImpact(x, y, plantType = "radish") {
+  createProjectileImpact(x, y, plantType = "radish", customTint = null) {
     const effectId = getPlantVFXProfile(plantType)?.impact;
-    if (effectId && this.vfxManager?.play(effectId, x, y, { count: 8, durationMs: 220, endScale: 2.1 })) return;
+    const tint = Number.isInteger(customTint) ? customTint : null;
+    if (effectId && this.vfxManager?.play(effectId, x, y, { ...(tint === null ? {} : { tint }), count: 8, durationMs: 220, endScale: 2.1 })) return;
     const burst = this.add.container(x, y).setDepth(24);
-    const flash = this.add.circle(0, 0, 10, 0xfff4f7, 0.96);
+    const flash = this.add.circle(0, 0, 10, tint ?? 0xfff4f7, 0.96);
     const sparks = [];
-    const colors = [0xff7185, 0x8bd66f, 0xffc7d0, 0x65bd62, 0xffffff, 0xffa4b2];
+    const colors = tint === null ? [0xff7185, 0x8bd66f, 0xffc7d0, 0x65bd62, 0xffffff, 0xffa4b2] : [tint, tint, 0xffffff, tint, 0xffffff, tint];
     for (let i = 0; i < 6; i += 1) {
       const angle = (Math.PI * 2 * i) / 6;
       const spark = this.add.circle(Math.cos(angle) * 5, Math.sin(angle) * 5, 3, colors[i], 1);
@@ -3526,10 +3532,11 @@ export default class BattleScene extends Scene {
     });
   }
 
-  createProjectileTrail(x, y, plantType = "radish") {
+  createProjectileTrail(x, y, plantType = "radish", customTint = null) {
     const effectId = getPlantVFXProfile(plantType)?.trail;
-    if (effectId && this.vfxManager?.playProjectileTrail(effectId, x, y, { count: 3, durationMs: 180, endScale: 1.6 })) return;
-    const spark = this.add.circle(x, y, PhaserMath.Between(2, 4), 0xffc247, 0.72).setDepth(14);
+    const tint = Number.isInteger(customTint) ? customTint : null;
+    if (effectId && this.vfxManager?.playProjectileTrail(effectId, x, y, { ...(tint === null ? {} : { tint }), count: 3, durationMs: 180, endScale: 1.6 })) return;
+    const spark = this.add.circle(x, y, PhaserMath.Between(2, 4), tint ?? 0xffc247, 0.72).setDepth(14);
     this.tweens.add({
       targets: spark,
       x: x - PhaserMath.Between(5, 12),
@@ -4362,7 +4369,13 @@ export default class BattleScene extends Scene {
         ? this.pineappleLanePoint(shot.localX, shot.row)
         : this.lanePoint(shot.localX, shot.row);
       const projectileX = position.x + (shot.launchOffsetX || 0);
-      const projectileY = position.y + (shot.launchOffsetY || 0);
+      const studioProgress = shot.studioPlantId
+        ? PhaserMath.Clamp((shot.localX - shot.startLocalX) / Math.max(1, shot.targetLocalX - shot.startLocalX), 0, 1)
+        : 0;
+      const studioArcOffset = shot.studioPlantId
+        ? Math.sin(Math.PI * studioProgress) * (shot.projectileHeight || 0)
+        : 0;
+      const projectileY = position.y + (shot.launchOffsetY || 0) - studioArcOffset;
       let trailPositionY = projectileY;
 
       // Give the outgoing pineapple bomb a smooth launch arc. Progress is
@@ -4392,7 +4405,7 @@ export default class BattleScene extends Scene {
 
       shot.trailTimer -= dt * 1000;
       if (shot.trailTimer <= 0) {
-        this.createProjectileTrail(projectileX - 5, trailPositionY, shot.plantType);
+        this.createProjectileTrail(projectileX - 5, trailPositionY, shot.plantType, shot.projectileEffectColor);
         shot.trailTimer = 48;
       }
 
@@ -4433,7 +4446,7 @@ export default class BattleScene extends Scene {
           shot.view.destroy();
           continue;
         }
-        this.createProjectileImpact(projectileX, projectileY, shot.plantType);
+        this.createProjectileImpact(projectileX, projectileY, shot.plantType, shot.projectileEffectColor);
         this.playThornImpactSound();
         this.applyMonsterDamage(
           hit, shot.damage * this.incomingMonsterDamageMultiplier(hit), shot.plantType
