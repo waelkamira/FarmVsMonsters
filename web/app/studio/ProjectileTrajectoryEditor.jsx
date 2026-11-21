@@ -8,7 +8,7 @@ const DEFAULT_POINTS=[{progress:0,x:0,y:0},{progress:.5,x:0,y:110},{progress:1,x
 export default function ProjectileTrajectoryEditor({
  imageUrl,plantUrl,frameCount=1,rows=1,columns=1,
  plantFrameCount=1,plantRows=1,plantColumns=1,plantSizePercent=100,
- path,setPath,points=DEFAULT_POINTS,setPoints,plantFps=8,targetX=0,targetY=0,plantFps=8,
+ path,setPath,points=DEFAULT_POINTS,setPoints,plantFps=8,targetX=0,targetY=0,
  launchX,setLaunchX,launchY,setLaunchY,
  speed,setSpeed,collisionRadius,setCollisionRadius,height,setHeight,
  rotation,setRotation,playing,setPlaying
@@ -35,7 +35,7 @@ export default function ProjectileTrajectoryEditor({
  const normalizedPoints=useMemo(()=>Array.isArray(points)&&points.length>=2?points:DEFAULT_POINTS,[points]);
  const offsetAt=t=>getProjectileTrajectoryOffset({type:"custom",progress:t,points:normalizedPoints,height,targetX,targetY});
  const pointAt=t=>{const base=baseAt(t),offset=offsetAt(t);return{x:base.x+offset.x*.55,y:base.y-offset.y*.55};};
- const pathD=useMemo(()=>Array.from({length:101},(_,i)=>pointAt(i/100)).map((p,i)=>(i?"L":"M")+p.x.toFixed(1)+","+p.y.toFixed(1)).join(" "),[normalizedPoints,launchX,launchY]);
+ const pathD=useMemo(()=>Array.from({length:101},(_,i)=>pointAt(i/100)).map((p,i)=>(i?"L":"M")+p.x.toFixed(1)+","+p.y.toFixed(1)).join(" "),[normalizedPoints,launchX,launchY,height,targetX,targetY]);
  const current=pointAt(progress);
  const frameIndex=Math.min(Math.max(1,frameCount)-1,projectileFrame);
  const frameColumn=frameIndex%Math.max(1,columns),frameRow=Math.floor(frameIndex/Math.max(1,columns));
@@ -82,7 +82,7 @@ export default function ProjectileTrajectoryEditor({
    <label>ارتفاع / إزاحة الإطلاق العمودية<input type="number" min="-300" max="300" value={launchY} onChange={e=>setLaunchY(clamp(e.target.value,-300,300))}/></label>
    <label>دوران القذيفة (درجة)<input type="number" min="0" max="360" value={rotation} onChange={e=>setRotation(clamp(e.target.value,0,360))}/></label>
    <label>نصف قطر الإصابة<input type="number" min="4" max="100" value={collisionRadius} onChange={e=>setCollisionRadius(clamp(e.target.value,4,100))}/></label>
-   <label>ارتفاع المسار العام<input type="number" min="0" max="300" value={height} onChange={e=>setHeight(clamp(e.target.value,0,300))}/></label>
+   <label>ارتفاع المسار العام<input type="number" min="-300" max="300" value={height} onChange={e=>setHeight(clamp(e.target.value,-300,300))}/></label>
   </div>
   <div className="studio-motion-point-actions"><span>{normalizedPoints.length} نقاط تحكم · {selectedPoint>=0?`النقطة المحددة ${selectedPoint+1}`:"حدد دبوساً لتعديله أو حذفه"}</span><button type="button" onClick={()=>{const gaps=normalizedPoints.slice(1).map((item,index)=>({progress:(item.progress+normalizedPoints[index].progress)/2,index:index+1})).sort((a,b)=>(b.progress-a.progress));const progressValue=gaps[0]?.progress??.5;const next=[...normalizedPoints,{progress:Number(progressValue.toFixed(3)),x:0,y:0}].sort((a,b)=>a.progress-b.progress);setPoints(next);setSelectedPoint(next.findIndex(item=>item.progress===Number(progressValue.toFixed(3))));}} disabled={normalizedPoints.length>=18}>إضافة نقطة</button><button type="button" onClick={removeWaypoint} disabled={selectedPoint<=0||selectedPoint>=normalizedPoints.length-1}>حذف النقطة المحددة</button><button type="button" onClick={()=>{setPoints(DEFAULT_POINTS);setSelectedPoint(-1);}}>إعادة المسار الافتراضي</button></div>
   <small className="studio-field-help">النقاط محفوظة كإزاحات فعلية بالبكسل على مسار المقذوف، ويستخدم محرك المعركة منحنى Catmull–Rom المار عبرها. النقطة الأولى والأخيرة تثبتان بداية المسار ونهايته.</small>
