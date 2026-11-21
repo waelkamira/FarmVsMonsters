@@ -3153,7 +3153,7 @@ export default class BattleScene extends Scene {
     // Studio plants use the saved idle clip; restore it after an attack and
     // keep this check lightweight because it runs on every battle frame.
     const studioPlant = plant?.studioPlant;
-    if (!studioPlant || plant.studioAttacking || plant.isAttacking || !plant.view?.active) return;
+    if (!studioPlant || plant.studioAttacking || plant.studioThrowing || plant.isAttacking || !plant.view?.active) return;
 
     const sprite = plant.view.list?.find((child) =>
       child?.active && child.getData?.("studioPlantSprite")
