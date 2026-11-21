@@ -12,6 +12,7 @@ import {cloneStudioAsset,createStudioAssetRevision,restoreStudioAssetRevision} f
 import {getAssetDependents} from "../../../../game/studio/assetDependencies.mjs";
 import {createStudioAnimationProfile} from "../../../../game/studio/animationProfiles.mjs";
 import {createStudioMonsterProfile} from "../../../../game/studio/monsterProfiles.mjs";
+import {safeAssetPath} from "../../../../game/studio/assetReadiness.mjs";
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
 const COOKIE="fvm_studio_session";
@@ -329,7 +330,7 @@ export async function PATCH(req){
    if(previousRequest?.state==="open")return NextResponse.json({success:true,operation:"publish-requested",asset,reviewUrl:previousRequest.url,reviewNumber:previousRequest.number,releaseBranch:asset.releaseRequest.branch,alreadyRequested:true,message:"يوجد طلب مراجعة مفتوح لهذا الأصل بالفعل."});
    if(previousRequest?.merged)return NextResponse.json({success:true,operation:"published",asset:{...asset,status:"published"},reviewUrl:previousRequest.url,reviewNumber:previousRequest.number,alreadyPublished:true,message:"تم دمج طلب النشر مسبقاً."});
   }
-  const safeAssetPath=(value)=>typeof value==="string"&&value.startsWith("/assets/")&&!value.includes("..");
+
   if(!safeAssetPath(asset.path))return NextResponse.json({error:"Invalid asset path."},{status:400});
   if(asset.type==="monster"){
    const releaseBranch=createStudioReleaseBranchName(id,randomUUID().slice(0,8));
@@ -364,7 +365,7 @@ export async function PATCH(req){
    if(previousRequest?.state==="open")return NextResponse.json({success:true,operation:"publish-requested",asset,reviewUrl:previousRequest.url,reviewNumber:previousRequest.number,releaseBranch:asset.releaseRequest.branch,alreadyRequested:true,message:"يوجد طلب مراجعة مفتوح لهذا النبات بالفعل."});
    if(previousRequest?.merged)return NextResponse.json({success:true,operation:"published",asset:{...asset,status:"published"},reviewUrl:previousRequest.url,reviewNumber:previousRequest.number,alreadyPublished:true,message:"تم دمج طلب النشر مسبقاً."});
   }
-  const safeAssetPath=(value)=>typeof value==="string"&&value.startsWith("/assets/")&&!value.includes("..");
+
   if(!safeAssetPath(asset.path))return NextResponse.json({error:"Invalid plant asset path."},{status:400});
   if(asset.combat.mode==="projectile"&&!safeAssetPath(asset.combat.projectile?.path))return NextResponse.json({error:"The linked projectile asset is missing."},{status:409});
   const releaseBranch=createStudioReleaseBranchName(id,randomUUID().slice(0,8));
