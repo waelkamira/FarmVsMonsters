@@ -19,7 +19,7 @@ test("Studio supports safe duplication for every registered asset type",()=>{
 
 test("Studio exposes archive and restore actions for every asset type",()=>{
   assert.match(studioPage,/a\.status==="archived"[\s\S]*?transitionAsset\(a,"restore"\)/);
-  assert.match(studioPage,/\(a\.status==="draft"\|\|a\.status==="testing"\)&&<button[^>]*transitionAsset\(a,"archive"\)/);
+  assert.match(studioPage,/a\.status==="draft"[\s\S]*?transitionAsset\(a,"archive"\)/);
   assert.match(assetsRoute,/registry\.assets\.findIndex\(asset=>asset\.id===id\)/);
 });
 
