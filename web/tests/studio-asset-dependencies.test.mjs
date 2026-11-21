@@ -82,6 +82,7 @@ test("Studio API guards replacement, archive and version restore when direct dep
 
 test("asset detail route imports the shared Studio stylesheet from the correct directory", () => {
   assert.match(detailsSource, /import "\.\.\/\.\.\/studio\.css"/);
+  assert.match(detailsSource, /combat\.projectile\.managed/);
 });
 
 test("plant projectile references resolve to a managed projectile asset and block destructive lifecycle operations", () => {
