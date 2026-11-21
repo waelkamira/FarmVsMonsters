@@ -8,7 +8,7 @@ import { getProjectileVFXProfile } from "../vfx/ProjectileVFXProfiles.mjs";
 import { getMonsterReactionProfile, getPlantAnimationProfile } from "../visuals/PlantMonsterVisualProfiles.mjs";
 import { createStudioAnimationProfile } from "../studio/animationProfiles.mjs";
 import { getSpriteFrameRectangles } from "../studio/spriteSheetGrid.mjs";
-import { getProjectileTrajectoryOffset } from "../studio/projectileTrajectory.mjs";
+import { getProjectileTrajectoryOffset, getProjectileHeadCorrection } from "../studio/projectileTrajectory.mjs";
 import { createStudioMonsterProfile, resolveStudioMonsterRuntimeProfile, selectWeightedStudioMonster } from "../studio/monsterProfiles.mjs";
 
 // Temporary playtest mode exposes every implemented built-in plant; campaign progression data remains intact.
@@ -4726,8 +4726,15 @@ export default class BattleScene extends Scene {
         });
         const authoredEndX = targetLanePosition.x + (shot.launchOffsetX || 0) + endOffset.x;
         const authoredEndY = targetLanePosition.y + (shot.launchOffsetY || 0) - endOffset.y;
-        projectileX += (headX - authoredEndX) * studioProgress;
-        projectileY += (headY - authoredEndY) * studioProgress;
+        const headCorrection = getProjectileHeadCorrection({
+          progress: studioProgress,
+          targetX: headX,
+          targetY: headY,
+          trajectoryEndX: authoredEndX,
+          trajectoryEndY: authoredEndY
+        });
+        projectileX += headCorrection.x;
+        projectileY += headCorrection.y;
         studioHeadTarget = { x: headX, y: headY, progress: studioProgress };
       }
       let trailPositionY = projectileY;
@@ -4777,6 +4784,10 @@ export default class BattleScene extends Scene {
         this.createProjectileTrail(projectileX - 5, trailPositionY, shot.plantType, shot.projectileEffectColor);
         shot.trailTimer = 48;
       }
+
+      // Studio-authored shots are resolved only at their authored head endpoint;
+      // do not let the legacy lane-radius collision detonate them against the torso.
+      if (shot.studioPlantId) continue;
 
       // A Radish projectile can damage monsters in its own lane only.
       let hit = null;
