@@ -49,6 +49,9 @@ export function selectWeightedStudioMonster(monsters, wave, randomInt) {
   const candidates = monsters.filter((monster) => monster?.monsterProfile?.spawnWeight > 0 && monster.monsterProfile.firstWave <= wave);
   const totalWeight = candidates.reduce((sum, monster) => sum + monster.monsterProfile.spawnWeight, 0);
   if (!totalWeight) return null;
+  // The combined Studio weight is a percentage chance. Any remaining chance
+  // continues to use the existing built-in wave roster unchanged.
+  if (randomInt(1, 100) > Math.min(100, totalWeight)) return null;
   let roll = randomInt(1, totalWeight);
   for (const monster of candidates) {
     roll -= monster.monsterProfile.spawnWeight;
