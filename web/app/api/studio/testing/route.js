@@ -57,12 +57,12 @@ async function auditStoredFiles(driver, assets) {
       return statuses;
     }
     const files = new Set(tree.tree.filter((entry) => entry.type === "blob").map((entry) => entry.path));
-    for (const assetPath of paths) statuses[assetPath] = files.has("web/public" + assetPath) ? "present" : "missing";
+    for (const assetPath of paths) statuses[assetPath] = files.has("web/public" + decodeURIComponent(assetPath)) ? "present" : "missing";
     return statuses;
   }
   for (const assetPath of paths) {
     try {
-      await access(path.join(process.cwd(), "public", assetPath.slice(1)));
+      await access(path.join(process.cwd(), "public", decodeURIComponent(assetPath.slice(1))));
       statuses[assetPath] = "present";
     } catch (error) {
       statuses[assetPath] = error.code === "ENOENT" ? "missing" : "unknown";
