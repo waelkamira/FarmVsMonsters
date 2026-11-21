@@ -40,6 +40,8 @@ test("clones any registered asset as a clean draft while preserving its immutabl
   const clone = cloneStudioAsset(source, "ice-pepper", "Ice Pepper", "2026-11-21T15:00:00.000Z");
   assert.equal(clone.id, "ice-pepper");
   assert.equal(clone.name, "Ice Pepper");
+  assert.equal(cloneStudioAsset(source, "ice-pepper").name, "Fire Pepper (نسخة)");
+  assert.equal(cloneStudioAsset(source, "ice-pepper", "   ").name, "ice-pepper");
   assert.equal(clone.path, source.path);
   assert.deepEqual(clone.combat, source.combat);
   assert.notEqual(clone.combat, source.combat);
