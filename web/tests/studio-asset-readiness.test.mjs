@@ -91,6 +91,24 @@ test("blocks duplicate identifiers and unsafe file paths", () => {
   assert.equal(report.blocked, 2);
   assert.ok(report.assets.every((asset) => asset.errors.some((message) => message.includes("المعرّف"))));
 });
+test("rejects encoded traversal, malformed encoding, separators, and URL suffixes in asset paths", () => {
+  const unsafePaths = [
+    "/assets/%2e%2e/private.png",
+    "/assets/plants/%2E%2E/private.png",
+    "/assets\\\\private.png",
+    "/assets/plants\\\\..\\\\private.png",
+    "/assets/plants/file.png?download=1",
+    "/assets//file.png",
+    "/assets/plants/./file.png",
+    "/assets/%E0%A4%A.png",
+    "/assets/plants%2Ffile.png"
+  ];
+  for (const unsafePath of unsafePaths) {
+    const report = auditStudioAssetRegistry([validProjectile({ path: unsafePath })]);
+    assert.equal(report.blocked, 1, `Expected unsafe path to be blocked: ${unsafePath}`);
+    assert.ok(report.assets[0].errors.some((message) => message.includes("مسار ملف الأصل")));
+  }
+});
 test("Testing Lab API is session-protected and labels its limited audit scope", () => {
   assert.match(apiSource, /verifyStudioSession/);
   assert.match(apiSource, /if \(!authorized\(req\)\)/);
