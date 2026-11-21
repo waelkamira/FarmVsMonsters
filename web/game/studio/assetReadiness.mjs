@@ -16,11 +16,11 @@ export function safeAssetPath(value) {
 }
 
 export function applyStudioAssetFileAudit(report, assets, statusByPath = {}) {
-  const sourceById = new Map((Array.isArray(assets) ? assets : []).filter((asset) => asset?.id).map((asset) => [String(asset.id), asset]));
   const checkedPaths = new Set();
   const counts = { present: 0, missing: 0, unknown: 0 };
-  const auditedAssets = report.assets.map((entry) => {
-    const source = sourceById.get(String(entry.id));
+  const sourceAssets = Array.isArray(assets) ? assets : [];
+  const auditedAssets = report.assets.map((entry, index) => {
+    const source = sourceAssets[index];
     const paths = [...new Set([source?.path, source?.combat?.projectile?.path].filter((value) => safeAssetPath(value)))];
     const fileChecks = paths.map((assetPath) => {
       checkedPaths.add(assetPath);
