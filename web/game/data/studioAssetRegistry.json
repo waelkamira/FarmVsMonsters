@@ -104,6 +104,106 @@
       },
       "testingAt": "2026-11-21T00:27:23.116Z",
       "publishedAt": "2026-11-21T00:28:42.201Z"
+    },
+    {
+      "id": "coconut-level-1",
+      "type": "plant",
+      "name": "coconut-level-1",
+      "filename": "coconut-level-1.png",
+      "path": "/assets/plants/coconut-level-1-487d580b00fb70d382469abd7818c11f0bd5346c410fbb569bdbc412f5feba2a.png",
+      "rows": 3,
+      "columns": 4,
+      "frameCount": 12,
+      "spriteSheet": true,
+      "status": "draft",
+      "releaseRequest": null,
+      "publishedAt": null,
+      "testingAt": null,
+      "archivedAt": null,
+      "restoredFromVersion": null,
+      "createdAt": "2026-11-21T21:27:30.589Z",
+      "updatedAt": "2026-11-21T21:27:30.589Z",
+      "combat": {
+        "mode": "projectile",
+        "projectile": {
+          "id": "coconut-level-1-projectile",
+          "path": "/assets/projectiles/plants/coconut-level-1-projectile-4a8b3f9370ea72bb6c13362fbbd7e2c1d3ca19c1756552679c2524015677b0dc.png",
+          "filename": "coconut-level-1-projectile.png",
+          "managed": false,
+          "frameCount": 1,
+          "rows": 1,
+          "columns": 1
+        },
+        "energyCost": 60,
+        "hp": 150,
+        "cooldownMs": 1800,
+        "damage": 30,
+        "range": 180,
+        "projectileSpeed": 280,
+        "projectileHeight": 0,
+        "projectileEffectColor": "#ffc247",
+        "projectileRotation": 4,
+        "projectileTrajectoryType": "custom",
+        "projectilePathPoints": [
+          {
+            "progress": 0,
+            "x": -24,
+            "y": 4
+          },
+          {
+            "progress": 0.5,
+            "x": -213,
+            "y": 307
+          },
+          {
+            "progress": 0.75,
+            "x": -221,
+            "y": 45
+          },
+          {
+            "progress": 0.875,
+            "x": -92,
+            "y": 286
+          },
+          {
+            "progress": 1,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "projectileCurveX": 0,
+        "projectileCurveY": 110,
+        "projectileLaunchOffsetX": 127,
+        "projectileLaunchOffsetY": -57,
+        "projectileTargetOffsetX": 0,
+        "projectileTargetOffsetY": 0,
+        "projectileCollisionRadius": 22,
+        "energyAmount": 15,
+        "energyIntervalMs": 12000,
+        "sizePercent": 100
+      },
+      "animationProfile": {
+        "idle": {
+          "startFrame": 0,
+          "endFrame": 0,
+          "fps": 6,
+          "loop": true
+        },
+        "move": {
+          "startFrame": 0,
+          "endFrame": 8,
+          "fps": 10,
+          "loop": true
+        },
+        "attack": {
+          "startFrame": 0,
+          "endFrame": 8,
+          "fps": 12,
+          "loop": false
+        }
+      },
+      "revision": 1,
+      "versions": []
     }
   ]
 }
