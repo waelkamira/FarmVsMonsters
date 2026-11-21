@@ -142,6 +142,13 @@ export async function POST(req){
  const driver=process.env.STUDIO_STORAGE_DRIVER||"local";let old,registrySha;
  try{if(driver==="github"){const token=process.env.STUDIO_GITHUB_TOKEN,branch=process.env.STUDIO_GITHUB_BRANCH||"studio/assets";if(!token)return NextResponse.json({error:"STUDIO_GITHUB_TOKEN is required."},{status:503});const document=await githubGetDocument(REGISTRY_PATH,token,branch);old=document?JSON.parse(document.content):{version:1,assets:[]};registrySha=document?.sha??null;}else old=await localRegistry();}catch(error){return NextResponse.json({error:error.message},{status:502});}
  const index=old.assets.findIndex(a=>a.id===id),existing=index>=0?old.assets[index]:null;
+ const projectileAssetId=String(form.get("projectileAssetId")||"").trim();
+ const selectedProjectileAsset=projectileAssetId?old.assets.find(asset=>asset.id===projectileAssetId&&asset.type==="plantProjectile"):null;
+ if(projectileAssetId&&type!=="plant")return NextResponse.json({error:"يمكن ربط القذائف بالنباتات فقط."},{status:400});
+ if(projectileAssetId&&!selectedProjectileAsset)return NextResponse.json({error:"القذيفة المحددة غير موجودة في مكتبة Studio."},{status:404});
+ if(selectedProjectileAsset?.status==="archived")return NextResponse.json({error:"لا يمكن استخدام قذيفة مؤرشفة."},{status:409});
+ if(projectileAssetId&&hasProjectile)return NextResponse.json({error:"اختر قذيفة من المكتبة أو ارفع ملفاً جديداً، وليس كليهما."},{status:400});
+
  if(existing&&(hasFile||hasProjectile||removeProjectile)){
   const dependents=getAssetDependents(old.assets,id);
   if(dependents.length)return NextResponse.json({error:"لا يمكن استبدال ملفات هذا الأصل قبل معالجة الأصول التي تعتمد عليه: "+dependents.map(item=>item.assetName).join("، ")},{status:409});
@@ -161,6 +168,7 @@ export async function POST(req){
   }catch(error){return NextResponse.json({error:error.message||"Invalid animation profile."},{status:400});}
  }
  if(hasProjectile&&removeProjectile)return NextResponse.json({error:"Choose a new projectile or remove the existing projectile, not both."},{status:400});
+ if(projectileAssetId&&removeProjectile)return NextResponse.json({error:"لا يمكن ربط قذيفة وإزالة القذيفة الحالية في العملية نفسها."},{status:400});
  if(hasProjectile&&(type!=="plant"||!STUDIO_ASSET_TYPES.plantProjectile.accepts.includes(projectileFile.type)||projectileFile.size>STUDIO_MAX_UPLOAD_BYTES))return NextResponse.json({error:"Projectile must be a supported PNG/WebP/GIF file up to 8 MB and can only be attached to a plant."},{status:415});
  const projectileBytes=hasProjectile?Buffer.from(await projectileFile.arrayBuffer()):null;
  let combatProfile=null;
@@ -168,10 +176,14 @@ export async function POST(req){
   const behavior=String(form.get("behavior")||"");
   if(!behavior)return NextResponse.json({error:"اختر نظام النبتة يدوياً قبل حفظها."},{status:400});
   if(hasProjectile&&behavior!=="projectile")return NextResponse.json({error:"اختر نظام إطلاق المقذوفات لاستخدام ملف القذيفة، أو أزل ملف القذيفة."},{status:400});
+  if(projectileAssetId&&behavior!=="projectile")return NextResponse.json({error:"اختر نظام إطلاق المقذوفات لاستخدام قذيفة المكتبة."},{status:400});
+  if(selectedProjectileAsset&&(!selectedProjectileAsset.path?.startsWith("/assets/")||selectedProjectileAsset.path.includes("..")))return NextResponse.json({error:"مسار القذيفة المحددة غير صالح."},{status:400});
   const currentProjectile=behavior==="projectile"
     ?(hasProjectile
       ?{id:id+"-projectile",filename:id+"-projectile"+ext(projectileFile.type),path:"/assets/"+createImmutableAssetPath("projectiles/plants",id+"-projectile",ext(projectileFile.type),projectileBytes)}
-      :(removeProjectile?null:(existing?.combat?.mode==="projectile"?existing.combat.projectile:null)))
+      :(selectedProjectileAsset
+        ?{id:selectedProjectileAsset.id,filename:selectedProjectileAsset.filename,path:selectedProjectileAsset.path}
+        :(removeProjectile?null:(existing?.combat?.mode==="projectile"?existing.combat.projectile:null))))
     :null;
   try{combatProfile=readCombatForm(form,currentProjectile,existing);}catch(error){return NextResponse.json({error:error.message},{status:400});}
   if(combatProfile.mode==="projectile"&&!currentProjectile)return NextResponse.json({error:"ارفع ملف القذيفة مع النبتة أو اختر سلوكاً بديلاً."},{status:400});
