@@ -288,6 +288,33 @@ export default class BattleScene extends Scene {
         }
       }
     }
+    // Register each attached projectile Sprite Sheet only after Phaser has loaded
+    // its image, using the independent grid saved with that projectile.
+    for (const plant of this.studioPlants) {
+      const projectile = plant.combat?.projectile;
+      const textureKey = plant.projectileTextureKey;
+      if (!projectile?.path || !this.textures.exists(textureKey)) continue;
+      const frameCount = Math.max(1, Math.min(24, Number(projectile.frameCount) || 1));
+      const rows = Math.max(1, Number(projectile.rows) || 1);
+      const columns = Math.max(1, Number(projectile.columns) || 1);
+      if (rows * columns !== frameCount) {
+        projectile.frameCount = 1;
+        projectile.rows = 1;
+        projectile.columns = 1;
+        continue;
+      }
+      if (frameCount > 1 && this.registerStudioGridSheet(textureKey, rows, columns)) {
+        const animationKey = "studio-projectile-" + plant.id;
+        if (!this.anims.exists(animationKey)) {
+          this.anims.create({
+            key: animationKey,
+            frames: this.anims.generateFrameNumbers(textureKey, { start: 0, end: frameCount - 1 }),
+            frameRate: 12,
+            repeat: -1
+          });
+        }
+      }
+    }
     const publishedStudioMonsters = this.cache.json.get("studio-published-monster-catalog")?.monsters || [];
     const testStudioMonsters = this.cache.json.get("studio-test-monster-catalog")?.monsters || [];
     const studioMonsterMap = new Map();
@@ -3527,9 +3554,14 @@ export default class BattleScene extends Scene {
       const view = this.add.container(laneOrigin.x + 14, laneOrigin.y - 30).setDepth(16);
       const textureKey = plant.studioPlant.projectileTextureKey || "studio-projectile-published-" + plant.studioPlant.id;
       if (this.textures.exists(textureKey)) {
-        const frame = this.textures.getFrame(textureKey);
+        const projectile = plant.studioPlant.combat.projectile || {};
+        const hasFrames = Number(projectile.frameCount) > 1 && this.anims.exists("studio-projectile-" + plant.studioPlant.id);
+        const sprite = this.add.sprite(0, 0, textureKey, hasFrames ? "0" : undefined);
+        const frame = this.textures.getFrame(textureKey, hasFrames ? "0" : undefined);
         const width = Math.min(38, 28 * (frame.realWidth / frame.realHeight));
-        view.add(this.add.image(0, 0, textureKey).setDisplaySize(width, 28));
+        sprite.setDisplaySize(width, 28);
+        if (hasFrames) sprite.play("studio-projectile-" + plant.studioPlant.id);
+        view.add(sprite);
       } else {
         view.add(this.add.circle(0, 0, 11, 0xffc247, 1).setStrokeStyle(2, 0xffefc2, 1));
       }
