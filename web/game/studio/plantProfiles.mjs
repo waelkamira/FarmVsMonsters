@@ -13,6 +13,8 @@ const LIMITS = Object.freeze({
   damage: [1, 1000],
   range: [24, 500],
   projectileSpeed: [60, 1200],
+  projectileHeight: [0, 300],
+  projectileRotation: [0, 360],
   projectileCollisionRadius: [4, 100],
   energyAmount: [1, 100],
   energyIntervalMs: [1000, 120000]
@@ -36,6 +38,9 @@ export function createStudioPlantCombatProfile({
   damage = 30,
   range = 180,
   projectileSpeed = 280,
+  projectileHeight = 0,
+  projectileEffectColor = "#ffc247",
+  projectileRotation = 0,
   projectileCollisionRadius = 22,
   energyAmount = 15,
   energyIntervalMs = 12000
@@ -63,6 +68,9 @@ export function createStudioPlantCombatProfile({
       : boundedNumber(damage, "damage", 30),
     range: boundedNumber(range, "range", 180),
     projectileSpeed: boundedNumber(projectileSpeed, "projectileSpeed", 280),
+    projectileHeight: boundedNumber(projectileHeight, "projectileHeight", 0),
+    projectileEffectColor: (() => { const color = String(projectileEffectColor ?? "#ffc247").trim().toLowerCase(); if (!/^#[0-9a-f]{6}$/.test(color)) throw new RangeError("Invalid plant setting: projectileEffectColor must be a six-digit hex color."); return color; })(),
+    projectileRotation: boundedNumber(projectileRotation, "projectileRotation", 0),
     projectileCollisionRadius: boundedNumber(projectileCollisionRadius, "projectileCollisionRadius", 22),
     energyAmount: boundedNumber(energyAmount, "energyAmount", 15),
     energyIntervalMs: boundedNumber(energyIntervalMs, "energyIntervalMs", 12000)
