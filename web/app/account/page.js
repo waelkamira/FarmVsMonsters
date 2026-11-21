@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { LanguageToggle, useLocale } from "../LocaleProvider";
 import {
   getPlayerSession,
@@ -10,6 +10,16 @@ import {
   signOutPlayer,
   restoreOrInitializeCloudProgress
 } from "../../game/services/playerAccount.mjs";
+
+function subscribeToLocation(callback) {
+  if (typeof window === "undefined") return () => {};
+  window.addEventListener("popstate", callback);
+  return () => window.removeEventListener("popstate", callback);
+}
+
+function getLocationSearch() {
+  return window.location.search;
+}
 
 export default function AccountPage() {
   const { locale } = useLocale();
@@ -22,25 +32,24 @@ export default function AccountPage() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const search = useSyncExternalStore(subscribeToLocation, getLocationSearch, () => "");
+  const params = new URLSearchParams(search);
+  const googleError = params.get("google_error");
+  const oauthMessage = params.get("google") === "connected"
+    ? (ar ? "تم تسجيل الدخول باستخدام Google. الحفظ السحابي متوقف مؤقتاً أثناء تأمين تقدمك." : "Signed in with Google. Cloud saving is temporarily paused while progression security is upgraded.")
+    : "";
+  const oauthErrorMessages = {
+    cloud_unconfigured: ar ? "خدمة الحسابات السحابية غير مهيأة بعد." : "Cloud accounts are not configured yet.",
+    google_denied: ar ? "تم إلغاء تسجيل الدخول باستخدام Google." : "Google sign-in was cancelled.",
+    oauth_invalid_state: ar ? "تعذر التحقق من طلب تسجيل الدخول. حاول مرة أخرى." : "The sign-in request could not be verified. Please try again.",
+    oauth_exchange_failed: ar ? "تعذر إكمال تسجيل الدخول باستخدام Google." : "Google sign-in could not be completed."
+  };
+  const oauthError = googleError
+    ? (oauthErrorMessages[googleError] || (ar ? "حدث خطأ أثناء تسجيل الدخول." : "Google sign-in failed."))
+    : "";
+  const hasOAuthFeedback = Boolean(googleError || params.get("google") === "connected");
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const googleError = params.get("google_error");
-    if (params.get("google") === "connected") {
-      setMessage(ar ? "تم تسجيل الدخول باستخدام Google. الحفظ السحابي متوقف مؤقتاً أثناء تأمين تقدمك." : "Signed in with Google. Cloud saving is temporarily paused while progression security is upgraded.");
-    } else if (googleError) {
-      const messages = {
-        cloud_unconfigured: ar ? "خدمة الحسابات السحابية غير مهيأة بعد." : "Cloud accounts are not configured yet.",
-        google_denied: ar ? "تم إلغاء تسجيل الدخول باستخدام Google." : "Google sign-in was cancelled.",
-        oauth_invalid_state: ar ? "تعذر التحقق من طلب تسجيل الدخول. حاول مرة أخرى." : "The sign-in request could not be verified. Please try again.",
-        oauth_exchange_failed: ar ? "تعذر إكمال تسجيل الدخول باستخدام Google." : "Google sign-in could not be completed."
-      };
-      setError(messages[googleError] || (ar ? "حدث خطأ أثناء تسجيل الدخول." : "Google sign-in failed."));
-    }
-    if (params.has("google") || params.has("google_error")) {
-      window.history.replaceState({}, "", window.location.pathname);
-    }
-
     let active = true;
     getPlayerSession()
       .then(async ({ user: current }) => {
@@ -49,18 +58,18 @@ export default function AccountPage() {
         if (current) {
           try {
             await restoreOrInitializeCloudProgress();
-            if (active) setMessage(ar ? "تم التحقق من حسابك؛ تقدم اللعب محفوظ محلياً حالياً." : "Your account is connected; gameplay progress is currently saved locally.");
+            if (active && !hasOAuthFeedback) setMessage(ar ? "تم التحقق من حسابك؛ تقدم اللعب محفوظ محلياً حالياً." : "Your account is connected; gameplay progress is currently saved locally.");
           } catch (reason) {
-            if (active) setError(reason.message);
+            if (active && !hasOAuthFeedback) setError(reason.message);
           }
         }
       })
       .catch((reason) => {
-        if (active && !String(reason.message).includes("Failed to fetch")) setError(reason.message);
+        if (active && !hasOAuthFeedback && !String(reason.message).includes("Failed to fetch")) setError(reason.message);
       })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, []);
+  }, [ar, hasOAuthFeedback]);
 
   async function submit(event) {
     event.preventDefault();
@@ -161,8 +170,8 @@ export default function AccountPage() {
           </>
         )}
 
-        {error && <p className="account-feedback account-error" role="alert">{error}</p>}
-        {message && <p className="account-feedback account-success" role="status">{message}</p>}
+        {(error || oauthError) && <p className="account-feedback account-error" role="alert">{error || oauthError}</p>}
+        {(message || oauthMessage) && <p className="account-feedback account-success" role="status">{message || oauthMessage}</p>}
         <p className="account-security">
           {ar
             ? "كلمة المرور لا تُخزّن في اللعبة. تتم المصادقة عبر Supabase، وتُحمى بيانات كل لاعب بسياسات وصول خاصة بحسابه."

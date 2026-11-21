@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { useLocale, LanguageToggle } from "../LocaleProvider";
+import { readStorageSnapshot, subscribeToBrowserStorage } from "../../game/hooks/browserStorage.mjs";
 
 const controls = [
   { key: "musicVolume", label: "Background music", labelAr: "الموسيقى الخلفية", icon: "🎵", initial: 70 },
@@ -10,27 +11,29 @@ const controls = [
   { key: "projectileVolume", label: "Projectile sounds", labelAr: "أصوات المقذوفات", icon: "💥", initial: 65 }
 ];
 
+const DEFAULT_VALUES = { musicVolume: 70, effectsVolume: 80, projectileVolume: 65 };
+const SETTINGS_SERVER_SNAPSHOT = JSON.stringify({ ready: false, values: DEFAULT_VALUES });
+
+function getSettingsSnapshot() {
+  const values = {};
+  controls.forEach(({ key, initial }) => {
+    const raw = readStorageSnapshot("farmVsMonsters.audio." + key, null);
+    const stored = Number(raw);
+    values[key] = raw !== null && Number.isFinite(stored) ? Math.max(0, Math.min(100, stored)) : initial;
+  });
+  return JSON.stringify({ ready: true, values });
+}
+
 export default function SettingsPage() {
   const { t, locale } = useLocale();
   const ar = locale === "ar";
-  const [values, setValues] = useState({ musicVolume: 70, effectsVolume: 80, projectileVolume: 65 });
-  const [ready, setReady] = useState(false);
-
-  useEffect(() => {
-    const next = {};
-    controls.forEach(({ key, initial }) => {
-      const raw = window.localStorage.getItem("farmVsMonsters.audio." + key);
-      const stored = Number(raw);
-      next[key] = raw !== null && Number.isFinite(stored) ? Math.max(0, Math.min(100, stored)) : initial;
-    });
-    setValues(next);
-    setReady(true);
-  }, []);
+  const settingsSnapshot = useSyncExternalStore(subscribeToBrowserStorage, getSettingsSnapshot, () => SETTINGS_SERVER_SNAPSHOT);
+  const { values, ready } = JSON.parse(settingsSnapshot);
 
   function changeVolume(key, value) {
     const volume = Number(value);
-    setValues((current) => ({ ...current, [key]: volume }));
     window.localStorage.setItem("farmVsMonsters.audio." + key, String(volume));
+    window.dispatchEvent(new Event("farm-storage-change"));
   }
 
   return (

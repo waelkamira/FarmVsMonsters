@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useLocale } from "../app/LocaleProvider";
 
@@ -13,9 +14,6 @@ export default function PhaserGame() {
   useEffect(() => {
     let game = null;
     let cancelled = false;
-
-    setStatus("loading");
-    setErrorMessage("");
 
     const showError = (error) => {
       if (cancelled) return;
@@ -86,10 +84,14 @@ export default function PhaserGame() {
         <div className="game-status game-status-error" role="alert">
           <strong>{t("The battle could not be started")}</strong>
           <span>{errorMessage || t("The game engine failed to initialize.")}</span>
-          <button type="button" className="game-retry-button" onClick={() => setAttempt((value) => value + 1)}>
+          <button type="button" className="game-retry-button" onClick={() => {
+            setErrorMessage("");
+            setStatus("loading");
+            setAttempt((value) => value + 1);
+          }}>
             {t("Try Again")}
           </button>
-          <a href="/" className="game-back-link">{t("Return to Main Menu")}</a>
+          <Link href="/" className="game-back-link">{t("Return to Main Menu")}</Link>
         </div>
       )}
     </div>

@@ -10,6 +10,19 @@ const routeSource = readFileSync(path.join(here, "../app/api/studio/assets/route
 const detailsSource = readFileSync(path.join(here, "../app/studio/assets/[id]/page.js"), "utf8");
 const studioSource = readFileSync(path.join(here, "../app/studio/page.js"), "utf8");
 
+
+test("explicit inline projectile remains an inline file even when its id matches a library projectile", () => {
+  const assets = [
+    { id: "thorn", type: "plant", path: "/assets/plants/thorn.png", combat: { projectile: { id: "thorn-shot", path: "/assets/projectiles/inline-shot.png", managed: false } } },
+    { id: "thorn-shot", type: "plantProjectile", path: "/assets/projectiles/library-shot.png" }
+  ];
+  const report = buildAssetDependencyReport(assets, "thorn");
+  assert.equal(report.dependencies[0].kind, "embedded-file");
+  assert.equal(report.dependencies[0].resolved, true);
+  assert.equal(report.sharedFiles.some((entry) => entry.path === "/assets/projectiles/inline-shot.png"), false);
+  assert.equal(buildAssetDependencyReport(assets, "thorn-shot").dependents.length, 0);
+});
+
 test("reports registered projectile assets as explicit dependencies and reverse references", () => {
   const assets = [
     { id: "fire", type: "plant", name: "Fire", path: "/assets/plants/fire.png", combat: { projectile: { id: "fire-shot", path: "/assets/projectiles/fire-shot.png" } } },
@@ -20,6 +33,30 @@ test("reports registered projectile assets as explicit dependencies and reverse 
   assert.deepEqual(report.dependents.map((item) => item.assetId), ["fire"]);
   assert.equal(report.canArchive, false);
   assert.deepEqual(getAssetDependents(assets, "fire-shot").map((item) => item.assetId), ["fire"]);
+});
+
+
+test("does not resolve a managed projectile ID to an asset of the wrong type", () => {
+  const assets = [
+    { id: "thorn", type: "plant", path: "/assets/plants/thorn.png", combat: { projectile: { id: "wrong-type", path: "/assets/effects/wrong.png", managed: true } } },
+    { id: "wrong-type", type: "monster", path: "/assets/monsters/wrong.png" }
+  ];
+  const report = buildAssetDependencyReport(assets, "thorn");
+  assert.equal(report.dependencies[0].kind, "asset");
+  assert.equal(report.dependencies[0].resolved, false);
+  assert.equal(report.unresolved.length, 1);
+});
+
+
+test("legacy projectile IDs that collide with non-projectile assets remain embedded", () => {
+  const assets = [
+    { id: "thorn", type: "plant", path: "/assets/plants/thorn.png", combat: { projectile: { id: "collision", path: "/assets/projectiles/inline.png" } } },
+    { id: "collision", type: "monster", path: "/assets/monsters/collision.png" }
+  ];
+  const report = buildAssetDependencyReport(assets, "thorn");
+  assert.equal(report.dependencies[0].kind, "embedded-file");
+  assert.equal(report.dependencies[0].resolved, true);
+  assert.equal(report.dependents.length, 0);
 });
 
 test("reports a missing managed projectile asset as an unresolved dependency", () => {

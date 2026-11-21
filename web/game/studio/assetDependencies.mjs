@@ -7,13 +7,14 @@ function declaredDependencies(asset, byId) {
     const projectileId = projectile.id ? String(projectile.id) : "";
     const target = projectileId ? byId.get(projectileId) : null;
     if (projectile.managed === true) {
-      dependencies.push(target && target.id !== asset.id
-        ? { kind: "asset", relation: "projectile", targetId: target.id, targetName: target.name || target.id, targetType: target.type, path: normalizePath(projectile.path || target.path), resolved: true }
+      const validTarget = target?.type === "plantProjectile" && target.id !== asset.id ? target : null;
+      dependencies.push(validTarget
+        ? { kind: "asset", relation: "projectile", targetId: validTarget.id, targetName: validTarget.name || validTarget.id, targetType: validTarget.type, path: normalizePath(projectile.path || validTarget.path), resolved: true }
         : { kind: "asset", relation: "projectile", targetId: projectileId, targetName: projectileId || projectile.filename || "قذيفة مُدارة", targetType: "plantProjectile", path: normalizePath(projectile.path), resolved: false });
     } else if (projectile.managed === false) {
       dependencies.push({ kind: "embedded-file", relation: "projectile", targetId: null, targetName: projectile.filename || projectileId || "ملف القذيفة", targetType: "plantProjectile", path: normalizePath(projectile.path), resolved: Boolean(projectile.path), managedWithOwner: true });
     } else {
-      dependencies.push(target && target.id !== asset.id
+      dependencies.push(target?.type === "plantProjectile" && target.id !== asset.id
         ? { kind: "asset", relation: "projectile", targetId: target.id, targetName: target.name || target.id, targetType: target.type, path: normalizePath(projectile.path || target.path), resolved: true }
         : { kind: "embedded-file", relation: "projectile", targetId: null, targetName: projectile.filename || projectileId || "ملف القذيفة", targetType: "plantProjectile", path: normalizePath(projectile.path), resolved: Boolean(projectile.path), managedWithOwner: true });
     }
@@ -39,7 +40,7 @@ function collectFileUses(assets) {
     add(asset, "primary", asset.path);
     const projectile = asset.combat?.projectile;
     const managedTarget = projectile?.id ? byId.get(String(projectile.id)) : null;
-    const managed = projectile?.managed === true || managedTarget?.type === "plantProjectile";
+    const managed = projectile?.managed === true || (projectile?.managed !== false && managedTarget?.type === "plantProjectile");
     if (!managed) add(asset, "projectile", projectile?.path);
   }
   return uses;
