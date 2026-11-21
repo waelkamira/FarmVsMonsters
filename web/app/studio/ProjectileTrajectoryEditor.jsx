@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { getProjectileTrajectoryOffset } from "../../game/studio/projectileTrajectory.mjs";
 
 const clamp=(v,min,max)=>Math.min(max,Math.max(min,Number(v)||0));
-export default function ProjectileTrajectoryEditor({imageUrl,plantUrl,frameCount=1,rows=1,columns=1,path,setPath,curveX,setCurveX,curveY,setCurveY,launchX,setLaunchX,launchY,setLaunchY,targetX,setTargetX,targetY,setTargetY,speed,setSpeed,height,setHeight,rotation,setRotation,playing,setPlaying}){
+export default function ProjectileTrajectoryEditor({imageUrl,plantUrl,frameCount=1,rows=1,columns=1,path,setPath,curveX,setCurveX,curveY,setCurveY,launchX,setLaunchX,launchY,setLaunchY,targetX,setTargetX,targetY,setTargetY,speed,setSpeed,collisionRadius,setCollisionRadius,height,setHeight,rotation,setRotation,playing,setPlaying}){
  const [progress,setProgress]=useState(0);
  const [drag,setDrag]=useState("");
  const [imageSize,setImageSize]=useState({width:1,height:1});
@@ -45,7 +45,7 @@ export default function ProjectileTrajectoryEditor({imageUrl,plantUrl,frameCount
    <label>إزاحة الإطلاق العمودية<input type="number" min="-120" max="120" value={launchY} onChange={e=>setLaunchY(clamp(e.target.value,-120,120))}/></label>\n   <label>إزاحة نقطة الإصابة أفقياً<input type="number" min="-100" max="100" value={targetX} onChange={e=>setTargetX(clamp(e.target.value,-100,100))}/></label>\n   <label>إزاحة نقطة الإصابة عمودياً<input type="number" min="-100" max="100" value={targetY} onChange={e=>setTargetY(clamp(e.target.value,-100,100))}/></label>
    {path!=="straight"&&path!=="bezier"&&<label>ارتفاع القوس<input type="number" min="0" max="300" value={height} onChange={e=>setHeight(clamp(e.target.value,0,300))}/></label>}
    {path==="bezier"&&<><label>انحراف المقبض أفقياً<input type="number" min="-180" max="180" value={curveX} onChange={e=>setCurveX(clamp(e.target.value,-180,180))}/></label><label>ارتفاع المقبض<input type="number" min="-300" max="300" value={curveY} onChange={e=>setCurveY(clamp(e.target.value,-300,300))}/></label></>}
-   <label>دوران صورة القذيفة<input type="number" min="0" max="360" value={rotation} onChange={e=>setRotation(clamp(e.target.value,0,360))}/></label>
+   <label>نصف قطر الإصابة<input type="number" min="4" max="100" value={collisionRadius} onChange={e=>setCollisionRadius(clamp(e.target.value,4,100))}/></label>\n   <label>دوران صورة القذيفة<input type="number" min="0" max="360" value={rotation} onChange={e=>setRotation(clamp(e.target.value,0,360))}/></label>
   </div>
   <small className="studio-field-help">المعاينة توضح المسار والسرعة والموضع بصرياً. تُحفظ قيم المسار مع ملف النبتة وتُطبّق في محرك المعركة.</small>
  </section>;
