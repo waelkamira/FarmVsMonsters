@@ -175,3 +175,19 @@ test("shared physical asset paths are counted only once in the integrity summary
 test("Testing Lab resolves URL-encoded asset filenames before checking storage", () => {
   assert.match(apiSource, /decodeURIComponent\(assetPath\)/);
 });
+
+test("physical file checks stay aligned to each registry row when IDs are duplicated", () => {
+  const assets = [
+    validProjectile({ path: "/assets/projectiles/first.png" }),
+    validProjectile({ path: "/assets/projectiles/second.png" })
+  ];
+  const report = applyStudioAssetFileAudit(auditStudioAssetRegistry(assets), assets, {
+    "/assets/projectiles/first.png": "present",
+    "/assets/projectiles/second.png": "missing"
+  });
+  assert.equal(report.fileAudit.checked, 2);
+  assert.equal(report.assets[0].fileChecks[0].path, "/assets/projectiles/first.png");
+  assert.equal(report.assets[0].fileChecks[0].status, "present");
+  assert.equal(report.assets[1].fileChecks[0].path, "/assets/projectiles/second.png");
+  assert.equal(report.assets[1].fileChecks[0].status, "missing");
+});
