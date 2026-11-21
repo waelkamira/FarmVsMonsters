@@ -38,7 +38,7 @@ export default function ProjectileTrajectoryEditor({
  const end={x:735,y:262.5};
  const targetHead={x:end.x,y:end.y-10};
  const baseAt=t=>({x:start.x+(end.x-start.x)*t,y:start.y+(end.y-start.y)*t});
- const normalizedPoints=useMemo(()=>Array.isArray(points)&&points.length>=2?points:DEFAULT_POINTS,[points]);
+ const normalizedPoints=useMemo(()=>{const source=Array.isArray(points)&&points.length>=2?points:DEFAULT_POINTS;const origin=source[0]||{x:0,y:0};return source.map(item=>({...item,x:Number(item.x||0)-Number(origin.x||0),y:Number(item.y||0)-Number(origin.y||0)}));},[points]);
  const offsetAt=t=>getProjectileTrajectoryOffset({type:"custom",progress:t,points:normalizedPoints,height,targetX,targetY});
  const rawPointAt=t=>{const base=baseAt(t),offset=offsetAt(t);return{x:base.x+offset.x,y:base.y-offset.y};};
  const rawEnd=rawPointAt(1);
