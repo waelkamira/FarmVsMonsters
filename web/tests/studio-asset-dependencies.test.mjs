@@ -34,7 +34,18 @@ test("explicit inline projectile remains an inline file even when its id matches
   assert.deepEqual(getAssetDependents(assets, "fire-shot").map((item) => item.assetId), ["fire"]);
 });
 
-test("reports a missing managed projectile asset as an unresolved dependency", () => {
+
+test("does not resolve a managed projectile ID to an asset of the wrong type", () => {
+  const assets = [
+    { id: "thorn", type: "plant", path: "/assets/plants/thorn.png", combat: { projectile: { id: "wrong-type", path: "/assets/effects/wrong.png", managed: true } } },
+    { id: "wrong-type", type: "monster", path: "/assets/monsters/wrong.png" }
+  ];
+  const report = buildAssetDependencyReport(assets, "thorn");
+  assert.equal(report.dependencies[0].kind, "asset");
+  assert.equal(report.dependencies[0].resolved, false);
+  assert.equal(report.unresolved.length, 1);
+});
+\ntest("reports a missing managed projectile asset as an unresolved dependency", () => {
   const assets = [{ id: "thorn", type: "plant", path: "/assets/plants/thorn.png", combat: { projectile: { id: "missing-shot", path: "/assets/projectiles/missing-shot.png", managed: true } } }];
   const report = buildAssetDependencyReport(assets, "thorn");
   assert.equal(report.dependencies[0].kind, "asset");
