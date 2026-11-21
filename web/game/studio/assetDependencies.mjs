@@ -39,7 +39,7 @@ function collectFileUses(assets) {
     add(asset, "primary", asset.path);
     const projectile = asset.combat?.projectile;
     const managedTarget = projectile?.id ? byId.get(String(projectile.id)) : null;
-    const managed = projectile?.managed === true || managedTarget?.type === "plantProjectile";
+    const managed = projectile?.managed === true || (projectile?.managed !== false && managedTarget?.type === "plantProjectile");
     if (!managed) add(asset, "projectile", projectile?.path);
   }
   return uses;
