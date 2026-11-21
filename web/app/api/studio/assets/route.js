@@ -73,6 +73,8 @@ function readCombatForm(form,projectile,existing){
   projectileCurveY:form.get("projectileCurveY")??previous?.projectileCurveY??110,
   projectileLaunchOffsetX:form.get("projectileLaunchOffsetX")??previous?.projectileLaunchOffsetX??14,
   projectileLaunchOffsetY:form.get("projectileLaunchOffsetY")??previous?.projectileLaunchOffsetY??-30,
+  projectileTargetOffsetX:form.get("projectileTargetOffsetX")??previous?.projectileTargetOffsetX??0,
+  projectileTargetOffsetY:form.get("projectileTargetOffsetY")??previous?.projectileTargetOffsetY??0,
   projectileCollisionRadius:form.get("projectileCollisionRadius")??previous?.projectileCollisionRadius??22,
   energyAmount:form.get("energyAmount")??previous?.energyAmount??15,
   energyIntervalMs:form.get("energyIntervalMs")??previous?.energyIntervalMs??12000,
