@@ -28,7 +28,7 @@ test("Studio enforces draft-to-testing-to-published and publishes the catalog on
   assert.match(assetsRoute, /status:"testing"/);
   assert.match(assetsRoute, /status:"published"/);
   assert.match(assetsRoute, /PUBLISHED_CATALOG_PATH/);
-  assert.match(assetsRoute, /githubPut\("web\/public"\+asset\.path/);
+  assert.match(assetsRoute, /githubPutImmutable\("web\/public"\+asset\.path/);
 });
 
 test("local sync downloads only testing plants and writes the exact local runtime catalog path", () => {
@@ -69,5 +69,5 @@ test("every registered asset can be opened for editing and metadata-only edits k
   assert.match(assetsRoute, /const hasFile=Boolean\(file&&typeof file\.arrayBuffer/);
   assert.match(assetsRoute, /if\(!hasFile&&\(!replace\|\|!existing\)\)/);
   assert.match(assetsRoute, /path:hasFile\?"\/assets\/"\+relative:existing\.path/);
-  assert.match(assetsRoute, /if\(hasFile\)await githubPut/);
+  assert.match(assetsRoute, /if\(hasFile\)await githubPutImmutable/);
 });
