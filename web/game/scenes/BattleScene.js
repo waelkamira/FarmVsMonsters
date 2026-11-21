@@ -8,6 +8,7 @@ import { getProjectileVFXProfile } from "../vfx/ProjectileVFXProfiles.mjs";
 import { getMonsterReactionProfile, getPlantAnimationProfile } from "../visuals/PlantMonsterVisualProfiles.mjs";
 import { createStudioAnimationProfile } from "../studio/animationProfiles.mjs";
 import { getSpriteFrameRectangles } from "../studio/spriteSheetGrid.mjs";
+import { getProjectileTrajectoryOffset } from "../studio/projectileTrajectory.mjs";
 import { createStudioMonsterProfile, resolveStudioMonsterRuntimeProfile, selectWeightedStudioMonster } from "../studio/monsterProfiles.mjs";
 
 // Temporary playtest mode exposes every implemented built-in plant; campaign progression data remains intact.
@@ -4689,20 +4690,11 @@ export default class BattleScene extends Scene {
       const studioProgress = shot.studioPlantId
         ? PhaserMath.Clamp((shot.localX - shot.startLocalX) / Math.max(1, shot.targetLocalX - shot.startLocalX), 0, 1)
         : 0;
-      const studioCurveProgress = studioProgress;
-      const studioCurveX = shot.studioPlantId && shot.projectileTrajectoryType === "bezier"
-        ? 2 * studioCurveProgress * (1 - studioCurveProgress) * (shot.projectileCurveX || 0)
-        : 0;
-      const projectileX = position.x + (shot.launchOffsetX || 0) + studioCurveX;
-      let studioPathOffset = 0;
-      if (shot.studioPlantId && shot.projectileTrajectoryType === "arc") {
-        studioPathOffset = Math.sin(Math.PI * studioProgress) * (shot.projectileHeight || 0);
-      } else if (shot.studioPlantId && shot.projectileTrajectoryType === "sine") {
-        studioPathOffset = Math.sin(Math.PI * 2 * studioProgress) * (shot.projectileHeight || 0);
-      } else if (shot.studioPlantId && shot.projectileTrajectoryType === "bezier") {
-        studioPathOffset = 2 * studioCurveProgress * (1 - studioCurveProgress) * (shot.projectileCurveY || 0);
-      }
-      const projectileY = position.y + (shot.launchOffsetY || 0) - studioPathOffset;
+      const studioOffset = shot.studioPlantId
+        ? getProjectileTrajectoryOffset({type:shot.projectileTrajectoryType,progress:studioProgress,height:shot.projectileHeight,curveX:shot.projectileCurveX,curveY:shot.projectileCurveY})
+        : {x:0,y:0};
+      const projectileX = position.x + (shot.launchOffsetX || 0) + studioOffset.x;
+      const projectileY = position.y + (shot.launchOffsetY || 0) - studioOffset.y;
       let trailPositionY = projectileY;
 
       // Give the outgoing pineapple bomb a smooth launch arc. Progress is
