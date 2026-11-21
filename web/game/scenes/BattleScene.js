@@ -8,7 +8,7 @@ import { getProjectileVFXProfile } from "../vfx/ProjectileVFXProfiles.mjs";
 import { getMonsterReactionProfile, getPlantAnimationProfile } from "../visuals/PlantMonsterVisualProfiles.mjs";
 
 // Keep campaign unlocks active; Studio plants enter the local and published catalogs through their own lifecycle.
-const PLAYTEST_ALL_PLANTS = false;
+const PLAYTEST_ALL_PLANTS = true;
 const ALL_PLAYTEST_PLANT_IDS = Object.freeze(["radish", "mushroom", "pumpkin", "pineapple", "hazelnut", "mango", "snow-thrower", "electric-mushroom", "fire-pepper"]);
 import { createSeededRandom } from "../rules/seededRandom.mjs";
 import { createCombatEventLog, appendCombatEvent } from "../rules/combatEventLog.mjs";
@@ -906,20 +906,15 @@ export default class BattleScene extends Scene {
         PLAYTEST_ALL_PLANTS || unlocked.has(type)
       ));
       const saved = JSON.parse(window.localStorage.getItem("farmVsMonsters.selectedPlants") || "null");
-      if (PLAYTEST_ALL_PLANTS) {
-        selectedTypes = [...availableTypes];
-      } else if (Array.isArray(saved)) {
-        // Always reserve seed-bank space for plants currently in Studio testing.
-        // A previously saved loadout must not silently hide a newly prepared plant.
-        const testingTypes = (this.studioPlants || [])
-          .filter((plant) => plant.testOnly)
-          .map((plant) => plant.id)
-          .filter((type) => availableTypes.has(type));
-        selectedTypes = [...new Set(["mushroom", "radish", ...testingTypes,
-          ...saved.filter((type) => availableTypes.has(type))])].slice(0, 7);
-      } else {
-        selectedTypes = [...availableTypes];
-      }
+      // All implemented plants are unlocked for the current playtest. The player still equips at most seven.
+      const testingTypes = (this.studioPlants || [])
+        .filter((plant) => plant.testOnly)
+        .map((plant) => plant.id)
+        .filter((type) => availableTypes.has(type));
+      const preferredLoadout = Array.isArray(saved)
+        ? ["mushroom", "radish", ...testingTypes, ...saved.filter((type) => availableTypes.has(type))]
+        : [...availableTypes];
+      selectedTypes = [...new Set(preferredLoadout.filter((type) => availableTypes.has(type)))].slice(0, 7);
     } catch {
       // Storage failures keep the starter loadout playable.
       selectedTypes = ["radish", "mushroom"];
@@ -2988,8 +2983,9 @@ export default class BattleScene extends Scene {
     if (this.textures.exists(textureKey)) {
       const sheet = Boolean(studioPlant.spriteSheet);
       const frame = this.textures.getFrame(textureKey, sheet ? "0" : undefined);
-      const height = 88 * perspective;
-      const width = Math.min(height * (frame.realWidth / frame.realHeight), 100 * perspective);
+      const sizeFactor = PhaserMath.Clamp((Number(studioPlant.combat?.sizePercent) || 100) / 100, 0.25, 2);
+      const height = 88 * perspective * sizeFactor;
+      const width = Math.min(height * (frame.realWidth / frame.realHeight), 100 * perspective * sizeFactor);
       const artwork = sheet
         ? this.add.sprite(0, -height / 2 + 2, textureKey, "0").setDisplaySize(width, height)
         : this.add.image(0, -height / 2 + 2, textureKey).setDisplaySize(width, height);
