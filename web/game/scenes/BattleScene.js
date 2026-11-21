@@ -7,6 +7,7 @@ import { getPlantVFXProfile } from "../vfx/PlantVFXProfiles.mjs";
 import { getProjectileVFXProfile } from "../vfx/ProjectileVFXProfiles.mjs";
 import { getMonsterReactionProfile, getPlantAnimationProfile } from "../visuals/PlantMonsterVisualProfiles.mjs";
 import { createStudioAnimationProfile } from "../studio/animationProfiles.mjs";
+import { createStudioMonsterProfile, resolveStudioMonsterRuntimeProfile, selectWeightedStudioMonster } from "../studio/monsterProfiles.mjs";
 
 // Temporary playtest mode exposes every implemented built-in plant; campaign progression data remains intact.
 const PLAYTEST_ALL_PLANTS = true;
@@ -190,10 +191,25 @@ export default class BattleScene extends Scene {
         }
       });
     };
+    const queueStudioMonsterCatalog = (catalogKey) => {
+      this.load.once("filecomplete-json-" + catalogKey, () => {
+        const entries = this.cache.json.get(catalogKey)?.monsters || [];
+        const variant = catalogKey === "studio-test-monster-catalog" ? "testing" : "published";
+        for (const entry of entries) {
+          if (!entry || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(entry.id || "") ||
+              typeof entry.path !== "string" || !(entry.path.startsWith("/assets/") || entry.path.startsWith("/api/studio/assets?preview="))) continue;
+          this.load.image("studio-monster-" + variant + "-" + entry.id, entry.path);
+        }
+      });
+    };
     queueStudioCatalog("studio-published-catalog");
     queueStudioCatalog("studio-test-catalog");
     this.load.json("studio-published-catalog", "/assets/studio-plant-catalog.json");
     this.load.json("studio-test-catalog", "/api/studio/assets?catalog=testing");
+    queueStudioMonsterCatalog("studio-published-monster-catalog");
+    queueStudioMonsterCatalog("studio-test-monster-catalog");
+    this.load.json("studio-published-monster-catalog", "/assets/studio-monster-catalog.json");
+    this.load.json("studio-test-monster-catalog", "/api/studio/assets?catalog=testing-monsters");
     this.load.on("loaderror", (file) => {
       if (file.key === "farm-battlefield") this.backgroundAssetFailed = true;
       if (file.key === "radish-level-1") this.radishAssetFailed = true;
@@ -272,6 +288,49 @@ export default class BattleScene extends Scene {
               repeat: clip.loop ? -1 : 0
             });
           }
+        }
+      }
+    }
+    const publishedStudioMonsters = this.cache.json.get("studio-published-monster-catalog")?.monsters || [];
+    const testStudioMonsters = this.cache.json.get("studio-test-monster-catalog")?.monsters || [];
+    const studioMonsterMap = new Map();
+    const addStudioMonsters = (entries, testOnly) => {
+      for (const entry of entries) {
+        if (!entry || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(entry.id || "") ||
+            typeof entry.path !== "string" || !(entry.path.startsWith("/assets/") || entry.path.startsWith("/api/studio/assets?preview="))) continue;
+        try {
+          const monsterProfile = createStudioMonsterProfile(entry.monsterProfile);
+          const frameCount = Math.max(1, (Number(entry.rows) || 1) * (Number(entry.columns) || 1));
+          const animationProfile = createStudioAnimationProfile(entry.animationProfile, frameCount);
+          const variant = testOnly ? "testing" : "published";
+          studioMonsterMap.set(entry.id, {
+            ...entry,
+            monsterProfile,
+            animationProfile,
+            testOnly,
+            textureKey: "studio-monster-" + variant + "-" + entry.id
+          });
+        } catch (error) {
+          console.warn("Skipping invalid Studio monster profile:", entry.id, error);
+        }
+      }
+    };
+    addStudioMonsters(publishedStudioMonsters, false);
+    addStudioMonsters(testStudioMonsters, true);
+    this.studioMonsters = [...studioMonsterMap.values()];
+    this.studioMonstersById = Object.fromEntries(this.studioMonsters.map((monster) => [monster.id, monster]));
+    for (const monster of this.studioMonsters) {
+      if (!monster.spriteSheet || !this.registerStudioGridSheet(monster.textureKey, monster.rows, monster.columns)) continue;
+      for (const [clipName, clip] of [["idle", monster.animationProfile.idle], ["attack", monster.animationProfile.attack]]) {
+        if (clip.endFrame <= clip.startFrame) continue;
+        const animationKey = "studio-monster-" + monster.id + "-" + clipName;
+        if (!this.anims.exists(animationKey)) {
+          this.anims.create({
+            key: animationKey,
+            frames: this.anims.generateFrameNumbers(monster.textureKey, { start: clip.startFrame, end: clip.endFrame }),
+            frameRate: clip.fps,
+            repeat: clip.loop ? -1 : 0
+          });
         }
       }
     }
