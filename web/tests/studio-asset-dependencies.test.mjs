@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { buildAssetDependencyReport, getAssetDependents } from "../game/studio/assetDependencies.mjs";
 
 test("reports registered projectile assets as explicit dependencies and reverse references", () => {
