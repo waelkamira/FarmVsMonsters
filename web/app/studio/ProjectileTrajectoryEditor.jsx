@@ -12,10 +12,10 @@ export default function ProjectileTrajectoryEditor({imageUrl,plantUrl,frameCount
  useEffect(()=>{if(!playing)setProgress(0);},[playing,path,curveX,curveY,launchX,launchY]);
  const start={x:86+clamp(launchX,-70,70)*.55,y:168-clamp(launchY,-120,120)*.55};
  const end={x:520+clamp(targetX,-100,100)*.55,y:164-clamp(targetY,-100,100)*.55};
- const control={x:303+clamp(curveX,-180,180)*.55,y:164-clamp(curveY,-300,300)*.55};
+ const control={x:(start.x+end.x)/2+clamp(curveX,-180,180)*.55,y:(start.y+end.y)/2-clamp(curveY,-300,300)*.55};
  const point=t=>{const offset=getProjectileTrajectoryOffset({type:path,progress:t,height:clamp(height,0,300),curveX,curveY,targetX,targetY});return{x:start.x+(end.x-start.x)*t+offset.x*.55,y:start.y+(end.y-start.y)*t-offset.y*.55};};
  const pathD=useMemo(()=>Array.from({length:51},(_,i)=>point(i/50)).map((p,i)=>(i?"L":"M")+p.x.toFixed(1)+","+p.y.toFixed(1)).join(" "),[path,curveX,curveY,launchX,launchY,targetX,targetY,height]);
- const pointer=(e)=>{const rect=e.currentTarget.ownerSVGElement?.getBoundingClientRect()||e.currentTarget.getBoundingClientRect();const x=(e.clientX-rect.left)*560/rect.width,y=(e.clientY-rect.top)*240/rect.height;if(drag==="launch"){setLaunchX(Math.round(clamp((x-86)/.55,-70,70)));setLaunchY(Math.round(clamp((168-y)/.55,-120,120)));}if(drag==="curve"){setCurveX(Math.round(clamp((x-303)/.55,-180,180)));setCurveY(Math.round(clamp((164-y)/.55,-300,300)));}if(drag==="target"){setTargetX(Math.round(clamp((x-520)/.55,-100,100)));setTargetY(Math.round(clamp((164-y)/.55,-100,100)));}};
+ const pointer=(e)=>{const rect=e.currentTarget.ownerSVGElement?.getBoundingClientRect()||e.currentTarget.getBoundingClientRect();const x=(e.clientX-rect.left)*560/rect.width,y=(e.clientY-rect.top)*240/rect.height;if(drag==="launch"){setLaunchX(Math.round(clamp((x-86)/.55,-70,70)));setLaunchY(Math.round(clamp((168-y)/.55,-120,120)));}if(drag==="curve"){setCurveX(Math.round(clamp((x-(start.x+end.x)/2)/.55,-180,180)));setCurveY(Math.round(clamp(((start.y+end.y)/2-y)/.55,-300,300)));}if(drag==="target"){setTargetX(Math.round(clamp((x-520)/.55,-100,100)));setTargetY(Math.round(clamp((164-y)/.55,-100,100)));}};
  const current=point(progress);
  const frameIndex=Math.min(Math.max(1,frameCount)-1,Math.floor(progress*Math.max(1,frameCount)));
  const frameColumn=frameIndex%Math.max(1,columns),frameRow=Math.floor(frameIndex/Math.max(1,columns));
