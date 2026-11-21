@@ -18,6 +18,7 @@ test("Studio monster profile controls and lifecycle are connected to the asset A
   assert.match(assetsRoute, /catalog==="testing-monsters"/);
   assert.match(assetsRoute, /PUBLISHED_MONSTER_CATALOG_PATH/);
   assert.match(assetsRoute, /Publish monster:/);
+  assert.match(assetsRoute, /operation!=="publish"/);
   assert.match(assetsRoute, /monsterProfile:asset\.monsterProfile/);
 });
 
