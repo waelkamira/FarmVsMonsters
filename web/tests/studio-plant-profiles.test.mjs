@@ -18,6 +18,11 @@ test("projectile behavior requires an explicitly selected mode and linked projec
   assert.equal(profile.projectile.path,projectile.path);
 });
 
+test("persists whether a projectile is a managed library asset or an embedded file",()=>{
+  const base={id:"shot",path:"/assets/projectiles/shot.png"};
+  assert.equal(createStudioPlantCombatProfile({behavior:"projectile",projectile:{...base,managed:true}}).projectile.managed,true);
+  assert.equal(createStudioPlantCombatProfile({behavior:"projectile",projectile:{...base,managed:false}}).projectile.managed,false);
+});
 test("plants without projectile assets retain each supported manually selected behavior",()=>{
   for(const behavior of Object.keys(STUDIO_PLANT_BEHAVIORS).filter((value)=>value!=="projectile")){
     const profile=createStudioPlantCombatProfile({behavior});
