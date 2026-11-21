@@ -34,6 +34,9 @@ function readCombatForm(form,projectile,existing){
   damage:form.get("damage")??previous?.damage??30,
   range:form.get("range")??previous?.range??180,
   projectileSpeed:form.get("projectileSpeed")??previous?.projectileSpeed??280,
+  projectileHeight:form.get("projectileHeight")??previous?.projectileHeight??0,
+  projectileEffectColor:form.get("projectileEffectColor")??previous?.projectileEffectColor??"#ffc247",
+  projectileRotation:form.get("projectileRotation")??previous?.projectileRotation??0,
   projectileCollisionRadius:form.get("projectileCollisionRadius")??previous?.projectileCollisionRadius??22,
   energyAmount:form.get("energyAmount")??previous?.energyAmount??15,
   energyIntervalMs:form.get("energyIntervalMs")??previous?.energyIntervalMs??12000
