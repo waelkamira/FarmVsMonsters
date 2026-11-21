@@ -63,14 +63,14 @@
       "rows": 3,
       "columns": 3,
       "spriteSheet": true,
-      "status": "published",
+      "status": "draft",
       "createdAt": "2026-11-20T21:52:10.198Z",
-      "updatedAt": "2026-11-20T22:43:05.182Z",
+      "updatedAt": "2026-11-21T00:27:09.657Z",
       "combat": {
         "mode": "projectile",
         "projectile": {
           "id": "bamboo-throwing-level-1-projectile",
-          "path": "/assets/projectiles/plants/bamboo-throwing-level-1-projectile.png",
+          "path": "/assets/projectiles/plants/bamboo-throwing-level-1-projectile-cbedc31ec96279864eaf335cd3f9594a067d085445f913348b6a7475e97fc27c.png",
           "filename": "bamboo-throwing-level-1-projectile.png"
         },
         "energyCost": 60,
