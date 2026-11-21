@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { getProjectileTrajectoryOffset } from "../game/studio/projectileTrajectory.mjs";
+import { createStudioPlantCombatProfile } from "../game/studio/plantProfiles.mjs";
 
 test("straight trajectory has no visual offset",()=>{
  assert.deepEqual(getProjectileTrajectoryOffset({type:"straight",progress:.5,height:90,curveX:80,curveY:120}),{x:0,y:0});
@@ -22,7 +23,6 @@ test("progress is clamped to the path endpoints",()=>{
  assert.deepEqual(getProjectileTrajectoryOffset({type:"bezier",progress:3,curveX:120,curveY:200}),{x:0,y:0});
 });
 
-import { createStudioPlantCombatProfile } from "../game/studio/plantProfiles.mjs";
 
 test("plant combat profile persists trajectory and launch tuning",()=>{
  const profile=createStudioPlantCombatProfile({
