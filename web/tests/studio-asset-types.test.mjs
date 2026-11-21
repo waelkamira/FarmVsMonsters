@@ -1,0 +1,7 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import {STUDIO_ASSET_TYPES,STUDIO_MAX_UPLOAD_BYTES,validateStudioAsset} from "../game/studio/assetTypes.mjs";
+test("all requested categories exist",()=>{for(const t of ["plant","monster","plantProjectile","monsterProjectile","effect","item","audio"])assert.ok(STUDIO_ASSET_TYPES[t]);});
+test("accepts a 3x3 plant sheet",()=>{const r=validateStudioAsset({id:"fire-pepper",type:"plant",file:{size:1024,type:"image/png"},rows:3,columns:3});assert.equal(r.valid,true);assert.equal(r.config.spriteSheet,true);});
+test("rejects invalid IDs, media and oversized files",()=>{assert.equal(validateStudioAsset({id:"Fire Pepper",type:"plant",file:{size:100,type:"image/png"}}).valid,false);assert.equal(validateStudioAsset({id:"wrong",type:"plant",file:{size:100,type:"audio/mpeg"}}).valid,false);assert.equal(validateStudioAsset({id:"large",type:"monster",file:{size:STUDIO_MAX_UPLOAD_BYTES+1,type:"image/png"}}).valid,false);});
+test("projectile images are not treated as sprite sheets",()=>{const r=validateStudioAsset({id:"seed-shot",type:"plantProjectile",file:{size:100,type:"image/webp"},rows:1,columns:1});assert.equal(r.valid,true);assert.equal(r.config.spriteSheet,false);});
