@@ -193,7 +193,7 @@ export async function PATCH(req){
    try{updated=operation==="restore-version"?restoreStudioAssetRevision(registry.assets[index],body.versionNumber):transitionStudioAssetStatus(registry.assets[index],operation);}
    catch(error){return NextResponse.json({error:error.message},{status:409});}
    registry.assets[index]=updated;await saveLocalRegistry(registry);
-   return NextResponse.json({success:true,operation,asset:updated,message:operation==="archive"?"تمت أرشفة النبتة مع الاحتفاظ بملفاتها.":operation==="restore"?"تمت استعادة النبتة كمسودة.":"تمت استعادة الإصدار السابق كمسودة جديدة."});
+   return NextResponse.json({success:true,operation,asset:updated,message:operation==="archive"?"تمت أرشفة الأصل مع الاحتفاظ بملفاته.":operation==="restore"?"تمت استعادة الأصل كمسودة.":"تمت استعادة الإصدار السابق كمسودة جديدة."});
   }catch(error){return NextResponse.json({error:error.message||"Studio lifecycle action failed."},{status:500});}
  }
  const token=process.env.STUDIO_GITHUB_TOKEN,storageBranch=process.env.STUDIO_GITHUB_BRANCH||"studio/assets",targetBranch=process.env.STUDIO_PUBLISH_BRANCH||"main";
@@ -201,7 +201,7 @@ export async function PATCH(req){
  try{
   const registryDocument=await githubGetDocument(REGISTRY_PATH,token,storageBranch),registry=registryDocument?JSON.parse(registryDocument.content):{version:1,assets:[]},registrySha=registryDocument?.sha??null;
   const index=registry.assets.findIndex(asset=>asset.id===id)
-  if(index<0)return NextResponse.json({error:"لم يتم العثور على النبتة في مكتبة Studio."},{status:404});
+  if(index<0)return NextResponse.json({error:"لم يتم العثور على الأصل في مكتبة Studio."},{status:404});
   const asset=registry.assets[index];
   if(operation==="clone"){
    const newId=String(body.newId||"").trim().toLowerCase();
@@ -210,7 +210,7 @@ export async function PATCH(req){
    if(asset.type==="plant"&&STUDIO_RESERVED_PLANT_IDS.includes(newId))return NextResponse.json({error:"هذا المعرّف محجوز لنبتة أساسية."},{status:409});
    const clone=cloneStudioAsset(asset,newId,body.newName);
    registry.assets.push(clone);
-   await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(registry,null,2)+"\\n"),"studio: clone "+id+" as "+newId,token,storageBranch,registrySha);
+   await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(registry,null,2)+"\n"),"studio: clone "+id+" as "+newId,token,storageBranch,registrySha);
    return NextResponse.json({success:true,operation,asset:clone,message:"تم إنشاء نسخة جديدة كمسودة مستقلة."});
   }
   if(operation==="restore-version"){
@@ -239,7 +239,7 @@ export async function PATCH(req){
    catch(error){return NextResponse.json({error:error.message},{status:409});}
    registry.assets[index]=updated;
    await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(registry,null,2)+"\n"),"studio: "+operation+" plant "+id,token,storageBranch,registrySha);
-   return NextResponse.json({success:true,operation,asset:updated,message:operation==="archive"?"تمت أرشفة النبتة مع الاحتفاظ بملفاتها.":"تمت استعادة النبتة كمسودة."});
+   return NextResponse.json({success:true,operation,asset:updated,message:operation==="archive"?"تمت أرشفة الأصل مع الاحتفاظ بملفاته.":"تمت استعادة الأصل كمسودة."});
   }
   if(!asset.combat?.mode)return NextResponse.json({error:"يجب تعيين سلوك قتالي للنبتة أولاً."},{status:409});
   if(operation==="prepare-test"){
