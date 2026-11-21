@@ -23,6 +23,12 @@ test("Studio exposes archive and restore actions for every asset type",()=>{
   assert.match(assetsRoute,/registry\.assets\.findIndex\(asset=>asset\.id===id\)/);
 });
 
+test("Studio supports previewing uploaded and existing audio assets",()=>{
+  assert.match(studioPage,/audioPreviewUrl/);
+  assert.match(studioPage,/<audio controls preload="metadata"/);
+  assert.match(studioPage,/studio-audio-preview/);
+});
+
 test("Studio dashboard summarizes assets by type and lifecycle status",()=>{
   assert.match(studioPage,/assets\.filter\(a=>a\.type==="plant"\)/);
   assert.match(studioPage,/assets\.filter\(a=>a\.type==="monster"\)/);
