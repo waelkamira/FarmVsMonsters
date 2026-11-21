@@ -42,6 +42,7 @@ test("clones any registered asset as a clean draft while preserving its immutabl
   assert.equal(clone.name, "Ice Pepper");
   assert.equal(clone.path, source.path);
   assert.deepEqual(clone.combat, source.combat);
+  assert.notEqual(clone.combat, source.combat);
   assert.equal(clone.revision, 1);
   assert.deepEqual(clone.versions, []);
   assert.equal(clone.status, "draft");
