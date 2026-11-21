@@ -8,6 +8,7 @@ import {createStudioPlantCombatProfile} from "../../../../game/studio/plantProfi
 import {assertExpectedContentSha} from "../../../../game/studio/registryConcurrency.mjs";
 import {createImmutableAssetPath} from "../../../../game/studio/immutableAssetPath.mjs";
 import {createStudioReleaseBranchName,resolveStudioReleaseAsset,transitionStudioAssetStatus} from "../../../../game/studio/releaseLifecycle.mjs";
+import {createStudioAssetRevision,restoreStudioAssetRevision} from "../../../../game/studio/assetVersions.mjs";
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
 const COOKIE="fvm_studio_session";
@@ -151,7 +152,7 @@ export async function POST(req){
  const bytes=hasFile?Buffer.from(await file.arrayBuffer()):null;
  const relative=hasFile?createImmutableAssetPath(config.folder,id,extension,bytes):(existing?.path||"").replace(/^\/assets\//,"");
  const now=new Date().toISOString();
- const record={...(existing||{}),id,type,name:String(form.get("name")||id).trim().slice(0,80),filename:hasFile?id+extension:existing.filename,path:hasFile?"/assets/"+relative:existing.path,rows,columns,spriteSheet:config.spriteSheet,status:"draft",releaseRequest:null,createdAt:existing?.createdAt||now,updatedAt:now,...(type==="plant"?{combat:combatProfile}:{})};
+ const record=createStudioAssetRevision(existing,{...(existing||{}),id,type,name:String(form.get("name")||id).trim().slice(0,80),filename:hasFile?id+extension:existing.filename,path:hasFile?"/assets/"+relative:existing.path,rows,columns,spriteSheet:config.spriteSheet,status:"draft",releaseRequest:null,createdAt:existing?.createdAt||now,updatedAt:now,...(type==="plant"?{combat:combatProfile}:{})});
  const next={...old,version:1,assets:existing?old.assets.map((a,i)=>i===index?record:a):[...old.assets,record]};
  try{
   if(driver==="github"){
@@ -171,18 +172,18 @@ export async function PATCH(req){
  if(!authorized(req))return NextResponse.json({error:"Unauthorized."},{status:401});
  let body;try{body=await req.json();}catch{return NextResponse.json({error:"Invalid Studio action."},{status:400});}
  const id=String(body.id||"").trim(),operation=String(body.operation||"");
- if(!STUDIO_ID_PATTERN.test(id)||!["prepare-test","publish","archive","restore"].includes(operation))return NextResponse.json({error:"Invalid asset or operation."},{status:400});
+ if(!STUDIO_ID_PATTERN.test(id)||!["prepare-test","publish","archive","restore","restore-version"].includes(operation))return NextResponse.json({error:"Invalid asset or operation."},{status:400});
  const driver=process.env.STUDIO_STORAGE_DRIVER||"local";
  if(driver!=="github"){
-  if(operation!=="archive"&&operation!=="restore")return NextResponse.json({error:"Testing preparation and publishing require GitHub storage."},{status:503});
+  if(operation!=="archive"&&operation!=="restore"&&operation!=="restore-version")return NextResponse.json({error:"Testing preparation and publishing require GitHub storage."},{status:503});
   try{
    const registry=await localRegistry(),index=registry.assets.findIndex(asset=>asset.id===id&&asset.type==="plant");
    if(index<0)return NextResponse.json({error:"لم يتم العثور على النبتة في مكتبة Studio."},{status:404});
    let updated;
-   try{updated=transitionStudioAssetStatus(registry.assets[index],operation);}
+   try{updated=operation==="restore-version"?restoreStudioAssetRevision(registry.assets[index],body.versionNumber):transitionStudioAssetStatus(registry.assets[index],operation);}
    catch(error){return NextResponse.json({error:error.message},{status:409});}
    registry.assets[index]=updated;await saveLocalRegistry(registry);
-   return NextResponse.json({success:true,operation,asset:updated,message:operation==="archive"?"تمت أرشفة النبتة مع الاحتفاظ بملفاتها.":"تمت استعادة النبتة كمسودة."});
+   return NextResponse.json({success:true,operation,asset:updated,message:operation==="archive"?"تمت أرشفة النبتة مع الاحتفاظ بملفاتها.":operation==="restore"?"تمت استعادة النبتة كمسودة.":"تمت استعادة الإصدار السابق كمسودة جديدة."});
   }catch(error){return NextResponse.json({error:error.message||"Studio lifecycle action failed."},{status:500});}
  }
  const token=process.env.STUDIO_GITHUB_TOKEN,storageBranch=process.env.STUDIO_GITHUB_BRANCH||"studio/assets",targetBranch=process.env.STUDIO_PUBLISH_BRANCH||"main";
@@ -192,6 +193,20 @@ export async function PATCH(req){
   const index=registry.assets.findIndex(asset=>asset.id===id&&asset.type==="plant");
   if(index<0)return NextResponse.json({error:"لم يتم العثور على النبتة في مكتبة Studio."},{status:404});
   const asset=registry.assets[index];
+  if(operation==="restore-version"){
+   let candidate=asset;
+   if(asset.releaseRequest?.number){
+    const previousRequest=await githubGetPullRequest(asset.releaseRequest.number,token);
+    if(previousRequest?.state==="open")return NextResponse.json({error:"أغلق طلب مراجعة النشر المفتوح أولاً قبل استعادة إصدار آخر."},{status:409});
+    candidate={...asset,releaseRequest:null};
+   }
+   let updated;
+   try{updated=restoreStudioAssetRevision(candidate,body.versionNumber);}
+   catch(error){return NextResponse.json({error:error.message},{status:409});}
+   registry.assets[index]=updated;
+   await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(registry,null,2)+"\\n"),"studio: restore "+id+" version "+body.versionNumber,token,storageBranch,registrySha);
+   return NextResponse.json({success:true,operation,asset:updated,message:"تمت استعادة الإصدار كمسودة جديدة؛ يجب اختبارها قبل طلب النشر."});
+  }
   if(operation==="archive"||operation==="restore"){
    let candidate=asset;
    if(operation==="archive"&&asset.releaseRequest?.number){
