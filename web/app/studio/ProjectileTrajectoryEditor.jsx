@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
+import { getProjectileTrajectoryOffset } from "../../game/studio/projectileTrajectory.mjs";
 
 const clamp=(v,min,max)=>Math.min(max,Math.max(min,Number(v)||0));
 export default function ProjectileTrajectoryEditor({imageUrl,plantUrl,path,setPath,curveX,setCurveX,curveY,setCurveY,launchX,setLaunchX,launchY,setLaunchY,speed,setSpeed,height,setHeight,rotation,setRotation,playing,setPlaying}){
@@ -10,7 +11,7 @@ export default function ProjectileTrajectoryEditor({imageUrl,plantUrl,path,setPa
  const start={x:86+clamp(launchX,-70,70)*.55,y:168-clamp(launchY,-120,120)*.55};
  const end={x:520,y:164};
  const control={x:303+clamp(curveX,-180,180)*.55,y:164-clamp(curveY,-300,300)*.55};
- const point=t=>{const u=1-t;if(path==="straight")return{x:start.x+(end.x-start.x)*t,y:start.y+(end.y-start.y)*t};if(path==="arc"||path==="sine")return{x:start.x+(end.x-start.x)*t,y:start.y+(end.y-start.y)*t-Math.sin(Math.PI*t)*(path==="arc"?clamp(height,0,300)*.45:clamp(height,0,300)*.45)};return{x:u*u*start.x+2*u*t*control.x+t*t*end.x,y:u*u*start.y+2*u*t*control.y+t*t*end.y};};
+ const point=t=>{const offset=getProjectileTrajectoryOffset({type:path,progress:t,height:clamp(height,0,300),curveX,curveY});return{x:start.x+(end.x-start.x)*t+offset.x*.55,y:start.y+(end.y-start.y)*t-offset.y*.55};};
  const pathD=useMemo(()=>Array.from({length:51},(_,i)=>point(i/50)).map((p,i)=>(i?"L":"M")+p.x.toFixed(1)+","+p.y.toFixed(1)).join(" "),[path,curveX,curveY,launchX,launchY,height]);
  const pointer=(e)=>{const rect=e.currentTarget.ownerSVGElement?.getBoundingClientRect()||e.currentTarget.getBoundingClientRect();const x=(e.clientX-rect.left)*560/rect.width,y=(e.clientY-rect.top)*240/rect.height;if(drag==="launch"){setLaunchX(Math.round(clamp((x-86)/.55,-70,70)));setLaunchY(Math.round(clamp((168-y)/.55,-120,120)));}if(drag==="curve"){setCurveX(Math.round(clamp((x-303)/.55,-180,180)));setCurveY(Math.round(clamp((164-y)/.55,-300,300)));}};
  const current=point(progress);
