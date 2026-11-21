@@ -42,6 +42,14 @@ function sampleControlPoints(points, progress) {
   return { x: interpolate("x"), y: interpolate("y") };
 }
 
+export function getProjectileHeadCorrection({progress=0,targetX=0,targetY=0,trajectoryEndX=0,trajectoryEndY=0}={}) {
+  const t = Math.min(1, Math.max(0, Number(progress) || 0));
+  return {
+    x: (Number(targetX) - Number(trajectoryEndX)) * t,
+    y: (Number(targetY) - Number(trajectoryEndY)) * t
+  };
+}
+
 export function getProjectileTrajectoryOffset({type="arc",progress=0,height=0,curveX=0,curveY=110,targetX=0,targetY=0,points=null}={}) {
   const t=Math.min(1,Math.max(0,Number(progress)||0));
   const targetOffset={x:(Number(targetX)||0)*t,y:(Number(targetY)||0)*t};
