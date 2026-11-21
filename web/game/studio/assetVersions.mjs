@@ -71,6 +71,8 @@ export function cloneStudioAsset(asset, newId, newName, timestamp = new Date().t
     releaseRequest: null,
     archivedAt: null,
     publishedAt: null,
+    testingAt: null,
+    restoredFromVersion: null,
     clonedFrom: asset.id,
     createdAt: timestamp,
     updatedAt: timestamp
