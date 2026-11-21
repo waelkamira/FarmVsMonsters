@@ -9,6 +9,7 @@ import {assertExpectedContentSha} from "../../../../game/studio/registryConcurre
 import {createImmutableAssetPath} from "../../../../game/studio/immutableAssetPath.mjs";
 import {createStudioReleaseBranchName,resolveStudioReleaseAsset,transitionStudioAssetStatus} from "../../../../game/studio/releaseLifecycle.mjs";
 import {cloneStudioAsset,createStudioAssetRevision,restoreStudioAssetRevision} from "../../../../game/studio/assetVersions.mjs";
+import {getAssetDependents} from "../../../../game/studio/assetDependencies.mjs";
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
 const COOKIE="fvm_studio_session";
@@ -126,6 +127,10 @@ export async function POST(req){
  const driver=process.env.STUDIO_STORAGE_DRIVER||"local";let old,registrySha;
  try{if(driver==="github"){const token=process.env.STUDIO_GITHUB_TOKEN,branch=process.env.STUDIO_GITHUB_BRANCH||"studio/assets";if(!token)return NextResponse.json({error:"STUDIO_GITHUB_TOKEN is required."},{status:503});const document=await githubGetDocument(REGISTRY_PATH,token,branch);old=document?JSON.parse(document.content):{version:1,assets:[]};registrySha=document?.sha??null;}else old=await localRegistry();}catch(error){return NextResponse.json({error:error.message},{status:502});}
  const index=old.assets.findIndex(a=>a.id===id),existing=index>=0?old.assets[index]:null;
+ if(existing&&(hasFile||hasProjectile||removeProjectile)){
+  const dependents=getAssetDependents(old.assets,id);
+  if(dependents.length)return NextResponse.json({error:"لا يمكن استبدال ملفات هذا الأصل قبل معالجة الأصول التي تعتمد عليه: "+dependents.map(item=>item.assetName).join("، ")},{status:409});
+ }
  if(existing&&!replace)return NextResponse.json({error:"Asset ID already exists. اختر الأصل من المكتبة واستخدم زر التعديل."},{status:409});
  if(!existing&&replace)return NextResponse.json({error:"الأصل المطلوب تعديله غير موجود في المكتبة."},{status:404});
  if(existing&&existing.type!==type)return NextResponse.json({error:"لا يمكن تغيير فئة الأصل أثناء التعديل."},{status:409});
@@ -180,6 +185,10 @@ export async function PATCH(req){
   try{
    const registry=await localRegistry(),index=registry.assets.findIndex(asset=>asset.id===id);
    if(index<0)return NextResponse.json({error:"لم يتم العثور على الأصل في مكتبة Studio."},{status:404});
+   if(operation==="archive"||operation==="restore-version"){
+    const dependents=getAssetDependents(registry.assets,id);
+    if(dependents.length)return NextResponse.json({error:"لا يمكن تنفيذ العملية قبل معالجة الأصول التي تعتمد على هذا الأصل: "+dependents.map(item=>item.assetName).join("، ")},{status:409});
+   }
    if(operation==="clone"){
     const newId=String(body.newId||"").trim().toLowerCase();
     if(!STUDIO_ID_PATTERN.test(newId)||newId.length>64)return NextResponse.json({error:"معرّف النسخة غير صالح."},{status:400});
@@ -214,6 +223,8 @@ export async function PATCH(req){
    return NextResponse.json({success:true,operation,asset:clone,message:"تم إنشاء نسخة جديدة كمسودة مستقلة."});
   }
   if(operation==="restore-version"){
+   const dependents=getAssetDependents(registry.assets,id);
+   if(dependents.length)return NextResponse.json({error:"لا يمكن استعادة إصدار هذا الأصل قبل معالجة الأصول التي تعتمد عليه: "+dependents.map(item=>item.assetName).join("، ")},{status:409});
    let candidate=asset;
    if(asset.releaseRequest?.number){
     const previousRequest=await githubGetPullRequest(asset.releaseRequest.number,token);
@@ -226,6 +237,10 @@ export async function PATCH(req){
    registry.assets[index]=updated;
    await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(registry,null,2)+"\n"),"studio: restore "+id+" version "+body.versionNumber,token,storageBranch,registrySha);
    return NextResponse.json({success:true,operation,asset:updated,message:"تمت استعادة الإصدار كمسودة جديدة؛ يجب اختبارها قبل طلب النشر."});
+  }
+  if(operation==="archive"){
+   const dependents=getAssetDependents(registry.assets,id);
+   if(dependents.length)return NextResponse.json({error:"لا يمكن أرشفة هذا الأصل قبل معالجة الأصول التي تعتمد عليه: "+dependents.map(item=>item.assetName).join("، ")},{status:409});
   }
   if(operation==="archive"||operation==="restore"){
    let candidate=asset;
@@ -241,6 +256,7 @@ export async function PATCH(req){
    await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(registry,null,2)+"\n"),"studio: "+operation+" asset "+id,token,storageBranch,registrySha);
    return NextResponse.json({success:true,operation,asset:updated,message:operation==="archive"?"تمت أرشفة الأصل مع الاحتفاظ بملفاته.":"تمت استعادة الأصل كمسودة."});
   }
+  if(asset.type!=="plant")return NextResponse.json({error:"هذه العملية متاحة للنباتات فقط."},{status:409});
   if(!asset.combat?.mode)return NextResponse.json({error:"يجب تعيين سلوك قتالي للنبتة أولاً."},{status:409});
   if(operation==="prepare-test"){
    const updated={...asset,status:"testing",testingAt:new Date().toISOString(),releaseRequest:null};
