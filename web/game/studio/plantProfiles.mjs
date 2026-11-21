@@ -54,6 +54,17 @@ export function createStudioPlantCombatProfile({
   if (mode === "projectile" && (!projectile?.path || !projectile?.id)) {
     throw new RangeError("A projectile plant must have an associated projectile asset.");
   }
+  const projectileFrameCount = Number(projectile?.frameCount ?? 1);
+  const projectileRows = Number(projectile?.rows ?? 1);
+  const projectileColumns = Number(projectile?.columns ?? 1);
+  if (mode === "projectile" && (
+    !Number.isInteger(projectileFrameCount) || projectileFrameCount < 1 || projectileFrameCount > 24 ||
+    !Number.isInteger(projectileRows) || projectileRows < 1 ||
+    !Number.isInteger(projectileColumns) || projectileColumns < 1 ||
+    projectileRows * projectileColumns !== projectileFrameCount
+  )) {
+    throw new RangeError("Projectile Sprite Sheet frame count must match its rows × columns (1–24 frames).");
+  }
 
   return Object.freeze({
     mode,
@@ -62,9 +73,9 @@ export function createStudioPlantCombatProfile({
       path: String(projectile.path),
       filename: String(projectile.filename || ""),
       managed: projectile.managed === true,
-      frameCount: Number.isInteger(Number(projectile.frameCount)) && Number(projectile.frameCount) >= 1 && Number(projectile.frameCount) <= 24 ? Number(projectile.frameCount) : 1,
-      rows: Number.isInteger(Number(projectile.rows)) && Number(projectile.rows) >= 1 ? Number(projectile.rows) : 1,
-      columns: Number.isInteger(Number(projectile.columns)) && Number(projectile.columns) >= 1 ? Number(projectile.columns) : 1
+      frameCount: projectileFrameCount,
+      rows: projectileRows,
+      columns: projectileColumns
     }) : null,
     energyCost: boundedNumber(energyCost, "energyCost", 60),
     hp: boundedNumber(hp, "hp", 150),
