@@ -56,14 +56,15 @@ test("blocks stale managed projectile paths and orphan projectile links", () => 
     })
   });
   const orphanPlant = validPlant({
+    id: "melee-orphan", name: "Melee Orphan",
     combat: createStudioPlantCombatProfile({ behavior: "melee" })
   });
   orphanPlant.combat = { ...orphanPlant.combat, projectile: { id: "unused-shot", path: "/assets/projectiles/unused.png", managed: false } };
   const report = auditStudioAssetRegistry([stalePlant, validProjectile(), orphanPlant]);
   assert.equal(report.assets.find((asset) => asset.id === "thorn-plant").readiness, "blocked");
   assert.equal(report.assets.find((asset) => asset.id === "thorn-plant").errors.some((message) => message.includes("لا يطابق")), true);
-  assert.equal(report.assets.find((asset) => asset.id === "thorn-plant").readiness, "blocked");
-  assert.ok(report.assets.find((asset) => asset.id === "thorn-plant").errors.length > 0);
+  assert.equal(report.assets.find((asset) => asset.id === "melee-orphan").readiness, "blocked");
+  assert.ok(report.assets.find((asset) => asset.id === "melee-orphan").errors.some((message) => message.includes("لا يطلق مقذوفات")));
 });
 test("blocks invalid animation ranges and invalid monster profiles", () => {
   const plant = validPlant({ animationProfile: { idle: { startFrame: 0, endFrame: 12, fps: 6, loop: true } } });
