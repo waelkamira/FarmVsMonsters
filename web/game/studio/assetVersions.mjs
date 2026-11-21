@@ -58,6 +58,8 @@ export function restoreStudioAssetRevision(asset, versionNumber, timestamp = new
     versions: [...versions, currentSnapshot],
     status: "draft",
     releaseRequest: null,
+    publishedAt: null,
+    testingAt: null,
     archivedAt: null,
     restoredFromVersion: target.versionNumber,
     updatedAt: timestamp
