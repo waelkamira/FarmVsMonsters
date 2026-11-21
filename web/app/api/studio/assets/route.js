@@ -141,7 +141,17 @@ export async function POST(req){
  const removeProjectile=String(form.get("removeProjectile")||"false")==="true";
  const driver=process.env.STUDIO_STORAGE_DRIVER||"local";let old,registrySha;
  try{if(driver==="github"){const token=process.env.STUDIO_GITHUB_TOKEN,branch=process.env.STUDIO_GITHUB_BRANCH||"studio/assets";if(!token)return NextResponse.json({error:"STUDIO_GITHUB_TOKEN is required."},{status:503});const document=await githubGetDocument(REGISTRY_PATH,token,branch);old=document?JSON.parse(document.content):{version:1,assets:[]};registrySha=document?.sha??null;}else old=await localRegistry();}catch(error){return NextResponse.json({error:error.message},{status:502});}
- const index=old.assets.findIndex(a=>a.id===id),existing=index>=0?old.assets[index]:null;
+ const index=old.assets.findIndex(a=>a.id===id);let existing=index>=0?old.assets[index]:null;
+ if(existing?.releaseRequest?.number){
+  if(driver!=="github")return NextResponse.json({error:"لا يمكن تعديل أصل له طلب مراجعة نشر قبل التحقق من حالة الطلب."},{status:409});
+  try{
+   const releaseToken=process.env.STUDIO_GITHUB_TOKEN;
+   if(!releaseToken)return NextResponse.json({error:"STUDIO_GITHUB_TOKEN is required."},{status:503});
+   existing=resolveStudioReleaseAsset(existing,await githubGetPullRequest(existing.releaseRequest.number,releaseToken));
+   old.assets[index]=existing;
+   if(existing.releaseRequest?.state==="open")return NextResponse.json({error:"هناك طلب مراجعة نشر مفتوح لهذا الأصل. انتظر إغلاقه قبل تعديله."},{status:409});
+  }catch(error){return NextResponse.json({error:error.message||"تعذر التحقق من طلب النشر الحالي."},{status:502});}
+ }
  const projectileAssetId=String(form.get("projectileAssetId")||"").trim();
  const selectedProjectileAsset=projectileAssetId?old.assets.find(asset=>asset.id===projectileAssetId&&asset.type==="plantProjectile"):null;
  if(projectileAssetId&&type!=="plant")return NextResponse.json({error:"يمكن ربط القذائف بالنباتات فقط."},{status:400});
@@ -253,7 +263,7 @@ export async function PATCH(req){
   const registryDocument=await githubGetDocument(REGISTRY_PATH,token,storageBranch),registry=registryDocument?JSON.parse(registryDocument.content):{version:1,assets:[]},registrySha=registryDocument?.sha??null;
   const index=registry.assets.findIndex(asset=>asset.id===id);
   if(index<0)return NextResponse.json({error:"لم يتم العثور على الأصل في مكتبة Studio."},{status:404});
-  const asset=registry.assets[index];
+  let asset=registry.assets[index];
   if(operation==="clone"){
    const newId=String(body.newId||"").trim().toLowerCase();
    if(!STUDIO_ID_PATTERN.test(newId)||newId.length>64)return NextResponse.json({error:"معرّف النسخة غير صالح."},{status:400});
@@ -265,6 +275,16 @@ export async function PATCH(req){
    return NextResponse.json({success:true,operation,asset:clone,message:"تم إنشاء نسخة جديدة كمسودة مستقلة."});
   }
   if(operation==="restore-version"){
+   if(asset.releaseRequest?.number){
+    if(driver!=="github")return NextResponse.json({error:"لا يمكن استعادة إصدار قبل التحقق من طلب النشر المرتبط."},{status:409});
+    try{
+     const releaseToken=process.env.STUDIO_GITHUB_TOKEN;
+     if(!releaseToken)return NextResponse.json({error:"STUDIO_GITHUB_TOKEN is required."},{status:503});
+     asset=resolveStudioReleaseAsset(asset,await githubGetPullRequest(asset.releaseRequest.number,releaseToken));
+     registry.assets[index]=asset;
+     if(asset.releaseRequest?.state==="open")return NextResponse.json({error:"هناك طلب مراجعة نشر مفتوح لهذا الأصل. انتظر إغلاقه قبل استعادة إصدار."},{status:409});
+    }catch(error){return NextResponse.json({error:error.message||"تعذر التحقق من طلب النشر الحالي."},{status:502});}
+   }
    let candidate=asset;
    if(asset.releaseRequest?.number){
     const previousRequest=await githubGetPullRequest(asset.releaseRequest.number,token);
