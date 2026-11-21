@@ -13,7 +13,9 @@ const PLANTS = [
   { id: "pineapple", name: "Pineapple L1", ar: "الأناناس L1", role: "Arcing bomb attacker", roleAr: "قاذف قنابل مقوسة", cost: 70, image: "/assets/plants/pineapple-level-1.png" },
   { id: "hazelnut", name: "Hazelnut L1", ar: "البندق L1", role: "Arcing bomb attacker", roleAr: "قاذف قنابل مقوسة", cost: 65, image: "/assets/plants/hazelnut-level-1.png" },
   { id: "mango", name: "Mango L1", ar: "المانجو L1", role: "Arcing bomb attacker", roleAr: "قاذف قنابل مقوسة", cost: 70, image: "/assets/plants/mango-level-1.png" },
-  { id: "snow-thrower", name: "Snow Thrower L1", ar: "قاذف الثلج L1", role: "Freeze support", roleAr: "دعم بالتجميد", cost: 90, image: "/assets/plants/Snow-thrower-level-1.png" }
+  { id: "snow-thrower", name: "Snow Thrower L1", ar: "قاذف الثلج L1", role: "Freeze support", roleAr: "دعم بالتجميد", cost: 90, image: "/assets/plants/Snow-thrower-level-1.png" },
+  { id: "electric-mushroom", name: "Electric Mushroom L1", ar: "الفطر الكهربائي L1", role: "Electric lane attacker", roleAr: "مهاجم كهربائي للمسار", cost: 85, image: "/assets/plants/Electric-mushroom-level-1.png", spriteSheet: true },
+  { id: "fire-pepper", name: "Fire Pepper L1", ar: "فلفل النار L1", role: "Lane-clearing special", roleAr: "هجوم ناري للمسار", cost: 130, image: "/assets/plants/pepper-flamethrower-level-1.png", spriteSheet: true }
 ];
 
 const STARTER_LOADOUT = ["radish", "mushroom"];
@@ -69,7 +71,8 @@ export default function StageOneSeedSelectionPage() {
       let unlocked = STARTER_LOADOUT;
       try { unlocked = loadUnlockedPlantIds(window.localStorage); } catch { /* Starter seeds remain available. */ }
       const studioIds = studioPlants.map((plant) => plant.id);
-      const safeUnlocked = [...new Set([...STARTER_LOADOUT, ...unlocked, ...studioIds])];
+      // Temporary open-roster mode: all current built-in and Studio catalog plants are unlocked.
+      const safeUnlocked = [...new Set([...STARTER_LOADOUT, ...unlocked, ...nextPlants.map((plant) => plant.id), ...studioIds])];
       setUnlockedIds(safeUnlocked);
       try {
         const saved = JSON.parse(window.localStorage.getItem("farmVsMonsters.selectedPlants") || "null");
@@ -88,10 +91,6 @@ export default function StageOneSeedSelectionPage() {
   }, []);
 
   function togglePlant(plant) {
-    if (!unlockedIds.includes(plant.id)) {
-      setNotice(ar ? "هذه النبتة لم تُفتح بعد. أكمل المراحل للحصول عليها." : "This seed is locked. Complete campaign stages to unlock it.");
-      return;
-    }
     if (plant.required) return;
     setNotice("");
     if (selected.includes(plant.id)) {
@@ -137,10 +136,10 @@ export default function StageOneSeedSelectionPage() {
           <div className="seed-select-meter"><i style={{ width: (selected.length / MAX_SEEDS * 100) + "%" }} /></div>
         </div>
 
-        <div className="seed-select-grid">
+        <div className="seed-select-grid seed-select-catalog-scroll">
           {plantCatalog.map((plant) => {
-            const unlocked = unlockedIds.includes(plant.id);
-            const active = selected.includes(plant.id) && unlocked;
+            const unlocked = true;
+            const active = selected.includes(plant.id);
             return (
               <button
                 type="button"
