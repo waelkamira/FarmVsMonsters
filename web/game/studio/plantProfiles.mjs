@@ -61,7 +61,10 @@ export function createStudioPlantCombatProfile({
       id: String(projectile.id),
       path: String(projectile.path),
       filename: String(projectile.filename || ""),
-      managed: projectile.managed === true
+      managed: projectile.managed === true,
+      frameCount: Number.isInteger(Number(projectile.frameCount)) && Number(projectile.frameCount) >= 1 && Number(projectile.frameCount) <= 24 ? Number(projectile.frameCount) : 1,
+      rows: Number.isInteger(Number(projectile.rows)) && Number(projectile.rows) >= 1 ? Number(projectile.rows) : 1,
+      columns: Number.isInteger(Number(projectile.columns)) && Number(projectile.columns) >= 1 ? Number(projectile.columns) : 1
     }) : null,
     energyCost: boundedNumber(energyCost, "energyCost", 60),
     hp: boundedNumber(hp, "hp", 150),
