@@ -10,7 +10,19 @@ const routeSource = readFileSync(path.join(here, "../app/api/studio/assets/route
 const detailsSource = readFileSync(path.join(here, "../app/studio/assets/[id]/page.js"), "utf8");
 const studioSource = readFileSync(path.join(here, "../app/studio/page.js"), "utf8");
 
-test("reports registered projectile assets as explicit dependencies and reverse references", () => {
+
+test("explicit inline projectile remains an inline file even when its id matches a library projectile", () => {
+  const assets = [
+    { id: "thorn", type: "plant", path: "/assets/plants/thorn.png", combat: { projectile: { id: "thorn-shot", path: "/assets/projectiles/inline-shot.png", managed: false } } },
+    { id: "thorn-shot", type: "plantProjectile", path: "/assets/projectiles/library-shot.png" }
+  ];
+  const report = buildAssetDependencyReport(assets, "thorn");
+  assert.equal(report.dependencies[0].kind, "embedded-file");
+  assert.equal(report.dependencies[0].resolved, true);
+  assert.equal(report.sharedFiles.some((entry) => entry.path === "/assets/projectiles/inline-shot.png"), false);
+  assert.equal(buildAssetDependencyReport(assets, "thorn-shot").dependents.length, 0);
+});
+\ntest("reports registered projectile assets as explicit dependencies and reverse references", () => {
   const assets = [
     { id: "fire", type: "plant", name: "Fire", path: "/assets/plants/fire.png", combat: { projectile: { id: "fire-shot", path: "/assets/projectiles/fire-shot.png" } } },
     { id: "fire-shot", type: "plantProjectile", name: "Fire Shot", path: "/assets/projectiles/fire-shot.png", status: "draft" }
