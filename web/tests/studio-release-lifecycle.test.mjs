@@ -59,3 +59,9 @@ test("does not archive published or review-pending assets", () => {
 test("rejects restoring an asset that is not archived", () => {
   assert.throws(() => transitionStudioAssetStatus({ id: "draft", status: "draft" }, "restore"), /لا يمكن استعادة/);
 });
+
+test("does not treat a merged release request as pending after the asset is a draft", () => {
+  const mergedDraft = { id: "draft-after-release", status: "draft", releaseRequest: { number: 123, state: "merged" } };
+  const result = transitionStudioAssetStatus(mergedDraft, "archive", "2026-11-21T13:00:00.000Z");
+  assert.equal(result.status, "archived");
+});

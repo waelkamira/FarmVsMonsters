@@ -4,10 +4,19 @@ function declaredDependencies(asset, byId) {
   const dependencies = [];
   const projectile = asset?.combat?.projectile;
   if (projectile && (projectile.id || projectile.path)) {
-    const target = projectile.id ? byId.get(String(projectile.id)) : null;
-    dependencies.push(target && target.id !== asset.id
-      ? { kind: "asset", relation: "projectile", targetId: target.id, targetName: target.name || target.id, targetType: target.type, path: normalizePath(projectile.path || target.path), resolved: true }
-      : { kind: "embedded-file", relation: "projectile", targetId: null, targetName: projectile.filename || projectile.id || "ملف القذيفة", targetType: "plantProjectile", path: normalizePath(projectile.path), resolved: Boolean(projectile.path), managedWithOwner: true });
+    const projectileId = projectile.id ? String(projectile.id) : "";
+    const target = projectileId ? byId.get(projectileId) : null;
+    if (projectile.managed === true) {
+      dependencies.push(target && target.id !== asset.id
+        ? { kind: "asset", relation: "projectile", targetId: target.id, targetName: target.name || target.id, targetType: target.type, path: normalizePath(projectile.path || target.path), resolved: true }
+        : { kind: "asset", relation: "projectile", targetId: projectileId, targetName: projectileId || projectile.filename || "قذيفة مُدارة", targetType: "plantProjectile", path: normalizePath(projectile.path), resolved: false });
+    } else if (projectile.managed === false) {
+      dependencies.push({ kind: "embedded-file", relation: "projectile", targetId: null, targetName: projectile.filename || projectileId || "ملف القذيفة", targetType: "plantProjectile", path: normalizePath(projectile.path), resolved: Boolean(projectile.path), managedWithOwner: true });
+    } else {
+      dependencies.push(target && target.id !== asset.id
+        ? { kind: "asset", relation: "projectile", targetId: target.id, targetName: target.name || target.id, targetType: target.type, path: normalizePath(projectile.path || target.path), resolved: true }
+        : { kind: "embedded-file", relation: "projectile", targetId: null, targetName: projectile.filename || projectileId || "ملف القذيفة", targetType: "plantProjectile", path: normalizePath(projectile.path), resolved: Boolean(projectile.path), managedWithOwner: true });
+    }
   }
   for (const reference of asList(asset?.dependencies)) {
     const id = typeof reference === "string" ? reference : reference?.id;
@@ -48,14 +57,16 @@ export function buildAssetDependencyReport(assets, assetId) {
     const ownReferences = references.filter((reference) => reference.assetId === assetId);
     if (ownReferences.length && otherReferences.length) sharedFiles.push({ path, ownRoles: ownReferences.map((item) => item.role), usedBy: otherReferences });
   }
-  const protectedStatus = ["published", "approved"].includes(asset.status);
+  const pendingRelease = asset.status === "approved" || Boolean(asset.releaseRequest?.number && asset.releaseRequest.state !== "merged");
+  const protectedStatus = asset.status === "published" || pendingRelease;
   const unresolved = dependencies.filter((dependency) => !dependency.resolved);
   return {
     assetId, dependencies, dependents, sharedFiles, unresolved,
     canArchive: !protectedStatus && asset.status !== "archived" && dependents.length === 0,
-    canReplace: dependents.length === 0,
+    canReplace: !pendingRelease && dependents.length === 0,
     archiveBlockers: dependents.map((item) => item.assetName),
     warnings: [
+      ...(pendingRelease ? ["يوجد طلب نشر مفتوح؛ أغلقه أو انتظر نتيجته قبل تعديل هذا الأصل."] : []),
       ...unresolved.map((item) => "تعذر تحديد ملف التبعية: " + item.targetName),
       ...sharedFiles.map((item) => "الملف " + item.path + " مشترك مع " + item.usedBy.map((use) => use.assetName).join("، ") + "؛ الاستبدال ينشئ مساراً جديداً ولا يغيّر النسخ الأخرى.")
     ]

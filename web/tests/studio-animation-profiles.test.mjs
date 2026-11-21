@@ -5,6 +5,7 @@ import { createStudioAnimationProfile, validateStudioAnimationProfile } from "..
 test("creates a safe default idle and attack animation for a sprite sheet", () => {
   const profile = createStudioAnimationProfile(null, 9);
   assert.deepEqual(profile.idle, { startFrame: 0, endFrame: 0, fps: 6, loop: true });
+  assert.deepEqual(profile.move, { startFrame: 0, endFrame: 8, fps: 10, loop: true });
   assert.deepEqual(profile.attack, { startFrame: 0, endFrame: 8, fps: 12, loop: false });
 });
 test("retains custom frame ranges and frame rates", () => {

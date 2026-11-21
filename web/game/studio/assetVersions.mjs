@@ -1,5 +1,9 @@
+function copyJson(value) {
+  return value === undefined || value === null ? value : JSON.parse(JSON.stringify(value));
+}
+
 function copyCombat(combat) {
-  return combat ? JSON.parse(JSON.stringify(combat)) : null;
+  return combat ? copyJson(combat) : null;
 }
 
 export function snapshotStudioAsset(asset, versionNumber) {
@@ -15,7 +19,9 @@ export function snapshotStudioAsset(asset, versionNumber) {
     columns: asset.columns,
     spriteSheet: asset.spriteSheet,
     combat: copyCombat(asset.combat),
-    animationProfile: asset.animationProfile ? JSON.parse(JSON.stringify(asset.animationProfile)) : null
+    animationProfile: copyJson(asset.animationProfile),
+    monsterProfile: copyJson(asset.monsterProfile),
+    dependencies: copyJson(asset.dependencies)
   };
 }
 
@@ -45,7 +51,9 @@ export function restoreStudioAssetRevision(asset, versionNumber, timestamp = new
     columns: target.columns,
     spriteSheet: target.spriteSheet,
     combat: copyCombat(target.combat),
-    animationProfile: target.animationProfile ? JSON.parse(JSON.stringify(target.animationProfile)) : null,
+    animationProfile: copyJson(target.animationProfile),
+    monsterProfile: copyJson(target.monsterProfile),
+    dependencies: copyJson(target.dependencies),
     revision: currentRevision + 1,
     versions: [...versions, currentSnapshot],
     status: "draft",
@@ -65,7 +73,9 @@ export function cloneStudioAsset(asset, newId, newName, timestamp = new Date().t
   return {
     ...asset,
     combat: copyCombat(asset.combat),
-    animationProfile: asset.animationProfile ? JSON.parse(JSON.stringify(asset.animationProfile)) : null,
+    animationProfile: copyJson(asset.animationProfile),
+    monsterProfile: copyJson(asset.monsterProfile),
+    dependencies: copyJson(asset.dependencies),
     id,
     name: String(newName || `${asset.name || asset.id} (نسخة)`).trim().slice(0, 80) || id,
     revision: 1,

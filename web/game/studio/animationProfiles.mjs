@@ -22,7 +22,7 @@ function readClip(input, name, maxFrame, defaults) {
     startFrame,
     endFrame,
     fps: readFps(clip.fps, name + ".fps", defaults.fps),
-    loop: name === "idle" ? true : Boolean(clip.loop ?? false)
+    loop: name === "idle" || name === "move" ? true : Boolean(clip.loop ?? false)
   });
 }
 export function createStudioAnimationProfile(input, frameCount) {
@@ -34,6 +34,7 @@ export function createStudioAnimationProfile(input, frameCount) {
   const maxFrame = count - 1;
   return Object.freeze({
     idle: readClip(profile.idle, "idle", maxFrame, { startFrame: 0, endFrame: 0, fps: DEFAULT_FPS.idle }),
+    move: readClip(profile.move, "move", maxFrame, { startFrame: 0, endFrame: maxFrame, fps: 10 }),
     attack: readClip(profile.attack, "attack", maxFrame, { startFrame: 0, endFrame: maxFrame, fps: DEFAULT_FPS.attack })
   });
 }
