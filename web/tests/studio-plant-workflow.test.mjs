@@ -23,6 +23,12 @@ test("Studio exposes archive and restore actions for every asset type",()=>{
   assert.match(assetsRoute,/registry\.assets\.findIndex\(asset=>asset\.id===id\)/);
 });
 
+test("Studio dashboard summarizes assets by type and lifecycle status",()=>{
+  assert.match(studioPage,/assets\.filter\(a=>a\.type==="plant"\)/);
+  assert.match(studioPage,/assets\.filter\(a=>a\.type==="monster"\)/);
+  for(const status of ["draft","testing","approved","published","archived"])assert.ok(studioPage.includes(`a.status==="${status}"`));
+});
+
 test("Studio asset library supports search and type/status filtering",()=>{
   assert.match(studioPage,/assetSearch/);
   assert.match(studioPage,/assetTypeFilter/);
