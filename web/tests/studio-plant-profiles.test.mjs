@@ -38,3 +38,18 @@ test("blocker and energy templates do not receive combat damage defaults",()=>{
   assert.equal(createStudioPlantCombatProfile({behavior:"blocker"}).damage,0);
   assert.equal(createStudioPlantCombatProfile({behavior:"energy"}).damage,0);
 });
+
+test("projectile arc, effect color, and rotation settings are validated and retained",()=>{
+  const projectile={id:"bamboo-throwing-projectile",path:"/assets/projectiles/plants/bamboo-throwing.png"};
+  const profile=createStudioPlantCombatProfile({
+    behavior:"projectile",projectile,projectileSpeed:420,projectileHeight:95,
+    projectileEffectColor:"#32aaff",projectileRotation:135
+  });
+  assert.equal(profile.projectileSpeed,420);
+  assert.equal(profile.projectileHeight,95);
+  assert.equal(profile.projectileEffectColor,"#32aaff");
+  assert.equal(profile.projectileRotation,135);
+  assert.equal(validateStudioPlantCombatProfile({behavior:"projectile",projectile,projectileHeight:301}).valid,false);
+  assert.equal(validateStudioPlantCombatProfile({behavior:"projectile",projectile,projectileRotation:-1}).valid,false);
+  assert.equal(validateStudioPlantCombatProfile({behavior:"projectile",projectile,projectileEffectColor:"red"}).valid,false);
+});
