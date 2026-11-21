@@ -1,4 +1,4 @@
-export const STUDIO_PLANT_BEHAVIORS = Object.freeze({
+import { normalizeProjectilePathPoints } from "./projectileTrajectory.mjs";\nexport const STUDIO_PLANT_BEHAVIORS = Object.freeze({
   projectile: Object.freeze({ label: "إطلاق مقذوفات", description: "يطلق قذيفة مرتبطة بهذه النبتة." }),
   blocker: Object.freeze({ label: "حاجز دفاعي", description: "يمتص عضّات الوحوش ويوقف تقدمها دون إطلاق مقذوفات." }),
   melee: Object.freeze({ label: "هجوم قريب", description: "يضرب أقرب وحش في المسار عندما يدخل نطاق الهجوم." }),
@@ -42,7 +42,7 @@ export function createStudioPlantCombatProfile({
   projectileHeight = 0,
   projectileEffectColor = "#ffc247",
   projectileRotation = 0,
-  projectileTrajectoryType = "arc",
+  projectileTrajectoryType = "arc",\n  projectilePathPoints = null,
   projectileCurveX = 0,
   projectileCurveY = 110,
   projectileLaunchOffsetX = 14,
@@ -95,7 +95,7 @@ export function createStudioPlantCombatProfile({
     projectileHeight: boundedNumber(projectileHeight, "projectileHeight", 0),
     projectileEffectColor: (() => { const color = String(projectileEffectColor ?? "#ffc247").trim().toLowerCase(); if (!/^#[0-9a-f]{6}$/.test(color)) throw new RangeError("Invalid plant setting: projectileEffectColor must be a six-digit hex color."); return color; })(),
     projectileRotation: boundedNumber(projectileRotation, "projectileRotation", 0),
-    projectileTrajectoryType: (() => { const value = String(projectileTrajectoryType || "arc"); if (!["straight","arc","sine","bezier"].includes(value)) throw new RangeError("Invalid projectile trajectory type."); return value; })(),
+    projectileTrajectoryType: (() => { const value = String(projectileTrajectoryType || "arc"); if (!["straight","arc","sine","bezier","custom"].includes(value)) throw new RangeError("Invalid projectile trajectory type."); return value; })(),\n    projectilePathPoints: (() => { if (projectilePathPoints == null) return null; return normalizeProjectilePathPoints(projectilePathPoints); })(),
     projectileCurveX: Math.max(-180, Math.min(180, Math.round(Number(projectileCurveX) || 0))),
     projectileCurveY: Math.max(-300, Math.min(300, Math.round(Number(projectileCurveY) || 0))),
     projectileLaunchOffsetX: Math.max(-70, Math.min(70, Math.round(Number(projectileLaunchOffsetX) || 0))),
