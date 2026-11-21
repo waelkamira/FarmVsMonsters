@@ -3574,6 +3574,7 @@ export default class BattleScene extends Scene {
         projectileTrajectoryType: profile.projectileTrajectoryType || "arc",
         projectileCurveX: Number(profile.projectileCurveX) || 0, projectileCurveY: Number(profile.projectileCurveY) || 110,
         projectileTargetOffsetX: Number(profile.projectileTargetOffsetX) || 0, projectileTargetOffsetY: Number(profile.projectileTargetOffsetY) || 0,
+        projectilePathPoints: Array.isArray(profile.projectilePathPoints) ? profile.projectilePathPoints : null,
         damage: profile.damage, freeze: false, freezeDurationMs: 0,
         collisionRadius: profile.projectileCollisionRadius, dropSpeed: profile.projectileSpeed * 1.5,
         projectileHeight: profile.projectileHeight || 0, projectileEffectColor: effectColor,
@@ -4692,7 +4693,7 @@ export default class BattleScene extends Scene {
         ? PhaserMath.Clamp((shot.localX - shot.startLocalX) / Math.max(1, shot.targetLocalX - shot.startLocalX), 0, 1)
         : 0;
       const studioOffset = shot.studioPlantId
-        ? getProjectileTrajectoryOffset({type:shot.projectileTrajectoryType,progress:studioProgress,height:shot.projectileHeight,curveX:shot.projectileCurveX,curveY:shot.projectileCurveY,targetX:shot.projectileTargetOffsetX,targetY:shot.projectileTargetOffsetY})
+        ? getProjectileTrajectoryOffset({type:shot.projectileTrajectoryType,progress:studioProgress,height:shot.projectileHeight,curveX:shot.projectileCurveX,curveY:shot.projectileCurveY,targetX:shot.projectileTargetOffsetX,targetY:shot.projectileTargetOffsetY,points:shot.projectilePathPoints})
         : {x:0,y:0};
       const projectileX = position.x + (shot.launchOffsetX || 0) + studioOffset.x;
       const projectileY = position.y + (shot.launchOffsetY || 0) - studioOffset.y;

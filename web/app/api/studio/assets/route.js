@@ -69,6 +69,7 @@ function readCombatForm(form,projectile,existing){
   projectileEffectColor:form.get("projectileEffectColor")??previous?.projectileEffectColor??"#ffc247",
   projectileRotation:form.get("projectileRotation")??previous?.projectileRotation??0,
   projectileTrajectoryType:form.get("projectileTrajectoryType")??previous?.projectileTrajectoryType??"arc",
+  projectilePathPoints: (() => { const raw = form.get("projectilePathPoints"); if (raw == null || raw === "") return previous?.projectilePathPoints ?? null; try { return JSON.parse(String(raw)); } catch { throw new Error("Invalid projectile path points JSON."); } })(),
   projectileCurveX:form.get("projectileCurveX")??previous?.projectileCurveX??0,
   projectileCurveY:form.get("projectileCurveY")??previous?.projectileCurveY??110,
   projectileLaunchOffsetX:form.get("projectileLaunchOffsetX")??previous?.projectileLaunchOffsetX??14,

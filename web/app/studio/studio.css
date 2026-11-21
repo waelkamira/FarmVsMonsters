@@ -116,3 +116,25 @@
 .studio-effect-color{max-width:220px}
 .studio-effect-color input{min-height:42px;width:100%;border:1px solid #655333;border-radius:8px;background:#17160f;padding:4px}
 @media(max-width:560px){.studio-trajectory-heading{align-items:flex-start}.studio-trajectory-actions{width:100%}.studio-trajectory-actions button{flex:1}}
+
+
+/* Studio freeform projectile motion editor */
+.studio-motion-editor{display:grid;gap:14px}
+.studio-motion-canvas{width:100%;min-height:260px;touch-action:none;user-select:none;cursor:crosshair}
+.studio-motion-toolbar{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+.studio-motion-frame-controls{display:grid;gap:8px;padding:12px;border:1px solid #526b45;border-radius:10px;background:#172319;color:#eaf2df}
+.studio-motion-frame-controls>b{font-size:12px;color:#f1cc7e}
+.studio-motion-frame-controls .studio-trajectory-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.studio-motion-frame-controls .studio-trajectory-actions span{font-size:12px;font-weight:800;color:#fff;min-width:100px;text-align:center}
+.studio-motion-frame-controls button,.studio-motion-point-actions button{border:1px solid #69845b;border-radius:7px;padding:7px 10px;background:#30442c;color:#f0f6e9;font-size:11px;font-weight:800;cursor:pointer}
+.studio-motion-frame-controls button:hover,.studio-motion-point-actions button:hover{background:#45623b}
+.studio-motion-frame-controls button:disabled,.studio-motion-point-actions button:disabled{opacity:.4;cursor:not-allowed}
+.studio-motion-point-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:12px;border:1px solid #526b45;border-radius:10px;background:#172319}
+.studio-motion-point-actions>span{margin-left:auto;color:#e7edda;font-size:12px}
+.studio-motion-point-actions button{white-space:nowrap}
+.studio-motion-settings{grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
+@media(max-width:620px){.studio-motion-point-actions>span{width:100%;margin:0}.studio-motion-frame-controls .studio-trajectory-actions{gap:4px}.studio-motion-frame-controls .studio-trajectory-actions button{flex:1}}
+
+.studio-motion-progress{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px;padding:10px 12px;border:1px solid #526b45;border-radius:10px;background:#172319;color:#eaf2df;font-size:12px;font-weight:800}
+.studio-motion-progress input{grid-column:1/-1;width:100%;accent-color:#f1cc7e}
+.studio-motion-progress span{font-variant-numeric:tabular-nums;color:#f1cc7e}
