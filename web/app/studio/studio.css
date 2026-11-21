@@ -138,3 +138,23 @@
 .studio-motion-progress{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px;padding:10px 12px;border:1px solid #526b45;border-radius:10px;background:#172319;color:#eaf2df;font-size:12px;font-weight:800}
 .studio-motion-progress input{grid-column:1/-1;width:100%;accent-color:#f1cc7e}
 .studio-motion-progress span{font-variant-numeric:tabular-nums;color:#f1cc7e}
+
+
+/* Keep asset names independent from the action toolbar. */
+.studio-list .studio-asset-row{display:grid;grid-template-columns:58px minmax(0,1fr);align-items:start;gap:10px;min-width:0;padding:12px}
+.studio-list .studio-asset-row>.studio-thumb,.studio-list .studio-asset-row>.studio-thumb-fallback{grid-column:1;grid-row:1;width:58px;height:58px;flex:0 0 58px}
+.studio-list .studio-asset-row>.studio-asset-meta{grid-column:2;grid-row:1;min-width:0;width:100%;flex:initial}
+.studio-asset-meta b{min-width:0;max-width:100%;overflow-wrap:anywhere;word-break:break-word;line-height:1.45}
+.studio-asset-actions{grid-column:1/-1;display:flex;align-items:center;flex-wrap:wrap;gap:8px;min-width:0;width:100%}
+.studio-asset-actions>em{flex:0 0 auto;margin:0;padding:5px 9px;border-radius:7px;background:#302b1e;color:#e8c477;font-size:11px;font-style:normal;font-weight:800;white-space:normal}
+.studio-asset-actions>button,.studio-asset-actions>.studio-asset-details-link,.studio-asset-actions>.studio-release-link{flex:0 1 auto;max-width:100%;min-width:0;white-space:normal;text-align:center;overflow-wrap:anywhere}
+.studio-asset-actions .studio-version-tools{flex:1 1 230px;min-width:min(100%,190px)}
+.studio-asset-actions .studio-version-tools label{min-width:0;flex:1}
+.studio-asset-actions .studio-version-tools select{max-width:100%;min-width:0}
+@media(max-width:560px){
+ .studio-list .studio-asset-row{grid-template-columns:48px minmax(0,1fr);gap:9px}
+ .studio-list .studio-asset-row>.studio-thumb,.studio-list .studio-asset-row>.studio-thumb-fallback{width:48px;height:48px;flex-basis:48px}
+ .studio-asset-actions{gap:6px}
+ .studio-asset-actions>button,.studio-asset-actions>.studio-asset-details-link{flex:1 1 calc(50% - 6px)}
+ .studio-asset-actions .studio-version-tools{flex-basis:100%}
+}
