@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useSyncExternalStore, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { useLocale, LanguageToggle } from "../LocaleProvider";
 import { readStorageSnapshot, subscribeToBrowserStorage } from "../../game/hooks/browserStorage.mjs";
 
@@ -16,11 +16,9 @@ export default function SettingsPage() {
   const ar = locale === "ar";
   const settingsSnapshot = useSyncExternalStore(subscribeToBrowserStorage, getSettingsSnapshot, () => SETTINGS_SERVER_SNAPSHOT);
   const { values, ready } = JSON.parse(settingsSnapshot);
-  const [localValues, setLocalValues] = useState(values);
 
   function changeVolume(key, value) {
     const volume = Number(value);
-    setLocalValues((current) => ({ ...current, [key]: volume }));
     window.localStorage.setItem("farmVsMonsters.audio." + key, String(volume));
     window.dispatchEvent(new Event("farm-storage-change"));
   }
@@ -48,9 +46,9 @@ export default function SettingsPage() {
           {controls.map(({key,label,labelAr,icon}) => (
             <label className="codex-volume-row" key={key}>
               <span className="codex-volume-icon" aria-hidden="true">{icon}</span>
-              <span className="codex-volume-copy"><strong>{ar ? labelAr : t(label)}</strong><small>{localValues[key] === 0 ? (ar ? "صامت" : "Muted") : (ar ? "مستوى الصوت" : "Volume level")}</small></span>
-              <input aria-label={ar ? labelAr : t(label)} type="range" min="0" max="100" step="1" value={localValues[key]} disabled={!ready} onChange={(e) => changeVolume(key,e.target.value)} />
-              <output>{localValues[key]}%</output>
+              <span className="codex-volume-copy"><strong>{ar ? labelAr : t(label)}</strong><small>{values[key] === 0 ? (ar ? "صامت" : "Muted") : (ar ? "مستوى الصوت" : "Volume level")}</small></span>
+              <input aria-label={ar ? labelAr : t(label)} type="range" min="0" max="100" step="1" value={values[key]} disabled={!ready} onChange={(e) => changeVolume(key,e.target.value)} />
+              <output>{values[key]}%</output>
             </label>
           ))}
         </div>
