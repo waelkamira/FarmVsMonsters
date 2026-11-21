@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import "../studio.css";
 
 const LABELS = {
   ready: "متوافق مع العقد",
