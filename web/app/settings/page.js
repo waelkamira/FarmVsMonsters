@@ -11,6 +11,19 @@ const controls = [
   { key: "projectileVolume", label: "Projectile sounds", labelAr: "أصوات المقذوفات", icon: "💥", initial: 65 }
 ];
 
+const DEFAULT_VALUES = { musicVolume: 70, effectsVolume: 80, projectileVolume: 65 };
+const SETTINGS_SERVER_SNAPSHOT = JSON.stringify({ ready: false, values: DEFAULT_VALUES });
+
+function getSettingsSnapshot() {
+  const values = {};
+  controls.forEach(({ key, initial }) => {
+    const raw = readStorageSnapshot("farmVsMonsters.audio." + key, null);
+    const stored = Number(raw);
+    values[key] = raw !== null && Number.isFinite(stored) ? Math.max(0, Math.min(100, stored)) : initial;
+  });
+  return JSON.stringify({ ready: true, values });
+}
+
 export default function SettingsPage() {
   const { t, locale } = useLocale();
   const ar = locale === "ar";
