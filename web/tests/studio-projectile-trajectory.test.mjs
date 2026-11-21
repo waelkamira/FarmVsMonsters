@@ -48,3 +48,7 @@ test("plant combat profile rejects unsupported trajectory types",()=>{
   projectileTrajectoryType:"teleport"
  }),/trajectory type/);
 });
+
+test("impact offsets reach the configured target at the end of the path",()=>{
+ assert.deepEqual(getProjectileTrajectoryOffset({type:"straight",progress:1,targetX:36,targetY:-24}),{x:36,y:-24});
+});
