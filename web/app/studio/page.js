@@ -2,8 +2,8 @@
 import {useCallback,useEffect,useMemo,useState} from "react";
 import Link from "next/link";
 import "./studio.css";
+import { inferSpriteGrid } from "../../game/studio/spriteSheetGrid.mjs";
 const TYPES=[["plant","نبات","🌱"],["monster","وحش","👾"],["plantProjectile","قذيفة نبات","🔥"],["monsterProjectile","قذيفة وحش","☄️"],["effect","مؤثر","✨"],["item","عنصر","🎒"],["audio","صوت","🔊"]];
-function inferSpriteGrid(width,height,frameCount){let best={rows:1,columns:frameCount,score:Infinity};for(let rows=1;rows<=frameCount;rows++){if(frameCount%rows!==0)continue;const columns=frameCount/rows;const frameAspect=(width/columns)/(height/rows);const score=Math.abs(Math.log(frameAspect));if(score<best.score)best={rows,columns,score};}return {rows:best.rows,columns:best.columns};}
 function defaultStudioAnimationProfile(rows=3,columns=3){const lastFrame=Math.max(0,rows*columns-1);return {idle:{startFrame:0,endFrame:0,fps:6,loop:true},move:{startFrame:0,endFrame:lastFrame,fps:10,loop:true},attack:{startFrame:0,endFrame:lastFrame,fps:12,loop:false}};}
 function defaultStudioMonsterProfile(){return {baseArchetype:"cave-brute",hpMultiplier:1,speedMultiplier:1,damageMultiplier:1,attackIntervalMultiplier:1,widthScale:1,heightScale:1,spawnWeight:0,firstWave:1};}
 export default function StudioPage(){
