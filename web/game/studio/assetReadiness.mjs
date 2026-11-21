@@ -5,7 +5,14 @@ import { createStudioMonsterProfile } from "./monsterProfiles.mjs";
 import { buildAssetDependencyReport } from "./assetDependencies.mjs";
 
 function safeAssetPath(value) {
-  return typeof value === "string" && value.startsWith("/assets/") && !value.includes("..");
+  if (typeof value !== "string" || !value.startsWith("/assets/")) return false;
+  if (/[?#\\\\\\u0000-\\u001f\\u007f]/.test(value) || /%(?:2f|5c)/i.test(value)) return false;
+  let decoded;
+  try { decoded = decodeURIComponent(value); }
+  catch { return false; }
+  if (!decoded.startsWith("/assets/") || /[?#\\\\\\u0000-\\u001f\\u007f]/.test(decoded)) return false;
+  const segments = decoded.slice("/assets/".length).split("/");
+  return segments.length > 0 && segments.every((segment) => segment.length > 0 && segment !== "." && segment !== "..");
 }
 function addMessage(list, message) {
   if (!list.includes(message)) list.push(message);
