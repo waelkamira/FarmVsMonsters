@@ -40,8 +40,14 @@ export function applyStudioAssetFileAudit(report, assets, statusByPath = {}) {
     const status = statusByPath[assetPath] === "present" || statusByPath[assetPath] === "missing" ? statusByPath[assetPath] : "unknown";
     counts[status] += 1;
   }
+  const count = (readiness) => auditedAssets.filter((entry) => entry.readiness === readiness).length;
   return {
     ...report,
+    total: auditedAssets.length,
+    ready: count("ready"),
+    warning: count("warning"),
+    blocked: count("blocked"),
+    excluded: count("excluded"),
     assets: auditedAssets,
     fileAudit: { checked: checkedPaths.size, present: counts.present, missing: counts.missing, unknown: counts.unknown }
   };
