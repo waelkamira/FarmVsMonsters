@@ -12,8 +12,8 @@ const LIMITS = Object.freeze({
 function bounded(value, field, fallback) {
   const number = Number(value ?? fallback);
   const [min, max] = LIMITS[field];
-  if (!Number.isFinite(number) || number < min || number > max) throw new RangeError(field + " must be between " + min + " and " + max + ".");
-  return Math.round(number * 100) / 100;
+  if (!Number.isFinite(number) || number < min || number > max || ((field === "spawnWeight" || field === "firstWave") && !Number.isInteger(number))) throw new RangeError(field + " must be between " + min + " and " + max + (field === "spawnWeight" || field === "firstWave" ? " as a whole number." : "."));
+  return field === "spawnWeight" || field === "firstWave" ? number : Math.round(number * 100) / 100;
 }
 export function createStudioMonsterProfile(input = {}) {
   const profile = input && typeof input === "object" ? input : {};
