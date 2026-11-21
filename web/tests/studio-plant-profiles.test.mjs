@@ -34,6 +34,14 @@ test("behavior settings are bounded to safe gameplay ranges",()=>{
   assert.equal(validateStudioPlantCombatProfile({behavior:"energy",energyIntervalMs:2000,energyAmount:20}).valid,true);
 });
 
+test("plant size is validated and retained as a percentage",()=>{
+  const profile=createStudioPlantCombatProfile({behavior:"melee",sizePercent:135});
+  assert.equal(profile.sizePercent,135);
+  assert.equal(createStudioPlantCombatProfile({behavior:"melee"}).sizePercent,100);
+  assert.equal(validateStudioPlantCombatProfile({behavior:"melee",sizePercent:24}).valid,false);
+  assert.equal(validateStudioPlantCombatProfile({behavior:"melee",sizePercent:201}).valid,false);
+});
+
 test("blocker and energy templates do not receive combat damage defaults",()=>{
   assert.equal(createStudioPlantCombatProfile({behavior:"blocker"}).damage,0);
   assert.equal(createStudioPlantCombatProfile({behavior:"energy"}).damage,0);
