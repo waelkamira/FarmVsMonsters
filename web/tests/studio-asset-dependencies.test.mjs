@@ -52,3 +52,13 @@ test("Studio API guards replacement, archive and version restore when direct dep
 test("asset detail route imports the shared Studio stylesheet from the correct directory", () => {
   assert.match(detailsSource, /import "\.\.\/\.\.\/studio\.css"/);
 });
+
+test("plant projectile references resolve to a managed projectile asset and block destructive lifecycle operations", () => {
+  const api = readFileSync(new URL("../app/api/studio/assets/route.js", import.meta.url), "utf8");
+  const studio = readFileSync(new URL("../app/studio/page.js", import.meta.url), "utf8");
+  assert.match(studio, /studio-projectile-library/);
+  assert.match(studio, /projectileAssetId/);
+  assert.match(api, /selectedProjectileAsset=projectileAssetId/);
+  assert.match(api, /id:selectedProjectileAsset\.id/);
+  assert.match(api, /getAssetDependents/);
+});
