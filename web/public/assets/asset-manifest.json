@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-20T04:29:21.220Z",
-  "assetCount": 88,
-  "totalBytes": 24072120,
+  "generatedAt": "2026-11-20T14:17:57.097Z",
+  "assetCount": 89,
+  "totalBytes": 24438194,
   "groups": {
     "audio": [
       {
@@ -454,6 +454,11 @@
       }
     ],
     "plants": [
+      {
+        "key": "plants-electric-mushroom-level-1",
+        "url": "/assets/plants/Electric-mushroom-level-1.png",
+        "type": "image"
+      },
       {
         "key": "plants-onion",
         "url": "/assets/plants/Onion.png",
@@ -1313,6 +1318,16 @@
       "sha256": "567d7c2c19dce9ef5116bb65d0b0735db6223a5eed8e654f4ffd1d144606559d",
       "width": 64,
       "height": 64
+    },
+    {
+      "key": "plants-electric-mushroom-level-1",
+      "url": "/assets/plants/Electric-mushroom-level-1.png",
+      "type": "image",
+      "group": "plants",
+      "bytes": 366074,
+      "sha256": "22d8f60a35bac3067319880ae8d98be0ba8ac017aaabbbdff8a677ca3d6574a2",
+      "width": 512,
+      "height": 512
     },
     {
       "key": "plants-onion",

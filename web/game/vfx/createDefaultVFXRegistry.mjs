@@ -9,7 +9,8 @@ const PALETTES = Object.freeze({
   pineapple: 0xffc45c,
   hazelnut: 0xb9824b,
   mango: 0xffd45b,
-  "snow-thrower": 0xbcecff
+  "snow-thrower": 0xbcecff,
+  "electric-mushroom": 0x65d9ff
 });
 
 export function createDefaultVFXRegistry() {

@@ -38,7 +38,8 @@ test("active Stage 1 plant encyclopedia matches combat costs and available artwo
     pineapple: "pineapple",
     hazelnut: "hazelnut",
     mango: "mango",
-    "snow-thrower": "snowThrower"
+    "snow-thrower": "snowThrower",
+    "electric-mushroom": "electric-mushroom"
   };
   const activePlants = STAGE_ONE_PLANTS.filter((plant) => plant.implemented);
   assert.deepEqual(

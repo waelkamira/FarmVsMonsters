@@ -79,6 +79,18 @@ export const PHASE_ONE_PLANTS = Object.freeze({
     freezeProjectile: true, projectileSpeed: 300, projectileCollisionRadius: 28,
     freezeDurationMs: 2600, plantingEnergyCost: 90, seedPacketRechargeMs: 18000, hp: 150,
     cooldownMs: 3600, range: 360
+  }),
+  // Electric Mushroom is a visual/combat playtest prototype; tune after hands-on VFX review.
+  "electric-mushroom": Object.freeze({
+    projectileDamage: 22, projectileSpeed: 350, projectileCollisionRadius: 26,
+    plantingEnergyCost: 80, seedPacketRechargeMs: 11000, hp: 115,
+    cooldownMs: 1850, range: 360
+  }),
+  // Fire Pepper is a lane-clearing playtest special: one burst damages every monster ahead in its lane.
+  "fire-pepper": Object.freeze({
+    projectileDamage: 44, projectileSpeed: 0, projectileCollisionRadius: 0,
+    plantingEnergyCost: 130, seedPacketRechargeMs: 20000, hp: 125,
+    cooldownMs: 9000, range: 360
   })
 });
 

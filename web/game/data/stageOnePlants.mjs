@@ -122,15 +122,15 @@ export const STAGE_ONE_PLANTS = Object.freeze([
   },
   {
     id: "fire-pepper",
-    assetPath: "/assets/plants/fire-pepper.png",
-    name: "Fire Pepper",
-    nameAr: "فلفل النار",
+    assetPath: "/assets/plants/Pepper-flamethrower-level-1.png",
+    name: "Fire Pepper Level 1",
+    nameAr: "فلفل النار المستوى الأول",
     role: "Lane-clearing special",
     roleAr: "سلاح خاص لتنظيف المسار",
-    description: "Creates a line of fire that damages every monster crossing its lane.",
-    descriptionAr: "يشعل خطاً نارياً يلحق الضرر بكل وحش يعبر مساره.",
-    energyCost: 130, coinPrice: 360, status: "planned", implemented: false, purchasable: false, image: null,
-    stats: ["Lane-wide damage", "Rare plant"], statsAr: ["ضرر على كامل المسار", "نبتة نادرة"]
+    description: "Plays its nine-frame flamethrower animation, then scorches every monster ahead in its lane.",
+    descriptionAr: "ينفذ حركة قاذف اللهب ذات الإطارات التسعة ثم يحرق جميع الوحوش أمامه في مساره.",
+    energyCost: 130, coinPrice: 360, status: "active", implemented: true, purchasable: false, image: null,
+    stats: ["44 lane damage", "9000 ms cooldown"], statsAr: ["ضرر ٤٤ على المسار", "فاصل هجوم ٩٠٠٠ مللي ثانية"]
   },
 
   {
@@ -179,6 +179,19 @@ export const STAGE_ONE_PLANTS = Object.freeze([
     descriptionAr: "يطلق قذيفة مانجو صغيرة بمسار منحنٍ وتهوي فوق الوحش الموجود في مساره.",
     energyCost: 70, coinPrice: 0, status: "active", implemented: true, purchasable: false, image: null,
     stats: ["130 HP", "40 damage", "2100 ms cooldown"], statsAr: ["١٣٠ صحة", "ضرر ٤٠", "فاصل هجوم ٢١٠٠ مللي ثانية"]
+  },
+
+  {
+    id: "electric-mushroom",
+    assetPath: "/assets/plants/Electric-mushroom-level-1.png",
+    name: "Electric Mushroom Level 1",
+    nameAr: "الفطر الكهربائي المستوى الأول",
+    role: "Electric lane attacker",
+    roleAr: "مهاجم كهربائي للمسار",
+    description: "Uses a nine-frame electric charge animation before firing a cyan lightning bolt at monsters in its lane.",
+    descriptionAr: "ينفذ حركة شحن كهربائية من تسعة إطارات قبل إطلاق صاعقة سماوية على الوحوش في مساره.",
+    energyCost: 80, coinPrice: 0, status: "active", implemented: true, purchasable: false, image: null,
+    stats: ["115 HP", "22 damage", "1850 ms cooldown"], statsAr: ["١١٥ صحة", "ضرر ٢٢", "فاصل هجوم ١٨٥٠ مللي ثانية"]
   }
 ]);
 
