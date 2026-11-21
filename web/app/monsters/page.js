@@ -1,20 +1,27 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { useLocale, LanguageToggle } from "../LocaleProvider";
 import CatalogThumb from "../components/CatalogThumb";
 
 import { STAGE_ONE_MONSTERS, FUTURE_MONSTERS, MONSTER_ROSTER_TOTAL } from "../../game/data/monsterRoster.mjs";
 import { loadDiscoveredMonsterIds } from "../../game/rules/phaseOneRules.mjs";
+import { subscribeToBrowserStorage } from "../../game/hooks/browserStorage.mjs";
+
+function getDiscoveredSnapshot() {
+  try {
+    return JSON.stringify(loadDiscoveredMonsterIds(window.localStorage));
+  } catch {
+    return "[]";
+  }
+}
 
 export default function MonstersPage() {
   const { locale } = useLocale();
   const ar = locale === "ar";
-  const [discoveredIds, setDiscoveredIds] = useState([]);
-  useEffect(() => {
-    try { setDiscoveredIds(loadDiscoveredMonsterIds(window.localStorage)); } catch { setDiscoveredIds([]); }
-  }, []);
+  const discoveredSnapshot = useSyncExternalStore(subscribeToBrowserStorage, getDiscoveredSnapshot, () => "[]");
+  const discoveredIds = JSON.parse(discoveredSnapshot);
   const discoveredCount = STAGE_ONE_MONSTERS.filter((monster) => discoveredIds.includes(monster.id)).length;
 
   return (
