@@ -3144,6 +3144,32 @@ export default class BattleScene extends Scene {
     return plant;
   }
 
+  updatePlantIdleMotion(plant, deltaMs = 0) {
+    // Built-in plants already use their own Phaser idle tweens/animations.
+    // Studio plants use the saved idle clip; restore it after an attack and
+    // keep this check lightweight because it runs on every battle frame.
+    const studioPlant = plant?.studioPlant;
+    if (!studioPlant || plant.studioAttacking || plant.isAttacking || !plant.view?.active) return;
+
+    const sprite = plant.view.list?.find((child) =>
+      child?.active && child.getData?.("studioPlantSprite")
+    );
+    if (!sprite) return;
+
+    const idleKey = "studio-" + studioPlant.id + "-idle";
+    if (this.anims.exists(idleKey)) {
+      if (!sprite.anims?.isPlaying || sprite.anims.currentAnim?.key !== idleKey) {
+        sprite.play(idleKey);
+      }
+      return;
+    }
+
+    // Static sheets or profiles without a registered idle clip should remain
+    // on the configured idle frame rather than retaining an attack frame.
+    const idleFrame = String(studioPlant.animationProfile?.idle?.startFrame ?? 0);
+    if (sprite.frame?.name !== idleFrame) sprite.setFrame(idleFrame);
+  }
+
   updatePlants(delta) {
     const deltaMs = Number.isFinite(delta) ? Math.max(0, delta) : 0;
     for (const plant of this.plants) {
