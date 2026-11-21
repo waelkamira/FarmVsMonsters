@@ -71,3 +71,8 @@ test("plant projectile references resolve to a managed projectile asset and bloc
   assert.match(routeSource, /id:selectedProjectileAsset\.id/);
   assert.match(routeSource, /getAssetDependents/);
 });
+
+test("allows archive analysis after a merged release request has been cleared from the workflow", () => {
+  const assets = [{ id: "draft-after-release", type: "plant", path: "/assets/plants/draft.png", status: "draft", releaseRequest: { number: 123, state: "merged" } }];
+  assert.equal(buildAssetDependencyReport(assets, "draft-after-release").canArchive, true);
+});
