@@ -163,11 +163,12 @@ test("Studio persists validated idle and attack animation profiles into Phaser r
   assert.match(studioPage,/animationProfile:JSON\.stringify\(animationProfile\)/);
   assert.match(studioPage,/studio-animation-profile-editor/);
   assert.match(studioPage,/أول إطار للهجوم/);
-  assert.match(assetsRoute,/createStudioAnimationProfile/);\n  assert.match(assetsRoute,/config.spriteSheet&&type==="plant"/);
+  assert.match(assetsRoute,/createStudioAnimationProfile/);
+  assert.match(assetsRoute,/config\.spriteSheet&&type==="plant"/);
   assert.match(assetsRoute,/animationProfile:asset\.animationProfile/);
-  assert.match(battleScene,/createStudioAnimationProfile\\(plant\\.animationProfile,\\s*frameCount\\)/);
+  assert.match(battleScene,/createStudioAnimationProfile\(plant\.animationProfile,\s*frameCount\)/);
   assert.match(battleScene,/clip\.fps/);
-  assert.match(battleScene,/studio-\" \+ plant\.id \+ \"-idle/);
-  assert.match(battleScene,/studio-\" \+ plant\.id \+ \"-attack/);
+  assert.match(battleScene,/studioPlant\.id \+ "-idle"/);
+  assert.match(battleScene,/\["attack", plant\.animationProfile\.attack\]/);
   assert.match(battleScene,/plant\.studioPlant\.animationProfile\?\.idle\?\.startFrame/);
 });
