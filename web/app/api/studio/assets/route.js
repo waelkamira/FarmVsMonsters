@@ -193,7 +193,7 @@ export async function POST(req){
       ?{id:id+"-projectile",filename:id+"-projectile"+ext(projectileFile.type),path:"/assets/"+createImmutableAssetPath("projectiles/plants",id+"-projectile",ext(projectileFile.type),projectileBytes),managed:false}
       :(selectedProjectileAsset
         ?{id:selectedProjectileAsset.id,filename:selectedProjectileAsset.filename,path:selectedProjectileAsset.path,managed:true}
-        :(removeProjectile?null:(existing?.combat?.mode==="projectile"?existing.combat.projectile:null))))
+        :(removeProjectile?null:(existing?.combat?.mode==="projectile"&&existing.combat.projectile?{...existing.combat.projectile,managed:old.assets.some(item=>item.id===existing.combat.projectile.id&&item.type==="plantProjectile")}:null))))
     :null;
   try{combatProfile=readCombatForm(form,currentProjectile,existing);}catch(error){return NextResponse.json({error:error.message},{status:400});}
   if(combatProfile.mode==="projectile"&&!currentProjectile)return NextResponse.json({error:"ارفع ملف القذيفة مع النبتة أو اختر سلوكاً بديلاً."},{status:400});
