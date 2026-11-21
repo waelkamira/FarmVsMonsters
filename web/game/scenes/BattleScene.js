@@ -8,7 +8,7 @@ import { getProjectileVFXProfile } from "../vfx/ProjectileVFXProfiles.mjs";
 import { getMonsterReactionProfile, getPlantAnimationProfile } from "../visuals/PlantMonsterVisualProfiles.mjs";
 import { createStudioAnimationProfile } from "../studio/animationProfiles.mjs";
 import { getSpriteFrameRectangles } from "../studio/spriteSheetGrid.mjs";
-import { getProjectileTrajectoryOffset, getProjectileHeadCorrection } from "../studio/projectileTrajectory.mjs";
+import { getProjectileTrajectoryOffset, getProjectileHeadCorrection, getProjectileLaunchPoint } from "../studio/projectileTrajectory.mjs";
 import { createStudioMonsterProfile, resolveStudioMonsterRuntimeProfile, selectWeightedStudioMonster } from "../studio/monsterProfiles.mjs";
 
 // Temporary playtest mode exposes every implemented built-in plant; campaign progression data remains intact.
@@ -3550,7 +3550,8 @@ export default class BattleScene extends Scene {
       const row = plant.row;
       const profile = plant.studioPlant.combat;
       const laneOrigin = this.lanePoint(localX, row);
-      const view = this.add.container(laneOrigin.x + 14, laneOrigin.y - 30).setDepth(16);
+      const launchPoint = getProjectileLaunchPoint({ laneX: laneOrigin.x, laneY: laneOrigin.y, offsetX: profile.projectileLaunchOffsetX, offsetY: profile.projectileLaunchOffsetY });
+      const view = this.add.container(launchPoint.x, launchPoint.y).setDepth(16);
       const textureKey = plant.studioPlant.projectileTextureKey || "studio-projectile-published-" + plant.studioPlant.id;
       if (this.textures.exists(textureKey)) {
         const projectile = plant.studioPlant.combat.projectile || {};
@@ -4695,8 +4696,9 @@ export default class BattleScene extends Scene {
       const studioOffset = shot.studioPlantId
         ? getProjectileTrajectoryOffset({type:shot.projectileTrajectoryType,progress:studioProgress,height:shot.projectileHeight,curveX:shot.projectileCurveX,curveY:shot.projectileCurveY,targetX:shot.projectileTargetOffsetX,targetY:shot.projectileTargetOffsetY,points:shot.projectilePathPoints})
         : {x:0,y:0};
-      let projectileX = position.x + (shot.launchOffsetX || 0) + studioOffset.x;
-      let projectileY = position.y + (shot.launchOffsetY || 0) - studioOffset.y;
+      const launchPoint = getProjectileLaunchPoint({ laneX: position.x, laneY: position.y, offsetX: shot.launchOffsetX, offsetY: shot.launchOffsetY });
+      let projectileX = launchPoint.x + studioOffset.x;
+      let projectileY = launchPoint.y - studioOffset.y;
 
       // Studio-authored trajectories terminate at the live monster's head.
       // Preserve the authored curve, then progressively correct its endpoint
@@ -4724,8 +4726,9 @@ export default class BattleScene extends Scene {
           targetY: shot.projectileTargetOffsetY,
           points: shot.projectilePathPoints
         });
-        const authoredEndX = targetLanePosition.x + (shot.launchOffsetX || 0) + endOffset.x;
-        const authoredEndY = targetLanePosition.y + (shot.launchOffsetY || 0) - endOffset.y;
+        const targetLaunchPoint = getProjectileLaunchPoint({ laneX: targetLanePosition.x, laneY: targetLanePosition.y, offsetX: shot.launchOffsetX, offsetY: shot.launchOffsetY });
+        const authoredEndX = targetLaunchPoint.x + endOffset.x;
+        const authoredEndY = targetLaunchPoint.y - endOffset.y;
         const headCorrection = getProjectileHeadCorrection({
           progress: studioProgress,
           targetX: headX,
