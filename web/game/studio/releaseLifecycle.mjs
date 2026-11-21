@@ -23,7 +23,7 @@ export function resolveStudioReleaseAsset(asset, pullRequest) {
 export function transitionStudioAssetStatus(asset, operation, timestamp = new Date().toISOString()) {
   if (operation === "archive") {
     if (asset.status === "archived") return asset;
-    if (asset.status === "published" || asset.status === "approved" || asset.releaseRequest?.number) {
+    if (asset.status === "published" || asset.status === "approved" || (asset.releaseRequest?.number && asset.releaseRequest.state !== "merged")) {
       throw new Error("لا يمكن أرشفة أصل منشور أو له طلب مراجعة مفتوح. أزل النشر عبر طلب إصدار مخصص أولاً.");
     }
     if (asset.status !== "draft" && asset.status !== "testing") {
