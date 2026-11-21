@@ -134,3 +134,7 @@
 .studio-motion-point-actions button{white-space:nowrap}
 .studio-motion-settings{grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
 @media(max-width:620px){.studio-motion-point-actions>span{width:100%;margin:0}.studio-motion-frame-controls .studio-trajectory-actions{gap:4px}.studio-motion-frame-controls .studio-trajectory-actions button{flex:1}}
+
+.studio-motion-progress{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px;padding:10px 12px;border:1px solid #526b45;border-radius:10px;background:#172319;color:#eaf2df;font-size:12px;font-weight:800}
+.studio-motion-progress input{grid-column:1/-1;width:100%;accent-color:#f1cc7e}
+.studio-motion-progress span{font-variant-numeric:tabular-nums;color:#f1cc7e}
