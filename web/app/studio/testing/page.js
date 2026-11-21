@@ -4,7 +4,7 @@ import Link from "next/link";
 import "../studio.css";
 
 const LABELS = {
-  ready: "متوافق مع العقد",
+  ready: "متوافق مع العقد والملفات",
   warning: "يحتاج مراجعة",
   blocked: "محظور",
   excluded: "مستبعد"
@@ -48,14 +48,14 @@ export default function StudioTestingPage() {
         <article><small>متوافق</small><b>{report.ready}</b></article>
         <article><small>تحذيرات</small><b>{report.warning}</b></article>
         <article><small>مشكلات مانعة</small><b>{report.blocked}</b></article>
-        <article><small>مستبعد / مؤرشف</small><b>{report.excluded}</b></article>
+        <article><small>مستبعد / مؤرشف</small><b>{report.excluded}</b></article>\n        <article><small>ملفات تم فحصها</small><b>{report.fileAudit?.checked ?? 0}</b></article>\n        <article><small>ملفات موجودة</small><b>{report.fileAudit?.present ?? 0}</b></article>\n        <article><small>ملفات مفقودة</small><b>{report.fileAudit?.missing ?? 0}</b></article>\n        <article><small>ملفات غير مؤكدة</small><b>{report.fileAudit?.unknown ?? 0}</b></article>
       </section>
       <section className="studio-testing-report">
         <div className="studio-testing-report-head"><div><h2>نتيجة الفحص</h2><small>{new Date(report.checkedAt).toLocaleString()} · التخزين: {report.storage}</small></div><span>{report.blocked === 0 ? "لا توجد أخطاء مانعة" : "توجد أصول تحتاج إلى إصلاح"}</span></div>
         {report.assets.length === 0 ? <div className="studio-testing-empty">لا توجد أصول في سجل Studio الحالي.</div> : <div className="studio-testing-list">
           {report.assets.map(asset => <article className="studio-testing-asset" key={asset.id || asset.name}>
             <div className="studio-testing-asset-head"><div><b>{asset.name}</b><small>{asset.id || "بدون معرّف"} · {asset.type} · {asset.status}</small></div><em data-readiness={asset.readiness}>{LABELS[asset.readiness] || asset.readiness}</em></div>
-            <div className="studio-testing-relations"><span>تبعيات: {asset.dependencyCount}</span><span>أصول تعتمد عليه: {asset.dependentCount}</span><span>{asset.canArchive ? "يمكن أرشفته" : "الأرشفة محمية"}</span><span>{asset.canReplace ? "يمكن استبداله" : "الاستبدال محمي"}</span></div>
+            <div className="studio-testing-relations"><span>ملفات: {asset.fileChecks?.length ?? 0}</span><span>مفقود: {asset.fileChecks?.filter(file => file.status === "missing").length ?? 0}</span><span>غير مؤكد: {asset.fileChecks?.filter(file => file.status === "unknown").length ?? 0}</span><span>تبعيات: {asset.dependencyCount}</span><span>أصول تعتمد عليه: {asset.dependentCount}</span><span>{asset.canArchive ? "يمكن أرشفته" : "الأرشفة محمية"}</span><span>{asset.canReplace ? "يمكن استبداله" : "الاستبدال محمي"}</span></div>
             {asset.errors.length > 0 && <div className="studio-testing-messages studio-testing-errors"><b>أخطاء مانعة</b><ul>{asset.errors.map((message,index)=><li key={index}>{message}</li>)}</ul></div>}
             {asset.warnings.length > 0 && <div className="studio-testing-messages studio-testing-warnings"><b>تنبيهات</b><ul>{asset.warnings.map((message,index)=><li key={index}>{message}</li>)}</ul></div>}
             {asset.id && <><Link href={"/studio/assets/"+encodeURIComponent(asset.id)}>فتح تفاصيل الأصل ↗</Link>{(asset.type === "plant" || asset.type === "monster") && asset.status === "testing" && asset.readiness !== "blocked" && <Link href="/stage/1/select">اختبار داخل اللعبة ↗</Link>}</>}
