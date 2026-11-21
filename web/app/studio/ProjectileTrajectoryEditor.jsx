@@ -78,7 +78,7 @@ export default function ProjectileTrajectoryEditor({
    <label>إزاحة نقطة الإصابة أفقياً<input type="number" min="-100" max="100" value={targetX} onChange={e=>setTargetX(clamp(e.target.value,-100,100))}/></label>
    <label>إزاحة نقطة الإصابة عمودياً<input type="number" min="-100" max="100" value={targetY} onChange={e=>setTargetY(clamp(e.target.value,-100,100))}/></label>
    {path!=="straight"&&path!=="bezier"&&<label>ارتفاع القوس<input type="number" min="0" max="300" value={height} onChange={e=>setHeight(clamp(e.target.value,0,300))}/></label>}
-   {path==="bezier"&&<><label>انحراف المقبض أفقياً<input type="number" min="-180" max="180" value={curveX} onChange={e=>setCurveX(clamp(e.target.value,-180,180))}/></label><label>ارتفاع المقبض<input type="number" min="-300" max="300" value={curveY} onChange={e=>setCurveY(clamp(e.target.value,-300,300))}/></>}
+   {path==="bezier"&&<><label>انحراف المقبض أفقياً<input type="number" min="-180" max="180" value={curveX} onChange={e=>setCurveX(clamp(e.target.value,-180,180))}/></label><label>ارتفاع المقبض<input type="number" min="-300" max="300" value={curveY} onChange={e=>setCurveY(clamp(e.target.value,-300,300))}/></label></>}
    <label>نصف قطر الإصابة<input type="number" min="4" max="100" value={collisionRadius} onChange={e=>setCollisionRadius(clamp(e.target.value,4,100))}/></label>
    <label>دوران صورة القذيفة<input type="number" min="0" max="360" value={rotation} onChange={e=>setRotation(clamp(e.target.value,0,360))}/></label>
   </div>
