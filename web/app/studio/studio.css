@@ -97,3 +97,19 @@
 
 .studio-head-actions{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
 .studio-head-actions a{white-space:nowrap}
+
+
+.studio-projectile-tuning{display:grid;gap:14px;padding:15px;border:1px solid #695333;border-radius:13px;background:#17170f}
+.studio-trajectory-editor{display:grid;gap:12px;min-width:0}
+.studio-trajectory-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.studio-trajectory-heading h4{margin:0 0 5px;color:#f4d58f}
+.studio-trajectory-heading small{color:#b9aa86}
+.studio-trajectory-actions{display:flex;gap:8px}
+.studio-trajectory-actions button{border:1px solid #9b7b45;border-radius:8px;padding:9px 12px;background:#3b3020;color:#f5d99d;cursor:pointer;font-weight:700}
+.studio-trajectory-canvas{width:100%;height:auto;display:block;border:1px solid #4e674f;border-radius:14px;touch-action:none;overflow:hidden}
+.studio-trajectory-canvas image{pointer-events:none}
+.studio-trajectory-canvas circle{touch-action:none}
+.studio-trajectory-editor select,.studio-trajectory-editor input:not([type=range]){width:100%;min-width:0;background:#17160f;border:1px solid #655333;color:#fff1ce;padding:10px;border-radius:8px}
+.studio-effect-color{max-width:220px}
+.studio-effect-color input{min-height:42px;width:100%;border:1px solid #655333;border-radius:8px;background:#17160f;padding:4px}
+@media(max-width:560px){.studio-trajectory-heading{align-items:flex-start}.studio-trajectory-actions{width:100%}.studio-trajectory-actions button{flex:1}}
