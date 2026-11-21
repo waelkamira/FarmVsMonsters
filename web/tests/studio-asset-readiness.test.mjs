@@ -10,6 +10,7 @@ import path from "node:path";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const apiSource = readFileSync(path.join(root, "app/api/studio/testing/route.js"), "utf8");
+const pageSource = readFileSync(path.join(root, "app/studio/testing/page.js"), "utf8");
 function validPlant(overrides = {}) {
   return {
     id: "thorn-plant", name: "Thorn Plant", type: "plant", status: "published",
@@ -97,4 +98,12 @@ test("Testing Lab API is session-protected and labels its limited audit scope", 
   assert.match(apiSource, /registry-and-runtime-contracts/);
   assert.match(apiSource, /لا يشغّل معركة Phaser/);
   assert.match(apiSource, /Cache-Control.*private, no-store/);
+});
+
+test("Testing Lab page runs the audit and renders readiness outcomes", () => {
+  assert.match(pageSource, /fetch\("\/api\/studio\/testing"/);
+  assert.match(pageSource, /report\.ready/);
+  assert.match(pageSource, /report\.blocked/);
+  assert.match(pageSource, /report\.assets\.map/);
+  assert.match(pageSource, /لا يشغّل معركة Phaser/);
 });
