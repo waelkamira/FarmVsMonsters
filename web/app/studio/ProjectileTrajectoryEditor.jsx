@@ -6,6 +6,8 @@ const clamp=(v,min,max)=>Math.min(max,Math.max(min,Number(v)||0));
 export default function ProjectileTrajectoryEditor({imageUrl,plantUrl,frameCount=1,rows=1,columns=1,path,setPath,curveX,setCurveX,curveY,setCurveY,launchX,setLaunchX,launchY,setLaunchY,speed,setSpeed,height,setHeight,rotation,setRotation,playing,setPlaying}){
  const [progress,setProgress]=useState(0);
  const [drag,setDrag]=useState("");
+ const [imageSize,setImageSize]=useState({width:1,height:1});
+ useEffect(()=>{if(!imageUrl)return;const image=new window.Image();image.onload=()=>setImageSize({width:image.naturalWidth,height:image.naturalHeight});image.src=imageUrl;return()=>{image.onload=null;};},[imageUrl]);
  useEffect(()=>{if(!playing)return;let last=0;let frame=0;const tick=now=>{if(!last)last=now;const dt=Math.min(64,now-last);last=now;setProgress(p=>{const n=p+dt*Math.max(0.05,speed)/18000;return n>=1?0:n;});frame=requestAnimationFrame(tick);};frame=requestAnimationFrame(tick);return()=>cancelAnimationFrame(frame);},[playing,speed]);
  useEffect(()=>{if(!playing)setProgress(0);},[playing,path,curveX,curveY,launchX,launchY]);
  const start={x:86+clamp(launchX,-70,70)*.55,y:168-clamp(launchY,-120,120)*.55};
@@ -17,6 +19,7 @@ export default function ProjectileTrajectoryEditor({imageUrl,plantUrl,frameCount
  const current=point(progress);
  const frameIndex=Math.min(Math.max(1,frameCount)-1,Math.floor(progress*Math.max(1,frameCount)));
  const frameColumn=frameIndex%Math.max(1,columns),frameRow=Math.floor(frameIndex/Math.max(1,columns));
+ const frameWidth=imageSize.width/Math.max(1,columns),frameHeight=imageSize.height/Math.max(1,rows);
  return <section className="studio-trajectory-editor">
   <div className="studio-trajectory-heading"><div><h4>محرّر مسار القذيفة</h4><small>اسحب نقطة الإطلاق أو مقبض المنحنى بالماوس. حرّك القيم من الحقول أيضاً.</small></div><div className="studio-trajectory-actions"><button type="button" onClick={()=>{setProgress(0);setPlaying(false);}}>إعادة ضبط</button><button type="button" onClick={()=>setPlaying(v=>!v)}>{playing?"إيقاف":"تشغيل المعاينة"}</button></div></div>
   <svg className="studio-trajectory-canvas" viewBox="0 0 560 240" role="img" aria-label="محرر مرئي لمسار القذيفة">
@@ -27,7 +30,7 @@ export default function ProjectileTrajectoryEditor({imageUrl,plantUrl,frameCount
    {path==="bezier"&&<path d={`M${start.x},${start.y} L${control.x},${control.y} L${end.x},${end.y}`} stroke="#7ed9c0" strokeDasharray="4 5" fill="none" opacity=".7"/>}
    <circle cx={end.x} cy={end.y} r="17" fill="#a84f48" stroke="#ffc9a7" strokeWidth="2"/><text x={end.x} y={end.y+4} textAnchor="middle" fill="white" fontSize="10">هدف</text>
    {plantUrl&&<image href={plantUrl} x="35" y="115" width="74" height="74" preserveAspectRatio="xMidYMid meet"/>}
-   {imageUrl&&<svg x={current.x-15} y={current.y-15} width="30" height="30" viewBox={`${frameColumn} ${frameRow} 1 1`} preserveAspectRatio="xMidYMid meet" overflow="hidden"><image href={imageUrl} x="0" y="0" width={Math.max(1,columns)} height={Math.max(1,rows)} preserveAspectRatio="none"/></svg> }
+   {imageUrl&&<svg x={current.x-15} y={current.y-15} width="30" height="30" viewBox={`${frameColumn*frameWidth} ${frameRow*frameHeight} ${frameWidth} ${frameHeight}`} preserveAspectRatio="xMidYMid meet" overflow="hidden" transform={`rotate(${rotation} ${15} ${15})`}><image href={imageUrl} x="0" y="0" width={imageSize.width} height={imageSize.height} preserveAspectRatio="none"/></svg> }
    {!imageUrl&&<circle cx={current.x} cy={current.y} r="10" fill="#ffc247" stroke="#fff1c1" strokeWidth="2"/>}
    <circle cx={start.x} cy={start.y} r="11" fill="#4abf8a" stroke="white" strokeWidth="2" style={{cursor:"grab"}} onPointerDown={e=>{e.currentTarget.setPointerCapture(e.pointerId);setDrag("launch");}} onPointerMove={e=>{if(drag==="launch")pointer(e);}} onPointerUp={()=>setDrag("")}/>
    {path==="bezier"&&<circle cx={control.x} cy={control.y} r="10" fill="#55c8d9" stroke="white" strokeWidth="2" style={{cursor:"grab"}} onPointerDown={e=>{e.currentTarget.setPointerCapture(e.pointerId);setDrag("curve");}} onPointerMove={e=>{if(drag==="curve")pointer(e);}} onPointerUp={()=>setDrag("")}/>}
