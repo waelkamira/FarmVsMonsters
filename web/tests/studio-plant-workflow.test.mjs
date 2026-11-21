@@ -49,6 +49,8 @@ test("Studio can preview a selected Sprite Sheet row with adjustable playback sp
 test("Studio provides a live size preview for the selected or edited plant",()=>{
   assert.match(studioPage,/editingAsset\?\.previewUrl/);
   assert.match(studioPage,/studio-live-preview-stage/);
+  assert.match(studioPage,/sprite&&\(previewUrl\|\|editingAsset\?\.previewUrl/);
+  assert.match(studioPage,/معاينة حركة Sprite Sheet/);
   assert.match(studioPage,/scale\(\$\{plantSizePercent\/100\}\)/);
   assert.match(studioPage,/setEditingAsset\(asset\)/);
 });
