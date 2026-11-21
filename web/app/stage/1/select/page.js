@@ -76,10 +76,12 @@ export default function StageOneSeedSelectionPage() {
         const validSaved = Array.isArray(saved)
           ? saved.filter((id) => safeUnlocked.includes(id) && nextPlants.some((plant) => plant.id === id))
           : [];
-        const defaultTesting = studioPlants.filter((plant) => plant.testing).map((plant) => plant.id);
-        setSelected([...new Set([...STARTER_LOADOUT, ...defaultTesting, ...validSaved])].slice(0, MAX_SEEDS));
+        const defaultStudioPlants = studioPlants.map((plant) => plant.id);
+        // Newly published Studio plants are unlocked and equipped by default;
+        // the seven-slot limit applies only to the active loadout, not the catalog.
+        setSelected([...new Set([...STARTER_LOADOUT, ...defaultStudioPlants, ...validSaved])].slice(0, MAX_SEEDS));
       } catch {
-        setSelected([...STARTER_LOADOUT, ...studioPlants.filter((plant) => plant.testing).map((plant) => plant.id)].slice(0, MAX_SEEDS));
+        setSelected([...new Set([...STARTER_LOADOUT, ...studioPlants.map((plant) => plant.id)])].slice(0, MAX_SEEDS));
       }
     })();
     return () => { active = false; };
