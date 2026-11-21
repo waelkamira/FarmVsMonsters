@@ -21,3 +21,30 @@ test("progress is clamped to the path endpoints",()=>{
  assert.deepEqual(getProjectileTrajectoryOffset({type:"bezier",progress:-2,curveX:120,curveY:200}),{x:0,y:0});
  assert.deepEqual(getProjectileTrajectoryOffset({type:"bezier",progress:3,curveX:120,curveY:200}),{x:0,y:0});
 });
+
+import { createStudioPlantCombatProfile } from "../game/studio/plantProfiles.mjs";
+
+test("plant combat profile persists trajectory and launch tuning",()=>{
+ const profile=createStudioPlantCombatProfile({
+  behavior:"projectile",
+  projectile:{id:"seed",path:"/assets/seed.png",frameCount:1,rows:1,columns:1},
+  projectileTrajectoryType:"bezier",
+  projectileCurveX:75,
+  projectileCurveY:180,
+  projectileLaunchOffsetX:24,
+  projectileLaunchOffsetY:-42
+ });
+ assert.equal(profile.projectileTrajectoryType,"bezier");
+ assert.equal(profile.projectileCurveX,75);
+ assert.equal(profile.projectileCurveY,180);
+ assert.equal(profile.projectileLaunchOffsetX,24);
+ assert.equal(profile.projectileLaunchOffsetY,-42);
+});
+
+test("plant combat profile rejects unsupported trajectory types",()=>{
+ assert.throws(()=>createStudioPlantCombatProfile({
+  behavior:"projectile",
+  projectile:{id:"seed",path:"/assets/seed.png"},
+  projectileTrajectoryType:"teleport"
+ }),/trajectory type/);
+});
