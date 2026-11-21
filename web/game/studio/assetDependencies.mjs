@@ -48,7 +48,7 @@ export function buildAssetDependencyReport(assets, assetId) {
     const ownReferences = references.filter((reference) => reference.assetId === assetId);
     if (ownReferences.length && otherReferences.length) sharedFiles.push({ path, ownRoles: ownReferences.map((item) => item.role), usedBy: otherReferences });
   }
-  const protectedStatus = ["published", "approved"].includes(asset.status);
+  const protectedStatus = ["published", "approved"].includes(asset.status) || Boolean(asset.releaseRequest?.number);
   const unresolved = dependencies.filter((dependency) => !dependency.resolved);
   return {
     assetId, dependencies, dependents, sharedFiles, unresolved,
