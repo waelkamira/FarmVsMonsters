@@ -8,6 +8,7 @@ const DEFAULT_POINTS=[{progress:0,x:0,y:0},{progress:.5,x:0,y:110},{progress:1,x
 export default function ProjectileTrajectoryEditor({
  imageUrl,plantUrl,frameCount=1,rows=1,columns=1,
  plantFrameCount=1,plantRows=1,plantColumns=1,plantSizePercent=100,
+ idleStartFrame=0,idleEndFrame=0,idleFps=6,
  points=DEFAULT_POINTS,setPoints,plantFps=8,targetX=0,targetY=0,
  launchX,setLaunchX,launchY,setLaunchY,
  speed,setSpeed,collisionRadius,setCollisionRadius,height,setHeight,
@@ -23,8 +24,8 @@ export default function ProjectileTrajectoryEditor({
  const [projectileFrame,setProjectileFrame]=useState(0);
  useEffect(()=>{if(!imageUrl){setImageSize({width:1,height:1});return;}const image=new window.Image();image.onload=()=>{setImageSize({width:image.naturalWidth,height:image.naturalHeight});};image.src=imageUrl;return()=>{image.onload=null;};},[imageUrl]);
  useEffect(()=>{if(!plantUrl){setPlantImageSize({width:1,height:1});return;}const image=new window.Image();image.onload=()=>setPlantImageSize({width:image.naturalWidth,height:image.naturalHeight});image.src=plantUrl;return()=>{image.onload=null;};},[plantUrl]);
- useEffect(()=>{setPlantFrame(0);setPlantPlaying(false);},[plantUrl,plantFrameCount,plantRows,plantColumns]);
- useEffect(()=>{if(!plantPlaying)return;const timer=window.setInterval(()=>setPlantFrame(frame=>(frame+1)%Math.max(1,plantFrameCount)),1000/Math.max(1,plantFps));return()=>window.clearInterval(timer);},[plantPlaying,plantFps,plantFrameCount]);
+ useEffect(()=>{setPlantFrame(clamp(idleStartFrame,0,Math.max(0,plantFrameCount-1)));setPlantPlaying(false);},[plantUrl,plantFrameCount,plantRows,plantColumns,idleStartFrame]);
+ useEffect(()=>{if(!plantPlaying)return;const first=clamp(idleStartFrame,0,Math.max(0,plantFrameCount-1));const last=Math.max(first,clamp(idleEndFrame,first,Math.max(0,plantFrameCount-1)));const timer=window.setInterval(()=>setPlantFrame(frame=>frame>=last?first:Math.min(last,frame+1)),1000/Math.max(1,idleFps||plantFps));return()=>window.clearInterval(timer);},[plantPlaying,plantFps,idleFps,idleStartFrame,idleEndFrame,plantFrameCount]);
  useEffect(()=>{if(!playing)return;let last=0,raf=0;const tick=now=>{if(!last)last=now;const dt=Math.min(64,now-last);last=now;setProgress(p=>Math.min(1,p+dt*Math.max(.05,speed)/24000));raf=requestAnimationFrame(tick);};raf=requestAnimationFrame(tick);return()=>cancelAnimationFrame(raf);},[playing,speed]);
  useEffect(()=>{if(playing&&progress>=1)setPlaying(false);},[playing,progress,setPlaying]);
  useEffect(()=>{setProgress(0);},[points,launchX,launchY,height,targetX,targetY]);
@@ -74,7 +75,7 @@ export default function ProjectileTrajectoryEditor({
    {!plantUrl&&<g><circle cx={plantAnchor.x} cy={plantAnchor.y-30} r="30" fill="#72bd54"/><path d="M100 232Q58 188 68 170Q96 172 103 212Q113 176 140 179Q143 208 104 233" fill="#9cdb70"/></g>}
    <circle cx={start.x} cy={start.y} r="15" fill="#37c990" stroke="#fff" strokeWidth="3" style={{cursor:"move"}} onPointerDown={e=>{e.stopPropagation();e.currentTarget.ownerSVGElement.setPointerCapture(e.pointerId);setDrag({type:"launch"});}}/>
    <text x={start.x+18} y={start.y-15} fill="#fff" fontSize="13">موضع الإطلاق</text>
-   {normalizedPoints.map((item,index)=>{const p=pointAt(item.progress);return <g key={index}><circle cx={p.x} cy={p.y} r={selectedPoint===index?12:9} fill={index===0||index===normalizedPoints.length-1?"#35c98a":"#4dc6e8"} stroke="#fff" strokeWidth="2" style={{cursor:"grab"}} onPointerDown={e=>{e.stopPropagation();e.currentTarget.ownerSVGElement.setPointerCapture(e.pointerId);setSelectedPoint(index);setDrag({type:"waypoint",index});}}/><text x={p.x} y={p.y-17} fill="#fff" fontSize="11" textAnchor="middle">{index+1}</text></g>;})}
+   {normalizedPoints.map((item,index)=>{if(index===0)return null;const p=pointAt(item.progress);return <g key={index}><circle cx={p.x} cy={p.y} r={selectedPoint===index?12:9} fill={index===0||index===normalizedPoints.length-1?"#35c98a":"#4dc6e8"} stroke="#fff" strokeWidth="2" style={{cursor:"grab"}} onPointerDown={e=>{e.stopPropagation();e.currentTarget.ownerSVGElement.setPointerCapture(e.pointerId);setSelectedPoint(index);setDrag({type:"waypoint",index});}}/><text x={p.x} y={p.y-17} fill="#fff" fontSize="11" textAnchor="middle">{index+1}</text></g>;})}
    {progress<1&&imageUrl&&<svg x={current.x-24} y={current.y-24} width="48" height="48" style={{cursor:progress===0?"grab":"default"}} onPointerDown={e=>{if(progress>0.001)return;e.stopPropagation();e.currentTarget.ownerSVGElement.setPointerCapture(e.pointerId);setDrag({type:"launch"});}} viewBox={`${frameColumn*frameWidth} ${frameRow*frameHeight} ${frameWidth} ${frameHeight}`} preserveAspectRatio="xMidYMid meet" overflow="hidden" transform={`rotate(${rotation} ${current.x} ${current.y} )`}><image href={imageUrl} x="0" y="0" width={imageSize.width} height={imageSize.height} preserveAspectRatio="none"/></svg>}
    {!imageUrl&&progress<1&&<circle cx={current.x} cy={current.y} r="13" fill="#ffc247" stroke="#fff1c1" strokeWidth="2"/>}
    {progress>=1&&<g transform={`translate(${targetHead.x} ${targetHead.y} )`} pointerEvents="none"><circle r="24" fill="#ffd76b" fillOpacity=".28" stroke="#ffe28a" strokeWidth="3"/><path d="M0-31L6-13L23-22L15-5L32 0L14 6L23 23L5 14L0 32L-6 14L-23 23L-14 5L-32 0L-14-6L-23-23L-5-14Z" fill="#ffbd4a" stroke="#fff0b2" strokeWidth="2"/><circle r="8" fill="#fff3b0"/></g>}
