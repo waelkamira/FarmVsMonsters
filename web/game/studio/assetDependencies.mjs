@@ -4,10 +4,19 @@ function declaredDependencies(asset, byId) {
   const dependencies = [];
   const projectile = asset?.combat?.projectile;
   if (projectile && (projectile.id || projectile.path)) {
-    const target = projectile.id ? byId.get(String(projectile.id)) : null;
-    dependencies.push(target && target.id !== asset.id
-      ? { kind: "asset", relation: "projectile", targetId: target.id, targetName: target.name || target.id, targetType: target.type, path: normalizePath(projectile.path || target.path), resolved: true }
-      : { kind: "embedded-file", relation: "projectile", targetId: null, targetName: projectile.filename || projectile.id || "ملف القذيفة", targetType: "plantProjectile", path: normalizePath(projectile.path), resolved: Boolean(projectile.path), managedWithOwner: true });
+    const projectileId = projectile.id ? String(projectile.id) : "";
+    const target = projectileId ? byId.get(projectileId) : null;
+    if (projectile.managed === true) {
+      dependencies.push(target && target.id !== asset.id
+        ? { kind: "asset", relation: "projectile", targetId: target.id, targetName: target.name || target.id, targetType: target.type, path: normalizePath(projectile.path || target.path), resolved: true }
+        : { kind: "asset", relation: "projectile", targetId: projectileId, targetName: projectileId || projectile.filename || "قذيفة مُدارة", targetType: "plantProjectile", path: normalizePath(projectile.path), resolved: false });
+    } else if (projectile.managed === false) {
+      dependencies.push({ kind: "embedded-file", relation: "projectile", targetId: null, targetName: projectile.filename || projectileId || "ملف القذيفة", targetType: "plantProjectile", path: normalizePath(projectile.path), resolved: Boolean(projectile.path), managedWithOwner: true });
+    } else {
+      dependencies.push(target && target.id !== asset.id
+        ? { kind: "asset", relation: "projectile", targetId: target.id, targetName: target.name || target.id, targetType: target.type, path: normalizePath(projectile.path || target.path), resolved: true }
+        : { kind: "embedded-file", relation: "projectile", targetId: null, targetName: projectile.filename || projectileId || "ملف القذيفة", targetType: "plantProjectile", path: normalizePath(projectile.path), resolved: Boolean(projectile.path), managedWithOwner: true });
+    }
   }
   for (const reference of asList(asset?.dependencies)) {
     const id = typeof reference === "string" ? reference : reference?.id;
