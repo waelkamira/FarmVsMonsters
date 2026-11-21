@@ -11,7 +11,8 @@ test("creates a safe default monster profile with custom spawning disabled", () 
 test("validates base archetype and every tunable range", () => {
   assert.throws(() => createStudioMonsterProfile({ baseArchetype: "unknown" }), /supported base monster/);
   assert.throws(() => createStudioMonsterProfile({ hpMultiplier: 4.1 }), /hpMultiplier/);
-  assert.throws(() => createStudioMonsterProfile({ spawnWeight: -1 }), /spawnWeight/);\n  assert.throws(() => createStudioMonsterProfile({ spawnWeight: 1.5 }), /whole number/);
+  assert.throws(() => createStudioMonsterProfile({ spawnWeight: -1 }), /spawnWeight/);
+  assert.throws(() => createStudioMonsterProfile({ spawnWeight: 1.5 }), /whole number/);
   assert.throws(() => createStudioMonsterProfile({ firstWave: 11 }), /firstWave/);
 });
 test("applies custom combat multipliers without mutating the base profile", () => {
