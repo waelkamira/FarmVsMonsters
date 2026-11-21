@@ -35,23 +35,23 @@ test("does not alter assets without a release request", () => {
   assert.equal(resolveStudioReleaseAsset(draft, null), draft);
 });
 
-test("archives drafts without deleting their asset files", () => {
-  const draft = { id: "draft-plant", status: "draft", path: "/assets/plants/draft.png" };
+test("archives draft assets of any supported type without deleting their files", () => {
+  const draft = { id: "draft-sfx", type: "audio", status: "draft", path: "/assets/audio/draft.ogg" };
   const result = transitionStudioAssetStatus(draft, "archive", "2026-11-21T11:00:00.000Z");
   assert.equal(result.status, "archived");
   assert.equal(result.path, draft.path);
   assert.equal(result.archivedAt, "2026-11-21T11:00:00.000Z");
 });
 
-test("restores archived plants as drafts that must be tested again", () => {
-  const archived = { id: "old-plant", status: "archived", archivedAt: "2026-11-20T10:00:00.000Z" };
+test("restores archived assets of any type as drafts", () => {
+  const archived = { id: "old-effect", type: "effect", status: "archived", archivedAt: "2026-11-20T10:00:00.000Z" };
   const result = transitionStudioAssetStatus(archived, "restore", "2026-11-21T11:00:00.000Z");
   assert.equal(result.status, "draft");
   assert.equal(result.archivedAt, null);
   assert.equal(result.updatedAt, "2026-11-21T11:00:00.000Z");
 });
 
-test("does not archive published or review-pending plants", () => {
+test("does not archive published or review-pending assets", () => {
   assert.throws(() => transitionStudioAssetStatus({ id: "live", status: "published" }, "archive"), /لا يمكن أرشفة/);
   assert.throws(() => transitionStudioAssetStatus({ id: "pending", status: "testing", releaseRequest: { number: 7 } }, "archive"), /لا يمكن أرشفة/);
 });
