@@ -3569,7 +3569,9 @@ export default class BattleScene extends Scene {
       view.setRotation((Number(profile.projectileRotation) || 0) * Math.PI / 180);
       this.projectiles.push({
         view, localX, row, target, startLocalX: localX, targetLocalX: Math.max(localX + 1, target.localX),
-        launchOffsetX: 14, launchOffsetY: -30, speed: profile.projectileSpeed,
+        launchOffsetX: Number(profile.projectileLaunchOffsetX ?? 14), launchOffsetY: Number(profile.projectileLaunchOffsetY ?? -30), speed: profile.projectileSpeed,
+        projectileTrajectoryType: profile.projectileTrajectoryType || "arc",
+        projectileCurveX: Number(profile.projectileCurveX) || 0, projectileCurveY: Number(profile.projectileCurveY) || 110,
         damage: profile.damage, freeze: false, freezeDurationMs: 0,
         collisionRadius: profile.projectileCollisionRadius, dropSpeed: profile.projectileSpeed * 1.5,
         projectileHeight: profile.projectileHeight || 0, projectileEffectColor: effectColor,
@@ -4684,14 +4686,23 @@ export default class BattleScene extends Scene {
       const position = ["pineapple", "hazelnut", "mango", "snow-thrower"].includes(shot.plantType)
         ? this.pineappleLanePoint(shot.localX, shot.row)
         : this.lanePoint(shot.localX, shot.row);
-      const projectileX = position.x + (shot.launchOffsetX || 0);
       const studioProgress = shot.studioPlantId
         ? PhaserMath.Clamp((shot.localX - shot.startLocalX) / Math.max(1, shot.targetLocalX - shot.startLocalX), 0, 1)
         : 0;
-      const studioArcOffset = shot.studioPlantId
-        ? Math.sin(Math.PI * studioProgress) * (shot.projectileHeight || 0)
+      const studioCurveProgress = studioProgress;
+      const studioCurveX = shot.studioPlantId && shot.projectileTrajectoryType === "bezier"
+        ? 2 * studioCurveProgress * (1 - studioCurveProgress) * (shot.projectileCurveX || 0)
         : 0;
-      const projectileY = position.y + (shot.launchOffsetY || 0) - studioArcOffset;
+      const projectileX = position.x + (shot.launchOffsetX || 0) + studioCurveX;
+      let studioPathOffset = 0;
+      if (shot.studioPlantId && shot.projectileTrajectoryType === "arc") {
+        studioPathOffset = Math.sin(Math.PI * studioProgress) * (shot.projectileHeight || 0);
+      } else if (shot.studioPlantId && shot.projectileTrajectoryType === "sine") {
+        studioPathOffset = Math.sin(Math.PI * 2 * studioProgress) * (shot.projectileHeight || 0);
+      } else if (shot.studioPlantId && shot.projectileTrajectoryType === "bezier") {
+        studioPathOffset = 2 * studioCurveProgress * (1 - studioCurveProgress) * (shot.projectileCurveY || 0);
+      }
+      const projectileY = position.y + (shot.launchOffsetY || 0) - studioPathOffset;
       let trailPositionY = projectileY;
 
       // Give the outgoing pineapple bomb a smooth launch arc. Progress is
