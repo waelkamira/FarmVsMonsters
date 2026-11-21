@@ -10,6 +10,7 @@ import {createImmutableAssetPath} from "../../../../game/studio/immutableAssetPa
 import {createStudioReleaseBranchName,resolveStudioReleaseAsset,transitionStudioAssetStatus} from "../../../../game/studio/releaseLifecycle.mjs";
 import {cloneStudioAsset,createStudioAssetRevision,restoreStudioAssetRevision} from "../../../../game/studio/assetVersions.mjs";
 import {getAssetDependents} from "../../../../game/studio/assetDependencies.mjs";
+import {createStudioAnimationProfile} from "../../../../game/studio/animationProfiles.mjs";
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
 const COOKIE="fvm_studio_session";
@@ -137,6 +138,14 @@ export async function POST(req){
  if(!hasFile&&(!replace||!existing))return NextResponse.json({error:"Choose a file for a new asset."},{status:400});
  if(hasFile&&(file.size>STUDIO_MAX_UPLOAD_BYTES||!config.accepts.includes(file.type)))return NextResponse.json({error:"Choose a supported file up to 8 MB."},{status:415});
  if(config.spriteSheet&&(!Number.isInteger(rows)||!Number.isInteger(columns)||rows<1||columns<1||rows*columns>100))return NextResponse.json({error:"Invalid sprite grid."},{status:400});
+ let animationProfile=null;
+ if(config.spriteSheet){
+  try{
+   const rawProfile=String(form.get("animationProfile")||"");
+   const submittedProfile=rawProfile?JSON.parse(rawProfile):(existing?.animationProfile||null);
+   animationProfile=createStudioAnimationProfile(submittedProfile,rows*columns);
+  }catch(error){return NextResponse.json({error:error.message||"Invalid animation profile."},{status:400});}
+ }
  if(hasProjectile&&removeProjectile)return NextResponse.json({error:"Choose a new projectile or remove the existing projectile, not both."},{status:400});
  if(hasProjectile&&(type!=="plant"||!STUDIO_ASSET_TYPES.plantProjectile.accepts.includes(projectileFile.type)||projectileFile.size>STUDIO_MAX_UPLOAD_BYTES))return NextResponse.json({error:"Projectile must be a supported PNG/WebP/GIF file up to 8 MB and can only be attached to a plant."},{status:415});
  const projectileBytes=hasProjectile?Buffer.from(await projectileFile.arrayBuffer()):null;
@@ -158,7 +167,7 @@ export async function POST(req){
  const bytes=hasFile?Buffer.from(await file.arrayBuffer()):null;
  const relative=hasFile?createImmutableAssetPath(config.folder,id,extension,bytes):(existing?.path||"").replace(/^\/assets\//,"");
  const now=new Date().toISOString();
- const record=createStudioAssetRevision(existing,{...(existing||{}),id,type,name:String(form.get("name")||id).trim().slice(0,80),filename:hasFile?id+extension:existing.filename,path:hasFile?"/assets/"+relative:existing.path,rows,columns,spriteSheet:config.spriteSheet,status:"draft",releaseRequest:null,createdAt:existing?.createdAt||now,updatedAt:now,...(type==="plant"?{combat:combatProfile}:{})});
+ const record=createStudioAssetRevision(existing,{...(existing||{}),id,type,name:String(form.get("name")||id).trim().slice(0,80),filename:hasFile?id+extension:existing.filename,path:hasFile?"/assets/"+relative:existing.path,rows,columns,spriteSheet:config.spriteSheet,status:"draft",releaseRequest:null,createdAt:existing?.createdAt||now,updatedAt:now,...(type==="plant"?{combat:combatProfile}:{}),...(config.spriteSheet?{animationProfile}:{})});
  const next={...old,version:1,assets:existing?old.assets.map((a,i)=>i===index?record:a):[...old.assets,record]};
  try{
   if(driver==="github"){
@@ -282,7 +291,7 @@ export async function PATCH(req){
   const catalogDocument=await githubGetDocument(PUBLISHED_CATALOG_PATH,token,targetBranch);
   const catalog=catalogDocument?JSON.parse(catalogDocument.content):{version:1,plants:[]};
   const catalogSha=catalogDocument?.sha??null;
-  const publishedPlant={id:asset.id,name:asset.name,path:asset.path,rows:asset.rows,columns:asset.columns,spriteSheet:asset.spriteSheet,combat:asset.combat,publishedAt:new Date().toISOString()};
+  const publishedPlant={id:asset.id,name:asset.name,path:asset.path,rows:asset.rows,columns:asset.columns,spriteSheet:asset.spriteSheet,animationProfile:asset.animationProfile||null,combat:asset.combat,publishedAt:new Date().toISOString()};
   const existingIndex=(catalog.plants||[]).findIndex(plant=>plant.id===id);
   catalog.plants=existingIndex>=0?catalog.plants.map((plant,i)=>i===existingIndex?publishedPlant:plant):[...(catalog.plants||[]),publishedPlant];
   catalog.version=1;
