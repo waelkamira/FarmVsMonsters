@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { getProjectileTrajectoryOffset } from "../game/studio/projectileTrajectory.mjs";
+import { getProjectileTrajectoryOffset, normalizeProjectilePathPoints } from "../game/studio/projectileTrajectory.mjs";
 import { createStudioPlantCombatProfile } from "../game/studio/plantProfiles.mjs";
 
 test("straight trajectory has no visual offset",()=>{
@@ -70,7 +70,6 @@ test("custom trajectory passes through editable waypoint offsets",()=>{
  assert.deepEqual(end,{x:0,y:0});
 });
 test("custom trajectory validates bounded ordered control points",()=>{
- const {normalizeProjectilePathPoints}=require("../game/studio/projectileTrajectory.mjs");
  assert.throws(()=>normalizeProjectilePathPoints([{progress:0,x:0,y:0},{progress:.4,x:0,y:0}]),/start at 0 and end at 1/);
  assert.throws(()=>normalizeProjectilePathPoints([{progress:0,x:0,y:0},{progress:.5,x:1200,y:0},{progress:1,x:0,y:0}]),/Invalid projectile path/);
 });
