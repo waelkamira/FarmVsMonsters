@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
-import { getProjectileTrajectoryOffset } from "../../game/studio/projectileTrajectory.mjs";
+import { getProjectileTrajectoryOffset, getProjectileLaunchPoint } from "../../game/studio/projectileTrajectory.mjs";
 
 const clamp=(v,min,max)=>Math.min(max,Math.max(min,Number(v)||0));
 const BOARD={width:840,height:525,columns:8,rows:5,cellSize:105};
@@ -29,14 +29,16 @@ export default function ProjectileTrajectoryEditor({
  useEffect(()=>{if(playing&&progress>=1)setPlaying(false);},[playing,progress,setPlaying]);
  useEffect(()=>{setProgress(0);},[points,launchX,launchY,height,targetX,targetY]);
  useEffect(()=>{if(!playing||!imageUrl)return;const timer=window.setInterval(()=>setProjectileFrame(frame=>(frame+1)%Math.max(1,frameCount)),1000/10);return()=>window.clearInterval(timer);},[playing,imageUrl,frameCount]);
- const plantCenter={x:105,y:262.5};
- const start={x:plantCenter.x+clamp(launchX,-300,300)*.55,y:plantCenter.y+clamp(launchY,-300,300)*.55};
+ const laneOrigin={x:105,y:262.5};
+ // Runtime plants are anchored 5px above the lane center in the upper rows.
+ const plantAnchor={x:laneOrigin.x,y:laneOrigin.y-5};
+ const start=getProjectileLaunchPoint({laneX:laneOrigin.x,laneY:laneOrigin.y,offsetX:clamp(launchX,-300,300),offsetY:clamp(launchY,-300,300)});
  const end={x:735,y:262.5};
  const targetHead={x:end.x,y:end.y-10};
  const baseAt=t=>({x:start.x+(end.x-start.x)*t,y:start.y+(end.y-start.y)*t});
  const normalizedPoints=useMemo(()=>Array.isArray(points)&&points.length>=2?points:DEFAULT_POINTS,[points]);
  const offsetAt=t=>getProjectileTrajectoryOffset({type:"custom",progress:t,points:normalizedPoints,height,targetX,targetY});
- const rawPointAt=t=>{const base=baseAt(t),offset=offsetAt(t);return{x:base.x+offset.x*.55,y:base.y-offset.y*.55};};
+ const rawPointAt=t=>{const base=baseAt(t),offset=offsetAt(t);return{x:base.x+offset.x,y:base.y-offset.y};};
  const rawEnd=rawPointAt(1);
  const headCorrectionAt=t=>({x:(targetHead.x-rawEnd.x)*t,y:(targetHead.y-rawEnd.y)*t});
  const pointAt=t=>{const raw=rawPointAt(t),correction=headCorrectionAt(t);return{x:raw.x+correction.x,y:raw.y+correction.y};};
@@ -48,10 +50,10 @@ export default function ProjectileTrajectoryEditor({
  const safePlantFrame=Math.min(Math.max(0,plantFrameCount-1),plantFrame);
  const plantColumn=safePlantFrame%Math.max(1,plantColumns),plantRow=Math.floor(safePlantFrame/Math.max(1,plantColumns));
  const plantFrameWidth=plantImageSize.width/Math.max(1,plantColumns),plantFrameHeight=plantImageSize.height/Math.max(1,plantRows);
- const plantScale=clamp(plantSizePercent,25,200)/100,plantWidth=116*plantScale,plantHeight=132*plantScale;
+ const plantScale=clamp(plantSizePercent,25,200)/100,plantHeight=88*plantScale,plantWidth=Math.min(plantHeight*(plantFrameWidth/Math.max(1,plantFrameHeight)),100*plantScale);
  const pointerPosition=e=>{const svg=e.currentTarget;const rect=svg.getBoundingClientRect();return{x:(e.clientX-rect.left)*BOARD.width/rect.width,y:(e.clientY-rect.top)*BOARD.height/rect.height};};
- const movePointer=e=>{if(!drag)return;const p=pointerPosition(e);if(drag.type==="launch"){setLaunchX(Math.round(clamp((p.x-plantCenter.x)/.55,-300,300)));setLaunchY(Math.round(clamp((p.y-plantCenter.y)/.55,-300,300)));return;}if(drag.type==="waypoint"){const t=normalizedPoints[drag.index]?.progress;if(t==null)return;const base=baseAt(t),correction=headCorrectionAt(t);const next=normalizedPoints.map((item,index)=>index===drag.index?{...item,x:Math.round(clamp((p.x-base.x-correction.x)/.55,-1000,1000)),y:Math.round(clamp((base.y+correction.y-p.y)/.55,-1000,1000))}:item);setPoints(next);}};
- const addWaypoint=e=>{const p=pointerPosition(e);const t=clamp((p.x-start.x)/(end.x-start.x),.02,.98);if(normalizedPoints.length>=18||normalizedPoints.some(item=>Math.abs(item.progress-t)<.005))return;const base=baseAt(t),correction=headCorrectionAt(t);const next=[...normalizedPoints,{progress:Number(t.toFixed(3)),x:Math.round(clamp((p.x-base.x-correction.x)/.55,-1000,1000)),y:Math.round(clamp((base.y+correction.y-p.y)/.55,-1000,1000))}].sort((a,b)=>a.progress-b.progress);setPoints(next);setSelectedPoint(next.findIndex(item=>item.progress===Number(t.toFixed(3))));};
+ const movePointer=e=>{if(!drag)return;const p=pointerPosition(e);if(drag.type==="launch"){setLaunchX(Math.round(clamp(p.x-laneOrigin.x,-300,300)));setLaunchY(Math.round(clamp(p.y-laneOrigin.y,-300,300)));return;}if(drag.type==="waypoint"){const t=normalizedPoints[drag.index]?.progress;if(t==null)return;const base=baseAt(t),correction=headCorrectionAt(t);const next=normalizedPoints.map((item,index)=>index===drag.index?{...item,x:Math.round(clamp((p.x-base.x-correction.x),-1000,1000)),y:Math.round(clamp((base.y+correction.y-p.y),-1000,1000))}:item);setPoints(next);}};
+ const addWaypoint=e=>{const p=pointerPosition(e);const t=clamp((p.x-start.x)/(end.x-start.x),.02,.98);if(normalizedPoints.length>=18||normalizedPoints.some(item=>Math.abs(item.progress-t)<.005))return;const base=baseAt(t),correction=headCorrectionAt(t);const next=[...normalizedPoints,{progress:Number(t.toFixed(3)),x:Math.round(clamp((p.x-base.x-correction.x),-1000,1000)),y:Math.round(clamp((base.y+correction.y-p.y),-1000,1000))}].sort((a,b)=>a.progress-b.progress);setPoints(next);setSelectedPoint(next.findIndex(item=>item.progress===Number(t.toFixed(3))));};
  const removeWaypoint=()=>{if(selectedPoint<=0||selectedPoint>=normalizedPoints.length-1)return;setPoints(normalizedPoints.filter((_,index)=>index!==selectedPoint));setSelectedPoint(-1);};
  const previousFrame=()=>setPlantFrame(frame=>Math.max(0,frame-1));
  const nextFrame=()=>setPlantFrame(frame=>Math.min(Math.max(0,plantFrameCount-1),frame+1));
@@ -67,9 +69,9 @@ export default function ProjectileTrajectoryEditor({
    {Array.from({length:BOARD.columns*BOARD.rows},(_,i)=><rect key={i} x={(i%BOARD.columns)*BOARD.cellSize} y={Math.floor(i/BOARD.columns)*BOARD.cellSize} width={BOARD.cellSize} height={BOARD.cellSize} fill={i%2?"#ffffff":"#000000"} fillOpacity=".035" stroke="#d2e9b3" strokeOpacity=".25"/>)}
    <path d="M0 350H840" stroke="#d4e7b4" strokeDasharray="6 7" opacity=".3"/>
    <path d={pathD} fill="none" stroke="#102719" strokeWidth="13" strokeLinecap="round" opacity=".55" pointerEvents="none"/><path d={pathD} fill="none" stroke="#f7d36c" strokeWidth="4" strokeDasharray="9 7" strokeLinecap="round" pointerEvents="none"/>
-   <ellipse cx={plantCenter.x} cy="345" rx={58*plantScale} ry="11" fill="#102719" opacity=".55"/>
-   {plantUrl&&<svg x={plantCenter.x-plantWidth/2} y={plantCenter.y-plantHeight/2} width={plantWidth} height={plantHeight} viewBox={`${plantColumn*plantFrameWidth} ${plantRow*plantFrameHeight} ${plantFrameWidth} ${plantFrameHeight}`} preserveAspectRatio="xMidYMid meet" overflow="hidden"><image href={plantUrl} x="0" y="0" width={plantImageSize.width} height={plantImageSize.height} preserveAspectRatio="none"/></svg>}
-   {!plantUrl&&<g><circle cx={plantCenter.x} cy={plantCenter.y} r="30" fill="#72bd54"/><path d="M100 326Q58 282 68 264Q96 266 103 306Q113 270 140 273Q143 302 104 327" fill="#9cdb70"/></g>}
+   <ellipse cx={plantAnchor.x} cy={plantAnchor.y+5} rx={Math.max(24,plantWidth*.46)} ry={8*plantScale} fill="#102719" opacity=".55"/>
+   {plantUrl&&<svg x={plantAnchor.x-plantWidth/2} y={plantAnchor.y-plantHeight+2} width={plantWidth} height={plantHeight} viewBox={`${plantColumn*plantFrameWidth} ${plantRow*plantFrameHeight} ${plantFrameWidth} ${plantFrameHeight}`} preserveAspectRatio="xMidYMid meet" overflow="hidden"><image href={plantUrl} x="0" y="0" width={plantImageSize.width} height={plantImageSize.height} preserveAspectRatio="none"/></svg>}
+   {!plantUrl&&<g><circle cx={plantAnchor.x} cy={plantAnchor.y-30} r="30" fill="#72bd54"/><path d="M100 232Q58 188 68 170Q96 172 103 212Q113 176 140 179Q143 208 104 233" fill="#9cdb70"/></g>}
    <circle cx={start.x} cy={start.y} r="15" fill="#37c990" stroke="#fff" strokeWidth="3" style={{cursor:"move"}} onPointerDown={e=>{e.stopPropagation();e.currentTarget.ownerSVGElement.setPointerCapture(e.pointerId);setDrag({type:"launch"});}}/>
    <text x={start.x+18} y={start.y-15} fill="#fff" fontSize="13">موضع الإطلاق</text>
    {normalizedPoints.map((item,index)=>{const p=pointAt(item.progress);return <g key={index}><circle cx={p.x} cy={p.y} r={selectedPoint===index?12:9} fill={index===0||index===normalizedPoints.length-1?"#35c98a":"#4dc6e8"} stroke="#fff" strokeWidth="2" style={{cursor:"grab"}} onPointerDown={e=>{e.stopPropagation();e.currentTarget.ownerSVGElement.setPointerCapture(e.pointerId);setSelectedPoint(index);setDrag({type:"waypoint",index});}}/><text x={p.x} y={p.y-17} fill="#fff" fontSize="11" textAnchor="middle">{index+1}</text></g>;})}
@@ -78,7 +80,7 @@ export default function ProjectileTrajectoryEditor({
    {progress>=1&&<g transform={`translate(${targetHead.x} ${targetHead.y} )`} pointerEvents="none"><circle r="24" fill="#ffd76b" fillOpacity=".28" stroke="#ffe28a" strokeWidth="3"/><path d="M0-31L6-13L23-22L15-5L32 0L14 6L23 23L5 14L0 32L-6 14L-23 23L-14 5L-32 0L-14-6L-23-23L-5-14Z" fill="#ffbd4a" stroke="#fff0b2" strokeWidth="2"/><circle r="8" fill="#fff3b0"/></g>}
    <circle cx={targetHead.x} cy={targetHead.y} r={Math.max(18,clamp(collisionRadius,4,100)*.32)} fill="none" stroke="#ff927d" strokeDasharray="4 4" strokeWidth="2" pointerEvents="none"/>
 <g transform={`translate(${end.x} ${end.y})`}><ellipse cy="25" rx="24" ry="7" fill="#102719" opacity=".5"/><path d="M-16 14Q-27-3-15-21Q0-34 15-21Q27-3 16 14Z" fill="#718b79" stroke="#d4e5c8" strokeWidth="2"/><circle cx="-6" cy="-8" r="3" fill="#fff"/><circle cx="7" cy="-8" r="3" fill="#fff"/><circle cx="-6" cy="-8" r="1.5" fill="#26352b"/><circle cx="7" cy="-8" r="1.5" fill="#26352b"/></g>
-   <text x="20" y="30" fill="#d7e8c9" fontSize="14">ساحة المعركة · 8 × 5 خلايا متساوية</text><text x="105" y="505" fill="#e6f2d9" fontSize="12" textAnchor="middle">النبتة</text><text x="735" y="505" fill="#e6f2d9" fontSize="12" textAnchor="middle">الهدف</text>
+   <text x="20" y="30" fill="#d7e8c9" fontSize="14">ساحة المعركة · 8 × 5 خلايا متساوية</text><text x="105" y="505" fill="#e6f2d9" fontSize="12" textAnchor="middle">النبتة · موضع الارتكاز مطابق للعبة</text><text x="735" y="505" fill="#e6f2d9" fontSize="12" textAnchor="middle">الهدف</text>
   </svg>
   <label className="studio-motion-progress">موضع القذيفة على المسار<input type="range" min="0" max="1000" step="1" value={Math.round(progress*1000)} onChange={e=>{setPlaying(false);setProgress(Number(e.target.value)/1000);}}/><span>{Math.round(progress*100)}%</span></label>
   <div className="studio-motion-toolbar">
