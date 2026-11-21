@@ -22,6 +22,22 @@ test("reports registered projectile assets as explicit dependencies and reverse 
   assert.deepEqual(getAssetDependents(assets, "fire-shot").map((item) => item.assetId), ["fire"]);
 });
 
+test("reports a missing managed projectile asset as an unresolved dependency", () => {
+  const assets = [{ id: "thorn", type: "plant", path: "/assets/plants/thorn.png", combat: { projectile: { id: "missing-shot", path: "/assets/projectiles/missing-shot.png", managed: true } } }];
+  const report = buildAssetDependencyReport(assets, "thorn");
+  assert.equal(report.dependencies[0].kind, "asset");
+  assert.equal(report.dependencies[0].resolved, false);
+  assert.equal(report.unresolved.length, 1);
+});
+test("resolves an explicitly managed projectile reference to its library asset", () => {
+  const assets = [
+    { id: "thorn", type: "plant", path: "/assets/plants/thorn.png", combat: { projectile: { id: "thorn-shot", path: "/assets/projectiles/thorn-shot.png", managed: true } } },
+    { id: "thorn-shot", type: "plantProjectile", name: "Thorn Shot", path: "/assets/projectiles/thorn-shot.png" }
+  ];
+  const report = buildAssetDependencyReport(assets, "thorn-shot");
+  assert.deepEqual(report.dependents.map((item) => item.assetId), ["thorn"]);
+  assert.equal(report.canArchive, false);
+});
 test("reports inline projectile files without falsely treating them as missing", () => {
   const assets = [{ id: "bamboo", type: "plant", path: "/assets/plants/bamboo.png", combat: { projectile: { id: "bamboo-projectile", path: "/assets/projectiles/bamboo-shot.png" } } }];
   const report = buildAssetDependencyReport(assets, "bamboo");
@@ -74,6 +90,8 @@ test("plant projectile references resolve to a managed projectile asset and bloc
   assert.match(routeSource, /selectedProjectileAsset=projectileAssetId/);
   assert.match(routeSource, /id:selectedProjectileAsset\.id/);
   assert.match(routeSource, /getAssetDependents/);
+  assert.match(routeSource, /managed:true/);
+  assert.match(routeSource, /managed:false/);
 });
 
 test("allows archive analysis after a merged release request has been cleared from the workflow", () => {
