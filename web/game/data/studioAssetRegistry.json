@@ -10,7 +10,7 @@
       "rows": 3,
       "columns": 3,
       "spriteSheet": true,
-      "status": "draft",
+      "status": "testing",
       "createdAt": "2026-11-20T16:17:16.849Z",
       "updatedAt": "2026-11-21T00:31:43.290Z",
       "combat": {
@@ -29,7 +29,8 @@
         "projectileCollisionRadius": 22,
         "energyAmount": 15,
         "energyIntervalMs": 12000
-      }
+      },
+      "testingAt": "2026-11-21T00:31:54.486Z"
     },
     {
       "id": "pepper-flamethrower-level-1-bomb",
