@@ -72,7 +72,9 @@ A plant with an open release request cannot be archived until that request is cl
 
 ## Status transitions
 
-`draft -> testing -> approved -> published`\n\n`draft/testing -> archived -> draft`
+`draft -> testing -> approved -> published`
+
+`draft/testing -> archived -> draft`
 
 Closing an unmerged release request returns the asset to `testing`. Editing/replacing a plant clears its old release request and returns it to `draft`, requiring a fresh test and a new review request.
 
