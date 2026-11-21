@@ -52,7 +52,7 @@ export function buildAssetDependencyReport(assets, assetId) {
   const unresolved = dependencies.filter((dependency) => !dependency.resolved);
   return {
     assetId, dependencies, dependents, sharedFiles, unresolved,
-    canArchive: !protectedStatus && dependents.length === 0,
+    canArchive: !protectedStatus && asset.status !== "archived" && dependents.length === 0,
     canReplace: dependents.length === 0,
     archiveBlockers: dependents.map((item) => item.assetName),
     warnings: [
