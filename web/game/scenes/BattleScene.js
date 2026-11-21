@@ -7,7 +7,7 @@ import { getPlantVFXProfile } from "../vfx/PlantVFXProfiles.mjs";
 import { getProjectileVFXProfile } from "../vfx/ProjectileVFXProfiles.mjs";
 import { getMonsterReactionProfile, getPlantAnimationProfile } from "../visuals/PlantMonsterVisualProfiles.mjs";
 
-// Keep campaign unlocks active; Studio plants enter the local and published catalogs through their own lifecycle.
+// Temporary playtest mode exposes every implemented built-in plant; campaign progression data remains intact.
 const PLAYTEST_ALL_PLANTS = true;
 const ALL_PLAYTEST_PLANT_IDS = Object.freeze(["radish", "mushroom", "pumpkin", "pineapple", "hazelnut", "mango", "snow-thrower", "electric-mushroom", "fire-pepper"]);
 import { createSeededRandom } from "../rules/seededRandom.mjs";
