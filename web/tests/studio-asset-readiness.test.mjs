@@ -158,3 +158,20 @@ test("Testing Lab API checks local files and GitHub asset trees without claiming
   assert.match(apiSource, /applyStudioAssetFileAudit/);
   assert.match(apiSource, /لا يشغّل معركة Phaser/);
 });
+
+test("shared physical asset paths are counted only once in the integrity summary", () => {
+  const assets = [
+    validProjectile({ id: "shared-shot-a" }),
+    validProjectile({ id: "shared-shot-b" })
+  ];
+  const report = applyStudioAssetFileAudit(auditStudioAssetRegistry(assets), assets, {
+    "/assets/projectiles/thorn-shot.png": "present"
+  });
+  assert.equal(report.fileAudit.checked, 1);
+  assert.equal(report.fileAudit.present, 1);
+  assert.equal(report.ready, 2);
+});
+
+test("Testing Lab resolves URL-encoded asset filenames before checking storage", () => {
+  assert.match(apiSource, /decodeURIComponent\(assetPath\)/);
+});
