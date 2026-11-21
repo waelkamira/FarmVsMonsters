@@ -48,14 +48,16 @@ export function buildAssetDependencyReport(assets, assetId) {
     const ownReferences = references.filter((reference) => reference.assetId === assetId);
     if (ownReferences.length && otherReferences.length) sharedFiles.push({ path, ownRoles: ownReferences.map((item) => item.role), usedBy: otherReferences });
   }
-  const protectedStatus = ["published", "approved"].includes(asset.status) || Boolean(asset.releaseRequest?.number && asset.releaseRequest.state !== "merged");
+  const pendingRelease = asset.status === "approved" || Boolean(asset.releaseRequest?.number && asset.releaseRequest.state !== "merged");
+  const protectedStatus = asset.status === "published" || pendingRelease;
   const unresolved = dependencies.filter((dependency) => !dependency.resolved);
   return {
     assetId, dependencies, dependents, sharedFiles, unresolved,
     canArchive: !protectedStatus && asset.status !== "archived" && dependents.length === 0,
-    canReplace: dependents.length === 0,
+    canReplace: !pendingRelease && dependents.length === 0,
     archiveBlockers: dependents.map((item) => item.assetName),
     warnings: [
+      ...(pendingRelease ? ["يوجد طلب نشر مفتوح؛ أغلقه أو انتظر نتيجته قبل تعديل هذا الأصل."] : []),
       ...unresolved.map((item) => "تعذر تحديد ملف التبعية: " + item.targetName),
       ...sharedFiles.map((item) => "الملف " + item.path + " مشترك مع " + item.usedBy.map((use) => use.assetName).join("، ") + "؛ الاستبدال ينشئ مساراً جديداً ولا يغيّر النسخ الأخرى.")
     ]
