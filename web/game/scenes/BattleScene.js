@@ -7,6 +7,8 @@ import { getPlantVFXProfile } from "../vfx/PlantVFXProfiles.mjs";
 import { getProjectileVFXProfile } from "../vfx/ProjectileVFXProfiles.mjs";
 import { getMonsterReactionProfile, getPlantAnimationProfile } from "../visuals/PlantMonsterVisualProfiles.mjs";
 import { createStudioAnimationProfile } from "../studio/animationProfiles.mjs";
+import { getSpriteFrameRectangles } from "../studio/spriteSheetGrid.mjs";
+import { getProjectileTrajectoryOffset } from "../studio/projectileTrajectory.mjs";
 import { createStudioMonsterProfile, resolveStudioMonsterRuntimeProfile, selectWeightedStudioMonster } from "../studio/monsterProfiles.mjs";
 
 // Temporary playtest mode exposes every implemented built-in plant; campaign progression data remains intact.
@@ -285,6 +287,33 @@ export default class BattleScene extends Scene {
               repeat: clip.loop ? -1 : 0
             });
           }
+        }
+      }
+    }
+    // Register each attached projectile Sprite Sheet only after Phaser has loaded
+    // its image, using the independent grid saved with that projectile.
+    for (const plant of this.studioPlants) {
+      const projectile = plant.combat?.projectile;
+      const textureKey = plant.projectileTextureKey;
+      if (!projectile?.path || !this.textures.exists(textureKey)) continue;
+      const frameCount = Math.max(1, Math.min(24, Number(projectile.frameCount) || 1));
+      const rows = Math.max(1, Number(projectile.rows) || 1);
+      const columns = Math.max(1, Number(projectile.columns) || 1);
+      if (rows * columns !== frameCount) {
+        projectile.frameCount = 1;
+        projectile.rows = 1;
+        projectile.columns = 1;
+        continue;
+      }
+      if (frameCount > 1 && this.registerStudioGridSheet(textureKey, rows, columns)) {
+        const animationKey = "studio-projectile-" + plant.id;
+        if (!this.anims.exists(animationKey)) {
+          this.anims.create({
+            key: animationKey,
+            frames: this.anims.generateFrameNumbers(textureKey, { start: 0, end: frameCount - 1 }),
+            frameRate: 12,
+            repeat: -1
+          });
         }
       }
     }
@@ -3001,14 +3030,11 @@ export default class BattleScene extends Scene {
     const rowCount = Number(rows), columnCount = Number(columns);
     if (!source?.width || !source?.height || !Number.isInteger(rowCount) || !Number.isInteger(columnCount) ||
         rowCount < 1 || columnCount < 1 || rowCount * columnCount > 100) return false;
-    for (let index = 0; index < rowCount * columnCount; index += 1) {
-      const column = index % columnCount;
-      const row = Math.floor(index / columnCount);
-      const frameX = Math.floor((column * source.width) / columnCount);
-      const frameY = Math.floor((row * source.height) / rowCount);
-      const nextFrameX = Math.floor(((column + 1) * source.width) / columnCount);
-      const nextFrameY = Math.floor(((row + 1) * source.height) / rowCount);
-      if (!texture.has(String(index))) texture.add(String(index), 0, frameX, frameY, nextFrameX - frameX, nextFrameY - frameY);
+    const frames = getSpriteFrameRectangles(source.width, source.height, rowCount, columnCount);
+    for (const frame of frames) {
+      if (!texture.has(String(frame.index))) {
+        texture.add(String(frame.index), 0, frame.x, frame.y, frame.width, frame.height);
+      }
     }
     return true;
   }
@@ -3527,9 +3553,14 @@ export default class BattleScene extends Scene {
       const view = this.add.container(laneOrigin.x + 14, laneOrigin.y - 30).setDepth(16);
       const textureKey = plant.studioPlant.projectileTextureKey || "studio-projectile-published-" + plant.studioPlant.id;
       if (this.textures.exists(textureKey)) {
-        const frame = this.textures.getFrame(textureKey);
+        const projectile = plant.studioPlant.combat.projectile || {};
+        const hasFrames = Number(projectile.frameCount) > 1 && this.anims.exists("studio-projectile-" + plant.studioPlant.id);
+        const sprite = this.add.sprite(0, 0, textureKey, hasFrames ? "0" : undefined);
+        const frame = this.textures.getFrame(textureKey, hasFrames ? "0" : undefined);
         const width = Math.min(38, 28 * (frame.realWidth / frame.realHeight));
-        view.add(this.add.image(0, 0, textureKey).setDisplaySize(width, 28));
+        sprite.setDisplaySize(width, 28);
+        if (hasFrames) sprite.play("studio-projectile-" + plant.studioPlant.id);
+        view.add(sprite);
       } else {
         view.add(this.add.circle(0, 0, 11, 0xffc247, 1).setStrokeStyle(2, 0xffefc2, 1));
       }
@@ -3539,7 +3570,10 @@ export default class BattleScene extends Scene {
       view.setRotation((Number(profile.projectileRotation) || 0) * Math.PI / 180);
       this.projectiles.push({
         view, localX, row, target, startLocalX: localX, targetLocalX: Math.max(localX + 1, target.localX),
-        launchOffsetX: 14, launchOffsetY: -30, speed: profile.projectileSpeed,
+        launchOffsetX: Number(profile.projectileLaunchOffsetX ?? 14), launchOffsetY: Number(profile.projectileLaunchOffsetY ?? -30), speed: profile.projectileSpeed,
+        projectileTrajectoryType: profile.projectileTrajectoryType || "arc",
+        projectileCurveX: Number(profile.projectileCurveX) || 0, projectileCurveY: Number(profile.projectileCurveY) || 110,
+        projectileTargetOffsetX: Number(profile.projectileTargetOffsetX) || 0, projectileTargetOffsetY: Number(profile.projectileTargetOffsetY) || 0,
         damage: profile.damage, freeze: false, freezeDurationMs: 0,
         collisionRadius: profile.projectileCollisionRadius, dropSpeed: profile.projectileSpeed * 1.5,
         projectileHeight: profile.projectileHeight || 0, projectileEffectColor: effectColor,
@@ -4654,14 +4688,14 @@ export default class BattleScene extends Scene {
       const position = ["pineapple", "hazelnut", "mango", "snow-thrower"].includes(shot.plantType)
         ? this.pineappleLanePoint(shot.localX, shot.row)
         : this.lanePoint(shot.localX, shot.row);
-      const projectileX = position.x + (shot.launchOffsetX || 0);
       const studioProgress = shot.studioPlantId
         ? PhaserMath.Clamp((shot.localX - shot.startLocalX) / Math.max(1, shot.targetLocalX - shot.startLocalX), 0, 1)
         : 0;
-      const studioArcOffset = shot.studioPlantId
-        ? Math.sin(Math.PI * studioProgress) * (shot.projectileHeight || 0)
-        : 0;
-      const projectileY = position.y + (shot.launchOffsetY || 0) - studioArcOffset;
+      const studioOffset = shot.studioPlantId
+        ? getProjectileTrajectoryOffset({type:shot.projectileTrajectoryType,progress:studioProgress,height:shot.projectileHeight,curveX:shot.projectileCurveX,curveY:shot.projectileCurveY,targetX:shot.projectileTargetOffsetX,targetY:shot.projectileTargetOffsetY})
+        : {x:0,y:0};
+      const projectileX = position.x + (shot.launchOffsetX || 0) + studioOffset.x;
+      const projectileY = position.y + (shot.launchOffsetY || 0) - studioOffset.y;
       let trailPositionY = projectileY;
 
       // Give the outgoing pineapple bomb a smooth launch arc. Progress is

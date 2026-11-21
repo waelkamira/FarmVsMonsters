@@ -42,6 +42,13 @@ export function createStudioPlantCombatProfile({
   projectileHeight = 0,
   projectileEffectColor = "#ffc247",
   projectileRotation = 0,
+  projectileTrajectoryType = "arc",
+  projectileCurveX = 0,
+  projectileCurveY = 110,
+  projectileLaunchOffsetX = 14,
+  projectileLaunchOffsetY = -30,
+  projectileTargetOffsetX = 0,
+  projectileTargetOffsetY = 0,
   projectileCollisionRadius = 22,
   energyAmount = 15,
   energyIntervalMs = 12000,
@@ -54,6 +61,17 @@ export function createStudioPlantCombatProfile({
   if (mode === "projectile" && (!projectile?.path || !projectile?.id)) {
     throw new RangeError("A projectile plant must have an associated projectile asset.");
   }
+  const projectileFrameCount = Number(projectile?.frameCount ?? 1);
+  const projectileRows = Number(projectile?.rows ?? 1);
+  const projectileColumns = Number(projectile?.columns ?? 1);
+  if (mode === "projectile" && (
+    !Number.isInteger(projectileFrameCount) || projectileFrameCount < 1 || projectileFrameCount > 24 ||
+    !Number.isInteger(projectileRows) || projectileRows < 1 ||
+    !Number.isInteger(projectileColumns) || projectileColumns < 1 ||
+    projectileRows * projectileColumns !== projectileFrameCount
+  )) {
+    throw new RangeError("Projectile Sprite Sheet frame count must match its rows × columns (1–24 frames).");
+  }
 
   return Object.freeze({
     mode,
@@ -61,7 +79,10 @@ export function createStudioPlantCombatProfile({
       id: String(projectile.id),
       path: String(projectile.path),
       filename: String(projectile.filename || ""),
-      managed: projectile.managed === true
+      managed: projectile.managed === true,
+      frameCount: projectileFrameCount,
+      rows: projectileRows,
+      columns: projectileColumns
     }) : null,
     energyCost: boundedNumber(energyCost, "energyCost", 60),
     hp: boundedNumber(hp, "hp", 150),
@@ -74,6 +95,13 @@ export function createStudioPlantCombatProfile({
     projectileHeight: boundedNumber(projectileHeight, "projectileHeight", 0),
     projectileEffectColor: (() => { const color = String(projectileEffectColor ?? "#ffc247").trim().toLowerCase(); if (!/^#[0-9a-f]{6}$/.test(color)) throw new RangeError("Invalid plant setting: projectileEffectColor must be a six-digit hex color."); return color; })(),
     projectileRotation: boundedNumber(projectileRotation, "projectileRotation", 0),
+    projectileTrajectoryType: (() => { const value = String(projectileTrajectoryType || "arc"); if (!["straight","arc","sine","bezier"].includes(value)) throw new RangeError("Invalid projectile trajectory type."); return value; })(),
+    projectileCurveX: Math.max(-180, Math.min(180, Math.round(Number(projectileCurveX) || 0))),
+    projectileCurveY: Math.max(-300, Math.min(300, Math.round(Number(projectileCurveY) || 0))),
+    projectileLaunchOffsetX: Math.max(-70, Math.min(70, Math.round(Number(projectileLaunchOffsetX) || 0))),
+    projectileLaunchOffsetY: Math.max(-120, Math.min(120, Math.round(Number(projectileLaunchOffsetY) || 0))),
+    projectileTargetOffsetX: Math.max(-100, Math.min(100, Math.round(Number(projectileTargetOffsetX) || 0))),
+    projectileTargetOffsetY: Math.max(-100, Math.min(100, Math.round(Number(projectileTargetOffsetY) || 0))),
     projectileCollisionRadius: boundedNumber(projectileCollisionRadius, "projectileCollisionRadius", 22),
     energyAmount: boundedNumber(energyAmount, "energyAmount", 15),
     energyIntervalMs: boundedNumber(energyIntervalMs, "energyIntervalMs", 12000),

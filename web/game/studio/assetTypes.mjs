@@ -1,8 +1,8 @@
 export const STUDIO_ASSET_TYPES=Object.freeze({
  plant:{folder:"plants",accepts:["image/png","image/webp"],spriteSheet:true},
  monster:{folder:"monsters",accepts:["image/png","image/webp"],spriteSheet:true},
- plantProjectile:{folder:"projectiles/plants",accepts:["image/png","image/webp","image/gif"],spriteSheet:false},
- monsterProjectile:{folder:"projectiles/monsters",accepts:["image/png","image/webp","image/gif"],spriteSheet:false},
+ plantProjectile:{folder:"projectiles/plants",accepts:["image/png","image/webp","image/gif"],spriteSheet:true},
+ monsterProjectile:{folder:"projectiles/monsters",accepts:["image/png","image/webp","image/gif"],spriteSheet:true},
  effect:{folder:"effects",accepts:["image/png","image/webp","image/gif"],spriteSheet:false},
  item:{folder:"items",accepts:["image/png","image/webp"],spriteSheet:false},
  audio:{folder:"audio",accepts:["audio/mpeg","audio/wav","audio/ogg","audio/mp4"],spriteSheet:false}
