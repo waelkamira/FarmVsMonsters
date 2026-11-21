@@ -10,6 +10,13 @@ const battleScene = read("../game/scenes/BattleScene.js");
 const selector = read("../app/stage/1/select/page.js");
 const syncScript = read("../scripts/sync-studio-test-assets.mjs");
 
+test("Studio asset library supports search and type/status filtering",()=>{
+  assert.match(studioPage,/assetSearch/);
+  assert.match(studioPage,/assetTypeFilter/);
+  assert.match(studioPage,/assetStatusFilter/);
+  assert.match(studioPage,/filteredAssets\.map/);
+});
+
 test("Studio exposes plant size and applies it in the Phaser runtime",()=>{
   assert.match(studioPage,/plantSizePercent/);
   assert.match(studioPage,/حجم النبتة/);
