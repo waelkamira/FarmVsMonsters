@@ -22,6 +22,7 @@
 .studio-toast-error>span{background:#792f32;color:#ffd0ce}
 @keyframes studio-toast-in{from{opacity:0;transform:translate(-50%,-8px)}to{opacity:1;transform:translate(-50%,0)}}
 
+.studio-projectile-tuning .studio-field-group{grid-column:1/-1;display:grid;gap:4px}.studio-projectile-tuning .studio-field-group h4{margin:0;color:#f1cc7e;font-size:14px}
 .studio-combat-settings{display:grid;gap:12px;padding:15px;border:1px solid #7a6239;background:#17170f;border-radius:12px}
 .studio-combat-settings h3{margin:0;color:#f1cc7e;font-size:16px}
 .studio-combat-settings>p{margin:0;color:#b9aa86;font-size:12px;line-height:1.6}
