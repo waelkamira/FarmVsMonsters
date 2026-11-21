@@ -30,6 +30,7 @@
 .studio-projectile-drop{padding:14px}
 .studio-behavior-auto{margin:0;padding:9px 11px;border:1px solid #527d4b;border-radius:8px;background:#1d3822;color:#b9f0ad;font-size:12px}
 .studio-combat-settings .studio-grid label{font-size:12px}
+.studio-release-link{display:inline-flex;align-items:center;gap:5px;color:#f1cc7e;font-size:11px;text-decoration:underline;text-underline-offset:3px;white-space:nowrap}.studio-release-link:hover{color:#fff0bf}
 .studio-asset-row button{white-space:nowrap}
 .studio-asset-row button:nth-last-child(1){border-color:#719b65;background:#294126;color:#d8f3c8}
 
