@@ -56,3 +56,41 @@
 .studio-monster-settings{margin:16px 0;padding:16px;border:1px solid #8d6b43;border-radius:12px;background:linear-gradient(145deg,#292015,#1c1a14)}.studio-monster-settings h3{margin:0 0 8px;color:#f1cc7e}.studio-monster-settings>p{color:#c5b795;font-size:12px;line-height:1.65}.studio-monster-settings .studio-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}.studio-monster-settings label{display:grid;gap:6px;color:#f0e4c6;font-size:12px}.studio-monster-settings input,.studio-monster-settings select{min-width:0;width:100%}
 
 .studio-projectile-library{display:grid;gap:7px;margin:8px 0;padding:12px;border:1px solid #719b65;border-radius:10px;background:#1b261b;color:#e8f3dc}.studio-projectile-library>span{font-size:12px;font-weight:800}.studio-projectile-library select{width:100%;min-width:0;padding:10px;border:1px solid #566c4a;border-radius:8px;background:#111a11;color:#f0e4c6}
+
+.studio-testing-shell{max-width:1180px}
+.studio-testing-intro{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:22px;border:1px solid rgba(117,95,164,.2);border-radius:20px;background:linear-gradient(135deg,rgba(238,231,255,.9),rgba(226,247,239,.82));margin:22px 0}
+.studio-testing-intro b{font-size:18px;color:#44365f}
+.studio-testing-intro p{margin:7px 0 0;color:#6e6680;line-height:1.7}
+.studio-testing-intro button{border:0;border-radius:12px;padding:13px 20px;background:#6e55a7;color:#fff;font-weight:800;white-space:nowrap;cursor:pointer}
+.studio-testing-intro button:disabled{opacity:.55;cursor:wait}
+.studio-testing-empty{padding:30px;text-align:center;border:1px dashed rgba(117,95,164,.35);border-radius:18px;color:#746b87;background:rgba(255,255,255,.65)}
+.studio-testing-empty b{display:block;color:#4c3c76;font-size:18px}
+.studio-testing-empty p{margin:8px 0 0}
+.studio-testing-error{padding:12px 16px;border-radius:12px;background:#fff0f0;color:#9c3333}
+.studio-testing-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin:18px 0}
+.studio-testing-summary article{padding:16px;border-radius:16px;background:rgba(255,255,255,.88);border:1px solid rgba(117,95,164,.15);display:grid;gap:7px}
+.studio-testing-summary small{color:#746b87}
+.studio-testing-summary b{font-size:27px;color:#40345c}
+.studio-testing-report{padding:20px;border-radius:20px;background:rgba(255,255,255,.72);border:1px solid rgba(117,95,164,.18)}
+.studio-testing-report-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:16px}
+.studio-testing-report-head h2{margin:0 0 5px;color:#40345c}
+.studio-testing-report-head small{color:#7a7189}
+.studio-testing-report-head>span{font-weight:800;color:#4c7b5d}
+.studio-testing-list{display:grid;gap:12px}
+.studio-testing-asset{padding:16px;border:1px solid rgba(117,95,164,.16);border-radius:16px;background:#fff}
+.studio-testing-asset-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.studio-testing-asset-head>div{display:grid;gap:4px}
+.studio-testing-asset-head small{color:#7a7189}
+.studio-testing-asset-head em{font-style:normal;font-weight:800;padding:6px 10px;border-radius:999px;background:#f0edf6;color:#5c4d78;white-space:nowrap}
+.studio-testing-asset-head em[data-readiness="ready"]{background:#e8f5eb;color:#2d6d42}
+.studio-testing-asset-head em[data-readiness="warning"]{background:#fff4dd;color:#8a6418}
+.studio-testing-asset-head em[data-readiness="blocked"]{background:#fde8e8;color:#a33232}
+.studio-testing-asset-head em[data-readiness="excluded"]{background:#ececf0;color:#686875}
+.studio-testing-relations{display:flex;flex-wrap:wrap;gap:8px 14px;margin:12px 0;color:#716981;font-size:13px}
+.studio-testing-messages{margin:10px 0;padding:10px 13px;border-radius:12px}
+.studio-testing-messages ul{margin:7px 0 0;padding-right:20px;line-height:1.8}
+.studio-testing-errors{background:#fff0f0;color:#923d3d}
+.studio-testing-warnings{background:#fff8e9;color:#7e641f}
+.studio-testing-asset>a{display:inline-block;margin-top:8px;color:#684ca1;font-weight:800}
+.studio-testing-limit{color:#777087;line-height:1.8;margin:16px 2px}
+@media(max-width:680px){.studio-testing-intro,.studio-testing-report-head{align-items:stretch;flex-direction:column}.studio-testing-intro button{width:100%}}
