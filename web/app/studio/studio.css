@@ -94,3 +94,6 @@
 .studio-testing-asset>a{display:inline-block;margin-top:8px;color:#684ca1;font-weight:800}
 .studio-testing-limit{color:#777087;line-height:1.8;margin:16px 2px}
 @media(max-width:680px){.studio-testing-intro,.studio-testing-report-head{align-items:stretch;flex-direction:column}.studio-testing-intro button{width:100%}}
+
+.studio-head-actions{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.studio-head-actions a{white-space:nowrap}
