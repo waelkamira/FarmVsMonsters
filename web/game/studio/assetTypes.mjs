@@ -25,9 +25,9 @@ export function validateStudioAsset({id,type,file,rows=3,columns=3}){
  return {valid:errors.length===0,errors,config};
 }
 export function validateStudioAssetBytes(type, bytes) {
- if (!Buffer.isBuffer(bytes) || bytes.length < 4) return { valid: false, reason: "الملف فارغ أو أقصر من ترويسة صيغة معروفة." };
+ if (!(bytes instanceof Uint8Array) || bytes.length < 4) return { valid: false, reason: "الملف فارغ أو أقصر من ترويسة صيغة معروفة." };
  const starts = (...values) => values.every((value, index) => bytes[index] === value);
- const ascii = (offset, value) => bytes.subarray(offset, offset + value.length).toString("ascii") === value;
+ const ascii = (offset, value) => String.fromCharCode(...bytes.subarray(offset, offset + value.length)) === value;
  const signatures = {
   "image/png": () => bytes.length >= 8 && starts(0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a),
   "image/webp": () => bytes.length >= 12 && ascii(0, "RIFF") && ascii(8, "WEBP"),
