@@ -10,6 +10,12 @@ const battleScene = read("../game/scenes/BattleScene.js");
 const selector = read("../app/stage/1/select/page.js");
 const syncScript = read("../scripts/sync-studio-test-assets.mjs");
 
+test("Studio exposes archive and restore actions for every asset type",()=>{
+  assert.match(studioPage,/a\.status==="archived"&&<button[^>]*transitionAsset\(a,"restore"\)/);
+  assert.match(studioPage,/\(a\.status==="draft"\|\|a\.status==="testing"\)&&<button[^>]*transitionAsset\(a,"archive"\)/);
+  assert.match(assetsRoute,/registry\.assets\.findIndex\(asset=>asset\.id===id\)/);
+});
+
 test("Studio asset library supports search and type/status filtering",()=>{
   assert.match(studioPage,/assetSearch/);
   assert.match(studioPage,/assetTypeFilter/);
