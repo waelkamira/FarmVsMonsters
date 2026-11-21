@@ -209,3 +209,6 @@
   .studio-shell input:not([type="file"]),.studio-shell select,.studio-shell textarea{min-height:48px;font-size:16px}
   .studio-shell .studio-grid{grid-template-columns:1fr}
 }
+
+/* Asset-library Sprite Sheet thumbnails intentionally show frame 1 only. */
+.studio-list .studio-thumb-sprite{background-repeat:no-repeat;background-color:#302b1e;background-size:100% 100%;}
