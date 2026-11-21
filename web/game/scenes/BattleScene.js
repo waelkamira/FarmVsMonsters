@@ -4695,8 +4695,41 @@ export default class BattleScene extends Scene {
       const studioOffset = shot.studioPlantId
         ? getProjectileTrajectoryOffset({type:shot.projectileTrajectoryType,progress:studioProgress,height:shot.projectileHeight,curveX:shot.projectileCurveX,curveY:shot.projectileCurveY,targetX:shot.projectileTargetOffsetX,targetY:shot.projectileTargetOffsetY,points:shot.projectilePathPoints})
         : {x:0,y:0};
-      const projectileX = position.x + (shot.launchOffsetX || 0) + studioOffset.x;
-      const projectileY = position.y + (shot.launchOffsetY || 0) - studioOffset.y;
+      let projectileX = position.x + (shot.launchOffsetX || 0) + studioOffset.x;
+      let projectileY = position.y + (shot.launchOffsetY || 0) - studioOffset.y;
+
+      // Studio-authored trajectories terminate at the live monster's head.
+      // Preserve the authored curve, then progressively correct its endpoint
+      // so the final frame lands exactly on the head instead of the lane center.
+      let studioHeadTarget = null;
+      if (shot.studioPlantId) {
+        if (!shot.target?.alive || !shot.target.view?.active) {
+          shot.alive = false;
+          shot.view.destroy();
+          continue;
+        }
+        const targetBounds = shot.target.view.getBounds();
+        const headX = targetBounds.centerX;
+        const headY = targetBounds.top + Math.min(24, targetBounds.height * 0.2);
+        const targetLanePosition = ["pineapple", "hazelnut", "mango", "snow-thrower"].includes(shot.plantType)
+          ? this.pineappleLanePoint(shot.targetLocalX, shot.row)
+          : this.lanePoint(shot.targetLocalX, shot.row);
+        const endOffset = getProjectileTrajectoryOffset({
+          type: shot.projectileTrajectoryType,
+          progress: 1,
+          height: shot.projectileHeight,
+          curveX: shot.projectileCurveX,
+          curveY: shot.projectileCurveY,
+          targetX: shot.projectileTargetOffsetX,
+          targetY: shot.projectileTargetOffsetY,
+          points: shot.projectilePathPoints
+        });
+        const authoredEndX = targetLanePosition.x + (shot.launchOffsetX || 0) + endOffset.x;
+        const authoredEndY = targetLanePosition.y + (shot.launchOffsetY || 0) - endOffset.y;
+        projectileX += (headX - authoredEndX) * studioProgress;
+        projectileY += (headY - authoredEndY) * studioProgress;
+        studioHeadTarget = { x: headX, y: headY, progress: studioProgress };
+      }
       let trailPositionY = projectileY;
 
       // Give the outgoing pineapple bomb a smooth launch arc. Progress is
@@ -4722,6 +4755,21 @@ export default class BattleScene extends Scene {
         shot.view.setPosition(projectileX, arcedY);
       } else {
         shot.view.setPosition(projectileX, projectileY);
+      }
+
+      if (studioHeadTarget && studioHeadTarget.progress >= 1) {
+        shot.view.setPosition(studioHeadTarget.x, studioHeadTarget.y);
+        this.createProjectileImpact(studioHeadTarget.x, studioHeadTarget.y, shot.plantType, shot.projectileEffectColor);
+        this.playThornImpactSound();
+        this.applyMonsterDamage(
+          shot.target,
+          shot.damage * this.incomingMonsterDamageMultiplier(shot.target),
+          shot.plantType
+        );
+        this.damageMonsterIfNeeded(shot.target);
+        shot.alive = false;
+        shot.view.destroy();
+        continue;
       }
 
       shot.trailTimer -= dt * 1000;
