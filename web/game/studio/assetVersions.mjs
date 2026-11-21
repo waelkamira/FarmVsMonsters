@@ -53,3 +53,28 @@ export function restoreStudioAssetRevision(asset, versionNumber, timestamp = new
     updatedAt: timestamp
   };
 }
+
+export function cloneStudioAsset(asset, newId, newName, timestamp = new Date().toISOString()) {
+  const id = String(newId || "").trim().toLowerCase();
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(id) || id.length > 64) {
+    throw new TypeError("معرّف النسخة يجب أن يكون أحرفاً إنجليزية صغيرة وأرقاماً وشرطات فقط.");
+  }
+  if (!asset?.path || !asset?.type) throw new TypeError("لا يمكن نسخ أصل غير مكتمل.");
+  return {
+    ...asset,
+    combat: copyCombat(asset.combat),
+    id,
+    name: String(newName || `${asset.name || asset.id} (نسخة)`).trim().slice(0, 80) || id,
+    revision: 1,
+    versions: [],
+    status: "draft",
+    releaseRequest: null,
+    archivedAt: null,
+    publishedAt: null,
+    testingAt: null,
+    restoredFromVersion: null,
+    clonedFrom: asset.id,
+    createdAt: timestamp,
+    updatedAt: timestamp
+  };
+}

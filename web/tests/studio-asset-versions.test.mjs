@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createStudioAssetRevision, restoreStudioAssetRevision } from "../game/studio/assetVersions.mjs";
+import { cloneStudioAsset, createStudioAssetRevision, restoreStudioAssetRevision } from "../game/studio/assetVersions.mjs";
 
 test("starts a new asset at revision one", () => {
   const created = createStudioAssetRevision(null, { id: "radish", type: "plant", path: "/assets/plants/radish-a.png" });
@@ -33,4 +33,22 @@ test("restores an older version as a new draft revision without deleting history
 
 test("rejects a version number that is not in the asset history", () => {
   assert.throws(() => restoreStudioAssetRevision({ id: "radish", revision: 2, versions: [] }, 1), /الإصدار المطلوب غير موجود/);
+});
+
+test("clones any registered asset as a clean draft while preserving its immutable source path", () => {
+  const source = { id: "fire-pepper", type: "plant", name: "Fire Pepper", path: "/assets/plants/fire-pepper-v1.png", revision: 4, versions: [{ versionNumber: 3 }], status: "published", releaseRequest: { number: 12 }, combat: { mode: "projectile", projectile: { id: "fire-pepper-projectile", path: "/assets/projectiles/fire-pepper.png" } } };
+  const clone = cloneStudioAsset(source, "ice-pepper", "Ice Pepper", "2026-11-21T15:00:00.000Z");
+  assert.equal(clone.id, "ice-pepper");
+  assert.equal(clone.name, "Ice Pepper");
+  assert.equal(cloneStudioAsset(source, "ice-pepper").name, "Fire Pepper (نسخة)");
+  assert.equal(cloneStudioAsset(source, "ice-pepper", "   ").name, "ice-pepper");
+  assert.equal(clone.path, source.path);
+  assert.deepEqual(clone.combat, source.combat);
+  assert.notEqual(clone.combat, source.combat);
+  assert.equal(clone.revision, 1);
+  assert.deepEqual(clone.versions, []);
+  assert.equal(clone.status, "draft");
+  assert.equal(clone.releaseRequest, null);
+  assert.equal(clone.clonedFrom, "fire-pepper");
+  assert.throws(() => cloneStudioAsset(source, "../main"), /معرّف النسخة/);
 });

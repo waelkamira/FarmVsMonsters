@@ -10,6 +10,71 @@ const battleScene = read("../game/scenes/BattleScene.js");
 const selector = read("../app/stage/1/select/page.js");
 const syncScript = read("../scripts/sync-studio-test-assets.mjs");
 
+test("Studio supports safe duplication for every registered asset type",()=>{
+  assert.match(studioPage,/async function cloneAsset\(asset\)/);
+  assert.match(studioPage,/onClick=\{\(\)=>cloneAsset\(a\)\}/);
+  assert.match(assetsRoute,/operation==="clone"/);
+  assert.match(assetsRoute,/cloneStudioAsset\(asset,newId,body\.newName\)/);
+});
+
+test("Studio exposes archive and restore actions for every asset type",()=>{
+  assert.match(studioPage,/a\.status==="archived"[\s\S]*?transitionAsset\(a,"restore"\)/);
+  assert.match(studioPage,/a\.status==="draft"[\s\S]*?transitionAsset\(a,"archive"\)/);
+  assert.match(assetsRoute,/registry\.assets\.findIndex\(asset=>asset\.id===id\)/);
+});
+
+test("Studio supports previewing uploaded and existing audio assets",()=>{
+  assert.match(studioPage,/audioPreviewUrl/);
+  assert.match(studioPage,/<audio controls preload="metadata"/);
+  assert.match(studioPage,/studio-audio-preview/);
+});
+
+test("Studio dashboard summarizes assets by type and lifecycle status",()=>{
+  assert.match(studioPage,/assets\.filter\(a=>a\.type==="plant"\)/);
+  assert.match(studioPage,/assets\.filter\(a=>a\.type==="monster"\)/);
+  for(const status of ["draft","testing","approved","published","archived"])assert.ok(studioPage.includes(`a.status==="${status}"`));
+});
+
+test("Studio asset library supports search and type/status filtering",()=>{
+  assert.match(studioPage,/assetSearch/);
+  assert.match(studioPage,/assetTypeFilter/);
+  assert.match(studioPage,/assetStatusFilter/);
+  assert.match(studioPage,/filteredAssets\.map/);
+});
+
+test("Studio can preview a selected Sprite Sheet row with adjustable playback speed",()=>{
+  assert.match(studioPage,/animationRow/);
+  assert.match(studioPage,/animationFps/);
+  assert.match(studioPage,/animationPlaying/);
+  assert.match(studioPage,/animationFps/);
+  assert.match(studioPage,/setAnimationPlaying\(value=>!value\)/);
+  assert.match(studioPage,/studio-sprite-play/);
+  assert.match(studioPage,/steps\(\$\{columns\}\)/);
+});
+
+test("Studio provides a live size preview for the selected or edited plant",()=>{
+  assert.match(studioPage,/editingAsset\?\.previewUrl/);
+  assert.match(studioPage,/studio-live-preview-stage/);
+  assert.match(studioPage,/sprite&&\(previewUrl\|\|editingAsset\?\.previewUrl/);
+  assert.match(studioPage,/معاينة حركة Sprite Sheet/);
+  assert.match(studioPage,/scale\(\$\{type==="plant"\?plantSizePercent\/100:1\}\)/);
+  assert.match(studioPage,/setEditingAsset\(asset\)/);
+});
+
+test("Studio exposes plant size and applies it in the Phaser runtime",()=>{
+  assert.match(studioPage,/plantSizePercent/);
+  assert.match(studioPage,/حجم النبتة/);
+  assert.match(assetsRoute,/sizePercent/);
+  assert.match(battleScene,/studioPlant\.combat\?\.sizePercent/);
+});
+
+test("all built-in plants are unlocked in the current roster while loadout remains capped at seven",()=>{
+  assert.match(selector,/nextPlants\.map\(\(plant\) => plant\.id\)/);
+  assert.match(selector,/MAX_SEEDS = 7/);
+  assert.match(battleScene,/const PLAYTEST_ALL_PLANTS = true/);
+  assert.match(battleScene,/\.slice\(0, 7\)/);
+});
+
 test("Studio requires manual behavior selection and only links a projectile in projectile mode", () => {
   assert.match(studioPage, /projectileFile/);
   assert.match(studioPage, /required value=\{behavior\}/);
