@@ -6,6 +6,7 @@ import { createDefaultVFXRegistry } from "../vfx/createDefaultVFXRegistry.mjs";
 import { getPlantVFXProfile } from "../vfx/PlantVFXProfiles.mjs";
 import { getProjectileVFXProfile } from "../vfx/ProjectileVFXProfiles.mjs";
 import { getMonsterReactionProfile, getPlantAnimationProfile } from "../visuals/PlantMonsterVisualProfiles.mjs";
+import { createStudioAnimationProfile } from "../studio/animationProfiles.mjs";
 
 // Temporary playtest mode exposes every implemented built-in plant; campaign progression data remains intact.
 const PLAYTEST_ALL_PLANTS = true;
@@ -249,15 +250,28 @@ export default class BattleScene extends Scene {
     for (const plant of this.studioPlants) {
       const textureKey = plant.textureKey;
       const frameCount = Math.max(1, (Number(plant.rows) || 1) * (Number(plant.columns) || 1));
-      if (plant.spriteSheet && frameCount > 0 && this.registerStudioGridSheet(textureKey, plant.rows, plant.columns) && frameCount > 1) {
-        const animationKey = "studio-" + plant.id + "-attack";
-        if (!this.anims.exists(animationKey)) {
-          this.anims.create({
-            key: animationKey,
-            frames: this.anims.generateFrameNumbers(textureKey, { start: 0, end: frameCount - 1 }),
-            frameRate: 12,
-            repeat: 0
-          });
+      try {
+        plant.animationProfile = createStudioAnimationProfile(plant.animationProfile, frameCount);
+      } catch {
+        // Older or malformed catalog entries retain a safe first-frame idle and full-sheet attack.
+        plant.animationProfile = createStudioAnimationProfile(null, Math.min(100, frameCount));
+      }
+      if (plant.spriteSheet && frameCount > 0 && this.registerStudioGridSheet(textureKey, plant.rows, plant.columns)) {
+        const clips = [
+          ["idle", plant.animationProfile.idle],
+          ["attack", plant.animationProfile.attack]
+        ];
+        for (const [clipName, clip] of clips) {
+          if (clip.endFrame <= clip.startFrame) continue;
+          const animationKey = "studio-" + plant.id + "-" + clipName;
+          if (!this.anims.exists(animationKey)) {
+            this.anims.create({
+              key: animationKey,
+              frames: this.anims.generateFrameNumbers(textureKey, { start: clip.startFrame, end: clip.endFrame }),
+              frameRate: clip.fps,
+              repeat: clip.loop ? -1 : 0
+            });
+          }
         }
       }
     }
@@ -2986,10 +3000,15 @@ export default class BattleScene extends Scene {
       const sizeFactor = PhaserMath.Clamp((Number(studioPlant.combat?.sizePercent) || 100) / 100, 0.25, 2);
       const height = 88 * perspective * sizeFactor;
       const width = Math.min(height * (frame.realWidth / frame.realHeight), 100 * perspective * sizeFactor);
+      const idleFrame = String(studioPlant.animationProfile?.idle?.startFrame ?? 0);
       const artwork = sheet
-        ? this.add.sprite(0, -height / 2 + 2, textureKey, "0").setDisplaySize(width, height)
+        ? this.add.sprite(0, -height / 2 + 2, textureKey, idleFrame).setDisplaySize(width, height)
         : this.add.image(0, -height / 2 + 2, textureKey).setDisplaySize(width, height);
       artwork.setData("studioPlantSprite", true);
+      if (sheet) {
+        const idleAnimationKey = "studio-" + studioPlant.id + "-idle";
+        if (this.anims.exists(idleAnimationKey)) artwork.play(idleAnimationKey);
+      }
       container.add(artwork);
     }
     container.setData("studioPlantId", studioPlant.id);
@@ -3143,7 +3162,7 @@ export default class BattleScene extends Scene {
           plant.studioAttacking = true;
           attackSprite.play(animationKey);
           attackSprite.once("animationcomplete", () => {
-            if (attackSprite.active) attackSprite.setFrame("0");
+            if (attackSprite.active) { const idleKey = "studio-" + plant.studioPlant.id + "-idle"; if (this.anims.exists(idleKey)) attackSprite.play(idleKey); else attackSprite.setFrame(String(plant.studioPlant.animationProfile?.idle?.startFrame ?? 0)); }
             plant.studioAttacking = false;
             applyStudioHit();
           });
@@ -3347,7 +3366,7 @@ export default class BattleScene extends Scene {
         plant.studioThrowing = true;
         sprite.play(animationKey);
         sprite.once("animationcomplete", () => {
-          if (sprite.active) sprite.setFrame("0");
+          if (sprite.active) { const idleKey = "studio-" + plant.studioPlant.id + "-idle"; if (this.anims.exists(idleKey)) sprite.play(idleKey); else sprite.setFrame(String(plant.studioPlant.animationProfile?.idle?.startFrame ?? 0)); }
           plant.studioThrowing = false;
           if (plant.alive && target?.alive && !this.gameOver) this.fireThornProjectile(plant, target);
         });
