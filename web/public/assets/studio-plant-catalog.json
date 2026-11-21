@@ -34,7 +34,7 @@
         "mode": "projectile",
         "projectile": {
           "id": "bamboo-throwing-level-1-projectile",
-          "path": "/assets/projectiles/plants/bamboo-throwing-level-1-projectile.png",
+          "path": "/assets/projectiles/plants/bamboo-throwing-level-1-projectile-cbedc31ec96279864eaf335cd3f9594a067d085445f913348b6a7475e97fc27c.png",
           "filename": "bamboo-throwing-level-1-projectile.png"
         },
         "energyCost": 60,
@@ -47,7 +47,7 @@
         "energyAmount": 15,
         "energyIntervalMs": 12000
       },
-      "publishedAt": "2026-11-20T22:52:19.606Z"
+      "publishedAt": "2026-11-21T00:28:42.201Z"
     }
   ]
 }
