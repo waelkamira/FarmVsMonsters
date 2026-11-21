@@ -1,3 +1,7 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { getProjectileHeadCorrection } from "../game/studio/projectileTrajectory.mjs";
+
 test("Studio projectile path endpoint is corrected onto the monster head",()=>{
  const correctionAtStart=getProjectileHeadCorrection({progress:0,targetX:420,targetY:155,trajectoryEndX:360,trajectoryEndY:240});
  assert.deepEqual(correctionAtStart,{x:0,y:0});
