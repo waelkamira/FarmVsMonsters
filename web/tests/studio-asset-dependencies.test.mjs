@@ -45,6 +45,17 @@ test("does not resolve a managed projectile ID to an asset of the wrong type", (
   assert.equal(report.dependencies[0].resolved, false);
   assert.equal(report.unresolved.length, 1);
 });
+\n
+test("legacy projectile IDs that collide with non-projectile assets remain embedded", () => {
+  const assets = [
+    { id: "thorn", type: "plant", path: "/assets/plants/thorn.png", combat: { projectile: { id: "collision", path: "/assets/projectiles/inline.png" } } },
+    { id: "collision", type: "monster", path: "/assets/monsters/collision.png" }
+  ];
+  const report = buildAssetDependencyReport(assets, "thorn");
+  assert.equal(report.dependencies[0].kind, "embedded-file");
+  assert.equal(report.dependencies[0].resolved, true);
+  assert.equal(report.dependents.length, 0);
+});
 \ntest("reports a missing managed projectile asset as an unresolved dependency", () => {
   const assets = [{ id: "thorn", type: "plant", path: "/assets/plants/thorn.png", combat: { projectile: { id: "missing-shot", path: "/assets/projectiles/missing-shot.png", managed: true } } }];
   const report = buildAssetDependencyReport(assets, "thorn");
