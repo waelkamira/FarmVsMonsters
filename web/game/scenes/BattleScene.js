@@ -3888,6 +3888,14 @@ export default class BattleScene extends Scene {
     return resolveMonsterArchetype(this.wave, spawnIndex);
   }
 
+  selectStudioMonsterForSpawn() {
+    return selectWeightedStudioMonster(
+      this.studioMonsters || [],
+      this.wave,
+      (min, max) => this.simulationRandom.nextInt(min, max)
+    );
+  }
+
   createHyenaAnimations() {
     // These four authored sheets are the required monster artwork. Hit and
     // death are optional single-pose sheets and must never disable the hyenas.
@@ -3974,7 +3982,20 @@ export default class BattleScene extends Scene {
 
   playHyenaAnimation(monster, key, force = false) {
     const sprite = monster && monster.hyenaSprite;
-    if (!sprite || !sprite.active || !this.hyenaAnimationsReady || !this.anims.exists(key)) return;
+    if (!sprite || !sprite.active) return;
+    if (monster.studioMonster) {
+      const action = ["hyena-bite", "hyena-hit", "hyena-death"].includes(key) ? "attack" : "idle";
+      const animationKey = "studio-monster-" + monster.studioMonster.id + "-" + action;
+      if (action === "attack" && !force && monster.hitAnimUntil > this.time.now) return;
+      if (this.anims.exists(animationKey)) {
+        const currentKey = sprite.anims.currentAnim?.key;
+        if (force || currentKey !== animationKey || !sprite.anims.isPlaying) sprite.play(animationKey);
+      } else if (action === "idle") {
+        sprite.setFrame(String(monster.studioMonster.animationProfile?.idle?.startFrame ?? 0));
+      }
+      return;
+    }
+    if (!this.hyenaAnimationsReady || !this.anims.exists(key)) return;
     if (!force && monster.hitAnimUntil > this.time.now && key !== "hyena-hit") return;
     const currentKey = sprite.anims.currentAnim?.key;
     if (!force && currentKey === key && sprite.anims.isPlaying) return;
@@ -4026,9 +4047,13 @@ export default class BattleScene extends Scene {
 
   spawnMonster(spawnIndex = this.spawnedThisWave) {
     const row = this.simulationRandom.nextInt(0, LANES - 1);
-    const archetype = this.monsterArchetypeFor(spawnIndex);
+    const studioMonster = this.selectStudioMonsterForSpawn();
+    const archetype = studioMonster?.monsterProfile?.baseArchetype || this.monsterArchetypeFor(spawnIndex);
     try { recordMonsterDiscovery(window.localStorage, archetype); } catch { /* Bestiary tracking must never interrupt battle. */ }
-    const profile = getMonsterCombatStats(archetype, this.wave);
+    const baseProfile = getMonsterCombatStats(archetype, this.wave);
+    const profile = studioMonster
+      ? resolveStudioMonsterRuntimeProfile(baseProfile, studioMonster.monsterProfile)
+      : baseProfile;
     const hp = profile.hp;
     const speed = profile.speed;
     const spawn = this.monsterLanePoint(SPAWN_LOCAL_X, row);
@@ -4128,9 +4153,13 @@ export default class BattleScene extends Scene {
     }
 
     let monsterRecord = null;
-    const hyenaSprite = this.hyenaAnimationsReady
-      ? this.add.sprite(0, 0, "hyena-idle", 0).setOrigin(0.5, 1).setFlipX(true).setScale(0.918)
-      : null;
+    const customMonsterTexture = studioMonster?.textureKey;
+    const customMonsterIdleFrame = String(studioMonster?.animationProfile?.idle?.startFrame ?? 0);
+    const hyenaSprite = customMonsterTexture && this.textures.exists(customMonsterTexture)
+      ? this.add.sprite(0, 0, customMonsterTexture, customMonsterIdleFrame).setOrigin(0.5, 1).setFlipX(true).setScale(0.918)
+      : this.hyenaAnimationsReady
+        ? this.add.sprite(0, 0, "hyena-idle", 0).setOrigin(0.5, 1).setFlipX(true).setScale(0.918)
+        : null;
     const tierTint = MONSTER_TIER_TINTS[archetype] ?? 0xffffff;
     // Monster visuals must always use the authored hyena artwork. Never show
     // the old programmatically drawn creature as a fallback.
@@ -4139,13 +4168,20 @@ export default class BattleScene extends Scene {
     if (hyenaSprite) {
       view.add(hyenaSprite);
       hyenaSprite.setTint(tierTint);
-      hyenaSprite.play("hyena-idle");
-      hyenaSprite.on("animationcomplete", (animation) => {
-        if (!monsterRecord || !monsterRecord.alive) return;
-        if (animation.key === "hyena-bite" || animation.key === "hyena-hit") {
-          this.playHyenaAnimation(monsterRecord, "hyena-idle", true);
-        }
-      });
+      if (studioMonster) {
+        const idleKey = "studio-monster-" + studioMonster.id + "-idle";
+        if (this.anims.exists(idleKey)) hyenaSprite.play(idleKey);
+        hyenaSprite.on("animationcomplete", (animation) => {
+          if (!monsterRecord || !monsterRecord.alive) return;
+          if (animation.key === "studio-monster-" + studioMonster.id + "-attack") this.playHyenaAnimation(monsterRecord, "hyena-idle", true);
+        });
+      } else {
+        hyenaSprite.play("hyena-idle");
+        hyenaSprite.on("animationcomplete", (animation) => {
+          if (!monsterRecord || !monsterRecord.alive) return;
+          if (animation.key === "hyena-bite" || animation.key === "hyena-hit") this.playHyenaAnimation(monsterRecord, "hyena-idle", true);
+        });
+      }
     }
 
     // Stonehide raises a clearly visible shale ring while it braces over prey.
@@ -4195,6 +4231,7 @@ export default class BattleScene extends Scene {
       burstCooldown: archetype === "dust-skitter" ? this.simulationRandom.nextInt(profile.initialBurstCooldownMinMs, profile.initialBurstCooldownMaxMs) : 0,
       burstRemaining: 0,
       combatProfile: profile,
+      studioMonster,
       // Dust Skitters occasionally hop; this is purely visual and never
       // changes their lane, collision position, or ability to be hit.
       jumpCooldown: archetype === "dust-skitter" ? this.simulationRandom.nextInt(profile.jumpCooldownMinMs, profile.jumpCooldownMaxMs) : 0,
@@ -4535,11 +4572,15 @@ export default class BattleScene extends Scene {
     if (monster.braceCue?.active) monster.braceCue.setVisible(false);
     const sprite = monster.hyenaSprite;
     if (sprite?.active) {
-      if (!monster.frozenTextureKey) {
+      if (!monster.frozenTextureKey && !monster.studioMonster) {
         const preferred = this.wave >= 4 ? "frozen-hyena-level-2" : "frozen-hyena-level-1";
         const fallback = preferred === "frozen-hyena-level-2" ? "frozen-hyena-level-1" : "frozen-hyena-level-2";
         monster.frozenTextureKey = this.textures.exists(preferred) ? preferred : this.textures.exists(fallback) ? fallback : null;
         monster.frozenAnimationKey = sprite.anims.currentAnim?.key || (monster.kind === "dust-skitter" ? "hyena-run" : "hyena-walk");
+        monster.frozenSpriteSize = { width: sprite.displayWidth, height: sprite.displayHeight };
+      }
+      if (monster.studioMonster && !monster.frozenAnimationKey) {
+        monster.frozenAnimationKey = "hyena-idle";
         monster.frozenSpriteSize = { width: sprite.displayWidth, height: sprite.displayHeight };
       }
       sprite.stop();
@@ -4550,6 +4591,8 @@ export default class BattleScene extends Scene {
         sprite.setOrigin(0.5, 1);
         if (monster.frozenSpriteSize?.width > 0 && monster.frozenSpriteSize?.height > 0) sprite.setDisplaySize(monster.frozenSpriteSize.width, monster.frozenSpriteSize.height);
         sprite.clearTint();
+      } else if (monster.studioMonster) {
+        sprite.setTint(0x9feaff);
       }
     }
     if (monster.freezeStage === 5) {
