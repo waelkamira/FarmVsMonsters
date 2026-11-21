@@ -41,6 +41,12 @@ After preparing the plant, refresh the game page and open Stage 1 seed selection
 
 Selecting `تعديل` on a registered asset opens the same editor with its current metadata. A replacement file is optional: leaving the file input empty preserves the existing image/audio file while saving metadata or plant combat-profile changes. Every saved edit returns the asset to `draft`; it must be prepared and tested again before publishing.
 
+## Version history and restore
+
+Every new asset starts at revision 1. Saving edits creates a new revision and stores the previous metadata, immutable asset path, sprite-sheet settings, and combat profile in the asset's version history. The previous image/projectile files remain available because asset paths are content-addressed and are not overwritten.
+
+The Studio library displays the current revision and lets an administrator select a saved revision to restore. Restoring does not rewind the revision counter or change the live game catalog: it creates a new revision from the selected snapshot, marks it as `draft`, and requires another prepare/test/review cycle before publication.
+
 ## 3. Request a reviewed release
 
 The Studio `publish` action is available only after a plant is `testing`. It does **not** write to the target branch directly.
@@ -67,6 +73,8 @@ A plant with an open release request cannot be archived until that request is cl
 ## Status transitions
 
 `draft -> testing -> approved -> published`
+
+`draft/testing -> archived -> draft`
 
 Closing an unmerged release request returns the asset to `testing`. Editing/replacing a plant clears its old release request and returns it to `draft`, requiring a fresh test and a new review request.
 
