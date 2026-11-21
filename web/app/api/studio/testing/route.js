@@ -74,7 +74,9 @@ export async function POST(req) {
   if (!authorized(req)) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   try {
     const { driver, assets } = await loadRegistry();
-    const registryReport = auditStudioAssetRegistry(assets);\n    const fileStatuses = await auditStoredFiles(driver, assets);\n    const report = applyStudioAssetFileAudit(registryReport, assets, fileStatuses);
+    const registryReport = auditStudioAssetRegistry(assets);
+    const fileStatuses = await auditStoredFiles(driver, assets);
+    const report = applyStudioAssetFileAudit(registryReport, assets, fileStatuses);
     return NextResponse.json({
       ...report,
       storage: driver,
