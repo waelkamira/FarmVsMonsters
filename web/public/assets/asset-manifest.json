@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "generatedAt": "2026-11-20T14:17:57.097Z",
-  "assetCount": 89,
-  "totalBytes": 24438194,
+  "assetCount": 88,
+  "totalBytes": 24437593,
   "groups": {
     "audio": [
       {
@@ -410,11 +410,6 @@
       {
         "key": "plant-icons-explosive-berry",
         "url": "/assets/plant-icons/explosive-berry.svg",
-        "type": "svg"
-      },
-      {
-        "key": "plant-icons-fire-pepper",
-        "url": "/assets/plant-icons/fire-pepper.svg",
         "type": "svg"
       },
       {
@@ -1236,16 +1231,6 @@
       "group": "plant-icons",
       "bytes": 667,
       "sha256": "9653f388e1acd17f44ecde87da87ae4d179e5ec30719a36d131e16c7f065a4f6",
-      "width": 64,
-      "height": 64
-    },
-    {
-      "key": "plant-icons-fire-pepper",
-      "url": "/assets/plant-icons/fire-pepper.svg",
-      "type": "svg",
-      "group": "plant-icons",
-      "bytes": 601,
-      "sha256": "8aaf828a0d35c4dc508033e64119b291756bd0c156f0b2ea414f2fa859e95c62",
       "width": 64,
       "height": 64
     },

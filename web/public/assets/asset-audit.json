@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "generatedAt": "2026-11-20T14:17:57.092Z",
-  "assetCount": 89,
-  "totalBytes": 24438194,
+  "assetCount": 88,
+  "totalBytes": 24437593,
   "groups": {
     "audio": {
       "assetCount": 14,
@@ -33,8 +33,8 @@
       "totalBytes": 3561
     },
     "plant-icons": {
-      "assetCount": 10,
-      "totalBytes": 5906
+      "assetCount": 9,
+      "totalBytes": 5305
     },
     "plants": {
       "assetCount": 16,
