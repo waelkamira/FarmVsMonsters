@@ -56,7 +56,7 @@ export default function ProjectileTrajectoryEditor({
  const previousFrame=()=>setPlantFrame(frame=>Math.max(0,frame-1));
  const nextFrame=()=>setPlantFrame(frame=>Math.min(Math.max(0,plantFrameCount-1),frame+1));
  return <section className="studio-trajectory-editor studio-motion-editor">
-  <div className="studio-trajectory-heading"><div><h4>محرر حركة النبتة والقذيفة</h4><small>انقر مرتين على المسار لإضافة دبوس واسحبه لتشكيل المسار. اسحب صورة القذيفة نفسها أو مقبض الإطلاق لضبط مكان خروجها وارتفاعها.</small></div><div className="studio-trajectory-actions"><button type="button" onClick={()=>{setProgress(0);setPlaying(false);}}>إعادة موضع التشغيل</button><button type="button" onClick={()=>setPlaying(v=>!v)}>{playing?"إيقاف القذيفة":"تشغيل المسار"}</button></div></div>
+  <div className="studio-trajectory-heading"><div><h4>محرر حركة النبتة والقذيفة</h4><small>انقر مرتين على المسار لإضافة دبوس واسحبه لتشكيل المسار. اسحب صورة القذيفة نفسها أو مقبض الإطلاق لضبط مكان خروجها وارتفاعها.</small></div><div className="studio-trajectory-actions"><button type="button" onClick={()=>{setProgress(0);setPlaying(false);}}>إعادة موضع التشغيل</button><button type="button" onClick={()=>{if(!playing&&progress>=1)setProgress(0);setPlaying(v=>!v);}}>{playing?"إيقاف القذيفة":"تشغيل المسار"}</button></div></div>
   <div className="studio-battle-preview-legend"><span>🌱 النبتة</span><span>☄️ القذيفة</span><span>● دبابيس المسار (انقر مرتين لإضافة)</span></div>
   <svg className="studio-trajectory-canvas studio-battle-preview studio-motion-canvas" viewBox="0 0 840 525" role="img" aria-label="محرر تفاعلي لمسار القذيفة" onPointerMove={movePointer} onPointerUp={()=>setDrag(null)} onPointerCancel={()=>setDrag(null)} onDoubleClick={addWaypoint}>
    <defs>
