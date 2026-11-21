@@ -322,7 +322,7 @@ export default class BattleScene extends Scene {
     for (const monster of this.studioMonsters) {
       if (!monster.spriteSheet || !this.registerStudioGridSheet(monster.textureKey, monster.rows, monster.columns)) continue;
       monster.runtimeReady = true;
-      for (const [clipName, clip] of [["idle", monster.animationProfile.idle], ["attack", monster.animationProfile.attack]]) {
+      for (const [clipName, clip] of [["idle", monster.animationProfile.idle], ["move", monster.animationProfile.move], ["attack", monster.animationProfile.attack]]) {
         if (clip.endFrame <= clip.startFrame) continue;
         const animationKey = "studio-monster-" + monster.id + "-" + clipName;
         if (!this.anims.exists(animationKey)) {
@@ -3985,12 +3985,14 @@ export default class BattleScene extends Scene {
     const sprite = monster && monster.hyenaSprite;
     if (!sprite || !sprite.active) return;
     if (monster.studioMonster) {
-      const action = ["hyena-bite", "hyena-hit", "hyena-death"].includes(key) ? "attack" : "idle";
+      const action = ["hyena-bite", "hyena-hit", "hyena-death"].includes(key) ? "attack" : ["hyena-walk", "hyena-run"].includes(key) ? "move" : "idle";
       const animationKey = "studio-monster-" + monster.studioMonster.id + "-" + action;
       if (action === "attack" && !force && monster.hitAnimUntil > this.time.now) return;
       if (this.anims.exists(animationKey)) {
         const currentKey = sprite.anims.currentAnim?.key;
         if (force || currentKey !== animationKey || !sprite.anims.isPlaying) sprite.play(animationKey);
+      } else if (action === "move" && this.anims.exists("studio-monster-" + monster.studioMonster.id + "-idle")) {
+        sprite.play("studio-monster-" + monster.studioMonster.id + "-idle");
       } else if (action === "idle") {
         sprite.setFrame(String(monster.studioMonster.animationProfile?.idle?.startFrame ?? 0));
       }
