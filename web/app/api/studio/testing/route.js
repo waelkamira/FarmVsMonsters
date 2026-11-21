@@ -48,7 +48,7 @@ export async function POST(req) {
       storage: driver,
       checkedAt: new Date().toISOString(),
       scope: "registry-and-runtime-contracts",
-      note: "هذا الفحص يتحقق من سجل الأصول وعقود التوافق؛ لا يشغّل معركة Phaser ولا يحل محل اختبار المتصفح."
+      note: "هذا الفحص يتحقق من سجل الأصول وعقود التوافق ومساراتها النصية فقط؛ لا يفحص وجود بايتات الملفات الفعلية، ولا يشغّل معركة Phaser، ولا يحل محل اختبار المتصفح."
     }, { headers: { "Cache-Control": "private, no-store" } });
   } catch (error) {
     return NextResponse.json({ error: error.message || "تعذر تشغيل فحص Studio." }, { status: error.status || 500 });
