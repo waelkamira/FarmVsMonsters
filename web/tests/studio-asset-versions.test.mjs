@@ -29,6 +29,8 @@ test("restores an older version as a new draft revision without deleting history
   assert.equal(restored.versions.length, 3);
   assert.equal(restored.versions[2].versionNumber, 3);
   assert.equal(restored.releaseRequest, null);
+  assert.equal(restored.publishedAt, null);
+  assert.equal(restored.testingAt, null);
 });
 
 test("rejects a version number that is not in the asset history", () => {
@@ -92,4 +94,17 @@ test("version snapshots and restore preserve independent animation and monster p
   restored.monsterProfile.hpMultiplier = 3;
   assert.equal(edited.versions[0].animationProfile.attack.startFrame, 6);
   assert.equal(edited.versions[0].monsterProfile.hpMultiplier, 1.4);
+});
+
+test("editing a previously published asset resets release timestamps on the new draft", () => {
+  const existing = {
+    id: "released-plant", type: "plant", path: "/assets/plants/released.png", revision: 2,
+    status: "published", publishedAt: "2026-11-20T12:00:00.000Z", testingAt: "2026-11-20T11:00:00.000Z",
+    archivedAt: null, restoredFromVersion: 1
+  };
+  const updated = createStudioAssetRevision(existing, { ...existing, status: "draft", publishedAt: null, testingAt: null, archivedAt: null, restoredFromVersion: null });
+  assert.equal(updated.status, "draft");
+  assert.equal(updated.publishedAt, null);
+  assert.equal(updated.testingAt, null);
+  assert.equal(updated.restoredFromVersion, null);
 });
