@@ -3,85 +3,90 @@ import { useEffect, useMemo, useState } from "react";
 import { getProjectileTrajectoryOffset } from "../../game/studio/projectileTrajectory.mjs";
 
 const clamp=(v,min,max)=>Math.min(max,Math.max(min,Number(v)||0));
-const BOARD={width:560,height:240,columns:8,cellWidth:70,laneTop:82,laneHeight:126};
+const BOARD={width:840,height:420,columns:8,cellWidth:105,laneTop:70,laneHeight:300};
+const DEFAULT_POINTS=[{progress:0,x:0,y:0},{progress:.5,x:0,y:110},{progress:1,x:0,y:0}];
+const makeId=()=>`wp-${Math.random().toString(36).slice(2,9)}`;
 export default function ProjectileTrajectoryEditor({
  imageUrl,plantUrl,frameCount=1,rows=1,columns=1,
  plantFrameCount=1,plantRows=1,plantColumns=1,plantSizePercent=100,
- idleStartFrame=0,idleEndFrame=0,idleFps=6,
- path,setPath,curveX,setCurveX,curveY,setCurveY,
- launchX,setLaunchX,launchY,setLaunchY,targetX,setTargetX,targetY,setTargetY,
+ path,setPath,points=DEFAULT_POINTS,setPoints,
+ launchX,setLaunchX,launchY,setLaunchY,
  speed,setSpeed,collisionRadius,setCollisionRadius,height,setHeight,
  rotation,setRotation,playing,setPlaying
 }){
  const [progress,setProgress]=useState(0);
- const [drag,setDrag]=useState("");
+ const [drag,setDrag]=useState(null);
+ const [selectedPoint,setSelectedPoint]=useState(-1);
  const [imageSize,setImageSize]=useState({width:1,height:1});
  const [plantImageSize,setPlantImageSize]=useState({width:1,height:1});
- const [plantIdleFrame,setPlantIdleFrame]=useState(Math.max(0,Number(idleStartFrame)||0));
- useEffect(()=>{if(!imageUrl)return;const image=new window.Image();image.onload=()=>setImageSize({width:image.naturalWidth,height:image.naturalHeight});image.src=imageUrl;return()=>{image.onload=null;};},[imageUrl]);
- useEffect(()=>{if(!plantUrl)return;const image=new window.Image();image.onload=()=>setPlantImageSize({width:image.naturalWidth,height:image.naturalHeight});image.src=plantUrl;return()=>{image.onload=null;};},[plantUrl]);
- useEffect(()=>{const first=clamp(idleStartFrame,0,Math.max(0,plantFrameCount-1));const last=clamp(idleEndFrame,first,Math.max(0,plantFrameCount-1));setPlantIdleFrame(first);if(last<=first)return;const timer=window.setInterval(()=>setPlantIdleFrame(frame=>frame>=last?first:frame+1),1000/Math.max(1,idleFps));return()=>window.clearInterval(timer);},[idleStartFrame,idleEndFrame,idleFps,plantFrameCount,plantUrl]);
- useEffect(()=>{if(!playing)return;let last=0;let frame=0;const tick=now=>{if(!last)last=now;const dt=Math.min(64,now-last);last=now;setProgress(p=>{const n=p+dt*Math.max(0.05,speed)/18000;return n>=1?0:n;});frame=requestAnimationFrame(tick);};frame=requestAnimationFrame(tick);return()=>cancelAnimationFrame(frame);},[playing,speed]);
- useEffect(()=>{if(!playing)setProgress(0);},[playing,path,curveX,curveY,launchX,launchY,targetX,targetY]);
- const plantCenter={x:72,y:159};
- const start={x:86+clamp(launchX,-70,70)*.55,y:168-clamp(launchY,-120,120)*.55};
- const baseEnd={x:520,y:164};
- const end={x:baseEnd.x+clamp(targetX,-100,100)*.55,y:baseEnd.y-clamp(targetY,-100,100)*.55};
- const control={x:(start.x+end.x)/2+clamp(curveX,-180,180)*.55,y:(start.y+end.y)/2-clamp(curveY,-300,300)*.55};
- const point=t=>{const offset=getProjectileTrajectoryOffset({type:path,progress:t,height:clamp(height,0,300),curveX,curveY,targetX,targetY});return{x:start.x+(baseEnd.x-start.x)*t+offset.x*.55,y:start.y+(baseEnd.y-start.y)*t-offset.y*.55};};
- const pathD=useMemo(()=>Array.from({length:51},(_,i)=>point(i/50)).map((p,i)=>(i?"L":"M")+p.x.toFixed(1)+","+p.y.toFixed(1)).join(" "),[path,curveX,curveY,launchX,launchY,targetX,targetY,height]);
- const pointer=e=>{const svg=e.currentTarget.ownerSVGElement||e.currentTarget;const rect=svg.getBoundingClientRect();const x=(e.clientX-rect.left)*BOARD.width/rect.width,y=(e.clientY-rect.top)*BOARD.height/rect.height;if(drag==="launch"){setLaunchX(Math.round(clamp((x-86)/.55,-70,70)));setLaunchY(Math.round(clamp((168-y)/.55,-120,120)));}if(drag==="curve"){setCurveX(Math.round(clamp((x-(start.x+end.x)/2)/.55,-180,180)));setCurveY(Math.round(clamp(((start.y+end.y)/2-y)/.55,-300,300)));}if(drag==="target"){setTargetX(Math.round(clamp((x-520)/.55,-100,100)));setTargetY(Math.round(clamp((164-y)/.55,-100,100)));}};
- const current=point(progress);
- const frameIndex=Math.min(Math.max(1,frameCount)-1,Math.floor(progress*Math.max(1,frameCount)));
+ const [plantFrame,setPlantFrame]=useState(0);
+ const [plantPlaying,setPlantPlaying]=useState(false);
+ const [projectileFrame,setProjectileFrame]=useState(0);
+ const [projectileImageLoaded,setProjectileImageLoaded]=useState(false);
+ useEffect(()=>{if(!imageUrl){setImageSize({width:1,height:1});setProjectileImageLoaded(false);return;}const image=new window.Image();image.onload=()=>{setImageSize({width:image.naturalWidth,height:image.naturalHeight});setProjectileImageLoaded(true);};image.src=imageUrl;return()=>{image.onload=null;};},[imageUrl]);
+ useEffect(()=>{if(!plantUrl){setPlantImageSize({width:1,height:1});return;}const image=new window.Image();image.onload=()=>setPlantImageSize({width:image.naturalWidth,height:image.naturalHeight});image.src=plantUrl;return()=>{image.onload=null;};},[plantUrl]);
+ useEffect(()=>{setPlantFrame(0);setPlantPlaying(false);},[plantUrl,plantFrameCount,plantRows,plantColumns]);
+ useEffect(()=>{if(!plantPlaying)return;const timer=window.setInterval(()=>setPlantFrame(frame=>(frame+1)%Math.max(1,plantFrameCount)),1000/Math.max(1,plantFps));return()=>window.clearInterval(timer);},[plantPlaying,plantFps,plantFrameCount]);
+ useEffect(()=>{if(!playing)return;let last=0,raf=0;const tick=now=>{if(!last)last=now;const dt=Math.min(64,now-last);last=now;setProgress(p=>{const n=p+dt*Math.max(.05,speed)/24000;return n>=1?0:n;});raf=requestAnimationFrame(tick);};raf=requestAnimationFrame(tick);return()=>cancelAnimationFrame(raf);},[playing,speed]);
+ useEffect(()=>{if(!playing)setProgress(0);},[playing,points,launchX,launchY]);
+ useEffect(()=>{if(!imageUrl)return;const timer=window.setInterval(()=>setProjectileFrame(frame=>(frame+1)%Math.max(1,frameCount)),1000/10);return()=>window.clearInterval(timer);},[imageUrl,frameCount]);
+ const plantCenter={x:100,y:300};
+ const start={x:plantCenter.x+clamp(launchX,-300,300)*.55,y:plantCenter.y+clamp(launchY,-300,300)*.55};
+ const end={x:760,y:300};
+ const baseAt=t=>({x:start.x+(end.x-start.x)*t,y:start.y+(end.y-start.y)*t});
+ const normalizedPoints=useMemo(()=>Array.isArray(points)&&points.length>=2?points:DEFAULT_POINTS,[points]);
+ const offsetAt=t=>getProjectileTrajectoryOffset({type:"custom",progress:t,points:normalizedPoints});
+ const pointAt=t=>{const base=baseAt(t),offset=offsetAt(t);return{x:base.x+offset.x*.55,y:base.y-offset.y*.55};};
+ const pathD=useMemo(()=>Array.from({length:101},(_,i)=>pointAt(i/100)).map((p,i)=>(i?"L":"M")+p.x.toFixed(1)+","+p.y.toFixed(1)).join(" "),[normalizedPoints,launchX,launchY]);
+ const current=pointAt(progress);
+ const frameIndex=Math.min(Math.max(1,frameCount)-1,projectileFrame);
  const frameColumn=frameIndex%Math.max(1,columns),frameRow=Math.floor(frameIndex/Math.max(1,columns));
  const frameWidth=imageSize.width/Math.max(1,columns),frameHeight=imageSize.height/Math.max(1,rows);
- const safePlantFrame=Math.min(Math.max(0,plantFrameCount-1),plantIdleFrame);
+ const safePlantFrame=Math.min(Math.max(0,plantFrameCount-1),plantFrame);
  const plantColumn=safePlantFrame%Math.max(1,plantColumns),plantRow=Math.floor(safePlantFrame/Math.max(1,plantColumns));
  const plantFrameWidth=plantImageSize.width/Math.max(1,plantColumns),plantFrameHeight=plantImageSize.height/Math.max(1,plantRows);
- const plantScale=clamp(plantSizePercent,40,180)/100;
- const plantWidth=74*plantScale,plantHeight=84*plantScale;
- return <section className="studio-trajectory-editor">
-  <div className="studio-trajectory-heading"><div><h4>معاينة ساحة المعركة ومسار القذيفة</h4><small>النبتة تظهر على خلية من المسار، والقذيفة تنطلق من موضعها نحو الهدف. اسحب نقاط المسار وعدّل الحقول لمعاينة الحركة.</small></div><div className="studio-trajectory-actions"><button type="button" onClick={()=>{setProgress(0);setPlaying(false);}}>إعادة ضبط</button><button type="button" onClick={()=>setPlaying(v=>!v)}>{playing?"إيقاف":"تشغيل المعاينة"}</button></div></div>
-  <div className="studio-battle-preview-legend"><span>🌱 النبتة وموقع الإطلاق</span><span>☄️ القذيفة المتحركة</span><span>👾 موضع الوحش المستهدف</span></div>
-  <svg className="studio-trajectory-canvas studio-battle-preview" viewBox="0 0 560 240" role="img" aria-label="معاينة ساحة معركة بها النبتة ومسار القذيفة">
+ const plantScale=clamp(plantSizePercent,25,200)/100,plantWidth=116*plantScale,plantHeight=132*plantScale;
+ const pointerPosition=e=>{const svg=e.currentTarget;const rect=svg.getBoundingClientRect();return{x:(e.clientX-rect.left)*BOARD.width/rect.width,y:(e.clientY-rect.top)*BOARD.height/rect.height};};
+ const movePointer=e=>{if(!drag)return;const p=pointerPosition(e);if(drag.type==="launch"){setLaunchX(Math.round(clamp((p.x-plantCenter.x)/.55,-300,300)));setLaunchY(Math.round(clamp((p.y-plantCenter.y)/.55,-300,300)));return;}if(drag.type==="waypoint"){const t=normalizedPoints[drag.index]?.progress;if(t==null)return;const base=baseAt(t);const next=normalizedPoints.map((item,index)=>index===drag.index?{...item,x:Math.round((p.x-base.x)/.55),y:Math.round((base.y-p.y)/.55)}:item);setPoints(next);}};
+ const addWaypoint=e=>{const p=pointerPosition(e);const t=clamp((p.x-start.x)/(end.x-start.x),.02,.98);if(normalizedPoints.length>=18)return;const base=baseAt(t);const next=[...normalizedPoints,{progress:Number(t.toFixed(3)),x:Math.round((p.x-base.x)/.55),y:Math.round((base.y-p.y)/.55)}].sort((a,b)=>a.progress-b.progress);setPoints(next);setSelectedPoint(next.findIndex(item=>item.progress===Number(t.toFixed(3))));};
+ const removeWaypoint=()=>{if(selectedPoint<=0||selectedPoint>=normalizedPoints.length-1)return;setPoints(normalizedPoints.filter((_,index)=>index!==selectedPoint));setSelectedPoint(-1);};
+ const previousFrame=()=>setPlantFrame(frame=>Math.max(0,frame-1));
+ const nextFrame=()=>setPlantFrame(frame=>Math.min(Math.max(0,plantFrameCount-1),frame+1));
+ return <section className="studio-trajectory-editor studio-motion-editor">
+  <div className="studio-trajectory-heading"><div><h4>محرر حركة النبتة والقذيفة</h4><small>انقر مرتين على المسار لإضافة دبوس، ثم اسحبه لتشكيل الحركة. اسحب نقطة الإطلاق من النبتة لتحديد موضع خروج القذيفة.</small></div><div className="studio-trajectory-actions"><button type="button" onClick={()=>{setProgress(0);setPlaying(false);}}>إعادة موضع التشغيل</button><button type="button" onClick={()=>setPlaying(v=>!v)}>{playing?"إيقاف القذيفة":"تشغيل المسار"}</button></div></div>
+  <div className="studio-battle-preview-legend"><span>🌱 النبتة</span><span>☄️ القذيفة</span><span>● دبابيس المسار (انقر مرتين لإضافة)</span></div>
+  <svg className="studio-trajectory-canvas studio-battle-preview studio-motion-canvas" viewBox="0 0 840 420" role="img" aria-label="محرر تفاعلي لمسار القذيفة" onPointerMove={movePointer} onPointerUp={()=>setDrag(null)} onPointerCancel={()=>setDrag(null)} onDoubleClick={addWaypoint}>
    <defs>
-    <linearGradient id="battle-grass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#527d45"/><stop offset="1" stopColor="#294c32"/></linearGradient>
-    <pattern id="battle-ground" width="70" height="63" patternUnits="userSpaceOnUse"><rect width="70" height="63" fill="url(#battle-grass)"/><path d="M0 0H70V63H0Z" fill="none" stroke="#b4d28a" strokeOpacity=".22"/><path d="M9 47l5-7m9 11 4-6m25-24 4-6" stroke="#c6dc9b" strokeOpacity=".18" strokeWidth="2"/></pattern>
-    <pattern id="trajectory-grid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M 28 0 L 0 0 0 28" fill="none" stroke="#ffffff" strokeOpacity=".07" strokeWidth="1"/></pattern>
+    <linearGradient id="motion-grass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#527d45"/><stop offset="1" stopColor="#294c32"/></linearGradient>
+    <pattern id="motion-ground" width="105" height="75" patternUnits="userSpaceOnUse"><rect width="105" height="75" fill="url(#motion-grass)"/><path d="M0 0H105V75H0Z" fill="none" stroke="#b4d28a" strokeOpacity=".25"/><path d="M12 55l6-9m15 13 5-8m42-25 5-7" stroke="#c6dc9b" strokeOpacity=".2" strokeWidth="2"/></pattern>
    </defs>
-   <rect width="560" height="240" rx="14" fill="#17251b"/>
-   <rect x="0" y={BOARD.laneTop} width="560" height={BOARD.laneHeight} fill="url(#battle-ground)"/>
-   {Array.from({length:BOARD.columns},(_,i)=><rect key={i} x={i*BOARD.cellWidth} y={BOARD.laneTop} width={BOARD.cellWidth} height={BOARD.laneHeight} fill={i%2?"#ffffff":"#000000"} fillOpacity=".035" stroke="#d2e9b3" strokeOpacity=".25" strokeWidth="1"/>)}
-   <rect width="560" height="240" fill="url(#trajectory-grid)"/>
-   <path d="M0 190 H560" stroke="#d4e7b4" strokeDasharray="5 6" opacity=".3"/>
-   <path d={pathD} fill="none" stroke="#1d3025" strokeWidth="8" strokeLinecap="round" opacity=".5"/>
-   <path d={pathD} fill="none" stroke="#f7d36c" strokeWidth="3" strokeDasharray="7 5" strokeLinecap="round"/>
-   {path==="bezier"&&<path d={`M${start.x},${start.y} L${control.x},${control.y} L${end.x},${end.y}`} stroke="#7ed9c0" strokeDasharray="4 5" fill="none" opacity=".7"/>}
-   <ellipse cx={plantCenter.x} cy="194" rx={42*plantScale} ry="8" fill="#102719" opacity=".55"/>
+   <rect width="840" height="420" rx="16" fill="#17251b"/><rect x="0" y={BOARD.laneTop} width="840" height={BOARD.laneHeight} fill="url(#motion-ground)"/>
+   {Array.from({length:BOARD.columns},(_,i)=><rect key={i} x={i*BOARD.cellWidth} y={BOARD.laneTop} width={BOARD.cellWidth} height={BOARD.laneHeight} fill={i%2?"#ffffff":"#000000"} fillOpacity=".035" stroke="#d2e9b3" strokeOpacity=".25"/>)}
+   <path d="M0 350H840" stroke="#d4e7b4" strokeDasharray="6 7" opacity=".3"/>
+   <path d={pathD} fill="none" stroke="#102719" strokeWidth="13" strokeLinecap="round" opacity=".55" pointerEvents="none"/><path d={pathD} fill="none" stroke="#f7d36c" strokeWidth="4" strokeDasharray="9 7" strokeLinecap="round" pointerEvents="none"/>
+   <ellipse cx={plantCenter.x} cy="355" rx={58*plantScale} ry="11" fill="#102719" opacity=".55"/>
    {plantUrl&&<svg x={plantCenter.x-plantWidth/2} y={plantCenter.y-plantHeight/2} width={plantWidth} height={plantHeight} viewBox={`${plantColumn*plantFrameWidth} ${plantRow*plantFrameHeight} ${plantFrameWidth} ${plantFrameHeight}`} preserveAspectRatio="xMidYMid meet" overflow="hidden"><image href={plantUrl} x="0" y="0" width={plantImageSize.width} height={plantImageSize.height} preserveAspectRatio="none"/></svg>}
-   {!plantUrl&&<g><circle cx={plantCenter.x} cy={plantCenter.y} r="22" fill="#72bd54"/><path d="M72 180Q42 147 48 135Q69 136 75 165Q81 139 102 139Q105 160 76 181" fill="#9cdb70"/></g>}
-   <circle cx={end.x} cy={end.y} r={Math.max(18,clamp(collisionRadius,4,100)*.32)} fill="none" stroke="#ff927d" strokeDasharray="3 3" strokeWidth="2" pointerEvents="none"/>
-   <g transform={`translate(${end.x} ${end.y})`}><ellipse cy="25" rx="20" ry="5" fill="#102719" opacity=".5"/><path d="M-13 13Q-23-2-13-18Q0-30 13-18Q23-2 13 13Z" fill="#718b79" stroke="#d4e5c8" strokeWidth="2"/><circle cx="-5" cy="-7" r="2.5" fill="#fff"/><circle cx="6" cy="-7" r="2.5" fill="#fff"/><circle cx="-5" cy="-7" r="1.2" fill="#26352b"/><circle cx="6" cy="-7" r="1.2" fill="#26352b"/></g>
-   {imageUrl&&<svg x={current.x-15} y={current.y-15} width="30" height="30" viewBox={`${frameColumn*frameWidth} ${frameRow*frameHeight} ${frameWidth} ${frameHeight}`} preserveAspectRatio="xMidYMid meet" overflow="hidden" transform={`rotate(${rotation} ${current.x} ${current.y})`}><image href={imageUrl} x="0" y="0" width={imageSize.width} height={imageSize.height} preserveAspectRatio="none"/></svg>}
-   {!imageUrl&&<circle cx={current.x} cy={current.y} r="10" fill="#ffc247" stroke="#fff1c1" strokeWidth="2"/>}
-   <circle cx={start.x} cy={start.y} r="11" fill="#4abf8a" stroke="white" strokeWidth="2" style={{cursor:"grab"}} onPointerDown={e=>{e.currentTarget.setPointerCapture(e.pointerId);setDrag("launch");}} onPointerMove={e=>{if(drag==="launch")pointer(e);}} onPointerUp={()=>setDrag("")} onPointerCancel={()=>setDrag("")}/>
-   <circle cx={end.x} cy={end.y} r="17" fill="transparent" stroke="transparent" style={{cursor:"grab"}} onPointerDown={e=>{e.currentTarget.setPointerCapture(e.pointerId);setDrag("target");}} onPointerMove={e=>{if(drag==="target")pointer(e);}} onPointerUp={()=>setDrag("")} onPointerCancel={()=>setDrag("")}/>
-   {path==="bezier"&&<circle cx={control.x} cy={control.y} r="10" fill="#55c8d9" stroke="white" strokeWidth="2" style={{cursor:"grab"}} onPointerDown={e=>{e.currentTarget.setPointerCapture(e.pointerId);setDrag("curve");}} onPointerMove={e=>{if(drag==="curve")pointer(e);}} onPointerUp={()=>setDrag("")} onPointerCancel={()=>setDrag("")}/>}
-   <text x="18" y="24" fill="#d7e8c9" fontSize="11">مسار واحد · 8 خلايا متساوية</text>
-   <text x="72" y="226" fill="#e6f2d9" fontSize="10" textAnchor="middle">النبتة</text><text x={end.x} y="226" fill="#e6f2d9" fontSize="10" textAnchor="middle">الهدف</text>
+   {!plantUrl&&<g><circle cx={plantCenter.x} cy={plantCenter.y} r="30" fill="#72bd54"/><path d="M100 326Q58 282 68 264Q96 266 103 306Q113 270 140 273Q143 302 104 327" fill="#9cdb70"/></g>}
+   <circle cx={start.x} cy={start.y} r="15" fill="#37c990" stroke="#fff" strokeWidth="3" style={{cursor:"move"}} onPointerDown={e=>{e.stopPropagation();e.currentTarget.ownerSVGElement.setPointerCapture(e.pointerId);setDrag({type:"launch"});}}/>
+   <text x={start.x+18} y={start.y-15} fill="#fff" fontSize="13">موضع الإطلاق</text>
+   {normalizedPoints.map((item,index)=>{const p=pointAt(item.progress);return <g key={index}><circle cx={p.x} cy={p.y} r={selectedPoint===index?12:9} fill={index===0||index===normalizedPoints.length-1?"#35c98a":"#4dc6e8"} stroke="#fff" strokeWidth="2" style={{cursor:"grab"}} onPointerDown={e=>{e.stopPropagation();e.currentTarget.ownerSVGElement.setPointerCapture(e.pointerId);setSelectedPoint(index);setDrag({type:"waypoint",index});}}/><text x={p.x} y={p.y-17} fill="#fff" fontSize="11" textAnchor="middle">{index+1}</text></g>;})}
+   {imageUrl&&<svg x={current.x-24} y={current.y-24} width="48" height="48" viewBox={`${frameColumn*frameWidth} ${frameRow*frameHeight} ${frameWidth} ${frameHeight}`} preserveAspectRatio="xMidYMid meet" overflow="hidden" transform={`rotate(${rotation} ${current.x} ${current.y})`}><image href={imageUrl} x="0" y="0" width={imageSize.width} height={imageSize.height} preserveAspectRatio="none"/></svg>}
+   {!imageUrl&&<circle cx={current.x} cy={current.y} r="13" fill="#ffc247" stroke="#fff1c1" strokeWidth="2"/>}
+   <text x="20" y="30" fill="#d7e8c9" fontSize="14">8 أعمدة · ساحة المعركة</text><text x="100" y="400" fill="#e6f2d9" fontSize="12" textAnchor="middle">النبتة</text><text x="760" y="400" fill="#e6f2d9" fontSize="12" textAnchor="middle">اتجاه الهدف</text>
   </svg>
-  <div className="studio-grid">
-   <label>نوع المسار<select value={path} onChange={e=>setPath(e.target.value)}><option value="arc">قوس ناعم</option><option value="straight">مستقيم</option><option value="sine">موجة جيبية</option><option value="bezier">منحنى قابل للتحكم (Bezier)</option></select></label>
-   <label>سرعة القذيفة<input type="number" min="60" max="1200" value={speed} onChange={e=>setSpeed(clamp(e.target.value,60,1200))}/></label>
-   <label>إزاحة الإطلاق الأفقية<input type="number" min="-70" max="70" value={launchX} onChange={e=>setLaunchX(clamp(e.target.value,-70,70))}/></label>
-   <label>إزاحة الإطلاق العمودية<input type="number" min="-120" max="120" value={launchY} onChange={e=>setLaunchY(clamp(e.target.value,-120,120))}/></label>
-   <label>إزاحة نقطة الإصابة أفقياً<input type="number" min="-100" max="100" value={targetX} onChange={e=>setTargetX(clamp(e.target.value,-100,100))}/></label>
-   <label>إزاحة نقطة الإصابة عمودياً<input type="number" min="-100" max="100" value={targetY} onChange={e=>setTargetY(clamp(e.target.value,-100,100))}/></label>
-   {path!=="straight"&&path!=="bezier"&&<label>ارتفاع القوس<input type="number" min="0" max="300" value={height} onChange={e=>setHeight(clamp(e.target.value,0,300))}/></label>}
-   {path==="bezier"&&<><label>انحراف المقبض أفقياً<input type="number" min="-180" max="180" value={curveX} onChange={e=>setCurveX(clamp(e.target.value,-180,180))}/></label><label>ارتفاع المقبض<input type="number" min="-300" max="300" value={curveY} onChange={e=>setCurveY(clamp(e.target.value,-300,300))}/></label></>}
-   <label>نصف قطر الإصابة<input type="number" min="4" max="100" value={collisionRadius} onChange={e=>setCollisionRadius(clamp(e.target.value,4,100))}/></label>
-   <label>دوران صورة القذيفة<input type="number" min="0" max="360" value={rotation} onChange={e=>setRotation(clamp(e.target.value,0,360))}/></label>
+  <div className="studio-motion-toolbar">
+   <div className="studio-motion-frame-controls"><b>معاينة إطارات النبتة</b><div className="studio-trajectory-actions"><button type="button" onClick={()=>setPlantFrame(0)}>الأول</button><button type="button" onClick={previousFrame}>◀ السابق</button><span>الإطار {plantFrame+1} / {Math.max(1,plantFrameCount)}</span><button type="button" onClick={nextFrame}>التالي ▶</button><button type="button" onClick={()=>setPlantFrame(Math.max(0,plantFrameCount-1))}>الأخير</button><button type="button" onClick={()=>setPlantPlaying(v=>!v)}>{plantPlaying?"إيقاف":"تشغيل الإطارات"}</button></div></div>
+   <div className="studio-motion-frame-controls"><b>معاينة إطارات القذيفة</b><div className="studio-trajectory-actions"><button type="button" onClick={()=>setProjectileFrame(0)}>الأول</button><button type="button" onClick={()=>setProjectileFrame(frame=>Math.max(0,frame-1))}>◀</button><span>الإطار {projectileFrame+1} / {Math.max(1,frameCount)}</span><button type="button" onClick={()=>setProjectileFrame(frame=>Math.min(Math.max(0,frameCount-1),frame+1))}>▶</button></div></div>
   </div>
-  <small className="studio-field-help">تُعرض النبتة من إطارها الفعلي داخل خلية المعركة، وتُقص القذيفة من Sprite Sheet أثناء الحركة. الإعدادات المحفوظة هي نفسها التي يقرأها محرك المعركة.</small>
+  <div className="studio-grid studio-motion-settings">
+   <label>سرعة القذيفة<input type="number" min="60" max="1200" value={speed} onChange={e=>setSpeed(clamp(e.target.value,60,1200))}/></label>
+   <label>إزاحة الإطلاق الأفقية<input type="number" min="-300" max="300" value={launchX} onChange={e=>setLaunchX(clamp(e.target.value,-300,300))}/></label>
+   <label>ارتفاع / إزاحة الإطلاق العمودية<input type="number" min="-300" max="300" value={launchY} onChange={e=>setLaunchY(clamp(e.target.value,-300,300))}/></label>
+   <label>دوران القذيفة (درجة)<input type="number" min="0" max="360" value={rotation} onChange={e=>setRotation(clamp(e.target.value,0,360))}/></label>
+   <label>نصف قطر الإصابة<input type="number" min="4" max="100" value={collisionRadius} onChange={e=>setCollisionRadius(clamp(e.target.value,4,100))}/></label>
+   <label>ارتفاع المسار العام<input type="number" min="0" max="300" value={height} onChange={e=>setHeight(clamp(e.target.value,0,300))}/></label>
+  </div>
+  <div className="studio-motion-point-actions"><span>{normalizedPoints.length} نقاط تحكم · {selectedPoint>=0?`النقطة المحددة ${selectedPoint+1}`:"حدد دبوساً لتعديله أو حذفه"}</span><button type="button" onClick={()=>{const next=[...normalizedPoints,{progress:.5,x:0,y:0}].sort((a,b)=>a.progress-b.progress);setPoints(next);setSelectedPoint(next.length-2);}} disabled={normalizedPoints.length>=18}>إضافة نقطة</button><button type="button" onClick={removeWaypoint} disabled={selectedPoint<=0||selectedPoint>=normalizedPoints.length-1}>حذف النقطة المحددة</button><button type="button" onClick={()=>{setPoints(DEFAULT_POINTS);setSelectedPoint(-1);}}>إعادة المسار الافتراضي</button></div>
+  <small className="studio-field-help">النقاط محفوظة كإزاحات فعلية بالبكسل على مسار المقذوف، ويستخدم محرك المعركة منحنى Catmull–Rom المار عبرها. النقطة الأولى والأخيرة تثبتان بداية المسار ونهايته.</small>
  </section>;
 }
