@@ -32,13 +32,19 @@ test("plant combat profile persists trajectory and launch tuning",()=>{
   projectileCurveX:75,
   projectileCurveY:180,
   projectileLaunchOffsetX:24,
-  projectileLaunchOffsetY:-42
+  projectileLaunchOffsetY:-42,
+  projectileTargetOffsetX:18,
+  projectileTargetOffsetY:-12,
+  projectileCollisionRadius:34
  });
  assert.equal(profile.projectileTrajectoryType,"bezier");
  assert.equal(profile.projectileCurveX,75);
  assert.equal(profile.projectileCurveY,180);
  assert.equal(profile.projectileLaunchOffsetX,24);
  assert.equal(profile.projectileLaunchOffsetY,-42);
+ assert.equal(profile.projectileTargetOffsetX,18);
+ assert.equal(profile.projectileTargetOffsetY,-12);
+ assert.equal(profile.projectileCollisionRadius,34);
 });
 
 test("plant combat profile rejects unsupported trajectory types",()=>{
