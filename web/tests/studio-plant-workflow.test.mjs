@@ -63,11 +63,33 @@ test("testing catalog is served directly from the Studio staging branch with pro
 });
 
 test("every registered asset can be opened for editing and metadata-only edits keep the current file", () => {
-  assert.match(studioPage, /onClick=\{\(\)=>beginReplace\(a\)\}>تعديل<\/button>/);
+  assert.match(studioPage, /onClick=\{\(\)=>beginReplace\(a\)\}[^>]*>تعديل<\/button>/);
   assert.match(studioPage, /required=\{!editing\}/);
   assert.match(studioPage, /if\(file\)form\.set\("file",file\)/);
   assert.match(assetsRoute, /const hasFile=Boolean\(file&&typeof file\.arrayBuffer/);
   assert.match(assetsRoute, /if\(!hasFile&&\(!replace\|\|!existing\)\)/);
   assert.match(assetsRoute, /path:hasFile\?"\/assets\/"\+relative:existing\.path/);
   assert.match(assetsRoute, /if\(hasFile\)await githubPutImmutable/);
+});
+
+test("Studio exposes editable projectile controls with per-field Arabic explanations",()=>{
+  for(const field of ["projectileSpeed","projectileHeight","projectileEffectColor","projectileRotation"]){
+    assert.ok(studioPage.includes(field));
+  }
+  for(const label of ["سرعة القذيفة","ارتفاع مسار القذيفة","لون تأثير القذيفة","زاوية دوران القذيفة"]){
+    assert.ok(studioPage.includes(label));
+  }
+  assert.match(studioPage,/studio-field-help/);
+  assert.match(assetsRoute,/projectileHeight/);
+  assert.match(assetsRoute,/projectileEffectColor/);
+  assert.match(assetsRoute,/projectileRotation/);
+  assert.match(battleScene,/projectileHeight/);
+  assert.match(battleScene,/projectileEffectColor/);
+  assert.match(battleScene,/projectileRotation/);
+});
+
+test("published Studio plants are included in the default seven-slot loadout",()=>{
+  assert.match(selector,/defaultStudioPlants = studioPlants\.map/);
+  assert.match(selector,/STARTER_LOADOUT, \.\.\.defaultStudioPlants/);
+  assert.match(selector,/MAX_SEEDS = 7/);
 });
