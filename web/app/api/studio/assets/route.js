@@ -276,6 +276,8 @@ export async function PATCH(req){
    return NextResponse.json({success:true,operation,asset:clone,message:"تم إنشاء نسخة جديدة كمسودة مستقلة."});
   }
   if(operation==="restore-version"){
+   const dependents=getAssetDependents(registry.assets,id);
+   if(dependents.length)return NextResponse.json({error:"لا يمكن استعادة إصدار هذا الأصل قبل معالجة الأصول التي تعتمد عليه: "+dependents.map(item=>item.assetName).join("، ")},{status:409});
    if(asset.releaseRequest?.number){
     if(driver!=="github")return NextResponse.json({error:"لا يمكن استعادة إصدار قبل التحقق من طلب النشر المرتبط."},{status:409});
     try{
@@ -293,7 +295,7 @@ export async function PATCH(req){
    await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(registry,null,2)+"\n"),"studio: restore "+id+" version "+body.versionNumber,token,storageBranch,registrySha);
    return NextResponse.json({success:true,operation,asset:updated,message:"تمت استعادة الإصدار كمسودة جديدة؛ يجب اختبارها قبل طلب النشر."});
   }
-  if(operation==="archive"||operation==="restore-version"){
+  if(operation==="archive"){
    const dependents=getAssetDependents(registry.assets,id);
    if(dependents.length)return NextResponse.json({error:"لا يمكن أرشفة هذا الأصل قبل معالجة الأصول التي تعتمد عليه: "+dependents.map(item=>item.assetName).join("، ")},{status:409});
   }
