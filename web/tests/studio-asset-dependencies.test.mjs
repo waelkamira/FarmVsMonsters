@@ -42,6 +42,11 @@ test("detects shared immutable files between cloned assets without blocking safe
   assert.match(report.warnings[0], /ينشئ مساراً جديداً/);
 });
 
+test("does not advertise archive for assets with an open release request", () => {
+  const assets = [{ id: "released", type: "plant", path: "/assets/plants/released.png", status: "testing", releaseRequest: { number: 42 } }];
+  const report = buildAssetDependencyReport(assets, "released");
+  assert.equal(report.canArchive, false);
+});
 test("reports unresolved explicit dependencies and missing assets", () => {
   const assets = [{ id: "tower", type: "plant", path: "/assets/plants/tower.png", dependencies: [{ id: "unknown-effect", relation: "impact-effect" }] }];
   const report = buildAssetDependencyReport(assets, "tower");
