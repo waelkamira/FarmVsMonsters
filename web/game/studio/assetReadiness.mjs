@@ -13,7 +13,9 @@ export function safeAssetPath(value) {
   if (!decoded.startsWith("/assets/") || /[?#\\\x00-\x1f\x7f]/.test(decoded)) return false;
   const segments = decoded.slice("/assets/".length).split("/");
   return segments.length > 0 && segments.every((segment) => segment.length > 0 && segment !== "." && segment !== "..");
-}\n\nexport function applyStudioAssetFileAudit(report, assets, statusByPath = {}) {
+}
+
+export function applyStudioAssetFileAudit(report, assets, statusByPath = {}) {
   const sourceById = new Map((Array.isArray(assets) ? assets : []).filter((asset) => asset?.id).map((asset) => [String(asset.id), asset]));
   const checkedPaths = new Set();
   const counts = { present: 0, missing: 0, unknown: 0 };
@@ -23,7 +25,6 @@ export function safeAssetPath(value) {
     const fileChecks = paths.map((assetPath) => {
       checkedPaths.add(assetPath);
       const status = statusByPath[assetPath] === "present" || statusByPath[assetPath] === "missing" ? statusByPath[assetPath] : "unknown";
-      counts[status] += 1;
       return { path: assetPath, status };
     });
     const errors = [...entry.errors];
@@ -35,6 +36,10 @@ export function safeAssetPath(value) {
     const readiness = entry.status === "archived" ? "excluded" : errors.length ? "blocked" : warnings.length ? "warning" : "ready";
     return { ...entry, readiness, errors: [...new Set(errors)], warnings: [...new Set(warnings)], fileChecks };
   });
+  for (const assetPath of checkedPaths) {
+    const status = statusByPath[assetPath] === "present" || statusByPath[assetPath] === "missing" ? statusByPath[assetPath] : "unknown";
+    counts[status] += 1;
+  }
   return {
     ...report,
     assets: auditedAssets,
