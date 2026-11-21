@@ -37,3 +37,18 @@ test("reports unresolved explicit dependencies and missing assets", () => {
   assert.equal(report.dependencies[0].resolved, false);
   assert.equal(report.unresolved.length, 1);
 });
+
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import path from "node:path";
+const here = path.dirname(fileURLToPath(import.meta.url));
+const routeSource = readFileSync(path.join(here, "../app/api/studio/assets/route.js"), "utf8");
+const detailsSource = readFileSync(path.join(here, "../app/studio/assets/[id]/page.js"), "utf8");
+test("Studio API guards replacement, archive and version restore when direct dependents exist", () => {
+  assert.match(routeSource, /getAssetDependents\(old\.assets,id\)/);
+  assert.match(routeSource, /getAssetDependents\(registry\.assets,id\)/);
+  assert.match(routeSource, /dependents\.length\)return NextResponse\.json/);
+});
+test("asset detail route imports the shared Studio stylesheet from the correct directory", () => {
+  assert.match(detailsSource, /import "\.\.\/\.\.\/studio\.css"/);
+});
