@@ -30,6 +30,14 @@ test("Studio asset library supports search and type/status filtering",()=>{
   assert.match(studioPage,/filteredAssets\.map/);
 });
 
+test("Studio can preview a selected Sprite Sheet row with adjustable playback speed",()=>{
+  assert.match(studioPage,/animationRow/);
+  assert.match(studioPage,/animationFps/);
+  assert.match(studioPage,/animationPlaying/);
+  assert.match(studioPage,/studio-sprite-play/);
+  assert.match(studioPage,/steps\(\$\{columns\}\)/);
+});
+
 test("Studio provides a live size preview for the selected or edited plant",()=>{
   assert.match(studioPage,/editingAsset\?\.previewUrl/);
   assert.match(studioPage,/studio-live-preview-stage/);
