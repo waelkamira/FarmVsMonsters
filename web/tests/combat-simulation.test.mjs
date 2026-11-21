@@ -424,3 +424,28 @@ test("Phaser registers Snow Thrower assets and freezes monsters without HP damag
   assert.match(scene, /freezeMonster\(hit, shot\.freezeDurationMs\)/);
   assert.match(scene, /restoreMonsterAfterFreeze/);
 });
+
+test("Studio plant profiles allow a new plant to use configured placement and its recorded refund", () => {
+  const config = { plantingEnergyCost: 62, hp: 230 };
+  const placed = resolvePlantPlacement({
+    energy: 150, plants: [], type: "bamboo-level-1", col: 3, row: 2,
+    columns: 8, rows: 5, customConfig: config
+  });
+  assert.equal(placed.ok, true);
+  assert.equal(placed.energy, 88);
+  assert.deepEqual(placed.plant, {
+    type: "bamboo-level-1", col: 3, row: 2, hp: 230,
+    alive: true, energyCost: 62
+  });
+  const uprooted = resolvePlantUproot({ energy: 88, plant: placed.plant });
+  assert.deepEqual(uprooted, {
+    ok: true, reason: "PLANT_UPROOTED", energy: 150, refund: 62
+  });
+});
+
+test("Studio placement rejects a missing or malformed custom combat profile", () => {
+  const base = { energy: 100, plants: [], type: "new-studio-plant", col: 0, row: 0, columns: 8, rows: 5 };
+  assert.equal(resolvePlantPlacement(base).reason, "UNKNOWN_PLANT_TYPE");
+  assert.equal(resolvePlantPlacement({ ...base, customConfig: { plantingEnergyCost: -1, hp: 20 } }).reason, "UNKNOWN_PLANT_TYPE");
+  assert.equal(resolvePlantPlacement({ ...base, customConfig: { plantingEnergyCost: 10, hp: 0 } }).reason, "UNKNOWN_PLANT_TYPE");
+});

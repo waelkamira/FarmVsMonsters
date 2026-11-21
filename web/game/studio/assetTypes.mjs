@@ -9,6 +9,11 @@ export const STUDIO_ASSET_TYPES=Object.freeze({
 });
 export const STUDIO_MAX_UPLOAD_BYTES=8*1024*1024;
 export const STUDIO_ID_PATTERN=/^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+export const STUDIO_RESERVED_PLANT_IDS=Object.freeze([
+ "radish","mushroom","energy-mushroom","pumpkin","pumpkin-guard",
+ "pineapple","hazelnut","mango","snow-thrower","pea-shooter","thorn-wall",
+ "sunflower","ice-bloom","double-radish","explosive-berry","fire-pepper"
+]);
 export function validateStudioAsset({id,type,file,rows=3,columns=3}){
  const errors=[],config=STUDIO_ASSET_TYPES[type];
  if(!config)errors.push("Unsupported asset category.");
