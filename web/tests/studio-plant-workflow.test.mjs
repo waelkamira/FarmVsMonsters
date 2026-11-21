@@ -10,6 +10,13 @@ const battleScene = read("../game/scenes/BattleScene.js");
 const selector = read("../app/stage/1/select/page.js");
 const syncScript = read("../scripts/sync-studio-test-assets.mjs");
 
+test("Studio supports safe duplication for every registered asset type",()=>{
+  assert.match(studioPage,/async function cloneAsset\(asset\)/);
+  assert.match(studioPage,/onClick=\{\(\)=>cloneAsset\(a\)\}/);
+  assert.match(assetsRoute,/operation==="clone"/);
+  assert.match(assetsRoute,/cloneStudioAsset\(asset,newId,body\.newName\)/);
+});
+
 test("Studio exposes archive and restore actions for every asset type",()=>{
   assert.match(studioPage,/a\.status==="archived"&&<button[^>]*transitionAsset\(a,"restore"\)/);
   assert.match(studioPage,/\(a\.status==="draft"\|\|a\.status==="testing"\)&&<button[^>]*transitionAsset\(a,"archive"\)/);
