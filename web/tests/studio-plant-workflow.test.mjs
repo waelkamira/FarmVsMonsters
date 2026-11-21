@@ -17,6 +17,13 @@ test("Studio asset library supports search and type/status filtering",()=>{
   assert.match(studioPage,/filteredAssets\.map/);
 });
 
+test("Studio provides a live size preview for the selected or edited plant",()=>{
+  assert.match(studioPage,/editingAsset\?\.previewUrl/);
+  assert.match(studioPage,/studio-live-preview-stage/);
+  assert.match(studioPage,/scale\(\$\{plantSizePercent\/100\}\)/);
+  assert.match(studioPage,/setEditingAsset\(asset\)/);
+});
+
 test("Studio exposes plant size and applies it in the Phaser runtime",()=>{
   assert.match(studioPage,/plantSizePercent/);
   assert.match(studioPage,/حجم النبتة/);
