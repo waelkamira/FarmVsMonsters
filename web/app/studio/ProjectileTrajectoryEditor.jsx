@@ -9,7 +9,7 @@ export default function ProjectileTrajectoryEditor({imageUrl,plantUrl,frameCount
  const [imageSize,setImageSize]=useState({width:1,height:1});
  useEffect(()=>{if(!imageUrl)return;const image=new window.Image();image.onload=()=>setImageSize({width:image.naturalWidth,height:image.naturalHeight});image.src=imageUrl;return()=>{image.onload=null;};},[imageUrl]);
  useEffect(()=>{if(!playing)return;let last=0;let frame=0;const tick=now=>{if(!last)last=now;const dt=Math.min(64,now-last);last=now;setProgress(p=>{const n=p+dt*Math.max(0.05,speed)/18000;return n>=1?0:n;});frame=requestAnimationFrame(tick);};frame=requestAnimationFrame(tick);return()=>cancelAnimationFrame(frame);},[playing,speed]);
- useEffect(()=>{if(!playing)setProgress(0);},[playing,path,curveX,curveY,launchX,launchY]);
+ useEffect(()=>{if(!playing)setProgress(0);},[playing,path,curveX,curveY,launchX,launchY,targetX,targetY]);
  const start={x:86+clamp(launchX,-70,70)*.55,y:168-clamp(launchY,-120,120)*.55};
  const baseEnd={x:520,y:164};
  const end={x:baseEnd.x+clamp(targetX,-100,100)*.55,y:baseEnd.y-clamp(targetY,-100,100)*.55};
