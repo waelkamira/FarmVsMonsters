@@ -190,9 +190,9 @@ export async function POST(req){
   if(selectedProjectileAsset&&(!selectedProjectileAsset.path?.startsWith("/assets/")||selectedProjectileAsset.path.includes("..")))return NextResponse.json({error:"مسار القذيفة المحددة غير صالح."},{status:400});
   const currentProjectile=behavior==="projectile"
     ?(hasProjectile
-      ?{id:id+"-projectile",filename:id+"-projectile"+ext(projectileFile.type),path:"/assets/"+createImmutableAssetPath("projectiles/plants",id+"-projectile",ext(projectileFile.type),projectileBytes)}
+      ?{id:id+"-projectile",filename:id+"-projectile"+ext(projectileFile.type),path:"/assets/"+createImmutableAssetPath("projectiles/plants",id+"-projectile",ext(projectileFile.type),projectileBytes),managed:false}
       :(selectedProjectileAsset
-        ?{id:selectedProjectileAsset.id,filename:selectedProjectileAsset.filename,path:selectedProjectileAsset.path}
+        ?{id:selectedProjectileAsset.id,filename:selectedProjectileAsset.filename,path:selectedProjectileAsset.path,managed:true}
         :(removeProjectile?null:(existing?.combat?.mode==="projectile"?existing.combat.projectile:null))))
     :null;
   try{combatProfile=readCombatForm(form,currentProjectile,existing);}catch(error){return NextResponse.json({error:error.message},{status:400});}
