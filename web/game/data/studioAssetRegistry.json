@@ -42,8 +42,11 @@
       "rows": 3,
       "columns": 3,
       "spriteSheet": false,
-      "status": "draft",
-      "createdAt": "2026-11-20T16:17:42.668Z"
+      "status": "archived",
+      "createdAt": "2026-11-20T16:17:42.668Z",
+      "archivedAt": "2026-11-21T21:59:29.097Z",
+      "updatedAt": "2026-11-21T21:59:29.097Z",
+      "releaseRequest": null
     },
     {
       "id": "bamboo-level-1",
