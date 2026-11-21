@@ -10,6 +10,20 @@ const battleScene = read("../game/scenes/BattleScene.js");
 const selector = read("../app/stage/1/select/page.js");
 const syncScript = read("../scripts/sync-studio-test-assets.mjs");
 
+test("Studio exposes plant size and applies it in the Phaser runtime",()=>{
+  assert.match(studioPage,/plantSizePercent/);
+  assert.match(studioPage,/حجم النبتة/);
+  assert.match(assetsRoute,/sizePercent/);
+  assert.match(battleScene,/studioPlant\.combat\?\.sizePercent/);
+});
+
+test("all built-in plants are unlocked in the current roster while loadout remains capped at seven",()=>{
+  assert.match(selector,/nextPlants\.map\(\(plant\) => plant\.id\)/);
+  assert.match(selector,/MAX_SEEDS = 7/);
+  assert.match(battleScene,/const PLAYTEST_ALL_PLANTS = true/);
+  assert.match(battleScene,/\.slice\(0, 7\)/);
+});
+
 test("Studio requires manual behavior selection and only links a projectile in projectile mode", () => {
   assert.match(studioPage, /projectileFile/);
   assert.match(studioPage, /required value=\{behavior\}/);
