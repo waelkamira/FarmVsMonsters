@@ -237,6 +237,7 @@ export async function PATCH(req){
   try{
    const registry=await localRegistry(),index=registry.assets.findIndex(asset=>asset.id===id);
    if(index<0)return NextResponse.json({error:"لم يتم العثور على الأصل في مكتبة Studio."},{status:404});
+   if(operation==="restore-version"&&registry.assets[index].releaseRequest?.number)return NextResponse.json({error:"لا يمكن استعادة إصدار مرتبط بطلب نشر قبل التحقق من حالته."},{status:409});
    if(operation==="archive"||operation==="restore-version"){
     const dependents=getAssetDependents(registry.assets,id);
     if(dependents.length)return NextResponse.json({error:"لا يمكن تنفيذ العملية قبل معالجة الأصول التي تعتمد على هذا الأصل: "+dependents.map(item=>item.assetName).join("، ")},{status:409});
@@ -285,14 +286,8 @@ export async function PATCH(req){
      if(asset.releaseRequest?.state==="open")return NextResponse.json({error:"هناك طلب مراجعة نشر مفتوح لهذا الأصل. انتظر إغلاقه قبل استعادة إصدار."},{status:409});
     }catch(error){return NextResponse.json({error:error.message||"تعذر التحقق من طلب النشر الحالي."},{status:502});}
    }
-   let candidate=asset;
-   if(asset.releaseRequest?.number){
-    const previousRequest=await githubGetPullRequest(asset.releaseRequest.number,token);
-    if(previousRequest?.state==="open")return NextResponse.json({error:"أغلق طلب مراجعة النشر المفتوح أولاً قبل استعادة إصدار آخر."},{status:409});
-    candidate={...asset,releaseRequest:null};
-   }
    let updated;
-   try{updated=restoreStudioAssetRevision(candidate,body.versionNumber);}
+   try{updated=restoreStudioAssetRevision(asset,body.versionNumber);}
    catch(error){return NextResponse.json({error:error.message},{status:409});}
    registry.assets[index]=updated;
    await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(registry,null,2)+"\n"),"studio: restore "+id+" version "+body.versionNumber,token,storageBranch,registrySha);
