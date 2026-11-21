@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useSyncExternalStore, useState } from "react";
 import { useLocale, LanguageToggle } from "../LocaleProvider";
+import { readStorageSnapshot, subscribeToBrowserStorage } from "../../game/hooks/browserStorage.mjs";
 
 const controls = [
   { key: "musicVolume", label: "Background music", labelAr: "الموسيقى الخلفية", icon: "🎵", initial: 70 },
@@ -13,24 +14,15 @@ const controls = [
 export default function SettingsPage() {
   const { t, locale } = useLocale();
   const ar = locale === "ar";
-  const [values, setValues] = useState({ musicVolume: 70, effectsVolume: 80, projectileVolume: 65 });
-  const [ready, setReady] = useState(false);
-
-  useEffect(() => {
-    const next = {};
-    controls.forEach(({ key, initial }) => {
-      const raw = window.localStorage.getItem("farmVsMonsters.audio." + key);
-      const stored = Number(raw);
-      next[key] = raw !== null && Number.isFinite(stored) ? Math.max(0, Math.min(100, stored)) : initial;
-    });
-    setValues(next);
-    setReady(true);
-  }, []);
+  const settingsSnapshot = useSyncExternalStore(subscribeToBrowserStorage, getSettingsSnapshot, () => SETTINGS_SERVER_SNAPSHOT);
+  const { values, ready } = JSON.parse(settingsSnapshot);
+  const [localValues, setLocalValues] = useState(values);
 
   function changeVolume(key, value) {
     const volume = Number(value);
-    setValues((current) => ({ ...current, [key]: volume }));
+    setLocalValues((current) => ({ ...current, [key]: volume }));
     window.localStorage.setItem("farmVsMonsters.audio." + key, String(volume));
+    window.dispatchEvent(new Event("farm-storage-change"));
   }
 
   return (
@@ -56,9 +48,9 @@ export default function SettingsPage() {
           {controls.map(({key,label,labelAr,icon}) => (
             <label className="codex-volume-row" key={key}>
               <span className="codex-volume-icon" aria-hidden="true">{icon}</span>
-              <span className="codex-volume-copy"><strong>{ar ? labelAr : t(label)}</strong><small>{values[key] === 0 ? (ar ? "صامت" : "Muted") : (ar ? "مستوى الصوت" : "Volume level")}</small></span>
-              <input aria-label={ar ? labelAr : t(label)} type="range" min="0" max="100" step="1" value={values[key]} disabled={!ready} onChange={(e) => changeVolume(key,e.target.value)} />
-              <output>{values[key]}%</output>
+              <span className="codex-volume-copy"><strong>{ar ? labelAr : t(label)}</strong><small>{localValues[key] === 0 ? (ar ? "صامت" : "Muted") : (ar ? "مستوى الصوت" : "Volume level")}</small></span>
+              <input aria-label={ar ? labelAr : t(label)} type="range" min="0" max="100" step="1" value={localValues[key]} disabled={!ready} onChange={(e) => changeVolume(key,e.target.value)} />
+              <output>{localValues[key]}%</output>
             </label>
           ))}
         </div>
