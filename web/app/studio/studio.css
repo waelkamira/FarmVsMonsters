@@ -37,3 +37,5 @@
 .studio-asset-row button:nth-last-child(1){border-color:#719b65;background:#294126;color:#d8f3c8}
 
 .studio-field-help{display:block;color:#b9aa86;font-size:11px;line-height:1.55;font-weight:400}.studio-combat-settings label>span{color:#f1e4c5;font-weight:700}.studio-combat-settings input[type=color]{width:100%;min-height:42px;padding:4px;border:1px solid #655333;border-radius:8px;background:#17160f;cursor:pointer}.studio-combat-settings input[type=number]{width:100%;min-width:0}
+
+.studio-library-filters{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(130px,1fr) minmax(130px,1fr);gap:9px;margin:0 0 12px;padding:11px;border:1px solid #51432d;border-radius:10px;background:#17170f}.studio-library-filters label{min-width:0}.studio-library-filters input,.studio-library-filters select{width:100%;min-width:0;background:#17160f;border:1px solid #655333;color:#fff1ce;padding:9px;border-radius:8px}@media(max-width:560px){.studio-library-filters{grid-template-columns:1fr}}
