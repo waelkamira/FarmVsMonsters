@@ -11,14 +11,23 @@ import {
   restoreOrInitializeCloudProgress
 } from "../../game/services/playerAccount.mjs";
 
+let observedLocationSearch;
+
 function subscribeToLocation(callback) {
   if (typeof window === "undefined") return () => {};
-  window.addEventListener("popstate", callback);
-  return () => window.removeEventListener("popstate", callback);
+  const onPopState = () => {
+    observedLocationSearch = window.location.search;
+    callback();
+  };
+  window.addEventListener("popstate", onPopState);
+  return () => window.removeEventListener("popstate", onPopState);
 }
 
 function getLocationSearch() {
-  return window.location.search;
+  if (observedLocationSearch === undefined) {
+    observedLocationSearch = window.location.search;
+  }
+  return observedLocationSearch;
 }
 
 export default function AccountPage() {
