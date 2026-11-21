@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { getProjectileTrajectoryOffset, getProjectileLaunchPoint } from "../../game/studio/projectileTrajectory.mjs";
+import gridCalibration from "../../game/data/farm-grid-calibration.json";
 
 const clamp=(v,min,max)=>Math.min(max,Math.max(min,Number(v)||0));
 const BOARD={width:840,height:525,columns:8,rows:5,cellSize:105};
@@ -51,7 +52,13 @@ export default function ProjectileTrajectoryEditor({
  const safePlantFrame=Math.min(Math.max(0,plantFrameCount-1),plantFrame);
  const plantColumn=safePlantFrame%Math.max(1,plantColumns),plantRow=Math.floor(safePlantFrame/Math.max(1,plantColumns));
  const plantFrameWidth=plantImageSize.width/Math.max(1,plantColumns),plantFrameHeight=plantImageSize.height/Math.max(1,plantRows);
- const plantScale=clamp(plantSizePercent,25,200)/100,plantHeight=88*plantScale,plantWidth=Math.min(plantHeight*(plantFrameWidth/Math.max(1,plantFrameHeight)),100*plantScale);
+ const plantScale=clamp(plantSizePercent,25,200)/100;
+ const previewRow=2;
+ const laneCenters=gridCalibration.grid.controlPoints.map((row,index)=>index<gridCalibration.grid.rows?(row[0].y+gridCalibration.grid.controlPoints[index+1][0].y)/2:null).filter(Number.isFinite);
+ const previewLaneGap=laneCenters[previewRow+1]-laneCenters[previewRow];
+ const plantPerspective=clamp(previewLaneGap/54,.62,1.08);
+ const plantHeight=88*plantPerspective*plantScale;
+ const plantWidth=Math.min(plantHeight*(plantFrameWidth/Math.max(1,plantFrameHeight)),100*plantPerspective*plantScale);
  const pointerPosition=e=>{const svg=e.currentTarget;const rect=svg.getBoundingClientRect();return{x:(e.clientX-rect.left)*BOARD.width/rect.width,y:(e.clientY-rect.top)*BOARD.height/rect.height};};
  const movePointer=e=>{if(!drag)return;const p=pointerPosition(e);if(drag.type==="launch"){setLaunchX(Math.round(clamp(p.x-laneOrigin.x,-300,300)));setLaunchY(Math.round(clamp(p.y-laneOrigin.y,-300,300)));return;}if(drag.type==="waypoint"){const t=normalizedPoints[drag.index]?.progress;if(t==null)return;const base=baseAt(t),correction=headCorrectionAt(t);const next=normalizedPoints.map((item,index)=>index===drag.index?{...item,x:Math.round(clamp((p.x-base.x-correction.x),-1000,1000)),y:Math.round(clamp((base.y+correction.y-p.y),-1000,1000))}:item);setPoints(next);}};
  const addWaypoint=e=>{const p=pointerPosition(e);const t=clamp((p.x-start.x)/(end.x-start.x),.02,.98);if(normalizedPoints.length>=18||normalizedPoints.some(item=>Math.abs(item.progress-t)<.005))return;const base=baseAt(t),correction=headCorrectionAt(t);const next=[...normalizedPoints,{progress:Number(t.toFixed(3)),x:Math.round(clamp((p.x-base.x-correction.x),-1000,1000)),y:Math.round(clamp((base.y+correction.y-p.y),-1000,1000))}].sort((a,b)=>a.progress-b.progress);setPoints(next);setSelectedPoint(next.findIndex(item=>item.progress===Number(t.toFixed(3))));};
@@ -74,7 +81,7 @@ export default function ProjectileTrajectoryEditor({
    {plantUrl&&<svg x={plantAnchor.x-plantWidth/2} y={plantAnchor.y-plantHeight+2} width={plantWidth} height={plantHeight} viewBox={`${plantColumn*plantFrameWidth} ${plantRow*plantFrameHeight} ${plantFrameWidth} ${plantFrameHeight}`} preserveAspectRatio="xMidYMid meet" overflow="hidden"><image href={plantUrl} x="0" y="0" width={plantImageSize.width} height={plantImageSize.height} preserveAspectRatio="none"/></svg>}
    {!plantUrl&&<g><circle cx={plantAnchor.x} cy={plantAnchor.y-30} r="30" fill="#72bd54"/><path d="M100 232Q58 188 68 170Q96 172 103 212Q113 176 140 179Q143 208 104 233" fill="#9cdb70"/></g>}
    <circle cx={start.x} cy={start.y} r="15" fill="#37c990" stroke="#fff" strokeWidth="3" style={{cursor:"move"}} onPointerDown={e=>{e.stopPropagation();e.currentTarget.ownerSVGElement.setPointerCapture(e.pointerId);setDrag({type:"launch"});}}/>
-   <text x={start.x+18} y={start.y-15} fill="#fff" fontSize="13">موضع الإطلاق</text>
+   <text x={start.x+18} y={start.y-15} fill="#fff" fontSize="13">فوهة الإطلاق · اسحبها</text>
    {normalizedPoints.map((item,index)=>{if(index===0)return null;const p=pointAt(item.progress);return <g key={index}><circle cx={p.x} cy={p.y} r={selectedPoint===index?12:9} fill={index===0||index===normalizedPoints.length-1?"#35c98a":"#4dc6e8"} stroke="#fff" strokeWidth="2" style={{cursor:"grab"}} onPointerDown={e=>{e.stopPropagation();e.currentTarget.ownerSVGElement.setPointerCapture(e.pointerId);setSelectedPoint(index);setDrag({type:"waypoint",index});}}/><text x={p.x} y={p.y-17} fill="#fff" fontSize="11" textAnchor="middle">{index+1}</text></g>;})}
    {progress<1&&imageUrl&&<svg x={current.x-24} y={current.y-24} width="48" height="48" style={{cursor:progress===0?"grab":"default"}} onPointerDown={e=>{if(progress>0.001)return;e.stopPropagation();e.currentTarget.ownerSVGElement.setPointerCapture(e.pointerId);setDrag({type:"launch"});}} viewBox={`${frameColumn*frameWidth} ${frameRow*frameHeight} ${frameWidth} ${frameHeight}`} preserveAspectRatio="xMidYMid meet" overflow="hidden" transform={`rotate(${rotation} ${current.x} ${current.y} )`}><image href={imageUrl} x="0" y="0" width={imageSize.width} height={imageSize.height} preserveAspectRatio="none"/></svg>}
    {!imageUrl&&progress<1&&<circle cx={current.x} cy={current.y} r="13" fill="#ffc247" stroke="#fff1c1" strokeWidth="2"/>}
