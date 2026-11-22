@@ -77,3 +77,12 @@ test("preserves uncertain and reconstructed occlusion as explicit warnings", () 
   assert.ok(result.warnings.some((warning) => warning.code === "generated-pixels"));
   assert.ok(result.warnings.some((warning) => warning.code === "unknown-role"));
 });
+
+test("rejects a muzzle anchor that references a missing or non-weapon part", () => {
+  const missing = baseInput();
+  missing.anchors = { muzzle: { partId: "missing-weapon", x: 220, y: 136 } };
+  assert.throws(() => buildAutoRigFromParts(missing), /missing weapon part/);
+  const wrongRole = baseInput();
+  wrongRole.anchors = { muzzle: { partId: "body-main", x: 128, y: 120 } };
+  assert.throws(() => buildAutoRigFromParts(wrongRole), /weapon or weapon-barrel/);
+});
