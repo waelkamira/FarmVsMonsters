@@ -203,3 +203,12 @@ test("rigged projectile assets require the standard muzzle attachment", () => {
   assert.match(routeSource, /نقطة تثبيت باسم muzzle/);
   assert.match(routeSource, /النبتة ذات الهيكل تحتاج نقطة تثبيت باسم muzzle/);
 });
+
+test("Rig Editor supports canvas zoom/pan, direct attachment handles, presets, and FPS", () => {
+  const editor = readFileSync(path.join(here, "../app/studio/RigEditor.jsx"), "utf8");
+  assert.match(editor, /function handleWheel/);
+  assert.match(editor, /تحريك مساحة العمل/);
+  assert.match(editor, /updateToolPosition/);
+  assert.match(editor, /applyPreset/);
+  assert.match(editor, /updateClip\("fps"/);
+});
