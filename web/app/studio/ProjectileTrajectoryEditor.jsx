@@ -1,11 +1,26 @@
 "use client";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { getProjectileTrajectoryOffset, getProjectileLaunchPoint } from "../../game/studio/projectileTrajectory.mjs";
 import gridCalibration from "../../game/data/farm-grid-calibration.json";
 
 const clamp=(v,min,max)=>Math.min(max,Math.max(min,Number(v)||0));
 const BOARD={width:840,height:525,columns:8,rows:5,cellSize:105};
 const DEFAULT_POINTS=[{progress:0,x:0,y:0},{progress:.5,x:0,y:110},{progress:1,x:0,y:0}];
+function createFrameClock({enabled,first,last,fps}){
+ let frame=first,timer=null;
+ const listeners=new Set();
+ const emit=()=>listeners.forEach(listener=>listener());
+ return {
+  subscribe(listener){
+   if(!enabled)return()=>{};
+   listeners.add(listener);
+   if(!timer&&last>first)timer=window.setInterval(()=>{frame=frame>=last?first:frame+1;emit();},1000/Math.max(1,fps||1));
+   return()=>{listeners.delete(listener);if(!listeners.size&&timer){window.clearInterval(timer);timer=null;}};
+  },
+  getSnapshot:()=>frame,
+  getServerSnapshot:()=>first
+ };
+}
 export default function ProjectileTrajectoryEditor({
  imageUrl,plantUrl,frameCount=1,rows=1,columns=1,
  plantFrameCount=1,plantRows=1,plantColumns=1,plantSizePercent=100,
@@ -24,6 +39,10 @@ export default function ProjectileTrajectoryEditor({
  const [imageSize,setImageSize]=useState({width:1,height:1});
  const [plantImageSize,setPlantImageSize]=useState({width:1,height:1});
  const [plantFrame,setPlantFrame]=useState(clamp(idleStartFrame,0,Math.max(0,plantFrameCount-1)));
+ const plantFrameLast=Math.max(0,plantFrameCount-1);
+ const plantFrameClock=useMemo(()=>createFrameClock({enabled:plantPlaying,first:clamp(idleStartFrame,0,plantFrameLast),last:plantFrameLast,fps:plantFps}),[plantPlaying,idleStartFrame,plantFrameLast,plantFps]);
+ const animatedPlantFrame=useSyncExternalStore(plantFrameClock.subscribe,plantFrameClock.getSnapshot,plantFrameClock.getServerSnapshot);
+ const displayPlantFrame=plantPlaying?animatedPlantFrame:Math.min(plantFrameLast,Math.max(0,plantFrame));
  const [plantPlaying,setPlantPlaying]=useState(false);
  const [projectileFrame,setProjectileFrame]=useState(0);
  const [projectilePlaying,setProjectilePlaying]=useState(false);
@@ -52,7 +71,7 @@ export default function ProjectileTrajectoryEditor({
  const frameIndex=Math.min(Math.max(1,frameCount)-1,projectileFrame);
  const frameColumn=frameIndex%Math.max(1,columns),frameRow=Math.floor(frameIndex/Math.max(1,columns));
  const frameWidth=imageSize.width/Math.max(1,columns),frameHeight=imageSize.height/Math.max(1,rows);
- const safePlantFrame=Math.min(Math.max(0,plantFrameCount-1),plantFrame);
+ const safePlantFrame=displayPlantFrame;
  const plantColumn=safePlantFrame%Math.max(1,plantColumns),plantRow=Math.floor(safePlantFrame/Math.max(1,plantColumns));
  const plantFrameWidth=plantImageSize.width/Math.max(1,plantColumns),plantFrameHeight=plantImageSize.height/Math.max(1,plantRows);
  const plantScale=clamp(plantSizePercent,25,200)/100;
@@ -95,7 +114,7 @@ export default function ProjectileTrajectoryEditor({
   </svg>
   <label className="studio-motion-progress">موضع القذيفة على المسار<input type="range" min="0" max="1000" step="1" value={Math.round(progress*1000)} onChange={e=>{setPlaying(false);setProgress(Number(e.target.value)/1000);}}/><span>{Math.round(progress*100)}%</span></label>
   <div className="studio-motion-toolbar">
-   <div className="studio-motion-frame-controls"><b>معاينة إطارات النبتة</b><div className="studio-trajectory-actions"><button type="button" onClick={()=>setPlantFrame(0)}>الأول</button><button type="button" onClick={previousFrame}>◀ السابق</button><span>الإطار {plantFrame+1} / {Math.max(1,plantFrameCount)}</span><button type="button" onClick={nextFrame}>التالي ▶</button><button type="button" onClick={()=>setPlantFrame(Math.max(0,plantFrameCount-1))}>الأخير</button><button type="button" onClick={()=>setPlantPlaying(v=>!v)}>{plantPlaying?"إيقاف":"تشغيل الإطارات"}</button></div></div>
+   <div className="studio-motion-frame-controls"><b>معاينة إطارات النبتة</b><div className="studio-trajectory-actions"><button type="button" onClick={()=>setPlantFrame(0)}>الأول</button><button type="button" onClick={previousFrame}>◀ السابق</button><span>الإطار {displayPlantFrame+1} / {Math.max(1,plantFrameCount)}</span><button type="button" onClick={nextFrame}>التالي ▶</button><button type="button" onClick={()=>setPlantFrame(Math.max(0,plantFrameCount-1))}>الأخير</button><button type="button" onClick={()=>setPlantPlaying(v=>!v)}>{plantPlaying?"إيقاف":"تشغيل الإطارات"}</button></div></div>
    <div className="studio-motion-frame-controls"><b>معاينة إطارات القذيفة</b><div className="studio-trajectory-actions"><button type="button" onClick={()=>setProjectileFrame(0)}>الأول</button><button type="button" onClick={()=>setProjectileFrame(frame=>Math.max(0,frame-1))}>◀</button><span>الإطار {projectileFrame+1} / {Math.max(1,frameCount)}</span><button type="button" onClick={()=>setProjectileFrame(frame=>Math.min(Math.max(0,frameCount-1),frame+1))}>التالي ▶</button><button type="button" onClick={()=>setProjectileFrame(Math.max(0,frameCount-1))}>الأخير</button><button type="button" onClick={()=>setProjectilePlaying(value=>{if(!value)setProjectileFrame(0);return !value;})}>{projectilePlaying?"إيقاف الإطارات":"تشغيل الإطارات"}</button></div><label className="studio-motion-fps">سرعة إطارات القذيفة<input type="range" min="1" max="24" value={projectileFps} onChange={e=>setProjectileFps(Number(e.target.value))}/><span>{projectileFps} FPS</span></label></div>
   </div>
   <div className="studio-grid studio-motion-settings">
