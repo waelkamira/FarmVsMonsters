@@ -1380,3 +1380,8 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - Prompt coordinates must be actual finite numeric source-space values; string/null coercion is rejected at both the authenticated API proxy and local worker.
 - Prompt labels must be integer 0/1 values, and every segmentation request must include at least one positive (inside-target) point. Negative points remain optional and refine exclusions.
 - Added worker and route-contract tests for strict coordinate/label validation and positive-point requirements.
+
+
+## 2026-11-22 — Latest point-prompt validation run
+- Auto-Rig subsystem run `45032986956` passed on commit `e11bbe2`: all Auto-Rig/worker protocol/quality/publish/Rig Library tests, Python worker tests (including fake-predictor point segmentation), focused ESLint, full-project ESLint diagnostic step, and Next.js production build.
+- The point-prompt pipeline now enforces numeric finite coordinates, integer binary labels, a positive target point, and optional negative exclusion points at both API and worker boundaries.
