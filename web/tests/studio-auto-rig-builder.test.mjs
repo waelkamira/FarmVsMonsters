@@ -176,3 +176,11 @@ test("shares one versioned semantic role dictionary between the builder and Stud
   assert.ok(AUTO_RIG_ROLE_OPTIONS.some((option) => option.value === "weapon.muzzle"));
   assert.ok(!result.warnings.some((warning) => warning.code === "unknown-role" && warning.partId === "muzzle-region"));
 });
+
+
+test("flags generated pixel provenance even when occlusion is not separately marked", () => {
+  const input = baseInput();
+  input.parts[0].provenance = { segmentation: "model-mask", pixels: "reconstructed" };
+  const result = buildAutoRigFromParts(input);
+  assert.ok(result.warnings.some((warning) => warning.code === "generated-pixels" && warning.partId === "body-main"));
+});
