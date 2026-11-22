@@ -49,7 +49,7 @@ These components are not separate products. They are feature workspaces inside t
 | Asset revisions | `assetVersions.mjs` | Present; combat, animation, rig, monster and dependency snapshots are represented | Verify complete lifecycle in browser and release path |
 | Asset readiness | `assetReadiness.mjs` | Present; contract/readiness and file audit states | Actual image decode, dimensions and frame inspection still require distinct proof |
 | Release lifecycle | `releaseLifecycle.mjs` | Present; release state transitions and branch naming | Multi-file atomicity, PR lifecycle and failure recovery need end-to-end proof |
-| Registry concurrency | `registryConcurrency.mjs` | Expected-SHA conflict helper present | Confirm all write paths enforce it and that conflict UI preserves edits |
+| Registry concurrency | `registryConcurrency.mjs` | Expected-SHA conflict helper present | GitHub asset-registry writes use expected SHA in several paths; local POST/PATCH paths do not demonstrate concurrency protection; verify all mutations and conflict UI |
 | Plant profile | `plantProfiles.mjs` | Present | Verify each editable field affects live Phaser behavior |
 | Monster profile | `monsterProfiles.mjs` | Present | Current supported behavior models are bounded; new AI behaviors require engine work |
 | Animation profiles | `animationProfiles.mjs` | Present | Browser authoring and actual battle playback not verified here |
@@ -97,7 +97,7 @@ Auto-Rig generates a proposal; it does not bypass human review, validation, asse
 | Economy & Monetization | Future workspace | Costs, rewards, prices, validation | Planned/incomplete |
 | Simulation & Balance Lab | Future workspace | Deterministic scenarios, battle engine, metrics | Current Testing Lab is a readiness audit, not this system |
 | Localization & Accessibility | Future workspace | String catalogs, RTL, accessibility options | Design requirement; comprehensive Studio management not evidenced |
-| Release Manager | Release lifecycle + UI | Version package, PR, approval, activation, rollback | Partial source; atomic release and full UI workflow unverified |
+| Release Manager | Release lifecycle + UI | Version package, PR, approval, activation, rollback | **Unsafe/incomplete on current main:** PATCH publish writes directly to target branch (default main), then syncs registry separately; no PR created by this route; atomic release unverified |
 | Operations & Analytics | Future workspace | Runtime telemetry, incidents, privacy | Planned/incomplete |
 | AI Assistant | Future workspace | Proposals, plans, tests, approvals | Planned; Auto-Rig is a bounded specialized tool, not the general assistant |
 | Settings & Security | Session/API | Auth, roles, audit, integrations | Basic signed admin session exists; full RBAC/audit administration incomplete |
