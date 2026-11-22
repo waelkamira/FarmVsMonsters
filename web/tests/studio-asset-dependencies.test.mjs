@@ -221,3 +221,14 @@ test("rig part serialization treats static assets as a single frame", () => {
   assert.match(routeSource, /function getRigPartFrameCount\(part\)\{if\(!part\?\.spriteSheet\)return 1/);
   assert.match(routeSource, /frameCount:getRigPartFrameCount\(part\)/);
 });
+
+test("BattleScene advances rigged monsters through move, hit, freeze, and thaw states", () => {
+  assert.match(battleSceneSource, /monster\.hyenaSprite \|\| monster\.studioRig/);
+  assert.match(battleSceneSource, /monster\.studioRig\?\.root\?\.active/);
+  assert.match(battleSceneSource, /stopStudioSkeletalRig\(rig, true\)/);
+  assert.match(battleSceneSource, /restoreClip = rig\.profile\.clips\.find/);
+});
+test("rigged projectile launch never silently falls back when muzzle is missing", () => {
+  assert.match(battleSceneSource, /if \(skeletalRig && !muzzle\)/);
+  assert.match(battleSceneSource, /Rigged projectile plant has no valid muzzle attachment/);
+});
