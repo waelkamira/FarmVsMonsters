@@ -13,6 +13,7 @@ function polygonBounds(points) {
   const right = Math.ceil(Math.max(...xs)), bottom = Math.ceil(Math.max(...ys));
   return { x, y, width: Math.max(1, right - x), height: Math.max(1, bottom - y) };
 }
+function imageFromDataUrl(url) { return new Promise((resolve, reject) => { const image = new Image(); image.onload = () => resolve(image); image.onerror = () => reject(new Error("تعذر تحميل صورة إعادة البناء.")); image.src = url; }); }
 function canvasBlob(canvas) {
   return new Promise((resolve, reject) => canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error("تعذر إنشاء صورة الجزء المقصوص.")), "image/png"));
 }
@@ -57,6 +58,9 @@ export default function AutoRigBuilderPanel({
   const [occlusionMode, setOcclusionMode] = useState(false);
   const [occlusionPoints, setOcclusionPoints] = useState([]);
   const [occlusionTargetPartId, setOcclusionTargetPartId] = useState("");
+  const [donorMode, setDonorMode] = useState(false);
+  const [donorPoints, setDonorPoints] = useState([]);
+  const [donorTargetPartId, setDonorTargetPartId] = useState("");
   const [busy, setBusy] = useState(false);
   const [generated, setGenerated] = useState(false);
   const [qualityReport, setQualityReport] = useState(null);
@@ -107,6 +111,9 @@ export default function AutoRigBuilderPanel({
       setOcclusionMode(false);
       setOcclusionPoints([]);
       setOcclusionTargetPartId("");
+      setDonorMode(false);
+      setDonorPoints([]);
+      setDonorTargetPartId("");
       draggingVertex.current = null;
       setAiProposals([]);
       setAiProposalRoles({});
@@ -418,6 +425,10 @@ export default function AutoRigBuilderPanel({
       setOcclusionPoints((current) => [...current, { x, y }]);
       return;
     }
+    if (donorMode) {
+      setDonorPoints((current) => [...current, { x, y }]);
+      return;
+    }
     if (editingPartId) return;
     if (muzzleMode) {
       setMuzzlePoint({ x, y });
@@ -435,10 +446,97 @@ export default function AutoRigBuilderPanel({
     setAiPromptMode(false);
     setAiPromptPoints([]);
     setMuzzleMode(false);
+    setDonorMode(false);
+    setDonorPoints([]);
+    setDonorTargetPartId("");
     setOcclusionTargetPartId(partId);
     setOcclusionPoints([]);
     setOcclusionMode(true);
     setMessage("انقر حول المنطقة التي يُفترض أن يشغلها الجزء المخفي، ثم اعتمد القناع. هذا يحدد منطقة إعادة البناء ولا ينشئ بكسلات جديدة بعد.");
+  }
+
+  function beginDonorPolygon(partId) {
+    const part = parts.find((item) => item.id === partId);
+    if (!part?.occlusionMask || disabled || busy || generated) return;
+    setEditingPartId("");
+    setPoints([]);
+    setAiPromptMode(false);
+    setAiPromptPoints([]);
+    setOcclusionMode(false);
+    setOcclusionPoints([]);
+    setMuzzleMode(false);
+    setDonorTargetPartId(partId);
+    setDonorPoints([]);
+    setDonorMode(true);
+    setMessage("ارسم مضلعاً حول جزء مرئي مماثل يمكن نسخه إلى المنطقة المخفية، مثل الورقة المقابلة أو الذراع الأخرى.");
+  }
+
+  function commitDonorPolygon() {
+    if (donorPoints.length < 3 || !donorTargetPartId) {
+      setMessage("حدد ثلاث نقاط أو أكثر حول الجزء المرئي المماثل.");
+      return;
+    }
+    const area = donorPoints.reduce((sum, point, index) => {
+      const next = donorPoints[(index + 1) % donorPoints.length];
+      return sum + point.x * next.y - next.x * point.y;
+    }, 0) / 2;
+    if (Math.abs(area) < 4) {
+      setMessage("منطقة الجزء المماثل صغيرة جداً أو نقاطها على خط واحد.");
+      return;
+    }
+    setParts((current) => current.map((part) => part.id === donorTargetPartId
+      ? { ...part, donorMask: { kind: "polygon", points: donorPoints } }
+      : part));
+    setDonorMode(false);
+    setDonorPoints([]);
+    setMessage("تم تحديد الجزء المرئي المماثل. يمكنك الآن تنفيذ نقل البكسلات إلى المنطقة المخفية.");
+  }
+
+  async function reconstructHiddenRegion(partId) {
+    const part = parts.find((item) => item.id === partId);
+    if (!image || !part?.donorMask || !part?.occlusionMask || aiBusy || busy || generated) return;
+    setAiBusy(true);
+    try {
+      const sourceCanvas = document.createElement("canvas");
+      sourceCanvas.width = image.naturalWidth || image.width;
+      sourceCanvas.height = image.naturalHeight || image.height;
+      sourceCanvas.getContext("2d").drawImage(image, 0, 0);
+      const response = await fetch("/api/studio/auto-rig/worker", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          task: "visible-donor-reconstruction",
+          canvas: { width: sourceCanvas.width, height: sourceCanvas.height },
+          imageDataUrl: sourceCanvas.toDataURL("image/png"),
+          sourcePolygon: part.donorMask.points,
+          targetPolygon: part.occlusionMask.points,
+          flipHorizontal: true
+        })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "تعذر نقل بكسلات الجزء المماثل.");
+      const patchImage = await imageFromDataUrl(data.patchDataUrl);
+      const union = {
+        x: Math.min(part.bounds.x, data.targetBounds.x),
+        y: Math.min(part.bounds.y, data.targetBounds.y),
+        width: Math.max(part.bounds.x + part.bounds.width, data.targetBounds.x + data.targetBounds.width) - Math.min(part.bounds.x, data.targetBounds.x),
+        height: Math.max(part.bounds.y + part.bounds.height, data.targetBounds.y + data.targetBounds.height) - Math.min(part.bounds.y, data.targetBounds.y)
+      };
+      setParts((current) => current.map((item) => item.id === partId ? {
+        ...item,
+        bounds: union,
+        reconstructionPatch: { dataUrl: data.patchDataUrl, targetBounds: data.targetBounds },
+        reconstruction: { method: data.provenance.method, donorBounds: data.donorBounds, targetBounds: data.targetBounds, reviewed: false },
+        provenance: { ...(item.provenance || {}), pixels: "reconstructed" },
+        occlusion: "reconstructed",
+        reviewed: false
+      } : item));
+      setMessage("تم إنشاء رقعة نقل مرآتي من الجزء المرئي. افحص المعاينة وعلّم مراجعة البكسلات قبل اعتماد الجزء؛ هذه ليست إعادة توليد تخيلية للأنسجة.");
+      patchImage.width = patchImage.naturalWidth;
+    } catch (error) {
+      setMessage(error.message);
+    } finally { setAiBusy(false); }
   }
 
   function commitOcclusionMask() {
@@ -455,7 +553,7 @@ export default function AutoRigBuilderPanel({
       return;
     }
     setParts((current) => current.map((part) => part.id === occlusionTargetPartId
-      ? { ...part, occlusionMask: { kind: "polygon", points: occlusionPoints }, occlusion: "unresolved", reviewed: false }
+      ? { ...part, occlusionMask: { kind: "polygon", points: occlusionPoints }, donorMask: null, reconstructionPatch: null, reconstruction: null, provenance: { ...(part.provenance || {}), pixels: "source" }, occlusion: "unresolved", reviewed: false }
       : part));
     setOcclusionMode(false);
     setOcclusionPoints([]);
@@ -534,6 +632,7 @@ export default function AutoRigBuilderPanel({
         ...(part.confidence == null ? {} : { confidence: part.confidence }),
         reviewed: part.reviewed === true,
         occlusion: part.occlusion || "unresolved",
+        ...(part.reconstruction ? { reconstruction: part.reconstruction } : {}),
         ...(part.occlusionMask ? { occlusionMask: part.occlusionMask } : {}),
         mask: { kind: "polygon", points: part.points },
         provenance: part.provenance || { segmentation: "manual-polygon", pixels: "source" }
@@ -566,6 +665,10 @@ export default function AutoRigBuilderPanel({
         context.clip();
         context.drawImage(image, -bounds.x, -bounds.y);
         context.restore();
+        if (part.reconstructionPatch?.dataUrl) {
+          const reconstructedImage = await imageFromDataUrl(part.reconstructionPatch.dataUrl);
+          context.drawImage(reconstructedImage, part.reconstructionPatch.targetBounds.x - bounds.x, part.reconstructionPatch.targetBounds.y - bounds.y);
+        }
         const blob = await canvasBlob(output);
         const form = new FormData();
         form.set("type", "item");
