@@ -20,6 +20,8 @@ test("worker bridge restricts upstream URL to HTTP loopback", () => {
 
 test("worker bridge validates image limits, task names, and worker geometry before returning proposals", () => {
   assert.match(source, /MAX_IMAGE_DATA_URL_CHARS/);
+  assert.match(source, /MAX_REQUEST_BODY_BYTES/);
+  assert.match(source, /new TextEncoder\(\)\.encode\(rawBody\)\.byteLength/);
   assert.match(source, /4096/);
   assert.match(source, /body\.task !== "part-detection"/);
   assert.match(source, /validateAutoRigWorkerResponse/);
