@@ -5,6 +5,7 @@ import { readFileSync } from "node:fs";
 const route = readFileSync(new URL("../app/api/studio/assets/route.js", import.meta.url), "utf8");
 const studioPage = readFileSync(new URL("../app/studio/page.js", import.meta.url), "utf8");
 const battleScene = readFileSync(new URL("../game/scenes/BattleScene.js", import.meta.url), "utf8");
+const rigEditor = readFileSync(new URL("../app/studio/RigEditor.jsx", import.meta.url), "utf8");
 
 test("Studio persists validated skeletal profiles and serializes their part assets", () => {
   assert.ok(route.includes('createSkeletalRigProfile(submittedRigProfile)'));
@@ -37,4 +38,10 @@ test("legacy Sprite Sheet rendering remains the fallback when a rig cannot rende
   assert.ok(battleScene.includes("if (!rigRendered && this.textures.exists(textureKey))"));
   assert.ok(battleScene.includes("const hyenaSprite = studioRig ? null : customMonsterTexture"));
   assert.ok(battleScene.includes("preserving Sprite Sheet fallback"));
+});
+
+
+test("replays a completed non-looping preview from its first frame", () => {
+  assert.ok(rigEditor.includes("if (timeMs >= clip.durationMs) setTimeMs(0)"));
+  assert.ok(rigEditor.includes("setPlaying(true)"));
 });
