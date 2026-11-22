@@ -105,6 +105,8 @@ def classify_regions(image_rgb, proposals, character_type):
         polygon = np.asarray([[int(p["x"]), int(p["y"])] for p in points], dtype=np.int32)
         if np.any(polygon[:, 0] < 0) or np.any(polygon[:, 0] >= width) or np.any(polygon[:, 1] < 0) or np.any(polygon[:, 1] >= height):
             raise ValueError("Proposal " + str(index) + " polygon is outside the image.")
+        if np.any(polygon[:, 0] < x) or np.any(polygon[:, 0] >= x + w) or np.any(polygon[:, 1] < y) or np.any(polygon[:, 1] >= y + h):
+            raise ValueError("Proposal " + str(index) + " polygon is outside proposal crop.")
         mask = np.zeros((height, width), dtype=np.uint8)
         cv2.fillPoly(mask, [polygon], 255)
         crop = image_rgb[y:y+h, x:x+w].copy()
