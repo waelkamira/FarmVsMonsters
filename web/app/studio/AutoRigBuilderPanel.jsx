@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AUTO_RIG_ROLE_OPTIONS, analyzeAutoRigQuality, buildAutoRigFromParts, moveAutoRigPolygonVertex } from "../../game/studio/autoRigBuilder.mjs";
 import { suggestAutoRigSemanticRoles } from "../../game/studio/semanticRoleClassifier.mjs";
+import { suggestRigTemplateRetarget } from "../../game/studio/rigTemplateRetarget.mjs";
 
 function slug(value) {
   return String(value || "character").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "character";
@@ -70,6 +71,8 @@ export default function AutoRigBuilderPanel({
   const [aiProposals, setAiProposals] = useState([]);
   const [aiProposalRoles, setAiProposalRoles] = useState({});
   const [aiSemanticSuggestions, setAiSemanticSuggestions] = useState({});
+  const [selectedRigTemplateId, setSelectedRigTemplateId] = useState("");
+  const [rigTemplatePlan, setRigTemplatePlan] = useState(null);
   const [aiPromptMode, setAiPromptMode] = useState(false);
   const [aiPromptPoints, setAiPromptPoints] = useState([]);
   const [aiPromptLabel, setAiPromptLabel] = useState(1);
@@ -77,6 +80,7 @@ export default function AutoRigBuilderPanel({
   const [muzzlePoint, setMuzzlePoint] = useState(null);
   const [muzzleMode, setMuzzleMode] = useState(false);
   const existingIds = useMemo(() => new Set(assets.map((asset) => asset.id)), [assets]);
+  const rigTemplates = useMemo(() => assets.filter((asset) => asset.id !== currentAssetId && asset.rigProfile?.bones?.length && Array.isArray(asset.rigBuildManifest?.parts) && asset.rigBuildManifest.parts.length), [assets, currentAssetId]);
   const emitterParts = useMemo(() => parts.filter((part) => ["weapon", "weapon.barrel", "weapon.muzzle", "mouth", "head", "face"].includes(part.role)), [parts]);
   const activeEmitterPart = emitterParts.find((part) => part.id === muzzlePartId) || emitterParts[0] || null;
 
@@ -118,6 +122,8 @@ export default function AutoRigBuilderPanel({
       setAiProposals([]);
       setAiProposalRoles({});
       setAiSemanticSuggestions({});
+      setRigTemplatePlan(null);
+      setSelectedRigTemplateId("");
       setAiPromptMode(false);
       setAiPromptPoints([]);
       setAiPromptLabel(1);
@@ -340,6 +346,32 @@ export default function AutoRigBuilderPanel({
       setAiStatus("offline");
       setMessage(error.message);
     } finally { setAiBusy(false); }
+  }
+
+  function suggestTemplateRetarget() {
+    if (!image || !parts.length || !selectedRigTemplateId) return;
+    const templateAsset = rigTemplates.find((asset) => asset.id === selectedRigTemplateId);
+    if (!templateAsset) { setMessage("تعذر العثور على الهيكل المرجعي المحدد."); return; }
+    try {
+      const plan = suggestRigTemplateRetarget(
+        templateAsset.rigBuildManifest,
+        parts,
+        { width: image.width, height: image.height }
+      );
+      setRigTemplatePlan(plan);
+      setMessage("تمت مطابقة " + plan.matches.length + " جزءاً مع القالب المرجعي. هذه اقتراحات وليست تعديلات مطبقة؛ راجعها ثم اختر تطبيقها.");
+    } catch (error) { setMessage(error.message); }
+  }
+
+  function applyTemplateRetarget() {
+    if (!rigTemplatePlan || generated || disabled || busy) return;
+    const updates = new Map(rigTemplatePlan.matches.map((match) => [match.targetPartId, match.update]));
+    setParts((current) => current.map((part) => {
+      const update = updates.get(part.id);
+      return update ? { ...part, ...update, reviewed: false } : part;
+    }));
+    setRigTemplatePlan(null);
+    setMessage("طُبّقت اقتراحات القالب على الأجزاء المطابقة. راجع نقاط الدوران والآباء بصرياً ثم أعد تأكيد مراجعة كل جزء.");
   }
 
   function suggestSemanticRoles() {
@@ -688,6 +720,9 @@ export default function AutoRigBuilderPanel({
         drawOrder: part.drawOrder,
         ...(part.confidence == null ? {} : { confidence: part.confidence }),
         reviewed: part.reviewed === true,
+        ...(part.pivot ? { pivot: part.pivot } : {}),
+        ...(part.parentPartId ? { parentPartId: part.parentPartId } : {}),
+        ...(part.side ? { side: part.side } : {}),
         occlusion: part.occlusion || "unresolved",
         ...(part.reconstruction ? { reconstruction: part.reconstruction } : {}),
         ...(part.occlusionMask ? { occlusionMask: part.occlusionMask } : {}),
@@ -771,6 +806,22 @@ export default function AutoRigBuilderPanel({
       <small>AUTO-RIG · GUIDED SEGMENTATION</small>
       <h3>استخراج أجزاء الشخصية وبناء الهيكل الأولي</h3>
       <p>يمكنك اكتشاف المناطق المرئية محلياً باستخدام SAM 2 أو رسم الأقنعة يدوياً. بعد تحديد منطقة مخفية، يمكنك نقل بكسلات من جزء مرئي مماثل (مثل الورقة المقابلة) إلى المنطقة المحددة، ثم مراجعة الرقعة يدوياً. يمكنك أيضاً ترميم نسيج محدود من البكسلات المحيطة باستخدام Telea؛ هذه معالجة محلية غير دلالية وليست توليداً تشريحياً. نقل الجزء المماثل يظل خياراً آخر. والتصنيف الدلالي هنا اقتراح هندسي يحتاج تأكيدك. تُحفظ الأجزاء كصور PNG شفافة مستقلة ويُنشأ هيكل قابل للتعديل.</p>
+      {rigTemplates.length > 0 && <div style={{ border: "1px solid #d8dce5", borderRadius: 10, padding: 12, margin: "12px 0" }}>
+        <b>إعادة استخدام هيكل محفوظ</b>
+        <p style={{ margin: "6px 0", fontSize: 13 }}>اختر شخصية سبق تجهيز هيكلها لمطابقة الأدوار ونقاط الدوران وترتيب الأجزاء. لا يُنسخ الهيكل تلقائياً؛ يجب مراجعة كل مطابقة قبل إنشاء Rig جديد.</p>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+          <select aria-label="القالب الهيكلي المرجعي" value={selectedRigTemplateId} disabled={disabled || busy || generated} onChange={(event) => { setSelectedRigTemplateId(event.target.value); setRigTemplatePlan(null); }}>
+            <option value="">اختر قالباً محفوظاً...</option>
+            {rigTemplates.map((asset) => <option key={asset.id} value={asset.id}>{asset.name || asset.id} · {asset.rigBuildManifest.parts.length} أجزاء</option>)}
+          </select>
+          <button type="button" disabled={disabled || busy || generated || !image || !parts.length || !selectedRigTemplateId} onClick={suggestTemplateRetarget}>مطابقة القالب مع الأجزاء الحالية</button>
+        </div>
+        {rigTemplatePlan && <div style={{ marginTop: 10 }}>
+          <p>مطابقات: {rigTemplatePlan.matches.length} · أجزاء غير مطابقة في القالب: {rigTemplatePlan.unmatchedTemplatePartIds.length} · أجزاء جديدة غير مطابقة: {rigTemplatePlan.unmatchedTargetPartIds.length}</p>
+          <ul>{rigTemplatePlan.matches.map((match) => <li key={match.templatePartId + ":" + match.targetPartId}>{match.role}: {match.templatePartId} ← {match.targetPartId} · ثقة هندسية {Math.round(match.confidence * 100)}% · يلزم التحقق البصري{match.parentWarning ? " · " + match.parentWarning : ""}</li>)}</ul>
+          <button type="button" disabled={disabled || busy || generated || !rigTemplatePlan.matches.length} onClick={applyTemplateRetarget}>تطبيق الاقتراحات بعد المراجعة</button>
+        </div>}
+      </div>}
       <div className="studio-actions" style={{ display: "flex", flexWrap: "wrap", gap: 8, margin: "10px 0" }}>
         <button type="button" disabled={disabled || aiBusy} onClick={checkAIWorker}>{aiBusy ? "جارٍ الاتصال..." : "فحص محرك AI المحلي"}</button>
         <button type="button" disabled={disabled || aiBusy || generated || !image || aiPromptMode} onClick={requestAISegmentation}>{aiBusy ? "جارٍ تحليل الصورة..." : "اقتراح المناطق المرئية وتقسيمها تلقائياً"}</button>
