@@ -301,3 +301,23 @@ test("quality validator rejects invalid manifests without assigning a score", ()
   assert.equal(report.score, 0);
   assert.ok(report.errors.length > 0);
 });
+
+
+test("quality readiness requires explicit confidence review without treating missing values as zero", () => {
+  const input = baseInput();
+  input.parts = input.parts.map((part) => ({
+    ...part,
+    mask: { kind: "polygon", points: [
+      { x: part.bounds.x, y: part.bounds.y },
+      { x: part.bounds.x + part.bounds.width, y: part.bounds.y },
+      { x: part.bounds.x + part.bounds.width, y: part.bounds.y + part.bounds.height },
+      { x: part.bounds.x, y: part.bounds.y + part.bounds.height }
+    ] }
+  }));
+  const built = buildAutoRigFromParts(input);
+  const report = analyzeAutoRigQuality(built.manifest, built.profile);
+  assert.equal(report.checks.confidenceReviewed, false);
+  assert.equal(report.checks.lowConfidenceCount, 0);
+  assert.equal(report.readyForAnimation, false);
+  assert.ok(report.warnings.some((warning) => warning.code === "missing-confidence"));
+});
