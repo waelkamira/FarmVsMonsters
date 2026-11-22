@@ -1136,3 +1136,7 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - Review branch: `feat/studio-hybrid-animation-engine-mainline`; PR #88.
 
 - Follow-up runtime correction: centralized looping-idle clip resolution. Plants and monsters now prefer a looping `idle` clip, otherwise a looping fallback; one-shot attack clips are no longer restarted every update as an idle animation. Freeze recovery still falls back to the first clip if no looping clip exists.
+
+- Manual isolated runtime checks executed against the current branch source: skeletal interpolation and crossfade completion; idle-clip resolution; Phaser rig construction and world-space muzzle/hitbox transforms; convex collision; parent transforms; projectile launch/trajectory origin; and asset-readiness rejection of unsupported rig-part types. These checks passed after the crossfade fix.
+- Syntax compilation via JavaScript Function parsing passed for `BattleScene.js` and the Studio assets API route after removing module import/export declarations. This is a syntax check only, not a Next.js/ESLint production build.
+- GitHub Actions was retried again on commit `8345c0f6df22c620d4588ab49fa79c993deefa53`; both workflow jobs still fail before runner assignment (`runner_id: 0`, zero steps). Full `npm test`, ESLint, Next.js production build, and live in-game browser verification remain outstanding.
