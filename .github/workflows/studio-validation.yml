@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - feat/studio-sprite-frame-count
+      - feat/studio-hybrid-animation-engine
+      - feat/studio-hybrid-animation-engine-mainline
+  workflow_dispatch:
   pull_request:
     paths:
       - "web/app/studio/**"

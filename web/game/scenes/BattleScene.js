@@ -8,6 +8,10 @@ import { getProjectileVFXProfile } from "../vfx/ProjectileVFXProfiles.mjs";
 import { getMonsterReactionProfile, getPlantAnimationProfile, getPlantIdleMotionTransform } from "../visuals/PlantMonsterVisualProfiles.mjs";
 import { createStudioAnimationProfile } from "../studio/animationProfiles.mjs";
 import { getSpriteFrameRectangles } from "../studio/spriteSheetGrid.mjs";
+import { createPhaserSkeletalRig } from "../studio/phaserSkeletalRig.mjs";
+import { createSkeletalAnimationController, resolveSkeletalIdleClip } from "../studio/animationStateMachine.mjs";
+import { circleIntersectsConvexPolygon, convexPolygonsOverlap } from "../studio/skeletalCollision.mjs";
+import { transformRigHitboxToWorld, transformRigPointToWorld } from "../studio/skeletalWorldTransform.mjs";
 import { getProjectileTrajectoryOffset, getProjectileHeadCorrection, getProjectileLaunchPoint } from "../studio/projectileTrajectory.mjs";
 import { createStudioMonsterProfile, resolveStudioMonsterRuntimeProfile, selectWeightedStudioMonster } from "../studio/monsterProfiles.mjs";
 
@@ -177,6 +181,17 @@ export default class BattleScene extends Scene {
     for (const asset of soundAssets.assets) {
       this.load.audio(asset.key, asset.path);
     }
+    const queuedRigPartTextures = new Set();
+    const queueRigPartTextures = (entry, variant) => {
+      for (const part of entry.rigParts || []) {
+        if (!part || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(part.id || "") || typeof part.path !== "string" ||
+            !(part.path.startsWith("/assets/") || part.path.startsWith("/api/studio/assets?preview="))) continue;
+        const key = "studio-rig-part-" + variant + "-" + part.id;
+        if (queuedRigPartTextures.has(key)) continue;
+        queuedRigPartTextures.add(key);
+        this.load.image(key, part.path);
+      }
+    };
     const queueStudioCatalog = (catalogKey) => {
       this.load.once("filecomplete-json-" + catalogKey, () => {
         const entries = this.cache.json.get(catalogKey)?.plants || [];
@@ -185,6 +200,7 @@ export default class BattleScene extends Scene {
           if (!entry || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(entry.id || "") ||
               typeof entry.path !== "string" || !(entry.path.startsWith("/assets/") || entry.path.startsWith("/api/studio/assets?preview="))) continue;
           this.load.image("studio-plant-" + variant + "-" + entry.id, entry.path);
+          queueRigPartTextures(entry, variant);
           if (entry.combat?.mode === "projectile" && entry.combat.projectile?.path && (entry.combat.projectile.path.startsWith("/assets/") || entry.combat.projectile.path.startsWith("/api/studio/assets?preview="))) {
             this.load.image("studio-projectile-" + variant + "-" + entry.id, entry.combat.projectile.path);
           }
@@ -199,6 +215,7 @@ export default class BattleScene extends Scene {
           if (!entry || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(entry.id || "") ||
               typeof entry.path !== "string" || !(entry.path.startsWith("/assets/") || entry.path.startsWith("/api/studio/assets?preview="))) continue;
           this.load.image("studio-monster-" + variant + "-" + entry.id, entry.path);
+          queueRigPartTextures(entry, variant);
         }
       });
     };
@@ -261,6 +278,14 @@ export default class BattleScene extends Scene {
     addStudioPlants(publishedStudioPlants, false);
     addStudioPlants(testStudioPlants, true);
     this.studioPlants = [...studioPlantMap.values()];
+    for (const plant of this.studioPlants) {
+      const variant = plant.testOnly ? "testing" : "published";
+      plant.rigPartTextures = Object.fromEntries((plant.rigParts || []).map((part) => {
+        const textureKey = "studio-rig-part-" + variant + "-" + part.id;
+        if (this.textures.exists(textureKey)) this.registerStudioGridSheet(textureKey, part.rows || 1, part.columns || 1);
+        return [part.id, textureKey];
+      }));
+    }
     this.studioPlantsByType = Object.fromEntries(this.studioPlants.map((plant) => [plant.id, plant]));
     for (const plant of this.studioPlants) {
       const textureKey = plant.textureKey;
@@ -344,6 +369,14 @@ export default class BattleScene extends Scene {
     addStudioMonsters(publishedStudioMonsters, false);
     addStudioMonsters(testStudioMonsters, true);
     this.studioMonsters = [...studioMonsterMap.values()];
+    for (const monster of this.studioMonsters) {
+      const variant = monster.testOnly ? "testing" : "published";
+      monster.rigPartTextures = Object.fromEntries((monster.rigParts || []).map((part) => {
+        const textureKey = "studio-rig-part-" + variant + "-" + part.id;
+        if (this.textures.exists(textureKey)) this.registerStudioGridSheet(textureKey, part.rows || 1, part.columns || 1);
+        return [part.id, textureKey];
+      }));
+    }
     this.studioMonstersById = Object.fromEntries(this.studioMonsters.map((monster) => [monster.id, monster]));
     for (const monster of this.studioMonsters) {
       if (!monster.spriteSheet || !this.registerStudioGridSheet(monster.textureKey, monster.rows, monster.columns)) continue;
@@ -3057,6 +3090,100 @@ export default class BattleScene extends Scene {
     return true;
   }
 
+  playStudioSkeletalRig(rig, clipId, onComplete = null) {
+    const clip = rig?.profile?.clips?.find((entry) => entry.id === clipId);
+    if (!clip || !rig.root?.active) return false;
+    rig._animationEvent?.remove?.();
+    if (!rig._animationController) {
+      rig._animationController = createSkeletalAnimationController(rig.profile, clipId);
+    } else if (rig._animationController.state === clipId) {
+      rig._animationController.restart();
+    } else {
+      rig._animationController.setState(clipId, 140);
+    }
+    rig._activeClipId = clipId;
+    rig.applyPose(rig._animationController.getPose());
+    let previousAt = this.time.now;
+    const event = this.time.addEvent({
+      delay: 16,
+      loop: true,
+      callback: () => {
+        if (!rig.root?.active) { event.remove(); return; }
+        const now = this.time.now;
+        const delta = Math.max(0, Math.min(80, now - previousAt));
+        previousAt = now;
+        rig.applyPose(rig._animationController.update(delta));
+        if (onComplete && rig._animationController.elapsedMs >= clip.durationMs) {
+          event.remove();
+          rig._animationEvent = null;
+          rig._activeClipId = null;
+          onComplete();
+        } else if (!clip.loop && rig._animationController.elapsedMs >= clip.durationMs) {
+          event.remove();
+          rig._animationEvent = null;
+          rig._activeClipId = null;
+        }
+      }
+    });
+    rig._animationEvent = event;
+    if (!rig._destroyListenerRegistered) {
+      rig._destroyListenerRegistered = true;
+      rig.root.once("destroy", () => {
+        rig._animationEvent?.remove?.();
+        rig._animationEvent = null;
+        rig._activeClipId = null;
+      });
+    }
+    return true;
+  }
+
+  stopStudioSkeletalRig(rig, frozen = false) {
+    if (!rig) return;
+    rig._animationEvent?.remove?.();
+    rig._animationEvent = null;
+    rig._activeClipId = frozen ? "frozen" : null;
+  }
+
+  getStudioRigAttachmentWorld(rig, parentView, attachmentId) {
+    if (!rig || !parentView?.active) return null;
+    const point = rig.getAttachment(attachmentId);
+    if (!point) return null;
+    return transformRigPointToWorld(point, parentView);
+  }
+
+  getStudioRigHitboxesWorld(rig, parentView, kind) {
+    if (!rig || !parentView?.active) return [];
+    return rig.profile.hitboxes.filter((item) => item.kind === kind).map((profile) =>
+      transformRigHitboxToWorld(rig.getHitbox(profile.id), parentView)
+    );
+  }
+
+  getStudioRigHitboxWorld(rig, parentView, kind) {
+    return this.getStudioRigHitboxesWorld(rig, parentView, kind)[0] || null;
+  }
+
+  studioOrientedHitboxesOverlap(a, b) {
+    return convexPolygonsOverlap(a, b);
+  }
+
+  studioProjectileHitsMonster(shot, monster, projectileX, projectileY) {
+    if (!monster?.studioRig) return true;
+    const hurtboxes = this.getStudioRigHitboxesWorld(monster.studioRig, monster.view, "hurt");
+    if (!hurtboxes.length) return true;
+    const radius = Math.max(2, Number(shot.collisionRadius) || 8);
+    return hurtboxes.some((hurt) => circleIntersectsConvexPolygon(
+      { x: projectileX, y: projectileY, radius },
+      hurt.points
+    ));
+  }
+
+  studioRigHitboxesOverlap(attackerRig, attackerView, targetRig, targetView) {
+    const attacks = this.getStudioRigHitboxesWorld(attackerRig, attackerView, "attack");
+    const hurts = this.getStudioRigHitboxesWorld(targetRig, targetView, "hurt");
+    if (!attacks.length || !hurts.length) return true;
+    return attacks.some((attack) => hurts.some((hurt) => this.studioOrientedHitboxesOverlap(attack, hurt)));
+  }
+
   drawStudioCatalogPlant(studioPlant, x, y, row = 2) {
     const textureKey = studioPlant.textureKey || "studio-plant-published-" + studioPlant.id;
     const container = this.add.container(x, y).setDepth(11);
@@ -3065,22 +3192,41 @@ export default class BattleScene extends Scene {
       ? this.laneYs[rowIndex + 1] - this.laneYs[rowIndex]
       : this.laneYs[rowIndex] - this.laneYs[rowIndex - 1];
     const perspective = PhaserMath.Clamp(laneGap / 54, 0.62, 1.08);
-    if (this.textures.exists(textureKey)) {
-      const sheet = Boolean(studioPlant.spriteSheet);
-      const frame = this.textures.getFrame(textureKey, sheet ? "0" : undefined);
+    if (studioPlant.rigProfile || this.textures.exists(textureKey)) {
       const sizeFactor = PhaserMath.Clamp((Number(studioPlant.combat?.sizePercent) || 100) / 100, 0.25, 2);
       const height = 88 * perspective * sizeFactor;
-      const width = Math.min(height * (frame.realWidth / frame.realHeight), 100 * perspective * sizeFactor);
-      const idleFrame = String(studioPlant.animationProfile?.idle?.startFrame ?? 0);
-      const artwork = sheet
-        ? this.add.sprite(0, -height / 2 + 2, textureKey, idleFrame).setDisplaySize(width, height)
-        : this.add.image(0, -height / 2 + 2, textureKey).setDisplaySize(width, height);
-      artwork.setData("studioPlantSprite", true);
-      if (sheet) {
-        const idleAnimationKey = "studio-" + studioPlant.id + "-idle";
-        if (this.anims.exists(idleAnimationKey)) artwork.play(idleAnimationKey);
+      let rigRendered = false;
+      if (studioPlant.rigProfile && studioPlant.rigPartTextures) {
+        try {
+          const rig = createPhaserSkeletalRig(this, studioPlant.rigProfile, studioPlant.rigPartTextures);
+          const canvas = rig.profile.canvas;
+          const width = Math.min(height * (canvas.width / canvas.height), 100 * perspective * sizeFactor);
+          rig.root.setPosition(-canvas.width / 2, -canvas.height / 2 - height / 2 + 2);
+          rig.root.setScale(width / canvas.width, height / canvas.height);
+          container.add(rig.root);
+          container.setData("studioSkeletalRig", rig);
+          const idleClip = resolveSkeletalIdleClip(rig.profile) || rig.profile.clips[0];
+          if (idleClip) this.playStudioSkeletalRig(rig, idleClip.id);
+          rigRendered = true;
+        } catch (error) {
+          console.warn("Studio plant skeletal rig unavailable; preserving Sprite Sheet fallback:", studioPlant.id, error);
+        }
       }
-      container.add(artwork);
+      if (!rigRendered && this.textures.exists(textureKey)) {
+        const sheet = Boolean(studioPlant.spriteSheet);
+        const frame = this.textures.getFrame(textureKey, sheet ? "0" : undefined);
+        const width = Math.min(height * (frame.realWidth / frame.realHeight), 100 * perspective * sizeFactor);
+        const idleFrame = String(studioPlant.animationProfile?.idle?.startFrame ?? 0);
+        const artwork = sheet
+          ? this.add.sprite(0, -height / 2 + 2, textureKey, idleFrame).setDisplaySize(width, height)
+          : this.add.image(0, -height / 2 + 2, textureKey).setDisplaySize(width, height);
+        artwork.setData("studioPlantSprite", true);
+        if (sheet) {
+          const idleAnimationKey = "studio-" + studioPlant.id + "-idle";
+          if (this.anims.exists(idleAnimationKey)) artwork.play(idleAnimationKey);
+        }
+        container.add(artwork);
+      }
     }
     container.setData("studioPlantId", studioPlant.id);
     container.setData("studioBehavior", studioPlant.combat.mode);
@@ -3167,6 +3313,12 @@ export default class BattleScene extends Scene {
     const studioPlant = plant.studioPlant;
     if (studioPlant) {
       if (plant.studioAttacking || plant.studioThrowing || plant.isAttacking) return;
+      const skeletalRig = plant.view.getData?.("studioSkeletalRig");
+      if (skeletalRig) {
+        const idleClip = resolveSkeletalIdleClip(skeletalRig.profile);
+        if (idleClip && skeletalRig._activeClipId !== idleClip.id) this.playStudioSkeletalRig(skeletalRig, idleClip.id);
+        return;
+      }
       const sprite = plant.view.list?.find((child) =>
         child?.active && child.getData?.("studioPlantSprite")
       );
@@ -3249,14 +3401,25 @@ export default class BattleScene extends Scene {
       if (studioProfile?.mode === "melee" || studioProfile?.mode === "contact") {
         if (studioProfile.mode === "contact" && !target.isEating) continue;
         const attackSprite = plant.view?.list?.find((child) => child?.getData?.("studioPlantSprite"));
+        const skeletalRig = plant.view?.getData?.("studioSkeletalRig");
         const animationKey = "studio-" + plant.studioPlant.id + "-attack";
         const applyStudioHit = () => {
           if (!plant.alive || !target.alive || (studioProfile.mode === "contact" && !target.isEating) || this.gameOver) return;
+          if (skeletalRig && target.studioRig && !this.studioRigHitboxesOverlap(skeletalRig, plant.view, target.studioRig, target.view)) return;
           this.applyMonsterDamage(target, studioProfile.damage, plant.type);
           this.createProjectileImpact(target.view?.x ?? plant.x, target.view?.y ?? plant.y - 22, plant.type);
           this.damageMonsterIfNeeded(target);
         };
-        if (attackSprite?.active && this.anims.exists(animationKey)) {
+        if (skeletalRig?.profile.clips.some((clip) => clip.id === "attack")) {
+          if (plant.studioAttacking) continue;
+          plant.studioAttacking = true;
+          this.playStudioSkeletalRig(skeletalRig, "attack", () => {
+            const idle = resolveSkeletalIdleClip(skeletalRig.profile);
+            if (idle) this.playStudioSkeletalRig(skeletalRig, idle.id);
+            plant.studioAttacking = false;
+            applyStudioHit();
+          });
+        } else if (attackSprite?.active && this.anims.exists(animationKey)) {
           if (plant.studioAttacking) continue;
           plant.studioAttacking = true;
           attackSprite.play(animationKey);
@@ -3460,7 +3623,17 @@ export default class BattleScene extends Scene {
     if (plant.studioPlant) {
       const animationKey = "studio-" + plant.studioPlant.id + "-attack";
       const sprite = plant.view?.list?.find((child) => child?.getData?.("studioPlantSprite"));
-      if (sprite?.active && this.anims.exists(animationKey)) {
+      const skeletalRig = plant.view?.getData?.("studioSkeletalRig");
+      if (skeletalRig?.profile.clips.some((clip) => clip.id === "attack")) {
+        if (plant.studioThrowing) return;
+        plant.studioThrowing = true;
+        this.playStudioSkeletalRig(skeletalRig, "attack", () => {
+          const idle = resolveSkeletalIdleClip(skeletalRig.profile);
+          if (idle) this.playStudioSkeletalRig(skeletalRig, idle.id);
+          plant.studioThrowing = false;
+          if (plant.alive && target?.alive && !this.gameOver) this.fireThornProjectile(plant, target);
+        });
+      } else if (sprite?.active && this.anims.exists(animationKey)) {
         if (plant.studioThrowing) return;
         plant.studioThrowing = true;
         sprite.play(animationKey);
@@ -3547,7 +3720,18 @@ export default class BattleScene extends Scene {
       const row = plant.row;
       const profile = plant.studioPlant.combat;
       const laneOrigin = this.lanePoint(localX, row);
-      const launchPoint = getProjectileLaunchPoint({ laneX: laneOrigin.x, laneY: laneOrigin.y, offsetX: profile.projectileLaunchOffsetX, offsetY: profile.projectileLaunchOffsetY });
+      const skeletalRig = plant.view?.getData?.("studioSkeletalRig");
+      const muzzle = skeletalRig?.profile.attachments.some((item) => item.id === "muzzle")
+        ? this.getStudioRigAttachmentWorld(skeletalRig, plant.view, "muzzle") : null;
+      if (skeletalRig && !muzzle) {
+        console.error("Rigged projectile plant has no valid muzzle attachment:", plant.studioPlant.id);
+        return;
+      }
+      const launchPoint = muzzle
+        ? { x: muzzle.x, y: muzzle.y }
+        : getProjectileLaunchPoint({ laneX: laneOrigin.x, laneY: laneOrigin.y, offsetX: profile.projectileLaunchOffsetX, offsetY: profile.projectileLaunchOffsetY });
+      const launchOffsetX = launchPoint.x - laneOrigin.x;
+      const launchOffsetY = launchPoint.y - laneOrigin.y;
       const view = this.add.container(launchPoint.x, launchPoint.y).setDepth(16);
       const textureKey = plant.studioPlant.projectileTextureKey || "studio-projectile-published-" + plant.studioPlant.id;
       if (this.textures.exists(textureKey)) {
@@ -3568,7 +3752,7 @@ export default class BattleScene extends Scene {
       view.setRotation((Number(profile.projectileRotation) || 0) * Math.PI / 180);
       this.projectiles.push({
         view, localX, row, target, startLocalX: localX, targetLocalX: Math.max(localX + 1, target.localX),
-        launchOffsetX: Number(profile.projectileLaunchOffsetX ?? 14), launchOffsetY: Number(profile.projectileLaunchOffsetY ?? -30), speed: profile.projectileSpeed,
+        launchOffsetX, launchOffsetY, speed: profile.projectileSpeed,
         projectileTrajectoryType: profile.projectileTrajectoryType || "arc",
         projectileCurveX: Number(profile.projectileCurveX) || 0, projectileCurveY: Number(profile.projectileCurveY) || 110,
         projectileTargetOffsetX: Number(profile.projectileTargetOffsetX) || 0, projectileTargetOffsetY: Number(profile.projectileTargetOffsetY) || 0,
@@ -3980,6 +4164,34 @@ export default class BattleScene extends Scene {
   }
 
   playHyenaAnimation(monster, key, force = false) {
+    if (monster?.studioMonster?.rigProfile && monster.studioRig) {
+      const action = key === "hyena-death" ? "death"
+        : key === "hyena-hit" ? "hit"
+        : key === "hyena-bite" ? "attack"
+        : ["hyena-walk", "hyena-run"].includes(key) ? "move" : "idle";
+      if (action === "attack" && !force && monster.hitAnimUntil > this.time.now) return;
+      const rig = monster.studioRig;
+      const activeId = rig._activeClipId;
+      const protectedAction = (activeId === "death" && action !== "death")
+        || (activeId === "frozen" && !["frozen", "death"].includes(action))
+        || ((monster.freezeStage || 0) > 0 && !["frozen", "death"].includes(action))
+        || (["attack", "hit"].includes(activeId) && ["idle", "move"].includes(action));
+      if (protectedAction && (activeId === "death" || activeId === "frozen" || (monster.freezeStage || 0) > 0 || !force)) return;
+      const clip = rig.profile.clips.find((entry) => entry.id === action)
+        || (action === "hit" ? rig.profile.clips.find((entry) => entry.id === "attack") : null)
+        || resolveSkeletalIdleClip(rig.profile);
+      if (clip && !force && activeId === clip.id) return;
+      if (clip) {
+        const returnsToIdle = ["attack", "hit"].includes(action);
+        const onComplete = returnsToIdle ? () => {
+          if (!monster.alive || (monster.freezeStage || 0) > 0 || rig._activeClipId !== null) return;
+          const idle = resolveSkeletalIdleClip(rig.profile);
+          if (idle) this.playStudioSkeletalRig(rig, idle.id);
+        } : null;
+        this.playStudioSkeletalRig(rig, clip.id, onComplete);
+      }
+      return;
+    }
     const sprite = monster && monster.hyenaSprite;
     if (!sprite || !sprite.active) return;
     if (monster.studioMonster) {
@@ -4154,9 +4366,25 @@ export default class BattleScene extends Scene {
     }
 
     let monsterRecord = null;
+    let studioRig = null;
+    if (studioMonster?.rigProfile && studioMonster.rigPartTextures) {
+      try {
+        studioRig = createPhaserSkeletalRig(this, studioMonster.rigProfile, studioMonster.rigPartTextures);
+        const canvas = studioRig.profile.canvas;
+        studioRig.root.setPosition(-canvas.width / 2, -canvas.height);
+        studioRig.root.setScale(0.918 * 360 / canvas.width, 0.918 * 298 / canvas.height);
+        view.add(studioRig.root);
+        view.setData("studioSkeletalRig", studioRig);
+        const idleClip = resolveSkeletalIdleClip(studioRig.profile) || studioRig.profile.clips[0];
+        if (idleClip) this.playStudioSkeletalRig(studioRig, idleClip.id);
+      } catch (error) {
+        console.warn("Studio monster skeletal rig unavailable; preserving Sprite Sheet fallback:", studioMonster.id, error);
+        studioRig = null;
+      }
+    }
     const customMonsterTexture = studioMonster?.textureKey;
     const customMonsterIdleFrame = String(studioMonster?.animationProfile?.idle?.startFrame ?? 0);
-    const hyenaSprite = customMonsterTexture && this.textures.exists(customMonsterTexture)
+    const hyenaSprite = studioRig ? null : customMonsterTexture && this.textures.exists(customMonsterTexture)
       ? this.add.sprite(0, 0, customMonsterTexture, customMonsterIdleFrame).setOrigin(0.5, 1).setFlipX(true).setScale(0.918)
       : this.hyenaAnimationsReady
         ? this.add.sprite(0, 0, "hyena-idle", 0).setOrigin(0.5, 1).setFlipX(true).setScale(0.918)
@@ -4233,6 +4461,7 @@ export default class BattleScene extends Scene {
       burstRemaining: 0,
       combatProfile: profile,
       studioMonster,
+      studioRig,
       // Dust Skitters occasionally hop; this is purely visual and never
       // changes their lane, collision position, or ability to be hit.
       jumpCooldown: archetype === "dust-skitter" ? this.simulationRandom.nextInt(profile.jumpCooldownMinMs, profile.jumpCooldownMaxMs) : 0,
@@ -4305,7 +4534,7 @@ export default class BattleScene extends Scene {
       eater.isEatingIce = true;
       eater.iceTargetId = frozen.combatId;
       eater.attackCooldown = 0;
-      if (eater.hyenaSprite?.active) this.playHyenaAnimation(eater, "hyena-bite");
+      if (eater.hyenaSprite?.active || eater.studioRig) this.playHyenaAnimation(eater, "hyena-bite");
       frozen.iceBiteCooldownMs = (frozen.iceBiteCooldownMs ?? 0) - delta;
       if (frozen.iceBiteCooldownMs <= 0) {
         frozen.freezeStage = Math.max(0, frozen.freezeStage - 1);
@@ -4440,7 +4669,7 @@ export default class BattleScene extends Scene {
         // The bite sheet animates the mouth/body (including the legs); movement
         // coordinates are deliberately not advanced anywhere in this branch.
         if (!monster.isEating) monster.isEating = true;
-        if (monster.hyenaSprite && monster.hitAnimUntil <= this.time.now) {
+        if ((monster.hyenaSprite || monster.studioRig) && monster.hitAnimUntil <= this.time.now) {
           this.playHyenaAnimation(monster, "hyena-bite");
         }
         const bite = resolveBiteAttack({
@@ -4454,6 +4683,8 @@ export default class BattleScene extends Scene {
             monsterId: monster.combatId, plantCol: blocker.col, plantRow: blocker.row,
             damage: monster.plantDamage
           });
+          const plantRig = blocker.view?.getData?.("studioSkeletalRig");
+          if (monster.studioRig && plantRig && !this.studioRigHitboxesOverlap(monster.studioRig, monster.view, plantRig, blocker.view)) continue;
           blocker.hp = applyHitPointsDamage(blocker.hp, monster.plantDamage).hp;
           this.playMonsterBiteSound();
           this.flashEatenPlant(blocker);
@@ -4546,7 +4777,7 @@ export default class BattleScene extends Scene {
       monster.x = position.x; monster.y = position.y;
       monster.view.setPosition(position.x, position.y);
       if (monster.hyenaSprite?.active) monster.hyenaSprite.y = 0;
-      if (monster.hyenaSprite && monster.hitAnimUntil <= this.time.now) {
+      if ((monster.hyenaSprite || monster.studioRig) && monster.hitAnimUntil <= this.time.now) {
         // The corrected 15-frame run sheet belongs to the fast hyena.
         // Keep it running for the full advance so its new crop can be tested
         // clearly in a normal battle, rather than only during a short burst.
@@ -4566,12 +4797,19 @@ export default class BattleScene extends Scene {
 
   freezeMonster(monster) {
     if (!monster?.alive || monster.freezeStage >= 5) return false;
+    const wasAlreadyFrozen = (monster.freezeStage || 0) > 0;
     monster.freezeStage = Math.min(5, (monster.freezeStage || 0) + 1);
     monster.braced = false;
     monster.isEating = false;
     if (monster.view?.active) this.tweens.killTweensOf(monster.view);
     if (monster.braceCue?.active) monster.braceCue.setVisible(false);
     const sprite = monster.hyenaSprite;
+    if (monster.studioRig && !wasAlreadyFrozen) {
+      const rig = monster.studioRig;
+      monster.frozenAnimationKey = rig._activeClipId || "move";
+      if (rig.profile.clips.some((clip) => clip.id === "frozen")) this.playStudioSkeletalRig(rig, "frozen");
+      else this.stopStudioSkeletalRig(rig, true);
+    }
     if (sprite?.active) {
       if (!monster.frozenTextureKey && !monster.studioMonster) {
         const preferred = this.wave >= 4 ? "frozen-hyena-level-2" : "frozen-hyena-level-1";
@@ -4606,6 +4844,14 @@ export default class BattleScene extends Scene {
 
   restoreMonsterAfterFreeze(monster) {
     const sprite = monster?.hyenaSprite;
+    if (monster?.studioRig) {
+      const rig = monster.studioRig;
+      const restoreClip = rig.profile.clips.find((clip) => clip.id === monster.frozenAnimationKey)?.id
+        || rig.profile.clips.find((clip) => clip.id === "move")?.id
+        || resolveSkeletalIdleClip(rig.profile)?.id
+        || rig.profile.clips[0]?.id;
+      if (restoreClip) this.playStudioSkeletalRig(rig, restoreClip);
+    }
     if (sprite?.active) {
       sprite.setTint(monster.tierTint ?? 0xffffff);
       sprite.setScale(0.918);
@@ -4797,6 +5043,7 @@ export default class BattleScene extends Scene {
         if (!monster?.alive || monster.row !== shot.row ||
             !Number.isFinite(monster.localX)) continue;
         if (shot.freeze && monster.freezeStage >= 5) continue;
+        if (!this.studioProjectileHitsMonster(shot, monster, projectileX, projectileY)) continue;
         const horizontalDistance = Math.abs(monster.localX - shot.localX);
         const hitRadius = (shot.collisionRadius || PHASE_ONE_PLANTS.radish.projectileCollisionRadius) * (monster.widthScale || 1);
         if (shot.freeze) {
@@ -4906,38 +5153,39 @@ export default class BattleScene extends Scene {
     const sprite = monster.hyenaSprite;
     const hitColor = getProjectileVFXProfile(plantType)?.tint ?? 0x9bdc72;
     const reaction = getMonsterReactionProfile(monster.kind);
-    if (sprite?.active) {
+    if (sprite?.active || monster.studioRig?.root?.active) {
       monster.hitAnimUntil = this.time.now + reaction.hitDurationMs;
-      this.playHyenaAnimation(monster, "hyena-idle", true);
+      this.playHyenaAnimation(monster, monster.studioRig ? "hyena-hit" : "hyena-idle", true);
 
-      if (monster.hitGlowEffect && sprite.postFX?.remove) {
-        sprite.postFX.remove(monster.hitGlowEffect);
-        monster.hitGlowEffect = null;
-      }
-      if (sprite.postFX?.addGlow) {
-        monster.hitGlowEffect = sprite.postFX.addGlow(hitColor, reaction.glowRadius, 0, false, 0.1, 12);
-      }
-
-      this.tweens.killTweensOf(sprite);
-      const baseX = Number.isFinite(monster.hitRecoilBaseX) ? monster.hitRecoilBaseX : sprite.x;
-      monster.hitRecoilBaseX = baseX;
-      sprite.x = baseX;
-      sprite.setScale(0.918);
-      this.tweens.add({
-        targets: sprite,
-        x: baseX + reaction.recoilPx,
-        scaleX: reaction.squashX,
-        scaleY: reaction.squashY,
-        duration: Math.max(45, Math.round(reaction.hitDurationMs * 0.32)),
-        ease: "Quad.easeOut",
-        yoyo: true,
-        onComplete: () => {
-          if (sprite.active) {
-            sprite.x = baseX;
-            sprite.setScale(0.918);
-          }
+      if (sprite?.active) {
+        if (monster.hitGlowEffect && sprite.postFX?.remove) {
+          sprite.postFX.remove(monster.hitGlowEffect);
+          monster.hitGlowEffect = null;
         }
-      });
+        if (sprite.postFX?.addGlow) {
+          monster.hitGlowEffect = sprite.postFX.addGlow(hitColor, reaction.glowRadius, 0, false, 0.1, 12);
+        }
+        this.tweens.killTweensOf(sprite);
+        const baseX = Number.isFinite(monster.hitRecoilBaseX) ? monster.hitRecoilBaseX : sprite.x;
+        monster.hitRecoilBaseX = baseX;
+        sprite.x = baseX;
+        sprite.setScale(0.918);
+        this.tweens.add({
+          targets: sprite,
+          x: baseX + reaction.recoilPx,
+          scaleX: reaction.squashX,
+          scaleY: reaction.squashY,
+          duration: Math.max(45, Math.round(reaction.hitDurationMs * 0.32)),
+          ease: "Quad.easeOut",
+          yoyo: true,
+          onComplete: () => {
+            if (sprite.active) {
+              sprite.x = baseX;
+              sprite.setScale(0.918);
+            }
+          }
+        });
+      }
     }
 
     const graphic = monster.hitFlashGraphic;
@@ -4983,7 +5231,7 @@ export default class BattleScene extends Scene {
     // reward and wave counters are still granted immediately and exactly once.
     if (monster.view && monster.view.active) {
       this.tweens.killTweensOf(monster.view);
-      if (monster.hyenaSprite && monster.hyenaSprite.active) {
+      if ((monster.hyenaSprite && monster.hyenaSprite.active) || monster.studioRig?.root?.active) {
         this.playHyenaAnimation(monster, "hyena-death", true);
         this.tweens.add({
           targets: monster.view,

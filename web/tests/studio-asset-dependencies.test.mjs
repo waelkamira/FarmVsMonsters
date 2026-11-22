@@ -9,6 +9,7 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const routeSource = readFileSync(path.join(here, "../app/api/studio/assets/route.js"), "utf8");
 const detailsSource = readFileSync(path.join(here, "../app/studio/assets/[id]/page.js"), "utf8");
 const studioSource = readFileSync(path.join(here, "../app/studio/page.js"), "utf8");
+const battleSceneSource = readFileSync(path.join(here, "../game/scenes/BattleScene.js"), "utf8");
 
 
 test("explicit inline projectile remains an inline file even when its id matches a library projectile", () => {
@@ -136,4 +137,165 @@ test("plant projectile references resolve to a managed projectile asset and bloc
 test("allows archive analysis after a merged release request has been cleared from the workflow", () => {
   const assets = [{ id: "draft-after-release", type: "plant", path: "/assets/plants/draft.png", status: "draft", releaseRequest: { number: 123, state: "merged" } }];
   assert.equal(buildAssetDependencyReport(assets, "draft-after-release").canArchive, true);
+});
+
+test("rig part references are reported as dependencies and block source-part archival", () => {
+  const assets = [
+    { id: "plant", type: "plant", path: "/assets/plants/plant.png", rigProfile: { bones: [{ id: "head", part: { assetId: "head-part", frame: 0 } }] } },
+    { id: "head-part", type: "item", name: "Head Part", path: "/assets/parts/head.png" }
+  ];
+  const report = buildAssetDependencyReport(assets, "plant");
+  assert.equal(report.dependencies.length, 1);
+  assert.equal(report.dependencies[0].relation, "rig-part");
+  assert.equal(report.dependencies[0].targetId, "head-part");
+  assert.equal(buildAssetDependencyReport(assets, "head-part").canArchive, false);
+});
+
+test("Studio asset API validates and publishes the rig profile with plant and monster catalogs", () => {
+  assert.match(routeSource, /createSkeletalRigProfile/);
+  assert.match(routeSource, /form\.get\("rigProfile"\)/);
+  assert.match(routeSource, /rigProfile:asset\.rigProfile\|\|null/);
+});
+
+test("release staging includes every referenced skeletal bitmap part", () => {
+  assert.match(routeSource, /getRigPartAssets/);
+  assert.match(routeSource, /publish skeletal part/);
+  assert.match(routeSource, /rigParts:rigPartAssets\.map/);
+});
+
+test("rejects archived rig part assets during Studio save and release", () => {
+  assert.match(routeSource, /partAsset\.status==="archived"/);
+  assert.match(routeSource, /part\.status==="archived"/);
+});
+
+test("Studio API validates skeletal part frame indices at save and release time", () => {
+  assert.match(routeSource, /partFrameCount/);
+  assert.match(routeSource, /invalidRigFrame/);
+});
+
+test("BattleScene loads rig bitmap parts and uses skeletal plant and monster renderers", () => {
+  assert.match(battleSceneSource, /createPhaserSkeletalRig/);
+  assert.match(battleSceneSource, /studio-rig-part-/);
+  assert.match(battleSceneSource, /studioPlant\.rigProfile/);
+  assert.match(battleSceneSource, /studioMonster\?\.rigProfile/);
+  assert.match(battleSceneSource, /preserving Sprite Sheet fallback/);
+});
+
+test("BattleScene uses rig muzzle attachments and skeletal attack/hurt hitboxes in combat", () => {
+  assert.match(battleSceneSource, /rig\.getAttachment\(attachmentId\)/);
+  assert.match(battleSceneSource, /launchOffsetX, launchOffsetY/);
+  assert.match(battleSceneSource, /studioRigHitboxesOverlap/);
+  assert.match(battleSceneSource, /studioProjectileHitsMonster/);
+  assert.match(battleSceneSource, /getStudioRigHitboxWorld/);
+});
+test("Studio asset form persists the visual rig profile", () => {
+  assert.match(studioSource, /import RigEditor from "\.\/RigEditor\.jsx"/);
+  assert.match(studioSource, /rigProfile:JSON\.stringify\(rigProfile\)/);
+  assert.match(studioSource, /<RigEditor profile=\{rigProfile\}/);
+});
+test("testing catalogs include the referenced rig bitmap assets", () => {
+  assert.match(routeSource, /serializeRigParts/);
+  assert.match(routeSource, /rigParts:serializeRigParts/);
+});
+
+test("rigged projectile assets require the standard muzzle attachment", () => {
+  assert.match(routeSource, /rigProfile\.attachments\.some\(item=>item\.id==="muzzle"\)/);
+  assert.match(routeSource, /نقطة تثبيت باسم muzzle/);
+  assert.match(routeSource, /النبتة ذات الهيكل تحتاج نقطة تثبيت باسم muzzle/);
+});
+
+test("Rig Editor supports canvas zoom/pan, direct attachment handles, presets, and FPS", () => {
+  const editor = readFileSync(path.join(here, "../app/studio/RigEditor.jsx"), "utf8");
+  assert.match(editor, /function handleWheel/);
+  assert.match(editor, /تحريك مساحة العمل/);
+  assert.match(editor, /updateToolPosition/);
+  assert.match(editor, /applyPreset/);
+  assert.match(editor, /updateClip\("fps"/);
+});
+
+test("Studio API rejects empty skeletal rigs before saving", () => {
+  assert.match(routeSource, /يجب ربط صورة واحدة على الأقل بأحد عظام الهيكل قبل الحفظ/);
+});
+
+test("rig part serialization treats static assets as a single frame", () => {
+  assert.match(routeSource, /function getRigPartFrameCount\(part\)\{if\(!part\?\.spriteSheet\)return 1/);
+  assert.match(routeSource, /frameCount:getRigPartFrameCount\(part\)/);
+});
+
+test("BattleScene advances rigged monsters through move, hit, freeze, and thaw states", () => {
+  assert.match(battleSceneSource, /monster\.hyenaSprite \|\| monster\.studioRig/);
+  assert.match(battleSceneSource, /monster\.studioRig\?\.root\?\.active/);
+  assert.match(battleSceneSource, /stopStudioSkeletalRig\(rig, true\)/);
+  assert.match(battleSceneSource, /restoreClip = rig\.profile\.clips\.find/);
+});
+test("rigged projectile launch never silently falls back when muzzle is missing", () => {
+  assert.match(battleSceneSource, /if \(skeletalRig && !muzzle\)/);
+  assert.match(battleSceneSource, /Rigged projectile plant has no valid muzzle attachment/);
+});
+
+test("Studio monster skeletal state priorities protect frozen and death states", () => {
+  assert.match(battleSceneSource, /activeId === "death" && action !== "death"/);
+  assert.match(battleSceneSource, /activeId === "frozen" && !\["frozen", "death"\]\.includes\(action\)/);
+  assert.match(battleSceneSource, /wasAlreadyFrozen/);
+  assert.match(battleSceneSource, /returnsToIdle = \["attack", "hit"\]\.includes\(action\)/);
+});
+test("Rig Editor snaps every edited keyframe to an integer clip frame", () => {
+  const editor = readFileSync(path.join(here, "../app/studio/RigEditor.jsx"), "utf8");
+  assert.match(editor, /snapSkeletalKeyframeTime\(timeMs, targetClip\.fps, targetClip\.durationMs\)/);
+  assert.match(editor, /snapSkeletalKeyframeTime\(timeMs, target\.fps, target\.durationMs\)/);
+});
+
+test("Studio skeletal collision evaluates every authored hitbox using oriented rectangle SAT", () => {
+  assert.match(battleSceneSource, /getStudioRigHitboxesWorld/);
+  assert.match(battleSceneSource, /attacks\.some\(\(attack\) => hurts\.some/);
+  assert.match(battleSceneSource, /studioOrientedHitboxesOverlap/);
+  assert.match(battleSceneSource, /hurtboxes\.some/);
+});
+
+test("Rig Editor resets canvas transforms before applying viewport zoom and pan", () => {
+  const editor = readFileSync(path.join(here, "../app/studio/RigEditor.jsx"), "utf8");
+  assert.match(editor, /context\.setTransform\(1, 0, 0, 1, 0, 0\);\s*context\.clearRect/);
+});
+
+test("Rig Editor blocks readiness when referenced bitmap parts are unavailable", () => {
+  const editor = readFileSync(path.join(here, "../app/studio/RigEditor.jsx"), "utf8");
+  assert.match(editor, /missingPartIds/);
+  assert.match(editor, /availableParts\.some\(\(asset\) => asset\.id === item\.part\.assetId\)/);
+  assert.match(editor, /rigIsReady = validation\.valid && hasVisualPart && missingPartIds\.length === 0/);
+});
+
+test("Rig Editor resolves available part assets before readiness validation", () => {
+  const editor = readFileSync(path.join(here, "../app/studio/RigEditor.jsx"), "utf8");
+  assert.ok(editor.indexOf("const availableParts = useMemo") < editor.indexOf("const missingPartIds ="));
+});
+
+test("BattleScene delegates skeletal hitbox collision to shared tested geometry", () => {
+  assert.match(battleSceneSource, /from "\.\.\/studio\/skeletalCollision\.mjs"/);
+  assert.match(battleSceneSource, /return convexPolygonsOverlap\(a, b\)/);
+  assert.match(battleSceneSource, /circleIntersectsConvexPolygon/);
+});
+
+test("Rigged projectiles resolve muzzle attachment through the plant view transform", () => {
+  assert.match(battleSceneSource, /getStudioRigAttachmentWorld\(rig, parentView, attachmentId\)/);
+  assert.match(battleSceneSource, /this\.getStudioRigAttachmentWorld\(skeletalRig, plant\.view, "muzzle"\)/);
+  assert.match(battleSceneSource, /const launchOffsetX = launchPoint\.x - laneOrigin\.x/);
+  assert.match(battleSceneSource, /const launchOffsetY = launchPoint\.y - laneOrigin\.y/);
+});
+
+test("BattleScene uses the tested world-space transform for muzzle and hitbox positions", () => {
+  assert.match(battleSceneSource, /from "\.\.\/studio\/skeletalWorldTransform\.mjs"/);
+  assert.match(battleSceneSource, /transformRigPointToWorld\(point, parentView\)/);
+  assert.match(battleSceneSource, /transformRigHitboxToWorld\(rig\.getHitbox\(profile\.id\), parentView\)/);
+});
+
+
+test("does not resolve unsupported rig-part asset types", () => {
+  const assets = [
+    { id: "rigged-plant", type: "plant", path: "/assets/plants/rigged.png", rigProfile: { bones: [{ id: "root", part: { assetId: "projectile-part", frame: 0 } }] } },
+    { id: "projectile-part", type: "plantProjectile", path: "/assets/projectiles/part.png", status: "published" }
+  ];
+  const report = buildAssetDependencyReport(assets, "rigged-plant");
+  assert.equal(report.dependencies[0].relation, "rig-part");
+  assert.equal(report.dependencies[0].resolved, false);
+  assert.equal(report.unresolved.length, 1);
 });
