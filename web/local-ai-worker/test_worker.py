@@ -156,6 +156,51 @@ class WorkerTests(unittest.TestCase):
         self.assertLessEqual(len(points), 512)
         self.assertTrue(all(0 <= p["x"] < 32 and 0 <= p["y"] < 32 for p in points))
 
+    def test_visible_donor_transfer_preserves_target_alpha_and_mirrors_pixels(self):
+        import base64
+        import cv2
+        import numpy as np
+        height = width = 64
+        image = np.zeros((height, width, 3), dtype=np.uint8)
+        for x in range(8, 24):
+            image[12:28, x] = (x * 8, 120, 40)
+        ok, encoded = cv2.imencode(".png", cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
+        self.assertTrue(ok)
+        payload = {
+            "canvas": {"width": width, "height": height},
+            "imageDataUrl": "data:image/png;base64," + base64.b64encode(encoded.tobytes()).decode("ascii"),
+            "sourcePolygon": [{"x": 8, "y": 12}, {"x": 23, "y": 12}, {"x": 23, "y": 27}, {"x": 8, "y": 27}],
+            "targetPolygon": [{"x": 36, "y": 12}, {"x": 51, "y": 12}, {"x": 51, "y": 27}, {"x": 36, "y": 27}],
+            "flipHorizontal": True
+        }
+        result = worker.reconstruct_from_visible_donor(payload)
+        raw = base64.b64decode(result["patchDataUrl"].split(",", 1)[1])
+        patch = cv2.imdecode(np.frombuffer(raw, dtype=np.uint8), cv2.IMREAD_UNCHANGED)
+        self.assertEqual(result["provenance"]["method"], "visible-donor-transfer")
+        self.assertEqual(result["targetBounds"], {"x": 36, "y": 12, "width": 16, "height": 16})
+        self.assertEqual(patch.shape, (16, 16, 4))
+        self.assertTrue(np.all(patch[:, :, 3] == 255))
+        self.assertGreater(int(patch[8, 0, 2]), int(patch[8, 15, 2]))
+
+    def test_visible_donor_transfer_rejects_overlapping_and_degenerate_regions(self):
+        import base64
+        import cv2
+        import numpy as np
+        image = np.full((32, 32, 3), 120, dtype=np.uint8)
+        ok, encoded = cv2.imencode(".png", cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
+        self.assertTrue(ok)
+        base = {
+            "canvas": {"width": 32, "height": 32},
+            "imageDataUrl": "data:image/png;base64," + base64.b64encode(encoded.tobytes()).decode("ascii"),
+            "sourcePolygon": [{"x": 2, "y": 2}, {"x": 15, "y": 2}, {"x": 15, "y": 15}, {"x": 2, "y": 15}],
+            "targetPolygon": [{"x": 10, "y": 10}, {"x": 22, "y": 10}, {"x": 22, "y": 22}, {"x": 10, "y": 22}]
+        }
+        with self.assertRaises(ValueError):
+            worker.reconstruct_from_visible_donor(base)
+        base["sourcePolygon"] = [{"x": 2, "y": 2}, {"x": 12, "y": 2}, {"x": 22, "y": 2}]
+        with self.assertRaises(ValueError):
+            worker.reconstruct_from_visible_donor(base)
+
     def test_mask_selection_drops_background_tiny_regions_and_near_duplicates(self):
         import numpy as np
         shape = (100, 100)
