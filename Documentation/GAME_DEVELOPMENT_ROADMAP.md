@@ -202,7 +202,7 @@ The user will create and provide the cave artwork later. Do not invent final cav
 - The browser rebuild and core battle scene exist in `web/`.
 - Phase 1 now exposes both Radish and Energy Mushroom cards. The Mushroom produces a full 15-energy collectible every 12 seconds even when the energy bank is full; the player must click each pickup before its 12-second expiry, and the 300-energy cap is applied at collection. Mushrooms are resource plants, not defensive plants, and do not block emergency club combat. Browser verification is still required.
 - Farmer frame-count validation was added on 2026-11-14.
-- The Phase 1 code now uses 2 / 3 / 4 / 5 / 6 ordinary monsters (30 total). Stage 2 targets 31, Stage 3 targets 32, then +1 per stage. The dragon boss is counted separately; the sixth-wave loop remains removed.
+- The Phase 1 code now uses 2 / 3 / 4 / 5 / 6 ordinary monsters (20 total). Stage 2 targets 25, Stage 3 targets 30, then follows the explicit campaign totals. The dragon boss is counted separately; the sixth-wave loop remains removed.
 - Phase 1 currently includes three monster archetypes: Cave-brute, Dust-skitter, and Stonehide. Stonehide braces while eating, reducing incoming damage; it is intended to require layered defense rather than a single Radish.
 - The battle HUD now tracks total campaign defeats out of 20 and the current wave's defeats out of that wave's target; the per-wave counter resets only when the previous wave is fully cleared.
 - Current code still triggers ordinary final-wave Victory after all scheduled monsters die; this is not yet correct for the approved story stage. Replace it with the Wave 5 dragon sequence, automatic slingshot combat, and rescue ending before declaring victory.
@@ -221,7 +221,7 @@ The user will create and provide the cave artwork later. Do not invent final cav
 
 1. Finalize and verify the battlefield environment, grid alignment, farmer movement/planting, and current starter plant/resource interactions.
 2. Finalize the game visual system: stage presentation, buttons, HUD, main menu, How to Play, pause, and settings. Do not add new plant types before these foundations are approved.
-3. Rebalance the five waves so the opening is forgiving and enemy pressure increases gradually; reduce the current excessive 100-enemy total based on playtesting.
+3. Rebalance the five waves so the opening is forgiving and enemy pressure increases gradually; verify the current 20-enemy Stage 1 schedule and tune it only from measured playtesting.
 4. Implement the Wave 5 dragon appearance while a few followers remain, dragon fireballs, dedicated boss health, and automatic farmer slingshot attacks when in range.
 5. Implement dragon defeat → wife rescue → reunion/celebration → stage results. Do not show victory before the dragon and required followers are defeated.
 6. Verify Pause/Resume audio suspension, all menu/settings transitions, restart, and defeat/retry behavior in a real browser.
@@ -249,7 +249,7 @@ Run from `web/` with `npm test`. GitHub Actions is configured to run the suite, 
 
 
 ## 2026-11-15 — Stage 1 balance and in-game field guide
-- Replaced the obsolete 100-monster prototype schedule with five waves of 2 / 3 / 4 / 5 / 6 ordinary monsters (30 total). The dragon remains a separate boss.
+- Replaced the obsolete 100-monster prototype schedule with five waves of 2 / 3 / 4 / 5 / 6 ordinary monsters (20 total). The dragon remains a separate boss.
 - Added a ten-stage campaign count helper: Stage N contains 29 + N ordinary monsters (Stage 1 = 30 through Stage 10 = 39).
 - Added an in-battle journal/menu with four tabs: campaign stages, plant catalogue, cave/coin balance, and monster field guide.
 - Stage 1 is shown as available; later stages are visibly locked pending campaign progression. No unsupported unlock claims are made.
