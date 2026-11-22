@@ -530,7 +530,7 @@ Auto-Rig وHybrid/Skeletal Rig جزءان من **Asset & Animation Studio** ول
 
 ### 29.7 توحيد حالة فروع Hybrid Rig وAuto-Rig
 
-- **PR #84 — Hybrid Animation Engine:** حالته مغلق وغير مدمج. وجود ملفات ومكوّنات Rig في main لا يعني أن PR #84 نفسه دُمج. فرعه التاريخي `feat/studio-hybrid-animation-engine` متباعد عن main (206 التزامات أماماً و66 خلفاً عند الفحص)، لذلك لا يُدمج أو يُنقل بالجملة.
+- **PR #84 — Hybrid Animation Engine:** المحاولة التاريخية الأولى مغلقة وغير مدمجة. التنفيذ الذي وصل إلى main جاء عبر **PR #88 — Port Hybrid Animation Engine onto current main**، وهو مدمج في الالتزام `a642d676e186bb6ae59b5875585352a690ce40d7`. لذلك Hybrid Rig وRigEditor ومحرك Phaser الهيكلي جزء موجود مصدرياً في main. الفرع التاريخي `feat/studio-hybrid-animation-engine` متباعد (206 التزامات أماماً و66 خلفاً)، ولا يُدمج؛ أما PR #88/فرعه `feat/studio-hybrid-animation-engine-mainline` فهو مسار الدمج الصحيح الذي اكتمل.
 - **PR #89 — AI Auto-Rig Builder:** ما زال مفتوحاً وغير مدمج. مكوّن `AutoRigBuilderPanel.jsx` ومجموعة من تحسينات worker/semantic roles/rig retargeting موجودة في هذا الفرع فقط، وليست ضمن صفحة Studio الحالية على main. مقارنة الفرع أظهرت 411 التزاماً أمام main وصفر خلفه، مع 27 ملفاً متغيراً؛ لا يُدمج كاملاً دون مراجعة نطاقه وتاريخه.
 - تحقق CI على رأس PR #89 أظهر نجاح `Auto-Rig subsystem validation`، لكن `Studio and Game Validation` و`Web validation` و`Web quality gate` فشلت. كما أن اختبار SAM2 على جهاز Windows الفعلي والأوزان/العتاد المستهدف ما زال غير مثبت في المصدر.
 - القرار المعماري: لا يُعامل PR #89 كمنتج Auto-Rig مستقل. نراجع مكوناته وننقل القدرات المطلوبة إلى Asset & Animation Studio، بحيث تُحفظ ضمن سجل الأصل وRig contract والإصدارات والتبعيات والجاهزية والنشر والاختبار الموحد. ولا نعتبر الميزة موجودة في main قبل دمجها والتحقق منها.
