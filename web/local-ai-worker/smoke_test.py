@@ -40,17 +40,58 @@ def synthetic_plant_data_url():
 
 
 def validate_proposals(result, label):
-    proposals = result.get("proposals")
+    proposals = result.get("proposals") if isinstance(result, dict) else None
     if not isinstance(proposals, list) or not proposals:
         raise RuntimeError(label + " returned no segmentation proposals.")
-    for proposal in proposals:
-        bounds = proposal.get("bounds") or {}
-        if not isinstance(proposal.get("mask", {}).get("points"), list):
-            raise RuntimeError(label + " returned a proposal without an editable polygon.")
-        if not (0 <= bounds.get("x", -1) < WIDTH and 0 <= bounds.get("y", -1) < HEIGHT):
-            raise RuntimeError(label + " returned out-of-canvas bounds.")
-        if bounds.get("x", 0) + bounds.get("width", 0) > WIDTH or bounds.get("y", 0) + bounds.get("height", 0) > HEIGHT:
+    if len(proposals) > 63:
+        raise RuntimeError(label + " returned more than 63 segmentation proposals.")
+    seen_ids = set()
+    for index, proposal in enumerate(proposals):
+        if not isinstance(proposal, dict):
+            raise RuntimeError(label + " proposal " + str(index) + " is not an object.")
+        proposal_id = proposal.get("id")
+        if not isinstance(proposal_id, str) or not proposal_id or len(proposal_id) > 59:
+            raise RuntimeError(label + " returned a proposal with an invalid ID.")
+        if proposal_id in seen_ids:
+            raise RuntimeError(label + " returned duplicate proposal ID: " + proposal_id)
+        seen_ids.add(proposal_id)
+        role = proposal.get("role")
+        if not isinstance(role, str) or not role or len(role) > 80:
+            raise RuntimeError(label + " returned a proposal with an invalid semantic role.")
+        confidence = proposal.get("confidence")
+        if confidence is not None and (isinstance(confidence, bool) or not isinstance(confidence, (int, float)) or not np.isfinite(confidence) or not 0 <= confidence <= 1):
+            raise RuntimeError(label + " returned an invalid confidence score.")
+        bounds = proposal.get("bounds")
+        if not isinstance(bounds, dict):
+            raise RuntimeError(label + " returned a proposal without source bounds.")
+        x, y, width, height = (bounds.get(key) for key in ("x", "y", "width", "height"))
+        if any(isinstance(value, bool) or not isinstance(value, int) for value in (x, y, width, height)):
+            raise RuntimeError(label + " returned non-integer source bounds.")
+        if width < 1 or height < 1 or not (0 <= x < WIDTH and 0 <= y < HEIGHT):
             raise RuntimeError(label + " returned bounds outside the source canvas.")
+        if x + width > WIDTH or y + height > HEIGHT:
+            raise RuntimeError(label + " returned bounds outside the source canvas.")
+        mask = proposal.get("mask")
+        points = mask.get("points") if isinstance(mask, dict) and mask.get("kind") == "polygon" else None
+        if not isinstance(points, list) or not 3 <= len(points) <= 512:
+            raise RuntimeError(label + " returned a proposal without an editable polygon.")
+        area_twice = 0.0
+        for point_index, point in enumerate(points):
+            if not isinstance(point, dict):
+                raise RuntimeError(label + " returned a malformed polygon point.")
+            px, py = point.get("x"), point.get("y")
+            if isinstance(px, bool) or isinstance(py, bool) or not isinstance(px, (int, float)) or not isinstance(py, (int, float)) or not np.isfinite(px) or not np.isfinite(py):
+                raise RuntimeError(label + " returned non-finite polygon coordinates.")
+            if not (0 <= px <= WIDTH and 0 <= py <= HEIGHT):
+                raise RuntimeError(label + " returned polygon points outside the source canvas.")
+            if not (x <= px <= x + width and y <= py <= y + height):
+                raise RuntimeError(label + " returned polygon points outside proposal crop bounds.")
+            next_point = points[(point_index + 1) % len(points)]
+            if not isinstance(next_point, dict) or not isinstance(next_point.get("x"), (int, float)) or not isinstance(next_point.get("y"), (int, float)):
+                raise RuntimeError(label + " returned a malformed polygon point.")
+            area_twice += px * next_point["y"] - next_point["x"] * py
+        if abs(area_twice) < 2:
+            raise RuntimeError(label + " returned a degenerate polygon mask.")
     return len(proposals)
 
 
