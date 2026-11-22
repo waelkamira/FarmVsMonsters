@@ -184,3 +184,12 @@ test("readiness blocks a skeletal profile with no bitmap parts", () => {
   assert.equal(report.blocked, 1);
   assert.ok(report.assets[0].errors.some((message) => message.includes("صورة جزء واحدة على الأقل")));
 });
+
+test("readiness reports malformed rig arrays without crashing the whole audit", () => {
+  const report = auditStudioAssetRegistry([
+    validPlant({ rigProfile: { version: 1, bones: {}, attachments: {}, clips: [] } }),
+    validProjectile()
+  ]);
+  assert.equal(report.blocked, 1);
+  assert.ok(report.assets[0].errors.some((message) => message.includes("ملف الهيكل")));
+});
