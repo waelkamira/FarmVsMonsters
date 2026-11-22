@@ -3272,7 +3272,7 @@ export default class BattleScene extends Scene {
         const sheet = Boolean(studioPlant.spriteSheet);
         const frame = this.textures.getFrame(textureKey, studioPlant.atlas?.frameNames?.[0] || (sheet ? "0" : undefined));
         const width = Math.min(height * (frame.realWidth / frame.realHeight), 100 * perspective * sizeFactor);
-        const idleFrame = studioPlant.atlas?.clips?.idle?.[0] || String(studioPlant.animationProfile?.idle?.startFrame ?? 0);
+        const idleFrame = studioPlant.atlas?.clips?.idle?.[0] || studioPlant.atlas?.frameNames?.[0] || String(studioPlant.animationProfile?.idle?.startFrame ?? 0);
         const artwork = sheet
           ? this.add.sprite(0, -height / 2 + 2, textureKey, idleFrame).setDisplaySize(width, height)
           : this.add.image(0, -height / 2 + 2, textureKey).setDisplaySize(width, height);
@@ -4298,7 +4298,7 @@ export default class BattleScene extends Scene {
     const sprite = monster && monster.hyenaSprite;
     if (!sprite || !sprite.active) return;
     if (monster.studioMonster) {
-      const action = ["hyena-bite", "hyena-hit", "hyena-death"].includes(key) ? "attack" : ["hyena-walk", "hyena-run"].includes(key) ? "move" : "idle";
+      const action = key === "hyena-hit" && monster.studioMonster.atlas?.clips?.hurt ? "hurt" : key === "hyena-death" && monster.studioMonster.atlas?.clips?.death ? "death" : ["hyena-bite", "hyena-hit", "hyena-death"].includes(key) ? "attack" : ["hyena-walk", "hyena-run"].includes(key) ? "move" : "idle";
       const animationKey = "studio-monster-" + monster.studioMonster.id + "-" + action;
       if (action === "attack" && !force && monster.hitAnimUntil > this.time.now) return;
       if (this.anims.exists(animationKey)) {
