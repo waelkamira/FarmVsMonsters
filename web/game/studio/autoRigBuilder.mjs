@@ -120,6 +120,28 @@ function readPart(raw, index, canvas) {
     if (Math.abs(area) < 1) throw new RangeError("Part " + id + " mask polygon must enclose a non-zero area.");
     mask = { kind: "polygon", points };
   }
+  let occlusionMask = null;
+  if (raw.occlusionMask != null) {
+    const sourceMask = raw.occlusionMask;
+    if (!sourceMask || sourceMask.kind !== "polygon" || !Array.isArray(sourceMask.points) ||
+        sourceMask.points.length < 3 || sourceMask.points.length > 512) {
+      throw new TypeError("Part " + id + " occlusion mask must be a polygon with 3–512 source-space points.");
+    }
+    const points = sourceMask.points.map((point, pointIndex) => {
+      const px = finite(point?.x, "parts[" + index + "].occlusionMask.points[" + pointIndex + "].x");
+      const py = finite(point?.y, "parts[" + index + "].occlusionMask.points[" + pointIndex + "].y");
+      if (px < 0 || py < 0 || px > canvas.width || py > canvas.height) {
+        throw new RangeError("Part " + id + " occlusion mask point lies outside the source canvas.");
+      }
+      return { x: px, y: py };
+    });
+    const area = Math.abs(points.reduce((sum, point, pointIndex) => {
+      const next = points[(pointIndex + 1) % points.length];
+      return sum + point.x * next.y - next.x * point.y;
+    }, 0) / 2);
+    if (area < 1) throw new RangeError("Part " + id + " occlusion mask must enclose a non-zero area.");
+    occlusionMask = { kind: "polygon", points };
+  }
   const provenanceInput = raw.provenance && typeof raw.provenance === "object" ? raw.provenance : {};
   const segmentation = ["manual-polygon", "model-mask", "imported-mask", "sam2"].includes(provenanceInput.segmentation)
     ? provenanceInput.segmentation : (mask ? "manual-polygon" : "unspecified");
@@ -129,7 +151,7 @@ function readPart(raw, index, canvas) {
     id, assetId, role, side, frame, bounds: { x, y, width, height },
     pivot: { x: pivotX, y: pivotY }, pivotExplicit,
     name: String(raw.name || role).slice(0, 80),
-    confidence, reviewed: raw.reviewed === true, mask, provenance: { segmentation, pixels },
+    confidence, reviewed: raw.reviewed === true, mask, occlusionMask, provenance: { segmentation, pixels },
     occlusion: raw.occlusion === "unresolved" ? "unresolved" : raw.occlusion === "reconstructed" ? "reconstructed" : "none",
     parentPartId: raw.parentPartId == null ? null : readId(raw.parentPartId, "parts[" + index + "].parentPartId", 59),
     drawOrder: Number.isFinite(Number(raw.drawOrder)) ? Number(raw.drawOrder) : index
@@ -362,7 +384,7 @@ export function buildAutoRigFromParts(input) {
         id: part.id, assetId: part.assetId, role: part.role, side: part.side,
         bounds: part.bounds, pivot: part.pivot, parentPartId: parentByPartId.get(part.id),
         drawOrder: part.drawOrder, confidence: part.confidence, reviewed: part.reviewed, occlusion: part.occlusion,
-        mask: part.mask, provenance: part.provenance
+        mask: part.mask, occlusionMask: part.occlusionMask, provenance: part.provenance
       })),
       anchors: attachments.map((attachment) => ({ id: attachment.id, boneId: attachment.boneId, x: attachment.x, y: attachment.y })),
       animation: { generator: "procedural-starter", version: 1, clipIds: clips.map((clip) => clip.id) },
@@ -441,6 +463,8 @@ export function analyzeAutoRigQuality(manifest, profileInput) {
   const allPartsReviewed = parts.every((part) => part.reviewed === true);
   const unreviewedCount = parts.filter((part) => part.reviewed !== true).length;
   const occlusionResolved = parts.every((part) => part.occlusion !== "unresolved");
+  const occlusionMaskCount = parts.filter((part) => part.occlusionMask?.kind === "polygon").length;
+  const unresolvedWithoutMaskCount = parts.filter((part) => part.occlusion === "unresolved" && !part.occlusionMask).length;
   const sourceFingerprintPresent = /^[a-f0-9]{64}$/i.test(String(manifest.source.sha256 || ""));
   const hasPrimaryBody = parts.some((part) => ["body", "stem"].includes(normalizeRole(part.role)));
   const lowConfidenceCount = parts.filter((part) => part.confidence != null && Number.isFinite(Number(part.confidence)) && Number(part.confidence) < 0.65).length;
@@ -451,6 +475,7 @@ export function analyzeAutoRigQuality(manifest, profileInput) {
   if (!allPartsReviewed) warnings.push({ code: "unreviewed-parts", count: unreviewedCount, message: "One or more parts have not been explicitly reviewed and approved by the author." });
   if (lowConfidenceCount) warnings.push({ code: "low-confidence", count: lowConfidenceCount, message: "Review low-confidence segmentation proposals." });
   if (!occlusionResolved) warnings.push({ code: "unresolved-occlusion", message: "One or more parts have unresolved occlusion." });
+  if (unresolvedWithoutMaskCount) warnings.push({ code: "missing-occlusion-mask", count: unresolvedWithoutMaskCount, message: "Mark the hidden region on each occluded part before reconstruction can run." });
   if (reconstructedCount) warnings.push({ code: "reconstructed-pixels", count: reconstructedCount, message: "Review generated pixels before publishing." });
   if (!sourceFingerprintPresent) warnings.push({ code: "missing-source-fingerprint", message: "The original source image has no SHA-256 fingerprint." });
   if (!hasPrimaryBody) warnings.push({ code: "missing-primary-body", message: "No body or stem role is assigned; the rig may lack a stable primary anchor." });
@@ -474,6 +499,8 @@ export function analyzeAutoRigQuality(manifest, profileInput) {
       allPartsReviewed,
       unreviewedCount,
       occlusionResolved,
+      occlusionMaskCount,
+      unresolvedWithoutMaskCount,
       sourceFingerprintPresent,
       hasPrimaryBody,
       lowConfidenceCount,
