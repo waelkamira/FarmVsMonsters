@@ -274,3 +274,10 @@ test("BattleScene delegates skeletal hitbox collision to shared tested geometry"
   assert.match(battleSceneSource, /return orientedRectanglesOverlap\(a, b\)/);
   assert.match(battleSceneSource, /circleIntersectsOrientedRectangle/);
 });
+
+test("Rigged projectiles resolve muzzle attachment through the plant view transform", () => {
+  assert.match(battleSceneSource, /getStudioRigAttachmentWorld\(rig, parentView, attachmentId\)/);
+  assert.match(battleSceneSource, /this\.getStudioRigAttachmentWorld\(skeletalRig, plant\.view, "muzzle"\)/);
+  assert.match(battleSceneSource, /const launchOffsetX = muzzle \? muzzle\.x - laneOrigin\.x/);
+  assert.match(battleSceneSource, /const launchOffsetY = muzzle \? muzzle\.y - laneOrigin\.y/);
+});
