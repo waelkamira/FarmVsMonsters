@@ -1,0 +1,55 @@
+name: Phaser Atlas validation
+
+on:
+  push:
+    branches:
+      - feat/studio-ai-auto-rig-builder
+    paths:
+      - "web/app/studio/page.js"
+      - "web/app/api/studio/assets/route.js"
+      - "web/game/studio/phaserAtlas.mjs"
+      - "web/game/studio/assetVersions.mjs"
+      - "web/game/scenes/BattleScene.js"
+      - "web/tests/phaser-atlas-import.test.mjs"
+      - "web/tests/studio-phaser-atlas-workflow.test.mjs"
+      - "web/tests/studio-asset-versions.test.mjs"
+      - ".github/workflows/phaser-atlas-validation.yml"
+  pull_request:
+    paths:
+      - "web/app/studio/page.js"
+      - "web/app/api/studio/assets/route.js"
+      - "web/game/studio/phaserAtlas.mjs"
+      - "web/game/studio/assetVersions.mjs"
+      - "web/game/scenes/BattleScene.js"
+      - "web/tests/phaser-atlas-import.test.mjs"
+      - "web/tests/studio-phaser-atlas-workflow.test.mjs"
+      - "web/tests/studio-asset-versions.test.mjs"
+      - ".github/workflows/phaser-atlas-validation.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: phaser-atlas-validation-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - name: Run focused Phaser Atlas and Studio version tests
+        run: node --test tests/phaser-atlas-import.test.mjs tests/studio-phaser-atlas-workflow.test.mjs tests/studio-asset-versions.test.mjs
+      - name: Lint changed Studio and runtime modules
+        run: npx eslint app/studio/page.js app/api/studio/assets/route.js game/studio/phaserAtlas.mjs game/studio/assetVersions.mjs game/scenes/BattleScene.js
+      - name: Build production application
+        run: npm run build
