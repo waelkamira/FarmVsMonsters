@@ -3294,7 +3294,9 @@ export default class BattleScene extends Scene {
       // Pineapple Level 1 keeps its tuned base size; only its row perspective changes.
       const baseHeight = type === "pumpkin" ? 70 : type === "pineapple" ? 132 : type === "hazelnut" ? 112 : type === "mango" ? 112 : type === "snow-thrower" ? 84 : type === "electric-mushroom" ? 96 : type === "corn-monster" ? 112 : 64;
       const height = baseHeight * pineapplePerspectiveScale;
-      const plantFrame = this.textures.getFrame(texture, type === "corn-monster" ? "idle_00" : ["pineapple", "hazelnut", "mango", "snow-thrower", "electric-mushroom"].includes(type) ? "0" : undefined);
+      const plantFrame = type === "corn-monster"
+        ? this.textures.getFrame(texture, "idle_00")
+        : this.textures.getFrame(texture, ["pineapple", "hazelnut", "mango", "snow-thrower", "electric-mushroom"].includes(type) ? "0" : undefined);
       const width = height * (plantFrame.realWidth / plantFrame.realHeight);
       const maxWidth = (type === "pineapple" ? 152 : type === "hazelnut" ? 116 : type === "mango" ? 116 : type === "snow-thrower" ? 84 : type === "electric-mushroom" ? 104 : type === "corn-monster" ? 116 : 76) * pineapplePerspectiveScale;
       if (["pineapple", "hazelnut", "mango", "snow-thrower", "electric-mushroom", "corn-monster"].includes(type)) {
