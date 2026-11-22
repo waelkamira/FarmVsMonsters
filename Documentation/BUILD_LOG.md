@@ -1290,3 +1290,10 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - Auto-Rig subsystem validation passed on the recent branch head available to CI: Python worker compile/tests, Auto-Rig/Studio contract tests, focused ESLint, full-project ESLint diagnostic step, and production build.
 - The separate Studio and Game Validation workflow failed in the existing broad game test suite: 363 passed and 54 failed out of 417. The failures are concentrated in Phase 1 combat/replay/wave scheduler, monster stats, planting/resource, and static Phaser integration assertions (for example `wood-frame-inventory.test.mjs`).
 - These failures are not Auto-Rig worker tests and were not changed as part of this Studio-only pass. They remain a repository-level blocker to claiming a fully green project or merging the dependent feature.
+
+
+## 2026-11-22 — Rig quality validator integration
+- Added `analyzeAutoRigQuality` to report manifest validity, editable-mask coverage, semantic-role confirmation, confidence review, occlusion resolution, source fingerprint presence, primary body/stem assignment, and reconstructed-pixel counts.
+- The validator returns a transparent 0–100 heuristic score, actionable warnings, and a separate `readyForAnimation` gate. It does not silently repair data or treat a high score as proof of visual correctness.
+- Integrated the report into the Auto-Rig Studio workflow so the user sees quality findings after generation.
+- Added tests for a fully reviewed rig, an unclassified role, and invalid manifests.
