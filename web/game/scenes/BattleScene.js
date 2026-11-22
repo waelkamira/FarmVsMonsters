@@ -178,6 +178,17 @@ export default class BattleScene extends Scene {
     for (const asset of soundAssets.assets) {
       this.load.audio(asset.key, asset.path);
     }
+    const queuedRigPartTextures = new Set();
+    const queueRigPartTextures = (entry, variant) => {
+      for (const part of entry.rigParts || []) {
+        if (!part || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(part.id || "") || typeof part.path !== "string" ||
+            !(part.path.startsWith("/assets/") || part.path.startsWith("/api/studio/assets?preview="))) continue;
+        const key = "studio-rig-part-" + variant + "-" + part.id;
+        if (queuedRigPartTextures.has(key)) continue;
+        queuedRigPartTextures.add(key);
+        this.load.image(key, part.path);
+      }
+    };
     const queueStudioCatalog = (catalogKey) => {
       this.load.once("filecomplete-json-" + catalogKey, () => {
         const entries = this.cache.json.get(catalogKey)?.plants || [];
@@ -186,11 +197,7 @@ export default class BattleScene extends Scene {
           if (!entry || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(entry.id || "") ||
               typeof entry.path !== "string" || !(entry.path.startsWith("/assets/") || entry.path.startsWith("/api/studio/assets?preview="))) continue;
           this.load.image("studio-plant-" + variant + "-" + entry.id, entry.path);
-          for (const part of entry.rigParts || []) {
-            if (!part || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(part.id || "") || typeof part.path !== "string" ||
-                !(part.path.startsWith("/assets/") || part.path.startsWith("/api/studio/assets?preview="))) continue;
-            this.load.image("studio-rig-part-" + variant + "-" + part.id, part.path);
-          }
+          queueRigPartTextures(entry, variant);
           if (entry.combat?.mode === "projectile" && entry.combat.projectile?.path && (entry.combat.projectile.path.startsWith("/assets/") || entry.combat.projectile.path.startsWith("/api/studio/assets?preview="))) {
             this.load.image("studio-projectile-" + variant + "-" + entry.id, entry.combat.projectile.path);
           }
