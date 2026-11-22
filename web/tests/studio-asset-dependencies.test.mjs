@@ -201,5 +201,5 @@ test("testing catalogs include the referenced rig bitmap assets", () => {
 test("rigged projectile assets require the standard muzzle attachment", () => {
   assert.match(routeSource, /rigProfile\.attachments\.some\(item=>item\.id==="muzzle"\)/);
   assert.match(routeSource, /نقطة تثبيت باسم muzzle/);
-  assert.match(routeSource, /rigged projectile plants/);
+  assert.match(routeSource, /النبتة ذات الهيكل تحتاج نقطة تثبيت باسم muzzle/);
 });
