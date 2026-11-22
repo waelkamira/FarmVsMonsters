@@ -166,3 +166,8 @@ test("rejects archived rig part assets during Studio save and release", () => {
   assert.match(routeSource, /partAsset\.status==="archived"/);
   assert.match(routeSource, /part\.status==="archived"/);
 });
+
+test("Studio API validates skeletal part frame indices at save and release time", () => {
+  assert.match(routeSource, /partFrameCount/);
+  assert.match(routeSource, /invalidRigFrame/);
+});
