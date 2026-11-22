@@ -66,6 +66,8 @@ def reconstruct_anatomical_region(payload, image_rgb):
     x, y, w, h = cv2.boundingRect(full_mask)
     if w < 8 or h < 8 or int((full_mask > 0).sum()) < 64:
         raise ValueError("Anatomical target region is too small for diffusion reconstruction.")
+    if max(w, h) > 768:
+        raise ValueError("Split large hidden regions into smaller reviewable anatomical patches (maximum target dimension 768 px).")
     prompt_detail = payload.get("prompt", "")
     if not isinstance(prompt_detail, str) or len(prompt_detail) > 400:
         raise ValueError("Reconstruction prompt must be a string of at most 400 characters.")
