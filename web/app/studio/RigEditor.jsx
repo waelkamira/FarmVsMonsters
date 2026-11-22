@@ -469,7 +469,7 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
               <label>Pivot Y<input type="number" value={bone.pivot.y} disabled={disabled} onChange={(event) => updateBone("pivot.y", Number(event.target.value))}/></label>
             </div>
             <label>صورة الجزء<select value={bone.part?.assetId || ""} disabled={disabled} onChange={(event) => addPart(event.target.value)}><option value="">بدون صورة</option>{availableParts.map((asset) => <option key={asset.id} value={asset.id}>{asset.name || asset.id} · {asset.type}</option>)}</select></label>
-            {bone.part && <label>رقم الإطار<input type="number" min="0" max={Math.max(0, (partAssets.find((asset) => asset.id === bone.part.assetId)?.frameCount || 1) - 1)} value={bone.part.frame} disabled={disabled} onChange={(event) => updateBone("part.frame", Number(event.target.value))}/></label>}
+            {bone.part && <label>رقم الإطار<input type="number" min="0" max={Math.max(0, ((partAssets.find((asset) => asset.id === bone.part.assetId)?.spriteSheet ? (partAssets.find((asset) => asset.id === bone.part.assetId)?.frameCount || ((partAssets.find((asset) => asset.id === bone.part.assetId)?.rows || 1) * (partAssets.find((asset) => asset.id === bone.part.assetId)?.columns || 1))) : 1) - 1)} value={bone.part.frame} disabled={disabled} onChange={(event) => updateBone("part.frame", Number(event.target.value))}/></label>}
           </div>}
         </div>
       </div>
