@@ -4,7 +4,8 @@ import {
   createSkeletalRigProfile,
   evaluateSkeletalClip,
   getSkeletalAttachmentTransform,
-  getSkeletalHitboxTransform
+  getSkeletalHitboxTransform,
+  validateSkeletalRigProfile
 } from "../game/studio/skeletalAnimation.mjs";
 
 function sampleRig(overrides = {}) {
@@ -107,4 +108,11 @@ test("rejects out-of-order keyframes and invalid canvas sizes", () => {
     clips: [{ id: "bad", durationMs: 100, tracks: [{ boneId: "root", keyframes: [{ timeMs: 50 }, { timeMs: 20 }] }] }]
   })), /strictly increasing/);
   assert.throws(() => createSkeletalRigProfile(sampleRig({ canvas: { width: 0, height: 200 } })), /canvas.width/);
+});
+
+test("returns actionable validation errors without throwing", () => {
+  const result = validateSkeletalRigProfile({ bones: [{ id: "root", parentId: null }, null] });
+  assert.equal(result.valid, false);
+  assert.equal(result.profile, null);
+  assert.match(result.errors[0], /must be an object/);
 });
