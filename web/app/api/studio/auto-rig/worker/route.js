@@ -7,6 +7,7 @@ export const dynamic = "force-dynamic";
 
 const COOKIE = "fvm_studio_session";
 const MAX_IMAGE_DATA_URL_CHARS = 11 * 1024 * 1024;
+const MAX_REQUEST_BODY_BYTES = 12 * 1024 * 1024;
 const WORKER_TIMEOUT_MS = 45_000;
 
 function authorized(req) {
@@ -49,9 +50,19 @@ export async function POST(req) {
   try { base = workerEndpoint(); } catch (error) {
     return NextResponse.json({ error: error.message, code: "WORKER_NOT_CONFIGURED" }, { status: 503 });
   }
+  const declaredLength = Number(req.headers.get("content-length") || 0);
+  if (Number.isFinite(declaredLength) && declaredLength > MAX_REQUEST_BODY_BYTES) {
+    return NextResponse.json({ error: "Request body exceeds the 12 MB limit." }, { status: 413 });
+  }
   let body;
-  try { body = await req.json(); } catch {
-    return NextResponse.json({ error: "Request body must be valid JSON." }, { status: 400 });
+  try {
+    const rawBody = await req.text();
+    if (new TextEncoder().encode(rawBody).byteLength > MAX_REQUEST_BODY_BYTES) {
+      return NextResponse.json({ error: "Request body exceeds the 12 MB limit." }, { status: 413 });
+    }
+    body = JSON.parse(rawBody);
+  } catch {
+    return NextResponse.json({ error: "Request body must be valid JSON within the size limit." }, { status: 400 });
   }
   const width = Number(body?.canvas?.width), height = Number(body?.canvas?.height);
   if (!Number.isInteger(width) || !Number.isInteger(height) || width < 1 || height < 1 || width > 4096 || height > 4096) {
