@@ -273,7 +273,7 @@ export default function AutoRigBuilderPanel({
       setAiProposals(data.proposals || []);
       setAiProposalRoles({});
       setAiStatus("connected");
-      setMessage("اكتشف المحرك " + (data.proposals || []).length + " جزءاً. راجع كل قناع واعتمده يدوياً قبل إنشاء الهيكل.");
+      setMessage("اقترح SAM 2 " + (data.proposals || []).length + " منطقة مرئية. هذه أقنعة هندسية وليست تصنيفاً دلالياً؛ عيّن دور كل منطقة وراجعها قبل إنشاء الهيكل.");
     } catch (error) {
       setAiStatus("offline");
       setMessage(error.message);
