@@ -138,6 +138,7 @@ export async function POST(req){
  if(type==="plant"&&STUDIO_RESERVED_PLANT_IDS.includes(id))return NextResponse.json({error:"هذا المعرّف محجوز لنبتة أساسية في اللعبة. اختر معرّفاً جديداً."},{status:409});
  const hasFile=Boolean(file&&typeof file.arrayBuffer==="function"&&file.size>0);
  const hasAtlas=uploadMode==="atlas"&&hasFile;
+ const usingAtlas=hasAtlas||(!hasFile&&uploadMode==="atlas"&&Boolean(existing?.atlas));
  const hasAtlasJson=Boolean(atlasJsonFile&&typeof atlasJsonFile.arrayBuffer==="function"&&atlasJsonFile.size>0);
  const hasProjectile=Boolean(projectileFile&&typeof projectileFile.arrayBuffer==="function"&&projectileFile.size>0);
  const removeProjectile=String(form.get("removeProjectile")||"false")==="true";
@@ -172,7 +173,7 @@ export async function POST(req){
  if(hasAtlas&&(!["plant","monster"].includes(type)||!hasFile||!hasAtlasJson||file.type!=="image/png"||atlasJsonFile.size>2*1024*1024))return NextResponse.json({error:"Phaser Output يحتاج ملف PNG وملف JSON صالحين، وهو متاح للنباتات والوحوش فقط. الحد الأقصى لـ JSON هو 2 MB."},{status:415});
  if(!hasAtlas&&hasAtlasJson)return NextResponse.json({error:"ملف JSON مرفق دون اختيار وضع Phaser Atlas."},{status:400});
  if(hasFile&&(file.size>STUDIO_MAX_UPLOAD_BYTES||!config.accepts.includes(file.type)))return NextResponse.json({error:"Choose a supported file up to 8 MB."},{status:415});
- if(config.spriteSheet&&!hasAtlas&&(!Number.isInteger(frameCount)||frameCount<1||frameCount>24||!Number.isInteger(rows)||!Number.isInteger(columns)||rows<1||columns<1||rows*columns!==frameCount))return NextResponse.json({error:"عدد الإطارات يجب أن يكون من 1 إلى 24، ويجب أن يطابق حاصل ضرب الصفوف والأعمدة."},{status:400});
+ if(config.spriteSheet&&!usingAtlas&&(!Number.isInteger(frameCount)||frameCount<1||frameCount>24||!Number.isInteger(rows)||!Number.isInteger(columns)||rows<1||columns<1||rows*columns!==frameCount))return NextResponse.json({error:"عدد الإطارات يجب أن يكون من 1 إلى 24، ويجب أن يطابق حاصل ضرب الصفوف والأعمدة."},{status:400});
  let animationProfile=null;
  if(config.spriteSheet&&!hasAtlas&&(type==="plant"||type==="monster")){
   try{
@@ -247,7 +248,7 @@ export async function POST(req){
  const atlasJsonRelative=hasAtlas?createImmutableAssetPath(config.folder,id+"-atlas",".json",atlasJsonBytes):(existing?.atlas?.jsonPath||"").replace(/^\/assets\//,"");
  const atlasRecord=hasAtlas?{frameCount:atlasValidation.frameCount,frameNames:atlasValidation.frameNames,clips:atlasValidation.clips,format:atlasValidation.format,filename:id+"-atlas.json",jsonPath:"/assets/"+atlasJsonRelative}:hasFile?null:(existing?.atlas||null);
  const now=new Date().toISOString();
- const record=createStudioAssetRevision(existing,{...(existing||{}),id,type,name:String(form.get("name")||id).trim().slice(0,80),filename:hasFile?id+extension:existing.filename,path:hasFile?"/assets/"+relative:existing.path,rows:hasAtlas?1:rows,columns:hasAtlas?1:columns,frameCount:hasAtlas?atlasValidation.frameCount:(config.spriteSheet?frameCount:1),spriteSheet:config.spriteSheet,...(atlasRecord?{atlas:atlasRecord}:hasFile?{atlas:null}:{}),status:"draft",releaseRequest:null,publishedAt:null,testingAt:null,archivedAt:null,restoredFromVersion:null,createdAt:existing?.createdAt||now,updatedAt:now,...(type==="plant"?{combat:combatProfile}:{}),...(type==="monster"?{monsterProfile}:{}),...(config.spriteSheet&&(type==="plant"||type==="monster")?{animationProfile,rigProfile}:{})});
+ const record=createStudioAssetRevision(existing,{...(existing||{}),id,type,name:String(form.get("name")||id).trim().slice(0,80),filename:hasFile?id+extension:existing.filename,path:hasFile?"/assets/"+relative:existing.path,rows:usingAtlas?1:rows,columns:usingAtlas?1:columns,frameCount:usingAtlas?(hasAtlas?atlasValidation.frameCount:existing.atlas.frameCount):(config.spriteSheet?frameCount:1),spriteSheet:config.spriteSheet,...(atlasRecord?{atlas:atlasRecord}:hasFile?{atlas:null}:{}),status:"draft",releaseRequest:null,publishedAt:null,testingAt:null,archivedAt:null,restoredFromVersion:null,createdAt:existing?.createdAt||now,updatedAt:now,...(type==="plant"?{combat:combatProfile}:{}),...(type==="monster"?{monsterProfile}:{}),...(config.spriteSheet&&(type==="plant"||type==="monster")?{animationProfile,rigProfile}:{})});
  const next={...old,version:1,assets:existing?old.assets.map((a,i)=>i===index?record:a):[...old.assets,record]};
  try{
   if(driver==="github"){
