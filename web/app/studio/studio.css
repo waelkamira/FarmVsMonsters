@@ -191,3 +191,9 @@
 
 .studio-rig-stage-actions label{display:grid;gap:4px;color:#f0e4c6;font-size:10px}
 .studio-rig-stage-actions select{max-width:180px;min-width:110px;padding:7px;border:1px solid #655333;border-radius:7px;background:#17160f;color:#fff1ce}
+
+.studio-rig-keyframe-tracks{display:grid;gap:8px;max-height:190px;overflow:auto;padding:8px;border:1px solid #3f5138;border-radius:8px;background:#10170f}
+.studio-rig-keyframe-track{display:grid;grid-template-columns:90px minmax(0,1fr);align-items:center;gap:8px}
+.studio-rig-keyframe-track>b{overflow:hidden;color:#cbd9bc;font-size:10px;text-overflow:ellipsis;white-space:nowrap}
+.studio-rig-keyframe-rail{position:relative;height:27px;border-bottom:1px solid #647458;background:linear-gradient(90deg,transparent 49.8%,#ffffff13 50%,transparent 50.2%)}
+.studio-rig-keyframe-rail button{position:absolute;top:2px;transform:translateX(-50%);max-width:52px;overflow:hidden;border:1px solid #9ac878;border-radius:5px;padding:3px 4px;background:#344a2d;color:#f1f8e8;font-size:8px;white-space:nowrap;cursor:pointer}
