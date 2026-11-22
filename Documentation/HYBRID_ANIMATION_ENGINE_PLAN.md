@@ -15,6 +15,19 @@ The engine is implemented in the active browser project under \`web/\`. Godot re
 - Reuse rigs, clips, and presets across compatible characters without copying source image files.
 - Preserve all existing Sprite Sheet assets and animation profile behavior.
 
+## Visual and performance principles
+
+The Plants-vs.-Zombies reference is a direction for readability and resource efficiency, not a request to copy its art or internal engine. FarmVsMonsters will use these principles:
+
+- Prefer a clear silhouette, expressive face, strong pose, and immediately readable combat role over unnecessary geometry or tiny decorative detail.
+- Design important facial features and action cues for phone screens; allow head/face proportions to be slightly exaggerated when that improves recognition.
+- Use a bitmap cutout rig for reusable body parts and secondary motion (head sway, breathing, recoil, limbs), instead of storing a full duplicate image for every animation frame.
+- Keep authored Sprite Sheets where frame-by-frame deformation is more expressive or simpler; support mixed techniques per character rather than forcing every asset into one animation format.
+- Reuse source parts, rig profiles, and clips across compatible assets without copying source files.
+- Let Phaser's existing WebGL renderer batch and transform the 2D containers; do not add a custom OpenGL dependency or a heavyweight 3D runtime for this feature.
+- Keep texture dimensions, frame counts, draw calls, and active effects bounded; test readability and frame pacing on representative low-end mobile hardware.
+- Animation is presentation-only: combat damage, timing, target selection, and state transitions remain controlled by the authoritative battle systems.
+
 ## Architecture
 
 ### 1. Versioned rig profile
@@ -32,11 +45,11 @@ All references must resolve. IDs are stable and unique. Parent graphs must be ac
 
 ### 2. Runtime evaluator
 
-The pure evaluator validates profiles, samples keyframes, interpolates transforms (including shortest-path rotation), composes parent-child world transforms, and resolves attachments/hitboxes from the same pose. The Phaser adapter will translate those evaluated transforms to Phaser Containers/Sprites; no React component or persisted content record may execute arbitrary JavaScript.
+The pure evaluator validates profiles, samples keyframes, interpolates transforms (including shortest-path rotation), composes parent-child world transforms, and resolves attachments/hitboxes from the same pose. The Phaser adapter translates those evaluated transforms to Phaser Containers/Sprites; no React component or persisted content record may execute arbitrary JavaScript.
 
 ### 3. Animation state machine
 
-The runtime state machine will own named states such as idle, move, attack, hurt, frozen, death, and special. Transitions are explicit and prioritized. Non-looping action clips return to a configured fallback state. State changes must not allow the idle updater to overwrite an active attack clip.
+The runtime state machine owns named states such as idle, move, attack, hit, frozen, death, and special. Transitions are explicit and prioritized. Non-looping attack/hit clips return to idle when the character remains alive and unfrozen. Death cannot be interrupted; frozen state survives stacked freeze hits; idle/movement updates cannot overwrite active attack/hit clips.
 
 ### 4. Blending
 
@@ -48,13 +61,13 @@ Projectile spawn positions are derived from the evaluated attachment transform (
 
 ### 6. Hitboxes
 
-Attack/hurt rectangles are resolved from the same evaluated pose as the visible parts. Initial implementation may support oriented rectangles and conservative axis-aligned bounds for the current combat collision system. Hitbox geometry must not independently change damage, target selection, or combat timing.
+Attack/hurt rectangles are resolved from the same evaluated pose as the visible parts. Their four corners are transformed through the full parent translation, non-uniform scale, and rotation, then tested as convex polygons with SAT; projectile circles are tested against the transformed polygon edges. Hitbox geometry must not independently change damage, target selection, or combat timing.
 
 ### 7. Studio editor
 
-The editor is a mode switch inside Asset & Animation Studio:
+The editor is an optional skeletal workspace inside Asset & Animation Studio. Existing Sprite Sheet controls remain available and can be used without creating a rig; removing a rig profile safely returns the asset to Sprite Sheet mode.
 
-- Animation mode: Sprite Sheet (existing), Skeletal (new), or Hybrid.
+- Animation mode: existing Sprite Sheet, optional Skeletal cutout rig, or Hybrid (Sprite Sheet base plus rigged moving parts).
 - Rig canvas: actual character artwork, part layers, zoom/pan, bone hierarchy, pivot handles.
 - Bone tools: create, rename, re-parent with cycle prevention, delete with child handling, and set local transform.
 - Part assignment: immutable Studio asset ID and optional frame.
