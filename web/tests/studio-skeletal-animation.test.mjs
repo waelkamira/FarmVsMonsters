@@ -150,3 +150,8 @@ test("keyframe snapping returns valid integer frame times within clip bounds", (
   assert.equal(Number.isInteger(snapSkeletalKeyframeTime(213.7, clip.fps, clip.durationMs)), true);
   assert.equal(snapSkeletalKeyframeTime(900, 12, 300), 300);
 });
+
+
+test("rejects rigs without an animation clip so runtime controllers can always initialize", () => {
+  assert.throws(() => createSkeletalRigProfile(sampleRig({ clips: [] })), /between 1 and 16 animation clips/);
+});
