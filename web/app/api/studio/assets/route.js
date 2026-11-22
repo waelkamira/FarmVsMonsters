@@ -137,7 +137,7 @@ export async function POST(req){
  if(!config||!STUDIO_ID_PATTERN.test(id)||id.length>64)return NextResponse.json({error:"Invalid category or ID. Use a lowercase slug up to 64 characters."},{status:400});
  if(type==="plant"&&STUDIO_RESERVED_PLANT_IDS.includes(id))return NextResponse.json({error:"هذا المعرّف محجوز لنبتة أساسية في اللعبة. اختر معرّفاً جديداً."},{status:409});
  const hasFile=Boolean(file&&typeof file.arrayBuffer==="function"&&file.size>0);
- const hasAtlas=uploadMode==="atlas";
+ const hasAtlas=uploadMode==="atlas"&&hasFile;
  const hasAtlasJson=Boolean(atlasJsonFile&&typeof atlasJsonFile.arrayBuffer==="function"&&atlasJsonFile.size>0);
  const hasProjectile=Boolean(projectileFile&&typeof projectileFile.arrayBuffer==="function"&&projectileFile.size>0);
  const removeProjectile=String(form.get("removeProjectile")||"false")==="true";
@@ -242,7 +242,7 @@ export async function POST(req){
  const bytes=hasFile?Buffer.from(await file.arrayBuffer()):null;
  if(hasFile){const signature=validateStudioAssetBytes(file.type,bytes);if(!signature.valid)return NextResponse.json({error:signature.reason},{status:415});}
  let atlasValidation=null,atlasJsonBytes=null;
- if(hasAtlas){atlasJsonBytes=Buffer.from(await atlasJsonFile.arrayBuffer());if(atlasJsonBytes.length>2*1024*1024)return NextResponse.json({error:"ملف JSON يتجاوز 2 MB."},{status:413});atlasValidation=validatePhaserAtlasDocument(atlasJsonBytes.toString("utf8"));if(!atlasValidation.valid)return NextResponse.json({error:atlasValidation.errors.join("، ")},{status:400});}
+ if(hasAtlas){atlasJsonBytes=Buffer.from(await atlasJsonFile.arrayBuffer());if(atlasJsonBytes.length>2*1024*1024)return NextResponse.json({error:"ملف JSON يتجاوز 2 MB."},{status:413});atlasValidation=validatePhaserAtlasDocument(atlasJsonBytes.toString("utf8"));if(!atlasValidation.valid)return NextResponse.json({error:atlasValidation.errors.join("، ")},{status:400});if(atlasValidation.image&&atlasValidation.image.toLowerCase()!==file.name.toLowerCase())return NextResponse.json({error:"اسم الصورة داخل JSON لا يطابق ملف PNG المحدد ("+atlasValidation.image+")."},{status:400});}
  const relative=hasFile?createImmutableAssetPath(config.folder,id,extension,bytes):(existing?.path||"").replace(/^\/assets\//,"");
  const atlasJsonRelative=hasAtlas?createImmutableAssetPath(config.folder,id+"-atlas",".json",atlasJsonBytes):(existing?.atlas?.jsonPath||"").replace(/^\/assets\//,"");
  const atlasRecord=hasAtlas?{frameCount:atlasValidation.frameCount,frameNames:atlasValidation.frameNames,clips:atlasValidation.clips,format:atlasValidation.format,filename:id+"-atlas.json",jsonPath:"/assets/"+atlasJsonRelative}:hasFile?null:(existing?.atlas||null);
@@ -394,7 +394,7 @@ export async function PATCH(req){
   const publishedAt=new Date().toISOString();
   const publishedRecord=isMonster
    ?{id:asset.id,name:asset.name,path:asset.path,...(asset.atlas?{atlas:asset.atlas}:{}),rows:asset.rows,columns:asset.columns,spriteSheet:asset.spriteSheet,animationProfile:asset.animationProfile||null,rigProfile:asset.rigProfile||null,rigParts:rigPartAssets.map(part=>({id:part.id,name:part.name,path:part.path,rows:part.spriteSheet?(part.rows||1):1,columns:part.spriteSheet?(part.columns||1):1,frameCount:getRigPartFrameCount(part),spriteSheet:Boolean(part.spriteSheet)})),monsterProfile:asset.monsterProfile,publishedAt}
-   :{id:asset.id,name:asset.name,path:asset.path,rows:asset.rows,columns:asset.columns,spriteSheet:asset.spriteSheet,animationProfile:asset.animationProfile||null,rigProfile:asset.rigProfile||null,rigParts:rigPartAssets.map(part=>({id:part.id,name:part.name,path:part.path,rows:part.spriteSheet?(part.rows||1):1,columns:part.spriteSheet?(part.columns||1):1,frameCount:getRigPartFrameCount(part),spriteSheet:Boolean(part.spriteSheet)})),combat:asset.combat,publishedAt};
+   :{id:asset.id,name:asset.name,path:asset.path,...(asset.atlas?{atlas:asset.atlas}:{}),rows:asset.rows,columns:asset.columns,spriteSheet:asset.spriteSheet,animationProfile:asset.animationProfile||null,rigProfile:asset.rigProfile||null,rigParts:rigPartAssets.map(part=>({id:part.id,name:part.name,path:part.path,rows:part.spriteSheet?(part.rows||1):1,columns:part.spriteSheet?(part.columns||1):1,frameCount:getRigPartFrameCount(part),spriteSheet:Boolean(part.spriteSheet)})),combat:asset.combat,publishedAt};
   const collectionKey=isMonster?"monsters":"plants";
   const collection=Array.isArray(catalog[collectionKey])?catalog[collectionKey]:[];
   const existingIndex=collection.findIndex(item=>item.id===id);
