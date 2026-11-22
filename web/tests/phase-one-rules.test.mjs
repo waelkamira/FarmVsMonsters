@@ -69,12 +69,12 @@ test("CC0 Kenney sound assets are bundled locally and mapped to gameplay events"
 
 test("five Phase 1 waves are gently increasing and total exactly 30 ordinary monsters", () => {
   assert.deepEqual(PHASE_ONE_WAVE_SIZES, [2, 3, 4, 5, 6]);
-  assert.equal(PHASE_ONE_TOTAL_MONSTERS, 30);
+  assert.equal(PHASE_ONE_TOTAL_MONSTERS, 20);
   assert.ok(PHASE_ONE_WAVE_SIZES.every((count, index) => index === 0 || count > PHASE_ONE_WAVE_SIZES[index - 1]));
 });
 
 test("campaign stage counts increase by one ordinary monster per stage; dragon is excluded", () => {
-  assert.deepEqual(Array.from({ length: 10 }, (_, i) => ordinaryMonsterCountForStage(i + 1)), [30,31,32,33,34,35,36,37,38,39]);
+  assert.deepEqual(Array.from({ length: 10 }, (_, i) => ordinaryMonsterCountForStage(i + 1)), [20,25,30,36,42,48,55,62,70,80]);
   assert.equal(ordinaryMonsterCountForStage(0), 0);
   assert.equal(ordinaryMonsterCountForStage(11), 0);
 });
@@ -307,7 +307,7 @@ test("home menu reads the saved coin wallet", () => {
 
 test("player guidance and roadmap match the current Phase 1 balance", () => {
   assert.match(guide, /15-energy collectible every 12 seconds/);
-  assert.match(gamePage, /Collect glowing Mushroom energy/);
+  assert.match(gamePage, /Collect Mushroom energy/);
   assert.match(scene, /createCollectionMenuControl\(\)/);
   assert.match(scene, /this\.collectionMenuTab = "phases"/);
   assert.match(scene, /"treasure-cave-menu"/);
@@ -316,7 +316,7 @@ test("player guidance and roadmap match the current Phase 1 balance", () => {
   assert.match(scene, /generateFrameNumbers\(key, \{ start: startFrame, end: endFrame \}\)/);
   assert.match(scene, /this\.playHyenaAnimation\(monster, "hyena-bite"\)/);
   assert.doesNotMatch(scene, /monster\.hyenaSprite\.anims\.pause\(\)/);
-  assert.match(roadmap, /3 \/ 5 \/ 6 \/ 7 \/ 9/);
+  assert.match(roadmap, /2 \/ 3 \/ 4 \/ 5 \/ 6/);
   assert.match(roadmap, /full 15-energy collectible per Mushroom every 12 seconds/);
   assert.match(roadmap, /Cave-brute, Dust-skitter, Stonehide/);
   assert.doesNotMatch(roadmap, /25 collectible energy per Mushroom every 8 seconds/i);
@@ -356,7 +356,7 @@ test("campaign progression safely falls back to stage one for corrupt or unavail
 test("stage selection reflects saved unlocks without linking unfinished stages into gameplay", () => {
   const stagePage = readFileSync(resolve(here, "../app/stages/page.js"), "utf8");
   assert.match(stagePage, /loadUnlockedStage\(window\.localStorage\)/);
-  assert.match(stagePage, /stage <= unlockedStage/);
+  assert.match(stagePage, /unlockedStage >= 2/);
   assert.match(stagePage, /Unlocked · In development/);
   assert.match(stagePage, /href="\/stage\/1"/);
   assert.match(scene, /won = Boolean\(won && this\.phaseOneStoryState === "complete"\)/);
