@@ -41,6 +41,10 @@ async function githubCreateBranch(branchName,baseBranch,token){
  if(!created.ok){const error=await created.json().catch(()=>({}));throw Error(error.message||"تعذر إنشاء فرع إصدار المراجعة ("+created.status+").");}
  return sha;
 }
+async function githubDeleteBranch(branchName,token){
+ const response=await fetch(githubApiUrl("/git/refs/heads/"+encodeURIComponent(branchName)),{method:"DELETE",headers:githubHeaders(token)});
+ if(!response.ok&&response.status!==404){const error=await response.json().catch(()=>({}));throw Error(error.message||"تعذر تنظيف فرع الإصدار غير المكتمل.");}
+}
 async function githubCreatePullRequest(head,base,title,body,token){
  const response=await fetch(githubApiUrl("/pulls"),{method:"POST",headers:{...githubHeaders(token),"Content-Type":"application/json"},body:JSON.stringify({head,base,title,body,draft:false})});
  if(!response.ok){const error=await response.json().catch(()=>({}));if(response.status===403||response.status===404)throw Error("تعذر إنشاء طلب المراجعة. يحتاج رمز GitHub إلى صلاحية Pull requests: Read and write إضافة إلى Contents: Read and write.");throw Error(error.message||"GitHub pull request creation failed ("+response.status+").");}
@@ -303,6 +307,8 @@ export async function PATCH(req){
  }
  const token=process.env.STUDIO_GITHUB_TOKEN,storageBranch=process.env.STUDIO_GITHUB_BRANCH||"studio/assets",targetBranch=process.env.STUDIO_PUBLISH_BRANCH||"main";
  if(!token)return NextResponse.json({error:"STUDIO_GITHUB_TOKEN is required."},{status:503});
+ let releaseBranchForCleanup=null;
+ let releasePullRequestAttempted=false;
  try{
   const registryDocument=await githubGetDocument(REGISTRY_PATH,token,storageBranch),registry=registryDocument?JSON.parse(registryDocument.content):{version:1,assets:[]},registrySha=registryDocument?.sha??null;
   const index=registry.assets.findIndex(asset=>asset.id===id);
@@ -384,15 +390,6 @@ export async function PATCH(req){
    registry.assets[index]=asset;
   }
 
-  const releaseBranch=createStudioReleaseBranchName(id,randomUUID().replace(/-/g,"").slice(0,8));
-  await githubCreateBranch(releaseBranch,targetBranch,token);
-
-  // Stage every binary dependency and the catalog update on an isolated release branch.
-  // The game branch remains untouched until the pull request is reviewed and merged.
-  const artworkPath="web/public"+asset.path;
-  const artworkBytes=await githubGetBytes(artworkPath,token,storageBranch);
-  await githubPutImmutable(artworkPath,artworkBytes,"stage "+asset.type+" artwork for release "+id,token,releaseBranch);
-
   const rigPartIds=[...new Set((asset.rigProfile?.bones||[]).map(bone=>bone?.part?.assetId).filter(Boolean))];
   const rigPartAssets=getRigPartAssets(registry.assets,asset);
   if(rigPartAssets.length!==rigPartIds.length||rigPartAssets.some(part=>!part||!["item","plant","monster","effect"].includes(part.type)||part.status==="archived"||!safeAssetPath(part.path))){
@@ -406,22 +403,27 @@ export async function PATCH(req){
   });
   if(invalidRigFrame)return NextResponse.json({error:"يوجد إطار غير صالح في أحد أجزاء الهيكل؛ صحح رقم الإطار قبل طلب النشر."},{status:409});
 
-  const stagedPaths=new Set([asset.path]);
+  const sourceFiles=new Map();
+  sourceFiles.set(asset.path,await githubGetBytes("web/public"+asset.path,token,storageBranch));
   for(const part of rigPartAssets){
-   if(stagedPaths.has(part.path))continue;
-   const partBytes=await githubGetBytes("web/public"+part.path,token,storageBranch);
-   await githubPutImmutable("web/public"+part.path,partBytes,"stage skeletal part "+part.id+" for "+asset.type+" "+id,token,releaseBranch);
-   stagedPaths.add(part.path);
+   if(!safeAssetPath(part.path))return NextResponse.json({error:"مسار أحد أجزاء الهيكل غير صالح."},{status:409});
+   if(!sourceFiles.has(part.path))sourceFiles.set(part.path,await githubGetBytes("web/public"+part.path,token,storageBranch));
   }
-
   if(asset.type==="plant"&&asset.combat.mode==="projectile"){
    if(!safeAssetPath(asset.combat.projectile?.path))return NextResponse.json({error:"The linked projectile asset is missing."},{status:409});
-   if(!stagedPaths.has(asset.combat.projectile.path)){
-    const projectilePath="web/public"+asset.combat.projectile.path;
-    const projectileBytes=await githubGetBytes(projectilePath,token,storageBranch);
-    await githubPutImmutable(projectilePath,projectileBytes,"stage plant projectile for release "+id,token,releaseBranch);
-    stagedPaths.add(asset.combat.projectile.path);
+   if(!sourceFiles.has(asset.combat.projectile.path)){
+    sourceFiles.set(asset.combat.projectile.path,await githubGetBytes("web/public"+asset.combat.projectile.path,token,storageBranch));
    }
+  }
+
+  const releaseBranch=createStudioReleaseBranchName(id,randomUUID().replace(/-/g,"").slice(0,8));
+  await githubCreateBranch(releaseBranch,targetBranch,token);
+  releaseBranchForCleanup=releaseBranch;
+
+  // Stage every binary dependency and the catalog update on an isolated release branch.
+  // The game branch remains untouched until the pull request is reviewed and merged.
+  for(const [assetPath,bytes] of sourceFiles){
+   await githubPutImmutable("web/public"+assetPath,bytes,"stage "+asset.type+" release dependency for "+id,token,releaseBranch);
   }
 
   const isMonster=asset.type==="monster";
@@ -440,6 +442,7 @@ export async function PATCH(req){
   catalog.version=1;
   await githubPut(catalogPath,Buffer.from(JSON.stringify(catalog,null,2)+"\n"),"stage "+asset.type+" catalog release "+id,token,releaseBranch,catalogDocument?.sha??null);
 
+  releasePullRequestAttempted=true;
   const pr=await githubCreatePullRequest(
    releaseBranch,
    targetBranch,
@@ -467,5 +470,8 @@ export async function PATCH(req){
     ?"تم إنشاء طلب مراجعة النشر، لكن تعذر تحديث حالة الأصل في مكتبة Studio. احتفظ برابط المراجعة."
     :"تم إنشاء طلب مراجعة النشر. لن يتغير فرع اللعبة الأساسي حتى تتم مراجعة الطلب ودمجه."
   });
- }catch(error){return NextResponse.json({error:error.message||"Studio action failed."},{status:error.code==="STUDIO_WRITE_CONFLICT"?409:502});}
+ }catch(error){
+  if(releaseBranchForCleanup&&!releasePullRequestAttempted){try{await githubDeleteBranch(releaseBranchForCleanup,token);}catch(cleanupError){error.message=(error.message||"Studio action failed.")+" Cleanup warning: "+cleanupError.message;}}
+  return NextResponse.json({error:error.message||"Studio action failed."},{status:error.code==="STUDIO_WRITE_CONFLICT"?409:502});
+ }
 }
