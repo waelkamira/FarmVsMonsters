@@ -19,22 +19,21 @@ def load_model():
         if _MODEL is not None: return _MODEL
         if _MODEL_ERROR: raise RuntimeError(_MODEL_ERROR)
         config, checkpoint = os.environ.get("SAM2_CONFIG"), os.environ.get("SAM2_CHECKPOINT")
-    if not config or not checkpoint or not Path(config).is_file() or not Path(checkpoint).is_file():
-        _MODEL_ERROR = "Set SAM2_CONFIG and SAM2_CHECKPOINT to existing local SAM 2 files; weights are never downloaded."
-        raise RuntimeError(_MODEL_ERROR)
-    try:
-        from sam2.automatic_mask_generator import SAM2AutomaticMaskGenerator
-        from sam2.build_sam import build_sam2
-        import torch
-        device = "cuda" if torch.cuda.is_available() else "cpu"
-        model = build_sam2(config, checkpoint, device=device)
-        _MODEL = (SAM2AutomaticMaskGenerator(model, points_per_side=24, pred_iou_thresh=0.78,
-                    stability_score_thresh=0.86, min_mask_region_area=64), device)
-        return _MODEL
-    except Exception as exc:
-        _MODEL_ERROR = "Could not initialize SAM 2: " + str(exc)[:250]
-        raise RuntimeError(_MODEL_ERROR) from exc
-
+        if not config or not checkpoint or not Path(config).is_file() or not Path(checkpoint).is_file():
+            _MODEL_ERROR = "Set SAM2_CONFIG and SAM2_CHECKPOINT to existing local SAM 2 files; weights are never downloaded."
+            raise RuntimeError(_MODEL_ERROR)
+        try:
+            from sam2.automatic_mask_generator import SAM2AutomaticMaskGenerator
+            from sam2.build_sam import build_sam2
+            import torch
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+            model = build_sam2(config, checkpoint, device=device)
+            _MODEL = (SAM2AutomaticMaskGenerator(model, points_per_side=24, pred_iou_thresh=0.78,
+                        stability_score_thresh=0.86, min_mask_region_area=64), device)
+            return _MODEL
+        except Exception as exc:
+            _MODEL_ERROR = "Could not initialize SAM 2: " + str(exc)[:250]
+            raise RuntimeError(_MODEL_ERROR) from exc
 def capabilities():
     try:
         _, device = load_model()
