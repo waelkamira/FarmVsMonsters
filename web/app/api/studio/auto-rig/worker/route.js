@@ -14,6 +14,14 @@ function authorized(req) {
   return verifyStudioSession(process.env.STUDIO_ADMIN_TOKEN || "", req.cookies.get(COOKIE)?.value || "");
 }
 
+function sameOriginPost(req) {
+  const origin = req.headers.get("origin");
+  const fetchSite = req.headers.get("sec-fetch-site");
+  if (origin && origin !== new URL(req.url).origin) return false;
+  if (fetchSite && !["same-origin", "same-site", "none"].includes(fetchSite)) return false;
+  return (req.headers.get("content-type") || "").split(";", 1)[0].trim().toLowerCase() === "application/json";
+}
+
 async function readBoundedBody(request, maxBytes) {
   if (!request.body) return Buffer.alloc(0);
   const reader = request.body.getReader();
@@ -81,6 +89,7 @@ export async function GET(req) {
 
 export async function POST(req) {
   if (!authorized(req)) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  if (!sameOriginPost(req)) return NextResponse.json({ error: "Cross-origin or non-JSON requests are not allowed." }, { status: 403 });
   let base;
   try { base = workerEndpoint(); } catch (error) {
     return NextResponse.json({ error: error.message, code: "WORKER_NOT_CONFIGURED" }, { status: 503 });
