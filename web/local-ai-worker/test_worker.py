@@ -15,6 +15,7 @@ class WorkerTests(unittest.TestCase):
 
     def test_rejects_invalid_sam2_point_prompts(self):
         with self.assertRaises(ValueError): worker.normalize_prompt_points([], 100, 100)
+        with self.assertRaises(ValueError): worker.normalize_prompt_points([{"x": 20, "y": 20, "label": 0}], 100, 100)
         with self.assertRaises(ValueError): worker.normalize_prompt_points([{"x": 100, "y": 20, "label": 1}], 100, 100)
         with self.assertRaises(ValueError): worker.normalize_prompt_points([{"x": 20, "y": 20, "label": 2}], 100, 100)
         with self.assertRaises(ValueError): worker.normalize_prompt_points([{"x": float("nan"), "y": 20, "label": 1}], 100, 100)
