@@ -1264,3 +1264,11 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - Preserved AI confidence and segmentation provenance in the generated Auto-Rig manifest, including SAM 2 provenance.
 - Added focused worker protocol/route tests and CI coverage.
 - Not complete: the actual Python/local inference process, SAM 2 and semantic model adapters, hidden-part reconstruction, Rig Library, and end-to-end validation against a real game character still remain. No model installation or successful full build is claimed.
+
+
+## 2026-11-22 — First local SAM 2 worker adapter
+- Implemented a Python loopback-only worker process under `web/local-ai-worker`, with capability discovery and automatic SAM 2 mask generation using a locally configured checkpoint.
+- Converted SAM 2 masks to bounded, simplified source-coordinate polygon proposals for explicit review and approval in Studio.
+- Changed the Studio UI to request the implemented `part-detection` task and made capability health distinguish ready from degraded.
+- Added setup instructions, Python contract tests, and a dedicated CI job for Python dependency installation, syntax compilation, and worker tests.
+- Outstanding: install and run SAM 2 on the target Windows machine; add semantic plant/monster role classification, prompt-conditioned segmentation, occlusion handling, hidden-part reconstruction, Rig Library, animation generation, and real-asset end-to-end verification.
