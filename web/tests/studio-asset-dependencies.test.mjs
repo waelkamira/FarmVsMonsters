@@ -281,3 +281,9 @@ test("Rigged projectiles resolve muzzle attachment through the plant view transf
   assert.match(battleSceneSource, /const launchOffsetX = muzzle \? muzzle\.x - laneOrigin\.x/);
   assert.match(battleSceneSource, /const launchOffsetY = muzzle \? muzzle\.y - laneOrigin\.y/);
 });
+
+test("BattleScene uses the tested world-space transform for muzzle and hitbox positions", () => {
+  assert.match(battleSceneSource, /from "\.\.\/studio\/skeletalWorldTransform\.mjs"/);
+  assert.match(battleSceneSource, /transformRigPointToWorld\(point, parentView\)/);
+  assert.match(battleSceneSource, /const world = transformRigPointToWorld\(local, parentView\)/);
+});
