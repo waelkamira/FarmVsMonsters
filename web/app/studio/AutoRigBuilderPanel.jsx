@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AUTO_RIG_ROLE_OPTIONS, analyzeAutoRigQuality, buildAutoRigFromParts, moveAutoRigPolygonVertex } from "../../game/studio/autoRigBuilder.mjs";
+import { AUTO_RIG_ROLE_OPTIONS, analyzeAutoRigQuality, buildAutoRigFromParts, moveAutoRigPolygonVertex, parseAutoRigMotionRequest, applyAutoRigMotionRequest } from "../../game/studio/autoRigBuilder.mjs";
 import { suggestRigTemplateRetarget } from "../../game/studio/rigTemplateRetarget.mjs";
 
 function slug(value) {
   return String(value || "character").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "character";
 }
+const MOTION_CLIP_LABELS = Object.freeze({ idle: "الخمول والتمايل", move: "المشي والحركة", attack: "الهجوم وإطلاق القذيفة", hit: "تلقي الضرر", death: "الموت والسقوط" });
+
 function polygonBounds(points) {
   const xs = points.map((point) => point.x), ys = points.map((point) => point.y);
   const x = Math.floor(Math.min(...xs)), y = Math.floor(Math.min(...ys));
@@ -62,6 +64,7 @@ export default function AutoRigBuilderPanel({
   const [donorPoints, setDonorPoints] = useState([]);
   const [donorTargetPartId, setDonorTargetPartId] = useState("");
   const [anatomicalPrompt, setAnatomicalPrompt] = useState("");
+  const [motionPrompt, setMotionPrompt] = useState("");
   const [busy, setBusy] = useState(false);
   const [generated, setGenerated] = useState(false);
   const [qualityReport, setQualityReport] = useState(null);
@@ -84,6 +87,7 @@ export default function AutoRigBuilderPanel({
   const targetPartsFingerprint = useMemo(() => JSON.stringify(parts.map((part) => ({ id: part.id, role: part.role, side: part.side, bounds: part.bounds, points: part.points, pivot: part.pivot, parentPartId: part.parentPartId, drawOrder: part.drawOrder }))), [parts]);
   const emitterParts = useMemo(() => parts.filter((part) => ["weapon", "weapon.barrel", "weapon.muzzle", "mouth", "head", "face"].includes(part.role)), [parts]);
   const activeEmitterPart = emitterParts.find((part) => part.id === muzzlePartId) || emitterParts[0] || null;
+  const motionPlan = useMemo(() => parseAutoRigMotionRequest(motionPrompt, { characterType, requiresMuzzle }), [motionPrompt, characterType, requiresMuzzle]);
 
   useEffect(() => {
     if (!sourceFile && !sourceUrl) return;
@@ -784,6 +788,11 @@ export default function AutoRigBuilderPanel({
 
   async function generateRig() {
     if (!image || !parts.length || busy || disabled || generated || occlusionMode || donorMode) return;
+    if (!motionPlan.valid) {
+      setMessage(motionPlan.reason);
+      return;
+    }
+    const motionRequest = motionPlan;
     if (requiresMuzzle && (!activeEmitterPart || !muzzlePoint)) {
       setMessage("اختر جزء مصدر الإطلاق ثم حدّد نقطة muzzle داخله قبل إنشاء هيكل نبتة المقذوفات.");
       return;
@@ -868,11 +877,13 @@ export default function AutoRigBuilderPanel({
         requiresMuzzle,
         anchors: requiresMuzzle ? { muzzle: { partId: activeEmitterPart.id, x: muzzlePoint.x, y: muzzlePoint.y } } : undefined
       });
-      setQualityReport(analyzeAutoRigQuality(result.manifest, result.profile));
-      onRigGenerated(result.profile);
-      if (onManifestGenerated) onManifestGenerated(result.manifest);
+      const motionResult = applyAutoRigMotionRequest(result.profile, result.manifest, motionRequest);
+      setQualityReport(analyzeAutoRigQuality(motionResult.manifest, motionResult.profile));
+      onRigGenerated(motionResult.profile);
+      if (onManifestGenerated) onManifestGenerated(motionResult.manifest);
       setGenerated(true);
-      setMessage("اكتمل استخراج " + created.length + " جزءاً وإنشاء الهيكل ومقاطع الحركة الابتدائية. راجع العظام ونقاط الدوران والحركات قبل الحفظ.");
+      const requestedLabels = motionRequest.actions.map((id) => MOTION_CLIP_LABELS[id] || id).join("، ");
+      setMessage("اكتمل استخراج " + created.length + " جزءاً وإنشاء الهيكل وتطبيق طلب الحركة: " + requestedLabels + ". راجع العظام ونقاط الدوران والمقاطع قبل الحفظ.");
     } catch (error) {
       if (created.length && onAssetsCreated) {
         try { await onAssetsCreated(); } catch {}
@@ -956,6 +967,9 @@ export default function AutoRigBuilderPanel({
           <input value={partName} disabled={disabled || busy || generated} onChange={(event) => setPartName(event.target.value)} maxLength={80} />
         </label>
       </div>
+      <label style={{ display: "flex", flexDirection: "column", gap: 4, margin: "8px 0" }}>وصف الحركة المطلوبة<textarea rows={2} value={motionPrompt} maxLength={400} disabled={disabled || busy || generated || aiBusy} onChange={(event) => setMotionPrompt(event.target.value)} placeholder="مثال: يتمايل بهدوء ثم يطلق قذيفة عند اقتراب الوحش" /></label>
+      {motionPrompt.trim() && <p className="studio-message" role="status">{motionPlan.valid ? "المقاطع التي سيجهزها الطلب: " + motionPlan.actions.map((id) => MOTION_CLIP_LABELS[id] || id).join("، ") + (motionPlan.projectileRequested ? " · يتطلب سلوك المقذوفات ونقطة muzzle" : "") : motionPlan.reason}</p>}
+      <small>يدعم هذا الإصدار أوصاف التمايل، الحركة، الهجوم، الضرر والموت. الأوصاف غير المدعومة لن تتحول إلى حركة تلقائياً.</small>
       <label style={{ display: "flex", flexDirection: "column", gap: 4, margin: "8px 0" }}>وصف الجزء التشريحي المخفي المطلوب توليده محلياً<input type="text" value={anatomicalPrompt} maxLength={400} disabled={disabled || busy || generated || aiBusy} onChange={(event) => setAnatomicalPrompt(event.target.value)} placeholder="مثال: استمرار الورقة اليسرى خلف الجسم بنفس الشكل واللون والخط" /></label>
       {occlusionMode&&<p className="studio-message" role="status">وضع تحديد المنطقة المخفية مفعّل: انقر 3 نقاط أو أكثر حول المنطقة ثم اضغط «اعتماد المنطقة» في صف الجزء.</p>}
       {donorMode&&<p className="studio-message" role="status">وضع تحديد الجزء المماثل مفعّل: ارسم مضلعاً حول المنطقة المرئية ثم اعتمده.</p>}
@@ -1007,7 +1021,7 @@ export default function AutoRigBuilderPanel({
           <button type="button" disabled={disabled || busy || generated} style={{ marginInlineStart: 6 }} onClick={() => { setParts((current) => current.filter((item) => item.id !== part.id)); if (editingPartId === part.id) setEditingPartId(""); if (part.id === activeEmitterPart?.id) { setMuzzlePartId(""); setMuzzlePoint(null); setMuzzleMode(false); } }}>حذف</button>
         </li>)}</ul>
       </div>}
-      <button type="button" className="studio-submit" disabled={disabled || busy || generated || occlusionMode || donorMode || !image || !parts.length} onClick={generateRig}>
+      <button type="button" className="studio-submit" disabled={disabled || busy || generated || occlusionMode || donorMode || !image || !parts.length || !motionPrompt.trim()} onClick={generateRig}>
         {busy ? "جارٍ قصّ الأجزاء وحفظها..." : "قصّ الأجزاء وإنشاء الهيكل ←"}
       </button>
       {qualityReport && <div style={{ marginTop: 12, padding: 12, border: "1px solid #d8dce5", borderRadius: 10 }}>
