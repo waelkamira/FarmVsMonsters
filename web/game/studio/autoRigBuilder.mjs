@@ -290,3 +290,50 @@ export function buildAutoRigFromParts(input) {
     warnings
   };
 }
+
+
+export function validateAutoRigBuildManifest(input, profileInput) {
+  try {
+    if (!input || typeof input !== "object" || Array.isArray(input)) throw new TypeError("Auto-Rig build manifest must be an object.");
+    if (Number(input.version) !== 1 || input.builder !== "farmvsmonsters-auto-rig") throw new RangeError("Unsupported Auto-Rig build manifest version or builder.");
+    if (input.roleDictionaryVersion !== AUTO_RIG_ROLE_DICTIONARY_VERSION) throw new RangeError("Auto-Rig role dictionary version does not match this Studio build.");
+    if (input.generator?.id !== "farmvsmonsters-auto-rig" || Number(input.generator?.version) !== 1) throw new RangeError("Unsupported Auto-Rig generator identity or version.");
+    const profile = createSkeletalRigProfile(profileInput);
+    const canvas = input.canvas || {};
+    if (Number(canvas.width) !== profile.canvas.width || Number(canvas.height) !== profile.canvas.height) {
+      throw new RangeError("Auto-Rig manifest canvas does not match the skeletal profile canvas.");
+    }
+    if (!input.source || Number(input.source.width) !== profile.canvas.width || Number(input.source.height) !== profile.canvas.height) {
+      throw new RangeError("Auto-Rig source dimensions do not match the generated canvas.");
+    }
+    if (input.source.sha256 != null && !/^[a-f0-9]{64}$/i.test(String(input.source.sha256))) {
+      throw new TypeError("Auto-Rig source hash is invalid.");
+    }
+    if (!Array.isArray(input.parts) || input.parts.length < 1 || input.parts.length > 63) {
+      throw new RangeError("Auto-Rig manifest must contain between 1 and 63 parts.");
+    }
+    const parts = input.parts.map((part, index) => readPart(part, index, profile.canvas));
+    const byId = new Map();
+    for (const part of parts) {
+      if (byId.has(part.id)) throw new RangeError("Duplicate manifest part ID: " + part.id + ".");
+      byId.set(part.id, part);
+    }
+    for (const part of parts) {
+      if (part.parentPartId && !byId.has(part.parentPartId)) throw new RangeError("Manifest part " + part.id + " references a missing parent.");
+      const visited = new Set([part.id]);
+      let parentId = part.parentPartId;
+      while (parentId) {
+        if (visited.has(parentId)) throw new RangeError("Auto-Rig manifest parent graph contains a cycle.");
+        visited.add(parentId);
+        parentId = byId.get(parentId)?.parentPartId || null;
+      }
+      const bone = profile.bones.find((entry) => entry.id === "part-" + part.id);
+      if (!bone || bone.part?.assetId !== part.assetId) throw new RangeError("Manifest part " + part.id + " does not match a skeletal profile part bone.");
+    }
+    const partBones = profile.bones.filter((bone) => bone.part);
+    if (partBones.length !== parts.length) throw new RangeError("Skeletal profile and Auto-Rig manifest contain different part counts.");
+    return { valid: true, manifest: input, profile, errors: [] };
+  } catch (error) {
+    return { valid: false, manifest: null, profile: null, errors: [error.message] };
+  }
+}
