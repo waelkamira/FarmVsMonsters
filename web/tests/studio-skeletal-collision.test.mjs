@@ -20,11 +20,14 @@ test("oriented rectangles account for rotation rather than axis-aligned bounds",
 test("circle collision handles rotated rectangles and edge tangency", () => {
   const rectangle = { x: 10, y: 10, width: 20, height: 8, rotation: 45 };
   assert.equal(circleIntersectsOrientedRectangle({ x: 10, y: 10, radius: 0 }, rectangle), true);
+  const tangent = { x: 10 + 12 * Math.SQRT1_2, y: 10 + 12 * Math.SQRT1_2, radius: 2 };
+  assert.equal(circleIntersectsOrientedRectangle(tangent, rectangle), true);
   assert.equal(circleIntersectsOrientedRectangle({ x: 10, y: 25, radius: 2 }, rectangle), false);
   assert.equal(circleIntersectsOrientedRectangle({ x: 10, y: 10, radius: 0 }, { ...rectangle, rotation: 0 }), true);
 });
 
 test("collision helpers reject invalid geometry instead of silently accepting it", () => {
   assert.throws(() => orientedRectanglesOverlap({ x: 0, y: 0, width: 0, height: 2 }, { x: 0, y: 0, width: 2, height: 2 }), /positive dimensions/);
+  assert.throws(() => orientedRectanglesOverlap({ x: 0, y: 0, width: 2, height: 2, rotation: "invalid" }, { x: 0, y: 0, width: 2, height: 2 }), /finite rotation/);
   assert.throws(() => circleIntersectsOrientedRectangle({ x: 0, y: 0, radius: -1 }, { x: 0, y: 0, width: 2, height: 2 }), /non-negative radius/);
 });
