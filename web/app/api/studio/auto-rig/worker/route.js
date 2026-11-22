@@ -82,8 +82,8 @@ export async function POST(req) {
     }
     points = [];
     for (const point of body.points) {
-      const x = Number(point?.x), y = Number(point?.y), label = point?.label == null ? 1 : Number(point.label);
-      if (!Number.isFinite(x) || !Number.isFinite(y) || x < 0 || y < 0 || x >= width || y >= height || ![0, 1].includes(label)) {
+      const x = point?.x, y = point?.y, label = point?.label == null ? 1 : point.label;
+      if (typeof x !== "number" || typeof y !== "number" || !Number.isFinite(x) || !Number.isFinite(y) || x < 0 || y < 0 || x >= width || y >= height || ![0, 1].includes(label)) {
         return NextResponse.json({ error: "Prompt points must be finite source coordinates with labels 0 or 1." }, { status: 400 });
       }
       points.push({ x, y, label });
