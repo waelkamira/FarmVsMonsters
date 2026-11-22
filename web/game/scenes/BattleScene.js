@@ -3152,6 +3152,24 @@ export default class BattleScene extends Scene {
     rig._activeClipId = frozen ? "frozen" : null;
   }
 
+  getStudioRigAttachmentWorld(rig, parentView, attachmentId) {
+    if (!rig || !parentView?.active) return null;
+    const point = rig.getAttachment(attachmentId);
+    if (!point) return null;
+    const scaleX = Number(parentView.scaleX) || 1;
+    const scaleY = Number(parentView.scaleY) || 1;
+    const rotation = Number(parentView.rotation) || 0;
+    const x = point.x * scaleX, y = point.y * scaleY;
+    return {
+      ...point,
+      x: parentView.x + x * Math.cos(rotation) - y * Math.sin(rotation),
+      y: parentView.y + x * Math.sin(rotation) + y * Math.cos(rotation),
+      rotation: point.rotation + rotation * 180 / Math.PI,
+      scaleX: point.scaleX * scaleX,
+      scaleY: point.scaleY * scaleY
+    };
+  }
+
   getStudioRigHitboxesWorld(rig, parentView, kind) {
     if (!rig || !parentView?.active) return [];
     return rig.profile.hitboxes.filter((item) => item.kind === kind).map((profile) => {
@@ -3731,13 +3749,13 @@ export default class BattleScene extends Scene {
       const laneOrigin = this.lanePoint(localX, row);
       const skeletalRig = plant.view?.getData?.("studioSkeletalRig");
       const muzzle = skeletalRig?.profile.attachments.some((item) => item.id === "muzzle")
-        ? skeletalRig.getAttachment("muzzle") : null;
+        ? this.getStudioRigAttachmentWorld(skeletalRig, plant.view, "muzzle") : null;
       if (skeletalRig && !muzzle) {
         console.error("Rigged projectile plant has no valid muzzle attachment:", plant.studioPlant.id);
         return;
       }
-      const launchOffsetX = muzzle ? plant.view.x + muzzle.x - laneOrigin.x : Number(profile.projectileLaunchOffsetX ?? 14);
-      const launchOffsetY = muzzle ? plant.view.y + muzzle.y - laneOrigin.y : Number(profile.projectileLaunchOffsetY ?? -30);
+      const launchOffsetX = muzzle ? muzzle.x - laneOrigin.x : Number(profile.projectileLaunchOffsetX ?? 14);
+      const launchOffsetY = muzzle ? muzzle.y - laneOrigin.y : Number(profile.projectileLaunchOffsetY ?? -30);
       const view = this.add.container(laneOrigin.x + launchOffsetX, laneOrigin.y + launchOffsetY).setDepth(16);
       const textureKey = plant.studioPlant.projectileTextureKey || "studio-projectile-published-" + plant.studioPlant.id;
       if (this.textures.exists(textureKey)) {
