@@ -159,7 +159,7 @@ test("Studio asset API validates and publishes the rig profile with plant and mo
 
 test("release staging includes every referenced skeletal bitmap part", () => {
   assert.match(routeSource, /getRigPartAssets/);
-  assert.match(routeSource, /stage skeletal part/);
+  assert.match(routeSource, /publish skeletal part/);
   assert.match(routeSource, /rigParts:rigPartAssets\.map/);
 });
 
@@ -182,7 +182,7 @@ test("BattleScene loads rig bitmap parts and uses skeletal plant and monster ren
 });
 
 test("BattleScene uses rig muzzle attachments and skeletal attack/hurt hitboxes in combat", () => {
-  assert.match(battleSceneSource, /getAttachment\("muzzle"\)/);
+  assert.match(battleSceneSource, /rig\.getAttachment\(attachmentId\)/);
   assert.match(battleSceneSource, /launchOffsetX, launchOffsetY/);
   assert.match(battleSceneSource, /studioRigHitboxesOverlap/);
   assert.match(battleSceneSource, /studioProjectileHitsMonster/);
@@ -278,8 +278,8 @@ test("BattleScene delegates skeletal hitbox collision to shared tested geometry"
 test("Rigged projectiles resolve muzzle attachment through the plant view transform", () => {
   assert.match(battleSceneSource, /getStudioRigAttachmentWorld\(rig, parentView, attachmentId\)/);
   assert.match(battleSceneSource, /this\.getStudioRigAttachmentWorld\(skeletalRig, plant\.view, "muzzle"\)/);
-  assert.match(battleSceneSource, /const launchOffsetX = muzzle \? muzzle\.x - laneOrigin\.x/);
-  assert.match(battleSceneSource, /const launchOffsetY = muzzle \? muzzle\.y - laneOrigin\.y/);
+  assert.match(battleSceneSource, /const launchOffsetX = launchPoint\.x - laneOrigin\.x/);
+  assert.match(battleSceneSource, /const launchOffsetY = launchPoint\.y - laneOrigin\.y/);
 });
 
 test("BattleScene uses the tested world-space transform for muzzle and hitbox positions", () => {
