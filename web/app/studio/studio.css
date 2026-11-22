@@ -188,3 +188,6 @@
 .studio-rig-header-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
 .studio-rig-header-actions button{border:1px solid #8a5c4d;border-radius:8px;padding:7px 9px;background:#38231e;color:#ffd9c9;font-size:10px;font-weight:800;cursor:pointer}
 @media(max-width:760px){.studio-rig-header-actions{justify-content:flex-start}}
+
+.studio-rig-stage-actions label{display:grid;gap:4px;color:#f0e4c6;font-size:10px}
+.studio-rig-stage-actions select{max-width:180px;min-width:110px;padding:7px;border:1px solid #655333;border-radius:7px;background:#17160f;color:#fff1ce}
