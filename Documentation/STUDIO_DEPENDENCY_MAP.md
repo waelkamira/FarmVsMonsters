@@ -87,7 +87,7 @@ Source Asset
   → monitoring / rollback
 ```
 
-Auto-Rig is allowed to propose part segmentation and semantic roles. It must not bypass:
+Main currently contains the Auto-Rig builder/protocol/worker foundation, while the dedicated `AutoRigBuilderPanel.jsx` is only on open PR #89. Integrate that panel inside Asset & Animation Studio rather than as a separate tool/product. Auto-Rig is allowed to propose part segmentation and semantic roles. It must not bypass:
 - human review of parts and bone hierarchy;
 - stable IDs and source asset references;
 - rig schema validation;
