@@ -198,7 +198,7 @@ export async function POST(req){
     for(const bone of rigProfile.bones){
      if(!bone.part)continue;
      const partAsset=old.assets.find(item=>item.id===bone.part.assetId);
-     if(!partAsset||partAsset.id===id||partAsset.type==="audio"||!safeAssetPath(partAsset.path)){
+     if(!partAsset||partAsset.id===id||partAsset.type==="audio"||partAsset.status==="archived"||!safeAssetPath(partAsset.path)){
       throw new Error("جزء الهيكل "+bone.id+" يشير إلى أصل صورة غير موجود أو غير صالح: "+bone.part.assetId);
      }
     }
@@ -365,7 +365,7 @@ export async function PATCH(req){
   if(!safeAssetPath(asset.path))return NextResponse.json({error:"Invalid asset path."},{status:400});
   const rigPartIds=[...new Set((asset.rigProfile?.bones||[]).map(bone=>bone?.part?.assetId).filter(Boolean))];
   const rigPartAssets=getRigPartAssets(registry.assets,asset);
-  if(rigPartAssets.length!==rigPartIds.length||rigPartAssets.some(part=>!part||part.type==="audio"||!safeAssetPath(part.path)))return NextResponse.json({error:"يوجد جزء هيكلي مفقود أو غير صالح؛ أصلح تبعيات الهيكل قبل النشر."},{status:409});
+  if(rigPartAssets.length!==rigPartIds.length||rigPartAssets.some(part=>!part||part.type==="audio"||part.status==="archived"||!safeAssetPath(part.path)))return NextResponse.json({error:"يوجد جزء هيكلي مفقود أو غير صالح؛ أصلح تبعيات الهيكل قبل النشر."},{status:409});
   if(asset.type==="monster"){
    const releaseBranch=createStudioReleaseBranchName(id,randomUUID().slice(0,8));
    await githubCreateBranch(releaseBranch,targetBranch,token);
