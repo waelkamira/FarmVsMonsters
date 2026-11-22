@@ -52,6 +52,10 @@ export function createSkeletalAnimationController(profileInput, initialClipId = 
     const pose = currentPose();
     if (!transition) return pose;
     const amount = Math.max(0, Math.min(1, transition.elapsedMs / transition.durationMs));
+    if (amount >= 1) {
+      transition = null;
+      return pose;
+    }
     const localBones = {};
     for (const bone of profile.bones) {
       localBones[bone.id] = blendTransform(
@@ -60,7 +64,6 @@ export function createSkeletalAnimationController(profileInput, initialClipId = 
         amount
       );
     }
-    if (amount >= 1) transition = null;
     return makeWorldPose(profile, currentClipId, pose.timeMs, localBones);
   }
 
