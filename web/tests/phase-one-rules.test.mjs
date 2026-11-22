@@ -237,7 +237,7 @@ test("all monster archetypes and Stonehide bracing values live in the canonical 
   for (const kind of ["cave-brute", "dust-skitter", "stonehide"]) {
     assert.ok(PHASE_ONE_MONSTERS[kind], "missing " + kind + " profile");
   }
-  assert.equal(PHASE_ONE_MONSTERS.stonehide.bracedIncomingDamageMultiplier, 0.55);
+  assert.equal(PHASE_ONE_MONSTERS.stonehide.armorMultiplier, 0.7);
   assert.equal(getStonehideIncomingDamageMultiplier(true), 0.385);
   assert.equal(getStonehideIncomingDamageMultiplier(false), 0.7);
 });
