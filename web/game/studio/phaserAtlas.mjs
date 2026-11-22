@@ -28,6 +28,8 @@ export function validatePhaserAtlasDocument(input, imageDimensions = null) {
     const x = Number(rect?.x), y = Number(rect?.y), w = Number(rect?.w ?? rect?.width), h = Number(rect?.h ?? rect?.height);
     if (![x, y, w, h].every(Number.isFinite) || x < 0 || y < 0 || w <= 0 || h <= 0) {
       errors.push("مستطيل الإطار غير صالح: " + name);
+    } else if (hasMetaSize && (x + w > metaWidth || y + h > metaHeight)) {
+      errors.push("الإطار يتجاوز حدود صورة Atlas: " + name);
     }
     const source = frame?.sourceSize;
     if (source && (![Number(source.w), Number(source.h)].every(Number.isFinite) || Number(source.w) <= 0 || Number(source.h) <= 0)) {
