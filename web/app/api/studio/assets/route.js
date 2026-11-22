@@ -11,7 +11,7 @@ import {cloneStudioAsset,createStudioAssetRevision,restoreStudioAssetRevision} f
 import {getAssetDependents} from "../../../../game/studio/assetDependencies.mjs";
 import {createStudioAnimationProfile} from "../../../../game/studio/animationProfiles.mjs";
 import {createSkeletalRigProfile} from "../../../../game/studio/skeletalAnimation.mjs";
-import {validateAutoRigBuildManifest} from "../../../../game/studio/autoRigBuilder.mjs";
+import {analyzeAutoRigQuality,validateAutoRigBuildManifest} from "../../../../game/studio/autoRigBuilder.mjs";
 import {createStudioMonsterProfile} from "../../../../game/studio/monsterProfiles.mjs";
 import {safeAssetPath} from "../../../../game/studio/assetReadiness.mjs";
 export const runtime="nodejs";
@@ -360,6 +360,13 @@ export async function PATCH(req){
   }
   if(operation!=="publish")return NextResponse.json({error:"عملية Studio غير معروفة."},{status:400});
   if(asset.status!=="testing")return NextResponse.json({error:"يجب تجهيز الأصل للاختبار والتحقق منه داخل اللعبة أولاً."},{status:409});
+  if(asset.rigBuildManifest){
+   const quality=analyzeAutoRigQuality(asset.rigBuildManifest,asset.rigProfile);
+   if(!quality.valid||!quality.readyForAnimation){
+    const findings=quality.warnings.map(item=>item.message);
+    return NextResponse.json({error:"لا يمكن نشر هيكل Auto-Rig قبل اجتياز فحص الجودة ومراجعة جميع الأجزاء.",qualityReport:quality,warnings:findings},{status:409});
+   }
+  }
   if(!safeAssetPath(asset.path))return NextResponse.json({error:"Invalid asset path."},{status:400});
 
   // Publish directly to the configured game branch. The catalog is written last,
