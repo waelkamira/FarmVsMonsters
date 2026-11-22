@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { auditStudioAssetRegistry } from "../game/studio/assetReadiness.mjs";
+import { auditStudioAssetRegistry, applyStudioAssetFileAudit } from "../game/studio/assetReadiness.mjs";
 import { createStudioPlantCombatProfile } from "../game/studio/plantProfiles.mjs";
 import { createStudioAnimationProfile } from "../game/studio/animationProfiles.mjs";
 import { createStudioMonsterProfile } from "../game/studio/monsterProfiles.mjs";
@@ -113,9 +113,9 @@ test("Testing Lab API is session-protected and labels its limited audit scope", 
   assert.match(apiSource, /verifyStudioSession/);
   assert.match(apiSource, /if \(!authorized\(req\)\)/);
   assert.match(apiSource, /auditStudioAssetRegistry/);
-  assert.match(apiSource, /registry-and-runtime-contracts/);
+  assert.match(apiSource, /registry-runtime-contracts-and-file-integrity/);
   assert.match(apiSource, /لا يشغّل معركة Phaser/);
-  assert.match(apiSource, /لا يفحص وجود بايتات الملفات الفعلية/);
+  assert.match(apiSource, /وجود الملفات في مخزن الأصول/);
   assert.match(apiSource, /Cache-Control.*private, no-store/);
 });
 
@@ -127,4 +127,67 @@ test("Testing Lab page runs the audit and renders readiness outcomes", () => {
   assert.match(pageSource, /report\.note/);
   assert.match(pageSource, /import "\.\.\/studio\.css"/);
   assert.match(pageSource, /stage\/1\/select/);
+});
+
+test("physical file audit blocks missing files and warns when storage cannot be checked", () => {
+  const assets = [validPlant(), validMonster()];
+  const registryReport = auditStudioAssetRegistry(assets);
+  const report = applyStudioAssetFileAudit(registryReport, assets, {
+    "/assets/plants/thorn-plant.png": "missing",
+    "/assets/projectiles/thorn-shot.png": "present",
+    "/assets/monsters/cave-scout.png": "unknown"
+  });
+  assert.equal(report.fileAudit.checked, 3);
+  assert.equal(report.fileAudit.present, 1);
+  assert.equal(report.fileAudit.missing, 1);
+  assert.equal(report.fileAudit.unknown, 1);
+  assert.equal(report.total, 2);
+  assert.equal(report.blocked, 1);
+  assert.equal(report.warning, 1);
+  assert.equal(report.ready, 0);
+  assert.equal(report.assets.find((asset) => asset.id === "thorn-plant").readiness, "blocked");
+  assert.ok(report.assets.find((asset) => asset.id === "thorn-plant").errors.some((message) => message.includes("غير موجود فعلياً")));
+  assert.equal(report.assets.find((asset) => asset.id === "cave-scout").readiness, "warning");
+  assert.ok(report.assets.find((asset) => asset.id === "cave-scout").warnings.some((message) => message.includes("تعذر التحقق")));
+});
+
+test("Testing Lab API checks local files and GitHub asset trees without claiming Phaser execution", () => {
+  assert.match(apiSource, /auditStoredFiles/);
+  assert.match(apiSource, /await access\(/);
+  assert.match(apiSource, /git\/trees\//);
+  assert.match(apiSource, /applyStudioAssetFileAudit/);
+  assert.match(apiSource, /لا يشغّل معركة Phaser/);
+});
+
+test("shared physical asset paths are counted only once in the integrity summary", () => {
+  const assets = [
+    validProjectile({ id: "shared-shot-a" }),
+    validProjectile({ id: "shared-shot-b" })
+  ];
+  const report = applyStudioAssetFileAudit(auditStudioAssetRegistry(assets), assets, {
+    "/assets/projectiles/thorn-shot.png": "present"
+  });
+  assert.equal(report.fileAudit.checked, 1);
+  assert.equal(report.fileAudit.present, 1);
+  assert.equal(report.ready, 2);
+});
+
+test("Testing Lab resolves URL-encoded asset filenames before checking storage", () => {
+  assert.match(apiSource, /decodeURIComponent\(assetPath\)/);
+});
+
+test("physical file checks stay aligned to each registry row when IDs are duplicated", () => {
+  const assets = [
+    validProjectile({ path: "/assets/projectiles/first.png" }),
+    validProjectile({ path: "/assets/projectiles/second.png" })
+  ];
+  const report = applyStudioAssetFileAudit(auditStudioAssetRegistry(assets), assets, {
+    "/assets/projectiles/first.png": "present",
+    "/assets/projectiles/second.png": "missing"
+  });
+  assert.equal(report.fileAudit.checked, 2);
+  assert.equal(report.assets[0].fileChecks[0].path, "/assets/projectiles/first.png");
+  assert.equal(report.assets[0].fileChecks[0].status, "present");
+  assert.equal(report.assets[1].fileChecks[0].path, "/assets/projectiles/second.png");
+  assert.equal(report.assets[1].fileChecks[0].status, "missing");
 });

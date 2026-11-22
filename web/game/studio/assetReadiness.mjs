@@ -13,7 +13,47 @@ export function safeAssetPath(value) {
   if (!decoded.startsWith("/assets/") || /[?#\\\x00-\x1f\x7f]/.test(decoded)) return false;
   const segments = decoded.slice("/assets/".length).split("/");
   return segments.length > 0 && segments.every((segment) => segment.length > 0 && segment !== "." && segment !== "..");
-}function addMessage(list, message) {
+}
+
+export function applyStudioAssetFileAudit(report, assets, statusByPath = {}) {
+  const checkedPaths = new Set();
+  const counts = { present: 0, missing: 0, unknown: 0 };
+  const sourceAssets = Array.isArray(assets) ? assets : [];
+  const auditedAssets = report.assets.map((entry, index) => {
+    const source = sourceAssets[index];
+    const paths = [...new Set([source?.path, source?.combat?.projectile?.path].filter((value) => safeAssetPath(value)))];
+    const fileChecks = paths.map((assetPath) => {
+      checkedPaths.add(assetPath);
+      const status = statusByPath[assetPath] === "present" || statusByPath[assetPath] === "missing" ? statusByPath[assetPath] : "unknown";
+      return { path: assetPath, status };
+    });
+    const errors = [...entry.errors];
+    const warnings = [...entry.warnings];
+    for (const check of fileChecks) {
+      if (check.status === "missing") errors.push("الملف غير موجود فعلياً في مخزن الأصول: " + check.path);
+      if (check.status === "unknown") warnings.push("تعذر التحقق من وجود الملف فعلياً: " + check.path);
+    }
+    const readiness = entry.status === "archived" ? "excluded" : errors.length ? "blocked" : warnings.length ? "warning" : "ready";
+    return { ...entry, readiness, errors: [...new Set(errors)], warnings: [...new Set(warnings)], fileChecks };
+  });
+  for (const assetPath of checkedPaths) {
+    const status = statusByPath[assetPath] === "present" || statusByPath[assetPath] === "missing" ? statusByPath[assetPath] : "unknown";
+    counts[status] += 1;
+  }
+  const count = (readiness) => auditedAssets.filter((entry) => entry.readiness === readiness).length;
+  return {
+    ...report,
+    total: auditedAssets.length,
+    ready: count("ready"),
+    warning: count("warning"),
+    blocked: count("blocked"),
+    excluded: count("excluded"),
+    assets: auditedAssets,
+    fileAudit: { checked: checkedPaths.size, present: counts.present, missing: counts.missing, unknown: counts.unknown }
+  };
+}
+
+function addMessage(list, message) {
   if (!list.includes(message)) list.push(message);
 }
 export function auditStudioAssetRegistry(input) {
