@@ -36,7 +36,7 @@ Meta's official SAM 2 installation guidance recommends WSL with Ubuntu when inst
    - SAM 2 checkpoint: `~/models/sam2.1_hiera_tiny.pt`
    - CLIP model: `~/models/clip-vit-base-patch32`
 
-   You do not need to download either model manually. The first setup requires an internet connection; inference itself runs locally.
+   You do not need to download either model manually. The first setup downloads about 761 MB of model weights and requires an internet connection; inference itself runs locally. Model weights are not committed to Git.
 
 7. Optional: download a compatible Stable Diffusion inpainting checkpoint into a local directory (the worker never downloads weights). For example:
 
@@ -61,7 +61,7 @@ Meta's official SAM 2 installation guidance recommends WSL with Ubuntu when inst
 
    This verifies both automatic and point-prompted SAM 2 inference against a generated test plant image. It does not replace validation with the actual FarmVsMonsters plant and monster artwork.
 
-10. With the worker running and the setup script completed, run the real-asset smoke test from the same directory:
+10. After the synthetic HTTP smoke test passes, stop the worker with `Ctrl+C` before running the real-asset smoke test. This script loads the models directly and does not need the worker server; stopping it avoids loading a second copy of the models into memory:
 
    ```bash
    python real_asset_smoke_test.py
@@ -70,7 +70,7 @@ Meta's official SAM 2 installation guidance recommends WSL with Ubuntu when inst
    By default this tests the first 3×3 Hazelnut Level 1 frame and the Hyena idle asset from the checked-out repository. It runs SAM 2 segmentation followed by local CLIP role suggestions on both assets and prints the masks/suggestion counts plus per-region roles. A successful command proves model execution on real repository pixels, but the output still requires visual inspection in Studio; it does not prove pivots, clips, save/version behavior or Phaser gameplay.
 
 
-11. In the Windows environment running the Studio Next.js app, set:
+11. Restart the worker with `bash start-worker-wsl.sh`. In the Windows environment running the Studio Next.js app, set:
 
    ```env
    STUDIO_LOCAL_AI_WORKER_URL=http://127.0.0.1:8765
