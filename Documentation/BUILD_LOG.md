@@ -1081,3 +1081,11 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - Added focused Node test coverage for evaluator, adapter, state machine, readiness, versioning, dependencies, Studio wiring, and BattleScene integration.
 - Verification status: source changes and tests are committed to feat/studio-hybrid-animation-engine. GitHub Actions creates jobs but reports runner_id: 0, zero steps, and no logs; no test, lint, build, or browser result is claimed. The connected browser context is unavailable in this session, so live Chrome/Windows verification remains open.
 - Remaining acceptance gates: run Node tests, ESLint, and production build on a working runner; visually verify a rigged plant and monster in BattleScene; verify launch origin and hitbox behavior; add explicit state-priority rules and final cleanup/performance checks.
+
+### Hybrid Rig Editor and runtime hardening — 2026-11-22
+- Extended the canvas editor with zoom/pan, draggable attachment and hitbox handles, clickable per-bone keyframe tracks, FPS-stepped preview, editable breathing/walk/recoil presets, and a safe switch back to Sprite Sheet mode.
+- Normalized rig-part frame counts so static images always expose exactly one frame even if an older registry entry contains stale frameCount metadata; published and testing catalog descriptors now use the normalized grid.
+- Restricted rig parts to supported image asset categories and blocked empty rigs, invalid part references, archived parts, out-of-range frames, and projectile rigs without a muzzle attachment.
+- BattleScene now uses every configured attack/hurt hitbox for supported overlap checks, advances rigged monster move/hit/death clips, preserves frozen poses, and registers one destroy listener per rig to stop animation timers.
+- Added additional regression coverage for static frame bounds, missing bitmap parts, malformed rig profiles, muzzle requirements, editor interactions, and monster state/freeze wiring.
+- Validation remains blocked before job execution: GitHub Actions runner_id is 0 and the job has no steps or logs. No automated or browser pass is claimed.
