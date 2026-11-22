@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { evaluateSkeletalClip, getSkeletalAttachmentTransform, getSkeletalHitboxTransform, validateSkeletalRigProfile } from "../../game/studio/skeletalAnimation.mjs";
+import { evaluateSkeletalClip, getSkeletalAttachmentTransform, getSkeletalHitboxTransform, snapSkeletalKeyframeTime, validateSkeletalRigProfile } from "../../game/studio/skeletalAnimation.mjs";
 
 function createDefaultRig(width = 256, height = 256) {
   return {
@@ -81,7 +81,7 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
             ] };
             targetClip.tracks.push(track);
           }
-          const at = Math.min(targetClip.durationMs, Math.max(0, timeMs));
+          const at = snapSkeletalKeyframeTime(targetClip, timeMs);
           const current = selectedPose?.localBones?.[selectedBoneId] || target;
           const frame = { ...current, timeMs: at, [field]: value };
           const index = track.keyframes.findIndex((item) => item.timeMs === at);
@@ -108,7 +108,7 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
         targetClip.tracks.push(track);
       }
       const current = selectedPose?.localBones?.[selectedBoneId] || target;
-      const at = Math.min(targetClip.durationMs, Math.max(0, timeMs));
+      const at = snapSkeletalKeyframeTime(targetClip, timeMs);
       const frame = { timeMs: at, x, y, rotation: current.rotation, scaleX: current.scaleX, scaleY: current.scaleY };
       const index = track.keyframes.findIndex((item) => item.timeMs === at);
       if (index >= 0) track.keyframes[index] = frame;
@@ -209,7 +209,7 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
       const target = next.clips.find((item) => item.id === selectedClipId);
       const track = target?.tracks.find((item) => item.boneId === selectedBoneId);
       if (!track || track.keyframes.length <= 1) return;
-      track.keyframes = track.keyframes.filter((item) => item.timeMs !== Math.min(target.durationMs, Math.max(0, timeMs)));
+      track.keyframes = track.keyframes.filter((item) => item.timeMs !== snapSkeletalKeyframeTime(target, timeMs));
     });
   }
   function removeClip() {
@@ -251,7 +251,7 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
         track = { boneId: selectedBoneId, keyframes: [{ timeMs: 0, ...base }, { timeMs: target.durationMs, ...base }] };
         target.tracks.push(track);
       }
-      const frame = { timeMs: Math.min(target.durationMs, Math.max(0, timeMs)), x: current.x, y: current.y, rotation: current.rotation, scaleX: current.scaleX, scaleY: current.scaleY };
+      const frame = { timeMs: snapSkeletalKeyframeTime(target, timeMs), x: current.x, y: current.y, rotation: current.rotation, scaleX: current.scaleX, scaleY: current.scaleY };
       const existing = track.keyframes.findIndex((item) => item.timeMs === frame.timeMs);
       if (existing >= 0) track.keyframes[existing] = frame;
       else track.keyframes.push(frame);
@@ -479,7 +479,7 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
           <label>المقطع<select value={selectedClipId} onChange={(event) => { setSelectedClipId(event.target.value); setTimeMs(0); setPlaying(false); }}>{rig.clips.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
           {clip && <><label>اسم المقطع<input value={clip.name} disabled={disabled} onChange={(event) => updateClip("name", event.target.value)}/></label><label>المدة (ms)<input type="number" min="1" max="60000" value={clip.durationMs} disabled={disabled} onChange={(event) => updateClip("durationMs", Number(event.target.value))}/></label><label>FPS<input type="number" min="1" max="60" value={clip.fps || 24} disabled={disabled} onChange={(event) => updateClip("fps", Number(event.target.value))}/></label><label className="studio-rig-check"><input type="checkbox" checked={clip.loop} disabled={disabled} onChange={(event) => updateClip("loop", event.target.checked)}/> تكرار المقطع</label></>}
         </div>
-        {clip && <><label className="studio-rig-time">الزمن الحالي: {Math.round(timeMs)} ms<input type="range" min="0" max={clip.durationMs} value={Math.min(timeMs, clip.durationMs)} disabled={playing} onChange={(event) => setTimeMs(Number(event.target.value))}/></label><div className="studio-rig-keyframe-tracks">{clip.tracks.map((track) => <div className="studio-rig-keyframe-track" key={track.boneId}><b>{rig.bones.find((item) => item.id === track.boneId)?.name || track.boneId}</b><div className="studio-rig-keyframe-rail">{track.keyframes.map((keyframe) => <button key={keyframe.timeMs} type="button" title={keyframe.timeMs + " ms"} style={{ left: (keyframe.timeMs / clip.durationMs * 100) + "%" }} onClick={() => { setSelectedBoneId(track.boneId); setTimeMs(keyframe.timeMs); setPlaying(false); }}>{keyframe.timeMs}</button>)}</div></div>)}</div><div className="studio-rig-stage-actions"><button type="button" disabled={disabled || !rigIsReady} onClick={() => setPlaying((value) => !value)}>{playing ? "إيقاف المعاينة" : "▶ تشغيل المقطع"}</button><button type="button" disabled={disabled || playing} onClick={addKeyframe}>＋ حفظ إطار للعظمة المحددة</button><button type="button" disabled={disabled || playing || !clip.tracks.find((track) => track.boneId === selectedBoneId)?.keyframes.some((keyframe) => keyframe.timeMs === timeMs) || (clip.tracks.find((track) => track.boneId === selectedBoneId)?.keyframes.length || 0) <= 1} onClick={removeKeyframe}>حذف الإطار الحالي</button><span>{clip.tracks.find((track) => track.boneId === selectedBoneId)?.keyframes.length || 0} إطار مفتاحي للعظمة المحددة</span></div></>}
+        {clip && <><label className="studio-rig-time">الزمن الحالي: {Math.round(timeMs)} ms<input type="range" min="0" max={clip.durationMs} value={Math.min(timeMs, clip.durationMs)} disabled={playing} onChange={(event) => setTimeMs(Number(event.target.value))}/></label><div className="studio-rig-keyframe-tracks">{clip.tracks.map((track) => <div className="studio-rig-keyframe-track" key={track.boneId}><b>{rig.bones.find((item) => item.id === track.boneId)?.name || track.boneId}</b><div className="studio-rig-keyframe-rail">{track.keyframes.map((keyframe) => <button key={keyframe.timeMs} type="button" title={keyframe.timeMs + " ms"} style={{ left: (keyframe.timeMs / clip.durationMs * 100) + "%" }} onClick={() => { setSelectedBoneId(track.boneId); setTimeMs(keyframe.timeMs); setPlaying(false); }}>{keyframe.timeMs}</button>)}</div></div>)}</div><div className="studio-rig-stage-actions"><button type="button" disabled={disabled || !rigIsReady} onClick={() => setPlaying((value) => !value)}>{playing ? "إيقاف المعاينة" : "▶ تشغيل المقطع"}</button><button type="button" disabled={disabled || playing} onClick={addKeyframe}>＋ حفظ إطار للعظمة المحددة</button><button type="button" disabled={disabled || playing || !clip.tracks.find((track) => track.boneId === selectedBoneId)?.keyframes.some((keyframe) => keyframe.timeMs === snapSkeletalKeyframeTime(clip, timeMs)) || (clip.tracks.find((track) => track.boneId === selectedBoneId)?.keyframes.length || 0) <= 1} onClick={removeKeyframe}>حذف الإطار الحالي</button><span>{clip.tracks.find((track) => track.boneId === selectedBoneId)?.keyframes.length || 0} إطار مفتاحي للعظمة المحددة</span></div></>}
       </div>
       <div className="studio-rig-tools">
         <div><h5>نقاط تثبيت السلاح والقذائف</h5><p>تُستخدم لاحقاً لإطلاق القذائف من موضع السلاح الحقيقي.</p><button type="button" disabled={disabled} onClick={addAttachment}>＋ إضافة نقطة تثبيت</button></div>
