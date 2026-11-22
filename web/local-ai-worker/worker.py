@@ -256,11 +256,15 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Content-Length",str(len(raw))); self.send_header("Cache-Control","no-store")
         self.end_headers(); self.wfile.write(raw)
     def do_GET(self):
-        if urlparse(self.path).path != "/v1/capabilities": return self.send_json(404,{"error":"Not found"})
+        parsed = urlparse(self.path)
+        if parsed.path != "/v1/capabilities" or parsed.query or parsed.fragment:
+            return self.send_json(404,{"error":"Not found"})
+        self.connection.settimeout(90)
         self.send_json(200,capabilities())
     def do_POST(self):
-        task_path = urlparse(self.path).path
-        if task_path not in ("/v1/auto-rig/part-detection", "/v1/auto-rig/prompted-segmentation"):
+        parsed = urlparse(self.path)
+        task_path = parsed.path
+        if parsed.query or parsed.fragment or task_path not in ("/v1/auto-rig/part-detection", "/v1/auto-rig/prompted-segmentation"):
             return self.send_json(404,{"error":"Unsupported task"})
         if not trusted_local_request(self.headers):
             return self.send_json(403,{"error":"Only same-machine JSON requests without a browser Origin are accepted."})
@@ -271,6 +275,7 @@ class Handler(BaseHTTPRequestHandler):
                 return self.send_json(400,{"error":"Transfer-Encoding is not supported."})
             raw = read_limited_body(self.rfile, self.headers.get("Content-Length"))
             payload = validate_task_payload(json.loads(raw))
+            self.connection.settimeout(90)
             result = detect_parts(payload) if task_path.endswith("/part-detection") else segment_from_points(payload)
             self.send_json(200,result)
         except RuntimeError as exc: self.send_json(503,{"error":str(exc)})
