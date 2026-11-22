@@ -2,6 +2,21 @@ import { createSkeletalRigProfile } from "./skeletalAnimation.mjs";
 
 const ID_PATTERN = /^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,63}$/;
 export const AUTO_RIG_ROLE_DICTIONARY_VERSION = "1.0.0";
+export const AUTO_RIG_ROLE_OPTIONS = Object.freeze([
+  { value: "body", label: "الجسم" }, { value: "stem", label: "الساق" },
+  { value: "head", label: "الرأس" }, { value: "face", label: "الوجه" },
+  { value: "eye.left", label: "العين اليسرى" }, { value: "eye.right", label: "العين اليمنى" },
+  { value: "mouth", label: "الفم" }, { value: "jaw.upper", label: "الفك العلوي" },
+  { value: "jaw.lower", label: "الفك السفلي" }, { value: "leaf.left", label: "الورقة اليسرى" },
+  { value: "leaf.right", label: "الورقة اليمنى" }, { value: "leaf", label: "ورقة" },
+  { value: "arm.left", label: "الذراع الأيسر" }, { value: "arm.right", label: "الذراع الأيمن" },
+  { value: "hand.left", label: "اليد اليسرى" }, { value: "hand.right", label: "اليد اليمنى" },
+  { value: "weapon", label: "السلاح" }, { value: "weapon.barrel", label: "ماسورة السلاح" },
+  { value: "weapon.muzzle", label: "منطقة فوهة السلاح" }, { value: "back", label: "الجزء الخلفي" },
+  { value: "tail", label: "الذيل" }, { value: "armor", label: "الدرع" },
+  { value: "accessory", label: "إضافة" }, { value: "shadow", label: "الظل" },
+  { value: "effect", label: "مؤثر" }
+]);
 const ROLE_ALIASES = Object.freeze({
   "left-leaf": "leaf.left",
   "leaf-left": "leaf.left",
@@ -36,6 +51,7 @@ const PARENT_ROLES = Object.freeze({
   "hand.right": ["arm.right", "body"],
   "weapon": ["hand.left", "hand.right", "arm.left", "arm.right", "body"],
   "weapon.barrel": ["weapon"],
+  "weapon.muzzle": ["weapon.barrel", "weapon"],
   "back": ["body"],
   "tail": ["body"],
   "armor": ["body"],
