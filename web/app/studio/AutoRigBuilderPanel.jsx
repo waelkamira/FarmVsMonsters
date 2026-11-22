@@ -52,6 +52,9 @@ export default function AutoRigBuilderPanel({
   const [points, setPoints] = useState([]);
   const [parts, setParts] = useState([]);
   const [editingPartId, setEditingPartId] = useState("");
+  const [occlusionMode, setOcclusionMode] = useState(false);
+  const [occlusionPoints, setOcclusionPoints] = useState([]);
+  const [occlusionTargetPartId, setOcclusionTargetPartId] = useState("");
   const [busy, setBusy] = useState(false);
   const [generated, setGenerated] = useState(false);
   const [qualityReport, setQualityReport] = useState(null);
@@ -95,6 +98,9 @@ export default function AutoRigBuilderPanel({
       setPoints([]);
       setParts([]);
       setEditingPartId("");
+      setOcclusionMode(false);
+      setOcclusionPoints([]);
+      setOcclusionTargetPartId("");
       draggingVertex.current = null;
       setAiProposals([]);
       setAiProposalRoles({});
@@ -131,6 +137,20 @@ export default function AutoRigBuilderPanel({
       context.fill();
       context.stroke();
     });
+    parts.forEach((part) => {
+      const polygon = part.occlusionMask?.points || [];
+      if (polygon.length < 3) return;
+      context.beginPath();
+      polygon.forEach((point, index) => index ? context.lineTo(point.x, point.y) : context.moveTo(point.x, point.y));
+      context.closePath();
+      context.fillStyle = "rgba(245, 170, 35, 0.18)";
+      context.strokeStyle = "#d28a12";
+      context.lineWidth = Math.max(2, canvas.width / 280);
+      context.setLineDash([Math.max(5, canvas.width / 90), Math.max(3, canvas.width / 150)]);
+      context.fill();
+      context.stroke();
+      context.setLineDash([]);
+    });
     aiProposals.forEach((proposal) => {
       const polygon = proposal.mask?.points || [];
       if (polygon.length < 3) return;
@@ -154,6 +174,21 @@ export default function AutoRigBuilderPanel({
       });
       context.fillStyle = "#ff8a32";
       context.fill();
+    }
+    if (occlusionPoints.length) {
+      context.beginPath();
+      occlusionPoints.forEach((point, index) => index ? context.lineTo(point.x, point.y) : context.moveTo(point.x, point.y));
+      context.strokeStyle = "#d28a12";
+      context.lineWidth = Math.max(2, canvas.width / 250);
+      context.setLineDash([Math.max(5, canvas.width / 90), Math.max(3, canvas.width / 150)]);
+      context.stroke();
+      context.setLineDash([]);
+      occlusionPoints.forEach((point) => {
+        context.beginPath();
+        context.arc(point.x, point.y, Math.max(3, canvas.width / 120), 0, Math.PI * 2);
+        context.fillStyle = "#d28a12";
+        context.fill();
+      });
     }
     if (muzzlePoint) {
       context.beginPath();
@@ -181,7 +216,7 @@ export default function AutoRigBuilderPanel({
         context.fill();
       });
     }
-  }, [image, points, parts, aiProposals, editingPartId]);
+  }, [image, points, parts, aiProposals, editingPartId, occlusionPoints]);
 
   async function checkAIWorker() {
     setAiBusy(true);
@@ -286,7 +321,7 @@ export default function AutoRigBuilderPanel({
 
   function moveVertexDrag(event) {
     const drag = draggingVertex.current;
-    if (!drag || drag.pointerId !== event.pointerId || disabled || busy || generated) return;
+    if (!drag || drag.pointerId !== event.pointerId || disabled || busy || generated || occlusionMode) return;
     const point = canvasPoint(event);
     setParts((current) => current.map((part) => {
       if (part.id !== drag.partId) return part;
@@ -304,8 +339,13 @@ export default function AutoRigBuilderPanel({
   }
 
   function addPoint(event) {
-    if (!image || disabled || busy || generated || editingPartId) return;
+    if (!image || disabled || busy || generated) return;
     const { x, y } = canvasPoint(event);
+    if (occlusionMode) {
+      setOcclusionPoints((current) => [...current, { x, y }]);
+      return;
+    }
+    if (editingPartId) return;
     if (muzzleMode) {
       setMuzzlePoint({ x, y });
       setMuzzleMode(false);
@@ -315,8 +355,40 @@ export default function AutoRigBuilderPanel({
     setPoints((current) => [...current, { x, y }]);
   }
 
+  function beginOcclusionMask(partId) {
+    if (disabled || busy || generated) return;
+    setEditingPartId("");
+    setPoints([]);
+    setMuzzleMode(false);
+    setOcclusionTargetPartId(partId);
+    setOcclusionPoints([]);
+    setOcclusionMode(true);
+    setMessage("انقر حول المنطقة التي يُفترض أن يشغلها الجزء المخفي، ثم اعتمد القناع. هذا يحدد منطقة إعادة البناء ولا ينشئ بكسلات جديدة بعد.");
+  }
+
+  function commitOcclusionMask() {
+    if (occlusionPoints.length < 3 || !occlusionTargetPartId) {
+      setMessage("حدد ثلاث نقاط أو أكثر حول المنطقة المخفية.");
+      return;
+    }
+    const area = occlusionPoints.reduce((sum, point, index) => {
+      const next = occlusionPoints[(index + 1) % occlusionPoints.length];
+      return sum + point.x * next.y - next.x * point.y;
+    }, 0) / 2;
+    if (Math.abs(area) < 4) {
+      setMessage("منطقة الاحتجاب صغيرة جداً أو نقاطها على خط واحد.");
+      return;
+    }
+    setParts((current) => current.map((part) => part.id === occlusionTargetPartId
+      ? { ...part, occlusionMask: { kind: "polygon", points: occlusionPoints }, occlusion: "unresolved" }
+      : part));
+    setOcclusionMode(false);
+    setOcclusionPoints([]);
+    setMessage("تم حفظ قناع المنطقة المخفية. ما زال يحتاج إلى إعادة بناء فعلية قبل النشر.");
+  }
+
   function commitPart() {
-    if (generated) return;
+    if (generated || occlusionMode) return;
     if (points.length < 3) {
       setMessage("ارسم حدود الجزء بثلاث نقاط أو أكثر قبل اعتماده.");
       return;
@@ -365,7 +437,7 @@ export default function AutoRigBuilderPanel({
   }
 
   async function generateRig() {
-    if (!image || !parts.length || busy || disabled || generated) return;
+    if (!image || !parts.length || busy || disabled || generated || occlusionMode) return;
     if (requiresMuzzle && (!activeEmitterPart || !muzzlePoint)) {
       setMessage("اختر جزء مصدر الإطلاق ثم حدّد نقطة muzzle داخله قبل إنشاء هيكل نبتة المقذوفات.");
       return;
@@ -387,6 +459,7 @@ export default function AutoRigBuilderPanel({
         ...(part.confidence == null ? {} : { confidence: part.confidence }),
         reviewed: part.reviewed === true,
         occlusion: part.occlusion || "unresolved",
+        ...(part.occlusionMask ? { occlusionMask: part.occlusionMask } : {}),
         mask: { kind: "polygon", points: part.points },
         provenance: part.provenance || { segmentation: "manual-polygon", pixels: "source" }
       }));
@@ -502,6 +575,7 @@ export default function AutoRigBuilderPanel({
           <input value={partName} disabled={disabled || busy || generated} onChange={(event) => setPartName(event.target.value)} maxLength={80} />
         </label>
       </div>
+      {occlusionMode&&<p className="studio-message" role="status">وضع تحديد المنطقة المخفية مفعّل: انقر 3 نقاط أو أكثر حول المنطقة ثم اضغط «اعتماد المنطقة» في صف الجزء.</p>}
       <div className="studio-actions" style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 10 }}>
         <button type="button" disabled={disabled || busy || generated || !points.length} onClick={() => setPoints((current) => current.slice(0, -1))}>تراجع عن آخر نقطة</button>
         <button type="button" disabled={disabled || busy || !points.length} onClick={() => setPoints([])}>إلغاء التحديد</button>
@@ -539,7 +613,7 @@ export default function AutoRigBuilderPanel({
               <option value="none">لا يوجد جزء مخفي</option>
             </select>
           </label>
-          <button type="button" disabled={disabled || busy || generated} style={{ marginInlineStart: 10 }} onClick={() => { setEditingPartId((current) => current === part.id ? "" : part.id); setPoints([]); setMessage(editingPartId === part.id ? "تم إنهاء تحرير القناع." : "اسحب نقاط القناع البرتقالية لتعديل حدود الجزء؛ اضغط الزر مجدداً لإنهاء التحرير."); }}>{editingPartId === part.id ? "إنهاء التحرير" : "تحرير القناع"}</button>
+          <button type="button" disabled={disabled || busy || generated} style={{ marginInlineStart: 8 }} onClick={() => beginOcclusionMask(part.id)}>تحديد المنطقة المخفية</button>{part.occlusionMask&&<small style={{ marginInlineStart: 6 }}>قناع احتجاب محفوظ</small>}{occlusionMode&&occlusionTargetPartId===part.id&&<><button type="button" disabled={occlusionPoints.length<3} style={{ marginInlineStart: 6 }} onClick={commitOcclusionMask}>اعتماد المنطقة ({occlusionPoints.length})</button><button type="button" style={{ marginInlineStart: 4 }} onClick={() => { setOcclusionMode(false); setOcclusionPoints([]); setOcclusionTargetPartId(""); }}>إلغاء</button></>}<button type="button" disabled={disabled || busy || generated} style={{ marginInlineStart: 10 }} onClick={() => { setEditingPartId((current) => current === part.id ? "" : part.id); setPoints([]); setMessage(editingPartId === part.id ? "تم إنهاء تحرير القناع." : "اسحب نقاط القناع البرتقالية لتعديل حدود الجزء؛ اضغط الزر مجدداً لإنهاء التحرير."); }}>{editingPartId === part.id ? "إنهاء التحرير" : "تحرير القناع"}</button>
           <button type="button" disabled={disabled || busy || generated} style={{ marginInlineStart: 6 }} onClick={() => { setParts((current) => current.filter((item) => item.id !== part.id)); if (editingPartId === part.id) setEditingPartId(""); if (part.id === activeEmitterPart?.id) { setMuzzlePartId(""); setMuzzlePoint(null); setMuzzleMode(false); } }}>حذف</button>
         </li>)}</ul>
       </div>}
