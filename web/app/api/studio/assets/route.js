@@ -48,7 +48,7 @@ async function githubDeleteBranch(branchName,token){
 }
 async function githubCreatePullRequest(head,base,title,body,token){
  const response=await fetch(githubApiUrl("/pulls"),{method:"POST",headers:{...githubHeaders(token),"Content-Type":"application/json"},body:JSON.stringify({head,base,title,body,draft:false})});
- if(!response.ok){const error=await response.json().catch(()=>({}));if(response.status===403||response.status===404)throw Error("تعذر إنشاء طلب المراجعة. يحتاج رمز GitHub إلى صلاحية Pull requests: Read and write إضافة إلى Contents: Read and write.");throw Error(error.message||"GitHub pull request creation failed ("+response.status+").");}
+ if(!response.ok){const error=await response.json().catch(()=>({}));const failure=Error(response.status===403||response.status===404?"تعذر إنشاء طلب المراجعة. يحتاج رمز GitHub إلى صلاحية Pull requests: Read and write إضافة إلى Contents: Read and write.":error.message||"GitHub pull request creation failed ("+response.status+").");failure.status=response.status;throw failure;}
  const pr=await response.json();
  return {number:pr.number,url:pr.html_url,state:pr.state,merged:Boolean(pr.merged),mergedAt:pr.merged_at||null};
 }
@@ -445,13 +445,14 @@ export async function PATCH(req){
   await githubPut(catalogPath,Buffer.from(JSON.stringify(catalog,null,2)+"\n"),"stage "+asset.type+" catalog release "+id,token,releaseBranch,catalogDocument?.sha??null);
 
   releasePullRequestAttempted=true;
-  const pr=await githubCreatePullRequest(
+  let pr;
+  try{pr=await githubCreatePullRequest(
    releaseBranch,
    targetBranch,
    "Publish "+asset.type+": "+asset.name+" ("+id+")",
    "## Studio content release\n\n- Type: "+asset.type+"\n- ID: "+id+"\n- Revision: "+(asset.revision||1)+"\n- Includes the immutable source asset, the complete referenced rig-part set, linked projectile when applicable, and the updated published catalog.\n- Asset lifecycle, rig schema, frame references and dependency checks were validated before staging.\n\n**Required before merge:** review the diff and complete the live Phaser gameplay/browser verification for this exact revision. Merging this pull request activates the content on the target game branch. The Studio action does not merge it automatically.",
    token
-  );
+  );}catch(error){if([403,404,422].includes(error.status))releasePullRequestAttempted=false;throw error;}
 
   const requested={...asset,status:"approved",releaseRequest:{number:pr.number,url:pr.url,branch:releaseBranch,state:"open",createdAt:new Date().toISOString()}};
   registry.assets[index]=requested;
