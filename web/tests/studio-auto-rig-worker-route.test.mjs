@@ -42,6 +42,11 @@ test("worker bridge validates image limits, task names, and worker geometry befo
   assert.match(source, /status: 422/);
 });
 
+test("worker bridge allows model startup and bounded inference time", () => {
+  assert.ok(source.includes("WORKER_TIMEOUT_MS = 85_000"));
+  assert.ok(source.includes("setTimeout(() => controller.abort(), 30_000)"));
+});
+
 test("worker bridge reads request and response streams with explicit byte ceilings", () => {
   assert.ok(source.includes("async function readBoundedBody(request, maxBytes)"));
   assert.match(source, /total > maxBytes/);
