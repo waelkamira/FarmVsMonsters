@@ -336,3 +336,8 @@ The Auto-Rig Builder is a permanent first-class Studio subsystem composed of the
 
 ## 2026-11-22 — Rig Library semantic search
 - Extended the existing Studio library search to index Auto-Rig part IDs, semantic roles, part names, bone names, and attachment names in addition to asset metadata. This keeps Rig Library discovery inside the existing asset registry and search controls.
+
+
+## 2026-11-22 — Rig Library regression coverage
+- Added a focused source-contract test for the rigged/unrigged library filters and semantic search across part roles, bone names, and attachment names.
+- Included the new test in the Auto-Rig subsystem workflow so changes to the Studio Rig Library are covered by the same build and validation pipeline.
