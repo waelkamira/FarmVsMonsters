@@ -49,8 +49,9 @@ def extract(video, folder, count, info, background):
 
 def normalize(paths, width, height, margin):
     images = [Image.open(p).convert("RGBA") for p in paths]
-    boxes = [bbox(im) for im in images]
-    boxes = [b for b in boxes if b]
+    source_boxes = [bbox(im) for im in images]
+    opaque_source_frames = sum(1 for im, b in zip(images, source_boxes) if b == (0, 0, im.width, im.height))
+    boxes = [b for b in source_boxes if b]
     if not boxes:
         raise ValueError("No visible pixels. Check the background-removal mode.")
     x0, y0 = min(b[0] for b in boxes), min(b[1] for b in boxes)
@@ -64,7 +65,7 @@ def normalize(paths, width, height, margin):
         canvas = Image.new("RGBA", (width, height), (0, 0, 0, 0))
         canvas.alpha_composite(subject, ((width - rw) // 2, height - margin - rh))
         result.append(canvas)
-    return result, {"sourceCrop": [x0, y0, x1, y1], "scale": scale, "subjectSize": [rw, rh]}
+    return result, {"sourceCrop": [x0, y0, x1, y1], "scale": scale, "subjectSize": [rw, rh]}, opaque_source_frames
 
 def write_atlas(frames, path, columns, name):
     w, h = frames[0].size
@@ -112,7 +113,7 @@ def main():
     info = probe(a.input)
     with tempfile.TemporaryDirectory(prefix="fvm-ai-video-") as tmp:
         paths, original_count = extract(a.input, Path(tmp), a.frames, info, a.background)
-        frames, layout = normalize(paths, a.width, a.height, a.margin)
+        frames, layout, opaque_source_frames = normalize(paths, a.width, a.height, a.margin)
     frames_dir = a.output_dir / "frames"
     frames_dir.mkdir(exist_ok=True)
     for i, frame in enumerate(frames):
@@ -132,15 +133,15 @@ def main():
         warnings.append("Some frames were duplicated to complete the requested count.")
     if empty:
         warnings.append("One or more frames have no visible subject.")
-    if opaque == len(frames):
-        warnings.append("No transparency detected; background may remain.")
+    if opaque_source_frames == len(frames):
+        warnings.append("All decoded source frames are fully opaque; background removal may not have occurred.")
     report = {"status": "needs_review" if warnings else "passed_structural_checks",
         "requestedFrames": a.frames, "decodedFrames": original_count, "outputFrames": len(frames),
         "source": info, "playbackFps": a.fps, "playbackDurationSeconds": len(frames) / a.fps,
         "canvas": {"width": a.width, "height": a.height},
         "sheet": {"columns": columns, "rows": rows, "width": columns * a.width, "height": rows * a.height},
         "backgroundMode": a.background, "layout": layout, "emptyFrames": empty,
-        "opaqueFrameCount": opaque, "warnings": warnings,
+        "opaqueFrameCount": opaque, "opaqueSourceFrameCount": opaque_source_frames, "warnings": warnings,
         "note": "Structural checks do not judge artistic quality, anatomy, or identity consistency.",
         "atlas": atlas_path.name, "atlasJson": atlas_path.with_suffix(".json").name}
     (a.output_dir / "validation.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
