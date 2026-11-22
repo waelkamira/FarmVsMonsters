@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AUTO_RIG_ROLE_OPTIONS, analyzeAutoRigQuality, buildAutoRigFromParts, moveAutoRigPolygonVertex } from "../../game/studio/autoRigBuilder.mjs";
-import { suggestAutoRigSemanticRoles } from "../../game/studio/semanticRoleClassifier.mjs";
 import { suggestRigTemplateRetarget } from "../../game/studio/rigTemplateRetarget.mjs";
 
 function slug(value) {
@@ -380,15 +379,40 @@ export default function AutoRigBuilderPanel({
     setMessage("طُبّقت اقتراحات القالب على الأجزاء المطابقة. راجع نقاط الدوران والآباء بصرياً ثم أعد تأكيد مراجعة كل جزء.");
   }
 
-  function suggestSemanticRoles() {
-    if (!image || !aiProposals.length) return;
+  async function suggestSemanticRoles() {
+    if (!image || !aiProposals.length || aiBusy || disabled || generated) return;
+    setAiBusy(true);
     try {
-      const suggestions = suggestAutoRigSemanticRoles(aiProposals, { width: image.width, height: image.height }, characterType);
-      setAiProposalRoles((current) => ({ ...current, ...Object.fromEntries(suggestions.map((item) => [item.proposalId, item.role])) }));
+      const sourceCanvas = document.createElement("canvas");
+      sourceCanvas.width = image.naturalWidth || image.width;
+      sourceCanvas.height = image.naturalHeight || image.height;
+      sourceCanvas.getContext("2d").drawImage(image, 0, 0);
+      const response = await fetch("/api/studio/auto-rig/worker", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          task: "semantic-classification",
+          characterType: characterType === "monster" ? "monster" : "plant",
+          canvas: { width: sourceCanvas.width, height: sourceCanvas.height },
+          imageDataUrl: sourceCanvas.toDataURL("image/png"),
+          proposals: aiProposals
+        })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "تعذر تشغيل المصنف البصري المحلي. تحقق من تثبيت نموذج CLIP المحلي.");
+      const suggestions = Array.isArray(data.suggestions) ? data.suggestions : [];
+      setAiProposalRoles((current) => ({
+        ...current,
+        ...Object.fromEntries(suggestions.filter((item) => item.role !== "unknown").map((item) => [item.proposalId, item.role]))
+      }));
       setAiSemanticSuggestions(Object.fromEntries(suggestions.map((item) => [item.proposalId, item])));
-      const lowConfidence = suggestions.filter((item) => item.confidence < 0.5).length;
-      setMessage("تم اقتراح أدوار هندسية لـ " + suggestions.length + " منطقة. " + lowConfidence + " اقتراحات منخفضة الثقة؛ راجع كل دور يدوياً قبل اعتماد القناع.");
-    } catch (error) { setMessage(error.message); }
+      const uncertain = suggestions.filter((item) => item.role === "unknown" || item.margin < 0.035).length;
+      setAiStatus("connected");
+      setMessage("حلّل المصنف البصري المحلي " + suggestions.length + " منطقة باستخدام CLIP. " + uncertain + " منطقة غير مؤكدة وتحتاج تعييناً يدوياً؛ لم يعتمد أي قناع تلقائياً.");
+    } catch (error) {
+      setMessage(error.message);
+    } finally { setAiBusy(false); }
   }
 
   function acceptAIProposal(proposal, selectedRole) {
@@ -843,11 +867,11 @@ export default function AutoRigBuilderPanel({
 <span className="studio-message" role="status">حالة المحرك: {aiStatus === "connected" ? "جاهز" : aiStatus === "degraded" ? "مثبت لكن النموذج غير جاهز" : aiStatus === "offline" ? "غير متصل" : aiStatus === "not-configured" ? "غير مهيأ" : "لم يُفحص"}</span>
       </div>
       {aiProposals.length > 0 && <div style={{ margin: "12px 0", padding: 12, border: "1px solid #d8dce5", borderRadius: 10 }}>
-        <b>مقترحات AI ({aiProposals.length}) — يلزم اعتمادك</b><p style={{ margin: "6px 0", fontSize: 13 }}>الأقنعة الزرقاء المتقطعة هي مقترحات غير معتمدة؛ الأقنعة الخضراء هي أجزاء أُضيفت إلى الهيكل. التصنيف الهندسي مساعد أولي وليس فهماً بصرياً مؤكداً.</p>
-        <button type="button" disabled={disabled || busy || generated} onClick={suggestSemanticRoles}>اقتراح الأدوار الدلالية تلقائياً</button>
+        <b>مقترحات AI ({aiProposals.length}) — يلزم اعتمادك</b><p style={{ margin: "6px 0", fontSize: 13 }}>الأقنعة الزرقاء المتقطعة مقترحات SAM 2 غير معتمدة؛ الأقنعة الخضراء أجزاء أُضيفت إلى الهيكل. استخدم المصنف البصري المحلي CLIP لاقتراح الدور من محتوى الصورة، ثم راجع النتيجة يدوياً.</p>
+        <button type="button" disabled={disabled || busy || generated} onClick={suggestSemanticRoles}>{aiBusy ? "جارٍ التصنيف البصري..." : "تصنيف الأجزاء بصرياً باستخدام CLIP المحلي"}</button>
         <ul>{aiProposals.map((proposal) => <li key={proposal.id} style={{ marginTop: 6 }}>
           {proposal.name || proposal.role} · ثقة التقسيم {proposal.confidence == null ? "غير محددة" : Math.round(proposal.confidence * 100) + "%"}
-          {aiSemanticSuggestions[proposal.id] && <small style={{ display: "block", marginTop: 3 }}>اقتراح الدور: {aiSemanticSuggestions[proposal.id].role} · ثقة هندسية {Math.round(aiSemanticSuggestions[proposal.id].confidence * 100)}% · {aiSemanticSuggestions[proposal.id].reason}</small>}
+          {aiSemanticSuggestions[proposal.id] && <small style={{ display: "block", marginTop: 3 }}>اقتراح CLIP البصري: {aiSemanticSuggestions[proposal.id].role} · درجة التشابه {Math.round(aiSemanticSuggestions[proposal.id].confidence * 100)}% · هامش {Math.round(aiSemanticSuggestions[proposal.id].margin * 100)}% · {aiSemanticSuggestions[proposal.id].reason}</small>}
           <label style={{ display: "inline-flex", gap: 6, marginInlineStart: 10 }}>الدور
             <select value={aiProposalRoles[proposal.id] || ""} disabled={disabled || busy || generated} onChange={(event) => setAiProposalRoles((current) => ({ ...current, [proposal.id]: event.target.value }))}>
               <option value="">اختر الدور...</option>{AUTO_RIG_ROLE_OPTIONS.map((item) => <option value={item.value} key={item.value}>{item.label}</option>)}
