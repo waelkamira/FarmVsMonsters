@@ -1404,3 +1404,8 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 ## 2026-11-22 — Transparent-canvas mask clipping
 - Extended alpha-aware decoding to return a source-visible pixel mask. Automatic and point-prompted SAM 2 masks are clipped to non-transparent pixels before polygon conversion, preventing the transparent canvas from being accepted as part of a character.
 - Added regression coverage for transparent/semitransparent pixel decoding and automatic mask clipping. The prompted-segmentation fixture now uses the alpha-aware decoder contract.
+
+
+## 2026-11-22 — Alpha-aware proposal clipping regression verification
+- Updated the prompted-segmentation test fixture to use the new alpha-aware decoder contract and added an automatic-mask regression proving that transparent canvas pixels are excluded from the proposal bounds.
+- The local-worker job passed all Python tests, Python compilation, and WSL launcher syntax checks in run `45035114044`. The paired Node/ESLint/production-build job is still running at the time of this note.
