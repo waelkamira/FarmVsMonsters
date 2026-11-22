@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { AUTO_RIG_ROLE_DICTIONARY_VERSION, AUTO_RIG_ROLE_OPTIONS, buildAutoRigFromParts } from "../game/studio/autoRigBuilder.mjs";
+import { AUTO_RIG_ROLE_DICTIONARY_VERSION, AUTO_RIG_ROLE_OPTIONS, buildAutoRigFromParts, validateAutoRigBuildManifest } from "../game/studio/autoRigBuilder.mjs";
 import {
   evaluateSkeletalClip,
   getSkeletalAttachmentTransform,
@@ -183,4 +183,20 @@ test("flags generated pixel provenance even when occlusion is not separately mar
   input.parts[0].provenance = { segmentation: "model-mask", pixels: "reconstructed" };
   const result = buildAutoRigFromParts(input);
   assert.ok(result.warnings.some((warning) => warning.code === "generated-pixels" && warning.partId === "body-main"));
+});
+
+
+test("validates persisted build manifests while allowing subsequent manual rig edits", () => {
+  const generated = buildAutoRigFromParts(baseInput());
+  const valid = validateAutoRigBuildManifest(generated.manifest, generated.profile);
+  assert.equal(valid.valid, true, valid.errors.join("; "));
+  const editedProfile = JSON.parse(JSON.stringify(generated.profile));
+  editedProfile.bones.push({
+    id: "manual-extra-bone", name: "Manual extra bone", parentId: "part-body-main",
+    x: 5, y: 6, rotation: 0, scaleX: 1, scaleY: 1, pivot: { x: 0, y: 0 }, part: null
+  });
+  assert.equal(validateAutoRigBuildManifest(generated.manifest, editedProfile).valid, true);
+  const invalidManifest = JSON.parse(JSON.stringify(generated.manifest));
+  invalidManifest.parts[0].parentPartId = "missing-parent";
+  assert.match(validateAutoRigBuildManifest(invalidManifest, generated.profile).errors[0], /missing parent/);
 });
