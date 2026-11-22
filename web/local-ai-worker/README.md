@@ -29,6 +29,9 @@ STUDIO_LOCAL_AI_WORKER_URL=http://127.0.0.1:8765
 Restart the web app, open Auto-Rig Builder and select "فحص محرك AI المحلي". The worker advertises part-detection only after the SAM 2 model loads. It emits automatic masks as editable polygons. This adapter does not perform semantic body/limb/weapon classification, text-prompted segmentation, or hidden-pixel reconstruction.
 
 ## Limits
+
+- The HTTP worker accepts only JSON requests whose Host header targets its exact loopback bind address and rejects requests carrying a browser Origin header. This prevents websites from using cross-site form posts to trigger local inference.
+- Only one inference request is admitted at a time; additional requests receive HTTP 429 rather than queuing unbounded image payloads and memory use.
 - Binds to 127.0.0.1 only.
 - No telemetry, cloud API, credentials, or automatic weight downloads.
 - Maximum image size 8 MB; maximum dimensions 4096 x 4096.
