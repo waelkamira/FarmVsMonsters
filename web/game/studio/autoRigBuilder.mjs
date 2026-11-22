@@ -178,17 +178,69 @@ function suggestAutoPivot(part, parent) {
   return best || { x: part.bounds.x + part.bounds.width / 2, y: part.bounds.y + part.bounds.height / 2 };
 }
 
-function buildStaticClip(id, name, durationMs, loop, bones) {
-  return {
-    id, name, durationMs, fps: 24, loop,
-    tracks: bones.map((bone) => ({
-      boneId: bone.id,
-      keyframes: [
-        { timeMs: 0, x: bone.x, y: bone.y, rotation: bone.rotation, scaleX: bone.scaleX, scaleY: bone.scaleY },
-        { timeMs: durationMs, x: bone.x, y: bone.y, rotation: bone.rotation, scaleX: bone.scaleX, scaleY: bone.scaleY }
-      ]
-    }))
-  };
+function buildStarterClips(bones, parts) {
+  const roles = new Map(parts.map((part) => ["part-" + part.id, part.role]));
+  const visible = bones.filter((bone) => bone.part);
+  const body = visible.find((bone) => roles.get(bone.id) === "body")
+    || visible.find((bone) => roles.get(bone.id) === "stem")
+    || visible[0];
+  const leaves = visible.filter((bone) => String(roles.get(bone.id) || "").startsWith("leaf"));
+  const head = visible.find((bone) => roles.get(bone.id) === "head");
+  const arms = visible.filter((bone) => /^(arm|hand)\\./.test(roles.get(bone.id) || ""));
+  const weapons = visible.filter((bone) => ["weapon", "weapon.barrel", "weapon.muzzle"].includes(roles.get(bone.id)));
+  const baseFrame = (bone, timeMs, changes = {}) => ({
+    timeMs, x: bone.x, y: bone.y, rotation: bone.rotation,
+    scaleX: bone.scaleX, scaleY: bone.scaleY, ...changes
+  });
+  const track = (bone, frames) => ({ boneId: bone.id, keyframes: frames });
+  const oscillation = (bone, durationMs, midTime, changes) => track(bone, [
+    baseFrame(bone, 0),
+    baseFrame(bone, midTime, changes),
+    baseFrame(bone, durationMs)
+  ]);
+  const clips = [];
+  const idleTracks = [];
+  if (body) idleTracks.push(oscillation(body, 1200, 600, { y: body.y - 2, scaleX: body.scaleX * 0.99, scaleY: body.scaleY * 1.015 }));
+  for (const bone of leaves) idleTracks.push(oscillation(bone, 1200, 600, { rotation: bone.rotation + 3 }));
+  if (head) idleTracks.push(oscillation(head, 1200, 600, { rotation: head.rotation - 1.5 }));
+  clips.push({ id: "idle", name: "Idle · breathing", durationMs: 1200, fps: 12, loop: true, tracks: idleTracks });
+
+  const moveTracks = [];
+  if (body) moveTracks.push(oscillation(body, 600, 300, { y: body.y - 4 }));
+  for (const bone of leaves) moveTracks.push(oscillation(bone, 600, 300, { rotation: bone.rotation - 5 }));
+  clips.push({ id: "move", name: "Move · bounce", durationMs: 600, fps: 12, loop: true, tracks: moveTracks });
+
+  const attackTargets = weapons.length ? weapons : arms.length ? arms : body ? [body] : [];
+  clips.push({
+    id: "attack", name: "Attack · strike", durationMs: 520, fps: 15, loop: false,
+    tracks: attackTargets.map((bone) => track(bone, [
+      baseFrame(bone, 0),
+      baseFrame(bone, 160, { rotation: bone.rotation - 28 }),
+      baseFrame(bone, 340, { rotation: bone.rotation + 8 }),
+      baseFrame(bone, 520)
+    ]))
+  });
+
+  const hitTargets = [body, head].filter(Boolean);
+  clips.push({
+    id: "hit", name: "Hit · recoil", durationMs: 360, fps: 15, loop: false,
+    tracks: hitTargets.map((bone) => track(bone, [
+      baseFrame(bone, 0),
+      baseFrame(bone, 100, { rotation: bone.rotation + 8, scaleX: bone.scaleX * 0.94, scaleY: bone.scaleY * 1.03 }),
+      baseFrame(bone, 360)
+    ]))
+  });
+
+  const deathTarget = body || visible[0];
+  clips.push({
+    id: "death", name: "Death · fall", durationMs: 900, fps: 12, loop: false,
+    tracks: deathTarget ? [track(deathTarget, [
+      baseFrame(deathTarget, 0),
+      baseFrame(deathTarget, 500, { rotation: deathTarget.rotation + 38, scaleX: deathTarget.scaleX * 0.9, scaleY: deathTarget.scaleY * 0.72 }),
+      baseFrame(deathTarget, 900, { rotation: deathTarget.rotation + 82, scaleX: deathTarget.scaleX * 0.78, scaleY: deathTarget.scaleY * 0.32 })
+    ])] : []
+  });
+  return clips;
 }
 
 /**
@@ -287,7 +339,7 @@ export function buildAutoRigFromParts(input) {
     });
   }
 
-  const clips = [buildStaticClip("idle", "Idle", 1000, true, bones)];
+  const clips = buildStarterClips(bones, parts);
   const profile = createSkeletalRigProfile({ version: 1, canvas, bones, attachments, hitboxes: [], clips });
   const warnings = [];
   for (const part of parts) {
@@ -311,6 +363,7 @@ export function buildAutoRigFromParts(input) {
         mask: part.mask, provenance: part.provenance
       })),
       anchors: attachments.map((attachment) => ({ id: attachment.id, boneId: attachment.boneId, x: attachment.x, y: attachment.y })),
+      animation: { generator: "procedural-starter", version: 1, clipIds: clips.map((clip) => clip.id) },
       warnings
     },
     warnings
