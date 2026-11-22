@@ -10,6 +10,19 @@ Generate a clean character image, animate it with an image-to-video service, the
 - FFmpeg and FFprobe on PATH
 - Install Pillow: `python -m pip install -r web/game/studio/autoRig/videoPipeline/requirements.txt`
 
+## Prepare the Hazelnut reference automatically
+
+The current BattleScene loads Hazelnut as a 1024 × 1024 sheet with 341 × 341 cells and uses frame 0 as its displayed plant pose. Extract that exact first frame before uploading it to the video model:
+
+```powershell
+python web/game/studio/autoRig/videoPipeline/extract_reference_frame.py `
+  --input "web\public\assets\plants\hazelnut-level-1.png" `
+  --output "web\.autorig-workspace\ai-video\hazelnut-reference.png" `
+  --frame-width 341 --frame-height 341 --columns 3 --index 0
+```
+
+This uses the existing Phaser frame contract; it does not alter the original sprite sheet.
+
 ## First Hazelnut experiment
 1. Use the existing approved Hazelnut Level 1 artwork as the image reference. Do not overwrite it.
 2. Generate a 2–3 second clip: one character, locked camera, fixed framing, full character visible, no cuts or scene changes.
@@ -23,11 +36,12 @@ python web/game/studio/autoRig/videoPipeline/video_to_spritesheet.py `
   --output-dir "web\.autorig-workspace\ai-video\hazelnut-idle" `
   --name "hazelnut-idle" `
   --start-seconds 0 --clip-duration 2 `
+  --start-seconds 0 --clip-duration 2 `
   --frames 24 --fps 12 --width 150 --height 150 `
   --columns 6 --background green
 ```
 
-Use `--start-seconds` and `--clip-duration` to select a 2-second segment from a longer provider clip. 24 frames at 12 FPS represent 2 seconds; keep the extracted clip duration and playback FPS aligned to avoid speeding up or slowing down the motion. Use `--background alpha` for a video with a real alpha channel. Use `--background none` only when intentionally retaining the background.
+Use `--start-seconds` and `--clip-duration` to select a 2-second segment from a longer provider clip. 24 frames at 12 FPS represent 2 seconds; keep the extracted clip duration and playback FPS aligned to avoid speeding up or slowing down the motion. Use `--start-seconds` and `--clip-duration` to select a 2-second segment from a longer provider clip. 24 frames at 12 FPS represent 2 seconds; keep source clip duration and playback FPS aligned to avoid changing motion speed. Use `--background alpha` for a video with a real alpha channel. Use `--background none` only when intentionally retaining the background.
 
 ## Outputs
 - `hazelnut-idle.png`: 6 × 4 sheet, 150 × 150 per frame by default.
