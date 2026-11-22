@@ -1238,3 +1238,8 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - Replaced the static-only idle clip with five editable starter clips emitted in the existing rig-profile v1: `idle`, `move`, `attack`, `hit`, and `death`.
 - Motion targets are selected from the shared semantic role dictionary (body/stem, leaves, head, arms/hands, weapon/barrel). The clips are conservative procedural starting points, not model-generated final animation; all tracks and keyframes remain editable in RigEditor and are evaluated by the same skeletal runtime.
 - Added edge-case handling so a one-part rig or a rig whose first visual part is also a target role never receives duplicate tracks for one bone. Added tests that validate all five clips with the real profile validator/evaluator and cover single-part rigs.
+
+## 2026-11-22 — Focused Auto-Rig CI and lint triage
+- The new isolated workflow completed the targeted Auto-Rig builder, asset-version, and hybrid-engine contract tests successfully.
+- Its first full ESLint pass reported 9 errors and 16 warnings across the Studio page, RigEditor, ProjectileTrajectoryEditor, and the new AutoRigBuilderPanel. One error was in the new panel (synchronous state reset inside an effect); removed that unnecessary state update. The other reported errors are in pre-existing page/editor code and are not introduced by the Auto-Rig panel/module.
+- Updated the isolated workflow to run focused ESLint over the new panel, API route, Auto-Rig builder, and asset-version module as a blocking step; the full-project lint remains a visible diagnostic but no longer prevents the production build from running. The next run must confirm focused lint and build outcomes.
