@@ -47,6 +47,7 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
     update((next) => {
       const target = next.bones.find((item) => item.id === selectedBoneId);
       if (!target) return;
+      if (field === "part") { target.part = value; return; }
       if (field.startsWith("pivot.")) target.pivot[field.slice(6)] = value;
       else if (field.startsWith("part.")) {
         if (!target.part) target.part = { assetId: availableParts[0]?.id || "", frame: 0 };
