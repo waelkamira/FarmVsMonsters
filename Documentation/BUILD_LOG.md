@@ -1100,3 +1100,10 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - Added animation state guards for attack, hit, frozen, and death states, including correct preservation across stacked freeze events.
 - Validation remains pending: the GitHub Actions jobs for the current feature branch terminate before any steps or logs are available; no tests/lint/build/browser pass is claimed.
 - Working branch: `feat/studio-hybrid-animation-engine`; review PR: #84.
+
+### Final rig-editor and collision refinements — 2026-11-22
+- Keyframe timestamps now snap to integer clip-frame times in the editor, including numeric edits, canvas dragging, presets, keyframe insertion/removal, and preview sampling.
+- Added per-clip FPS validation and defaulting in the rig data contract.
+- BattleScene uses oriented-rectangle SAT across all authored attack/hurt hitbox pairs and circle-vs-oriented-hurtbox checks for projectiles.
+- Monster state guards protect death and frozen states, preserve the pre-freeze animation across stacked freeze hits, and prevent idle/movement from resetting active attack/hit clips.
+- Validation still has not executed: the latest GitHub Actions jobs finish with runner_id=0 and no steps/logs. Live Chrome/Windows battle verification remains open.
