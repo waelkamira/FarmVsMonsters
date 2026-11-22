@@ -1153,3 +1153,11 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - Added Documentation/AI_AUTO_RIG_BUILDER_PLAN.md with the local-first architecture, stable semantic part roles, layer/occlusion handling, deterministic rig generation, optional inference worker, implementation phases, and acceptance criteria.
 - Decision: do not add a heavy model or paid/cloud API dependency to the web app. Start with a deterministic, testable Auto-Rig core and keep AI segmentation as an optional local worker.
 - Verification: repository branch/PR state and source files were inspected through GitHub. No application build or live game test was run in this documentation-only step.
+
+
+## 2026-11-22 — Deterministic Auto-Rig core (initial)
+- Added web/game/studio/autoRigBuilder.mjs. It accepts already-extracted part descriptors, validates source-space bounds/pivots and stable IDs, assigns deterministic parent bones from semantic roles, converts global pivots into cropped-image pivots and parent-local bone positions, and builds a version-1 skeletal profile through the existing validator.
+- Added explicit muzzle-anchor generation for projectile rigs; projectile rigs are rejected when the muzzle point is not confirmed.
+- Added warnings for unresolved occlusion, reconstructed/generated pixels, and unknown semantic roles. Multiple instances of the same role are supported.
+- Added web/tests/studio-auto-rig-builder.test.mjs for deterministic output, parent mapping, multi-instance roles, coordinate conversion, muzzle anchors, cycle/bounds/duplicate rejection, and provenance warnings.
+- Verification: files were committed and read-back is pending. The new Node test file, Next.js build, and live Chrome preview have not yet been executed. This core consumes extracted layer descriptors; it does not yet perform AI image segmentation or reconstruct hidden pixels.
