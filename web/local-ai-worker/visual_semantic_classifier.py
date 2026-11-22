@@ -44,8 +44,11 @@ TAXONOMY = {
 }
 
 def model_status():
-    model_dir = os.environ.get("FVM_CLIP_MODEL_DIR", "").strip()
-    return bool(model_dir and Path(model_dir).is_dir())
+    model_dir = Path(os.environ.get("FVM_CLIP_MODEL_DIR", "").strip())
+    if not model_dir.is_dir():
+        return False
+    has_weights = any((model_dir / name).is_file() for name in ("model.safetensors", "pytorch_model.bin"))
+    return (model_dir / "config.json").is_file() and (model_dir / "preprocessor_config.json").is_file() and has_weights
 
 def _load_model():
     global _MODEL, _MODEL_ERROR
