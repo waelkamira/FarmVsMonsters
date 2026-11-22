@@ -38,7 +38,7 @@ async function readBoundedBody(request, maxBytes) {
 
 async function readBoundedJsonResponse(response, maxBytes = 2 * 1024 * 1024) {
   const declaredLength = response.headers.get("content-length");
-  if (declaredLength && (!/^\\d+$/.test(declaredLength) || Number(declaredLength) > maxBytes)) {
+  if (declaredLength && (!/^\d+$/.test(declaredLength) || Number(declaredLength) > maxBytes)) {
     throw new RangeError("Worker response exceeds the allowed size.");
   }
   const raw = await readBoundedBody(response, maxBytes);
@@ -86,7 +86,7 @@ export async function POST(req) {
     return NextResponse.json({ error: error.message, code: "WORKER_NOT_CONFIGURED" }, { status: 503 });
   }
   const declaredLength = req.headers.get("content-length");
-  if (declaredLength && (!/^\\d+$/.test(declaredLength) || Number(declaredLength) > MAX_REQUEST_BODY_BYTES)) {
+  if (declaredLength && (!/^\d+$/.test(declaredLength) || Number(declaredLength) > MAX_REQUEST_BODY_BYTES)) {
     return NextResponse.json({ error: "Request body exceeds the 12 MB limit or has an invalid Content-Length." }, { status: 413 });
   }
   let body;
