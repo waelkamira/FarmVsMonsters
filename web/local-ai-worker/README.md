@@ -7,7 +7,7 @@ This optional inference process runs on the developer's machine and binds only t
 - Automatic SAM 2 mask proposals for visible image regions.
 - Positive/negative point-prompted segmentation with up to three alternative masks.
 - Source-coordinate polygon masks, confidence values, and source-pixel provenance.
-- Transparent PNG input is composited onto white for inference; the original source bytes are never changed.
+- Transparent PNG input is composited onto white for inference and every predicted mask is clipped to non-transparent source pixels; the original source bytes are never changed.
 
 **Important:** SAM 2 returns geometric regions, not semantic labels. It does not know whether a mask is a leaf, arm, head, weapon, or body. Assign each proposal a role in Studio and review its shape. Hidden-part reconstruction and semantic plant/monster classification are not implemented by this adapter.
 
