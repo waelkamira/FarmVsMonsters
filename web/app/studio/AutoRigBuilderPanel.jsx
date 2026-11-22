@@ -44,12 +44,14 @@ export default function AutoRigBuilderPanel({
 }) {
   const canvasRef = useRef(null);
   const nextPartIndex = useRef(1);
+  const draggingVertex = useRef(null);
   const [image, setImage] = useState(null);
   const [imageError, setImageError] = useState("");
   const [role, setRole] = useState("body");
   const [partName, setPartName] = useState("الجسم");
   const [points, setPoints] = useState([]);
   const [parts, setParts] = useState([]);
+  const [editingPartId, setEditingPartId] = useState("");
   const [busy, setBusy] = useState(false);
   const [generated, setGenerated] = useState(false);
   const [qualityReport, setQualityReport] = useState(null);
@@ -92,6 +94,8 @@ export default function AutoRigBuilderPanel({
       setImageError("");
       setPoints([]);
       setParts([]);
+      setEditingPartId("");
+      draggingVertex.current = null;
       setAiProposals([]);
       setAiProposalRoles({});
       setMuzzlePartId("");
@@ -141,6 +145,16 @@ export default function AutoRigBuilderPanel({
       context.stroke();
       context.setLineDash([]);
     });
+    const editingPart = parts.find((part) => part.id === editingPartId);
+    if (editingPart) {
+      context.beginPath();
+      editingPart.points.forEach((point, index) => {
+        context.moveTo(point.x + Math.max(5, canvas.width / 100), point.y);
+        context.arc(point.x, point.y, Math.max(5, canvas.width / 100), 0, Math.PI * 2);
+      });
+      context.fillStyle = "#ff8a32";
+      context.fill();
+    }
     if (muzzlePoint) {
       context.beginPath();
       context.arc(muzzlePoint.x, muzzlePoint.y, Math.max(6, canvas.width / 70), 0, Math.PI * 2);
@@ -167,7 +181,7 @@ export default function AutoRigBuilderPanel({
         context.fill();
       });
     }
-  }, [image, points, parts, aiProposals]);
+  }, [image, points, parts, aiProposals, editingPartId]);
 
   async function checkAIWorker() {
     setAiBusy(true);
@@ -243,12 +257,55 @@ export default function AutoRigBuilderPanel({
     setMessage("تم اعتماد القناع المقترح كجزء قابل للتحرير. راجع حدوده ودوره قبل الحفظ.");
   }
 
-  function addPoint(event) {
-    if (!image || disabled || busy || generated) return;
+  function canvasPoint(event) {
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
-    const x = (event.clientX - rect.left) * canvas.width / rect.width;
-    const y = (event.clientY - rect.top) * canvas.height / rect.height;
+    return { x: (event.clientX - rect.left) * canvas.width / rect.width, y: (event.clientY - rect.top) * canvas.height / rect.height };
+  }
+
+  function startVertexDrag(event) {
+    if (!editingPartId || disabled || busy || generated) return;
+    const canvas = canvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+    const point = canvasPoint(event);
+    const tolerance = Math.max(6, 14 * canvas.width / Math.max(1, rect.width));
+    const part = parts.find((item) => item.id === editingPartId);
+    if (!part) return;
+    let nearest = -1, distance = Infinity;
+    part.points.forEach((vertex, index) => {
+      const nextDistance = Math.hypot(vertex.x - point.x, vertex.y - point.y);
+      if (nextDistance < distance) { distance = nextDistance; nearest = index; }
+    });
+    if (nearest < 0 || distance > tolerance) { setMessage("اسحب إحدى نقاط القناع البرتقالية لتعديل حدوده."); return; }
+    draggingVertex.current = { partId: editingPartId, index: nearest, pointerId: event.pointerId };
+    canvas.setPointerCapture(event.pointerId);
+    event.preventDefault();
+  }
+
+  function moveVertexDrag(event) {
+    const drag = draggingVertex.current;
+    if (!drag || drag.pointerId !== event.pointerId || disabled || busy || generated) return;
+    const point = canvasPoint(event);
+    setParts((current) => current.map((part) => part.id !== drag.partId ? part : {
+      ...part,
+      points: part.points.map((vertex, index) => index === drag.index ? {
+        x: Math.max(0, Math.min(image.width, point.x)),
+        y: Math.max(0, Math.min(image.height, point.y))
+      } : vertex),
+      bounds: polygonBounds(part.points.map((vertex, index) => index === drag.index ? {
+        x: Math.max(0, Math.min(image.width, point.x)),
+        y: Math.max(0, Math.min(image.height, point.y))
+      } : vertex))
+    }));
+  }
+
+  function endVertexDrag(event) {
+    if (draggingVertex.current?.pointerId === event.pointerId) draggingVertex.current = null;
+  }
+
+  function addPoint(event) {
+    if (!image || disabled || busy || generated || editingPartId) return;
+    const { x, y } = canvasPoint(event);
     if (muzzleMode) {
       setMuzzlePoint({ x, y });
       setMuzzleMode(false);
@@ -425,7 +482,7 @@ export default function AutoRigBuilderPanel({
         ? <p className="studio-message">أبعاد الصورة {image.width}×{image.height} أكبر من الحد الحالي 4096×4096.</p>
         : null}
       {image && <div style={{ border: "1px solid #d8dce5", borderRadius: 12, overflow: "hidden", background: "#f4f5f8", maxHeight: 440, overflowY: "auto" }}>
-        <canvas ref={canvasRef} onClick={addPoint} style={{ display: "block", width: "100%", height: "auto", maxHeight: 420, objectFit: "contain", cursor: disabled || busy || generated ? "not-allowed" : "crosshair", touchAction: "manipulation" }} />
+        <canvas ref={canvasRef} onClick={addPoint} onPointerDown={startVertexDrag} onPointerMove={moveVertexDrag} onPointerUp={endVertexDrag} onPointerCancel={endVertexDrag} style={{ display: "block", width: "100%", height: "auto", maxHeight: 420, objectFit: "contain", cursor: disabled || busy || generated ? "not-allowed" : "crosshair", touchAction: "manipulation" }} />
       </div>}
       <div className="studio-grid" style={{ marginTop: 12 }}>
         <label>الدور الدلالي
@@ -467,7 +524,8 @@ export default function AutoRigBuilderPanel({
         <b>الأجزاء المحددة ({parts.length}/63)</b>
         <ul>{parts.map((part) => <li key={part.id} style={{ marginTop: 5 }}>
           {part.name} · {part.role} · {part.bounds.width}×{part.bounds.height}
-          <button type="button" disabled={disabled || busy || generated} style={{ marginInlineStart: 10 }} onClick={() => { setParts((current) => current.filter((item) => item.id !== part.id)); if (part.id === activeEmitterPart?.id) { setMuzzlePartId(""); setMuzzlePoint(null); setMuzzleMode(false); } }}>حذف</button>
+          <button type="button" disabled={disabled || busy || generated} style={{ marginInlineStart: 10 }} onClick={() => { setEditingPartId((current) => current === part.id ? "" : part.id); setPoints([]); setMessage(editingPartId === part.id ? "تم إنهاء تحرير القناع." : "اسحب نقاط القناع البرتقالية لتعديل حدود الجزء؛ اضغط الزر مجدداً لإنهاء التحرير."); }}>{editingPartId === part.id ? "إنهاء التحرير" : "تحرير القناع"}</button>
+          <button type="button" disabled={disabled || busy || generated} style={{ marginInlineStart: 6 }} onClick={() => { setParts((current) => current.filter((item) => item.id !== part.id)); if (editingPartId === part.id) setEditingPartId(""); if (part.id === activeEmitterPart?.id) { setMuzzlePartId(""); setMuzzlePoint(null); setMuzzleMode(false); } }}>حذف</button>
         </li>)}</ul>
       </div>}
       <button type="button" className="studio-submit" disabled={disabled || busy || generated || !image || !parts.length} onClick={generateRig}>
