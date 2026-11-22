@@ -325,7 +325,7 @@ export default function AutoRigBuilderPanel({
       </div>
       {requiresMuzzle && <div className="studio-grid" style={{ marginTop: 12 }}>
         <label>جزء مصدر الإطلاق
-          <select value={activeEmitterPart?.id || ""} disabled={disabled || busy || !emitterParts.length} onChange={(event) => { setMuzzlePartId(event.target.value); setMuzzlePoint(null); }}>
+          <select value={activeEmitterPart?.id || ""} disabled={disabled || busy || !emitterParts.length} onChange={(event) => { setMuzzlePartId(event.target.value); setMuzzlePoint(null); setMuzzleMode(false); }}>
             {emitterParts.map((part) => <option key={part.id} value={part.id}>{part.name} · {part.role}</option>)}
           </select>
         </label>
