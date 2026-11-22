@@ -19,7 +19,12 @@ function validPolygon(points, width, height) {
   if (points.some((point) => !point || typeof point.x !== "number" || typeof point.y !== "number" ||
       !Number.isFinite(point.x) || !Number.isFinite(point.y) || point.x < 0 || point.y < 0 ||
       point.x >= width || point.y >= height)) return false;
-  return new Set(points.map((point) => point.x + ":" + point.y)).size >= 3;
+  if (new Set(points.map((point) => point.x + ":" + point.y)).size < 3) return false;
+  const area = Math.abs(points.reduce((sum, point, index) => {
+    const next = points[(index + 1) % points.length];
+    return sum + point.x * next.y - next.x * point.y;
+  }, 0) / 2);
+  return area >= 4;
 }
 
 function validReconstructionResponse(data, width, height) {
