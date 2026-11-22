@@ -215,11 +215,7 @@ export default class BattleScene extends Scene {
           if (!entry || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(entry.id || "") ||
               typeof entry.path !== "string" || !(entry.path.startsWith("/assets/") || entry.path.startsWith("/api/studio/assets?preview="))) continue;
           this.load.image("studio-monster-" + variant + "-" + entry.id, entry.path);
-          for (const part of entry.rigParts || []) {
-            if (!part || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(part.id || "") || typeof part.path !== "string" ||
-                !(part.path.startsWith("/assets/") || part.path.startsWith("/api/studio/assets?preview="))) continue;
-            this.load.image("studio-rig-part-" + variant + "-" + part.id, part.path);
-          }
+          queueRigPartTextures(entry, variant);
         }
       });
     };
