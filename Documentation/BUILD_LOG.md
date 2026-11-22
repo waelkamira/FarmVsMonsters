@@ -1432,3 +1432,10 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - Preserved the existing asynchronous `cloneAsset(asset)` action signature while replacing native prompts with the accessible Studio dialog. The asset-cloning source-contract test now passes.
 - The latest broad Studio/Game test run recorded 374 passed and 53 failed out of 427 (run `45035732569`). The clone-dialog and clone-action failures were eliminated; remaining failures are concentrated in combat/replay/wave scheduling, monster stats and plant/resource contracts, plus older Studio/runtime source-contract expectations.
 - The focused Auto-Rig subsystem suite, worker suite, ESLint, and production build are green on the preceding feature-branch head; the new signature-only adjustment is included in the current re-run.
+
+
+## 2026-11-22 — Auto-Rig semantic role suggestions
+- Added a conservative geometry-only semantic role suggestion module for plant/monster cutouts, using relative bounds, center position, area, and aspect ratio.
+- Integrated a Studio action to suggest roles for SAM 2 proposals. Suggestions are explicitly non-authoritative: they do not approve masks, set author-review flags, or pass the quality gate automatically.
+- Added focused tests and included them in Auto-Rig CI and ESLint.
+- Verification pending: GitHub Actions must run against the latest branch head; local Windows/WSL SAM 2 and real asset-to-Phaser validation remain outstanding.
