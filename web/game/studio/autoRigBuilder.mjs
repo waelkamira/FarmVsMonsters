@@ -149,7 +149,7 @@ function readPart(raw, index, canvas) {
   let reconstruction = null;
   if (raw.reconstruction != null) {
     const value = raw.reconstruction;
-    if (!value || !["visible-donor-transfer", "opencv-telea-inpaint"].includes(value.method) || typeof value.reviewed !== "boolean") {
+    if (!value || !["visible-donor-transfer", "opencv-telea-inpaint", "local-diffusion-anatomical-inpaint"].includes(value.method) || typeof value.reviewed !== "boolean") {
       throw new TypeError("Part " + id + " reconstruction metadata is invalid.");
     }
     const readBounds = (bounds, field) => {
@@ -180,7 +180,11 @@ function readPart(raw, index, canvas) {
     const targetBounds = readBounds(value.targetBounds, "reconstruction target bounds");
     const targetMask = readPolygon(value.targetMask, "reconstruction target mask");
     const donorTransfer = value.method === "visible-donor-transfer";
+    const diffusionGenerated = value.method === "local-diffusion-anatomical-inpaint";
     if (donorTransfer && typeof value.flipHorizontal !== "boolean") throw new TypeError("Part " + id + " reconstruction flip setting is invalid.");
+    if (diffusionGenerated && (typeof value.model !== "string" || !value.model.trim() || typeof value.prompt !== "string" || !value.prompt.trim() || !Number.isInteger(value.seed) || value.seed < 0 || value.seed > 2147483647)) {
+      throw new TypeError("Part " + id + " diffusion reconstruction provenance is incomplete.");
+    }
     reconstruction = {
       method: value.method,
       ...(donorTransfer ? {
@@ -188,6 +192,7 @@ function readPart(raw, index, canvas) {
         donorMask: readPolygon(value.donorMask, "reconstruction donor mask"),
         flipHorizontal: value.flipHorizontal
       } : {}),
+      ...(diffusionGenerated ? { model: value.model.slice(0, 120), prompt: value.prompt.slice(0, 400), seed: value.seed } : {}),
       targetBounds,
       targetMask,
       reviewed: value.reviewed
