@@ -11,8 +11,8 @@ const selector = read("../app/stage/1/select/page.js");
 const syncScript = read("../scripts/sync-studio-test-assets.mjs");
 
 test("Studio supports safe duplication for every registered asset type",()=>{
-  assert.match(studioPage,/async function cloneAsset\(asset\)/);
-  assert.match(studioPage,/onClick=\{\(\)=>cloneAsset\(a\)\}/);
+  assert.match(studioPage,/async function cloneAsset\(\)/);
+  assert.match(studioPage,/onClick=\{\(\)=>openCloneDialog\(a\)\}/);
   assert.match(assetsRoute,/operation==="clone"/);
   assert.match(assetsRoute,/cloneStudioAsset\(asset,newId,body\.newName\)/);
 });
