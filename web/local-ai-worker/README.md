@@ -1,6 +1,6 @@
 # Local Studio AI Worker (SAM 2)
 
-This optional inference process runs on the developer's machine and binds only to `127.0.0.1`. It makes no hosted inference calls and never downloads model checkpoints automatically.
+The optional inference process runs on the developer's machine and binds only to `127.0.0.1`. The one-time setup script downloads verified SAM 2 and CLIP weights into local directories; the running worker makes no hosted inference calls and never downloads model weights.
 
 ## What it does today
 
@@ -28,7 +28,7 @@ Meta's official SAM 2 installation guidance recommends WSL with Ubuntu when inst
    bash setup-wsl.sh
    ```
 
-   The default script installs CPU-only PyTorch, clones the official SAM 2 source into your WSL user cache, installs SAM 2 with its optional CUDA extension disabled, and installs this worker's image dependencies. This is the safest baseline for machines without a confirmed NVIDIA/CUDA setup. If you have a compatible NVIDIA GPU, follow the PyTorch selector first and set `FVM_TORCH_INDEX_URL` to the matching wheel index before running setup; do not mix CPU and CUDA builds.
+   The default script installs CPU-only PyTorch, clones the official SAM 2 source into your WSL user cache, installs SAM 2 with its optional CUDA extension disabled, and installs this worker's core image/CLIP dependencies. Diffusion packages are excluded from the default setup because hidden-region reconstruction is optional and not needed for the first image-to-animation acceptance test. This is the safest baseline for machines without a confirmed NVIDIA/CUDA setup. If you have a compatible NVIDIA GPU, follow the PyTorch selector first and set `FVM_TORCH_INDEX_URL` to the matching wheel index before running setup; do not mix CPU and CUDA builds.
 
 5. The setup script now downloads the official **SAM 2.1 Hiera Tiny** checkpoint automatically and verifies its SHA-256 before use. It also downloads only the required PyTorch/safetensors files for **OpenAI CLIP ViT-B/32** (about 605 MB), rather than all framework variants. Both model directories remain outside Git.
 
@@ -38,7 +38,7 @@ Meta's official SAM 2 installation guidance recommends WSL with Ubuntu when inst
 
    You do not need to download either model manually. The first setup downloads about 761 MB of model weights and requires an internet connection; inference itself runs locally. Model weights are not committed to Git.
 
-7. Optional: download a compatible Stable Diffusion inpainting checkpoint into a local directory (the worker never downloads weights). For example:
+7. Optional only — not needed for the first Hazelnut movement test: install the diffusion packages and download a compatible Stable Diffusion inpainting checkpoint into a local directory (the worker never downloads these weights). To install the extra packages, run `FVM_INSTALL_INPAINTING=1 bash setup-wsl.sh` or activate the worker virtual environment and run `python -m pip install -r requirements-inpainting.txt`. Then download the checkpoint. For example:
 
    ```bash
    hf download runwayml/stable-diffusion-inpainting --local-dir "$HOME/models/stable-diffusion-inpainting"
@@ -95,7 +95,7 @@ $env:FVM_AI_WORKER_PORT="8765"
 - Binds to `127.0.0.1` only; it is not a LAN service.
 - Accepts POST requests only with the exact loopback Host header, JSON content type, and no browser Origin header. This blocks cross-site browser form submissions from triggering local inference.
 - Admits one inference request at a time; concurrent requests receive HTTP 429 instead of building an unbounded queue.
-- No telemetry, cloud API, credentials, or automatic weight downloads.
+- No telemetry or cloud inference. The one-time setup script downloads the pinned SAM 2 and CLIP files; the running worker never downloads model weights or requires cloud credentials.
 - Maximum image size 8 MB; maximum dimensions 4096 × 4096.
 - Transparent PNG pixels are composited onto white for model input to avoid treating transparent pixels as black artwork.
 - SAM 2 masks may overlap or split one character into many regions; inspect and edit every accepted mask.
