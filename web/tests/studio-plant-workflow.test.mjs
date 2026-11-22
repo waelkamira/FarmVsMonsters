@@ -123,7 +123,7 @@ test("testing catalog is served directly from the Studio staging branch with pro
   assert.match(assetsRoute, /asset\.status==="testing"/);
   assert.match(assetsRoute, /api\/studio\/assets\?preview=/);
   assert.match(assetsRoute, /Cache-Control.*private, no-store/);
-  assert.match(studioPage, /متاحة الآن للاختبار مباشرة داخل اللعبة/);
+  assert.match(studioPage, /الأصل متاح الآن للاختبار داخل اللعبة/);
   assert.doesNotMatch(studioPage, /شغّل npm run studio:sync لمزامنتها/);
 });
 
