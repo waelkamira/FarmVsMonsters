@@ -1122,3 +1122,15 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - Canvas drag and pan listeners now clean up on pointer-up, pointer-cancel, and window blur.
 - Corrected Phaser frame registration for static monster rig parts: static images are registered as a 1×1 grid so the rig renderer can resolve frame 0 consistently, matching the plant rig-part path.
 - Validation status: source review and GitHub commits only. Latest Actions jobs still terminate with runner_id=0 and no executed steps/logs; automated tests, lint, production build, and live browser verification remain unconfirmed.
+
+
+## 2026-11-22 — Mainline hybrid-rig integration
+- Rebased the skeletal editor, evaluator, Phaser renderer, collision helpers, asset dependency checks, version snapshots, and BattleScene wiring onto the current `main` line.
+- Preserved the current direct-publish API and binary upload-signature validation while adding rig-profile persistence, referenced-part catalog descriptors, and immutable publication of rig bitmap dependencies.
+- Connected the projectile muzzle attachment to the current shared launch-point helper so authored muzzle coordinates become the exact initial trajectory offsets.
+- Deduplicated shared rig-part texture loads across plant and monster catalogs.
+- Restricted rig bitmap dependencies to renderable image asset categories and added readiness/dependency regression tests for unsupported part types.
+- Required at least one animation clip so a rig always has an initial evaluated pose before attachments and hitboxes are queried.
+- Added a Studio/BattleScene source-integration test to guard profile persistence, muzzle launch, hitbox collision wiring, and Sprite Sheet fallback.
+- Verification status: GitHub Actions jobs still terminate before runner assignment (`runner_id: 0`, zero steps and no logs). Tests, ESLint, production build, and live Chrome/Windows battle behavior remain unverified; do not merge until those gates pass.
+- Review branch: `feat/studio-hybrid-animation-engine-mainline`; PR #88.
