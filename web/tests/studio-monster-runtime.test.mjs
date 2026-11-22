@@ -14,11 +14,11 @@ test("Studio monster profile controls and lifecycle are connected to the asset A
   assert.match(studioPage, /حركة التنقل/);
   assert.match(studioPage, /monsterProfile:JSON\.stringify\(monsterProfile\)/);
   assert.match(studioPage, /اختبار الوحش داخل اللعبة/);
-  assert.match(studioPage, /طلب مراجعة نشر الوحش/);
+  assert.match(studioPage, /نشر الوحش الآن/);
   assert.match(assetsRoute, /createStudioMonsterProfile/);
   assert.match(assetsRoute, /catalog==="testing-monsters"/);
   assert.match(assetsRoute, /PUBLISHED_MONSTER_CATALOG_PATH/);
-  assert.match(assetsRoute, /Publish monster:/);
+  assert.match(assetsRoute, /studio: publish \\"\+asset\.type/);
   assert.match(assetsRoute, /operation!=="publish"/);
   assert.match(assetsRoute, /resolveStudioReleaseAsset\(existing/);
   assert.match(assetsRoute, /asset\.releaseRequest\?\.state==="open"/);
