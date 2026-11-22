@@ -1,10 +1,11 @@
 import { createSkeletalRigProfile } from "./skeletalAnimation.mjs";
 
 const ID_PATTERN = /^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,63}$/;
-export const AUTO_RIG_ROLE_DICTIONARY_VERSION = "1.0.0";
+export const AUTO_RIG_ROLE_DICTIONARY_VERSION = "1.1.0";
 const MUZZLE_EMITTER_ROLES = new Set(["weapon", "weapon.barrel", "weapon.muzzle", "mouth", "head", "face"]);
 export const AUTO_RIG_ROLE_OPTIONS = Object.freeze([
   { value: "body", label: "الجسم" }, { value: "stem", label: "الساق" },
+  { value: "root", label: "الجذر" }, { value: "flower", label: "الزهرة" }, { value: "fruit", label: "الثمرة" },
   { value: "head", label: "الرأس" }, { value: "face", label: "الوجه" },
   { value: "eye.left", label: "العين اليسرى" }, { value: "eye.right", label: "العين اليمنى" },
   { value: "mouth", label: "الفم" }, { value: "jaw.upper", label: "الفك العلوي" },
@@ -12,6 +13,8 @@ export const AUTO_RIG_ROLE_OPTIONS = Object.freeze([
   { value: "leaf.right", label: "الورقة اليمنى" }, { value: "leaf", label: "ورقة" },
   { value: "arm.left", label: "الذراع الأيسر" }, { value: "arm.right", label: "الذراع الأيمن" },
   { value: "hand.left", label: "اليد اليسرى" }, { value: "hand.right", label: "اليد اليمنى" },
+  { value: "leg.left", label: "الساق اليسرى" }, { value: "leg.right", label: "الساق اليمنى" },
+  { value: "foot.left", label: "القدم اليسرى" }, { value: "foot.right", label: "القدم اليمنى" },
   { value: "weapon", label: "السلاح" }, { value: "weapon.barrel", label: "ماسورة السلاح" },
   { value: "weapon.muzzle", label: "منطقة فوهة السلاح" }, { value: "back", label: "الجزء الخلفي" },
   { value: "tail", label: "الذيل" }, { value: "armor", label: "الدرع" },
@@ -31,11 +34,22 @@ const ROLE_ALIASES = Object.freeze({
   "hand-left": "hand.left",
   "right-hand": "hand.right",
   "hand-right": "hand.right",
+  "left-leg": "leg.left",
+  "leg-left": "leg.left",
+  "right-leg": "leg.right",
+  "leg-right": "leg.right",
+  "left-foot": "foot.left",
+  "foot-left": "foot.left",
+  "right-foot": "foot.right",
+  "foot-right": "foot.right",
   "weapon-barrel": "weapon.barrel"
 });
 const PARENT_ROLES = Object.freeze({
   "body": [],
   "stem": ["body"],
+  "root": ["body"],
+  "flower": ["stem", "body"],
+  "fruit": ["stem", "body"],
   "head": ["body", "stem"],
   "face": ["head", "body"],
   "eye.left": ["face", "head"],
@@ -50,6 +64,10 @@ const PARENT_ROLES = Object.freeze({
   "arm.right": ["body", "stem"],
   "hand.left": ["arm.left", "body"],
   "hand.right": ["arm.right", "body"],
+  "leg.left": ["body"],
+  "leg.right": ["body"],
+  "foot.left": ["leg.left", "body"],
+  "foot.right": ["leg.right", "body"],
   "weapon": ["hand.left", "hand.right", "arm.left", "arm.right", "body"],
   "weapon.barrel": ["weapon"],
   "weapon.muzzle": ["weapon.barrel", "weapon"],
