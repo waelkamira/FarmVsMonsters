@@ -8,7 +8,7 @@ function validCell(payload) {
   return Number.isInteger(payload?.col) && payload.col >= 0 && payload.col < 8 && Number.isInteger(payload?.row) && payload.row >= 0 && payload.row < 5;
 }
 function validPlantType(value) {
-  return typeof value === "string" && PLANT_EVENT_TYPES.has(value);
+  return typeof value === "string" && (PLANT_EVENT_TYPES.has(value) || /^[a-z0-9]+(?:-[a-z0-9]+)*-level-\\d+$/.test(value));
 }
 function validPickupId(value) { return typeof value === "string" && /^pickup-\d+$/.test(value); }
 function normalizePayload(type, payload) {
