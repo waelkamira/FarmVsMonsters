@@ -142,9 +142,10 @@ test("animation clips normalize and validate preview FPS metadata", () => {
 
 test("keyframe snapping returns valid integer frame times within clip bounds", () => {
   const clip = { durationMs: 1000, fps: 24 };
-  assert.equal(snapSkeletalKeyframeTime(clip, 20), 0);
-  assert.equal(snapSkeletalKeyframeTime(clip, 45), 42);
-  assert.equal(snapSkeletalKeyframeTime(clip, 990), 1000);
-  assert.equal(Number.isInteger(snapSkeletalKeyframeTime(clip, 213.7)), true);
-  assert.equal(snapSkeletalKeyframeTime({ durationMs: 300, fps: 12 }, 900), 300);
+  assert.equal(snapSkeletalKeyframeTime(20, clip.fps, clip.durationMs), 0);
+  assert.equal(snapSkeletalKeyframeTime(45, clip.fps, clip.durationMs), 42);
+  assert.equal(snapSkeletalKeyframeTime(50, 30, 1000), 67);
+  assert.equal(snapSkeletalKeyframeTime(990, clip.fps, clip.durationMs), 1000);
+  assert.equal(Number.isInteger(snapSkeletalKeyframeTime(213.7, clip.fps, clip.durationMs)), true);
+  assert.equal(snapSkeletalKeyframeTime(900, 12, 300), 300);
 });
