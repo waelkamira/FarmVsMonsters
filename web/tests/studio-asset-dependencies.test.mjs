@@ -251,3 +251,8 @@ test("Studio skeletal collision evaluates every authored hitbox using oriented r
   assert.match(battleSceneSource, /studioOrientedHitboxesOverlap/);
   assert.match(battleSceneSource, /hurtboxes\.some/);
 });
+
+test("Rig Editor resets canvas transforms before applying viewport zoom and pan", () => {
+  const editor = readFileSync(path.join(here, "../app/studio/RigEditor.jsx"), "utf8");
+  assert.match(editor, /context\.setTransform\(1, 0, 0, 1, 0, 0\);\s*context\.clearRect/);
+});
