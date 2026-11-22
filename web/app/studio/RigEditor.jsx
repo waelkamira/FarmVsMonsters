@@ -295,10 +295,17 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
     if (!bone || disabled || playing) return;
     const rect = canvasRef.current.getBoundingClientRect();
     const scaleX = rig.canvas.width / rect.width, scaleY = rig.canvas.height / rect.height;
-    const initial = { x: bone.x, y: bone.y, clientX: event.clientX, clientY: event.clientY };
+    const parentPose = bone.parentId ? selectedPose?.bones?.[bone.parentId] : null;
+    const parentRotation = (parentPose?.rotation || 0) * Math.PI / 180;
+    const parentScaleX = parentPose?.scaleX || 1, parentScaleY = parentPose?.scaleY || 1;
+    const initial = { x: bonePose.x, y: bonePose.y, clientX: event.clientX, clientY: event.clientY };
     const move = (nextEvent) => {
-      updateBone("x", Math.round(initial.x + (nextEvent.clientX - initial.clientX) * scaleX));
-      updateBone("y", Math.round(initial.y + (nextEvent.clientY - initial.clientY) * scaleY));
+      const dx = (nextEvent.clientX - initial.clientX) * scaleX;
+      const dy = (nextEvent.clientY - initial.clientY) * scaleY;
+      const localX = (dx * Math.cos(parentRotation) + dy * Math.sin(parentRotation)) / parentScaleX;
+      const localY = (-dx * Math.sin(parentRotation) + dy * Math.cos(parentRotation)) / parentScaleY;
+      updateBone("x", Math.round(initial.x + localX));
+      updateBone("y", Math.round(initial.y + localY));
     };
     const up = () => { window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", up); };
     canvasRef.current.setPointerCapture?.(event.pointerId);
