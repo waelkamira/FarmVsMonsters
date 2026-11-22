@@ -63,3 +63,7 @@ test("local registry mutations use snapshots, expected hashes, and the atomic st
 test("local registry write conflicts are returned as HTTP 409", () => {
   assert.match(apiSource, /Studio lifecycle action failed\."\},\{status:error\.code==="STUDIO_WRITE_CONFLICT"\?409:500\}\)/);
 });
+
+test("archiving after a closed unmerged release resets the pending status before transition", () => {
+  assert.match(apiSource, /candidate=\{\.\.\.asset,status:"testing",releaseRequest:null\}/);
+});
