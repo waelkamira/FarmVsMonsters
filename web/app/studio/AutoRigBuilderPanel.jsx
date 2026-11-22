@@ -251,6 +251,8 @@ export default function AutoRigBuilderPanel({
       bounds: proposal.bounds,
       drawOrder: index - 1,
       confidence: proposal.confidence ?? null,
+      reviewed: false,
+      occlusion: "unresolved",
       provenance: proposal.provenance || { segmentation: "model-mask", pixels: "source" }
     }]);
     setAiProposals((current) => current.filter((item) => item.id !== proposal.id));
@@ -352,6 +354,8 @@ export default function AutoRigBuilderPanel({
       assetId,
       role,
       name: partName.trim() || role,
+      reviewed: false,
+      occlusion: "unresolved",
       points,
       bounds,
       drawOrder: index - 1
@@ -381,6 +385,8 @@ export default function AutoRigBuilderPanel({
         bounds: part.bounds,
         drawOrder: part.drawOrder,
         ...(part.confidence == null ? {} : { confidence: part.confidence }),
+        reviewed: part.reviewed === true,
+        occlusion: part.occlusion || "unresolved",
         mask: { kind: "polygon", points: part.points },
         provenance: part.provenance || { segmentation: "manual-polygon", pixels: "source" }
       }));
@@ -522,6 +528,17 @@ export default function AutoRigBuilderPanel({
         <b>الأجزاء المحددة ({parts.length}/63)</b>
         <ul>{parts.map((part) => <li key={part.id} style={{ marginTop: 5 }}>
           {part.name} · {part.role} · {part.bounds.width}×{part.bounds.height}
+          <label style={{ display: "inline-flex", gap: 5, marginInlineStart: 8 }}>
+            <input type="checkbox" checked={part.reviewed === true} disabled={disabled || busy || generated} onChange={(event) => setParts((current) => current.map((item) => item.id === part.id ? { ...item, reviewed: event.target.checked } : item))} />
+            تمت مراجعة الجزء
+          </label>
+          <label style={{ display: "inline-flex", gap: 5, marginInlineStart: 8 }}>
+            الاحتجاب
+            <select value={part.occlusion || "unresolved"} disabled={disabled || busy || generated} onChange={(event) => setParts((current) => current.map((item) => item.id === part.id ? { ...item, occlusion: event.target.value } : item))}>
+              <option value="unresolved">غير محسوم</option>
+              <option value="none">لا يوجد جزء مخفي</option>
+            </select>
+          </label>
           <button type="button" disabled={disabled || busy || generated} style={{ marginInlineStart: 10 }} onClick={() => { setEditingPartId((current) => current === part.id ? "" : part.id); setPoints([]); setMessage(editingPartId === part.id ? "تم إنهاء تحرير القناع." : "اسحب نقاط القناع البرتقالية لتعديل حدود الجزء؛ اضغط الزر مجدداً لإنهاء التحرير."); }}>{editingPartId === part.id ? "إنهاء التحرير" : "تحرير القناع"}</button>
           <button type="button" disabled={disabled || busy || generated} style={{ marginInlineStart: 6 }} onClick={() => { setParts((current) => current.filter((item) => item.id !== part.id)); if (editingPartId === part.id) setEditingPartId(""); if (part.id === activeEmitterPart?.id) { setMuzzlePartId(""); setMuzzlePoint(null); setMuzzleMode(false); } }}>حذف</button>
         </li>)}</ul>
