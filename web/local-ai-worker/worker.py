@@ -56,11 +56,23 @@ def decode_image(data_url, width, height):
     raw = base64.b64decode(match.group(2), validate=True)
     if len(raw) > MAX_IMAGE: raise ValueError("Image exceeds 8 MB.")
     import cv2, numpy as np
-    image = cv2.imdecode(np.frombuffer(raw, dtype=np.uint8), cv2.IMREAD_COLOR)
-    if image is None: raise ValueError("Image decoding failed.")
-    h, w = image.shape[:2]
+    decoded = cv2.imdecode(np.frombuffer(raw, dtype=np.uint8), cv2.IMREAD_UNCHANGED)
+    if decoded is None: raise ValueError("Image decoding failed.")
+    h, w = decoded.shape[:2]
     if w != width or h != height or max(w,h) > 4096: raise ValueError("Decoded dimensions do not match source canvas.")
-    return cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    if decoded.ndim == 2:
+        return cv2.cvtColor(decoded, cv2.COLOR_GRAY2RGB)
+    if decoded.shape[2] == 4:
+        rgb = cv2.cvtColor(decoded[:, :, :3], cv2.COLOR_BGR2RGB).astype(np.float32)
+        alpha = decoded[:, :, 3:4].astype(np.float32) / 255.0
+        return np.clip(rgb * alpha + 255.0 * (1.0 - alpha), 0, 255).astype(np.uint8)
+    if decoded.shape[2] == 2:
+        gray = cv2.cvtColor(decoded[:, :, :1], cv2.COLOR_GRAY2RGB).astype(np.float32)
+        alpha = decoded[:, :, 1:2].astype(np.float32) / 255.0
+        return np.clip(gray * alpha + 255.0 * (1.0 - alpha), 0, 255).astype(np.uint8)
+    if decoded.shape[2] != 3:
+        raise ValueError("Unsupported decoded image channel layout.")
+    return cv2.cvtColor(decoded, cv2.COLOR_BGR2RGB)
 
 def polygon_for_mask(mask, cv2):
     contours, _ = cv2.findContours(mask.astype("uint8"), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
