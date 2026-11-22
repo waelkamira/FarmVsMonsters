@@ -5057,11 +5057,11 @@ export default class BattleScene extends Scene {
     const sprite = monster.hyenaSprite;
     const hitColor = getProjectileVFXProfile(plantType)?.tint ?? 0x9bdc72;
     const reaction = getMonsterReactionProfile(monster.kind);
-    if (sprite?.active) {
+    if (sprite?.active || monster.studioRig?.root?.active) {
       monster.hitAnimUntil = this.time.now + reaction.hitDurationMs;
-      this.playHyenaAnimation(monster, "hyena-idle", true);
+      this.playHyenaAnimation(monster, monster.studioRig ? "hyena-hit" : "hyena-idle", true);
 
-      if (monster.hitGlowEffect && sprite.postFX?.remove) {
+      if (sprite?.active && monster.hitGlowEffect && sprite.postFX?.remove) {
         sprite.postFX.remove(monster.hitGlowEffect);
         monster.hitGlowEffect = null;
       }
