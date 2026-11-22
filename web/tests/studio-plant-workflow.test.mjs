@@ -93,7 +93,7 @@ test("Studio enforces draft-to-testing-to-published and publishes the catalog on
   assert.match(assetsRoute, /status:"testing"/);
   assert.match(assetsRoute, /status:"published"/);
   assert.match(assetsRoute, /PUBLISHED_CATALOG_PATH/);
-  assert.match(assetsRoute, /const artworkPath\\s*=\\s*createImmutableAssetPath\(asset\.path/);
+  assert.match(assetsRoute, /const artworkPath\s*=\s*createImmutableAssetPath\(asset\.path/);
   assert.match(assetsRoute, /githubPutImmutable\(artworkPath/);
 });
 
