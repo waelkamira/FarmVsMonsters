@@ -19,6 +19,13 @@ class WorkerTests(unittest.TestCase):
         with self.assertRaises(ValueError): worker.normalize_prompt_points([{"x": 20, "y": 20, "label": 2}], 100, 100)
         with self.assertRaises(ValueError): worker.normalize_prompt_points([{"x": float("nan"), "y": 20, "label": 1}], 100, 100)
 
+    def test_ready_capabilities_advertise_automatic_and_prompted_segmentation(self):
+        with patch.object(worker, "load_model", return_value=(object(), object(), "cpu")):
+            result = worker.capabilities()
+        self.assertEqual(result["status"], "ready")
+        self.assertIn("part-detection", result["capabilities"])
+        self.assertIn("prompted-segmentation", result["capabilities"])
+
     def test_rejects_non_data_url(self):
         with self.assertRaises(ValueError):
             worker.decode_image("https://example.com/a.png", 10, 10)
