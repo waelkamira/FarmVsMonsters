@@ -1322,3 +1322,9 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - Any part flagged as reconstructed—whether by pixel provenance or occlusion status—blocks animation readiness until a future reconstruction-review workflow can verify it.
 - Extended quality tests to cover reconstructed occlusion independently from reconstructed pixel provenance.
 - Hardened the API route against oversized JSON bodies before parsing; Python worker body and image limits remain independently enforced.
+
+
+## 2026-11-22 — Studio Rig Library entry point
+- Extended the existing persistent asset library with a dedicated rig filter: all assets, assets with a linked skeletal rig, and assets without a rig.
+- Rigged asset rows now show bone count, attachment count, and the stored Auto-Rig manifest version when available. Selecting an item for editing reuses the existing Studio edit flow, preserving the current registry/version lifecycle instead of creating a parallel rig database.
+- Added the Studio library page to the existing production build validation path; focused lint remains scoped to the Auto-Rig component and its API/core modules to avoid expanding the lint gate into unrelated legacy page diagnostics.
