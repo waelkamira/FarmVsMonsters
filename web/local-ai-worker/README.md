@@ -67,7 +67,7 @@ Meta's official SAM 2 installation guidance recommends WSL with Ubuntu when inst
    python real_asset_smoke_test.py
    ```
 
-   By default this tests the first 3×3 Hazelnut Level 1 frame and the Hyena idle asset from the checked-out repository. It runs SAM 2 segmentation followed by local CLIP role suggestions on both assets and prints the masks/suggestion counts plus per-region roles. A successful command proves model execution on real repository pixels, but the output still requires visual inspection in Studio; it does not prove pivots, clips, save/version behavior or Phaser gameplay.
+   By default this tests the first 3×3 Hazelnut Level 1 frame and the Hyena idle asset from the checked-out repository. It runs SAM 2 segmentation followed by local CLIP role suggestions on both assets, prints mask/suggestion counts and per-region roles, and saves visual overlays (`hazelnut-sam2-clip-preview.png` and `hyena-sam2-clip-preview.png`) under `auto-rig-real-asset-results/`. Inspect those overlays before enabling the worker in Studio. A successful command proves model execution on real repository pixels, but it does not prove pivots, clips, save/version behavior or Phaser gameplay.
 
 
 11. Restart the worker with `bash start-worker-wsl.sh`. In the Windows environment running the Studio Next.js app, set:
