@@ -81,7 +81,7 @@ The editor is a mode switch inside Asset & Animation Studio:
 - [x] Studio API validation and persistence of rig profiles in asset records and published catalogs.
 - [x] Rig profiles preserved by clone, revision snapshot, and version restore.
 - [x] Rig-part dependencies reported and protected from destructive lifecycle operations.
-- [x] Testing Lab readiness audit validates rig profiles and blocks missing/archived part assets.
+- [x] Testing Lab readiness audit validates rig profiles, blocks missing/archived part assets, and checks referenced Sprite Sheet frame bounds.
 - [x] Release staging includes referenced rig-part files and publishes their asset descriptors.
 - [ ] Focused Node tests pass in the repository environment.
 
