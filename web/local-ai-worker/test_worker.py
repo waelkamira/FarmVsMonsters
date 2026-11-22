@@ -201,6 +201,50 @@ class WorkerTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             worker.reconstruct_from_visible_donor(base)
 
+    def test_local_texture_inpaint_returns_a_reviewable_alpha_clipped_patch(self):
+        import base64
+        import cv2
+        import numpy as np
+        image = np.zeros((48, 48, 3), dtype=np.uint8)
+        for y in range(48):
+            for x in range(48):
+                image[y, x] = (x * 3, y * 3, 90)
+        ok, encoded = cv2.imencode(".png", cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
+        self.assertTrue(ok)
+        payload = {
+            "canvas": {"width": 48, "height": 48},
+            "imageDataUrl": "data:image/png;base64," + base64.b64encode(encoded.tobytes()).decode("ascii"),
+            "targetPolygon": [{"x": 18, "y": 16}, {"x": 29, "y": 16}, {"x": 29, "y": 29}, {"x": 18, "y": 29}],
+            "inpaintRadius": 3
+        }
+        result = worker.inpaint_hidden_region(payload)
+        raw = base64.b64decode(result["patchDataUrl"].split(",", 1)[1])
+        patch = cv2.imdecode(np.frombuffer(raw, dtype=np.uint8), cv2.IMREAD_UNCHANGED)
+        self.assertEqual(result["provenance"]["method"], "opencv-telea-inpaint")
+        self.assertEqual(result["targetBounds"], {"x": 18, "y": 16, "width": 12, "height": 14})
+        self.assertEqual(patch.shape, (14, 12, 4))
+        self.assertTrue(np.all(patch[:, :, 3] == 255))
+
+    def test_local_texture_inpaint_rejects_invalid_radius_and_small_targets(self):
+        import base64
+        import cv2
+        import numpy as np
+        image = np.full((24, 24, 3), 100, dtype=np.uint8)
+        ok, encoded = cv2.imencode(".png", cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
+        self.assertTrue(ok)
+        base = {
+            "canvas": {"width": 24, "height": 24},
+            "imageDataUrl": "data:image/png;base64," + base64.b64encode(encoded.tobytes()).decode("ascii"),
+            "targetPolygon": [{"x": 4, "y": 4}, {"x": 16, "y": 4}, {"x": 16, "y": 16}, {"x": 4, "y": 16}],
+            "inpaintRadius": 99
+        }
+        with self.assertRaises(ValueError):
+            worker.inpaint_hidden_region(base)
+        base["inpaintRadius"] = 3
+        base["targetPolygon"] = [{"x": 4, "y": 4}, {"x": 6, "y": 4}, {"x": 6, "y": 6}, {"x": 4, "y": 6}]
+        with self.assertRaises(ValueError):
+            worker.inpaint_hidden_region(base)
+
     def test_mask_selection_drops_background_tiny_regions_and_near_duplicates(self):
         import numpy as np
         shape = (100, 100)
