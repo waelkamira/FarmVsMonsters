@@ -202,7 +202,7 @@ export default class BattleScene extends Scene {
         for (const entry of entries) {
           if (!entry || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(entry.id || "") ||
               typeof entry.path !== "string" || !(entry.path.startsWith("/assets/") || entry.path.startsWith("/api/studio/assets?preview="))) continue;
-          this.load.image("studio-plant-" + variant + "-" + entry.id, entry.path);
+          if(entry.atlas?.jsonPath)this.load.atlas("studio-plant-" + variant + "-" + entry.id, entry.path, entry.atlas.jsonPath);else this.load.image("studio-plant-" + variant + "-" + entry.id, entry.path);
           queueRigPartTextures(entry, variant);
           if (entry.combat?.mode === "projectile" && entry.combat.projectile?.path && (entry.combat.projectile.path.startsWith("/assets/") || entry.combat.projectile.path.startsWith("/api/studio/assets?preview="))) {
             this.load.image("studio-projectile-" + variant + "-" + entry.id, entry.combat.projectile.path);
@@ -217,7 +217,7 @@ export default class BattleScene extends Scene {
         for (const entry of entries) {
           if (!entry || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(entry.id || "") ||
               typeof entry.path !== "string" || !(entry.path.startsWith("/assets/") || entry.path.startsWith("/api/studio/assets?preview="))) continue;
-          this.load.image("studio-monster-" + variant + "-" + entry.id, entry.path);
+          if(entry.atlas?.jsonPath)this.load.atlas("studio-monster-" + variant + "-" + entry.id, entry.path, entry.atlas.jsonPath);else this.load.image("studio-monster-" + variant + "-" + entry.id, entry.path);
           queueRigPartTextures(entry, variant);
         }
       });
@@ -319,7 +319,13 @@ export default class BattleScene extends Scene {
         // Older or malformed catalog entries retain a safe first-frame idle and full-sheet attack.
         plant.animationProfile = createStudioAnimationProfile(null, Math.min(100, frameCount));
       }
-      if (plant.spriteSheet && frameCount > 0 && this.registerStudioGridSheet(textureKey, plant.rows, plant.columns)) {
+      if (plant.atlas?.clips && this.textures.exists(textureKey)) {
+        for (const [clipName, frameNames] of Object.entries(plant.atlas.clips)) {
+          if (!Array.isArray(frameNames) || !frameNames.length) continue;
+          const animationKey = "studio-" + plant.id + "-" + clipName;
+          if (!this.anims.exists(animationKey)) this.anims.create({key:animationKey,frames:frameNames.map(frame=>({key:textureKey,frame})),frameRate:clipName==="attack"?12:8,repeat:["idle","move","run","walk"].includes(clipName)?-1:0});
+        }
+      } else if (plant.spriteSheet && frameCount > 0 && this.registerStudioGridSheet(textureKey, plant.rows, plant.columns)) {
         const clips = [
           ["idle", plant.animationProfile.idle],
           ["attack", plant.animationProfile.attack]
@@ -402,6 +408,15 @@ export default class BattleScene extends Scene {
     }
     this.studioMonstersById = Object.fromEntries(this.studioMonsters.map((monster) => [monster.id, monster]));
     for (const monster of this.studioMonsters) {
+      if (monster.atlas?.clips && this.textures.exists(monster.textureKey)) {
+        monster.runtimeReady = true;
+        for (const [clipName, frameNames] of Object.entries(monster.atlas.clips)) {
+          if (!Array.isArray(frameNames) || !frameNames.length) continue;
+          const animationKey = "studio-monster-" + monster.id + "-" + clipName;
+          if (!this.anims.exists(animationKey)) this.anims.create({key:animationKey,frames:frameNames.map(frame=>({key:monster.textureKey,frame})),frameRate:clipName==="attack"?12:8,repeat:["idle","move","run","walk"].includes(clipName)?-1:0});
+        }
+        continue;
+      }
       if (!monster.spriteSheet || !this.registerStudioGridSheet(monster.textureKey, monster.rows, monster.columns)) continue;
       monster.runtimeReady = true;
       for (const [clipName, clip] of [["idle", monster.animationProfile.idle], ["move", monster.animationProfile.move], ["attack", monster.animationProfile.attack]]) {
