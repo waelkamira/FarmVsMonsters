@@ -1,120 +1,152 @@
 # خارطة التنفيذ المرحلية — FarmVsMonsters وStudio
 
-**الحالة:** خارطة التنفيذ المعتمدة حاليًا؛ المرحلة 1 نشطة بعد قرار المستخدم بإغلاق المرحلة 0 لأغراض الانتقال بتاريخ 2026-11-21. مهام الاختبار والبناء غير المنفذة تُتابع بالتوازي ولا تُعد ناجحة قبل تشغيلها.
+**الحالة:** المرحلة 1 — Studio Foundation & Game Architecture نشطة، وغير مغلقة.  
+**آخر مطابقة موثقة:** 2026-11-22  
+**مرجع الحالة:** `STUDIO_SYSTEM_INVENTORY.md` و`STUDIO_PHASE1_ACCEPTANCE_MATRIX.md`.
 
-## قواعد التنفيذ
-- مرحلة واحدة قيد التنفيذ في كل وقت، مع استثناء الأعمال التوثيقية/التحضيرية التي لا تتجاوز بوابة المرحلة.
-- كل ميزة: تصميم → تنفيذ → API/Validation/Storage → Runtime → اختبار → تحقق متصفح → توثيق.
-- لا دمج إلى main دون موافقة صريحة.
+## قواعد التنفيذ الحاكمة
+
+- الميثاق في `ARCHITECTURE_CHARTER.md` ملزم.
+- ترتيب المستخدم التنفيذي: إصلاح الوثائق وتعارضاتها → جرد الأنظمة والصفحات → تحديد الموجود/الناقص/غير المختبر → خريطة الاعتماديات وتدفق البيانات → معايير قبول المرحلة الأولى → إكمال المرحلة الأولى → المراحل التالية بالتتابع.
+- مرحلة واحدة نشطة في كل وقت.
+- لا دمج إلى `main` دون موافقة صريحة.
 - لا خدمات مدفوعة دون موافقة.
-- لا Terminal للعمليات اليومية.
-- لا ادعاء نتائج غير متحققة.
-- المسار النشط Next.js/React/Phaser داخل web/؛ لا Rewrite شامل ولا نقل إلى المشاريع التاريخية.
+- لا Terminal للعمليات اليومية التي يجب أن يوفرها Studio.
+- لا ادعاء نجاح اختبار لم يُنفذ.
+- المسار النشط Next.js/React/Phaser داخل `web/`; Godot متوقف حالياً، ولا Rewrite شامل.
+- Auto-Rig وHybrid Rig جزءان من Asset & Animation Studio ويخضعان لدورة الأصول الموحدة؛ لا يُداران كمنتجين أو مساري نشر مستقلين.
 
-## المرحلة 0 — Audit & Baseline (مغلقة للانتقال)
-- تدقيق المستودع والفروع وPRs، الصفحات وAPI.
-- جرد مصادر بيانات المحتوى والأصول والأنيميشن والاختبارات.
-- مصفوفة Studio→API→Service→Storage→Runtime→Engine.
-- اختبار Browser/Chrome ومسارات اللعب وأصول Bamboo Throwing.
-- تحقق Node tests، ESLint، Production Build في Runner أو Windows.
-- تحديد الفجوات والخطوات القابلة لإعادة الإنتاج.
-**نتيجة الانتقال:** حُفظت خريطة أساسية، ورُوجعت الفروع المتراكبة ودُمجت العناصر الأساسية. أكد المستخدم نجاح Bamboo Throwing. اختبارات CI الشاملة وESLint وBuild ما زالت غير متاحة بسبب Runner لم يبدأ أي خطوة؛ تُتابع هذه العناصر كمهام متوازية، ولا تمنع بدء التطوير.
+## ترتيب العمل التأسيسي المعتمد
 
-## المرحلة 1 — Studio Foundation & Game Architecture
-- Content Registry، contracts، IDs، relations، versioning.
-- API/services/validation/auth/permissions/audit.
-- Draft/Testing/Approved/Published/Disabled/Archived lifecycle.
-- dependency & compatibility analysis، safe deletion، recovery.
-- storage abstraction، runtime adapters، publication bundles/atomic activation.
-- Capability Extension architecture، event/interaction contracts.
-- UI foundation، search/library، drafts، preview، save/recovery.
-**بوابة:** دورة محتوى نموذجية End-to-End، اختبار، سجل، صلاحيات وتبعيات وإصدار واسترجاع، وصول فعلي للمحرك.
+1. مراجعة وإصلاح الوثائق والتعارضات.
+2. إنشاء جرد شامل لكل الأنظمة والصفحات وواجهات API والخدمات والعقود والاختبارات.
+3. تصنيف الحالة بالأدلة: موجود في المصدر، متكامل مصدرياً، ناقص، غير مختبر، متحقق.
+4. رسم خريطة الاعتماديات وتدفق البيانات من Studio إلى Runtime.
+5. تثبيت معايير قبول المرحلة الأولى.
+6. تنفيذ النواقص الحرجة في المرحلة الأولى وإغلاق بوابتها قبل الانتقال.
+
+## المرحلة 0 — Audit & Baseline
+
+**الحالة:** مغلقة للانتقال فقط؛ لا تعني اجتياز جميع اختبارات التشغيل.
+
+- جرد المستودع والفروع والصفحات وواجهات API.
+- تحديد المسار النشط ومصادر البيانات والأصول.
+- تسجيل قيود Runner وغياب Windows/Chrome execution عند عدم توفرهما.
+- إبقاء عناصر التحقق غير المنفذة مفتوحة حتى تتوفر بيئة تنفيذ.
+
+## المرحلة 1 — Studio Foundation & Game Architecture (النشطة)
+
+### A. Studio Core
+- Shell/navigation extensible؛ تفكيك الصفحة الكبيرة تدريجياً إلى وحدات.
+- جلسات آمنة وصلاحيات واضحة؛ توسيع النموذج إلى صلاحيات العمليات.
+- عقود schemas/IDs/relations/versioning/capabilities موحدة.
+- Registry/storage abstraction دون ربط الواجهة بمزود التخزين.
+- حفظ المسودات وحماية التعديلات والتعامل مع التعارض.
+- سجل تغييرات/تدقيق قابل للمراجعة.
+- دعم عربي وRTL أساسي من البداية.
+
+### B. Asset & Animation Foundation (جزء من المرحلة الأولى)
+- Asset identity, upload validation, immutable paths and safe replacement.
+- Sprite Sheet dimensions/grid/frame metadata and preview.
+- Animation profile and shared runtime contracts.
+- Hybrid/Skeletal Rig as an optional mode on the same asset record.
+- Auto-Rig as a proposal tool inside the rig workflow; human review is mandatory.
+- Attachments, hitboxes, rig-part dependencies, revisions and restore.
+- Readiness checks and actual browser/runtime evidence.
+
+### C. Safe content lifecycle and release
+- Draft/Testing/Approved/Published/Disabled/Archived.
+- Dependency-aware archive/replace/restore.
+- Optimistic concurrency on every mutation path.
+- Complete release package and dependency closure.
+- Review/approval workflow; immutable published revisions.
+- Atomic activation or equivalent single-pointer release; failed release must not change active content.
+- Rollback and reconciliation of PR state.
+
+### D. Quality foundation
+- Unit, API, integration, browser and live gameplay tests separated.
+- Testing Lab reports its exact scope; readiness audit is not represented as battle simulation.
+- Test, lint and production build must run in an actual runner.
+- No production release without required evidence.
+
+### Phase 1 exit gate
+
+Use `STUDIO_PHASE1_ACCEPTANCE_MATRIX.md`. Phase 1 is not complete until all mandatory gates and end-to-end scenarios pass with recorded evidence, including a rigged asset and Auto-Rig workflow through the shared asset lifecycle.
 
 ## المرحلة 2 — Content Creation Core
-- Plant Studio.
-- Monster Studio.
-- Projectile & Weapon Studio.
-- Ability/Effect/Interaction framework.
-- Gameplay AI profiles supported by engine.
-**بوابة:** إنشاء/نسخ/تعديل محتوى جديد، اختبار منفرد وتفاعلي، نشر واسترجاع مع runtime proof.
 
-## المرحلة 3 — Assets & Presentation
-- Asset library، Sprite Sheet editor، animation/audio/VFX.
-- فحص النوع والأبعاد، preview، استبدال آمن، dependencies.
-**بوابة:** رفع ومعاينة وربط وتشغيل واسترجاع أصل من Studio.
+- Plant Studio, Monster Studio, Projectile & Weapon Studio.
+- Ability/Effect/Interaction contracts and supported Gameplay AI profiles.
+- Each field must map to a persisted schema and runtime behavior.
+- Creation, clone, edit, test, release and restore.
+- **Gate:** new plant, monster and projectile complete the end-to-end lifecycle and work in a real Phaser stage.
 
-## المرحلة 4 — World Construction
-- World/Map Editor، grid، terrain، paths، entry/exit، obstacles، environment.
-**بوابة:** خريطة جديدة تعمل من بيانات Studio.
+## المرحلة 3 — World Construction
 
-## المرحلة 5 — Game Construction
-- Level/Wave builder، objective/victory/defeat/event/difficulty.
-- Game Mode framework وفق الأولوية.
-**بوابة:** مرحلة وموجات قابلة للإنشاء والاختبار والمحاكاة والنشر.
+- World/Map Editor, grid, terrain, paths, entry/exit, obstacles, environment.
+- Map schema and runtime adapter before visual editor expansion.
+- **Gate:** a newly authored map runs from Studio data and passes collision/path checks.
 
-## المرحلة 6 — Player & Progression
-- player data، save، inventory، resources، unlocks، upgrades، tasks، achievements، rewards، migrations.
-**بوابة:** تقدم محفوظ وموثوق، اختبار سلامة، تحكم Studio.
+## المرحلة 4 — Game Construction
 
-## المرحلة 7 — Economy & Monetization
-- اقتصاد، متجر، أسعار، عملات، عروض، عناصر تجميلية، purchase validation، simulation.
-**بوابة:** تغييرات اقتصادية آمنة قابلة للمحاكاة والتدقيق؛ لا خدمات دفع دون موافقة.
+- Level/Wave Builder, objectives, win/loss, events, difficulty and supported game modes.
+- **Gate:** create and run a complete stage with configured waves and reproducible simulation.
 
-## المرحلة 8 — Simulation, Testing & Balance
-- sandbox، unit/content/interaction/level tests، performance، compatibility، balance reports، regression.
-**بوابة:** نتائج موثوقة، reproducible، لا نشر عند فشل شروط إلزامية.
+## المرحلة 5 — Player & Progression
 
-## المرحلة 9 — Player Experience & Expansion
-- tutorial، loops، challenges، replayability، collection، social/viral readiness، additional modes.
-**بوابة:** تجربة لاعب واضحة واختبارات/تحليلات وفق نطاق كل ميزة.
+- Player save schema, inventory, resources, unlocks, upgrades, tasks, achievements, rewards and migrations.
+- **Gate:** persistent player progress with integrity and recovery tests.
 
-## المرحلة 10 — Localization, Accessibility & Platform Readiness
-- localization، RTL، Arabic، missing strings، accessibility options، responsive/mobile/touch، device compatibility.
-**بوابة:** تحقق تجربة لكل نطاق لغة/جهاز ضمن المعلن، لا ادعاء دعم غير مختبر.
+## المرحلة 6 — Economy & Monetization
 
-## المرحلة 11 — Release & Operations
-- environments، release bundles، staging، production، monitoring، incident handling، rollback، live operations، analytics، scheduling.
-**بوابة:** نشر متماسك، مراقبة واسترجاع وإجراءات incident موثقة.
+- Costs, currencies, rewards, store, offers and purchase validation.
+- No paid provider/service without prior approval.
+- **Gate:** safe simulation, audit and idempotency for sensitive operations.
 
-## المرحلة 12 — AI-Assisted Studio & Continuous Expansion
-- conversational change workflow، impact analysis، proposals، code/content assistance، test generation، diagnostics.
-- يبدأ تصميم التكامل الآمن من مراحل الأساس، ويكتمل تدريجيًا؛ لا يفترض API مدفوع أو نشر تلقائي.
-**بوابة:** سير عمل آمن، قابل للمراجعة، موثق، ويعرض نتائج الاختبارات الفعلية.
+## المرحلة 7 — Simulation, Testing & Balance
 
-## التبعيات الحاكمة
-- Dependency/versioning قبل نشر المحتوى المركب.
-- Map data قبل Level Builder.
-- Engine capabilities قبل سلوك غير موجود.
-- Save/data integrity قبل progression/economy.
-- test/simulation قبل releases.
-- releases/monitoring قبل Live Ops واسعة.
-- AI workflow يبنى فوق مراجعة آمنة وversion control وtests.
+- Sandbox, scenario simulation, level tests, performance, compatibility, balance reports and regression.
+- This expands the basic test foundation established in Phase 1.
+- **Gate:** reproducible results and release blocks on mandatory failures.
 
-## الأولويات
-P0: blockers، أمان، فقد بيانات، أخطاء تشغيل أو نشر، بوابة المرحلة. P1: متطلبات المرحلة. P2: تحسينات. P3: توسعات مستقبلية (Multiplayer، منصات إضافية، اجتماعي واسع). لا يشتت P2/P3 المرحلة الحالية دون مبرر.
+## المرحلة 8 — Player Experience & Expansion
 
+- Tutorial, core loops, challenges, replayability, collections and prioritized modes.
+- Social/multiplayer readiness only; no premature implementation.
+- **Gate:** tested player journeys and measurable acceptance criteria.
 
-## حالة خارطة التنفيذ الحالية — 2026-11-21
+## المرحلة 9 — Localization, Accessibility & Platform Readiness
 
-**المرحلة النشطة: المرحلة 1 — Studio Foundation & Game Architecture.**
+- Expand localization/RTL foundations, missing-string detection, accessibility and responsive/touch behavior.
+- Arabic/RTL basics are already mandatory in Phase 1; this phase completes broad coverage.
+- **Gate:** language/device matrix verified in browser/device environments.
 
-تم دمج أساس Studio وإدارة الأصول ودورة النبات والاختبار والنشر، مع دمج أعمال Fire Pepper/Electric Mushroom. تبدأ المرحلة 1 من هذا الأساس بدل إعادة تدقيق المستودع بالكامل.
+## المرحلة 10 — Release & Operations
 
+- Release environments, staged rollout, monitoring, incidents, analytics, scheduling and rollback.
+- Phase 1 provides safe content release foundations; this phase expands game-wide operations.
+- **Gate:** observable, reversible production release workflow.
 
+## المرحلة 11 — AI-Assisted Studio & Continuous Expansion
 
-### تحديث تنفيذ 2026-11-21
-- أُصلحت حقول إعدادات القذيفة الأربع لتظهر في الإضافة والتعديل مع إبقاء اختيار سلوك النبتة يدويًا؛ دُمج PR #54.
-- أُصلح إغلاق دالة `createProjectileImpact` التي كانت تمنع تحليل `BattleScene.js`؛ دُمج PR #55.
-- دُمج PR #56 لمسار النشر عبر فرع إصدار وPull Request؛ أصبح `main` لا يتلقى ملفات النبتة أو الكتالوج مباشرة من زر Studio.
-- دُمج PR #57 للأرشفة والاستعادة القابلتين للعكس للمسودات والنباتات قيد الاختبار، مع الاحتفاظ بالأصول ومنع أرشفة المحتوى المنشور أو طلبات المراجعة المفتوحة.
-- دُمج PR #58 لسجل إصدارات الأصول واستعادة إصدار سابق كمسودة جديدة دون المساس بالإصدار المنشور.
-- عند تعديل أصل منشور، تبقى نسخة الكتالوج الحية كما هي، ويُحفظ الإصدار السابق في السجل وتُنشأ مسودة برقم مراجعة جديد.
-- بقي التحقق التشغيلي من إنشاء طلب إصدار فعلي من Studio مع رمز GitHub ذي صلاحية Pull requests: Read and write مطلوبًا؛ لم يتم اختباره عبر واجهة المتصفح.
-- ما زال GitHub Actions لا يخصص Runner للوظيفة (`runner_id=0` وبدون خطوات)، لذلك لم يبدأ Node tests أو ESLint أو Production Build.
-### أولويات المرحلة 1 الحالية
-1. تثبيت العقود الموحدة للمحتوى والسلوك والأصول والإصدارات.
-2. جعل كل عناصر Studio قابلة للفتح والتعديل دائمًا للمسؤول، بما فيها العناصر المنشورة؛ أي تعديل على منشور ينشئ مسودة إصدار جديدة.
-3. إكمال حقول سلوك النبات مع وصف موجز لكل حقل، وإعدادات المقذوفات المدعومة من المحرك.
-4. إكمال ربط كتالوج النباتات المنشور والاختبار مع قائمة اختيار البذور وPhaser؛ حد السبعة للتشكيلة فقط وليس لعدد محتوى المرحلة.
-5. جعل طلب النشر يمر عبر فرع إصدار وPull Request للمراجعة، مع منع الكتابة المباشرة إلى main، والتحقق من حالة الطلب بعد الدمج أو الإغلاق. متابعة حماية التزامن والتراجع والتعامل مع فشل تجهيز الإصدار.
-6. استكمال الاختبارات وCI بالتوازي مع التطوير، وعدم إصدار Production قبل تحقق فعلي.
+- General conversational change workflow, impact analysis, proposals, test generation and diagnostics.
+- Auto-Rig remains in Asset & Animation Studio; it is not the general AI assistant.
+- No automatic production publish; every change remains reviewable.
+- **Gate:** safe, auditable and evidence-backed assistant workflow.
+
+## Dependency rules
+
+- schemas/IDs/storage/concurrency before editor proliferation.
+- assets/animation/rig contracts before dependent character editors.
+- engine capability before exposing new behavior fields.
+- map before level builder; monster/wave contracts before encounter simulation.
+- save integrity before progression/economy.
+- test evidence and atomic release before broad live operations.
+- AI workflows build on version control, review and test infrastructure.
+
+## Priority rules
+
+P0: security, data loss, runtime breakage, release corruption, phase gate blockers.  
+P1: mandatory current-phase requirements.  
+P2: usability and maintainability improvements.  
+P3: future expansion. P2/P3 must not distract from a blocked P0/P1 gate.
