@@ -65,6 +65,8 @@ $env:FVM_AI_WORKER_PORT="8765"
 - Binds to `127.0.0.1` only; it is not a LAN service.
 - Accepts POST requests only with the exact loopback Host header, JSON content type, and no browser Origin header. This blocks cross-site browser form submissions from triggering local inference.
 - Admits one inference request at a time; concurrent requests receive HTTP 429 instead of building an unbounded queue.
+- Requires a valid bounded Content-Length, rejects transfer-encoded request bodies, validates JSON object/canvas shape before inference, and rejects truncated bodies.
+- Applies a short socket timeout while receiving request headers/body and a bounded inference response timeout to limit slow-client resource retention.
 - No telemetry, cloud API, credentials, or automatic weight downloads.
 - Maximum image size 8 MB; maximum dimensions 4096 × 4096.
 - Transparent PNG pixels are composited onto white for model input to avoid treating transparent pixels as black artwork.
