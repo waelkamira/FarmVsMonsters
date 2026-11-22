@@ -32,6 +32,9 @@ fi
 # CUDA extension for a reliable CPU-capable setup; masks remain fully usable.
 SAM2_BUILD_CUDA=0 python -m pip install -e "$SAM2_DIR"
 python -m pip install -r "$WORKER_DIR/requirements.txt"
+if [ "${FVM_INSTALL_INPAINTING:-0}" = "1" ]; then
+  python -m pip install -r "$WORKER_DIR/requirements-inpainting.txt"
+fi
 
 # Download the small official SAM 2.1 checkpoint and only the PyTorch/safetensors
 # files needed by CLIP. Model weights stay outside the repository.
