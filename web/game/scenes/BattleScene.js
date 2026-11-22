@@ -3401,15 +3401,15 @@ export default class BattleScene extends Scene {
       if (plant.cooldown > 0) continue;
       const plantLaneX = this.worldToLane(plant).localX;
       // Every shooter is lane-locked: it never targets an adjacent row.
-      const target = this.monsters
-        .filter((monster) => monster.alive && monster.row === plant.row &&
-          Number.isFinite(monster.localX) &&
-          monster.localX - plantLaneX <= (studioProfile?.range ?? GRID_WIDTH) &&
-          !(plant.type === "snow-thrower" && monster.freezeStage >= 5) &&
-          // Start firing the instant the monster crosses the lawn's far/right edge.
-          // Keep targeting only monsters ahead of this plant in the same lane.
-          monster.localX <= GRID_WIDTH / 2 && monster.localX > plantLaneX)
-        .sort((a, b) => a.localX - b.localX)[0];
+      const target = selectProjectileTarget({
+        monsters: this.monsters,
+        row: plant.row,
+        localX: plantLaneX,
+        collisionRadius: studioProfile?.range ?? GRID_WIDTH,
+        requireAhead: true,
+        maxLocalX: GRID_WIDTH / 2,
+        excludeFrozenStage: plant.type === "snow-thrower" ? 5 : null
+      });
       if (!target) continue;
       if (studioProfile?.mode === "melee" || studioProfile?.mode === "contact") {
         if (studioProfile.mode === "contact" && !target.isEating) continue;
