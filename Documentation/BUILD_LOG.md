@@ -1114,3 +1114,11 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - Added `skeletalWorldTransform.mjs` and unit tests for parent translation, non-uniform scaling, rotation, defaults, and invalid transform values; BattleScene now shares this helper for muzzle and hitbox world coordinates.
 
 - Improved collision geometry for non-uniformly scaled characters: rig hitboxes are now transformed corner-by-corner into convex polygons and tested with SAT; projectile circles use polygon edge-distance tests instead of approximating a skewed shape as an oriented rectangle.
+
+
+### Rig editor visual-reference and interaction hardening — 2026-11-22
+- The Rig Editor now displays the current uploaded or existing character artwork as a faint first-frame alignment reference beneath the cutout parts, including the newly selected local upload before it is saved.
+- Reparenting choices now exclude descendants of the selected bone, preventing users from creating a cyclic hierarchy through the parent selector.
+- Canvas drag and pan listeners now clean up on pointer-up, pointer-cancel, and window blur.
+- Corrected Phaser frame registration for static monster rig parts: static images are registered as a 1×1 grid so the rig renderer can resolve frame 0 consistently, matching the plant rig-part path.
+- Validation status: source review and GitHub commits only. Latest Actions jobs still terminate with runner_id=0 and no executed steps/logs; automated tests, lint, production build, and live browser verification remain unconfirmed.
