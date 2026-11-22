@@ -180,3 +180,20 @@ test("BattleScene loads rig bitmap parts and uses skeletal plant and monster ren
   assert.match(battleSceneSource, /studioMonster\?\.rigProfile/);
   assert.match(battleSceneSource, /preserving Sprite Sheet fallback/);
 });
+
+test("BattleScene uses rig muzzle attachments and skeletal attack/hurt hitboxes in combat", () => {
+  assert.match(battleSceneSource, /getAttachment\(muzzleId\)/);
+  assert.match(battleSceneSource, /launchOffsetX, launchOffsetY/);
+  assert.match(battleSceneSource, /studioRigHitboxesOverlap/);
+  assert.match(battleSceneSource, /studioProjectileHitsMonster/);
+  assert.match(battleSceneSource, /getStudioRigHitboxWorld/);
+});
+test("Studio asset form persists the visual rig profile", () => {
+  assert.match(studioSource, /import RigEditor from "\.\/RigEditor\.jsx"/);
+  assert.match(studioSource, /rigProfile:JSON\.stringify\(rigProfile\)/);
+  assert.match(studioSource, /<RigEditor profile=\{rigProfile\}/);
+});
+test("testing catalogs include the referenced rig bitmap assets", () => {
+  assert.match(routeSource, /serializeRigParts/);
+  assert.match(routeSource, /rigParts:serializeRigParts/);
+});
