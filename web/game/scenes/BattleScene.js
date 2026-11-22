@@ -10,8 +10,8 @@ import { createStudioAnimationProfile } from "../studio/animationProfiles.mjs";
 import { getSpriteFrameRectangles } from "../studio/spriteSheetGrid.mjs";
 import { createPhaserSkeletalRig } from "../studio/phaserSkeletalRig.mjs";
 import { createSkeletalAnimationController } from "../studio/animationStateMachine.mjs";
-import { circleIntersectsOrientedRectangle, orientedRectanglesOverlap } from "../studio/skeletalCollision.mjs";
-import { transformRigPointToWorld } from "../studio/skeletalWorldTransform.mjs";
+import { circleIntersectsConvexPolygon, convexPolygonsOverlap } from "../studio/skeletalCollision.mjs";
+import { transformRigHitboxToWorld, transformRigPointToWorld } from "../studio/skeletalWorldTransform.mjs";
 import { getProjectileTrajectoryOffset } from "../studio/projectileTrajectory.mjs";
 import { createStudioMonsterProfile, resolveStudioMonsterRuntimeProfile, selectWeightedStudioMonster } from "../studio/monsterProfiles.mjs";
 
@@ -3162,17 +3162,9 @@ export default class BattleScene extends Scene {
 
   getStudioRigHitboxesWorld(rig, parentView, kind) {
     if (!rig || !parentView?.active) return [];
-    return rig.profile.hitboxes.filter((item) => item.kind === kind).map((profile) => {
-      const local = rig.getHitbox(profile.id);
-      const world = transformRigPointToWorld(local, parentView);
-      return {
-        x: world.x,
-        y: world.y,
-        width: local.width * Math.abs(Number(parentView.scaleX) || 1),
-        height: local.height * Math.abs(Number(parentView.scaleY) || 1),
-        rotation: world.rotation
-      };
-    });
+    return rig.profile.hitboxes.filter((item) => item.kind === kind).map((profile) =>
+      transformRigHitboxToWorld(rig.getHitbox(profile.id), parentView)
+    );
   }
 
   getStudioRigHitboxWorld(rig, parentView, kind) {
@@ -3180,7 +3172,7 @@ export default class BattleScene extends Scene {
   }
 
   studioOrientedHitboxesOverlap(a, b) {
-    return orientedRectanglesOverlap(a, b);
+    return convexPolygonsOverlap(a, b);
   }
 
   studioProjectileHitsMonster(shot, monster, projectileX, projectileY) {
@@ -3188,9 +3180,9 @@ export default class BattleScene extends Scene {
     const hurtboxes = this.getStudioRigHitboxesWorld(monster.studioRig, monster.view, "hurt");
     if (!hurtboxes.length) return true;
     const radius = Math.max(2, Number(shot.collisionRadius) || 8);
-    return hurtboxes.some((hurt) => circleIntersectsOrientedRectangle(
+    return hurtboxes.some((hurt) => circleIntersectsConvexPolygon(
       { x: projectileX, y: projectileY, radius },
-      hurt
+      hurt.points
     ));
   }
 
