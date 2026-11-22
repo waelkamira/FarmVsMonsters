@@ -33,7 +33,7 @@ function validReconstructionResponse(data, width, height, task) {
     bounds.x + bounds.width <= width && bounds.y + bounds.height <= height;
   return data && data.protocolVersion === 1 &&
     typeof data.patchDataUrl === "string" && data.patchDataUrl.length <= MAX_IMAGE_DATA_URL_CHARS &&
-    /^data:image\/png;base64,[a-zA-Z0-9+/]+=+$/.test(data.patchDataUrl) &&
+    /^data:image\/png;base64,[a-zA-Z0-9+/]+={0,2}$/.test(data.patchDataUrl) &&
     validBounds(data.targetBounds) &&
     (task === "visible-donor-reconstruction" ? validBounds(data.donorBounds) && data.provenance?.method === "visible-donor-transfer" : data.provenance?.method === "opencv-telea-inpaint") &&
     data.provenance?.pixels === "reconstructed" && data.provenance?.reviewRequired === true;
