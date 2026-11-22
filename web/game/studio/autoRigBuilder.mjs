@@ -160,10 +160,31 @@ function readPart(raw, index, canvas) {
       }
       return { x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height };
     };
+    const readPolygon = (polygon, field) => {
+      if (!polygon || polygon.kind !== "polygon" || !Array.isArray(polygon.points) || polygon.points.length < 3 || polygon.points.length > 512) {
+        throw new TypeError("Part " + id + " " + field + " must be a 3–512 point polygon.");
+      }
+      const points = polygon.points.map((point, pointIndex) => {
+        const px = finite(point?.x, field + ".points[" + pointIndex + "].x");
+        const py = finite(point?.y, field + ".points[" + pointIndex + "].y");
+        if (px < 0 || py < 0 || px >= canvas.width || py >= canvas.height) throw new RangeError("Part " + id + " " + field + " lies outside the source canvas.");
+        return { x: px, y: py };
+      });
+      const area = Math.abs(points.reduce((sum, point, pointIndex) => {
+        const next = points[(pointIndex + 1) % points.length];
+        return sum + point.x * next.y - next.x * point.y;
+      }, 0) / 2);
+      if (area < 4) throw new RangeError("Part " + id + " " + field + " is degenerate.");
+      return { kind: "polygon", points };
+    };
+    if (typeof value.flipHorizontal !== "boolean") throw new TypeError("Part " + id + " reconstruction flip setting is invalid.");
     reconstruction = {
       method: value.method,
       donorBounds: readBounds(value.donorBounds, "reconstruction donor bounds"),
       targetBounds: readBounds(value.targetBounds, "reconstruction target bounds"),
+      donorMask: readPolygon(value.donorMask, "reconstruction donor mask"),
+      targetMask: readPolygon(value.targetMask, "reconstruction target mask"),
+      flipHorizontal: value.flipHorizontal,
       reviewed: value.reviewed
     };
   }
