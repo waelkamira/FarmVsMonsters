@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { verifyStudioSession } from "../../../../../game/studio/signedSession.mjs";
-import { validateAutoRigWorkerResponse } from "../../../../../game/studio/autoRigWorkerProtocol.mjs";
+import { normalizeAutoRigWorkerCapabilities, validateAutoRigWorkerResponse } from "../../../../../game/studio/autoRigWorkerProtocol.mjs";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -36,8 +36,8 @@ export async function GET(req) {
   try {
     const response = await fetch(new URL("/v1/capabilities", base), { signal: controller.signal, cache: "no-store" });
     if (!response.ok) return NextResponse.json({ status: "unavailable", error: "Worker health check failed (" + response.status + ")." }, { status: 503 });
-    const data = await response.json();
-    return NextResponse.json({ status: "connected", capabilities: data }, { headers: { "Cache-Control": "no-store" } });
+    const data = normalizeAutoRigWorkerCapabilities(await response.json());
+    return NextResponse.json({ status: data.status === "ready" ? "connected" : "degraded", capabilities: data }, { status: data.status === "ready" ? 200 : 503, headers: { "Cache-Control": "no-store" } });
   } catch {
     return NextResponse.json({ status: "offline", error: "Local AI worker is not reachable. Start the worker on this machine and retry." }, { status: 503 });
   } finally { clearTimeout(timeout); }
