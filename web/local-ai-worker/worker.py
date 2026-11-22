@@ -49,6 +49,7 @@ def capabilities():
     try:
         import cv2, numpy
         available.append("visible-donor-reconstruction")
+        available.append("local-texture-inpaint")
     except Exception as exc:
         warnings.append("OpenCV/NumPy unavailable for donor transfer: " + str(exc)[:180])
     try:
@@ -324,6 +325,49 @@ def reconstruct_from_visible_donor(payload):
     }
 
 
+def inpaint_hidden_region(payload):
+    """Fill a user-marked region from its immediate surroundings using OpenCV Telea.
+
+    This is local texture inpainting, not semantic/anatomical generation. The
+    author must inspect the patch and explicitly approve it before rig readiness.
+    """
+    width, height = payload["canvas"]["width"], payload["canvas"]["height"]
+    image, _visible_pixels = decode_image_data(payload["imageDataUrl"], width, height)
+    import cv2, numpy as np
+    points = normalize_polygon_points(payload.get("targetPolygon"), width, height, "Target")
+    mask = np.zeros((height, width), dtype=np.uint8)
+    cv2.fillPoly(mask, [np.asarray(points, dtype=np.int32)], 255)
+    ys, xs = np.where(mask > 0)
+    if len(xs) < 16:
+        raise ValueError("The hidden target region is too small to inpaint.")
+    radius = payload.get("inpaintRadius", 3)
+    if isinstance(radius, bool) or not isinstance(radius, int) or not 1 <= radius <= 8:
+        raise ValueError("inpaintRadius must be an integer from 1 to 8.")
+    bounds = {
+        "x": int(xs.min()), "y": int(ys.min()),
+        "width": int(xs.max() - xs.min() + 1),
+        "height": int(ys.max() - ys.min() + 1)
+    }
+    restored = cv2.inpaint(image, mask, float(radius), cv2.INPAINT_TELEA)
+    x, y, w, h = bounds["x"], bounds["y"], bounds["width"], bounds["height"]
+    patch_rgb = restored[y:y + h, x:x + w]
+    patch_alpha = mask[y:y + h, x:x + w]
+    bgra = cv2.cvtColor(patch_rgb, cv2.COLOR_RGB2BGRA)
+    bgra[:, :, 3] = patch_alpha
+    ok, encoded = cv2.imencode(".png", bgra)
+    if not ok:
+        raise RuntimeError("Could not encode the inpainted texture patch.")
+    data_url = "data:image/png;base64," + base64.b64encode(encoded.tobytes()).decode("ascii")
+    if len(data_url) > MAX_OUTPUT_DATA_URL_CHARS:
+        raise ValueError("Inpainted patch exceeds the output size limit.")
+    return {
+        "protocolVersion": 1,
+        "patchDataUrl": data_url,
+        "targetBounds": bounds,
+        "provenance": {"pixels": "reconstructed", "method": "opencv-telea-inpaint", "reviewRequired": True}
+    }
+
+
 class Handler(BaseHTTPRequestHandler):
     server_version = "FVMStudioAI/1"
     def send_json(self,status,value):
@@ -347,7 +391,7 @@ class Handler(BaseHTTPRequestHandler):
             if length < 1 or length > MAX_BODY: return self.send_json(413,{"error":"Request body exceeds limit"})
             payload=json.loads(self.rfile.read(length))
             if payload.get("protocolVersion") != 1: return self.send_json(400,{"error":"Unsupported protocol"})
-            result = detect_parts(payload) if task_path.endswith("/part-detection") else segment_from_points(payload) if task_path.endswith("/prompted-segmentation") else reconstruct_from_visible_donor(payload)
+            result = detect_parts(payload) if task_path.endswith("/part-detection") else segment_from_points(payload) if task_path.endswith("/prompted-segmentation") else reconstruct_from_visible_donor(payload) if task_path.endswith("/visible-donor-reconstruction") else inpaint_hidden_region(payload)
             self.send_json(200,result)
         except RuntimeError as exc: self.send_json(503,{"error":str(exc)})
         except (ValueError,KeyError,TypeError,json.JSONDecodeError) as exc: self.send_json(400,{"error":str(exc)[:300]})
