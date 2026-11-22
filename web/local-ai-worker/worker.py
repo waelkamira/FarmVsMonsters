@@ -293,8 +293,8 @@ def reconstruct_from_visible_donor(payload):
     transferred = cv2.resize(donor_crop, target_size, interpolation=cv2.INTER_CUBIC)
     local_target = target_mask[target_bounds["y"]:target_bounds["y"] + target_bounds["height"],
                                target_bounds["x"]:target_bounds["x"] + target_bounds["width"]]
-    # The target polygon is authoritative; donor bounds supply the transferred texture.
-    alpha = np.where(local_target, 255, 0).astype(np.uint8)
+    # Keep only pixels supported by both the mapped donor silhouette and target polygon.
+    alpha = np.where(local_target & (transferred_alpha > 0), 255, 0).astype(np.uint8)
     bgra = cv2.cvtColor(transferred, cv2.COLOR_RGB2BGRA)
     bgra[:, :, 3] = alpha
     ok, encoded = cv2.imencode(".png", bgra)
