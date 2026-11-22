@@ -27,6 +27,8 @@ fi
 if [ ! -d "$SAM2_DIR/.git" ]; then
   git clone --depth 1 https://github.com/facebookresearch/sam2.git "$SAM2_DIR"
 fi
+SAM2_CONFIG_PATH="$SAM2_DIR/sam2/configs/sam2.1/sam2.1_hiera_t.yaml"
+[ -f "$SAM2_CONFIG_PATH" ] || { echo "SAM 2.1 config file missing: $SAM2_CONFIG_PATH"; exit 1; }
 
 # Official SAM 2 guidance recommends WSL/Ubuntu on Windows. Skip the optional
 # CUDA extension for a reliable CPU-capable setup; masks remain fully usable.
@@ -87,6 +89,7 @@ PY
 
 echo
 echo "SAM 2 Python environment is ready."
+echo "SAM 2 config: $SAM2_CONFIG_PATH"
 echo "SAM 2 checkpoint: $SAM2_CHECKPOINT"
 echo "CLIP model directory: $CLIP_DIR"
 echo "Next: run bash \"$WORKER_DIR/start-worker-wsl.sh\""
