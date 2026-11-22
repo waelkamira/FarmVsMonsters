@@ -42,7 +42,7 @@ async function githubGetPullRequest(number,token){
 async function githubPut(filePath,bytes,message,token,branch,expectedSha){const api=githubUrl(filePath),headers=githubHeaders(token);const check=await fetch(api+"?ref="+encodeURIComponent(branch),{headers});let sha=null;if(check.ok)sha=(await check.json()).sha;else if(check.status!==404)throw Error("GitHub lookup failed ("+check.status+").");assertExpectedContentSha(expectedSha,sha);const saved=await fetch(api,{method:"PUT",headers:{...headers,"Content-Type":"application/json"},body:JSON.stringify({message,branch,content:Buffer.from(bytes).toString("base64"),...(sha?{sha}:{})})});if(!saved.ok){const data=await saved.json().catch(()=>({}));throw Error(data.message||"GitHub save failed ("+saved.status+").");}}
 async function localRegistry(){try{return JSON.parse(await readFile(path.join(process.cwd(),"game/data/studioAssetRegistry.json"),"utf8"));}catch(error){if(error.code==="ENOENT")return {version:1,assets:[]};throw error;}}
 async function saveLocalRegistry(registry){const target=path.join(process.cwd(),"game/data/studioAssetRegistry.json");await mkdir(path.dirname(target),{recursive:true});await writeFile(target,JSON.stringify(registry,null,2)+"\n","utf8");}
-function addPreviewUrls(registry){const github=process.env.STUDIO_STORAGE_DRIVER==="github";return {...registry,storage:process.env.STUDIO_STORAGE_DRIVER||"local",assets:(registry.assets||[]).map(asset=>({...asset,previewUrl:github?"/api/studio/assets?preview="+encodeURIComponent(asset.path):asset.path,rigParts:serializeRigParts(registry.assets||[],asset),...(asset.combat?.projectile?{combat:{...asset.combat,projectile:{...asset.combat.projectile,frameCount:asset.combat.projectile.frameCount??1,rows:asset.combat.projectile.rows??1,columns:asset.combat.projectile.columns??1,previewUrl:github?"/api/studio/assets?preview="+encodeURIComponent(asset.combat.projectile.path):asset.combat.projectile.path}}}:{})}))};}
+function addPreviewUrls(registry){const github=process.env.STUDIO_STORAGE_DRIVER==="github";return {...registry,storage:process.env.STUDIO_STORAGE_DRIVER||"local",assets:(registry.assets||[]).map(asset=>({...asset,previewUrl:github?"/api/studio/assets?preview="+encodeURIComponent(asset.path):asset.path,...(asset.atlas?{atlas:{...asset.atlas,jsonPath:github?"/api/studio/assets?preview="+encodeURIComponent(asset.atlas.jsonPath):asset.atlas.jsonPath}}:{}),rigParts:serializeRigParts(registry.assets||[],asset),...(asset.combat?.projectile?{combat:{...asset.combat,projectile:{...asset.combat.projectile,frameCount:asset.combat.projectile.frameCount??1,rows:asset.combat.projectile.rows??1,columns:asset.combat.projectile.columns??1,previewUrl:github?"/api/studio/assets?preview="+encodeURIComponent(asset.combat.projectile.path):asset.combat.projectile.path}}}:{})}))};}
 function readCombatForm(form,projectile,existing){
  const previous=existing?.combat;
  return createStudioPlantCombatProfile({
@@ -86,7 +86,7 @@ export async function GET(req){
      if(!asset.releaseRequest?.number)return asset;
      try{return resolveStudioReleaseAsset(asset,await githubGetPullRequest(asset.releaseRequest.number,token));}catch{return asset;}
     }));
-    const monsters=candidates.filter(asset=>asset.status==="testing").map(asset=>({...asset,path:"/api/studio/assets?preview="+encodeURIComponent(asset.path),rigParts:serializeRigParts(registry.assets||[],asset)}));
+    const monsters=candidates.filter(asset=>asset.status==="testing").map(asset=>({...asset,path:"/api/studio/assets?preview="+encodeURIComponent(asset.path),...(asset.atlas?{atlas:{...asset.atlas,jsonPath:"/api/studio/assets?preview="+encodeURIComponent(asset.atlas.jsonPath)}}:{}),rigParts:serializeRigParts(registry.assets||[],asset)}));
     return NextResponse.json({version:1,monsters},{headers:{"Cache-Control":"private, no-store"}});
    }catch(error){return NextResponse.json({error:error.message||"Could not load testing monster catalog."},{status:502});}
   }
@@ -101,6 +101,7 @@ export async function GET(req){
     const plants=candidates.filter(asset=>asset.status==="testing").map(asset=>({
      ...asset,
      path:"/api/studio/assets?preview="+encodeURIComponent(asset.path),
+     ...(asset.atlas?{atlas:{...asset.atlas,jsonPath:"/api/studio/assets?preview="+encodeURIComponent(asset.atlas.jsonPath)}}:{}),
      rigParts:serializeRigParts(registry.assets||[],asset),
      ...(asset.combat?.projectile?{combat:{...asset.combat,projectile:{...asset.combat.projectile,frameCount:asset.combat.projectile.frameCount??1,rows:asset.combat.projectile.rows??1,columns:asset.combat.projectile.columns??1,path:"/api/studio/assets?preview="+encodeURIComponent(asset.combat.projectile.path)}}}:{})
     }));
@@ -109,7 +110,7 @@ export async function GET(req){
   }
   const preview=req.nextUrl.searchParams.get("preview");
   if(preview!==null){
-   const allowedTypes={".png":"image/png",".webp":"image/webp",".gif":"image/gif",".mp3":"audio/mpeg",".wav":"audio/wav",".ogg":"audio/ogg",".m4a":"audio/mp4"};
+   const allowedTypes={".png":"image/png",".webp":"image/webp",".gif":"image/gif",".mp3":"audio/mpeg",".wav":"audio/wav",".ogg":"audio/ogg",".m4a":"audio/mp4",".json":"application/json"};
    const extension=path.extname(preview).toLowerCase();
    if(!preview.startsWith("/assets/")||preview.includes("..")||!allowedTypes[extension])return NextResponse.json({error:"Invalid asset preview path."},{status:400});
    try{const upstream=await fetch(githubUrl("web/public"+preview)+"?ref="+encodeURIComponent(branch),{headers:{...githubHeaders(token),Accept:"application/vnd.github.raw"}});if(!upstream.ok)return NextResponse.json({error:"GitHub preview failed ("+upstream.status+")."},{status:upstream.status===404?404:502});return new NextResponse(await upstream.arrayBuffer(),{headers:{"Content-Type":allowedTypes[extension],"Cache-Control":"private, max-age=300","X-Content-Type-Options":"nosniff"}});}catch(error){return NextResponse.json({error:error.message||"Preview fetch failed."},{status:502});}
@@ -132,10 +133,12 @@ export async function GET(req){
 export async function POST(req){
  if(!authorized(req))return NextResponse.json({error:"Unauthorized."},{status:401});
  let form;try{form=await req.formData();}catch{return NextResponse.json({error:"Invalid multipart upload."},{status:400});}
- const id=String(form.get("id")||"").trim().toLowerCase(),type=String(form.get("type")||""),config=STUDIO_ASSET_TYPES[type],file=form.get("file"),projectileFile=form.get("projectileFile"),rows=Number(form.get("rows")||1),columns=Number(form.get("columns")||1),frameCount=Number(form.get("frameCount")||9),replace=String(form.get("replace")||"false")==="true";
+ const id=String(form.get("id")||"").trim().toLowerCase(),type=String(form.get("type")||""),config=STUDIO_ASSET_TYPES[type],file=form.get("file"),atlasJsonFile=form.get("atlasJsonFile"),uploadMode=String(form.get("uploadMode")||"spritesheet"),projectileFile=form.get("projectileFile"),rows=Number(form.get("rows")||1),columns=Number(form.get("columns")||1),frameCount=Number(form.get("frameCount")||9),replace=String(form.get("replace")||"false")==="true";
  if(!config||!STUDIO_ID_PATTERN.test(id)||id.length>64)return NextResponse.json({error:"Invalid category or ID. Use a lowercase slug up to 64 characters."},{status:400});
  if(type==="plant"&&STUDIO_RESERVED_PLANT_IDS.includes(id))return NextResponse.json({error:"هذا المعرّف محجوز لنبتة أساسية في اللعبة. اختر معرّفاً جديداً."},{status:409});
  const hasFile=Boolean(file&&typeof file.arrayBuffer==="function"&&file.size>0);
+ const hasAtlas=uploadMode==="atlas";
+ const hasAtlasJson=Boolean(atlasJsonFile&&typeof atlasJsonFile.arrayBuffer==="function"&&atlasJsonFile.size>0);
  const hasProjectile=Boolean(projectileFile&&typeof projectileFile.arrayBuffer==="function"&&projectileFile.size>0);
  const removeProjectile=String(form.get("removeProjectile")||"false")==="true";
  const driver=process.env.STUDIO_STORAGE_DRIVER||"local";let old,registrySha;
@@ -166,10 +169,12 @@ export async function POST(req){
  if(!existing&&replace)return NextResponse.json({error:"الأصل المطلوب تعديله غير موجود في المكتبة."},{status:404});
  if(existing&&existing.type!==type)return NextResponse.json({error:"لا يمكن تغيير فئة الأصل أثناء التعديل."},{status:409});
  if(!hasFile&&(!replace||!existing))return NextResponse.json({error:"Choose a file for a new asset."},{status:400});
+ if(hasAtlas&&(!["plant","monster"].includes(type)||!hasFile||!hasAtlasJson||file.type!=="image/png"||atlasJsonFile.size>2*1024*1024))return NextResponse.json({error:"Phaser Output يحتاج ملف PNG وملف JSON صالحين، وهو متاح للنباتات والوحوش فقط. الحد الأقصى لـ JSON هو 2 MB."},{status:415});
+ if(!hasAtlas&&hasAtlasJson)return NextResponse.json({error:"ملف JSON مرفق دون اختيار وضع Phaser Atlas."},{status:400});
  if(hasFile&&(file.size>STUDIO_MAX_UPLOAD_BYTES||!config.accepts.includes(file.type)))return NextResponse.json({error:"Choose a supported file up to 8 MB."},{status:415});
- if(config.spriteSheet&&(!Number.isInteger(frameCount)||frameCount<1||frameCount>24||!Number.isInteger(rows)||!Number.isInteger(columns)||rows<1||columns<1||rows*columns!==frameCount))return NextResponse.json({error:"عدد الإطارات يجب أن يكون من 1 إلى 24، ويجب أن يطابق حاصل ضرب الصفوف والأعمدة."},{status:400});
+ if(config.spriteSheet&&!hasAtlas&&(!Number.isInteger(frameCount)||frameCount<1||frameCount>24||!Number.isInteger(rows)||!Number.isInteger(columns)||rows<1||columns<1||rows*columns!==frameCount))return NextResponse.json({error:"عدد الإطارات يجب أن يكون من 1 إلى 24، ويجب أن يطابق حاصل ضرب الصفوف والأعمدة."},{status:400});
  let animationProfile=null;
- if(config.spriteSheet&&(type==="plant"||type==="monster")){
+ if(config.spriteSheet&&!hasAtlas&&(type==="plant"||type==="monster")){
   try{
    const rawProfile=String(form.get("animationProfile")||"");
    const submittedProfile=rawProfile?JSON.parse(rawProfile):(existing?.animationProfile||null);
@@ -177,7 +182,7 @@ export async function POST(req){
   }catch(error){return NextResponse.json({error:error.message||"Invalid animation profile."},{status:400});}
  }
  let rigProfile=null;
- if(config.spriteSheet&&(type==="plant"||type==="monster")){
+ if(config.spriteSheet&&!hasAtlas&&(type==="plant"||type==="monster")){
   try{
    const rawRigProfile=String(form.get("rigProfile")||"");
    const submittedRigProfile=rawRigProfile?JSON.parse(rawRigProfile):(existing?.rigProfile||null);
@@ -236,18 +241,24 @@ export async function POST(req){
  if(!extension)return NextResponse.json({error:"Unknown file extension."},{status:415});
  const bytes=hasFile?Buffer.from(await file.arrayBuffer()):null;
  if(hasFile){const signature=validateStudioAssetBytes(file.type,bytes);if(!signature.valid)return NextResponse.json({error:signature.reason},{status:415});}
+ let atlasValidation=null,atlasJsonBytes=null;
+ if(hasAtlas){atlasJsonBytes=Buffer.from(await atlasJsonFile.arrayBuffer());if(atlasJsonBytes.length>2*1024*1024)return NextResponse.json({error:"ملف JSON يتجاوز 2 MB."},{status:413});atlasValidation=validatePhaserAtlasDocument(atlasJsonBytes.toString("utf8"));if(!atlasValidation.valid)return NextResponse.json({error:atlasValidation.errors.join("، ")},{status:400});}
  const relative=hasFile?createImmutableAssetPath(config.folder,id,extension,bytes):(existing?.path||"").replace(/^\/assets\//,"");
+ const atlasJsonRelative=hasAtlas?createImmutableAssetPath(config.folder,id+"-atlas",".json",atlasJsonBytes):(existing?.atlas?.jsonPath||"").replace(/^\/assets\//,"");
+ const atlasRecord=hasAtlas?{frameCount:atlasValidation.frameCount,frameNames:atlasValidation.frameNames,clips:atlasValidation.clips,format:atlasValidation.format,filename:id+"-atlas.json",jsonPath:"/assets/"+atlasJsonRelative}:hasFile?null:(existing?.atlas||null);
  const now=new Date().toISOString();
- const record=createStudioAssetRevision(existing,{...(existing||{}),id,type,name:String(form.get("name")||id).trim().slice(0,80),filename:hasFile?id+extension:existing.filename,path:hasFile?"/assets/"+relative:existing.path,rows,columns,frameCount:config.spriteSheet?frameCount:1,spriteSheet:config.spriteSheet,status:"draft",releaseRequest:null,publishedAt:null,testingAt:null,archivedAt:null,restoredFromVersion:null,createdAt:existing?.createdAt||now,updatedAt:now,...(type==="plant"?{combat:combatProfile}:{}),...(type==="monster"?{monsterProfile}:{}),...(config.spriteSheet&&(type==="plant"||type==="monster")?{animationProfile,rigProfile}:{})});
+ const record=createStudioAssetRevision(existing,{...(existing||{}),id,type,name:String(form.get("name")||id).trim().slice(0,80),filename:hasFile?id+extension:existing.filename,path:hasFile?"/assets/"+relative:existing.path,rows:hasAtlas?1:rows,columns:hasAtlas?1:columns,frameCount:hasAtlas?atlasValidation.frameCount:(config.spriteSheet?frameCount:1),spriteSheet:config.spriteSheet,...(atlasRecord?{atlas:atlasRecord}:hasFile?{atlas:null}:{}),status:"draft",releaseRequest:null,publishedAt:null,testingAt:null,archivedAt:null,restoredFromVersion:null,createdAt:existing?.createdAt||now,updatedAt:now,...(type==="plant"?{combat:combatProfile}:{}),...(type==="monster"?{monsterProfile}:{}),...(config.spriteSheet&&(type==="plant"||type==="monster")?{animationProfile,rigProfile}:{})});
  const next={...old,version:1,assets:existing?old.assets.map((a,i)=>i===index?record:a):[...old.assets,record]};
  try{
   if(driver==="github"){
    const token=process.env.STUDIO_GITHUB_TOKEN,branch=process.env.STUDIO_GITHUB_BRANCH||"studio/assets";
    if(hasFile)await githubPutImmutable("web/public/assets/"+relative,bytes,"studio: "+(existing?"replace ":"add ")+type+" "+id,token,branch);
+   if(hasAtlas)await githubPutImmutable("web/public/assets/"+atlasJsonRelative,atlasJsonBytes,"studio: add Phaser Atlas JSON for "+id,token,branch);
    if(hasProjectile){await githubPutImmutable("web/public/"+record.combat.projectile.path.replace(/^\//,""),projectileBytes,"studio: attach projectile to "+id,token,branch);}
    await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(next,null,2)+"\n"),"studio: "+(existing?"update ":"register ")+id,token,branch,registrySha);
   }else if(driver==="local"&&process.env.NODE_ENV!=="production"){
    if(hasFile){const target=path.join(process.cwd(),"public/assets",relative);await mkdir(path.dirname(target),{recursive:true});await writeFile(target,bytes);}
+   if(hasAtlas){const atlasTarget=path.join(process.cwd(),"public/assets",atlasJsonRelative);await mkdir(path.dirname(atlasTarget),{recursive:true});await writeFile(atlasTarget,atlasJsonBytes);}
    if(hasProjectile){const pTarget=path.join(process.cwd(),"public",record.combat.projectile.path.replace(/^\//,""));await mkdir(path.dirname(pTarget),{recursive:true});await writeFile(pTarget,projectileBytes);}
    await saveLocalRegistry(next);
   }else return NextResponse.json({error:"Production uploads require STUDIO_STORAGE_DRIVER=github and a configured GitHub token."},{status:503});
@@ -359,6 +370,7 @@ export async function PATCH(req){
   const artworkPath="web/public"+asset.path;
   const artworkBytes=await githubGetBytes(artworkPath,token,storageBranch);
   await githubPutImmutable(artworkPath,artworkBytes,"studio: publish "+asset.type+" artwork "+id,token,targetBranch);
+  if(asset.atlas?.jsonPath){if(!safeAssetPath(asset.atlas.jsonPath))return NextResponse.json({error:"مسار Phaser Atlas JSON غير صالح."},{status:409});const atlasPath="web/public"+asset.atlas.jsonPath;const atlasBytes=await githubGetBytes(atlasPath,token,storageBranch);await githubPutImmutable(atlasPath,atlasBytes,"studio: publish Phaser Atlas JSON "+id,token,targetBranch);}
   const rigPartIds=[...new Set((asset.rigProfile?.bones||[]).map(bone=>bone?.part?.assetId).filter(Boolean))];
   const rigPartAssets=getRigPartAssets(registry.assets,asset);
   if(rigPartAssets.length!==rigPartIds.length||rigPartAssets.some(part=>!part||!["item","plant","monster","effect"].includes(part.type)||part.status==="archived"||!safeAssetPath(part.path)))return NextResponse.json({error:"يوجد جزء هيكلي مفقود أو غير صالح؛ أصلح تبعيات الهيكل قبل النشر."},{status:409});
@@ -381,7 +393,7 @@ export async function PATCH(req){
   const catalog=catalogDocument?JSON.parse(catalogDocument.content):(isMonster?{version:1,monsters:[]}:{version:1,plants:[]});
   const publishedAt=new Date().toISOString();
   const publishedRecord=isMonster
-   ?{id:asset.id,name:asset.name,path:asset.path,rows:asset.rows,columns:asset.columns,spriteSheet:asset.spriteSheet,animationProfile:asset.animationProfile||null,rigProfile:asset.rigProfile||null,rigParts:rigPartAssets.map(part=>({id:part.id,name:part.name,path:part.path,rows:part.spriteSheet?(part.rows||1):1,columns:part.spriteSheet?(part.columns||1):1,frameCount:getRigPartFrameCount(part),spriteSheet:Boolean(part.spriteSheet)})),monsterProfile:asset.monsterProfile,publishedAt}
+   ?{id:asset.id,name:asset.name,path:asset.path,...(asset.atlas?{atlas:asset.atlas}:{}),rows:asset.rows,columns:asset.columns,spriteSheet:asset.spriteSheet,animationProfile:asset.animationProfile||null,rigProfile:asset.rigProfile||null,rigParts:rigPartAssets.map(part=>({id:part.id,name:part.name,path:part.path,rows:part.spriteSheet?(part.rows||1):1,columns:part.spriteSheet?(part.columns||1):1,frameCount:getRigPartFrameCount(part),spriteSheet:Boolean(part.spriteSheet)})),monsterProfile:asset.monsterProfile,publishedAt}
    :{id:asset.id,name:asset.name,path:asset.path,rows:asset.rows,columns:asset.columns,spriteSheet:asset.spriteSheet,animationProfile:asset.animationProfile||null,rigProfile:asset.rigProfile||null,rigParts:rigPartAssets.map(part=>({id:part.id,name:part.name,path:part.path,rows:part.spriteSheet?(part.rows||1):1,columns:part.spriteSheet?(part.columns||1):1,frameCount:getRigPartFrameCount(part),spriteSheet:Boolean(part.spriteSheet)})),combat:asset.combat,publishedAt};
   const collectionKey=isMonster?"monsters":"plants";
   const collection=Array.isArray(catalog[collectionKey])?catalog[collectionKey]:[];
