@@ -321,3 +321,33 @@ test("quality readiness requires explicit confidence review without treating mis
   assert.equal(report.readyForAnimation, false);
   assert.ok(report.warnings.some((warning) => warning.code === "missing-confidence"));
 });
+
+
+test("animation readiness requires a source fingerprint and no unreviewed reconstructed pixels", () => {
+  const input = baseInput();
+  input.source = { assetId: "source-character", sha256: "b".repeat(64), frame: 0 };
+  input.parts = input.parts.map((part) => ({
+    ...part,
+    confidence: 0.95,
+    mask: { kind: "polygon", points: [
+      { x: part.bounds.x, y: part.bounds.y },
+      { x: part.bounds.x + part.bounds.width, y: part.bounds.y },
+      { x: part.bounds.x + part.bounds.width, y: part.bounds.y + part.bounds.height },
+      { x: part.bounds.x, y: part.bounds.y + part.bounds.height }
+    ] }
+  }));
+  const complete = buildAutoRigFromParts(input);
+  assert.equal(analyzeAutoRigQuality(complete.manifest, complete.profile).readyForAnimation, true);
+
+  const missingFingerprint = JSON.parse(JSON.stringify(complete.manifest));
+  missingFingerprint.source.sha256 = null;
+  const noFingerprintReport = analyzeAutoRigQuality(missingFingerprint, complete.profile);
+  assert.equal(noFingerprintReport.readyForAnimation, false);
+  assert.ok(noFingerprintReport.warnings.some((warning) => warning.code === "missing-source-fingerprint"));
+
+  const reconstructed = JSON.parse(JSON.stringify(complete.manifest));
+  reconstructed.parts[0].provenance.pixels = "reconstructed";
+  const reconstructedReport = analyzeAutoRigQuality(reconstructed, complete.profile);
+  assert.equal(reconstructedReport.readyForAnimation, false);
+  assert.ok(reconstructedReport.warnings.some((warning) => warning.code === "reconstructed-pixels"));
+});
