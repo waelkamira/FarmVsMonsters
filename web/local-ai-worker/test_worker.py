@@ -26,6 +26,36 @@ class WorkerTests(unittest.TestCase):
         self.assertIn("part-detection", result["capabilities"])
         self.assertIn("prompted-segmentation", result["capabilities"])
 
+    def test_prompted_segmentation_returns_valid_source_space_mask_proposals(self):
+        import numpy as np
+        class FakePredictor:
+            def set_image(self, image):
+                self.shape = image.shape[:2]
+            def predict(self, point_coords, point_labels, multimask_output):
+                self.coords = point_coords
+                self.labels = point_labels
+                self.multimask = multimask_output
+                mask = np.zeros((1, *self.shape), dtype=bool)
+                mask[0, 20:60, 30:70] = True
+                return mask, np.asarray([0.91], dtype=np.float32), None
+        predictor = FakePredictor()
+        payload = {
+            "canvas": {"width": 100, "height": 100},
+            "imageDataUrl": "data:image/png;base64,AA==",
+            "points": [{"x": 40, "y": 40, "label": 1}, {"x": 10, "y": 10, "label": 0}]
+        }
+        with patch.object(worker, "decode_image", return_value=np.zeros((100, 100, 3), dtype=np.uint8)), \
+             patch.object(worker, "load_model", return_value=(object(), predictor, "cpu")):
+            result = worker.segment_from_points(payload)
+        self.assertEqual(result["protocolVersion"], 1)
+        self.assertEqual(len(result["proposals"]), 1)
+        proposal = result["proposals"][0]
+        self.assertEqual(proposal["provenance"]["segmentation"], "sam2")
+        self.assertEqual(proposal["bounds"], {"x": 30, "y": 20, "width": 40, "height": 40})
+        self.assertAlmostEqual(proposal["confidence"], 0.91, places=5)
+        self.assertEqual(predictor.labels.tolist(), [1, 0])
+        self.assertTrue(predictor.multimask)
+
     def test_rejects_non_data_url(self):
         with self.assertRaises(ValueError):
             worker.decode_image("https://example.com/a.png", 10, 10)
