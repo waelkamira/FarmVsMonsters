@@ -210,7 +210,7 @@ function buildStarterClips(bones, parts) {
   const leaves = visible.filter((bone) => bone.id !== body?.id && String(roles.get(bone.id) || "").startsWith("leaf"));
   const headCandidate = visible.find((bone) => roles.get(bone.id) === "head");
   const head = headCandidate?.id === body?.id ? null : headCandidate;
-  const arms = visible.filter((bone) => /^(arm|hand)\\./.test(roles.get(bone.id) || ""));
+  const arms = visible.filter((bone) => /^(arm|hand)\./.test(roles.get(bone.id) || ""));
   const weapons = visible.filter((bone) => ["weapon", "weapon.barrel", "weapon.muzzle"].includes(roles.get(bone.id)));
   const baseFrame = (bone, timeMs, changes = {}) => ({
     timeMs, x: bone.x, y: bone.y, rotation: bone.rotation,
