@@ -8,6 +8,7 @@ import { getProjectileVFXProfile } from "../vfx/ProjectileVFXProfiles.mjs";
 import { getMonsterReactionProfile, getPlantAnimationProfile } from "../visuals/PlantMonsterVisualProfiles.mjs";
 import { createStudioAnimationProfile } from "../studio/animationProfiles.mjs";
 import { getSpriteFrameRectangles } from "../studio/spriteSheetGrid.mjs";
+import { createPhaserSkeletalRig } from "../studio/phaserSkeletalRig.mjs";
 import { getProjectileTrajectoryOffset } from "../studio/projectileTrajectory.mjs";
 import { createStudioMonsterProfile, resolveStudioMonsterRuntimeProfile, selectWeightedStudioMonster } from "../studio/monsterProfiles.mjs";
 
@@ -185,6 +186,11 @@ export default class BattleScene extends Scene {
           if (!entry || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(entry.id || "") ||
               typeof entry.path !== "string" || !(entry.path.startsWith("/assets/") || entry.path.startsWith("/api/studio/assets?preview="))) continue;
           this.load.image("studio-plant-" + variant + "-" + entry.id, entry.path);
+          for (const part of entry.rigParts || []) {
+            if (!part || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(part.id || "") || typeof part.path !== "string" ||
+                !(part.path.startsWith("/assets/") || part.path.startsWith("/api/studio/assets?preview="))) continue;
+            this.load.image("studio-rig-part-" + variant + "-" + part.id, part.path);
+          }
           if (entry.combat?.mode === "projectile" && entry.combat.projectile?.path && (entry.combat.projectile.path.startsWith("/assets/") || entry.combat.projectile.path.startsWith("/api/studio/assets?preview="))) {
             this.load.image("studio-projectile-" + variant + "-" + entry.id, entry.combat.projectile.path);
           }
@@ -199,6 +205,11 @@ export default class BattleScene extends Scene {
           if (!entry || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(entry.id || "") ||
               typeof entry.path !== "string" || !(entry.path.startsWith("/assets/") || entry.path.startsWith("/api/studio/assets?preview="))) continue;
           this.load.image("studio-monster-" + variant + "-" + entry.id, entry.path);
+          for (const part of entry.rigParts || []) {
+            if (!part || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(part.id || "") || typeof part.path !== "string" ||
+                !(part.path.startsWith("/assets/") || part.path.startsWith("/api/studio/assets?preview="))) continue;
+            this.load.image("studio-rig-part-" + variant + "-" + part.id, part.path);
+          }
         }
       });
     };
@@ -261,6 +272,14 @@ export default class BattleScene extends Scene {
     addStudioPlants(publishedStudioPlants, false);
     addStudioPlants(testStudioPlants, true);
     this.studioPlants = [...studioPlantMap.values()];
+    for (const plant of this.studioPlants) {
+      const variant = plant.testOnly ? "testing" : "published";
+      plant.rigPartTextures = Object.fromEntries((plant.rigParts || []).map((part) => {
+        const textureKey = "studio-rig-part-" + variant + "-" + part.id;
+        if (this.textures.exists(textureKey) && part.spriteSheet) this.registerStudioGridSheet(textureKey, part.rows, part.columns);
+        return [part.id, textureKey];
+      }));
+    }
     this.studioPlantsByType = Object.fromEntries(this.studioPlants.map((plant) => [plant.id, plant]));
     for (const plant of this.studioPlants) {
       const textureKey = plant.textureKey;
@@ -344,6 +363,14 @@ export default class BattleScene extends Scene {
     addStudioMonsters(publishedStudioMonsters, false);
     addStudioMonsters(testStudioMonsters, true);
     this.studioMonsters = [...studioMonsterMap.values()];
+    for (const monster of this.studioMonsters) {
+      const variant = monster.testOnly ? "testing" : "published";
+      monster.rigPartTextures = Object.fromEntries((monster.rigParts || []).map((part) => {
+        const textureKey = "studio-rig-part-" + variant + "-" + part.id;
+        if (this.textures.exists(textureKey) && part.spriteSheet) this.registerStudioGridSheet(textureKey, part.rows, part.columns);
+        return [part.id, textureKey];
+      }));
+    }
     this.studioMonstersById = Object.fromEntries(this.studioMonsters.map((monster) => [monster.id, monster]));
     for (const monster of this.studioMonsters) {
       if (!monster.spriteSheet || !this.registerStudioGridSheet(monster.textureKey, monster.rows, monster.columns)) continue;
@@ -3059,6 +3086,34 @@ export default class BattleScene extends Scene {
         texture.add(frameName, 0, frameX, frameY, nextFrameX - frameX, nextFrameY - frameY);
       }
     }
+    return true;
+  }
+
+  playStudioSkeletalRig(rig, clipId, onComplete = null) {
+    const clip = rig?.profile?.clips?.find((entry) => entry.id === clipId);
+    if (!clip || !rig.root?.active) return false;
+    rig._animationEvent?.remove?.();
+    const startedAt = this.time.now;
+    rig.play(clipId, 0);
+    const event = this.time.addEvent({
+      delay: 16,
+      loop: true,
+      callback: () => {
+        if (!rig.root?.active) { event.remove(); return; }
+        const elapsed = this.time.now - startedAt;
+        rig.play(clipId, elapsed);
+        if (onComplete && elapsed >= clip.durationMs) {
+          event.remove();
+          rig._animationEvent = null;
+          onComplete();
+        } else if (!clip.loop && elapsed >= clip.durationMs) {
+          event.remove();
+          rig._animationEvent = null;
+        }
+      }
+    });
+    rig._animationEvent = event;
+    rig.root.once("destroy", () => event.remove());
     return true;
   }
 
