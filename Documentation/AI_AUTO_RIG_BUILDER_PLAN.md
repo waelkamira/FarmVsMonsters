@@ -238,3 +238,11 @@ Templates target semantic roles and skip absent bones. Weapon attack timing must
 
 ## Current decision
 The Auto-Rig Builder is a permanent first-class Studio subsystem composed of the nine modules above. The deterministic Auto-Rig core is its first implementation layer; AI segmentation and reconstruction are pluggable local capabilities that progressively power the same integrated workflow. This avoids making the Studio depend on a large, hardware-sensitive model before validating the workflow on real FarmVsMonsters art. No separate animation runtime is permitted.
+
+
+## 2026-11-22 — Local inference worker contract foundation
+- Added `web/game/studio/autoRigWorkerProtocol.mjs` as the versioned boundary between Studio and an optional loopback inference worker.
+- The contract capability-detects part detection, prompted segmentation, and hidden-part reconstruction without claiming a model is installed or available.
+- Worker outputs are rejected unless proposal IDs, semantic roles, confidence, source-coordinate bounds, editable polygon masks, provenance, protocol version, and the 63-part limit are valid. Partial output is discarded when any proposal is invalid.
+- Added focused protocol regression tests and included them in the Auto-Rig CI workflow and focused ESLint command.
+- This is an integration contract, not an AI model implementation. The actual local worker, model installation/setup, SAM 2 adapter, semantic plant/monster detector, and reconstruction backend remain explicit implementation gates; no hosted inference API or model weights were added.
