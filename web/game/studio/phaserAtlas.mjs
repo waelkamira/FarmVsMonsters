@@ -1,7 +1,14 @@
 const MAX_ATLAS_FRAMES = 512;
 const SAFE_FRAME_NAME = /^[a-zA-Z0-9][a-zA-Z0-9._ -]{0,95}$/;
 
-export function validatePhaserAtlasDocument(input) {
+export function readPngDimensions(bytes) {
+  if (!(bytes instanceof Uint8Array) || bytes.length < 24 || bytes[0] !== 0x89 || bytes[1] !== 0x50 || bytes[2] !== 0x4e || bytes[3] !== 0x47) return null;
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const width = view.getUint32(16, false), height = view.getUint32(20, false);
+  return width > 0 && height > 0 ? { width, height } : null;
+}
+
+export function validatePhaserAtlasDocument(input, imageDimensions = null) {
   let atlas;
   try { atlas = typeof input === "string" ? JSON.parse(input) : input; }
   catch { return { valid: false, errors: ["ملف JSON غير صالح."] }; }
@@ -30,6 +37,10 @@ export function validatePhaserAtlasDocument(input) {
   const meta = atlas?.meta;
   if (!meta || typeof meta !== "object") errors.push("بيانات meta مفقودة من Phaser Atlas.");
   const image = typeof meta?.image === "string" ? meta.image.trim() : "";
+  const metaWidth = Number(meta?.size?.w), metaHeight = Number(meta?.size?.h);
+  const hasMetaSize = Number.isFinite(metaWidth) && Number.isFinite(metaHeight) && metaWidth > 0 && metaHeight > 0;
+  if (meta?.size && !hasMetaSize) errors.push("أبعاد الصورة في meta.size غير صالحة.");
+  if (imageDimensions && hasMetaSize && (metaWidth !== imageDimensions.width || metaHeight !== imageDimensions.height)) errors.push("أبعاد PNG لا تطابق أبعاد meta.size في Phaser Atlas.");
   if (image && (image.includes("..") || image.includes("/") || image.includes("\\"))) errors.push("اسم الصورة داخل meta يجب أن يكون اسماً فقط دون مسارات.");
   const clips = {};
   for (const name of names) {
