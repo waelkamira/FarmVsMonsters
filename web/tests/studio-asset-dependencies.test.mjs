@@ -212,3 +212,7 @@ test("Rig Editor supports canvas zoom/pan, direct attachment handles, presets, a
   assert.match(editor, /applyPreset/);
   assert.match(editor, /updateClip\("fps"/);
 });
+
+test("Studio API rejects empty skeletal rigs before saving", () => {
+  assert.match(routeSource, /يجب ربط صورة واحدة على الأقل بأحد عظام الهيكل قبل الحفظ/);
+});
