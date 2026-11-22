@@ -50,3 +50,31 @@ jobs:
 
       - name: Production build
         run: npm run build
+
+  local-ai-worker:
+    name: Local AI worker contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: web/local-ai-worker
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install worker test dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Validate WSL launcher syntax
+        run: bash -n setup-wsl.sh start-worker-wsl.sh
+
+      - name: Compile worker
+        run: python -m py_compile worker.py
+
+      - name: Run worker contract tests
+        run: python -m unittest -v test_worker.py
