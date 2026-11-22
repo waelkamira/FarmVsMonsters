@@ -8,7 +8,7 @@ function getSharedResourceState(scene) {
   const owner = scene.game || scene.textures;
   let state = sharedResourcesByGame.get(owner);
   if (!state) {
-    state = new Map();
+    state = { resources: new Map(), loadQueue: Promise.resolve() };
     sharedResourcesByGame.set(owner, state);
   }
   return state;
@@ -41,10 +41,11 @@ export class PhaserAssetManager {
       completedAt: null
     };
     this.groups = new Map();
-    this.sharedResources = getSharedResourceState(scene);
+    this.sharedState = getSharedResourceState(scene);
+    this.sharedResources = this.sharedState.resources;
     this.localResources = new Map();
     this.listeners = [];
-    this.loadQueue = Promise.resolve();
+    this.activeLoadAbort = null;
     this.destroyed = false;
     this.observeLoader();
   }
@@ -109,14 +110,85 @@ export class PhaserAssetManager {
   }
 
   enqueueLoad(task) {
-    const next = this.loadQueue.then(task, task);
-    this.loadQueue = next.catch(() => {});
+    // All managers attached to the same Phaser Game share one queue. This
+    // prevents two scenes from racing to load (and then both claiming) a key.
+    const next = this.sharedState.loadQueue.then(task, task);
+    this.sharedState.loadQueue = next.catch(() => {});
     return next;
+  }
+
+  waitForLoaderIdle(loader) {
+    if (!loader.isLoading()) return Promise.resolve();
+    return new Promise((resolve, reject) => {
+      let settled = false;
+      const finish = (error) => {
+        if (settled) return;
+        settled = true;
+        loader.off("complete", onComplete);
+        if (this.activeLoadAbort === abort) this.activeLoadAbort = null;
+        error ? reject(error) : resolve();
+      };
+      const onComplete = () => finish();
+      const abort = (error) => finish(error);
+      this.activeLoadAbort = abort;
+      loader.once("complete", onComplete);
+    });
+  }
+
+  loadPendingAssets(loader, groupName, pending) {
+    return new Promise((resolve, reject) => {
+      let settled = false;
+      const errors = [];
+      const finish = (error) => {
+        if (settled) return;
+        settled = true;
+        loader.off("complete", onComplete);
+        loader.off("loaderror", onError);
+        error ? reject(error) : resolve();
+      };
+      const onComplete = () => {
+        if (errors.length) {
+          const failedKeys = [...new Set(errors)];
+          const error = new Error(
+            `Failed to load ${failedKeys.length} asset(s) in group "${groupName}": ${failedKeys.join(", ")}`
+          );
+          error.failedKeys = failedKeys;
+          finish(error);
+        } else finish();
+      };
+      const onError = (file) => {
+        errors.push(file?.key || file?.src || "unknown");
+      };
+
+      loader.once("complete", onComplete);
+      loader.on("loaderror", onError);
+      try {
+        for (const entry of pending) this.queueEntry(loader, entry);
+        loader.start();
+      } catch (error) {
+        finish(error);
+      }
+    });
+  }
+
+  rollbackPendingAssets(entries) {
+    for (const entry of entries) {
+      const resourceId = resourceIdFor(entry);
+      const shared = this.sharedResources.get(resourceId);
+      if (shared?.references > 0 || !this.hasAsset(entry.key, entry.type)) continue;
+
+      if (entry.type === "audio") {
+        this.scene.cache?.audio?.remove?.(entry.key);
+      } else if (this.scene.textures.exists(entry.key)) {
+        this.scene.textures.remove(entry.key);
+      }
+    }
   }
 
   loadGroup(groupName, options = {}) {
     if (this.destroyed) return Promise.reject(new Error("Asset manager has been destroyed"));
     return this.enqueueLoad(async () => {
+      if (this.destroyed) throw new Error("Asset manager has been destroyed");
       const entries = this.getGroup(groupName);
       const alreadyLoaded = this.groups.get(groupName);
       if (alreadyLoaded) {
@@ -134,38 +206,17 @@ export class PhaserAssetManager {
       const loader = this.scene.load;
 
       if (pending.length > 0) {
-        if (loader.isLoading()) {
-          await new Promise((resolve) => loader.once("complete", resolve));
+        try {
+          await this.waitForLoaderIdle(loader);
+          if (this.destroyed) throw new Error("Asset manager has been destroyed");
+          await this.loadPendingAssets(loader, groupName, pending);
+          if (this.destroyed) throw new Error("Asset manager has been destroyed");
+        } catch (error) {
+          // Phaser continues after per-file load errors. Roll back successful
+          // siblings so a retry starts from a clean, unowned group.
+          this.rollbackPendingAssets(pending);
+          throw error;
         }
-        await new Promise((resolve, reject) => {
-          let settled = false;
-          const finish = (error) => {
-            if (settled) return;
-            settled = true;
-            loader.off("complete", onComplete);
-            loader.off("loaderror", onError);
-            error ? reject(error) : resolve();
-          };
-          const errors = [];
-          const onComplete = () => {
-            if (errors.length && options.failOnError !== false) {
-              finish(new Error(`Failed to load ${errors.length} asset(s) in group "${groupName}"`));
-            } else finish();
-          };
-          const onError = (file) => {
-            // Phaser emits loaderror per file and continues loading the queue.
-            errors.push(file?.key || file?.src || "unknown");
-          };
-          loader.once("complete", onComplete);
-          loader.on("loaderror", onError);
-
-          try {
-            for (const entry of pending) this.queueEntry(loader, entry);
-            loader.start();
-          } catch (error) {
-            finish(error);
-          }
-        });
       }
 
       for (const entry of entries) {
@@ -252,7 +303,12 @@ export class PhaserAssetManager {
   destroy(options = {}) {
     if (this.destroyed) return;
     this.destroyed = true;
-    for (const [event, handler] of this.listeners) this.scene.load.off(event, handler);
+    const scene = this.scene;
+    if (this.activeLoadAbort) {
+      this.activeLoadAbort(new Error("Asset manager has been destroyed"));
+      this.activeLoadAbort = null;
+    }
+    for (const [event, handler] of this.listeners) scene.load.off(event, handler);
     this.listeners = [];
     for (const groupName of [...this.groups.keys()]) {
       const group = this.groups.get(groupName);
@@ -273,7 +329,12 @@ export class PhaserAssetManager {
         this.releaseGroup(groupName);
       }
     }
-    this.scene = null;
+    // Let an active Phaser batch finish so any successful sibling files can
+    // be rolled back before dropping the scene reference.
+    const pendingWork = this.sharedState.loadQueue;
+    pendingWork.finally(() => {
+      this.scene = null;
+    });
   }
 }
 
