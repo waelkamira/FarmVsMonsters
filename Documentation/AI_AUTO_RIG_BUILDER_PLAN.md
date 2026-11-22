@@ -246,3 +246,12 @@ The Auto-Rig Builder is a permanent first-class Studio subsystem composed of the
 - Worker outputs are rejected unless proposal IDs, semantic roles, confidence, source-coordinate bounds, editable polygon masks, provenance, protocol version, and the 63-part limit are valid. Partial output is discarded when any proposal is invalid.
 - Added focused protocol regression tests and included them in the Auto-Rig CI workflow and focused ESLint command.
 - This is an integration contract, not an AI model implementation. The actual local worker, model installation/setup, SAM 2 adapter, semantic plant/monster detector, and reconstruction backend remain explicit implementation gates; no hosted inference API or model weights were added.
+
+
+## 2026-11-22 — Authenticated local worker bridge
+- Added `POST /api/studio/auto-rig/worker` for Studio-session-authenticated task dispatch and `GET` for capability/health discovery.
+- The bridge accepts bounded PNG/JPEG/WebP data URLs, source dimensions, and one of the three declared task types; applies a 45-second inference timeout; and validates all returned proposal geometry against the original source canvas before exposing it to Studio.
+- The upstream endpoint is restricted to HTTP loopback addresses only. Remote worker URLs are rejected to avoid turning this authenticated route into an SSRF proxy or silently uploading artwork to a hosted inference provider.
+- Added focused route-contract tests and included the route and tests in Auto-Rig CI and ESLint.
+- Runtime configuration: optional `STUDIO_LOCAL_AI_WORKER_URL=http://127.0.0.1:8765`. Without a worker process, the health route intentionally reports offline/not configured; the bridge does not fabricate AI results.
+- Remaining: implement and package the actual local worker process and its model adapters; wire worker status and approved proposals into the Auto-Rig UI; add real plant/monster image fixtures and end-to-end validation.
