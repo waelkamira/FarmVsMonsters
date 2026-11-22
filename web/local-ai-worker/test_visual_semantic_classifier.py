@@ -35,7 +35,7 @@ class VisualSemanticClassifierTests(unittest.TestCase):
         image = np.zeros((32, 32, 3), dtype=np.uint8)
         invalid = [{
             "id": "bad",
-            "bounds": {"x": 0, "y": 0, "width": 12, "height": 12},
+            "bounds": {"x": 10, "y": 10, "width": 12, "height": 12},
             "mask": {"kind": "polygon", "points": [{"x": 0, "y": 0}, {"x": 10, "y": 0}, {"x": 5, "y": 10}]}
         }]
         with self.assertRaisesRegex(ValueError, "outside proposal crop"):
