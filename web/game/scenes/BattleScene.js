@@ -3137,6 +3137,37 @@ export default class BattleScene extends Scene {
     return true;
   }
 
+  getStudioRigHitboxWorld(rig, parentView, kind) {
+    if (!rig || !parentView?.active) return null;
+    const profile = rig.profile.hitboxes.find((item) => item.kind === kind);
+    if (!profile) return null;
+    const local = rig.getHitbox(profile.id);
+    const scaleX = Number(parentView.scaleX) || 1;
+    const scaleY = Number(parentView.scaleY) || 1;
+    const rotation = (Number(parentView.rotation) || 0) * 180 / Math.PI;
+    return {
+      x: parentView.x + local.x * scaleX,
+      y: parentView.y + local.y * scaleY,
+      width: local.width * Math.abs(scaleX),
+      height: local.height * Math.abs(scaleY),
+      rotation: local.rotation + rotation
+    };
+  }
+
+  studioRigHitboxesOverlap(attackerRig, attackerView, targetRig, targetView) {
+    const attack = this.getStudioRigHitboxWorld(attackerRig, attackerView, "attack");
+    const hurt = this.getStudioRigHitboxWorld(targetRig, targetView, "hurt");
+    if (!attack || !hurt) return true;
+    const bounds = (hitbox) => {
+      const radians = hitbox.rotation * Math.PI / 180;
+      const halfWidth = (Math.abs(Math.cos(radians)) * hitbox.width + Math.abs(Math.sin(radians)) * hitbox.height) / 2;
+      const halfHeight = (Math.abs(Math.sin(radians)) * hitbox.width + Math.abs(Math.cos(radians)) * hitbox.height) / 2;
+      return { left: hitbox.x - halfWidth, right: hitbox.x + halfWidth, top: hitbox.y - halfHeight, bottom: hitbox.y + halfHeight };
+    };
+    const a = bounds(attack), b = bounds(hurt);
+    return a.left <= b.right && a.right >= b.left && a.top <= b.bottom && a.bottom >= b.top;
+  }
+
   drawStudioCatalogPlant(studioPlant, x, y, row = 2) {
     const textureKey = studioPlant.textureKey || "studio-plant-published-" + studioPlant.id;
     const container = this.add.container(x, y).setDepth(11);
@@ -3356,6 +3387,7 @@ export default class BattleScene extends Scene {
         const animationKey = "studio-" + plant.studioPlant.id + "-attack";
         const applyStudioHit = () => {
           if (!plant.alive || !target.alive || (studioProfile.mode === "contact" && !target.isEating) || this.gameOver) return;
+          if (skeletalRig && target.studioRig && !this.studioRigHitboxesOverlap(skeletalRig, plant.view, target.studioRig, target.view)) return;
           this.applyMonsterDamage(target, studioProfile.damage, plant.type);
           this.createProjectileImpact(target.view?.x ?? plant.x, target.view?.y ?? plant.y - 22, plant.type);
           this.damageMonsterIfNeeded(target);
