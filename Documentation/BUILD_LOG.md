@@ -1391,3 +1391,11 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - The SAM 2 worker now accepts POST requests only when the Host header matches its exact 127.0.0.1 bind/port, the media type is JSON, and no browser Origin header is present. This blocks cross-site browser form submissions from triggering local model inference.
 - A bounded single-request admission slot prevents concurrent uploads from accumulating while CPU/GPU inference is serialized; busy clients receive HTTP 429 and can retry.
 - Added worker unit coverage for accepted loopback requests and rejected browser-origin, remote-host, and non-JSON requests. The local-worker CI job compiles and runs these tests.
+
+
+## 2026-11-22 — Local AI worker security, alpha, and WSL setup
+- Hardened loopback POST requests: exact loopback Host, JSON content type, no browser Origin, and a single bounded inference slot (429 when busy).
+- Preserved source PNG alpha during model preprocessing by compositing transparent pixels onto white; added regression coverage for opaque/semitransparent/transparent pixels.
+- Added WSL 2 setup/start scripts for Windows users, defaulting to CPU PyTorch and installing official SAM 2 source without its optional CUDA extension. Model checkpoints remain manually installed.
+- Added shell syntax validation to the focused worker CI. Worker tests and WSL launcher syntax passed in run `45034810415`; the full Auto-Rig focused pipeline is still being rechecked on the latest head.
+- Clarified Studio UI copy: automatic SAM 2 results are visible-region masks, not semantic part labels. Role assignment and approval remain author-controlled.
