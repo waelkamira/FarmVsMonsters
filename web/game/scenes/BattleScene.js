@@ -4082,6 +4082,18 @@ export default class BattleScene extends Scene {
   }
 
   playHyenaAnimation(monster, key, force = false) {
+    if (monster?.studioMonster?.rigProfile && monster.studioRig) {
+      const action = ["hyena-bite", "hyena-hit", "hyena-death"].includes(key) ? "attack" : ["hyena-walk", "hyena-run"].includes(key) ? "move" : "idle";
+      if (action === "attack" && !force && monster.hitAnimUntil > this.time.now) return;
+      const rig = monster.studioRig;
+      const clip = rig.profile.clips.find((entry) => entry.id === action)
+        || rig.profile.clips.find((entry) => entry.id === "idle");
+      if (clip) this.playStudioSkeletalRig(rig, clip.id, action === "attack" ? () => {
+        const idle = rig.profile.clips.find((entry) => entry.id === "idle");
+        if (idle) this.playStudioSkeletalRig(rig, idle.id);
+      } : null);
+      return;
+    }
     const sprite = monster && monster.hyenaSprite;
     if (!sprite || !sprite.active) return;
     if (monster.studioMonster) {
@@ -4256,9 +4268,25 @@ export default class BattleScene extends Scene {
     }
 
     let monsterRecord = null;
+    let studioRig = null;
+    if (studioMonster?.rigProfile && studioMonster.rigPartTextures) {
+      try {
+        studioRig = createPhaserSkeletalRig(this, studioMonster.rigProfile, studioMonster.rigPartTextures);
+        const canvas = studioRig.profile.canvas;
+        studioRig.root.setPosition(-canvas.width / 2, -canvas.height);
+        studioRig.root.setScale(0.918 * 360 / canvas.width, 0.918 * 298 / canvas.height);
+        view.add(studioRig.root);
+        view.setData("studioSkeletalRig", studioRig);
+        const idleClip = studioRig.profile.clips.find((entry) => entry.id === "idle") || studioRig.profile.clips[0];
+        if (idleClip) this.playStudioSkeletalRig(studioRig, idleClip.id);
+      } catch (error) {
+        console.warn("Studio monster skeletal rig unavailable; preserving Sprite Sheet fallback:", studioMonster.id, error);
+        studioRig = null;
+      }
+    }
     const customMonsterTexture = studioMonster?.textureKey;
     const customMonsterIdleFrame = String(studioMonster?.animationProfile?.idle?.startFrame ?? 0);
-    const hyenaSprite = customMonsterTexture && this.textures.exists(customMonsterTexture)
+    const hyenaSprite = studioRig ? null : customMonsterTexture && this.textures.exists(customMonsterTexture)
       ? this.add.sprite(0, 0, customMonsterTexture, customMonsterIdleFrame).setOrigin(0.5, 1).setFlipX(true).setScale(0.918)
       : this.hyenaAnimationsReady
         ? this.add.sprite(0, 0, "hyena-idle", 0).setOrigin(0.5, 1).setFlipX(true).setScale(0.918)
@@ -4335,6 +4363,7 @@ export default class BattleScene extends Scene {
       burstRemaining: 0,
       combatProfile: profile,
       studioMonster,
+      studioRig,
       // Dust Skitters occasionally hop; this is purely visual and never
       // changes their lane, collision position, or ability to be hit.
       jumpCooldown: archetype === "dust-skitter" ? this.simulationRandom.nextInt(profile.jumpCooldownMinMs, profile.jumpCooldownMaxMs) : 0,
