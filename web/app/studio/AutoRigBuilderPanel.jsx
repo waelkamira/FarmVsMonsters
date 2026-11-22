@@ -63,6 +63,9 @@ export default function AutoRigBuilderPanel({
   const [aiBusy, setAiBusy] = useState(false);
   const [aiProposals, setAiProposals] = useState([]);
   const [aiProposalRoles, setAiProposalRoles] = useState({});
+  const [aiPromptMode, setAiPromptMode] = useState(false);
+  const [aiPromptPoints, setAiPromptPoints] = useState([]);
+  const [aiPromptLabel, setAiPromptLabel] = useState(1);
   const [muzzlePartId, setMuzzlePartId] = useState("");
   const [muzzlePoint, setMuzzlePoint] = useState(null);
   const [muzzleMode, setMuzzleMode] = useState(false);
@@ -104,6 +107,9 @@ export default function AutoRigBuilderPanel({
       draggingVertex.current = null;
       setAiProposals([]);
       setAiProposalRoles({});
+      setAiPromptMode(false);
+      setAiPromptPoints([]);
+      setAiPromptLabel(1);
       setMuzzlePartId("");
       setMuzzlePoint(null);
       setMuzzleMode(false);
@@ -135,6 +141,15 @@ export default function AutoRigBuilderPanel({
       context.strokeStyle = "#159b72";
       context.lineWidth = Math.max(2, canvas.width / 300);
       context.fill();
+      context.stroke();
+    });
+    aiPromptPoints.forEach((point) => {
+      context.beginPath();
+      context.arc(point.x, point.y, Math.max(5, canvas.width / 90), 0, Math.PI * 2);
+      context.fillStyle = point.label === 0 ? "#e34858" : "#16a36f";
+      context.fill();
+      context.strokeStyle = "#ffffff";
+      context.lineWidth = Math.max(1, canvas.width / 500);
       context.stroke();
     });
     parts.forEach((part) => {
@@ -216,7 +231,7 @@ export default function AutoRigBuilderPanel({
         context.fill();
       });
     }
-  }, [image, points, parts, aiProposals, editingPartId, occlusionPoints]);
+  }, [image, points, parts, aiProposals, editingPartId, occlusionPoints, aiPromptPoints]);
 
   async function checkAIWorker() {
     setAiBusy(true);
@@ -257,6 +272,39 @@ export default function AutoRigBuilderPanel({
       setAiProposalRoles({});
       setAiStatus("connected");
       setMessage("اكتشف المحرك " + (data.proposals || []).length + " جزءاً. راجع كل قناع واعتمده يدوياً قبل إنشاء الهيكل.");
+    } catch (error) {
+      setAiStatus("offline");
+      setMessage(error.message);
+    } finally { setAiBusy(false); }
+  }
+
+  async function requestAIPromptedSegmentation() {
+    if (!image || aiBusy || disabled || generated || !aiPromptPoints.length) return;
+    setAiBusy(true);
+    setAiProposals([]);
+    try {
+      const sourceCanvas = document.createElement("canvas");
+      sourceCanvas.width = image.naturalWidth || image.width;
+      sourceCanvas.height = image.naturalHeight || image.height;
+      sourceCanvas.getContext("2d").drawImage(image, 0, 0);
+      const response = await fetch("/api/studio/auto-rig/worker", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          task: "prompted-segmentation",
+          canvas: { width: sourceCanvas.width, height: sourceCanvas.height },
+          imageDataUrl: sourceCanvas.toDataURL("image/png"),
+          points: aiPromptPoints
+        })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "تعذر تنفيذ التقسيم الموجّه بالنقاط.");
+      setAiProposals(data.proposals || []);
+      setAiProposalRoles({});
+      setAiPromptMode(false);
+      setAiStatus("connected");
+      setMessage("أنشأ SAM 2 " + (data.proposals || []).length + " أقنعة بديلة وفق نقاطك. اختر القناع الأدق ثم عيّن دوره الدلالي.");
     } catch (error) {
       setAiStatus("offline");
       setMessage(error.message);
@@ -341,6 +389,10 @@ export default function AutoRigBuilderPanel({
   function addPoint(event) {
     if (!image || disabled || busy || generated) return;
     const { x, y } = canvasPoint(event);
+    if (aiPromptMode) {
+      setAiPromptPoints((current) => [...current, { x, y, label: aiPromptLabel }]);
+      return;
+    }
     if (occlusionMode) {
       setOcclusionPoints((current) => [...current, { x, y }]);
       return;
@@ -359,6 +411,8 @@ export default function AutoRigBuilderPanel({
     if (disabled || busy || generated) return;
     setEditingPartId("");
     setPoints([]);
+    setAiPromptMode(false);
+    setAiPromptPoints([]);
     setMuzzleMode(false);
     setOcclusionTargetPartId(partId);
     setOcclusionPoints([]);
@@ -538,8 +592,17 @@ export default function AutoRigBuilderPanel({
       <p>يمكنك اكتشاف مناطق الشخصية محلياً باستخدام SAM 2 أو رسم الأقنعة يدوياً. راجع كل قناع وحدد دوره الدلالي قبل اعتماده؛ تُحفظ الأجزاء كصور PNG شفافة مستقلة، ثم تُنشأ بنية أولية قابلة للتعديل. عند استخدام Sprite Sheet تتم معالجة أول إطار فقط كصورة مرجعية. إعادة بناء الأجزاء المخفية والتصنيف الدلالي المتخصص ما زالا قيد التطوير.</p>
       <div className="studio-actions" style={{ display: "flex", flexWrap: "wrap", gap: 8, margin: "10px 0" }}>
         <button type="button" disabled={disabled || aiBusy} onClick={checkAIWorker}>{aiBusy ? "جارٍ الاتصال..." : "فحص محرك AI المحلي"}</button>
-        <button type="button" disabled={disabled || aiBusy || generated || !image} onClick={requestAISegmentation}>{aiBusy ? "جارٍ تحليل الصورة..." : "اكتشاف الأجزاء وتقسيمها تلقائياً"}</button>
-        <span className="studio-message" role="status">حالة المحرك: {aiStatus === "connected" ? "جاهز" : aiStatus === "degraded" ? "مثبت لكن النموذج غير جاهز" : aiStatus === "offline" ? "غير متصل" : aiStatus === "not-configured" ? "غير مهيأ" : "لم يُفحص"}</span>
+        <button type="button" disabled={disabled || aiBusy || generated || !image || aiPromptMode} onClick={requestAISegmentation}>{aiBusy ? "جارٍ تحليل الصورة..." : "اكتشاف الأجزاء وتقسيمها تلقائياً"}</button>
+                <button type="button" disabled={disabled || aiBusy || generated || !image} onClick={() => { setAiPromptMode((current) => !current); setAiPromptPoints([]); setOcclusionMode(false); setOcclusionPoints([]); setEditingPartId(""); setMuzzleMode(false); setMessage("انقر على جزء الشخصية لإضافة نقطة إيجابية، أو اختر نقطة سلبية لاستبعاد منطقة. بعد تحديد النقاط اطلب التقسيم الموجّه."); }}>{aiPromptMode ? "إنهاء تحديد نقاط AI" : "تحديد نقاط AI"}</button>
+        <label style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>نوع النقطة
+          <select value={aiPromptLabel} disabled={!aiPromptMode || disabled || aiBusy} onChange={(event) => setAiPromptLabel(Number(event.target.value))}>
+            <option value={1}>إيجابية · داخل الجزء</option>
+            <option value={0}>سلبية · خارج الجزء</option>
+          </select>
+        </label>
+        <button type="button" disabled={disabled || aiBusy || generated || !aiPromptPoints.length} onClick={requestAIPromptedSegmentation}>تقسيم SAM 2 حسب النقاط ({aiPromptPoints.length})</button>
+        <button type="button" disabled={!aiPromptPoints.length || aiBusy} onClick={() => setAiPromptPoints([])}>مسح نقاط AI</button>
+<span className="studio-message" role="status">حالة المحرك: {aiStatus === "connected" ? "جاهز" : aiStatus === "degraded" ? "مثبت لكن النموذج غير جاهز" : aiStatus === "offline" ? "غير متصل" : aiStatus === "not-configured" ? "غير مهيأ" : "لم يُفحص"}</span>
       </div>
       {aiProposals.length > 0 && <div style={{ margin: "12px 0", padding: 12, border: "1px solid #d8dce5", borderRadius: 10 }}>
         <b>مقترحات AI ({aiProposals.length}) — يلزم اعتمادك</b><p style={{ margin: "6px 0", fontSize: 13 }}>الأقنعة الزرقاء المتقطعة هي مقترحات غير معتمدة؛ الأقنعة الخضراء هي أجزاء أُضيفت إلى الهيكل.</p>
