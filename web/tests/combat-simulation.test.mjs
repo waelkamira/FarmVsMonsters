@@ -355,7 +355,7 @@ test("phase-one wave scheduler preserves intermission, first spawn delay and int
   assert.equal(intermission.remainingIntermissionSecond, 4);
 
   const firstSpawn = resolveWaveSpawnStep({
-    wave: 2, waveSize: 5, spawnedThisWave: 0,
+    wave: 2, waveSize: 3, spawnedThisWave: 0,
     intermissionMs: 0, spawnTimerMs: 100, deltaMs: 120
   });
   assert.equal(firstSpawn.shouldSpawn, true);
