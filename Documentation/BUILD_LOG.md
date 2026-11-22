@@ -1561,3 +1561,14 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - Fixed starter seed loadout normalization order and projectile asset classification defaults.
 - Fixed React effect/state lint issues in Studio's trajectory preview, Rig Editor, and sprite-grid page without disabling lint rules.
 - Full-suite validation is being rerun; baseline failures are being investigated and corrected rather than skipped or hidden.
+
+## 2026-11-23 — Phaser Atlas workflow adopted; Auto-Rig retired
+
+- Replaced the Auto-Rig product direction with a direct Phaser Atlas import workflow for plants and monsters.
+- Removed the Auto-Rig Builder UI, worker API, local SAM/CLIP worker, builder modules, dedicated CI workflow, related documentation, and builder-specific tests.
+- Removed Auto-Rig build-manifest persistence and quality-gating references while retaining the separate manual skeletal rig editor/runtime for compatibility with existing assets.
+- Added a second Studio upload mode for selecting a `phaser_output` directory containing exactly one PNG and one JSON file. The server validates the Phaser Atlas structure, frame rectangles, frame names, image pairing, and size limits before saving the two files independently.
+- Saved Atlas JSON paths, frame names, and name-derived clip groups in the Studio asset registry; preserved that metadata through revisions and cloning; included both files in publishing and preview routes.
+- Updated Phaser BattleScene to load named-frame Atlas textures for Studio plants and monsters and register animations from their frame-name groups.
+- Added focused Atlas parser, upload-flow, BattleScene loading, and asset-version regression tests.
+- Validation is running on the current branch. No browser upload or live BattleScene playtest has been claimed yet; no merge to `main` is authorized.
