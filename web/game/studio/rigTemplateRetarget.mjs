@@ -127,6 +127,20 @@ export function suggestRigTemplateRetarget(templateManifest, targetParts, target
     throw new RangeError("Template and target part IDs must be unique.");
   }
 
+  const templateById = new Map(templateParts.map((part) => [part.id, part]));
+  for (const part of templateParts) {
+    if (part.parentPartId != null && !templateById.has(part.parentPartId)) {
+      throw new RangeError("Template part " + part.id + " references a missing parent part.");
+    }
+    const visited = new Set([part.id]);
+    let parentId = part.parentPartId || null;
+    while (parentId) {
+      if (visited.has(parentId)) throw new RangeError("Template parent graph contains a cycle.");
+      visited.add(parentId);
+      parentId = templateById.get(parentId)?.parentPartId || null;
+    }
+  }
+
   const orderedTemplates = [...templateParts].sort((a, b) => a.id.localeCompare(b.id));
   const orderedTargets = [...targets].sort((a, b) => a.id.localeCompare(b.id));
   const dummyCost = 2;
