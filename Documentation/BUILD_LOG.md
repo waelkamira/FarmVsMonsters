@@ -1104,7 +1104,7 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 ### Final rig-editor and collision refinements — 2026-11-22
 - Keyframe timestamps now snap to integer clip-frame times in the editor, including numeric edits, canvas dragging, presets, keyframe insertion/removal, and preview sampling.
 - Added per-clip FPS validation and defaulting in the rig data contract.
-- BattleScene uses oriented-rectangle SAT across all authored attack/hurt hitbox pairs and circle-vs-oriented-hurtbox checks for projectiles.
+- BattleScene uses convex-polygon SAT across all authored attack/hurt hitbox pairs and circle-vs-polygon checks for projectiles, including non-uniform parent scaling.
 - Monster state guards protect death and frozen states, preserve the pre-freeze animation across stacked freeze hits, and prevent idle/movement from resetting active attack/hit clips.
 - Validation still has not executed: the latest GitHub Actions jobs finish with runner_id=0 and no steps/logs. Live Chrome/Windows battle verification remains open.
 
