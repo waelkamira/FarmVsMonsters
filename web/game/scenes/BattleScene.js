@@ -1180,7 +1180,8 @@ export default class BattleScene extends Scene {
     let iconScale = 1;
     if (imageKey && this.textures.exists(imageKey)) {
       const gridSheet = imageKey === "mango-level-1" || imageKey === "radish-level-1" || imageKey === "snow-thrower-level-1" || imageKey === "electric-mushroom-level-1" || imageKey === "corn-monster" || Boolean(this.studioPlantsByType?.[type]?.spriteSheet);
-      const frameName = type === "corn-monster" ? "idle_00" : "0";
+      const atlasFrame = this.studioPlantsByType?.[type]?.atlas?.frameNames?.[0];
+      const frameName = type === "corn-monster" ? "idle_00" : (atlasFrame || "0");
       const frame = this.textures.getFrame(imageKey, gridSheet ? frameName : undefined);
       // Bound every seed icon by both dimensions using its frame rectangle.
       const frameWidth = Math.max(1, frame.cutWidth || frame.width || 1);
@@ -3269,9 +3270,9 @@ export default class BattleScene extends Scene {
       }
       if (!rigRendered && this.textures.exists(textureKey)) {
         const sheet = Boolean(studioPlant.spriteSheet);
-        const frame = this.textures.getFrame(textureKey, sheet ? "0" : undefined);
+        const frame = this.textures.getFrame(textureKey, studioPlant.atlas?.frameNames?.[0] || (sheet ? "0" : undefined));
         const width = Math.min(height * (frame.realWidth / frame.realHeight), 100 * perspective * sizeFactor);
-        const idleFrame = String(studioPlant.animationProfile?.idle?.startFrame ?? 0);
+        const idleFrame = studioPlant.atlas?.clips?.idle?.[0] || String(studioPlant.animationProfile?.idle?.startFrame ?? 0);
         const artwork = sheet
           ? this.add.sprite(0, -height / 2 + 2, textureKey, idleFrame).setDisplaySize(width, height)
           : this.add.image(0, -height / 2 + 2, textureKey).setDisplaySize(width, height);
