@@ -341,3 +341,10 @@ The Auto-Rig Builder is a permanent first-class Studio subsystem composed of the
 ## 2026-11-22 — Rig Library regression coverage
 - Added a focused source-contract test for the rigged/unrigged library filters and semantic search across part roles, bone names, and attachment names.
 - Included the new test in the Auto-Rig subsystem workflow so changes to the Studio Rig Library are covered by the same build and validation pipeline.
+
+
+## 2026-11-22 — Hidden-region mask authoring foundation
+- Added validated `occlusionMask` polygons to the versioned Auto-Rig manifest, stored in original source-image coordinates and constrained to the source canvas.
+- Studio can now enter a per-part hidden-region marking mode, draw and save the polygon region where the occluded part is expected to continue, and display saved regions as dashed amber overlays.
+- The quality report distinguishes unresolved occlusion with a supplied region mask from unresolved occlusion with no reconstruction target. The mask is preparation data only: no pixels are fabricated, and the rig remains blocked until a real reconstruction model and review flow exist.
+- Added regression tests for manifest persistence and out-of-canvas occlusion masks.
