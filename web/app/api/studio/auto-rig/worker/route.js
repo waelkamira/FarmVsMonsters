@@ -27,17 +27,16 @@ function validPolygon(points, width, height) {
   return area >= 4;
 }
 
-function validReconstructionResponse(data, width, height) {
+function validReconstructionResponse(data, width, height, task) {
   const validBounds = (bounds) => bounds && ["x", "y", "width", "height"].every((key) => Number.isInteger(bounds[key])) &&
     bounds.x >= 0 && bounds.y >= 0 && bounds.width > 0 && bounds.height > 0 &&
     bounds.x + bounds.width <= width && bounds.y + bounds.height <= height;
   return data && data.protocolVersion === 1 &&
     typeof data.patchDataUrl === "string" && data.patchDataUrl.length <= MAX_IMAGE_DATA_URL_CHARS &&
     /^data:image\/png;base64,[a-zA-Z0-9+/]+=+$/.test(data.patchDataUrl) &&
-    validBounds(data.targetBounds) && validBounds(data.donorBounds) &&
-    data.provenance?.pixels === "reconstructed" &&
-    data.provenance?.method === "visible-donor-transfer" &&
-    data.provenance?.reviewRequired === true;
+    validBounds(data.targetBounds) &&
+    (task === "visible-donor-reconstruction" ? validBounds(data.donorBounds) && data.provenance?.method === "visible-donor-transfer" : data.provenance?.method === "opencv-telea-inpaint") &&
+    data.provenance?.pixels === "reconstructed" && data.provenance?.reviewRequired === true;
 }
 
 function workerEndpoint() {
@@ -98,7 +97,7 @@ export async function POST(req) {
       !/^data:image\/(png|jpeg|webp);base64,[a-zA-Z0-9+/]+=*$/.test(body.imageDataUrl)) {
     return NextResponse.json({ error: "Provide a PNG, JPEG, or WebP base64 data URL within the 8 MB source limit." }, { status: 400 });
   }
-  if (!["part-detection", "prompted-segmentation", "visible-donor-reconstruction"].includes(body.task)) {
+  if (!["part-detection", "prompted-segmentation", "visible-donor-reconstruction", "local-texture-inpaint"].includes(body.task)) {
     return NextResponse.json({ error: "Unsupported Auto-Rig worker task." }, { status: 400 });
   }
   let points;
@@ -119,14 +118,16 @@ export async function POST(req) {
     }
   }
   let reconstruction;
-  if (body.task === "visible-donor-reconstruction") {
-    if (!validPolygon(body.sourcePolygon, width, height) || !validPolygon(body.targetPolygon, width, height)) {
-      return NextResponse.json({ error: "Visible donor and hidden target must each be valid 3–512 point source-space polygons." }, { status: 400 });
+  if (body.task === "visible-donor-reconstruction" || body.task === "local-texture-inpaint") {
+    if (!validPolygon(body.targetPolygon, width, height) || (body.task === "visible-donor-reconstruction" && !validPolygon(body.sourcePolygon, width, height))) {
+      return NextResponse.json({ error: "The hidden target and any required visible donor must be valid 3–512 point source-space polygons." }, { status: 400 });
     }
-    if (body.flipHorizontal != null && typeof body.flipHorizontal !== "boolean") {
+    if (body.task === "visible-donor-reconstruction" && body.flipHorizontal != null && typeof body.flipHorizontal !== "boolean") {
       return NextResponse.json({ error: "flipHorizontal must be a boolean when supplied." }, { status: 400 });
     }
-    reconstruction = { sourcePolygon: body.sourcePolygon, targetPolygon: body.targetPolygon, flipHorizontal: body.flipHorizontal !== false };
+    reconstruction = body.task === "visible-donor-reconstruction"
+      ? { sourcePolygon: body.sourcePolygon, targetPolygon: body.targetPolygon, flipHorizontal: body.flipHorizontal !== false }
+      : { targetPolygon: body.targetPolygon, inpaintRadius: Number.isInteger(body.inpaintRadius) && body.inpaintRadius >= 1 && body.inpaintRadius <= 8 ? body.inpaintRadius : 3 };
   }
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), WORKER_TIMEOUT_MS);
@@ -143,8 +144,8 @@ export async function POST(req) {
       return NextResponse.json({ error: "Local worker rejected the task (" + response.status + ").", detail: detail.slice(0, 500) }, { status: 502 });
     }
     const workerData = await response.json();
-    if (body.task === "visible-donor-reconstruction") {
-      if (!validReconstructionResponse(workerData, width, height)) {
+    if (body.task === "visible-donor-reconstruction" || body.task === "local-texture-inpaint") {
+      if (!validReconstructionResponse(workerData, width, height, body.task)) {
         return NextResponse.json({ error: "Worker returned invalid reconstructed image data or geometry." }, { status: 422 });
       }
       return NextResponse.json(workerData, { headers: { "Cache-Control": "no-store" } });
