@@ -66,6 +66,20 @@ class WorkerTests(unittest.TestCase):
         self.assertEqual(predictor.labels.tolist(), [1, 0])
         self.assertTrue(predictor.multimask)
 
+    def test_decodes_transparent_png_without_turning_transparent_pixels_black(self):
+        import base64, cv2, numpy as np
+        bgra = np.zeros((2, 2, 4), dtype=np.uint8)
+        bgra[0, 0] = [0, 0, 255, 255]
+        bgra[0, 1] = [0, 255, 0, 128]
+        bgra[1, 0] = [255, 0, 0, 0]
+        ok, encoded = cv2.imencode(".png", bgra)
+        self.assertTrue(ok)
+        data_url = "data:image/png;base64," + base64.b64encode(encoded.tobytes()).decode("ascii")
+        rgb = worker.decode_image(data_url, 2, 2)
+        self.assertEqual(rgb[0, 0].tolist(), [255, 0, 0])
+        self.assertTrue(all(channel >= 254 for channel in rgb[1, 0].tolist()))
+        self.assertTrue(all(126 <= channel <= 129 for channel in rgb[0, 1].tolist()))
+
     def test_rejects_non_data_url(self):
         with self.assertRaises(ValueError):
             worker.decode_image("https://example.com/a.png", 10, 10)
