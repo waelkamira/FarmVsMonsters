@@ -1272,3 +1272,9 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - Changed the Studio UI to request the implemented `part-detection` task and made capability health distinguish ready from degraded.
 - Added setup instructions, Python contract tests, and a dedicated CI job for Python dependency installation, syntax compilation, and worker tests.
 - Outstanding: install and run SAM 2 on the target Windows machine; add semantic plant/monster role classification, prompt-conditioned segmentation, occlusion handling, hidden-part reconstruction, Rig Library, animation generation, and real-asset end-to-end verification.
+
+
+## 2026-11-22 — SAM 2 proposal quality filtering
+- Added mask candidate filtering before polygon conversion: reject tiny regions and near-full-canvas background masks, rank by predicted-IoU × stability, suppress near-identical masks at IoU ≥ 0.92, and cap output at 63 proposals.
+- Added Python regression coverage for background/tiny-mask rejection and duplicate suppression.
+- This reduces obvious SAM 2 noise but does not solve semantic segmentation, overlapping-part interpretation, or occlusion reasoning; every proposal still requires visual review and role assignment.
