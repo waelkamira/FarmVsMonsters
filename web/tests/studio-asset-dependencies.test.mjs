@@ -161,3 +161,8 @@ test("release staging includes every referenced skeletal bitmap part", () => {
   assert.match(routeSource, /stage skeletal part/);
   assert.match(routeSource, /rigParts:rigPartAssets\.map/);
 });
+
+test("rejects archived rig part assets during Studio save and release", () => {
+  assert.match(routeSource, /partAsset\.status==="archived"/);
+  assert.match(routeSource, /part\.status==="archived"/);
+});
