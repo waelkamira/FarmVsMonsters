@@ -4595,19 +4595,20 @@ export default class BattleScene extends Scene {
       const monsterHalfWidth = monster.hyenaSprite
         ? monster.hyenaSprite.width * monster.hyenaSprite.scaleX * monster.view.scaleX * 0.5
         : monster.view.getBounds().width * 0.5;
-      const widestBlockingPlantHalfWidth = this.plants.reduce((widest, plant) => {
-        if (!plant.alive || plant.row !== monster.row || !plant.view?.active) return widest;
-        return Math.max(widest, plant.view.getBounds().width * 0.5);
-      }, 0);
-      // Include a plant that the monster has just crossed by a few pixels.
+      // Only living Radishes are defensive blockers. Resource Mushrooms and
+      // other producers must never stop a monster or enlarge its overlap range.
+      const blockingPlants = this.plants.filter((plant) =>
+        plant.type === "radish" && plant.alive && plant.row === monster.row && plant.view?.active
+      );
+      const widestBlockingPlantHalfWidth = blockingPlants.reduce((widest, plant) =>
+        Math.max(widest, plant.view.getBounds().width * 0.5), 0);
+      // Include a Radish that the monster has just crossed by a few pixels.
       // Without this overlap allowance, the strict "plant ahead" query drops
       // the blocker and the monster walks straight through it.
       const blocker = selectLaneBlocker({
-        plants: this.plants.map((plant) => ({
+        plants: blockingPlants.map((plant) => ({
           plant,
-          localX: plant.alive && plant.row === monster.row
-            ? this.worldToLane(plant).localX
-            : null
+          localX: this.worldToLane(plant).localX
         })),
         row: monster.row,
         monsterLocalX: monster.localX,
