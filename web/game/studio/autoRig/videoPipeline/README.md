@@ -25,7 +25,7 @@ This uses the existing Phaser frame contract; it does not alter the original spr
 
 ## First Hazelnut experiment
 1. Use the existing approved Hazelnut Level 1 artwork as the image reference. Do not overwrite it.
-2. Generate a 2–3 second clip: one character, locked camera, fixed framing, full character visible, no cuts or scene changes.
+2. Generate a short clip (3–5 seconds if that is the provider's minimum): one character, locked camera, fixed framing, full character visible, no cuts or scene changes. We will extract a 2-second segment for 24 frames at 12 FPS.
 3. If the provider cannot output alpha, request a flat pure green background (#00FF00). Avoid green details on the character.
 4. Download the generated video locally; do not commit it.
 5. From the repository root, run:
@@ -36,12 +36,11 @@ python web/game/studio/autoRig/videoPipeline/video_to_spritesheet.py `
   --output-dir "web\.autorig-workspace\ai-video\hazelnut-idle" `
   --name "hazelnut-idle" `
   --start-seconds 0 --clip-duration 2 `
-  --start-seconds 0 --clip-duration 2 `
   --frames 24 --fps 12 --width 150 --height 150 `
   --columns 6 --background green
 ```
 
-Use `--start-seconds` and `--clip-duration` to select a 2-second segment from a longer provider clip. 24 frames at 12 FPS represent 2 seconds; keep the extracted clip duration and playback FPS aligned to avoid speeding up or slowing down the motion. Use `--start-seconds` and `--clip-duration` to select a 2-second segment from a longer provider clip. 24 frames at 12 FPS represent 2 seconds; keep source clip duration and playback FPS aligned to avoid changing motion speed. Use `--background alpha` for a video with a real alpha channel. Use `--background none` only when intentionally retaining the background.
+The provider may return a longer clip; use `--start-seconds` and `--clip-duration` to select a 2-second segment. 24 frames at 12 FPS represent 2 seconds. Keep the selected clip duration and playback FPS aligned so the motion is not sped up or slowed down. Use `--background alpha` for a video with a real alpha channel. Use `--background none` only when intentionally retaining the background.
 
 ## Outputs
 - `hazelnut-idle.png`: 6 × 4 sheet, 150 × 150 per frame by default.
