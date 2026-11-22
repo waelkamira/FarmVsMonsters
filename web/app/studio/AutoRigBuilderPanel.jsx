@@ -922,7 +922,7 @@ export default function AutoRigBuilderPanel({
       </div>
       {aiProposals.length > 0 && <div style={{ margin: "12px 0", padding: 12, border: "1px solid #d8dce5", borderRadius: 10 }}>
         <b>مقترحات AI ({aiProposals.length}) — يلزم اعتمادك</b><p style={{ margin: "6px 0", fontSize: 13 }}>الأقنعة الزرقاء المتقطعة مقترحات SAM 2 غير معتمدة؛ الأقنعة الخضراء أجزاء أُضيفت إلى الهيكل. استخدم المصنف البصري المحلي CLIP لاقتراح الدور من محتوى الصورة، ثم راجع النتيجة يدوياً.</p>
-        <button type="button" disabled={disabled || busy || generated} onClick={suggestSemanticRoles}>{aiBusy ? "جارٍ التصنيف البصري..." : "تصنيف الأجزاء بصرياً باستخدام CLIP المحلي"}</button>
+        <button type="button" disabled={disabled || busy || generated || aiBusy} onClick={suggestSemanticRoles}>{aiBusy ? "جارٍ التصنيف البصري..." : "تصنيف الأجزاء بصرياً باستخدام CLIP المحلي"}</button>
         <ul>{aiProposals.map((proposal) => <li key={proposal.id} style={{ marginTop: 6 }}>
           {proposal.name || proposal.role} · ثقة التقسيم {proposal.confidence == null ? "غير محددة" : Math.round(proposal.confidence * 100) + "%"}
           {aiSemanticSuggestions[proposal.id] && <small style={{ display: "block", marginTop: 3 }}>اقتراح CLIP البصري: {aiSemanticSuggestions[proposal.id].role} · درجة التشابه {Math.round(aiSemanticSuggestions[proposal.id].confidence * 100)}% · هامش {Math.round(aiSemanticSuggestions[proposal.id].margin * 100)}% · {aiSemanticSuggestions[proposal.id].reason}</small>}
