@@ -201,6 +201,10 @@ export async function POST(req){
      if(!partAsset||partAsset.id===id||partAsset.type==="audio"||partAsset.status==="archived"||!safeAssetPath(partAsset.path)){
       throw new Error("جزء الهيكل "+bone.id+" يشير إلى أصل صورة غير موجود أو غير صالح: "+bone.part.assetId);
      }
+     const partFrameCount=Math.max(1,Number(partAsset.frameCount||(Number(partAsset.rows||1)*Number(partAsset.columns||1))||1));
+     if(!Number.isInteger(partFrameCount)||bone.part.frame>=partFrameCount){
+      throw new Error("رقم إطار جزء الهيكل "+bone.id+" خارج عدد إطارات الأصل "+bone.part.assetId+".");
+     }
     }
    }
   }catch(error){return NextResponse.json({error:error.message||"Invalid skeletal rig profile."},{status:400});}
@@ -366,6 +370,9 @@ export async function PATCH(req){
   const rigPartIds=[...new Set((asset.rigProfile?.bones||[]).map(bone=>bone?.part?.assetId).filter(Boolean))];
   const rigPartAssets=getRigPartAssets(registry.assets,asset);
   if(rigPartAssets.length!==rigPartIds.length||rigPartAssets.some(part=>!part||part.type==="audio"||part.status==="archived"||!safeAssetPath(part.path)))return NextResponse.json({error:"يوجد جزء هيكلي مفقود أو غير صالح؛ أصلح تبعيات الهيكل قبل النشر."},{status:409});
+  const rigPartById=new Map(rigPartAssets.filter(Boolean).map(part=>[part.id,part]));
+  const invalidRigFrame=(asset.rigProfile?.bones||[]).some(bone=>{if(!bone?.part)return false;const part=rigPartById.get(bone.part.assetId);const count=Math.max(1,Number(part?.frameCount||(Number(part?.rows||1)*Number(part?.columns||1))||1));return !part||!Number.isInteger(count)||bone.part.frame>=count;});
+  if(invalidRigFrame)return NextResponse.json({error:"يوجد إطار غير صالح في أحد أجزاء الهيكل؛ صحح رقم الإطار قبل النشر."},{status:409});
   if(asset.type==="monster"){
    const releaseBranch=createStudioReleaseBranchName(id,randomUUID().slice(0,8));
    await githubCreateBranch(releaseBranch,targetBranch,token);
