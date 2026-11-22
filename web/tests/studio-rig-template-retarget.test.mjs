@@ -51,3 +51,22 @@ test("rejects invalid dimensions, malformed bounds, and duplicate IDs", () => {
   assert.throws(() => suggestRigTemplateRetarget(template, [{ id: "x", role: "body", bounds: { x: -1, y: 0, width: 2, height: 2 } }], { width: 100, height: 100 }), /fit inside/);
   assert.throws(() => suggestRigTemplateRetarget({ ...template, parts: [template.parts[0], template.parts[0]] }, [{ id: "x", role: "stem", bounds: { x: 0, y: 0, width: 10, height: 10 } }], { width: 100, height: 100 }), /unique/);
 });
+
+
+test("uses a global minimum-cost assignment for repeated semantic roles", () => {
+  const repeatedTemplate = {
+    canvas: { width: 100, height: 100 },
+    parts: [
+      { id: "leaf-a", role: "leaf", bounds: { x: 10, y: 10, width: 10, height: 10 } },
+      { id: "leaf-b", role: "leaf", bounds: { x: 30, y: 10, width: 10, height: 10 } }
+    ]
+  };
+  const repeatedTargets = [
+    { id: "target-a", role: "leaf", bounds: { x: 20, y: 10, width: 10, height: 10 } },
+    { id: "target-b", role: "leaf", bounds: { x: 5, y: 10, width: 10, height: 10 } }
+  ];
+  const result = suggestRigTemplateRetarget(repeatedTemplate, repeatedTargets, { width: 100, height: 100 });
+  const pairs = new Map(result.matches.map((match) => [match.templatePartId, match.targetPartId]));
+  assert.equal(pairs.get("leaf-a"), "target-b");
+  assert.equal(pairs.get("leaf-b"), "target-a");
+});
