@@ -48,6 +48,7 @@ jobs:
           node --test
           tests/studio-local-registry-store.test.mjs
           tests/studio-reviewed-release-flow.test.mjs
+          tests/studio-unsaved-changes.test.mjs
           tests/studio-asset-dependencies.test.mjs
           tests/studio-asset-readiness.test.mjs
           tests/studio-release-lifecycle.test.mjs
