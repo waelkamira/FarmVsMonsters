@@ -1168,3 +1168,12 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - Opened draft PR #89 targeting the hybrid animation branch, not main: https://github.com/waelkamira/FarmVsMonsters/pull/89.
 - Read back the Auto-Rig module, regression test file, architecture plan, and build log from the feature branch. The test file currently contains 8 focused test cases.
 - The draft PR is intentionally not merge-ready. The new tests and full application checks have not yet been executed; live Chrome/gameplay validation remains required.
+
+
+## 2026-11-22 — Auto-Rig Builder adopted as a permanent Studio subsystem
+- Updated Documentation/AI_AUTO_RIG_BUILDER_PLAN.md to make the Auto-Rig system a first-class, permanent part of the Asset & Animation Studio rather than an external/temporary utility.
+- Defined all nine required product modules and their responsibilities: AI Part Detector, Smart Image Segmentation, Hidden Part Reconstruction, Auto Bone Generator, Auto Pivot Detection, Animation Generator, Weapon Attachment Builder, Rig Quality Validator, and Rig Library.
+- Added a shared integration contract: all modules use one versioned authoring manifest and emit the existing game-compatible skeletal rig profile and referenced assets. No parallel animation runtime or incompatible output format is allowed.
+- Required manual editability, reversibility, source preservation, confidence/provenance reporting, same-evaluator previews, existing Phaser muzzle/weapon behavior, and use of the existing Studio asset/version/dependency/publish lifecycle.
+- Expanded Phase 2 and Phase 5 and added acceptance criteria for all-nine-module integration, runtime parity, and reusable role-based rig templates.
+- This is a planning/documentation update only; no new module UI, model worker, or runtime feature was claimed as implemented. Build/tests/live gameplay remain unverified.
