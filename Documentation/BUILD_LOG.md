@@ -1278,3 +1278,9 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - Added mask candidate filtering before polygon conversion: reject tiny regions and near-full-canvas background masks, rank by predicted-IoU × stability, suppress near-identical masks at IoU ≥ 0.92, and cap output at 63 proposals.
 - Added Python regression coverage for background/tiny-mask rejection and duplicate suppression.
 - This reduces obvious SAM 2 noise but does not solve semantic segmentation, overlapping-part interpretation, or occlusion reasoning; every proposal still requires visual review and role assignment.
+
+
+## 2026-11-22 — Windows worker launcher and review overlay
+- Added a PowerShell launcher that verifies local SAM 2 config/checkpoint paths and imports PyTorch, SAM 2, and OpenCV before starting the loopback service.
+- Added a blue dashed overlay for unapproved AI proposals and a green overlay for accepted parts; stale proposals are cleared when the source image changes.
+- Restricted the API bridge to the only implemented worker task (`part-detection`) so future reconstruction and prompted-segmentation tasks cannot be mistaken for available capabilities.
