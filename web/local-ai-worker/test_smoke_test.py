@@ -33,5 +33,40 @@ class SmokeTestHelpersTests(unittest.TestCase):
             }]}, "test")
 
 
+    def test_proposal_validator_rejects_duplicate_ids_and_invalid_confidence(self):
+        valid = {
+            "id": "part-1", "role": "body", "confidence": 0.8,
+            "bounds": {"x": 10, "y": 20, "width": 30, "height": 40},
+            "mask": {"kind": "polygon", "points": [{"x": 10, "y": 20}, {"x": 40, "y": 20}, {"x": 25, "y": 60}]}
+        }
+        with self.assertRaisesRegex(RuntimeError, "duplicate proposal ID"):
+            validate_proposals({"proposals": [valid, dict(valid)]}, "test")
+        invalid = dict(valid, confidence=1.2)
+        with self.assertRaisesRegex(RuntimeError, "invalid confidence"):
+            validate_proposals({"proposals": [invalid]}, "test")
+
+    def test_proposal_validator_rejects_degenerate_or_out_of_crop_polygons(self):
+        base = {
+            "id": "part-1", "role": "body", "confidence": 0.8,
+            "bounds": {"x": 10, "y": 20, "width": 30, "height": 40},
+            "mask": {"kind": "polygon", "points": [{"x": 10, "y": 20}, {"x": 20, "y": 20}, {"x": 30, "y": 20}]}
+        }
+        with self.assertRaisesRegex(RuntimeError, "degenerate polygon"):
+            validate_proposals({"proposals": [base]}, "test")
+        outside = dict(base)
+        outside["mask"] = {"kind": "polygon", "points": [{"x": 10, "y": 20}, {"x": 50, "y": 20}, {"x": 25, "y": 60}]}
+        with self.assertRaisesRegex(RuntimeError, "outside proposal crop"):
+            validate_proposals({"proposals": [outside]}, "test")
+
+    def test_proposal_validator_rejects_excessive_proposal_count(self):
+        proposal = {
+            "id": "part-1", "role": "body",
+            "bounds": {"x": 10, "y": 20, "width": 30, "height": 40},
+            "mask": {"kind": "polygon", "points": [{"x": 10, "y": 20}, {"x": 40, "y": 20}, {"x": 25, "y": 60}]}
+        }
+        with self.assertRaisesRegex(RuntimeError, "more than 63"):
+            validate_proposals({"proposals": [dict(proposal, id="part-" + str(i)) for i in range(64)]}, "test")
+
+
 if __name__ == "__main__":
     unittest.main()
