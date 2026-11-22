@@ -4173,10 +4173,11 @@ export default class BattleScene extends Scene {
       if (action === "attack" && !force && monster.hitAnimUntil > this.time.now) return;
       const rig = monster.studioRig;
       const activeId = rig._activeClipId;
-      const protectedAction = ["death", "frozen"].includes(activeId)
-        || (["attack", "hit"].includes(activeId) && ["idle", "move"].includes(action))
-        || ((monster.freezeStage || 0) > 0 && ["idle", "move"].includes(action));
-      if (!force && protectedAction) return;
+      const protectedAction = (activeId === "death" && action !== "death")
+        || (activeId === "frozen" && !["frozen", "death"].includes(action))
+        || ((monster.freezeStage || 0) > 0 && !["frozen", "death"].includes(action))
+        || (["attack", "hit"].includes(activeId) && ["idle", "move"].includes(action));
+      if (protectedAction && (activeId === "death" || activeId === "frozen" || (monster.freezeStage || 0) > 0 || !force)) return;
       const clip = rig.profile.clips.find((entry) => entry.id === action)
         || (action === "hit" ? rig.profile.clips.find((entry) => entry.id === "attack") : null)
         || rig.profile.clips.find((entry) => entry.id === "idle");
@@ -4797,13 +4798,14 @@ export default class BattleScene extends Scene {
 
   freezeMonster(monster) {
     if (!monster?.alive || monster.freezeStage >= 5) return false;
+    const wasAlreadyFrozen = (monster.freezeStage || 0) > 0;
     monster.freezeStage = Math.min(5, (monster.freezeStage || 0) + 1);
     monster.braced = false;
     monster.isEating = false;
     if (monster.view?.active) this.tweens.killTweensOf(monster.view);
     if (monster.braceCue?.active) monster.braceCue.setVisible(false);
     const sprite = monster.hyenaSprite;
-    if (monster.studioRig) {
+    if (monster.studioRig && !wasAlreadyFrozen) {
       const rig = monster.studioRig;
       monster.frozenAnimationKey = rig._activeClipId || "move";
       if (rig.profile.clips.some((clip) => clip.id === "frozen")) this.playStudioSkeletalRig(rig, "frozen");
