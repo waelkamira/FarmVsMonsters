@@ -30,16 +30,16 @@ export function validatePhaserAtlasDocument(input) {
   const meta = atlas?.meta;
   if (!meta || typeof meta !== "object") errors.push("بيانات meta مفقودة من Phaser Atlas.");
   const image = typeof meta?.image === "string" ? meta.image.trim() : "";
-  if (image && (image.includes("..") || image.includes("/") || image.includes("\\\\"))) errors.push("اسم الصورة داخل meta يجب أن يكون اسماً فقط دون مسارات.");
+  if (image && (image.includes("..") || image.includes("/") || image.includes("\\"))) errors.push("اسم الصورة داخل meta يجب أن يكون اسماً فقط دون مسارات.");
   const clips = {};
   for (const name of names) {
-    const match = name.match(/^(.+?)[_-](\\d+)$/);
+    const match = name.match(/^(.+?)[_-](\d+)$/);
     if (!match) continue;
     const clip = match[1].toLowerCase();
     (clips[clip] ||= []).push(name);
   }
   for (const clip of Object.keys(clips)) clips[clip].sort((a,b) => {
-    const na = Number(a.match(/(\\d+)$/)?.[1] || 0), nb = Number(b.match(/(\\d+)$/)?.[1] || 0);
+    const na = Number(a.match(/(\d+)$/)?.[1] || 0), nb = Number(b.match(/(\d+)$/)?.[1] || 0);
     return na - nb;
   });
   return {
