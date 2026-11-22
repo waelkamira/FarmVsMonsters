@@ -271,8 +271,8 @@ test("Rig Editor resolves available part assets before readiness validation", ()
 
 test("BattleScene delegates skeletal hitbox collision to shared tested geometry", () => {
   assert.match(battleSceneSource, /from "\.\.\/studio\/skeletalCollision\.mjs"/);
-  assert.match(battleSceneSource, /return orientedRectanglesOverlap\(a, b\)/);
-  assert.match(battleSceneSource, /circleIntersectsOrientedRectangle/);
+  assert.match(battleSceneSource, /return convexPolygonsOverlap\(a, b\)/);
+  assert.match(battleSceneSource, /circleIntersectsConvexPolygon/);
 });
 
 test("Rigged projectiles resolve muzzle attachment through the plant view transform", () => {
@@ -285,5 +285,5 @@ test("Rigged projectiles resolve muzzle attachment through the plant view transf
 test("BattleScene uses the tested world-space transform for muzzle and hitbox positions", () => {
   assert.match(battleSceneSource, /from "\.\.\/studio\/skeletalWorldTransform\.mjs"/);
   assert.match(battleSceneSource, /transformRigPointToWorld\(point, parentView\)/);
-  assert.match(battleSceneSource, /const world = transformRigPointToWorld\(local, parentView\)/);
+  assert.match(battleSceneSource, /transformRigHitboxToWorld\(rig\.getHitbox\(profile\.id\), parentView\)/);
 });
