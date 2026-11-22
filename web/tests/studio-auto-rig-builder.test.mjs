@@ -377,3 +377,22 @@ test("polygon vertex editing clamps coordinates and rejects collapsed masks", ()
   assert.throws(() => moveAutoRigPolygonVertex(collinear, 3, { x: 100, y: 100 }, { width: 100, height: 100 }), /collapse the mask polygon/);
   assert.throws(() => moveAutoRigPolygonVertex(polygon, 8, { x: 1, y: 1 }, { width: 100, height: 100 }), /index is out of range/);
 });
+
+
+test("persists editable occlusion-region masks and rejects masks outside the source canvas", () => {
+  const input = baseInput();
+  input.parts[0].occlusion = "unresolved";
+  input.parts[0].occlusionMask = {
+    kind: "polygon",
+    points: [{ x: 90, y: 100 }, { x: 150, y: 100 }, { x: 150, y: 150 }, { x: 90, y: 150 }]
+  };
+  const built = buildAutoRigFromParts(input);
+  assert.deepEqual(built.manifest.parts[0].occlusionMask, input.parts[0].occlusionMask);
+
+  const invalid = baseInput();
+  invalid.parts[0].occlusionMask = {
+    kind: "polygon",
+    points: [{ x: 90, y: 100 }, { x: 150, y: 100 }, { x: 300, y: 150 }]
+  };
+  assert.throws(() => buildAutoRigFromParts(invalid), /occlusion mask point lies outside the source canvas/);
+});
