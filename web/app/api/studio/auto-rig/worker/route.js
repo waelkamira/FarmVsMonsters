@@ -150,7 +150,7 @@ export async function POST(req) {
       : { targetPolygon: body.targetPolygon, inpaintRadius: Number.isInteger(body.inpaintRadius) && body.inpaintRadius >= 1 && body.inpaintRadius <= 8 ? body.inpaintRadius : 3 };
   }
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), WORKER_TIMEOUT_MS);
+  const timeout = setTimeout(() => controller.abort(), body.task === "semantic-classification" ? 90_000 : WORKER_TIMEOUT_MS);
   try {
     const response = await fetch(new URL("/v1/auto-rig/" + body.task, base), {
       method: "POST",
