@@ -13,7 +13,8 @@ class WorkerTests(unittest.TestCase):
         with patch.object(worker, "load_model", side_effect=RuntimeError("missing weights")):
             result = worker.capabilities()
         self.assertEqual(result["status"], "degraded")
-        self.assertEqual(result["capabilities"], [])
+        self.assertIn("visible-donor-reconstruction", result["capabilities"])
+        self.assertNotIn("part-detection", result["capabilities"])
 
     def test_normalizes_positive_and_negative_sam2_point_prompts(self):
         points = worker.normalize_prompt_points([{"x": 12.5, "y": 20, "label": 1}, {"x": 40, "y": 50, "label": 0}], 100, 100)
@@ -35,6 +36,7 @@ class WorkerTests(unittest.TestCase):
         self.assertEqual(result["status"], "ready")
         self.assertIn("part-detection", result["capabilities"])
         self.assertIn("prompted-segmentation", result["capabilities"])
+        self.assertIn("visible-donor-reconstruction", result["capabilities"])
 
     def test_automatic_mask_proposals_are_clipped_to_visible_alpha(self):
         import numpy as np
@@ -80,6 +82,48 @@ class WorkerTests(unittest.TestCase):
         self.assertAlmostEqual(proposal["confidence"], 0.91, places=5)
         self.assertEqual(predictor.labels.tolist(), [1, 0])
         self.assertTrue(predictor.multimask)
+
+    def test_visible_donor_reconstruction_returns_transparent_reviewable_patch(self):
+        import base64, cv2, numpy as np
+        rgb = np.zeros((100, 100, 3), dtype=np.uint8)
+        rgb[:, :] = [220, 40, 30]
+        visible = np.ones((100, 100), dtype=bool)
+        payload = {
+            "canvas": {"width": 100, "height": 100},
+            "imageDataUrl": "data:image/png;base64,AA==",
+            "sourcePolygon": [{"x": 10, "y": 10}, {"x": 30, "y": 10}, {"x": 30, "y": 30}, {"x": 10, "y": 30}],
+            "targetPolygon": [{"x": 60, "y": 10}, {"x": 80, "y": 10}, {"x": 80, "y": 30}, {"x": 60, "y": 30}],
+            "flipHorizontal": True
+        }
+        with patch.object(worker, "decode_image_data", return_value=(rgb, visible)):
+            result = worker.reconstruct_from_visible_donor(payload)
+        self.assertEqual(result["protocolVersion"], 1)
+        self.assertEqual(result["targetBounds"], {"x": 60, "y": 10, "width": 21, "height": 21})
+        self.assertEqual(result["donorBounds"], {"x": 10, "y": 10, "width": 21, "height": 21})
+        self.assertEqual(result["provenance"], {"pixels": "reconstructed", "method": "visible-donor-transfer", "reviewRequired": True})
+        encoded = base64.b64decode(result["patchDataUrl"].split(",", 1)[1])
+        patch_image = cv2.imdecode(np.frombuffer(encoded, dtype=np.uint8), cv2.IMREAD_UNCHANGED)
+        self.assertEqual(patch_image.shape, (21, 21, 4))
+        self.assertEqual(int(patch_image[10, 10, 3]), 255)
+        self.assertEqual(int(patch_image[0, 0, 3]), 255)
+
+    def test_visible_donor_reconstruction_rejects_invalid_and_invisible_donor(self):
+        import numpy as np
+        rgb = np.zeros((20, 20, 3), dtype=np.uint8)
+        visible = np.ones((20, 20), dtype=bool)
+        payload = {
+            "canvas": {"width": 20, "height": 20},
+            "imageDataUrl": "data:image/png;base64,AA==",
+            "sourcePolygon": [{"x": -1, "y": 1}, {"x": 5, "y": 1}, {"x": 5, "y": 5}],
+            "targetPolygon": [{"x": 10, "y": 10}, {"x": 15, "y": 10}, {"x": 15, "y": 15}, {"x": 10, "y": 15}]
+        }
+        with patch.object(worker, "decode_image_data", return_value=(rgb, visible)):
+            with self.assertRaises(ValueError):
+                worker.reconstruct_from_visible_donor(payload)
+            payload["sourcePolygon"] = [{"x": 1, "y": 1}, {"x": 5, "y": 1}, {"x": 5, "y": 5}, {"x": 1, "y": 5}]
+            with self.assertRaises(ValueError):
+                worker.reconstruct_from_visible_donor(payload | {"sourcePolygon": [{"x": 1, "y": 1}, {"x": 5, "y": 1}, {"x": 5, "y": 5}, {"x": 1, "y": 5}], "targetPolygon": [{"x": 10, "y": 10}, {"x": 15, "y": 10}, {"x": 15, "y": 15}, {"x": 10, "y": 15}]})
+
 
     def test_decodes_transparent_png_without_turning_transparent_pixels_black(self):
         import base64, cv2, numpy as np
