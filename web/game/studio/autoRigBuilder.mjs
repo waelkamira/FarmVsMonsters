@@ -152,7 +152,7 @@ function readPart(raw, index, canvas) {
     pivot: { x: pivotX, y: pivotY }, pivotExplicit,
     name: String(raw.name || role).slice(0, 80),
     confidence, reviewed: raw.reviewed === true, mask, occlusionMask, provenance: { segmentation, pixels },
-    occlusion: raw.occlusion === "unresolved" ? "unresolved" : raw.occlusion === "reconstructed" ? "reconstructed" : "none",
+    occlusion: raw.occlusion === "none" ? "none" : raw.occlusion === "reconstructed" ? "reconstructed" : "unresolved",
     parentPartId: raw.parentPartId == null ? null : readId(raw.parentPartId, "parts[" + index + "].parentPartId", 59),
     drawOrder: Number.isFinite(Number(raw.drawOrder)) ? Number(raw.drawOrder) : index
   };
