@@ -65,6 +65,6 @@ A feature is complete only when:
 
 ## Hybrid character animation (incremental)
 
-The active Phaser runtime keeps Sprite Sheet animation as the compatibility baseline and adds an optional versioned skeletal/cutout profile. The pure profile evaluator lives in `web/game/studio/skeletalAnimation.mjs`; it validates the bone graph and references, samples keyframes, composes hierarchical transforms, and resolves attachment/hitbox transforms. Studio asset records preserve this profile through revision snapshots, cloning, and restore. Published catalogs carry the rig profile and descriptors for its referenced bitmap-part assets.
+The active Phaser runtime keeps Sprite Sheet animation as the compatibility baseline and adds an optional versioned skeletal/cutout profile. The pure profile evaluator lives in `web/game/studio/skeletalAnimation.mjs`, with a Phaser Container adapter in `web/game/studio/phaserSkeletalRig.mjs`; it validates the bone graph and references, samples keyframes, composes hierarchical transforms, and resolves attachment/hitbox transforms. Studio asset records preserve this profile through revision snapshots, cloning, and restore. Published catalogs carry the rig profile and descriptors for its referenced bitmap-part assets.
 
 The evaluator does not render Phaser objects or own combat rules. The next runtime/editor phases must use the same evaluated pose for visible parts, weapon/projectile attachments, and hitboxes. Assets without a rig profile continue through the existing Sprite Sheet animation path unchanged.
