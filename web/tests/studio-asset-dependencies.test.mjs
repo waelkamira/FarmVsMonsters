@@ -244,3 +244,10 @@ test("Rig Editor snaps every edited keyframe to an integer clip frame", () => {
   assert.match(editor, /snapSkeletalKeyframeTime\(targetClip, timeMs\)/);
   assert.match(editor, /snapSkeletalKeyframeTime\(target, timeMs\)/);
 });
+
+test("Studio skeletal collision evaluates every authored hitbox using oriented rectangle SAT", () => {
+  assert.match(battleSceneSource, /getStudioRigHitboxesWorld/);
+  assert.match(battleSceneSource, /attacks\.some\(\(attack\) => hurts\.some/);
+  assert.match(battleSceneSource, /studioOrientedHitboxesOverlap/);
+  assert.match(battleSceneSource, /hurtboxes\.some/);
+});
