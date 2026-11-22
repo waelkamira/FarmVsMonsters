@@ -27,6 +27,7 @@ import {
   loadUnlockedStage,
   unlockNextStage
 } from "../game/rules/phaseOneRules.mjs";
+import { PHASE_ONE_MONSTERS, getStonehideIncomingDamageMultiplier } from "../game/rules/phaseOneCombatContract.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const scene = readFileSync(resolve(here, "../game/scenes/BattleScene.js"), "utf8");
@@ -67,7 +68,7 @@ test("CC0 Kenney sound assets are bundled locally and mapped to gameplay events"
 });
 
 test("five Phase 1 waves are gently increasing and total exactly 30 ordinary monsters", () => {
-  assert.deepEqual(PHASE_ONE_WAVE_SIZES, [3, 5, 6, 7, 9]);
+  assert.deepEqual(PHASE_ONE_WAVE_SIZES, [2, 3, 4, 5, 6]);
   assert.equal(PHASE_ONE_TOTAL_MONSTERS, 30);
   assert.ok(PHASE_ONE_WAVE_SIZES.every((count, index) => index === 0 || count > PHASE_ONE_WAVE_SIZES[index - 1]));
 });
@@ -165,7 +166,8 @@ test("Mushroom production always creates a full collectible; the energy cap is a
   const production = scene.slice(scene.indexOf("spawnMushroomEnergy(plant) {"), scene.indexOf("fireThorn(plant"));
   assert.match(production, /const amount = MUSHROOM_CONFIG\.energy;/);
   assert.doesNotMatch(production, /Math\.min\(MUSHROOM_CONFIG\.energy, MAX_ENERGY - this\.energy\)/);
-  assert.match(production, /collectEnergy\(this\.energy, amount\)/);
+  assert.match(production, /this\.energyPickups\.push\(token\)/);
+  assert.match(scene, /collectEnergy\(this\.energy, amount\)/);
 });
 
 test("resource Mushrooms never stop monsters; only living Radishes are defensive blockers", () => {
@@ -188,7 +190,7 @@ test("uprooting a plant does not switch the stationary farmer to an action anima
 
 test("a farmhouse defeat aborts the rest of the current simulation frame", () => {
   const update = scene.slice(scene.indexOf("  update(_time, delta) {"), scene.indexOf("  // Sort world characters"));
-  assert.match(update, /this\.updateMonsters\(dt, delta\);\s*if \(this\.gameOver\) return;\s*this\.updateDepthSorting\(\);/);
+  assert.match(update, /this\.updateMonsters\(dt, delta\);\s*if \(this\.gameOver\) return;\s*this\.updateDragonBoss\(deltaMs\);/);
 });
 
 test("terminal results clean up pending Mushroom pickups and their expiry timers", () => {
@@ -204,18 +206,15 @@ test("terminal results clean up pending Mushroom pickups and their expiry timers
 });
 
 test("monster archetype composition introduces threats in measured waves", () => {
-  for (let i = 0; i < 10; i += 1) {
-    assert.equal(monsterArchetypeFor(1, i), "cave-brute");
-    assert.equal(monsterArchetypeFor(2, i), "cave-brute");
-  }
-  for (const wave of [3, 4]) {
-    assert.equal(monsterArchetypeFor(wave, 1), "dust-skitter");
-    assert.equal(monsterArchetypeFor(wave, 0), "cave-brute");
-    assert.equal(monsterArchetypeFor(wave, 4), "dust-skitter");
-  }
-  for (let i = 0; i < 30; i += 1) {
-    const expected = (i + 1) % 10 === 0 ? "alpha-brute" : (i + 1) % 5 === 0 ? "stonehide" : i % 3 === 1 ? "dust-skitter" : "cave-brute";
-    assert.equal(monsterArchetypeFor(5, i), expected);
+  for (const [wave, waveSize] of PHASE_ONE_WAVE_SIZES.entries()) {
+    for (let spawnIndex = 0; spawnIndex < waveSize; spawnIndex += 1) {
+      const expected = wave === 3 && spawnIndex === 4
+        ? "dust-skitter"
+        : wave === 4 && spawnIndex === 5
+          ? "stonehide"
+          : "cave-brute";
+      assert.equal(monsterArchetypeFor(wave + 1, spawnIndex), expected);
+    }
   }
 });
 
@@ -233,16 +232,19 @@ test("Dust Skitters perform periodic visual hops while remaining grounded by pla
   assert.doesNotMatch(update, /monster\.shadow/, "monster movement must not update a ground shadow");
 });
 
-test("all three monster profiles and Stonehide bracing damage reduction remain wired", () => {
+test("all monster archetypes and Stonehide bracing values live in the canonical combat contract", () => {
   for (const kind of ["cave-brute", "dust-skitter", "stonehide"]) {
-    assert.ok(scene.includes(`"${kind}": {`), `missing ${kind} profile`);
+    assert.ok(PHASE_ONE_MONSTERS[kind], "missing " + kind + " profile");
   }
-  assert.match(scene, /return monster\.braced \? armorMultiplier \* 0\.55 : armorMultiplier/);
+  assert.equal(PHASE_ONE_MONSTERS.stonehide.bracedIncomingDamageMultiplier, 0.55);
+  assert.equal(getStonehideIncomingDamageMultiplier(true), 0.55);
+  assert.equal(getStonehideIncomingDamageMultiplier(false), 0.7);
 });
 
 test("requestPlant uses the imported centralized plant configs", () => {
   const requestPlant = scene.slice(scene.indexOf("requestPlant(col, row) {"), scene.indexOf("updatePlantingMovement(dt) {"));
-  assert.match(requestPlant, /this\.selectedPlant === "mushroom" \? MUSHROOM_CONFIG : RADISH_CONFIG/);
+  assert.match(requestPlant, /const plantConfigs = \{ radish: RADISH_CONFIG, mushroom: MUSHROOM_CONFIG/);
+  assert.match(requestPlant, /const plantConfig = plantConfigs\[this\.selectedPlant\]/);
   assert.doesNotMatch(requestPlant, /\b(?:MUSHROOM|RADISH)\b(?!_CONFIG)/);
 });
 
@@ -257,7 +259,7 @@ test("monster defeat is guarded against duplicate rewards", () => {
   assert.match(scene, /if \(monster\.hp > 0 \|\| !monster\.alive\) return/);
   assert.match(scene, /monster\.alive = false/);
   assert.match(scene, /this\.totalDefeatedMonsters \+= 1/);
-  assert.match(scene, /this\.coins \+= MONSTER_KILL_COIN_REWARD/);
+  assert.match(scene, /this\.coins \+= PHASE_ONE_REWARDS\.ordinaryMonsterDefeatCoins/);
   assert.match(scene, /this\.registry\.set\(["']coins["'], this\.coins\)/);
 });
 
@@ -283,7 +285,7 @@ test("battle scene uses the shared pure rules rather than duplicate balancing co
 });
 
 test("pause, terminal-state and retry guards remain present", () => {
-  assert.match(scene, /if \(this\.gameOver \|\| this\.isPaused\) return/);
+  assert.match(scene, /if \(this\.gameOver \|\| this\.isPaused \|\| this\.collectionMenuOpen \|\| this\.inventoryOpen\) return/);
   assert.match(scene, /if \(this\.gameOver \|\| this\.isPaused \|\| !this\.scene\.isActive\(\)\) return/);
   assert.match(scene, /this\.scene\.restart\(\)/);
   assert.match(scene, /this\.stopBackgroundMusic\(\)/);
