@@ -1255,3 +1255,12 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - The page enables this step only when the plant behavior is `projectile`; the existing API requirement for a confirmed muzzle attachment remains authoritative. Added regression coverage for mouth and dedicated muzzle-region emitters.
 - Revalidated after guided muzzle/emitter UI and upload-resilience changes (Auto-Rig subsystem workflow run #46, commit `df42713c2fff5812aff2784270cb607b925a27a4`): focused tests, focused ESLint, and production build all passed. The full-project lint diagnostic remains at 8 inherited errors and 16 warnings outside the focused Auto-Rig files.
 - Final recheck after the generated-state lock and emitter selection safeguards (Auto-Rig subsystem workflow run #50, commit `4769fd31c5f56234891eef1f3eeedfbc7cab2d4a`): all focused contract tests passed, focused ESLint passed, and the production build completed successfully.
+
+
+## 2026-11-22 — Auto-Rig local AI integration layer
+- Added a versioned worker protocol that validates capability metadata, source-coordinate polygon masks, confidence, provenance, proposal IDs, and canvas bounds.
+- Added an authenticated Studio API bridge for worker health discovery and local inference dispatch. The bridge only permits loopback HTTP upstreams, validates image payloads and tasks, enforces timeouts, and rejects invalid worker geometry.
+- Added Studio UI controls to check worker availability, request prompted segmentation, inspect confidence-tagged proposals, and approve each proposal into the editable part list. Approval remains explicit; AI suggestions are not saved automatically.
+- Preserved AI confidence and segmentation provenance in the generated Auto-Rig manifest, including SAM 2 provenance.
+- Added focused worker protocol/route tests and CI coverage.
+- Not complete: the actual Python/local inference process, SAM 2 and semantic model adapters, hidden-part reconstruction, Rig Library, and end-to-end validation against a real game character still remain. No model installation or successful full build is claimed.
