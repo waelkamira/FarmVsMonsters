@@ -1,5 +1,51 @@
 const MAX_PARTS = 63;
 
+function minimumCostAssignment(costs) {
+  const rowCount = costs.length;
+  if (!rowCount) return [];
+  const columnCount = costs[0].length;
+  if (columnCount < rowCount || costs.some((row) => row.length !== columnCount)) {
+    throw new RangeError("Retarget assignment matrix must be rectangular with at least as many columns as rows.");
+  }
+  const u = Array(rowCount + 1).fill(0);
+  const v = Array(columnCount + 1).fill(0);
+  const p = Array(columnCount + 1).fill(0);
+  const way = Array(columnCount + 1).fill(0);
+  for (let i = 1; i <= rowCount; i += 1) {
+    p[0] = i;
+    let j0 = 0;
+    const minv = Array(columnCount + 1).fill(Infinity);
+    const used = Array(columnCount + 1).fill(false);
+    do {
+      used[j0] = true;
+      const i0 = p[j0];
+      let delta = Infinity;
+      let j1 = 0;
+      for (let j = 1; j <= columnCount; j += 1) {
+        if (used[j]) continue;
+        const current = costs[i0 - 1][j - 1] - u[i0] - v[j];
+        if (current < minv[j]) { minv[j] = current; way[j] = j0; }
+        if (minv[j] < delta) { delta = minv[j]; j1 = j; }
+      }
+      for (let j = 0; j <= columnCount; j += 1) {
+        if (used[j]) { u[p[j]] += delta; v[j] -= delta; }
+        else minv[j] -= delta;
+      }
+      j0 = j1;
+    } while (p[j0] !== 0);
+    do {
+      const j1 = way[j0];
+      p[j0] = p[j1];
+      j0 = j1;
+    } while (j0 !== 0);
+  }
+  const assignment = Array(rowCount).fill(-1);
+  for (let j = 1; j <= columnCount; j += 1) {
+    if (p[j] > 0) assignment[p[j] - 1] = j - 1;
+  }
+  return assignment;
+}
+
 function positiveInteger(value, field) {
   if (!Number.isInteger(value) || value < 1 || value > 4096) {
     throw new RangeError(field + " must be an integer between 1 and 4096.");
@@ -81,42 +127,47 @@ export function suggestRigTemplateRetarget(templateManifest, targetParts, target
     throw new RangeError("Template and target part IDs must be unique.");
   }
 
-  const candidates = [];
-  for (const templatePart of templateParts) {
-    for (const targetPart of targets) {
-      if (templatePart.role !== targetPart.role) continue;
-      if (templatePart.side && targetPart.side && templatePart.side !== targetPart.side) continue;
+  const orderedTemplates = [...templateParts].sort((a, b) => a.id.localeCompare(b.id));
+  const orderedTargets = [...targets].sort((a, b) => a.id.localeCompare(b.id));
+  const dummyCost = 2;
+  const invalidCost = 10;
+  const costs = orderedTemplates.map((templatePart) => [
+    ...orderedTargets.map((targetPart) => {
+      if (templatePart.role !== targetPart.role) return invalidCost;
+      if (templatePart.side && targetPart.side && templatePart.side !== targetPart.side) return invalidCost;
       const distance = Math.hypot(
         templatePart.normalizedCenter.x - targetPart.normalizedCenter.x,
         templatePart.normalizedCenter.y - targetPart.normalizedCenter.y
       );
-      const sidePenalty = templatePart.side && !targetPart.side ? 0.08 : 0;
-      const cost = distance + sidePenalty;
-      candidates.push({ templatePart, targetPart, cost, distance });
-    }
-  }
-  candidates.sort((a, b) => a.cost - b.cost ||
-    a.templatePart.id.localeCompare(b.templatePart.id) ||
-    a.targetPart.id.localeCompare(b.targetPart.id));
-
+      return distance + (templatePart.side && !targetPart.side ? 0.08 : 0);
+    }),
+    ...orderedTemplates.map(() => dummyCost)
+  ]);
+  const assignment = minimumCostAssignment(costs);
+  const matches = [];
   const usedTemplate = new Set();
   const usedTargets = new Set();
-  const matches = [];
-  for (const candidate of candidates) {
-    const { templatePart, targetPart } = candidate;
-    if (usedTemplate.has(templatePart.id) || usedTargets.has(targetPart.id)) continue;
-    usedTemplate.add(templatePart.id);
-    usedTargets.add(targetPart.id);
+  for (let row = 0; row < assignment.length; row += 1) {
+    const column = assignment[row];
+    if (column < 0 || column >= orderedTargets.length || costs[row][column] >= dummyCost) continue;
+    const templatePart = orderedTemplates[row];
+    const targetPart = orderedTargets[column];
+    const cost = costs[row][column];
     const pivot = {
       x: targetPart.bounds.x + templatePart.normalizedPivot.x * targetPart.bounds.width,
       y: targetPart.bounds.y + templatePart.normalizedPivot.y * targetPart.bounds.height
     };
+    usedTemplate.add(templatePart.id);
+    usedTargets.add(targetPart.id);
     matches.push({
       templatePartId: templatePart.id,
       targetPartId: targetPart.id,
       role: targetPart.role,
-      normalizedCenterDistance: Number(candidate.distance.toFixed(4)),
-      confidence: Number(Math.max(0.1, Math.min(1, 1 - candidate.cost / 1.25)).toFixed(3)),
+      normalizedCenterDistance: Number(Math.hypot(
+        templatePart.normalizedCenter.x - targetPart.normalizedCenter.x,
+        templatePart.normalizedCenter.y - targetPart.normalizedCenter.y
+      ).toFixed(4)),
+      confidence: Number(Math.max(0.1, Math.min(1, 1 - cost / 1.25)).toFixed(3)),
       reviewRequired: true,
       update: {
         pivot,
