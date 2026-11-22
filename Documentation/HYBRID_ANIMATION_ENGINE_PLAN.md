@@ -103,7 +103,8 @@ The editor is a mode switch inside Asset & Animation Studio:
 - [x] Support direct bone dragging and numeric transform editing; edit keyframes at the selected timeline time.
 - [x] Save/load the rig profile through the existing authenticated Studio draft APIs.
 - [x] Reuse existing validation and asset dependency/revision protections.
-- [ ] Add zoom/pan, draggable attachment/hitbox handles, FPS controls, and editable animation presets.
+- [x] Add draggable attachment/hitbox handles and editable breathing, walk, and recoil presets.
+- [ ] Add zoom/pan and FPS controls.
 - [ ] Verify editor interaction and save/restore in Chrome on Windows.
 
 ### Phase D — Animation state machine and blending
