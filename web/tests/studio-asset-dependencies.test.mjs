@@ -263,3 +263,8 @@ test("Rig Editor blocks readiness when referenced bitmap parts are unavailable",
   assert.match(editor, /availableParts\.some\(\(asset\) => asset\.id === item\.part\.assetId\)/);
   assert.match(editor, /rigIsReady = validation\.valid && hasVisualPart && missingPartIds\.length === 0/);
 });
+
+test("Rig Editor resolves available part assets before readiness validation", () => {
+  const editor = readFileSync(path.join(here, "../app/studio/RigEditor.jsx"), "utf8");
+  assert.ok(editor.indexOf("const availableParts = useMemo") < editor.indexOf("const missingPartIds ="));
+});
