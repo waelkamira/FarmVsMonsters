@@ -1,7 +1,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { buildAutoRigFromParts } from "../game/studio/autoRigBuilder.mjs";
-import { validateSkeletalRigProfile } from "../game/studio/skeletalAnimation.mjs";
+import {
+  evaluateSkeletalClip,
+  getSkeletalAttachmentTransform,
+  validateSkeletalRigProfile
+} from "../game/studio/skeletalAnimation.mjs";
 
 const baseInput = () => ({
   canvas: { width: 256, height: 256 },
@@ -85,4 +89,47 @@ test("rejects a muzzle anchor that references a missing or non-weapon part", () 
   const wrongRole = baseInput();
   wrongRole.anchors = { muzzle: { partId: "body-main", x: 128, y: 120 } };
   assert.throws(() => buildAutoRigFromParts(wrongRole), /weapon or weapon-barrel/);
+});
+
+
+test("generated rig contract resolves the muzzle to the original source-space point in the shared evaluator", () => {
+  const input = baseInput();
+  input.requiresMuzzle = true;
+  input.anchors = { muzzle: { partId: "weapon-main", x: 224, y: 136, rotation: 0 } };
+  const { profile } = buildAutoRigFromParts(input);
+  const validation = validateSkeletalRigProfile(profile);
+  assert.equal(validation.valid, true, validation.errors.join("; "));
+  const pose = evaluateSkeletalClip(validation.profile, "idle", 0);
+  const muzzle = getSkeletalAttachmentTransform(validation.profile, pose, "muzzle");
+  assert.ok(Math.abs(muzzle.x - (224 - input.canvas.width / 2)) < 1e-9);
+  assert.ok(Math.abs(muzzle.y - (136 - input.canvas.height / 2)) < 1e-9);
+});
+
+test("accepts full-length existing asset IDs while keeping bone-safe part instance IDs", () => {
+  const input = baseInput();
+  input.parts[0].assetId = "a".repeat(64);
+  const result = buildAutoRigFromParts(input);
+  assert.equal(result.profile.bones.find((bone) => bone.id === "part-body-main").part.assetId, "a".repeat(64));
+  input.parts[0].id = "p".repeat(60);
+  assert.throws(() => buildAutoRigFromParts(input), /1–59 safe characters/);
+});
+
+test("rejects a muzzle point outside the selected weapon bounds even when it remains on the canvas", () => {
+  const input = baseInput();
+  input.anchors = { muzzle: { partId: "weapon-main", x: 100, y: 136 } };
+  assert.throws(() => buildAutoRigFromParts(input), /inside or on the confirmed weapon part bounds/);
+});
+
+test("chooses the nearest eligible parent instance instead of depending on input order", () => {
+  const input = baseInput();
+  input.parts.push(
+    { id: "body-secondary", assetId: "asset-body-secondary", role: "body", bounds: { x: 180, y: 180, width: 50, height: 50 }, pivot: { x: 205, y: 205 } },
+    { id: "leaf-near-secondary", assetId: "asset-leaf-near", role: "leaf", bounds: { x: 180, y: 130, width: 30, height: 30 }, pivot: { x: 195, y: 145 } }
+  );
+  const first = buildAutoRigFromParts(input);
+  input.parts.reverse();
+  const second = buildAutoRigFromParts(input);
+  const parentId = first.manifest.parts.find((part) => part.id === "leaf-near-secondary").parentPartId;
+  assert.equal(parentId, "body-secondary");
+  assert.equal(second.manifest.parts.find((part) => part.id === "leaf-near-secondary").parentPartId, parentId);
 });
