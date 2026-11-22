@@ -468,6 +468,171 @@ export function buildAutoRigFromParts(input) {
 }
 
 
+
+const AUTO_RIG_MOTION_CLIPS = new Set(["idle", "move", "attack", "hit", "death"]);
+
+function normalizeMotionText(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFKC")
+    .replace(/[أإآ]/g, "ا")
+    .replace(/ى/g, "ي")
+    .replace(/\s+/g, " ");
+}
+
+function includesMotionTerm(text, terms) {
+  return terms.some((term) => text.includes(term));
+}
+
+/**
+ * Maps a short Arabic/English motion request to the editable clips this
+ * builder can actually produce. This is a bounded procedural command parser,
+ * not a claim of unrestricted text-to-animation generation.
+ */
+export function parseAutoRigMotionRequest(prompt, options = {}) {
+  const text = String(prompt || "").trim();
+  if (!text) {
+    return { valid: false, reason: "اكتب وصف الحركة المطلوبة قبل إنشاء الهيكل والحركة." };
+  }
+  const normalized = normalizeMotionText(text);
+  const characterType = options.characterType === "monster" ? "monster" : "plant";
+  const projectileRequested = includesMotionTerm(normalized, [
+    "قذيفة", "مقذوف", "projectile", "shoot", "fire"
+  ]);
+  const actions = [];
+  if (includesMotionTerm(normalized, [
+    "يتمايل", "تتمايل", "تمايل", "يهتز", "اهتزاز", "يتنفس", "خمول",
+    "sway", "swing", "wiggle", "breathing", "idle"
+  ])) actions.push("idle");
+  if (includesMotionTerm(normalized, [
+    "يمشي", "مشي", "يتحرك", "تحرك", "يجري", "يركض",
+    "walk", "walking", "move", "moving", "run", "running"
+  ])) actions.push("move");
+  if (includesMotionTerm(normalized, [
+    "يهاجم", "يهجم", "هجوم", "يضرب", "اطلق", "يطلق", "اطلاق",
+    "attack", "shoot", "fire", "launch"
+  ]) || projectileRequested) actions.push("attack");
+  if (includesMotionTerm(normalized, [
+    "يتلقى الضرر", "ضرر", "يتأذي", "يتاذي", "اصابة", "يصاب",
+    "hit", "damage", "recoil"
+  ])) actions.push("hit");
+  if (includesMotionTerm(normalized, [
+    "يموت", "موت", "يسقط", "سقوط", "death", "die", "fall"
+  ])) actions.push("death");
+
+  if (!actions.length) {
+    return {
+      valid: false,
+      reason: "لم أتعرف على حركة مدعومة. جرّب: تمايل، مشي، هجوم، ضرر، أو موت.",
+      supportedClipIds: [...AUTO_RIG_MOTION_CLIPS]
+    };
+  }
+  if (projectileRequested && characterType !== "plant") {
+    return {
+      valid: false,
+      reason: "ربط طلب إطلاق القذيفة متاح حالياً للنباتات فقط؛ يمكن للوحوش استخدام مقطع الهجوم العادي."
+    };
+  }
+  if (projectileRequested && options.requiresMuzzle !== true) {
+    return {
+      valid: false,
+      reason: "طلبت إطلاق قذيفة. اختر سلوك النبتة «إطلاق مقذوفات» أولاً، ثم حدّد جزء مصدر الإطلاق ونقطة muzzle."
+    };
+  }
+
+  const strengthMultiplier = includesMotionTerm(normalized, ["بقوة", "قوي", "قوية", "strong", "powerful"])
+    ? 1.5
+    : includesMotionTerm(normalized, ["بهدوء", "خفيف", "خفيفة", "gentle", "soft"])
+      ? 0.75
+      : 1;
+  const speedMultiplier = includesMotionTerm(normalized, ["ببطء", "بطيء", "بطيئة", "slow"])
+    ? 1.5
+    : includesMotionTerm(normalized, ["بسرعة", "سريع", "سريعة", "fast", "quick"])
+      ? 0.7
+      : 1;
+
+  return {
+    valid: true,
+    version: 1,
+    text,
+    characterType,
+    actions,
+    projectileRequested,
+    strengthMultiplier,
+    speedMultiplier
+  };
+}
+
+/**
+ * Applies a validated motion request to the generated editable clips and
+ * stores the request alongside the Auto-Rig manifest for later review.
+ */
+export function applyAutoRigMotionRequest(profileInput, manifestInput, request) {
+  if (!request || request.valid !== true || !Array.isArray(request.actions) || !request.actions.length) {
+    throw new TypeError("A valid Auto-Rig motion request is required.");
+  }
+  if (!manifestInput || typeof manifestInput !== "object" || Array.isArray(manifestInput)) {
+    throw new TypeError("An Auto-Rig build manifest is required.");
+  }
+  const profile = createSkeletalRigProfile(profileInput);
+  const selected = new Set(request.actions);
+  for (const action of selected) {
+    if (!AUTO_RIG_MOTION_CLIPS.has(action)) throw new RangeError("Unsupported requested motion clip: " + action);
+  }
+  const available = new Set(profile.clips.map((clip) => clip.id));
+  const missing = [...selected].filter((id) => !available.has(id));
+  if (missing.length) throw new RangeError("Generated rig is missing requested clips: " + missing.join(", "));
+  if (request.projectileRequested && !profile.attachments.some((attachment) => attachment.id === "muzzle")) {
+    throw new RangeError("Projectile motion requires a confirmed muzzle attachment.");
+  }
+
+  const strength = Number.isFinite(request.strengthMultiplier) ? Math.min(2, Math.max(0.5, request.strengthMultiplier)) : 1;
+  const speed = Number.isFinite(request.speedMultiplier) ? Math.min(2, Math.max(0.5, request.speedMultiplier)) : 1;
+  const clips = profile.clips.map((clip) => {
+    if (!selected.has(clip.id)) return clip;
+    return {
+      ...clip,
+      durationMs: Math.max(100, Math.round(clip.durationMs * speed)),
+      tracks: clip.tracks.map((track) => {
+        const first = track.keyframes[0] || {};
+        return {
+          ...track,
+          keyframes: track.keyframes.map((frame) => {
+            const next = { ...frame, timeMs: Math.round(frame.timeMs * speed) };
+            if (strength !== 1) {
+              for (const key of ["x", "y", "rotation", "scaleX", "scaleY"]) {
+                if (typeof first[key] === "number" && typeof frame[key] === "number") {
+                  next[key] = first[key] + (frame[key] - first[key]) * strength;
+                }
+              }
+            }
+            return next;
+          })
+        };
+      })
+    };
+  });
+  const nextProfile = createSkeletalRigProfile({ ...profile, clips });
+  const nextManifest = {
+    ...manifestInput,
+    animation: {
+      ...(manifestInput.animation || {}),
+      requestedClipIds: [...request.actions]
+    },
+    motionRequest: {
+      version: 1,
+      text: request.text,
+      characterType: request.characterType,
+      clipIds: [...request.actions],
+      projectileRequested: request.projectileRequested === true,
+      strengthMultiplier: strength,
+      speedMultiplier: speed
+    }
+  };
+  return { profile: nextProfile, manifest: nextManifest };
+}
+
 export function validateAutoRigBuildManifest(input, profileInput) {
   try {
     if (!input || typeof input !== "object" || Array.isArray(input)) throw new TypeError("Auto-Rig build manifest must be an object.");
