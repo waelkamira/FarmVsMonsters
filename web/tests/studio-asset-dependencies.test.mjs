@@ -9,6 +9,7 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const routeSource = readFileSync(path.join(here, "../app/api/studio/assets/route.js"), "utf8");
 const detailsSource = readFileSync(path.join(here, "../app/studio/assets/[id]/page.js"), "utf8");
 const studioSource = readFileSync(path.join(here, "../app/studio/page.js"), "utf8");
+const battleSceneSource = readFileSync(path.join(here, "../game/scenes/BattleScene.js"), "utf8");
 
 
 test("explicit inline projectile remains an inline file even when its id matches a library projectile", () => {
