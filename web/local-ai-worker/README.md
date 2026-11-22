@@ -6,10 +6,11 @@ This optional inference process runs on the developer's machine and binds only t
 
 - Automatic SAM 2 mask proposals for visible image regions.
 - Positive/negative point-prompted segmentation with up to three alternative masks.
+- Author-guided visible-donor pixel transfer: copy a manually selected visible source polygon into a manually marked hidden target polygon, optionally mirrored, producing a transparent PNG patch with explicit reconstruction provenance.
 - Source-coordinate polygon masks, confidence values, and source-pixel provenance.
 - Transparent PNG input is composited onto white for inference and every predicted mask is clipped to non-transparent source pixels; the original source bytes are never changed.
 
-**Important:** SAM 2 returns geometric regions, not semantic labels. It does not know whether a mask is a leaf, arm, head, weapon, or body. Assign each proposal a role in Studio and review its shape. Hidden-part reconstruction and semantic plant/monster classification are not implemented by this adapter.
+**Important:** SAM 2 returns geometric regions, not semantic labels. It does not know whether a mask is a leaf, arm, head, weapon, or body. Assign each proposal a role in Studio and review its shape. Generative hidden-part completion is not implemented. The donor-transfer operation is a deterministic symmetry/texture-copy aid, not an AI model that invents missing anatomy; it can be unsuitable when the two regions are not visually corresponding. Every patch requires human inspection and approval.
 
 ## Windows setup (recommended: WSL 2 + Ubuntu)
 
@@ -76,7 +77,7 @@ $env:FVM_AI_WORKER_PORT="8765"
 | Capability | Status |
 |---|---|
 | Automatic visible-region mask proposals | Implemented |
-| Positive/negative point-prompted masks | Implemented |
+| Positive/negative point-prompted masks | Implemented |\n| Visible donor transfer into a manually marked hidden polygon | Implemented as an author-guided pixel-copy aid; requires review |
 | Editable polygon proposals in Studio | Implemented |
 | Semantic part-role classification | Not implemented; author assigns roles |
 | Hidden-part detection and pixel reconstruction | Not implemented |
