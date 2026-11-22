@@ -10,12 +10,15 @@ MAX_BODY = 12 * 1024 * 1024
 MAX_IMAGE = 8 * 1024 * 1024
 _MODEL = None
 _MODEL_ERROR = None
+_MODEL_LOCK = threading.Lock()
+_INFERENCE_LOCK = threading.Lock()
 
 def load_model():
     global _MODEL, _MODEL_ERROR
-    if _MODEL is not None: return _MODEL
-    if _MODEL_ERROR: raise RuntimeError(_MODEL_ERROR)
-    config, checkpoint = os.environ.get("SAM2_CONFIG"), os.environ.get("SAM2_CHECKPOINT")
+    with _MODEL_LOCK:
+        if _MODEL is not None: return _MODEL
+        if _MODEL_ERROR: raise RuntimeError(_MODEL_ERROR)
+        config, checkpoint = os.environ.get("SAM2_CONFIG"), os.environ.get("SAM2_CHECKPOINT")
     if not config or not checkpoint or not Path(config).is_file() or not Path(checkpoint).is_file():
         _MODEL_ERROR = "Set SAM2_CONFIG and SAM2_CHECKPOINT to existing local SAM 2 files; weights are never downloaded."
         raise RuntimeError(_MODEL_ERROR)
@@ -67,7 +70,8 @@ def detect_parts(payload):
     image = decode_image(payload["imageDataUrl"], width, height)
     generator, _ = load_model()
     import cv2
-    masks = generator.generate(image)
+    with _INFERENCE_LOCK:
+        masks = generator.generate(image)
     proposals = []
     for index, item in enumerate(sorted(masks, key=lambda value:value.get("area",0), reverse=True)):
         if len(proposals) >= 63: break
