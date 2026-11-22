@@ -12,7 +12,7 @@ test("Studio persists validated skeletal profiles and serializes their part asse
   assert.ok(route.includes("getRigPartAssets"));
   assert.ok(route.includes("serializeRigParts(registry.assets||[],asset)"));
   assert.ok(route.includes("rigProfile}:{})"));
-  assert.ok(route.includes("rigParts:rigPartAssets.map"));
+  assert.ok(route.includes("const rigParts=rigPartAssets.map"));
   assert.ok(studioPage.includes('import RigEditor from "./RigEditor.jsx"'));
   assert.ok(studioPage.includes("rigProfile:JSON.stringify(rigProfile)"));
 });
