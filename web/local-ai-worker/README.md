@@ -1,12 +1,13 @@
 # Local Studio AI Worker (SAM 2)
 
-This optional inference process runs on the developer's machine and binds only to `127.0.0.1`. It makes no hosted inference calls and never downloads model checkpoints automatically. The Studio web app talks to it through the authenticated Next.js worker bridge.
+This optional inference process runs on the developer's machine and binds only to `127.0.0.1`. It makes no hosted inference calls and never downloads model checkpoints automatically.
 
 ## What it does today
 
 - Automatic SAM 2 mask proposals for visible image regions.
 - Positive/negative point-prompted segmentation with up to three alternative masks.
-- Author-guided visible-donor pixel transfer: copy a manually selected visible source polygon into a manually marked hidden target polygon, optionally mirrored, producing a transparent PNG patch with explicit reconstruction provenance.\n- Local texture inpainting: apply OpenCV Telea inpainting only inside a manually marked target polygon and return a transparent patch. This fills local texture gaps from neighboring pixels; it does not infer anatomy or semantic structure.
+- Author-guided visible-donor pixel transfer: copy a manually selected visible source polygon into a manually marked hidden target polygon, optionally mirrored, producing a transparent PNG patch with explicit reconstruction provenance.
+- Local texture inpainting: apply OpenCV Telea inpainting only inside a manually marked target polygon and return a transparent patch. This fills local texture gaps from neighboring pixels; it does not infer anatomy or semantic structure.
 - Source-coordinate polygon masks, confidence values, and source-pixel provenance.
 - Transparent PNG input is composited onto white for inference and every predicted mask is clipped to non-transparent source pixels; the original source bytes are never changed.
 
@@ -86,7 +87,8 @@ $env:FVM_AI_WORKER_PORT="8765"
 |---|---|
 | Automatic visible-region mask proposals | Implemented |
 | Positive/negative point-prompted masks | Implemented |
-| Visible donor transfer into a manually marked hidden polygon | Implemented as an author-guided pixel-copy aid; requires review |\n| OpenCV Telea local texture inpainting | Implemented for small surrounding-texture gaps; requires review |
+| Visible donor transfer into a manually marked hidden polygon | Implemented as an author-guided pixel-copy aid; requires review |
+| OpenCV Telea local texture inpainting | Implemented for small surrounding-texture gaps; requires review |
 | Editable polygon proposals in Studio | Implemented |
 | Semantic part-role classification | Not implemented; author assigns roles |
 | Hidden-part detection and pixel reconstruction | Not implemented |
