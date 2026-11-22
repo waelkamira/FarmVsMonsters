@@ -126,7 +126,6 @@ export function suggestRigTemplateRetarget(templateManifest, targetParts, target
     });
   }
 
-  const targetById = new Map(targets.map((part) => [part.id, part]));
   const templateToTarget = new Map(matches.map((match) => [match.templatePartId, match.targetPartId]));
   for (const match of matches) {
     const templatePart = templateParts.find((part) => part.id === match.templatePartId);
