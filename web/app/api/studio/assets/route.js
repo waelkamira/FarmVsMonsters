@@ -455,7 +455,7 @@ export async function PATCH(req){
   registry.assets[index]=requested;
   let registrySyncWarning=null;
   try{
-   await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(registry,null,2)+"\\n"),"studio: request "+asset.type+" release "+id,token,storageBranch,registrySha);
+   await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(registry,null,2)+"\n"),"studio: request "+asset.type+" release "+id,token,storageBranch,registrySha);
   }catch(error){
    if(error.code==="STUDIO_WRITE_CONFLICT"){
     try{
@@ -467,7 +467,7 @@ export async function PATCH(req){
       throw new Error("تم إنشاء طلب المراجعة، لكن الأصل تغير في المكتبة أثناء النشر. لا يمكن تحديث حالته دون مراجعة التعارض. رابط الطلب: "+pr.url);
      }
      latestRegistry.assets[latestIndex]=requested;
-     await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(latestRegistry,null,2)+"\\n"),"studio: reconcile release request "+id,token,storageBranch,latestDocument?.sha??null);
+     await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(latestRegistry,null,2)+"\n"),"studio: reconcile release request "+id,token,storageBranch,latestDocument?.sha??null);
     }catch(syncError){registrySyncWarning=syncError.message;}
    }else registrySyncWarning=error.message;
   }
