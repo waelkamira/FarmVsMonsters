@@ -374,6 +374,21 @@ test("animation readiness requires a source fingerprint and no unreviewed recons
 });
 
 
+test("starter attack clip animates arm and hand roles when no weapon part exists", () => {
+  const input = baseInput();
+  input.parts = input.parts.filter((part) => part.role !== "weapon");
+  input.parts.push(
+    { id: "arm-left", assetId: "asset-arm-left", role: "arm.left", bounds: { x: 24, y: 110, width: 48, height: 20 }, pivot: { x: 68, y: 120 } },
+    { id: "hand-left", assetId: "asset-hand-left", role: "hand.left", bounds: { x: 10, y: 108, width: 20, height: 20 }, pivot: { x: 28, y: 118 } }
+  );
+  const built = buildAutoRigFromParts(input);
+  const attack = built.profile.clips.find((clip) => clip.id === "attack");
+  assert.deepEqual(
+    attack.tracks.map((track) => track.boneId).sort(),
+    ["part-arm-left", "part-hand-left"]
+  );
+});
+
 test("polygon vertex editing clamps coordinates and rejects collapsed masks", () => {
   const polygon = [{ x: 10, y: 10 }, { x: 90, y: 10 }, { x: 90, y: 90 }, { x: 10, y: 90 }];
   const moved = moveAutoRigPolygonVertex(polygon, 0, { x: -20, y: 120 }, { width: 100, height: 100 });
