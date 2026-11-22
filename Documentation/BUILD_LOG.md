@@ -1439,3 +1439,5 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - Integrated a Studio action to suggest roles for SAM 2 proposals. Suggestions are explicitly non-authoritative: they do not approve masks, set author-review flags, or pass the quality gate automatically.
 - Added focused tests and included them in Auto-Rig CI and ESLint.
 - Verification pending: GitHub Actions must run against the latest branch head; local Windows/WSL SAM 2 and real asset-to-Phaser validation remain outstanding.
+
+- Follow-up runtime review found and fixed an escaped-regex defect in starter animation role matching: arm/hand bones now correctly become attack targets when no weapon part exists. Added a regression test for both arm and hand targets.
