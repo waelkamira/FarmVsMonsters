@@ -552,6 +552,50 @@ export default function AutoRigBuilderPanel({
     } finally { setAiBusy(false); }
   }
 
+  async function inpaintHiddenRegion(partId) {
+    const part = parts.find((item) => item.id === partId);
+    if (!image || !part?.occlusionMask || aiBusy || busy || generated) return;
+    setAiBusy(true);
+    try {
+      const sourceCanvas = document.createElement("canvas");
+      sourceCanvas.width = image.naturalWidth || image.width;
+      sourceCanvas.height = image.naturalHeight || image.height;
+      sourceCanvas.getContext("2d").drawImage(image, 0, 0);
+      const response = await fetch("/api/studio/auto-rig/worker", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          task: "local-texture-inpaint",
+          canvas: { width: sourceCanvas.width, height: sourceCanvas.height },
+          imageDataUrl: sourceCanvas.toDataURL("image/png"),
+          targetPolygon: part.occlusionMask.points,
+          inpaintRadius: 3
+        })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "تعذر ترميم نسيج المنطقة المحددة.");
+      const union = {
+        x: Math.min(part.bounds.x, data.targetBounds.x),
+        y: Math.min(part.bounds.y, data.targetBounds.y),
+        width: Math.max(part.bounds.x + part.bounds.width, data.targetBounds.x + data.targetBounds.width) - Math.min(part.bounds.x, data.targetBounds.x),
+        height: Math.max(part.bounds.y + part.bounds.height, data.targetBounds.y + data.targetBounds.height) - Math.min(part.bounds.y, data.targetBounds.y)
+      };
+      setParts((current) => current.map((item) => item.id === partId ? {
+        ...item,
+        bounds: union,
+        reconstructionPatch: { dataUrl: data.patchDataUrl, targetBounds: data.targetBounds },
+        reconstruction: { method: data.provenance.method, targetBounds: data.targetBounds, targetMask: part.occlusionMask, reviewed: false },
+        provenance: { ...(item.provenance || {}), pixels: "reconstructed" },
+        occlusion: "reconstructed",
+        reviewed: false
+      } : item));
+      setMessage("تم ترميم النسيج محلياً من البكسلات المحيطة (Telea). هذه ليست إعادة بناء تشريحية أو توليداً دلالياً؛ راجع الرقعة قبل اعتمادها.");
+    } catch (error) {
+      setMessage(error.message);
+    } finally { setAiBusy(false); }
+  }
+
   function commitOcclusionMask() {
     if (occlusionPoints.length < 3 || !occlusionTargetPartId) {
       setMessage("حدد ثلاث نقاط أو أكثر حول المنطقة المخفية.");
@@ -726,7 +770,7 @@ export default function AutoRigBuilderPanel({
     <section className="studio-panel" style={{ marginTop: 18 }}>
       <small>AUTO-RIG · GUIDED SEGMENTATION</small>
       <h3>استخراج أجزاء الشخصية وبناء الهيكل الأولي</h3>
-      <p>يمكنك اكتشاف المناطق المرئية محلياً باستخدام SAM 2 أو رسم الأقنعة يدوياً. بعد تحديد منطقة مخفية، يمكنك نقل بكسلات من جزء مرئي مماثل (مثل الورقة المقابلة) إلى المنطقة المحددة، ثم مراجعة الرقعة يدوياً. هذه طريقة نقل/انعكاس هندسية وليست توليداً تخيلياً للأنسجة؛ والتصنيف الدلالي هنا اقتراح هندسي يحتاج تأكيدك. تُحفظ الأجزاء كصور PNG شفافة مستقلة ويُنشأ هيكل قابل للتعديل.</p>
+      <p>يمكنك اكتشاف المناطق المرئية محلياً باستخدام SAM 2 أو رسم الأقنعة يدوياً. بعد تحديد منطقة مخفية، يمكنك نقل بكسلات من جزء مرئي مماثل (مثل الورقة المقابلة) إلى المنطقة المحددة، ثم مراجعة الرقعة يدوياً. يمكنك أيضاً ترميم نسيج محدود من البكسلات المحيطة باستخدام Telea؛ هذه معالجة محلية غير دلالية وليست توليداً تشريحياً. نقل الجزء المماثل يظل خياراً آخر. والتصنيف الدلالي هنا اقتراح هندسي يحتاج تأكيدك. تُحفظ الأجزاء كصور PNG شفافة مستقلة ويُنشأ هيكل قابل للتعديل.</p>
       <div className="studio-actions" style={{ display: "flex", flexWrap: "wrap", gap: 8, margin: "10px 0" }}>
         <button type="button" disabled={disabled || aiBusy} onClick={checkAIWorker}>{aiBusy ? "جارٍ الاتصال..." : "فحص محرك AI المحلي"}</button>
         <button type="button" disabled={disabled || aiBusy || generated || !image || aiPromptMode} onClick={requestAISegmentation}>{aiBusy ? "جارٍ تحليل الصورة..." : "اقتراح المناطق المرئية وتقسيمها تلقائياً"}</button>
@@ -823,7 +867,7 @@ export default function AutoRigBuilderPanel({
               <option value="none">لا يوجد جزء مخفي</option><option value="reconstructed" disabled>تم نقل بكسلات الجزء (مراجعة مطلوبة)</option>
             </select>
           </label>
-          <button type="button" disabled={disabled || busy || generated} style={{ marginInlineStart: 8 }} onClick={() => beginOcclusionMask(part.id)}>تحديد المنطقة المخفية</button>{part.occlusionMask&&<small style={{ marginInlineStart: 6 }}>قناع احتجاب محفوظ</small>}{part.occlusionMask&&<button type="button" disabled={disabled || busy || generated || aiBusy} style={{ marginInlineStart: 6 }} onClick={() => beginDonorPolygon(part.id)}>اختيار جزء مرئي مماثل</button>}{part.donorMask&&<button type="button" disabled={disabled || busy || generated || aiBusy} style={{ marginInlineStart: 6 }} onClick={() => reconstructHiddenRegion(part.id)}>نقل البكسلات إلى المنطقة المخفية</button>}{part.donorMask&&<label style={{ display: "inline-flex", gap: 5, marginInlineStart: 6 }}><input type="checkbox" checked={part.flipDonorHorizontal !== false} disabled={disabled || busy || generated || aiBusy} onChange={(event) => setParts((current) => current.map((item) => item.id === part.id ? { ...item, flipDonorHorizontal: event.target.checked } : item))} /> قلب أفقي</label>}{occlusionMode&&occlusionTargetPartId===part.id&&<><button type="button" disabled={occlusionPoints.length<3} style={{ marginInlineStart: 6 }} onClick={commitOcclusionMask}>اعتماد المنطقة ({occlusionPoints.length})</button><button type="button" style={{ marginInlineStart: 4 }} onClick={() => { setOcclusionMode(false); setOcclusionPoints([]); setOcclusionTargetPartId(""); }}>إلغاء</button></>}<button type="button" disabled={disabled || busy || generated} style={{ marginInlineStart: 10 }} onClick={() => { setOcclusionMode(false); setOcclusionPoints([]); setOcclusionTargetPartId(""); setEditingPartId((current) => current === part.id ? "" : part.id); setPoints([]); setMessage(editingPartId === part.id ? "تم إنهاء تحرير القناع." : "اسحب نقاط القناع البرتقالية لتعديل حدود الجزء؛ اضغط الزر مجدداً لإنهاء التحرير."); }}>{editingPartId === part.id ? "إنهاء التحرير" : "تحرير القناع"}</button>
+          <button type="button" disabled={disabled || busy || generated} style={{ marginInlineStart: 8 }} onClick={() => beginOcclusionMask(part.id)}>تحديد المنطقة المخفية</button>{part.occlusionMask&&<small style={{ marginInlineStart: 6 }}>قناع احتجاب محفوظ</small>}{part.occlusionMask&&<button type="button" disabled={disabled || busy || generated || aiBusy} style={{ marginInlineStart: 6 }} onClick={() => inpaintHiddenRegion(part.id)}>ترميم محلي من المحيط</button>}{part.occlusionMask&&<button type="button" disabled={disabled || busy || generated || aiBusy} style={{ marginInlineStart: 6 }} onClick={() => beginDonorPolygon(part.id)}>اختيار جزء مرئي مماثل</button>}{part.donorMask&&<button type="button" disabled={disabled || busy || generated || aiBusy} style={{ marginInlineStart: 6 }} onClick={() => reconstructHiddenRegion(part.id)}>نقل البكسلات إلى المنطقة المخفية</button>}{part.donorMask&&<label style={{ display: "inline-flex", gap: 5, marginInlineStart: 6 }}><input type="checkbox" checked={part.flipDonorHorizontal !== false} disabled={disabled || busy || generated || aiBusy} onChange={(event) => setParts((current) => current.map((item) => item.id === part.id ? { ...item, flipDonorHorizontal: event.target.checked } : item))} /> قلب أفقي</label>}{occlusionMode&&occlusionTargetPartId===part.id&&<><button type="button" disabled={occlusionPoints.length<3} style={{ marginInlineStart: 6 }} onClick={commitOcclusionMask}>اعتماد المنطقة ({occlusionPoints.length})</button><button type="button" style={{ marginInlineStart: 4 }} onClick={() => { setOcclusionMode(false); setOcclusionPoints([]); setOcclusionTargetPartId(""); }}>إلغاء</button></>}<button type="button" disabled={disabled || busy || generated} style={{ marginInlineStart: 10 }} onClick={() => { setOcclusionMode(false); setOcclusionPoints([]); setOcclusionTargetPartId(""); setEditingPartId((current) => current === part.id ? "" : part.id); setPoints([]); setMessage(editingPartId === part.id ? "تم إنهاء تحرير القناع." : "اسحب نقاط القناع البرتقالية لتعديل حدود الجزء؛ اضغط الزر مجدداً لإنهاء التحرير."); }}>{editingPartId === part.id ? "إنهاء التحرير" : "تحرير القناع"}</button>
           <button type="button" disabled={disabled || busy || generated} style={{ marginInlineStart: 6 }} onClick={() => { setParts((current) => current.filter((item) => item.id !== part.id)); if (editingPartId === part.id) setEditingPartId(""); if (part.id === activeEmitterPart?.id) { setMuzzlePartId(""); setMuzzlePoint(null); setMuzzleMode(false); } }}>حذف</button>
         </li>)}</ul>
       </div>}
