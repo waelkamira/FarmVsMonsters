@@ -23,7 +23,7 @@ test("worker bridge validates image limits, task names, and worker geometry befo
   assert.match(source, /MAX_REQUEST_BODY_BYTES/);
   assert.match(source, /new TextEncoder\(\)\.encode\(rawBody\)\.byteLength/);
   assert.match(source, /4096/);
-  assert.match(source, /\["part-detection", "prompted-segmentation"\]\.includes\(body\.task\)/);
+  assert.match(source, /\["part-detection", "prompted-segmentation", "visible-donor-reconstruction"\]\.includes\(body\.task\)/);
   assert.match(source, /body\.points\.length > 32/);
   assert.match(source, /typeof x !== "number" \|\| typeof y !== "number"/);
   assert.match(source, /!Number\.isInteger\(label\)/);
@@ -31,5 +31,16 @@ test("worker bridge validates image limits, task names, and worker geometry befo
   assert.match(source, /points\.push\(\{ x, y, label \}\)/);
   assert.match(source, /\.\.\.\(points \? \{ points \} : \{\}\)/);
   assert.match(source, /validateAutoRigWorkerResponse/);
+  assert.match(source, /status: 422/);
+});
+
+
+test("worker bridge validates donor and target polygons and reviewable reconstruction output", () => {
+  assert.match(source, /function validPolygon\(points, width, height\)/);
+  assert.match(source, /body\.sourcePolygon/);
+  assert.match(source, /body\.targetPolygon/);
+  assert.match(source, /flipHorizontal/);
+  assert.match(source, /function validReconstructionResponse/);
+  assert.match(source, /reviewRequired === true/);
   assert.match(source, /status: 422/);
 });
