@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { validatePhaserAtlasDocument } from "../game/studio/phaserAtlas.mjs";
+import { readPngDimensions, validatePhaserAtlasDocument } from "../game/studio/phaserAtlas.mjs";
 
 const sample = {
   frames: {
@@ -45,4 +45,16 @@ test("rejects malformed JSON, missing frames, duplicate names, and unsafe rectan
 test("rejects atlas files that exceed the frame limit", () => {
   const frames = Object.fromEntries(Array.from({ length: 513 }, (_, i) => ["frame_" + i, { frame: { x: 0, y: 0, w: 1, h: 1 } }]));
   assert.ok(validatePhaserAtlasDocument({ frames, meta: {} }).errors.some(message => message.includes("512")));
+});
+
+test("checks atlas frame bounds and meta dimensions against the PNG header", () => {
+  const png = new Uint8Array(24);
+  png.set([0x89, 0x50, 0x4e, 0x47], 0);
+  new DataView(png.buffer).setUint32(16, 600, false);
+  new DataView(png.buffer).setUint32(20, 150, false);
+  assert.deepEqual(readPngDimensions(png), { width: 600, height: 150 });
+  assert.equal(validatePhaserAtlasDocument(sample, { width: 600, height: 150 }).valid, true);
+  assert.equal(validatePhaserAtlasDocument(sample, { width: 300, height: 150 }).valid, false);
+  const outside = { frames: { edge: { frame: { x: 590, y: 0, w: 20, h: 10 } } }, meta: { size: { w: 600, h: 150 } } };
+  assert.ok(validatePhaserAtlasDocument(outside).errors.some(message => message.includes("يتجاوز حدود")));
 });
