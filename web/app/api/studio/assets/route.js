@@ -22,6 +22,7 @@ const PUBLISHED_CATALOG_PATH="web/public/assets/studio-plant-catalog.json";
 const PUBLISHED_MONSTER_CATALOG_PATH="web/public/assets/studio-monster-catalog.json";
 function authorized(req){return verifyStudioSession(process.env.STUDIO_ADMIN_TOKEN||"",req.cookies.get(COOKIE)?.value||"");}
 function ext(type){return {"image/png":".png","image/webp":".webp","image/gif":".gif","audio/mpeg":".mp3","audio/wav":".wav","audio/ogg":".ogg","audio/mp4":".m4a"}[type]||"";}
+function getRigPartAssets(assets,asset){const ids=[...new Set((asset?.rigProfile?.bones||[]).map(bone=>bone?.part?.assetId).filter(Boolean))];return ids.map(id=>assets.find(item=>item.id===id));}
 function githubHeaders(token){return {Authorization:"Bearer "+token,Accept:"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28"};}
 function githubUrl(filePath){return "https://api.github.com/repos/"+(process.env.STUDIO_GITHUB_REPOSITORY||"waelkamira/FarmVsMonsters")+"/contents/"+filePath;}
 async function githubGetDocument(filePath,token,branch){const response=await fetch(githubUrl(filePath)+"?ref="+encodeURIComponent(branch),{headers:githubHeaders(token)});if(response.status===404)return null;if(!response.ok)throw Error("GitHub read failed ("+response.status+").");const data=await response.json();return {content:Buffer.from(data.content||"","base64").toString("utf8"),sha:data.sha};}
@@ -362,20 +363,24 @@ export async function PATCH(req){
   }
 
   if(!safeAssetPath(asset.path))return NextResponse.json({error:"Invalid asset path."},{status:400});
+  const rigPartIds=[...new Set((asset.rigProfile?.bones||[]).map(bone=>bone?.part?.assetId).filter(Boolean))];
+  const rigPartAssets=getRigPartAssets(registry.assets,asset);
+  if(rigPartAssets.length!==rigPartIds.length||rigPartAssets.some(part=>!part||part.type==="audio"||!safeAssetPath(part.path)))return NextResponse.json({error:"يوجد جزء هيكلي مفقود أو غير صالح؛ أصلح تبعيات الهيكل قبل النشر."},{status:409});
   if(asset.type==="monster"){
    const releaseBranch=createStudioReleaseBranchName(id,randomUUID().slice(0,8));
    await githubCreateBranch(releaseBranch,targetBranch,token);
    const monsterBytes=await githubGetBytes("web/public"+asset.path,token,storageBranch);
    await githubPutImmutable("web/public"+asset.path,monsterBytes,"stage monster artwork for release "+id,token,releaseBranch);
+   for(const part of rigPartAssets){if(part.path===asset.path)continue;const partBytes=await githubGetBytes("web/public"+part.path,token,storageBranch);await githubPutImmutable("web/public"+part.path,partBytes,"stage skeletal part "+part.id+" for monster "+id,token,releaseBranch);}
    const catalogDocument=await githubGetDocument(PUBLISHED_MONSTER_CATALOG_PATH,token,targetBranch);
    const catalog=catalogDocument?JSON.parse(catalogDocument.content):{version:1,monsters:[]};
    const catalogSha=catalogDocument?.sha??null;
-   const publishedMonster={id:asset.id,name:asset.name,path:asset.path,rows:asset.rows,columns:asset.columns,spriteSheet:asset.spriteSheet,animationProfile:asset.animationProfile||null,rigProfile:asset.rigProfile||null,monsterProfile:asset.monsterProfile,publishedAt:new Date().toISOString()};
+   const publishedMonster={id:asset.id,name:asset.name,path:asset.path,rows:asset.rows,columns:asset.columns,spriteSheet:asset.spriteSheet,animationProfile:asset.animationProfile||null,rigProfile:asset.rigProfile||null,rigParts:rigPartAssets.map(part=>({id:part.id,name:part.name,path:part.path,rows:part.rows,columns:part.columns,frameCount:part.frameCount,spriteSheet:part.spriteSheet})),monsterProfile:asset.monsterProfile,publishedAt:new Date().toISOString()};
    const existingIndex=(catalog.monsters||[]).findIndex(monster=>monster.id===id);
    catalog.monsters=existingIndex>=0?catalog.monsters.map((monster,i)=>i===existingIndex?publishedMonster:monster):[...(catalog.monsters||[]),publishedMonster];
    catalog.version=1;
    await githubPut(PUBLISHED_MONSTER_CATALOG_PATH,Buffer.from(JSON.stringify(catalog,null,2)+"\n"),"stage monster catalog release "+id,token,releaseBranch,catalogSha);
-   const pr=await githubCreatePullRequest(releaseBranch,targetBranch,"Publish monster: "+asset.name+" ("+id+")","## Studio monster release\n\n- Monster: "+id+"\n- Base archetype: "+asset.monsterProfile.baseArchetype+"\n- Includes the monster artwork, Sprite Sheet profile, optional skeletal rig, and monster combat profile.\n- Spawn weight: "+asset.monsterProfile.spawnWeight+"; first wave: "+asset.monsterProfile.firstWave+".\n- Complete manual gameplay verification before merging this release.\n\nMerge this pull request to activate the monster in the target game branch.",token);
+   const pr=await githubCreatePullRequest(releaseBranch,targetBranch,"Publish monster: "+asset.name+" ("+id+")","## Studio monster release\n\n- Monster: "+id+"\n- Base archetype: "+asset.monsterProfile.baseArchetype+"\n- Includes the monster artwork, Sprite Sheet profile, optional skeletal rig and all referenced rig-part files, and monster combat profile.\n- Spawn weight: "+asset.monsterProfile.spawnWeight+"; first wave: "+asset.monsterProfile.firstWave+".\n- Complete manual gameplay verification before merging this release.\n\nMerge this pull request to activate the monster in the target game branch.",token);
    const requested={...asset,releaseRequest:{number:pr.number,url:pr.url,branch:releaseBranch,createdAt:new Date().toISOString()}};
    registry.assets[index]=requested;
    try{await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(registry,null,2)+"\n"),"studio: request monster release "+id,token,storageBranch,registrySha);}
@@ -406,15 +411,16 @@ export async function PATCH(req){
    const projectileBytes=await githubGetBytes("web/public"+asset.combat.projectile.path,token,storageBranch);
    await githubPutImmutable("web/public"+asset.combat.projectile.path,projectileBytes,"stage plant projectile for release "+id,token,releaseBranch);
   }
+  for(const part of rigPartAssets){if(part.path===asset.path||part.path===asset.combat?.projectile?.path)continue;const partBytes=await githubGetBytes("web/public"+part.path,token,storageBranch);await githubPutImmutable("web/public"+part.path,partBytes,"stage skeletal part "+part.id+" for plant "+id,token,releaseBranch);}
   const catalogDocument=await githubGetDocument(PUBLISHED_CATALOG_PATH,token,targetBranch);
   const catalog=catalogDocument?JSON.parse(catalogDocument.content):{version:1,plants:[]};
   const catalogSha=catalogDocument?.sha??null;
-  const publishedPlant={id:asset.id,name:asset.name,path:asset.path,rows:asset.rows,columns:asset.columns,spriteSheet:asset.spriteSheet,animationProfile:asset.animationProfile||null,rigProfile:asset.rigProfile||null,combat:asset.combat,publishedAt:new Date().toISOString()};
+  const publishedPlant={id:asset.id,name:asset.name,path:asset.path,rows:asset.rows,columns:asset.columns,spriteSheet:asset.spriteSheet,animationProfile:asset.animationProfile||null,rigProfile:asset.rigProfile||null,rigParts:rigPartAssets.map(part=>({id:part.id,name:part.name,path:part.path,rows:part.rows,columns:part.columns,frameCount:part.frameCount,spriteSheet:part.spriteSheet})),combat:asset.combat,publishedAt:new Date().toISOString()};
   const existingIndex=(catalog.plants||[]).findIndex(plant=>plant.id===id);
   catalog.plants=existingIndex>=0?catalog.plants.map((plant,i)=>i===existingIndex?publishedPlant:plant):[...(catalog.plants||[]),publishedPlant];
   catalog.version=1;
   await githubPut(PUBLISHED_CATALOG_PATH,Buffer.from(JSON.stringify(catalog,null,2)+"\n"),"stage plant catalog release "+id,token,releaseBranch,catalogSha);
-  const pr=await githubCreatePullRequest(releaseBranch,targetBranch,"Publish plant: "+asset.name+" ("+id+")","## Studio plant release\n\n- Plant: "+id+"\n- Behavior: "+asset.combat.mode+"\n- Includes the plant asset, Sprite Sheet profile, optional skeletal rig, linked projectile when applicable, and the published plant catalog update.\n- Prepared in FarmVsMonsters Studio; complete manual gameplay verification before merging this release.\n\nMerge this pull request to activate the plant in the target game branch.",token);
+  const pr=await githubCreatePullRequest(releaseBranch,targetBranch,"Publish plant: "+asset.name+" ("+id+")","## Studio plant release\n\n- Plant: "+id+"\n- Behavior: "+asset.combat.mode+"\n- Includes the plant asset, Sprite Sheet profile, optional skeletal rig and all referenced rig-part files, linked projectile when applicable, and the published plant catalog update.\n- Prepared in FarmVsMonsters Studio; complete manual gameplay verification before merging this release.\n\nMerge this pull request to activate the plant in the target game branch.",token);
   const requested={...asset,releaseRequest:{number:pr.number,url:pr.url,branch:releaseBranch,createdAt:new Date().toISOString()}};
   registry.assets[index]=requested;
   try{await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(registry,null,2)+"\n"),"studio: request plant release "+id,token,storageBranch,registrySha);}
