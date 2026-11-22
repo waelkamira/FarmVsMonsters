@@ -21,7 +21,7 @@ test("worker bridge restricts upstream URL to HTTP loopback", () => {
 test("worker bridge validates image limits, task names, and worker geometry before returning proposals", () => {
   assert.match(source, /MAX_IMAGE_DATA_URL_CHARS/);
   assert.match(source, /MAX_REQUEST_BODY_BYTES/);
-  assert.match(source, /new TextEncoder\(\)\.encode\(rawBody\)\.byteLength/);
+  assert.ok(source.includes("async function readBoundedBody(request, maxBytes)"));
   assert.match(source, /4096/);
   assert.match(source, /\["part-detection", "prompted-segmentation"\]\.includes\(body\.task\)/);
   assert.match(source, /body\.points\.length > 32/);
@@ -47,6 +47,6 @@ test("worker bridge does not forward internal worker error response bodies", () 
 });
 
 test("worker bridge validates Content-Length syntax and exact streamed byte count", () => {
-  assert.match(source, /!\\/^\\\\d\+\\\$\\/\.test\\(declaredLength\\)/);
-  assert.match(source, /Number\\(declaredLength\\) !== rawBody\\.byteLength/);
+  assert.ok(source.includes('if (declaredLength && (!/^\\d+$/.test(declaredLength)'));
+  assert.ok(source.includes("Number(declaredLength) !== rawBody.byteLength"));
 });
