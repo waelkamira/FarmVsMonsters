@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { transformRigPointToWorld } from "../game/studio/skeletalWorldTransform.mjs";
+import { transformRigHitboxToWorld, transformRigPointToWorld } from "../game/studio/skeletalWorldTransform.mjs";
 
 test("transforms a rig attachment through parent position, non-uniform scale, and rotation", () => {
   const point = { x: 10, y: 5, rotation: 15, scaleX: 1, scaleY: 1 };
@@ -24,4 +24,16 @@ test("transforms default unit scale and zero rotation without changing local coo
 
 test("rejects non-finite attachment or parent transform values", () => {
   assert.throws(() => transformRigPointToWorld({ x: 1, y: 2 }, { x: 0, y: 0, rotation: NaN }), /finite numbers/);
+});
+
+test("transforms all hitbox corners through non-uniform parent scale without approximating a rotated box", () => {
+  const world = transformRigHitboxToWorld(
+    { x: 0, y: 0, width: 20, height: 10, rotation: 45 },
+    { x: 100, y: 50, scaleX: 2, scaleY: 1, rotation: 0 }
+  );
+  assert.equal(world.points.length, 4);
+  assert.equal(world.x, 100);
+  assert.equal(world.y, 50);
+  assert.ok(Math.abs(world.points[0].x - 92.9289321881) < 0.0001);
+  assert.ok(Math.abs(world.points[0].y - 39.3933982822) < 0.0001);
 });
