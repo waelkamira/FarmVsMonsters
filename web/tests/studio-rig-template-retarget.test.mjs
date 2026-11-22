@@ -70,3 +70,22 @@ test("uses a global minimum-cost assignment for repeated semantic roles", () => 
   assert.equal(pairs.get("leaf-a"), "target-b");
   assert.equal(pairs.get("leaf-b"), "target-a");
 });
+
+
+test("rejects missing and cyclic parent references in a saved template", () => {
+  const missingParent = { ...template, parts: [{ ...template.parts[0], parentPartId: "absent" }] };
+  assert.throws(() => suggestRigTemplateRetarget(missingParent, [
+    { id: "stem", role: "stem", bounds: { x: 40, y: 20, width: 20, height: 70 } }
+  ], { width: 100, height: 100 }), /missing parent/);
+  const cyclic = {
+    ...template,
+    parts: [
+      { ...template.parts[0], parentPartId: "leaf-left" },
+      { ...template.parts[1], parentPartId: "stem" }
+    ]
+  };
+  assert.throws(() => suggestRigTemplateRetarget(cyclic, [
+    { id: "stem", role: "stem", bounds: { x: 40, y: 20, width: 20, height: 70 } },
+    { id: "leaf", role: "leaf", side: "left", bounds: { x: 10, y: 35, width: 30, height: 20 } }
+  ], { width: 100, height: 100 }), /cycle/);
+});
