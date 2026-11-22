@@ -348,3 +348,8 @@ The Auto-Rig Builder is a permanent first-class Studio subsystem composed of the
 - Studio can now enter a per-part hidden-region marking mode, draw and save the polygon region where the occluded part is expected to continue, and display saved regions as dashed amber overlays.
 - The quality report distinguishes unresolved occlusion with a supplied region mask from unresolved occlusion with no reconstruction target. The mask is preparation data only: no pixels are fabricated, and the rig remains blocked until a real reconstruction model and review flow exist.
 - Added regression tests for manifest persistence and out-of-canvas occlusion masks.
+
+
+## 2026-11-22 — Review invalidation on edits
+- Accepted part roles can now be corrected in the part list. Changing a role, dragging a polygon vertex, or changing the occlusion assessment invalidates the explicit author-review flag so stale approval cannot survive a substantive edit.
+- Re-drawing an occlusion region also clears the review flag and leaves the part unresolved.
