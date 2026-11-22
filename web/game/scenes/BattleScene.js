@@ -4706,8 +4706,8 @@ export default class BattleScene extends Scene {
       let jumpOffset = 0;
       if (monster.kind === "dust-skitter") {
         const profile = monster.combatProfile;
-        const jumpWillStart = false;
-        const jumpWillLand = false;
+        const jumpWillStart = !monster.isJumping && monster.jumpCooldown - delta <= 0;
+        const jumpWillLand = monster.isJumping && monster.jumpElapsed + delta >= monster.jumpDuration;
         const burstWillStart = monster.burstCooldown - delta <= 0 && monster.burstRemaining <= 0;
         const motion = resolveDustSkitterMotionStep({
           isJumping: false,
@@ -4715,11 +4715,15 @@ export default class BattleScene extends Scene {
           jumpElapsedMs: monster.jumpElapsed,
           jumpDurationMs: monster.jumpDuration,
           deltaMs: delta,
-          jumpSpeedMultiplier: 1,
-          jumpVisualHeight: 0,
-          visualScale: 1,
-          nextJumpDurationMs: null,
-          nextJumpResetCooldownMs: null,
+          jumpSpeedMultiplier: profile.jumpSpeedMultiplier,
+          jumpVisualHeight: 34,
+          visualScale: monster.view.scaleY,
+          nextJumpDurationMs: jumpWillStart
+            ? this.simulationRandom.nextInt(profile.jumpDurationMinMs, profile.jumpDurationMaxMs)
+            : null,
+          nextJumpResetCooldownMs: jumpWillLand
+            ? this.simulationRandom.nextInt(profile.jumpResetCooldownMinMs, profile.jumpResetCooldownMaxMs)
+            : null,
           burstCooldownMs: monster.burstCooldown,
           burstRemainingMs: monster.burstRemaining,
           burstDurationMs: profile.burstDurationMs,
@@ -4727,7 +4731,7 @@ export default class BattleScene extends Scene {
           nextBurstCooldownMs: burstWillStart
             ? this.simulationRandom.nextInt(profile.burstCooldownMinMs, profile.burstCooldownMaxMs)
             : null,
-          enableJump: false
+          enableJump: true
         });
         monster.isJumping = motion.isJumping;
         monster.jumpCooldown = motion.jumpCooldownMs;
@@ -4776,7 +4780,7 @@ export default class BattleScene extends Scene {
       const position = this.monsterLanePoint(monster.localX, monster.row);
       monster.x = position.x; monster.y = position.y;
       monster.view.setPosition(position.x, position.y);
-      if (monster.hyenaSprite?.active) monster.hyenaSprite.y = 0;
+      if (monster.hyenaSprite?.active) monster.hyenaSprite.y = jumpOffset;
       if ((monster.hyenaSprite || monster.studioRig) && monster.hitAnimUntil <= this.time.now) {
         // The corrected 15-frame run sheet belongs to the fast hyena.
         // Keep it running for the full advance so its new crop can be tested
