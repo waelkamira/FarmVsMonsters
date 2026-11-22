@@ -29,6 +29,16 @@ test("worker capability normalization never advertises unimplemented reconstruct
   assert.equal(normalized.status, "ready");
 });
 
+test("worker with no implemented capabilities is degraded even if it reports ready", () => {
+  const normalized = normalizeAutoRigWorkerCapabilities({
+    protocolVersion: 1,
+    status: "ready",
+    capabilities: ["hidden-part-reconstruction"]
+  });
+  assert.deepEqual(normalized.capabilities, []);
+  assert.equal(normalized.status, "degraded");
+});
+
 test("rejects unsupported worker protocol versions", () => {
   assert.throws(() => normalizeAutoRigWorkerCapabilities({ protocolVersion: 2 }), /protocol version/);
 });
