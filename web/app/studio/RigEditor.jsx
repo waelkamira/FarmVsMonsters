@@ -282,7 +282,7 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
   useEffect(() => {
     const urls = new Set([
       ...rig.bones.map((item) => item.part && partAssets.find((asset) => asset.id === item.part.assetId)?.previewUrl || (item.part && partAssets.find((asset) => asset.id === item.part.assetId)?.path)),
-      referenceImageUrl || referenceImageUrl || referenceAsset?.previewUrl || referenceAsset?.path
+      referenceImageUrl || referenceAsset?.previewUrl || referenceAsset?.path
     ].filter(Boolean));
     let active = true;
     for (const url of urls) {
@@ -307,7 +307,7 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
     context.fillRect(0, 0, canvas.width, canvas.height);
     context.translate(panX, panY);
     context.scale(zoom, zoom);
-    const referenceUrl = referenceAsset?.previewUrl || referenceAsset?.path;
+    const referenceUrl = referenceImageUrl || referenceAsset?.previewUrl || referenceAsset?.path;
     const referenceImage = referenceUrl && imageCache.current.get(referenceUrl);
     if (referenceImage?.complete && referenceImage.naturalWidth > 0) {
       const rows = referenceSpriteSheet ? Math.max(1, Number(referenceRows) || 1) : 1;
