@@ -185,7 +185,7 @@ test("shares one versioned semantic role dictionary between the builder and Stud
 test("flags generated pixel provenance even when occlusion is not separately marked", () => {
   const input = baseInput();
   input.parts[0].provenance = { segmentation: "model-mask", pixels: "reconstructed" };
-  input.parts[0].reconstruction = { method: "visible-donor-transfer", donorBounds: { x: 24, y: 60, width: 72, height: 48 }, targetBounds: { x: 80, y: 90, width: 40, height: 40 }, reviewed: false };
+  input.parts[0].reconstruction = { method: "visible-donor-transfer", donorBounds: { x: 24, y: 60, width: 72, height: 48 }, targetBounds: { x: 80, y: 90, width: 40, height: 40 }, donorMask: { kind: "polygon", points: [{ x: 24, y: 60 }, { x: 96, y: 60 }, { x: 96, y: 108 }, { x: 24, y: 108 }] }, targetMask: { kind: "polygon", points: [{ x: 80, y: 90 }, { x: 120, y: 90 }, { x: 120, y: 130 }, { x: 80, y: 130 }] }, flipHorizontal: true, reviewed: false };
   const result = buildAutoRigFromParts(input);
   assert.ok(result.warnings.some((warning) => warning.code === "generated-pixels" && warning.partId === "body-main"));
 });
@@ -369,7 +369,7 @@ test("animation readiness requires a source fingerprint and no unreviewed recons
 
   const reconstructed = JSON.parse(JSON.stringify(complete.manifest));
   reconstructed.parts[0].provenance.pixels = "reconstructed";
-  reconstructed.parts[0].reconstruction = { method: "visible-donor-transfer", donorBounds: { x: 24, y: 60, width: 72, height: 48 }, targetBounds: { x: 80, y: 90, width: 40, height: 40 }, reviewed: false };
+  reconstructed.parts[0].reconstruction = { method: "visible-donor-transfer", donorBounds: { x: 24, y: 60, width: 72, height: 48 }, targetBounds: { x: 80, y: 90, width: 40, height: 40 }, donorMask: { kind: "polygon", points: [{ x: 24, y: 60 }, { x: 96, y: 60 }, { x: 96, y: 108 }, { x: 24, y: 108 }] }, targetMask: { kind: "polygon", points: [{ x: 80, y: 90 }, { x: 120, y: 90 }, { x: 120, y: 130 }, { x: 80, y: 130 }] }, flipHorizontal: true, reviewed: false };
   const reconstructedReport = analyzeAutoRigQuality(reconstructed, complete.profile);
   assert.equal(reconstructedReport.readyForAnimation, false);
   assert.ok(reconstructedReport.warnings.some((warning) => warning.code === "reconstructed-pixels"));
@@ -380,7 +380,7 @@ test("animation readiness requires a source fingerprint and no unreviewed recons
   reviewedReconstruction.parts[0].occlusionMask = { kind: "polygon", points: [
     { x: 80, y: 90 }, { x: 120, y: 90 }, { x: 120, y: 130 }, { x: 80, y: 130 }
   ] };
-  reviewedReconstruction.parts[0].reconstruction = { method: "visible-donor-transfer", donorBounds: { x: 24, y: 60, width: 72, height: 48 }, targetBounds: { x: 80, y: 90, width: 40, height: 40 }, reviewed: true };
+  reviewedReconstruction.parts[0].reconstruction = { method: "visible-donor-transfer", donorBounds: { x: 24, y: 60, width: 72, height: 48 }, targetBounds: { x: 80, y: 90, width: 40, height: 40 }, donorMask: { kind: "polygon", points: [{ x: 24, y: 60 }, { x: 96, y: 60 }, { x: 96, y: 108 }, { x: 24, y: 108 }] }, targetMask: { kind: "polygon", points: [{ x: 80, y: 90 }, { x: 120, y: 90 }, { x: 120, y: 130 }, { x: 80, y: 130 }] }, flipHorizontal: true, reviewed: true };
   const reviewedReconstructionReport = analyzeAutoRigQuality(reviewedReconstruction, complete.profile);
   assert.equal(reviewedReconstructionReport.readyForAnimation, true);
   assert.equal(reviewedReconstructionReport.checks.reconstructionPendingCount, 0);
