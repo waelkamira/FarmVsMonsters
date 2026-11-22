@@ -256,7 +256,7 @@ export default function AutoRigBuilderPanel({
     <section className="studio-panel" style={{ marginTop: 18 }}>
       <small>AI AUTO-RIG · GUIDED SEGMENTATION</small>
       <h3>استخراج أجزاء الشخصية وبناء الهيكل الأولي</h3>
-      <p>هذه مرحلة التفكيك الموجّه: انقر حول كل جزء لرسم قناعه، ثم اختر دوره. سيُحفظ كل جزء كصورة PNG شفافة مستقلة، وتُنشأ عظام متوافقة مع محرك اللعبة. عند استخدام Sprite Sheet تتم معالجة أول إطار فقط كصورة مرجعية. لا يوجد استدلال AI تلقائي في هذه المرحلة بعد.</p>
+      <p>هذه مرحلة التفكيك الموجّه: انقر حول كل جزء لرسم قناعه، ثم اختر دوره. سيُحفظ كل جزء كصورة PNG شفافة مستقلة، وتُنشأ عظام متوافقة مع محرك اللعبة. عند استخدام Sprite Sheet تتم معالجة أول إطار فقط كصورة مرجعية. إذا كانت النبتة تطلق قذيفة، أضف نقطة muzzle مؤكدة من محرر الهيكل قبل الحفظ. لا يوجد استدلال AI تلقائي في هذه المرحلة بعد.</p>
       {imageError && <p className="studio-message" role="alert">{imageError}</p>}
       {image && (image.width > 4096 || image.height > 4096)
         ? <p className="studio-message">أبعاد الصورة {image.width}×{image.height} أكبر من الحد الحالي 4096×4096.</p>
