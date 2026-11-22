@@ -393,3 +393,8 @@ The Auto-Rig Builder is a permanent first-class Studio subsystem composed of the
 - Updated the worker README to follow Meta's current installation guidance: Python 3.10+, PyTorch 2.5.1+, matching torchvision, and WSL/Ubuntu recommended on Windows. Native PowerShell startup remains a best-effort alternative.
 - CI now validates WSL shell syntax in addition to Python compilation and worker tests. The alpha-handling worker test passed in run `45034701613`; WSL launcher syntax and the worker contract tests passed in run `45034810415`.
 - The Studio button now describes automatic SAM 2 output as visible-region proposals rather than implying semantic role recognition. The author must assign each region's semantic role.
+
+
+## 2026-11-22 — Transparent-canvas mask clipping
+- Extended alpha-aware decoding to return a source-visible pixel mask. Automatic and point-prompted SAM 2 masks are clipped to non-transparent pixels before polygon conversion, preventing the transparent canvas from being accepted as part of a character.
+- Added regression coverage for transparent/semitransparent pixel decoding and automatic mask clipping. The prompted-segmentation fixture now uses the alpha-aware decoder contract.
