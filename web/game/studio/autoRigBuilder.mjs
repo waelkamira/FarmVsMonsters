@@ -442,7 +442,7 @@ export function analyzeAutoRigQuality(manifest, profileInput) {
   const occlusionResolved = parts.every((part) => part.occlusion !== "unresolved");
   const sourceFingerprintPresent = /^[a-f0-9]{64}$/i.test(String(manifest.source.sha256 || ""));
   const hasPrimaryBody = parts.some((part) => ["body", "stem"].includes(normalizeRole(part.role)));
-  const lowConfidenceCount = parts.filter((part) => Number.isFinite(Number(part.confidence)) && Number(part.confidence) < 0.65).length;
+  const lowConfidenceCount = parts.filter((part) => part.confidence != null && Number.isFinite(Number(part.confidence)) && Number(part.confidence) < 0.65).length;
   const reconstructedCount = parts.filter((part) => part.provenance?.pixels === "reconstructed").length;
   const warnings = [];
   if (!rolesConfirmed) warnings.push({ code: "unconfirmed-semantic-role", message: "One or more parts still have unknown semantic roles." });
@@ -465,7 +465,7 @@ export function analyzeAutoRigQuality(manifest, profileInput) {
     - penalty(!hasPrimaryBody, 10));
   return {
     valid: true,
-    readyForAnimation: rolesConfirmed && allMasksPresent && occlusionResolved && hasPrimaryBody,
+    readyForAnimation: rolesConfirmed && allMasksPresent && confidenceReviewed && lowConfidenceCount === 0 && occlusionResolved && hasPrimaryBody,
     score,
     checks: {
       rolesConfirmed,
