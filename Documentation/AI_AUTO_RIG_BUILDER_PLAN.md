@@ -307,3 +307,10 @@ The Auto-Rig Builder is a permanent first-class Studio subsystem composed of the
 ## 2026-11-22 — Worker proxy hardening
 - The authenticated Studio bridge now checks declared and actual UTF-8 request-body size (12 MB) before JSON parsing, in addition to the existing 8 MB image payload and canvas-dimension limits.
 - Added a route-contract regression assertion for the body-size guard.
+
+
+## 2026-11-22 — Per-part quality gate and request validation follow-up
+- Clarified that model confidence is not equivalent to author approval. The manifest persists `reviewed` per part, while the Studio author separately resolves the occlusion state.
+- Any part flagged as reconstructed—whether by pixel provenance or occlusion status—blocks animation readiness until a future reconstruction-review workflow can verify it.
+- Extended quality tests to cover reconstructed occlusion independently from reconstructed pixel provenance.
+- Hardened the API route against oversized JSON bodies before parsing; Python worker body and image limits remain independently enforced.
