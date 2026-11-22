@@ -55,7 +55,7 @@ test("worker bridge validates local diffusion anatomical reconstruction prompt, 
   assert.match(source, /body\.task === "anatomical-inpaint"/);
   assert.match(source, /body\.prompt\.length > 400/);
   assert.match(source, /local-diffusion-anatomical-inpaint/);
-  assert.match(source, /data\.provenance\\?\.model/);
-  assert.match(source, /data\.provenance\\?\.seed/);
+  assert.match(source, /data\.provenance\?\.model/);
+  assert.match(source, /data\.provenance\?\.seed/);
   assert.match(source, /180_000/);
 });
