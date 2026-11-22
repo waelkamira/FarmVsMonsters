@@ -168,7 +168,7 @@ export async function POST(req){
  if(existing&&!replace)return NextResponse.json({error:"Asset ID already exists. اختر الأصل من المكتبة واستخدم زر التعديل."},{status:409});
  if(!existing&&replace)return NextResponse.json({error:"الأصل المطلوب تعديله غير موجود في المكتبة."},{status:404});
  if(existing&&existing.type!==type)return NextResponse.json({error:"لا يمكن تغيير فئة الأصل أثناء التعديل."},{status:409});
- const usingAtlas=hasAtlas||(!hasFile&&uploadMode==="atlas"&&Boolean(existing?.atlas));
+ const usingAtlas=hasAtlas||(!hasFile&&Boolean(existing?.atlas));
  if(!hasFile&&(!replace||!existing))return NextResponse.json({error:"Choose a file for a new asset."},{status:400});
  if(hasAtlas&&(!["plant","monster"].includes(type)||!hasFile||!hasAtlasJson||file.type!=="image/png"||atlasJsonFile.size>2*1024*1024))return NextResponse.json({error:"Phaser Output يحتاج ملف PNG وملف JSON صالحين، وهو متاح للنباتات والوحوش فقط. الحد الأقصى لـ JSON هو 2 MB."},{status:415});
  if(!hasAtlas&&hasAtlasJson)return NextResponse.json({error:"ملف JSON مرفق دون اختيار وضع Phaser Atlas."},{status:400});
