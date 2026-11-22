@@ -19,6 +19,7 @@ on:
       - "web/tests/studio-clone-dialog.test.mjs"
       - "web/tests/studio-auto-rig-builder.test.mjs"
       - "web/tests/studio-semantic-role-classifier.test.mjs"
+      - "web/local-ai-worker/test_visual_semantic_classifier.py"
       - "web/tests/studio-rig-template-retarget.test.mjs"
       - "web/tests/studio-auto-rig-reconstruction-ui.test.mjs"
       - "web/tests/studio-asset-versions.test.mjs"
@@ -77,6 +78,6 @@ jobs:
       - name: Validate WSL launcher syntax
         run: bash -n setup-wsl.sh start-worker-wsl.sh
       - name: Compile worker
-        run: python -m py_compile worker.py smoke_test.py
+        run: python -m py_compile worker.py smoke_test.py visual_semantic_classifier.py
       - name: Run worker contract tests
-        run: python -m unittest -v test_worker.py test_smoke_test.py
+        run: python -m unittest -v test_worker.py test_smoke_test.py test_visual_semantic_classifier.py
