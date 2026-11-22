@@ -40,10 +40,14 @@ export default function AutoRigBuilderPanel({
   currentAssetId = "",
   assets = [],
   disabled = false,
+  sourceRows = 1,
+  sourceColumns = 1,
+  sourceSpriteSheet = false,
   onRigGenerated,
   onAssetsCreated
 }) {
   const canvasRef = useRef(null);
+  const nextPartIndex = useRef(1);
   const [image, setImage] = useState(null);
   const [imageError, setImageError] = useState("");
   const [role, setRole] = useState("body");
@@ -63,12 +67,28 @@ export default function AutoRigBuilderPanel({
     const localUrl = sourceFile ? URL.createObjectURL(sourceFile) : sourceUrl;
     const nextImage = new Image();
     nextImage.onload = () => {
-      if (active) {
-        setImage(nextImage);
-        setImageError("");
-        setPoints([]);
-        setParts([]);
+      if (!active) return;
+      let workingImage = nextImage;
+      if (sourceSpriteSheet) {
+        const columns = Math.max(1, Number(sourceColumns) || 1);
+        const rows = Math.max(1, Number(sourceRows) || 1);
+        const frameWidth = Math.floor(nextImage.naturalWidth / columns);
+        const frameHeight = Math.floor(nextImage.naturalHeight / rows);
+        if (frameWidth < 1 || frameHeight < 1) {
+          setImageError("تعذر تحديد أبعاد أول إطار من Sprite Sheet.");
+          return;
+        }
+        const frame = document.createElement("canvas");
+        frame.width = frameWidth;
+        frame.height = frameHeight;
+        frame.getContext("2d").drawImage(nextImage, 0, 0, frameWidth, frameHeight, 0, 0, frameWidth, frameHeight);
+        workingImage = frame;
       }
+      setImage(workingImage);
+      setImageError("");
+      setPoints([]);
+      setParts([]);
+      nextPartIndex.current = 1;
     };
     nextImage.onerror = () => { if (active) setImageError("تعذر قراءة الصورة المصدر."); };
     nextImage.src = localUrl;
@@ -76,7 +96,7 @@ export default function AutoRigBuilderPanel({
       active = false;
       if (sourceFile) URL.revokeObjectURL(localUrl);
     };
-  }, [sourceFile, sourceUrl]);
+  }, [sourceFile, sourceUrl, sourceRows, sourceColumns, sourceSpriteSheet]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -129,7 +149,7 @@ export default function AutoRigBuilderPanel({
       setMessage("الحد الأقصى 63 جزءاً في الهيكل الواحد.");
       return;
     }
-    const index = parts.length + 1;
+    const index = nextPartIndex.current++;
     const bounds = polygonBounds(points);
     const roleSlug = slug(role.replaceAll(".", "-"));
     const suffix = "-" + roleSlug + "-" + String(index).padStart(2, "0") + "-cutout";
@@ -139,6 +159,15 @@ export default function AutoRigBuilderPanel({
     while (existingIds.has(assetId) || parts.some((part) => part.assetId === assetId)) {
       const extra = "-" + collision++;
       assetId = base.slice(0, 64 - suffix.length - extra.length) + suffix + extra;
+    }
+    const area = points.reduce((sum, point, pointIndex) => {
+      const next = points[(pointIndex + 1) % points.length];
+      return sum + point.x * next.y - next.x * point.y;
+    }, 0) / 2;
+    if (Math.abs(area) < 4) {
+      setMessage("المنطقة صغيرة جداً أو نقاطها على خط واحد. ارسم حدوداً أوضح.");
+      nextPartIndex.current -= 1;
+      return;
     }
     setParts((current) => [...current, {
       id: "part-" + String(index).padStart(2, "0"),
@@ -170,10 +199,10 @@ export default function AutoRigBuilderPanel({
         drawOrder: part.drawOrder
       }));
       const preview = buildAutoRigFromParts({
-        canvas: { width: image.naturalWidth, height: image.naturalHeight },
+        canvas: { width: image.width, height: image.height },
         parts: descriptors
       });
-      if (image.naturalWidth > 4096 || image.naturalHeight > 4096) {
+      if (image.width > 4096 || image.height > 4096) {
         throw new Error("أبعاد الصورة تتجاوز الحد الحالي 4096×4096.");
       }
       for (const part of parts) {
@@ -209,7 +238,7 @@ export default function AutoRigBuilderPanel({
       }
       if (onAssetsCreated) await onAssetsCreated();
       const result = buildAutoRigFromParts({
-        canvas: { width: image.naturalWidth, height: image.naturalHeight },
+        canvas: { width: image.width, height: image.height },
         parts: descriptors
       });
       onRigGenerated(result.profile);
@@ -227,10 +256,10 @@ export default function AutoRigBuilderPanel({
     <section className="studio-panel" style={{ marginTop: 18 }}>
       <small>AI AUTO-RIG · GUIDED SEGMENTATION</small>
       <h3>استخراج أجزاء الشخصية وبناء الهيكل الأولي</h3>
-      <p>هذه مرحلة التفكيك الموجّه: انقر حول كل جزء لرسم قناعه، ثم اختر دوره. سيُحفظ كل جزء كصورة PNG شفافة مستقلة، وتُنشأ عظام متوافقة مع محرك اللعبة. لا يوجد استدلال AI تلقائي في هذه المرحلة بعد.</p>
+      <p>هذه مرحلة التفكيك الموجّه: انقر حول كل جزء لرسم قناعه، ثم اختر دوره. سيُحفظ كل جزء كصورة PNG شفافة مستقلة، وتُنشأ عظام متوافقة مع محرك اللعبة. عند استخدام Sprite Sheet تتم معالجة أول إطار فقط كصورة مرجعية. لا يوجد استدلال AI تلقائي في هذه المرحلة بعد.</p>
       {imageError && <p className="studio-message" role="alert">{imageError}</p>}
-      {image && (image.naturalWidth > 4096 || image.naturalHeight > 4096)
-        ? <p className="studio-message">أبعاد الصورة {image.naturalWidth}×{image.naturalHeight} أكبر من الحد الحالي 4096×4096.</p>
+      {image && (image.width > 4096 || image.height > 4096)
+        ? <p className="studio-message">أبعاد الصورة {image.width}×{image.height} أكبر من الحد الحالي 4096×4096.</p>
         : null}
       {image && <div style={{ border: "1px solid #d8dce5", borderRadius: 12, overflow: "hidden", background: "#f4f5f8", maxHeight: 440, overflowY: "auto" }}>
         <canvas ref={canvasRef} onClick={addPoint} style={{ display: "block", width: "100%", height: "auto", maxHeight: 420, objectFit: "contain", cursor: disabled || busy ? "not-allowed" : "crosshair", touchAction: "manipulation" }} />
