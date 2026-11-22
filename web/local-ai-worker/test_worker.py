@@ -78,7 +78,7 @@ class WorkerTests(unittest.TestCase):
         rgb = worker.decode_image(data_url, 2, 2)
         self.assertEqual(rgb[0, 0].tolist(), [255, 0, 0])
         self.assertTrue(all(channel >= 254 for channel in rgb[1, 0].tolist()))
-        self.assertTrue(all(126 <= channel <= 129 for channel in rgb[0, 1].tolist()))
+        self.assertEqual(rgb[0, 1].tolist(), [127, 255, 127])
 
     def test_rejects_non_data_url(self):
         with self.assertRaises(ValueError):
