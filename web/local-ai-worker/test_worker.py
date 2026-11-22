@@ -3,6 +3,12 @@ from unittest.mock import patch
 import worker
 
 class WorkerTests(unittest.TestCase):
+    def test_worker_accepts_only_loopback_json_requests_without_browser_origin(self):
+        trusted = {"Host": worker.HOST + ":" + str(worker.PORT), "Content-Type": "application/json"}
+        self.assertTrue(worker.trusted_local_request(trusted))
+        self.assertFalse(worker.trusted_local_request({**trusted, "Origin": "https://attacker.example"}))
+        self.assertFalse(worker.trusted_local_request({**trusted, "Host": "attacker.example"}))
+        self.assertFalse(worker.trusted_local_request({**trusted, "Content-Type": "text/plain"}))
     def test_capabilities_degraded_without_weights(self):
         with patch.object(worker, "load_model", side_effect=RuntimeError("missing weights")):
             result = worker.capabilities()
