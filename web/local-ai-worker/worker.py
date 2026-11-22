@@ -43,12 +43,21 @@ def load_model():
             _MODEL_ERROR = "Could not initialize SAM 2: " + str(exc)[:250]
             raise RuntimeError(_MODEL_ERROR) from exc
 def capabilities():
+    available = []
+    warnings = []
+    try:
+        import cv2, numpy
+        available.append("visible-donor-reconstruction")
+    except Exception as exc:
+        warnings.append("OpenCV/NumPy unavailable for donor transfer: " + str(exc)[:180])
     try:
         _, _, device = load_model()
-        return {"protocolVersion":1,"status":"ready","device":device,"capabilities":["part-detection","prompted-segmentation"],
-                "models":[{"id":"sam2-automatic-mask-generator","version":"local-checkpoint","license":"Apache-2.0"}],"warnings":[]}
+        available.extend(["part-detection", "prompted-segmentation"])
+        return {"protocolVersion":1,"status":"ready","device":device,"capabilities":available,
+                "models":[{"id":"sam2-automatic-mask-generator","version":"local-checkpoint","license":"Apache-2.0"}],"warnings":warnings}
     except Exception as exc:
-        return {"protocolVersion":1,"status":"degraded","device":"unknown","capabilities":[],"models":[],"warnings":[str(exc)]}
+        warnings.append(str(exc)[:300])
+        return {"protocolVersion":1,"status":"degraded","device":"unknown","capabilities":available,"models":[],"warnings":warnings}
 
 def decode_image_data(data_url, width, height):
     match = re.fullmatch(r"data:image/(png|jpeg|webp);base64,([A-Za-z0-9+/]+=*)", data_url or "")
@@ -271,21 +280,14 @@ def reconstruct_from_visible_donor(payload):
     }
     donor_crop = image[donor_bounds["y"]:donor_bounds["y"] + donor_bounds["height"],
                        donor_bounds["x"]:donor_bounds["x"] + donor_bounds["width"]].copy()
-    donor_alpha = donor_mask[donor_bounds["y"]:donor_bounds["y"] + donor_bounds["height"],
-                             donor_bounds["x"]:donor_bounds["x"] + donor_bounds["width"]].astype(np.uint8) * 255
     if payload.get("flipHorizontal", True) is True:
         donor_crop = cv2.flip(donor_crop, 1)
-        donor_alpha = cv2.flip(donor_alpha, 1)
     target_size = (target_bounds["width"], target_bounds["height"])
     transferred = cv2.resize(donor_crop, target_size, interpolation=cv2.INTER_CUBIC)
-    transferred_alpha = cv2.resize(donor_alpha, target_size, interpolation=cv2.INTER_NEAREST)
     local_target = target_mask[target_bounds["y"]:target_bounds["y"] + target_bounds["height"],
                                target_bounds["x"]:target_bounds["x"] + target_bounds["width"]]
-    # The target polygon is authoritative. Donor alpha is used only as a soft
-    # edge-confidence mask so the transfer does not inherit the donor's bbox.
+    # The target polygon is authoritative; donor bounds supply the transferred texture.
     alpha = np.where(local_target, 255, 0).astype(np.uint8)
-    if transferred_alpha.size:
-        alpha = cv2.bitwise_and(alpha, np.where(transferred_alpha > 0, 255, 255).astype(np.uint8))
     bgra = cv2.cvtColor(transferred, cv2.COLOR_RGB2BGRA)
     bgra[:, :, 3] = alpha
     ok, encoded = cv2.imencode(".png", bgra)
