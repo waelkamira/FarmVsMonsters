@@ -67,6 +67,14 @@ export function snapSkeletalKeyframeTime(clip, timeMs) {
   return Math.min(duration, Math.max(0, Math.round(frameIndex * frameDuration)));
 }
 
+export function snapSkeletalKeyframeTime(timeMs, fps = 24, durationMs = 60000) {
+  const duration = Math.max(1, Math.round(Number(durationMs) || 1));
+  const rate = Math.max(1, Math.min(60, Math.round(Number(fps) || 24)));
+  const time = Math.max(0, Math.min(duration, Number(timeMs) || 0));
+  const frameIndex = Math.round(time * rate / 1000);
+  return Math.max(0, Math.min(duration, Math.round(frameIndex * 1000 / rate)));
+}
+
 export function createSkeletalRigProfile(input) {
   if (!input || typeof input !== "object") throw new TypeError("A skeletal rig profile is required.");
   if (Number(input.version ?? 1) !== 1) throw new RangeError("Only skeletal rig profile version 1 is supported.");
@@ -153,6 +161,7 @@ export function createSkeletalRigProfile(input) {
     clipIds.add(id);
     const durationMs = finite(entry.durationMs, "clips[" + clipIndex + "].durationMs", 1, 60000, 1000);
     const fps = finite(entry.fps, "clips[" + clipIndex + "].fps", 1, 60, 24);
+    if (!Number.isInteger(durationMs) || !Number.isInteger(fps)) throw new RangeError("Clip duration and FPS must be integers.");
     if (!Number.isInteger(durationMs)) throw new RangeError("Animation duration must be an integer in milliseconds.");
     if (!Array.isArray(entry.tracks) || entry.tracks.length > MAX_BONES) {
       throw new RangeError("Each animation clip must contain a valid track list.");
