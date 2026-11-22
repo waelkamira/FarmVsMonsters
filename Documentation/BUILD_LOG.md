@@ -1202,3 +1202,8 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - Connected the guided Studio panel to hash the original source bytes when Web Crypto is available and to pass the mask/provenance metadata into the canonical manifest. The source art remains unchanged; only cutout PNG derivatives are added to the existing Studio asset library.
 - Added regressions for source metadata, role dictionary version, mask persistence, provenance, malformed hashes, and out-of-canvas mask points. Test execution is still pending because the latest GitHub Actions attempts have not exposed runnable job steps or logs.
 - CI rechecked after the mask/provenance and upload-guard changes (head commit f95541272cbaa49cac563c9aee5b5607237988c9). Both required workflows again reported failure while their job payloads contained `steps: null` and no log URL; this environment still cannot expose an actual test/build trace. The branch is 26 commits ahead of its PR base and 0 behind at this checkpoint; merge remains blocked pending real executable validation.
+
+## 2026-11-22 — Shared semantic role dictionary
+- Moved the Studio role choices into the Auto-Rig builder's versioned role dictionary so the UI and deterministic generator consume the same canonical values instead of maintaining duplicate lists.
+- Added the missing jaw and weapon-muzzle semantic roles, including parent-role guidance for a muzzle-region part. The actual projectile launch point remains a separately confirmed `muzzle` attachment, not an inferred polygon role.
+- Added a regression that confirms the Studio option and generator agree on `weapon.muzzle` and do not emit an unknown-role warning for it.
