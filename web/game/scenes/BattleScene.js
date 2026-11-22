@@ -3670,7 +3670,13 @@ export default class BattleScene extends Scene {
       const row = plant.row;
       const profile = plant.studioPlant.combat;
       const laneOrigin = this.lanePoint(localX, row);
-      const view = this.add.container(laneOrigin.x + 14, laneOrigin.y - 30).setDepth(16);
+      const skeletalRig = plant.view?.getData?.("studioSkeletalRig");
+      const muzzleId = skeletalRig?.profile.attachments.find((item) => item.id === "muzzle")?.id
+        || skeletalRig?.profile.attachments[0]?.id;
+      const muzzle = muzzleId ? skeletalRig.getAttachment(muzzleId) : null;
+      const launchOffsetX = muzzle ? plant.view.x + muzzle.x - laneOrigin.x : Number(profile.projectileLaunchOffsetX ?? 14);
+      const launchOffsetY = muzzle ? plant.view.y + muzzle.y - laneOrigin.y : Number(profile.projectileLaunchOffsetY ?? -30);
+      const view = this.add.container(laneOrigin.x + launchOffsetX, laneOrigin.y + launchOffsetY).setDepth(16);
       const textureKey = plant.studioPlant.projectileTextureKey || "studio-projectile-published-" + plant.studioPlant.id;
       if (this.textures.exists(textureKey)) {
         const projectile = plant.studioPlant.combat.projectile || {};
@@ -3690,7 +3696,7 @@ export default class BattleScene extends Scene {
       view.setRotation((Number(profile.projectileRotation) || 0) * Math.PI / 180);
       this.projectiles.push({
         view, localX, row, target, startLocalX: localX, targetLocalX: Math.max(localX + 1, target.localX),
-        launchOffsetX: Number(profile.projectileLaunchOffsetX ?? 14), launchOffsetY: Number(profile.projectileLaunchOffsetY ?? -30), speed: profile.projectileSpeed,
+        launchOffsetX, launchOffsetY, speed: profile.projectileSpeed,
         projectileTrajectoryType: profile.projectileTrajectoryType || "arc",
         projectileCurveX: Number(profile.projectileCurveX) || 0, projectileCurveY: Number(profile.projectileCurveY) || 110,
         projectileTargetOffsetX: Number(profile.projectileTargetOffsetX) || 0, projectileTargetOffsetY: Number(profile.projectileTargetOffsetY) || 0,
