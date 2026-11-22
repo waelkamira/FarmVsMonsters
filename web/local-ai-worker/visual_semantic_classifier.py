@@ -138,7 +138,7 @@ def classify_regions(image_rgb, proposals, character_type):
             side = "left" if center_x < width / 2 else "right"
             if kind == "plant" and role == "leaf":
                 role = "leaf." + side
-            elif kind == "monster" and role in ("arm", "hand", "eye"):
+            elif kind == "monster" and role in ("arm", "hand", "eye", "leg", "foot"):
                 role = role + "." + side
             results.append({
                 "proposalId": str(proposals[proposal_index].get("id", "")),
