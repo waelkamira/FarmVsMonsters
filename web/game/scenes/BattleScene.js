@@ -3725,9 +3725,12 @@ export default class BattleScene extends Scene {
       const profile = plant.studioPlant.combat;
       const laneOrigin = this.lanePoint(localX, row);
       const skeletalRig = plant.view?.getData?.("studioSkeletalRig");
-      const muzzleId = skeletalRig?.profile.attachments.find((item) => item.id === "muzzle")?.id
-        || skeletalRig?.profile.attachments[0]?.id;
-      const muzzle = muzzleId ? skeletalRig.getAttachment(muzzleId) : null;
+      const muzzle = skeletalRig?.profile.attachments.some((item) => item.id === "muzzle")
+        ? skeletalRig.getAttachment("muzzle") : null;
+      if (skeletalRig && !muzzle) {
+        console.error("Rigged projectile plant has no valid muzzle attachment:", plant.studioPlant.id);
+        return;
+      }
       const launchOffsetX = muzzle ? plant.view.x + muzzle.x - laneOrigin.x : Number(profile.projectileLaunchOffsetX ?? 14);
       const launchOffsetY = muzzle ? plant.view.y + muzzle.y - laneOrigin.y : Number(profile.projectileLaunchOffsetY ?? -30);
       const view = this.add.container(laneOrigin.x + launchOffsetX, laneOrigin.y + launchOffsetY).setDepth(16);
