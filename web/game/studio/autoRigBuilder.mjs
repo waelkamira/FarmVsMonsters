@@ -121,7 +121,7 @@ function readPart(raw, index, canvas) {
     mask = { kind: "polygon", points };
   }
   const provenanceInput = raw.provenance && typeof raw.provenance === "object" ? raw.provenance : {};
-  const segmentation = ["manual-polygon", "model-mask", "imported-mask"].includes(provenanceInput.segmentation)
+  const segmentation = ["manual-polygon", "model-mask", "imported-mask", "sam2"].includes(provenanceInput.segmentation)
     ? provenanceInput.segmentation : (mask ? "manual-polygon" : "unspecified");
   const pixels = ["source", "reconstructed"].includes(provenanceInput.pixels) ? provenanceInput.pixels : "source";
   if (confidence !== null && (confidence < 0 || confidence > 1)) throw new RangeError("Part " + id + " confidence must be between 0 and 1.");
