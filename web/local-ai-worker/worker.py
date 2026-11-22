@@ -64,6 +64,40 @@ def polygon_for_mask(mask, cv2):
     if len(points) > 512: points = points[::((len(points)+511)//512)][:512]
     return [{"x":int(p[0]),"y":int(p[1])} for p in points]
 
+def select_distinct_masks(masks, image_shape, limit=63):
+    height, width = image_shape[:2]
+    image_area = height * width
+    candidates = []
+    for item in masks:
+        mask = item.get("segmentation")
+        if mask is None or getattr(mask, "shape", None) != (height, width):
+            continue
+        area = int(item.get("area", int(mask.sum())))
+        ratio = area / image_area
+        if ratio < 0.0015 or ratio > 0.78:
+            continue
+        quality = float(item.get("predicted_iou", 0.0)) * float(item.get("stability_score", 0.0))
+        candidates.append((quality, area, item))
+    candidates.sort(key=lambda value: (value[0], value[1]), reverse=True)
+    selected = []
+    selected_masks = []
+    for _quality, _area, item in candidates:
+        mask = item["segmentation"].astype(bool)
+        duplicate = False
+        for prior in selected_masks:
+            intersection = int((mask & prior).sum())
+            union = int((mask | prior).sum())
+            if union and intersection / union >= 0.92:
+                duplicate = True
+                break
+        if duplicate:
+            continue
+        selected.append(item)
+        selected_masks.append(mask)
+        if len(selected) >= limit:
+            break
+    return selected
+
 def detect_parts(payload):
     width, height = payload["canvas"]["width"], payload["canvas"]["height"]
     image = decode_image(payload["imageDataUrl"], width, height)
@@ -71,8 +105,9 @@ def detect_parts(payload):
     import cv2
     with _INFERENCE_LOCK:
         masks = generator.generate(image)
+    masks = select_distinct_masks(masks, image.shape, limit=63)
     proposals = []
-    for index, item in enumerate(sorted(masks, key=lambda value:value.get("area",0), reverse=True)):
+    for index, item in enumerate(masks):
         if len(proposals) >= 63: break
         mask = item.get("segmentation")
         if mask is None: continue
