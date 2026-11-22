@@ -27,6 +27,20 @@ export function createPhaserSkeletalRig(scene, profileInput, partTextures = {}, 
   }
 
   const profile = createSkeletalRigProfile(profileInput);
+  const resolvedParts = new Map();
+  for (const bone of profile.bones) {
+    if (!bone.part) continue;
+    const textureKey = resolveTextureKey(partTextures, bone.part.assetId);
+    if (!scene.textures.exists(textureKey)) {
+      throw new Error("Missing loaded texture for skeletal part " + bone.part.assetId + " (" + textureKey + ").");
+    }
+    const frame = scene.textures.get(textureKey)?.get?.(bone.part.frame);
+    if (!frame || !Number.isFinite(frame.width) || !Number.isFinite(frame.height) || frame.width < 1 || frame.height < 1) {
+      throw new Error("Missing or invalid frame " + bone.part.frame + " for skeletal part " + bone.part.assetId + ".");
+    }
+    resolvedParts.set(bone.id, { textureKey, frame });
+  }
+
   const root = scene.add.container(Number(options.x) || 0, Number(options.y) || 0);
   root.setVisible?.(options.visible !== false);
 
@@ -36,17 +50,7 @@ export function createPhaserSkeletalRig(scene, profileInput, partTextures = {}, 
   for (const bone of profile.bones) {
     const container = containers.get(bone.id);
     if (bone.part) {
-      const textureKey = resolveTextureKey(partTextures, bone.part.assetId);
-      if (!scene.textures.exists(textureKey)) {
-        root.destroy?.(true);
-        throw new Error("Missing loaded texture for skeletal part " + bone.part.assetId + " (" + textureKey + ").");
-      }
-      const texture = scene.textures.get(textureKey);
-      const frame = texture?.get?.(bone.part.frame);
-      if (!frame || !Number.isFinite(frame.width) || !Number.isFinite(frame.height) || frame.width < 1 || frame.height < 1) {
-        root.destroy?.(true);
-        throw new Error("Missing or invalid frame " + bone.part.frame + " for skeletal part " + bone.part.assetId + ".");
-      }
+      const { textureKey, frame } = resolvedParts.get(bone.id);
       const image = scene.add.image(0, 0, textureKey, bone.part.frame);
       image.setOrigin(
         Math.max(0, Math.min(1, bone.pivot.x / frame.width)),
@@ -90,13 +94,21 @@ export function createPhaserSkeletalRig(scene, profileInput, partTextures = {}, 
     setVisible(visible) {
       if (!destroyed) root.setVisible(Boolean(visible));
     },
+    setRotation(degrees) {
+      if (!destroyed) root.setRotation((Number(degrees) || 0) * Math.PI / 180);
+    },
+    setScale(scaleX, scaleY = scaleX) {
+      if (!destroyed) root.setScale(Number(scaleX) || 1, Number(scaleY) || 1);
+    },
     getAttachment(id) {
       if (!currentPose) throw new Error("Play or apply a skeletal pose before resolving attachments.");
-      return getSkeletalAttachmentTransform(profile, currentPose, id);
+      const point = getSkeletalAttachmentTransform(profile, currentPose, id);
+      return { ...point, x: root.x + point.x, y: root.y + point.y };
     },
     getHitbox(id) {
       if (!currentPose) throw new Error("Play or apply a skeletal pose before resolving hitboxes.");
-      return getSkeletalHitboxTransform(profile, currentPose, id);
+      const hitbox = getSkeletalHitboxTransform(profile, currentPose, id);
+      return { ...hitbox, x: root.x + hitbox.x, y: root.y + hitbox.y };
     },
     destroy() {
       if (destroyed) return;
