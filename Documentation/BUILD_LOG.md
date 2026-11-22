@@ -1524,3 +1524,11 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - Auto-Rig run `45050521931` completed successfully: 75/75 Node tests, focused ESLint, full-project ESLint diagnostic step, Next.js production build, worker Python compile/tests, and WSL launcher syntax all passed.
 - Studio/Game run `45050521955` remains red with the same 53 known broad gameplay/legacy Studio failures; the last completed broad run for this branch family recorded 391 passed / 53 failed of 444.
 - Web quality gate run `45050521990` remained in progress at this entry; verify separately. PR stays draft pending local-model and real-asset acceptance.
+
+
+## 2026-11-22 — Local SAM 2 smoke-test harness and CI (head 1ea655f2)
+- Added `web/local-ai-worker/smoke_test.py`: when the local worker and SAM 2 checkpoint are running, it generates a synthetic plant image, checks worker capabilities, exercises automatic part detection and positive/negative point-prompted segmentation, and validates source-space proposal geometry. It makes no cloud requests and uses no real game asset.
+- Added three Python tests for synthetic PNG generation and proposal-response validation; worker CI now compiles the smoke-test script and runs it with the worker contract suite.
+- Auto-Rig run `45050695811` passed: 75/75 Node tests, 20/20 Python tests, focused ESLint, full-project ESLint diagnostic step, Next.js production build, and WSL launcher syntax.
+- This smoke harness is now ready for execution on the target Windows/WSL machine, but no SAM 2 checkpoint inference on that machine is claimed. Real FarmVsMonsters plant/monster asset acceptance and Phaser BattleScene validation remain pending.
+- Broad Web Quality Gate `45050695795` and Studio/Game Validation `45050695748` remain separate repository-wide blockers; the latest completed broad suite in this branch family recorded 391 passed and 53 failed of 444.
