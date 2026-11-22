@@ -47,10 +47,10 @@ This is the required logical flow. The current code implements parts of it, but 
 - This is a registry/file readiness report. It does not itself run a live Phaser battle, verify visual correctness, or measure FPS.
 
 ### Auto-Rig proposal
-- Studio editor invokes the protected `/api/studio/auto-rig/worker` bridge.
-- API validates session, same-origin request shape, bounded body/response sizes and worker response protocol.
-- `autoRigWorkerProtocol.mjs` normalizes capabilities and validates proposal shape.
-- `autoRigBuilder.mjs` creates a deterministic rig proposal/profile using the shared skeletal contract.
+- **Current mainline:** the protected `/api/studio/auto-rig/worker` bridge, `autoRigWorkerProtocol.mjs` and `autoRigBuilder.mjs` exist, but the main Studio page and `RigEditor.jsx` do not invoke the worker and main does not contain `AutoRigBuilderPanel.jsx`. Thus the full Studio UI → worker → proposal → save path is not currently wired on main.
+- **PR #89 only:** the open `feat/studio-ai-auto-rig-builder` branch adds `AutoRigBuilderPanel.jsx`, semantic role suggestions, rig-template retargeting, worker extensions and related tests. Treat this as a proposed Asset & Animation Studio feature branch, not as an independent product and not as mainline functionality.
+- Once integrated, the API must validate session, same-origin request shape, bounded body/response sizes and worker response protocol.
+- `autoRigWorkerProtocol.mjs` normalizes capabilities and validates proposal shape; `autoRigBuilder.mjs` creates a deterministic rig proposal/profile using the shared skeletal contract.
 - Human review and ordinary asset save/revision/readiness/release lifecycle remain mandatory.
 - Worker/model availability, complete browser workflow and final runtime quality are not established by source presence alone.
 
