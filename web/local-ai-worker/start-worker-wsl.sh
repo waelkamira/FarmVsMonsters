@@ -7,6 +7,7 @@ SAM2_DIR="${SAM2_REPO_DIR:-$HOME/.cache/fvm-sam2}"
 
 export SAM2_CONFIG="${SAM2_CONFIG:-$SAM2_DIR/configs/sam2.1/sam2.1_hiera_t.yaml}"
 export SAM2_CHECKPOINT="${SAM2_CHECKPOINT:-$HOME/models/sam2.1_hiera_tiny.pt}"
+export FVM_CLIP_MODEL_DIR="${FVM_CLIP_MODEL_DIR:-$HOME/models/clip-vit-base-patch32}"
 export FVM_AI_WORKER_PORT="${FVM_AI_WORKER_PORT:-8765}"
 
 [ -f "$ENV_DIR/bin/activate" ] || { echo "Worker environment missing. Run setup-wsl.sh first."; exit 1; }
