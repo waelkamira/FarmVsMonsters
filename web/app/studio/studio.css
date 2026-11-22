@@ -212,3 +212,16 @@
 
 /* Asset-library Sprite Sheet thumbnails intentionally show frame 1 only. */
 .studio-list .studio-thumb-sprite{background-repeat:no-repeat;background-color:#302b1e;background-size:100% 100%;}
+
+
+/* Accessible in-Studio clone dialog. */
+.studio-modal-backdrop{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:18px;background:#090d0bd9;backdrop-filter:blur(5px)}
+.studio-clone-dialog{width:min(100%,520px);padding:22px;border:1px solid #9c8656;border-radius:18px;background:#1d241b;color:#fff4d8;box-shadow:0 24px 80px #0009}
+.studio-clone-dialog>header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.studio-clone-dialog h2{margin:0;font-size:20px}
+.studio-clone-dialog>header button{width:40px;min-width:40px;font-size:22px}
+.studio-clone-dialog p{color:#d7c9a8;line-height:1.7}
+.studio-clone-dialog form{display:grid;gap:14px}
+.studio-clone-dialog label{display:grid;gap:7px;font-weight:700}
+.studio-clone-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:8px}
+.studio-clone-actions button:last-child{background:#d7a84f;color:#20190d;font-weight:800}
