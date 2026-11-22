@@ -5,7 +5,7 @@ import { VFXManager } from "../vfx/VFXManager.mjs";
 import { createDefaultVFXRegistry } from "../vfx/createDefaultVFXRegistry.mjs";
 import { getPlantVFXProfile } from "../vfx/PlantVFXProfiles.mjs";
 import { getProjectileVFXProfile } from "../vfx/ProjectileVFXProfiles.mjs";
-import { getMonsterReactionProfile, getPlantAnimationProfile } from "../visuals/PlantMonsterVisualProfiles.mjs";
+import { getMonsterReactionProfile, getPlantAnimationProfile, getPlantIdleMotionTransform } from "../visuals/PlantMonsterVisualProfiles.mjs";
 import { createStudioAnimationProfile } from "../studio/animationProfiles.mjs";
 import { getSpriteFrameRectangles } from "../studio/spriteSheetGrid.mjs";
 import { getProjectileTrajectoryOffset, getProjectileHeadCorrection, getProjectileLaunchPoint } from "../studio/projectileTrajectory.mjs";
@@ -3016,10 +3016,6 @@ export default class BattleScene extends Scene {
       plant.add(g);
     }
 
-    this.tweens.add({
-      targets: plant, scaleY: 1.04, duration: 1250,
-      ease: "Sine.easeInOut", yoyo: true, repeat: -1
-    });
     return plant;
   }
 
@@ -3131,7 +3127,6 @@ export default class BattleScene extends Scene {
       const fallback = this.add.ellipse(0, -24, 42, 48, type === "pumpkin" ? 0xf39b32 : 0xe8e5d7, 1);
       plant.add(fallback);
     }
-    this.tweens.add({ targets: plant, scaleY: 1.025, duration: 1350, ease: "Sine.easeInOut", yoyo: true, repeat: -1 });
     return plant;
   }
 
@@ -3163,41 +3158,44 @@ export default class BattleScene extends Scene {
       plant.add(g);
     }
 
-    this.tweens.add({
-      targets: plant,
-      scaleY: 1.025,
-      duration: 1450,
-      ease: "Sine.easeInOut",
-      yoyo: true,
-      repeat: -1
-    });
     return plant;
   }
 
   updatePlantIdleMotion(plant, deltaMs = 0) {
-    // Built-in plants already use their own Phaser idle tweens/animations.
-    // Studio plants use the saved idle clip; restore it after an attack and
-    // keep this check lightweight because it runs on every battle frame.
-    const studioPlant = plant?.studioPlant;
-    if (!studioPlant || plant.studioAttacking || plant.studioThrowing || plant.isAttacking || !plant.view?.active) return;
+    if (!plant?.alive || !plant.view?.active) return;
 
-    const sprite = plant.view.list?.find((child) =>
-      child?.active && child.getData?.("studioPlantSprite")
-    );
-    if (!sprite) return;
-
-    const idleKey = "studio-" + studioPlant.id + "-idle";
-    if (this.anims.exists(idleKey)) {
-      if (!sprite.anims?.isPlaying || sprite.anims.currentAnim?.key !== idleKey) {
-        sprite.play(idleKey);
+    // Studio-authored plants keep their saved clip and return to idle after attacks.
+    const studioPlant = plant.studioPlant;
+    if (studioPlant) {
+      if (plant.studioAttacking || plant.studioThrowing || plant.isAttacking) return;
+      const sprite = plant.view.list?.find((child) =>
+        child?.active && child.getData?.("studioPlantSprite")
+      );
+      if (!sprite) return;
+      const idleKey = "studio-" + studioPlant.id + "-idle";
+      if (this.anims.exists(idleKey)) {
+        if (!sprite.anims?.isPlaying || sprite.anims.currentAnim?.key !== idleKey) {
+          sprite.play(idleKey);
+        }
+        return;
       }
+      const idleFrame = String(studioPlant.animationProfile?.idle?.startFrame ?? 0);
+      if (sprite.frame?.name !== idleFrame) sprite.setFrame(idleFrame);
       return;
     }
 
-    // Static sheets or profiles without a registered idle clip should remain
-    // on the configured idle frame rather than retaining an attack frame.
-    const idleFrame = String(studioPlant.animationProfile?.idle?.startFrame ?? 0);
-    if (sprite.frame?.name !== idleFrame) sprite.setFrame(idleFrame);
+    // Built-in plants use deterministic profile-driven breathing motion.
+    const elapsed = (plant.idleElapsedMs || 0) + Math.max(0, Number(deltaMs) || 0);
+    const transform = getPlantIdleMotionTransform(
+      plant.type,
+      elapsed,
+      plant.idlePhaseMs || 0,
+      plant.idleBaseScaleX || 1,
+      plant.idleBaseScaleY || 1
+    );
+    if (!transform) return;
+    plant.idleElapsedMs = elapsed;
+    plant.view.setScale(transform.scaleX, transform.scaleY);
   }
 
   updatePlants(delta) {
