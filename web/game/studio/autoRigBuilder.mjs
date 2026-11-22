@@ -640,6 +640,36 @@ export function validateAutoRigBuildManifest(input, profileInput) {
     if (input.roleDictionaryVersion !== AUTO_RIG_ROLE_DICTIONARY_VERSION) throw new RangeError("Auto-Rig role dictionary version does not match this Studio build.");
     if (input.generator?.id !== "farmvsmonsters-auto-rig" || Number(input.generator?.version) !== 1) throw new RangeError("Unsupported Auto-Rig generator identity or version.");
     const profile = createSkeletalRigProfile(profileInput);
+    if (input.motionRequest != null) {
+      const motion = input.motionRequest;
+      if (!motion || typeof motion !== "object" || Array.isArray(motion) || Number(motion.version) !== 1) {
+        throw new TypeError("Auto-Rig motion request metadata is invalid.");
+      }
+      if (typeof motion.text !== "string" || !motion.text.trim() || motion.text.length > 400) {
+        throw new TypeError("Auto-Rig motion request text is invalid.");
+      }
+      if (!["plant", "monster"].includes(motion.characterType)) throw new RangeError("Auto-Rig motion request character type is invalid.");
+      if (!Array.isArray(motion.clipIds) || motion.clipIds.length < 1 || motion.clipIds.length > AUTO_RIG_MOTION_CLIPS.size) {
+        throw new RangeError("Auto-Rig motion request must select at least one supported clip.");
+      }
+      const requestedIds = new Set(motion.clipIds);
+      if (requestedIds.size !== motion.clipIds.length || [...requestedIds].some((id) => !AUTO_RIG_MOTION_CLIPS.has(id))) {
+        throw new RangeError("Auto-Rig motion request contains duplicate or unsupported clip IDs.");
+      }
+      if (motion.projectileRequested === true) {
+        if (motion.characterType !== "plant" || !requestedIds.has("attack") || !profile.attachments.some((attachment) => attachment.id === "muzzle")) {
+          throw new RangeError("Projectile motion metadata requires a plant attack clip and confirmed muzzle attachment.");
+        }
+      }
+      for (const key of ["strengthMultiplier", "speedMultiplier"]) {
+        const value = Number(motion[key]);
+        if (!Number.isFinite(value) || value < 0.5 || value > 2) throw new RangeError("Auto-Rig motion request " + key + " is outside the supported range.");
+      }
+      if (!Array.isArray(input.animation?.requestedClipIds) || input.animation.requestedClipIds.length !== motion.clipIds.length ||
+        input.animation.requestedClipIds.some((id, index) => id !== motion.clipIds[index])) {
+        throw new RangeError("Auto-Rig animation requested clips do not match the motion request.");
+      }
+    }
     const canvas = input.canvas || {};
     if (Number(canvas.width) !== profile.canvas.width || Number(canvas.height) !== profile.canvas.height) {
       throw new RangeError("Auto-Rig manifest canvas does not match the skeletal profile canvas.");
