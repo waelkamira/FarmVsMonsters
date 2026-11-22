@@ -137,3 +137,21 @@ test("allows archive analysis after a merged release request has been cleared fr
   const assets = [{ id: "draft-after-release", type: "plant", path: "/assets/plants/draft.png", status: "draft", releaseRequest: { number: 123, state: "merged" } }];
   assert.equal(buildAssetDependencyReport(assets, "draft-after-release").canArchive, true);
 });
+
+test("rig part references are reported as dependencies and block source-part archival", () => {
+  const assets = [
+    { id: "plant", type: "plant", path: "/assets/plants/plant.png", rigProfile: { bones: [{ id: "head", part: { assetId: "head-part", frame: 0 } }] } },
+    { id: "head-part", type: "item", name: "Head Part", path: "/assets/parts/head.png" }
+  ];
+  const report = buildAssetDependencyReport(assets, "plant");
+  assert.equal(report.dependencies.length, 1);
+  assert.equal(report.dependencies[0].relation, "rig-part");
+  assert.equal(report.dependencies[0].targetId, "head-part");
+  assert.equal(buildAssetDependencyReport(assets, "head-part").canArchive, false);
+});
+
+test("Studio asset API validates and publishes the rig profile with plant and monster catalogs", () => {
+  assert.match(routeSource, /createSkeletalRigProfile/);
+  assert.match(routeSource, /form\.get\("rigProfile"\)/);
+  assert.match(routeSource, /rigProfile:asset\.rigProfile\|\|null/);
+});
