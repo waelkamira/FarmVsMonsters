@@ -1303,3 +1303,10 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - Studio now lets the author select an accepted part and drag individual polygon vertices directly on the source preview. AI proposals remain visually distinct and cannot be edited as accepted data until the author explicitly assigns a semantic role and approves them.
 - Tightened `readyForAnimation`: a valid manifest alone is insufficient. All parts must have known semantic roles, editable masks, reviewed confidence, no low-confidence values, resolved occlusion, a SHA-256 source fingerprint, a primary body/stem, and no reconstructed pixels awaiting review.
 - Added regression coverage for missing source fingerprints and reconstructed-pixel provenance. The validator still reports heuristic quality separately from manifest validity.
+
+
+## 2026-11-22 — Explicit per-part review and occlusion assessment
+- Added a persisted `reviewed` flag to each manifest part; author review is now separate from model confidence. A high SAM 2 confidence score no longer silently counts as human approval.
+- New manual and AI-derived parts start unreviewed and with occlusion unresolved. Studio exposes an explicit review checkbox and an occlusion assessment selector for every part.
+- The animation readiness gate now requires all parts to be explicitly reviewed, all occlusion states resolved, and all prior source/mask/role/confidence requirements. This prevents an unexamined part from being treated as production-ready.
+- Updated quality-validator tests to distinguish missing model confidence from missing human review.
