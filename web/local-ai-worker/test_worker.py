@@ -1,8 +1,30 @@
 import unittest
+import io
 from unittest.mock import patch
 import worker
 
 class WorkerTests(unittest.TestCase):
+    def test_bounded_request_reader_rejects_invalid_lengths_and_truncated_bodies(self):
+        self.assertEqual(worker.read_limited_body(io.BytesIO(b'{"ok":true}'), "11"), b'{"ok":true}')
+        with self.assertRaises(ValueError):
+            worker.read_limited_body(io.BytesIO(b"x"), None)
+        with self.assertRaises(ValueError):
+            worker.read_limited_body(io.BytesIO(b"x"), "-1")
+        with self.assertRaises(ValueError):
+            worker.read_limited_body(io.BytesIO(b"x"), str(worker.MAX_BODY + 1))
+        with self.assertRaises(ValueError):
+            worker.read_limited_body(io.BytesIO(b"x"), "2")
+
+    def test_task_payload_requires_an_object_and_bounded_integer_canvas(self):
+        payload = {"protocolVersion": 1, "canvas": {"width": 100, "height": 80}, "imageDataUrl": "data:image/png;base64,AA=="}
+        self.assertIs(worker.validate_task_payload(payload), payload)
+        for invalid in (None, [], {"protocolVersion": 2}, {**payload, "canvas": {"width": True, "height": 80}},
+                        {**payload, "canvas": {"width": 4097, "height": 80}},
+                        {**payload, "imageDataUrl": "x" * (11 * 1024 * 1024 + 1)}):
+            with self.subTest(invalid=type(invalid).__name__):
+                with self.assertRaises(ValueError):
+                    worker.validate_task_payload(invalid)
+
     def test_worker_accepts_only_loopback_json_requests_without_browser_origin(self):
         trusted = {"Host": worker.HOST + ":" + str(worker.PORT), "Content-Type": "application/json"}
         self.assertTrue(worker.trusted_local_request(trusted))
