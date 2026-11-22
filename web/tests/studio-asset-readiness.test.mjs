@@ -157,7 +157,7 @@ test("readiness blocks skeletal part frame indices outside the referenced asset"
     bones: [{ id: "root", parentId: null }, { id: "head", parentId: "root", part: { assetId: "head-part", frame: 2 } }],
     attachments: [{ id: "muzzle", boneId: "root", x: 10, y: 0 }], hitboxes: [], clips: []
   };
-  const part = { id: "head-part", type: "item", status: "published", path: "/assets/parts/head.png", frameCount: 1, rows: 1, columns: 1 };
+  const part = { id: "head-part", type: "item", status: "published", path: "/assets/parts/head.png", frameCount: 9, rows: 1, columns: 1, spriteSheet: false };
   const report = auditStudioAssetRegistry([validPlant({ rigProfile }), validProjectile(), part]);
   assert.equal(report.blocked, 1);
   assert.ok(report.assets[0].errors.some((message) => message.includes("خارج عدد إطارات الأصل")));
