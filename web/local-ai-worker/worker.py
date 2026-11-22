@@ -106,11 +106,12 @@ def normalize_prompt_points(points, width, height):
     for index, point in enumerate(points):
         if not isinstance(point, dict):
             raise ValueError("Prompt point " + str(index) + " must be an object.")
-        try:
-            x, y = float(point["x"]), float(point["y"])
-            label = int(point.get("label", 1))
-        except (KeyError, TypeError, ValueError):
-            raise ValueError("Prompt point " + str(index) + " is malformed.")
+        raw_x, raw_y, raw_label = point.get("x"), point.get("y"), point.get("label", 1)
+        if isinstance(raw_x, bool) or isinstance(raw_y, bool) or not isinstance(raw_x, (int, float)) or not isinstance(raw_y, (int, float)):
+            raise ValueError("Prompt point " + str(index) + " coordinates must be numeric.")
+        if isinstance(raw_label, bool) or not isinstance(raw_label, int):
+            raise ValueError("Prompt point " + str(index) + " label must be integer 0 or 1.")
+        x, y, label = float(raw_x), float(raw_y), raw_label
         if not math.isfinite(x) or not math.isfinite(y) or not 0 <= x < width or not 0 <= y < height:
             raise ValueError("Prompt point " + str(index) + " is outside the source canvas.")
         if label not in (0, 1):
