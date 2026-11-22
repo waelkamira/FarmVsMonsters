@@ -22,7 +22,7 @@ test("normalizes only supported worker capabilities and bounded model metadata",
     models: [{ id: "sam2", version: "2.1", license: "Apache-2.0" }, { id: 3, version: "bad" }],
     warnings: ["weights not installed", 4]
   });
-  assert.deepEqual(result.capabilities, ["part-detection", "prompted-segmentation", "visible-donor-reconstruction", "local-texture-inpaint"]);
+  assert.deepEqual(result.capabilities, ["local-texture-inpaint", "part-detection", "prompted-segmentation", "visible-donor-reconstruction"]);
   assert.equal(result.models.length, 1);
   assert.deepEqual(result.warnings, ["weights not installed"]);
 });
