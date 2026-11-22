@@ -1498,3 +1498,11 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - Added four focused Node tests and wired the new module/test into the Auto-Rig GitHub Actions workflow.
 - Source edits are committed on the PR branch. CI for the new head has not yet been observed; do not report the new tests/build as passed until GitHub Actions completes.
 - The feature is a deterministic template-retargeting aid, not learned visual role classification, generative hidden-part completion, or a substitute for real-asset runtime acceptance.
+
+
+## 2026-11-22 — Verified semantic template-retarget CI (head c358e96f)
+- Auto-Rig subsystem run `45050027596` completed successfully: 71/71 Node tests, focused ESLint, full-project ESLint diagnostic step, Next.js production build, Python worker compile/tests, and WSL launcher syntax all passed.
+- The four new rig-template-retarget tests are included in the 71 passing focused tests.
+- Studio/Game Validation run `45050027543` remains red on the broad suite: 389 passed, 53 failed out of 442. This is four more total tests than the prior broad run, with the same failure count of 53; the broad gameplay/legacy Studio failures remain tracked and are not waived.
+- Web quality gate run `45050027482` was still in progress at the time of this log entry; its final state must be checked separately.
+- No real local SAM 2 checkpoint inference, target Windows/WSL image acceptance, or Studio-to-Phaser live asset test is claimed by CI.
