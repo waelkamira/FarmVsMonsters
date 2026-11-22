@@ -111,7 +111,9 @@ The editor is a mode switch inside Asset & Animation Studio:
 - [x] Add a pure named-state controller with bounded cross-fades and shortest-path rotation blending.
 - [x] Prevent plant idle updates and repeated monster movement updates from restarting active clips.
 - [x] Return completed non-looping actions to idle where configured by the battle integration.
-- [ ] Add explicit priority rules for frozen/stunned/death interruption and verify all state transitions in battle.
+- [x] Add explicit priority guards: death cannot be interrupted, frozen state survives stacked freeze hits and ordinary reactions, and attack/hit cannot be reset by idle/movement updates.
+- [x] Add integer frame snapping so timeline edits and drag operations always save validator-compatible keyframe timestamps.
+- [ ] Verify all state transitions in a live browser battle.
 
 ### Phase E — Full battle integration and verification
 - [x] Use rig attachment points for real projectile origins.
@@ -122,7 +124,7 @@ The editor is a mode switch inside Asset & Animation Studio:
 - [ ] Run tests, lint, production build, and Chrome verification on Windows.
 - [x] Update the Studio master plan and this plan with implementation evidence and remaining gates.
 
-**CI environment note (2026-11-22):** GitHub Actions creates the validation jobs but reports `runner_id: 0`, no steps, and no downloadable job logs. This means the jobs have not reached a runner; no test, lint, or build result is being claimed. Re-run these checks when a GitHub-hosted runner is available.
+**CI environment note (2026-11-22):** Earlier GitHub Actions attempts ended before any job step started (`runner_id: 0`, empty steps, and no job logs). The workflow has now been enabled for pushes to `feat/studio-hybrid-animation-engine` and manual dispatch so the updated branch can be validated again. No test, lint, or build result is claimed until a runner executes the steps.
 
 ## Safety and quality rules
 
