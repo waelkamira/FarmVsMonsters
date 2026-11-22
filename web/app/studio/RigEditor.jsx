@@ -16,10 +16,6 @@ function createDefaultRig(width = 256, height = 256) {
     ] }] }]
   };
 }
-const safeId = (value, fallback) => {
-  const id = String(value || "").toLowerCase().replace(/[^a-z0-9._:-]/g, "-").replace(/^-+|-+$/g, "").slice(0, 64);
-  return id || fallback;
-};
 const clone = (value) => JSON.parse(JSON.stringify(value));
 
 export default function RigEditor({ profile, onChange, assets = [], currentAssetId, disabled = false }) {
@@ -218,7 +214,6 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
     if (!bone || disabled || playing) return;
     const rect = canvasRef.current.getBoundingClientRect();
     const scaleX = rig.canvas.width / rect.width, scaleY = rig.canvas.height / rect.height;
-    const startX = (event.clientX - rect.left) * scaleX, startY = (event.clientY - rect.top) * scaleY;
     const initial = { x: bone.x, y: bone.y, clientX: event.clientX, clientY: event.clientY };
     const move = (nextEvent) => {
       updateBone("x", Math.round(initial.x + (nextEvent.clientX - initial.clientX) * scaleX));
