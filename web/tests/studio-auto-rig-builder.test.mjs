@@ -178,6 +178,9 @@ test("shares one versioned semantic role dictionary between the builder and Stud
   });
   const result = buildAutoRigFromParts(input);
   assert.ok(AUTO_RIG_ROLE_OPTIONS.some((option) => option.value === "weapon.muzzle"));
+  for (const role of ["root", "flower", "fruit", "leg.left", "leg.right", "foot.left", "foot.right"]) {
+    assert.ok(AUTO_RIG_ROLE_OPTIONS.some((option) => option.value === role), "missing role option: " + role);
+  }
   assert.ok(!result.warnings.some((warning) => warning.code === "unknown-role" && warning.partId === "muzzle-region"));
 });
 
