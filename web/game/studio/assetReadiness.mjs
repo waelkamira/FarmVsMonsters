@@ -56,6 +56,10 @@ export function auditStudioAssetRegistry(input) {
         else if (linked.path !== combat.projectile.path) errors.push("مسار القذيفة المحفوظ في النبتة لا يطابق مسار أصل القذيفة الحالي.");
       }
     }
+    if (asset?.rigProfile && type === "plant" && asset.combat?.mode === "projectile" &&
+        !asset.rigProfile.attachments?.some((attachment) => attachment.id === "muzzle")) {
+      errors.push("النبتة الهيكلية التي تطلق قذيفة تحتاج نقطة تثبيت باسم muzzle.");
+    }
     if (asset?.rigProfile) {
       if (type !== "plant" && type !== "monster") errors.push("ملف الهيكل متاح للنباتات والوحوش فقط.");
       const rigValidation = validateSkeletalRigProfile(asset.rigProfile);
