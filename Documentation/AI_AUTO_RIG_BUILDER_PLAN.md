@@ -445,3 +445,14 @@ A first usable reconstruction workflow is now implemented as deterministic visib
 5. Pixel review is a separate explicit approval from the overall part review. The quality gate allows reconstructed pixels only after both reviews and resolved occlusion.
 
 **Capability boundary:** donor transfer is an author-guided symmetry/texture-copy operation, not generative inpainting. A second path, `local-texture-inpaint`, uses OpenCV Telea to fill a manually marked region from immediate neighboring pixels. It is useful only for small texture gaps and does not infer anatomy, shape, or semantic structure. Both methods produce transparent patches, preserve provenance, and require explicit pixel review plus normal part review. A future local generative inpainting model remains separate and must include model/checkpoint provenance and the same fail-closed review gate. The worker advertises `visible-donor-reconstruction` and `local-texture-inpaint`, never `hidden-part-reconstruction`.
+
+
+## 2026-11-22 — Semantic Rig Library template retargeting
+A first reviewed template-retargeting path is now integrated into the permanent Auto-Rig panel:
+- Authors can select another saved rigged asset as a template after extracting and assigning roles to the current character's parts.
+- The retargeter matches exact semantic roles one-to-one, respects explicit left/right sides, compares normalized source-space centers, and transfers normalized pivots, draw order, and mapped parent relationships.
+- The UI previews match confidence and unmatched parts. Applying the plan is a separate explicit action; every changed target part is marked unreviewed so the normal author and quality gates still apply.
+- Unmatched template parents are not invented; the builder falls back to its normal parent selection. This is deterministic geometric/semantic-role matching, not learned visual classification or automatic mesh/bone deformation transfer.
+- Focused tests cover one-to-one mapping, side preservation, normalized pivot transfer, unmatched parents, malformed geometry, and duplicate IDs. CI now includes this module and test.
+
+Remaining work: learned plant/monster visual role classification; generative anatomical hidden-part reconstruction; robust semantic template mapping when source roles are absent or ambiguous; live SAM 2 checkpoint and real-asset Studio-to-Phaser validation; broad repository validation debt.
