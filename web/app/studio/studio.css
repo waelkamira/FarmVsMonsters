@@ -138,3 +138,77 @@
 .studio-motion-progress{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px;padding:10px 12px;border:1px solid #526b45;border-radius:10px;background:#172319;color:#eaf2df;font-size:12px;font-weight:800}
 .studio-motion-progress input{grid-column:1/-1;width:100%;accent-color:#f1cc7e}
 .studio-motion-progress span{font-variant-numeric:tabular-nums;color:#f1cc7e}
+
+
+/* Keep asset names independent from the action toolbar. */
+.studio-list .studio-asset-row{display:grid;grid-template-columns:58px minmax(0,1fr);align-items:start;gap:10px;min-width:0;padding:12px}
+.studio-list .studio-asset-row>.studio-thumb,.studio-list .studio-asset-row>.studio-thumb-fallback{grid-column:1;grid-row:1;width:58px;height:58px;flex:0 0 58px}
+.studio-list .studio-asset-row>.studio-asset-meta{grid-column:2;grid-row:1;min-width:0;width:100%;flex:initial}
+.studio-asset-meta b{min-width:0;max-width:100%;overflow-wrap:anywhere;word-break:break-word;line-height:1.45}
+.studio-asset-actions{grid-column:1/-1;display:flex;align-items:center;flex-wrap:wrap;gap:8px;min-width:0;width:100%}
+.studio-asset-actions>em{flex:0 0 auto;margin:0;padding:5px 9px;border-radius:7px;background:#302b1e;color:#e8c477;font-size:11px;font-style:normal;font-weight:800;white-space:normal}
+.studio-asset-actions>button,.studio-asset-actions>.studio-asset-details-link,.studio-asset-actions>.studio-release-link{flex:0 1 auto;max-width:100%;min-width:0;white-space:normal;text-align:center;overflow-wrap:anywhere}
+.studio-asset-actions .studio-version-tools{flex:1 1 230px;min-width:min(100%,190px)}
+.studio-asset-actions .studio-version-tools label{min-width:0;flex:1}
+.studio-asset-actions .studio-version-tools select{max-width:100%;min-width:0}
+@media(max-width:560px){
+ .studio-list .studio-asset-row{grid-template-columns:48px minmax(0,1fr);gap:9px}
+ .studio-list .studio-asset-row>.studio-thumb,.studio-list .studio-asset-row>.studio-thumb-fallback{width:48px;height:48px;flex-basis:48px}
+ .studio-asset-actions{gap:6px}
+ .studio-asset-actions>button,.studio-asset-actions>.studio-asset-details-link{flex:1 1 calc(50% - 6px)}
+ .studio-asset-actions .studio-version-tools{flex-basis:100%}
+}
+
+
+/* Larger asset thumbnails make plant identification immediate in the library. */
+.studio-list .studio-asset-row{grid-template-columns:112px minmax(0,1fr);column-gap:14px;row-gap:12px}
+.studio-list .studio-asset-row>.studio-thumb,
+.studio-list .studio-asset-row>.studio-thumb-fallback{width:112px;height:112px;min-width:112px;min-height:112px;flex:0 0 112px;border-radius:12px;object-fit:contain;background:#242d21;border:1px solid #66784e}
+.studio-list .studio-asset-row>.studio-thumb-audio,
+.studio-list .studio-asset-row>.studio-thumb-fallback{font-size:34px}
+.studio-list .studio-asset-row>.studio-asset-meta{align-self:center}
+@media(max-width:560px){
+ .studio-list .studio-asset-row{grid-template-columns:88px minmax(0,1fr);column-gap:10px}
+ .studio-list .studio-asset-row>.studio-thumb,
+ .studio-list .studio-asset-row>.studio-thumb-fallback{width:88px;height:88px;min-width:88px;min-height:88px;flex-basis:88px}
+}
+
+
+/* Studio form usability: larger targets, readable values, and clear keyboard focus. */
+.studio-shell input:not([type="file"]),.studio-shell select,.studio-shell textarea{
+  box-sizing:border-box;min-width:0;max-width:100%;min-height:46px;width:100%;
+  padding:11px 13px;border:1px solid #796746;border-radius:10px;
+  background:#12140f;color:#fff4d8;font:inherit;font-size:15px;line-height:1.4;
+  transition:border-color .15s ease,box-shadow .15s ease,background .15s ease;
+}
+.studio-shell input:not([type="file"]):focus,.studio-shell select:focus,.studio-shell textarea:focus{
+  outline:none;border-color:#f0c66e;background:#191b14;
+  box-shadow:0 0 0 3px #e8bd6533;
+}
+.studio-shell input::placeholder,.studio-shell textarea::placeholder{color:#988d72;opacity:1}
+.studio-shell input[type="number"]{
+  direction:ltr;text-align:left;font-variant-numeric:tabular-nums;
+  font-size:16px;font-weight:700;letter-spacing:.02em;
+}
+.studio-shell input[type="number"]::-webkit-inner-spin-button,
+.studio-shell input[type="number"]::-webkit-outer-spin-button{opacity:1;min-height:24px}
+.studio-shell input[type="range"]{accent-color:#e8bd65;cursor:pointer;min-height:30px}
+.studio-shell input[type="checkbox"],.studio-shell input[type="radio"]{width:20px;height:20px;accent-color:#e8bd65}
+.studio-shell label{min-width:0}
+.studio-shell .studio-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr));gap:14px}
+.studio-shell .studio-panel form{gap:16px}
+.studio-shell .studio-panel label{gap:9px;line-height:1.5}
+.studio-shell .studio-trajectory-editor input:not([type="range"]),
+.studio-shell .studio-trajectory-editor select{min-height:48px;font-size:16px}
+.studio-shell .studio-motion-settings{grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr))}
+.studio-shell button{min-height:40px}
+.studio-shell button:focus-visible,.studio-shell a:focus-visible{
+  outline:3px solid #f0c66e;outline-offset:2px
+}
+@media(max-width:560px){
+  .studio-shell input:not([type="file"]),.studio-shell select,.studio-shell textarea{min-height:48px;font-size:16px}
+  .studio-shell .studio-grid{grid-template-columns:1fr}
+}
+
+/* Asset-library Sprite Sheet thumbnails intentionally show frame 1 only. */
+.studio-list .studio-thumb-sprite{background-repeat:no-repeat;background-color:#302b1e;background-size:100% 100%;}

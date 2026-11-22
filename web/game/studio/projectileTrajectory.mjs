@@ -42,16 +42,39 @@ function sampleControlPoints(points, progress) {
   return { x: interpolate("x"), y: interpolate("y") };
 }
 
+export function getProjectileHeadCorrection({progress=0,targetX=0,targetY=0,trajectoryEndX=0,trajectoryEndY=0}={}) {
+  const t = Math.min(1, Math.max(0, Number(progress) || 0));
+  return {
+    x: (Number(targetX) - Number(trajectoryEndX)) * t,
+    y: (Number(targetY) - Number(trajectoryEndY)) * t
+  };
+}
+
 export function getProjectileTrajectoryOffset({type="arc",progress=0,height=0,curveX=0,curveY=110,targetX=0,targetY=0,points=null}={}) {
   const t=Math.min(1,Math.max(0,Number(progress)||0));
   const targetOffset={x:(Number(targetX)||0)*t,y:(Number(targetY)||0)*t};
   if (Array.isArray(points) && points.length >= 2) {
     const offset = sampleControlPoints(points, t);
-    return { x: targetOffset.x + offset.x, y: targetOffset.y + offset.y + Math.sin(Math.PI*t)*(Number(height)||0) };
+    // Control-point coordinates are relative to the muzzle, so the first
+    // authored point defines zero offset and can never move the launch origin.
+    const origin = points[0] || { x: 0, y: 0 };
+    return { x: targetOffset.x + offset.x - Number(origin.x || 0), y: targetOffset.y + offset.y - Number(origin.y || 0) + Math.sin(Math.PI*t)*(Number(height)||0) };
   }
   const bend=2*t*(1-t);
   if(type==="straight")return targetOffset;
   if(type==="sine")return {x:targetOffset.x,y:targetOffset.y+Math.sin(Math.PI*2*t)*(Number(height)||0)};
   if(type==="bezier")return {x:targetOffset.x+bend*(Number(curveX)||0),y:targetOffset.y+bend*(Number(curveY)||0)};
   return {x:targetOffset.x,y:targetOffset.y+Math.sin(Math.PI*t)*(Number(height)||0)};
+}
+
+
+/**
+ * Resolve the projectile's world-space muzzle point from the same lane anchor
+ * and pixel offsets in both Studio and the Phaser battle runtime.
+ */
+export function getProjectileLaunchPoint({ laneX = 0, laneY = 0, offsetX = 0, offsetY = 0 } = {}) {
+  return {
+    x: Number(laneX || 0) + Number(offsetX || 0),
+    y: Number(laneY || 0) + Number(offsetY || 0)
+  };
 }
