@@ -541,7 +541,7 @@ export default function AutoRigBuilderPanel({
         ...item,
         bounds: union,
         reconstructionPatch: { dataUrl: data.patchDataUrl, targetBounds: data.targetBounds },
-        reconstruction: { method: data.provenance.method, donorBounds: data.donorBounds, targetBounds: data.targetBounds, reviewed: false },
+        reconstruction: { method: data.provenance.method, donorBounds: data.donorBounds, targetBounds: data.targetBounds, donorMask: part.donorMask, targetMask: part.occlusionMask, flipHorizontal: true, reviewed: false },
         provenance: { ...(item.provenance || {}), pixels: "reconstructed" },
         occlusion: "reconstructed",
         reviewed: false
