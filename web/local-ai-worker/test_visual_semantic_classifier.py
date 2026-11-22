@@ -1,5 +1,6 @@
 import os
 import tempfile
+from pathlib import Path
 import unittest
 from unittest.mock import patch
 
@@ -22,6 +23,16 @@ class VisualSemanticClassifierTests(unittest.TestCase):
     def test_classifier_requires_a_local_model_directory(self):
         with patch.dict(os.environ, {"FVM_CLIP_MODEL_DIR": "/path/that/does/not/exist"}):
             self.assertFalse(model_status())
+
+    def test_model_status_requires_config_processor_and_local_weights(self):
+        with tempfile.TemporaryDirectory() as directory:
+            model_dir = Path(directory)
+            (model_dir / "config.json").write_text("{}", encoding="utf-8")
+            (model_dir / "preprocessor_config.json").write_text("{}", encoding="utf-8")
+            with patch.dict(os.environ, {"FVM_CLIP_MODEL_DIR": directory}):
+                self.assertFalse(model_status())
+                (model_dir / "model.safetensors").touch()
+                self.assertTrue(model_status())
 
     def test_classifier_rejects_empty_and_excessive_proposal_batches(self):
         image = np.zeros((32, 32, 3), dtype=np.uint8)
