@@ -37,11 +37,11 @@ test("inventory is a read-only collection view and does not invent item purchase
 });
 
 test("the uploaded seed-card frame is loaded and rendered on every battle seed packet", () => {
-  assert.match(scene, /seed-card-frame", "\/assets\/items\/ui\/ui-seed-card-fram\.png"/);
+  assert.match(scene, /seed-card", "\/assets\/items\/ui\/ui-seed-card\.png"/);
   assert.match(scene, /this\.textures\.exists\("seed-card"\)/);
   assert.match(scene, /Math\.min\(86 \/ frameSource\.width, 98 \/ frameSource\.height\)/);
   assert.match(scene, /\.\.\.\(seedFrame \? \[seedFrame\] : \[\]\)/);
-  assert.match(scene, /card\.add\(\[halo, packetFrame, packetRim, panel, \.\.\.\(seedFrame \? \[seedFrame\] : \[\]\), icon/);
+  assert.match(scene, /card\.add\(\[\.\.\.\(seedFrame \? \[seedFrame\] : \[\]\), panel, icon/);
 });
 
 
@@ -49,13 +49,13 @@ test("the uploaded locked seed-card artwork is used for locked plant cards and c
   assert.match(scene, /seed-card-locked", "\/assets\/items\/ui\/ui-seed-card-locked\.png"/);
   assert.match(scene, /locked && this\.textures\.exists\("seed-card-locked"\)/);
   assert.match(scene, /cardArtworkKey/);
-  assert.match(scene, /!unlocked && this\.textures\.exists\("seed-card-locked"\)/);
+  assert.match(scene, /locked && this\.textures\.exists\("seed-card-locked"\)/);
 });
 
 test("the uploaded empty seed-slot artwork fills unused loadout positions", () => {
   assert.match(scene, /seed-slot-empty", "\/assets\/items\/ui\/ui-seed-slot-empty\.png"/);
   assert.match(scene, /const packetSlotCount = Math\.max\(9, selectedTypes\.length\)/);
-  assert.match(scene, /if \(type\) continue/);
+  assert.match(scene, /const emptySlotCount = Math\.max\(0, inactiveSlots - inactivePlants\.length\)/);
   assert.match(scene, /"seed-slot-empty"\)/);
-  assert.match(scene, /\.setDepth\(44\)/);
+  assert.match(scene, /emptySlot = this\.add\.container\(x, 72\)\.setDepth\(45\)/);
 });
