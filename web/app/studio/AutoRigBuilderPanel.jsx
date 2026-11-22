@@ -214,6 +214,7 @@ export default function AutoRigBuilderPanel({
 
   function acceptAIProposal(proposal, selectedRole) {
     if (generated || parts.length >= 63) return;
+    if (!selectedRole) { setMessage("اختر الدور الدلالي للجزء قبل اعتماده."); return; }
     const points = proposal.mask.points;
     const candidateRole = selectedRole || proposal.role;
     const knownRole = AUTO_RIG_ROLE_OPTIONS.some((item) => item.value === candidateRole) ? candidateRole : "accessory";
@@ -408,11 +409,11 @@ export default function AutoRigBuilderPanel({
         <ul>{aiProposals.map((proposal) => <li key={proposal.id} style={{ marginTop: 6 }}>
           {proposal.name || proposal.role} · ثقة {proposal.confidence == null ? "غير محددة" : Math.round(proposal.confidence * 100) + "%"}
           <label style={{ display: "inline-flex", gap: 6, marginInlineStart: 10 }}>الدور
-            <select value={aiProposalRoles[proposal.id] || (AUTO_RIG_ROLE_OPTIONS.some((item) => item.value === proposal.role) ? proposal.role : "accessory")} disabled={disabled || busy || generated} onChange={(event) => setAiProposalRoles((current) => ({ ...current, [proposal.id]: event.target.value }))}>
-              {AUTO_RIG_ROLE_OPTIONS.map((item) => <option value={item.value} key={item.value}>{item.label}</option>)}
+            <select value={aiProposalRoles[proposal.id] || ""} disabled={disabled || busy || generated} onChange={(event) => setAiProposalRoles((current) => ({ ...current, [proposal.id]: event.target.value }))}>
+              <option value="">اختر الدور...</option>{AUTO_RIG_ROLE_OPTIONS.map((item) => <option value={item.value} key={item.value}>{item.label}</option>)}
             </select>
           </label>
-          <button type="button" disabled={disabled || busy || generated || parts.length >= 63} style={{ marginInlineStart: 10 }} onClick={() => acceptAIProposal(proposal, aiProposalRoles[proposal.id])}>اعتماد القناع</button>
+          <button type="button" disabled={disabled || busy || generated || parts.length >= 63 || !aiProposalRoles[proposal.id]} style={{ marginInlineStart: 10 }} onClick={() => acceptAIProposal(proposal, aiProposalRoles[proposal.id])}>اعتماد القناع</button>
         </li>)}</ul>
         <p>لا تُحفظ المقترحات تلقائياً. اعتماد القناع ينقله إلى قائمة الأجزاء التي يمكنك مراجعتها وحذفها قبل إنشاء الهيكل.</p>
       </div>}
