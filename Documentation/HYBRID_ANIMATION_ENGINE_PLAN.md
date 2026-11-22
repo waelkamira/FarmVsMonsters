@@ -85,6 +85,9 @@ The editor is a mode switch inside Asset & Animation Studio:
 - [ ] Focused Node tests pass in the repository environment.
 
 ### Phase B — Phaser runtime adapter
+- [x] Add a Phaser Container renderer adapter that builds the bone hierarchy, assigns bitmap frames/pivots, applies evaluated local transforms, and exposes world-space attachments/hitboxes.
+- [x] Add focused fake-scene tests for container hierarchy, pivots, attachments, hitboxes, missing textures, and cleanup.
+- [ ] Integrate the adapter into the live plant/monster battle runtime.
 - Render each bitmap part using the evaluated world transform.
 - Integrate state selection with existing plant/monster runtime animation calls.
 - Add deterministic state transitions and safe cleanup on scene shutdown.
