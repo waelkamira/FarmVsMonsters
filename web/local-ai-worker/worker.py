@@ -380,7 +380,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send_json(200,capabilities())
     def do_POST(self):
         task_path = urlparse(self.path).path
-        if task_path not in ("/v1/auto-rig/part-detection", "/v1/auto-rig/prompted-segmentation"):
+        if task_path not in ("/v1/auto-rig/part-detection", "/v1/auto-rig/prompted-segmentation", "/v1/auto-rig/visible-donor-reconstruction", "/v1/auto-rig/local-texture-inpaint"):
             return self.send_json(404,{"error":"Unsupported task"})
         if not trusted_local_request(self.headers):
             return self.send_json(403,{"error":"Only same-machine JSON requests without a browser Origin are accepted."})
