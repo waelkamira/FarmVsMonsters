@@ -2,6 +2,7 @@ import { createSkeletalRigProfile } from "./skeletalAnimation.mjs";
 
 const ID_PATTERN = /^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,63}$/;
 export const AUTO_RIG_ROLE_DICTIONARY_VERSION = "1.0.0";
+const MUZZLE_EMITTER_ROLES = new Set(["weapon", "weapon.barrel", "mouth", "head", "face"]);
 export const AUTO_RIG_ROLE_OPTIONS = Object.freeze([
   { value: "body", label: "الجسم" }, { value: "stem", label: "الساق" },
   { value: "head", label: "الرأس" }, { value: "face", label: "الوجه" },
@@ -313,24 +314,24 @@ export function buildAutoRigFromParts(input) {
 
   const attachments = [];
   const muzzle = input.anchors?.muzzle;
-  if (input.requiresMuzzle && !muzzle) throw new RangeError("A projectile rig requires a confirmed muzzle anchor.");
+  if (input.requiresMuzzle && !muzzle) throw new RangeError("A projectile rig requires a confirmed muzzle/emitter anchor.");
   if (muzzle) {
     const weapon = muzzle.partId
       ? partsById.get(readId(muzzle.partId, "anchors.muzzle.partId", 59))
-      : parts.find((part) => part.role === "weapon.barrel") || parts.find((part) => part.role === "weapon");
-    if (muzzle.partId && !weapon) throw new RangeError("Muzzle anchor references a missing weapon part.");
-    if (!weapon || !["weapon", "weapon.barrel"].includes(weapon.role)) {
-      throw new RangeError("A muzzle anchor must reference a weapon or weapon-barrel part.");
+      : parts.find((part) => part.role === "weapon.barrel") || parts.find((part) => part.role === "weapon") || parts.find((part) => part.role === "mouth") || parts.find((part) => part.role === "head") || parts.find((part) => part.role === "face");
+    if (muzzle.partId && !weapon) throw new RangeError("Muzzle anchor references a missing emitter part.");
+    if (!weapon || !MUZZLE_EMITTER_ROLES.has(weapon.role)) {
+      throw new RangeError("A muzzle anchor must reference a weapon, barrel, mouth, head, or face part.");
     }
     const x = finite(muzzle.x, "anchors.muzzle.x");
     const y = finite(muzzle.y, "anchors.muzzle.y");
     if (x < 0 || y < 0 || x > canvas.width || y > canvas.height) throw new RangeError("Muzzle anchor must lie inside the source canvas.");
     if (x < weapon.bounds.x || y < weapon.bounds.y || x > weapon.bounds.x + weapon.bounds.width || y > weapon.bounds.y + weapon.bounds.height) {
-      throw new RangeError("Muzzle anchor must lie inside or on the confirmed weapon part bounds.");
+      throw new RangeError("Muzzle anchor must lie inside or on the confirmed emitter part bounds.");
     }
     attachments.push({
       id: "muzzle",
-      name: "Weapon muzzle",
+      name: "Muzzle / emitter",
       boneId: "part-" + weapon.id,
       x: x - weapon.pivot.x,
       y: y - weapon.pivot.y,
