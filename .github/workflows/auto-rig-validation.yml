@@ -8,9 +8,11 @@ on:
     paths:
       - "web/app/studio/**"
       - "web/app/api/studio/assets/route.js"
+      - "web/app/api/studio/auto-rig/worker/route.js"
       - "web/game/studio/**"
       - "web/game/studio/autoRigWorkerProtocol.mjs"
       - "web/tests/studio-auto-rig-worker-protocol.test.mjs"
+      - "web/tests/studio-auto-rig-worker-route.test.mjs"
       - "web/tests/studio-auto-rig-builder.test.mjs"
       - "web/tests/studio-asset-versions.test.mjs"
       - "web/tests/studio-hybrid-engine-integration.test.mjs"
@@ -39,10 +41,10 @@ jobs:
         run: npm ci
 
       - name: Run Auto-Rig and Studio contract tests
-        run: node --test tests/studio-auto-rig-builder.test.mjs tests/studio-auto-rig-worker-protocol.test.mjs tests/studio-asset-versions.test.mjs tests/studio-hybrid-engine-integration.test.mjs
+        run: node --test tests/studio-auto-rig-builder.test.mjs tests/studio-auto-rig-worker-protocol.test.mjs tests/studio-auto-rig-worker-route.test.mjs tests/studio-asset-versions.test.mjs tests/studio-hybrid-engine-integration.test.mjs
 
       - name: Run focused Auto-Rig ESLint
-        run: npx eslint app/studio/AutoRigBuilderPanel.jsx app/api/studio/assets/route.js game/studio/autoRigBuilder.mjs game/studio/autoRigWorkerProtocol.mjs game/studio/assetVersions.mjs
+        run: npx eslint app/studio/AutoRigBuilderPanel.jsx app/api/studio/assets/route.js app/api/studio/auto-rig/worker/route.js game/studio/autoRigBuilder.mjs game/studio/autoRigWorkerProtocol.mjs game/studio/assetVersions.mjs
 
       - name: Run full-project ESLint diagnostics
         run: npm run lint
