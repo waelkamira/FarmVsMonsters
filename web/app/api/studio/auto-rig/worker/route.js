@@ -72,8 +72,22 @@ export async function POST(req) {
       !/^data:image\/(png|jpeg|webp);base64,[a-zA-Z0-9+/]+=*$/.test(body.imageDataUrl)) {
     return NextResponse.json({ error: "Provide a PNG, JPEG, or WebP base64 data URL within the 8 MB source limit." }, { status: 400 });
   }
-  if (body.task !== "part-detection") {
+  if (!["part-detection", "prompted-segmentation"].includes(body.task)) {
     return NextResponse.json({ error: "Unsupported Auto-Rig worker task." }, { status: 400 });
+  }
+  let points;
+  if (body.task === "prompted-segmentation") {
+    if (!Array.isArray(body.points) || body.points.length < 1 || body.points.length > 32) {
+      return NextResponse.json({ error: "Prompted segmentation requires 1–32 points." }, { status: 400 });
+    }
+    points = [];
+    for (const point of body.points) {
+      const x = Number(point?.x), y = Number(point?.y), label = point?.label == null ? 1 : Number(point.label);
+      if (!Number.isFinite(x) || !Number.isFinite(y) || x < 0 || y < 0 || x >= width || y >= height || ![0, 1].includes(label)) {
+        return NextResponse.json({ error: "Prompt points must be finite source coordinates with labels 0 or 1." }, { status: 400 });
+      }
+      points.push({ x, y, label });
+    }
   }
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), WORKER_TIMEOUT_MS);
@@ -81,7 +95,7 @@ export async function POST(req) {
     const response = await fetch(new URL("/v1/auto-rig/" + body.task, base), {
       method: "POST",
       headers: { "Content-Type": "application/json", Accept: "application/json" },
-      body: JSON.stringify({ protocolVersion: 1, canvas: { width, height }, imageDataUrl: body.imageDataUrl, prompt: typeof body.prompt === "string" ? body.prompt.slice(0, 500) : "" }),
+      body: JSON.stringify({ protocolVersion: 1, canvas: { width, height }, imageDataUrl: body.imageDataUrl, prompt: typeof body.prompt === "string" ? body.prompt.slice(0, 500) : "", ...(points ? { points } : {}) }),
       signal: controller.signal,
       cache: "no-store"
     });
