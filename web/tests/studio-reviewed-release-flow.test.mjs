@@ -59,3 +59,7 @@ test("local registry mutations use snapshots, expected hashes, and the atomic st
   assert.match(apiSource, /saveLocalRegistry\(next,registrySha\)/);
   assert.match(apiSource, /saveLocalRegistry\(registry,registrySha\)/);
 });
+
+test("local registry write conflicts are returned as HTTP 409", () => {
+  assert.match(apiSource, /Studio lifecycle action failed\."\},\{status:error\.code==="STUDIO_WRITE_CONFLICT"\?409:500\}\)/);
+});
