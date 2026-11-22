@@ -18,6 +18,7 @@ class SmokeTestHelpersTests(unittest.TestCase):
 
     def test_proposal_validator_accepts_editable_source_space_masks(self):
         result = {"proposals": [{
+            "id": "part-1", "role": "body", "confidence": 0.8,
             "bounds": {"x": 10, "y": 20, "width": 30, "height": 40},
             "mask": {"kind": "polygon", "points": [{"x": 10, "y": 20}, {"x": 40, "y": 20}, {"x": 25, "y": 60}]}
         }]}
@@ -28,6 +29,7 @@ class SmokeTestHelpersTests(unittest.TestCase):
             validate_proposals({"proposals": []}, "test")
         with self.assertRaisesRegex(RuntimeError, "outside the source canvas"):
             validate_proposals({"proposals": [{
+                "id": "outside", "role": "body",
                 "bounds": {"x": 300, "y": 300, "width": 30, "height": 30},
                 "mask": {"kind": "polygon", "points": [{"x": 300, "y": 300}, {"x": 310, "y": 300}, {"x": 310, "y": 310}]}
             }]}, "test")
