@@ -241,8 +241,8 @@ test("Studio monster skeletal state priorities protect frozen and death states",
 });
 test("Rig Editor snaps every edited keyframe to an integer clip frame", () => {
   const editor = readFileSync(path.join(here, "../app/studio/RigEditor.jsx"), "utf8");
-  assert.match(editor, /snapSkeletalKeyframeTime\(targetClip, timeMs\)/);
-  assert.match(editor, /snapSkeletalKeyframeTime\(target, timeMs\)/);
+  assert.match(editor, /snapSkeletalKeyframeTime\(timeMs, targetClip\.fps, targetClip\.durationMs\)/);
+  assert.match(editor, /snapSkeletalKeyframeTime\(timeMs, target\.fps, target\.durationMs\)/);
 });
 
 test("Studio skeletal collision evaluates every authored hitbox using oriented rectangle SAT", () => {
