@@ -1,5 +1,5 @@
 """Loopback-only SAM 2 worker. Model weights must be installed locally."""
-import base64, json, os, re, threading
+import base64, json, math, os, re, threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse
@@ -111,7 +111,7 @@ def normalize_prompt_points(points, width, height):
             label = int(point.get("label", 1))
         except (KeyError, TypeError, ValueError):
             raise ValueError("Prompt point " + str(index) + " is malformed.")
-        if not np.isfinite(x) or not np.isfinite(y) or not 0 <= x < width or not 0 <= y < height:
+        if not math.isfinite(x) or not math.isfinite(y) or not 0 <= x < width or not 0 <= y < height:
             raise ValueError("Prompt point " + str(index) + " is outside the source canvas.")
         if label not in (0, 1):
             raise ValueError("Prompt point labels must be 0 (negative) or 1 (positive).")
