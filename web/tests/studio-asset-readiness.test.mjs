@@ -24,7 +24,7 @@ function validPlant(overrides = {}) {
   };
 }
 function validProjectile(overrides = {}) {
-  return { id: "thorn-shot", name: "Thorn Shot", type: "plantProjectile", status: "published", path: "/assets/projectiles/thorn-shot.png", ...overrides };
+  return { id: "thorn-shot", name: "Thorn Shot", type: "plantProjectile", status: "published", path: "/assets/projectiles/thorn-shot.png", rows: 1, columns: 1, frameCount: 1, spriteSheet: true, ...overrides };
 }
 function validMonster(overrides = {}) {
   return {
