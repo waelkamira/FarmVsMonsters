@@ -31,6 +31,6 @@ test("Studio offers local texture inpainting as a separate review-gated reconstr
   assert.match(panel, /function inpaintHiddenRegion\(partId\)/);
   assert.match(panel, /task: "local-texture-inpaint"/);
   assert.match(panel, /ترميم محلي من المحيط/);
-  assert.match(panel, /opencv-telea-inpaint/);
+  assert.match(panel, /inpaintRadius: 3/);
   assert.match(panel, /reviewed: false/);
 });
