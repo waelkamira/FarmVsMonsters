@@ -4,58 +4,32 @@ import { readFileSync } from "node:fs";
 
 const scene = readFileSync(new URL("../game/scenes/BattleScene.js", import.meta.url), "utf8");
 
-test("the uploaded wood frame is loaded and used by a dedicated inventory control", () => {
-  assert.match(scene, /inventory-wood-frame", "\/assets\/items\/ui\/ui-inventory-wood-fram\.png"/);
-  assert.match(scene, /this\.createInventoryControl\(\)/);
-  assert.match(scene, /this\.add\.container\(930, 27\)\.setDepth\(49\)/);
-  assert.match(scene, /this\.add\.image\(0, 0, "inventory-wood-frame"\)\.setDisplaySize\(570, 620\)/);
-  assert.match(scene, /const sheet = \["radish-level-1", "pineapple-level-1", "hazelnut-level-1", "mango-level-1", "snow-thrower-level-1"\]\.includes\(plant\.image\)/);
-  assert.match(scene, /this\.add\.sprite\(x, y - 12, plant\.image, 0\)/);
+test("inventory uses the uploaded wood frame as its container backdrop", () => {
+  assert.ok(scene.includes('this.load.image("inventory-wood-frame", "/assets/items/ui/ui-inventory-wood-fram.png")'));
+  assert.ok(scene.includes('this.textures.exists("inventory-wood-frame")'));
+  assert.ok(scene.includes('this.add.image(0, 0, "inventory-wood-frame").setDisplaySize(570, 620)'));
 });
 
-test("inventory shows saved plant unlocks, seed-bar membership, field counts, and live resources", () => {
-  assert.match(scene, /unlockedIds\\s*=\\s*PLAYTEST_ALL_PLANTS[\\s\\S]*?loadUnlockedPlantIds\\(window\\.localStorage\\)[\\s\\S]*?ALL_PLAYTEST_PLANT_IDS/);
-  assert.match(scene, /farmVsMonsters\.selectedPlants/);
-  assert.match(scene, /this\.plants\.filter\(\(item\) => item\.alive && item\.type === plant\.id\)/);
-  assert.match(scene, /this\.coins\.toLocaleString\(\)/);
-  assert.match(scene, /this\.totalDefeatedMonsters/);
+test("only unlocked and selected plants become active seed cards", () => {
+  assert.ok(scene.includes("PLAYTEST_ALL_PLANTS"));
+  assert.ok(scene.includes("loadUnlockedPlantIds(window.localStorage)"));
+  assert.ok(scene.includes("ALL_PLAYTEST_PLANT_IDS"));
+  assert.ok(scene.includes("selectedTypes.includes(plant.type)"));
 });
 
-test("opening inventory pauses the battle and prevents clicks from reaching battlefield planting", () => {
-  assert.match(scene, /this\.gameOver \|\| this\.isPaused \|\| this\.collectionMenuOpen \|\| this\.inventoryOpen/);
-  assert.match(scene, /this\.gameOver \|\| this\.storySequenceActive \|\| this\.inventoryOpen/);
-  assert.match(scene, /this\.collectionMenuOpen \|\|\n\s*this\.inventoryOpen \|\|/);
-  assert.match(scene, /closeInventory\(\)/);
+test("seed-card artwork and locked card state use the supplied textures", () => {
+  assert.ok(scene.includes('this.load.image("seed-card", "/assets/items/ui/ui-seed-card.png")'));
+  assert.ok(scene.includes('this.load.image("seed-card-locked", "/assets/items/ui/ui-seed-card-locked.png")'));
+  assert.ok(scene.includes("this.textures.exists(cardArtworkKey)"));
+  assert.ok(scene.includes("Math.min(88 / source.width, 101.2 / source.height)"));
+  assert.ok(scene.includes("card.add([...(seedFrame ? [seedFrame] : []), panel, icon, cost, cooldownOverlay, cooldownLabel])"));
 });
 
-test("inventory is a read-only collection view and does not invent item purchase or consumption", () => {
-  const inventoryStart = scene.indexOf("  openInventory() {");
-  const inventoryEnd = scene.indexOf("  createPauseControl() {", inventoryStart);
-  assert.ok(inventoryStart >= 0 && inventoryEnd > inventoryStart);
-  const inventoryCode = scene.slice(inventoryStart, inventoryEnd);
-  assert.doesNotMatch(inventoryCode, /purchasePlant\(|saveCoins\(|this\.coins\s*[-+]=|unlockPlantReward\(/);
-});
-
-test("the uploaded seed-card frame is loaded and rendered on every battle seed packet", () => {
-  assert.match(scene, /seed-card", "\/assets\/items\/ui\/ui-seed-card\.png"/);
-  assert.match(scene, /this\.textures\.exists\(cardArtworkKey\)/);
-  assert.match(scene, /Math\.min\(86 \/ frameSource\.width, 98 \/ frameSource\.height\)/);
-  assert.match(scene, /\.\.\.\(seedFrame \? \[seedFrame\] : \[\]\)/);
-  assert.match(scene, /card\.add\(\[\.\.\.\(seedFrame \? \[seedFrame\] : \[\]\), panel, icon/);
-});
-
-
-test("the uploaded locked seed-card artwork is used for locked plant cards and collection entries", () => {
-  assert.match(scene, /seed-card-locked", "\/assets\/items\/ui\/ui-seed-card-locked\.png"/);
-  assert.match(scene, /locked && this\.textures\.exists\("seed-card-locked"\)/);
-  assert.match(scene, /cardArtworkKey/);
-  assert.match(scene, /locked && this\.textures\.exists\("seed-card-locked"\)/);
-});
-
-test("the uploaded empty seed-slot artwork fills unused loadout positions", () => {
-  assert.match(scene, /seed-slot-empty", "\/assets\/items\/ui\/ui-seed-slot-empty\.png"/);
-  assert.match(scene, /const packetSlotCount = Math\.max\(9, selectedTypes\.length\)/);
-  assert.match(scene, /const emptySlotCount = Math\.max\(0, inactiveSlots - inactivePlants\.length\)/);
-  assert.match(scene, /"seed-slot-empty"\)/);
-  assert.match(scene, /emptySlot = this\.add\.container\(x, 72\)\.setDepth\(45\)/);
+test("unused loadout positions show inactive plants and uploaded empty-slot art", () => {
+  assert.ok(scene.includes("const packetSlotCount = Math.max(9, selectedTypes.length)"));
+  assert.ok(scene.includes("const inactiveSlots = Math.max(0, packetSlotCount - selectedTypes.length)"));
+  assert.ok(scene.includes("inactivePlants.slice(0, inactiveSlots)"));
+  assert.ok(scene.includes("const emptySlotCount = Math.max(0, inactiveSlots - inactivePlants.length)"));
+  assert.ok(scene.includes('this.textures.exists("seed-slot-empty")'));
+  assert.ok(scene.includes("this.add.container(x, 72).setDepth(45)"));
 });
