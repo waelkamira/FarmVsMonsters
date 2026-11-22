@@ -462,9 +462,10 @@ export function analyzeAutoRigQuality(manifest, profileInput) {
   const allMasksPresent = parts.every((part) => part.mask?.kind === "polygon" && part.mask.points.length >= 3);
   const allPartsReviewed = parts.every((part) => part.reviewed === true);
   const unreviewedCount = parts.filter((part) => part.reviewed !== true).length;
-  const occlusionResolved = parts.every((part) => part.occlusion !== "unresolved");
+  const occlusionResolved = parts.every((part) => part.occlusion === "none");
+  const unresolvedOcclusionCount = parts.filter((part) => part.occlusion !== "none" && part.occlusion !== "reconstructed").length;
   const occlusionMaskCount = parts.filter((part) => part.occlusionMask?.kind === "polygon").length;
-  const unresolvedWithoutMaskCount = parts.filter((part) => part.occlusion === "unresolved" && !part.occlusionMask).length;
+  const unresolvedWithoutMaskCount = parts.filter((part) => part.occlusion !== "none" && part.occlusion !== "reconstructed" && !part.occlusionMask).length;
   const sourceFingerprintPresent = /^[a-f0-9]{64}$/i.test(String(manifest.source.sha256 || ""));
   const hasPrimaryBody = parts.some((part) => ["body", "stem"].includes(normalizeRole(part.role)));
   const lowConfidenceCount = parts.filter((part) => part.confidence != null && Number.isFinite(Number(part.confidence)) && Number(part.confidence) < 0.65).length;
@@ -474,7 +475,7 @@ export function analyzeAutoRigQuality(manifest, profileInput) {
   if (!allMasksPresent) warnings.push({ code: "missing-editable-mask", message: "One or more parts have no editable polygon mask." });
   if (!allPartsReviewed) warnings.push({ code: "unreviewed-parts", count: unreviewedCount, message: "One or more parts have not been explicitly reviewed and approved by the author." });
   if (lowConfidenceCount) warnings.push({ code: "low-confidence", count: lowConfidenceCount, message: "Review low-confidence segmentation proposals." });
-  if (!occlusionResolved) warnings.push({ code: "unresolved-occlusion", message: "One or more parts have unresolved occlusion." });
+  if (!occlusionResolved) warnings.push({ code: "unresolved-occlusion", count: unresolvedOcclusionCount, message: "One or more parts have missing or unresolved occlusion assessment." });
   if (unresolvedWithoutMaskCount) warnings.push({ code: "missing-occlusion-mask", count: unresolvedWithoutMaskCount, message: "Mark the hidden region on each occluded part before reconstruction can run." });
   if (reconstructedCount) warnings.push({ code: "reconstructed-pixels", count: reconstructedCount, message: "Review generated pixels before publishing." });
   if (!sourceFingerprintPresent) warnings.push({ code: "missing-source-fingerprint", message: "The original source image has no SHA-256 fingerprint." });
