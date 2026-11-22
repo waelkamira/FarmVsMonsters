@@ -332,7 +332,7 @@ export async function PATCH(req){
   if(operation==="prepare-test"){
    const updated={...asset,status:"testing",testingAt:new Date().toISOString(),releaseRequest:null};
    registry.assets[index]=updated;
-   await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(registry,null,2)+"\\n"),"studio: prepare "+asset.type+" test "+id,token,storageBranch,registrySha);
+   await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(registry,null,2)+"\n"),"studio: prepare "+asset.type+" test "+id,token,storageBranch,registrySha);
    return NextResponse.json({success:true,operation,asset:updated,message:asset.type==="monster"?"الوحش جاهز للاختبار داخل اللعبة.":"النبتة جاهزة للاختبار داخل اللعبة."});
   }
   if(operation!=="publish")return NextResponse.json({error:"عملية Studio غير معروفة."},{status:400});
@@ -365,13 +365,13 @@ export async function PATCH(req){
   const existingIndex=collection.findIndex(item=>item.id===id);
   catalog[collectionKey]=existingIndex>=0?collection.map((item,i)=>i===existingIndex?publishedRecord:item):[...collection,publishedRecord];
   catalog.version=1;
-  await githubPut(catalogPath,Buffer.from(JSON.stringify(catalog,null,2)+"\\n"),"studio: publish "+asset.type+" "+id,token,targetBranch,catalogDocument?.sha??null);
+  await githubPut(catalogPath,Buffer.from(JSON.stringify(catalog,null,2)+"\n"),"studio: publish "+asset.type+" "+id,token,targetBranch,catalogDocument?.sha??null);
 
   const publishedAsset={...asset,status:"published",publishedAt,releaseRequest:null};
   registry.assets[index]=publishedAsset;
   let registrySyncWarning=null;
   try{
-   await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(registry,null,2)+"\\n"),"studio: mark "+asset.type+" published "+id,token,storageBranch,registrySha);
+   await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(registry,null,2)+"\n"),"studio: mark "+asset.type+" published "+id,token,storageBranch,registrySha);
   }catch(error){registrySyncWarning=error.message;}
   return NextResponse.json({success:true,operation:"published",asset:publishedAsset,publishedAt,targetBranch,registrySyncWarning,message:asset.type==="monster"?"تم نشر الوحش مباشرة في اللعبة دون طلب مراجعة.":"تم نشر النبتة مباشرة في اللعبة دون طلب مراجعة."});
  }catch(error){return NextResponse.json({error:error.message||"Studio action failed."},{status:error.code==="STUDIO_WRITE_CONFLICT"?409:502});}
