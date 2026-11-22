@@ -309,7 +309,7 @@ export default function AutoRigBuilderPanel({
         ? <p className="studio-message">أبعاد الصورة {image.width}×{image.height} أكبر من الحد الحالي 4096×4096.</p>
         : null}
       {image && <div style={{ border: "1px solid #d8dce5", borderRadius: 12, overflow: "hidden", background: "#f4f5f8", maxHeight: 440, overflowY: "auto" }}>
-        <canvas ref={canvasRef} onClick={addPoint} style={{ display: "block", width: "100%", height: "auto", maxHeight: 420, objectFit: "contain", cursor: disabled || busy ? "not-allowed" : "crosshair", touchAction: "manipulation" }} />
+        <canvas ref={canvasRef} onClick={addPoint} style={{ display: "block", width: "100%", height: "auto", maxHeight: 420, objectFit: "contain", cursor: disabled || busy || generated ? "not-allowed" : "crosshair", touchAction: "manipulation" }} />
       </div>}
       <div className="studio-grid" style={{ marginTop: 12 }}>
         <label>الدور الدلالي
@@ -322,7 +322,7 @@ export default function AutoRigBuilderPanel({
           </select>
         </label>
         <label>اسم الجزء
-          <input value={partName} disabled={disabled || busy} onChange={(event) => setPartName(event.target.value)} maxLength={80} />
+          <input value={partName} disabled={disabled || busy || generated} onChange={(event) => setPartName(event.target.value)} maxLength={80} />
         </label>
       </div>
       <div className="studio-actions" style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 10 }}>
