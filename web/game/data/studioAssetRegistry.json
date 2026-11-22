@@ -140,7 +140,12 @@
       "testingAt": "2026-11-22T09:52:35.136Z",
       "publishedAt": null,
       "frameCount": 9,
-      "releaseRequest": null,
+      "releaseRequest": {
+        "number": 85,
+        "url": "https://github.com/waelkamira/FarmVsMonsters/pull/85",
+        "branch": "studio/release/bamboo-throwing-level-1-52d1f3dc",
+        "createdAt": "2026-11-22T10:11:15.709Z"
+      },
       "archivedAt": null,
       "restoredFromVersion": null,
       "animationProfile": {
