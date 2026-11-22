@@ -21,6 +21,7 @@ test("rigged projectile plants require and use the actual muzzle attachment", ()
   assert.ok(battleScene.includes('this.getStudioRigAttachmentWorld(skeletalRig, plant.view, "muzzle")'));
   assert.ok(battleScene.includes("const launchPoint = muzzle"));
   assert.ok(battleScene.includes("const launchOffsetX = launchPoint.x - laneOrigin.x"));
+  assert.ok(battleScene.includes("resolveSkeletalIdleClip(skeletalRig.profile)"));
   assert.ok(battleScene.includes("const launchOffsetY = launchPoint.y - laneOrigin.y"));
 });
 

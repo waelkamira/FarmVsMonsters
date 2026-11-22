@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createSkeletalAnimationController } from "../game/studio/animationStateMachine.mjs";
+import { createSkeletalAnimationController, resolveSkeletalIdleClip } from "../game/studio/animationStateMachine.mjs";
 
 function profile() {
   return {
@@ -52,4 +52,14 @@ test("controller rejects missing states and profiles without clips", () => {
   const controller = createSkeletalAnimationController(profile());
   assert.throws(() => controller.setState("missing"), /Unknown skeletal animation state/);
   assert.throws(() => createSkeletalAnimationController({ ...profile(), clips: [] }), /requires at least one clip/);
+});
+
+
+test("idle resolution prefers a looping idle and never replays one-shot clips as idle", () => {
+  const attackOnly = { clips: [{ id: "attack", loop: false }, { id: "death", loop: false }] };
+  assert.equal(resolveSkeletalIdleClip(attackOnly), null);
+  const moveFallback = { clips: [{ id: "attack", loop: false }, { id: "move", loop: true }] };
+  assert.equal(resolveSkeletalIdleClip(moveFallback).id, "move");
+  const explicitIdle = { clips: [{ id: "move", loop: true }, { id: "idle", loop: true }] };
+  assert.equal(resolveSkeletalIdleClip(explicitIdle).id, "idle");
 });

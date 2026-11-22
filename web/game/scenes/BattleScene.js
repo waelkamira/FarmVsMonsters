@@ -9,7 +9,7 @@ import { getMonsterReactionProfile, getPlantAnimationProfile, getPlantIdleMotion
 import { createStudioAnimationProfile } from "../studio/animationProfiles.mjs";
 import { getSpriteFrameRectangles } from "../studio/spriteSheetGrid.mjs";
 import { createPhaserSkeletalRig } from "../studio/phaserSkeletalRig.mjs";
-import { createSkeletalAnimationController } from "../studio/animationStateMachine.mjs";
+import { createSkeletalAnimationController, resolveSkeletalIdleClip } from "../studio/animationStateMachine.mjs";
 import { circleIntersectsConvexPolygon, convexPolygonsOverlap } from "../studio/skeletalCollision.mjs";
 import { transformRigHitboxToWorld, transformRigPointToWorld } from "../studio/skeletalWorldTransform.mjs";
 import { getProjectileTrajectoryOffset, getProjectileHeadCorrection, getProjectileLaunchPoint } from "../studio/projectileTrajectory.mjs";
@@ -3205,7 +3205,7 @@ export default class BattleScene extends Scene {
           rig.root.setScale(width / canvas.width, height / canvas.height);
           container.add(rig.root);
           container.setData("studioSkeletalRig", rig);
-          const idleClip = rig.profile.clips.find((entry) => entry.id === "idle") || rig.profile.clips[0];
+          const idleClip = resolveSkeletalIdleClip(rig.profile) || rig.profile.clips[0];
           if (idleClip) this.playStudioSkeletalRig(rig, idleClip.id);
           rigRendered = true;
         } catch (error) {
@@ -3315,7 +3315,7 @@ export default class BattleScene extends Scene {
       if (plant.studioAttacking || plant.studioThrowing || plant.isAttacking) return;
       const skeletalRig = plant.view.getData?.("studioSkeletalRig");
       if (skeletalRig) {
-        const idleClip = skeletalRig.profile.clips.find((entry) => entry.id === "idle") || skeletalRig.profile.clips[0];
+        const idleClip = resolveSkeletalIdleClip(skeletalRig.profile);
         if (idleClip && skeletalRig._activeClipId !== idleClip.id) this.playStudioSkeletalRig(skeletalRig, idleClip.id);
         return;
       }
@@ -3414,7 +3414,7 @@ export default class BattleScene extends Scene {
           if (plant.studioAttacking) continue;
           plant.studioAttacking = true;
           this.playStudioSkeletalRig(skeletalRig, "attack", () => {
-            const idle = skeletalRig.profile.clips.find((clip) => clip.id === "idle");
+            const idle = resolveSkeletalIdleClip(skeletalRig.profile);
             if (idle) this.playStudioSkeletalRig(skeletalRig, idle.id);
             plant.studioAttacking = false;
             applyStudioHit();
@@ -3628,7 +3628,7 @@ export default class BattleScene extends Scene {
         if (plant.studioThrowing) return;
         plant.studioThrowing = true;
         this.playStudioSkeletalRig(skeletalRig, "attack", () => {
-          const idle = skeletalRig.profile.clips.find((clip) => clip.id === "idle");
+          const idle = resolveSkeletalIdleClip(skeletalRig.profile);
           if (idle) this.playStudioSkeletalRig(skeletalRig, idle.id);
           plant.studioThrowing = false;
           if (plant.alive && target?.alive && !this.gameOver) this.fireThornProjectile(plant, target);
@@ -4179,13 +4179,13 @@ export default class BattleScene extends Scene {
       if (protectedAction && (activeId === "death" || activeId === "frozen" || (monster.freezeStage || 0) > 0 || !force)) return;
       const clip = rig.profile.clips.find((entry) => entry.id === action)
         || (action === "hit" ? rig.profile.clips.find((entry) => entry.id === "attack") : null)
-        || rig.profile.clips.find((entry) => entry.id === "idle");
+        || resolveSkeletalIdleClip(rig.profile);
       if (clip && !force && activeId === clip.id) return;
       if (clip) {
         const returnsToIdle = ["attack", "hit"].includes(action);
         const onComplete = returnsToIdle ? () => {
           if (!monster.alive || (monster.freezeStage || 0) > 0 || rig._activeClipId !== null) return;
-          const idle = rig.profile.clips.find((entry) => entry.id === "idle");
+          const idle = resolveSkeletalIdleClip(rig.profile);
           if (idle) this.playStudioSkeletalRig(rig, idle.id);
         } : null;
         this.playStudioSkeletalRig(rig, clip.id, onComplete);
@@ -4375,7 +4375,7 @@ export default class BattleScene extends Scene {
         studioRig.root.setScale(0.918 * 360 / canvas.width, 0.918 * 298 / canvas.height);
         view.add(studioRig.root);
         view.setData("studioSkeletalRig", studioRig);
-        const idleClip = studioRig.profile.clips.find((entry) => entry.id === "idle") || studioRig.profile.clips[0];
+        const idleClip = resolveSkeletalIdleClip(studioRig.profile) || studioRig.profile.clips[0];
         if (idleClip) this.playStudioSkeletalRig(studioRig, idleClip.id);
       } catch (error) {
         console.warn("Studio monster skeletal rig unavailable; preserving Sprite Sheet fallback:", studioMonster.id, error);
@@ -4848,7 +4848,7 @@ export default class BattleScene extends Scene {
       const rig = monster.studioRig;
       const restoreClip = rig.profile.clips.find((clip) => clip.id === monster.frozenAnimationKey)?.id
         || rig.profile.clips.find((clip) => clip.id === "move")?.id
-        || rig.profile.clips.find((clip) => clip.id === "idle")?.id;
+        || resolveSkeletalIdleClip(rig.profile)?.id;
       if (restoreClip) this.playStudioSkeletalRig(rig, restoreClip);
     }
     if (sprite?.active) {

@@ -96,3 +96,12 @@ export function createSkeletalAnimationController(profileInput, initialClipId = 
     }
   };
 }
+
+
+/** Return a stable looping idle clip, never a one-shot attack/movement clip. */
+export function resolveSkeletalIdleClip(profileInput) {
+  const clips = Array.isArray(profileInput?.clips) ? profileInput.clips : [];
+  return clips.find((clip) => clip?.id === "idle" && clip.loop)
+    || clips.find((clip) => clip?.loop)
+    || null;
+}
