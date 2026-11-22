@@ -42,7 +42,7 @@ jobs:
         run: npm ci
 
       - name: Run Auto-Rig, quality-validator, and Studio contract tests
-        run: node --test tests/studio-auto-rig-builder.test.mjs tests/studio-auto-rig-worker-protocol.test.mjs tests/studio-auto-rig-worker-route.test.mjs tests/studio-auto-rig-publish-gate.test.mjs tests/studio-asset-versions.test.mjs tests/studio-hybrid-engine-integration.test.mjs
+        run: node --test tests/studio-auto-rig-builder.test.mjs tests/studio-auto-rig-worker-protocol.test.mjs tests/studio-auto-rig-worker-route.test.mjs tests/studio-auto-rig-publish-gate.test.mjs tests/studio-rig-library.test.mjs tests/studio-asset-versions.test.mjs tests/studio-hybrid-engine-integration.test.mjs
 
       - name: Run focused Auto-Rig ESLint
         run: npx eslint app/studio/AutoRigBuilderPanel.jsx app/api/studio/assets/route.js app/api/studio/auto-rig/worker/route.js game/studio/autoRigBuilder.mjs game/studio/autoRigWorkerProtocol.mjs game/studio/assetVersions.mjs
