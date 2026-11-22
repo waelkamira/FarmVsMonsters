@@ -179,3 +179,8 @@
 .studio-rig-editor footer{padding-top:10px;border-top:1px solid #ffffff18}
 @media(max-width:760px){.studio-rig-layout{grid-template-columns:1fr}.studio-rig-stage canvas{width:min(100%,360px)}.studio-rig-tool-row{grid-template-columns:1fr 1fr}.studio-rig-tool-row>b{grid-column:1/-1}}
 @media(max-width:480px){.studio-rig-editor{padding:10px}.studio-rig-editor>header{flex-direction:column}.studio-rig-fields-grid{grid-template-columns:1fr 1fr}.studio-rig-timeline-head{align-items:flex-start;flex-direction:column}}
+
+.studio-rig-presets{display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:10px;border:1px solid #46563b;border-radius:9px;background:#172319}
+.studio-rig-presets>b{margin-left:auto;color:#dcebcf;font-size:11px}
+.studio-rig-presets button{border:1px solid #69845b;border-radius:7px;padding:7px 9px;background:#30442c;color:#f0f6e9;font-size:11px;font-weight:800;cursor:pointer}
+@media(max-width:560px){.studio-rig-presets>b{width:100%}.studio-rig-presets button{flex:1}}
