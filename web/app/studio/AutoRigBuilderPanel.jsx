@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AUTO_RIG_ROLE_OPTIONS, buildAutoRigFromParts } from "../../game/studio/autoRigBuilder.mjs";
+import { AUTO_RIG_ROLE_OPTIONS, analyzeAutoRigQuality, buildAutoRigFromParts } from "../../game/studio/autoRigBuilder.mjs";
 
 function slug(value) {
   return String(value || "character").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "character";
@@ -52,6 +52,7 @@ export default function AutoRigBuilderPanel({
   const [parts, setParts] = useState([]);
   const [busy, setBusy] = useState(false);
   const [generated, setGenerated] = useState(false);
+  const [qualityReport, setQualityReport] = useState(null);
   const [message, setMessage] = useState("");
   const [aiStatus, setAiStatus] = useState("unknown");
   const [aiBusy, setAiBusy] = useState(false);
@@ -97,6 +98,7 @@ export default function AutoRigBuilderPanel({
       setMuzzlePoint(null);
       setMuzzleMode(false);
       setGenerated(false);
+      setQualityReport(null);
       nextPartIndex.current = 1;
     };
     nextImage.onerror = () => { if (active) setImageError("تعذر قراءة الصورة المصدر."); };
@@ -378,6 +380,7 @@ export default function AutoRigBuilderPanel({
         requiresMuzzle,
         anchors: requiresMuzzle ? { muzzle: { partId: activeEmitterPart.id, x: muzzlePoint.x, y: muzzlePoint.y } } : undefined
       });
+      setQualityReport(analyzeAutoRigQuality(result.manifest, result.profile));
       onRigGenerated(result.profile);
       if (onManifestGenerated) onManifestGenerated(result.manifest);
       setGenerated(true);
@@ -470,6 +473,11 @@ export default function AutoRigBuilderPanel({
       <button type="button" className="studio-submit" disabled={disabled || busy || generated || !image || !parts.length} onClick={generateRig}>
         {busy ? "جارٍ قصّ الأجزاء وحفظها..." : "قصّ الأجزاء وإنشاء الهيكل ←"}
       </button>
+      {qualityReport && <div style={{ marginTop: 12, padding: 12, border: "1px solid #d8dce5", borderRadius: 10 }}>
+        <b>تقرير جودة الهيكل: {qualityReport.score}/100</b>
+        <p>{qualityReport.readyForAnimation ? "اجتاز الفحوص الأساسية ويمكن متابعة ضبط الحركة." : "الهيكل يحتاج مراجعة قبل اعتباره جاهزاً للتحريك."}</p>
+        {qualityReport.warnings.length > 0 && <ul>{qualityReport.warnings.map((warning) => <li key={warning.code}>{warning.message}</li>)}</ul>}
+      </div>}
       {generated && <p className="studio-message" role="status">تم توليد الهيكل والمقاطع. أكمل ضبطها من محرر الهيكل أدناه؛ أعد تحميل الصورة المصدر إذا أردت بدء عملية استخراج جديدة.</p>}
       {message && <p className="studio-message" role="status">{message}</p>}
     </section>
