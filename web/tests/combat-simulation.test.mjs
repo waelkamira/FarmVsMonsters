@@ -421,8 +421,12 @@ test("Phaser registers Snow Thrower assets and freezes monsters without HP damag
   assert.match(scene, /snow-thrower-level-1/);
   assert.match(scene, /Snow-thrower-bomb-level-1\.png/);
   assert.match(scene, /frozen-hyena-level-1/);
-  assert.match(scene, /freezeMonster\(hit, shot\.freezeDurationMs\)/);
+  assert.match(scene, /this\.freezeMonster\(hit\)/);
   assert.match(scene, /restoreMonsterAfterFreeze/);
+  const freeze = scene.slice(scene.indexOf("  freezeMonster(monster) {"), scene.indexOf("  restoreMonsterAfterFreeze(monster) {"));
+  assert.match(freeze, /monster\.freezeStage = Math\.min\(5/);
+  assert.match(freeze, /monster\.freezeFullHoldMs = 30000/);
+  assert.doesNotMatch(freeze, /monster\.hp\s*[-+]=/);
 });
 
 test("Studio plant profiles allow a new plant to use configured placement and its recorded refund", () => {
