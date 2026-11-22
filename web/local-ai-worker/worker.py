@@ -50,7 +50,7 @@ def capabilities():
     except Exception as exc:
         return {"protocolVersion":1,"status":"degraded","device":"unknown","capabilities":[],"models":[],"warnings":[str(exc)]}
 
-def decode_image(data_url, width, height):
+def decode_image_data(data_url, width, height):
     match = re.fullmatch(r"data:image/(png|jpeg|webp);base64,([A-Za-z0-9+/]+=*)", data_url or "")
     if not match: raise ValueError("Expected PNG, JPEG, or WebP base64 data URL.")
     raw = base64.b64decode(match.group(2), validate=True)
@@ -61,18 +61,27 @@ def decode_image(data_url, width, height):
     h, w = decoded.shape[:2]
     if w != width or h != height or max(w,h) > 4096: raise ValueError("Decoded dimensions do not match source canvas.")
     if decoded.ndim == 2:
-        return cv2.cvtColor(decoded, cv2.COLOR_GRAY2RGB)
-    if decoded.shape[2] == 4:
+        rgb = cv2.cvtColor(decoded, cv2.COLOR_GRAY2RGB)
+        visible = np.ones((h, w), dtype=bool)
+    elif decoded.shape[2] == 4:
         rgb = cv2.cvtColor(decoded[:, :, :3], cv2.COLOR_BGR2RGB).astype(np.float32)
-        alpha = decoded[:, :, 3:4].astype(np.float32) / 255.0
-        return np.clip(rgb * alpha + 255.0 * (1.0 - alpha), 0, 255).astype(np.uint8)
-    if decoded.shape[2] == 2:
+        alpha = decoded[:, :, 3].astype(np.float32) / 255.0
+        visible = alpha > (8.0 / 255.0)
+        rgb = np.clip(rgb * alpha[:, :, None] + 255.0 * (1.0 - alpha[:, :, None]), 0, 255).astype(np.uint8)
+    elif decoded.shape[2] == 2:
         gray = cv2.cvtColor(decoded[:, :, :1], cv2.COLOR_GRAY2RGB).astype(np.float32)
-        alpha = decoded[:, :, 1:2].astype(np.float32) / 255.0
-        return np.clip(gray * alpha + 255.0 * (1.0 - alpha), 0, 255).astype(np.uint8)
-    if decoded.shape[2] != 3:
+        alpha = decoded[:, :, 1].astype(np.float32) / 255.0
+        visible = alpha > (8.0 / 255.0)
+        rgb = np.clip(gray * alpha[:, :, None] + 255.0 * (1.0 - alpha[:, :, None]), 0, 255).astype(np.uint8)
+    elif decoded.shape[2] == 3:
+        rgb = cv2.cvtColor(decoded, cv2.COLOR_BGR2RGB)
+        visible = np.ones((h, w), dtype=bool)
+    else:
         raise ValueError("Unsupported decoded image channel layout.")
-    return cv2.cvtColor(decoded, cv2.COLOR_BGR2RGB)
+    return rgb, visible
+
+def decode_image(data_url, width, height):
+    return decode_image_data(data_url, width, height)[0]
 
 def polygon_for_mask(mask, cv2):
     contours, _ = cv2.findContours(mask.astype("uint8"), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -142,11 +151,17 @@ def normalize_prompt_points(points, width, height):
 
 def detect_parts(payload):
     width, height = payload["canvas"]["width"], payload["canvas"]["height"]
-    image = decode_image(payload["imageDataUrl"], width, height)
+    image, visible_pixels = decode_image_data(payload["imageDataUrl"], width, height)
     generator, _, _ = load_model()
     import cv2
     with _INFERENCE_LOCK:
         masks = generator.generate(image)
+    for item in masks:
+        mask = item.get("segmentation")
+        if mask is not None and getattr(mask, "shape", None) == visible_pixels.shape:
+            clipped = mask.astype(bool) & visible_pixels
+            item["segmentation"] = clipped
+            item["area"] = int(clipped.sum())
     masks = select_distinct_masks(masks, image.shape, limit=63)
     proposals = []
     for index, item in enumerate(masks):
@@ -166,7 +181,7 @@ def detect_parts(payload):
 
 def segment_from_points(payload):
     width, height = payload["canvas"]["width"], payload["canvas"]["height"]
-    image = decode_image(payload["imageDataUrl"], width, height)
+    image, visible_pixels = decode_image_data(payload["imageDataUrl"], width, height)
     points = normalize_prompt_points(payload.get("points"), width, height)
     _, predictor, _ = load_model()
     import cv2, numpy as np
@@ -181,6 +196,9 @@ def segment_from_points(payload):
         )
     proposals = []
     for index, mask in enumerate(masks):
+        mask = mask.astype(bool) & visible_pixels
+        if not mask.any():
+            continue
         polygon = polygon_for_mask(mask, cv2)
         if not polygon:
             continue
