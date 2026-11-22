@@ -45,7 +45,7 @@ class WorkerTests(unittest.TestCase):
         visible = np.zeros((10, 10), dtype=bool)
         visible[2:8, 2:8] = True
         rgb = np.zeros((10, 10, 3), dtype=np.uint8)
-        with patch.object(worker, "decode_image_data", return_value=(rgb, visible)), \\
+        with patch.object(worker, "decode_image_data", return_value=(rgb, visible)), \
              patch.object(worker, "load_model", return_value=(FakeGenerator(), object(), "cpu")):
             result = worker.detect_parts({"canvas": {"width": 10, "height": 10}, "imageDataUrl": "data:image/png;base64,AA=="})
         self.assertEqual(len(result["proposals"]), 1)
