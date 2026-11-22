@@ -68,7 +68,7 @@ This is one integrated system, with the following sub-capabilities:
 3. Sprite Sheet grid/frame metadata and preview.
 4. Animation profiles (Idle/Move/Attack and supported states).
 5. Skeletal/cutout rig editor (Hybrid Rig).
-6. Auto-Rig proposal generation and human-reviewed rig authoring.
+6. Auto-Rig proposal generation and human-reviewed rig authoring. **Mainline status:** builder/protocol/worker API source exists, but the dedicated `AutoRigBuilderPanel.jsx` and its UI invocation are not present on main; those currently exist on open PR #89 only.
 7. Attachments, projectile muzzle anchors and pose-bound hitboxes.
 8. Asset dependencies, revision snapshots and restoration.
 9. Readiness checks and test evidence.
@@ -84,7 +84,7 @@ Auto-Rig generates a proposal; it does not bypass human review, validation, asse
 | Content/asset library | `/studio` | Registry, IDs, types, statuses, search/filter | Present in source; browser verification open |
 | Asset detail/dependency center | `/studio/assets/[id]` | Asset record, references, versions | Present in source; coverage not universal for all future relations |
 | Asset & Animation Studio | Main + RigEditor | Asset files, frames, animation profile, rig profile | Partial/integrated source; browser/runtime gates open |
-| Auto-Rig | RigEditor/workflow + worker API | Source image, worker protocol, proposal, rig contract | Builder and worker bridge source present; complete operational workflow unverified |
+| Auto-Rig | Asset & Animation Studio (target workspace) | Source image, worker protocol, proposal, rig contract | Main has builder/protocol/worker API source, but no `AutoRigBuilderPanel.jsx` or UI invocation; expanded panel/worker workflow exists only on open PR #89 and is not integrated into main |
 | Plant Studio | Main/detail page | Plant profile, projectile, animations, assets, Phaser | Partial integrated source; verify all editable fields and edge cases |
 | Monster Studio | Main/detail page | Monster profile, behavior model, waves, assets, animations | Partial integrated source; supported behavior set limited |
 | Projectile/Weapon Studio | Main + trajectory editor | Projectile asset, trajectory, origin, collision/effect | Partial source; verify full create/edit/runtime path |
