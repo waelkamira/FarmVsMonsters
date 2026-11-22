@@ -275,6 +275,8 @@ test("quality validator reports explicit readiness checks and blocks unknown sem
       { x: part.bounds.x, y: part.bounds.y + part.bounds.height }
     ] },
     confidence: 0.9,
+    reviewed: true,
+    occlusion: "none",
     provenance: { segmentation: "manual-polygon", pixels: "source" }
   }));
   input.source = { assetId: "source-character", sha256: "a".repeat(64), frame: 0 };
@@ -303,7 +305,7 @@ test("quality validator rejects invalid manifests without assigning a score", ()
 });
 
 
-test("quality readiness requires explicit confidence review without treating missing values as zero", () => {
+test("quality readiness requires explicit author review separately from model confidence", () => {
   const input = baseInput();
   input.parts = input.parts.map((part) => ({
     ...part,
@@ -316,10 +318,11 @@ test("quality readiness requires explicit confidence review without treating mis
   }));
   const built = buildAutoRigFromParts(input);
   const report = analyzeAutoRigQuality(built.manifest, built.profile);
-  assert.equal(report.checks.confidenceReviewed, false);
+  assert.equal(report.checks.allPartsReviewed, false);
+  assert.equal(report.checks.unreviewedCount, input.parts.length);
   assert.equal(report.checks.lowConfidenceCount, 0);
   assert.equal(report.readyForAnimation, false);
-  assert.ok(report.warnings.some((warning) => warning.code === "missing-confidence"));
+  assert.ok(report.warnings.some((warning) => warning.code === "unreviewed-parts"));
 });
 
 
@@ -329,6 +332,8 @@ test("animation readiness requires a source fingerprint and no unreviewed recons
   input.parts = input.parts.map((part) => ({
     ...part,
     confidence: 0.95,
+    reviewed: true,
+    occlusion: "none",
     mask: { kind: "polygon", points: [
       { x: part.bounds.x, y: part.bounds.y },
       { x: part.bounds.x + part.bounds.width, y: part.bounds.y },
