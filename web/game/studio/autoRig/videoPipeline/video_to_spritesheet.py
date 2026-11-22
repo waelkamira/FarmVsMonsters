@@ -27,15 +27,16 @@ def bbox(image):
     alpha = image.convert("RGBA").getchannel("A")
     return alpha.point(lambda p: 255 if p > 12 else 0).getbbox()
 
-def extract(video, folder, count, info, background):
-    rate = count / info["durationSeconds"]
+def extract(video, folder, count, info, background, start_seconds, clip_duration):
+    rate = count / clip_duration
     filters = [f"fps={rate:.10f}"]
     if background == "green":
         filters.append("chromakey=0x00FF00:0.16:0.08")
     filters.append("format=rgba")
     target = folder / "frame-%04d.png"
-    command(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-i", str(video),
-             "-an", "-vf", ",".join(filters), "-frames:v", str(count), str(target)])
+    command(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-ss", str(start_seconds),
+             "-i", str(video), "-t", str(clip_duration), "-an", "-vf", ",".join(filters),
+             "-frames:v", str(count), str(target)])
     paths = sorted(folder.glob("frame-*.png"))
     if not paths:
         raise RuntimeError("FFmpeg did not produce frames.")
@@ -94,6 +95,9 @@ def main():
     p.add_argument("--name", default="character")
     p.add_argument("--frames", type=int, default=24)
     p.add_argument("--fps", type=int, default=12)
+    p.add_argument("--start-seconds", type=float, default=0.0)
+    p.add_argument("--clip-duration", type=float, default=None,
+                   help="Duration to extract; defaults to the remaining source video duration.")
     p.add_argument("--width", type=int, default=150)
     p.add_argument("--height", type=int, default=150)
     p.add_argument("--columns", type=int, default=6)
@@ -111,8 +115,14 @@ def main():
             raise RuntimeError(exe + " must be installed and available on PATH.")
     a.output_dir.mkdir(parents=True, exist_ok=True)
     info = probe(a.input)
+    if a.start_seconds < 0 or a.start_seconds >= info["durationSeconds"]:
+        raise ValueError("start-seconds must be inside the source video.")
+    clip_duration = a.clip_duration if a.clip_duration is not None else info["durationSeconds"] - a.start_seconds
+    if clip_duration <= 0 or a.start_seconds + clip_duration > info["durationSeconds"] + 0.02:
+        raise ValueError("Selected clip range exceeds the source video duration.")
     with tempfile.TemporaryDirectory(prefix="fvm-ai-video-") as tmp:
-        paths, original_count = extract(a.input, Path(tmp), a.frames, info, a.background)
+        paths, original_count = extract(a.input, Path(tmp), a.frames, info, a.background,
+                                        a.start_seconds, clip_duration)
         frames, layout, opaque_source_frames = normalize(paths, a.width, a.height, a.margin)
     frames_dir = a.output_dir / "frames"
     frames_dir.mkdir(exist_ok=True)
@@ -137,7 +147,8 @@ def main():
         warnings.append("All decoded source frames are fully opaque; background removal may not have occurred.")
     report = {"status": "needs_review" if warnings else "passed_structural_checks",
         "requestedFrames": a.frames, "decodedFrames": original_count, "outputFrames": len(frames),
-        "source": info, "playbackFps": a.fps, "playbackDurationSeconds": len(frames) / a.fps,
+        "source": info, "sourceClipStartSeconds": a.start_seconds, "sourceClipDurationSeconds": clip_duration,
+        "playbackFps": a.fps, "playbackDurationSeconds": len(frames) / a.fps,
         "canvas": {"width": a.width, "height": a.height},
         "sheet": {"columns": columns, "rows": rows, "width": columns * a.width, "height": rows * a.height},
         "backgroundMode": a.background, "layout": layout, "emptyFrames": empty,
