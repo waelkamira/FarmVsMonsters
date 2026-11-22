@@ -12,6 +12,13 @@ _MODEL = None
 _MODEL_ERROR = None
 _MODEL_LOCK = threading.Lock()
 _INFERENCE_LOCK = threading.Lock()
+_REQUEST_SLOT = threading.BoundedSemaphore(1)
+
+def trusted_local_request(headers):
+    host = str(headers.get("Host", "")).strip().lower()
+    content_type = str(headers.get("Content-Type", "")).split(";", 1)[0].strip().lower()
+    origin = headers.get("Origin")
+    return host == (HOST + ":" + str(PORT)).lower() and content_type == "application/json" and not origin
 
 def load_model():
     global _MODEL, _MODEL_ERROR
@@ -193,6 +200,10 @@ class Handler(BaseHTTPRequestHandler):
         task_path = urlparse(self.path).path
         if task_path not in ("/v1/auto-rig/part-detection", "/v1/auto-rig/prompted-segmentation"):
             return self.send_json(404,{"error":"Unsupported task"})
+        if not trusted_local_request(self.headers):
+            return self.send_json(403,{"error":"Only same-machine JSON requests without a browser Origin are accepted."})
+        if not _REQUEST_SLOT.acquire(blocking=False):
+            return self.send_json(429,{"error":"The local AI worker is busy; retry after the current inference finishes."})
         try:
             length=int(self.headers.get("Content-Length","0"))
             if length < 1 or length > MAX_BODY: return self.send_json(413,{"error":"Request body exceeds limit"})
@@ -203,6 +214,8 @@ class Handler(BaseHTTPRequestHandler):
         except RuntimeError as exc: self.send_json(503,{"error":str(exc)})
         except (ValueError,KeyError,TypeError,json.JSONDecodeError) as exc: self.send_json(400,{"error":str(exc)[:300]})
         except Exception as exc: self.send_json(500,{"error":"Inference failed: "+str(exc)[:250]})
+        finally:
+            _REQUEST_SLOT.release()
     def log_message(self,*_args): pass
 
 if __name__ == "__main__":
