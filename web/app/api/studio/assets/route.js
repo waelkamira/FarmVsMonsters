@@ -235,6 +235,7 @@ export async function POST(req){
     :null;
   try{combatProfile=readCombatForm(form,currentProjectile,existing);}catch(error){return NextResponse.json({error:error.message},{status:400});}
   if(combatProfile.mode==="projectile"&&!currentProjectile)return NextResponse.json({error:"ارفع ملف القذيفة مع النبتة أو اختر سلوكاً بديلاً."},{status:400});
+  if(rigProfile&&combatProfile.mode==="projectile"&&!rigProfile.attachments.some(item=>item.id==="muzzle"))return NextResponse.json({error:"النبتة ذات الهيكل تحتاج نقطة تثبيت باسم muzzle لإطلاق القذيفة من فوهة السلاح."},{status:400});
  }
  let monsterProfile=null;
  if(type==="monster"){
