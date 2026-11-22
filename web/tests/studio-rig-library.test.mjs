@@ -15,6 +15,8 @@ test("Studio Rig Library filters rigged and unrigged assets through the existing
 test("Rig Library search includes part roles, bone names, and attachment names", () => {
   assert.match(page, /part\.role/);
   assert.match(page, /bone\.name/);
+  assert.match(page, /bone\.id/);
   assert.match(page, /attachment\.name/);
+  assert.match(page, /attachment\.id/);
   assert.match(page, /مكتبة الأصول والهياكل/);
 });
