@@ -146,12 +146,36 @@ function readPart(raw, index, canvas) {
   const segmentation = ["manual-polygon", "model-mask", "imported-mask", "sam2"].includes(provenanceInput.segmentation)
     ? provenanceInput.segmentation : (mask ? "manual-polygon" : "unspecified");
   const pixels = ["source", "reconstructed"].includes(provenanceInput.pixels) ? provenanceInput.pixels : "source";
+  let reconstruction = null;
+  if (raw.reconstruction != null) {
+    const value = raw.reconstruction;
+    if (!value || value.method !== "visible-donor-transfer" || typeof value.reviewed !== "boolean") {
+      throw new TypeError("Part " + id + " reconstruction metadata is invalid.");
+    }
+    const readBounds = (bounds, field) => {
+      if (!bounds || !["x", "y", "width", "height"].every((key) => Number.isInteger(bounds[key])) ||
+          bounds.x < 0 || bounds.y < 0 || bounds.width < 1 || bounds.height < 1 ||
+          bounds.x + bounds.width > canvas.width || bounds.y + bounds.height > canvas.height) {
+        throw new RangeError("Part " + id + " " + field + " must fit inside the source canvas.");
+      }
+      return { x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height };
+    };
+    reconstruction = {
+      method: value.method,
+      donorBounds: readBounds(value.donorBounds, "reconstruction donor bounds"),
+      targetBounds: readBounds(value.targetBounds, "reconstruction target bounds"),
+      reviewed: value.reviewed
+    };
+  }
+  if (pixels === "reconstructed" && !reconstruction) {
+    throw new TypeError("Part " + id + " reconstructed pixels require reviewable reconstruction metadata.");
+  }
   if (confidence !== null && (confidence < 0 || confidence > 1)) throw new RangeError("Part " + id + " confidence must be between 0 and 1.");
   return {
     id, assetId, role, side, frame, bounds: { x, y, width, height },
     pivot: { x: pivotX, y: pivotY }, pivotExplicit,
     name: String(raw.name || role).slice(0, 80),
-    confidence, reviewed: raw.reviewed === true, mask, occlusionMask, provenance: { segmentation, pixels },
+    confidence, reviewed: raw.reviewed === true, mask, occlusionMask, reconstruction, provenance: { segmentation, pixels },
     occlusion: raw.occlusion === "none" ? "none" : raw.occlusion === "reconstructed" ? "reconstructed" : "unresolved",
     parentPartId: raw.parentPartId == null ? null : readId(raw.parentPartId, "parts[" + index + "].parentPartId", 59),
     drawOrder: Number.isFinite(Number(raw.drawOrder)) ? Number(raw.drawOrder) : index
@@ -384,7 +408,7 @@ export function buildAutoRigFromParts(input) {
         id: part.id, assetId: part.assetId, role: part.role, side: part.side,
         bounds: part.bounds, pivot: part.pivot, parentPartId: parentByPartId.get(part.id),
         drawOrder: part.drawOrder, confidence: part.confidence, reviewed: part.reviewed, occlusion: part.occlusion,
-        mask: part.mask, occlusionMask: part.occlusionMask, provenance: part.provenance
+        mask: part.mask, occlusionMask: part.occlusionMask, reconstruction: part.reconstruction, provenance: part.provenance
       })),
       anchors: attachments.map((attachment) => ({ id: attachment.id, boneId: attachment.boneId, x: attachment.x, y: attachment.y })),
       animation: { generator: "procedural-starter", version: 1, clipIds: clips.map((clip) => clip.id) },
@@ -469,7 +493,9 @@ export function analyzeAutoRigQuality(manifest, profileInput) {
   const sourceFingerprintPresent = /^[a-f0-9]{64}$/i.test(String(manifest.source.sha256 || ""));
   const hasPrimaryBody = parts.some((part) => ["body", "stem"].includes(normalizeRole(part.role)));
   const lowConfidenceCount = parts.filter((part) => part.confidence != null && Number.isFinite(Number(part.confidence)) && Number(part.confidence) < 0.65).length;
-  const reconstructedCount = parts.filter((part) => part.provenance?.pixels === "reconstructed" || part.occlusion === "reconstructed").length;
+  const reconstructedParts = parts.filter((part) => part.provenance?.pixels === "reconstructed" || part.occlusion === "reconstructed");
+  const reconstructedCount = reconstructedParts.length;
+  const reconstructionPendingCount = reconstructedParts.filter((part) => part.reconstruction?.reviewed !== true).length;
   const warnings = [];
   if (!rolesConfirmed) warnings.push({ code: "unconfirmed-semantic-role", message: "One or more parts still have unknown semantic roles." });
   if (!allMasksPresent) warnings.push({ code: "missing-editable-mask", message: "One or more parts have no editable polygon mask." });
@@ -477,7 +503,7 @@ export function analyzeAutoRigQuality(manifest, profileInput) {
   if (lowConfidenceCount) warnings.push({ code: "low-confidence", count: lowConfidenceCount, message: "Review low-confidence segmentation proposals." });
   if (!occlusionResolved) warnings.push({ code: "unresolved-occlusion", count: unresolvedOcclusionCount, message: "One or more parts have missing or unresolved occlusion assessment." });
   if (unresolvedWithoutMaskCount) warnings.push({ code: "missing-occlusion-mask", count: unresolvedWithoutMaskCount, message: "Mark the hidden region on each occluded part before reconstruction can run." });
-  if (reconstructedCount) warnings.push({ code: "reconstructed-pixels", count: reconstructedCount, message: "Review generated pixels before publishing." });
+  if (reconstructionPendingCount) warnings.push({ code: "reconstructed-pixels", count: reconstructionPendingCount, message: "Review generated pixels before publishing." });
   if (!sourceFingerprintPresent) warnings.push({ code: "missing-source-fingerprint", message: "The original source image has no SHA-256 fingerprint." });
   if (!hasPrimaryBody) warnings.push({ code: "missing-primary-body", message: "No body or stem role is assigned; the rig may lack a stable primary anchor." });
   const penalty = (condition, amount) => condition ? amount : 0;
@@ -487,12 +513,12 @@ export function analyzeAutoRigQuality(manifest, profileInput) {
     - penalty(!allPartsReviewed, 10)
     - Math.min(15, lowConfidenceCount * 5)
     - penalty(!occlusionResolved, 15)
-    - Math.min(10, reconstructedCount * 3)
+    - Math.min(10, reconstructionPendingCount * 3)
     - penalty(!sourceFingerprintPresent, 5)
     - penalty(!hasPrimaryBody, 10));
   return {
     valid: true,
-    readyForAnimation: rolesConfirmed && allMasksPresent && allPartsReviewed && lowConfidenceCount === 0 && occlusionResolved && sourceFingerprintPresent && hasPrimaryBody && reconstructedCount === 0,
+    readyForAnimation: rolesConfirmed && allMasksPresent && allPartsReviewed && lowConfidenceCount === 0 && occlusionResolved && sourceFingerprintPresent && hasPrimaryBody && reconstructionPendingCount === 0,
     score,
     checks: {
       rolesConfirmed,
@@ -505,7 +531,8 @@ export function analyzeAutoRigQuality(manifest, profileInput) {
       sourceFingerprintPresent,
       hasPrimaryBody,
       lowConfidenceCount,
-      reconstructedCount
+      reconstructedCount,
+      reconstructionPendingCount
     },
     errors: [],
     warnings
