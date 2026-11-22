@@ -232,3 +232,15 @@ test("rigged projectile launch never silently falls back when muzzle is missing"
   assert.match(battleSceneSource, /if \(skeletalRig && !muzzle\)/);
   assert.match(battleSceneSource, /Rigged projectile plant has no valid muzzle attachment/);
 });
+
+test("Studio monster skeletal state priorities protect frozen and death states", () => {
+  assert.match(battleSceneSource, /activeId === "death" && action !== "death"/);
+  assert.match(battleSceneSource, /activeId === "frozen" && !\["frozen", "death"\]\.includes\(action\)/);
+  assert.match(battleSceneSource, /wasAlreadyFrozen/);
+  assert.match(battleSceneSource, /returnsToIdle = \["attack", "hit"\]\.includes\(action\)/);
+});
+test("Rig Editor snaps every edited keyframe to an integer clip frame", () => {
+  const editor = readFileSync(path.join(here, "../app/studio/RigEditor.jsx"), "utf8");
+  assert.match(editor, /snapSkeletalKeyframeTime\(targetClip, timeMs\)/);
+  assert.match(editor, /snapSkeletalKeyframeTime\(target, timeMs\)/);
+});
