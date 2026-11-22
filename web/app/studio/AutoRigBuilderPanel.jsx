@@ -91,6 +91,8 @@ export default function AutoRigBuilderPanel({
       setImageError("");
       setPoints([]);
       setParts([]);
+      setAiProposals([]);
+      setAiProposalRoles({});
       setMuzzlePartId("");
       setMuzzlePoint(null);
       setMuzzleMode(false);
@@ -123,6 +125,20 @@ export default function AutoRigBuilderPanel({
       context.fill();
       context.stroke();
     });
+    aiProposals.forEach((proposal) => {
+      const polygon = proposal.mask?.points || [];
+      if (polygon.length < 3) return;
+      context.beginPath();
+      polygon.forEach((point, index) => index ? context.lineTo(point.x, point.y) : context.moveTo(point.x, point.y));
+      context.closePath();
+      context.fillStyle = "rgba(40, 150, 245, 0.12)";
+      context.strokeStyle = "#1688e8";
+      context.lineWidth = Math.max(2, canvas.width / 280);
+      context.setLineDash([Math.max(5, canvas.width / 90), Math.max(3, canvas.width / 150)]);
+      context.fill();
+      context.stroke();
+      context.setLineDash([]);
+    });
     if (muzzlePoint) {
       context.beginPath();
       context.arc(muzzlePoint.x, muzzlePoint.y, Math.max(6, canvas.width / 70), 0, Math.PI * 2);
@@ -149,7 +165,7 @@ export default function AutoRigBuilderPanel({
         context.fill();
       });
     }
-  }, [image, points, parts]);
+  }, [image, points, parts, aiProposals]);
 
   async function checkAIWorker() {
     setAiBusy(true);
