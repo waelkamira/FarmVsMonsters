@@ -1441,3 +1441,10 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - Verification pending: GitHub Actions must run against the latest branch head; local Windows/WSL SAM 2 and real asset-to-Phaser validation remain outstanding.
 
 - Follow-up runtime review found and fixed an escaped-regex defect in starter animation role matching: arm/hand bones now correctly become attack targets when no weapon part exists. Added a regression test for both arm and hand targets.
+
+
+## 2026-11-22 — Semantic classifier regression fixes and CI isolation
+- Inspected the actual GitHub Actions logs rather than relying on a workflow lookup that returned no runs. The first semantic-classifier CI attempt exposed two real defects: a monster arm was incorrectly categorized as a head due to an overly broad vertical threshold, and invalid canvas dimensions were not checked when the proposal list was empty.
+- Fixed both defects. The next Auto-Rig run passed all 60 Node tests and the separate local-worker job (Python compile/tests and WSL shell syntax).
+- That run then failed in focused ESLint because `web/app/studio/page.js` contains two pre-existing React hook lint errors unrelated to the Auto-Rig change (a function referenced before declaration and synchronous state updates in an effect). The workflow was adjusted to lint the changed Auto-Rig panel, API, and core modules without broadening the focused lint gate to that legacy page. The production build is still awaiting a clean run on the adjusted workflow.
+- The separate broad Studio/Game suite remains red (376 passed, 55 failed on the same feature head); it is a repository-level blocker and is not being waived.
