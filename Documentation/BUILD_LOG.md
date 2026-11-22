@@ -1366,3 +1366,11 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 ## 2026-11-22 — Latest focused validation (commit 1463e9f)
 - Auto-Rig subsystem run `45032089391` passed on the current feature commit: all Auto-Rig, worker-protocol, publish-gate, Rig Library, asset-version, and hybrid-engine contract tests; focused ESLint; full-project ESLint diagnostic step; production build; Python worker compile and tests.
 - The separate broad Web Quality Gate / Studio-Game test suite remains independent and has previously failed 54 of 424 tests; no claim of repository-wide green status is made.
+
+
+## 2026-11-22 — Interactive SAM 2 point prompting
+- Extended the local SAM 2 worker to load both `SAM2AutomaticMaskGenerator` and `SAM2ImagePredictor` from the same local checkpoint.
+- Added a prompted-segmentation endpoint supporting 1–32 positive/negative source-space point prompts and up to three mask alternatives per request.
+- Extended the authenticated Studio proxy to validate prompt count, coordinates, and binary labels before forwarding. The worker independently validates prompts and source image dimensions.
+- Studio now supports positive points (inside the target) and negative points (outside it), renders them on the source preview, and requests point-conditioned SAM 2 masks. Alternatives remain unapproved until the author selects one, assigns its semantic role, edits if necessary, and explicitly reviews it.
+- Added worker unit tests for valid and invalid point prompts. This is interactive SAM 2 segmentation, not semantic role classification or hidden-pixel generation.
