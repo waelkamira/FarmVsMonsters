@@ -51,6 +51,7 @@ export default function AutoRigBuilderPanel({
   const [points, setPoints] = useState([]);
   const [parts, setParts] = useState([]);
   const [busy, setBusy] = useState(false);
+  const [generated, setGenerated] = useState(false);
   const [message, setMessage] = useState("");
   const [muzzlePartId, setMuzzlePartId] = useState("");
   const [muzzlePoint, setMuzzlePoint] = useState(null);
@@ -89,6 +90,7 @@ export default function AutoRigBuilderPanel({
       setMuzzlePartId("");
       setMuzzlePoint(null);
       setMuzzleMode(false);
+      setGenerated(false);
       nextPartIndex.current = 1;
     };
     nextImage.onerror = () => { if (active) setImageError("تعذر قراءة الصورة المصدر."); };
@@ -146,7 +148,7 @@ export default function AutoRigBuilderPanel({
   }, [image, points, parts]);
 
   function addPoint(event) {
-    if (!image || disabled || busy) return;
+    if (!image || disabled || busy || generated) return;
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
     const x = (event.clientX - rect.left) * canvas.width / rect.width;
@@ -161,6 +163,7 @@ export default function AutoRigBuilderPanel({
   }
 
   function commitPart() {
+    if (generated) return;
     if (points.length < 3) {
       setMessage("ارسم حدود الجزء بثلاث نقاط أو أكثر قبل اعتماده.");
       return;
@@ -207,7 +210,7 @@ export default function AutoRigBuilderPanel({
   }
 
   async function generateRig() {
-    if (!image || !parts.length || busy || disabled) return;
+    if (!image || !parts.length || busy || disabled || generated) return;
     if (requiresMuzzle && (!activeEmitterPart || !muzzlePoint)) {
       setMessage("اختر جزء مصدر الإطلاق ثم حدّد نقطة muzzle داخله قبل إنشاء هيكل نبتة المقذوفات.");
       return;
@@ -282,9 +285,13 @@ export default function AutoRigBuilderPanel({
       });
       onRigGenerated(result.profile);
       if (onManifestGenerated) onManifestGenerated(result.manifest);
+      setGenerated(true);
       setMessage("اكتمل استخراج " + created.length + " جزءاً وإنشاء الهيكل ومقاطع الحركة الابتدائية. راجع العظام ونقاط الدوران والحركات قبل الحفظ.");
     } catch (error) {
-      setMessage(error.message + (created.length ? " تم حفظ الأجزاء التالية في المكتبة: " + created.join("، ") + ". راجعها قبل إعادة المحاولة." : ""));
+      if (created.length && onAssetsCreated) {
+        try { await onAssetsCreated(); } catch {}
+      }
+      setMessage(error.message + (created.length ? " تم حفظ الأجزاء التالية في المكتبة: " + created.join("، ") + ". احذف تحديداتها وأعد رسمها قبل المحاولة مجدداً." : ""));
     } finally {
       setBusy(false);
     }
@@ -306,7 +313,7 @@ export default function AutoRigBuilderPanel({
       </div>}
       <div className="studio-grid" style={{ marginTop: 12 }}>
         <label>الدور الدلالي
-          <select value={role} disabled={disabled || busy} onChange={(event) => {
+          <select value={role} disabled={disabled || busy || generated} onChange={(event) => {
             const value = event.target.value;
             setRole(value);
             setPartName(AUTO_RIG_ROLE_OPTIONS.find((item) => item.value === value)?.label || value);
@@ -319,21 +326,21 @@ export default function AutoRigBuilderPanel({
         </label>
       </div>
       <div className="studio-actions" style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 10 }}>
-        <button type="button" disabled={disabled || busy || !points.length} onClick={() => setPoints((current) => current.slice(0, -1))}>تراجع عن آخر نقطة</button>
+        <button type="button" disabled={disabled || busy || generated || !points.length} onClick={() => setPoints((current) => current.slice(0, -1))}>تراجع عن آخر نقطة</button>
         <button type="button" disabled={disabled || busy || !points.length} onClick={() => setPoints([])}>إلغاء التحديد</button>
-        <button type="button" disabled={disabled || busy || points.length < 3} onClick={commitPart}>اعتماد الجزء</button>
+        <button type="button" disabled={disabled || busy || generated || points.length < 3} onClick={commitPart}>اعتماد الجزء</button>
       </div>
       {requiresMuzzle && <div className="studio-grid" style={{ marginTop: 12 }}>
         <label>جزء مصدر الإطلاق
-          <select value={activeEmitterPart?.id || ""} disabled={disabled || busy || !emitterParts.length} onChange={(event) => { setMuzzlePartId(event.target.value); setMuzzlePoint(null); setMuzzleMode(false); }}>
+          <select value={activeEmitterPart?.id || ""} disabled={disabled || busy || generated || !emitterParts.length} onChange={(event) => { setMuzzlePartId(event.target.value); setMuzzlePoint(null); setMuzzleMode(false); }}>
             {emitterParts.map((part) => <option key={part.id} value={part.id}>{part.name} · {part.role}</option>)}
           </select>
         </label>
         <div>
           <span>نقطة فوهة الإطلاق (muzzle)</span>
           <div className="studio-actions" style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 6 }}>
-            <button type="button" disabled={disabled || busy || !activeEmitterPart} onClick={() => { setMuzzlePoint(null); setMuzzleMode(true); setMessage("انقر داخل حدود جزء مصدر الإطلاق لتحديد نقطة خروج القذيفة."); }}>تحديد النقطة على الصورة</button>
-            <button type="button" disabled={disabled || busy || !muzzlePoint} onClick={() => setMuzzlePoint(null)}>مسح النقطة</button>
+            <button type="button" disabled={disabled || busy || generated || !activeEmitterPart} onClick={() => { setMuzzlePoint(null); setMuzzleMode(true); setMessage("انقر داخل حدود جزء مصدر الإطلاق لتحديد نقطة خروج القذيفة."); }}>تحديد النقطة على الصورة</button>
+            <button type="button" disabled={disabled || busy || generated || !muzzlePoint} onClick={() => setMuzzlePoint(null)}>مسح النقطة</button>
           </div>
           {muzzleMode && <p>وضع تحديد الفوهة مفعّل: انقر داخل الجزء المحدد على الصورة</p>}
           {muzzlePoint && <p>النقطة المحددة: {Math.round(muzzlePoint.x)}, {Math.round(muzzlePoint.y)}</p>}
@@ -344,12 +351,13 @@ export default function AutoRigBuilderPanel({
         <b>الأجزاء المحددة ({parts.length}/63)</b>
         <ul>{parts.map((part) => <li key={part.id} style={{ marginTop: 5 }}>
           {part.name} · {part.role} · {part.bounds.width}×{part.bounds.height}
-          <button type="button" disabled={disabled || busy} style={{ marginInlineStart: 10 }} onClick={() => { setParts((current) => current.filter((item) => item.id !== part.id)); if (part.id === muzzlePartId) { setMuzzlePartId(""); setMuzzlePoint(null); setMuzzleMode(false); } }}>حذف</button>
+          <button type="button" disabled={disabled || busy || generated} style={{ marginInlineStart: 10 }} onClick={() => { setParts((current) => current.filter((item) => item.id !== part.id)); if (part.id === activeEmitterPart?.id) { setMuzzlePartId(""); setMuzzlePoint(null); setMuzzleMode(false); } }}>حذف</button>
         </li>)}</ul>
       </div>}
-      <button type="button" className="studio-submit" disabled={disabled || busy || !image || !parts.length} onClick={generateRig}>
+      <button type="button" className="studio-submit" disabled={disabled || busy || generated || !image || !parts.length} onClick={generateRig}>
         {busy ? "جارٍ قصّ الأجزاء وحفظها..." : "قصّ الأجزاء وإنشاء الهيكل ←"}
       </button>
+      {generated && <p className="studio-message" role="status">تم توليد الهيكل والمقاطع. أكمل ضبطها من محرر الهيكل أدناه؛ أعد تحميل الصورة المصدر إذا أردت بدء عملية استخراج جديدة.</p>}
       {message && <p className="studio-message" role="status">{message}</p>}
     </section>
   );
