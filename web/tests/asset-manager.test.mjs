@@ -233,6 +233,8 @@ test("reference-counts audio cache entries and removes them after the final rele
   const game = {};
   const firstScene = createScene(game);
   const secondScene = createScene(game, firstScene.textures);
+  // Phaser audio cache is game-scoped just like the texture cache.
+  secondScene.cache.audio = firstScene.cache.audio;
   const manifest = {
     groups: { sounds: [{ key: "victory", url: "/assets/audio/victory.ogg", type: "audio" }] }
   };
