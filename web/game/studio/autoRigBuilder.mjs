@@ -267,7 +267,7 @@ export function buildAutoRigFromParts(input) {
   for (const part of parts) {
     if (!KNOWN_ROLES.has(part.role)) warnings.push({ code: "unknown-role", partId: part.id, role: part.role });
     if (part.occlusion === "unresolved") warnings.push({ code: "unresolved-occlusion", partId: part.id });
-    if (part.occlusion === "reconstructed") warnings.push({ code: "generated-pixels", partId: part.id });
+    if (part.occlusion === "reconstructed" || part.provenance.pixels === "reconstructed") warnings.push({ code: "generated-pixels", partId: part.id });
   }
   return {
     profile,
