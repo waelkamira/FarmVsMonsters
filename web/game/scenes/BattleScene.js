@@ -997,18 +997,17 @@ export default class BattleScene extends Scene {
         PLAYTEST_ALL_PLANTS || unlocked.has(type)
       ));
       const saved = JSON.parse(window.localStorage.getItem("farmVsMonsters.selectedPlants") || "null");
-      // All implemented plants are unlocked for the current playtest. The player still equips at most seven.
+      // All implemented plants are available during playtesting; campaign unlock data remains unchanged.
       const testingTypes = (this.studioPlants || [])
         .filter((plant) => plant.testOnly)
         .map((plant) => plant.id)
         .filter((type) => availableTypes.has(type));
-      // Playtest mode equips every available built-in and Studio plant so each can be tested.
-      // Ignore an older saved loadout here; normal campaign unlock/save data remains untouched.
       const preferredLoadout = PLAYTEST_ALL_PLANTS
-        ? [...availableTypes]
+        ? [...ALL_PLAYTEST_PLANT_IDS, ...testingTypes, ...(Array.isArray(saved) ? saved : [])]
         : Array.isArray(saved)
           ? ["mushroom", "radish", ...testingTypes, ...saved.filter((type) => availableTypes.has(type))]
           : [...availableTypes];
+      // Ignore old saved loadouts in playtest mode and equip every implemented built-in plant.
       selectedTypes = [...new Set(preferredLoadout.filter((type) => availableTypes.has(type)))];
     } catch {
       // Storage failures keep the starter loadout playable.
