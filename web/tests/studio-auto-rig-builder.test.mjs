@@ -209,6 +209,37 @@ test("supports review-gated local texture inpainting provenance without donor me
   assert.ok(result.warnings.some((warning) => warning.code === "generated-pixels" && warning.partId === "body-main"));
 });
 
+test("supports review-gated local diffusion anatomical reconstruction provenance", () => {
+  const input = baseInput();
+  input.parts[0].provenance = { segmentation: "sam2", pixels: "reconstructed" };
+  input.parts[0].reconstruction = {
+    method: "local-diffusion-anatomical-inpaint",
+    model: "stable-diffusion-inpainting",
+    prompt: "continue the left leaf behind the body",
+    seed: 20261122,
+    targetBounds: { x: 80, y: 90, width: 40, height: 40 },
+    targetMask: { kind: "polygon", points: [{ x: 80, y: 90 }, { x: 120, y: 90 }, { x: 120, y: 130 }, { x: 80, y: 130 }] },
+    reviewed: false
+  };
+  const result = buildAutoRigFromParts(input);
+  assert.equal(result.manifest.parts[0].reconstruction.method, "local-diffusion-anatomical-inpaint");
+  assert.equal(result.manifest.parts[0].reconstruction.model, "stable-diffusion-inpainting");
+  assert.equal(result.manifest.parts[0].reconstruction.seed, 20261122);
+  assert.ok(result.warnings.some((warning) => warning.code === "generated-pixels" && warning.partId === "body-main"));
+});
+
+test("rejects local diffusion reconstruction without model, prompt, or seed provenance", () => {
+  const input = baseInput();
+  input.parts[0].provenance = { segmentation: "sam2", pixels: "reconstructed" };
+  input.parts[0].reconstruction = {
+    method: "local-diffusion-anatomical-inpaint",
+    targetBounds: { x: 80, y: 90, width: 40, height: 40 },
+    targetMask: { kind: "polygon", points: [{ x: 80, y: 90 }, { x: 120, y: 90 }, { x: 120, y: 130 }, { x: 80, y: 130 }] },
+    reviewed: false
+  };
+  assert.throws(() => buildAutoRigFromParts(input), /diffusion reconstruction provenance is incomplete/);
+});
+
 test("validates persisted build manifests while allowing subsequent manual rig edits", () => {
   const generated = buildAutoRigFromParts(baseInput());
   const valid = validateAutoRigBuildManifest(generated.manifest, generated.profile);
