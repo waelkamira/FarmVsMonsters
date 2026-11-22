@@ -1046,8 +1046,7 @@ export default class BattleScene extends Scene {
       // Storage failures keep the starter loadout playable.
       selectedTypes = ["radish", "mushroom"];
     }
-    if (!selectedTypes.includes("mushroom")) selectedTypes.unshift("mushroom");
-    if (!selectedTypes.includes("radish")) selectedTypes.push("radish");
+    selectedTypes = ["mushroom", "radish", ...selectedTypes.filter((type) => type !== "mushroom" && type !== "radish")].slice(0, 7);
     this.plantCardsByType = {};
     const packetStartX = 164;
     const packetGap = selectedTypes.length > 7 ? 78 : 90;
