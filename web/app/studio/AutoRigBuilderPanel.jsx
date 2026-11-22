@@ -45,6 +45,7 @@ export default function AutoRigBuilderPanel({
   sourceColumns = 1,
   sourceSpriteSheet = false,
   onRigGenerated,
+  onManifestGenerated,
   onAssetsCreated
 }) {
   const canvasRef = useRef(null);
@@ -256,6 +257,7 @@ export default function AutoRigBuilderPanel({
         parts: descriptors
       });
       onRigGenerated(result.profile);
+      if (onManifestGenerated) onManifestGenerated(result.manifest);
       setMessage("اكتمل استخراج " + created.length + " جزءاً وإنشاء هيكل أولي. راجع العظام ونقاط الدوران قبل الحفظ.");
     } catch (error) {
       setMessage(error.message + (created.length ? " تم حفظ الأجزاء التالية في المكتبة: " + created.join("، ") + ". راجعها قبل إعادة المحاولة." : ""));
