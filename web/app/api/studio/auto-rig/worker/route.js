@@ -88,6 +88,9 @@ export async function POST(req) {
       }
       points.push({ x, y, label });
     }
+    if (!points.some((point) => point.label === 1)) {
+      return NextResponse.json({ error: "At least one positive point is required for SAM 2 segmentation." }, { status: 400 });
+    }
   }
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), WORKER_TIMEOUT_MS);
