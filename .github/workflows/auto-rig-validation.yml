@@ -21,6 +21,7 @@ on:
       - "web/tests/studio-semantic-role-classifier.test.mjs"
       - "web/local-ai-worker/test_visual_semantic_classifier.py"
       - "web/local-ai-worker/test_generative_anatomical_reconstruction.py"
+      - "web/local-ai-worker/real_asset_smoke_test.py"
       - "web/tests/studio-rig-template-retarget.test.mjs"
       - "web/tests/studio-auto-rig-reconstruction-ui.test.mjs"
       - "web/tests/studio-asset-versions.test.mjs"
@@ -79,6 +80,6 @@ jobs:
       - name: Validate WSL launcher syntax
         run: bash -n setup-wsl.sh start-worker-wsl.sh
       - name: Compile worker
-        run: python -m py_compile worker.py smoke_test.py visual_semantic_classifier.py generative_anatomical_reconstruction.py
+        run: python -m py_compile worker.py smoke_test.py visual_semantic_classifier.py generative_anatomical_reconstruction.py real_asset_smoke_test.py
       - name: Run worker contract tests
         run: python -m unittest -v test_worker.py test_smoke_test.py test_visual_semantic_classifier.py test_generative_anatomical_reconstruction.py
