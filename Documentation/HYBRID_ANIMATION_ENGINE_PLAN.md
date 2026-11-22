@@ -78,6 +78,9 @@ The editor is a mode switch inside Asset & Animation Studio:
 - [x] Parent hierarchy and reference validation.
 - [x] Deterministic clip sampling and parent transform composition.
 - [x] Attachment and hitbox transform resolution.
+- [x] Studio API validation and persistence of rig profiles in asset records and published catalogs.
+- [x] Rig profiles preserved by clone, revision snapshot, and version restore.
+- [x] Rig-part dependencies reported and protected from destructive lifecycle operations.
 - [ ] Focused Node tests pass in the repository environment.
 
 ### Phase B — Phaser runtime adapter
