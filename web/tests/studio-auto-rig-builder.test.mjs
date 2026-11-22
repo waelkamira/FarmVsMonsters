@@ -194,6 +194,21 @@ test("flags generated pixel provenance even when occlusion is not separately mar
 });
 
 
+test("supports review-gated local texture inpainting provenance without donor metadata", () => {
+  const input = baseInput();
+  input.parts[0].provenance = { segmentation: "manual", pixels: "reconstructed" };
+  input.parts[0].reconstruction = {
+    method: "opencv-telea-inpaint",
+    targetBounds: { x: 80, y: 90, width: 40, height: 40 },
+    targetMask: { kind: "polygon", points: [{ x: 80, y: 90 }, { x: 120, y: 90 }, { x: 120, y: 130 }, { x: 80, y: 130 }] },
+    reviewed: false
+  };
+  const result = buildAutoRigFromParts(input);
+  assert.equal(result.manifest.parts[0].reconstruction.method, "opencv-telea-inpaint");
+  assert.equal(result.manifest.parts[0].reconstruction.donorBounds, undefined);
+  assert.ok(result.warnings.some((warning) => warning.code === "generated-pixels" && warning.partId === "body-main"));
+});
+
 test("validates persisted build manifests while allowing subsequent manual rig edits", () => {
   const generated = buildAutoRigFromParts(baseInput());
   const valid = validateAutoRigBuildManifest(generated.manifest, generated.profile);
