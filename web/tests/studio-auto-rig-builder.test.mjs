@@ -47,7 +47,7 @@ test("creates a muzzle attachment relative to the confirmed weapon pivot", () =>
   input.anchors = { muzzle: { partId: "weapon-main", x: 224, y: 136, rotation: 0 } };
   const result = buildAutoRigFromParts(input);
   assert.deepEqual(result.profile.attachments[0], {
-    id: "muzzle", name: "Weapon muzzle", boneId: "part-weapon-main",
+    id: "muzzle", name: "Muzzle / emitter", boneId: "part-weapon-main",
     x: 66, y: 0, rotation: 0, scaleX: 1, scaleY: 1
   });
 });
@@ -55,7 +55,7 @@ test("creates a muzzle attachment relative to the confirmed weapon pivot", () =>
 test("blocks projectile rigs without an explicit muzzle anchor", () => {
   const input = baseInput();
   input.requiresMuzzle = true;
-  assert.throws(() => buildAutoRigFromParts(input), /confirmed muzzle anchor/);
+  assert.throws(() => buildAutoRigFromParts(input), /confirmed muzzle\/emitter anchor/);
 });
 
 test("rejects duplicate part IDs, invalid bounds, and cyclic parent references", () => {
@@ -88,7 +88,7 @@ test("rejects a muzzle anchor that references a missing or non-weapon part", () 
   assert.throws(() => buildAutoRigFromParts(missing), /missing weapon part/);
   const wrongRole = baseInput();
   wrongRole.anchors = { muzzle: { partId: "body-main", x: 128, y: 120 } };
-  assert.throws(() => buildAutoRigFromParts(wrongRole), /weapon or weapon-barrel/);
+  assert.throws(() => buildAutoRigFromParts(wrongRole), /weapon, barrel, mouth, head, or face/);
 });
 
 
@@ -117,7 +117,7 @@ test("accepts full-length existing asset IDs while keeping bone-safe part instan
 test("rejects a muzzle point outside the selected weapon bounds even when it remains on the canvas", () => {
   const input = baseInput();
   input.anchors = { muzzle: { partId: "weapon-main", x: 100, y: 136 } };
-  assert.throws(() => buildAutoRigFromParts(input), /inside or on the confirmed weapon part bounds/);
+  assert.throws(() => buildAutoRigFromParts(input), /inside or on the confirmed emitter part bounds/);
 });
 
 test("chooses the nearest eligible parent instance instead of depending on input order", () => {
@@ -235,4 +235,17 @@ test("single-part Auto-Rigs do not create duplicate animation tracks", () => {
     const ids = clip.tracks.map((track) => track.boneId);
     assert.equal(new Set(ids).size, ids.length);
   }
+});
+
+
+test("supports mouth and head emitter anchors for plants without a separate weapon sprite", () => {
+  const input = baseInput();
+  input.parts = input.parts.filter((part) => part.role !== "weapon");
+  input.parts.find((part) => part.role === "head").id = "mouth-emitter";
+  input.parts.find((part) => part.role === "head").role = "mouth";
+  input.requiresMuzzle = true;
+  input.anchors = { muzzle: { partId: "mouth-emitter", x: 128, y: 102 } };
+  const result = buildAutoRigFromParts(input);
+  assert.equal(result.profile.attachments[0].boneId, "part-mouth-emitter");
+  assert.equal(result.profile.attachments[0].id, "muzzle");
 });
