@@ -85,6 +85,10 @@ export default function AutoRigBuilderPanel({
   const activeEmitterPart = emitterParts.find((part) => part.id === muzzlePartId) || emitterParts[0] || null;
 
   useEffect(() => {
+    setRigTemplatePlan(null);
+  }, [parts]);
+
+  useEffect(() => {
     if (!sourceFile && !sourceUrl) return;
     let active = true;
     const localUrl = sourceFile ? URL.createObjectURL(sourceFile) : sourceUrl;
