@@ -1,6 +1,0 @@
-numpy
-opencv-python-headless
-Pillow
-transformers>=4.46,<5
-safetensors
-huggingface_hub>=0.26,<1
