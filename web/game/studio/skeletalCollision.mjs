@@ -1,7 +1,7 @@
 function readRectangle(rectangle) {
   const x = Number(rectangle?.x), y = Number(rectangle?.y);
   const width = Math.abs(Number(rectangle?.width)), height = Math.abs(Number(rectangle?.height));
-  const rotation = Number(rectangle?.rotation) || 0;
+  const rotation = Number(rectangle?.rotation ?? 0);
   if (![x, y, width, height, rotation].every(Number.isFinite) || width <= 0 || height <= 0) {
     throw new TypeError("A collision rectangle requires finite coordinates, positive dimensions, and a finite rotation.");
   }
