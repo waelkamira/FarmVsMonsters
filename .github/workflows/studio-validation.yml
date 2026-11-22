@@ -43,9 +43,24 @@ jobs:
           cache-dependency-path: web/package-lock.json
       - name: Install dependencies
         run: npm ci
-      - name: Run unit tests
+      - name: Run focused Studio foundation tests
+        run: >-
+          node --test
+          tests/studio-local-registry-store.test.mjs
+          tests/studio-reviewed-release-flow.test.mjs
+          tests/studio-unsaved-changes.test.mjs
+          tests/studio-asset-dependencies.test.mjs
+          tests/studio-asset-readiness.test.mjs
+          tests/studio-release-lifecycle.test.mjs
+          tests/studio-hybrid-engine-integration.test.mjs
+          tests/studio-clone-dialog.test.mjs
+          tests/studio-asset-versions.test.mjs
+      - name: Run full unit suite
+        if: always()
         run: npm test
       - name: Run ESLint
+        if: always()
         run: npm run lint
       - name: Build production application
+        if: always()
         run: npm run build

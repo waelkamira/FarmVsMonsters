@@ -11,8 +11,8 @@ const selector = read("../app/stage/1/select/page.js");
 const syncScript = read("../scripts/sync-studio-test-assets.mjs");
 
 test("Studio supports safe duplication for every registered asset type",()=>{
-  assert.match(studioPage,/async function cloneAsset\(asset\)/);
-  assert.match(studioPage,/onClick=\{\(\)=>cloneAsset\(a\)\}/);
+  assert.match(studioPage,/async function cloneAsset\(\)/);
+  assert.match(studioPage,/onClick=\{\(\)=>openCloneDialog\(a\)\}/);
   assert.match(assetsRoute,/operation==="clone"/);
   assert.match(assetsRoute,/cloneStudioAsset\(asset,newId,body\.newName\)/);
 });
@@ -123,7 +123,7 @@ test("testing catalog is served directly from the Studio staging branch with pro
   assert.match(assetsRoute, /asset\.status==="testing"/);
   assert.match(assetsRoute, /api\/studio\/assets\?preview=/);
   assert.match(assetsRoute, /Cache-Control.*private, no-store/);
-  assert.match(studioPage, /متاحة الآن للاختبار مباشرة داخل اللعبة/);
+  assert.match(studioPage, /الأصل متاح الآن للاختبار داخل اللعبة/);
   assert.doesNotMatch(studioPage, /شغّل npm run studio:sync لمزامنتها/);
 });
 
