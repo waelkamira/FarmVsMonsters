@@ -10,6 +10,7 @@ on:
       - "web/app/api/studio/assets/route.js"
       - "web/app/api/studio/auto-rig/worker/route.js"
       - "web/game/studio/**"
+      - "web/local-ai-worker/**"
       - "web/game/studio/autoRigWorkerProtocol.mjs"
       - "web/tests/studio-auto-rig-worker-protocol.test.mjs"
       - "web/tests/studio-auto-rig-worker-route.test.mjs"
