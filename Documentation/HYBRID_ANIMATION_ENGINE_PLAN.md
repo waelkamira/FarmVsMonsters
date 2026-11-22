@@ -113,8 +113,8 @@ The editor is a mode switch inside Asset & Animation Studio:
 - [x] Return completed non-looping actions to idle where configured by the battle integration.
 - [x] Add explicit priority guards: death cannot be interrupted, frozen state survives stacked freeze hits and ordinary reactions, and attack/hit cannot be reset by idle/movement updates.
 - [x] Add integer frame snapping so timeline edits and drag operations always save validator-compatible keyframe timestamps.
-- [x] Extract oriented-rectangle and projectile-circle collision math into a pure module with unit tests for overlap, separation, rotation, tangency, and invalid geometry.
-- [x] Resolve projectile muzzle points and collision boxes through a shared tested world-transform helper (position, non-uniform scale, and rotation) before converting to lane coordinates.
+- [x] Extract polygon SAT and projectile-circle collision into a pure module with tests for overlap, separation, rotation, tangency, skewed polygons, and invalid geometry.
+- [x] Resolve projectile muzzle points and all four hitbox corners through a shared tested world-transform helper (position, non-uniform scale, and rotation), preserving exact parallelogram geometry under non-uniform scaling.
 - [ ] Verify all state transitions and hitbox behavior in a live browser battle.
 
 ### Phase E — Full battle integration and verification
