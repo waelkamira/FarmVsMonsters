@@ -47,6 +47,73 @@ Turn one uploaded plant or monster illustration into a reviewable, editable, gam
 - Licensing: the source code is Apache-2.0, but LayerDiff 3D and depth checkpoints inherit additional OpenRAIL terms from upstream model weights; the body-part parsing model has separate Apache-2.0 terms. Commercial use is described as permitted, but the OpenRAIL use restrictions must be carried into applicable terms when redistributing weights or hosting a service.
 - Decision: keep as an optional research adapter only. Do not bundle its weights, make it a required install, or make it the default pipeline until art-style tests, hardware tests, and license compliance are complete.
 
+## Permanent Studio subsystem — required product modules
+
+The Auto-Rig workflow is a first-class, permanent subsystem of the Asset & Animation Studio, not a temporary external utility. It must be reachable from the normal Studio asset workflow and persist its outputs through the existing asset/version/dependency/publish lifecycle.
+
+The subsystem is composed of these named modules. Each module has a defined responsibility, input/output contract, editable result, and validation state:
+
+1. **AI Part Detector**
+   - Proposes semantic plant/monster part instances from the original image and segmentation results.
+   - Uses the versioned role vocabulary, but never assumes every character has every role.
+   - Assigns stable instance IDs independently of role names; repeated leaves, petals, limbs, eyes, weapon components, and accessories remain distinct instances.
+   - Exposes confidence and lets the user rename, split, merge, add, or remove proposals.
+
+2. **Smart Image Segmentation**
+   - Produces editable masks and transparent layer images in original source coordinates.
+   - Supports AI prompts (points/boxes), edge refinement, and manual mask editing.
+   - Preserves source art, alpha, z-order, and provenance; no destructive overwrite.
+   - A mask is not treated as semantic understanding or as reconstruction of hidden pixels.
+
+3. **Hidden Part Reconstruction**
+   - Detects occluded regions and proposes completion only where an underlying part is genuinely required for its intended motion.
+   - Separates original pixels from generated pixels in metadata and review UI.
+   - Offers before/after review, confidence, accept/reject, and rollback.
+   - If reconstruction is uncertain or unavailable, marks the part unresolved and requests manual completion rather than silently inventing pixels.
+
+4. **Auto Bone Generator**
+   - Builds a deterministic parent/child hierarchy from approved part roles, contact geometry, and user corrections.
+   - Emits bones directly in the existing skeletal rig-profile format consumed by the current Phaser runtime.
+   - Keeps bone hierarchy independent from render z-order.
+
+5. **Auto Pivot Detection**
+   - Suggests pivots from overlap/contact boundaries and part geometry, not just image centers.
+   - Stores source-space and crop-local coordinates consistently.
+   - Shows confidence and allows direct visual drag correction before rig generation is accepted.
+
+6. **Animation Generator**
+   - Creates editable starter clips such as idle, attack, hit, death, and movement when applicable.
+   - Uses the existing skeletal evaluator, clip schema, playback controls, and game state machine.
+   - Generates suggestions only; user-approved clips are saved in the same rig profile used in gameplay.
+   - Does not own damage, cooldown, projectile timing, or other combat authority.
+
+7. **Weapon Attachment Builder**
+   - Detects/proposes weapon, barrel, grip/hand attachment, muzzle, projectile direction, and optional recoil anchor.
+   - Requires visual confirmation of muzzle position and direction for projectile-firing plants.
+   - Writes attachments in the existing runtime attachment format so BattleScene projectile origin remains authoritative and consistent.
+   - Never guesses or silently changes a live projectile origin.
+
+8. **Rig Quality Validator**
+   - Performs structural, geometric, visual, and runtime-readiness checks.
+   - Checks unique/stable IDs, valid parent graph/no cycles, valid masks and image assets, bounds/pivots, unresolved occlusion, generated-pixel provenance, clip references, attachment validity, muzzle requirements, and hitbox proposals.
+   - Runs the same rig-profile validator and skeletal evaluator used by the game; Studio-only validation must not diverge from runtime behavior.
+   - Reports blocking errors separately from warnings and gives actionable links to the relevant editor control.
+
+9. **Rig Library**
+   - Stores approved reusable rig templates, role maps, pivot presets, motion templates, and weapon/attachment presets.
+   - Supports versioning, search, duplication, and controlled updates without changing already-published assets.
+   - Uses semantic roles and explicit per-instance IDs so templates can be retargeted to new plants without re-defining every part.
+   - Saves through the existing Studio asset API/version/dependency system; it is not a separate untracked file store.
+
+### Shared integration contract
+- All nine modules operate on one canonical, versioned Auto-Rig build manifest and produce one existing game-compatible skeletal rig profile plus referenced image assets.
+- The manifest records source hash/dimensions, role dictionary version, part instance IDs, masks/layer paths, source-space bounds, pivots, parent links, z-order, confidence, occlusion/reconstruction provenance, attachment proposals, and generator/model versions.
+- The build manifest is authoring metadata; it does not create a second animation runtime. The canonical output remains the current rig-profile format.
+- Every output is manually editable, reversible, and reviewable. Original source images and published versions are immutable during generation.
+- The preview must use the exact skeletal evaluator/runtime behavior used in Phaser gameplay.
+- The pipeline remains local-first with optional model adapters. If AI models are unavailable, the same modules remain accessible with guided/manual proposals; there must be no hard dependency on a paid cloud API.
+- Existing Sprite Sheet assets, manual Rig Editor workflows, asset IDs, dependencies, snapshots, muzzle attachments, hitboxes, and publishing remain backward compatible.
+
 ## Proposed pipeline
 
 ### Stage A — image intake and source preservation
@@ -130,9 +197,11 @@ Templates target semantic roles and skip absent bones. Weapon attack timing must
 - Add regression tests for missing/duplicate parts, multi-leaf instances, unknown roles, occlusion flags, muzzle requirements, stable IDs, and invalid geometry.
 - This phase can be tested without AI models.
 
-### Phase 2 — Studio review workflow
-- Add a dedicated Auto-Rig wizard beside the existing Rig Editor.
-- Support source image upload, layer proposals, role correction, mask review, pivot adjustment, and generated-rig preview.
+### Phase 2 — permanent Studio subsystem and review workflow
+- Integrate the nine permanent modules (AI Part Detector, Smart Image Segmentation, Hidden Part Reconstruction, Auto Bone Generator, Auto Pivot Detection, Animation Generator, Weapon Attachment Builder, Rig Quality Validator, and Rig Library) into the normal Studio navigation and asset workflow.
+- Add a unified Auto-Rig workspace/wizard beside the existing Rig Editor, not a detached external app.
+- Support source image upload, proposals, role correction, mask review, reconstruction approval, pivot adjustment, bone tree editing, weapon/muzzle setup, animation generation, quality reports, and Rig Library save/retarget.
+- Save all approved outputs through the existing Studio asset API, version snapshots, dependencies, and explicit test/publish lifecycle.
 - Preserve the existing manual rig editor and Sprite Sheet workflow.
 
 ### Phase 3 — local segmentation worker
@@ -145,12 +214,14 @@ Templates target semantic roles and skip absent bones. Weapon attack timing must
 - Add only models whose weights and all upstream terms are compatible with the project's distribution and intended commercial use.
 - Train/fine-tune a FarmVsMonsters part-role model only if a properly licensed, representative dataset becomes available.
 
-### Phase 5 — motion authoring and production validation
-- Add reusable plant/monster motion templates and retargeting by semantic roles.
+### Phase 5 — motion authoring, Rig Library, and production validation
+- Add reusable plant/monster motion templates and retargeting by semantic roles; expose them through the permanent Rig Library.
+- Complete Weapon Attachment Builder and Rig Quality Validator integration with the existing combat/runtime contracts.
 - Validate projectile muzzle position, hitboxes, animation state transitions, asset publication, and existing Sprite Sheet compatibility in live Chrome gameplay.
 - No merge to main until the full build, tests, and live browser/game acceptance gates pass.
 
 ## Initial acceptance criteria
+0. All nine named modules are permanent Studio capabilities, not an external or disposable utility.
 1. A single source image can be opened without changing or overwriting it.
 2. Every proposed part has a unique instance ID, a stable semantic role, source-space bounds, and an editable mask.
 3. Multiple parts with the same role are supported.
@@ -161,6 +232,9 @@ Templates target semantic roles and skip absent bones. Weapon attack timing must
 8. Assets remain drafts until the existing explicit test/publish action is used.
 9. Existing Sprite Sheet-only plants and monsters continue to work unchanged.
 10. With no local AI worker installed, the Studio remains functional through its deterministic/manual fallback.
+11. All module outputs share one versioned manifest and save to the existing game-compatible rig profile and asset lifecycle; no second runtime or parallel animation format is introduced.
+12. Animation previews use the same skeletal evaluator as gameplay, and weapon muzzle attachments resolve through the existing Phaser runtime.
+13. Rig Library templates can be reused by semantic role while preserving unique per-character part instance IDs and published-version immutability.
 
 ## Current decision
-The first deliverable is the deterministic Auto-Rig core and its contract. The AI segmentation worker is a separate optional phase. This avoids making the existing Studio depend on a large, hardware-sensitive model before we have validated the workflow on real FarmVsMonsters art.
+The Auto-Rig Builder is a permanent first-class Studio subsystem composed of the nine modules above. The deterministic Auto-Rig core is its first implementation layer; AI segmentation and reconstruction are pluggable local capabilities that progressively power the same integrated workflow. This avoids making the Studio depend on a large, hardware-sensitive model before validating the workflow on real FarmVsMonsters art. No separate animation runtime is permitted.
