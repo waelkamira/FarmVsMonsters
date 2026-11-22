@@ -187,6 +187,9 @@ test("flags generated pixel provenance even when occlusion is not separately mar
   input.parts[0].provenance = { segmentation: "model-mask", pixels: "reconstructed" };
   input.parts[0].reconstruction = { method: "visible-donor-transfer", donorBounds: { x: 24, y: 60, width: 72, height: 48 }, targetBounds: { x: 80, y: 90, width: 40, height: 40 }, donorMask: { kind: "polygon", points: [{ x: 24, y: 60 }, { x: 96, y: 60 }, { x: 96, y: 108 }, { x: 24, y: 108 }] }, targetMask: { kind: "polygon", points: [{ x: 80, y: 90 }, { x: 120, y: 90 }, { x: 120, y: 130 }, { x: 80, y: 130 }] }, flipHorizontal: true, reviewed: false };
   const result = buildAutoRigFromParts(input);
+  assert.equal(result.manifest.parts[0].reconstruction.flipHorizontal, true);
+  assert.deepEqual(result.manifest.parts[0].reconstruction.donorMask, input.parts[0].reconstruction.donorMask);
+  assert.deepEqual(result.manifest.parts[0].reconstruction.targetMask, input.parts[0].reconstruction.targetMask);
   assert.ok(result.warnings.some((warning) => warning.code === "generated-pixels" && warning.partId === "body-main"));
 });
 
