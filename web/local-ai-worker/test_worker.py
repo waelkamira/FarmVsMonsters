@@ -9,6 +9,16 @@ class WorkerTests(unittest.TestCase):
         self.assertEqual(result["status"], "degraded")
         self.assertEqual(result["capabilities"], [])
 
+    def test_normalizes_positive_and_negative_sam2_point_prompts(self):
+        points = worker.normalize_prompt_points([{"x": 12.5, "y": 20, "label": 1}, {"x": 40, "y": 50, "label": 0}], 100, 100)
+        self.assertEqual(points, [(12.5, 20.0, 1), (40.0, 50.0, 0)])
+
+    def test_rejects_invalid_sam2_point_prompts(self):
+        with self.assertRaises(ValueError): worker.normalize_prompt_points([], 100, 100)
+        with self.assertRaises(ValueError): worker.normalize_prompt_points([{"x": 100, "y": 20, "label": 1}], 100, 100)
+        with self.assertRaises(ValueError): worker.normalize_prompt_points([{"x": 20, "y": 20, "label": 2}], 100, 100)
+        with self.assertRaises(ValueError): worker.normalize_prompt_points([{"x": float("nan"), "y": 20, "label": 1}], 100, 100)
+
     def test_rejects_non_data_url(self):
         with self.assertRaises(ValueError):
             worker.decode_image("https://example.com/a.png", 10, 10)
