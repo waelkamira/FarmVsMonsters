@@ -465,7 +465,7 @@ export function analyzeAutoRigQuality(manifest, profileInput) {
     - penalty(!hasPrimaryBody, 10));
   return {
     valid: true,
-    readyForAnimation: rolesConfirmed && allMasksPresent && confidenceReviewed && lowConfidenceCount === 0 && occlusionResolved && hasPrimaryBody,
+    readyForAnimation: rolesConfirmed && allMasksPresent && confidenceReviewed && lowConfidenceCount === 0 && occlusionResolved && sourceFingerprintPresent && hasPrimaryBody && reconstructedCount === 0,
     score,
     checks: {
       rolesConfirmed,
