@@ -21,22 +21,20 @@ export function normalizeSeedLoadout(selectedIds, unlockedIds) {
   );
   REQUIRED_STARTER_SEEDS.forEach((id) => unlocked.add(id));
 
-  const selected = [];
+  const selectedExtras = [];
   const source = Array.isArray(selectedIds) ? selectedIds : [];
   for (const id of source) {
-    if (unlocked.has(id) && !selected.includes(id) && selected.length < MAX_SEED_PACKETS) {
-      selected.push(id);
+    if (
+      unlocked.has(id) &&
+      !REQUIRED_STARTER_SEEDS.includes(id) &&
+      !selectedExtras.includes(id) &&
+      selectedExtras.length < MAX_SEED_PACKETS - REQUIRED_STARTER_SEEDS.length
+    ) {
+      selectedExtras.push(id);
     }
   }
 
-  for (const required of REQUIRED_STARTER_SEEDS) {
-    if (!selected.includes(required)) {
-      if (selected.length >= MAX_SEED_PACKETS) selected.pop();
-      selected.unshift(required);
-    }
-  }
-
-  return selected;
+  return [...REQUIRED_STARTER_SEEDS, ...selectedExtras];
 }
 
 export function createDefaultSeedLoadout(unlockedIds) {
