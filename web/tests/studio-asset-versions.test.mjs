@@ -152,8 +152,10 @@ test("clones, snapshots, and restores the Auto-Rig authoring manifest independen
     revision: 1, rigProfile: { version: 1 }, rigBuildManifest: manifest
   };
   const clone = cloneStudioAsset(source, "rigged-plant-copy");
-  assert.deepEqual(clone.rigBuildManifest, manifest);
+  const clonedManifest = { ...manifest, source: { ...manifest.source, assetId: "rigged-plant-copy" } };
+  assert.deepEqual(clone.rigBuildManifest, clonedManifest);
   assert.notEqual(clone.rigBuildManifest, manifest);
+  assert.equal(clone.rigBuildManifest.source.sha256, manifest.source.sha256);
   const editedManifest = { ...manifest, source: { ...manifest.source, sha256: "b".repeat(64) } };
   const edited = createStudioAssetRevision(source, { ...source, rigBuildManifest: editedManifest });
   assert.deepEqual(edited.versions[0].rigBuildManifest, manifest);
