@@ -1145,3 +1145,11 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 
 - Rig Editor playback follow-up: replaying a completed non-looping clip now resets the preview time to zero before starting; pausing mid-clip still resumes from the current frame. Added a regression assertion for replay behavior.
 - The isolated test harness was rerun after this UI fix: 104 test cases passed across the same 9 test groups. Full repository `node --test`, ESLint, Next.js build, and live browser battle verification remain blocked/unverified as noted above.
+
+
+## 2026-11-22 — AI Auto-Rig Builder architecture
+- Audited the current Hybrid Animation Engine branch and confirmed the active implementation is Phaser 3 in web/; the existing skeletal profile/evaluator and Rig Editor remain the target integration.
+- Evaluated Rigby2D (MIT OR Apache-2.0), Stretchy Studio (MIT), Segment Anything, and See-through as candidate references/adapters. The plan records their capabilities and limitations, including the fact that SAM masks are not semantic part labels, Rigby2D AutoRig requires already-separated layers, and See-through's anime-focused model weights have additional OpenRAIL terms and significant VRAM requirements.
+- Added Documentation/AI_AUTO_RIG_BUILDER_PLAN.md with the local-first architecture, stable semantic part roles, layer/occlusion handling, deterministic rig generation, optional inference worker, implementation phases, and acceptance criteria.
+- Decision: do not add a heavy model or paid/cloud API dependency to the web app. Start with a deterministic, testable Auto-Rig core and keep AI segmentation as an optional local worker.
+- Verification: repository branch/PR state and source files were inspected through GitHub. No application build or live game test was run in this documentation-only step.
