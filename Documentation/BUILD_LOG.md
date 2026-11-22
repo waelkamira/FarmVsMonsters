@@ -1161,3 +1161,10 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - Added warnings for unresolved occlusion, reconstructed/generated pixels, and unknown semantic roles. Multiple instances of the same role are supported.
 - Added web/tests/studio-auto-rig-builder.test.mjs for deterministic output, parent mapping, multi-instance roles, coordinate conversion, muzzle anchors, cycle/bounds/duplicate rejection, and provenance warnings.
 - Verification: files were committed and read-back is pending. The new Node test file, Next.js build, and live Chrome preview have not yet been executed. This core consumes extracted layer descriptors; it does not yet perform AI image segmentation or reconstruct hidden pixels.
+
+
+## 2026-11-22 — Auto-Rig Builder feature branch and draft PR
+- Created feature branch feat/studio-ai-auto-rig-builder from feat/studio-hybrid-animation-engine-mainline so this work remains isolated from main and explicitly depends on the Hybrid Animation Engine work in PR #88.
+- Opened draft PR #89 targeting the hybrid animation branch, not main: https://github.com/waelkamira/FarmVsMonsters/pull/89.
+- Read back the Auto-Rig module, regression test file, architecture plan, and build log from the feature branch. The test file currently contains 8 focused test cases.
+- The draft PR is intentionally not merge-ready. The new tests and full application checks have not yet been executed; live Chrome/gameplay validation remains required.
