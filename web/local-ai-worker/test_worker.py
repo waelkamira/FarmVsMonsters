@@ -36,6 +36,21 @@ class WorkerTests(unittest.TestCase):
         self.assertIn("part-detection", result["capabilities"])
         self.assertIn("prompted-segmentation", result["capabilities"])
 
+    def test_automatic_mask_proposals_are_clipped_to_visible_alpha(self):
+        import numpy as np
+        class FakeGenerator:
+            def generate(self, image):
+                return [{"segmentation": np.ones((10, 10), dtype=bool), "area": 100,
+                         "predicted_iou": .95, "stability_score": .95}]
+        visible = np.zeros((10, 10), dtype=bool)
+        visible[2:8, 2:8] = True
+        rgb = np.zeros((10, 10, 3), dtype=np.uint8)
+        with patch.object(worker, "decode_image_data", return_value=(rgb, visible)), \\
+             patch.object(worker, "load_model", return_value=(FakeGenerator(), object(), "cpu")):
+            result = worker.detect_parts({"canvas": {"width": 10, "height": 10}, "imageDataUrl": "data:image/png;base64,AA=="})
+        self.assertEqual(len(result["proposals"]), 1)
+        self.assertEqual(result["proposals"][0]["bounds"], {"x": 2, "y": 2, "width": 6, "height": 6})
+
     def test_prompted_segmentation_returns_valid_source_space_mask_proposals(self):
         import numpy as np
         class FakePredictor:
