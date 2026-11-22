@@ -149,7 +149,7 @@ function readPart(raw, index, canvas) {
   let reconstruction = null;
   if (raw.reconstruction != null) {
     const value = raw.reconstruction;
-    if (!value || value.method !== "visible-donor-transfer" || typeof value.reviewed !== "boolean") {
+    if (!value || !["visible-donor-transfer", "opencv-telea-inpaint"].includes(value.method) || typeof value.reviewed !== "boolean") {
       throw new TypeError("Part " + id + " reconstruction metadata is invalid.");
     }
     const readBounds = (bounds, field) => {
@@ -177,14 +177,19 @@ function readPart(raw, index, canvas) {
       if (area < 4) throw new RangeError("Part " + id + " " + field + " is degenerate.");
       return { kind: "polygon", points };
     };
-    if (typeof value.flipHorizontal !== "boolean") throw new TypeError("Part " + id + " reconstruction flip setting is invalid.");
+    const targetBounds = readBounds(value.targetBounds, "reconstruction target bounds");
+    const targetMask = readPolygon(value.targetMask, "reconstruction target mask");
+    const donorTransfer = value.method === "visible-donor-transfer";
+    if (donorTransfer && typeof value.flipHorizontal !== "boolean") throw new TypeError("Part " + id + " reconstruction flip setting is invalid.");
     reconstruction = {
       method: value.method,
-      donorBounds: readBounds(value.donorBounds, "reconstruction donor bounds"),
-      targetBounds: readBounds(value.targetBounds, "reconstruction target bounds"),
-      donorMask: readPolygon(value.donorMask, "reconstruction donor mask"),
-      targetMask: readPolygon(value.targetMask, "reconstruction target mask"),
-      flipHorizontal: value.flipHorizontal,
+      ...(donorTransfer ? {
+        donorBounds: readBounds(value.donorBounds, "reconstruction donor bounds"),
+        donorMask: readPolygon(value.donorMask, "reconstruction donor mask"),
+        flipHorizontal: value.flipHorizontal
+      } : {}),
+      targetBounds,
+      targetMask,
       reviewed: value.reviewed
     };
   }
