@@ -35,7 +35,7 @@ function validReconstructionResponse(data, width, height, task) {
     typeof data.patchDataUrl === "string" && data.patchDataUrl.length <= MAX_IMAGE_DATA_URL_CHARS &&
     /^data:image\/png;base64,[a-zA-Z0-9+/]+={0,2}$/.test(data.patchDataUrl) &&
     validBounds(data.targetBounds) &&
-    (task === "visible-donor-reconstruction" ? validBounds(data.donorBounds) && data.provenance?.method === "visible-donor-transfer" : data.provenance?.method === "opencv-telea-inpaint") &&
+    (task === "visible-donor-reconstruction" ? validBounds(data.donorBounds) && data.provenance?.method === "visible-donor-transfer" : task === "local-texture-inpaint" ? data.provenance?.method === "opencv-telea-inpaint" : data.provenance?.method === "local-diffusion-anatomical-inpaint" && typeof data.provenance?.model === "string" && typeof data.provenance?.prompt === "string" && Number.isInteger(data.provenance?.seed)) &&
     data.provenance?.pixels === "reconstructed" && data.provenance?.reviewRequired === true;
 }
 
@@ -97,7 +97,7 @@ export async function POST(req) {
       !/^data:image\/(png|jpeg|webp);base64,[a-zA-Z0-9+/]+=*$/.test(body.imageDataUrl)) {
     return NextResponse.json({ error: "Provide a PNG, JPEG, or WebP base64 data URL within the 8 MB source limit." }, { status: 400 });
   }
-  if (!["part-detection", "prompted-segmentation", "semantic-classification", "visible-donor-reconstruction", "local-texture-inpaint"].includes(body.task)) {
+  if (!["part-detection", "prompted-segmentation", "semantic-classification", "anatomical-inpaint", "visible-donor-reconstruction", "local-texture-inpaint"].includes(body.task)) {
     return NextResponse.json({ error: "Unsupported Auto-Rig worker task." }, { status: 400 });
   }
   let semanticClassification;
@@ -120,6 +120,15 @@ export async function POST(req) {
     }
     semanticClassification = { characterType: body.characterType, proposals: body.proposals };
   }
+  let anatomical;
+  if (body.task === "anatomical-inpaint") {
+    if (!validPolygon(body.targetPolygon, width, height) ||
+        typeof body.prompt !== "string" || !body.prompt.trim() || body.prompt.length > 400 ||
+        (body.seed != null && (!Number.isInteger(body.seed) || body.seed < 0 || body.seed > 2147483647))) {
+      return NextResponse.json({ error: "Anatomical reconstruction requires a valid target polygon, a description (max 400 characters), and an optional valid seed." }, { status: 400 });
+    }
+    anatomical = { targetPolygon: body.targetPolygon, prompt: body.prompt.trim(), seed: body.seed == null ? 20261122 : body.seed };
+  }
   let points;
   if (body.task === "prompted-segmentation") {
     if (!Array.isArray(body.points) || body.points.length < 1 || body.points.length > 32) {
@@ -138,7 +147,7 @@ export async function POST(req) {
     }
   }
   let reconstruction;
-  if (body.task === "visible-donor-reconstruction" || body.task === "local-texture-inpaint") {
+  if (body.task === "visible-donor-reconstruction" || body.task === "local-texture-inpaint" || body.task === "anatomical-inpaint") {
     if (!validPolygon(body.targetPolygon, width, height) || (body.task === "visible-donor-reconstruction" && !validPolygon(body.sourcePolygon, width, height))) {
       return NextResponse.json({ error: "The hidden target and any required visible donor must be valid 3–512 point source-space polygons." }, { status: 400 });
     }
@@ -150,12 +159,12 @@ export async function POST(req) {
       : { targetPolygon: body.targetPolygon, inpaintRadius: Number.isInteger(body.inpaintRadius) && body.inpaintRadius >= 1 && body.inpaintRadius <= 8 ? body.inpaintRadius : 3 };
   }
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), body.task === "semantic-classification" ? 90_000 : WORKER_TIMEOUT_MS);
+  const timeout = setTimeout(() => controller.abort(), body.task === "semantic-classification" || body.task === "anatomical-inpaint" ? 180_000 : WORKER_TIMEOUT_MS);
   try {
     const response = await fetch(new URL("/v1/auto-rig/" + body.task, base), {
       method: "POST",
       headers: { "Content-Type": "application/json", Accept: "application/json" },
-      body: JSON.stringify({ protocolVersion: 1, canvas: { width, height }, imageDataUrl: body.imageDataUrl, prompt: typeof body.prompt === "string" ? body.prompt.slice(0, 500) : "", ...(points ? { points } : {}), ...(semanticClassification || {}), ...(reconstruction || {}) }),
+      body: JSON.stringify({ protocolVersion: 1, canvas: { width, height }, imageDataUrl: body.imageDataUrl, prompt: typeof body.prompt === "string" ? body.prompt.slice(0, 500) : "", ...(points ? { points } : {}), ...(semanticClassification || {}), ...(anatomical || {}), ...(reconstruction || {}) }),
       signal: controller.signal,
       cache: "no-store"
     });
