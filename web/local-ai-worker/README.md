@@ -77,7 +77,8 @@ $env:FVM_AI_WORKER_PORT="8765"
 | Capability | Status |
 |---|---|
 | Automatic visible-region mask proposals | Implemented |
-| Positive/negative point-prompted masks | Implemented |\n| Visible donor transfer into a manually marked hidden polygon | Implemented as an author-guided pixel-copy aid; requires review |
+| Positive/negative point-prompted masks | Implemented |
+| Visible donor transfer into a manually marked hidden polygon | Implemented as an author-guided pixel-copy aid; requires review |
 | Editable polygon proposals in Studio | Implemented |
 | Semantic part-role classification | Not implemented; author assigns roles |
 | Hidden-part detection and pixel reconstruction | Not implemented |
