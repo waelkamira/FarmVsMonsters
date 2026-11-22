@@ -174,7 +174,7 @@ export async function POST(req) {
     }
     const workerData = await response.json();
     if (body.task === "semantic-classification") {
-      const allowedRoles = new Set(["body", "stem", "head", "face", "eye.left", "eye.right", "eye", "mouth", "jaw.upper", "jaw.lower", "leaf", "leaf.left", "leaf.right", "flower", "fruit", "root", "arm", "arm.left", "arm.right", "hand", "hand.left", "hand.right", "leg", "foot", "weapon", "weapon.barrel", "weapon.muzzle", "tail", "armor", "accessory", "shadow", "effect", "unknown"]);
+      const allowedRoles = new Set(["body", "stem", "head", "face", "eye.left", "eye.right", "eye", "mouth", "jaw.upper", "jaw.lower", "leaf", "leaf.left", "leaf.right", "flower", "fruit", "root", "arm", "arm.left", "arm.right", "hand", "hand.left", "hand.right", "leg", "leg.left", "leg.right", "foot", "foot.left", "foot.right", "weapon", "weapon.barrel", "weapon.muzzle", "tail", "armor", "accessory", "shadow", "effect", "unknown"]);
       const expectedIds = new Set(body.proposals.map((proposal) => proposal.id));
       const suggestions = workerData?.suggestions;
       if (workerData?.protocolVersion !== 1 || workerData?.classifier !== "local-clip-zero-shot" ||
