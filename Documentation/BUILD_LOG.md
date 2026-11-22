@@ -1473,3 +1473,12 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - Added Python pixel-level tests for Telea patch dimensions/alpha and invalid radius/too-small targets, plus Studio UI, API-route, worker-capability, and manifest regression tests.
 - Capability boundary: Telea is classical local texture interpolation, not semantic or anatomical reconstruction. It is appropriate only for small texture gaps. Large hidden limbs/leaves and unseen anatomy still need a local generative model with explicit checkpoint provenance and human review.
 - PR #88 was merged into `main` as `a642d676e186bb6ae59b5875585352a690ce40d7`; PR #89 was retargeted to `main` and remains draft. Auto-Rig and worker validation passed on the preceding donor-transfer checkpoint; the Telea additions are now under a fresh focused CI run.
+
+
+## 2026-11-22 — Hybrid engine integration and Auto-Rig reconstruction validation
+- PR #88 (Hybrid Animation Engine) merged into `main` at `a642d676e186bb6ae59b5875585352a690ce40d7`; Auto-Rig PR #89 now targets `main`.
+- Added author-guided visible-donor pixel transfer with optional horizontal mirroring, donor-alpha preservation, source/target polygon provenance, preview, and a separate pixel-review approval. Added local OpenCV Telea inpainting as a distinct texture-only fallback; neither method claims semantic/anatomical completion.
+- Updated the quality gate and tests so reconstructed pixels remain blocked until reconstruction review, overall part review, and occlusion resolution are complete.
+- Current Auto-Rig subsystem workflow on head `b9c1f7459215a47be90cce6dc7e756374347c654` passed, including worker compile/contract tests and focused Studio/API/manifest/quality checks.
+- Broad Studio/Game Validation and Web Quality Gate still fail in Phase 1 gameplay and legacy Studio source-contract tests (e.g. stale source-text assertions in `studio-plant-workflow.test.mjs` / `wood-frame-inventory.test.mjs`, and a `-0` versus `0` projectile assertion). These failures are outside the Auto-Rig-specific suite and remain merge blockers.
+- Still pending: actual SAM 2 checkpoint setup and inference on the target Windows/WSL machine, real plant/monster asset review in Studio, Studio-to-Phaser gameplay validation, semantic rig-template retargeting, and repository-wide green required checks.
