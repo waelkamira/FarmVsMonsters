@@ -65,6 +65,7 @@ export default function AutoRigBuilderPanel({
   const [aiBusy, setAiBusy] = useState(false);
   const [aiProposals, setAiProposals] = useState([]);
   const [aiProposalRoles, setAiProposalRoles] = useState({});
+  const [aiSemanticSuggestions, setAiSemanticSuggestions] = useState({});
   const [aiPromptMode, setAiPromptMode] = useState(false);
   const [aiPromptPoints, setAiPromptPoints] = useState([]);
   const [aiPromptLabel, setAiPromptLabel] = useState(1);
@@ -109,6 +110,7 @@ export default function AutoRigBuilderPanel({
       draggingVertex.current = null;
       setAiProposals([]);
       setAiProposalRoles({});
+      setAiSemanticSuggestions({});
       setAiPromptMode(false);
       setAiPromptPoints([]);
       setAiPromptLabel(1);
@@ -254,6 +256,7 @@ export default function AutoRigBuilderPanel({
     setAiPromptMode(false);
     setAiPromptPoints([]);
     setAiProposals([]);
+    setAiSemanticSuggestions({});
     try {
       const sourceCanvas = document.createElement("canvas");
       sourceCanvas.width = image.naturalWidth || image.width;
@@ -274,6 +277,7 @@ export default function AutoRigBuilderPanel({
       if (!response.ok) throw new Error(data.error || "تعذر تنفيذ التقسيم الذكي.");
       setAiProposals(data.proposals || []);
       setAiProposalRoles({});
+      setAiSemanticSuggestions({});
       setAiStatus("connected");
       setMessage("اقترح SAM 2 " + (data.proposals || []).length + " منطقة مرئية. هذه أقنعة هندسية وليست تصنيفاً دلالياً؛ عيّن دور كل منطقة وراجعها قبل إنشاء الهيكل.");
     } catch (error) {
@@ -320,6 +324,7 @@ export default function AutoRigBuilderPanel({
     try {
       const suggestions = suggestAutoRigSemanticRoles(aiProposals, { width: image.width, height: image.height }, characterType);
       setAiProposalRoles((current) => ({ ...current, ...Object.fromEntries(suggestions.map((item) => [item.proposalId, item.role])) }));
+      setAiSemanticSuggestions(Object.fromEntries(suggestions.map((item) => [item.proposalId, item])));
       const lowConfidence = suggestions.filter((item) => item.confidence < 0.5).length;
       setMessage("تم اقتراح أدوار هندسية لـ " + suggestions.length + " منطقة. " + lowConfidence + " اقتراحات منخفضة الثقة؛ راجع كل دور يدوياً قبل اعتماد القناع.");
     } catch (error) { setMessage(error.message); }
@@ -623,6 +628,7 @@ export default function AutoRigBuilderPanel({
         <button type="button" disabled={disabled || busy || generated} onClick={suggestSemanticRoles}>اقتراح الأدوار الدلالية تلقائياً</button>
         <ul>{aiProposals.map((proposal) => <li key={proposal.id} style={{ marginTop: 6 }}>
           {proposal.name || proposal.role} · ثقة التقسيم {proposal.confidence == null ? "غير محددة" : Math.round(proposal.confidence * 100) + "%"}
+          {aiSemanticSuggestions[proposal.id] && <small style={{ display: "block", marginTop: 3 }}>اقتراح الدور: {aiSemanticSuggestions[proposal.id].role} · ثقة هندسية {Math.round(aiSemanticSuggestions[proposal.id].confidence * 100)}% · {aiSemanticSuggestions[proposal.id].reason}</small>}
           <label style={{ display: "inline-flex", gap: 6, marginInlineStart: 10 }}>الدور
             <select value={aiProposalRoles[proposal.id] || ""} disabled={disabled || busy || generated} onChange={(event) => setAiProposalRoles((current) => ({ ...current, [proposal.id]: event.target.value }))}>
               <option value="">اختر الدور...</option>{AUTO_RIG_ROLE_OPTIONS.map((item) => <option value={item.value} key={item.value}>{item.label}</option>)}
