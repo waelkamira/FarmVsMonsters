@@ -200,3 +200,16 @@ test("validates persisted build manifests while allowing subsequent manual rig e
   invalidManifest.parts[0].parentPartId = "missing-parent";
   assert.match(validateAutoRigBuildManifest(invalidManifest, generated.profile).errors[0], /missing parent/);
 });
+
+
+test("suggests contact-aware pivots when the author has not supplied manual pivots", () => {
+  const input = baseInput();
+  input.parts[0].pivot = null;
+  input.parts[1].pivot = null;
+  const result = buildAutoRigFromParts(input);
+  const body = result.profile.bones.find((bone) => bone.id === "part-body-main");
+  const head = result.profile.bones.find((bone) => bone.id === "part-head-main");
+  assert.deepEqual(body.pivot, { x: 48, y: 120 });
+  assert.deepEqual(head.pivot, { x: 36, y: 70 });
+  assert.deepEqual({ x: head.x, y: head.y }, { x: 0, y: -108 });
+});
