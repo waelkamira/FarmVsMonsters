@@ -216,6 +216,91 @@ def segment_from_points(payload):
         })
     return {"protocolVersion": 1, "proposals": proposals}
 
+
+
+def normalize_polygon_points(points, width, height, label):
+    if not isinstance(points, list) or len(points) < 3 or len(points) > 512:
+        raise ValueError(label + " polygon must contain 3–512 points.")
+    normalized = []
+    for index, point in enumerate(points):
+        if not isinstance(point, dict):
+            raise ValueError(label + " point " + str(index) + " must be an object.")
+        x, y = point.get("x"), point.get("y")
+        if isinstance(x, bool) or isinstance(y, bool) or not isinstance(x, (int, float)) or not isinstance(y, (int, float)):
+            raise ValueError(label + " coordinates must be numeric.")
+        x, y = float(x), float(y)
+        if not math.isfinite(x) or not math.isfinite(y) or not 0 <= x < width or not 0 <= y < height:
+            raise ValueError(label + " polygon point is outside the source canvas.")
+        normalized.append((int(round(x)), int(round(y))))
+    if len(set(normalized)) < 3:
+        raise ValueError(label + " polygon needs at least three distinct points.")
+    return normalized
+
+def reconstruct_from_visible_donor(payload):
+    """Copy a user-selected visible donor region into a user-marked hidden target polygon.
+
+    This is deterministic, author-guided symmetry/texture transfer, not generative
+    inpainting. The returned pixels must be reviewed before they are used in a rig.
+    """
+    width, height = payload["canvas"]["width"], payload["canvas"]["height"]
+    image, visible_pixels = decode_image_data(payload["imageDataUrl"], width, height)
+    import cv2, numpy as np
+    donor_points = normalize_polygon_points(payload.get("sourcePolygon"), width, height, "Donor")
+    target_points = normalize_polygon_points(payload.get("targetPolygon"), width, height, "Target")
+    donor_mask = np.zeros((height, width), dtype=np.uint8)
+    target_mask = np.zeros((height, width), dtype=np.uint8)
+    cv2.fillPoly(donor_mask, [np.asarray(donor_points, dtype=np.int32)], 255)
+    cv2.fillPoly(target_mask, [np.asarray(target_points, dtype=np.int32)], 255)
+    donor_mask = (donor_mask > 0) & visible_pixels
+    if int(donor_mask.sum()) < 16:
+        raise ValueError("The selected donor region has too few visible source pixels.")
+    target_mask = target_mask > 0
+    if int(target_mask.sum()) < 16:
+        raise ValueError("The hidden target region is too small to reconstruct.")
+    donor_y, donor_x = np.where(donor_mask)
+    target_y, target_x = np.where(target_mask)
+    donor_bounds = {
+        "x": int(donor_x.min()), "y": int(donor_y.min()),
+        "width": int(donor_x.max() - donor_x.min() + 1),
+        "height": int(donor_y.max() - donor_y.min() + 1)
+    }
+    target_bounds = {
+        "x": int(target_x.min()), "y": int(target_y.min()),
+        "width": int(target_x.max() - target_x.min() + 1),
+        "height": int(target_y.max() - target_y.min() + 1)
+    }
+    donor_crop = image[donor_bounds["y"]:donor_bounds["y"] + donor_bounds["height"],
+                       donor_bounds["x"]:donor_bounds["x"] + donor_bounds["width"]].copy()
+    donor_alpha = donor_mask[donor_bounds["y"]:donor_bounds["y"] + donor_bounds["height"],
+                             donor_bounds["x"]:donor_bounds["x"] + donor_bounds["width"]].astype(np.uint8) * 255
+    if payload.get("flipHorizontal", True) is True:
+        donor_crop = cv2.flip(donor_crop, 1)
+        donor_alpha = cv2.flip(donor_alpha, 1)
+    target_size = (target_bounds["width"], target_bounds["height"])
+    transferred = cv2.resize(donor_crop, target_size, interpolation=cv2.INTER_CUBIC)
+    transferred_alpha = cv2.resize(donor_alpha, target_size, interpolation=cv2.INTER_NEAREST)
+    local_target = target_mask[target_bounds["y"]:target_bounds["y"] + target_bounds["height"],
+                               target_bounds["x"]:target_bounds["x"] + target_bounds["width"]]
+    # The target polygon is authoritative. Donor alpha is used only as a soft
+    # edge-confidence mask so the transfer does not inherit the donor's bbox.
+    alpha = np.where(local_target, 255, 0).astype(np.uint8)
+    if transferred_alpha.size:
+        alpha = cv2.bitwise_and(alpha, np.where(transferred_alpha > 0, 255, 255).astype(np.uint8))
+    bgra = cv2.cvtColor(transferred, cv2.COLOR_RGB2BGRA)
+    bgra[:, :, 3] = alpha
+    ok, encoded = cv2.imencode(".png", bgra)
+    if not ok:
+        raise RuntimeError("Could not encode reconstructed donor pixels.")
+    data_url = "data:image/png;base64," + base64.b64encode(encoded.tobytes()).decode("ascii")
+    return {
+        "protocolVersion": 1,
+        "patchDataUrl": data_url,
+        "targetBounds": target_bounds,
+        "donorBounds": donor_bounds,
+        "provenance": {"pixels": "reconstructed", "method": "visible-donor-transfer", "reviewRequired": True}
+    }
+
+
 class Handler(BaseHTTPRequestHandler):
     server_version = "FVMStudioAI/1"
     def send_json(self,status,value):
@@ -239,7 +324,7 @@ class Handler(BaseHTTPRequestHandler):
             if length < 1 or length > MAX_BODY: return self.send_json(413,{"error":"Request body exceeds limit"})
             payload=json.loads(self.rfile.read(length))
             if payload.get("protocolVersion") != 1: return self.send_json(400,{"error":"Unsupported protocol"})
-            result = detect_parts(payload) if task_path.endswith("/part-detection") else segment_from_points(payload)
+            result = detect_parts(payload) if task_path.endswith("/part-detection") else segment_from_points(payload) if task_path.endswith("/prompted-segmentation") else reconstruct_from_visible_donor(payload)
             self.send_json(200,result)
         except RuntimeError as exc: self.send_json(503,{"error":str(exc)})
         except (ValueError,KeyError,TypeError,json.JSONDecodeError) as exc: self.send_json(400,{"error":str(exc)[:300]})
