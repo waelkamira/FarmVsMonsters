@@ -24,9 +24,9 @@
 | P1-07 | Immutable asset identity | Stable IDs and immutable file paths; replacing creates new path | `immutableAssetPath.mjs`, asset API | Present in source; failure-path test needed |
 | P1-08 | Revision snapshots | Complete snapshots include combat, animation, rig, monster and dependencies | `assetVersions.mjs` | Present in source; complete UI restore flow not verified |
 | P1-09 | Dependency integrity | Forward/reverse references, missing refs, safe archive/replace/restore | `assetDependencies.mjs`, readiness module | Present in source for modeled relations; relation coverage incomplete as content expands |
-| P1-10 | Concurrency safety | All writes compare expected version/SHA; conflicts preserve local edits and provide reload/merge path | `registryConcurrency.mjs` | Partial; enforcement coverage and conflict UI not proven |
+| P1-10 | Concurrency safety | All writes compare expected version/SHA; conflicts preserve local edits and provide reload/merge path | `registryConcurrency.mjs`, asset API | Partial/Not verified; GitHub registry writes use expected SHA in several paths, but local POST/PATCH saves do not demonstrate optimistic concurrency; full enforcement and conflict UI are not proven |
 | P1-11 | Content lifecycle | Draft/testing/approved/published/disabled/archived with guarded transitions | `releaseLifecycle.mjs`, asset API | Partial; complete operational/browser lifecycle not verified |
-| P1-12 | Release transaction | Complete package, dependency closure, review, atomic activation, rollback; no partial live state | Release branch helper and PR workflow references | Blocked/partial; multi-file atomic activation and failure recovery not proven |
+| P1-12 | Release transaction | Complete package, dependency closure, review, atomic activation, rollback; no partial live state | `/api/studio/assets` PATCH publish path, release lifecycle helpers | **Blocked:** current mainline publish writes asset files and catalog directly to target branch (default `main`), then syncs registry separately; no PR is created by this route and partial catalog/registry state is possible |
 | P1-13 | Runtime contract | Published catalog maps exactly to runtime behavior; old content remains compatible | Plant/monster profiles and Phaser integration source | Partial; live battle proof not available |
 | P1-14 | Asset & Animation foundation | Sprite Sheet, animation, rig, Auto-Rig share identity, revisions, dependencies, readiness and release | Rig/Auto-Rig modules, RigEditor, worker route | Partial; full UI→worker→save→battle proof absent |
 | P1-15 | Basic test foundation | Unit, API, integration and browser checks are separated and reproducible | Many focused `web/tests/*studio*` files | Partial; test files exist but execution result not confirmed |
@@ -68,9 +68,10 @@
 2. Save from session A.
 3. Attempt stale save from session B.
 4. Reject stale write without losing B's unsaved form state.
-5. Simulate a release failure after staging.
-6. Verify active catalog pointer and runtime content remain unchanged.
-7. Retry or rollback with a clear audit trail.
+5. Verify local storage mode also detects stale writes, not just GitHub registry writes.
+6. Simulate a release failure after staging.
+7. Verify active catalog pointer and runtime content remain unchanged.
+8. Retry or rollback with a clear audit trail.
 
 ## Phase 1 exit criteria
 
