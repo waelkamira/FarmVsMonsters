@@ -264,3 +264,9 @@ The Auto-Rig Builder is a permanent first-class Studio subsystem composed of the
 - The Studio UI now requests the implemented `part-detection` capability instead of claiming text-prompted segmentation. Health status distinguishes ready from degraded worker state.
 - Added worker setup documentation and Python contract tests; CI now has a separate Python job to install image dependencies, compile the worker, and run its tests.
 - This is the first actual model adapter, not the completed AI feature set. Semantic plant/monster role classification, true prompt-conditioned segmentation, overlap/occlusion resolution, hidden-part reconstruction, and local Windows hardware validation remain outstanding. The worker cannot report ready until the user-side machine has SAM 2 and a checkpoint installed.
+
+
+## 2026-11-22 — SAM 2 proposal quality filtering
+- Added mask candidate filtering before polygon conversion: reject tiny regions and near-full-canvas background masks, rank by predicted-IoU × stability, suppress near-identical masks at IoU ≥ 0.92, and cap output at 63 proposals.
+- Added Python regression coverage for background/tiny-mask rejection and duplicate suppression.
+- This reduces obvious SAM 2 noise but does not solve semantic segmentation, overlapping-part interpretation, or occlusion reasoning; every proposal still requires visual review and role assignment.
