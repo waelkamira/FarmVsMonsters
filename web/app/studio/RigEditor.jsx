@@ -101,8 +101,8 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
     setSelectedBoneId(parentId);
   }
   function addAttachment() {
-    const id = "attachment-" + (rig.attachments.length + 1);
-    update((next) => next.attachments.push({ id, name: "نقطة تثبيت " + (next.attachments.length + 1), boneId: selectedBoneId, x: 20, y: 0, rotation: 0, scaleX: 1, scaleY: 1 }));
+    const id = rig.attachments.length === 0 ? "muzzle" : "attachment-" + (rig.attachments.length + 1);
+    update((next) => next.attachments.push({ id, name: id === "muzzle" ? "فوهة السلاح" : "نقطة تثبيت " + (next.attachments.length + 1), boneId: selectedBoneId, x: 20, y: 0, rotation: 0, scaleX: 1, scaleY: 1 }));
   }
   function addHitbox() {
     const id = "hitbox-" + (rig.hitboxes.length + 1);
