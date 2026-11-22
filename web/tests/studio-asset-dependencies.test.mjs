@@ -268,3 +268,9 @@ test("Rig Editor resolves available part assets before readiness validation", ()
   const editor = readFileSync(path.join(here, "../app/studio/RigEditor.jsx"), "utf8");
   assert.ok(editor.indexOf("const availableParts = useMemo") < editor.indexOf("const missingPartIds ="));
 });
+
+test("BattleScene delegates skeletal hitbox collision to shared tested geometry", () => {
+  assert.match(battleSceneSource, /from "\.\.\/studio\/skeletalCollision\.mjs"/);
+  assert.match(battleSceneSource, /return orientedRectanglesOverlap\(a, b\)/);
+  assert.match(battleSceneSource, /circleIntersectsOrientedRectangle/);
+});
