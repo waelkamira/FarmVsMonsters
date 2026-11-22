@@ -36,8 +36,13 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
   const rig = profile || createDefaultRig();
   const validation = useMemo(() => validateSkeletalRigProfile(rig), [rig]);
   const hasVisualPart = rig.bones.some((item) => item.part);
-  const rigIsReady = validation.valid && hasVisualPart;
-  const editorErrors = [...validation.errors, ...(!hasVisualPart ? ["يجب ربط صورة جزء واحدة على الأقل بأحد العظام."] : [])];
+  const missingPartIds = [...new Set(rig.bones.filter((item) => item.part && !availableParts.some((asset) => asset.id === item.part.assetId)).map((item) => item.part.assetId))];
+  const rigIsReady = validation.valid && hasVisualPart && missingPartIds.length === 0;
+  const editorErrors = [
+    ...validation.errors,
+    ...(!hasVisualPart ? ["يجب ربط صورة جزء واحدة على الأقل بأحد العظام."] : []),
+    ...missingPartIds.map((id) => "جزء الهيكل " + id + " غير متاح في مكتبة الأصول أو مؤرشف.")
+  ];
   const bone = rig.bones.find((item) => item.id === selectedBoneId) || rig.bones[0];
   const clip = rig.clips.find((item) => item.id === selectedClipId) || rig.clips[0];
   const selectedPose = useMemo(() => {
