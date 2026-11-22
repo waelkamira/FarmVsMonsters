@@ -1,0 +1,282 @@
+"use client";
+
+import { useEffect, useMemo, useRef, useState } from "react";
+import { evaluateSkeletalClip, validateSkeletalRigProfile } from "../../game/studio/skeletalAnimation.mjs";
+
+function createDefaultRig(width = 256, height = 256) {
+  return {
+    version: 1,
+    canvas: { width, height },
+    bones: [{ id: "root", name: "الجذر", parentId: null, x: width / 2, y: height / 2, rotation: 0, scaleX: 1, scaleY: 1, pivot: { x: 0, y: 0 }, part: null }],
+    attachments: [],
+    hitboxes: [],
+    clips: [{ id: "idle", name: "خمول", durationMs: 1000, loop: true, tracks: [{ boneId: "root", keyframes: [
+      { timeMs: 0, x: width / 2, y: height / 2, rotation: 0, scaleX: 1, scaleY: 1 },
+      { timeMs: 1000, x: width / 2, y: height / 2, rotation: 0, scaleX: 1, scaleY: 1 }
+    ] }] }]
+  };
+}
+const safeId = (value, fallback) => {
+  const id = String(value || "").toLowerCase().replace(/[^a-z0-9._:-]/g, "-").replace(/^-+|-+$/g, "").slice(0, 64);
+  return id || fallback;
+};
+const clone = (value) => JSON.parse(JSON.stringify(value));
+
+export default function RigEditor({ profile, onChange, assets = [], currentAssetId, disabled = false }) {
+  const canvasRef = useRef(null);
+  const [selectedBoneId, setSelectedBoneId] = useState(profile?.bones?.[0]?.id || "root");
+  const [selectedClipId, setSelectedClipId] = useState(profile?.clips?.[0]?.id || "idle");
+  const [timeMs, setTimeMs] = useState(0);
+  const [playing, setPlaying] = useState(false);
+  const [imageRevision, setImageRevision] = useState(0);
+  const [error, setError] = useState("");
+  const imageCache = useRef(new Map());
+  const rig = profile || createDefaultRig();
+  const validation = useMemo(() => validateSkeletalRigProfile(rig), [rig]);
+  const bone = rig.bones.find((item) => item.id === selectedBoneId) || rig.bones[0];
+  const clip = rig.clips.find((item) => item.id === selectedClipId) || rig.clips[0];
+  const partAssets = useMemo(() => assets.filter((asset) => asset.id !== currentAssetId && asset.type !== "audio" && asset.status !== "archived" && asset.path), [assets, currentAssetId]);
+  const availableParts = useMemo(() => partAssets.filter((asset) => ["item", "plant", "monster", "effect"].includes(asset.type)), [partAssets]);
+
+  function update(mutator) {
+    const next = clone(rig);
+    mutator(next);
+    onChange(next);
+  }
+  function updateBone(field, value) {
+    update((next) => {
+      const target = next.bones.find((item) => item.id === selectedBoneId);
+      if (!target) return;
+      if (field.startsWith("pivot.")) target.pivot[field.slice(6)] = value;
+      else if (field.startsWith("part.")) {
+        if (!target.part) target.part = { assetId: availableParts[0]?.id || "", frame: 0 };
+        target.part[field.slice(5)] = value;
+      } else target[field] = value;
+    });
+  }
+  function addBone() {
+    if (rig.bones.length >= 64) return;
+    const id = "bone-" + (rig.bones.length + 1);
+    update((next) => {
+      next.bones.push({ id, name: "مفصل جديد", parentId: selectedBoneId, x: 24, y: 0, rotation: 0, scaleX: 1, scaleY: 1, pivot: { x: 0, y: 0 }, part: null });
+      for (const item of next.clips) item.tracks.push({ boneId: id, keyframes: [{ timeMs: 0, x: 24, y: 0, rotation: 0, scaleX: 1, scaleY: 1 }, { timeMs: item.durationMs, x: 24, y: 0, rotation: 0, scaleX: 1, scaleY: 1 }] });
+    });
+    setSelectedBoneId(id);
+  }
+  function removeBone() {
+    if (!bone || bone.parentId === null) return;
+    const parentId = bone.parentId;
+    update((next) => {
+      next.bones = next.bones.filter((item) => item.id !== selectedBoneId);
+      next.bones.forEach((item) => { if (item.parentId === selectedBoneId) item.parentId = parentId; });
+      next.attachments = next.attachments.filter((item) => item.boneId !== selectedBoneId);
+      next.hitboxes = next.hitboxes.filter((item) => item.boneId !== selectedBoneId);
+      next.clips.forEach((item) => { item.tracks = item.tracks.filter((track) => track.boneId !== selectedBoneId); });
+    });
+    setSelectedBoneId(parentId);
+  }
+  function addAttachment() {
+    const id = "attachment-" + (rig.attachments.length + 1);
+    update((next) => next.attachments.push({ id, name: "نقطة تثبيت " + (next.attachments.length + 1), boneId: selectedBoneId, x: 20, y: 0, rotation: 0, scaleX: 1, scaleY: 1 }));
+  }
+  function addHitbox() {
+    const id = "hitbox-" + (rig.hitboxes.length + 1);
+    update((next) => next.hitboxes.push({ id, name: "منطقة إصابة " + (next.hitboxes.length + 1), boneId: selectedBoneId, x: 0, y: 0, rotation: 0, scaleX: 1, scaleY: 1, width: 32, height: 32, kind: "hurt" }));
+  }
+  function addClip() {
+    if (rig.clips.length >= 16) return;
+    const id = "clip-" + (rig.clips.length + 1);
+    update((next) => next.clips.push({
+      id, name: "حركة جديدة", durationMs: 1000, loop: true,
+      tracks: next.bones.map((item) => ({ boneId: item.id, keyframes: [
+        { timeMs: 0, x: item.x, y: item.y, rotation: item.rotation, scaleX: item.scaleX, scaleY: item.scaleY },
+        { timeMs: 1000, x: item.x, y: item.y, rotation: item.rotation, scaleX: item.scaleX, scaleY: item.scaleY }
+      ] }))
+    }));
+    setSelectedClipId(id);
+    setTimeMs(0);
+  }
+  function updateClip(field, value) {
+    update((next) => { const target = next.clips.find((item) => item.id === selectedClipId); if (target) target[field] = value; });
+  }
+  function addKeyframe() {
+    if (!clip || !bone) return;
+    update((next) => {
+      const target = next.clips.find((item) => item.id === selectedClipId);
+      let track = target.tracks.find((item) => item.boneId === selectedBoneId);
+      if (!track) { track = { boneId: selectedBoneId, keyframes: [] }; target.tracks.push(track); }
+      const frame = { timeMs: Math.min(target.durationMs, Math.max(0, timeMs)), x: bone.x, y: bone.y, rotation: bone.rotation, scaleX: bone.scaleX, scaleY: bone.scaleY };
+      const existing = track.keyframes.findIndex((item) => item.timeMs === frame.timeMs);
+      if (existing >= 0) track.keyframes[existing] = frame;
+      else track.keyframes.push(frame);
+      track.keyframes.sort((a, b) => a.timeMs - b.timeMs);
+      if (track.keyframes.length === 1) track.keyframes.push({ ...frame, timeMs: target.durationMs });
+    });
+  }
+  function addPart(assetId) {
+    const selected = availableParts.find((item) => item.id === assetId);
+    if (!selected) { updateBone("part", null); return; }
+    updateBone("part", { assetId: selected.id, frame: 0 });
+  }
+
+  useEffect(() => {
+    const urls = new Set(rig.bones.map((item) => item.part && partAssets.find((asset) => asset.id === item.part.assetId)?.previewUrl || (item.part && partAssets.find((asset) => asset.id === item.part.assetId)?.path)).filter(Boolean));
+    let active = true;
+    for (const url of urls) {
+      if (imageCache.current.has(url)) continue;
+      const image = new Image();
+      image.onload = () => { if (active) setImageRevision((value) => value + 1); };
+      image.onerror = () => { if (active) setError("تعذر تحميل إحدى صور أجزاء الهيكل."); };
+      image.src = url;
+      imageCache.current.set(url, image);
+    }
+    return () => { active = false; };
+  }, [rig.bones, partAssets]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const context = canvas.getContext("2d");
+    const width = rig.canvas.width, height = rig.canvas.height;
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    context.fillStyle = "#111a11";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.strokeStyle = "rgba(220,235,205,.10)";
+    context.lineWidth = 1;
+    for (let x = 0; x <= width; x += 16) { context.beginPath(); context.moveTo(x, 0); context.lineTo(x, height); context.stroke(); }
+    for (let y = 0; y <= height; y += 16) { context.beginPath(); context.moveTo(0, y); context.lineTo(width, y); context.stroke(); }
+    let pose = null;
+    if (playing && clip && validation.valid) {
+      try { pose = evaluateSkeletalClip(rig, clip.id, timeMs); } catch { pose = null; }
+    }
+    const local = pose?.localBones || Object.fromEntries(rig.bones.map((item) => [item.id, item]));
+    const children = new Map(rig.bones.map((item) => [item.id, []]));
+    rig.bones.forEach((item) => { if (item.parentId !== null) children.get(item.parentId)?.push(item); });
+    function drawBone(item, depth = 0) {
+      const transform = local[item.id] || item;
+      context.save();
+      context.translate(transform.x, transform.y);
+      context.rotate(transform.rotation * Math.PI / 180);
+      context.scale(transform.scaleX, transform.scaleY);
+      if (item.part) {
+        const asset = partAssets.find((candidate) => candidate.id === item.part.assetId);
+        const url = asset?.previewUrl || asset?.path;
+        const image = url && imageCache.current.get(url);
+        if (image?.complete && image.naturalWidth > 0) {
+          const rows = Math.max(1, Number(asset.rows) || 1), columns = Math.max(1, Number(asset.columns) || 1);
+          const frameWidth = image.naturalWidth / columns, frameHeight = image.naturalHeight / rows;
+          const frame = Math.max(0, Math.min(rows * columns - 1, Number(item.part.frame) || 0));
+          context.drawImage(image, (frame % columns) * frameWidth, Math.floor(frame / columns) * frameHeight, frameWidth, frameHeight, -item.pivot.x, -item.pivot.y, frameWidth, frameHeight);
+        }
+      }
+      if (item.id === selectedBoneId) {
+        context.strokeStyle = "#f5d16f";
+        context.lineWidth = 1.5;
+        context.beginPath(); context.arc(0, 0, 6, 0, Math.PI * 2); context.stroke();
+      }
+      for (const child of children.get(item.id) || []) drawBone(child, depth + 1);
+      context.restore();
+    }
+    const root = rig.bones.find((item) => item.parentId === null);
+    if (root) drawBone(root);
+    for (const attachment of rig.attachments) {
+      const target = rig.bones.find((item) => item.id === attachment.boneId);
+      if (!target) continue;
+      context.fillStyle = "#78d6ff";
+      context.beginPath(); context.arc(target.x + attachment.x, target.y + attachment.y, 4, 0, Math.PI * 2); context.fill();
+    }
+    for (const hitbox of rig.hitboxes) {
+      const target = rig.bones.find((item) => item.id === hitbox.boneId);
+      if (!target) continue;
+      context.strokeStyle = hitbox.kind === "attack" ? "#ff8a67" : "#8bd49b";
+      context.lineWidth = 1.5;
+      context.strokeRect(target.x + hitbox.x - hitbox.width / 2, target.y + hitbox.y - hitbox.height / 2, hitbox.width, hitbox.height);
+    }
+  }, [rig, partAssets, selectedBoneId, selectedClipId, clip, timeMs, playing, validation.valid, imageRevision]);
+
+  useEffect(() => {
+    if (!playing || !clip) return;
+    let frame;
+    let previous = performance.now();
+    let elapsed = timeMs;
+    const tick = (now) => {
+      elapsed += Math.min(80, now - previous);
+      previous = now;
+      if (elapsed >= clip.durationMs) {
+        if (clip.loop) elapsed %= clip.durationMs;
+        else { elapsed = clip.durationMs; setPlaying(false); }
+      }
+      setTimeMs(elapsed);
+      if (elapsed < clip.durationMs || clip.loop) frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [playing, selectedClipId, clip?.durationMs, clip?.loop]);
+
+  function pointerDown(event) {
+    if (!bone || disabled || playing) return;
+    const rect = canvasRef.current.getBoundingClientRect();
+    const scaleX = rig.canvas.width / rect.width, scaleY = rig.canvas.height / rect.height;
+    const startX = (event.clientX - rect.left) * scaleX, startY = (event.clientY - rect.top) * scaleY;
+    const initial = { x: bone.x, y: bone.y, clientX: event.clientX, clientY: event.clientY };
+    const move = (nextEvent) => {
+      updateBone("x", Math.round(initial.x + (nextEvent.clientX - initial.clientX) * scaleX));
+      updateBone("y", Math.round(initial.y + (nextEvent.clientY - initial.clientY) * scaleY));
+    };
+    const up = () => { window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", up); };
+    canvasRef.current.setPointerCapture?.(event.pointerId);
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up, { once: true });
+    event.preventDefault();
+  }
+
+  if (!profile) return <div className="studio-rig-empty"><b>الهيكل غير مهيأ بعد</b><button type="button" disabled={disabled} onClick={() => onChange(createDefaultRig())}>إنشاء هيكل جديد</button></div>;
+
+  return (
+    <section className="studio-rig-editor">
+      <header><div><h4>استديو التحريك الهيكلي · Cutout Rig</h4><p>اربط صور الأجزاء بالعظام، اضبط المفاصل بالسحب أو الحقول، ثم أنشئ مقاطع الحركة والإطارات المفتاحية.</p></div><span data-valid={validation.valid}>{validation.valid ? "هيكل صالح" : "يحتاج إلى إصلاح"}</span></header>
+      <div className="studio-rig-layout">
+        <div className="studio-rig-stage">
+          <canvas ref={canvasRef} width={rig.canvas.width} height={rig.canvas.height} onPointerDown={pointerDown} aria-label="معاينة الهيكل العظمي" />
+          <div className="studio-rig-stage-actions"><button type="button" disabled={disabled || playing} onClick={addBone}>＋ إضافة عظمة</button><button type="button" disabled={disabled || !bone || bone.parentId === null} onClick={removeBone}>حذف العظمة</button></div>
+          <small>اختر عظمة من القائمة، ثم اسحب على مساحة المعاينة لتحريكها. صور الأجزاء تُحمّل من مكتبة الأصول.</small>
+        </div>
+        <div className="studio-rig-controls">
+          <label>العظمة المحددة<select value={selectedBoneId} onChange={(event) => setSelectedBoneId(event.target.value)}>{rig.bones.map((item) => <option key={item.id} value={item.id}>{item.name} · {item.id}</option>)}</select></label>
+          {bone && <div className="studio-rig-fields">
+            <label>اسم العظمة<input value={bone.name} disabled={disabled} onChange={(event) => updateBone("name", event.target.value)} /></label>
+            <label>العظمة الأم<select value={bone.parentId || ""} disabled={disabled || bone.parentId === null} onChange={(event) => updateBone("parentId", event.target.value || null)}><option value="">جذر الهيكل</option>{rig.bones.filter((item) => item.id !== bone.id).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
+            <div className="studio-rig-fields-grid">
+              <label>X<input type="number" value={bone.x} disabled={disabled} onChange={(event) => updateBone("x", Number(event.target.value))}/></label>
+              <label>Y<input type="number" value={bone.y} disabled={disabled} onChange={(event) => updateBone("y", Number(event.target.value))}/></label>
+              <label>الدوران °<input type="number" value={bone.rotation} disabled={disabled} onChange={(event) => updateBone("rotation", Number(event.target.value))}/></label>
+              <label>Scale X<input type="number" min=".01" max="20" step=".05" value={bone.scaleX} disabled={disabled} onChange={(event) => updateBone("scaleX", Number(event.target.value))}/></label>
+              <label>Scale Y<input type="number" min=".01" max="20" step=".05" value={bone.scaleY} disabled={disabled} onChange={(event) => updateBone("scaleY", Number(event.target.value))}/></label>
+              <label>Pivot X<input type="number" value={bone.pivot.x} disabled={disabled} onChange={(event) => updateBone("pivot.x", Number(event.target.value))}/></label>
+              <label>Pivot Y<input type="number" value={bone.pivot.y} disabled={disabled} onChange={(event) => updateBone("pivot.y", Number(event.target.value))}/></label>
+            </div>
+            <label>صورة الجزء<select value={bone.part?.assetId || ""} disabled={disabled} onChange={(event) => addPart(event.target.value)}><option value="">بدون صورة</option>{availableParts.map((asset) => <option key={asset.id} value={asset.id}>{asset.name || asset.id} · {asset.type}</option>)}</select></label>
+            {bone.part && <label>رقم الإطار<input type="number" min="0" max={Math.max(0, (partAssets.find((asset) => asset.id === bone.part.assetId)?.frameCount || 1) - 1)} value={bone.part.frame} disabled={disabled} onChange={(event) => updateBone("part.frame", Number(event.target.value))}/></label>}
+          </div>}
+        </div>
+      </div>
+      <div className="studio-rig-timeline">
+        <div className="studio-rig-timeline-head"><h5>مقاطع الحركة والإطارات المفتاحية</h5><button type="button" disabled={disabled || rig.clips.length >= 16} onClick={addClip}>＋ مقطع حركة</button></div>
+        <div className="studio-rig-fields-grid">
+          <label>المقطع<select value={selectedClipId} onChange={(event) => { setSelectedClipId(event.target.value); setTimeMs(0); setPlaying(false); }}>{rig.clips.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
+          {clip && <><label>اسم المقطع<input value={clip.name} disabled={disabled} onChange={(event) => updateClip("name", event.target.value)}/></label><label>المدة (ms)<input type="number" min="1" max="60000" value={clip.durationMs} disabled={disabled} onChange={(event) => updateClip("durationMs", Number(event.target.value))}/></label><label className="studio-rig-check"><input type="checkbox" checked={clip.loop} disabled={disabled} onChange={(event) => updateClip("loop", event.target.checked)}/> تكرار المقطع</label></>}
+        </div>
+        {clip && <><label className="studio-rig-time">الزمن الحالي: {Math.round(timeMs)} ms<input type="range" min="0" max={clip.durationMs} value={Math.min(timeMs, clip.durationMs)} disabled={playing} onChange={(event) => setTimeMs(Number(event.target.value))}/></label><div className="studio-rig-stage-actions"><button type="button" disabled={disabled || !validation.valid} onClick={() => setPlaying((value) => !value)}>{playing ? "إيقاف المعاينة" : "▶ تشغيل المقطع"}</button><button type="button" disabled={disabled || playing} onClick={addKeyframe}>＋ حفظ إطار للعظمة المحددة</button><span>{clip.tracks.find((track) => track.boneId === selectedBoneId)?.keyframes.length || 0} إطار مفتاحي للعظمة المحددة</span></div></>}
+      </div>
+      <div className="studio-rig-tools">
+        <div><h5>نقاط تثبيت السلاح والقذائف</h5><p>تُستخدم لاحقاً لإطلاق القذائف من موضع السلاح الحقيقي.</p><button type="button" disabled={disabled} onClick={addAttachment}>＋ إضافة نقطة تثبيت</button></div>
+        {rig.attachments.map((item) => <div className="studio-rig-tool-row" key={item.id}><b>{item.name}</b><label>العظمة<select value={item.boneId} disabled={disabled} onChange={(event) => update((next) => { next.attachments.find((entry) => entry.id === item.id).boneId = event.target.value; })}>{rig.bones.map((entry) => <option key={entry.id} value={entry.id}>{entry.name}</option>)}</select></label><label>X<input type="number" value={item.x} disabled={disabled} onChange={(event) => update((next) => { next.attachments.find((entry) => entry.id === item.id).x = Number(event.target.value); })}/></label><label>Y<input type="number" value={item.y} disabled={disabled} onChange={(event) => update((next) => { next.attachments.find((entry) => entry.id === item.id).y = Number(event.target.value); })}/></label><button type="button" disabled={disabled} onClick={() => update((next) => { next.attachments = next.attachments.filter((entry) => entry.id !== item.id); })}>حذف</button></div>)}
+        <div><h5>مناطق الهجوم والتلقي</h5><p>حدد مناطق الضرر أو مناطق تلقي الإصابة المرتبطة بالعظام.</p><button type="button" disabled={disabled} onClick={addHitbox}>＋ إضافة منطقة إصابة</button></div>
+        {rig.hitboxes.map((item) => <div className="studio-rig-tool-row" key={item.id}><b>{item.name}</b><label>العظمة<select value={item.boneId} disabled={disabled} onChange={(event) => update((next) => { next.hitboxes.find((entry) => entry.id === item.id).boneId = event.target.value; })}>{rig.bones.map((entry) => <option key={entry.id} value={entry.id}>{entry.name}</option>)}</select></label><label>النوع<select value={item.kind} disabled={disabled} onChange={(event) => update((next) => { next.hitboxes.find((entry) => entry.id === item.id).kind = event.target.value; })}><option value="hurt">تلقي ضرر</option><option value="attack">هجوم</option></select></label><label>العرض<input type="number" min="1" value={item.width} disabled={disabled} onChange={(event) => update((next) => { next.hitboxes.find((entry) => entry.id === item.id).width = Number(event.target.value); })}/></label><label>الارتفاع<input type="number" min="1" value={item.height} disabled={disabled} onChange={(event) => update((next) => { next.hitboxes.find((entry) => entry.id === item.id).height = Number(event.target.value); })}/></label><button type="button" disabled={disabled} onClick={() => update((next) => { next.hitboxes = next.hitboxes.filter((entry) => entry.id !== item.id); })}>حذف</button></div>)}
+      </div>
+      {!validation.valid && <div className="studio-rig-errors" role="alert"><b>أخطاء يجب إصلاحها قبل الحفظ:</b><ul>{validation.errors.map((item) => <li key={item}>{item}</li>)}</ul></div>}
+      {error && <p className="studio-rig-errors">{error}</p>}
+      <footer>الأجزاء تُرفع أولاً إلى مكتبة الأصول كصور مستقلة من نوع «عنصر»، ثم تُربط هنا. لا يتغير أي أصل أصلي عند تعديل الهيكل.</footer>
+    </section>
+  );
+}
