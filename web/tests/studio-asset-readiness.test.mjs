@@ -162,3 +162,14 @@ test("readiness blocks skeletal part frame indices outside the referenced asset"
   assert.equal(report.blocked, 1);
   assert.ok(report.assets[0].errors.some((message) => message.includes("خارج عدد إطارات الأصل")));
 });
+
+test("readiness blocks rigged projectile plants without a muzzle attachment", () => {
+  const rigProfile = {
+    version: 1, canvas: { width: 200, height: 200 },
+    bones: [{ id: "root", parentId: null }],
+    attachments: [], hitboxes: [], clips: []
+  };
+  const report = auditStudioAssetRegistry([validPlant({ rigProfile }), validProjectile()]);
+  assert.equal(report.blocked, 1);
+  assert.ok(report.assets[0].errors.some((message) => message.includes("muzzle")));
+});
