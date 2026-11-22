@@ -184,9 +184,13 @@ export function buildAutoRigFromParts(input) {
   const muzzle = input.anchors?.muzzle;
   if (input.requiresMuzzle && !muzzle) throw new RangeError("A projectile rig requires a confirmed muzzle anchor.");
   if (muzzle) {
-    const weapon = muzzle.partId ? partsById.get(readId(muzzle.partId, "anchors.muzzle.partId")) :
-      parts.find((part) => part.role === "weapon.barrel") || parts.find((part) => part.role === "weapon");
-    if (!weapon) throw new RangeError("A muzzle anchor must reference a weapon or weapon-barrel part.");
+    const weapon = muzzle.partId
+      ? partsById.get(readId(muzzle.partId, "anchors.muzzle.partId"))
+      : parts.find((part) => part.role === "weapon.barrel") || parts.find((part) => part.role === "weapon");
+    if (muzzle.partId && !weapon) throw new RangeError("Muzzle anchor references a missing weapon part.");
+    if (!weapon || !["weapon", "weapon.barrel"].includes(weapon.role)) {
+      throw new RangeError("A muzzle anchor must reference a weapon or weapon-barrel part.");
+    }
     const x = finite(muzzle.x, "anchors.muzzle.x");
     const y = finite(muzzle.y, "anchors.muzzle.y");
     if (x < 0 || y < 0 || x > canvas.width || y > canvas.height) throw new RangeError("Muzzle anchor must lie inside the source canvas.");
