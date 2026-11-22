@@ -574,7 +574,7 @@ export default function AutoRigBuilderPanel({
   }
 
   function commitPart() {
-    if (generated || occlusionMode) return;
+    if (generated || occlusionMode || donorMode) return;
     if (points.length < 3) {
       setMessage("ارسم حدود الجزء بثلاث نقاط أو أكثر قبل اعتماده.");
       return;
@@ -623,7 +623,7 @@ export default function AutoRigBuilderPanel({
   }
 
   async function generateRig() {
-    if (!image || !parts.length || busy || disabled || generated || occlusionMode) return;
+    if (!image || !parts.length || busy || disabled || generated || occlusionMode || donorMode) return;
     if (requiresMuzzle && (!activeEmitterPart || !muzzlePoint)) {
       setMessage("اختر جزء مصدر الإطلاق ثم حدّد نقطة muzzle داخله قبل إنشاء هيكل نبتة المقذوفات.");
       return;
@@ -726,7 +726,7 @@ export default function AutoRigBuilderPanel({
     <section className="studio-panel" style={{ marginTop: 18 }}>
       <small>AUTO-RIG · GUIDED SEGMENTATION</small>
       <h3>استخراج أجزاء الشخصية وبناء الهيكل الأولي</h3>
-      <p>يمكنك اكتشاف مناطق الشخصية محلياً باستخدام SAM 2 أو رسم الأقنعة يدوياً. راجع كل قناع وحدد دوره الدلالي قبل اعتماده؛ تُحفظ الأجزاء كصور PNG شفافة مستقلة، ثم تُنشأ بنية أولية قابلة للتعديل. عند استخدام Sprite Sheet تتم معالجة أول إطار فقط كصورة مرجعية. إعادة بناء الأجزاء المخفية والتصنيف الدلالي المتخصص ما زالا قيد التطوير.</p>
+      <p>يمكنك اكتشاف المناطق المرئية محلياً باستخدام SAM 2 أو رسم الأقنعة يدوياً. بعد تحديد منطقة مخفية، يمكنك نقل بكسلات من جزء مرئي مماثل (مثل الورقة المقابلة) إلى المنطقة المحددة، ثم مراجعة الرقعة يدوياً. هذه طريقة نقل/انعكاس هندسية وليست توليداً تخيلياً للأنسجة؛ والتصنيف الدلالي هنا اقتراح هندسي يحتاج تأكيدك. تُحفظ الأجزاء كصور PNG شفافة مستقلة ويُنشأ هيكل قابل للتعديل.</p>
       <div className="studio-actions" style={{ display: "flex", flexWrap: "wrap", gap: 8, margin: "10px 0" }}>
         <button type="button" disabled={disabled || aiBusy} onClick={checkAIWorker}>{aiBusy ? "جارٍ الاتصال..." : "فحص محرك AI المحلي"}</button>
         <button type="button" disabled={disabled || aiBusy || generated || !image || aiPromptMode} onClick={requestAISegmentation}>{aiBusy ? "جارٍ تحليل الصورة..." : "اقتراح المناطق المرئية وتقسيمها تلقائياً"}</button>
@@ -820,14 +820,14 @@ export default function AutoRigBuilderPanel({
             الاحتجاب
             <select value={part.occlusion || "unresolved"} disabled={disabled || busy || generated} onChange={(event) => { const value = event.target.value; setParts((current) => current.map((item) => item.id === part.id ? { ...item, occlusion: value, reconstruction: null, reconstructionPatch: null, provenance: { ...(item.provenance || {}), pixels: "source" }, reviewed: false } : item)); }}>
               <option value="unresolved">غير محسوم</option>
-              <option value="none">لا يوجد جزء مخفي</option><option value="reconstructed">تم نقل بكسلات الجزء (مراجعة مطلوبة)</option>
+              <option value="none">لا يوجد جزء مخفي</option><option value="reconstructed" disabled>تم نقل بكسلات الجزء (مراجعة مطلوبة)</option>
             </select>
           </label>
           <button type="button" disabled={disabled || busy || generated} style={{ marginInlineStart: 8 }} onClick={() => beginOcclusionMask(part.id)}>تحديد المنطقة المخفية</button>{part.occlusionMask&&<small style={{ marginInlineStart: 6 }}>قناع احتجاب محفوظ</small>}{part.occlusionMask&&<button type="button" disabled={disabled || busy || generated || aiBusy} style={{ marginInlineStart: 6 }} onClick={() => beginDonorPolygon(part.id)}>اختيار جزء مرئي مماثل</button>}{part.donorMask&&<button type="button" disabled={disabled || busy || generated || aiBusy} style={{ marginInlineStart: 6 }} onClick={() => reconstructHiddenRegion(part.id)}>نقل البكسلات إلى المنطقة المخفية</button>}{occlusionMode&&occlusionTargetPartId===part.id&&<><button type="button" disabled={occlusionPoints.length<3} style={{ marginInlineStart: 6 }} onClick={commitOcclusionMask}>اعتماد المنطقة ({occlusionPoints.length})</button><button type="button" style={{ marginInlineStart: 4 }} onClick={() => { setOcclusionMode(false); setOcclusionPoints([]); setOcclusionTargetPartId(""); }}>إلغاء</button></>}<button type="button" disabled={disabled || busy || generated} style={{ marginInlineStart: 10 }} onClick={() => { setOcclusionMode(false); setOcclusionPoints([]); setOcclusionTargetPartId(""); setEditingPartId((current) => current === part.id ? "" : part.id); setPoints([]); setMessage(editingPartId === part.id ? "تم إنهاء تحرير القناع." : "اسحب نقاط القناع البرتقالية لتعديل حدود الجزء؛ اضغط الزر مجدداً لإنهاء التحرير."); }}>{editingPartId === part.id ? "إنهاء التحرير" : "تحرير القناع"}</button>
           <button type="button" disabled={disabled || busy || generated} style={{ marginInlineStart: 6 }} onClick={() => { setParts((current) => current.filter((item) => item.id !== part.id)); if (editingPartId === part.id) setEditingPartId(""); if (part.id === activeEmitterPart?.id) { setMuzzlePartId(""); setMuzzlePoint(null); setMuzzleMode(false); } }}>حذف</button>
         </li>)}</ul>
       </div>}
-      <button type="button" className="studio-submit" disabled={disabled || busy || generated || !image || !parts.length} onClick={generateRig}>
+      <button type="button" className="studio-submit" disabled={disabled || busy || generated || occlusionMode || donorMode || !image || !parts.length} onClick={generateRig}>
         {busy ? "جارٍ قصّ الأجزاء وحفظها..." : "قصّ الأجزاء وإنشاء الهيكل ←"}
       </button>
       {qualityReport && <div style={{ marginTop: 12, padding: 12, border: "1px solid #d8dce5", borderRadius: 10 }}>
