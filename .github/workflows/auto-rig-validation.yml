@@ -79,4 +79,4 @@ jobs:
       - name: Compile worker
         run: python -m py_compile worker.py smoke_test.py
       - name: Run worker contract tests
-        run: python -m unittest -v test_worker.py
+        run: python -m unittest -v test_worker.py test_smoke_test.py
