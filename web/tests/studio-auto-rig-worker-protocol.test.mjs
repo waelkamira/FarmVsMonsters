@@ -18,7 +18,7 @@ const proposal = () => ({
 test("normalizes only supported worker capabilities and bounded model metadata", () => {
   const result = normalizeAutoRigWorkerCapabilities({
     protocolVersion: AUTO_RIG_WORKER_PROTOCOL_VERSION, status: "ready", device: "cuda",
-    capabilities: ["part-detection", "unknown", "prompted-segmentation", "part-detection"],
+    capabilities: ["part-detection", "unknown", "prompted-segmentation", "hidden-part-reconstruction", "part-detection"],
     models: [{ id: "sam2", version: "2.1", license: "Apache-2.0" }, { id: 3, version: "bad" }],
     warnings: ["weights not installed", 4]
   });
