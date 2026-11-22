@@ -35,7 +35,8 @@ Restart the web app, open Auto-Rig Builder and select "فحص محرك AI الم
 - Binds to 127.0.0.1 only.
 - No telemetry, cloud API, credentials, or automatic weight downloads.
 - Maximum image size 8 MB; maximum dimensions 4096 x 4096.
-- SAM 2 masks can overlap or split one character into many regions; review each mask.
+- SAM 2 masks can overlap or split one character into many regions; review each mask. Transparent PNG pixels are composited onto white for inference so the original transparent background is not interpreted as black artwork.
+- Automatic SAM 2 proposals are geometric regions, not semantic part labels. Assign each proposal a role (body, leaf, arm, weapon, etc.) and review it in Studio.
 - Hidden-part reconstruction is not implemented by this adapter.
 
 
