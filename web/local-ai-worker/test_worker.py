@@ -54,7 +54,7 @@ class WorkerTests(unittest.TestCase):
             "imageDataUrl": "data:image/png;base64,AA==",
             "points": [{"x": 40, "y": 40, "label": 1}, {"x": 10, "y": 10, "label": 0}]
         }
-        with patch.object(worker, "decode_image", return_value=np.zeros((100, 100, 3), dtype=np.uint8)), \
+        with patch.object(worker, "decode_image_data", return_value=(np.zeros((100, 100, 3), dtype=np.uint8), np.ones((100, 100), dtype=bool))), \
              patch.object(worker, "load_model", return_value=(object(), predictor, "cpu")):
             result = worker.segment_from_points(payload)
         self.assertEqual(result["protocolVersion"], 1)
