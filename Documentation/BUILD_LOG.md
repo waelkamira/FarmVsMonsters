@@ -1284,3 +1284,9 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - Added a PowerShell launcher that verifies local SAM 2 config/checkpoint paths and imports PyTorch, SAM 2, and OpenCV before starting the loopback service.
 - Added a blue dashed overlay for unapproved AI proposals and a green overlay for accepted parts; stale proposals are cleared when the source image changes.
 - Restricted the API bridge to the only implemented worker task (`part-detection`) so future reconstruction and prompted-segmentation tasks cannot be mistaken for available capabilities.
+
+
+## 2026-11-22 — Broader validation findings
+- Auto-Rig subsystem validation passed on the recent branch head available to CI: Python worker compile/tests, Auto-Rig/Studio contract tests, focused ESLint, full-project ESLint diagnostic step, and production build.
+- The separate Studio and Game Validation workflow failed in the existing broad game test suite: 363 passed and 54 failed out of 417. The failures are concentrated in Phase 1 combat/replay/wave scheduler, monster stats, planting/resource, and static Phaser integration assertions (for example `wood-frame-inventory.test.mjs`).
+- These failures are not Auto-Rig worker tests and were not changed as part of this Studio-only pass. They remain a repository-level blocker to claiming a fully green project or merging the dependent feature.
