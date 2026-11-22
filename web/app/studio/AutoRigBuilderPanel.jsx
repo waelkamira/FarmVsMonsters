@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AUTO_RIG_ROLE_OPTIONS, analyzeAutoRigQuality, buildAutoRigFromParts, moveAutoRigPolygonVertex } from "../../game/studio/autoRigBuilder.mjs";
+import { suggestAutoRigSemanticRoles } from "../../game/studio/semanticRoleClassifier.mjs";
 
 function slug(value) {
   return String(value || "character").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "character";
@@ -37,6 +38,7 @@ export default function AutoRigBuilderPanel({
   sourceRows = 1,
   sourceColumns = 1,
   sourceSpriteSheet = false,
+  characterType = "plant",
   requiresMuzzle = false,
   onRigGenerated,
   onManifestGenerated,
@@ -311,6 +313,16 @@ export default function AutoRigBuilderPanel({
       setAiStatus("offline");
       setMessage(error.message);
     } finally { setAiBusy(false); }
+  }
+
+  function suggestSemanticRoles() {
+    if (!image || !aiProposals.length) return;
+    try {
+      const suggestions = suggestAutoRigSemanticRoles(aiProposals, { width: image.width, height: image.height }, characterType);
+      setAiProposalRoles((current) => ({ ...current, ...Object.fromEntries(suggestions.map((item) => [item.proposalId, item.role])) }));
+      const lowConfidence = suggestions.filter((item) => item.confidence < 0.5).length;
+      setMessage("تم اقتراح أدوار هندسية لـ " + suggestions.length + " منطقة. " + lowConfidence + " اقتراحات منخفضة الثقة؛ راجع كل دور يدوياً قبل اعتماد القناع.");
+    } catch (error) { setMessage(error.message); }
   }
 
   function acceptAIProposal(proposal, selectedRole) {
@@ -607,9 +619,10 @@ export default function AutoRigBuilderPanel({
 <span className="studio-message" role="status">حالة المحرك: {aiStatus === "connected" ? "جاهز" : aiStatus === "degraded" ? "مثبت لكن النموذج غير جاهز" : aiStatus === "offline" ? "غير متصل" : aiStatus === "not-configured" ? "غير مهيأ" : "لم يُفحص"}</span>
       </div>
       {aiProposals.length > 0 && <div style={{ margin: "12px 0", padding: 12, border: "1px solid #d8dce5", borderRadius: 10 }}>
-        <b>مقترحات AI ({aiProposals.length}) — يلزم اعتمادك</b><p style={{ margin: "6px 0", fontSize: 13 }}>الأقنعة الزرقاء المتقطعة هي مقترحات غير معتمدة؛ الأقنعة الخضراء هي أجزاء أُضيفت إلى الهيكل.</p>
+        <b>مقترحات AI ({aiProposals.length}) — يلزم اعتمادك</b><p style={{ margin: "6px 0", fontSize: 13 }}>الأقنعة الزرقاء المتقطعة هي مقترحات غير معتمدة؛ الأقنعة الخضراء هي أجزاء أُضيفت إلى الهيكل. التصنيف الهندسي مساعد أولي وليس فهماً بصرياً مؤكداً.</p>
+        <button type="button" disabled={disabled || busy || generated} onClick={suggestSemanticRoles}>اقتراح الأدوار الدلالية تلقائياً</button>
         <ul>{aiProposals.map((proposal) => <li key={proposal.id} style={{ marginTop: 6 }}>
-          {proposal.name || proposal.role} · ثقة {proposal.confidence == null ? "غير محددة" : Math.round(proposal.confidence * 100) + "%"}
+          {proposal.name || proposal.role} · ثقة التقسيم {proposal.confidence == null ? "غير محددة" : Math.round(proposal.confidence * 100) + "%"}
           <label style={{ display: "inline-flex", gap: 6, marginInlineStart: 10 }}>الدور
             <select value={aiProposalRoles[proposal.id] || ""} disabled={disabled || busy || generated} onChange={(event) => setAiProposalRoles((current) => ({ ...current, [proposal.id]: event.target.value }))}>
               <option value="">اختر الدور...</option>{AUTO_RIG_ROLE_OPTIONS.map((item) => <option value={item.value} key={item.value}>{item.label}</option>)}
