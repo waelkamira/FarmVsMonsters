@@ -4708,7 +4708,14 @@ export default class BattleScene extends Scene {
       if (monster.kind === "dust-skitter") {
         const profile = monster.combatProfile;
         const jumpWillStart = !monster.isJumping && monster.jumpCooldown - delta <= 0;
-        const jumpWillLand = monster.isJumping && monster.jumpElapsed + delta >= monster.jumpDuration;
+        const nextJumpDurationMs = jumpWillStart
+          ? this.simulationRandom.nextInt(profile.jumpDurationMinMs, profile.jumpDurationMaxMs)
+          : null;
+        const jumpWillLand = (monster.isJumping && monster.jumpElapsed + delta >= monster.jumpDuration) ||
+          (jumpWillStart && delta >= nextJumpDurationMs);
+        const nextJumpResetCooldownMs = jumpWillLand
+          ? this.simulationRandom.nextInt(profile.jumpResetCooldownMinMs, profile.jumpResetCooldownMaxMs)
+          : null;
         const burstWillStart = monster.burstCooldown - delta <= 0 && monster.burstRemaining <= 0;
         const motion = resolveDustSkitterMotionStep({
           isJumping: false,
@@ -4719,12 +4726,8 @@ export default class BattleScene extends Scene {
           jumpSpeedMultiplier: profile.jumpSpeedMultiplier,
           jumpVisualHeight: 34,
           visualScale: monster.view.scaleY,
-          nextJumpDurationMs: jumpWillStart
-            ? this.simulationRandom.nextInt(profile.jumpDurationMinMs, profile.jumpDurationMaxMs)
-            : null,
-          nextJumpResetCooldownMs: jumpWillLand
-            ? this.simulationRandom.nextInt(profile.jumpResetCooldownMinMs, profile.jumpResetCooldownMaxMs)
-            : null,
+          nextJumpDurationMs,
+          nextJumpResetCooldownMs,
           burstCooldownMs: monster.burstCooldown,
           burstRemainingMs: monster.burstRemaining,
           burstDurationMs: profile.burstDurationMs,
