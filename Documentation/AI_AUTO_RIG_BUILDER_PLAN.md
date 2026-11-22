@@ -366,3 +366,9 @@ The Auto-Rig Builder is a permanent first-class Studio subsystem composed of the
 - Extended the authenticated Studio proxy to validate prompt count, coordinates, and binary labels before forwarding. The worker independently validates prompts and source image dimensions.
 - Studio now supports positive points (inside the target) and negative points (outside it), renders them on the source preview, and requests point-conditioned SAM 2 masks. Alternatives remain unapproved until the author selects one, assigns its semantic role, edits if necessary, and explicitly reviews it.
 - Added worker unit tests for valid and invalid point prompts. This is interactive SAM 2 segmentation, not semantic role classification or hidden-pixel generation.
+
+
+## 2026-11-22 — Prompted segmentation validation hardening
+- Prompt coordinates must be actual finite numeric source-space values; string/null coercion is rejected at both the authenticated API proxy and local worker.
+- Prompt labels must be integer 0/1 values, and every segmentation request must include at least one positive (inside-target) point. Negative points remain optional and refine exclusions.
+- Added worker and route-contract tests for strict coordinate/label validation and positive-point requirements.
