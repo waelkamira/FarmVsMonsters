@@ -404,7 +404,7 @@ export default function AutoRigBuilderPanel({
         <span className="studio-message" role="status">حالة المحرك: {aiStatus === "connected" ? "جاهز" : aiStatus === "degraded" ? "مثبت لكن النموذج غير جاهز" : aiStatus === "offline" ? "غير متصل" : aiStatus === "not-configured" ? "غير مهيأ" : "لم يُفحص"}</span>
       </div>
       {aiProposals.length > 0 && <div style={{ margin: "12px 0", padding: 12, border: "1px solid #d8dce5", borderRadius: 10 }}>
-        <b>مقترحات AI ({aiProposals.length}) — يلزم اعتمادك</b>
+        <b>مقترحات AI ({aiProposals.length}) — يلزم اعتمادك</b><p style={{ margin: "6px 0", fontSize: 13 }}>الأقنعة الزرقاء المتقطعة هي مقترحات غير معتمدة؛ الأقنعة الخضراء هي أجزاء أُضيفت إلى الهيكل.</p>
         <ul>{aiProposals.map((proposal) => <li key={proposal.id} style={{ marginTop: 6 }}>
           {proposal.name || proposal.role} · ثقة {proposal.confidence == null ? "غير محددة" : Math.round(proposal.confidence * 100) + "%"}
           <label style={{ display: "inline-flex", gap: 6, marginInlineStart: 10 }}>الدور
