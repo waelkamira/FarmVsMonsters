@@ -570,7 +570,7 @@ export default function AutoRigBuilderPanel({
       : part));
     setOcclusionMode(false);
     setOcclusionPoints([]);
-    setMessage("تم حفظ قناع المنطقة المخفية. ما زال يحتاج إلى إعادة بناء فعلية قبل النشر.");
+    setMessage("تم حفظ المنطقة المخفية. اختر جزءاً مرئياً مماثلاً لنقل بكسلاته، ثم راجع النتيجة قبل النشر.");
   }
 
   function commitPart() {
