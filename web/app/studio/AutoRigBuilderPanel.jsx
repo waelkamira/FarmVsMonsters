@@ -56,6 +56,7 @@ export default function AutoRigBuilderPanel({
   const [aiStatus, setAiStatus] = useState("unknown");
   const [aiBusy, setAiBusy] = useState(false);
   const [aiProposals, setAiProposals] = useState([]);
+  const [aiProposalRoles, setAiProposalRoles] = useState({});
   const [muzzlePartId, setMuzzlePartId] = useState("");
   const [muzzlePoint, setMuzzlePoint] = useState(null);
   const [muzzleMode, setMuzzleMode] = useState(false);
@@ -186,6 +187,7 @@ export default function AutoRigBuilderPanel({
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "تعذر تنفيذ التقسيم الذكي.");
       setAiProposals(data.proposals || []);
+      setAiProposalRoles({});
       setAiStatus("connected");
       setMessage("اكتشف المحرك " + (data.proposals || []).length + " جزءاً. راجع كل قناع واعتمده يدوياً قبل إنشاء الهيكل.");
     } catch (error) {
@@ -194,10 +196,11 @@ export default function AutoRigBuilderPanel({
     } finally { setAiBusy(false); }
   }
 
-  function acceptAIProposal(proposal) {
+  function acceptAIProposal(proposal, selectedRole) {
     if (generated || parts.length >= 63) return;
     const points = proposal.mask.points;
-    const knownRole = AUTO_RIG_ROLE_OPTIONS.some((item) => item.value === proposal.role) ? proposal.role : "accessory";
+    const candidateRole = selectedRole || proposal.role;
+    const knownRole = AUTO_RIG_ROLE_OPTIONS.some((item) => item.value === candidateRole) ? candidateRole : "accessory";
     const suffix = "-" + slug(knownRole.replaceAll(".", "-")) + "-ai-" + String(nextPartIndex.current).padStart(2, "0") + "-cutout";
     const base = slug(currentAssetId || "character").slice(0, 64 - suffix.length);
     let assetId = base + suffix, collision = 1;
@@ -378,17 +381,22 @@ export default function AutoRigBuilderPanel({
     <section className="studio-panel" style={{ marginTop: 18 }}>
       <small>AUTO-RIG · GUIDED SEGMENTATION</small>
       <h3>استخراج أجزاء الشخصية وبناء الهيكل الأولي</h3>
-      <p>هذه مرحلة التفكيك الموجّه: ابدأ بالأجزاء الخلفية ثم الأمامية، وانقر حول كل جزء لرسم قناعه، ثم اختر دوره. سيُحفظ كل جزء كصورة PNG شفافة مستقلة، وتُقترح نقاط الدوران تلقائياً عند أقرب حدود اتصال مع الجزء الأب، ويمكن تعديلها لاحقاً في محرر الهيكل. كما تُنشأ مقاطع حركة ابتدائية للخمول والحركة والهجوم والإصابة والموت، وكلها قابلة للتعديل. عند استخدام Sprite Sheet تتم معالجة أول إطار فقط كصورة مرجعية. إذا كانت النبتة تطلق قذيفة، حدّد مصدر الإطلاق ونقطة muzzle هنا؛ أما بقية تفاصيل الارتباط فيمكن تعديلها لاحقاً في محرر الهيكل. لا يوجد استدلال AI تلقائي في هذه المرحلة بعد.</p>
+      <p>يمكنك اكتشاف مناطق الشخصية محلياً باستخدام SAM 2 أو رسم الأقنعة يدوياً. راجع كل قناع وحدد دوره الدلالي قبل اعتماده؛ تُحفظ الأجزاء كصور PNG شفافة مستقلة، ثم تُنشأ بنية أولية قابلة للتعديل. عند استخدام Sprite Sheet تتم معالجة أول إطار فقط كصورة مرجعية. إعادة بناء الأجزاء المخفية والتصنيف الدلالي المتخصص ما زالا قيد التطوير.</p>
       <div className="studio-actions" style={{ display: "flex", flexWrap: "wrap", gap: 8, margin: "10px 0" }}>
         <button type="button" disabled={disabled || aiBusy} onClick={checkAIWorker}>{aiBusy ? "جارٍ الاتصال..." : "فحص محرك AI المحلي"}</button>
         <button type="button" disabled={disabled || aiBusy || generated || !image} onClick={requestAISegmentation}>{aiBusy ? "جارٍ تحليل الصورة..." : "اكتشاف الأجزاء وتقسيمها تلقائياً"}</button>
-        <span className="studio-message" role="status">حالة المحرك: {aiStatus === "connected" ? "متصل" : aiStatus === "offline" ? "غير متصل" : aiStatus === "not-configured" ? "غير مهيأ" : "لم يُفحص"}</span>
+        <span className="studio-message" role="status">حالة المحرك: {aiStatus === "connected" ? "جاهز" : aiStatus === "degraded" ? "مثبت لكن النموذج غير جاهز" : aiStatus === "offline" ? "غير متصل" : aiStatus === "not-configured" ? "غير مهيأ" : "لم يُفحص"}</span>
       </div>
       {aiProposals.length > 0 && <div style={{ margin: "12px 0", padding: 12, border: "1px solid #d8dce5", borderRadius: 10 }}>
         <b>مقترحات AI ({aiProposals.length}) — يلزم اعتمادك</b>
         <ul>{aiProposals.map((proposal) => <li key={proposal.id} style={{ marginTop: 6 }}>
           {proposal.name || proposal.role} · ثقة {proposal.confidence == null ? "غير محددة" : Math.round(proposal.confidence * 100) + "%"}
-          <button type="button" disabled={disabled || busy || generated || parts.length >= 63} style={{ marginInlineStart: 10 }} onClick={() => acceptAIProposal(proposal)}>اعتماد القناع</button>
+          <label style={{ display: "inline-flex", gap: 6, marginInlineStart: 10 }}>الدور
+            <select value={aiProposalRoles[proposal.id] || (AUTO_RIG_ROLE_OPTIONS.some((item) => item.value === proposal.role) ? proposal.role : "accessory")} disabled={disabled || busy || generated} onChange={(event) => setAiProposalRoles((current) => ({ ...current, [proposal.id]: event.target.value }))}>
+              {AUTO_RIG_ROLE_OPTIONS.map((item) => <option value={item.value} key={item.value}>{item.label}</option>)}
+            </select>
+          </label>
+          <button type="button" disabled={disabled || busy || generated || parts.length >= 63} style={{ marginInlineStart: 10 }} onClick={() => acceptAIProposal(proposal, aiProposalRoles[proposal.id])}>اعتماد القناع</button>
         </li>)}</ul>
         <p>لا تُحفظ المقترحات تلقائياً. اعتماد القناع ينقله إلى قائمة الأجزاء التي يمكنك مراجعتها وحذفها قبل إنشاء الهيكل.</p>
       </div>}
