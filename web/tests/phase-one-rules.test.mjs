@@ -172,8 +172,9 @@ test("Mushroom production always creates a full collectible; the energy cap is a
 
 test("resource Mushrooms never stop monsters; only living Radishes are defensive blockers", () => {
   const updateMonsters = scene.slice(scene.indexOf("  updateMonsters(dt, delta) {"), scene.indexOf("  updateProjectiles(dt) {"));
-  assert.match(updateMonsters, /p\.alive && p\.type === "radish" && p\.row === monster\.row/);
-  assert.doesNotMatch(updateMonsters, /p\.alive && p\.row === monster\.row/);
+  assert.match(updateMonsters, /plant\.type === "radish" && plant\.alive && plant\.row === monster\.row/);
+  assert.match(updateMonsters, /plants: blockingPlants\.map/);
+  assert.doesNotMatch(updateMonsters, /plants: this\.plants\.map/);
 });
 
 test("the first monster crossing the final line ends the game immediately", () => {
