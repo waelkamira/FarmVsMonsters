@@ -38,6 +38,7 @@ This is the required logical flow. The current code implements parts of it, but 
 - Upload bytes are validated before use; file records use immutable paths and records retain revision history.
 - A changed published record is expected to become a new draft/revision rather than mutate the active published version.
 - Important risk: the API route is large and currently combines persistence, validation, lifecycle and release concerns. Refactoring should be incremental and behavior-preserving.
+- **Critical observed divergence:** the current `PATCH publish` implementation copies asset files to `STUDIO_PUBLISH_BRANCH` (default `main`), writes the published catalog to that branch, then attempts to sync the registry on the storage branch. It does not create a release PR in this route. If catalog publication succeeds but registry sync fails, the API returns success with `registrySyncWarning`; therefore the live catalog can change while registry status remains stale. This is not an atomic release transaction and does not satisfy the intended review-first policy.
 
 ### Testing/readiness audit
 - UI requests `/api/studio/testing`.
@@ -90,7 +91,7 @@ No UI component should invent a second canonical copy of any of these values.
 6. **Runtime boundary:** load a complete compatible catalog/package; reject unsupported schema/capability versions with actionable diagnostics.
 7. **Rollback boundary:** restore a previous immutable package without manually reconstructing files or altering player-save data.
 
-The current source has helpers for several of these boundaries, but the multi-file atomic activation and full failure-recovery behavior remain open acceptance items.
+The current source has helpers for several of these boundaries, but the multi-file atomic activation and full failure-recovery behavior remain open acceptance items. In particular, the current mainline publish route is a direct-write flow, not the desired staged-branch/PR approval flow; do not describe it as review-gated until the implementation is replaced and tested.
 
 ## 5. Cross-cutting contracts
 
