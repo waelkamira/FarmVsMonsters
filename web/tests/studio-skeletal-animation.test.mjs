@@ -128,3 +128,13 @@ test("partial keyframes inherit the bone base transform instead of snapping to t
   assert.equal(pose.bones.root.y, 25);
   assert.equal(pose.bones.root.rotation, 45);
 });
+
+test("animation clips normalize and validate preview FPS metadata", () => {
+  const rig = createSkeletalRigProfile(sampleRig({ clips: [
+    { id: "idle", durationMs: 1000, loop: true, tracks: [] }
+  ] }));
+  assert.equal(rig.clips[0].fps, 24);
+  assert.throws(() => createSkeletalRigProfile(sampleRig({ clips: [
+    { id: "idle", durationMs: 1000, fps: 61, loop: true, tracks: [] }
+  ] })), /fps/);
+});
