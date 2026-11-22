@@ -23,7 +23,8 @@ const PUBLISHED_MONSTER_CATALOG_PATH="web/public/assets/studio-monster-catalog.j
 function authorized(req){return verifyStudioSession(process.env.STUDIO_ADMIN_TOKEN||"",req.cookies.get(COOKIE)?.value||"");}
 function ext(type){return {"image/png":".png","image/webp":".webp","image/gif":".gif","audio/mpeg":".mp3","audio/wav":".wav","audio/ogg":".ogg","audio/mp4":".m4a"}[type]||"";}
 function getRigPartAssets(assets,asset){const ids=[...new Set((asset?.rigProfile?.bones||[]).map(bone=>bone?.part?.assetId).filter(Boolean))];return ids.map(id=>assets.find(item=>item.id===id));}
-function serializeRigParts(assets,asset){return getRigPartAssets(assets,asset).filter(part=>part&&["item","plant","monster","effect"].includes(part.type)&&part.status!=="archived"&&safeAssetPath(part.path)).map(part=>({id:part.id,name:part.name,type:part.type,path:"/api/studio/assets?preview="+encodeURIComponent(part.path),rows:part.rows||1,columns:part.columns||1,frameCount:part.frameCount||Math.max(1,(part.rows||1)*(part.columns||1)),spriteSheet:Boolean(part.spriteSheet)}));}
+function getRigPartFrameCount(part){if(!part?.spriteSheet)return 1;const capacity=Math.max(1,Number(part.rows||1)*Number(part.columns||1));const count=Number(part.frameCount)||capacity;return Math.max(1,Math.min(capacity,Number.isInteger(count)?count:capacity));}
+function serializeRigParts(assets,asset){return getRigPartAssets(assets,asset).filter(part=>part&&["item","plant","monster","effect"].includes(part.type)&&part.status!=="archived"&&safeAssetPath(part.path)).map(part=>({id:part.id,name:part.name,type:part.type,path:"/api/studio/assets?preview="+encodeURIComponent(part.path),rows:part.spriteSheet?(part.rows||1):1,columns:part.spriteSheet?(part.columns||1):1,frameCount:getRigPartFrameCount(part),spriteSheet:Boolean(part.spriteSheet)}));}
 function githubHeaders(token){return {Authorization:"Bearer "+token,Accept:"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28"};}
 function githubUrl(filePath){return "https://api.github.com/repos/"+(process.env.STUDIO_GITHUB_REPOSITORY||"waelkamira/FarmVsMonsters")+"/contents/"+filePath;}
 async function githubGetDocument(filePath,token,branch){const response=await fetch(githubUrl(filePath)+"?ref="+encodeURIComponent(branch),{headers:githubHeaders(token)});if(response.status===404)return null;if(!response.ok)throw Error("GitHub read failed ("+response.status+").");const data=await response.json();return {content:Buffer.from(data.content||"","base64").toString("utf8"),sha:data.sha};}
@@ -204,7 +205,7 @@ export async function POST(req){
      if(!partAsset||partAsset.id===id||!["item","plant","monster","effect"].includes(partAsset.type)||partAsset.status==="archived"||!safeAssetPath(partAsset.path)){
       throw new Error("جزء الهيكل "+bone.id+" يشير إلى أصل صورة غير موجود أو غير صالح: "+bone.part.assetId);
      }
-     const partFrameCount=Math.max(1,Number(partAsset.frameCount||(Number(partAsset.rows||1)*Number(partAsset.columns||1))||1));
+     const partFrameCount=getRigPartFrameCount(partAsset);
      if(!Number.isInteger(partFrameCount)||bone.part.frame>=partFrameCount){
       throw new Error("رقم إطار جزء الهيكل "+bone.id+" خارج عدد إطارات الأصل "+bone.part.assetId+".");
      }
@@ -375,7 +376,7 @@ export async function PATCH(req){
   const rigPartAssets=getRigPartAssets(registry.assets,asset);
   if(rigPartAssets.length!==rigPartIds.length||rigPartAssets.some(part=>!part||!["item","plant","monster","effect"].includes(part.type)||part.status==="archived"||!safeAssetPath(part.path)))return NextResponse.json({error:"يوجد جزء هيكلي مفقود أو غير صالح؛ أصلح تبعيات الهيكل قبل النشر."},{status:409});
   const rigPartById=new Map(rigPartAssets.filter(Boolean).map(part=>[part.id,part]));
-  const invalidRigFrame=(asset.rigProfile?.bones||[]).some(bone=>{if(!bone?.part)return false;const part=rigPartById.get(bone.part.assetId);const count=Math.max(1,Number(part?.frameCount||(Number(part?.rows||1)*Number(part?.columns||1))||1));return !part||!Number.isInteger(count)||bone.part.frame>=count;});
+  const invalidRigFrame=(asset.rigProfile?.bones||[]).some(bone=>{if(!bone?.part)return false;const part=rigPartById.get(bone.part.assetId);const count=getRigPartFrameCount(part);return !part||!Number.isInteger(count)||bone.part.frame>=count;});
   if(invalidRigFrame)return NextResponse.json({error:"يوجد إطار غير صالح في أحد أجزاء الهيكل؛ صحح رقم الإطار قبل النشر."},{status:409});
   if(asset.type==="monster"){
    const releaseBranch=createStudioReleaseBranchName(id,randomUUID().slice(0,8));
