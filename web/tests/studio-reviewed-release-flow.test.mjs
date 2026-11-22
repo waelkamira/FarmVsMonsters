@@ -29,7 +29,7 @@ test("published catalog including rig metadata is committed to the release branc
   assert.match(publishSource, /rigProfile:asset\.rigProfile\|\|null/);
   assert.match(publishSource, /rigParts,/);
   assert.match(publishSource, /githubPut\(catalogPath,[\s\S]*?releaseBranch,catalogDocument\?\.sha/);
-  assert.match(publishSource, /Merge this pull request to activate the content/);
+  assert.match(publishSource, /Merging this pull request activates the content/);
 });
 
 test("incomplete staging branches are cleaned up before a pull request is attempted", () => {
