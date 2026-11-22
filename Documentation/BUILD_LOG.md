@@ -1070,3 +1070,14 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - Added the first dragon fireball impact cue; it remains presentation-only and does not alter target selection or damage.
 - Current implementation uses Phaser procedural geometry and the built-in white particle texture when available. Sprite-sheet playback is supported by explicit keys but still needs authored effect sheets and registry metadata; renderer-specific shader pipelines remain an optional follow-up after compatibility testing.
 - Verification: GitHub source edits only. Tests, lint, production build, and Chrome/Windows visual/performance profiling have not been executed; do not treat runtime integration as verified.
+
+## 2026-11-22 — Hybrid Skeletal Animation Studio and Battle Integration
+- Added the versioned rig evaluator, Phaser Container renderer, and animation state controller with bounded cross-fades and shortest-path rotation.
+- Added the visual Rig Editor to the authenticated Studio plant/monster asset form: bitmap part assignment, bone hierarchy, canvas drag, zoom/pan, pivots, clips, FPS, clickable keyframe tracks, presets, attachments, and attack/hurt hitbox editing.
+- Rig profiles now persist through asset save, clone, version snapshots, restore, Testing Lab validation, release dependency checks, and published catalog metadata.
+- Studio testing catalogs now return the referenced bitmap part descriptors; BattleScene preloads those images and registers their frame grids.
+- BattleScene can render optional skeletal rigs for Studio plants and monsters while preserving the existing Sprite Sheet path for every asset without a rig.
+- Rigged projectile plants launch from the muzzle attachment. Rigged plant/monster attack and hurt hitboxes participate in supported melee, bite, and projectile collision checks. Monster freeze/thaw preserves or plays a frozen skeletal pose.
+- Added focused Node test coverage for evaluator, adapter, state machine, readiness, versioning, dependencies, Studio wiring, and BattleScene integration.
+- Verification status: source changes and tests are committed to feat/studio-hybrid-animation-engine. GitHub Actions creates jobs but reports runner_id: 0, zero steps, and no logs; no test, lint, build, or browser result is claimed. The connected browser context is unavailable in this session, so live Chrome/Windows verification remains open.
+- Remaining acceptance gates: run Node tests, ESLint, and production build on a working runner; visually verify a rigged plant and monster in BattleScene; verify launch origin and hitbox behavior; add explicit state-priority rules and final cleanup/performance checks.
