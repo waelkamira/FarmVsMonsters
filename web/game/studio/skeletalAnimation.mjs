@@ -144,6 +144,7 @@ export function createSkeletalRigProfile(input) {
     if (clipIds.has(id)) throw new RangeError("Duplicate animation clip ID: " + id + ".");
     clipIds.add(id);
     const durationMs = finite(entry.durationMs, "clips[" + clipIndex + "].durationMs", 1, 60000, 1000);
+    const fps = finite(entry.fps, "clips[" + clipIndex + "].fps", 1, 60, 24);
     if (!Number.isInteger(durationMs)) throw new RangeError("Animation duration must be an integer in milliseconds.");
     if (!Array.isArray(entry.tracks) || entry.tracks.length > MAX_BONES) {
       throw new RangeError("Each animation clip must contain a valid track list.");
@@ -171,7 +172,7 @@ export function createSkeletalRigProfile(input) {
       });
       return { boneId, keyframes };
     });
-    return { id, name: String(entry.name ?? id).slice(0, 80), durationMs, loop: Boolean(entry.loop), tracks };
+    return { id, name: String(entry.name ?? id).slice(0, 80), durationMs, fps, loop: Boolean(entry.loop), tracks };
   });
 
   return freezeDeep({ version: 1, canvas, bones, attachments, hitboxes, clips });
