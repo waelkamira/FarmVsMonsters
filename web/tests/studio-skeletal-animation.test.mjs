@@ -116,3 +116,15 @@ test("returns actionable validation errors without throwing", () => {
   assert.equal(result.profile, null);
   assert.match(result.errors[0], /must be an object/);
 });
+
+test("partial keyframes inherit the bone base transform instead of snapping to the origin", () => {
+  const rig = createSkeletalRigProfile({
+    version: 1,
+    bones: [{ id: "root", parentId: null, x: 40, y: 25, rotation: 0 }],
+    clips: [{ id: "idle", durationMs: 1000, loop: true, tracks: [{ boneId: "root", keyframes: [{ timeMs: 0, rotation: 0 }, { timeMs: 1000, rotation: 90 }] }] }]
+  });
+  const pose = evaluateSkeletalClip(rig, "idle", 500);
+  assert.equal(pose.bones.root.x, 40);
+  assert.equal(pose.bones.root.y, 25);
+  assert.equal(pose.bones.root.rotation, 45);
+});
