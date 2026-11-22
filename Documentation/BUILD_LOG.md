@@ -1448,3 +1448,10 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - Fixed both defects. The next Auto-Rig run passed all 60 Node tests and the separate local-worker job (Python compile/tests and WSL shell syntax).
 - That run then failed in focused ESLint because `web/app/studio/page.js` contains two pre-existing React hook lint errors unrelated to the Auto-Rig change (a function referenced before declaration and synchronous state updates in an effect). The workflow was adjusted to lint the changed Auto-Rig panel, API, and core modules without broadening the focused lint gate to that legacy page. The production build is still awaiting a clean run on the adjusted workflow.
 - The separate broad Studio/Game suite remains red (376 passed, 55 failed on the same feature head); it is a repository-level blocker and is not being waived.
+
+
+## 2026-11-22 — Focused Auto-Rig pipeline green after lint isolation
+- Auto-Rig subsystem workflow run `45045931453` passed on commit `b353bffc55b4cc1578bf180d4538399d831e9370`: all 60 Node contract/unit tests, focused ESLint, full-project ESLint diagnostic step, Next.js production build, Python worker compilation/tests, and WSL launcher syntax checks.
+- Subsequent UI transparency changes now display each geometry-based semantic suggestion's role, confidence, and rationale, and clear stale suggestions when the proposal set changes.
+- Removed `hidden-part-reconstruction` from the worker's supported capability allowlist until a real reconstruction backend exists; added a protocol regression to ensure an unsupported capability is ignored. The newest commits are awaiting their own CI run.
+- The broad Studio/Game validation remains a separate gate and has not passed; a prior run on the same feature line recorded 376 passing and 55 failing tests. Do not merge based solely on the focused Auto-Rig green result.
