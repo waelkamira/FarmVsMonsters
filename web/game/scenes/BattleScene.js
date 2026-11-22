@@ -3154,6 +3154,21 @@ export default class BattleScene extends Scene {
     };
   }
 
+  studioProjectileHitsMonster(shot, monster, projectileX, projectileY) {
+    if (!monster?.studioRig) return true;
+    const hurt = this.getStudioRigHitboxWorld(monster.studioRig, monster.view, "hurt");
+    if (!hurt) return true;
+    const radians = -hurt.rotation * Math.PI / 180;
+    const dx = projectileX - hurt.x, dy = projectileY - hurt.y;
+    const localX = dx * Math.cos(radians) - dy * Math.sin(radians);
+    const localY = dx * Math.sin(radians) + dy * Math.cos(radians);
+    const halfWidth = hurt.width / 2, halfHeight = hurt.height / 2;
+    const nearestX = PhaserMath.Clamp(localX, -halfWidth, halfWidth);
+    const nearestY = PhaserMath.Clamp(localY, -halfHeight, halfHeight);
+    const radius = Math.max(2, Number(shot.collisionRadius) || 8);
+    return Math.hypot(localX - nearestX, localY - nearestY) <= radius;
+  }
+
   studioRigHitboxesOverlap(attackerRig, attackerView, targetRig, targetView) {
     const attack = this.getStudioRigHitboxWorld(attackerRig, attackerView, "attack");
     const hurt = this.getStudioRigHitboxWorld(targetRig, targetView, "hurt");
@@ -4930,6 +4945,7 @@ export default class BattleScene extends Scene {
         if (!monster?.alive || monster.row !== shot.row ||
             !Number.isFinite(monster.localX)) continue;
         if (shot.freeze && monster.freezeStage >= 5) continue;
+        if (!this.studioProjectileHitsMonster(shot, monster, projectileX, projectileY)) continue;
         const horizontalDistance = Math.abs(monster.localX - shot.localX);
         const hitRadius = (shot.collisionRadius || PHASE_ONE_PLANTS.radish.projectileCollisionRadius) * (monster.widthScale || 1);
         if (shot.freeze) {
