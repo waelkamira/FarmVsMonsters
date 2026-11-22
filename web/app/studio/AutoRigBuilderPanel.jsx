@@ -54,10 +54,7 @@ export default function AutoRigBuilderPanel({
   const existingIds = useMemo(() => new Set(assets.map((asset) => asset.id)), [assets]);
 
   useEffect(() => {
-    if (!sourceFile && !sourceUrl) {
-      setImage(null);
-      return;
-    }
+    if (!sourceFile && !sourceUrl) return;
     let active = true;
     const localUrl = sourceFile ? URL.createObjectURL(sourceFile) : sourceUrl;
     const nextImage = new Image();
