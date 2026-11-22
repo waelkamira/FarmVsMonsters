@@ -1,4 +1,6 @@
 import os
+import tempfile
+from pathlib import Path
 import unittest
 from unittest.mock import patch
 
@@ -20,6 +22,18 @@ class GenerativeAnatomicalReconstructionTests(unittest.TestCase):
     def test_requires_existing_local_model_directory(self):
         with patch.dict(os.environ, {"FVM_INPAINT_MODEL_DIR": "/missing/local/model"}):
             self.assertFalse(model_status())
+
+    def test_model_status_requires_complete_local_diffusion_checkpoint(self):
+        with tempfile.TemporaryDirectory() as directory:
+            model_dir = Path(directory)
+            (model_dir / "model_index.json").write_text("{}", encoding="utf-8")
+            unet = model_dir / "unet"
+            unet.mkdir()
+            (unet / "config.json").write_text("{}", encoding="utf-8")
+            with patch.dict(os.environ, {"FVM_INPAINT_MODEL_DIR": directory}):
+                self.assertFalse(model_status())
+                (unet / "diffusion_pytorch_model.safetensors").touch()
+                self.assertTrue(model_status())
 
     def test_rejects_missing_prompt_before_loading_model(self):
         payload = dict(self.base, prompt="")
