@@ -41,7 +41,15 @@ Meta's official SAM 2 installation guidance recommends WSL with Ubuntu when inst
    bash start-worker-wsl.sh
    ```
 
-7. In the Windows environment running the Studio Next.js app, set:
+7. With the worker running, execute the local synthetic-image inference check:
+
+   ```bash
+   python smoke_test.py
+   ```
+
+   This verifies both automatic and point-prompted SAM 2 inference against a generated test plant image. It does not replace validation with the actual FarmVsMonsters plant and monster artwork.
+
+8. In the Windows environment running the Studio Next.js app, set:
 
    ```env
    STUDIO_LOCAL_AI_WORKER_URL=http://127.0.0.1:8765
