@@ -281,7 +281,7 @@ export default function AutoRigBuilderPanel({
   }
 
   async function requestAIPromptedSegmentation() {
-    if (!image || aiBusy || disabled || generated || !aiPromptPoints.length) return;
+    if (!image || aiBusy || disabled || generated || !aiPromptPoints.some((point) => point.label === 1)) return;
     setAiBusy(true);
     setAiProposals([]);
     try {
@@ -602,7 +602,7 @@ export default function AutoRigBuilderPanel({
             <option value={0}>سلبية · خارج الجزء</option>
           </select>
         </label>
-        <button type="button" disabled={disabled || aiBusy || generated || !aiPromptPoints.length} onClick={requestAIPromptedSegmentation}>تقسيم SAM 2 حسب النقاط ({aiPromptPoints.length})</button>
+        <button type="button" disabled={disabled || aiBusy || generated || !aiPromptPoints.some((point) => point.label === 1)} onClick={requestAIPromptedSegmentation}>تقسيم SAM 2 حسب النقاط ({aiPromptPoints.length})</button>
         <button type="button" disabled={!aiPromptPoints.length || aiBusy} onClick={() => setAiPromptPoints([])}>مسح نقاط AI</button>
 <span className="studio-message" role="status">حالة المحرك: {aiStatus === "connected" ? "جاهز" : aiStatus === "degraded" ? "مثبت لكن النموذج غير جاهز" : aiStatus === "offline" ? "غير متصل" : aiStatus === "not-configured" ? "غير مهيأ" : "لم يُفحص"}</span>
       </div>
