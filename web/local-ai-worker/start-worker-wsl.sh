@@ -6,7 +6,7 @@ ENV_DIR="${FVM_AI_VENV:-$HOME/.venvs/fvm-studio-ai}"
 SAM2_DIR="${SAM2_REPO_DIR:-$HOME/.cache/fvm-sam2}"
 
 MODEL_DIR="${FVM_MODEL_DIR:-$HOME/models}"
-export SAM2_CONFIG="${SAM2_CONFIG:-$SAM2_DIR/configs/sam2.1/sam2.1_hiera_t.yaml}"
+export SAM2_CONFIG="${SAM2_CONFIG:-$SAM2_DIR/sam2/configs/sam2.1/sam2.1_hiera_t.yaml}"
 export SAM2_CHECKPOINT="${SAM2_CHECKPOINT:-$MODEL_DIR/sam2.1_hiera_tiny.pt}"
 export FVM_CLIP_MODEL_DIR="${FVM_CLIP_MODEL_DIR:-$MODEL_DIR/clip-vit-base-patch32}"
 export FVM_AI_WORKER_PORT="${FVM_AI_WORKER_PORT:-8765}"
