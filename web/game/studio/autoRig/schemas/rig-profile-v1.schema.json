@@ -72,9 +72,118 @@
       "type": "string",
       "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,63}$"
     },
-    "transform": {
+    "bone": {
       "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "parentId"
+      ],
       "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "parentId": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/id"
+            }
+          ]
+        },
+        "x": {
+          "type": "number",
+          "minimum": -8192,
+          "maximum": 8192
+        },
+        "y": {
+          "type": "number",
+          "minimum": -8192,
+          "maximum": 8192
+        },
+        "rotation": {
+          "type": "number",
+          "minimum": -36000,
+          "maximum": 36000
+        },
+        "scaleX": {
+          "type": "number",
+          "minimum": 0.01,
+          "maximum": 20
+        },
+        "scaleY": {
+          "type": "number",
+          "minimum": 0.01,
+          "maximum": 20
+        },
+        "pivot": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [],
+          "properties": {
+            "x": {
+              "type": "number",
+              "minimum": -4096,
+              "maximum": 4096
+            },
+            "y": {
+              "type": "number",
+              "minimum": -4096,
+              "maximum": 4096
+            }
+          }
+        },
+        "part": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "assetId",
+                "frame"
+              ],
+              "properties": {
+                "assetId": {
+                  "$ref": "#/$defs/id"
+                },
+                "frame": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 10000
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "attachment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "boneId"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "boneId": {
+          "$ref": "#/$defs/id"
+        },
         "x": {
           "type": "number",
           "minimum": -8192,
@@ -102,172 +211,106 @@
         }
       }
     },
-    "bone": {
-      "allOf": [
-        {
-          "$ref": "#/$defs/transform"
-        },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "id",
-            "parentId"
-          ],
-          "properties": {
-            "id": {
-              "$ref": "#/$defs/id"
-            },
-            "name": {
-              "type": "string",
-              "maxLength": 80
-            },
-            "parentId": {
-              "oneOf": [
-                {
-                  "type": "null"
-                },
-                {
-                  "$ref": "#/$defs/id"
-                }
-              ]
-            },
-            "pivot": {
-              "type": "object",
-              "additionalProperties": false,
-              "properties": {
-                "x": {
-                  "type": "number",
-                  "minimum": -4096,
-                  "maximum": 4096
-                },
-                "y": {
-                  "type": "number",
-                  "minimum": -4096,
-                  "maximum": 4096
-                }
-              }
-            },
-            "part": {
-              "oneOf": [
-                {
-                  "type": "null"
-                },
-                {
-                  "type": "object",
-                  "additionalProperties": false,
-                  "required": [
-                    "assetId",
-                    "frame"
-                  ],
-                  "properties": {
-                    "assetId": {
-                      "$ref": "#/$defs/id"
-                    },
-                    "frame": {
-                      "type": "integer",
-                      "minimum": 0,
-                      "maximum": 10000
-                    }
-                  }
-                }
-              ]
-            }
-          }
-        }
-      ]
-    },
-    "attachment": {
-      "allOf": [
-        {
-          "$ref": "#/$defs/transform"
-        },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "id",
-            "boneId"
-          ],
-          "properties": {
-            "id": {
-              "$ref": "#/$defs/id"
-            },
-            "name": {
-              "type": "string",
-              "maxLength": 80
-            },
-            "boneId": {
-              "$ref": "#/$defs/id"
-            }
-          }
-        }
-      ]
-    },
     "hitbox": {
-      "allOf": [
-        {
-          "$ref": "#/$defs/transform"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "boneId",
+        "width",
+        "height"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
         },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "id",
-            "boneId",
-            "width",
-            "height"
-          ],
-          "properties": {
-            "id": {
-              "$ref": "#/$defs/id"
-            },
-            "name": {
-              "type": "string",
-              "maxLength": 80
-            },
-            "boneId": {
-              "$ref": "#/$defs/id"
-            },
-            "width": {
-              "type": "number",
-              "minimum": 1,
-              "maximum": 4096
-            },
-            "height": {
-              "type": "number",
-              "minimum": 1,
-              "maximum": 4096
-            },
-            "kind": {
-              "enum": [
-                "attack",
-                "hurt"
-              ]
-            }
-          }
+        "name": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "boneId": {
+          "$ref": "#/$defs/id"
+        },
+        "x": {
+          "type": "number",
+          "minimum": -8192,
+          "maximum": 8192
+        },
+        "y": {
+          "type": "number",
+          "minimum": -8192,
+          "maximum": 8192
+        },
+        "rotation": {
+          "type": "number",
+          "minimum": -36000,
+          "maximum": 36000
+        },
+        "scaleX": {
+          "type": "number",
+          "minimum": 0.01,
+          "maximum": 20
+        },
+        "scaleY": {
+          "type": "number",
+          "minimum": 0.01,
+          "maximum": 20
+        },
+        "width": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 4096
+        },
+        "height": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 4096
+        },
+        "kind": {
+          "enum": [
+            "attack",
+            "hurt"
+          ]
         }
-      ]
+      }
     },
     "keyframe": {
-      "allOf": [
-        {
-          "$ref": "#/$defs/transform"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "timeMs"
+      ],
+      "properties": {
+        "timeMs": {
+          "type": "integer",
+          "minimum": 0
         },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "timeMs"
-          ],
-          "properties": {
-            "timeMs": {
-              "type": "integer",
-              "minimum": 0
-            }
-          }
+        "x": {
+          "type": "number",
+          "minimum": -8192,
+          "maximum": 8192
+        },
+        "y": {
+          "type": "number",
+          "minimum": -8192,
+          "maximum": 8192
+        },
+        "rotation": {
+          "type": "number",
+          "minimum": -36000,
+          "maximum": 36000
+        },
+        "scaleX": {
+          "type": "number",
+          "minimum": 0.01,
+          "maximum": 20
+        },
+        "scaleY": {
+          "type": "number",
+          "minimum": 0.01,
+          "maximum": 20
         }
-      ]
+      }
     },
     "track": {
       "type": "object",
