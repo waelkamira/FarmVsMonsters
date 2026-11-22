@@ -21,8 +21,10 @@ test("player account screen provides sign-in and account creation", () => {
   assert.match(accountPage, /signUpPlayer/);
   assert.match(accountPage, /restoreOrInitializeCloudProgress/);
   assert.match(accountPage, /type="password"/);
-  assert.match(home, /href="\/account"/);
-  assert.match(stages, /href="\/account"/);
+  assert.match(accountPage, /Continue as Guest/);
+  assert.match(home, /getPlayerSession\(\)/);
+  assert.match(home, /restoreOrInitializeCloudProgress\(\)/);
+  assert.match(stages, /loadUnlockedStage\(window\.localStorage\)/);
 });
 
 test("account sessions use HttpOnly cookies and never expose a service-role key", () => {
@@ -69,15 +71,14 @@ test("menus and account controls use high-contrast text and visible focus states
 
 
 test("playing as a guest never requires authentication and keeps local progress", () => {
-  assert.match(home, /href="\/stages"/);
-  assert.match(home, /اختياري|Optional/);
+  assert.match(home, /router\.push\("\/game"\)/);
+  assert.match(home, /catch \{/);
   assert.match(accountPage, /Continue as Guest/);
   assert.match(accountPage, /اللعب كضيف/);
   assert.match(client, /export function readLocalPlayerProgress/);
   assert.match(battle, /saveCoins\(window\.localStorage/);
   assert.match(accountRoute, /cloudAvailable: false/);
 });
-
 
 test("Google OAuth uses server-side PKCE and protects the callback with state", async () => {
   const start = readFileSync(resolve(here, "../app/api/player/account/google/route.js"), "utf8");
