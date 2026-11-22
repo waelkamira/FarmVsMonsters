@@ -27,7 +27,7 @@ test("the farmer automatically fires sling stones and the dragon has its own hea
 test("dragon fireballs attack living plants or the farmhouse", () => {
   assert.match(scene, /boss\.attackCooldown = PHASE_ONE_DRAGON\.attackIntervalMs/);
   assert.match(scene, /const targetPlant = selectDragonFireballTarget\(this\.plants\)/);
-  assert.match(scene, /this\.houseHealth = Math\.max\(0, this\.houseHealth - 12\)/);
+  assert.match(scene, /this\.houseHealth = Math\.max\(0, this\.houseHealth - PHASE_ONE_DRAGON\.fireballDamageToFarm\)/);
 });
 
 test("Phase 1 cannot finish until all ordinary monsters and the separate dragon are defeated", () => {
