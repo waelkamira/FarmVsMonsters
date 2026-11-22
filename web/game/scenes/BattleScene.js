@@ -3170,23 +3170,61 @@ export default class BattleScene extends Scene {
     });
   }
 
+  getStudioRigHitboxesWorld(rig, parentView, kind) {
+    if (!rig || !parentView?.active) return [];
+    return rig.profile.hitboxes.filter((item) => item.kind === kind).map((profile) => {
+      const local = rig.getHitbox(profile.id);
+      const scaleX = Number(parentView.scaleX) || 1;
+      const scaleY = Number(parentView.scaleY) || 1;
+      const rotation = (Number(parentView.rotation) || 0) * 180 / Math.PI;
+      return {
+        x: parentView.x + local.x * scaleX,
+        y: parentView.y + local.y * scaleY,
+        width: local.width * Math.abs(scaleX),
+        height: local.height * Math.abs(scaleY),
+        rotation: local.rotation + rotation
+      };
+    });
+  }
+
   getStudioRigHitboxWorld(rig, parentView, kind) {
     return this.getStudioRigHitboxesWorld(rig, parentView, kind)[0] || null;
   }
 
+  studioOrientedHitboxesOverlap(a, b) {
+    const radians = (degrees) => degrees * Math.PI / 180;
+    const axes = (hitbox) => {
+      const angle = radians(hitbox.rotation);
+      return [
+        { x: Math.cos(angle), y: Math.sin(angle) },
+        { x: -Math.sin(angle), y: Math.cos(angle) }
+      ];
+    };
+    const axesA = axes(a), axesB = axes(b);
+    const dx = b.x - a.x, dy = b.y - a.y;
+    for (const axis of [...axesA, ...axesB]) {
+      const distance = Math.abs(dx * axis.x + dy * axis.y);
+      const radius = (a.width / 2) * Math.abs(axesA[0].x * axis.x + axesA[0].y * axis.y)
+        + (a.height / 2) * Math.abs(axesA[1].x * axis.x + axesA[1].y * axis.y)
+        + (b.width / 2) * Math.abs(axesB[0].x * axis.x + axesB[0].y * axis.y)
+        + (b.height / 2) * Math.abs(axesB[1].x * axis.x + axesB[1].y * axis.y);
+      if (distance > radius) return false;
+    }
+    return true;
+  }
+
   studioProjectileHitsMonster(shot, monster, projectileX, projectileY) {
     if (!monster?.studioRig) return true;
-    const hurtBoxes = this.getStudioRigHitboxesWorld(monster.studioRig, monster.view, "hurt");
-    if (!hurtBoxes.length) return true;
+    const hurtboxes = this.getStudioRigHitboxesWorld(monster.studioRig, monster.view, "hurt");
+    if (!hurtboxes.length) return true;
     const radius = Math.max(2, Number(shot.collisionRadius) || 8);
-    return hurtBoxes.some((hurt) => {
+    return hurtboxes.some((hurt) => {
       const radians = -hurt.rotation * Math.PI / 180;
       const dx = projectileX - hurt.x, dy = projectileY - hurt.y;
       const localX = dx * Math.cos(radians) - dy * Math.sin(radians);
       const localY = dx * Math.sin(radians) + dy * Math.cos(radians);
-      const halfWidth = hurt.width / 2, halfHeight = hurt.height / 2;
-      const nearestX = PhaserMath.Clamp(localX, -halfWidth, halfWidth);
-      const nearestY = PhaserMath.Clamp(localY, -halfHeight, halfHeight);
+      const nearestX = PhaserMath.Clamp(localX, -hurt.width / 2, hurt.width / 2);
+      const nearestY = PhaserMath.Clamp(localY, -hurt.height / 2, hurt.height / 2);
       return Math.hypot(localX - nearestX, localY - nearestY) <= radius;
     });
   }
@@ -3195,17 +3233,7 @@ export default class BattleScene extends Scene {
     const attacks = this.getStudioRigHitboxesWorld(attackerRig, attackerView, "attack");
     const hurts = this.getStudioRigHitboxesWorld(targetRig, targetView, "hurt");
     if (!attacks.length || !hurts.length) return true;
-    const bounds = (hitbox) => {
-      const radians = hitbox.rotation * Math.PI / 180;
-      const halfWidth = (Math.abs(Math.cos(radians)) * hitbox.width + Math.abs(Math.sin(radians)) * hitbox.height) / 2;
-      const halfHeight = (Math.abs(Math.sin(radians)) * hitbox.width + Math.abs(Math.cos(radians)) * hitbox.height) / 2;
-      return { left: hitbox.x - halfWidth, right: hitbox.x + halfWidth, top: hitbox.y - halfHeight, bottom: hitbox.y + halfHeight };
-    };
-    const targetBounds = hurts.map(bounds);
-    return attacks.some((attack) => {
-      const a = bounds(attack);
-      return targetBounds.some((b) => a.left <= b.right && a.right >= b.left && a.top <= b.bottom && a.bottom >= b.top);
-    });
+    return attacks.some((attack) => hurts.some((hurt) => this.studioOrientedHitboxesOverlap(attack, hurt)));
   }
 
   drawStudioCatalogPlant(studioPlant, x, y, row = 2) {
