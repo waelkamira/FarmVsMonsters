@@ -197,6 +197,7 @@ export async function POST(req){
    const submittedRigProfile=rawRigProfile?JSON.parse(rawRigProfile):(existing?.rigProfile||null);
    rigProfile=submittedRigProfile?createSkeletalRigProfile(submittedRigProfile):null;
    if(rigProfile){
+    if(!rigProfile.bones.some(bone=>bone.part))throw new Error("يجب ربط صورة واحدة على الأقل بأحد عظام الهيكل قبل الحفظ.");
     for(const bone of rigProfile.bones){
      if(!bone.part)continue;
      const partAsset=old.assets.find(item=>item.id===bone.part.assetId);
