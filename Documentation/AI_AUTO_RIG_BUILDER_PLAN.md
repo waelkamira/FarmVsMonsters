@@ -403,3 +403,8 @@ The Auto-Rig Builder is a permanent first-class Studio subsystem composed of the
 ## 2026-11-22 — Alpha-aware proposal clipping regression verification
 - Updated the prompted-segmentation test fixture to use the new alpha-aware decoder contract and added an automatic-mask regression proving that transparent canvas pixels are excluded from the proposal bounds.
 - The local-worker job passed all Python tests, Python compilation, and WSL launcher syntax checks in run `45035114044`. The paired Node/ESLint/production-build job is still running at the time of this note.
+
+
+## 2026-11-22 — Fail-closed occlusion defaults
+- Missing or unrecognized per-part occlusion metadata now normalizes to `unresolved`; only an explicit `none` assessment clears the occlusion gate. This prevents older or malformed manifests from silently asserting that no hidden pixels exist.
+- Added a regression proving that a manifest with a missing occlusion assessment cannot pass animation readiness.
