@@ -10,7 +10,7 @@ function createDefaultRig(width = 256, height = 256) {
     bones: [{ id: "root", name: "الجذر", parentId: null, x: width / 2, y: height / 2, rotation: 0, scaleX: 1, scaleY: 1, pivot: { x: 0, y: 0 }, part: null }],
     attachments: [],
     hitboxes: [],
-    clips: [{ id: "idle", name: "خمول", durationMs: 1000, loop: true, tracks: [{ boneId: "root", keyframes: [
+    clips: [{ id: "idle", name: "خمول", durationMs: 1000, fps: 24, loop: true, tracks: [{ boneId: "root", keyframes: [
       { timeMs: 0, x: width / 2, y: height / 2, rotation: 0, scaleX: 1, scaleY: 1 },
       { timeMs: 1000, x: width / 2, y: height / 2, rotation: 0, scaleX: 1, scaleY: 1 }
     ] }] }]
@@ -36,7 +36,7 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
   const clip = rig.clips.find((item) => item.id === selectedClipId) || rig.clips[0];
   const selectedPose = useMemo(() => {
     if (!clip || !validation.valid) return null;
-    try { return evaluateSkeletalClip(rig, clip.id, timeMs); } catch { return null; }
+    try { const frameMs = 1000 / (clip.fps || 24); return evaluateSkeletalClip(rig, clip.id, Math.round(timeMs / frameMs) * frameMs); } catch { return null; }
   }, [rig, clip, timeMs, validation.valid]);
   const bonePose = selectedPose?.localBones?.[selectedBoneId] || bone;
   useEffect(() => {
@@ -155,7 +155,7 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
     const id = preferred.find((candidate) => !rig.clips.some((item) => item.id === candidate)) || "clip-" + clipIndex;
     const clipNames = { move: "تنقل", attack: "هجوم", hit: "إصابة", death: "موت", jump: "قفز", special: "حركة خاصة" };
     update((next) => next.clips.push({
-      id, name: clipNames[id] || "حركة جديدة", durationMs: 1000, loop: id === "move" || id === "special",
+      id, name: clipNames[id] || "حركة جديدة", durationMs: 1000, fps: 24, loop: id === "move" || id === "special",
       tracks: next.bones.map((item) => ({ boneId: item.id, keyframes: [
         { timeMs: 0, x: item.x, y: item.y, rotation: item.rotation, scaleX: item.scaleX, scaleY: item.scaleY },
         { timeMs: 1000, x: item.x, y: item.y, rotation: item.rotation, scaleX: item.scaleX, scaleY: item.scaleY }
@@ -171,7 +171,7 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
       let target = next.clips.find((item) => item.id === stateId);
       if (!target) {
         if (next.clips.length >= 16) return;
-        target = { id: stateId, name: stateNames[stateId], durationMs: preset === "recoil" ? 420 : preset === "walk" ? 800 : 1400, loop: stateId !== "attack", tracks: [] };
+        target = { id: stateId, name: stateNames[stateId], durationMs: preset === "recoil" ? 420 : preset === "walk" ? 800 : 1400, fps: 24, loop: stateId !== "attack", tracks: [] };
         next.clips.push(target);
       }
       if (preset === "recoil") { target.durationMs = 420; target.loop = false; }
@@ -209,6 +209,7 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
     update((next) => {
       const target = next.clips.find((item) => item.id === selectedClipId);
       if (!target) return;
+      if (field === "fps") { target.fps = Math.max(1, Math.min(60, Math.floor(Number(value) || 24))); return; }
       if (field === "durationMs") {
         const duration = Math.max(1, Math.min(60000, Math.floor(Number(value) || 1)));
         target.durationMs = duration;
@@ -276,7 +277,7 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
     for (let y = 0; y <= height; y += 16) { context.beginPath(); context.moveTo(0, y); context.lineTo(width, y); context.stroke(); }
     let pose = null;
     if (clip && validation.valid) {
-      try { pose = evaluateSkeletalClip(rig, clip.id, timeMs); } catch { pose = null; }
+      try { const frameMs = 1000 / (clip.fps || 24); pose = evaluateSkeletalClip(rig, clip.id, Math.round(timeMs / frameMs) * frameMs); } catch { pose = null; }
     }
     const local = pose?.localBones || Object.fromEntries(rig.bones.map((item) => [item.id, item]));
     const children = new Map(rig.bones.map((item) => [item.id, []]));
@@ -432,7 +433,7 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
         <div className="studio-rig-presets"><b>قوالب حركة قابلة للتعديل</b><button type="button" disabled={disabled} onClick={() => applyPreset("breathing")}>تنفس / تأرجح</button><button type="button" disabled={disabled} onClick={() => applyPreset("walk")}>دورة تنقل</button><button type="button" disabled={disabled} onClick={() => applyPreset("recoil")}>ارتداد الهجوم</button></div><div className="studio-rig-timeline-head"><h5>مقاطع الحركة والإطارات المفتاحية</h5><div className="studio-rig-stage-actions"><button type="button" disabled={disabled || rig.clips.length >= 16} onClick={addClip}>＋ مقطع حركة</button><button type="button" disabled={disabled || rig.clips.length <= 1} onClick={removeClip}>حذف المقطع المحدد</button></div></div>
         <div className="studio-rig-fields-grid">
           <label>المقطع<select value={selectedClipId} onChange={(event) => { setSelectedClipId(event.target.value); setTimeMs(0); setPlaying(false); }}>{rig.clips.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
-          {clip && <><label>اسم المقطع<input value={clip.name} disabled={disabled} onChange={(event) => updateClip("name", event.target.value)}/></label><label>المدة (ms)<input type="number" min="1" max="60000" value={clip.durationMs} disabled={disabled} onChange={(event) => updateClip("durationMs", Number(event.target.value))}/></label><label className="studio-rig-check"><input type="checkbox" checked={clip.loop} disabled={disabled} onChange={(event) => updateClip("loop", event.target.checked)}/> تكرار المقطع</label></>}
+          {clip && <><label>اسم المقطع<input value={clip.name} disabled={disabled} onChange={(event) => updateClip("name", event.target.value)}/></label><label>المدة (ms)<input type="number" min="1" max="60000" value={clip.durationMs} disabled={disabled} onChange={(event) => updateClip("durationMs", Number(event.target.value))}/></label><label>FPS<input type="number" min="1" max="60" value={clip.fps || 24} disabled={disabled} onChange={(event) => updateClip("fps", Number(event.target.value))}/></label><label className="studio-rig-check"><input type="checkbox" checked={clip.loop} disabled={disabled} onChange={(event) => updateClip("loop", event.target.checked)}/> تكرار المقطع</label></>}
         </div>
         {clip && <><label className="studio-rig-time">الزمن الحالي: {Math.round(timeMs)} ms<input type="range" min="0" max={clip.durationMs} value={Math.min(timeMs, clip.durationMs)} disabled={playing} onChange={(event) => setTimeMs(Number(event.target.value))}/></label><div className="studio-rig-stage-actions"><button type="button" disabled={disabled || !validation.valid} onClick={() => setPlaying((value) => !value)}>{playing ? "إيقاف المعاينة" : "▶ تشغيل المقطع"}</button><button type="button" disabled={disabled || playing} onClick={addKeyframe}>＋ حفظ إطار للعظمة المحددة</button><span>{clip.tracks.find((track) => track.boneId === selectedBoneId)?.keyframes.length || 0} إطار مفتاحي للعظمة المحددة</span></div></>}
       </div>
