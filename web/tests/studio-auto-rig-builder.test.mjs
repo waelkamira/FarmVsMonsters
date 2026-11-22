@@ -230,6 +230,18 @@ test("generates editable idle, move, attack, hit, and death clips using the shar
   assert.equal(validation.valid, true, validation.errors.join("; "));
 });
 
+
+test("selects arm and hand bones as attack targets when no weapon part exists", () => {
+  const input = baseInput();
+  input.parts = input.parts.filter((part) => part.role !== "weapon");
+  input.parts.push({ id: "arm-left-main", assetId: "asset-arm-left", role: "arm.left", bounds: { x: 20, y: 100, width: 45, height: 28 }, pivot: { x: 60, y: 114 } });
+  input.parts.push({ id: "hand-left-main", assetId: "asset-hand-left", role: "hand.left", bounds: { x: 8, y: 100, width: 18, height: 18 }, pivot: { x: 18, y: 109 } });
+  const result = buildAutoRigFromParts(input);
+  const attack = result.profile.clips.find((clip) => clip.id === "attack");
+  assert.ok(attack.tracks.some((track) => track.boneId === "part-arm-left-main"));
+  assert.ok(attack.tracks.some((track) => track.boneId === "part-hand-left-main"));
+});
+
 test("single-part Auto-Rigs do not create duplicate animation tracks", () => {
   const input = baseInput();
   input.parts = [input.parts[0]];
