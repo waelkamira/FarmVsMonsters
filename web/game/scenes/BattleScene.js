@@ -10,6 +10,7 @@ import { createStudioAnimationProfile } from "../studio/animationProfiles.mjs";
 import { getSpriteFrameRectangles } from "../studio/spriteSheetGrid.mjs";
 import { createPhaserSkeletalRig } from "../studio/phaserSkeletalRig.mjs";
 import { createSkeletalAnimationController } from "../studio/animationStateMachine.mjs";
+import { circleIntersectsOrientedRectangle, orientedRectanglesOverlap } from "../studio/skeletalCollision.mjs";
 import { getProjectileTrajectoryOffset } from "../studio/projectileTrajectory.mjs";
 import { createStudioMonsterProfile, resolveStudioMonsterRuntimeProfile, selectWeightedStudioMonster } from "../studio/monsterProfiles.mjs";
 
@@ -3173,25 +3174,7 @@ export default class BattleScene extends Scene {
   }
 
   studioOrientedHitboxesOverlap(a, b) {
-    const radians = (degrees) => degrees * Math.PI / 180;
-    const axes = (hitbox) => {
-      const angle = radians(hitbox.rotation);
-      return [
-        { x: Math.cos(angle), y: Math.sin(angle) },
-        { x: -Math.sin(angle), y: Math.cos(angle) }
-      ];
-    };
-    const axesA = axes(a), axesB = axes(b);
-    const dx = b.x - a.x, dy = b.y - a.y;
-    for (const axis of [...axesA, ...axesB]) {
-      const distance = Math.abs(dx * axis.x + dy * axis.y);
-      const radius = (a.width / 2) * Math.abs(axesA[0].x * axis.x + axesA[0].y * axis.y)
-        + (a.height / 2) * Math.abs(axesA[1].x * axis.x + axesA[1].y * axis.y)
-        + (b.width / 2) * Math.abs(axesB[0].x * axis.x + axesB[0].y * axis.y)
-        + (b.height / 2) * Math.abs(axesB[1].x * axis.x + axesB[1].y * axis.y);
-      if (distance > radius) return false;
-    }
-    return true;
+    return orientedRectanglesOverlap(a, b);
   }
 
   studioProjectileHitsMonster(shot, monster, projectileX, projectileY) {
@@ -3199,15 +3182,10 @@ export default class BattleScene extends Scene {
     const hurtboxes = this.getStudioRigHitboxesWorld(monster.studioRig, monster.view, "hurt");
     if (!hurtboxes.length) return true;
     const radius = Math.max(2, Number(shot.collisionRadius) || 8);
-    return hurtboxes.some((hurt) => {
-      const radians = -hurt.rotation * Math.PI / 180;
-      const dx = projectileX - hurt.x, dy = projectileY - hurt.y;
-      const localX = dx * Math.cos(radians) - dy * Math.sin(radians);
-      const localY = dx * Math.sin(radians) + dy * Math.cos(radians);
-      const nearestX = PhaserMath.Clamp(localX, -hurt.width / 2, hurt.width / 2);
-      const nearestY = PhaserMath.Clamp(localY, -hurt.height / 2, hurt.height / 2);
-      return Math.hypot(localX - nearestX, localY - nearestY) <= radius;
-    });
+    return hurtboxes.some((hurt) => circleIntersectsOrientedRectangle(
+      { x: projectileX, y: projectileY, radius },
+      hurt
+    ));
   }
 
   studioRigHitboxesOverlap(attackerRig, attackerView, targetRig, targetView) {
