@@ -1310,3 +1310,8 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - New manual and AI-derived parts start unreviewed and with occlusion unresolved. Studio exposes an explicit review checkbox and an occlusion assessment selector for every part.
 - The animation readiness gate now requires all parts to be explicitly reviewed, all occlusion states resolved, and all prior source/mask/role/confidence requirements. This prevents an unexamined part from being treated as production-ready.
 - Updated quality-validator tests to distinguish missing model confidence from missing human review.
+
+
+## 2026-11-22 — Worker proxy hardening
+- The authenticated Studio bridge now checks declared and actual UTF-8 request-body size (12 MB) before JSON parsing, in addition to the existing 8 MB image payload and canvas-dimension limits.
+- Added a route-contract regression assertion for the body-size guard.
