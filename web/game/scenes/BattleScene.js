@@ -4649,7 +4649,7 @@ export default class BattleScene extends Scene {
         // The bite sheet animates the mouth/body (including the legs); movement
         // coordinates are deliberately not advanced anywhere in this branch.
         if (!monster.isEating) monster.isEating = true;
-        if (monster.hyenaSprite && monster.hitAnimUntil <= this.time.now) {
+        if ((monster.hyenaSprite || monster.studioRig) && monster.hitAnimUntil <= this.time.now) {
           this.playHyenaAnimation(monster, "hyena-bite");
         }
         const bite = resolveBiteAttack({
@@ -4663,6 +4663,8 @@ export default class BattleScene extends Scene {
             monsterId: monster.combatId, plantCol: blocker.col, plantRow: blocker.row,
             damage: monster.plantDamage
           });
+          const plantRig = blocker.view?.getData?.("studioSkeletalRig");
+          if (monster.studioRig && plantRig && !this.studioRigHitboxesOverlap(monster.studioRig, monster.view, plantRig, blocker.view)) continue;
           blocker.hp = applyHitPointsDamage(blocker.hp, monster.plantDamage).hp;
           this.playMonsterBiteSound();
           this.flashEatenPlant(blocker);
