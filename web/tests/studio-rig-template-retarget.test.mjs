@@ -59,6 +59,9 @@ test("rejects invalid dimensions, malformed bounds, and duplicate IDs", () => {
 
 test("uses a global minimum-cost assignment for repeated semantic roles", () => {
   const repeatedTemplate = {
+    version: 1,
+    builder: "farmvsmonsters-auto-rig",
+    roleDictionaryVersion: "1.0.0",
     canvas: { width: 1000, height: 1000 },
     parts: [
       { id: "leaf-a", role: "leaf", bounds: { x: 562, y: 921, width: 10, height: 10 } },
