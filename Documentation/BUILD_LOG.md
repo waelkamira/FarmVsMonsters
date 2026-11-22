@@ -1550,3 +1550,14 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - Added tests for the classifier, generative reconstruction, API/UI/manifest contracts, and Phaser skeletal rig pose/attachment/hitbox/projectile-circle transforms.
 - CI baseline comparison from the last completed full-suite run: PR head had 53 failures vs 55 on main, with no new failing test names; two inherited source-contract tests already pass on the PR head. This is not a green full-suite result. Latest focused workflows are still running.
 - Remaining acceptance gates: target-machine checkpoint execution; visual inspection of real plant/monster outputs; real BattleScene gameplay with rigged plant and monster; full-suite baseline debt remediation; and no merge until all acceptance gates pass.
+
+## 2026-11-22 — Baseline gameplay and validation debt repairs
+
+- Restored Dust Skitter visual-only jump timing while keeping the monster's collision root on the ground; jump state now persists across ticks and large frame deltas are handled.
+- Restricted defensive blocking to living Radishes; resource Mushrooms and other producers no longer stop monsters or expand blocker overlap ranges.
+- Tightened combat event plant validation while preserving versioned Studio plant IDs such as bamboo-level-1.
+- Reconciled Phase 1 tests and roadmap with the canonical wave sizes 2/3/4/5/6 (20 Stage 1 monsters), current stage totals, monster archetype schedule, and deferred planting-charge flow.
+- Corrected replay fixtures to the canonical Cave Brute HP and scheduler sizes; normalized negative zero in projectile trajectory offsets.
+- Fixed starter seed loadout normalization order and projectile asset classification defaults.
+- Fixed React effect/state lint issues in Studio's trajectory preview, Rig Editor, and sprite-grid page without disabling lint rules.
+- Full-suite validation is being rerun; baseline failures are being investigated and corrected rather than skipped or hidden.
