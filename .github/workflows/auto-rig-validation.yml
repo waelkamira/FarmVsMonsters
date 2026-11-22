@@ -88,7 +88,7 @@ jobs:
         run: python -m unittest -v test_worker.py test_smoke_test.py test_visual_semantic_classifier.py test_generative_anatomical_reconstruction.py
 
   validate-real-asset-inference:
-    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && contains(github.event.head_commit.message, '[real-asset-smoke]'))
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && contains(github.event.head_commit.message, '[real-asset-smoke]')) || (github.event_name == 'pull_request' && contains(github.event.pull_request.body, '<!-- run-real-asset-smoke -->'))
     needs: validate-local-ai-worker
     runs-on: ubuntu-latest
     timeout-minutes: 30
