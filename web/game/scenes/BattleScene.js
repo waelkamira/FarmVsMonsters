@@ -4848,7 +4848,8 @@ export default class BattleScene extends Scene {
       const rig = monster.studioRig;
       const restoreClip = rig.profile.clips.find((clip) => clip.id === monster.frozenAnimationKey)?.id
         || rig.profile.clips.find((clip) => clip.id === "move")?.id
-        || resolveSkeletalIdleClip(rig.profile)?.id;
+        || resolveSkeletalIdleClip(rig.profile)?.id
+        || rig.profile.clips[0]?.id;
       if (restoreClip) this.playStudioSkeletalRig(rig, restoreClip);
     }
     if (sprite?.active) {

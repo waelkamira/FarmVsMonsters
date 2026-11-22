@@ -1134,3 +1134,5 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - Added a Studio/BattleScene source-integration test to guard profile persistence, muzzle launch, hitbox collision wiring, and Sprite Sheet fallback.
 - Verification status: GitHub Actions jobs still terminate before runner assignment (`runner_id: 0`, zero steps and no logs). Tests, ESLint, production build, and live Chrome/Windows battle behavior remain unverified; do not merge until those gates pass.
 - Review branch: `feat/studio-hybrid-animation-engine-mainline`; PR #88.
+
+- Follow-up runtime correction: centralized looping-idle clip resolution. Plants and monsters now prefer a looping `idle` clip, otherwise a looping fallback; one-shot attack clips are no longer restarted every update as an idle animation. Freeze recovery still falls back to the first clip if no looping clip exists.
