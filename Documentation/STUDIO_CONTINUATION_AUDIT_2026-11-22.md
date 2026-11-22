@@ -43,3 +43,18 @@ F. Behavioral API tests, game integration tests, and Chrome Windows playtest/bui
 
 ## Session limitation
 GitHub source inspection and repository metadata were available. The local Windows folder `H:\FarmVsMonsters\web` and browser session were not connected, so commands, local files, and actual gameplay could not be executed.
+
+
+## Documentation reconciliation update — 2026-11-22
+
+The foundation-first documentation pass is available for review in draft PR #90:
+- `STUDIO_SYSTEM_INVENTORY.md` — actual pages, API routes, shared modules, planned systems and evidence boundaries.
+- `STUDIO_END_TO_END_DATA_FLOW.md` — source-backed flows and required transactional boundaries.
+- `STUDIO_DEPENDENCY_MAP.md` — layer/dependency order and unified Asset & Animation lifecycle.
+- `STUDIO_PHASE1_ACCEPTANCE_MATRIX.md` — explicit Phase 1 gates and end-to-end scenarios.
+- `STUDIO_IMPLEMENTATION_ROADMAP.md` — reordered phases with Studio Core and Asset & Animation foundation in Phase 1.
+- `STUDIO_MASTER_PLAN.md` — canonical reconciliation section while preserving historical implementation notes.
+
+The user-confirmed governance decision is explicit: Auto-Rig and Hybrid/Skeletal Rig are integrated capabilities within Asset & Animation Studio, not separate projects or release lifecycles. Both must use the same asset identity, revisions, dependency checks, readiness, release approval, runtime validation and rollback.
+
+PR #90 is draft and has not been merged. The branch is based on main `a642d676e186bb6ae59b5875585352a690ce40d7`, six commits ahead and zero commits behind at comparison time. No code, runtime or asset changes were made in this documentation pass. No tests, lint, production build, Chrome/Windows or live Phaser battle were executed.
