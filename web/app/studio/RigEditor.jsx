@@ -31,6 +31,11 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
   const validation = useMemo(() => validateSkeletalRigProfile(rig), [rig]);
   const bone = rig.bones.find((item) => item.id === selectedBoneId) || rig.bones[0];
   const clip = rig.clips.find((item) => item.id === selectedClipId) || rig.clips[0];
+  const selectedPose = useMemo(() => {
+    if (!clip || !validation.valid) return null;
+    try { return evaluateSkeletalClip(rig, clip.id, timeMs); } catch { return null; }
+  }, [rig, clip, timeMs, validation.valid]);
+  const bonePose = selectedPose?.localBones?.[selectedBoneId] || bone;
   const partAssets = useMemo(() => assets.filter((asset) => asset.id !== currentAssetId && asset.type !== "audio" && asset.status !== "archived" && asset.path), [assets, currentAssetId]);
   const availableParts = useMemo(() => partAssets.filter((asset) => ["item", "plant", "monster", "effect"].includes(asset.type)), [partAssets]);
 
@@ -44,11 +49,34 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
       const target = next.bones.find((item) => item.id === selectedBoneId);
       if (!target) return;
       if (field === "part") { target.part = value; return; }
-      if (field.startsWith("pivot.")) target.pivot[field.slice(6)] = value;
-      else if (field.startsWith("part.")) {
+      if (field.startsWith("pivot.")) { target.pivot[field.slice(6)] = value; return; }
+      if (field.startsWith("part.")) {
         if (!target.part) target.part = { assetId: availableParts[0]?.id || "", frame: 0 };
         target.part[field.slice(5)] = value;
-      } else target[field] = value;
+        return;
+      }
+      if (["x", "y", "rotation", "scaleX", "scaleY"].includes(field) && clip) {
+        const targetClip = next.clips.find((item) => item.id === selectedClipId);
+        if (targetClip) {
+          let track = targetClip.tracks.find((item) => item.boneId === selectedBoneId);
+          if (!track) {
+            track = { boneId: selectedBoneId, keyframes: [
+              { timeMs: 0, x: target.x, y: target.y, rotation: target.rotation, scaleX: target.scaleX, scaleY: target.scaleY },
+              { timeMs: targetClip.durationMs, x: target.x, y: target.y, rotation: target.rotation, scaleX: target.scaleX, scaleY: target.scaleY }
+            ] };
+            targetClip.tracks.push(track);
+          }
+          const at = Math.min(targetClip.durationMs, Math.max(0, timeMs));
+          const current = selectedPose?.localBones?.[selectedBoneId] || target;
+          const frame = { ...current, timeMs: at, [field]: value };
+          const index = track.keyframes.findIndex((item) => item.timeMs === at);
+          if (index >= 0) track.keyframes[index] = frame;
+          else track.keyframes.push(frame);
+          track.keyframes.sort((a, b) => a.timeMs - b.timeMs);
+          return;
+        }
+      }
+      target[field] = value;
     });
   }
   function addBone() {
@@ -82,9 +110,11 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
   }
   function addClip() {
     if (rig.clips.length >= 16) return;
-    const id = "clip-" + (rig.clips.length + 1);
+    const preferred = ["move", "attack", "hit", "death", "jump", "special"];
+    const id = preferred.find((candidate) => !rig.clips.some((item) => item.id === candidate)) || "clip-" + (rig.clips.length + 1);
+    const clipNames = { move: "تنقل", attack: "هجوم", hit: "إصابة", death: "موت", jump: "قفز", special: "حركة خاصة" };
     update((next) => next.clips.push({
-      id, name: "حركة جديدة", durationMs: 1000, loop: true,
+      id, name: clipNames[id] || "حركة جديدة", durationMs: 1000, loop: id === "move" || id === "special",
       tracks: next.bones.map((item) => ({ boneId: item.id, keyframes: [
         { timeMs: 0, x: item.x, y: item.y, rotation: item.rotation, scaleX: item.scaleX, scaleY: item.scaleY },
         { timeMs: 1000, x: item.x, y: item.y, rotation: item.rotation, scaleX: item.scaleX, scaleY: item.scaleY }
@@ -92,6 +122,14 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
     }));
     setSelectedClipId(id);
     setTimeMs(0);
+  }
+  function removeClip() {
+    if (rig.clips.length <= 1 || !clip) return;
+    const nextId = rig.clips.find((item) => item.id !== selectedClipId)?.id || rig.clips[0].id;
+    update((next) => { next.clips = next.clips.filter((item) => item.id !== selectedClipId); });
+    setSelectedClipId(nextId);
+    setTimeMs(0);
+    setPlaying(false);
   }
   function updateClip(field, value) {
     update((next) => { const target = next.clips.find((item) => item.id === selectedClipId); if (target) target[field] = value; });
@@ -102,7 +140,8 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
       const target = next.clips.find((item) => item.id === selectedClipId);
       let track = target.tracks.find((item) => item.boneId === selectedBoneId);
       if (!track) { track = { boneId: selectedBoneId, keyframes: [] }; target.tracks.push(track); }
-      const frame = { timeMs: Math.min(target.durationMs, Math.max(0, timeMs)), x: bone.x, y: bone.y, rotation: bone.rotation, scaleX: bone.scaleX, scaleY: bone.scaleY };
+      const current = selectedPose?.localBones?.[selectedBoneId] || bone;
+      const frame = { timeMs: Math.min(target.durationMs, Math.max(0, timeMs)), x: current.x, y: current.y, rotation: current.rotation, scaleX: current.scaleX, scaleY: current.scaleY };
       const existing = track.keyframes.findIndex((item) => item.timeMs === frame.timeMs);
       if (existing >= 0) track.keyframes[existing] = frame;
       else track.keyframes.push(frame);
@@ -258,11 +297,11 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
             <label>اسم العظمة<input value={bone.name} disabled={disabled} onChange={(event) => updateBone("name", event.target.value)} /></label>
             <label>العظمة الأم<select value={bone.parentId || ""} disabled={disabled || bone.parentId === null} onChange={(event) => updateBone("parentId", event.target.value || null)}><option value="">جذر الهيكل</option>{rig.bones.filter((item) => item.id !== bone.id).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
             <div className="studio-rig-fields-grid">
-              <label>X<input type="number" value={bone.x} disabled={disabled} onChange={(event) => updateBone("x", Number(event.target.value))}/></label>
-              <label>Y<input type="number" value={bone.y} disabled={disabled} onChange={(event) => updateBone("y", Number(event.target.value))}/></label>
-              <label>الدوران °<input type="number" value={bone.rotation} disabled={disabled} onChange={(event) => updateBone("rotation", Number(event.target.value))}/></label>
-              <label>Scale X<input type="number" min=".01" max="20" step=".05" value={bone.scaleX} disabled={disabled} onChange={(event) => updateBone("scaleX", Number(event.target.value))}/></label>
-              <label>Scale Y<input type="number" min=".01" max="20" step=".05" value={bone.scaleY} disabled={disabled} onChange={(event) => updateBone("scaleY", Number(event.target.value))}/></label>
+              <label>X<input type="number" value={bonePose.x} disabled={disabled} onChange={(event) => updateBone("x", Number(event.target.value))}/></label>
+              <label>Y<input type="number" value={bonePose.y} disabled={disabled} onChange={(event) => updateBone("y", Number(event.target.value))}/></label>
+              <label>الدوران °<input type="number" value={bonePose.rotation} disabled={disabled} onChange={(event) => updateBone("rotation", Number(event.target.value))}/></label>
+              <label>Scale X<input type="number" min=".01" max="20" step=".05" value={bonePose.scaleX} disabled={disabled} onChange={(event) => updateBone("scaleX", Number(event.target.value))}/></label>
+              <label>Scale Y<input type="number" min=".01" max="20" step=".05" value={bonePose.scaleY} disabled={disabled} onChange={(event) => updateBone("scaleY", Number(event.target.value))}/></label>
               <label>Pivot X<input type="number" value={bone.pivot.x} disabled={disabled} onChange={(event) => updateBone("pivot.x", Number(event.target.value))}/></label>
               <label>Pivot Y<input type="number" value={bone.pivot.y} disabled={disabled} onChange={(event) => updateBone("pivot.y", Number(event.target.value))}/></label>
             </div>
@@ -272,7 +311,7 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
         </div>
       </div>
       <div className="studio-rig-timeline">
-        <div className="studio-rig-timeline-head"><h5>مقاطع الحركة والإطارات المفتاحية</h5><button type="button" disabled={disabled || rig.clips.length >= 16} onClick={addClip}>＋ مقطع حركة</button></div>
+        <div className="studio-rig-timeline-head"><h5>مقاطع الحركة والإطارات المفتاحية</h5><div className="studio-rig-stage-actions"><button type="button" disabled={disabled || rig.clips.length >= 16} onClick={addClip}>＋ مقطع حركة</button><button type="button" disabled={disabled || rig.clips.length <= 1} onClick={removeClip}>حذف المقطع المحدد</button></div></div>
         <div className="studio-rig-fields-grid">
           <label>المقطع<select value={selectedClipId} onChange={(event) => { setSelectedClipId(event.target.value); setTimeMs(0); setPlaying(false); }}>{rig.clips.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
           {clip && <><label>اسم المقطع<input value={clip.name} disabled={disabled} onChange={(event) => updateClip("name", event.target.value)}/></label><label>المدة (ms)<input type="number" min="1" max="60000" value={clip.durationMs} disabled={disabled} onChange={(event) => updateClip("durationMs", Number(event.target.value))}/></label><label className="studio-rig-check"><input type="checkbox" checked={clip.loop} disabled={disabled} onChange={(event) => updateClip("loop", event.target.checked)}/> تكرار المقطع</label></>}
@@ -281,9 +320,9 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
       </div>
       <div className="studio-rig-tools">
         <div><h5>نقاط تثبيت السلاح والقذائف</h5><p>تُستخدم لاحقاً لإطلاق القذائف من موضع السلاح الحقيقي.</p><button type="button" disabled={disabled} onClick={addAttachment}>＋ إضافة نقطة تثبيت</button></div>
-        {rig.attachments.map((item) => <div className="studio-rig-tool-row" key={item.id}><b>{item.name}</b><label>العظمة<select value={item.boneId} disabled={disabled} onChange={(event) => update((next) => { next.attachments.find((entry) => entry.id === item.id).boneId = event.target.value; })}>{rig.bones.map((entry) => <option key={entry.id} value={entry.id}>{entry.name}</option>)}</select></label><label>X<input type="number" value={item.x} disabled={disabled} onChange={(event) => update((next) => { next.attachments.find((entry) => entry.id === item.id).x = Number(event.target.value); })}/></label><label>Y<input type="number" value={item.y} disabled={disabled} onChange={(event) => update((next) => { next.attachments.find((entry) => entry.id === item.id).y = Number(event.target.value); })}/></label><button type="button" disabled={disabled} onClick={() => update((next) => { next.attachments = next.attachments.filter((entry) => entry.id !== item.id); })}>حذف</button></div>)}
+        {rig.attachments.map((item) => <div className="studio-rig-tool-row" key={item.id}><label>الاسم<input value={item.name} disabled={disabled} onChange={(event) => update((next) => { next.attachments.find((entry) => entry.id === item.id).name = event.target.value; })}/></label><label>العظمة<select value={item.boneId} disabled={disabled} onChange={(event) => update((next) => { next.attachments.find((entry) => entry.id === item.id).boneId = event.target.value; })}>{rig.bones.map((entry) => <option key={entry.id} value={entry.id}>{entry.name}</option>)}</select></label><label>X<input type="number" value={item.x} disabled={disabled} onChange={(event) => update((next) => { next.attachments.find((entry) => entry.id === item.id).x = Number(event.target.value); })}/></label><label>Y<input type="number" value={item.y} disabled={disabled} onChange={(event) => update((next) => { next.attachments.find((entry) => entry.id === item.id).y = Number(event.target.value); })}/></label><label>الدوران<input type="number" value={item.rotation} disabled={disabled} onChange={(event) => update((next) => { next.attachments.find((entry) => entry.id === item.id).rotation = Number(event.target.value); })}/></label><button type="button" disabled={disabled} onClick={() => update((next) => { next.attachments = next.attachments.filter((entry) => entry.id !== item.id); })}>حذف</button></div>)}
         <div><h5>مناطق الهجوم والتلقي</h5><p>حدد مناطق الضرر أو مناطق تلقي الإصابة المرتبطة بالعظام.</p><button type="button" disabled={disabled} onClick={addHitbox}>＋ إضافة منطقة إصابة</button></div>
-        {rig.hitboxes.map((item) => <div className="studio-rig-tool-row" key={item.id}><b>{item.name}</b><label>العظمة<select value={item.boneId} disabled={disabled} onChange={(event) => update((next) => { next.hitboxes.find((entry) => entry.id === item.id).boneId = event.target.value; })}>{rig.bones.map((entry) => <option key={entry.id} value={entry.id}>{entry.name}</option>)}</select></label><label>النوع<select value={item.kind} disabled={disabled} onChange={(event) => update((next) => { next.hitboxes.find((entry) => entry.id === item.id).kind = event.target.value; })}><option value="hurt">تلقي ضرر</option><option value="attack">هجوم</option></select></label><label>العرض<input type="number" min="1" value={item.width} disabled={disabled} onChange={(event) => update((next) => { next.hitboxes.find((entry) => entry.id === item.id).width = Number(event.target.value); })}/></label><label>الارتفاع<input type="number" min="1" value={item.height} disabled={disabled} onChange={(event) => update((next) => { next.hitboxes.find((entry) => entry.id === item.id).height = Number(event.target.value); })}/></label><button type="button" disabled={disabled} onClick={() => update((next) => { next.hitboxes = next.hitboxes.filter((entry) => entry.id !== item.id); })}>حذف</button></div>)}
+        {rig.hitboxes.map((item) => <div className="studio-rig-tool-row" key={item.id}><label>الاسم<input value={item.name} disabled={disabled} onChange={(event) => update((next) => { next.hitboxes.find((entry) => entry.id === item.id).name = event.target.value; })}/></label><label>العظمة<select value={item.boneId} disabled={disabled} onChange={(event) => update((next) => { next.hitboxes.find((entry) => entry.id === item.id).boneId = event.target.value; })}>{rig.bones.map((entry) => <option key={entry.id} value={entry.id}>{entry.name}</option>)}</select></label><label>النوع<select value={item.kind} disabled={disabled} onChange={(event) => update((next) => { next.hitboxes.find((entry) => entry.id === item.id).kind = event.target.value; })}><option value="hurt">تلقي ضرر</option><option value="attack">هجوم</option></select></label><label>العرض<input type="number" min="1" value={item.width} disabled={disabled} onChange={(event) => update((next) => { next.hitboxes.find((entry) => entry.id === item.id).width = Number(event.target.value); })}/></label><label>X<input type="number" value={item.x} disabled={disabled} onChange={(event) => update((next) => { next.hitboxes.find((entry) => entry.id === item.id).x = Number(event.target.value); })}/></label><label>Y<input type="number" value={item.y} disabled={disabled} onChange={(event) => update((next) => { next.hitboxes.find((entry) => entry.id === item.id).y = Number(event.target.value); })}/></label><label>الدوران<input type="number" value={item.rotation} disabled={disabled} onChange={(event) => update((next) => { next.hitboxes.find((entry) => entry.id === item.id).rotation = Number(event.target.value); })}/></label><label>الارتفاع<input type="number" min="1" value={item.height} disabled={disabled} onChange={(event) => update((next) => { next.hitboxes.find((entry) => entry.id === item.id).height = Number(event.target.value); })}/></label><button type="button" disabled={disabled} onClick={() => update((next) => { next.hitboxes = next.hitboxes.filter((entry) => entry.id !== item.id); })}>حذف</button></div>)}
       </div>
       {!validation.valid && <div className="studio-rig-errors" role="alert"><b>أخطاء يجب إصلاحها قبل الحفظ:</b><ul>{validation.errors.map((item) => <li key={item}>{item}</li>)}</ul></div>}
       {error && <p className="studio-rig-errors">{error}</p>}
