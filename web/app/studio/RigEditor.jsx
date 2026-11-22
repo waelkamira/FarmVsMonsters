@@ -24,6 +24,9 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
   const [selectedClipId, setSelectedClipId] = useState(profile?.clips?.[0]?.id || "idle");
   const [timeMs, setTimeMs] = useState(0);
   const [playing, setPlaying] = useState(false);
+  const [zoom, setZoom] = useState(1);
+  const [panX, setPanX] = useState(0);
+  const [panY, setPanY] = useState(0);
   const [editTool, setEditTool] = useState("bone");
   const [selectedAttachmentId, setSelectedAttachmentId] = useState(profile?.attachments?.[0]?.id || "");
   const [selectedHitboxId, setSelectedHitboxId] = useState(profile?.hitboxes?.[0]?.id || "");
@@ -271,6 +274,8 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
     context.clearRect(0, 0, canvas.width, canvas.height);
     context.fillStyle = "#111a11";
     context.fillRect(0, 0, canvas.width, canvas.height);
+    context.translate(panX, panY);
+    context.scale(zoom, zoom);
     context.strokeStyle = "rgba(220,235,205,.10)";
     context.lineWidth = 1;
     for (let x = 0; x <= width; x += 16) { context.beginPath(); context.moveTo(x, 0); context.lineTo(x, height); context.stroke(); }
@@ -337,7 +342,7 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
         context.restore();
       }
     }
-  }, [rig, partAssets, selectedBoneId, selectedClipId, clip, timeMs, playing, validation.valid, imageRevision]);
+  }, [rig, partAssets, selectedBoneId, selectedClipId, clip, timeMs, playing, validation.valid, imageRevision, zoom, panX, panY]);
 
   useEffect(() => {
     if (!playing || !clip) return;
@@ -366,10 +371,37 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
     });
   }
 
+  function handleWheel(event) {
+    if (disabled) return;
+    event.preventDefault();
+    const rect = canvasRef.current.getBoundingClientRect();
+    const scaleX = rig.canvas.width / rect.width, scaleY = rig.canvas.height / rect.height;
+    const pointX = (event.clientX - rect.left) * scaleX;
+    const pointY = (event.clientY - rect.top) * scaleY;
+    const worldX = (pointX - panX) / zoom, worldY = (pointY - panY) / zoom;
+    const nextZoom = Math.max(0.5, Math.min(3, zoom * Math.exp(-event.deltaY * 0.001)));
+    setPanX(pointX - worldX * nextZoom);
+    setPanY(pointY - worldY * nextZoom);
+    setZoom(nextZoom);
+  }
+
   function pointerDown(event) {
     if (disabled || playing) return;
     const rect = canvasRef.current.getBoundingClientRect();
     const scaleX = rig.canvas.width / rect.width, scaleY = rig.canvas.height / rect.height;
+    if (editTool === "pan") {
+      const initial = { x: panX, y: panY, clientX: event.clientX, clientY: event.clientY };
+      const move = (nextEvent) => {
+        setPanX(initial.x + (nextEvent.clientX - initial.clientX) * scaleX);
+        setPanY(initial.y + (nextEvent.clientY - initial.clientY) * scaleY);
+      };
+      const up = () => { window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", up); };
+      canvasRef.current.setPointerCapture?.(event.pointerId);
+      window.addEventListener("pointermove", move);
+      window.addEventListener("pointerup", up, { once: true });
+      event.preventDefault();
+      return;
+    }
     const selectedToolItem = editTool === "attachment"
       ? rig.attachments.find((item) => item.id === selectedAttachmentId)
       : editTool === "hitbox" ? rig.hitboxes.find((item) => item.id === selectedHitboxId) : null;
@@ -385,8 +417,8 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
       : { x: selectedToolItem.x, y: selectedToolItem.y };
     const start = { ...initial, clientX: event.clientX, clientY: event.clientY };
     const move = (nextEvent) => {
-      const dx = (nextEvent.clientX - start.clientX) * scaleX;
-      const dy = (nextEvent.clientY - start.clientY) * scaleY;
+      const dx = (nextEvent.clientX - start.clientX) * scaleX / zoom;
+      const dy = (nextEvent.clientY - start.clientY) * scaleY / zoom;
       const localX = (dx * Math.cos(parentRotation) + dy * Math.sin(parentRotation)) / parentScaleX;
       const localY = (-dx * Math.sin(parentRotation) + dy * Math.cos(parentRotation)) / parentScaleY;
       if (editTool === "bone") updateBonePosition(Math.round(start.x + localX), Math.round(start.y + localY));
@@ -406,8 +438,8 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
       <header><div><h4>استديو التحريك الهيكلي · Cutout Rig</h4><p>اربط صور الأجزاء بالعظام، اضبط المفاصل بالسحب أو الحقول، ثم أنشئ مقاطع الحركة والإطارات المفتاحية.</p></div><div className="studio-rig-header-actions"><span data-valid={validation.valid}>{validation.valid ? "هيكل صالح" : "يحتاج إلى إصلاح"}</span><button type="button" disabled={disabled} onClick={() => { if (window.confirm("إزالة ملف الهيكل من هذه المسودة؟ ستبقى الصور الأصلية وSprite Sheet كما هي.")) onChange(null); }}>العودة إلى Sprite Sheet</button></div></header>
       <div className="studio-rig-layout">
         <div className="studio-rig-stage">
-          <canvas ref={canvasRef} width={rig.canvas.width} height={rig.canvas.height} onPointerDown={pointerDown} aria-label="معاينة الهيكل العظمي" />
-          <div className="studio-rig-stage-actions"><label>أداة السحب<select value={editTool} onChange={(event) => setEditTool(event.target.value)}><option value="bone">العظمة المحددة</option><option value="attachment">نقطة التثبيت</option><option value="hitbox">منطقة الإصابة</option></select></label>{editTool === "attachment" && <label>النقطة<select value={selectedAttachmentId} onChange={(event) => setSelectedAttachmentId(event.target.value)}>{rig.attachments.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>}{editTool === "hitbox" && <label>المنطقة<select value={selectedHitboxId} onChange={(event) => setSelectedHitboxId(event.target.value)}>{rig.hitboxes.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>}<button type="button" disabled={disabled || playing} onClick={addBone}>＋ إضافة عظمة</button><button type="button" disabled={disabled || !bone || bone.parentId === null} onClick={removeBone}>حذف العظمة</button></div>
+          <canvas ref={canvasRef} width={rig.canvas.width} height={rig.canvas.height} onPointerDown={pointerDown} onWheel={handleWheel} aria-label="معاينة الهيكل العظمي" />
+          <div className="studio-rig-stage-actions"><label>أداة السحب<select value={editTool} onChange={(event) => setEditTool(event.target.value)}><option value="bone">العظمة المحددة</option><option value="attachment">نقطة التثبيت</option><option value="hitbox">منطقة الإصابة</option><option value="pan">تحريك مساحة العمل</option></select></label>{editTool === "attachment" && <label>النقطة<select value={selectedAttachmentId} onChange={(event) => setSelectedAttachmentId(event.target.value)}>{rig.attachments.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>}{editTool === "hitbox" && <label>المنطقة<select value={selectedHitboxId} onChange={(event) => setSelectedHitboxId(event.target.value)}>{rig.hitboxes.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>}<button type="button" onClick={() => setZoom((value) => Math.min(3, value * 1.2))}>تكبير ＋</button><button type="button" onClick={() => setZoom((value) => Math.max(.5, value / 1.2))}>تصغير −</button><button type="button" onClick={() => { setZoom(1); setPanX(0); setPanY(0); }}>إعادة ضبط العرض</button><span>{Math.round(zoom * 100)}%</span><button type="button" disabled={disabled || playing} onClick={addBone}>＋ إضافة عظمة</button><button type="button" disabled={disabled || !bone || bone.parentId === null} onClick={removeBone}>حذف العظمة</button></div>
           <small>اختر عظمة من القائمة، ثم اسحب على مساحة المعاينة لتحريكها. صور الأجزاء تُحمّل من مكتبة الأصول.</small>
         </div>
         <div className="studio-rig-controls">
