@@ -5,7 +5,7 @@
 - PR #88, `Port Hybrid Animation Engine onto current main`: open, not merged, base `main`, currently reported non-mergeable by GitHub. Its description says the isolated harness passed 104 test cases, but full repository tests, ESLint, Next.js build, and live Windows/Chrome battle validation were not verified.
 - PR #89, `Build local AI Auto-Rig Builder on the hybrid rig engine`: open draft, mergeable according to GitHub, but explicitly depends on PR #88 and is based on `feat/studio-hybrid-animation-engine-mainline`, not directly on `main`.
 - PR #89's body reports a focused Auto-Rig CI run passing, while the broad validation run reported 374 passed and 53 failed out of 427. The failures are described as combat/replay/wave scheduling, monster stats, plant/resource contracts, account/catalog flows, and older Studio/runtime source-contract assertions. This is PR-provided run information; it has not been independently rerun during this review.
-- The Auto-Rig source branch remains heavily diverged from current main (289 commits ahead, 15 behind at this check). Do not merge either branch wholesale.
+- The Auto-Rig source branch remains heavily diverged from current main (289 commits ahead, 53 behind at the latest check). Do not merge either branch wholesale.
 
 ## Safe portions already ported to main
 
