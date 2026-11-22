@@ -48,6 +48,10 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
   ];
   const bone = rig.bones.find((item) => item.id === selectedBoneId) || rig.bones[0];
   const clip = rig.clips.find((item) => item.id === selectedClipId) || rig.clips[0];
+  const selectedPartAsset = bone?.part ? partAssets.find((asset) => asset.id === bone.part.assetId) : null;
+  const partFrameMax = selectedPartAsset?.spriteSheet
+    ? Math.max(0, (selectedPartAsset.frameCount || ((selectedPartAsset.rows || 1) * (selectedPartAsset.columns || 1))) - 1)
+    : 0;
   const selectedPose = useMemo(() => {
     if (!clip || !validation.valid) return null;
     try { return evaluateSkeletalClip(rig, clip.id, snapSkeletalKeyframeTime(clip, timeMs)); } catch { return null; }
@@ -177,8 +181,7 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
     const clipNames = { move: "تنقل", attack: "هجوم", hit: "إصابة", death: "موت", jump: "قفز", special: "حركة خاصة" };
     update((next) => next.clips.push({
       id, name: clipNames[id] || "حركة جديدة", durationMs: 1000, fps: 24, loop: id === "move" || id === "special",
-      tracks: next.bones.map((item) => ({ boneId: item.id, keyframes: [
-        { timeMs: 0, x: item.x, y: item.y, rotation: item.rotation, scaleX: item.scaleX, scaleY: item.scaleY },
+      tracks: next.bones.map((item) => ({ boneId: item.id, keyframes: [        { timeMs: 0, x: item.x, y: item.y, rotation: item.rotation, scaleX: item.scaleX, scaleY: item.scaleY },
         { timeMs: 1000, x: item.x, y: item.y, rotation: item.rotation, scaleX: item.scaleX, scaleY: item.scaleY }
       ] }))
     }));
@@ -357,8 +360,7 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
       for (const child of children.get(item.id) || []) drawBone(child);
       context.restore();
     }
-    const root = rig.bones.find((item) => item.parentId === null);
-    if (root) drawBone(root);
+    const root = rig.bones.find((item) => item.parentId === null);    if (root) drawBone(root);
     if (pose) {
       for (const item of rig.bones) {
         if (item.parentId === null) continue;
@@ -509,7 +511,7 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
               <label>Pivot Y<input type="number" value={bone.pivot.y} disabled={disabled} onChange={(event) => updateBone("pivot.y", Number(event.target.value))}/></label>
             </div>
             <label>صورة الجزء<select value={bone.part?.assetId || ""} disabled={disabled} onChange={(event) => addPart(event.target.value)}><option value="">بدون صورة</option>{availableParts.map((asset) => <option key={asset.id} value={asset.id}>{asset.name || asset.id} · {asset.type}</option>)}</select></label>
-            {bone.part && <label>رقم الإطار<input type="number" min="0" max={Math.max(0, ((partAssets.find((asset) => asset.id === bone.part.assetId)?.spriteSheet ? (partAssets.find((asset) => asset.id === bone.part.assetId)?.frameCount || ((partAssets.find((asset) => asset.id === bone.part.assetId)?.rows || 1) * (partAssets.find((asset) => asset.id === bone.part.assetId)?.columns || 1))) : 1) - 1)} value={bone.part.frame} disabled={disabled} onChange={(event) => updateBone("part.frame", Number(event.target.value))}/></label>}
+            {bone.part && <label>رقم الإطار<input type="number" min="0" max={partFrameMax} value={bone.part.frame} disabled={disabled} onChange={(event) => updateBone("part.frame", Number(event.target.value))}/></label>}
           </div>}
         </div>
       </div>
