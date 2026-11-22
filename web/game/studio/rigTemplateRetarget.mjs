@@ -94,7 +94,7 @@ export function suggestRigTemplateRetarget(templateManifest, targetParts, target
     throw new TypeError("A saved Auto-Rig template manifest is required.");
   }
   if (Number(templateManifest.version) !== 1 || templateManifest.builder !== "farmvsmonsters-auto-rig" ||
-      templateManifest.roleDictionaryVersion !== AUTO_RIG_ROLE_DICTIONARY_VERSION) {
+      ![AUTO_RIG_ROLE_DICTIONARY_VERSION, "1.0.0"].includes(templateManifest.roleDictionaryVersion)) {
     throw new RangeError("Template manifest version, builder, or semantic role dictionary is incompatible.");
   }
   const templateCanvas = templateManifest.canvas;
