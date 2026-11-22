@@ -108,7 +108,7 @@ jobs:
       - name: Run real-asset segmentation and visual role classification
         run: |
           source "$HOME/.venvs/fvm-studio-ai/bin/activate"
-          export SAM2_CONFIG="$HOME/.cache/fvm-sam2/configs/sam2.1/sam2.1_hiera_t.yaml"
+          export SAM2_CONFIG="$HOME/.cache/fvm-sam2/sam2/configs/sam2.1/sam2.1_hiera_t.yaml"
           export SAM2_CHECKPOINT="$HOME/models/sam2.1_hiera_tiny.pt"
           export FVM_CLIP_MODEL_DIR="$HOME/models/clip-vit-base-patch32"
           python real_asset_smoke_test.py --output-dir auto-rig-real-asset-results | tee auto-rig-real-asset-results.json
