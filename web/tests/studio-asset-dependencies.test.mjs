@@ -256,3 +256,10 @@ test("Rig Editor resets canvas transforms before applying viewport zoom and pan"
   const editor = readFileSync(path.join(here, "../app/studio/RigEditor.jsx"), "utf8");
   assert.match(editor, /context\.setTransform\(1, 0, 0, 1, 0, 0\);\s*context\.clearRect/);
 });
+
+test("Rig Editor blocks readiness when referenced bitmap parts are unavailable", () => {
+  const editor = readFileSync(path.join(here, "../app/studio/RigEditor.jsx"), "utf8");
+  assert.match(editor, /missingPartIds/);
+  assert.match(editor, /availableParts\.some\(\(asset\) => asset\.id === item\.part\.assetId\)/);
+  assert.match(editor, /rigIsReady = validation\.valid && hasVisualPart && missingPartIds\.length === 0/);
+});
