@@ -249,13 +249,17 @@ test("requestPlant uses the imported centralized plant configs", () => {
   assert.doesNotMatch(requestPlant, /\b(?:MUSHROOM|RADISH)\b(?!_CONFIG)/);
 });
 
-test("planting validates occupancy and energy before charging", () => {
-  assert.match(scene, /if \(this\.energy < config\.cost \|\| this\.plants\.some\(\(p\) => p\.alive && p\.col === col && p\.row === row\)\)/);
-  assert.match(scene, /this\.energy -= config\.cost/);
-  assert.match(scene, /this\.plants\.push\(plant\)/);
-  assert.match(scene, /this\.totalPlantsPlanted \+= 1/);
+test("planting validates occupancy and energy before charging at placement commit", () => {
+  const requestPlant = scene.slice(scene.indexOf("  requestPlant(col, row) {"), scene.indexOf("  updatePlantingMovement("));
+  const plantSelected = scene.slice(scene.indexOf("  plantSelected(col, row"), scene.indexOf("  uprootPlant(plant) {"));
+  assert.match(requestPlant, /if \(this\.energy < plantConfig\.cost\)/);
+  assert.match(requestPlant, /this\.plantingTarget = \{/);
+  assert.doesNotMatch(requestPlant, /this\.energy\s*[-+]=/);
+  assert.match(plantSelected, /resolvePlantPlacement\(/);
+  assert.match(plantSelected, /this\.energy = placement\.energy/);
+  assert.match(plantSelected, /this\.plants\.push\(plant\)/);
+  assert.match(plantSelected, /this\.totalPlantsPlanted \+= 1/);
 });
-
 test("monster defeat is guarded against duplicate rewards", () => {
   assert.match(scene, /if \(monster\.hp > 0 \|\| !monster\.alive\) return/);
   assert.match(scene, /monster\.alive = false/);
