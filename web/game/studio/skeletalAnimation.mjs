@@ -67,8 +67,12 @@ export function snapSkeletalKeyframeTime(clip, timeMs) {
   return Math.min(duration, Math.max(0, Math.round(frameIndex * frameDuration)));
 }
 
-export function snapSkeletalKeyframeTime(timeMs, fps = 24, durationMs = 60000) {
-  const duration = Math.max(1, Math.round(Number(durationMs) || 1));
+export function snapSkeletalKeyframeTime(timeOrClip, fpsOrTime = 24, durationMs = 60000) {
+  const clipInput = timeOrClip && typeof timeOrClip === "object";
+  const timeMs = clipInput ? fpsOrTime : timeOrClip;
+  const fps = clipInput ? timeOrClip.fps : fpsOrTime;
+  const durationInput = clipInput ? timeOrClip.durationMs : durationMs;
+  const duration = Math.max(1, Math.round(Number(durationInput) || 1));
   const rate = Math.max(1, Math.min(60, Math.round(Number(fps) || 24)));
   const time = Math.max(0, Math.min(duration, Number(timeMs) || 0));
   const frameIndex = Math.round(time * rate / 1000);
