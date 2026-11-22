@@ -207,7 +207,7 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
     const local = pose?.localBones || Object.fromEntries(rig.bones.map((item) => [item.id, item]));
     const children = new Map(rig.bones.map((item) => [item.id, []]));
     rig.bones.forEach((item) => { if (item.parentId !== null) children.get(item.parentId)?.push(item); });
-    function drawBone(item, depth = 0) {
+    function drawBone(item) {
       const transform = local[item.id] || item;
       context.save();
       context.translate(transform.x, transform.y);
@@ -229,7 +229,7 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
         context.lineWidth = 1.5;
         context.beginPath(); context.arc(0, 0, 6, 0, Math.PI * 2); context.stroke();
       }
-      for (const child of children.get(item.id) || []) drawBone(child, depth + 1);
+      for (const child of children.get(item.id) || []) drawBone(child);
       context.restore();
     }
     const root = rig.bones.find((item) => item.parentId === null);
