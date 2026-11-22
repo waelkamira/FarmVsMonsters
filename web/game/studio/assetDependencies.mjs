@@ -23,7 +23,7 @@ function declaredDependencies(asset, byId) {
     const partId = bone?.part?.assetId ? String(bone.part.assetId) : "";
     if (!partId) continue;
     const target = byId.get(partId);
-    dependencies.push(target && target.id !== asset.id && target.type !== "audio"
+    dependencies.push(target && target.id !== asset.id && target.type !== "audio" && target.status !== "archived"
       ? { kind: "asset", relation: "rig-part", targetId: target.id, targetName: target.name || target.id, targetType: target.type, path: normalizePath(target.path), resolved: true }
       : { kind: "asset", relation: "rig-part", targetId: partId, targetName: partId, targetType: null, path: "", resolved: false });
   }
