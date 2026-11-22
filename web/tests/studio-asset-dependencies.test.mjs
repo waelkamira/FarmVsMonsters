@@ -182,7 +182,7 @@ test("BattleScene loads rig bitmap parts and uses skeletal plant and monster ren
 });
 
 test("BattleScene uses rig muzzle attachments and skeletal attack/hurt hitboxes in combat", () => {
-  assert.match(battleSceneSource, /getAttachment\(muzzleId\)/);
+  assert.match(battleSceneSource, /getAttachment\("muzzle"\)/);
   assert.match(battleSceneSource, /launchOffsetX, launchOffsetY/);
   assert.match(battleSceneSource, /studioRigHitboxesOverlap/);
   assert.match(battleSceneSource, /studioProjectileHitsMonster/);
