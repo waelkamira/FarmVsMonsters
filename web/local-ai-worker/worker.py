@@ -243,6 +243,9 @@ def normalize_polygon_points(points, width, height, label):
         normalized.append((int(round(x)), int(round(y))))
     if len(set(normalized)) < 3:
         raise ValueError(label + " polygon needs at least three distinct points.")
+    area = abs(sum(normalized[index][0] * normalized[(index + 1) % len(normalized)][1] - normalized[(index + 1) % len(normalized)][0] * normalized[index][1] for index in range(len(normalized))) / 2)
+    if area < 4:
+        raise ValueError(label + " polygon area is too small or degenerate.")
     return normalized
 
 def reconstruct_from_visible_donor(payload):
@@ -266,6 +269,10 @@ def reconstruct_from_visible_donor(payload):
     target_mask = target_mask > 0
     if int(target_mask.sum()) < 16:
         raise ValueError("The hidden target region is too small to reconstruct.")
+    if np.count_nonzero(donor_mask & target_mask) > 0:
+        raise ValueError("Donor and hidden target regions must not overlap.")
+    if payload.get("flipHorizontal", True) not in (True, False):
+        raise ValueError("flipHorizontal must be a boolean.")
     donor_y, donor_x = np.where(donor_mask)
     target_y, target_x = np.where(target_mask)
     donor_bounds = {
@@ -294,6 +301,8 @@ def reconstruct_from_visible_donor(payload):
     if not ok:
         raise RuntimeError("Could not encode reconstructed donor pixels.")
     data_url = "data:image/png;base64," + base64.b64encode(encoded.tobytes()).decode("ascii")
+    if len(data_url) > MAX_IMAGE * 2:
+        raise ValueError("Reconstructed patch exceeds the output size limit.")
     return {
         "protocolVersion": 1,
         "patchDataUrl": data_url,
