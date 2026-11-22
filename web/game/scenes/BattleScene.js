@@ -9,6 +9,7 @@ import { getMonsterReactionProfile, getPlantAnimationProfile } from "../visuals/
 import { createStudioAnimationProfile } from "../studio/animationProfiles.mjs";
 import { getSpriteFrameRectangles } from "../studio/spriteSheetGrid.mjs";
 import { createPhaserSkeletalRig } from "../studio/phaserSkeletalRig.mjs";
+import { createSkeletalAnimationController } from "../studio/animationStateMachine.mjs";
 import { getProjectileTrajectoryOffset } from "../studio/projectileTrajectory.mjs";
 import { createStudioMonsterProfile, resolveStudioMonsterRuntimeProfile, selectWeightedStudioMonster } from "../studio/monsterProfiles.mjs";
 
@@ -3100,22 +3101,31 @@ export default class BattleScene extends Scene {
     const clip = rig?.profile?.clips?.find((entry) => entry.id === clipId);
     if (!clip || !rig.root?.active) return false;
     rig._animationEvent?.remove?.();
-    const startedAt = this.time.now;
+    if (!rig._animationController) {
+      rig._animationController = createSkeletalAnimationController(rig.profile, clipId);
+    } else if (rig._animationController.state === clipId) {
+      rig._animationController.restart();
+    } else {
+      rig._animationController.setState(clipId, 140);
+    }
     rig._activeClipId = clipId;
-    rig.play(clipId, 0);
+    rig.applyPose(rig._animationController.getPose());
+    let previousAt = this.time.now;
     const event = this.time.addEvent({
       delay: 16,
       loop: true,
       callback: () => {
         if (!rig.root?.active) { event.remove(); return; }
-        const elapsed = this.time.now - startedAt;
-        rig.play(clipId, elapsed);
-        if (onComplete && elapsed >= clip.durationMs) {
+        const now = this.time.now;
+        const delta = Math.max(0, Math.min(80, now - previousAt));
+        previousAt = now;
+        rig.applyPose(rig._animationController.update(delta));
+        if (onComplete && rig._animationController.elapsedMs >= clip.durationMs) {
           event.remove();
           rig._animationEvent = null;
           rig._activeClipId = null;
           onComplete();
-        } else if (!clip.loop && elapsed >= clip.durationMs) {
+        } else if (!clip.loop && rig._animationController.elapsedMs >= clip.durationMs) {
           event.remove();
           rig._animationEvent = null;
           rig._activeClipId = null;
