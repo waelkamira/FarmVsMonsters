@@ -1177,3 +1177,13 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - Required manual editability, reversibility, source preservation, confidence/provenance reporting, same-evaluator previews, existing Phaser muzzle/weapon behavior, and use of the existing Studio asset/version/dependency/publish lifecycle.
 - Expanded Phase 2 and Phase 5 and added acceptance criteria for all-nine-module integration, runtime parity, and reusable role-based rig templates.
 - This is a planning/documentation update only; no new module UI, model worker, or runtime feature was claimed as implemented. Build/tests/live gameplay remain unverified.
+
+## 2026-11-22 — Auto-Rig profile contract hardening
+- Reviewed the actual createSkeletalRigProfile / validateSkeletalRigProfile contract and the Phaser skeletal renderer. The canonical output remains rig-profile v1; the builder does not introduce a second runtime.
+- Corrected identifier limits: part instance IDs remain capped at 59 characters so the part- bone prefix stays within the engine's 64-character ID limit, while referenced asset IDs now use the full 64-character asset-ID allowance.
+- Made inferred parent selection stable across input ordering and less arbitrary when multiple instances share a semantic role: same-side candidates are preferred, then the nearest pivot, then a stable ID tie-break.
+- Hardened muzzle anchors: an anchor must reference a valid weapon/weapon-barrel part and lie inside or on that selected part's source-space bounds, in addition to remaining inside the source canvas.
+- Added contract regressions that validate generated profiles with the real runtime validator, evaluate the generated idle clip with the shared skeletal evaluator, and assert that the evaluated muzzle resolves to the corresponding canvas-centered source-space point. Added identifier, weapon-boundary, and parent-selection regressions.
+- GitHub Actions were triggered for the updated branch head. Both workflow jobs reported failure, but GitHub returned zero job steps and the job-log artifacts returned BlobNotFound; this provides no test/build output and does not establish a code failure or a passing test run. The Node test suite, lint, production build, and live Chrome gameplay validation remain unverified in this environment.
+- PR #89 remains unmerged and must remain draft until executable CI results and integrated Studio/gameplay validation are available.
+
