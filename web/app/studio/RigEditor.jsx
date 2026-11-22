@@ -35,6 +35,7 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
   const imageCache = useRef(new Map());
   const rig = profile || createDefaultRig();
   const validation = useMemo(() => validateSkeletalRigProfile(rig), [rig]);
+  const referenceAsset = assets.find((asset) => asset.id === currentAssetId && asset.path) || null;
   const partAssets = useMemo(() => assets.filter((asset) => asset.id !== currentAssetId && asset.type !== "audio" && asset.status !== "archived" && asset.path), [assets, currentAssetId]);
   const availableParts = useMemo(() => partAssets.filter((asset) => ["item", "plant", "monster", "effect"].includes(asset.type)), [partAssets]);
   const hasVisualPart = rig.bones.some((item) => item.part);
@@ -58,6 +59,15 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
     if (!rig.attachments.some((item) => item.id === selectedAttachmentId)) setSelectedAttachmentId(rig.attachments[0]?.id || "");
     if (!rig.hitboxes.some((item) => item.id === selectedHitboxId)) setSelectedHitboxId(rig.hitboxes[0]?.id || "");
   }, [rig.bones, rig.clips, rig.attachments, rig.hitboxes, selectedBoneId, selectedClipId, selectedAttachmentId, selectedHitboxId]);
+
+  function isDescendant(candidateId, ancestorId) {
+    let current = rig.bones.find((item) => item.id === candidateId);
+    while (current?.parentId) {
+      if (current.parentId === ancestorId) return true;
+      current = rig.bones.find((item) => item.id === current.parentId);
+    }
+    return false;
+  }
 
   function update(mutator) {
     const next = clone(rig);
@@ -270,7 +280,10 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
   }
 
   useEffect(() => {
-    const urls = new Set(rig.bones.map((item) => item.part && partAssets.find((asset) => asset.id === item.part.assetId)?.previewUrl || (item.part && partAssets.find((asset) => asset.id === item.part.assetId)?.path)).filter(Boolean));
+    const urls = new Set([
+      ...rig.bones.map((item) => item.part && partAssets.find((asset) => asset.id === item.part.assetId)?.previewUrl || (item.part && partAssets.find((asset) => asset.id === item.part.assetId)?.path)),
+      referenceAsset?.previewUrl || referenceAsset?.path
+    ].filter(Boolean));
     let active = true;
     for (const url of urls) {
       if (imageCache.current.has(url)) continue;
@@ -281,7 +294,7 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
       imageCache.current.set(url, image);
     }
     return () => { active = false; };
-  }, [rig.bones, partAssets]);
+  }, [rig.bones, partAssets, referenceAsset]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -294,6 +307,20 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
     context.fillRect(0, 0, canvas.width, canvas.height);
     context.translate(panX, panY);
     context.scale(zoom, zoom);
+    const referenceUrl = referenceAsset?.previewUrl || referenceAsset?.path;
+    const referenceImage = referenceUrl && imageCache.current.get(referenceUrl);
+    if (referenceImage?.complete && referenceImage.naturalWidth > 0) {
+      const rows = referenceAsset.spriteSheet ? Math.max(1, Number(referenceAsset.rows) || 1) : 1;
+      const columns = referenceAsset.spriteSheet ? Math.max(1, Number(referenceAsset.columns) || 1) : 1;
+      const frameWidth = referenceImage.naturalWidth / columns;
+      const frameHeight = referenceImage.naturalHeight / rows;
+      const fit = Math.min(width / frameWidth, height / frameHeight, 1);
+      const drawWidth = frameWidth * fit, drawHeight = frameHeight * fit;
+      context.save();
+      context.globalAlpha = 0.22;
+      context.drawImage(referenceImage, 0, 0, frameWidth, frameHeight, (width - drawWidth) / 2, (height - drawHeight) / 2, drawWidth, drawHeight);
+      context.restore();
+    }
     context.strokeStyle = "rgba(220,235,205,.10)";
     context.lineWidth = 1;
     for (let x = 0; x <= width; x += 16) { context.beginPath(); context.moveTo(x, 0); context.lineTo(x, height); context.stroke(); }
@@ -360,7 +387,7 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
         context.restore();
       }
     }
-  }, [rig, partAssets, selectedBoneId, selectedClipId, clip, timeMs, playing, validation.valid, imageRevision, zoom, panX, panY]);
+  }, [rig, partAssets, referenceAsset, selectedBoneId, selectedClipId, clip, timeMs, playing, validation.valid, imageRevision, zoom, panX, panY]);
 
   useEffect(() => {
     if (!playing || !clip) return;
@@ -413,10 +440,17 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
         setPanX(initial.x + (nextEvent.clientX - initial.clientX) * scaleX);
         setPanY(initial.y + (nextEvent.clientY - initial.clientY) * scaleY);
       };
-      const up = () => { window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", up); };
+      const up = () => {
+        window.removeEventListener("pointermove", move);
+        window.removeEventListener("pointerup", up);
+        window.removeEventListener("pointercancel", up);
+        window.removeEventListener("blur", up);
+      };
       canvasRef.current.setPointerCapture?.(event.pointerId);
       window.addEventListener("pointermove", move);
       window.addEventListener("pointerup", up, { once: true });
+      window.addEventListener("pointercancel", up, { once: true });
+      window.addEventListener("blur", up, { once: true });
       event.preventDefault();
       return;
     }
@@ -464,7 +498,7 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
           <label>العظمة المحددة<select value={selectedBoneId} onChange={(event) => setSelectedBoneId(event.target.value)}>{rig.bones.map((item) => <option key={item.id} value={item.id}>{item.name} · {item.id}</option>)}</select></label>
           {bone && <div className="studio-rig-fields">
             <label>اسم العظمة<input value={bone.name} disabled={disabled} onChange={(event) => updateBone("name", event.target.value)} /></label>
-            <label>العظمة الأم<select value={bone.parentId || ""} disabled={disabled || bone.parentId === null} onChange={(event) => updateBone("parentId", event.target.value || null)}><option value="">جذر الهيكل</option>{rig.bones.filter((item) => item.id !== bone.id).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
+            <label>العظمة الأم<select value={bone.parentId || ""} disabled={disabled || bone.parentId === null} onChange={(event) => updateBone("parentId", event.target.value || null)}><option value="">جذر الهيكل</option>{rig.bones.filter((item) => item.id !== bone.id && !isDescendant(item.id, bone.id)).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
             <div className="studio-rig-fields-grid">
               <label>X<input type="number" value={bonePose.x} disabled={disabled} onChange={(event) => updateBone("x", Number(event.target.value))}/></label>
               <label>Y<input type="number" value={bonePose.y} disabled={disabled} onChange={(event) => updateBone("y", Number(event.target.value))}/></label>
