@@ -18,8 +18,10 @@ export function snapshotStudioAsset(asset, versionNumber) {
     rows: asset.rows,
     columns: asset.columns,
     spriteSheet: asset.spriteSheet,
+    atlas: copyJson(asset.atlas),
     combat: copyCombat(asset.combat),
     animationProfile: copyJson(asset.animationProfile),
+    atlas: copyJson(asset.atlas),
     rigProfile: copyJson(asset.rigProfile),
     monsterProfile: copyJson(asset.monsterProfile),
     dependencies: copyJson(asset.dependencies)
@@ -51,6 +53,7 @@ export function restoreStudioAssetRevision(asset, versionNumber, timestamp = new
     rows: target.rows,
     columns: target.columns,
     spriteSheet: target.spriteSheet,
+    atlas: copyJson(target.atlas),
     combat: copyCombat(target.combat),
     animationProfile: copyJson(target.animationProfile),
     rigProfile: copyJson(target.rigProfile),
