@@ -203,6 +203,14 @@ def detect_parts(payload):
     return {"protocolVersion":1,"proposals":proposals}
 
 
+
+def reconstruct_anatomical_region(payload):
+    width, height = payload["canvas"]["width"], payload["canvas"]["height"]
+    image, _visible_pixels = decode_image_data(payload["imageDataUrl"], width, height)
+    from generative_anatomical_reconstruction import reconstruct_anatomical_region as generate_patch
+    return generate_patch(payload, image)
+
+
 def classify_semantic_roles(payload):
     width, height = payload["canvas"]["width"], payload["canvas"]["height"]
     image, _visible_pixels = decode_image_data(payload["imageDataUrl"], width, height)
@@ -403,7 +411,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send_json(200,capabilities())
     def do_POST(self):
         task_path = urlparse(self.path).path
-        if task_path not in ("/v1/auto-rig/part-detection", "/v1/auto-rig/prompted-segmentation", "/v1/auto-rig/semantic-classification", "/v1/auto-rig/visible-donor-reconstruction", "/v1/auto-rig/local-texture-inpaint"):
+        if task_path not in ("/v1/auto-rig/part-detection", "/v1/auto-rig/prompted-segmentation", "/v1/auto-rig/semantic-classification", "/v1/auto-rig/anatomical-inpaint", "/v1/auto-rig/visible-donor-reconstruction", "/v1/auto-rig/local-texture-inpaint"):
             return self.send_json(404,{"error":"Unsupported task"})
         if not trusted_local_request(self.headers):
             return self.send_json(403,{"error":"Only same-machine JSON requests without a browser Origin are accepted."})
@@ -414,7 +422,7 @@ class Handler(BaseHTTPRequestHandler):
             if length < 1 or length > MAX_BODY: return self.send_json(413,{"error":"Request body exceeds limit"})
             payload=json.loads(self.rfile.read(length))
             if payload.get("protocolVersion") != 1: return self.send_json(400,{"error":"Unsupported protocol"})
-            result = detect_parts(payload) if task_path.endswith("/part-detection") else segment_from_points(payload) if task_path.endswith("/prompted-segmentation") else classify_semantic_roles(payload) if task_path.endswith("/semantic-classification") else reconstruct_from_visible_donor(payload) if task_path.endswith("/visible-donor-reconstruction") else inpaint_hidden_region(payload)
+            result = detect_parts(payload) if task_path.endswith("/part-detection") else segment_from_points(payload) if task_path.endswith("/prompted-segmentation") else classify_semantic_roles(payload) if task_path.endswith("/semantic-classification") else reconstruct_anatomical_region(payload) if task_path.endswith("/anatomical-inpaint") else reconstruct_from_visible_donor(payload) if task_path.endswith("/visible-donor-reconstruction") else inpaint_hidden_region(payload)
             self.send_json(200,result)
         except RuntimeError as exc: self.send_json(503,{"error":str(exc)})
         except (ValueError,KeyError,TypeError,json.JSONDecodeError) as exc: self.send_json(400,{"error":str(exc)[:300]})
