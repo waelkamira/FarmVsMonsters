@@ -8,6 +8,7 @@ HOST = "127.0.0.1"
 PORT = int(os.environ.get("FVM_AI_WORKER_PORT", "8765"))
 MAX_BODY = 12 * 1024 * 1024
 MAX_IMAGE = 8 * 1024 * 1024
+MAX_OUTPUT_DATA_URL_CHARS = 11 * 1024 * 1024
 _MODEL = None
 _MODEL_ERROR = None
 _MODEL_LOCK = threading.Lock()
@@ -240,7 +241,10 @@ def normalize_polygon_points(points, width, height, label):
         x, y = float(x), float(y)
         if not math.isfinite(x) or not math.isfinite(y) or not 0 <= x < width or not 0 <= y < height:
             raise ValueError(label + " polygon point is outside the source canvas.")
-        normalized.append((int(round(x)), int(round(y))))
+        px, py = int(round(x)), int(round(y))
+        if not 0 <= px < width or not 0 <= py < height:
+            raise ValueError(label + " polygon point rounds outside the source canvas.")
+        normalized.append((px, py))
     if len(set(normalized)) < 3:
         raise ValueError(label + " polygon needs at least three distinct points.")
     area = abs(sum(normalized[index][0] * normalized[(index + 1) % len(normalized)][1] - normalized[(index + 1) % len(normalized)][0] * normalized[index][1] for index in range(len(normalized))) / 2)
@@ -301,7 +305,7 @@ def reconstruct_from_visible_donor(payload):
     if not ok:
         raise RuntimeError("Could not encode reconstructed donor pixels.")
     data_url = "data:image/png;base64," + base64.b64encode(encoded.tobytes()).decode("ascii")
-    if len(data_url) > MAX_IMAGE * 2:
+    if len(data_url) > MAX_OUTPUT_DATA_URL_CHARS:
         raise ValueError("Reconstructed patch exceeds the output size limit.")
     return {
         "protocolVersion": 1,
