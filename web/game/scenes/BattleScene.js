@@ -4764,7 +4764,7 @@ export default class BattleScene extends Scene {
       monster.x = position.x; monster.y = position.y;
       monster.view.setPosition(position.x, position.y);
       if (monster.hyenaSprite?.active) monster.hyenaSprite.y = 0;
-      if (monster.hyenaSprite && monster.hitAnimUntil <= this.time.now) {
+      if ((monster.hyenaSprite || monster.studioRig) && monster.hitAnimUntil <= this.time.now) {
         // The corrected 15-frame run sheet belongs to the fast hyena.
         // Keep it running for the full advance so its new crop can be tested
         // clearly in a normal battle, rather than only during a short burst.
