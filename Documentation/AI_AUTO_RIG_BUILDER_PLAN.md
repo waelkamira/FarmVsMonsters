@@ -415,3 +415,8 @@ The Auto-Rig Builder is a permanent first-class Studio subsystem composed of the
 - Cloning a rigged asset now deep-copies the skeletal profile and Auto-Rig authoring manifest, preserves the immutable source image and shared part dependencies, resets the clone to a new draft/version history, and rebinds the manifest's source asset ID to the new asset ID while retaining the original source hash.
 - Added the existing clone-dialog regression test to the focused Auto-Rig workflow and extended asset-version tests to verify independent manifest identity and copy behavior.
 - This provides safe draft duplication of a rigged asset; semantic template retargeting to a different character remains a later Rig Library capability.
+
+
+## 2026-11-22 — Rig Library search refinement and clone workflow verification
+- Rig Library semantic search now indexes both display names and stable IDs for bones and attachments, as well as part IDs, roles, and names.
+- Focused Auto-Rig run `45035533023` passed both Python worker tests and the Node Auto-Rig/Studio contract suite, including the accessible clone dialog, versioned rig-profile/manifest clone behavior, focused ESLint, full-project ESLint diagnostic step, and Next.js production build.
