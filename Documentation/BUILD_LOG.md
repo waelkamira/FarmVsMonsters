@@ -1089,3 +1089,14 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - BattleScene now uses every configured attack/hurt hitbox for supported overlap checks, advances rigged monster move/hit/death clips, preserves frozen poses, and registers one destroy listener per rig to stop animation timers.
 - Added additional regression coverage for static frame bounds, missing bitmap parts, malformed rig profiles, muzzle requirements, editor interactions, and monster state/freeze wiring.
 - Validation remains blocked before job execution: GitHub Actions runner_id is 0 and the job has no steps or logs. No automated or browser pass is claimed.
+
+
+## 2026-11-22 — Hybrid skeletal animation Studio
+- Added a visual cutout-rig editor with bone hierarchy, part assignment, pivots, animation clips, keyframes, attachment points, and attack/hurt hitboxes.
+- Added canvas zoom/pan, direct manipulation of bones and rig markers, editable breathing/walk/recoil presets, per-clip FPS, frame-stepped preview, and safe fallback to Sprite Sheet mode.
+- Added integer frame-time snapping for keyframes, protecting Studio saves from fractional millisecond timestamps.
+- Integrated optional rig rendering for Studio plants and monsters while preserving Sprite Sheet fallback.
+- Integrated muzzle-based projectile origins and multiple oriented hitboxes for melee, monster bites, and projectile collision.
+- Added animation state guards for attack, hit, frozen, and death states, including correct preservation across stacked freeze events.
+- Validation remains pending: the GitHub Actions jobs for the current feature branch terminate before any steps or logs are available; no tests/lint/build/browser pass is claimed.
+- Working branch: `feat/studio-hybrid-animation-engine`; review PR: #84.
