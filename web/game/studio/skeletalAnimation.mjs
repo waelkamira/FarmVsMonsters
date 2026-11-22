@@ -59,6 +59,14 @@ function validateParentGraph(bones) {
   }
 }
 
+export function snapSkeletalKeyframeTime(clip, timeMs) {
+  const duration = Math.max(1, Math.floor(Number(clip?.durationMs) || 1));
+  const fps = Math.max(1, Math.min(60, Math.floor(Number(clip?.fps) || 24)));
+  const frameDuration = 1000 / fps;
+  const frameIndex = Math.max(0, Math.round((Number(timeMs) || 0) / frameDuration));
+  return Math.min(duration, Math.max(0, Math.round(frameIndex * frameDuration)));
+}
+
 export function createSkeletalRigProfile(input) {
   if (!input || typeof input !== "object") throw new TypeError("A skeletal rig profile is required.");
   if (Number(input.version ?? 1) !== 1) throw new RangeError("Only skeletal rig profile version 1 is supported.");
