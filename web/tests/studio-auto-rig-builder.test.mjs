@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { buildAutoRigFromParts } from "../game/studio/autoRigBuilder.mjs";
+import { AUTO_RIG_ROLE_DICTIONARY_VERSION, buildAutoRigFromParts } from "../game/studio/autoRigBuilder.mjs";
 import {
   evaluateSkeletalClip,
   getSkeletalAttachmentTransform,
@@ -132,4 +132,35 @@ test("chooses the nearest eligible parent instance instead of depending on input
   const parentId = first.manifest.parts.find((part) => part.id === "leaf-near-secondary").parentPartId;
   assert.equal(parentId, "body-secondary");
   assert.equal(second.manifest.parts.find((part) => part.id === "leaf-near-secondary").parentPartId, parentId);
+});
+
+
+test("records source identity, versioned roles, polygon masks, and pixel provenance in the authoring manifest", () => {
+  const input = baseInput();
+  input.source = { assetId: "plant-source", sha256: "a".repeat(64), frame: 0 };
+  input.parts[0].mask = {
+    kind: "polygon",
+    points: [{ x: 90, y: 100 }, { x: 160, y: 100 }, { x: 160, y: 180 }, { x: 90, y: 180 }]
+  };
+  input.parts[0].provenance = { segmentation: "manual-polygon", pixels: "source" };
+  const result = buildAutoRigFromParts(input);
+  assert.equal(result.manifest.roleDictionaryVersion, AUTO_RIG_ROLE_DICTIONARY_VERSION);
+  assert.deepEqual(result.manifest.source, {
+    assetId: "plant-source", sha256: "a".repeat(64), frame: 0, width: 256, height: 256
+  });
+  assert.equal(result.manifest.parts[0].mask.kind, "polygon");
+  assert.equal(result.manifest.parts[0].provenance.segmentation, "manual-polygon");
+  assert.equal(result.manifest.parts[0].provenance.pixels, "source");
+});
+
+test("rejects malformed source hashes and masks outside source coordinates", () => {
+  const invalidHash = baseInput();
+  invalidHash.source = { sha256: "not-a-sha256" };
+  assert.throws(() => buildAutoRigFromParts(invalidHash), /64-character hexadecimal SHA-256/);
+  const invalidMask = baseInput();
+  invalidMask.parts[0].mask = {
+    kind: "polygon",
+    points: [{ x: 90, y: 100 }, { x: 160, y: 100 }, { x: 500, y: 180 }]
+  };
+  assert.throws(() => buildAutoRigFromParts(invalidMask), /outside the source canvas/);
 });
