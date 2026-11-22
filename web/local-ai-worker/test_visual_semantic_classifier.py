@@ -15,7 +15,7 @@ class VisualSemanticClassifierTests(unittest.TestCase):
         self.assertEqual(plant_kind, "plant")
         self.assertEqual(monster_kind, "monster")
         self.assertIn("leaf", [role for role, _description in plant_entries])
-        self.assertIn("jaw", [role for role, _description in monster_entries]) if "jaw" in [role for role, _description in monster_entries] else self.assertIn("mouth", [role for role, _description in monster_entries])
+        self.assertIn("mouth", [role for role, _description in monster_entries])
         self.assertTrue(all("2D game character sprite" in prompt for prompt in plant_prompts + monster_prompts))
         self.assertNotEqual(plant_prompts, monster_prompts)
 
