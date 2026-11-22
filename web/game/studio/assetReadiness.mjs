@@ -60,6 +60,9 @@ export function auditStudioAssetRegistry(input) {
         !asset.rigProfile.attachments?.some((attachment) => attachment.id === "muzzle")) {
       errors.push("النبتة الهيكلية التي تطلق قذيفة تحتاج نقطة تثبيت باسم muzzle.");
     }
+    if (asset?.rigProfile && !asset.rigProfile.bones?.some((bone) => bone?.part)) {
+      errors.push("يجب أن يحتوي الهيكل على صورة جزء واحدة على الأقل.");
+    }
     if (asset?.rigProfile) {
       if (type !== "plant" && type !== "monster") errors.push("ملف الهيكل متاح للنباتات والوحوش فقط.");
       const rigValidation = validateSkeletalRigProfile(asset.rigProfile);
