@@ -256,3 +256,16 @@ test("physical file checks stay aligned to each registry row when IDs are duplic
   assert.equal(report.assets[1].fileChecks[0].path, "/assets/projectiles/second.png");
   assert.equal(report.assets[1].fileChecks[0].status, "missing");
 });
+
+
+test("readiness blocks rig parts whose asset type cannot be rendered by the rig engine", () => {
+  const rigProfile = {
+    version: 1, canvas: { width: 200, height: 200 },
+    bones: [{ id: "root", parentId: null }, { id: "head", parentId: "root", part: { assetId: "projectile-part", frame: 0 } }],
+    attachments: [], hitboxes: [], clips: []
+  };
+  const invalidPart = { id: "projectile-part", type: "plantProjectile", status: "published", path: "/assets/projectiles/part.png" };
+  const report = auditStudioAssetRegistry([validPlant({ rigProfile }), validProjectile(), invalidPart]);
+  assert.equal(report.blocked, 1);
+  assert.ok(report.assets[0].errors.some((message) => message.includes("نوع أصل جزء الهيكل غير مدعوم")));
+});

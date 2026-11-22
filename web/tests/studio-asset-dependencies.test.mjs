@@ -287,3 +287,15 @@ test("BattleScene uses the tested world-space transform for muzzle and hitbox po
   assert.match(battleSceneSource, /transformRigPointToWorld\(point, parentView\)/);
   assert.match(battleSceneSource, /transformRigHitboxToWorld\(rig\.getHitbox\(profile\.id\), parentView\)/);
 });
+
+
+test("does not resolve unsupported rig-part asset types", () => {
+  const assets = [
+    { id: "rigged-plant", type: "plant", path: "/assets/plants/rigged.png", rigProfile: { bones: [{ id: "root", part: { assetId: "projectile-part", frame: 0 } }] } },
+    { id: "projectile-part", type: "plantProjectile", path: "/assets/projectiles/part.png", status: "published" }
+  ];
+  const report = buildAssetDependencyReport(assets, "rigged-plant");
+  assert.equal(report.dependencies[0].relation, "rig-part");
+  assert.equal(report.dependencies[0].resolved, false);
+  assert.equal(report.unresolved.length, 1);
+});

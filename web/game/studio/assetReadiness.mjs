@@ -113,6 +113,8 @@ export function auditStudioAssetRegistry(input) {
           const part = assets.find((candidate) => candidate?.id === bone.part.assetId);
           if (!part || part.status === "archived" || !safeAssetPath(part.path)) {
             errors.push("جزء الهيكل " + bone.id + " غير متاح أو مؤرشف: " + bone.part.assetId + ".");
+          } else if (!["item", "plant", "monster", "effect"].includes(part.type)) {
+            errors.push("نوع أصل جزء الهيكل غير مدعوم: " + part.type + ".");
           } else {
             const partCapacity = Math.max(1, Number(part.rows || 1) * Number(part.columns || 1));
             const partFrameCount = part.spriteSheet ? Math.max(1, Math.min(partCapacity, Number(part.frameCount) || partCapacity)) : 1;
