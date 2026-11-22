@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { getProjectileTrajectoryOffset, getProjectileLaunchPoint } from "../../game/studio/projectileTrajectory.mjs";
 import gridCalibration from "../../game/data/farm-grid-calibration.json";
 
@@ -15,7 +15,10 @@ export default function ProjectileTrajectoryEditor({
  speed,setSpeed,collisionRadius,setCollisionRadius,height,setHeight,
  rotation,setRotation,playing,setPlaying
 }){
- const [progress,setProgress]=useState(0);
+ const trajectoryKey=useMemo(()=>JSON.stringify([points,launchX,launchY,height,targetX,targetY]),[points,launchX,launchY,height,targetX,targetY]);
+ const [progressState,setProgressState]=useState({key:"",value:0});
+ const progress=progressState.key===trajectoryKey?progressState.value:0;
+ const setProgress=useCallback(next=>setProgressState(current=>({key:trajectoryKey,value:typeof next==="function"?next(current.key===trajectoryKey?current.value:0):next})),[trajectoryKey]);
  const [drag,setDrag]=useState(null);
  const [selectedPoint,setSelectedPoint]=useState(-1);
  const [imageSize,setImageSize]=useState({width:1,height:1});
@@ -30,7 +33,6 @@ export default function ProjectileTrajectoryEditor({
  useEffect(()=>{if(!plantPlaying)return;const last=Math.max(0,plantFrameCount-1);const first=clamp(idleStartFrame,0,last);const timer=window.setInterval(()=>setPlantFrame(frame=>frame<first||frame>=last?first:Math.min(last,frame+1)),1000/Math.max(1,plantFps||1));return()=>window.clearInterval(timer);},[plantPlaying,plantFps,plantFrameCount,idleStartFrame]);
  useEffect(()=>{if(!playing)return;let last=0,raf=0;const tick=now=>{if(!last)last=now;const dt=Math.min(64,now-last);last=now;setProgress(p=>Math.min(1,p+dt*Math.max(.05,speed)/24000));raf=requestAnimationFrame(tick);};raf=requestAnimationFrame(tick);return()=>cancelAnimationFrame(raf);},[playing,speed]);
  useEffect(()=>{if(playing&&progress>=1)setPlaying(false);},[playing,progress,setPlaying]);
- useEffect(()=>{setProgress(0);},[points,launchX,launchY,height,targetX,targetY]);
  useEffect(()=>{if((!playing&&!projectilePlaying)||!imageUrl)return;const timer=window.setInterval(()=>setProjectileFrame(frame=>(frame+1)%Math.max(1,frameCount)),1000/Math.max(1,projectileFps));return()=>window.clearInterval(timer);},[playing,projectilePlaying,imageUrl,frameCount,projectileFps]);
  const laneOrigin={x:105,y:262.5};
  // Runtime plants are anchored 5px above the lane center in the upper rows.
