@@ -13,7 +13,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import sys
 from pathlib import Path
 
@@ -138,7 +137,6 @@ def configure_scene(width, height, pixels_per_unit, baseline_margin_px):
     scene.render.image_settings.compression = 15
     scene.render.filepath = "//renders/plant-template-preview.png"
 
-    scene.render.image_settings.color_management = "FOLLOW_SCENE"
     scene.view_settings.view_transform = "Standard"
     try:
         scene.view_settings.look = "None"
@@ -206,14 +204,6 @@ def build_scene(args, source_info):
     rig_collection.objects.link(root)
     root["role"] = "Ground/root pivot; do not assume it is the center of the sprite."
 
-    muzzle = bpy.data.objects.new("ATTACK_ORIGIN_PLACEHOLDER", None)
-    muzzle.empty_display_type = "SPHERE"
-    muzzle.empty_display_size = 0.035
-    muzzle.location = (0.25, -0.02, 0.85)
-    rig_collection.objects.link(muzzle)
-    muzzle.parent = root
-    muzzle["role"] = "Unverified placeholder only; set after inspecting the real attack pose."
-
     half_w = args.width / float(args.pixels_per_unit) / 2.0
     add_guide_line("GUIDE_GROUNDLINE", [(-half_w, 0.02, 0.0), (half_w, 0.02, 0.0)], guide_collection)
     add_guide_line("GUIDE_CENTERLINE", [(0.0, 0.02, 0.0), (0.0, 0.02, args.height / float(args.pixels_per_unit))], guide_collection)
@@ -223,6 +213,7 @@ def build_scene(args, source_info):
     # a guessed body/head assembly.
     scene = bpy.context.scene
     scene["source_inspection"] = json.dumps(source_info or {}, ensure_ascii=False)
+    scene["anatomy_status"] = "not_inspected_no_parts_or_bones_created"
 
     for obj in guide_collection.objects:
         obj.hide_set(False)
