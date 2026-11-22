@@ -234,7 +234,7 @@ test("shared physical asset paths are counted only once in the integrity summary
   });
   assert.equal(report.fileAudit.checked, 1);
   assert.equal(report.fileAudit.present, 1);
-  assert.equal(report.ready, 2);
+  assert.equal(report.warning, 2);
 });
 
 test("Testing Lab resolves URL-encoded asset filenames before checking storage", () => {
@@ -264,7 +264,7 @@ test("readiness blocks rig parts whose asset type cannot be rendered by the rig 
     bones: [{ id: "root", parentId: null }, { id: "head", parentId: "root", part: { assetId: "projectile-part", frame: 0 } }],
     attachments: [], hitboxes: [], clips: [{ id: "idle", durationMs: 1000, loop: true, tracks: [] }]
   };
-  const invalidPart = { id: "projectile-part", type: "plantProjectile", status: "published", path: "/assets/projectiles/part.png" };
+  const invalidPart = { id: "projectile-part", type: "plantProjectile", status: "published", path: "/assets/projectiles/part.png", rows: 1, columns: 1, frameCount: 1, spriteSheet: true };
   const report = auditStudioAssetRegistry([validPlant({ rigProfile }), validProjectile(), invalidPart]);
   assert.equal(report.blocked, 1);
   assert.ok(report.assets[0].errors.some((message) => message.includes("نوع أصل جزء الهيكل غير مدعوم")));
