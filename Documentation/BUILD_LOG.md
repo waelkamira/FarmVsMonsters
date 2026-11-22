@@ -1208,3 +1208,9 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - Added the missing jaw and weapon-muzzle semantic roles, including parent-role guidance for a muzzle-region part. The actual projectile launch point remains a separately confirmed `muzzle` attachment, not an inferred polygon role.
 - Added a regression that confirms the Studio option and generator agree on `weapon.muzzle` and do not emit an unknown-role warning for it.
 - Tightened reconstruction review semantics: generated-pixel warnings now also derive from the explicit `provenance.pixels = reconstructed` marker, even if the part's occlusion state was not separately set. Added a regression for this independent provenance path.
+
+## 2026-11-22 — Persisted Auto-Rig build manifest
+- Added a server-side manifest validator that checks builder/version identity, semantic dictionary version, source dimensions/hash/frame, part IDs/bounds/pivots, mask geometry, provenance, parent references, and cycles.
+- Studio now carries the generated authoring manifest alongside the editable skeletal profile and submits both through the existing asset API. The API validates and stores `rigBuildManifest` in the same versioned asset record as `rigProfile`; it does not create a separate storage or runtime system.
+- The manifest is retained as generation provenance while the user remains free to edit bones, pivots, clips, and attachments in RigEditor. Validation therefore checks the manifest's own integrity without freezing the current editable profile to the original generated bone layout.
+- Added regressions for manifest validation, invalid parent references, and the ability to add manual bones after generation. These tests have been authored but not executed in a working Node/CI runner.
