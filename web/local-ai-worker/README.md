@@ -61,7 +61,7 @@ Meta's official SAM 2 installation guidance recommends WSL with Ubuntu when inst
 
    This verifies both automatic and point-prompted SAM 2 inference against a generated test plant image. It does not replace validation with the actual FarmVsMonsters plant and monster artwork.
 
-10. Run the real-asset smoke test from the same directory after both SAM 2 and CLIP checkpoints are configured:
+10. With the worker running and the setup script completed, run the real-asset smoke test from the same directory:
 
    ```bash
    python real_asset_smoke_test.py
