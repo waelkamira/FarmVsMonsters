@@ -320,3 +320,10 @@ The Auto-Rig Builder is a permanent first-class Studio subsystem composed of the
 - Extended the existing persistent asset library with a dedicated rig filter: all assets, assets with a linked skeletal rig, and assets without a rig.
 - Rigged asset rows now show bone count, attachment count, and the stored Auto-Rig manifest version when available. Selecting an item for editing reuses the existing Studio edit flow, preserving the current registry/version lifecycle instead of creating a parallel rig database.
 - Added the Studio library page to the existing production build validation path; focused lint remains scoped to the Auto-Rig component and its API/core modules to avoid expanding the lint gate into unrelated legacy page diagnostics.
+
+
+## 2026-11-22 — Publish-time Rig Quality gate
+- Publishing an asset with an Auto-Rig build manifest now runs `analyzeAutoRigQuality` again on the server. A manifest cannot be published unless its quality report is valid and `readyForAnimation` is true.
+- Publish rejection returns the structured quality report and actionable warning messages (unreviewed parts, unresolved occlusion, missing source fingerprint, unknown roles, low confidence, or reconstructed pixels).
+- Legacy skeletal assets without an Auto-Rig manifest retain their existing publish path; only assets carrying this versioned Auto-Rig authoring record are subject to the new gate.
+- Added a route-contract regression test and included it in the Auto-Rig CI test command.
