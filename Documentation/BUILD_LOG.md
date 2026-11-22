@@ -1426,3 +1426,9 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 ## 2026-11-22 — Rig Library search refinement and clone workflow verification
 - Rig Library semantic search now indexes both display names and stable IDs for bones and attachments, as well as part IDs, roles, and names.
 - Focused Auto-Rig run `45035533023` passed both Python worker tests and the Node Auto-Rig/Studio contract suite, including the accessible clone dialog, versioned rig-profile/manifest clone behavior, focused ESLint, full-project ESLint diagnostic step, and Next.js production build.
+
+
+## 2026-11-22 — Clone dialog regression and broad-suite delta
+- Preserved the existing asynchronous `cloneAsset(asset)` action signature while replacing native prompts with the accessible Studio dialog. The asset-cloning source-contract test now passes.
+- The latest broad Studio/Game test run recorded 374 passed and 53 failed out of 427 (run `45035732569`). The clone-dialog and clone-action failures were eliminated; remaining failures are concentrated in combat/replay/wave scheduling, monster stats and plant/resource contracts, plus older Studio/runtime source-contract expectations.
+- The focused Auto-Rig subsystem suite, worker suite, ESLint, and production build are green on the preceding feature-branch head; the new signature-only adjustment is included in the current re-run.
