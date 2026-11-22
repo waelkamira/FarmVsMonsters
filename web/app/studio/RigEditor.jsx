@@ -142,7 +142,7 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
   function addAttachment() {
     let attachmentIndex = 1;
     while (rig.attachments.some((item) => item.id === "attachment-" + attachmentIndex)) attachmentIndex += 1;
-    const id = rig.attachments.length === 0 ? "muzzle" : "attachment-" + attachmentIndex;
+    const id = !rig.attachments.some((item) => item.id === "muzzle") ? "muzzle" : "attachment-" + attachmentIndex;
     update((next) => next.attachments.push({ id, name: id === "muzzle" ? "فوهة السلاح" : "نقطة تثبيت " + (next.attachments.length + 1), boneId: selectedBoneId, x: 20, y: 0, rotation: 0, scaleX: 1, scaleY: 1 }));
     setSelectedAttachmentId(id);
   }
