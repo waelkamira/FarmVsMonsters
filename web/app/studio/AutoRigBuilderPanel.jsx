@@ -249,6 +249,8 @@ export default function AutoRigBuilderPanel({
   async function requestAISegmentation() {
     if (!image || aiBusy || disabled || generated) return;
     setAiBusy(true);
+    setAiPromptMode(false);
+    setAiPromptPoints([]);
     setAiProposals([]);
     try {
       const sourceCanvas = document.createElement("canvas");
