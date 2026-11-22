@@ -11,6 +11,7 @@ import {cloneStudioAsset,createStudioAssetRevision,restoreStudioAssetRevision} f
 import {getAssetDependents} from "../../../../game/studio/assetDependencies.mjs";
 import {createStudioAnimationProfile} from "../../../../game/studio/animationProfiles.mjs";
 import {createSkeletalRigProfile} from "../../../../game/studio/skeletalAnimation.mjs";
+import {validateAutoRigBuildManifest} from "../../../../game/studio/autoRigBuilder.mjs";
 import {createStudioMonsterProfile} from "../../../../game/studio/monsterProfiles.mjs";
 import {safeAssetPath} from "../../../../game/studio/assetReadiness.mjs";
 export const runtime="nodejs";
@@ -175,12 +176,20 @@ export async function POST(req){
    animationProfile=createStudioAnimationProfile(submittedProfile,rows*columns);
   }catch(error){return NextResponse.json({error:error.message||"Invalid animation profile."},{status:400});}
  }
- let rigProfile=null;
+ let rigProfile=null,rigBuildManifest=null;
  if(config.spriteSheet&&(type==="plant"||type==="monster")){
   try{
    const rawRigProfile=String(form.get("rigProfile")||"");
    const submittedRigProfile=rawRigProfile?JSON.parse(rawRigProfile):(existing?.rigProfile||null);
    rigProfile=submittedRigProfile?createSkeletalRigProfile(submittedRigProfile):null;
+   const rawBuildManifest=String(form.get("rigBuildManifest")||"");
+   const submittedBuildManifest=rawBuildManifest?JSON.parse(rawBuildManifest):(existing?.rigBuildManifest||null);
+   if(submittedBuildManifest){
+    if(!rigProfile)throw new Error("لا يمكن حفظ سجل Auto-Rig دون ملف هيكل مرتبط.");
+    const manifestValidation=validateAutoRigBuildManifest(submittedBuildManifest,rigProfile);
+    if(!manifestValidation.valid)throw new Error(manifestValidation.errors.join("، "));
+    rigBuildManifest=submittedBuildManifest;
+   }
    if(rigProfile){
     if(!rigProfile.bones.some(bone=>bone.part))throw new Error("يجب ربط صورة واحدة على الأقل بأحد عظام الهيكل قبل الحفظ.");
     for(const bone of rigProfile.bones){
@@ -237,7 +246,7 @@ export async function POST(req){
  if(hasFile){const signature=validateStudioAssetBytes(file.type,bytes);if(!signature.valid)return NextResponse.json({error:signature.reason},{status:415});}
  const relative=hasFile?createImmutableAssetPath(config.folder,id,extension,bytes):(existing?.path||"").replace(/^\/assets\//,"");
  const now=new Date().toISOString();
- const record=createStudioAssetRevision(existing,{...(existing||{}),id,type,name:String(form.get("name")||id).trim().slice(0,80),filename:hasFile?id+extension:existing.filename,path:hasFile?"/assets/"+relative:existing.path,rows,columns,frameCount:config.spriteSheet?frameCount:1,spriteSheet:config.spriteSheet,status:"draft",releaseRequest:null,publishedAt:null,testingAt:null,archivedAt:null,restoredFromVersion:null,createdAt:existing?.createdAt||now,updatedAt:now,...(type==="plant"?{combat:combatProfile}:{}),...(type==="monster"?{monsterProfile}:{}),...(config.spriteSheet&&(type==="plant"||type==="monster")?{animationProfile,rigProfile}:{})});
+ const record=createStudioAssetRevision(existing,{...(existing||{}),id,type,name:String(form.get("name")||id).trim().slice(0,80),filename:hasFile?id+extension:existing.filename,path:hasFile?"/assets/"+relative:existing.path,rows,columns,frameCount:config.spriteSheet?frameCount:1,spriteSheet:config.spriteSheet,status:"draft",releaseRequest:null,publishedAt:null,testingAt:null,archivedAt:null,restoredFromVersion:null,createdAt:existing?.createdAt||now,updatedAt:now,...(type==="plant"?{combat:combatProfile}:{}),...(type==="monster"?{monsterProfile}:{}),...(config.spriteSheet&&(type==="plant"||type==="monster")?{animationProfile,rigProfile,rigBuildManifest}:{})});
  const next={...old,version:1,assets:existing?old.assets.map((a,i)=>i===index?record:a):[...old.assets,record]};
  try{
   if(driver==="github"){
