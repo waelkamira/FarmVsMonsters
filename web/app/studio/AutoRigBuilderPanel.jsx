@@ -216,6 +216,21 @@ export default function AutoRigBuilderPanel({
         context.fill();
       });
     }
+    if (donorPoints.length) {
+      context.beginPath();
+      donorPoints.forEach((point, index) => index ? context.lineTo(point.x, point.y) : context.moveTo(point.x, point.y));
+      context.strokeStyle = "#a855f7";
+      context.lineWidth = Math.max(2, canvas.width / 250);
+      context.setLineDash([Math.max(5, canvas.width / 90), Math.max(3, canvas.width / 150)]);
+      context.stroke();
+      context.setLineDash([]);
+      donorPoints.forEach((point) => {
+        context.beginPath();
+        context.arc(point.x, point.y, Math.max(3, canvas.width / 120), 0, Math.PI * 2);
+        context.fillStyle = "#a855f7";
+        context.fill();
+      });
+    }
     if (muzzlePoint) {
       context.beginPath();
       context.arc(muzzlePoint.x, muzzlePoint.y, Math.max(6, canvas.width / 70), 0, Math.PI * 2);
@@ -242,7 +257,7 @@ export default function AutoRigBuilderPanel({
         context.fill();
       });
     }
-  }, [image, points, parts, aiProposals, editingPartId, occlusionPoints, aiPromptPoints]);
+  }, [image, points, parts, aiProposals, editingPartId, occlusionPoints, donorPoints, aiPromptPoints]);
 
   async function checkAIWorker() {
     setAiBusy(true);
@@ -516,7 +531,6 @@ export default function AutoRigBuilderPanel({
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "تعذر نقل بكسلات الجزء المماثل.");
-      const patchImage = await imageFromDataUrl(data.patchDataUrl);
       const union = {
         x: Math.min(part.bounds.x, data.targetBounds.x),
         y: Math.min(part.bounds.y, data.targetBounds.y),
@@ -533,7 +547,6 @@ export default function AutoRigBuilderPanel({
         reviewed: false
       } : item));
       setMessage("تم إنشاء رقعة نقل مرآتي من الجزء المرئي. افحص المعاينة وعلّم مراجعة البكسلات قبل اعتماد الجزء؛ هذه ليست إعادة توليد تخيلية للأنسجة.");
-      patchImage.width = patchImage.naturalWidth;
     } catch (error) {
       setMessage(error.message);
     } finally { setAiBusy(false); }
@@ -765,6 +778,8 @@ export default function AutoRigBuilderPanel({
         </label>
       </div>
       {occlusionMode&&<p className="studio-message" role="status">وضع تحديد المنطقة المخفية مفعّل: انقر 3 نقاط أو أكثر حول المنطقة ثم اضغط «اعتماد المنطقة» في صف الجزء.</p>}
+      {donorMode&&<p className="studio-message" role="status">وضع تحديد الجزء المماثل مفعّل: ارسم مضلعاً حول المنطقة المرئية ثم اعتمده.</p>}
+      {donorMode&&<div className="studio-actions"><button type="button" disabled={donorPoints.length<3} onClick={commitDonorPolygon}>اعتماد الجزء المماثل ({donorPoints.length})</button><button type="button" onClick={() => { setDonorMode(false); setDonorPoints([]); setDonorTargetPartId(""); }}>إلغاء</button></div>}
       <div className="studio-actions" style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 10 }}>
         <button type="button" disabled={disabled || busy || generated || !points.length} onClick={() => setPoints((current) => current.slice(0, -1))}>تراجع عن آخر نقطة</button>
         <button type="button" disabled={disabled || busy || !points.length} onClick={() => setPoints([])}>إلغاء التحديد</button>
@@ -796,18 +811,19 @@ export default function AutoRigBuilderPanel({
               {AUTO_RIG_ROLE_OPTIONS.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
             </select>
           </label>
+          {part.reconstructionPatch?.dataUrl&&<div style={{ margin: "8px 0" }}><img src={part.reconstructionPatch.dataUrl} alt="معاينة بكسلات الجزء المنقول" style={{ maxWidth: 180, maxHeight: 120, imageRendering: "auto", border: "1px solid #a855f7", borderRadius: 8 }} /><label style={{ display: "inline-flex", gap: 5, marginInlineStart: 8 }}><input type="checkbox" checked={part.reconstruction?.reviewed === true} disabled={disabled || busy || generated} onChange={(event) => setParts((current) => current.map((item) => item.id === part.id ? { ...item, reconstruction: { ...item.reconstruction, reviewed: event.target.checked }, reviewed: false } : item))} /> راجعت بكسلات الجزء المنقول</label></div>}
           <label style={{ display: "inline-flex", gap: 5, marginInlineStart: 8 }}>
             <input type="checkbox" checked={part.reviewed === true} disabled={disabled || busy || generated} onChange={(event) => setParts((current) => current.map((item) => item.id === part.id ? { ...item, reviewed: event.target.checked } : item))} />
             تمت مراجعة الجزء
           </label>
           <label style={{ display: "inline-flex", gap: 5, marginInlineStart: 8 }}>
             الاحتجاب
-            <select value={part.occlusion || "unresolved"} disabled={disabled || busy || generated} onChange={(event) => setParts((current) => current.map((item) => item.id === part.id ? { ...item, occlusion: event.target.value, reviewed: false } : item))}>
+            <select value={part.occlusion || "unresolved"} disabled={disabled || busy || generated} onChange={(event) => { const value = event.target.value; setParts((current) => current.map((item) => item.id === part.id ? { ...item, occlusion: value, reconstruction: null, reconstructionPatch: null, provenance: { ...(item.provenance || {}), pixels: "source" }, reviewed: false } : item)); }}>
               <option value="unresolved">غير محسوم</option>
-              <option value="none">لا يوجد جزء مخفي</option>
+              <option value="none">لا يوجد جزء مخفي</option><option value="reconstructed">تم نقل بكسلات الجزء (مراجعة مطلوبة)</option>
             </select>
           </label>
-          <button type="button" disabled={disabled || busy || generated} style={{ marginInlineStart: 8 }} onClick={() => beginOcclusionMask(part.id)}>تحديد المنطقة المخفية</button>{part.occlusionMask&&<small style={{ marginInlineStart: 6 }}>قناع احتجاب محفوظ</small>}{occlusionMode&&occlusionTargetPartId===part.id&&<><button type="button" disabled={occlusionPoints.length<3} style={{ marginInlineStart: 6 }} onClick={commitOcclusionMask}>اعتماد المنطقة ({occlusionPoints.length})</button><button type="button" style={{ marginInlineStart: 4 }} onClick={() => { setOcclusionMode(false); setOcclusionPoints([]); setOcclusionTargetPartId(""); }}>إلغاء</button></>}<button type="button" disabled={disabled || busy || generated} style={{ marginInlineStart: 10 }} onClick={() => { setOcclusionMode(false); setOcclusionPoints([]); setOcclusionTargetPartId(""); setEditingPartId((current) => current === part.id ? "" : part.id); setPoints([]); setMessage(editingPartId === part.id ? "تم إنهاء تحرير القناع." : "اسحب نقاط القناع البرتقالية لتعديل حدود الجزء؛ اضغط الزر مجدداً لإنهاء التحرير."); }}>{editingPartId === part.id ? "إنهاء التحرير" : "تحرير القناع"}</button>
+          <button type="button" disabled={disabled || busy || generated} style={{ marginInlineStart: 8 }} onClick={() => beginOcclusionMask(part.id)}>تحديد المنطقة المخفية</button>{part.occlusionMask&&<small style={{ marginInlineStart: 6 }}>قناع احتجاب محفوظ</small>}{part.occlusionMask&&<button type="button" disabled={disabled || busy || generated || aiBusy} style={{ marginInlineStart: 6 }} onClick={() => beginDonorPolygon(part.id)}>اختيار جزء مرئي مماثل</button>}{part.donorMask&&<button type="button" disabled={disabled || busy || generated || aiBusy} style={{ marginInlineStart: 6 }} onClick={() => reconstructHiddenRegion(part.id)}>نقل البكسلات إلى المنطقة المخفية</button>}{occlusionMode&&occlusionTargetPartId===part.id&&<><button type="button" disabled={occlusionPoints.length<3} style={{ marginInlineStart: 6 }} onClick={commitOcclusionMask}>اعتماد المنطقة ({occlusionPoints.length})</button><button type="button" style={{ marginInlineStart: 4 }} onClick={() => { setOcclusionMode(false); setOcclusionPoints([]); setOcclusionTargetPartId(""); }}>إلغاء</button></>}<button type="button" disabled={disabled || busy || generated} style={{ marginInlineStart: 10 }} onClick={() => { setOcclusionMode(false); setOcclusionPoints([]); setOcclusionTargetPartId(""); setEditingPartId((current) => current === part.id ? "" : part.id); setPoints([]); setMessage(editingPartId === part.id ? "تم إنهاء تحرير القناع." : "اسحب نقاط القناع البرتقالية لتعديل حدود الجزء؛ اضغط الزر مجدداً لإنهاء التحرير."); }}>{editingPartId === part.id ? "إنهاء التحرير" : "تحرير القناع"}</button>
           <button type="button" disabled={disabled || busy || generated} style={{ marginInlineStart: 6 }} onClick={() => { setParts((current) => current.filter((item) => item.id !== part.id)); if (editingPartId === part.id) setEditingPartId(""); if (part.id === activeEmitterPart?.id) { setMuzzlePartId(""); setMuzzlePoint(null); setMuzzleMode(false); } }}>حذف</button>
         </li>)}</ul>
       </div>}
