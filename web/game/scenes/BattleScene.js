@@ -4718,7 +4718,7 @@ export default class BattleScene extends Scene {
           : null;
         const burstWillStart = monster.burstCooldown - delta <= 0 && monster.burstRemaining <= 0;
         const motion = resolveDustSkitterMotionStep({
-          isJumping: false,
+          isJumping: monster.isJumping,
           jumpCooldownMs: monster.jumpCooldown,
           jumpElapsedMs: monster.jumpElapsed,
           jumpDurationMs: monster.jumpDuration,
