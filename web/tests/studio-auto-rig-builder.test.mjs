@@ -185,6 +185,7 @@ test("shares one versioned semantic role dictionary between the builder and Stud
 test("flags generated pixel provenance even when occlusion is not separately marked", () => {
   const input = baseInput();
   input.parts[0].provenance = { segmentation: "model-mask", pixels: "reconstructed" };
+  input.parts[0].reconstruction = { method: "visible-donor-transfer", donorBounds: { x: 24, y: 60, width: 72, height: 48 }, targetBounds: { x: 80, y: 90, width: 40, height: 40 }, reviewed: false };
   const result = buildAutoRigFromParts(input);
   assert.ok(result.warnings.some((warning) => warning.code === "generated-pixels" && warning.partId === "body-main"));
 });
