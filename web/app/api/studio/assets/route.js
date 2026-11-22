@@ -305,7 +305,7 @@ export async function PATCH(req){
    catch(error){return NextResponse.json({error:error.message},{status:409});}
    registry.assets[index]=updated;await saveLocalRegistry(registry,registrySha);
    return NextResponse.json({success:true,operation,asset:updated,message:operation==="archive"?"تمت أرشفة الأصل مع الاحتفاظ بملفاته.":operation==="restore"?"تمت استعادة الأصل كمسودة.":"تمت استعادة الإصدار السابق كمسودة جديدة."});
-  }catch(error){return NextResponse.json({error:error.message||"Studio lifecycle action failed."},{status:500});}
+  }catch(error){return NextResponse.json({error:error.message||"Studio lifecycle action failed."},{status:error.code==="STUDIO_WRITE_CONFLICT"?409:500});}
  }
  const token=process.env.STUDIO_GITHUB_TOKEN,storageBranch=process.env.STUDIO_GITHUB_BRANCH||"studio/assets",targetBranch=process.env.STUDIO_PUBLISH_BRANCH||"main";
  if(!token)return NextResponse.json({error:"STUDIO_GITHUB_TOKEN is required."},{status:503});
