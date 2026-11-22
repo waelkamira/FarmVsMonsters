@@ -87,6 +87,7 @@ jobs:
       - name: Run worker contract tests
         run: python -m unittest -v test_worker.py test_smoke_test.py test_visual_semantic_classifier.py test_generative_anatomical_reconstruction.py
 
+  # Expensive model download is opt-in through the PR body marker or workflow_dispatch.
   validate-real-asset-inference:
     if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && contains(github.event.head_commit.message, '[real-asset-smoke]')) || (github.event_name == 'pull_request' && contains(github.event.pull_request.body, '<!-- run-real-asset-smoke -->'))
     needs: validate-local-ai-worker
