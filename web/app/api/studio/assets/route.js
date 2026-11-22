@@ -11,6 +11,7 @@ import {createStudioReleaseBranchName,resolveStudioReleaseAsset,transitionStudio
 import {cloneStudioAsset,createStudioAssetRevision,restoreStudioAssetRevision} from "../../../../game/studio/assetVersions.mjs";
 import {getAssetDependents} from "../../../../game/studio/assetDependencies.mjs";
 import {createStudioAnimationProfile} from "../../../../game/studio/animationProfiles.mjs";
+import {createSkeletalRigProfile} from "../../../../game/studio/skeletalAnimation.mjs";
 import {createStudioMonsterProfile} from "../../../../game/studio/monsterProfiles.mjs";
 import {safeAssetPath} from "../../../../game/studio/assetReadiness.mjs";
 export const runtime="nodejs";
@@ -186,6 +187,23 @@ export async function POST(req){
    animationProfile=createStudioAnimationProfile(submittedProfile,rows*columns);
   }catch(error){return NextResponse.json({error:error.message||"Invalid animation profile."},{status:400});}
  }
+ let rigProfile=null;
+ if(config.spriteSheet&&(type==="plant"||type==="monster")){
+  try{
+   const rawRigProfile=String(form.get("rigProfile")||"");
+   const submittedRigProfile=rawRigProfile?JSON.parse(rawRigProfile):(existing?.rigProfile||null);
+   rigProfile=submittedRigProfile?createSkeletalRigProfile(submittedRigProfile):null;
+   if(rigProfile){
+    for(const bone of rigProfile.bones){
+     if(!bone.part)continue;
+     const partAsset=old.assets.find(item=>item.id===bone.part.assetId);
+     if(!partAsset||partAsset.id===id||partAsset.type==="audio"||!safeAssetPath(partAsset.path)){
+      throw new Error("جزء الهيكل "+bone.id+" يشير إلى أصل صورة غير موجود أو غير صالح: "+bone.part.assetId);
+     }
+    }
+   }
+  }catch(error){return NextResponse.json({error:error.message||"Invalid skeletal rig profile."},{status:400});}
+ }
  if(hasProjectile&&removeProjectile)return NextResponse.json({error:"Choose a new projectile or remove the existing projectile, not both."},{status:400});
  if(projectileAssetId&&removeProjectile)return NextResponse.json({error:"لا يمكن ربط قذيفة وإزالة القذيفة الحالية في العملية نفسها."},{status:400});
  if(hasProjectile&&(type!=="plant"||!STUDIO_ASSET_TYPES.plantProjectile.accepts.includes(projectileFile.type)||projectileFile.size>STUDIO_MAX_UPLOAD_BYTES))return NextResponse.json({error:"Projectile must be a supported PNG/WebP/GIF file up to 8 MB and can only be attached to a plant."},{status:415});
@@ -223,7 +241,7 @@ export async function POST(req){
  const bytes=hasFile?Buffer.from(await file.arrayBuffer()):null;
  const relative=hasFile?createImmutableAssetPath(config.folder,id,extension,bytes):(existing?.path||"").replace(/^\/assets\//,"");
  const now=new Date().toISOString();
- const record=createStudioAssetRevision(existing,{...(existing||{}),id,type,name:String(form.get("name")||id).trim().slice(0,80),filename:hasFile?id+extension:existing.filename,path:hasFile?"/assets/"+relative:existing.path,rows,columns,frameCount:config.spriteSheet?frameCount:1,spriteSheet:config.spriteSheet,status:"draft",releaseRequest:null,publishedAt:null,testingAt:null,archivedAt:null,restoredFromVersion:null,createdAt:existing?.createdAt||now,updatedAt:now,...(type==="plant"?{combat:combatProfile}:{}),...(type==="monster"?{monsterProfile}:{}),...(config.spriteSheet&&(type==="plant"||type==="monster")?{animationProfile}:{})});
+ const record=createStudioAssetRevision(existing,{...(existing||{}),id,type,name:String(form.get("name")||id).trim().slice(0,80),filename:hasFile?id+extension:existing.filename,path:hasFile?"/assets/"+relative:existing.path,rows,columns,frameCount:config.spriteSheet?frameCount:1,spriteSheet:config.spriteSheet,status:"draft",releaseRequest:null,publishedAt:null,testingAt:null,archivedAt:null,restoredFromVersion:null,createdAt:existing?.createdAt||now,updatedAt:now,...(type==="plant"?{combat:combatProfile}:{}),...(type==="monster"?{monsterProfile}:{}),...(config.spriteSheet&&(type==="plant"||type==="monster")?{animationProfile,rigProfile}:{})});
  const next={...old,version:1,assets:existing?old.assets.map((a,i)=>i===index?record:a):[...old.assets,record]};
  try{
   if(driver==="github"){
@@ -352,12 +370,12 @@ export async function PATCH(req){
    const catalogDocument=await githubGetDocument(PUBLISHED_MONSTER_CATALOG_PATH,token,targetBranch);
    const catalog=catalogDocument?JSON.parse(catalogDocument.content):{version:1,monsters:[]};
    const catalogSha=catalogDocument?.sha??null;
-   const publishedMonster={id:asset.id,name:asset.name,path:asset.path,rows:asset.rows,columns:asset.columns,spriteSheet:asset.spriteSheet,animationProfile:asset.animationProfile||null,monsterProfile:asset.monsterProfile,publishedAt:new Date().toISOString()};
+   const publishedMonster={id:asset.id,name:asset.name,path:asset.path,rows:asset.rows,columns:asset.columns,spriteSheet:asset.spriteSheet,animationProfile:asset.animationProfile||null,rigProfile:asset.rigProfile||null,monsterProfile:asset.monsterProfile,publishedAt:new Date().toISOString()};
    const existingIndex=(catalog.monsters||[]).findIndex(monster=>monster.id===id);
    catalog.monsters=existingIndex>=0?catalog.monsters.map((monster,i)=>i===existingIndex?publishedMonster:monster):[...(catalog.monsters||[]),publishedMonster];
    catalog.version=1;
    await githubPut(PUBLISHED_MONSTER_CATALOG_PATH,Buffer.from(JSON.stringify(catalog,null,2)+"\n"),"stage monster catalog release "+id,token,releaseBranch,catalogSha);
-   const pr=await githubCreatePullRequest(releaseBranch,targetBranch,"Publish monster: "+asset.name+" ("+id+")","## Studio monster release\n\n- Monster: "+id+"\n- Base archetype: "+asset.monsterProfile.baseArchetype+"\n- Includes the monster artwork, saved idle/move/attack animation profile, and monster combat profile.\n- Spawn weight: "+asset.monsterProfile.spawnWeight+"; first wave: "+asset.monsterProfile.firstWave+".\n- Complete manual gameplay verification before merging this release.\n\nMerge this pull request to activate the monster in the target game branch.",token);
+   const pr=await githubCreatePullRequest(releaseBranch,targetBranch,"Publish monster: "+asset.name+" ("+id+")","## Studio monster release\n\n- Monster: "+id+"\n- Base archetype: "+asset.monsterProfile.baseArchetype+"\n- Includes the monster artwork, Sprite Sheet profile, optional skeletal rig, and monster combat profile.\n- Spawn weight: "+asset.monsterProfile.spawnWeight+"; first wave: "+asset.monsterProfile.firstWave+".\n- Complete manual gameplay verification before merging this release.\n\nMerge this pull request to activate the monster in the target game branch.",token);
    const requested={...asset,releaseRequest:{number:pr.number,url:pr.url,branch:releaseBranch,createdAt:new Date().toISOString()}};
    registry.assets[index]=requested;
    try{await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(registry,null,2)+"\n"),"studio: request monster release "+id,token,storageBranch,registrySha);}
@@ -391,12 +409,12 @@ export async function PATCH(req){
   const catalogDocument=await githubGetDocument(PUBLISHED_CATALOG_PATH,token,targetBranch);
   const catalog=catalogDocument?JSON.parse(catalogDocument.content):{version:1,plants:[]};
   const catalogSha=catalogDocument?.sha??null;
-  const publishedPlant={id:asset.id,name:asset.name,path:asset.path,rows:asset.rows,columns:asset.columns,spriteSheet:asset.spriteSheet,animationProfile:asset.animationProfile||null,combat:asset.combat,publishedAt:new Date().toISOString()};
+  const publishedPlant={id:asset.id,name:asset.name,path:asset.path,rows:asset.rows,columns:asset.columns,spriteSheet:asset.spriteSheet,animationProfile:asset.animationProfile||null,rigProfile:asset.rigProfile||null,combat:asset.combat,publishedAt:new Date().toISOString()};
   const existingIndex=(catalog.plants||[]).findIndex(plant=>plant.id===id);
   catalog.plants=existingIndex>=0?catalog.plants.map((plant,i)=>i===existingIndex?publishedPlant:plant):[...(catalog.plants||[]),publishedPlant];
   catalog.version=1;
   await githubPut(PUBLISHED_CATALOG_PATH,Buffer.from(JSON.stringify(catalog,null,2)+"\n"),"stage plant catalog release "+id,token,releaseBranch,catalogSha);
-  const pr=await githubCreatePullRequest(releaseBranch,targetBranch,"Publish plant: "+asset.name+" ("+id+")","## Studio plant release\n\n- Plant: "+id+"\n- Behavior: "+asset.combat.mode+"\n- Includes the plant asset, linked projectile when applicable, and the published plant catalog update.\n- Prepared in FarmVsMonsters Studio; complete manual gameplay verification before merging this release.\n\nMerge this pull request to activate the plant in the target game branch.",token);
+  const pr=await githubCreatePullRequest(releaseBranch,targetBranch,"Publish plant: "+asset.name+" ("+id+")","## Studio plant release\n\n- Plant: "+id+"\n- Behavior: "+asset.combat.mode+"\n- Includes the plant asset, Sprite Sheet profile, optional skeletal rig, linked projectile when applicable, and the published plant catalog update.\n- Prepared in FarmVsMonsters Studio; complete manual gameplay verification before merging this release.\n\nMerge this pull request to activate the plant in the target game branch.",token);
   const requested={...asset,releaseRequest:{number:pr.number,url:pr.url,branch:releaseBranch,createdAt:new Date().toISOString()}};
   registry.assets[index]=requested;
   try{await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(registry,null,2)+"\n"),"studio: request plant release "+id,token,storageBranch,registrySha);}
