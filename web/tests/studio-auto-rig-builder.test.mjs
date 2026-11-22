@@ -365,6 +365,12 @@ test("animation readiness requires a source fingerprint and no unreviewed recons
   const occlusionReport = analyzeAutoRigQuality(occlusionReconstructed, complete.profile);
   assert.equal(occlusionReport.readyForAnimation, false);
   assert.ok(occlusionReport.warnings.some((warning) => warning.code === "reconstructed-pixels"));
+
+  const missingOcclusion = JSON.parse(JSON.stringify(complete.manifest));
+  delete missingOcclusion.parts[0].occlusion;
+  const missingOcclusionReport = analyzeAutoRigQuality(missingOcclusion, complete.profile);
+  assert.equal(missingOcclusionReport.readyForAnimation, false);
+  assert.ok(missingOcclusionReport.warnings.some((warning) => warning.code === "unresolved-occlusion"));
 });
 
 
