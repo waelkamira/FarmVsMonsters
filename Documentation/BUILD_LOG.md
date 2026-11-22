@@ -1187,3 +1187,11 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - GitHub Actions were triggered for the updated branch head. Both workflow jobs reported failure, but GitHub returned zero job steps and the job-log artifacts returned BlobNotFound; this provides no test/build output and does not establish a code failure or a passing test run. The Node test suite, lint, production build, and live Chrome gameplay validation remain unverified in this environment.
 - PR #89 remains unmerged and must remain draft until executable CI results and integrated Studio/gameplay validation are available.
 
+## 2026-11-22 — Guided Studio cutout workflow (first usable authoring slice)
+- Added AutoRigBuilderPanel to the normal plant/monster asset workflow. It can use a newly selected source image or an existing Studio asset and, for Sprite Sheets, isolates the first frame as the reference pose.
+- Added guided polygon-mask authoring: users outline each visible part, assign a stable semantic role and name, review/remove selections, and create transparent PNG cutouts without modifying the original source image.
+- Each cutout is saved as an ordinary Studio item asset through the existing authenticated asset API. The generated rig profile references those registered assets, so the existing asset dependency, version, readiness, and publishing lifecycle remains authoritative.
+- The generated profile is handed directly to the existing RigEditor for manual bone/pivot/clip/attachment review; it uses the same runtime profile format and evaluator. Projectile plants still require the user to add/confirm the muzzle attachment in RigEditor before save, as enforced by the existing API.
+- This is guided/manual segmentation, not automatic AI inference. AI Part Detector models, prompt-assisted segmentation, hidden-pixel reconstruction, undo/redo history, and bulk transactional rollback are not implemented yet. If a multi-part upload fails partway through, already-created cutout assets remain in the library and are reported for cleanup.
+- No executable test, lint, production build, or Chrome gameplay result is claimed for this UI addition. It remains subject to full CI and interactive validation before PR #89 can leave draft or be merged.
+
