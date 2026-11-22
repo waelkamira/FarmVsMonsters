@@ -213,3 +213,26 @@ test("suggests contact-aware pivots when the author has not supplied manual pivo
   assert.deepEqual(head.pivot, { x: 36, y: 70 });
   assert.deepEqual({ x: head.x, y: head.y }, { x: 0, y: -108 });
 });
+
+
+test("generates editable idle, move, attack, hit, and death clips using the shared skeletal evaluator", () => {
+  const result = buildAutoRigFromParts(baseInput());
+  assert.deepEqual(result.profile.clips.map((clip) => clip.id), ["idle", "move", "attack", "hit", "death"]);
+  for (const clip of result.profile.clips) {
+    assert.ok(clip.tracks.length > 0);
+    assert.doesNotThrow(() => evaluateSkeletalClip(result.profile, clip.id, Math.floor(clip.durationMs / 2)));
+  }
+  const validation = validateSkeletalRigProfile(result.profile);
+  assert.equal(validation.valid, true, validation.errors.join("; "));
+});
+
+test("single-part Auto-Rigs do not create duplicate animation tracks", () => {
+  const input = baseInput();
+  input.parts = [input.parts[0]];
+  input.parts[0].role = "leaf";
+  const result = buildAutoRigFromParts(input);
+  for (const clip of result.profile.clips) {
+    const ids = clip.tracks.map((track) => track.boneId);
+    assert.equal(new Set(ids).size, ids.length);
+  }
+});
