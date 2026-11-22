@@ -276,7 +276,7 @@ The Auto-Rig Builder is a permanent first-class Studio subsystem composed of the
 ## 2026-11-22 — Windows worker launcher and review overlay
 - Added a PowerShell launcher that verifies local SAM 2 config/checkpoint paths and imports PyTorch, SAM 2, and OpenCV before starting the loopback service.
 - Added a blue dashed overlay for unapproved AI proposals and a green overlay for accepted parts; stale proposals are cleared when the source image changes.
-- Restricted the API bridge to the only implemented worker task (`part-detection`) so future reconstruction and prompted-segmentation tasks cannot be mistaken for available capabilities.
+- The API bridge initially exposed only automatic mask proposals; it was subsequently extended to the implemented positive/negative point-prompted SAM 2 endpoint. Hidden-part reconstruction remains unavailable and is not advertised.
 
 
 ## 2026-11-22 — Broader validation findings
@@ -384,3 +384,12 @@ The Auto-Rig Builder is a permanent first-class Studio subsystem composed of the
 - The SAM 2 worker now accepts POST requests only when the Host header matches its exact 127.0.0.1 bind/port, the media type is JSON, and no browser Origin header is present. This blocks cross-site browser form submissions from triggering local model inference.
 - A bounded single-request admission slot prevents concurrent uploads from accumulating while CPU/GPU inference is serialized; busy clients receive HTTP 429 and can retry.
 - Added worker unit coverage for accepted loopback requests and rejected browser-origin, remote-host, and non-JSON requests. The local-worker CI job compiles and runs these tests.
+
+
+## 2026-11-22 — SAM 2 alpha handling and Windows WSL setup
+- The local worker now decodes source images with their original channel layout and composites transparent PNG pixels onto white for inference instead of silently discarding alpha and turning transparent pixels black.
+- Added a regression test covering opaque, semi-transparent, and fully transparent PNG pixels.
+- Added WSL 2 setup and launch scripts. The setup creates an isolated Python environment, installs CPU PyTorch by default, clones the official SAM 2 source, skips its optional CUDA extension, and installs worker dependencies. Checkpoints remain a separate manual download and are never committed.
+- Updated the worker README to follow Meta's current installation guidance: Python 3.10+, PyTorch 2.5.1+, matching torchvision, and WSL/Ubuntu recommended on Windows. Native PowerShell startup remains a best-effort alternative.
+- CI now validates WSL shell syntax in addition to Python compilation and worker tests. The alpha-handling worker test passed in run `45034701613`; WSL launcher syntax and the worker contract tests passed in run `45034810415`.
+- The Studio button now describes automatic SAM 2 output as visible-region proposals rather than implying semantic role recognition. The author must assign each region's semantic role.
