@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { AUTO_RIG_ROLE_DICTIONARY_VERSION, AUTO_RIG_ROLE_OPTIONS, buildAutoRigFromParts, validateAutoRigBuildManifest } from "../game/studio/autoRigBuilder.mjs";
+import { AUTO_RIG_ROLE_DICTIONARY_VERSION, AUTO_RIG_ROLE_OPTIONS, buildAutoRigFromParts, validateAutoRigBuildManifest, analyzeAutoRigQuality } from "../game/studio/autoRigBuilder.mjs";
 import {
   evaluateSkeletalClip,
   getSkeletalAttachmentTransform,
@@ -261,4 +261,43 @@ test("uses a dedicated weapon-muzzle region as a confirmed projectile emitter", 
   input.anchors = { muzzle: { partId: "weapon-tip", x: 224, y: 136 } };
   const result = buildAutoRigFromParts(input);
   assert.equal(result.profile.attachments[0].boneId, "part-weapon-tip");
+});
+
+
+test("quality validator reports explicit readiness checks and blocks unknown semantic roles", () => {
+  const input = baseInput();
+  input.parts = input.parts.map((part) => ({
+    ...part,
+    mask: { kind: "polygon", points: [
+      { x: part.bounds.x, y: part.bounds.y },
+      { x: part.bounds.x + part.bounds.width, y: part.bounds.y },
+      { x: part.bounds.x + part.bounds.width, y: part.bounds.y + part.bounds.height },
+      { x: part.bounds.x, y: part.bounds.y + part.bounds.height }
+    ] },
+    confidence: 0.9,
+    provenance: { segmentation: "manual-polygon", pixels: "source" }
+  }));
+  input.source = { assetId: "source-character", sha256: "a".repeat(64), frame: 0 };
+  const built = buildAutoRigFromParts(input);
+  const report = analyzeAutoRigQuality(built.manifest, built.profile);
+  assert.equal(report.valid, true);
+  assert.equal(report.readyForAnimation, true);
+  assert.equal(report.score, 100);
+  assert.equal(report.checks.rolesConfirmed, true);
+
+  const unclassified = structuredClone(input);
+  unclassified.parts[1].role = "unknown";
+  const unclassifiedBuild = buildAutoRigFromParts(unclassified);
+  const unclassifiedReport = analyzeAutoRigQuality(unclassifiedBuild.manifest, unclassifiedBuild.profile);
+  assert.equal(unclassifiedReport.valid, true);
+  assert.equal(unclassifiedReport.readyForAnimation, false);
+  assert.ok(unclassifiedReport.warnings.some((warning) => warning.code === "unconfirmed-semantic-role"));
+});
+
+test("quality validator rejects invalid manifests without assigning a score", () => {
+  const report = analyzeAutoRigQuality({}, {});
+  assert.equal(report.valid, false);
+  assert.equal(report.readyForAnimation, false);
+  assert.equal(report.score, 0);
+  assert.ok(report.errors.length > 0);
 });
