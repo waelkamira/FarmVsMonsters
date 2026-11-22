@@ -5,6 +5,7 @@ import {
   evaluateSkeletalClip,
   getSkeletalAttachmentTransform,
   getSkeletalHitboxTransform,
+  snapSkeletalKeyframeTime,
   validateSkeletalRigProfile
 } from "../game/studio/skeletalAnimation.mjs";
 
