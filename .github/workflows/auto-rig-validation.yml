@@ -41,7 +41,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run Auto-Rig and Studio contract tests
+      - name: Run Auto-Rig, quality-validator, and Studio contract tests
         run: node --test tests/studio-auto-rig-builder.test.mjs tests/studio-auto-rig-worker-protocol.test.mjs tests/studio-auto-rig-worker-route.test.mjs tests/studio-asset-versions.test.mjs tests/studio-hybrid-engine-integration.test.mjs
 
       - name: Run focused Auto-Rig ESLint
