@@ -35,6 +35,8 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
   const imageCache = useRef(new Map());
   const rig = profile || createDefaultRig();
   const validation = useMemo(() => validateSkeletalRigProfile(rig), [rig]);
+  const partAssets = useMemo(() => assets.filter((asset) => asset.id !== currentAssetId && asset.type !== "audio" && asset.status !== "archived" && asset.path), [assets, currentAssetId]);
+  const availableParts = useMemo(() => partAssets.filter((asset) => ["item", "plant", "monster", "effect"].includes(asset.type)), [partAssets]);
   const hasVisualPart = rig.bones.some((item) => item.part);
   const missingPartIds = [...new Set(rig.bones.filter((item) => item.part && !availableParts.some((asset) => asset.id === item.part.assetId)).map((item) => item.part.assetId))];
   const rigIsReady = validation.valid && hasVisualPart && missingPartIds.length === 0;
@@ -56,8 +58,6 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
     if (!rig.attachments.some((item) => item.id === selectedAttachmentId)) setSelectedAttachmentId(rig.attachments[0]?.id || "");
     if (!rig.hitboxes.some((item) => item.id === selectedHitboxId)) setSelectedHitboxId(rig.hitboxes[0]?.id || "");
   }, [rig.bones, rig.clips, rig.attachments, rig.hitboxes, selectedBoneId, selectedClipId, selectedAttachmentId, selectedHitboxId]);
-  const partAssets = useMemo(() => assets.filter((asset) => asset.id !== currentAssetId && asset.type !== "audio" && asset.status !== "archived" && asset.path), [assets, currentAssetId]);
-  const availableParts = useMemo(() => partAssets.filter((asset) => ["item", "plant", "monster", "effect"].includes(asset.type)), [partAssets]);
 
   function update(mutator) {
     const next = clone(rig);
