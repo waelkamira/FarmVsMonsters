@@ -18,6 +18,9 @@ class WorkerTests(unittest.TestCase):
         with self.assertRaises(ValueError): worker.normalize_prompt_points([{"x": 100, "y": 20, "label": 1}], 100, 100)
         with self.assertRaises(ValueError): worker.normalize_prompt_points([{"x": 20, "y": 20, "label": 2}], 100, 100)
         with self.assertRaises(ValueError): worker.normalize_prompt_points([{"x": float("nan"), "y": 20, "label": 1}], 100, 100)
+        with self.assertRaises(ValueError): worker.normalize_prompt_points([{"x": "20", "y": 20, "label": 1}], 100, 100)
+        with self.assertRaises(ValueError): worker.normalize_prompt_points([{"x": 20, "y": None, "label": 1}], 100, 100)
+        with self.assertRaises(ValueError): worker.normalize_prompt_points([{"x": 20, "y": 20, "label": True}], 100, 100)
 
     def test_ready_capabilities_advertise_automatic_and_prompted_segmentation(self):
         with patch.object(worker, "load_model", return_value=(object(), object(), "cpu")):
