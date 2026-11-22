@@ -11,6 +11,7 @@ import { getSpriteFrameRectangles } from "../studio/spriteSheetGrid.mjs";
 import { createPhaserSkeletalRig } from "../studio/phaserSkeletalRig.mjs";
 import { createSkeletalAnimationController } from "../studio/animationStateMachine.mjs";
 import { circleIntersectsOrientedRectangle, orientedRectanglesOverlap } from "../studio/skeletalCollision.mjs";
+import { transformRigPointToWorld } from "../studio/skeletalWorldTransform.mjs";
 import { getProjectileTrajectoryOffset } from "../studio/projectileTrajectory.mjs";
 import { createStudioMonsterProfile, resolveStudioMonsterRuntimeProfile, selectWeightedStudioMonster } from "../studio/monsterProfiles.mjs";
 
@@ -3156,33 +3157,20 @@ export default class BattleScene extends Scene {
     if (!rig || !parentView?.active) return null;
     const point = rig.getAttachment(attachmentId);
     if (!point) return null;
-    const scaleX = Number(parentView.scaleX) || 1;
-    const scaleY = Number(parentView.scaleY) || 1;
-    const rotation = Number(parentView.rotation) || 0;
-    const x = point.x * scaleX, y = point.y * scaleY;
-    return {
-      ...point,
-      x: parentView.x + x * Math.cos(rotation) - y * Math.sin(rotation),
-      y: parentView.y + x * Math.sin(rotation) + y * Math.cos(rotation),
-      rotation: point.rotation + rotation * 180 / Math.PI,
-      scaleX: point.scaleX * scaleX,
-      scaleY: point.scaleY * scaleY
-    };
+    return transformRigPointToWorld(point, parentView);
   }
 
   getStudioRigHitboxesWorld(rig, parentView, kind) {
     if (!rig || !parentView?.active) return [];
     return rig.profile.hitboxes.filter((item) => item.kind === kind).map((profile) => {
       const local = rig.getHitbox(profile.id);
-      const scaleX = Number(parentView.scaleX) || 1;
-      const scaleY = Number(parentView.scaleY) || 1;
-      const rotation = (Number(parentView.rotation) || 0) * 180 / Math.PI;
+      const world = transformRigPointToWorld(local, parentView);
       return {
-        x: parentView.x + local.x * scaleX,
-        y: parentView.y + local.y * scaleY,
-        width: local.width * Math.abs(scaleX),
-        height: local.height * Math.abs(scaleY),
-        rotation: local.rotation + rotation
+        x: world.x,
+        y: world.y,
+        width: local.width * Math.abs(Number(parentView.scaleX) || 1),
+        height: local.height * Math.abs(Number(parentView.scaleY) || 1),
+        rotation: world.rotation
       };
     });
   }
