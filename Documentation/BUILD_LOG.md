@@ -1516,3 +1516,11 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - Broad Studio/Game run `45050364564` remains red at 391 passed / 53 failed out of 444. The same 53 pre-existing gameplay/legacy Studio test failures persist; the two added retarget tests pass in the broad run as well as focused CI.
 - Web quality gate run `45050364624` was still in progress at the time of this entry; verify its terminal state separately.
 - This remains deterministic template matching, not learned semantic classification or generative hidden-part reconstruction. Real local SAM 2 checkpoint and Studio-to-Phaser validation remain pending.
+
+
+## 2026-11-22 — Final retarget schema/graph validation (head a016aa51)
+- Retargeting now rejects incompatible manifest versions/builders/role dictionaries and pivots outside source-part bounds; it validates missing/cyclic parent references before matching.
+- Added focused tests for schema compatibility, invalid pivots, parent graph safety, global minimum-cost repeated-role assignment, and Studio preview/apply integration with stale-target protection.
+- Auto-Rig run `45050521931` completed successfully: 75/75 Node tests, focused ESLint, full-project ESLint diagnostic step, Next.js production build, worker Python compile/tests, and WSL launcher syntax all passed.
+- Studio/Game run `45050521955` remains red with the same 53 known broad gameplay/legacy Studio failures; the last completed broad run for this branch family recorded 391 passed / 53 failed of 444.
+- Web quality gate run `45050521990` remained in progress at this entry; verify separately. PR stays draft pending local-model and real-asset acceptance.
