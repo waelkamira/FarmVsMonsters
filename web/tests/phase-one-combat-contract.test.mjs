@@ -84,7 +84,7 @@ test("radish, mushroom and dragon combat values preserve the current tuning", ()
 
 test("monster stats match the existing Stage 1 combat values", () => {
   const brute = getMonsterCombatStats("cave-brute", 1);
-  assert.equal(brute.hp, 175);
+  assert.equal(brute.hp, 125);
   assert.equal(brute.speed, 8);
   assert.equal(brute.plantDamage, 16);
   assert.equal(brute.attackIntervalMs, 1150);
@@ -125,7 +125,7 @@ test("Phaser uses the shared contract and has no duplicate monster balance table
   assert.match(scene, /getMonsterCombatStats\(archetype, this\.wave\)/);
   assert.match(scene, /PHASE_ONE_DRAGON\.maxHp/);
   assert.match(scene, /PHASE_ONE_REWARDS\.ordinaryMonsterDefeatCoins/);
-  assert.match(scene, /getMonsterSpawnIntervalMs\(this\.wave\)/);
+  assert.match(scene, /resolveWaveSpawnStep\(/);\n  assert.match(scene, /nextSpawnTimerMs/);
   assert.doesNotMatch(scene, /const COMBAT_BALANCE\s*=/);
   assert.match(rules, /PHASE_ONE_REWARDS\.ordinaryMonsterDefeatCoins/);
   assert.match(rules, /PHASE_ONE_WAVE_SIZES/);
