@@ -68,3 +68,11 @@ A feature is complete only when:
 The active Phaser runtime keeps Sprite Sheet animation as the compatibility baseline and adds an optional versioned skeletal/cutout profile. The pure profile evaluator lives in `web/game/studio/skeletalAnimation.mjs`, with a Phaser Container adapter in `web/game/studio/phaserSkeletalRig.mjs`; it validates the bone graph and references, samples keyframes, composes hierarchical transforms, and resolves attachment/hitbox transforms. Studio asset records preserve this profile through revision snapshots, cloning, and restore. Published catalogs carry the rig profile and descriptors for its referenced bitmap-part assets.
 
 The evaluator does not render Phaser objects or own combat rules. The next runtime/editor phases must use the same evaluated pose for visible parts, weapon/projectile attachments, and hitboxes. Assets without a rig profile continue through the existing Sprite Sheet animation path unchanged.
+
+## Hybrid animation runtime wiring — 2026-11-22
+
+The optional rig profile is now consumed by BattleScene for Studio-authored plants and monsters. Referenced part textures are loaded from published/testing catalog descriptors, converted to Phaser frames, and rendered through the skeletal Container adapter. Assets without a rig profile keep the existing Sprite Sheet/static renderer.
+
+BattleScene drives idle/move/attack/hit/death/frozen clips through the skeletal animation controller, including bounded cross-fades. Projectile plants with rigs require a muzzle attachment; projectile spawn offsets are calculated from that animated attachment. Rig attack/hurt boxes are consulted for custom melee, bite, and projectile hits when both sides expose the relevant hitboxes. Freeze/thaw pauses or uses a frozen clip and restores the previous state.
+
+This is source integration only. The automated checks have not reached a runner and live browser verification remains required before calling the system complete.
