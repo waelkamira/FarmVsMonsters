@@ -57,4 +57,4 @@ The foundation-first documentation pass is available for review in draft PR #90:
 
 The user-confirmed governance decision is explicit: Auto-Rig and Hybrid/Skeletal Rig are integrated capabilities within Asset & Animation Studio, not separate projects or release lifecycles. Both must use the same asset identity, revisions, dependency checks, readiness, release approval, runtime validation and rollback.
 
-PR #90 is draft and has not been merged. The branch is based on main `a642d676e186bb6ae59b5875585352a690ce40d7`, six commits ahead and zero commits behind at comparison time. No code, runtime or asset changes were made in this documentation pass. No tests, lint, production build, Chrome/Windows or live Phaser battle were executed.
+PR #90 is draft and has not been merged. The branch is based on main `a642d676e186bb6ae59b5875585352a690ce40d7`, seven commits ahead and zero commits behind at comparison time. No code, runtime or asset changes were made in this documentation pass. No tests, lint, production build, Chrome/Windows or live Phaser battle were executed.
