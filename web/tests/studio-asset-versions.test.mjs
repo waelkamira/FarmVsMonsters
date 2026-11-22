@@ -135,3 +135,30 @@ test("clone, revision snapshots, and restore preserve independent skeletal rig p
   restored.rigProfile.bones[1].x = 50;
   assert.equal(edited.versions[0].rigProfile.bones[1].x, 10);
 });
+
+
+test("clones, snapshots, and restores the Auto-Rig authoring manifest independently", () => {
+  const manifest = {
+    version: 1, builder: "farmvsmonsters-auto-rig",
+    generator: { id: "farmvsmonsters-auto-rig", version: 1 },
+    roleDictionaryVersion: "1.0.0",
+    source: { assetId: "rigged-plant", sha256: "a".repeat(64), frame: 0, width: 128, height: 128 },
+    canvas: { width: 128, height: 128 },
+    parts: [{ id: "part-01", assetId: "part-image", role: "body", bounds: { x: 0, y: 0, width: 128, height: 128 }, pivot: { x: 64, y: 128 }, parentPartId: null, drawOrder: 0, confidence: null, occlusion: "none", mask: null, provenance: { segmentation: "manual-polygon", pixels: "source" } }],
+    anchors: [], warnings: []
+  };
+  const source = {
+    id: "rigged-plant", type: "plant", path: "/assets/plants/rigged.png",
+    revision: 1, rigProfile: { version: 1 }, rigBuildManifest: manifest
+  };
+  const clone = cloneStudioAsset(source, "rigged-plant-copy");
+  assert.deepEqual(clone.rigBuildManifest, manifest);
+  assert.notEqual(clone.rigBuildManifest, manifest);
+  const editedManifest = { ...manifest, source: { ...manifest.source, sha256: "b".repeat(64) } };
+  const edited = createStudioAssetRevision(source, { ...source, rigBuildManifest: editedManifest });
+  assert.deepEqual(edited.versions[0].rigBuildManifest, manifest);
+  const restored = restoreStudioAssetRevision(edited, 1);
+  assert.deepEqual(restored.rigBuildManifest, manifest);
+  restored.rigBuildManifest.source.sha256 = "c".repeat(64);
+  assert.equal(edited.versions[0].rigBuildManifest.source.sha256, "a".repeat(64));
+});
