@@ -1,9 +1,27 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { resolvePlantPlacement } from "../game/rules/combatSimulation.mjs";
 
 const atlas = JSON.parse(readFileSync(new URL("../public/assets/plants/corn_monster.json", import.meta.url), "utf8"));
 const battleScene = readFileSync(new URL("../game/scenes/BattleScene.js", import.meta.url), "utf8");
+
+test("Corn Monster can be placed through the real combat placement rules", () => {
+  const result = resolvePlantPlacement({
+    energy: 100,
+    plants: [],
+    type: "corn-monster",
+    col: 2,
+    row: 1,
+    columns: 8,
+    rows: 5
+  });
+  assert.equal(result.ok, true);
+  assert.equal(result.reason, "PLANT_PLACED");
+  assert.equal(result.energy, 30);
+  assert.equal(result.plant.type, "corn-monster");
+  assert.equal(result.plant.hp, 140);
+});
 
 test("Corn Monster Atlas contains the expected named clips and valid 150px frames", () => {
   const frames = Object.entries(atlas.frames || {});
