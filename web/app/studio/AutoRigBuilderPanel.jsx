@@ -1,0 +1,270 @@
+"use client";
+
+import { useEffect, useMemo, useRef, useState } from "react";
+import { buildAutoRigFromParts } from "../../game/studio/autoRigBuilder.mjs";
+
+const ROLE_OPTIONS = [
+  ["body", "الجسم"], ["stem", "الساق"], ["head", "الرأس"], ["face", "الوجه"],
+  ["eye.left", "العين اليسرى"], ["eye.right", "العين اليمنى"], ["mouth", "الفم"],
+  ["leaf.left", "الورقة اليسرى"], ["leaf.right", "الورقة اليمنى"], ["leaf", "ورقة"],
+  ["arm.left", "الذراع الأيسر"], ["arm.right", "الذراع الأيمن"],
+  ["hand.left", "اليد اليسرى"], ["hand.right", "اليد اليمنى"],
+  ["weapon", "السلاح"], ["weapon.barrel", "ماسورة السلاح"],
+  ["back", "الجزء الخلفي"], ["tail", "الذيل"], ["armor", "الدرع"],
+  ["accessory", "إضافة"], ["shadow", "الظل"], ["effect", "مؤثر"]
+];
+
+function slug(value) {
+  return String(value || "character").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "character";
+}
+function polygonBounds(points) {
+  const xs = points.map((point) => point.x), ys = points.map((point) => point.y);
+  const x = Math.floor(Math.min(...xs)), y = Math.floor(Math.min(...ys));
+  const right = Math.ceil(Math.max(...xs)), bottom = Math.ceil(Math.max(...ys));
+  return { x, y, width: Math.max(1, right - x), height: Math.max(1, bottom - y) };
+}
+function polygonCenter(points, bounds) {
+  const total = points.reduce((sum, point) => ({ x: sum.x + point.x, y: sum.y + point.y }), { x: 0, y: 0 });
+  return {
+    x: Math.max(bounds.x, Math.min(bounds.x + bounds.width, total.x / points.length)),
+    y: Math.max(bounds.y, Math.min(bounds.y + bounds.height, total.y / points.length))
+  };
+}
+function canvasBlob(canvas) {
+  return new Promise((resolve, reject) => canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error("تعذر إنشاء صورة الجزء المقصوص.")), "image/png"));
+}
+
+export default function AutoRigBuilderPanel({
+  sourceUrl = "",
+  sourceFile = null,
+  currentAssetId = "",
+  assets = [],
+  disabled = false,
+  onRigGenerated,
+  onAssetsCreated
+}) {
+  const canvasRef = useRef(null);
+  const [image, setImage] = useState(null);
+  const [imageError, setImageError] = useState("");
+  const [role, setRole] = useState("body");
+  const [partName, setPartName] = useState("الجسم");
+  const [points, setPoints] = useState([]);
+  const [parts, setParts] = useState([]);
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
+  const existingIds = useMemo(() => new Set(assets.map((asset) => asset.id)), [assets]);
+
+  useEffect(() => {
+    if (!sourceFile && !sourceUrl) {
+      setImage(null);
+      return;
+    }
+    let active = true;
+    const localUrl = sourceFile ? URL.createObjectURL(sourceFile) : sourceUrl;
+    const nextImage = new Image();
+    nextImage.onload = () => {
+      if (active) {
+        setImage(nextImage);
+        setImageError("");
+        setPoints([]);
+        setParts([]);
+      }
+    };
+    nextImage.onerror = () => { if (active) setImageError("تعذر قراءة الصورة المصدر."); };
+    nextImage.src = localUrl;
+    return () => {
+      active = false;
+      if (sourceFile) URL.revokeObjectURL(localUrl);
+    };
+  }, [sourceFile, sourceUrl]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || !image) return;
+    canvas.width = image.naturalWidth;
+    canvas.height = image.naturalHeight;
+    const context = canvas.getContext("2d");
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    context.drawImage(image, 0, 0);
+    parts.forEach((part) => {
+      context.beginPath();
+      part.points.forEach((point, index) => index ? context.lineTo(point.x, point.y) : context.moveTo(point.x, point.y));
+      context.closePath();
+      context.fillStyle = "rgba(35, 190, 140, 0.18)";
+      context.strokeStyle = "#159b72";
+      context.lineWidth = Math.max(2, canvas.width / 300);
+      context.fill();
+      context.stroke();
+    });
+    if (points.length) {
+      context.beginPath();
+      points.forEach((point, index) => index ? context.lineTo(point.x, point.y) : context.moveTo(point.x, point.y));
+      context.strokeStyle = "#ff8a32";
+      context.lineWidth = Math.max(2, canvas.width / 250);
+      context.stroke();
+      points.forEach((point) => {
+        context.beginPath();
+        context.arc(point.x, point.y, Math.max(3, canvas.width / 120), 0, Math.PI * 2);
+        context.fillStyle = "#ff8a32";
+        context.fill();
+      });
+    }
+  }, [image, points, parts]);
+
+  function addPoint(event) {
+    if (!image || disabled || busy) return;
+    const canvas = canvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+    const x = (event.clientX - rect.left) * canvas.width / rect.width;
+    const y = (event.clientY - rect.top) * canvas.height / rect.height;
+    setPoints((current) => [...current, { x, y }]);
+  }
+
+  function commitPart() {
+    if (points.length < 3) {
+      setMessage("ارسم حدود الجزء بثلاث نقاط أو أكثر قبل اعتماده.");
+      return;
+    }
+    if (parts.length >= 63) {
+      setMessage("الحد الأقصى 63 جزءاً في الهيكل الواحد.");
+      return;
+    }
+    const index = parts.length + 1;
+    const bounds = polygonBounds(points);
+    const roleSlug = slug(role.replaceAll(".", "-"));
+    const suffix = "-" + roleSlug + "-" + String(index).padStart(2, "0") + "-cutout";
+    const base = slug(currentAssetId || "character").slice(0, 64 - suffix.length);
+    let assetId = base + suffix;
+    let collision = 1;
+    while (existingIds.has(assetId) || parts.some((part) => part.assetId === assetId)) {
+      const extra = "-" + collision++;
+      assetId = base.slice(0, 64 - suffix.length - extra.length) + suffix + extra;
+    }
+    setParts((current) => [...current, {
+      id: "part-" + String(index).padStart(2, "0"),
+      assetId,
+      role,
+      name: partName.trim() || role,
+      points,
+      bounds,
+      pivot: polygonCenter(points, bounds),
+      drawOrder: index - 1
+    }]);
+    setPoints([]);
+    setMessage("تمت إضافة الجزء. يمكنك رسم الجزء التالي أو إنشاء الهيكل.");
+  }
+
+  async function generateRig() {
+    if (!image || !parts.length || busy || disabled) return;
+    setBusy(true);
+    setMessage("");
+    const created = [];
+    try {
+      const descriptors = parts.map((part) => ({
+        id: part.id,
+        assetId: part.assetId,
+        role: part.role,
+        name: part.name,
+        bounds: part.bounds,
+        pivot: part.pivot,
+        drawOrder: part.drawOrder
+      }));
+      const preview = buildAutoRigFromParts({
+        canvas: { width: image.naturalWidth, height: image.naturalHeight },
+        parts: descriptors
+      });
+      if (image.naturalWidth > 4096 || image.naturalHeight > 4096) {
+        throw new Error("أبعاد الصورة تتجاوز الحد الحالي 4096×4096.");
+      }
+      for (const part of parts) {
+        const bounds = part.bounds;
+        const output = document.createElement("canvas");
+        output.width = bounds.width;
+        output.height = bounds.height;
+        const context = output.getContext("2d");
+        context.save();
+        context.beginPath();
+        part.points.forEach((point, index) => {
+          const x = point.x - bounds.x, y = point.y - bounds.y;
+          if (index) context.lineTo(x, y); else context.moveTo(x, y);
+        });
+        context.closePath();
+        context.clip();
+        context.drawImage(image, -bounds.x, -bounds.y);
+        context.restore();
+        const blob = await canvasBlob(output);
+        const form = new FormData();
+        form.set("type", "item");
+        form.set("id", part.assetId);
+        form.set("name", part.name);
+        form.set("rows", "1");
+        form.set("columns", "1");
+        form.set("frameCount", "1");
+        form.set("replace", "false");
+        form.set("file", new File([blob], part.assetId + ".png", { type: "image/png" }));
+        const response = await fetch("/api/studio/assets", { method: "POST", credentials: "same-origin", body: form });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "تعذر حفظ الجزء " + part.name);
+        created.push(part.assetId);
+      }
+      if (onAssetsCreated) await onAssetsCreated();
+      const result = buildAutoRigFromParts({
+        canvas: { width: image.naturalWidth, height: image.naturalHeight },
+        parts: descriptors
+      });
+      onRigGenerated(result.profile);
+      setMessage("اكتمل استخراج " + created.length + " جزءاً وإنشاء هيكل أولي. راجع العظام ونقاط الدوران قبل الحفظ.");
+    } catch (error) {
+      setMessage(error.message + (created.length ? " تم حفظ الأجزاء التالية في المكتبة: " + created.join("، ") + ". راجعها قبل إعادة المحاولة." : ""));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (!sourceFile && !sourceUrl) return null;
+
+  return (
+    <section className="studio-panel" style={{ marginTop: 18 }}>
+      <small>AI AUTO-RIG · GUIDED SEGMENTATION</small>
+      <h3>استخراج أجزاء الشخصية وبناء الهيكل الأولي</h3>
+      <p>هذه مرحلة التفكيك الموجّه: انقر حول كل جزء لرسم قناعه، ثم اختر دوره. سيُحفظ كل جزء كصورة PNG شفافة مستقلة، وتُنشأ عظام متوافقة مع محرك اللعبة. لا يوجد استدلال AI تلقائي في هذه المرحلة بعد.</p>
+      {imageError && <p className="studio-message" role="alert">{imageError}</p>}
+      {image && (image.naturalWidth > 4096 || image.naturalHeight > 4096)
+        ? <p className="studio-message">أبعاد الصورة {image.naturalWidth}×{image.naturalHeight} أكبر من الحد الحالي 4096×4096.</p>
+        : null}
+      {image && <div style={{ border: "1px solid #d8dce5", borderRadius: 12, overflow: "hidden", background: "#f4f5f8", maxHeight: 440, overflowY: "auto" }}>
+        <canvas ref={canvasRef} onClick={addPoint} style={{ display: "block", width: "100%", height: "auto", maxHeight: 420, objectFit: "contain", cursor: disabled || busy ? "not-allowed" : "crosshair", touchAction: "manipulation" }} />
+      </div>}
+      <div className="studio-grid" style={{ marginTop: 12 }}>
+        <label>الدور الدلالي
+          <select value={role} disabled={disabled || busy} onChange={(event) => {
+            const value = event.target.value;
+            setRole(value);
+            setPartName(ROLE_OPTIONS.find((item) => item[0] === value)?.[1] || value);
+          }}>
+            {ROLE_OPTIONS.map(([value, label]) => <option value={value} key={value}>{label}</option>)}
+          </select>
+        </label>
+        <label>اسم الجزء
+          <input value={partName} disabled={disabled || busy} onChange={(event) => setPartName(event.target.value)} maxLength={80} />
+        </label>
+      </div>
+      <div className="studio-actions" style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 10 }}>
+        <button type="button" disabled={disabled || busy || !points.length} onClick={() => setPoints((current) => current.slice(0, -1))}>تراجع عن آخر نقطة</button>
+        <button type="button" disabled={disabled || busy || !points.length} onClick={() => setPoints([])}>إلغاء التحديد</button>
+        <button type="button" disabled={disabled || busy || points.length < 3} onClick={commitPart}>اعتماد الجزء</button>
+      </div>
+      {parts.length > 0 && <div style={{ marginTop: 12 }}>
+        <b>الأجزاء المحددة ({parts.length}/63)</b>
+        <ul>{parts.map((part) => <li key={part.id} style={{ marginTop: 5 }}>
+          {part.name} · {part.role} · {part.bounds.width}×{part.bounds.height}
+          <button type="button" disabled={disabled || busy} style={{ marginInlineStart: 10 }} onClick={() => setParts((current) => current.filter((item) => item.id !== part.id))}>حذف</button>
+        </li>)}</ul>
+      </div>}
+      <button type="button" className="studio-submit" disabled={disabled || busy || !image || !parts.length} onClick={generateRig}>
+        {busy ? "جارٍ قصّ الأجزاء وحفظها..." : "قصّ الأجزاء وإنشاء الهيكل ←"}
+      </button>
+      {message && <p className="studio-message" role="status">{message}</p>}
+    </section>
+  );
+}
