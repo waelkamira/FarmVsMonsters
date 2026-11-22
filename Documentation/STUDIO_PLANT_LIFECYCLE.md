@@ -47,22 +47,22 @@ Every new asset starts at revision 1. Saving edits creates a new revision and st
 
 The Studio library displays the current revision and lets an administrator select a saved revision to restore. Restoring does not rewind the revision counter or change the live game catalog: it creates a new revision from the selected snapshot, marks it as `draft`, and requires another prepare/test/review cycle before publication.
 
-## 3. Request a reviewed release
+## 3. Publish directly after gameplay verification
 
-The Studio `publish` action is available only after a plant is `testing`. It does **not** write to the target branch directly.
+The Studio `publish` action is available only after an asset is `testing`. The administrator must first prepare the asset, open the game, and manually verify its actual gameplay behavior. Publishing is a direct write to `STUDIO_PUBLISH_BRANCH` (defaults to `main`); it does not create a GitHub pull request or request a review.
 
 The action:
-1. Creates a dedicated release branch from `STUDIO_PUBLISH_BRANCH` (defaults to `main`): `studio/release/<plant-id>-<suffix>`.
-2. Copies the immutable plant image and linked projectile (when applicable) from the Studio storage branch into that release branch.
-3. Updates `web/public/assets/studio-plant-catalog.json` on the release branch.
-4. Opens a GitHub pull request targeting `STUDIO_PUBLISH_BRANCH`.
-5. Saves the pull-request number, URL, and release branch in the Studio registry.
+1. Validates the asset type, saved gameplay profile, safe asset paths, and linked projectile when applicable.
+2. Reads the immutable artwork (and linked projectile) from the Studio storage branch.
+3. Writes/reuses those immutable files on the target game branch.
+4. Updates the appropriate published plant or monster catalog on the target branch. The catalog is written last, so the game does not list the asset before its files exist.
+5. Marks the Studio registry record as `published` and clears any obsolete release-request metadata.
 
-The Studio library shows the request as **approved / awaiting review** and provides a direct link. The target branch and live catalog remain unchanged until a reviewer merges the pull request. After merge, Studio reads the pull-request state and displays the plant as **published**. If the pull request is closed without merging, the plant returns to **testing** so another request can be made.
+The GitHub token requires `Contents: Read and write` for the repository. Pull-request permission is not required for direct publishing. If the target branch is protected against direct pushes, GitHub will reject the write; Studio must report that failure rather than silently opening a pull request.
 
-The GitHub token must have **Contents: Read and write** and **Pull requests: Read and write** permissions. If pull-request permission is missing, Studio reports the required permission instead of writing to the target branch.
+Asset files and the catalog are written as separate GitHub Contents API commits. The catalog update is the activation point. If an earlier file write succeeds but a later step fails, the uploaded immutable file may remain unreferenced; the game catalog remains unchanged until its final update succeeds. If the catalog succeeds but the Studio registry update fails, the asset is live and the API reports a registry synchronization warning so the status can be reconciled.
 
-All release files and the catalog change are collected on one release branch and enter the target branch through one pull-request merge. Failed staging can leave an unreferenced release branch or immutable files, but it cannot partially update the target branch.
+A previously opened review request does not block a new direct publish. The direct publish clears the stale request metadata only after the catalog update succeeds; any old pull request remains a separate GitHub item and is not merged automatically.
 
 ## 4. Archive and restore
 
@@ -72,11 +72,11 @@ A plant with an open release request cannot be archived until that request is cl
 
 ## Status transitions
 
-`draft -> testing -> approved -> published`
+`draft -> testing -> published`
 
 `draft/testing -> archived -> draft`
 
-Closing an unmerged release request returns the asset to `testing`. Editing/replacing a plant clears its old release request and returns it to `draft`, requiring a fresh test and a new review request.
+Editing/replacing an asset returns it to `draft`, requiring a fresh gameplay test before direct publication.
 
 ## Safety and operational notes
 
