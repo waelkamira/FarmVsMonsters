@@ -150,3 +150,15 @@ test("readiness validates rig profiles and blocks missing or archived bitmap par
   const archived = auditStudioAssetRegistry([validPlant({ rigProfile }), validProjectile(), { ...part, status: "archived" }]);
   assert.equal(archived.blocked, 1);
 });
+
+test("readiness blocks skeletal part frame indices outside the referenced asset", () => {
+  const rigProfile = {
+    version: 1, canvas: { width: 200, height: 200 },
+    bones: [{ id: "root", parentId: null }, { id: "head", parentId: "root", part: { assetId: "head-part", frame: 2 } }],
+    attachments: [], hitboxes: [], clips: []
+  };
+  const part = { id: "head-part", type: "item", status: "published", path: "/assets/parts/head.png", frameCount: 1, rows: 1, columns: 1 };
+  const report = auditStudioAssetRegistry([validPlant({ rigProfile }), validProjectile(), part]);
+  assert.equal(report.blocked, 1);
+  assert.ok(report.assets[0].errors.some((message) => message.includes("خارج عدد إطارات الأصل")));
+});
