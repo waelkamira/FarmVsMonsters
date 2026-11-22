@@ -18,7 +18,7 @@ function createDefaultRig(width = 256, height = 256) {
 }
 const clone = (value) => JSON.parse(JSON.stringify(value));
 
-export default function RigEditor({ profile, onChange, assets = [], currentAssetId, disabled = false }) {
+export default function RigEditor({ profile, onChange, assets = [], currentAssetId, referenceImageUrl = "", referenceRows = 1, referenceColumns = 1, referenceSpriteSheet = false, disabled = false }) {
   const canvasRef = useRef(null);
   const [selectedBoneId, setSelectedBoneId] = useState(profile?.bones?.[0]?.id || "root");
   const [selectedClipId, setSelectedClipId] = useState(profile?.clips?.[0]?.id || "idle");
@@ -282,7 +282,7 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
   useEffect(() => {
     const urls = new Set([
       ...rig.bones.map((item) => item.part && partAssets.find((asset) => asset.id === item.part.assetId)?.previewUrl || (item.part && partAssets.find((asset) => asset.id === item.part.assetId)?.path)),
-      referenceAsset?.previewUrl || referenceAsset?.path
+      referenceImageUrl || referenceImageUrl || referenceAsset?.previewUrl || referenceAsset?.path
     ].filter(Boolean));
     let active = true;
     for (const url of urls) {
@@ -294,7 +294,7 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
       imageCache.current.set(url, image);
     }
     return () => { active = false; };
-  }, [rig.bones, partAssets, referenceAsset]);
+  }, [rig.bones, partAssets, referenceAsset, referenceImageUrl]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -310,8 +310,8 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
     const referenceUrl = referenceAsset?.previewUrl || referenceAsset?.path;
     const referenceImage = referenceUrl && imageCache.current.get(referenceUrl);
     if (referenceImage?.complete && referenceImage.naturalWidth > 0) {
-      const rows = referenceAsset.spriteSheet ? Math.max(1, Number(referenceAsset.rows) || 1) : 1;
-      const columns = referenceAsset.spriteSheet ? Math.max(1, Number(referenceAsset.columns) || 1) : 1;
+      const rows = referenceSpriteSheet ? Math.max(1, Number(referenceRows) || 1) : 1;
+      const columns = referenceSpriteSheet ? Math.max(1, Number(referenceColumns) || 1) : 1;
       const frameWidth = referenceImage.naturalWidth / columns;
       const frameHeight = referenceImage.naturalHeight / rows;
       const fit = Math.min(width / frameWidth, height / frameHeight, 1);
@@ -387,7 +387,7 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
         context.restore();
       }
     }
-  }, [rig, partAssets, referenceAsset, selectedBoneId, selectedClipId, clip, timeMs, playing, validation.valid, imageRevision, zoom, panX, panY]);
+  }, [rig, partAssets, referenceAsset, referenceImageUrl, referenceRows, referenceColumns, referenceSpriteSheet, selectedBoneId, selectedClipId, clip, timeMs, playing, validation.valid, imageRevision, zoom, panX, panY]);
 
   useEffect(() => {
     if (!playing || !clip) return;
