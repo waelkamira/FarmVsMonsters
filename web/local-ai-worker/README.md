@@ -30,23 +30,13 @@ Meta's official SAM 2 installation guidance recommends WSL with Ubuntu when inst
 
    The default script installs CPU-only PyTorch, clones the official SAM 2 source into your WSL user cache, installs SAM 2 with its optional CUDA extension disabled, and installs this worker's image dependencies. This is the safest baseline for machines without a confirmed NVIDIA/CUDA setup. If you have a compatible NVIDIA GPU, follow the PyTorch selector first and set `FVM_TORCH_INDEX_URL` to the matching wheel index before running setup; do not mix CPU and CUDA builds.
 
-5. Download the official **SAM 2.1 Hiera Tiny** checkpoint from the [SAM 2 model/checkpoint section](https://github.com/facebookresearch/sam2#download-checkpoints) and place it at:
+5. The setup script now downloads the official **SAM 2.1 Hiera Tiny** checkpoint automatically and verifies its SHA-256 before use. It also downloads only the required PyTorch/safetensors files for **OpenAI CLIP ViT-B/32** (about 605 MB), rather than all framework variants. Both model directories remain outside Git.
 
-   ```text
-   ~/models/sam2.1_hiera_tiny.pt
-   ```
+   Defaults:
+   - SAM 2 checkpoint: `~/models/sam2.1_hiera_tiny.pt`
+   - CLIP model: `~/models/clip-vit-base-patch32`
 
-   Model weights are deliberately not committed to this repository.
-
-6. Download the CLIP model files manually into a local directory (the worker never downloads model weights). For example, after the setup script has installed Transformers, run:
-
-   ```bash
-   source "${FVM_AI_VENV:-$HOME/.venvs/fvm-studio-ai}/bin/activate"
-   hf download openai/clip-vit-base-patch32 --local-dir "$HOME/models/clip-vit-base-patch32"
-   export FVM_CLIP_MODEL_DIR="$HOME/models/clip-vit-base-patch32"
-   ```
-
-   The model is loaded with `local_files_only=True`; if the directory is missing or incomplete, visual classification reports an explicit error. The OpenAI CLIP model card/license and files should be checked before redistribution. Model files are not committed to this repository.
+   You do not need to download either model manually. The first setup requires an internet connection; inference itself runs locally.
 
 7. Optional: download a compatible Stable Diffusion inpainting checkpoint into a local directory (the worker never downloads weights). For example:
 
