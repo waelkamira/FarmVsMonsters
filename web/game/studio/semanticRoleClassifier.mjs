@@ -53,7 +53,7 @@ export function suggestAutoRigSemanticRoles(proposals, canvas, characterType = "
       } else if (side && item.area < primary.area * 0.65) {
         add(item, dx < 0 ? "arm.left" : "arm.right", 0.46, "امتداد جانبي؛ قد يكون ذراعاً");
       } else if (below && item.ratio < 0.8) {
-        add(item, "leg", 0.32, "منطقة سفلية؛ يلزم اختيار دور مناسب يدوياً");
+        add(item, "accessory", 0.32, "منطقة سفلية؛ لا يمكن تحديد دورها بثقة من الشكل وحده");
       } else {
         add(item, "accessory", 0.3, "الشكل وحده لا يكفي لتحديد الدور");
       }
