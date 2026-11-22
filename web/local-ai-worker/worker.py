@@ -116,7 +116,7 @@ def detect_parts(payload):
         x,y,w,h = cv2.boundingRect(mask.astype("uint8"))
         if w < 2 or h < 2: continue
         proposals.append({"id":"sam2-part-"+str(index+1),"name":"SAM 2 segment "+str(index+1),
-          "role":"accessory","confidence":max(0.0,min(1.0,float(item.get("predicted_iou",0.5)))),
+          "role":"unknown","confidence":max(0.0,min(1.0,float(item.get("predicted_iou",0.5)))),
           "bounds":{"x":int(x),"y":int(y),"width":int(w),"height":int(h)},
           "mask":{"kind":"polygon","points":polygon},
           "provenance":{"segmentation":"sam2","pixels":"source"}})
