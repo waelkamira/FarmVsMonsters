@@ -25,19 +25,20 @@ def load_model():
         try:
             from sam2.automatic_mask_generator import SAM2AutomaticMaskGenerator
             from sam2.build_sam import build_sam2
+            from sam2.sam2_image_predictor import SAM2ImagePredictor
             import torch
             device = "cuda" if torch.cuda.is_available() else "cpu"
             model = build_sam2(config, checkpoint, device=device)
             _MODEL = (SAM2AutomaticMaskGenerator(model, points_per_side=24, pred_iou_thresh=0.78,
-                        stability_score_thresh=0.86, min_mask_region_area=64), device)
+                        stability_score_thresh=0.86, min_mask_region_area=64), SAM2ImagePredictor(model), device)
             return _MODEL
         except Exception as exc:
             _MODEL_ERROR = "Could not initialize SAM 2: " + str(exc)[:250]
             raise RuntimeError(_MODEL_ERROR) from exc
 def capabilities():
     try:
-        _, device = load_model()
-        return {"protocolVersion":1,"status":"ready","device":device,"capabilities":["part-detection"],
+        _, _, device = load_model()
+        return {"protocolVersion":1,"status":"ready","device":device,"capabilities":["part-detection","prompted-segmentation"],
                 "models":[{"id":"sam2-automatic-mask-generator","version":"local-checkpoint","license":"Apache-2.0"}],"warnings":[]}
     except Exception as exc:
         return {"protocolVersion":1,"status":"degraded","device":"unknown","capabilities":[],"models":[],"warnings":[str(exc)]}
@@ -98,10 +99,29 @@ def select_distinct_masks(masks, image_shape, limit=63):
             break
     return selected
 
+def normalize_prompt_points(points, width, height):
+    if not isinstance(points, list) or not 1 <= len(points) <= 32:
+        raise ValueError("Provide between 1 and 32 SAM 2 point prompts.")
+    normalized = []
+    for index, point in enumerate(points):
+        if not isinstance(point, dict):
+            raise ValueError("Prompt point " + str(index) + " must be an object.")
+        try:
+            x, y = float(point["x"]), float(point["y"])
+            label = int(point.get("label", 1))
+        except (KeyError, TypeError, ValueError):
+            raise ValueError("Prompt point " + str(index) + " is malformed.")
+        if not np.isfinite(x) or not np.isfinite(y) or not 0 <= x < width or not 0 <= y < height:
+            raise ValueError("Prompt point " + str(index) + " is outside the source canvas.")
+        if label not in (0, 1):
+            raise ValueError("Prompt point labels must be 0 (negative) or 1 (positive).")
+        normalized.append((x, y, label))
+    return normalized
+
 def detect_parts(payload):
     width, height = payload["canvas"]["width"], payload["canvas"]["height"]
     image = decode_image(payload["imageDataUrl"], width, height)
-    generator, _ = load_model()
+    generator, _, _ = load_model()
     import cv2
     with _INFERENCE_LOCK:
         masks = generator.generate(image)
@@ -122,6 +142,40 @@ def detect_parts(payload):
           "provenance":{"segmentation":"sam2","pixels":"source"}})
     return {"protocolVersion":1,"proposals":proposals}
 
+def segment_from_points(payload):
+    width, height = payload["canvas"]["width"], payload["canvas"]["height"]
+    image = decode_image(payload["imageDataUrl"], width, height)
+    points = normalize_prompt_points(payload.get("points"), width, height)
+    _, predictor, _ = load_model()
+    import cv2, numpy as np
+    coordinates = np.asarray([[point[0], point[1]] for point in points], dtype=np.float32)
+    labels = np.asarray([point[2] for point in points], dtype=np.int32)
+    with _INFERENCE_LOCK:
+        predictor.set_image(image)
+        masks, scores, _logits = predictor.predict(
+            point_coords=coordinates,
+            point_labels=labels,
+            multimask_output=True
+        )
+    proposals = []
+    for index, mask in enumerate(masks):
+        polygon = polygon_for_mask(mask, cv2)
+        if not polygon:
+            continue
+        x, y, w, h = cv2.boundingRect(mask.astype("uint8"))
+        if w < 2 or h < 2:
+            continue
+        proposals.append({
+            "id": "sam2-prompt-" + str(index + 1),
+            "name": "SAM 2 prompted mask " + str(index + 1),
+            "role": "unknown",
+            "confidence": max(0.0, min(1.0, float(scores[index]))),
+            "bounds": {"x": int(x), "y": int(y), "width": int(w), "height": int(h)},
+            "mask": {"kind": "polygon", "points": polygon},
+            "provenance": {"segmentation": "sam2", "pixels": "source"}
+        })
+    return {"protocolVersion": 1, "proposals": proposals}
+
 class Handler(BaseHTTPRequestHandler):
     server_version = "FVMStudioAI/1"
     def send_json(self,status,value):
@@ -133,13 +187,16 @@ class Handler(BaseHTTPRequestHandler):
         if urlparse(self.path).path != "/v1/capabilities": return self.send_json(404,{"error":"Not found"})
         self.send_json(200,capabilities())
     def do_POST(self):
-        if urlparse(self.path).path != "/v1/auto-rig/part-detection": return self.send_json(404,{"error":"Unsupported task"})
+        task_path = urlparse(self.path).path
+        if task_path not in ("/v1/auto-rig/part-detection", "/v1/auto-rig/prompted-segmentation"):
+            return self.send_json(404,{"error":"Unsupported task"})
         try:
             length=int(self.headers.get("Content-Length","0"))
             if length < 1 or length > MAX_BODY: return self.send_json(413,{"error":"Request body exceeds limit"})
             payload=json.loads(self.rfile.read(length))
             if payload.get("protocolVersion") != 1: return self.send_json(400,{"error":"Unsupported protocol"})
-            self.send_json(200,detect_parts(payload))
+            result = detect_parts(payload) if task_path.endswith("/part-detection") else segment_from_points(payload)
+            self.send_json(200,result)
         except RuntimeError as exc: self.send_json(503,{"error":str(exc)})
         except (ValueError,KeyError,TypeError,json.JSONDecodeError) as exc: self.send_json(400,{"error":str(exc)[:300]})
         except Exception as exc: self.send_json(500,{"error":"Inference failed: "+str(exc)[:250]})
