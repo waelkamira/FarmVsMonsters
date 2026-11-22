@@ -49,7 +49,7 @@ Studio Shell / Navigation
        ├─ Immutable revision
        ├─ Dependency closure
        ├─ Complete package manifest
-       ├─ Approval / PR
+       ├─ Approval / PR (target architecture; not current publish behavior)
        ├─ Atomic activation (gap)
        └─ Rollback
 ```
@@ -106,11 +106,13 @@ Auto-Rig is allowed to propose part segmentation and semantic roles. It must not
 - A new runtime capability must register a contract, UI schema, adapter and tests before it becomes selectable.
 - A dependency cycle is a validation error unless a future explicitly designed relationship type permits it.
 - A failed release must leave the previous active package untouched.
+- Current mainline exception/risk: the asset API's publish operation writes files and then the catalog directly to the configured publish branch (default `main`), and only afterwards attempts registry synchronization. This is not an atomic activation and can leave catalog and registry out of sync.
 
 ## 6. Current architectural gaps to close in Phase 1
 
 - Break the large asset API route into testable service/domain modules without changing public behavior.
 - Verify expected-SHA enforcement on every mutation path and surface conflicts in the UI.
+- Replace the current direct-to-target-branch publish path with staged release branch + PR approval.
 - Establish atomic multi-file release packaging and a single activation switch.
 - Make release request state reconciliation reliable after merge, close, failure or lost webhook/poll.
 - Define capability/schema registry and compatibility checks centrally.
