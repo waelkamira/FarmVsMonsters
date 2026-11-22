@@ -197,3 +197,9 @@ test("testing catalogs include the referenced rig bitmap assets", () => {
   assert.match(routeSource, /serializeRigParts/);
   assert.match(routeSource, /rigParts:serializeRigParts/);
 });
+
+test("rigged projectile assets require the standard muzzle attachment", () => {
+  assert.match(routeSource, /rigProfile\.attachments\.some\(item=>item\.id==="muzzle"\)/);
+  assert.match(routeSource, /نقطة تثبيت باسم muzzle/);
+  assert.match(routeSource, /rigged projectile plants/);
+});
