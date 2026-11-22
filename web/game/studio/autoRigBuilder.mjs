@@ -129,7 +129,7 @@ function readPart(raw, index, canvas) {
     id, assetId, role, side, frame, bounds: { x, y, width, height },
     pivot: { x: pivotX, y: pivotY }, pivotExplicit,
     name: String(raw.name || role).slice(0, 80),
-    confidence, mask, provenance: { segmentation, pixels },
+    confidence, reviewed: raw.reviewed === true, mask, provenance: { segmentation, pixels },
     occlusion: raw.occlusion === "unresolved" ? "unresolved" : raw.occlusion === "reconstructed" ? "reconstructed" : "none",
     parentPartId: raw.parentPartId == null ? null : readId(raw.parentPartId, "parts[" + index + "].parentPartId", 59),
     drawOrder: Number.isFinite(Number(raw.drawOrder)) ? Number(raw.drawOrder) : index
@@ -361,7 +361,7 @@ export function buildAutoRigFromParts(input) {
       parts: parts.map((part) => ({
         id: part.id, assetId: part.assetId, role: part.role, side: part.side,
         bounds: part.bounds, pivot: part.pivot, parentPartId: parentByPartId.get(part.id),
-        drawOrder: part.drawOrder, confidence: part.confidence, occlusion: part.occlusion,
+        drawOrder: part.drawOrder, confidence: part.confidence, reviewed: part.reviewed, occlusion: part.occlusion,
         mask: part.mask, provenance: part.provenance
       })),
       anchors: attachments.map((attachment) => ({ id: attachment.id, boneId: attachment.boneId, x: attachment.x, y: attachment.y })),
@@ -438,7 +438,8 @@ export function analyzeAutoRigQuality(manifest, profileInput) {
   const parts = manifest.parts;
   const rolesConfirmed = parts.every((part) => KNOWN_ROLES.has(normalizeRole(part.role)));
   const allMasksPresent = parts.every((part) => part.mask?.kind === "polygon" && part.mask.points.length >= 3);
-  const confidenceReviewed = parts.every((part) => part.confidence !== null && part.confidence !== undefined);
+  const allPartsReviewed = parts.every((part) => part.reviewed === true);
+  const unreviewedCount = parts.filter((part) => part.reviewed !== true).length;
   const occlusionResolved = parts.every((part) => part.occlusion !== "unresolved");
   const sourceFingerprintPresent = /^[a-f0-9]{64}$/i.test(String(manifest.source.sha256 || ""));
   const hasPrimaryBody = parts.some((part) => ["body", "stem"].includes(normalizeRole(part.role)));
@@ -447,7 +448,7 @@ export function analyzeAutoRigQuality(manifest, profileInput) {
   const warnings = [];
   if (!rolesConfirmed) warnings.push({ code: "unconfirmed-semantic-role", message: "One or more parts still have unknown semantic roles." });
   if (!allMasksPresent) warnings.push({ code: "missing-editable-mask", message: "One or more parts have no editable polygon mask." });
-  if (!confidenceReviewed) warnings.push({ code: "missing-confidence", message: "One or more parts have no model confidence value; manually review them." });
+  if (!allPartsReviewed) warnings.push({ code: "unreviewed-parts", count: unreviewedCount, message: "One or more parts have not been explicitly reviewed and approved by the author." });
   if (lowConfidenceCount) warnings.push({ code: "low-confidence", count: lowConfidenceCount, message: "Review low-confidence segmentation proposals." });
   if (!occlusionResolved) warnings.push({ code: "unresolved-occlusion", message: "One or more parts have unresolved occlusion." });
   if (reconstructedCount) warnings.push({ code: "reconstructed-pixels", count: reconstructedCount, message: "Review generated pixels before publishing." });
@@ -457,7 +458,7 @@ export function analyzeAutoRigQuality(manifest, profileInput) {
   const score = Math.max(0, 100
     - penalty(!rolesConfirmed, 20)
     - penalty(!allMasksPresent, 15)
-    - penalty(!confidenceReviewed, 8)
+    - penalty(!allPartsReviewed, 10)
     - Math.min(15, lowConfidenceCount * 5)
     - penalty(!occlusionResolved, 15)
     - Math.min(10, reconstructedCount * 3)
@@ -465,12 +466,13 @@ export function analyzeAutoRigQuality(manifest, profileInput) {
     - penalty(!hasPrimaryBody, 10));
   return {
     valid: true,
-    readyForAnimation: rolesConfirmed && allMasksPresent && confidenceReviewed && lowConfidenceCount === 0 && occlusionResolved && sourceFingerprintPresent && hasPrimaryBody && reconstructedCount === 0,
+    readyForAnimation: rolesConfirmed && allMasksPresent && allPartsReviewed && lowConfidenceCount === 0 && occlusionResolved && sourceFingerprintPresent && hasPrimaryBody && reconstructedCount === 0,
     score,
     checks: {
       rolesConfirmed,
       allMasksPresent,
-      confidenceReviewed,
+      allPartsReviewed,
+      unreviewedCount,
       occlusionResolved,
       sourceFingerprintPresent,
       hasPrimaryBody,
