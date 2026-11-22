@@ -12,7 +12,7 @@ import {getAssetDependents} from "../../../../game/studio/assetDependencies.mjs"
 import {createStudioAnimationProfile} from "../../../../game/studio/animationProfiles.mjs";
 import {createSkeletalRigProfile} from "../../../../game/studio/skeletalAnimation.mjs";
 import {createStudioMonsterProfile} from "../../../../game/studio/monsterProfiles.mjs";
-import {validatePhaserAtlasDocument} from "../../../../game/studio/phaserAtlas.mjs";
+import {readPngDimensions,validatePhaserAtlasDocument} from "../../../../game/studio/phaserAtlas.mjs";
 import {safeAssetPath} from "../../../../game/studio/assetReadiness.mjs";
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
@@ -243,7 +243,7 @@ export async function POST(req){
  const bytes=hasFile?Buffer.from(await file.arrayBuffer()):null;
  if(hasFile){const signature=validateStudioAssetBytes(file.type,bytes);if(!signature.valid)return NextResponse.json({error:signature.reason},{status:415});}
  let atlasValidation=null,atlasJsonBytes=null;
- if(hasAtlas){atlasJsonBytes=Buffer.from(await atlasJsonFile.arrayBuffer());if(atlasJsonBytes.length>2*1024*1024)return NextResponse.json({error:"ملف JSON يتجاوز 2 MB."},{status:413});atlasValidation=validatePhaserAtlasDocument(atlasJsonBytes.toString("utf8"));if(!atlasValidation.valid)return NextResponse.json({error:atlasValidation.errors.join("، ")},{status:400});if(atlasValidation.image&&atlasValidation.image.toLowerCase()!==file.name.toLowerCase())return NextResponse.json({error:"اسم الصورة داخل JSON لا يطابق ملف PNG المحدد ("+atlasValidation.image+")."},{status:400});}
+ if(hasAtlas){atlasJsonBytes=Buffer.from(await atlasJsonFile.arrayBuffer());if(atlasJsonBytes.length>2*1024*1024)return NextResponse.json({error:"ملف JSON يتجاوز 2 MB."},{status:413});const pngDimensions=readPngDimensions(bytes);if(!pngDimensions)return NextResponse.json({error:"تعذر قراءة أبعاد PNG."},{status:415});atlasValidation=validatePhaserAtlasDocument(atlasJsonBytes.toString("utf8"),pngDimensions);if(!atlasValidation.valid)return NextResponse.json({error:atlasValidation.errors.join("، ")},{status:400});if(atlasValidation.image&&atlasValidation.image.toLowerCase()!==file.name.toLowerCase())return NextResponse.json({error:"اسم الصورة داخل JSON لا يطابق ملف PNG المحدد ("+atlasValidation.image+")."},{status:400});}
  const relative=hasFile?createImmutableAssetPath(config.folder,id,extension,bytes):(existing?.path||"").replace(/^\/assets\//,"");
  const atlasJsonRelative=hasAtlas?createImmutableAssetPath(config.folder,id+"-atlas",".json",atlasJsonBytes):(existing?.atlas?.jsonPath||"").replace(/^\/assets\//,"");
  const atlasRecord=hasAtlas?{frameCount:atlasValidation.frameCount,frameNames:atlasValidation.frameNames,clips:atlasValidation.clips,format:atlasValidation.format,filename:id+"-atlas.json",jsonPath:"/assets/"+atlasJsonRelative}:hasFile?null:(existing?.atlas||null);
