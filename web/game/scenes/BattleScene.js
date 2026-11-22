@@ -3137,6 +3137,13 @@ export default class BattleScene extends Scene {
     return true;
   }
 
+  stopStudioSkeletalRig(rig, frozen = false) {
+    if (!rig) return;
+    rig._animationEvent?.remove?.();
+    rig._animationEvent = null;
+    rig._activeClipId = frozen ? "frozen" : null;
+  }
+
   getStudioRigHitboxWorld(rig, parentView, kind) {
     if (!rig || !parentView?.active) return null;
     const profile = rig.profile.hitboxes.find((item) => item.kind === kind);
@@ -4514,7 +4521,7 @@ export default class BattleScene extends Scene {
       eater.isEatingIce = true;
       eater.iceTargetId = frozen.combatId;
       eater.attackCooldown = 0;
-      if (eater.hyenaSprite?.active) this.playHyenaAnimation(eater, "hyena-bite");
+      if (eater.hyenaSprite?.active || eater.studioRig) this.playHyenaAnimation(eater, "hyena-bite");
       frozen.iceBiteCooldownMs = (frozen.iceBiteCooldownMs ?? 0) - delta;
       if (frozen.iceBiteCooldownMs <= 0) {
         frozen.freezeStage = Math.max(0, frozen.freezeStage - 1);
@@ -4783,6 +4790,12 @@ export default class BattleScene extends Scene {
     if (monster.view?.active) this.tweens.killTweensOf(monster.view);
     if (monster.braceCue?.active) monster.braceCue.setVisible(false);
     const sprite = monster.hyenaSprite;
+    if (monster.studioRig) {
+      const rig = monster.studioRig;
+      monster.frozenAnimationKey = rig._activeClipId || "move";
+      if (rig.profile.clips.some((clip) => clip.id === "frozen")) this.playStudioSkeletalRig(rig, "frozen");
+      else this.stopStudioSkeletalRig(rig, true);
+    }
     if (sprite?.active) {
       if (!monster.frozenTextureKey && !monster.studioMonster) {
         const preferred = this.wave >= 4 ? "frozen-hyena-level-2" : "frozen-hyena-level-1";
@@ -4817,6 +4830,13 @@ export default class BattleScene extends Scene {
 
   restoreMonsterAfterFreeze(monster) {
     const sprite = monster?.hyenaSprite;
+    if (monster?.studioRig) {
+      const rig = monster.studioRig;
+      const restoreClip = rig.profile.clips.find((clip) => clip.id === monster.frozenAnimationKey)?.id
+        || rig.profile.clips.find((clip) => clip.id === "move")?.id
+        || rig.profile.clips.find((clip) => clip.id === "idle")?.id;
+      if (restoreClip) this.playStudioSkeletalRig(rig, restoreClip);
+    }
     if (sprite?.active) {
       sprite.setTint(monster.tierTint ?? 0xffffff);
       sprite.setScale(0.918);
