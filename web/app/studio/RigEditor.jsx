@@ -81,7 +81,9 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
   }
   function addBone() {
     if (rig.bones.length >= 64) return;
-    const id = "bone-" + (rig.bones.length + 1);
+    let boneIndex = 1;
+    while (rig.bones.some((item) => item.id === "bone-" + boneIndex)) boneIndex += 1;
+    const id = "bone-" + boneIndex;
     update((next) => {
       next.bones.push({ id, name: "مفصل جديد", parentId: selectedBoneId, x: 24, y: 0, rotation: 0, scaleX: 1, scaleY: 1, pivot: { x: 0, y: 0 }, part: null });
       for (const item of next.clips) item.tracks.push({ boneId: id, keyframes: [{ timeMs: 0, x: 24, y: 0, rotation: 0, scaleX: 1, scaleY: 1 }, { timeMs: item.durationMs, x: 24, y: 0, rotation: 0, scaleX: 1, scaleY: 1 }] });
@@ -101,17 +103,23 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
     setSelectedBoneId(parentId);
   }
   function addAttachment() {
-    const id = rig.attachments.length === 0 ? "muzzle" : "attachment-" + (rig.attachments.length + 1);
+    let attachmentIndex = 1;
+    while (rig.attachments.some((item) => item.id === "attachment-" + attachmentIndex)) attachmentIndex += 1;
+    const id = rig.attachments.length === 0 ? "muzzle" : "attachment-" + attachmentIndex;
     update((next) => next.attachments.push({ id, name: id === "muzzle" ? "فوهة السلاح" : "نقطة تثبيت " + (next.attachments.length + 1), boneId: selectedBoneId, x: 20, y: 0, rotation: 0, scaleX: 1, scaleY: 1 }));
   }
   function addHitbox() {
-    const id = "hitbox-" + (rig.hitboxes.length + 1);
+    let hitboxIndex = 1;
+    while (rig.hitboxes.some((item) => item.id === "hitbox-" + hitboxIndex)) hitboxIndex += 1;
+    const id = "hitbox-" + hitboxIndex;
     update((next) => next.hitboxes.push({ id, name: "منطقة إصابة " + (next.hitboxes.length + 1), boneId: selectedBoneId, x: 0, y: 0, rotation: 0, scaleX: 1, scaleY: 1, width: 32, height: 32, kind: "hurt" }));
   }
   function addClip() {
     if (rig.clips.length >= 16) return;
     const preferred = ["move", "attack", "hit", "death", "jump", "special"];
-    const id = preferred.find((candidate) => !rig.clips.some((item) => item.id === candidate)) || "clip-" + (rig.clips.length + 1);
+    let clipIndex = 1;
+    while (rig.clips.some((item) => item.id === "clip-" + clipIndex)) clipIndex += 1;
+    const id = preferred.find((candidate) => !rig.clips.some((item) => item.id === candidate)) || "clip-" + clipIndex;
     const clipNames = { move: "تنقل", attack: "هجوم", hit: "إصابة", death: "موت", jump: "قفز", special: "حركة خاصة" };
     update((next) => next.clips.push({
       id, name: clipNames[id] || "حركة جديدة", durationMs: 1000, loop: id === "move" || id === "special",
