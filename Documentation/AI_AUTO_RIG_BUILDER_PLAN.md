@@ -433,7 +433,7 @@ The Auto-Rig Builder is a permanent first-class Studio subsystem composed of the
 - Integrated an explicit Studio action to suggest semantic roles for current AI proposals and passed the active asset type into the panel.
 - Suggestions remain deliberately conservative (confidence below 0.7), do not mark parts as reviewed, do not approve masks, and never bypass the author’s role selection/review gate. Ambiguous shapes fall back to accessory with a low confidence.
 - Added focused tests for plant body/leaf suggestions, monster head/arm suggestions, and invalid geometry. Added the new test and module to Auto-Rig CI and ESLint.
-- This is a heuristic assist, not a trained visual classifier. Pixel-aware plant/monster classification remains a later model-backed milestone; hidden-pixel reconstruction is still not implemented.
+- This is a heuristic assist, not a trained visual classifier. Pixel-aware plant/monster classification remains a later model-backed milestone. Local donor transfer and Telea texture inpainting are implemented as separate, explicitly reviewed reconstruction aids; generative anatomical completion remains outstanding.
 
 
 ## 2026-11-22 — Author-guided visible-donor reconstruction (first reconstruction path)
@@ -444,4 +444,4 @@ A first usable reconstruction workflow is now implemented as deterministic visib
 4. Studio composites the patch into the extracted part PNG, expands part bounds to include the target, and stores donor/target polygons, bounds, transform choice, and method in the versioned manifest.
 5. Pixel review is a separate explicit approval from the overall part review. The quality gate allows reconstructed pixels only after both reviews and resolved occlusion.
 
-**Capability boundary:** this is an author-guided symmetry/texture-copy operation, not generative inpainting. It works best when a genuinely corresponding visible region exists; it cannot invent an unseen leaf, limb, or anatomy from context. A future local generative inpainting model remains a separate requirement and must have explicit model/checkpoint provenance and the same fail-closed review gate. The worker advertises `visible-donor-reconstruction`, never `hidden-part-reconstruction`.
+**Capability boundary:** donor transfer is an author-guided symmetry/texture-copy operation, not generative inpainting. A second path, `local-texture-inpaint`, uses OpenCV Telea to fill a manually marked region from immediate neighboring pixels. It is useful only for small texture gaps and does not infer anatomy, shape, or semantic structure. Both methods produce transparent patches, preserve provenance, and require explicit pixel review plus normal part review. A future local generative inpainting model remains separate and must include model/checkpoint provenance and the same fail-closed review gate. The worker advertises `visible-donor-reconstruction` and `local-texture-inpaint`, never `hidden-part-reconstruction`.
