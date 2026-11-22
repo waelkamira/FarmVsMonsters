@@ -368,9 +368,21 @@ test("animation readiness requires a source fingerprint and no unreviewed recons
 
   const reconstructed = JSON.parse(JSON.stringify(complete.manifest));
   reconstructed.parts[0].provenance.pixels = "reconstructed";
+  reconstructed.parts[0].reconstruction = { method: "visible-donor-transfer", donorBounds: { x: 24, y: 60, width: 72, height: 48 }, targetBounds: { x: 80, y: 90, width: 40, height: 40 }, reviewed: false };
   const reconstructedReport = analyzeAutoRigQuality(reconstructed, complete.profile);
   assert.equal(reconstructedReport.readyForAnimation, false);
   assert.ok(reconstructedReport.warnings.some((warning) => warning.code === "reconstructed-pixels"));
+
+  const reviewedReconstruction = JSON.parse(JSON.stringify(complete.manifest));
+  reviewedReconstruction.parts[0].provenance.pixels = "reconstructed";
+  reviewedReconstruction.parts[0].occlusion = "reconstructed";
+  reviewedReconstruction.parts[0].occlusionMask = { kind: "polygon", points: [
+    { x: 80, y: 90 }, { x: 120, y: 90 }, { x: 120, y: 130 }, { x: 80, y: 130 }
+  ] };
+  reviewedReconstruction.parts[0].reconstruction = { method: "visible-donor-transfer", donorBounds: { x: 24, y: 60, width: 72, height: 48 }, targetBounds: { x: 80, y: 90, width: 40, height: 40 }, reviewed: true };
+  const reviewedReconstructionReport = analyzeAutoRigQuality(reviewedReconstruction, complete.profile);
+  assert.equal(reviewedReconstructionReport.readyForAnimation, true);
+  assert.equal(reviewedReconstructionReport.checks.reconstructionPendingCount, 0);
 
   const occlusionReconstructed = JSON.parse(JSON.stringify(complete.manifest));
   occlusionReconstructed.parts[0].occlusion = "reconstructed";
