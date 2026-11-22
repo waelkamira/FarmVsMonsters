@@ -18,11 +18,12 @@
 - Oriented rectangle and convex polygon collision helpers.
 - Focused contract tests for all of the above.
 - Authenticated worker bridge route, hardened with bounded request/response stream reads, exact Content-Length checks, and sanitized upstream error responses.
+- Local Python SAM 2 worker, bounded request parsing, slow-client socket timeouts, request-shape validation, WSL/native launchers, setup instructions, and Python contract tests.
 
 The mainline ports are deliberately narrower than PR #88/#89. The full BattleScene combat/projectile integration, Rig Editor UI, Auto-Rig panel, asset API persistence, and local Python worker have not been merged as a unit. They require review against the current main files and the broad-suite failures before integration.
 
 ## Current verification boundary
 
-A new `.github/workflows/web-validation.yml` runs `npm ci`, full ESLint, `npm test`, and `npm run build` from `web` on main pushes and PRs affecting web files. GitHub status lookups for the latest port commits currently return no check statuses or workflow runs. Therefore, no passing build/test claim is made.
+A new `.github/workflows/web-validation.yml` runs `npm ci`, full ESLint, `npm test`, and `npm run build` from `web` on main pushes and PRs affecting web files. It also installs the worker's NumPy/OpenCV test dependencies, checks WSL shell syntax, compiles the Python worker, and runs its contract tests. GitHub status lookups for the latest port commits currently return no check statuses or workflow runs. Therefore, no passing build/test claim is made.
 
 The local SAM 2 model/checkpoint and the real Windows/WSL browser-to-Phaser flow remain unverified. Hidden-pixel reconstruction is still not implemented.
