@@ -56,7 +56,7 @@ export default function AutoRigBuilderPanel({
   const [muzzlePoint, setMuzzlePoint] = useState(null);
   const [muzzleMode, setMuzzleMode] = useState(false);
   const existingIds = useMemo(() => new Set(assets.map((asset) => asset.id)), [assets]);
-  const emitterParts = useMemo(() => parts.filter((part) => ["weapon", "weapon.barrel", "mouth", "head", "face"].includes(part.role)), [parts]);
+  const emitterParts = useMemo(() => parts.filter((part) => ["weapon", "weapon.barrel", "weapon.muzzle", "mouth", "head", "face"].includes(part.role)), [parts]);
   const activeEmitterPart = emitterParts.find((part) => part.id === muzzlePartId) || emitterParts[0] || null;
 
   useEffect(() => {
@@ -325,7 +325,7 @@ export default function AutoRigBuilderPanel({
       </div>
       {requiresMuzzle && <div className="studio-grid" style={{ marginTop: 12 }}>
         <label>جزء مصدر الإطلاق
-          <select value={activeEmitterPart?.id || ""} disabled={disabled || busy || !emitterParts.length} onChange={(event) => setMuzzlePartId(event.target.value)}>
+          <select value={activeEmitterPart?.id || ""} disabled={disabled || busy || !emitterParts.length} onChange={(event) => { setMuzzlePartId(event.target.value); setMuzzlePoint(null); }}>
             {emitterParts.map((part) => <option key={part.id} value={part.id}>{part.name} · {part.role}</option>)}
           </select>
         </label>
@@ -337,14 +337,14 @@ export default function AutoRigBuilderPanel({
           </div>
           {muzzleMode && <p>وضع تحديد الفوهة مفعّل: انقر داخل الجزء المحدد على الصورة</p>}
           {muzzlePoint && <p>النقطة المحددة: {Math.round(muzzlePoint.x)}, {Math.round(muzzlePoint.y)}</p>}
-          {!emitterParts.length && <p>أضف جزءاً بدور سلاح أو ماسورة أو فم أو رأس أولاً.</p>}
+          {!emitterParts.length && <p>أضف جزءاً بدور سلاح أو ماسورة أو منطقة فوهة أو فم أو رأس أولاً.</p>}
         </div>
       </div>}
       {parts.length > 0 && <div style={{ marginTop: 12 }}>
         <b>الأجزاء المحددة ({parts.length}/63)</b>
         <ul>{parts.map((part) => <li key={part.id} style={{ marginTop: 5 }}>
           {part.name} · {part.role} · {part.bounds.width}×{part.bounds.height}
-          <button type="button" disabled={disabled || busy} style={{ marginInlineStart: 10 }} onClick={() => setParts((current) => current.filter((item) => item.id !== part.id))}>حذف</button>
+          <button type="button" disabled={disabled || busy} style={{ marginInlineStart: 10 }} onClick={() => { setParts((current) => current.filter((item) => item.id !== part.id)); if (part.id === muzzlePartId) { setMuzzlePartId(""); setMuzzlePoint(null); setMuzzleMode(false); } }}>حذف</button>
         </li>)}</ul>
       </div>}
       <button type="button" className="studio-submit" disabled={disabled || busy || !image || !parts.length} onClick={generateRig}>
