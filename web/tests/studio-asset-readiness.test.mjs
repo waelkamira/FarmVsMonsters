@@ -262,7 +262,7 @@ test("readiness blocks rig parts whose asset type cannot be rendered by the rig 
   const rigProfile = {
     version: 1, canvas: { width: 200, height: 200 },
     bones: [{ id: "root", parentId: null }, { id: "head", parentId: "root", part: { assetId: "projectile-part", frame: 0 } }],
-    attachments: [], hitboxes: [], clips: []
+    attachments: [], hitboxes: [], clips: [{ id: "idle", durationMs: 1000, loop: true, tracks: [] }]
   };
   const invalidPart = { id: "projectile-part", type: "plantProjectile", status: "published", path: "/assets/projectiles/part.png" };
   const report = auditStudioAssetRegistry([validPlant({ rigProfile }), validProjectile(), invalidPart]);
