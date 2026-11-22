@@ -372,7 +372,7 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
 
   return (
     <section className="studio-rig-editor">
-      <header><div><h4>استديو التحريك الهيكلي · Cutout Rig</h4><p>اربط صور الأجزاء بالعظام، اضبط المفاصل بالسحب أو الحقول، ثم أنشئ مقاطع الحركة والإطارات المفتاحية.</p></div><span data-valid={validation.valid}>{validation.valid ? "هيكل صالح" : "يحتاج إلى إصلاح"}</span></header>
+      <header><div><h4>استديو التحريك الهيكلي · Cutout Rig</h4><p>اربط صور الأجزاء بالعظام، اضبط المفاصل بالسحب أو الحقول، ثم أنشئ مقاطع الحركة والإطارات المفتاحية.</p></div><div className="studio-rig-header-actions"><span data-valid={validation.valid}>{validation.valid ? "هيكل صالح" : "يحتاج إلى إصلاح"}</span><button type="button" disabled={disabled} onClick={() => { if (window.confirm("إزالة ملف الهيكل من هذه المسودة؟ ستبقى الصور الأصلية وSprite Sheet كما هي.")) onChange(null); }}>العودة إلى Sprite Sheet</button></div></header>
       <div className="studio-rig-layout">
         <div className="studio-rig-stage">
           <canvas ref={canvasRef} width={rig.canvas.width} height={rig.canvas.height} onPointerDown={pointerDown} aria-label="معاينة الهيكل العظمي" />
