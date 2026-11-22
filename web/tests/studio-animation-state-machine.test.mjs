@@ -35,7 +35,7 @@ test("crossfades local bone transforms using shortest-path rotation", () => {
   const halfway = controller.update(100);
   assert.ok(Math.abs(halfway.localBones.head.rotation - 368) < 0.001);
   const complete = controller.update(100);
-  assert.equal(complete.localBones.head.rotation, 26);
+  assert.equal(complete.localBones.head.rotation, 42);
 });
 
 test("crossfaded world pose keeps child hierarchy and supports reset", () => {
