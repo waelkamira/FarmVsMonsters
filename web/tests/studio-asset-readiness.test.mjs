@@ -129,6 +129,71 @@ test("Testing Lab page runs the audit and renders readiness outcomes", () => {
   assert.match(pageSource, /stage\/1\/select/);
 });
 
+test("readiness validates rig profiles and blocks missing or archived bitmap parts", () => {
+  const rigProfile = {
+    version: 1,
+    canvas: { width: 200, height: 200 },
+    bones: [
+      { id: "root", parentId: null },
+      { id: "head", parentId: "root", part: { assetId: "head-part", frame: 0 } }
+    ],
+    attachments: [{ id: "muzzle", boneId: "root", x: 10, y: 0 }],
+    hitboxes: [],
+    clips: []
+  };
+  const part = { id: "head-part", type: "item", status: "published", path: "/assets/parts/head.png" };
+  const valid = auditStudioAssetRegistry([validPlant({ rigProfile }), validProjectile(), part]);
+  assert.equal(valid.blocked, 0);
+  const missing = auditStudioAssetRegistry([validPlant({ rigProfile }), validProjectile()]);
+  assert.equal(missing.blocked, 1);
+  assert.ok(missing.assets[0].errors.some((message) => message.includes("جزء الهيكل")));
+  const archived = auditStudioAssetRegistry([validPlant({ rigProfile }), validProjectile(), { ...part, status: "archived" }]);
+  assert.equal(archived.blocked, 1);
+});
+
+test("readiness blocks skeletal part frame indices outside the referenced asset", () => {
+  const rigProfile = {
+    version: 1, canvas: { width: 200, height: 200 },
+    bones: [{ id: "root", parentId: null }, { id: "head", parentId: "root", part: { assetId: "head-part", frame: 2 } }],
+    attachments: [{ id: "muzzle", boneId: "root", x: 10, y: 0 }], hitboxes: [], clips: []
+  };
+  const part = { id: "head-part", type: "item", status: "published", path: "/assets/parts/head.png", frameCount: 9, rows: 1, columns: 1, spriteSheet: false };
+  const report = auditStudioAssetRegistry([validPlant({ rigProfile }), validProjectile(), part]);
+  assert.equal(report.blocked, 1);
+  assert.ok(report.assets[0].errors.some((message) => message.includes("خارج عدد إطارات الأصل")));
+});
+
+test("readiness blocks rigged projectile plants without a muzzle attachment", () => {
+  const rigProfile = {
+    version: 1, canvas: { width: 200, height: 200 },
+    bones: [{ id: "root", parentId: null }],
+    attachments: [], hitboxes: [], clips: []
+  };
+  const report = auditStudioAssetRegistry([validPlant({ rigProfile }), validProjectile()]);
+  assert.equal(report.blocked, 1);
+  assert.ok(report.assets[0].errors.some((message) => message.includes("muzzle")));
+});
+
+test("readiness blocks a skeletal profile with no bitmap parts", () => {
+  const rigProfile = {
+    version: 1, canvas: { width: 200, height: 200 },
+    bones: [{ id: "root", parentId: null }],
+    attachments: [], hitboxes: [], clips: []
+  };
+  const report = auditStudioAssetRegistry([validPlant({ rigProfile }), validProjectile()]);
+  assert.equal(report.blocked, 1);
+  assert.ok(report.assets[0].errors.some((message) => message.includes("صورة جزء واحدة على الأقل")));
+});
+
+test("readiness reports malformed rig arrays without crashing the whole audit", () => {
+  const report = auditStudioAssetRegistry([
+    validPlant({ rigProfile: { version: 1, bones: {}, attachments: {}, clips: [] } }),
+    validProjectile()
+  ]);
+  assert.equal(report.blocked, 1);
+  assert.ok(report.assets[0].errors.some((message) => message.includes("ملف الهيكل")));
+});
+
 test("physical file audit blocks missing files and warns when storage cannot be checked", () => {
   const assets = [validPlant(), validMonster()];
   const registryReport = auditStudioAssetRegistry(assets);

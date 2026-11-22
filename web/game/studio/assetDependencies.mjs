@@ -19,6 +19,14 @@ function declaredDependencies(asset, byId) {
         : { kind: "embedded-file", relation: "projectile", targetId: null, targetName: projectile.filename || projectileId || "ملف القذيفة", targetType: "plantProjectile", path: normalizePath(projectile.path), resolved: Boolean(projectile.path), managedWithOwner: true });
     }
   }
+  for (const bone of asList(asset?.rigProfile?.bones)) {
+    const partId = bone?.part?.assetId ? String(bone.part.assetId) : "";
+    if (!partId) continue;
+    const target = byId.get(partId);
+    dependencies.push(target && target.id !== asset.id && target.type !== "audio" && target.status !== "archived"
+      ? { kind: "asset", relation: "rig-part", targetId: target.id, targetName: target.name || target.id, targetType: target.type, path: normalizePath(target.path), resolved: true }
+      : { kind: "asset", relation: "rig-part", targetId: partId, targetName: partId, targetType: null, path: "", resolved: false });
+  }
   for (const reference of asList(asset?.dependencies)) {
     const id = typeof reference === "string" ? reference : reference?.id;
     if (!id) continue;

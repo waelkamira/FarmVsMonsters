@@ -1,6 +1,7 @@
 import { STUDIO_ASSET_TYPES, STUDIO_ID_PATTERN } from "./assetTypes.mjs";
 import { validateStudioPlantCombatProfile } from "./plantProfiles.mjs";
 import { validateStudioAnimationProfile } from "./animationProfiles.mjs";
+import { validateSkeletalRigProfile } from "./skeletalAnimation.mjs";
 import { createStudioMonsterProfile } from "./monsterProfiles.mjs";
 import { buildAssetDependencyReport } from "./assetDependencies.mjs";
 
@@ -93,6 +94,33 @@ export function auditStudioAssetRegistry(input) {
         else if (linked.status === "archived") errors.push("القذيفة المرتبطة مؤرشفة ولا يمكن استخدامها.");
         else if (!safeAssetPath(linked.path)) errors.push("مسار أصل القذيفة المُدارة غير صالح أو غير آمن.");
         else if (linked.path !== combat.projectile.path) errors.push("مسار القذيفة المحفوظ في النبتة لا يطابق مسار أصل القذيفة الحالي.");
+      }
+    }
+    if (asset?.rigProfile && type === "plant" && asset.combat?.mode === "projectile" &&
+        (!Array.isArray(asset.rigProfile.attachments) || !asset.rigProfile.attachments.some((attachment) => attachment?.id === "muzzle"))) {
+      errors.push("النبتة الهيكلية التي تطلق قذيفة تحتاج نقطة تثبيت باسم muzzle.");
+    }
+    if (asset?.rigProfile && (!Array.isArray(asset.rigProfile.bones) || !asset.rigProfile.bones.some((bone) => bone?.part))) {
+      errors.push("يجب أن يحتوي الهيكل على صورة جزء واحدة على الأقل.");
+    }
+    if (asset?.rigProfile) {
+      if (type !== "plant" && type !== "monster") errors.push("ملف الهيكل متاح للنباتات والوحوش فقط.");
+      const rigValidation = validateSkeletalRigProfile(asset.rigProfile);
+      if (!rigValidation.valid) rigValidation.errors.forEach((message) => errors.push("ملف الهيكل: " + message));
+      else {
+        for (const bone of rigValidation.profile.bones) {
+          if (!bone.part) continue;
+          const part = assets.find((candidate) => candidate?.id === bone.part.assetId);
+          if (!part || part.status === "archived" || !safeAssetPath(part.path)) {
+            errors.push("جزء الهيكل " + bone.id + " غير متاح أو مؤرشف: " + bone.part.assetId + ".");
+          } else {
+            const partCapacity = Math.max(1, Number(part.rows || 1) * Number(part.columns || 1));
+            const partFrameCount = part.spriteSheet ? Math.max(1, Math.min(partCapacity, Number(part.frameCount) || partCapacity)) : 1;
+            if (!Number.isInteger(partFrameCount) || bone.part.frame >= partFrameCount) {
+              errors.push("رقم إطار جزء الهيكل " + bone.id + " خارج عدد إطارات الأصل " + bone.part.assetId + ".");
+            }
+          }
+        }
       }
     }
     if (type === "monster") {

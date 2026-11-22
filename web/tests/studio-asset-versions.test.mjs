@@ -108,3 +108,30 @@ test("editing a previously published asset resets release timestamps on the new 
   assert.equal(updated.testingAt, null);
   assert.equal(updated.restoredFromVersion, null);
 });
+
+test("clone, revision snapshots, and restore preserve independent skeletal rig profiles", () => {
+  const source = {
+    id: "rigged-plant", type: "plant", path: "/assets/plants/rigged.png", revision: 1,
+    rigProfile: {
+      version: 1, canvas: { width: 200, height: 200 },
+      bones: [{ id: "root", parentId: null, x: 0, y: 0 }, { id: "head", parentId: "root", x: 10, y: 0, part: { assetId: "head-part", frame: 0 } }],
+      attachments: [{ id: "muzzle", boneId: "head", x: 8, y: 0 }],
+      hitboxes: [], clips: []
+    }
+  };
+  const clone = cloneStudioAsset(source, "rigged-plant-copy");
+  assert.deepEqual(clone.rigProfile, source.rigProfile);
+  assert.notEqual(clone.rigProfile, source.rigProfile);
+  clone.rigProfile.bones[1].x = 99;
+  assert.equal(source.rigProfile.bones[1].x, 10);
+
+  const edited = createStudioAssetRevision(source, {
+    ...source,
+    rigProfile: { ...source.rigProfile, bones: source.rigProfile.bones.map((bone) => ({ ...bone, x: bone.x + 5 })) }
+  });
+  assert.deepEqual(edited.versions[0].rigProfile, source.rigProfile);
+  const restored = restoreStudioAssetRevision(edited, 1);
+  assert.deepEqual(restored.rigProfile, source.rigProfile);
+  restored.rigProfile.bones[1].x = 50;
+  assert.equal(edited.versions[0].rigProfile.bones[1].x, 10);
+});

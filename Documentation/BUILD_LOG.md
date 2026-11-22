@@ -1070,3 +1070,55 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - Added the first dragon fireball impact cue; it remains presentation-only and does not alter target selection or damage.
 - Current implementation uses Phaser procedural geometry and the built-in white particle texture when available. Sprite-sheet playback is supported by explicit keys but still needs authored effect sheets and registry metadata; renderer-specific shader pipelines remain an optional follow-up after compatibility testing.
 - Verification: GitHub source edits only. Tests, lint, production build, and Chrome/Windows visual/performance profiling have not been executed; do not treat runtime integration as verified.
+
+## 2026-11-22 — Hybrid Skeletal Animation Studio and Battle Integration
+- Added the versioned rig evaluator, Phaser Container renderer, and animation state controller with bounded cross-fades and shortest-path rotation.
+- Added the visual Rig Editor to the authenticated Studio plant/monster asset form: bitmap part assignment, bone hierarchy, canvas drag, zoom/pan, pivots, clips, FPS, clickable keyframe tracks, presets, attachments, and attack/hurt hitbox editing.
+- Rig profiles now persist through asset save, clone, version snapshots, restore, Testing Lab validation, release dependency checks, and published catalog metadata.
+- Studio testing catalogs now return the referenced bitmap part descriptors; BattleScene preloads those images and registers their frame grids.
+- BattleScene can render optional skeletal rigs for Studio plants and monsters while preserving the existing Sprite Sheet path for every asset without a rig.
+- Rigged projectile plants launch from the muzzle attachment. Rigged plant/monster attack and hurt hitboxes participate in supported melee, bite, and projectile collision checks. Monster freeze/thaw preserves or plays a frozen skeletal pose.
+- Added focused Node test coverage for evaluator, adapter, state machine, readiness, versioning, dependencies, Studio wiring, and BattleScene integration.
+- Verification status: source changes and tests are committed to feat/studio-hybrid-animation-engine. GitHub Actions creates jobs but reports runner_id: 0, zero steps, and no logs; no test, lint, build, or browser result is claimed. The connected browser context is unavailable in this session, so live Chrome/Windows verification remains open.
+- Remaining acceptance gates: run Node tests, ESLint, and production build on a working runner; visually verify a rigged plant and monster in BattleScene; verify launch origin and hitbox behavior; add explicit state-priority rules and final cleanup/performance checks.
+
+### Hybrid Rig Editor and runtime hardening — 2026-11-22
+- Extended the canvas editor with zoom/pan, draggable attachment and hitbox handles, clickable per-bone keyframe tracks, FPS-stepped preview, editable breathing/walk/recoil presets, and a safe switch back to Sprite Sheet mode.
+- Normalized rig-part frame counts so static images always expose exactly one frame even if an older registry entry contains stale frameCount metadata; published and testing catalog descriptors now use the normalized grid.
+- Restricted rig parts to supported image asset categories and blocked empty rigs, invalid part references, archived parts, out-of-range frames, and projectile rigs without a muzzle attachment.
+- BattleScene now uses every configured attack/hurt hitbox for supported overlap checks, advances rigged monster move/hit/death clips, preserves frozen poses, and registers one destroy listener per rig to stop animation timers.
+- Added additional regression coverage for static frame bounds, missing bitmap parts, malformed rig profiles, muzzle requirements, editor interactions, and monster state/freeze wiring.
+- Validation remains blocked before job execution: GitHub Actions runner_id is 0 and the job has no steps or logs. No automated or browser pass is claimed.
+
+
+## 2026-11-22 — Hybrid skeletal animation Studio
+- Added a visual cutout-rig editor with bone hierarchy, part assignment, pivots, animation clips, keyframes, attachment points, and attack/hurt hitboxes.
+- Added canvas zoom/pan, direct manipulation of bones and rig markers, editable breathing/walk/recoil presets, per-clip FPS, frame-stepped preview, and safe fallback to Sprite Sheet mode.
+- Added integer frame-time snapping for keyframes, protecting Studio saves from fractional millisecond timestamps.
+- Integrated optional rig rendering for Studio plants and monsters while preserving Sprite Sheet fallback.
+- Integrated muzzle-based projectile origins and multiple oriented hitboxes for melee, monster bites, and projectile collision.
+- Added animation state guards for attack, hit, frozen, and death states, including correct preservation across stacked freeze events.
+- Validation remains pending: the GitHub Actions jobs for the current feature branch terminate before any steps or logs are available; no tests/lint/build/browser pass is claimed.
+- Working branch: `feat/studio-hybrid-animation-engine`; review PR: #84.
+
+### Final rig-editor and collision refinements — 2026-11-22
+- Keyframe timestamps now snap to integer clip-frame times in the editor, including numeric edits, canvas dragging, presets, keyframe insertion/removal, and preview sampling.
+- Added per-clip FPS validation and defaulting in the rig data contract.
+- BattleScene uses convex-polygon SAT across all authored attack/hurt hitbox pairs and circle-vs-polygon checks for projectiles, including non-uniform parent scaling.
+- Monster state guards protect death and frozen states, preserve the pre-freeze animation across stacked freeze hits, and prevent idle/movement from resetting active attack/hit clips.
+- Validation still has not executed: the latest GitHub Actions jobs finish with runner_id=0 and no steps/logs. Live Chrome/Windows battle verification remains open.
+
+- Extracted oriented skeletal hitbox collision and projectile-circle intersection into `skeletalCollision.mjs`; added geometry unit tests (overlap, separation, rotation, tangency, invalid values).
+- Corrected muzzle attachment conversion to full plant-view world space, including parent position, scale, and rotation, before projectile launch coordinates are calculated.
+
+- Added `skeletalWorldTransform.mjs` and unit tests for parent translation, non-uniform scaling, rotation, defaults, and invalid transform values; BattleScene now shares this helper for muzzle and hitbox world coordinates.
+
+- Improved collision geometry for non-uniformly scaled characters: rig hitboxes are now transformed corner-by-corner into convex polygons and tested with SAT; projectile circles use polygon edge-distance tests instead of approximating a skewed shape as an oriented rectangle.
+
+
+### Rig editor visual-reference and interaction hardening — 2026-11-22
+- The Rig Editor now displays the current uploaded or existing character artwork as a faint first-frame alignment reference beneath the cutout parts, including the newly selected local upload before it is saved.
+- Reparenting choices now exclude descendants of the selected bone, preventing users from creating a cyclic hierarchy through the parent selector.
+- Canvas drag and pan listeners now clean up on pointer-up, pointer-cancel, and window blur.
+- Corrected Phaser frame registration for static monster rig parts: static images are registered as a 1×1 grid so the rig renderer can resolve frame 0 consistently, matching the plant rig-part path.
+- Validation status: source review and GitHub commits only. Latest Actions jobs still terminate with runner_id=0 and no executed steps/logs; automated tests, lint, production build, and live browser verification remain unconfirmed.
