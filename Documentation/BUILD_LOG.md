@@ -1207,3 +1207,4 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - Moved the Studio role choices into the Auto-Rig builder's versioned role dictionary so the UI and deterministic generator consume the same canonical values instead of maintaining duplicate lists.
 - Added the missing jaw and weapon-muzzle semantic roles, including parent-role guidance for a muzzle-region part. The actual projectile launch point remains a separately confirmed `muzzle` attachment, not an inferred polygon role.
 - Added a regression that confirms the Studio option and generator agree on `weapon.muzzle` and do not emit an unknown-role warning for it.
+- Tightened reconstruction review semantics: generated-pixel warnings now also derive from the explicit `provenance.pixels = reconstructed` marker, even if the part's occlusion state was not separately set. Added a regression for this independent provenance path.
