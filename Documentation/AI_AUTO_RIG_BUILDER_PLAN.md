@@ -353,3 +353,8 @@ The Auto-Rig Builder is a permanent first-class Studio subsystem composed of the
 ## 2026-11-22 — Review invalidation on edits
 - Accepted part roles can now be corrected in the part list. Changing a role, dragging a polygon vertex, or changing the occlusion assessment invalidates the explicit author-review flag so stale approval cannot survive a substantive edit.
 - Re-drawing an occlusion region also clears the review flag and leaves the part unresolved.
+
+
+## 2026-11-22 — Latest focused validation (commit 1463e9f)
+- Auto-Rig subsystem run `45032089391` passed on the current feature commit: all Auto-Rig, worker-protocol, publish-gate, Rig Library, asset-version, and hybrid-engine contract tests; focused ESLint; full-project ESLint diagnostic step; production build; Python worker compile and tests.
+- The separate broad Web Quality Gate / Studio-Game test suite remains independent and has previously failed 54 of 424 tests; no claim of repository-wide green status is made.
