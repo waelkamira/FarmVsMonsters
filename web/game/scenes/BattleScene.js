@@ -4103,12 +4103,17 @@ export default class BattleScene extends Scene {
 
   playHyenaAnimation(monster, key, force = false) {
     if (monster?.studioMonster?.rigProfile && monster.studioRig) {
-      const action = ["hyena-bite", "hyena-hit", "hyena-death"].includes(key) ? "attack" : ["hyena-walk", "hyena-run"].includes(key) ? "move" : "idle";
+      const action = key === "hyena-death" ? "death"
+        : key === "hyena-hit" ? "hit"
+        : key === "hyena-bite" ? "attack"
+        : ["hyena-walk", "hyena-run"].includes(key) ? "move" : "idle";
       if (action === "attack" && !force && monster.hitAnimUntil > this.time.now) return;
       const rig = monster.studioRig;
       const clip = rig.profile.clips.find((entry) => entry.id === action)
+        || (action === "hit" ? rig.profile.clips.find((entry) => entry.id === "attack") : null)
         || rig.profile.clips.find((entry) => entry.id === "idle");
-      if (clip) this.playStudioSkeletalRig(rig, clip.id, action === "attack" ? () => {
+      if (clip && !force && rig._activeClipId === clip.id) return;
+      if (clip) this.playStudioSkeletalRig(rig, clip.id, ["attack", "hit", "death"].includes(action) ? () => {
         const idle = rig.profile.clips.find((entry) => entry.id === "idle");
         if (idle) this.playStudioSkeletalRig(rig, idle.id);
       } : null);
@@ -5073,7 +5078,7 @@ export default class BattleScene extends Scene {
     // reward and wave counters are still granted immediately and exactly once.
     if (monster.view && monster.view.active) {
       this.tweens.killTweensOf(monster.view);
-      if (monster.hyenaSprite && monster.hyenaSprite.active) {
+      if ((monster.hyenaSprite && monster.hyenaSprite.active) || monster.studioRig?.root?.active) {
         this.playHyenaAnimation(monster, "hyena-death", true);
         this.tweens.add({
           targets: monster.view,
