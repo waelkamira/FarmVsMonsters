@@ -1,18 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { buildAutoRigFromParts } from "../../game/studio/autoRigBuilder.mjs";
-
-const ROLE_OPTIONS = [
-  ["body", "الجسم"], ["stem", "الساق"], ["head", "الرأس"], ["face", "الوجه"],
-  ["eye.left", "العين اليسرى"], ["eye.right", "العين اليمنى"], ["mouth", "الفم"],
-  ["leaf.left", "الورقة اليسرى"], ["leaf.right", "الورقة اليمنى"], ["leaf", "ورقة"],
-  ["arm.left", "الذراع الأيسر"], ["arm.right", "الذراع الأيمن"],
-  ["hand.left", "اليد اليسرى"], ["hand.right", "اليد اليمنى"],
-  ["weapon", "السلاح"], ["weapon.barrel", "ماسورة السلاح"],
-  ["back", "الجزء الخلفي"], ["tail", "الذيل"], ["armor", "الدرع"],
-  ["accessory", "إضافة"], ["shadow", "الظل"], ["effect", "مؤثر"]
-];
+import { AUTO_RIG_ROLE_OPTIONS, buildAutoRigFromParts } from "../../game/studio/autoRigBuilder.mjs";
 
 function slug(value) {
   return String(value || "character").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "character";
@@ -294,9 +283,9 @@ export default function AutoRigBuilderPanel({
           <select value={role} disabled={disabled || busy} onChange={(event) => {
             const value = event.target.value;
             setRole(value);
-            setPartName(ROLE_OPTIONS.find((item) => item[0] === value)?.[1] || value);
+            setPartName(AUTO_RIG_ROLE_OPTIONS.find((item) => item.value === value)?.label || value);
           }}>
-            {ROLE_OPTIONS.map(([value, label]) => <option value={value} key={value}>{label}</option>)}
+            {AUTO_RIG_ROLE_OPTIONS.map((item) => <option value={item.value} key={item.value}>{item.label}</option>)}
           </select>
         </label>
         <label>اسم الجزء
