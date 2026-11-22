@@ -1335,3 +1335,8 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - Publish rejection returns the structured quality report and actionable warning messages (unreviewed parts, unresolved occlusion, missing source fingerprint, unknown roles, low confidence, or reconstructed pixels).
 - Legacy skeletal assets without an Auto-Rig manifest retain their existing publish path; only assets carrying this versioned Auto-Rig authoring record are subject to the new gate.
 - Added a route-contract regression test and included it in the Auto-Rig CI test command.
+
+
+## 2026-11-22 — Latest CI verification (commit d81e77d)
+- Auto-Rig subsystem validation run `45031329290` completed successfully: local worker compile/tests, all Auto-Rig/quality/Studio contract tests (including the publish gate), focused ESLint, full-project ESLint diagnostic step, and Next.js production build all passed.
+- The separate Web Quality Gate run `45031329327` and Studio/Game Validation run `45031329353` failed in the broad Phase 1/game suite: 370 passed and 54 failed out of 424. Failures span combat/replay, monster balance/wave scheduling, planting/resources, account/catalog flows, and several pre-existing Studio source-contract assertions. These failures prevent a repository-wide green status; they are not failures in the focused Auto-Rig CI job.
