@@ -3255,6 +3255,12 @@ export default class BattleScene extends Scene {
     const studioPlant = plant?.studioPlant;
     if (!studioPlant || plant.studioAttacking || plant.studioThrowing || plant.isAttacking || !plant.view?.active) return;
 
+    const skeletalRig = plant.view.getData?.("studioSkeletalRig");
+    if (skeletalRig) {
+      const idleClip = skeletalRig.profile.clips.find((entry) => entry.id === "idle") || skeletalRig.profile.clips[0];
+      if (idleClip && (!skeletalRig._animationEvent || !skeletalRig._animationEvent.getProgress?.())) this.playStudioSkeletalRig(skeletalRig, idleClip.id);
+      return;
+    }
     const sprite = plant.view.list?.find((child) =>
       child?.active && child.getData?.("studioPlantSprite")
     );
@@ -3326,6 +3332,7 @@ export default class BattleScene extends Scene {
       if (studioProfile?.mode === "melee" || studioProfile?.mode === "contact") {
         if (studioProfile.mode === "contact" && !target.isEating) continue;
         const attackSprite = plant.view?.list?.find((child) => child?.getData?.("studioPlantSprite"));
+        const skeletalRig = plant.view?.getData?.("studioSkeletalRig");
         const animationKey = "studio-" + plant.studioPlant.id + "-attack";
         const applyStudioHit = () => {
           if (!plant.alive || !target.alive || (studioProfile.mode === "contact" && !target.isEating) || this.gameOver) return;
@@ -3333,7 +3340,16 @@ export default class BattleScene extends Scene {
           this.createProjectileImpact(target.view?.x ?? plant.x, target.view?.y ?? plant.y - 22, plant.type);
           this.damageMonsterIfNeeded(target);
         };
-        if (attackSprite?.active && this.anims.exists(animationKey)) {
+        if (skeletalRig?.profile.clips.some((clip) => clip.id === "attack")) {
+          if (plant.studioAttacking) continue;
+          plant.studioAttacking = true;
+          this.playStudioSkeletalRig(skeletalRig, "attack", () => {
+            const idle = skeletalRig.profile.clips.find((clip) => clip.id === "idle");
+            if (idle) this.playStudioSkeletalRig(skeletalRig, idle.id);
+            plant.studioAttacking = false;
+            applyStudioHit();
+          });
+        } else if (attackSprite?.active && this.anims.exists(animationKey)) {
           if (plant.studioAttacking) continue;
           plant.studioAttacking = true;
           attackSprite.play(animationKey);
@@ -3537,7 +3553,17 @@ export default class BattleScene extends Scene {
     if (plant.studioPlant) {
       const animationKey = "studio-" + plant.studioPlant.id + "-attack";
       const sprite = plant.view?.list?.find((child) => child?.getData?.("studioPlantSprite"));
-      if (sprite?.active && this.anims.exists(animationKey)) {
+      const skeletalRig = plant.view?.getData?.("studioSkeletalRig");
+      if (skeletalRig?.profile.clips.some((clip) => clip.id === "attack")) {
+        if (plant.studioThrowing) return;
+        plant.studioThrowing = true;
+        this.playStudioSkeletalRig(skeletalRig, "attack", () => {
+          const idle = skeletalRig.profile.clips.find((clip) => clip.id === "idle");
+          if (idle) this.playStudioSkeletalRig(skeletalRig, idle.id);
+          plant.studioThrowing = false;
+          if (plant.alive && target?.alive && !this.gameOver) this.fireThornProjectile(plant, target);
+        });
+      } else if (sprite?.active && this.anims.exists(animationKey)) {
         if (plant.studioThrowing) return;
         plant.studioThrowing = true;
         sprite.play(animationKey);
