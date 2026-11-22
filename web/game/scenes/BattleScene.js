@@ -3144,50 +3144,61 @@ export default class BattleScene extends Scene {
     rig._activeClipId = frozen ? "frozen" : null;
   }
 
-  getStudioRigHitboxWorld(rig, parentView, kind) {
-    if (!rig || !parentView?.active) return null;
-    const profile = rig.profile.hitboxes.find((item) => item.kind === kind);
-    if (!profile) return null;
-    const local = rig.getHitbox(profile.id);
+  getStudioRigHitboxesWorld(rig, parentView, kind) {
+    if (!rig || !parentView?.active) return [];
+    const profiles = rig.profile.hitboxes.filter((item) => item.kind === kind);
     const scaleX = Number(parentView.scaleX) || 1;
     const scaleY = Number(parentView.scaleY) || 1;
     const rotation = (Number(parentView.rotation) || 0) * 180 / Math.PI;
-    return {
-      x: parentView.x + local.x * scaleX,
-      y: parentView.y + local.y * scaleY,
-      width: local.width * Math.abs(scaleX),
-      height: local.height * Math.abs(scaleY),
-      rotation: local.rotation + rotation
-    };
+    return profiles.map((profile) => {
+      const local = rig.getHitbox(profile.id);
+      return {
+        id: profile.id,
+        x: parentView.x + local.x * scaleX,
+        y: parentView.y + local.y * scaleY,
+        width: local.width * Math.abs(scaleX),
+        height: local.height * Math.abs(scaleY),
+        rotation: local.rotation + rotation
+      };
+    });
+  }
+
+  getStudioRigHitboxWorld(rig, parentView, kind) {
+    return this.getStudioRigHitboxesWorld(rig, parentView, kind)[0] || null;
   }
 
   studioProjectileHitsMonster(shot, monster, projectileX, projectileY) {
     if (!monster?.studioRig) return true;
-    const hurt = this.getStudioRigHitboxWorld(monster.studioRig, monster.view, "hurt");
-    if (!hurt) return true;
-    const radians = -hurt.rotation * Math.PI / 180;
-    const dx = projectileX - hurt.x, dy = projectileY - hurt.y;
-    const localX = dx * Math.cos(radians) - dy * Math.sin(radians);
-    const localY = dx * Math.sin(radians) + dy * Math.cos(radians);
-    const halfWidth = hurt.width / 2, halfHeight = hurt.height / 2;
-    const nearestX = PhaserMath.Clamp(localX, -halfWidth, halfWidth);
-    const nearestY = PhaserMath.Clamp(localY, -halfHeight, halfHeight);
+    const hurtBoxes = this.getStudioRigHitboxesWorld(monster.studioRig, monster.view, "hurt");
+    if (!hurtBoxes.length) return true;
     const radius = Math.max(2, Number(shot.collisionRadius) || 8);
-    return Math.hypot(localX - nearestX, localY - nearestY) <= radius;
+    return hurtBoxes.some((hurt) => {
+      const radians = -hurt.rotation * Math.PI / 180;
+      const dx = projectileX - hurt.x, dy = projectileY - hurt.y;
+      const localX = dx * Math.cos(radians) - dy * Math.sin(radians);
+      const localY = dx * Math.sin(radians) + dy * Math.cos(radians);
+      const halfWidth = hurt.width / 2, halfHeight = hurt.height / 2;
+      const nearestX = PhaserMath.Clamp(localX, -halfWidth, halfWidth);
+      const nearestY = PhaserMath.Clamp(localY, -halfHeight, halfHeight);
+      return Math.hypot(localX - nearestX, localY - nearestY) <= radius;
+    });
   }
 
   studioRigHitboxesOverlap(attackerRig, attackerView, targetRig, targetView) {
-    const attack = this.getStudioRigHitboxWorld(attackerRig, attackerView, "attack");
-    const hurt = this.getStudioRigHitboxWorld(targetRig, targetView, "hurt");
-    if (!attack || !hurt) return true;
+    const attacks = this.getStudioRigHitboxesWorld(attackerRig, attackerView, "attack");
+    const hurts = this.getStudioRigHitboxesWorld(targetRig, targetView, "hurt");
+    if (!attacks.length || !hurts.length) return true;
     const bounds = (hitbox) => {
       const radians = hitbox.rotation * Math.PI / 180;
       const halfWidth = (Math.abs(Math.cos(radians)) * hitbox.width + Math.abs(Math.sin(radians)) * hitbox.height) / 2;
       const halfHeight = (Math.abs(Math.sin(radians)) * hitbox.width + Math.abs(Math.cos(radians)) * hitbox.height) / 2;
       return { left: hitbox.x - halfWidth, right: hitbox.x + halfWidth, top: hitbox.y - halfHeight, bottom: hitbox.y + halfHeight };
     };
-    const a = bounds(attack), b = bounds(hurt);
-    return a.left <= b.right && a.right >= b.left && a.top <= b.bottom && a.bottom >= b.top;
+    const targetBounds = hurts.map(bounds);
+    return attacks.some((attack) => {
+      const a = bounds(attack);
+      return targetBounds.some((b) => a.left <= b.right && a.right >= b.left && a.top <= b.bottom && a.bottom >= b.top);
+    });
   }
 
   drawStudioCatalogPlant(studioPlant, x, y, row = 2) {
