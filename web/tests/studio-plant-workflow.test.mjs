@@ -93,7 +93,7 @@ test("Studio enforces draft-to-testing-to-published and publishes the catalog on
   assert.match(assetsRoute, /status:"testing"/);
   assert.match(assetsRoute, /status:"published"/);
   assert.match(assetsRoute, /PUBLISHED_CATALOG_PATH/);
-  assert.match(assetsRoute, /githubPutImmutable\("web\/public"\+asset\.path/);
+  assert.match(assetsRoute, /const artworkPath=createImmutableAssetPath\(asset\.path/);\n  assert.match(assetsRoute, /githubPutImmutable\(artworkPath/);
 });
 
 test("local sync downloads only testing plants and writes the exact local runtime catalog path", () => {
@@ -141,10 +141,10 @@ test("Studio exposes editable projectile controls with per-field Arabic explanat
   for(const field of ["projectileSpeed","projectileHeight","projectileEffectColor","projectileRotation"]){
     assert.ok(studioPage.includes(field));
   }
-  for(const label of ["سرعة القذيفة","ارتفاع مسار القذيفة","لون تأثير القذيفة","زاوية دوران القذيفة"]){
+  for(const label of ["سرعة القذيفة","ارتفاع المسار العام","لون تأثير الاصطدام","دوران القذيفة (درجة)"]){
     assert.ok(studioPage.includes(label));
   }
-  assert.match(studioPage,/studio-field-help/);
+  assert.match(studioPage,/studio-field-help/);\n  const trajectoryEditor = read("../app/studio/ProjectileTrajectoryEditor.jsx");\n  assert.match(trajectoryEditor,/studio-field-help/);
   assert.match(assetsRoute,/projectileHeight/);
   assert.match(assetsRoute,/projectileEffectColor/);
   assert.match(assetsRoute,/projectileRotation/);
