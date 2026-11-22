@@ -5061,34 +5061,35 @@ export default class BattleScene extends Scene {
       monster.hitAnimUntil = this.time.now + reaction.hitDurationMs;
       this.playHyenaAnimation(monster, monster.studioRig ? "hyena-hit" : "hyena-idle", true);
 
-      if (sprite?.active && monster.hitGlowEffect && sprite.postFX?.remove) {
-        sprite.postFX.remove(monster.hitGlowEffect);
-        monster.hitGlowEffect = null;
-      }
-      if (sprite.postFX?.addGlow) {
-        monster.hitGlowEffect = sprite.postFX.addGlow(hitColor, reaction.glowRadius, 0, false, 0.1, 12);
-      }
-
-      this.tweens.killTweensOf(sprite);
-      const baseX = Number.isFinite(monster.hitRecoilBaseX) ? monster.hitRecoilBaseX : sprite.x;
-      monster.hitRecoilBaseX = baseX;
-      sprite.x = baseX;
-      sprite.setScale(0.918);
-      this.tweens.add({
-        targets: sprite,
-        x: baseX + reaction.recoilPx,
-        scaleX: reaction.squashX,
-        scaleY: reaction.squashY,
-        duration: Math.max(45, Math.round(reaction.hitDurationMs * 0.32)),
-        ease: "Quad.easeOut",
-        yoyo: true,
-        onComplete: () => {
-          if (sprite.active) {
-            sprite.x = baseX;
-            sprite.setScale(0.918);
-          }
+      if (sprite?.active) {
+        if (monster.hitGlowEffect && sprite.postFX?.remove) {
+          sprite.postFX.remove(monster.hitGlowEffect);
+          monster.hitGlowEffect = null;
         }
-      });
+        if (sprite.postFX?.addGlow) {
+          monster.hitGlowEffect = sprite.postFX.addGlow(hitColor, reaction.glowRadius, 0, false, 0.1, 12);
+        }
+        this.tweens.killTweensOf(sprite);
+        const baseX = Number.isFinite(monster.hitRecoilBaseX) ? monster.hitRecoilBaseX : sprite.x;
+        monster.hitRecoilBaseX = baseX;
+        sprite.x = baseX;
+        sprite.setScale(0.918);
+        this.tweens.add({
+          targets: sprite,
+          x: baseX + reaction.recoilPx,
+          scaleX: reaction.squashX,
+          scaleY: reaction.squashY,
+          duration: Math.max(45, Math.round(reaction.hitDurationMs * 0.32)),
+          ease: "Quad.easeOut",
+          yoyo: true,
+          onComplete: () => {
+            if (sprite.active) {
+              sprite.x = baseX;
+              sprite.setScale(0.918);
+            }
+          }
+        });
+      }
     }
 
     const graphic = monster.hitFlashGraphic;
