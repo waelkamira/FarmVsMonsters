@@ -28,4 +28,5 @@ test("BattleScene registers Corn Monster as a selectable shooter with its own at
   assert.match(battleScene, /const kernel = this\.add\.ellipse/);
   assert.match(battleScene, /plantType: plant\.type/);
   assert.match(battleScene, /"corn-monster": CORN_MONSTER_CONFIG/);
+  assert.match(battleScene, /!\["radish", "mushroom", "pumpkin", "pineapple", "hazelnut", "mango", "snow-thrower", "electric-mushroom", "corn-monster"\]\.includes\(type\)/);
 });
