@@ -53,6 +53,9 @@ export default function AutoRigBuilderPanel({
   const [busy, setBusy] = useState(false);
   const [generated, setGenerated] = useState(false);
   const [message, setMessage] = useState("");
+  const [aiStatus, setAiStatus] = useState("unknown");
+  const [aiBusy, setAiBusy] = useState(false);
+  const [aiProposals, setAiProposals] = useState([]);
   const [muzzlePartId, setMuzzlePartId] = useState("");
   const [muzzlePoint, setMuzzlePoint] = useState(null);
   const [muzzleMode, setMuzzleMode] = useState(false);
@@ -146,6 +149,77 @@ export default function AutoRigBuilderPanel({
       });
     }
   }, [image, points, parts]);
+
+  async function checkAIWorker() {
+    setAiBusy(true);
+    try {
+      const response = await fetch("/api/studio/auto-rig/worker", { credentials: "same-origin", cache: "no-store" });
+      const data = await response.json();
+      setAiStatus(response.ok ? "connected" : data.status || "offline");
+      setMessage(response.ok ? "اتصال محرك الذكاء الاصطناعي المحلي ناجح." : data.error || "محرك الذكاء الاصطناعي المحلي غير متصل.");
+    } catch {
+      setAiStatus("offline");
+      setMessage("تعذر الوصول إلى جسر محرك الذكاء الاصطناعي المحلي.");
+    } finally { setAiBusy(false); }
+  }
+
+  async function requestAISegmentation() {
+    if (!image || aiBusy || disabled || generated) return;
+    setAiBusy(true);
+    setAiProposals([]);
+    try {
+      const sourceCanvas = document.createElement("canvas");
+      sourceCanvas.width = image.naturalWidth || image.width;
+      sourceCanvas.height = image.naturalHeight || image.height;
+      sourceCanvas.getContext("2d").drawImage(image, 0, 0);
+      const response = await fetch("/api/studio/auto-rig/worker", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          task: "prompted-segmentation",
+          canvas: { width: sourceCanvas.width, height: sourceCanvas.height },
+          imageDataUrl: sourceCanvas.toDataURL("image/png"),
+          prompt: "Segment the visible character into independently movable semantic parts. Return editable source-coordinate polygon masks."
+        })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "تعذر تنفيذ التقسيم الذكي.");
+      setAiProposals(data.proposals || []);
+      setAiStatus("connected");
+      setMessage("اقترح المحرك " + (data.proposals || []).length + " جزءاً. راجع كل قناع واعتمده يدوياً قبل إنشاء الهيكل.");
+    } catch (error) {
+      setAiStatus("offline");
+      setMessage(error.message);
+    } finally { setAiBusy(false); }
+  }
+
+  function acceptAIProposal(proposal) {
+    if (generated || parts.length >= 63) return;
+    const points = proposal.mask.points;
+    const knownRole = AUTO_RIG_ROLE_OPTIONS.some((item) => item.value === proposal.role) ? proposal.role : "accessory";
+    const suffix = "-" + slug(knownRole.replaceAll(".", "-")) + "-ai-" + String(nextPartIndex.current).padStart(2, "0") + "-cutout";
+    const base = slug(currentAssetId || "character").slice(0, 64 - suffix.length);
+    let assetId = base + suffix, collision = 1;
+    while (existingIds.has(assetId) || parts.some((part) => part.assetId === assetId)) {
+      const extra = "-" + collision++;
+      assetId = base.slice(0, 64 - suffix.length - extra.length) + suffix + extra;
+    }
+    const index = nextPartIndex.current++;
+    setParts((current) => [...current, {
+      id: "part-ai-" + String(index).padStart(2, "0"),
+      assetId,
+      role: knownRole,
+      name: String(proposal.name || knownRole).slice(0, 80),
+      points,
+      bounds: proposal.bounds,
+      drawOrder: index - 1,
+      confidence: proposal.confidence ?? null,
+      provenance: proposal.provenance || { segmentation: "model-mask", pixels: "source" }
+    }]);
+    setAiProposals((current) => current.filter((item) => item.id !== proposal.id));
+    setMessage("تم اعتماد القناع المقترح كجزء قابل للتحرير. راجع حدوده ودوره قبل الحفظ.");
+  }
 
   function addPoint(event) {
     if (!image || disabled || busy || generated) return;
@@ -304,6 +378,19 @@ export default function AutoRigBuilderPanel({
       <small>AUTO-RIG · GUIDED SEGMENTATION</small>
       <h3>استخراج أجزاء الشخصية وبناء الهيكل الأولي</h3>
       <p>هذه مرحلة التفكيك الموجّه: ابدأ بالأجزاء الخلفية ثم الأمامية، وانقر حول كل جزء لرسم قناعه، ثم اختر دوره. سيُحفظ كل جزء كصورة PNG شفافة مستقلة، وتُقترح نقاط الدوران تلقائياً عند أقرب حدود اتصال مع الجزء الأب، ويمكن تعديلها لاحقاً في محرر الهيكل. كما تُنشأ مقاطع حركة ابتدائية للخمول والحركة والهجوم والإصابة والموت، وكلها قابلة للتعديل. عند استخدام Sprite Sheet تتم معالجة أول إطار فقط كصورة مرجعية. إذا كانت النبتة تطلق قذيفة، حدّد مصدر الإطلاق ونقطة muzzle هنا؛ أما بقية تفاصيل الارتباط فيمكن تعديلها لاحقاً في محرر الهيكل. لا يوجد استدلال AI تلقائي في هذه المرحلة بعد.</p>
+      <div className="studio-actions" style={{ display: "flex", flexWrap: "wrap", gap: 8, margin: "10px 0" }}>
+        <button type="button" disabled={disabled || aiBusy} onClick={checkAIWorker}>{aiBusy ? "جارٍ الاتصال..." : "فحص محرك AI المحلي"}</button>
+        <button type="button" disabled={disabled || aiBusy || generated || !image} onClick={requestAISegmentation}>{aiBusy ? "جارٍ تحليل الصورة..." : "اقتراح الأجزاء بالذكاء الاصطناعي"}</button>
+        <span className="studio-message" role="status">حالة المحرك: {aiStatus === "connected" ? "متصل" : aiStatus === "offline" ? "غير متصل" : aiStatus === "not-configured" ? "غير مهيأ" : "لم يُفحص"}</span>
+      </div>
+      {aiProposals.length > 0 && <div style={{ margin: "12px 0", padding: 12, border: "1px solid #d8dce5", borderRadius: 10 }}>
+        <b>مقترحات AI ({aiProposals.length}) — يلزم اعتمادك</b>
+        <ul>{aiProposals.map((proposal) => <li key={proposal.id} style={{ marginTop: 6 }}>
+          {proposal.name || proposal.role} · ثقة {proposal.confidence == null ? "غير محددة" : Math.round(proposal.confidence * 100) + "%"}
+          <button type="button" disabled={disabled || busy || generated || parts.length >= 63} style={{ marginInlineStart: 10 }} onClick={() => acceptAIProposal(proposal)}>اعتماد القناع</button>
+        </li>)}</ul>
+        <p>لا تُحفظ المقترحات تلقائياً. اعتماد القناع ينقله إلى قائمة الأجزاء التي يمكنك مراجعتها وحذفها قبل إنشاء الهيكل.</p>
+      </div>}
       {imageError && <p className="studio-message" role="alert">{imageError}</p>}
       {image && (image.width > 4096 || image.height > 4096)
         ? <p className="studio-message">أبعاد الصورة {image.width}×{image.height} أكبر من الحد الحالي 4096×4096.</p>
