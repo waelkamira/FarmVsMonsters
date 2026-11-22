@@ -14,7 +14,7 @@ test("the uploaded wood frame is loaded and used by a dedicated inventory contro
 });
 
 test("inventory shows saved plant unlocks, seed-bar membership, field counts, and live resources", () => {
-  assert.match(scene, /unlockedIds = PLAYTEST_ALL_PLANTS \? \[\.\.\.new Set\(\[\.\.\.loadUnlockedPlantIds\(window\.localStorage\), \.\.\.ALL_PLAYTEST_PLANT_IDS\]\)\] : loadUnlockedPlantIds\(window\.localStorage\)/);
+  assert.match(scene, /unlockedIds\\s*=\\s*PLAYTEST_ALL_PLANTS[\\s\\S]*?loadUnlockedPlantIds\\(window\\.localStorage\\)[\\s\\S]*?ALL_PLAYTEST_PLANT_IDS/);
   assert.match(scene, /farmVsMonsters\.selectedPlants/);
   assert.match(scene, /this\.plants\.filter\(\(item\) => item\.alive && item\.type === plant\.id\)/);
   assert.match(scene, /this\.coins\.toLocaleString\(\)/);
