@@ -17,7 +17,7 @@ test("Studio offers both Sprite Sheet and Phaser Output folder import modes", ()
 test("Studio API validates and stores the PNG plus its matching Phaser JSON atlas", () => {
   assert.match(route, /validatePhaserAtlasDocument/);
   assert.match(route, /createImmutableAssetPath\(config\.folder,id\+"-atlas","\.json"/);
-  assert.match(route, /jsonPath:"\/assets\/"+atlasJsonRelative/);
+  assert.ok(route.includes('jsonPath:"/assets/"+atlasJsonRelative'));
   assert.match(route, /Phaser Atlas JSON/);
   assert.match(route, /application\/json/);
 });
