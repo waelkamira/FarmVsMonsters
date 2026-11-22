@@ -1506,3 +1506,13 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - Studio/Game Validation run `45050027543` remains red on the broad suite: 389 passed, 53 failed out of 442. This is four more total tests than the prior broad run, with the same failure count of 53; the broad gameplay/legacy Studio failures remain tracked and are not waived.
 - Web quality gate run `45050027482` was still in progress at the time of this log entry; its final state must be checked separately.
 - No real local SAM 2 checkpoint inference, target Windows/WSL image acceptance, or Studio-to-Phaser live asset test is claimed by CI.
+
+
+## 2026-11-22 — Retargeter hardening and verified CI (head 0968dafa)
+- Replaced greedy repeated-role matching with a rectangular Hungarian minimum-cost assignment, so repeated leaves/limbs are paired globally rather than by a locally nearest-first choice.
+- Added fail-closed validation for missing/cyclic template parent graphs. Explicit side mismatches are not matched; unmatched roles remain visible as unmatched instead of being forced into a false match.
+- Added target-part fingerprinting to the Studio preview. If an author edits the target masks/roles/geometry after preview, the apply action is disabled and stale mappings cannot be applied.
+- Auto-Rig subsystem run `45050364557` passed 73/73 Node tests, focused ESLint, full-project ESLint diagnostic step, Next.js production build, Python worker compile/tests, and WSL launcher syntax.
+- Broad Studio/Game run `45050364564` remains red at 391 passed / 53 failed out of 444. The same 53 pre-existing gameplay/legacy Studio test failures persist; the two added retarget tests pass in the broad run as well as focused CI.
+- Web quality gate run `45050364624` was still in progress at the time of this entry; verify its terminal state separately.
+- This remains deterministic template matching, not learned semantic classification or generative hidden-part reconstruction. Real local SAM 2 checkpoint and Studio-to-Phaser validation remain pending.
