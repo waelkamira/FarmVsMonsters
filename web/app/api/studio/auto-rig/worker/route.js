@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 const COOKIE = "fvm_studio_session";
 const MAX_IMAGE_DATA_URL_CHARS = 11 * 1024 * 1024;
 const MAX_REQUEST_BODY_BYTES = 12 * 1024 * 1024;
-const WORKER_TIMEOUT_MS = 45_000;
+const WORKER_TIMEOUT_MS = 85_000;
 
 function authorized(req) {
   return verifyStudioSession(process.env.STUDIO_ADMIN_TOKEN || "", req.cookies.get(COOKIE)?.value || "");
@@ -76,7 +76,7 @@ export async function GET(req) {
     return NextResponse.json({ status: "not-configured", error: error.message }, { status: 503 });
   }
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 2500);
+  const timeout = setTimeout(() => controller.abort(), 30_000);
   try {
     const response = await fetch(new URL("/v1/capabilities", base), { signal: controller.signal, cache: "no-store" });
     if (!response.ok) return NextResponse.json({ status: "unavailable", error: "Worker health check failed (" + response.status + ")." }, { status: 503 });
