@@ -166,6 +166,14 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
       if (preset === "recoil") { target.durationMs = 420; target.loop = false; }
       if (preset === "breathing") { target.durationMs = 1400; target.loop = true; }
       if (preset === "walk") { target.durationMs = 800; target.loop = true; }
+      for (const existingTrack of target.tracks) {
+        const byTime = new Map();
+        for (const keyframe of existingTrack.keyframes) {
+          const time = Math.min(target.durationMs, Math.max(0, keyframe.timeMs));
+          byTime.set(time, { ...keyframe, timeMs: time });
+        }
+        existingTrack.keyframes = [...byTime.values()].sort((a, b) => a.timeMs - b.timeMs);
+      }
       const base = selectedPose?.localBones?.[selectedBoneId] || bone;
       let track = target.tracks.find((item) => item.boneId === selectedBoneId);
       if (!track) { track = { boneId: selectedBoneId, keyframes: [] }; target.tracks.push(track); }
