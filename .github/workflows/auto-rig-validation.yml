@@ -77,6 +77,6 @@ jobs:
       - name: Validate WSL launcher syntax
         run: bash -n setup-wsl.sh start-worker-wsl.sh
       - name: Compile worker
-        run: python -m py_compile worker.py
+        run: python -m py_compile worker.py smoke_test.py
       - name: Run worker contract tests
         run: python -m unittest -v test_worker.py
