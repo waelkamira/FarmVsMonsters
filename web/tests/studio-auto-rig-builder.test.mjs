@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { AUTO_RIG_ROLE_DICTIONARY_VERSION, AUTO_RIG_ROLE_OPTIONS, buildAutoRigFromParts, validateAutoRigBuildManifest, analyzeAutoRigQuality, moveAutoRigPolygonVertex } from "../game/studio/autoRigBuilder.mjs";
+import { AUTO_RIG_ROLE_DICTIONARY_VERSION, AUTO_RIG_ROLE_OPTIONS, buildAutoRigFromParts, validateAutoRigBuildManifest, analyzeAutoRigQuality, moveAutoRigPolygonVertex, parseAutoRigMotionRequest, applyAutoRigMotionRequest } from "../game/studio/autoRigBuilder.mjs";
 import {
   evaluateSkeletalClip,
   getSkeletalAttachmentTransform,
@@ -283,6 +283,64 @@ test("generates editable idle, move, attack, hit, and death clips using the shar
   assert.equal(validation.valid, true, validation.errors.join("; "));
 });
 
+
+test("parses the Arabic Hazelnut sway-then-projectile request into idle and attack clips", () => {
+  const request = parseAutoRigMotionRequest("اجعل النبات يتمايل بهدوء ثم يطلق قذيفة ببطء", {
+    characterType: "plant",
+    requiresMuzzle: true
+  });
+  assert.equal(request.valid, true);
+  assert.deepEqual(request.actions, ["idle", "attack"]);
+  assert.equal(request.projectileRequested, true);
+  assert.equal(request.strengthMultiplier, 0.75);
+  assert.equal(request.speedMultiplier, 1.5);
+});
+
+test("requires projectile behavior and a muzzle workflow before accepting a plant projectile request", () => {
+  const request = parseAutoRigMotionRequest("يتمايل ثم يطلق قذيفة", {
+    characterType: "plant",
+    requiresMuzzle: false
+  });
+  assert.equal(request.valid, false);
+  assert.match(request.reason, /إطلاق مقذوفات/);
+});
+
+test("parses English movement, attack, and death requests for monsters", () => {
+  const request = parseAutoRigMotionRequest("make the monster walk, attack, then die quickly", {
+    characterType: "monster"
+  });
+  assert.equal(request.valid, true);
+  assert.deepEqual(request.actions, ["move", "attack", "death"]);
+  assert.equal(request.speedMultiplier, 0.7);
+});
+
+test("applies motion strength and speed to editable clips and persists the requested clip plan", () => {
+  const input = baseInput();
+  input.requiresMuzzle = true;
+  input.anchors = { muzzle: { partId: "weapon-main", x: 170, y: 130 } };
+  const built = buildAutoRigFromParts(input);
+  const request = parseAutoRigMotionRequest("يتمايل بقوة وببطء ثم يطلق قذيفة", {
+    characterType: "plant",
+    requiresMuzzle: true
+  });
+  const applied = applyAutoRigMotionRequest(built.profile, built.manifest, request);
+  const idle = applied.profile.clips.find((clip) => clip.id === "idle");
+  const leftLeafTrack = idle.tracks.find((track) => track.boneId === "part-leaf-left-01");
+  assert.equal(idle.durationMs, 1800);
+  assert.equal(leftLeafTrack.keyframes[1].rotation, 4.5);
+  assert.equal(applied.profile.clips.find((clip) => clip.id === "attack").durationMs, 780);
+  assert.deepEqual(applied.manifest.animation.requestedClipIds, ["idle", "attack"]);
+  assert.deepEqual(applied.manifest.motionRequest.clipIds, ["idle", "attack"]);
+  assert.equal(applied.manifest.motionRequest.projectileRequested, true);
+  assert.equal(validateSkeletalRigProfile(applied.profile).valid, true);
+  assert.equal(validateAutoRigBuildManifest(applied.manifest, applied.profile).valid, true);
+});
+
+test("rejects unsupported motion wording rather than silently inventing a clip", () => {
+  const request = parseAutoRigMotionRequest("اجعله يطير حول القمر", { characterType: "plant" });
+  assert.equal(request.valid, false);
+  assert.match(request.reason, /لم أتعرف/);
+});
 
 test("selects arm and hand bones as attack targets when no weapon part exists", () => {
   const input = baseInput();
