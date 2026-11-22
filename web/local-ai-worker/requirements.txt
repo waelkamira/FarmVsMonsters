@@ -3,5 +3,4 @@ opencv-python-headless
 Pillow
 transformers>=4.46,<5
 safetensors
-diffusers>=0.30,<1
-accelerate
+huggingface_hub>=0.26,<1
