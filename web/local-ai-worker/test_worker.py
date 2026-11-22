@@ -111,6 +111,7 @@ class WorkerTests(unittest.TestCase):
         import numpy as np
         rgb = np.zeros((20, 20, 3), dtype=np.uint8)
         visible = np.ones((20, 20), dtype=bool)
+        visible[1:6, 1:6] = False
         payload = {
             "canvas": {"width": 20, "height": 20},
             "imageDataUrl": "data:image/png;base64,AA==",
