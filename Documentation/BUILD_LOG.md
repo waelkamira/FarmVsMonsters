@@ -1385,3 +1385,9 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 ## 2026-11-22 — Latest point-prompt validation run
 - Auto-Rig subsystem run `45032986956` passed on commit `e11bbe2`: all Auto-Rig/worker protocol/quality/publish/Rig Library tests, Python worker tests (including fake-predictor point segmentation), focused ESLint, full-project ESLint diagnostic step, and Next.js production build.
 - The point-prompt pipeline now enforces numeric finite coordinates, integer binary labels, a positive target point, and optional negative exclusion points at both API and worker boundaries.
+
+
+## 2026-11-22 — Local inference worker security hardening
+- The SAM 2 worker now accepts POST requests only when the Host header matches its exact 127.0.0.1 bind/port, the media type is JSON, and no browser Origin header is present. This blocks cross-site browser form submissions from triggering local model inference.
+- A bounded single-request admission slot prevents concurrent uploads from accumulating while CPU/GPU inference is serialized; busy clients receive HTTP 429 and can retry.
+- Added worker unit coverage for accepted loopback requests and rejected browser-origin, remote-host, and non-JSON requests. The local-worker CI job compiles and runs these tests.
