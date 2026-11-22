@@ -161,6 +161,10 @@ export default function AutoRigBuilderPanel({
       setMessage("الحد الأقصى 63 جزءاً في الهيكل الواحد.");
       return;
     }
+    if (points.length > 512) {
+      setMessage("القناع الواحد يدعم 512 نقطة كحد أقصى؛ قلّل عدد النقرات.");
+      return;
+    }
     const index = nextPartIndex.current++;
     const bounds = polygonBounds(points);
     const roleSlug = slug(role.replaceAll(".", "-"));
@@ -201,6 +205,9 @@ export default function AutoRigBuilderPanel({
     setMessage("");
     const created = [];
     try {
+      if (sourceFile && sourceFile.size > 8 * 1024 * 1024) {
+        throw new Error("الصورة المصدر تتجاوز حد الرفع الحالي البالغ 8 ميغابايت.");
+      }
       const descriptors = parts.map((part) => ({
         id: part.id,
         assetId: part.assetId,
