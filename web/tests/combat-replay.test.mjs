@@ -51,12 +51,11 @@ test("manual uprooting preserves full refund and unknown rules versions are reje
 
 test("replay validates the five-wave monster roster, archetypes and exact combat stats", () => {
  const log=makeLog([
-  ev(0,"monster_spawned",{monsterId:"monster-1",wave:1,spawnIndex:0,row:2,archetype:"cave-brute",hp:175,speed:8,localX:238.4115}),
-  ev(1000,"monster_spawned",{monsterId:"monster-2",wave:1,spawnIndex:1,row:1,archetype:"cave-brute",hp:175,speed:8,localX:238.4115}),
-  ev(2000,"monster_spawned",{monsterId:"monster-3",wave:1,spawnIndex:2,row:4,archetype:"cave-brute",hp:175,speed:8,localX:238.4115}),
-  ev(3000,"monster_spawned",{monsterId:"monster-4",wave:2,spawnIndex:0,row:0,archetype:"cave-brute",hp:175,speed:9.35,localX:238.4115})
+  ev(0,"monster_spawned",{monsterId:"monster-1",wave:1,spawnIndex:0,row:2,archetype:"cave-brute",hp:125,speed:8,localX:238.4115}),
+  ev(1000,"monster_spawned",{monsterId:"monster-2",wave:1,spawnIndex:1,row:1,archetype:"cave-brute",hp:125,speed:8,localX:238.4115}),
+  ev(2000,"monster_spawned",{monsterId:"monster-3",wave:2,spawnIndex:0,row:4,archetype:"cave-brute",hp:133,speed:9.35,localX:238.4115})
  ]);
- const result=replayCombatEventLog(log); assert.equal(result.ok,true); assert.equal(result.state.monsters.length,4); assert.equal(result.state.currentWave,2); assert.equal(result.state.spawnedInWave,1);
+ const result=replayCombatEventLog(log); assert.equal(result.ok,true); assert.equal(result.state.monsters.length,3); assert.equal(result.state.currentWave,2); assert.equal(result.state.spawnedInWave,1);
 });
 test("replay rejects the temporary first-wave hyena playtest override", () => {
  const log=makeLog([ev(0,"monster_spawned",{monsterId:"monster-1",wave:1,spawnIndex:0,row:2,archetype:"dust-skitter",hp:36,speed:13.6,localX:238.4115})]);
@@ -64,7 +63,7 @@ test("replay rejects the temporary first-wave hyena playtest override", () => {
 });
 
 test("rejects forged monster identity, wave order, archetype and health", () => {
- const wrongId=makeLog([ev(0,"monster_spawned",{monsterId:"monster-9",wave:1,spawnIndex:0,row:1,archetype:"cave-brute",hp:175,speed:8,localX:238.4115})]);
+ const wrongId=makeLog([ev(0,"monster_spawned",{monsterId:"monster-9",wave:1,spawnIndex:0,row:1,archetype:"cave-brute",hp:125,speed:8,localX:238.4115})]);
  assert.equal(replayCombatEventLog(wrongId).reason,"INVALID_MONSTER_WAVE_SEQUENCE");
  const wrongType=makeLog([ev(0,"monster_spawned",{monsterId:"monster-1",wave:1,spawnIndex:0,row:1,archetype:"stonehide",hp:175,speed:8,localX:238.4115})]);
  assert.equal(replayCombatEventLog(wrongType).reason,"INVALID_MONSTER_ARCHETYPE");
