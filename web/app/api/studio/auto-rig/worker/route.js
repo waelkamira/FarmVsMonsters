@@ -14,6 +14,27 @@ function authorized(req) {
   return verifyStudioSession(process.env.STUDIO_ADMIN_TOKEN || "", req.cookies.get(COOKIE)?.value || "");
 }
 
+function validPolygon(points, width, height) {
+  if (!Array.isArray(points) || points.length < 3 || points.length > 512) return false;
+  if (points.some((point) => !point || typeof point.x !== "number" || typeof point.y !== "number" ||
+      !Number.isFinite(point.x) || !Number.isFinite(point.y) || point.x < 0 || point.y < 0 ||
+      point.x >= width || point.y >= height)) return false;
+  return new Set(points.map((point) => point.x + ":" + point.y)).size >= 3;
+}
+
+function validReconstructionResponse(data, width, height) {
+  const validBounds = (bounds) => bounds && ["x", "y", "width", "height"].every((key) => Number.isInteger(bounds[key])) &&
+    bounds.x >= 0 && bounds.y >= 0 && bounds.width > 0 && bounds.height > 0 &&
+    bounds.x + bounds.width <= width && bounds.y + bounds.height <= height;
+  return data && data.protocolVersion === 1 &&
+    typeof data.patchDataUrl === "string" && data.patchDataUrl.length <= MAX_IMAGE_DATA_URL_CHARS &&
+    /^data:image\/png;base64,[a-zA-Z0-9+/]+=*$/.test(data.patchDataUrl) &&
+    validBounds(data.targetBounds) && validBounds(data.donorBounds) &&
+    data.provenance?.pixels === "reconstructed" &&
+    data.provenance?.method === "visible-donor-transfer" &&
+    data.provenance?.reviewRequired === true;
+}
+
 function workerEndpoint() {
   const raw = process.env.STUDIO_LOCAL_AI_WORKER_URL || "http://127.0.0.1:8765";
   let url;
@@ -72,7 +93,7 @@ export async function POST(req) {
       !/^data:image\/(png|jpeg|webp);base64,[a-zA-Z0-9+/]+=*$/.test(body.imageDataUrl)) {
     return NextResponse.json({ error: "Provide a PNG, JPEG, or WebP base64 data URL within the 8 MB source limit." }, { status: 400 });
   }
-  if (!["part-detection", "prompted-segmentation"].includes(body.task)) {
+  if (!["part-detection", "prompted-segmentation", "visible-donor-reconstruction"].includes(body.task)) {
     return NextResponse.json({ error: "Unsupported Auto-Rig worker task." }, { status: 400 });
   }
   let points;
@@ -92,13 +113,23 @@ export async function POST(req) {
       return NextResponse.json({ error: "At least one positive point is required for SAM 2 segmentation." }, { status: 400 });
     }
   }
+  let reconstruction;
+  if (body.task === "visible-donor-reconstruction") {
+    if (!validPolygon(body.sourcePolygon, width, height) || !validPolygon(body.targetPolygon, width, height)) {
+      return NextResponse.json({ error: "Visible donor and hidden target must each be valid 3–512 point source-space polygons." }, { status: 400 });
+    }
+    if (body.flipHorizontal != null && typeof body.flipHorizontal !== "boolean") {
+      return NextResponse.json({ error: "flipHorizontal must be a boolean when supplied." }, { status: 400 });
+    }
+    reconstruction = { sourcePolygon: body.sourcePolygon, targetPolygon: body.targetPolygon, flipHorizontal: body.flipHorizontal !== false };
+  }
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), WORKER_TIMEOUT_MS);
   try {
     const response = await fetch(new URL("/v1/auto-rig/" + body.task, base), {
       method: "POST",
       headers: { "Content-Type": "application/json", Accept: "application/json" },
-      body: JSON.stringify({ protocolVersion: 1, canvas: { width, height }, imageDataUrl: body.imageDataUrl, prompt: typeof body.prompt === "string" ? body.prompt.slice(0, 500) : "", ...(points ? { points } : {}) }),
+      body: JSON.stringify({ protocolVersion: 1, canvas: { width, height }, imageDataUrl: body.imageDataUrl, prompt: typeof body.prompt === "string" ? body.prompt.slice(0, 500) : "", ...(points ? { points } : {}), ...(reconstruction || {}) }),
       signal: controller.signal,
       cache: "no-store"
     });
@@ -106,7 +137,14 @@ export async function POST(req) {
       const detail = await response.text().catch(() => "");
       return NextResponse.json({ error: "Local worker rejected the task (" + response.status + ").", detail: detail.slice(0, 500) }, { status: 502 });
     }
-    const result = validateAutoRigWorkerResponse(await response.json(), { width, height });
+    const workerData = await response.json();
+    if (body.task === "visible-donor-reconstruction") {
+      if (!validReconstructionResponse(workerData, width, height)) {
+        return NextResponse.json({ error: "Worker returned invalid reconstructed image data or geometry." }, { status: 422 });
+      }
+      return NextResponse.json(workerData, { headers: { "Cache-Control": "no-store" } });
+    }
+    const result = validateAutoRigWorkerResponse(workerData, { width, height });
     if (!result.valid) return NextResponse.json({ error: "Worker returned invalid or unsafe geometry.", validationErrors: result.errors }, { status: 422 });
     return NextResponse.json({ protocolVersion: 1, proposals: result.proposals }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
