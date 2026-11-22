@@ -12,7 +12,7 @@ test("accepts valid PNG, WebP, and GIF file signatures", () => {
 });
 
 test("accepts valid MP3, WAV, OGG, and MP4 file signatures", () => {
-  assert.equal(validateStudioAssetBytes("audio/mpeg", Buffer.from("ID3\\u0004\\u0000\\u0000\\u0000","binary")).valid, true);
+  assert.equal(validateStudioAssetBytes("audio/mpeg", Buffer.from([0x49,0x44,0x33,0x04,0x00,0x00,0x00])).valid, true);
   assert.equal(validateStudioAssetBytes("audio/wav", Buffer.from("RIFF0000WAVE","ascii")).valid, true);
   assert.equal(validateStudioAssetBytes("audio/ogg", Buffer.from("OggS0000","ascii")).valid, true);
   const mp4 = Buffer.alloc(12); mp4.write("ftyp",4,"ascii");
@@ -28,8 +28,8 @@ test("rejects MIME spoofing, truncated files, and unsupported content types", ()
 });
 
 test("Studio upload API validates primary and projectile bytes before writing", () => {
-  assert.match(route, /validateStudioAssetBytes\\(projectileFile\\.type,projectileBytes\\)/);
-  assert.match(route, /validateStudioAssetBytes\\(file\\.type,bytes\\)/);
-  assert.match(route, /status:415/);
+  assert.ok(route.includes("validateStudioAssetBytes(projectileFile.type,projectileBytes)"));
+  assert.ok(route.includes("validateStudioAssetBytes(file.type,bytes)"));
+  assert.ok(route.includes("status:415"));
   assert.ok(route.indexOf("validateStudioAssetBytes(file.type,bytes)") < route.indexOf('githubPutImmutable("web/public/assets/"+relative'));
 });
