@@ -23,7 +23,9 @@ test("worker bridge validates image limits, task names, and worker geometry befo
   assert.match(source, /MAX_REQUEST_BODY_BYTES/);
   assert.match(source, /new TextEncoder\(\)\.encode\(rawBody\)\.byteLength/);
   assert.match(source, /4096/);
-  assert.match(source, /body\.task !== "part-detection"/);
+  assert.match(source, /\["part-detection", "prompted-segmentation"\]\.includes\(body\.task\)/);
+  assert.match(source, /body\.points\.length > 32/);
+  assert.match(source, /points\.push\(\{ x, y, label \}\)/);
   assert.match(source, /validateAutoRigWorkerResponse/);
   assert.match(source, /status: 422/);
 });
