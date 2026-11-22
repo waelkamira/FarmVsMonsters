@@ -15,8 +15,11 @@ _PIPELINE_LOCK = threading.Lock()
 _INFERENCE_LOCK = threading.Lock()
 
 def model_status():
-    model_dir = os.environ.get("FVM_INPAINT_MODEL_DIR", "").strip()
-    return bool(model_dir and Path(model_dir).is_dir())
+    model_dir = Path(os.environ.get("FVM_INPAINT_MODEL_DIR", "").strip())
+    if not model_dir.is_dir() or not (model_dir / "model_index.json").is_file():
+        return False
+    unet = model_dir / "unet"
+    return (unet / "config.json").is_file() and any((unet / name).is_file() for name in ("diffusion_pytorch_model.safetensors", "diffusion_pytorch_model.bin"))
 
 def _load_pipeline():
     global _PIPELINE, _PIPELINE_ERROR
