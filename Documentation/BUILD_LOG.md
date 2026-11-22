@@ -1464,3 +1464,12 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - Persisted donor/target polygons, bounds, method, flip setting, pixel provenance, and a separate reconstruction-reviewed flag in the Auto-Rig manifest. Quality readiness now requires both pixel review and ordinary part review; unresolved reconstruction still fails closed.
 - Added worker, API-route, manifest-quality, and Studio UI contract tests. Auto-Rig run `45046682569` passed Node tests, focused ESLint, full-project lint diagnostics, production build, Python worker tests, Python compilation, and WSL launcher syntax. The newer donor/target-polygon provenance and UI contract-test commits are undergoing their own CI run.
 - Real Windows/WSL SAM 2 installation and a real asset's full Studio-to-Phaser battle validation remain outstanding. The donor-transfer method must not be represented as a generative model.
+
+
+## 2026-11-22 — Local texture inpainting added as a second reconstruction aid
+- Added a loopback worker task `local-texture-inpaint` using OpenCV Telea. It accepts only a manually drawn, bounded target polygon and a radius from 1 to 8, and returns a transparent PNG patch clipped to that target.
+- Added Studio control to invoke local inpainting without a donor part. The patch is previewed and composited into the extracted part, but remains unapproved until the author checks its separate reconstruction-review box.
+- Extended the API bridge, worker capability protocol, manifest normalizer, and quality metadata to distinguish `opencv-telea-inpaint` from `visible-donor-transfer`. Donor fields are required only for donor transfer; both methods require target polygon/bounds and explicit review.
+- Added Python pixel-level tests for Telea patch dimensions/alpha and invalid radius/too-small targets, plus Studio UI, API-route, worker-capability, and manifest regression tests.
+- Capability boundary: Telea is classical local texture interpolation, not semantic or anatomical reconstruction. It is appropriate only for small texture gaps. Large hidden limbs/leaves and unseen anatomy still need a local generative model with explicit checkpoint provenance and human review.
+- PR #88 was merged into `main` as `a642d676e186bb6ae59b5875585352a690ce40d7`; PR #89 was retargeted to `main` and remains draft. Auto-Rig and worker validation passed on the preceding donor-transfer checkpoint; the Telea additions are now under a fresh focused CI run.
