@@ -417,3 +417,67 @@ export function validateAutoRigBuildManifest(input, profileInput) {
     return { valid: false, manifest: null, profile: null, errors: [error.message] };
   }
 }
+
+
+/**
+ * Produces an actionable quality report without silently repairing authoring data.
+ * Invalid manifests are blocking; heuristic findings remain explicit warnings.
+ */
+export function analyzeAutoRigQuality(manifest, profileInput) {
+  const validation = validateAutoRigBuildManifest(manifest, profileInput);
+  if (!validation.valid) {
+    return {
+      valid: false,
+      readyForAnimation: false,
+      score: 0,
+      checks: {},
+      errors: validation.errors,
+      warnings: []
+    };
+  }
+  const parts = manifest.parts;
+  const rolesConfirmed = parts.every((part) => KNOWN_ROLES.has(normalizeRole(part.role)));
+  const allMasksPresent = parts.every((part) => part.mask?.kind === "polygon" && part.mask.points.length >= 3);
+  const confidenceReviewed = parts.every((part) => part.confidence !== null && part.confidence !== undefined);
+  const occlusionResolved = parts.every((part) => part.occlusion !== "unresolved");
+  const sourceFingerprintPresent = /^[a-f0-9]{64}$/i.test(String(manifest.source.sha256 || ""));
+  const hasPrimaryBody = parts.some((part) => ["body", "stem"].includes(normalizeRole(part.role)));
+  const lowConfidenceCount = parts.filter((part) => Number.isFinite(Number(part.confidence)) && Number(part.confidence) < 0.65).length;
+  const reconstructedCount = parts.filter((part) => part.provenance?.pixels === "reconstructed").length;
+  const warnings = [];
+  if (!rolesConfirmed) warnings.push({ code: "unconfirmed-semantic-role", message: "One or more parts still have unknown semantic roles." });
+  if (!allMasksPresent) warnings.push({ code: "missing-editable-mask", message: "One or more parts have no editable polygon mask." });
+  if (!confidenceReviewed) warnings.push({ code: "missing-confidence", message: "One or more parts have no model confidence value; manually review them." });
+  if (lowConfidenceCount) warnings.push({ code: "low-confidence", count: lowConfidenceCount, message: "Review low-confidence segmentation proposals." });
+  if (!occlusionResolved) warnings.push({ code: "unresolved-occlusion", message: "One or more parts have unresolved occlusion." });
+  if (reconstructedCount) warnings.push({ code: "reconstructed-pixels", count: reconstructedCount, message: "Review generated pixels before publishing." });
+  if (!sourceFingerprintPresent) warnings.push({ code: "missing-source-fingerprint", message: "The original source image has no SHA-256 fingerprint." });
+  if (!hasPrimaryBody) warnings.push({ code: "missing-primary-body", message: "No body or stem role is assigned; the rig may lack a stable primary anchor." });
+  const penalty = (condition, amount) => condition ? amount : 0;
+  const score = Math.max(0, 100
+    - penalty(!rolesConfirmed, 20)
+    - penalty(!allMasksPresent, 15)
+    - penalty(!confidenceReviewed, 8)
+    - Math.min(15, lowConfidenceCount * 5)
+    - penalty(!occlusionResolved, 15)
+    - Math.min(10, reconstructedCount * 3)
+    - penalty(!sourceFingerprintPresent, 5)
+    - penalty(!hasPrimaryBody, 10));
+  return {
+    valid: true,
+    readyForAnimation: rolesConfirmed && allMasksPresent && occlusionResolved && hasPrimaryBody,
+    score,
+    checks: {
+      rolesConfirmed,
+      allMasksPresent,
+      confidenceReviewed,
+      occlusionResolved,
+      sourceFingerprintPresent,
+      hasPrimaryBody,
+      lowConfidenceCount,
+      reconstructedCount
+    },
+    errors: [],
+    warnings
+  };
+}
