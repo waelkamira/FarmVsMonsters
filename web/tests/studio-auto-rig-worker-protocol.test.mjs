@@ -60,3 +60,17 @@ test("does not leak partial proposals when any worker output is invalid", () => 
   assert.equal(result.valid, false);
   assert.deepEqual(result.proposals, []);
 });
+
+test("rejects polygons outside their crop bounds and zero-area masks", () => {
+  const outside = proposal();
+  outside.mask.points[0] = { x: 5, y: 5 };
+  const outsideResult = validateAutoRigWorkerProposal(outside, canvas);
+  assert.equal(outsideResult.valid, false);
+  assert.match(outsideResult.errors.join(" "), /crop bounds/);
+
+  const degenerate = proposal();
+  degenerate.mask.points = [{ x: 30, y: 30 }, { x: 60, y: 60 }, { x: 90, y: 90 }];
+  const degenerateResult = validateAutoRigWorkerProposal(degenerate, canvas);
+  assert.equal(degenerateResult.valid, false);
+  assert.match(degenerateResult.errors.join(" "), /non-zero polygon area/);
+});
