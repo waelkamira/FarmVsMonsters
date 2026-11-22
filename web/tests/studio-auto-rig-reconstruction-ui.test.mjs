@@ -34,3 +34,14 @@ test("Studio offers local texture inpainting as a separate review-gated reconstr
   assert.match(panel, /inpaintRadius: 3/);
   assert.match(panel, /reviewed: false/);
 });
+
+test("Studio exposes local diffusion anatomical reconstruction with a prompt and separate pixel review", () => {
+  assert.match(panel, /function generateAnatomicalReconstruction\(partId\)/);
+  assert.match(panel, /task: "anatomical-inpaint"/);
+  assert.match(panel, /targetPolygon: part\.occlusionMask\.points/);
+  assert.match(panel, /prompt: anatomicalPrompt\.trim\(\)/);
+  assert.match(panel, /method: data\.provenance\.method/);
+  assert.match(panel, /model: data\.provenance\.model/);
+  assert.match(panel, /seed: data\.provenance\.seed/);
+  assert.match(panel, /إعادة بناء تشريحية توليدية محلية/);
+});
