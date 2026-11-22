@@ -97,8 +97,28 @@ export async function POST(req) {
       !/^data:image\/(png|jpeg|webp);base64,[a-zA-Z0-9+/]+=*$/.test(body.imageDataUrl)) {
     return NextResponse.json({ error: "Provide a PNG, JPEG, or WebP base64 data URL within the 8 MB source limit." }, { status: 400 });
   }
-  if (!["part-detection", "prompted-segmentation", "visible-donor-reconstruction", "local-texture-inpaint"].includes(body.task)) {
+  if (!["part-detection", "prompted-segmentation", "semantic-classification", "visible-donor-reconstruction", "local-texture-inpaint"].includes(body.task)) {
     return NextResponse.json({ error: "Unsupported Auto-Rig worker task." }, { status: 400 });
+  }
+  let semanticClassification;
+  if (body.task === "semantic-classification") {
+    if (!["plant", "monster"].includes(body.characterType) || !Array.isArray(body.proposals) ||
+        body.proposals.length < 1 || body.proposals.length > 63) {
+      return NextResponse.json({ error: "Visual classification requires a plant/monster type and 1–63 SAM 2 proposals." }, { status: 400 });
+    }
+    const proposalIds = new Set();
+    for (const proposal of body.proposals) {
+      if (!proposal || typeof proposal.id !== "string" || !/^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,63}$/.test(proposal.id) ||
+          proposalIds.has(proposal.id) || !validPolygon(proposal.mask?.points, width, height) ||
+          proposal.mask?.kind !== "polygon" || !proposal.bounds ||
+          !["x", "y", "width", "height"].every((key) => Number.isInteger(proposal.bounds[key])) ||
+          proposal.bounds.x < 0 || proposal.bounds.y < 0 || proposal.bounds.width < 2 || proposal.bounds.height < 2 ||
+          proposal.bounds.x + proposal.bounds.width > width || proposal.bounds.y + proposal.bounds.height > height) {
+        return NextResponse.json({ error: "A visual-classification proposal has invalid identity, bounds, or polygon geometry." }, { status: 400 });
+      }
+      proposalIds.add(proposal.id);
+    }
+    semanticClassification = { characterType: body.characterType, proposals: body.proposals };
   }
   let points;
   if (body.task === "prompted-segmentation") {
@@ -135,7 +155,7 @@ export async function POST(req) {
     const response = await fetch(new URL("/v1/auto-rig/" + body.task, base), {
       method: "POST",
       headers: { "Content-Type": "application/json", Accept: "application/json" },
-      body: JSON.stringify({ protocolVersion: 1, canvas: { width, height }, imageDataUrl: body.imageDataUrl, prompt: typeof body.prompt === "string" ? body.prompt.slice(0, 500) : "", ...(points ? { points } : {}), ...(reconstruction || {}) }),
+      body: JSON.stringify({ protocolVersion: 1, canvas: { width, height }, imageDataUrl: body.imageDataUrl, prompt: typeof body.prompt === "string" ? body.prompt.slice(0, 500) : "", ...(points ? { points } : {}), ...(semanticClassification || {}), ...(reconstruction || {}) }),
       signal: controller.signal,
       cache: "no-store"
     });
@@ -144,6 +164,21 @@ export async function POST(req) {
       return NextResponse.json({ error: "Local worker rejected the task (" + response.status + ").", detail: detail.slice(0, 500) }, { status: 502 });
     }
     const workerData = await response.json();
+    if (body.task === "semantic-classification") {
+      const allowedRoles = new Set(["body", "stem", "head", "face", "eye.left", "eye.right", "eye", "mouth", "jaw.upper", "jaw.lower", "leaf", "leaf.left", "leaf.right", "flower", "fruit", "root", "arm", "arm.left", "arm.right", "hand", "hand.left", "hand.right", "leg", "foot", "weapon", "weapon.barrel", "weapon.muzzle", "tail", "armor", "accessory", "shadow", "effect", "unknown"]);
+      const expectedIds = new Set(body.proposals.map((proposal) => proposal.id));
+      const suggestions = workerData?.suggestions;
+      if (workerData?.protocolVersion !== 1 || workerData?.classifier !== "local-clip-zero-shot" ||
+          !Array.isArray(suggestions) || suggestions.length !== expectedIds.size ||
+          suggestions.some((item) => !item || !expectedIds.has(item.proposalId) || !allowedRoles.has(item.role) ||
+            typeof item.confidence !== "number" || !Number.isFinite(item.confidence) || item.confidence < 0 || item.confidence > 1 ||
+            typeof item.margin !== "number" || !Number.isFinite(item.margin) || item.margin < 0 ||
+            typeof item.reason !== "string" || item.model !== "local-clip-zero-shot") ||
+          new Set(suggestions.map((item) => item.proposalId)).size !== expectedIds.size) {
+        return NextResponse.json({ error: "Local visual classifier returned an invalid or incomplete response." }, { status: 422 });
+      }
+      return NextResponse.json(workerData, { headers: { "Cache-Control": "no-store" } });
+    }
     if (body.task === "visible-donor-reconstruction" || body.task === "local-texture-inpaint") {
       if (!validReconstructionResponse(workerData, width, height, body.task)) {
         return NextResponse.json({ error: "Worker returned invalid reconstructed image data or geometry." }, { status: 422 });
