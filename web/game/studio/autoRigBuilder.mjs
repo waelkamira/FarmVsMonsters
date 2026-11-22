@@ -49,9 +49,9 @@ function finite(value, field) {
   if (!Number.isFinite(number)) throw new TypeError(field + " must be a finite number.");
   return number;
 }
-function readId(value, field) {
-  if (typeof value !== "string" || !ID_PATTERN.test(value) || value.length > 59) {
-    throw new TypeError(field + " must be a stable ID of 1–59 safe characters.");
+function readId(value, field, maxLength = 64) {
+  if (typeof value !== "string" || !ID_PATTERN.test(value) || value.length > maxLength) {
+    throw new TypeError(field + " must be a stable ID of 1–" + maxLength + " safe characters.");
   }
   return value;
 }
@@ -62,7 +62,7 @@ function normalizeRole(value) {
 }
 function readPart(raw, index, canvas) {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) throw new TypeError("parts[" + index + "] must be an object.");
-  const id = readId(raw.id, "parts[" + index + "].id");
+  const id = readId(raw.id, "parts[" + index + "].id", 59);
   const assetId = readId(raw.assetId, "parts[" + index + "].assetId");
   const role = normalizeRole(raw.role);
   const bounds = raw.bounds || {};
@@ -90,7 +90,7 @@ function readPart(raw, index, canvas) {
     name: String(raw.name || role).slice(0, 80),
     confidence,
     occlusion: raw.occlusion === "unresolved" ? "unresolved" : raw.occlusion === "reconstructed" ? "reconstructed" : "none",
-    parentPartId: raw.parentPartId == null ? null : readId(raw.parentPartId, "parts[" + index + "].parentPartId"),
+    parentPartId: raw.parentPartId == null ? null : readId(raw.parentPartId, "parts[" + index + "].parentPartId", 59),
     drawOrder: Number.isFinite(Number(raw.drawOrder)) ? Number(raw.drawOrder) : index
   };
 }
@@ -102,8 +102,15 @@ function chooseParent(part, partsById, parts) {
   const roles = PARENT_ROLES[part.role] || ["body", "stem"];
   for (const role of roles) {
     const candidates = parts.filter((candidate) => candidate.role === role && candidate.id !== part.id);
-    const match = candidates.find((candidate) => candidate.side && candidate.side === part.side) || candidates[0];
-    if (match) return match;
+    candidates.sort((a, b) => {
+      const aSidePenalty = part.side && a.side !== part.side ? 1 : 0;
+      const bSidePenalty = part.side && b.side !== part.side ? 1 : 0;
+      if (aSidePenalty !== bSidePenalty) return aSidePenalty - bSidePenalty;
+      const aDistance = Math.hypot(a.pivot.x - part.pivot.x, a.pivot.y - part.pivot.y);
+      const bDistance = Math.hypot(b.pivot.x - part.pivot.x, b.pivot.y - part.pivot.y);
+      return aDistance - bDistance || a.id.localeCompare(b.id);
+    });
+    if (candidates.length) return candidates[0];
   }
   return null;
 }
@@ -185,7 +192,7 @@ export function buildAutoRigFromParts(input) {
   if (input.requiresMuzzle && !muzzle) throw new RangeError("A projectile rig requires a confirmed muzzle anchor.");
   if (muzzle) {
     const weapon = muzzle.partId
-      ? partsById.get(readId(muzzle.partId, "anchors.muzzle.partId"))
+      ? partsById.get(readId(muzzle.partId, "anchors.muzzle.partId", 59))
       : parts.find((part) => part.role === "weapon.barrel") || parts.find((part) => part.role === "weapon");
     if (muzzle.partId && !weapon) throw new RangeError("Muzzle anchor references a missing weapon part.");
     if (!weapon || !["weapon", "weapon.barrel"].includes(weapon.role)) {
@@ -194,6 +201,9 @@ export function buildAutoRigFromParts(input) {
     const x = finite(muzzle.x, "anchors.muzzle.x");
     const y = finite(muzzle.y, "anchors.muzzle.y");
     if (x < 0 || y < 0 || x > canvas.width || y > canvas.height) throw new RangeError("Muzzle anchor must lie inside the source canvas.");
+    if (x < weapon.bounds.x || y < weapon.bounds.y || x > weapon.bounds.x + weapon.bounds.width || y > weapon.bounds.y + weapon.bounds.height) {
+      throw new RangeError("Muzzle anchor must lie inside or on the confirmed weapon part bounds.");
+    }
     attachments.push({
       id: "muzzle",
       name: "Weapon muzzle",
