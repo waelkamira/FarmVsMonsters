@@ -81,12 +81,9 @@ export default function AutoRigBuilderPanel({
   const [muzzleMode, setMuzzleMode] = useState(false);
   const existingIds = useMemo(() => new Set(assets.map((asset) => asset.id)), [assets]);
   const rigTemplates = useMemo(() => assets.filter((asset) => asset.id !== currentAssetId && asset.rigProfile?.bones?.length && Array.isArray(asset.rigBuildManifest?.parts) && asset.rigBuildManifest.parts.length), [assets, currentAssetId]);
+  const targetPartsFingerprint = useMemo(() => JSON.stringify(parts.map((part) => ({ id: part.id, role: part.role, side: part.side, bounds: part.bounds, points: part.points, pivot: part.pivot, parentPartId: part.parentPartId, drawOrder: part.drawOrder }))), [parts]);
   const emitterParts = useMemo(() => parts.filter((part) => ["weapon", "weapon.barrel", "weapon.muzzle", "mouth", "head", "face"].includes(part.role)), [parts]);
   const activeEmitterPart = emitterParts.find((part) => part.id === muzzlePartId) || emitterParts[0] || null;
-
-  useEffect(() => {
-    setRigTemplatePlan(null);
-  }, [parts]);
 
   useEffect(() => {
     if (!sourceFile && !sourceUrl) return;
@@ -362,13 +359,18 @@ export default function AutoRigBuilderPanel({
         parts,
         { width: image.width, height: image.height }
       );
-      setRigTemplatePlan(plan);
+      setRigTemplatePlan({ ...plan, targetFingerprint: targetPartsFingerprint });
       setMessage("تمت مطابقة " + plan.matches.length + " جزءاً مع القالب المرجعي. هذه اقتراحات وليست تعديلات مطبقة؛ راجعها ثم اختر تطبيقها.");
     } catch (error) { setMessage(error.message); }
   }
 
   function applyTemplateRetarget() {
     if (!rigTemplatePlan || generated || disabled || busy) return;
+    if (rigTemplatePlan.targetFingerprint !== targetPartsFingerprint) {
+      setRigTemplatePlan(null);
+      setMessage("تغيرت الأجزاء بعد إعداد معاينة القالب. أعد المطابقة قبل تطبيقها.");
+      return;
+    }
     const updates = new Map(rigTemplatePlan.matches.map((match) => [match.targetPartId, match.update]));
     setParts((current) => current.map((part) => {
       const update = updates.get(part.id);
@@ -823,7 +825,7 @@ export default function AutoRigBuilderPanel({
         {rigTemplatePlan && <div style={{ marginTop: 10 }}>
           <p>مطابقات: {rigTemplatePlan.matches.length} · أجزاء غير مطابقة في القالب: {rigTemplatePlan.unmatchedTemplatePartIds.length} · أجزاء جديدة غير مطابقة: {rigTemplatePlan.unmatchedTargetPartIds.length}</p>
           <ul>{rigTemplatePlan.matches.map((match) => <li key={match.templatePartId + ":" + match.targetPartId}>{match.role}: {match.templatePartId} ← {match.targetPartId} · ثقة هندسية {Math.round(match.confidence * 100)}% · يلزم التحقق البصري{match.parentWarning ? " · " + match.parentWarning : ""}</li>)}</ul>
-          <button type="button" disabled={disabled || busy || generated || !rigTemplatePlan.matches.length} onClick={applyTemplateRetarget}>تطبيق الاقتراحات بعد المراجعة</button>
+          <button type="button" disabled={disabled || busy || generated || !rigTemplatePlan.matches.length || rigTemplatePlan.targetFingerprint !== targetPartsFingerprint} onClick={applyTemplateRetarget}>تطبيق الاقتراحات بعد المراجعة</button>
         </div>}
       </div>}
       <div className="studio-actions" style={{ display: "flex", flexWrap: "wrap", gap: 8, margin: "10px 0" }}>
