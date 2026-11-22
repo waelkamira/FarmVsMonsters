@@ -88,7 +88,7 @@ test("rejects a muzzle anchor that references a missing or non-weapon part", () 
   assert.throws(() => buildAutoRigFromParts(missing), /missing weapon part/);
   const wrongRole = baseInput();
   wrongRole.anchors = { muzzle: { partId: "body-main", x: 128, y: 120 } };
-  assert.throws(() => buildAutoRigFromParts(wrongRole), /weapon, barrel, mouth, head, or face/);
+  assert.throws(() => buildAutoRigFromParts(wrongRole), /weapon, barrel, muzzle-region, mouth, head, or face/);
 });
 
 
@@ -248,4 +248,17 @@ test("supports mouth and head emitter anchors for plants without a separate weap
   const result = buildAutoRigFromParts(input);
   assert.equal(result.profile.attachments[0].boneId, "part-mouth-emitter");
   assert.equal(result.profile.attachments[0].id, "muzzle");
+});
+
+
+test("uses a dedicated weapon-muzzle region as a confirmed projectile emitter", () => {
+  const input = baseInput();
+  input.parts.push({
+    id: "weapon-tip", assetId: "asset-weapon-tip", role: "weapon.muzzle",
+    bounds: { x: 214, y: 126, width: 16, height: 20 }, pivot: { x: 222, y: 136 }
+  });
+  input.requiresMuzzle = true;
+  input.anchors = { muzzle: { partId: "weapon-tip", x: 224, y: 136 } };
+  const result = buildAutoRigFromParts(input);
+  assert.equal(result.profile.attachments[0].boneId, "part-weapon-tip");
 });
