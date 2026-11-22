@@ -26,6 +26,7 @@ test("worker bridge validates image limits, task names, and worker geometry befo
   assert.match(source, /\["part-detection", "prompted-segmentation"\]\.includes\(body\.task\)/);
   assert.match(source, /body\.points\.length > 32/);
   assert.match(source, /typeof x !== "number" \|\| typeof y !== "number"/);
+  assert.match(source, /!Number\.isInteger\(label\)/);
   assert.match(source, /points\.push\(\{ x, y, label \}\)/);
   assert.match(source, /validateAutoRigWorkerResponse/);
   assert.match(source, /status: 422/);
