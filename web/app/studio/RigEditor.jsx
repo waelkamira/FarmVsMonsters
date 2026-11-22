@@ -132,21 +132,40 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
     setPlaying(false);
   }
   function updateClip(field, value) {
-    update((next) => { const target = next.clips.find((item) => item.id === selectedClipId); if (target) target[field] = value; });
+    update((next) => {
+      const target = next.clips.find((item) => item.id === selectedClipId);
+      if (!target) return;
+      if (field === "durationMs") {
+        const duration = Math.max(1, Math.min(60000, Math.floor(Number(value) || 1)));
+        target.durationMs = duration;
+        for (const track of target.tracks) {
+          const byTime = new Map();
+          for (const keyframe of track.keyframes) {
+            const time = Math.min(duration, Math.max(0, keyframe.timeMs));
+            byTime.set(time, { ...keyframe, timeMs: time });
+          }
+          track.keyframes = [...byTime.values()].sort((a, b) => a.timeMs - b.timeMs);
+        }
+        setTimeMs((current) => Math.min(current, duration));
+      } else target[field] = value;
+    });
   }
   function addKeyframe() {
     if (!clip || !bone) return;
     update((next) => {
       const target = next.clips.find((item) => item.id === selectedClipId);
       let track = target.tracks.find((item) => item.boneId === selectedBoneId);
-      if (!track) { track = { boneId: selectedBoneId, keyframes: [] }; target.tracks.push(track); }
       const current = selectedPose?.localBones?.[selectedBoneId] || bone;
+      if (!track) {
+        const base = { x: bone.x, y: bone.y, rotation: bone.rotation, scaleX: bone.scaleX, scaleY: bone.scaleY };
+        track = { boneId: selectedBoneId, keyframes: [{ timeMs: 0, ...base }, { timeMs: target.durationMs, ...base }] };
+        target.tracks.push(track);
+      }
       const frame = { timeMs: Math.min(target.durationMs, Math.max(0, timeMs)), x: current.x, y: current.y, rotation: current.rotation, scaleX: current.scaleX, scaleY: current.scaleY };
       const existing = track.keyframes.findIndex((item) => item.timeMs === frame.timeMs);
       if (existing >= 0) track.keyframes[existing] = frame;
       else track.keyframes.push(frame);
       track.keyframes.sort((a, b) => a.timeMs - b.timeMs);
-      if (track.keyframes.length === 1) track.keyframes.push({ ...frame, timeMs: target.durationMs });
     });
   }
   function addPart(assetId) {
