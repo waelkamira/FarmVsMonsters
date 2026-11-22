@@ -85,7 +85,7 @@ test("preserves uncertain and reconstructed occlusion as explicit warnings", () 
 test("rejects a muzzle anchor that references a missing or non-weapon part", () => {
   const missing = baseInput();
   missing.anchors = { muzzle: { partId: "missing-weapon", x: 220, y: 136 } };
-  assert.throws(() => buildAutoRigFromParts(missing), /missing weapon part/);
+  assert.throws(() => buildAutoRigFromParts(missing), /missing emitter part/);
   const wrongRole = baseInput();
   wrongRole.anchors = { muzzle: { partId: "body-main", x: 128, y: 120 } };
   assert.throws(() => buildAutoRigFromParts(wrongRole), /weapon, barrel, muzzle-region, mouth, head, or face/);
