@@ -32,7 +32,7 @@ Studio Shell / Navigation
   │    ├─ Sprite Sheet Grid Contract
   │    ├─ Animation Profile Contract
   │    ├─ Hybrid/Skeletal Rig Contract
-  │    │    ├─ Auto-Rig Proposal Builder
+  │    │    ├─ Auto-Rig Proposal Builder (mainline core; panel pending integration)
   │    │    ├─ Rig Parts / Attachments / Hitboxes
   │    │    └─ Phaser Skeletal Adapter
   │    └─ Audio / VFX asset contracts
