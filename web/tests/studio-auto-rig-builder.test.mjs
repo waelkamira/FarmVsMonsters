@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { AUTO_RIG_ROLE_DICTIONARY_VERSION, AUTO_RIG_ROLE_OPTIONS, buildAutoRigFromParts, validateAutoRigBuildManifest, analyzeAutoRigQuality } from "../game/studio/autoRigBuilder.mjs";
+import { AUTO_RIG_ROLE_DICTIONARY_VERSION, AUTO_RIG_ROLE_OPTIONS, buildAutoRigFromParts, validateAutoRigBuildManifest, analyzeAutoRigQuality, moveAutoRigPolygonVertex } from "../game/studio/autoRigBuilder.mjs";
 import {
   evaluateSkeletalClip,
   getSkeletalAttachmentTransform,
@@ -350,4 +350,14 @@ test("animation readiness requires a source fingerprint and no unreviewed recons
   const reconstructedReport = analyzeAutoRigQuality(reconstructed, complete.profile);
   assert.equal(reconstructedReport.readyForAnimation, false);
   assert.ok(reconstructedReport.warnings.some((warning) => warning.code === "reconstructed-pixels"));
+});
+
+
+test("polygon vertex editing clamps coordinates and rejects collapsed masks", () => {
+  const polygon = [{ x: 10, y: 10 }, { x: 90, y: 10 }, { x: 90, y: 90 }, { x: 10, y: 90 }];
+  const moved = moveAutoRigPolygonVertex(polygon, 0, { x: -20, y: 120 }, { width: 100, height: 100 });
+  assert.deepEqual(moved[0], { x: 0, y: 100 });
+  assert.deepEqual(polygon[0], { x: 10, y: 10 });
+  assert.throws(() => moveAutoRigPolygonVertex(polygon, 0, { x: 90, y: 90 }, { width: 100, height: 100 }), /collapse the mask polygon/);
+  assert.throws(() => moveAutoRigPolygonVertex(polygon, 8, { x: 1, y: 1 }, { width: 100, height: 100 }), /index is out of range/);
 });
