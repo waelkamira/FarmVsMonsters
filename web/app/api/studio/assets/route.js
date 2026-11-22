@@ -364,7 +364,7 @@ export async function PATCH(req){
    const quality=analyzeAutoRigQuality(asset.rigBuildManifest,asset.rigProfile);
    if(!quality.valid||!quality.readyForAnimation){
     const findings=quality.warnings.map(item=>item.message);
-    return NextResponse.json({error:"لا يمكن نشر هيكل Auto-Rig قبل اجتياز فحص الجودة ومراجعة جميع الأجزاء.",qualityReport:quality,warnings:findings},{status:409});
+    return NextResponse.json({error:"لا يمكن نشر هيكل Auto-Rig قبل اجتياز فحص الجودة ومراجعة جميع الأجزاء. "+findings.join(" "),qualityReport:quality,warnings:findings},{status:409});
    }
   }
   if(!safeAssetPath(asset.path))return NextResponse.json({error:"Invalid asset path."},{status:400});
