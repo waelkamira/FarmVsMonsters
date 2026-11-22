@@ -48,8 +48,21 @@ export function validateAutoRigWorkerProposal(proposal, canvas) {
   const mask = proposal.mask;
   if (!mask || mask.kind !== "polygon" || !Array.isArray(mask.points) || mask.points.length < 3 || mask.points.length > 512) {
     errors.push("Proposal must include an editable polygon mask with 3–512 points.");
-  } else if (mask.points.some((point) => !point || !finite(point.x) || !finite(point.y) || point.x < 0 || point.y < 0 || point.x > width || point.y > height)) {
-    errors.push("Proposal mask contains points outside the original source canvas.");
+  } else {
+    if (mask.points.some((point) => !point || !finite(point.x) || !finite(point.y) || point.x < 0 || point.y < 0 || point.x > width || point.y > height)) {
+      errors.push("Proposal mask contains points outside the original source canvas.");
+    } else {
+      const area = Math.abs(mask.points.reduce((sum, point, index) => {
+        const next = mask.points[(index + 1) % mask.points.length];
+        return sum + point.x * next.y - next.x * point.y;
+      }, 0) / 2);
+      if (area < 1) errors.push("Proposal mask must enclose a non-zero polygon area.");
+      if (bounds && [bounds.x, bounds.y, bounds.width, bounds.height].every(Number.isInteger) &&
+          mask.points.some((point) => point.x < bounds.x || point.y < bounds.y ||
+            point.x > bounds.x + bounds.width || point.y > bounds.y + bounds.height)) {
+        errors.push("Proposal mask points must fit inside the proposal crop bounds.");
+      }
+    }
   }
   if (proposal.provenance && (!["model-mask", "sam2", "manual-polygon"].includes(proposal.provenance.segmentation) ||
       !["source", "reconstructed"].includes(proposal.provenance.pixels))) {
