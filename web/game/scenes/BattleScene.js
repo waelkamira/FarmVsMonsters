@@ -3153,25 +3153,6 @@ export default class BattleScene extends Scene {
 
   getStudioRigHitboxesWorld(rig, parentView, kind) {
     if (!rig || !parentView?.active) return [];
-    const profiles = rig.profile.hitboxes.filter((item) => item.kind === kind);
-    const scaleX = Number(parentView.scaleX) || 1;
-    const scaleY = Number(parentView.scaleY) || 1;
-    const rotation = (Number(parentView.rotation) || 0) * 180 / Math.PI;
-    return profiles.map((profile) => {
-      const local = rig.getHitbox(profile.id);
-      return {
-        id: profile.id,
-        x: parentView.x + local.x * scaleX,
-        y: parentView.y + local.y * scaleY,
-        width: local.width * Math.abs(scaleX),
-        height: local.height * Math.abs(scaleY),
-        rotation: local.rotation + rotation
-      };
-    });
-  }
-
-  getStudioRigHitboxesWorld(rig, parentView, kind) {
-    if (!rig || !parentView?.active) return [];
     return rig.profile.hitboxes.filter((item) => item.kind === kind).map((profile) => {
       const local = rig.getHitbox(profile.id);
       const scaleX = Number(parentView.scaleX) || 1;
