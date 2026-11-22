@@ -1399,3 +1399,8 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - Added WSL 2 setup/start scripts for Windows users, defaulting to CPU PyTorch and installing official SAM 2 source without its optional CUDA extension. Model checkpoints remain manually installed.
 - Added shell syntax validation to the focused worker CI. Worker tests and WSL launcher syntax passed in run `45034810415`; the full Auto-Rig focused pipeline is still being rechecked on the latest head.
 - Clarified Studio UI copy: automatic SAM 2 results are visible-region masks, not semantic part labels. Role assignment and approval remain author-controlled.
+
+
+## 2026-11-22 — Transparent-canvas mask clipping
+- Extended alpha-aware decoding to return a source-visible pixel mask. Automatic and point-prompted SAM 2 masks are clipped to non-transparent pixels before polygon conversion, preventing the transparent canvas from being accepted as part of a character.
+- Added regression coverage for transparent/semitransparent pixel decoding and automatic mask clipping. The prompted-segmentation fixture now uses the alpha-aware decoder contract.
