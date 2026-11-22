@@ -486,8 +486,8 @@ export function analyzeAutoRigQuality(manifest, profileInput) {
   const allMasksPresent = parts.every((part) => part.mask?.kind === "polygon" && part.mask.points.length >= 3);
   const allPartsReviewed = parts.every((part) => part.reviewed === true);
   const unreviewedCount = parts.filter((part) => part.reviewed !== true).length;
-  const occlusionResolved = parts.every((part) => part.occlusion === "none");
-  const unresolvedOcclusionCount = parts.filter((part) => part.occlusion !== "none").length;
+  const occlusionResolved = parts.every((part) => part.occlusion === "none" || (part.occlusion === "reconstructed" && part.reconstruction?.reviewed === true));
+  const unresolvedOcclusionCount = parts.filter((part) => part.occlusion !== "none" && !(part.occlusion === "reconstructed" && part.reconstruction?.reviewed === true)).length;
   const occlusionMaskCount = parts.filter((part) => part.occlusionMask?.kind === "polygon").length;
   const unresolvedWithoutMaskCount = parts.filter((part) => part.occlusion !== "none" && !part.occlusionMask).length;
   const sourceFingerprintPresent = /^[a-f0-9]{64}$/i.test(String(manifest.source.sha256 || ""));
