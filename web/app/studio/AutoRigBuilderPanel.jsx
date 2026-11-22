@@ -12,13 +12,6 @@ function polygonBounds(points) {
   const right = Math.ceil(Math.max(...xs)), bottom = Math.ceil(Math.max(...ys));
   return { x, y, width: Math.max(1, right - x), height: Math.max(1, bottom - y) };
 }
-function polygonCenter(points, bounds) {
-  const total = points.reduce((sum, point) => ({ x: sum.x + point.x, y: sum.y + point.y }), { x: 0, y: 0 });
-  return {
-    x: Math.max(bounds.x, Math.min(bounds.x + bounds.width, total.x / points.length)),
-    y: Math.max(bounds.y, Math.min(bounds.y + bounds.height, total.y / points.length))
-  };
-}
 function canvasBlob(canvas) {
   return new Promise((resolve, reject) => canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error("تعذر إنشاء صورة الجزء المقصوص.")), "image/png"));
 }
@@ -182,7 +175,6 @@ export default function AutoRigBuilderPanel({
       name: partName.trim() || role,
       points,
       bounds,
-      pivot: polygonCenter(points, bounds),
       drawOrder: index - 1
     }]);
     setPoints([]);
@@ -204,7 +196,6 @@ export default function AutoRigBuilderPanel({
         role: part.role,
         name: part.name,
         bounds: part.bounds,
-        pivot: part.pivot,
         drawOrder: part.drawOrder,
         mask: { kind: "polygon", points: part.points },
         provenance: { segmentation: "manual-polygon", pixels: "source" }
