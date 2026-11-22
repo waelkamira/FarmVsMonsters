@@ -61,7 +61,7 @@ export async function POST(req) {
       !/^data:image\/(png|jpeg|webp);base64,[a-zA-Z0-9+/]+=*$/.test(body.imageDataUrl)) {
     return NextResponse.json({ error: "Provide a PNG, JPEG, or WebP base64 data URL within the 8 MB source limit." }, { status: 400 });
   }
-  if (!["part-detection", "prompted-segmentation", "hidden-part-reconstruction"].includes(body.task)) {
+  if (body.task !== "part-detection") {
     return NextResponse.json({ error: "Unsupported Auto-Rig worker task." }, { status: 400 });
   }
   const controller = new AbortController();
