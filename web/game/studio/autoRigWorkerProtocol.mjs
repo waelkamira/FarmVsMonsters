@@ -1,6 +1,7 @@
 export const AUTO_RIG_WORKER_PROTOCOL_VERSION = 1;
 
-// Only advertise capabilities that the current local worker actually implements.\nconst CAPABILITIES = ["part-detection", "prompted-segmentation"];
+// Only advertise capabilities that the current local worker actually implements.
+const CAPABILITIES = ["part-detection", "prompted-segmentation"];
 
 function finite(value) {
   return typeof value === "number" && Number.isFinite(value);
@@ -18,7 +19,7 @@ export function normalizeAutoRigWorkerCapabilities(input) {
   const models = Array.isArray(input.models) ? input.models : [];
   return {
     protocolVersion: AUTO_RIG_WORKER_PROTOCOL_VERSION,
-    status: input.status === "ready" ? "ready" : "degraded",
+    status: input.status === "ready" && capabilities.length > 0 ? "ready" : "degraded",
     device: ["cpu", "cuda", "mps", "unknown"].includes(input.device) ? input.device : "unknown",
     capabilities,
     models: models.filter((model) => model && typeof model.id === "string" && typeof model.version === "string")
