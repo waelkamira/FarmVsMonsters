@@ -387,7 +387,7 @@ export async function PATCH(req){
    const catalogDocument=await githubGetDocument(PUBLISHED_MONSTER_CATALOG_PATH,token,targetBranch);
    const catalog=catalogDocument?JSON.parse(catalogDocument.content):{version:1,monsters:[]};
    const catalogSha=catalogDocument?.sha??null;
-   const publishedMonster={id:asset.id,name:asset.name,path:asset.path,rows:asset.rows,columns:asset.columns,spriteSheet:asset.spriteSheet,animationProfile:asset.animationProfile||null,rigProfile:asset.rigProfile||null,rigParts:rigPartAssets.map(part=>({id:part.id,name:part.name,path:part.path,rows:part.rows,columns:part.columns,frameCount:part.frameCount,spriteSheet:part.spriteSheet})),monsterProfile:asset.monsterProfile,publishedAt:new Date().toISOString()};
+   const publishedMonster={id:asset.id,name:asset.name,path:asset.path,rows:asset.rows,columns:asset.columns,spriteSheet:asset.spriteSheet,animationProfile:asset.animationProfile||null,rigProfile:asset.rigProfile||null,rigParts:rigPartAssets.map(part=>({id:part.id,name:part.name,path:part.path,rows:part.spriteSheet?(part.rows||1):1,columns:part.spriteSheet?(part.columns||1):1,frameCount:getRigPartFrameCount(part),spriteSheet:Boolean(part.spriteSheet)})),monsterProfile:asset.monsterProfile,publishedAt:new Date().toISOString()};
    const existingIndex=(catalog.monsters||[]).findIndex(monster=>monster.id===id);
    catalog.monsters=existingIndex>=0?catalog.monsters.map((monster,i)=>i===existingIndex?publishedMonster:monster):[...(catalog.monsters||[]),publishedMonster];
    catalog.version=1;
