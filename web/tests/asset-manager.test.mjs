@@ -17,11 +17,17 @@ function createScene(game = {}, sharedTextures = null, options = {}) {
     exists(key) { return this.keys.has(key); },
     remove(key) { this.keys.delete(key); }
   };
+  const audioKeys = new Set();
   const scene = {
     game,
     load: loader,
     textures,
-    cache: { audio: { exists: () => false, remove() {} } }
+    cache: {
+      audio: {
+        exists(key) { return audioKeys.has(key); },
+        remove(key) { audioKeys.delete(key); }
+      }
+    }
   };
   loader.start = () => {
     loader.startCount += 1;
@@ -31,7 +37,8 @@ function createScene(game = {}, sharedTextures = null, options = {}) {
           loader.emit("loaderror", { key: file.key });
           continue;
         }
-        scene.textures.keys.add(file.key);
+        if (file.type === "audio") audioKeys.add(file.key);
+        else scene.textures.keys.add(file.key);
         loader.emit("filecomplete", file.key);
       }
       loader.emit("progress", 1);
@@ -219,4 +226,30 @@ test("destroy during a load waits for completion and rolls back newly loaded ass
   assert.equal(scene.textures.exists("late-texture"), false);
   assert.equal(manager.getStats().referencedAssets, 0);
   assert.equal(manager.scene, null);
+});
+
+
+test("reference-counts audio cache entries and removes them after the final release", async () => {
+  const game = {};
+  const firstScene = createScene(game);
+  const secondScene = createScene(game, firstScene.textures);
+  const manifest = {
+    groups: { sounds: [{ key: "victory", url: "/assets/audio/victory.ogg", type: "audio" }] }
+  };
+  const firstManager = new PhaserAssetManager(firstScene, { manifest });
+  const secondManager = new PhaserAssetManager(secondScene, { manifest });
+
+  await Promise.all([
+    firstManager.loadGroup("sounds"),
+    secondManager.loadGroup("sounds")
+  ]);
+  assert.equal(firstScene.cache.audio.exists("victory"), true);
+
+  firstManager.releaseGroup("sounds");
+  assert.equal(firstScene.cache.audio.exists("victory"), true);
+  secondManager.releaseGroup("sounds");
+  assert.equal(firstScene.cache.audio.exists("victory"), false);
+
+  firstManager.destroy();
+  secondManager.destroy();
 });
