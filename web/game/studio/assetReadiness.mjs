@@ -74,7 +74,8 @@ export function auditStudioAssetRegistry(input) {
           if (!part || part.status === "archived" || !safeAssetPath(part.path)) {
             errors.push("جزء الهيكل " + bone.id + " غير متاح أو مؤرشف: " + bone.part.assetId + ".");
           } else {
-            const partFrameCount = Math.max(1, Number(part.frameCount || (Number(part.rows || 1) * Number(part.columns || 1)) || 1));
+            const partCapacity = Math.max(1, Number(part.rows || 1) * Number(part.columns || 1));
+            const partFrameCount = part.spriteSheet ? Math.max(1, Math.min(partCapacity, Number(part.frameCount) || partCapacity)) : 1;
             if (!Number.isInteger(partFrameCount) || bone.part.frame >= partFrameCount) {
               errors.push("رقم إطار جزء الهيكل " + bone.id + " خارج عدد إطارات الأصل " + bone.part.assetId + ".");
             }
