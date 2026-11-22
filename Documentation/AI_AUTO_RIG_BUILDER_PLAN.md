@@ -408,3 +408,10 @@ The Auto-Rig Builder is a permanent first-class Studio subsystem composed of the
 ## 2026-11-22 — Fail-closed occlusion defaults
 - Missing or unrecognized per-part occlusion metadata now normalizes to `unresolved`; only an explicit `none` assessment clears the occlusion gate. This prevents older or malformed manifests from silently asserting that no hidden pixels exist.
 - Added a regression proving that a manifest with a missing occlusion assessment cannot pass animation readiness.
+
+
+## 2026-11-22 — Rig Library duplication and manifest identity
+- Replaced the native browser prompts used by Studio asset cloning with an accessible in-app dialog (dialog semantics, modal state, initial focus, Escape cancellation, inline validation).
+- Cloning a rigged asset now deep-copies the skeletal profile and Auto-Rig authoring manifest, preserves the immutable source image and shared part dependencies, resets the clone to a new draft/version history, and rebinds the manifest's source asset ID to the new asset ID while retaining the original source hash.
+- Added the existing clone-dialog regression test to the focused Auto-Rig workflow and extended asset-version tests to verify independent manifest identity and copy behavior.
+- This provides safe draft duplication of a rigged asset; semantic template retargeting to a different character remains a later Rig Library capability.
