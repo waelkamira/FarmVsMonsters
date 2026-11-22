@@ -1,6 +1,7 @@
 import { createSkeletalRigProfile } from "./skeletalAnimation.mjs";
 
 const ID_PATTERN = /^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,63}$/;
+export const AUTO_RIG_ROLE_DICTIONARY_VERSION = "1.0.0";
 const ROLE_ALIASES = Object.freeze({
   "left-leaf": "leaf.left",
   "leaf-left": "leaf.left",
@@ -83,12 +84,34 @@ function readPart(raw, index, canvas) {
   if (!Number.isInteger(frame) || frame < 0 || frame > 10000) throw new RangeError("Part " + id + " frame must be an integer from 0 to 10000.");
   const side = raw.side === "left" || raw.side === "right" ? raw.side : (role.endsWith(".left") ? "left" : role.endsWith(".right") ? "right" : null);
   const confidence = raw.confidence == null ? null : finite(raw.confidence, "parts[" + index + "].confidence");
+  let mask = null;
+  if (raw.mask != null) {
+    if (!raw.mask || raw.mask.kind !== "polygon" || !Array.isArray(raw.mask.points) || raw.mask.points.length < 3 || raw.mask.points.length > 512) {
+      throw new TypeError("Part " + id + " mask must be a polygon with 3–512 source-space points.");
+    }
+    const points = raw.mask.points.map((point, pointIndex) => {
+      const px = finite(point?.x, "parts[" + index + "].mask.points[" + pointIndex + "].x");
+      const py = finite(point?.y, "parts[" + index + "].mask.points[" + pointIndex + "].y");
+      if (px < 0 || py < 0 || px > canvas.width || py > canvas.height) throw new RangeError("Part " + id + " mask point lies outside the source canvas.");
+      return { x: px, y: py };
+    });
+    const area = points.reduce((sum, point, pointIndex) => {
+      const next = points[(pointIndex + 1) % points.length];
+      return sum + point.x * next.y - next.x * point.y;
+    }, 0) / 2;
+    if (Math.abs(area) < 1) throw new RangeError("Part " + id + " mask polygon must enclose a non-zero area.");
+    mask = { kind: "polygon", points };
+  }
+  const provenanceInput = raw.provenance && typeof raw.provenance === "object" ? raw.provenance : {};
+  const segmentation = ["manual-polygon", "model-mask", "imported-mask"].includes(provenanceInput.segmentation)
+    ? provenanceInput.segmentation : (mask ? "manual-polygon" : "unspecified");
+  const pixels = ["source", "reconstructed"].includes(provenanceInput.pixels) ? provenanceInput.pixels : "source";
   if (confidence !== null && (confidence < 0 || confidence > 1)) throw new RangeError("Part " + id + " confidence must be between 0 and 1.");
   return {
     id, assetId, role, side, frame, bounds: { x, y, width, height },
     pivot: { x: pivotX, y: pivotY },
     name: String(raw.name || role).slice(0, 80),
-    confidence,
+    confidence, mask, provenance: { segmentation, pixels },
     occlusion: raw.occlusion === "unresolved" ? "unresolved" : raw.occlusion === "reconstructed" ? "reconstructed" : "none",
     parentPartId: raw.parentPartId == null ? null : readId(raw.parentPartId, "parts[" + index + "].parentPartId", 59),
     drawOrder: Number.isFinite(Number(raw.drawOrder)) ? Number(raw.drawOrder) : index
@@ -151,6 +174,12 @@ export function buildAutoRigFromParts(input) {
     ids.add(part.id);
   }
   const partsById = new Map(parts.map((part) => [part.id, part]));
+  const sourceInput = input.source && typeof input.source === "object" ? input.source : {};
+  const sourceAssetId = sourceInput.assetId == null ? null : readId(sourceInput.assetId, "source.assetId");
+  const sourceSha256 = sourceInput.sha256 == null ? null : String(sourceInput.sha256).toLowerCase();
+  if (sourceSha256 !== null && !/^[a-f0-9]{64}$/.test(sourceSha256)) throw new TypeError("source.sha256 must be a 64-character hexadecimal SHA-256 digest.");
+  const sourceFrame = sourceInput.frame == null ? 0 : finite(sourceInput.frame, "source.frame");
+  if (!Number.isInteger(sourceFrame) || sourceFrame < 0 || sourceFrame > 10000) throw new RangeError("source.frame must be an integer from 0 to 10000.");
   const center = { x: canvas.width / 2, y: canvas.height / 2 };
   const bones = [{
     id: "root", name: "Root", parentId: null,
@@ -229,11 +258,15 @@ export function buildAutoRigFromParts(input) {
     manifest: {
       version: 1,
       builder: "farmvsmonsters-auto-rig",
+      generator: { id: "farmvsmonsters-auto-rig", version: 1 },
+      roleDictionaryVersion: AUTO_RIG_ROLE_DICTIONARY_VERSION,
+      source: { assetId: sourceAssetId, sha256: sourceSha256, frame: sourceFrame, width: canvas.width, height: canvas.height },
       canvas,
       parts: parts.map((part) => ({
         id: part.id, assetId: part.assetId, role: part.role, side: part.side,
         bounds: part.bounds, pivot: part.pivot, parentPartId: parentByPartId.get(part.id),
-        drawOrder: part.drawOrder, confidence: part.confidence, occlusion: part.occlusion
+        drawOrder: part.drawOrder, confidence: part.confidence, occlusion: part.occlusion,
+        mask: part.mask, provenance: part.provenance
       })),
       anchors: attachments.map((attachment) => ({ id: attachment.id, boneId: attachment.boneId, x: attachment.x, y: attachment.y })),
       warnings
