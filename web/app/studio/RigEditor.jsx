@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { evaluateSkeletalClip, validateSkeletalRigProfile } from "../../game/studio/skeletalAnimation.mjs";
+import { evaluateSkeletalClip, getSkeletalAttachmentTransform, getSkeletalHitboxTransform, validateSkeletalRigProfile } from "../../game/studio/skeletalAnimation.mjs";
 
 function createDefaultRig(width = 256, height = 256) {
   return {
@@ -143,7 +143,7 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
     for (let x = 0; x <= width; x += 16) { context.beginPath(); context.moveTo(x, 0); context.lineTo(x, height); context.stroke(); }
     for (let y = 0; y <= height; y += 16) { context.beginPath(); context.moveTo(0, y); context.lineTo(width, y); context.stroke(); }
     let pose = null;
-    if (playing && clip && validation.valid) {
+    if (clip && validation.valid) {
       try { pose = evaluateSkeletalClip(rig, clip.id, timeMs); } catch { pose = null; }
     }
     const local = pose?.localBones || Object.fromEntries(rig.bones.map((item) => [item.id, item]));
@@ -176,18 +176,23 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
     }
     const root = rig.bones.find((item) => item.parentId === null);
     if (root) drawBone(root);
-    for (const attachment of rig.attachments) {
-      const target = rig.bones.find((item) => item.id === attachment.boneId);
-      if (!target) continue;
-      context.fillStyle = "#78d6ff";
-      context.beginPath(); context.arc(target.x + attachment.x, target.y + attachment.y, 4, 0, Math.PI * 2); context.fill();
-    }
-    for (const hitbox of rig.hitboxes) {
-      const target = rig.bones.find((item) => item.id === hitbox.boneId);
-      if (!target) continue;
-      context.strokeStyle = hitbox.kind === "attack" ? "#ff8a67" : "#8bd49b";
-      context.lineWidth = 1.5;
-      context.strokeRect(target.x + hitbox.x - hitbox.width / 2, target.y + hitbox.y - hitbox.height / 2, hitbox.width, hitbox.height);
+    if (pose) {
+      for (const attachment of rig.attachments) {
+        const point = getSkeletalAttachmentTransform(rig, pose, attachment.id);
+        context.fillStyle = "#78d6ff";
+        context.beginPath(); context.arc(point.x, point.y, 4, 0, Math.PI * 2); context.fill();
+        context.fillStyle = "#dff6ff"; context.font = "9px sans-serif"; context.fillText(attachment.name, point.x + 6, point.y - 6);
+      }
+      for (const hitbox of rig.hitboxes) {
+        const bounds = getSkeletalHitboxTransform(rig, pose, hitbox.id);
+        context.save();
+        context.translate(bounds.x, bounds.y);
+        context.rotate(bounds.rotation * Math.PI / 180);
+        context.strokeStyle = bounds.kind === "attack" ? "#ff8a67" : "#8bd49b";
+        context.lineWidth = 1.5;
+        context.strokeRect(-bounds.width / 2, -bounds.height / 2, bounds.width, bounds.height);
+        context.restore();
+      }
     }
   }, [rig, partAssets, selectedBoneId, selectedClipId, clip, timeMs, playing, validation.valid, imageRevision]);
 
