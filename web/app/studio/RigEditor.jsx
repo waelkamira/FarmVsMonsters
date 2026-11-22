@@ -194,7 +194,7 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
       const base = selectedPose?.localBones?.[selectedBoneId] || bone;
       let track = target.tracks.find((item) => item.boneId === selectedBoneId);
       if (!track) { track = { boneId: selectedBoneId, keyframes: [] }; target.tracks.push(track); }
-      const frame = (time, patch = {}) => ({ timeMs: time, x: base.x, y: base.y, rotation: base.rotation, scaleX: base.scaleX, scaleY: base.scaleY, ...patch });
+      const frame = (time, patch = {}) => ({ timeMs: snapSkeletalKeyframeTime(time, target.fps, target.durationMs), x: base.x, y: base.y, rotation: base.rotation, scaleX: base.scaleX, scaleY: base.scaleY, ...patch });
       if (preset === "breathing") track.keyframes = [frame(0, { rotation: base.rotation - 3 }), frame(700, { rotation: base.rotation + 3 }), frame(1400, { rotation: base.rotation - 3 })];
       else if (preset === "recoil") track.keyframes = [frame(0), frame(100, { rotation: base.rotation - 20 }), frame(240, { rotation: base.rotation + 5 }), frame(420)];
       else track.keyframes = [frame(0), frame(400, { x: base.x + 8, y: base.y - 4 }), frame(800)];
