@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { AUTO_RIG_ROLE_DICTIONARY_VERSION, buildAutoRigFromParts } from "../game/studio/autoRigBuilder.mjs";
+import { AUTO_RIG_ROLE_DICTIONARY_VERSION, AUTO_RIG_ROLE_OPTIONS, buildAutoRigFromParts } from "../game/studio/autoRigBuilder.mjs";
 import {
   evaluateSkeletalClip,
   getSkeletalAttachmentTransform,
@@ -163,4 +163,16 @@ test("rejects malformed source hashes and masks outside source coordinates", () 
     points: [{ x: 90, y: 100 }, { x: 160, y: 100 }, { x: 500, y: 180 }]
   };
   assert.throws(() => buildAutoRigFromParts(invalidMask), /outside the source canvas/);
+});
+
+
+test("shares one versioned semantic role dictionary between the builder and Studio options", () => {
+  const input = baseInput();
+  input.parts.push({
+    id: "muzzle-region", assetId: "asset-muzzle", role: "weapon.muzzle",
+    bounds: { x: 210, y: 126, width: 18, height: 12 }, pivot: { x: 219, y: 132 }
+  });
+  const result = buildAutoRigFromParts(input);
+  assert.ok(AUTO_RIG_ROLE_OPTIONS.some((option) => option.value === "weapon.muzzle"));
+  assert.ok(!result.warnings.some((warning) => warning.code === "unknown-role" && warning.partId === "muzzle-region"));
 });
