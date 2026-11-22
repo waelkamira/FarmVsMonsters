@@ -89,7 +89,6 @@ def classify_regions(image_rgb, proposals, character_type):
     if not isinstance(proposals, list) or not 1 <= len(proposals) <= 63:
         raise ValueError("Visual classification requires 1–63 segmentation proposals.")
     kind, entries, prompts = _role_prompts(character_type)
-    model, processor, device, torch = _load_model()
     crops, indexes = [], []
     height, width = image_rgb.shape[:2]
     for index, proposal in enumerate(proposals):
@@ -117,6 +116,7 @@ def classify_regions(image_rgb, proposals, character_type):
         crops.append(Image.fromarray(crop).convert("RGB"))
         indexes.append(index)
 
+    model, processor, device, torch = _load_model()
     results = []
     for batch_start in range(0, len(crops), 8):
         batch = crops[batch_start:batch_start + 8]
