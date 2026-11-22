@@ -214,7 +214,7 @@ export default function AutoRigBuilderPanel({
       }));
       const sourceSha256 = await hashSource(sourceFile, sourceUrl);
       const source = { assetId: currentAssetId || null, sha256: sourceSha256, frame: 0 };
-      const preview = buildAutoRigFromParts({
+      buildAutoRigFromParts({
         source,
         canvas: { width: image.width, height: image.height },
         parts: descriptors
