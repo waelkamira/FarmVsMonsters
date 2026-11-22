@@ -216,3 +216,8 @@ test("Rig Editor supports canvas zoom/pan, direct attachment handles, presets, a
 test("Studio API rejects empty skeletal rigs before saving", () => {
   assert.match(routeSource, /يجب ربط صورة واحدة على الأقل بأحد عظام الهيكل قبل الحفظ/);
 });
+
+test("rig part serialization treats static assets as a single frame", () => {
+  assert.match(routeSource, /function getRigPartFrameCount\(part\)\{if\(!part\?\.spriteSheet\)return 1/);
+  assert.match(routeSource, /frameCount:getRigPartFrameCount\(part\)/);
+});
