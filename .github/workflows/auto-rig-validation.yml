@@ -1,0 +1,46 @@
+name: Auto-Rig subsystem validation
+
+on:
+  push:
+    branches:
+      - feat/studio-ai-auto-rig-builder
+  pull_request:
+    paths:
+      - "web/app/studio/**"
+      - "web/app/api/studio/assets/route.js"
+      - "web/game/studio/**"
+      - "web/tests/studio-auto-rig-builder.test.mjs"
+      - "web/tests/studio-asset-versions.test.mjs"
+      - "web/tests/studio-hybrid-engine-integration.test.mjs"
+      - "web/package.json"
+      - "web/package-lock.json"
+      - ".github/workflows/auto-rig-validation.yml"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Auto-Rig and Studio contract tests
+        run: node --test tests/studio-auto-rig-builder.test.mjs tests/studio-asset-versions.test.mjs tests/studio-hybrid-engine-integration.test.mjs
+
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: Build production application
+        run: npm run build
