@@ -22,11 +22,12 @@ python web/game/studio/autoRig/videoPipeline/video_to_spritesheet.py `
   --input "C:\path\to\hazelnut-idle.mp4" `
   --output-dir "web\.autorig-workspace\ai-video\hazelnut-idle" `
   --name "hazelnut-idle" `
+  --start-seconds 0 --clip-duration 2 `
   --frames 24 --fps 12 --width 150 --height 150 `
   --columns 6 --background green
 ```
 
-Use `--background alpha` for a video with a real alpha channel. Use `--background none` only when intentionally retaining the background.
+Use `--start-seconds` and `--clip-duration` to select a 2-second segment from a longer provider clip. 24 frames at 12 FPS represent 2 seconds; keep the extracted clip duration and playback FPS aligned to avoid speeding up or slowing down the motion. Use `--background alpha` for a video with a real alpha channel. Use `--background none` only when intentionally retaining the background.
 
 ## Outputs
 - `hazelnut-idle.png`: 6 × 4 sheet, 150 × 150 per frame by default.
