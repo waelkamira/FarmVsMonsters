@@ -79,6 +79,7 @@ export function createSkeletalAnimationController(profileInput, initialClipId = 
       transition = duration > 0 ? { fromPose, elapsedMs: 0, durationMs: duration } : null;
       return true;
     },
+    restart() { elapsedMs = 0; transition = null; return getPose(); },
     update(deltaMs) {
       const delta = Math.max(0, Math.min(250, Number(deltaMs) || 0));
       elapsedMs += delta;
