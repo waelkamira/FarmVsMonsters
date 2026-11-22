@@ -426,3 +426,11 @@ The Auto-Rig Builder is a permanent first-class Studio subsystem composed of the
 - Preserved the existing asynchronous `cloneAsset(asset)` action signature while replacing native prompts with the accessible Studio dialog. The asset-cloning source-contract test now passes.
 - The latest broad Studio/Game test run recorded 374 passed and 53 failed out of 427 (run `45035732569`). The clone-dialog and clone-action failures were eliminated; remaining failures are concentrated in combat/replay/wave scheduling, monster stats and plant/resource contracts, plus older Studio/runtime source-contract expectations.
 - The focused Auto-Rig subsystem suite, worker suite, ESLint, and production build are green on the preceding feature-branch head; the new signature-only adjustment is included in the current re-run.
+
+
+## 2026-11-22 — Semantic role suggestion milestone
+- Added `web/game/studio/semanticRoleClassifier.mjs`, a deterministic, geometry-only role suggestion layer for SAM 2 masks. It uses source-space bounds, relative center, size, aspect ratio, and the selected character type (plant/monster).
+- Integrated an explicit Studio action to suggest semantic roles for current AI proposals and passed the active asset type into the panel.
+- Suggestions remain deliberately conservative (confidence below 0.7), do not mark parts as reviewed, do not approve masks, and never bypass the author’s role selection/review gate. Ambiguous shapes fall back to accessory with a low confidence.
+- Added focused tests for plant body/leaf suggestions, monster head/arm suggestions, and invalid geometry. Added the new test and module to Auto-Rig CI and ESLint.
+- This is a heuristic assist, not a trained visual classifier. Pixel-aware plant/monster classification remains a later model-backed milestone; hidden-pixel reconstruction is still not implemented.
