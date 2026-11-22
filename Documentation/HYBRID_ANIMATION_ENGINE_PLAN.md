@@ -83,34 +83,43 @@ The editor is a mode switch inside Asset & Animation Studio:
 - [x] Rig-part dependencies reported and protected from destructive lifecycle operations.
 - [x] Testing Lab readiness audit validates rig profiles, blocks missing/archived part assets, and checks referenced Sprite Sheet frame bounds.
 - [x] Release staging includes referenced rig-part files and publishes their asset descriptors.
-- [ ] Focused Node tests pass in the repository environment.
+- [x] Focused Node test coverage added for profile evaluation, validation, version history, dependencies, readiness, Phaser adapter, and state-machine blending.
+- [ ] Execute the focused Node tests in a working CI runner.
 
 ### Phase B — Phaser runtime adapter
 - [x] Add a Phaser Container renderer adapter that builds the bone hierarchy, assigns bitmap frames/pivots, applies evaluated local transforms, and exposes world-space attachments/hitboxes.
 - [x] Add focused fake-scene tests for container hierarchy, pivots, attachments, hitboxes, missing textures, and cleanup.
-- [ ] Integrate the adapter into the live plant/monster battle runtime.
-- Render each bitmap part using the evaluated world transform.
-- Integrate state selection with existing plant/monster runtime animation calls.
-- Add deterministic state transitions and safe cleanup on scene shutdown.
-- Keep legacy Sprite Sheet runtime unchanged when no rig profile exists.
+- [x] Integrate the adapter into the live plant and monster battle runtime, with legacy Sprite Sheet fallback.
+- [x] Load referenced bitmap part textures from published and Studio testing catalogs.
+- [x] Integrate named idle/move/attack/hit/death states with the battle animation calls and bounded cross-fades.
+- [x] Use the muzzle attachment for rigged projectile launch positions.
+- [x] Use rig attack/hurt hitboxes for custom melee, bite, and projectile collision checks when both rigs provide the relevant shapes.
+- [x] Keep legacy Sprite Sheet runtime unchanged when no rig profile exists.
+- [ ] Verify runtime behavior in an actual browser battle and check cleanup on scene shutdown.
 
 ### Phase C — Studio rig editor
-- Add mode selection and a visual rig canvas using the real uploaded art.
-- Implement bone hierarchy editing, pivots, part assignment, attachments, hitboxes, and timeline.
-- Save/load the rig profile through the existing authenticated Studio draft APIs.
-- Reuse existing validation and asset dependency/revision protections.
+- [x] Add a visual rig editor inside the existing plant/monster asset workflow.
+- [x] Render assigned bitmap parts on a canvas and expose bone hierarchy, transforms, pivots, part assignment, clips, keyframes, attachments, and hitboxes.
+- [x] Support direct bone dragging and numeric transform editing; edit keyframes at the selected timeline time.
+- [x] Save/load the rig profile through the existing authenticated Studio draft APIs.
+- [x] Reuse existing validation and asset dependency/revision protections.
+- [ ] Add zoom/pan, draggable attachment/hitbox handles, FPS controls, and editable animation presets.
+- [ ] Verify editor interaction and save/restore in Chrome on Windows.
 
 ### Phase D — Animation state machine and blending
-- Add explicit state priorities, transition rules, clip fallback, and bounded cross-fades.
-- Prevent idle updates from overriding attack/hurt/frozen/death states.
-- Verify blend determinism and state interruption rules.
+- [x] Add a pure named-state controller with bounded cross-fades and shortest-path rotation blending.
+- [x] Prevent plant idle updates and repeated monster movement updates from restarting active clips.
+- [x] Return completed non-looping actions to idle where configured by the battle integration.
+- [ ] Add explicit priority rules for frozen/stunned/death interruption and verify all state transitions in battle.
 
 ### Phase E — Full battle integration and verification
-- Use rig attachment points for real projectile origins.
-- Use pose-bound hitboxes for supported attacks.
-- Verify a rigged plant and a rigged monster in a live Phaser battle.
-- Run tests, lint, production build, and Chrome verification on Windows.
-- Update the Studio master plan and build log with actual evidence.
+- [x] Use rig attachment points for real projectile origins.
+- [x] Use pose-bound hitboxes for supported melee, bite, and projectile collisions.
+- [ ] Verify a rigged plant and a rigged monster in a live Phaser battle.
+- [ ] Run tests, lint, production build, and Chrome verification on Windows.
+- [x] Update the Studio master plan and this plan with implementation evidence and remaining gates.
+
+**CI environment note (2026-11-22):** GitHub Actions creates the validation jobs but reports `runner_id: 0`, no steps, and no downloadable job logs. This means the jobs have not reached a runner; no test, lint, or build result is being claimed. Re-run these checks when a GitHub-hosted runner is available.
 
 ## Safety and quality rules
 
