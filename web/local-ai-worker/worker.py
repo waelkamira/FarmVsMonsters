@@ -46,20 +46,32 @@ def load_model():
 def capabilities():
     available = []
     warnings = []
+    device = "unknown"
+    sam_ready = False
     try:
         import cv2, numpy
-        available.append("visible-donor-reconstruction")
-        available.append("local-texture-inpaint")
+        available.extend(["visible-donor-reconstruction", "local-texture-inpaint"])
     except Exception as exc:
-        warnings.append("OpenCV/NumPy unavailable for donor transfer: " + str(exc)[:180])
+        warnings.append("OpenCV/NumPy unavailable for reconstruction: " + str(exc)[:180])
     try:
         _, _, device = load_model()
         available.extend(["part-detection", "prompted-segmentation"])
-        return {"protocolVersion":1,"status":"ready","device":device,"capabilities":available,
-                "models":[{"id":"sam2-automatic-mask-generator","version":"local-checkpoint","license":"Apache-2.0"}],"warnings":warnings}
+        sam_ready = True
     except Exception as exc:
         warnings.append(str(exc)[:300])
-        return {"protocolVersion":1,"status":"degraded","device":"unknown","capabilities":available,"models":[],"warnings":warnings}
+    try:
+        from visual_semantic_classifier import model_status
+        if model_status():
+            available.append("semantic-classification")
+    except Exception as exc:
+        warnings.append("Local visual classifier unavailable: " + str(exc)[:180])
+    models = []
+    if sam_ready:
+        models.append({"id":"sam2-automatic-mask-generator","version":"local-checkpoint","license":"Apache-2.0"})
+    if "semantic-classification" in available:
+        models.append({"id":"local-clip-zero-shot","version":"local-checkpoint","license":"model-license-see-local-model-card"})
+    return {"protocolVersion":1,"status":"ready" if sam_ready else "degraded","device":device,
+            "capabilities":available,"models":models,"warnings":warnings}
 
 def decode_image_data(data_url, width, height):
     match = re.fullmatch(r"data:image/(png|jpeg|webp);base64,([A-Za-z0-9+/]+=*)", data_url or "")
@@ -189,6 +201,17 @@ def detect_parts(payload):
           "mask":{"kind":"polygon","points":polygon},
           "provenance":{"segmentation":"sam2","pixels":"source"}})
     return {"protocolVersion":1,"proposals":proposals}
+
+
+def classify_semantic_roles(payload):
+    width, height = payload["canvas"]["width"], payload["canvas"]["height"]
+    image, _visible_pixels = decode_image_data(payload["imageDataUrl"], width, height)
+    character_type = payload.get("characterType")
+    if character_type not in ("plant", "monster"):
+        raise ValueError("characterType must be plant or monster.")
+    from visual_semantic_classifier import classify_regions
+    return classify_regions(image, payload.get("proposals"), character_type)
+
 
 def segment_from_points(payload):
     width, height = payload["canvas"]["width"], payload["canvas"]["height"]
@@ -380,7 +403,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send_json(200,capabilities())
     def do_POST(self):
         task_path = urlparse(self.path).path
-        if task_path not in ("/v1/auto-rig/part-detection", "/v1/auto-rig/prompted-segmentation", "/v1/auto-rig/visible-donor-reconstruction", "/v1/auto-rig/local-texture-inpaint"):
+        if task_path not in ("/v1/auto-rig/part-detection", "/v1/auto-rig/prompted-segmentation", "/v1/auto-rig/semantic-classification", "/v1/auto-rig/visible-donor-reconstruction", "/v1/auto-rig/local-texture-inpaint"):
             return self.send_json(404,{"error":"Unsupported task"})
         if not trusted_local_request(self.headers):
             return self.send_json(403,{"error":"Only same-machine JSON requests without a browser Origin are accepted."})
@@ -391,7 +414,7 @@ class Handler(BaseHTTPRequestHandler):
             if length < 1 or length > MAX_BODY: return self.send_json(413,{"error":"Request body exceeds limit"})
             payload=json.loads(self.rfile.read(length))
             if payload.get("protocolVersion") != 1: return self.send_json(400,{"error":"Unsupported protocol"})
-            result = detect_parts(payload) if task_path.endswith("/part-detection") else segment_from_points(payload) if task_path.endswith("/prompted-segmentation") else reconstruct_from_visible_donor(payload) if task_path.endswith("/visible-donor-reconstruction") else inpaint_hidden_region(payload)
+            result = detect_parts(payload) if task_path.endswith("/part-detection") else segment_from_points(payload) if task_path.endswith("/prompted-segmentation") else classify_semantic_roles(payload) if task_path.endswith("/semantic-classification") else reconstruct_from_visible_donor(payload) if task_path.endswith("/visible-donor-reconstruction") else inpaint_hidden_region(payload)
             self.send_json(200,result)
         except RuntimeError as exc: self.send_json(503,{"error":str(exc)})
         except (ValueError,KeyError,TypeError,json.JSONDecodeError) as exc: self.send_json(400,{"error":str(exc)[:300]})
