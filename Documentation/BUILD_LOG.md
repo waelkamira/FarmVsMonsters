@@ -1455,3 +1455,12 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - Subsequent UI transparency changes now display each geometry-based semantic suggestion's role, confidence, and rationale, and clear stale suggestions when the proposal set changes.
 - Removed `hidden-part-reconstruction` from the worker's supported capability allowlist until a real reconstruction backend exists; added a protocol regression to ensure an unsupported capability is ignored. The newest commits are awaiting their own CI run.
 - The broad Studio/Game validation remains a separate gate and has not passed; a prior run on the same feature line recorded 376 passing and 55 failing tests. Do not merge based solely on the focused Auto-Rig green result.
+
+
+## 2026-11-22 — Visible donor reconstruction path integrated into Studio
+- Added a loopback worker task `visible-donor-reconstruction`: validate source-space donor/target polygons, require visible donor pixels, reject overlap/degenerate geometry, optionally mirror the donor, transfer only donor-silhouette pixels into the target polygon, and return a bounded transparent PNG patch with explicit provenance.
+- The worker exposes this capability independently of SAM 2 weights, so the deterministic donor-transfer task remains available even when SAM 2 is degraded/offline, provided OpenCV/NumPy are installed. Generative inpainting is explicitly not advertised or claimed.
+- Integrated donor and target polygon authoring into Studio. The resulting patch is previewed and composited into the extracted PNG part. Bounds expand to include the reconstructed target region.
+- Persisted donor/target polygons, bounds, method, flip setting, pixel provenance, and a separate reconstruction-reviewed flag in the Auto-Rig manifest. Quality readiness now requires both pixel review and ordinary part review; unresolved reconstruction still fails closed.
+- Added worker, API-route, manifest-quality, and Studio UI contract tests. Auto-Rig run `45046682569` passed Node tests, focused ESLint, full-project lint diagnostics, production build, Python worker tests, Python compilation, and WSL launcher syntax. The newer donor/target-polygon provenance and UI contract-test commits are undergoing their own CI run.
+- Real Windows/WSL SAM 2 installation and a real asset's full Studio-to-Phaser battle validation remain outstanding. The donor-transfer method must not be represented as a generative model.
