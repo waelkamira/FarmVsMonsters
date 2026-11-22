@@ -67,3 +67,11 @@ The direct-publish behavior is not an accidental discrepancy in the current rout
 The older `feat/studio-release-pull-request-flow` branch still contains an earlier PR-based implementation, but comparison with current main reports it is 11 commits ahead and 313 commits behind. It is **not safe to merge or cherry-pick wholesale**; only its design/history may inform a fresh implementation that preserves current monster, rig-part and projectile behavior.
 
 This confirms that the Phase 1 P0 release blocker is a deliberate mainline behavior change that must be reversed through a new, reviewed implementation—not merely a stale documentation statement.
+
+
+## Rig branch reconciliation — 2026-11-22
+
+- PR #84 (Hybrid Animation Engine) is closed unmerged. Mainline has related Rig source, but the old branch is divergent (206 ahead / 66 behind); do not merge it wholesale.
+- PR #89 (AI Auto-Rig Builder) remains open and unmerged. Its `AutoRigBuilderPanel.jsx`, semantic-role classifier, template retargeting and worker enhancements are not present on main. Main has only the Auto-Rig builder/protocol/worker API foundation, with no Studio page invocation.
+- PR #89's dedicated Auto-Rig subsystem validation passed, while Studio and Game Validation, Web validation and Web quality gate failed on its head. The target Windows/SAM2 hardware/model smoke test remains unverified.
+- The panel and supporting capabilities are to be integrated as a sub-capability of Asset & Animation Studio, using the common asset lifecycle. Do not merge PR #89 wholesale or describe its UI as already present on main.
