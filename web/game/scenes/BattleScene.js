@@ -4172,14 +4172,24 @@ export default class BattleScene extends Scene {
         : ["hyena-walk", "hyena-run"].includes(key) ? "move" : "idle";
       if (action === "attack" && !force && monster.hitAnimUntil > this.time.now) return;
       const rig = monster.studioRig;
+      const activeId = rig._activeClipId;
+      const protectedAction = ["death", "frozen"].includes(activeId)
+        || (["attack", "hit"].includes(activeId) && ["idle", "move"].includes(action))
+        || ((monster.freezeStage || 0) > 0 && ["idle", "move"].includes(action));
+      if (!force && protectedAction) return;
       const clip = rig.profile.clips.find((entry) => entry.id === action)
         || (action === "hit" ? rig.profile.clips.find((entry) => entry.id === "attack") : null)
         || rig.profile.clips.find((entry) => entry.id === "idle");
-      if (clip && !force && rig._activeClipId === clip.id) return;
-      if (clip) this.playStudioSkeletalRig(rig, clip.id, ["attack", "hit", "death"].includes(action) ? () => {
-        const idle = rig.profile.clips.find((entry) => entry.id === "idle");
-        if (idle) this.playStudioSkeletalRig(rig, idle.id);
-      } : null);
+      if (clip && !force && activeId === clip.id) return;
+      if (clip) {
+        const returnsToIdle = ["attack", "hit"].includes(action);
+        const onComplete = returnsToIdle ? () => {
+          if (!monster.alive || (monster.freezeStage || 0) > 0 || rig._activeClipId !== null) return;
+          const idle = rig.profile.clips.find((entry) => entry.id === "idle");
+          if (idle) this.playStudioSkeletalRig(rig, idle.id);
+        } : null;
+        this.playStudioSkeletalRig(rig, clip.id, onComplete);
+      }
       return;
     }
     const sprite = monster && monster.hyenaSprite;
