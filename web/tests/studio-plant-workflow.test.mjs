@@ -142,11 +142,11 @@ test("Studio exposes editable projectile controls with per-field Arabic explanat
   for(const field of ["projectileSpeed","projectileHeight","projectileEffectColor","projectileRotation"]){
     assert.ok(studioPage.includes(field));
   }
+  const trajectoryEditor = read("../app/studio/ProjectileTrajectoryEditor.jsx");
   for(const label of ["سرعة القذيفة","ارتفاع المسار العام","لون تأثير الاصطدام","دوران القذيفة (درجة)"]){
-    assert.ok(studioPage.includes(label));
+    assert.ok(studioPage.includes(label) || trajectoryEditor.includes(label));
   }
   assert.match(studioPage,/studio-field-help/);
-  const trajectoryEditor = read("../app/studio/ProjectileTrajectoryEditor.jsx");
   assert.match(trajectoryEditor,/studio-field-help/);
   assert.match(assetsRoute,/projectileHeight/);
   assert.match(assetsRoute,/projectileEffectColor/);
