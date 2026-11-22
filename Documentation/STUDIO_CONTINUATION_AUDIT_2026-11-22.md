@@ -58,3 +58,12 @@ The foundation-first documentation pass is available for review in draft PR #90:
 The user-confirmed governance decision is explicit: Auto-Rig and Hybrid/Skeletal Rig are integrated capabilities within Asset & Animation Studio, not separate projects or release lifecycles. Both must use the same asset identity, revisions, dependency checks, readiness, release approval, runtime validation and rollback.
 
 PR #90 is draft and has not been merged. The branch is based on main `a642d676e186bb6ae59b5875585352a690ce40d7`, seven commits ahead and zero commits behind at comparison time. No code, runtime or asset changes were made in this documentation pass. No tests, lint, production build, Chrome/Windows or live Phaser battle were executed.
+
+
+## Release-flow history correction — 2026-11-22
+
+The direct-publish behavior is not an accidental discrepancy in the current route. PR #86 (`Studio: publish tested assets directly to the game`) is merged into main. Its explicit intent was to replace the earlier release-branch/PR flow with direct writes to `STUDIO_PUBLISH_BRANCH` (default `main`), and it removed the pull-request creation helper from the API route. Its own description acknowledges that the catalog and files are separate Contents API commits and that a registry sync failure can leave the published catalog live while Studio registry state remains stale.
+
+The older `feat/studio-release-pull-request-flow` branch still contains an earlier PR-based implementation, but comparison with current main reports it is 11 commits ahead and 313 commits behind. It is **not safe to merge or cherry-pick wholesale**; only its design/history may inform a fresh implementation that preserves current monster, rig-part and projectile behavior.
+
+This confirms that the Phase 1 P0 release blocker is a deliberate mainline behavior change that must be reversed through a new, reviewed implementation—not merely a stale documentation statement.
