@@ -93,3 +93,8 @@ CI evidence on head `e7c7b4e46d01a310dd561759047bbd2692c81323`:
 - Chrome/Windows browser testing and a live Phaser battle remain unperformed.
 
 PR #91 is draft and unmerged. Interrupted-release recovery/idempotency, complete RBAC/audit scope, broader Studio shell modularization and real browser/runtime evidence remain open.
+
+
+### Correction: Hybrid Rig mainline merge record
+
+PR #84 was closed unmerged, but the Hybrid Animation Engine was subsequently ported onto the current mainline and merged through **PR #88** at `a642d676e186bb6ae59b5875585352a690ce40d7`. Thus the current mainline RigEditor, skeletal contracts, Phaser adapter and BattleScene integration are source-integrated from PR #88. The older `feat/studio-hybrid-animation-engine` branch remains divergent and must not be merged; do not confuse it with the merged `feat/studio-hybrid-animation-engine-mainline` branch.
