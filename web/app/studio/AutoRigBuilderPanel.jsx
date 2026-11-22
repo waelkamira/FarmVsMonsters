@@ -37,6 +37,7 @@ export default function AutoRigBuilderPanel({
   sourceRows = 1,
   sourceColumns = 1,
   sourceSpriteSheet = false,
+  requiresMuzzle = false,
   onRigGenerated,
   onManifestGenerated,
   onAssetsCreated
@@ -51,7 +52,12 @@ export default function AutoRigBuilderPanel({
   const [parts, setParts] = useState([]);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
+  const [muzzlePartId, setMuzzlePartId] = useState("");
+  const [muzzlePoint, setMuzzlePoint] = useState(null);
+  const [muzzleMode, setMuzzleMode] = useState(false);
   const existingIds = useMemo(() => new Set(assets.map((asset) => asset.id)), [assets]);
+  const emitterParts = useMemo(() => parts.filter((part) => ["weapon", "weapon.barrel", "mouth", "head", "face"].includes(part.role)), [parts]);
+  const activeEmitterPart = emitterParts.find((part) => part.id === muzzlePartId) || emitterParts[0] || null;
 
   useEffect(() => {
     if (!sourceFile && !sourceUrl) return;
@@ -80,6 +86,9 @@ export default function AutoRigBuilderPanel({
       setImageError("");
       setPoints([]);
       setParts([]);
+      setMuzzlePartId("");
+      setMuzzlePoint(null);
+      setMuzzleMode(false);
       nextPartIndex.current = 1;
     };
     nextImage.onerror = () => { if (active) setImageError("تعذر قراءة الصورة المصدر."); };
@@ -108,6 +117,19 @@ export default function AutoRigBuilderPanel({
       context.fill();
       context.stroke();
     });
+    if (muzzlePoint) {
+      context.beginPath();
+      context.arc(muzzlePoint.x, muzzlePoint.y, Math.max(6, canvas.width / 70), 0, Math.PI * 2);
+      context.strokeStyle = "#e23b64";
+      context.lineWidth = Math.max(2, canvas.width / 220);
+      context.stroke();
+      context.beginPath();
+      context.moveTo(muzzlePoint.x - canvas.width / 45, muzzlePoint.y);
+      context.lineTo(muzzlePoint.x + canvas.width / 45, muzzlePoint.y);
+      context.moveTo(muzzlePoint.x, muzzlePoint.y - canvas.width / 45);
+      context.lineTo(muzzlePoint.x, muzzlePoint.y + canvas.width / 45);
+      context.stroke();
+    }
     if (points.length) {
       context.beginPath();
       points.forEach((point, index) => index ? context.lineTo(point.x, point.y) : context.moveTo(point.x, point.y));
@@ -129,6 +151,12 @@ export default function AutoRigBuilderPanel({
     const rect = canvas.getBoundingClientRect();
     const x = (event.clientX - rect.left) * canvas.width / rect.width;
     const y = (event.clientY - rect.top) * canvas.height / rect.height;
+    if (muzzleMode) {
+      setMuzzlePoint({ x, y });
+      setMuzzleMode(false);
+      setMessage("تم تحديد نقطة مصدر الإطلاق. تأكد أنها داخل الجزء المحدد.");
+      return;
+    }
     setPoints((current) => [...current, { x, y }]);
   }
 
@@ -180,6 +208,10 @@ export default function AutoRigBuilderPanel({
 
   async function generateRig() {
     if (!image || !parts.length || busy || disabled) return;
+    if (requiresMuzzle && (!activeEmitterPart || !muzzlePoint)) {
+      setMessage("اختر جزء مصدر الإطلاق ثم حدّد نقطة muzzle داخله قبل إنشاء هيكل نبتة المقذوفات.");
+      return;
+    }
     setBusy(true);
     setMessage("");
     const created = [];
@@ -202,7 +234,9 @@ export default function AutoRigBuilderPanel({
       buildAutoRigFromParts({
         source,
         canvas: { width: image.width, height: image.height },
-        parts: descriptors
+        parts: descriptors,
+        requiresMuzzle,
+        anchors: requiresMuzzle ? { muzzle: { partId: activeEmitterPart.id, x: muzzlePoint.x, y: muzzlePoint.y } } : undefined
       });
       if (image.width > 4096 || image.height > 4096) {
         throw new Error("أبعاد الصورة تتجاوز الحد الحالي 4096×4096.");
@@ -242,7 +276,9 @@ export default function AutoRigBuilderPanel({
       const result = buildAutoRigFromParts({
         source,
         canvas: { width: image.width, height: image.height },
-        parts: descriptors
+        parts: descriptors,
+        requiresMuzzle,
+        anchors: requiresMuzzle ? { muzzle: { partId: activeEmitterPart.id, x: muzzlePoint.x, y: muzzlePoint.y } } : undefined
       });
       onRigGenerated(result.profile);
       if (onManifestGenerated) onManifestGenerated(result.manifest);
@@ -260,7 +296,7 @@ export default function AutoRigBuilderPanel({
     <section className="studio-panel" style={{ marginTop: 18 }}>
       <small>AUTO-RIG · GUIDED SEGMENTATION</small>
       <h3>استخراج أجزاء الشخصية وبناء الهيكل الأولي</h3>
-      <p>هذه مرحلة التفكيك الموجّه: ابدأ بالأجزاء الخلفية ثم الأمامية، وانقر حول كل جزء لرسم قناعه، ثم اختر دوره. سيُحفظ كل جزء كصورة PNG شفافة مستقلة، وتُقترح نقاط الدوران تلقائياً عند أقرب حدود اتصال مع الجزء الأب، ويمكن تعديلها لاحقاً في محرر الهيكل. كما تُنشأ مقاطع حركة ابتدائية للخمول والحركة والهجوم والإصابة والموت، وكلها قابلة للتعديل. عند استخدام Sprite Sheet تتم معالجة أول إطار فقط كصورة مرجعية. إذا كانت النبتة تطلق قذيفة، أضف نقطة muzzle مؤكدة من محرر الهيكل قبل الحفظ. لا يوجد استدلال AI تلقائي في هذه المرحلة بعد.</p>
+      <p>هذه مرحلة التفكيك الموجّه: ابدأ بالأجزاء الخلفية ثم الأمامية، وانقر حول كل جزء لرسم قناعه، ثم اختر دوره. سيُحفظ كل جزء كصورة PNG شفافة مستقلة، وتُقترح نقاط الدوران تلقائياً عند أقرب حدود اتصال مع الجزء الأب، ويمكن تعديلها لاحقاً في محرر الهيكل. كما تُنشأ مقاطع حركة ابتدائية للخمول والحركة والهجوم والإصابة والموت، وكلها قابلة للتعديل. عند استخدام Sprite Sheet تتم معالجة أول إطار فقط كصورة مرجعية. إذا كانت النبتة تطلق قذيفة، حدّد مصدر الإطلاق ونقطة muzzle هنا؛ أما بقية تفاصيل الارتباط فيمكن تعديلها لاحقاً في محرر الهيكل. لا يوجد استدلال AI تلقائي في هذه المرحلة بعد.</p>
       {imageError && <p className="studio-message" role="alert">{imageError}</p>}
       {image && (image.width > 4096 || image.height > 4096)
         ? <p className="studio-message">أبعاد الصورة {image.width}×{image.height} أكبر من الحد الحالي 4096×4096.</p>
@@ -287,6 +323,23 @@ export default function AutoRigBuilderPanel({
         <button type="button" disabled={disabled || busy || !points.length} onClick={() => setPoints([])}>إلغاء التحديد</button>
         <button type="button" disabled={disabled || busy || points.length < 3} onClick={commitPart}>اعتماد الجزء</button>
       </div>
+      {requiresMuzzle && <div className="studio-grid" style={{ marginTop: 12 }}>
+        <label>جزء مصدر الإطلاق
+          <select value={activeEmitterPart?.id || ""} disabled={disabled || busy || !emitterParts.length} onChange={(event) => setMuzzlePartId(event.target.value)}>
+            {emitterParts.map((part) => <option key={part.id} value={part.id}>{part.name} · {part.role}</option>)}
+          </select>
+        </label>
+        <div>
+          <span>نقطة فوهة الإطلاق (muzzle)</span>
+          <div className="studio-actions" style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 6 }}>
+            <button type="button" disabled={disabled || busy || !activeEmitterPart} onClick={() => { setMuzzlePoint(null); setMuzzleMode(true); setMessage("انقر داخل حدود جزء مصدر الإطلاق لتحديد نقطة خروج القذيفة."); }}>تحديد النقطة على الصورة</button>
+            <button type="button" disabled={disabled || busy || !muzzlePoint} onClick={() => setMuzzlePoint(null)}>مسح النقطة</button>
+          </div>
+          {muzzleMode && <p>وضع تحديد الفوهة مفعّل: انقر داخل الجزء المحدد على الصورة</p>}
+          {muzzlePoint && <p>النقطة المحددة: {Math.round(muzzlePoint.x)}, {Math.round(muzzlePoint.y)}</p>}
+          {!emitterParts.length && <p>أضف جزءاً بدور سلاح أو ماسورة أو فم أو رأس أولاً.</p>}
+        </div>
+      </div>}
       {parts.length > 0 && <div style={{ marginTop: 12 }}>
         <b>الأجزاء المحددة ({parts.length}/63)</b>
         <ul>{parts.map((part) => <li key={part.id} style={{ marginTop: 5 }}>
