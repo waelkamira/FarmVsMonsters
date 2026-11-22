@@ -26,3 +26,11 @@ test("Studio blocks rig generation while donor or hidden-region polygons are bei
   assert.match(panel, /generated \|\| occlusionMode \|\| donorMode/);
   assert.match(panel, /occlusionMode \|\| donorMode \|\| !image/);
 });
+
+test("Studio offers local texture inpainting as a separate review-gated reconstruction method", () => {
+  assert.match(panel, /function inpaintHiddenRegion\(partId\)/);
+  assert.match(panel, /task: "local-texture-inpaint"/);
+  assert.match(panel, /ترميم محلي من المحيط/);
+  assert.match(panel, /opencv-telea-inpaint/);
+  assert.match(panel, /reviewed: false/);
+});
