@@ -481,3 +481,34 @@ export function analyzeAutoRigQuality(manifest, profileInput) {
     warnings
   };
 }
+
+
+/**
+ * Returns a clamped, validated polygon after moving one source-space vertex.
+ * Invalid/degenerate edits are rejected so a drag cannot corrupt the saved mask.
+ */
+export function moveAutoRigPolygonVertex(points, vertexIndex, position, canvas) {
+  if (!Array.isArray(points) || points.length < 3 || points.length > 512) {
+    throw new TypeError("Editable mask must contain 3–512 vertices.");
+  }
+  if (!Number.isInteger(vertexIndex) || vertexIndex < 0 || vertexIndex >= points.length) {
+    throw new RangeError("Editable mask vertex index is out of range.");
+  }
+  const width = finite(canvas?.width, "canvas.width");
+  const height = finite(canvas?.height, "canvas.height");
+  if (width < 1 || height < 1) throw new RangeError("Editable mask canvas dimensions must be positive.");
+  const x = Math.max(0, Math.min(width, finite(position?.x, "position.x")));
+  const y = Math.max(0, Math.min(height, finite(position?.y, "position.y")));
+  const next = points.map((point, index) => {
+    if (!point || !Number.isFinite(Number(point.x)) || !Number.isFinite(Number(point.y))) {
+      throw new TypeError("Editable mask contains an invalid vertex.");
+    }
+    return index === vertexIndex ? { x, y } : { x: Number(point.x), y: Number(point.y) };
+  });
+  const area = Math.abs(next.reduce((sum, point, index) => {
+    const following = next[(index + 1) % next.length];
+    return sum + point.x * following.y - following.x * point.y;
+  }, 0) / 2);
+  if (area < 1) throw new RangeError("Vertex edit would collapse the mask polygon.");
+  return next;
+}
