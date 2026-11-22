@@ -303,8 +303,9 @@ export default function AutoRigBuilderPanel({
         name: part.name,
         bounds: part.bounds,
         drawOrder: part.drawOrder,
+        ...(part.confidence == null ? {} : { confidence: part.confidence }),
         mask: { kind: "polygon", points: part.points },
-        provenance: { segmentation: "manual-polygon", pixels: "source" }
+        provenance: part.provenance || { segmentation: "manual-polygon", pixels: "source" }
       }));
       const sourceSha256 = await hashSource(sourceFile, sourceUrl);
       const source = { assetId: currentAssetId || null, sha256: sourceSha256, frame: 0 };
