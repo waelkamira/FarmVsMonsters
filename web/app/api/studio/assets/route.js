@@ -355,7 +355,7 @@ export async function PATCH(req){
    if(operation==="archive"&&asset.releaseRequest?.number){
     const previousRequest=await githubGetPullRequest(asset.releaseRequest.number,token);
     if(previousRequest?.state==="open"||previousRequest?.merged)return NextResponse.json({error:"أغلق طلب مراجعة النشر المفتوح أولاً. لا يمكن أرشفة محتوى منشور؛ أزل نشره بطلب إصدار منفصل."},{status:409});
-    candidate={...asset,releaseRequest:null};
+    candidate={...asset,status:"testing",releaseRequest:null};
    }
    let updated;
    try{updated=transitionStudioAssetStatus(candidate,operation);}
