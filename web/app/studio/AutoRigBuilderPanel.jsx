@@ -33,6 +33,18 @@ function polygonCenter(points, bounds) {
 function canvasBlob(canvas) {
   return new Promise((resolve, reject) => canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error("تعذر إنشاء صورة الجزء المقصوص.")), "image/png"));
 }
+async function hashSource(file, url) {
+  if (!window.crypto?.subtle) return null;
+  let bytes;
+  if (file) bytes = await file.arrayBuffer();
+  else {
+    const response = await fetch(url, { credentials: "same-origin", cache: "no-store" });
+    if (!response.ok) throw new Error("تعذر قراءة الملف الأصلي لحساب بصمته.");
+    bytes = await response.arrayBuffer();
+  }
+  const digest = await window.crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(digest), (value) => value.toString(16).padStart(2, "0")).join("");
+}
 
 export default function AutoRigBuilderPanel({
   sourceUrl = "",
@@ -196,9 +208,14 @@ export default function AutoRigBuilderPanel({
         name: part.name,
         bounds: part.bounds,
         pivot: part.pivot,
-        drawOrder: part.drawOrder
+        drawOrder: part.drawOrder,
+        mask: { kind: "polygon", points: part.points },
+        provenance: { segmentation: "manual-polygon", pixels: "source" }
       }));
+      const sourceSha256 = await hashSource(sourceFile, sourceUrl);
+      const source = { assetId: currentAssetId || null, sha256: sourceSha256, frame: 0 };
       const preview = buildAutoRigFromParts({
+        source,
         canvas: { width: image.width, height: image.height },
         parts: descriptors
       });
@@ -238,6 +255,7 @@ export default function AutoRigBuilderPanel({
       }
       if (onAssetsCreated) await onAssetsCreated();
       const result = buildAutoRigFromParts({
+        source,
         canvas: { width: image.width, height: image.height },
         parts: descriptors
       });
