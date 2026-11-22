@@ -75,3 +75,21 @@ This confirms that the Phase 1 P0 release blocker is a deliberate mainline behav
 - PR #89 (AI Auto-Rig Builder) remains open and unmerged. Its `AutoRigBuilderPanel.jsx`, semantic-role classifier, template retargeting and worker enhancements are not present on main. Main has only the Auto-Rig builder/protocol/worker API foundation, with no Studio page invocation.
 - PR #89's dedicated Auto-Rig subsystem validation passed, while Studio and Game Validation, Web validation and Web quality gate failed on its head. The target Windows/SAM2 hardware/model smoke test remains unverified.
 - The panel and supporting capabilities are to be integrated as a sub-capability of Asset & Animation Studio, using the common asset lifecycle. Do not merge PR #89 wholesale or describe its UI as already present on main.
+
+
+## Phase 1 implementation follow-up — draft PR #91
+
+Draft PR #91 (`feat/studio-reviewed-release-transaction`) implements the first critical foundation corrections:
+- Replaces direct game-branch publishing with isolated release-branch staging and a review Pull Request containing the asset, rig parts, projectile dependency and catalog update.
+- Adds atomic local registry writes with an exclusive lock and expected-content SHA.
+- Adds accessible asset cloning and unsaved-change protection.
+- Adds focused Studio foundation tests and runs lint/build even if the legacy full suite fails.
+
+CI evidence on head `e7c7b4e46d01a310dd561759047bbd2692c81323`:
+- Focused Studio foundation tests: passed.
+- ESLint: passed.
+- Production build: passed.
+- Full unit suite: 54 failures; every failure also exists on the main baseline run (55 failures). The branch adds no new full-suite failure and fixes the existing accessible-clone-dialog failure.
+- Chrome/Windows browser testing and a live Phaser battle remain unperformed.
+
+PR #91 is draft and unmerged. Interrupted-release recovery/idempotency, complete RBAC/audit scope, broader Studio shell modularization and real browser/runtime evidence remain open.
