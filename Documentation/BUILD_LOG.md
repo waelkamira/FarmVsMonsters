@@ -1215,3 +1215,8 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - The manifest is retained as generation provenance while the user remains free to edit bones, pivots, clips, and attachments in RigEditor. Validation therefore checks the manifest's own integrity without freezing the current editable profile to the original generated bone layout.
 - Added regressions for manifest validation, invalid parent references, and the ability to add manual bones after generation. These tests have been authored but not executed in a working Node/CI runner.
 - The source-image replacement control now invalidates the prior Auto-Rig provenance manifest so a hash/mask record from an older source cannot silently be presented as current. Existing manually editable rig data is retained for review.
+
+## 2026-11-22 — Contact-aware automatic pivot suggestions
+- Added deterministic pivot inference for parts without a manually supplied pivot. Body/stem roots default to a base contact point; child parts use the closest point on their polygon mask (or bounds fallback) to the selected parent's pivot.
+- The guided polygon workflow now leaves pivots to the shared builder instead of assigning every part its polygon centroid. The generated local/cropped pivot is saved into the authoring manifest and remains editable in RigEditor.
+- Added a regression for a body/head pair proving the suggested pivots land on the expected base/neck contact positions and produce the expected parent-local bone transform.
