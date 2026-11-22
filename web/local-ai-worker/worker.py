@@ -291,10 +291,18 @@ def reconstruct_from_visible_donor(payload):
     }
     donor_crop = image[donor_bounds["y"]:donor_bounds["y"] + donor_bounds["height"],
                        donor_bounds["x"]:donor_bounds["x"] + donor_bounds["width"]].copy()
-    if payload.get("flipHorizontal", True) is True:
+    donor_alpha = donor_mask[donor_bounds["y"]:donor_bounds["y"] + donor_bounds["height"],
+                             donor_bounds["x"]:donor_bounds["x"] + donor_bounds["width"]].astype(np.uint8) * 255
+    flip_horizontal = payload.get("flipHorizontal", True)
+    if not isinstance(flip_horizontal, bool):
+        raise ValueError("flipHorizontal must be a boolean.")
+    donor_crop[donor_alpha == 0] = 0
+    if flip_horizontal:
         donor_crop = cv2.flip(donor_crop, 1)
+        donor_alpha = cv2.flip(donor_alpha, 1)
     target_size = (target_bounds["width"], target_bounds["height"])
     transferred = cv2.resize(donor_crop, target_size, interpolation=cv2.INTER_CUBIC)
+    transferred_alpha = cv2.resize(donor_alpha, target_size, interpolation=cv2.INTER_NEAREST)
     local_target = target_mask[target_bounds["y"]:target_bounds["y"] + target_bounds["height"],
                                target_bounds["x"]:target_bounds["x"] + target_bounds["width"]]
     # Keep only pixels supported by both the mapped donor silhouette and target polygon.
