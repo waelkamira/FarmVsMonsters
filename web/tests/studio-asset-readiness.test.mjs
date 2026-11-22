@@ -128,3 +128,25 @@ test("Testing Lab page runs the audit and renders readiness outcomes", () => {
   assert.match(pageSource, /import "\.\.\/studio\.css"/);
   assert.match(pageSource, /stage\/1\/select/);
 });
+
+test("readiness validates rig profiles and blocks missing or archived bitmap parts", () => {
+  const rigProfile = {
+    version: 1,
+    canvas: { width: 200, height: 200 },
+    bones: [
+      { id: "root", parentId: null },
+      { id: "head", parentId: "root", part: { assetId: "head-part", frame: 0 } }
+    ],
+    attachments: [],
+    hitboxes: [],
+    clips: []
+  };
+  const part = { id: "head-part", type: "item", status: "published", path: "/assets/parts/head.png" };
+  const valid = auditStudioAssetRegistry([validPlant({ rigProfile }), validProjectile(), part]);
+  assert.equal(valid.blocked, 0);
+  const missing = auditStudioAssetRegistry([validPlant({ rigProfile }), validProjectile()]);
+  assert.equal(missing.blocked, 1);
+  assert.ok(missing.assets[0].errors.some((message) => message.includes("جزء الهيكل")));
+  const archived = auditStudioAssetRegistry([validPlant({ rigProfile }), validProjectile(), { ...part, status: "archived" }]);
+  assert.equal(archived.blocked, 1);
+});
