@@ -2,13 +2,13 @@
 
 ## Status
 - Phase 0 source-code compatibility/licensing review is documented. Final hardware/model-weight validation on the target Windows PC remains pending; no model weights are bundled or auto-downloaded.
-- Phase 1 deterministic Auto-Rig core is implemented on this feature branch and its focused tests, ESLint, and production build have passed in GitHub Actions.
-- Phase 2 permanent Studio workflow is integrated: guided manual/AI mask authoring, semantic role assignment, editable cutouts, source-space pivots/bones, starter clips, muzzle attachment workflow, quality reporting, asset-library discovery, and server-side publish gating.
-- Phase 3 local SAM 2 worker is implemented with automatic mask proposals and positive/negative point-prompt segmentation. Its focused Python/Node CI is active; the actual model is optional and must be installed locally by the developer.
-- Phase 4 semantic plant/monster classification and hidden-pixel reconstruction remain incomplete. SAM 2 masks are geometric proposals only; role assignment and author review remain explicit.
-- Phase 5 quality/publish gates and Rig Library discovery are implemented; reusable rig-template retargeting and live Phaser/browser acceptance remain outstanding.
-- This work is additive to the existing Hybrid Animation Engine branch and targets the existing Phaser 3 runtime. No third-party editor is embedded and no paid/cloud inference API is required.
-
+- Phase 1 deterministic Auto-Rig core is implemented; the focused Auto-Rig subsystem CI (worker compile/tests, Node contract/quality tests, lint and production build) passes on the current PR head.
+- Phase 2 permanent Studio workflow is integrated: guided manual/AI mask authoring, geometry-based semantic role suggestions, editable cutouts, source-space pivots/bones, starter clips, muzzle attachment workflow, quality reporting, asset-library discovery, and server-side publish gating.
+- Phase 3 local SAM 2 worker is implemented with automatic mask proposals and positive/negative point-prompt segmentation. Focused Python/Node CI passes; actual checkpoint installation and inference remain optional local setup tasks.
+- Phase 4 has two review-gated pixel-repair aids: author-guided visible-donor transfer (including optional horizontal mirroring) and local OpenCV Telea texture inpainting. These are not semantic/anatomical generation. A model-backed plant/monster visual classifier and generative hidden-part completion remain incomplete; geometry-based role suggestions are deliberately low-confidence and require author review.
+- Phase 5 quality/publish gates and Rig Library discovery/duplication are implemented; semantic template retargeting, robust multi-asset rollback, and live Phaser/browser acceptance remain outstanding.
+- PR #88 (Hybrid Animation Engine) was merged into main on 2026-11-22. This PR now targets main directly. The Auto-Rig-specific CI passes; broad repository Phase 1 gameplay/legacy Studio tests still fail and block this PR from merge.
+- This work extends the existing Phaser 3 runtime. No third-party editor is embedded and no paid/cloud inference API is required.
 ## Product goal
 Turn one uploaded plant or monster illustration into a reviewable, editable, game-ready rig with the least possible manual preparation. The creator should upload the original image, choose or describe intended actions, review automatically extracted parts, and approve the generated rig. The system must preserve the original art and must never silently publish a low-quality result.
 
