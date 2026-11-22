@@ -177,6 +177,16 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
     const root = rig.bones.find((item) => item.parentId === null);
     if (root) drawBone(root);
     if (pose) {
+      for (const item of rig.bones) {
+        if (item.parentId === null) continue;
+        const parent = pose.bones[item.parentId], child = pose.bones[item.id];
+        if (!parent || !child) continue;
+        context.strokeStyle = item.id === selectedBoneId ? "#f5d16f" : "rgba(220,235,205,.65)";
+        context.lineWidth = item.id === selectedBoneId ? 2.5 : 1.5;
+        context.beginPath(); context.moveTo(parent.x, parent.y); context.lineTo(child.x, child.y); context.stroke();
+        context.fillStyle = item.id === selectedBoneId ? "#f5d16f" : "#dcebcf";
+        context.beginPath(); context.arc(child.x, child.y, item.id === selectedBoneId ? 5 : 3, 0, Math.PI * 2); context.fill();
+      }
       for (const attachment of rig.attachments) {
         const point = getSkeletalAttachmentTransform(rig, pose, attachment.id);
         context.fillStyle = "#78d6ff";
