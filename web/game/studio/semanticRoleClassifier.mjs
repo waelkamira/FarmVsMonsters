@@ -3,11 +3,12 @@
  * These are hints, never approvals: the author must inspect and choose each role.
  */
 export function suggestAutoRigSemanticRoles(proposals, canvas, characterType = "plant") {
-  if (!Array.isArray(proposals) || !proposals.length) return [];
+  if (!Array.isArray(proposals)) throw new TypeError("Semantic proposals must be an array.");
   const width = Number(canvas?.width), height = Number(canvas?.height);
   if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) {
     throw new TypeError("Semantic classification requires positive source dimensions.");
   }
+  if (!proposals.length) return [];
   const kind = characterType === "monster" ? "monster" : "plant";
   const items = proposals.map((proposal, index) => {
     const bounds = proposal?.bounds || {};
@@ -33,7 +34,7 @@ export function suggestAutoRigSemanticRoles(proposals, canvas, characterType = "
   for (const item of items) {
     if (assigned.has(item)) continue;
     const dx = item.cx - primary.cx;
-    const above = item.cy < primary.cy - 0.08;
+    const above = item.cy < primary.cy - 0.14;
     const below = item.cy > primary.cy + 0.12;
     const side = Math.abs(dx) > 0.13;
     const wide = item.ratio > 1.25;
