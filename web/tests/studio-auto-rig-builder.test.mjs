@@ -143,6 +143,8 @@ test("records source identity, versioned roles, polygon masks, and pixel provena
     points: [{ x: 90, y: 100 }, { x: 160, y: 100 }, { x: 160, y: 180 }, { x: 90, y: 180 }]
   };
   input.parts[0].provenance = { segmentation: "manual-polygon", pixels: "source" };
+  input.parts[0].reviewed = true;
+  input.parts[0].occlusion = "unresolved";
   const result = buildAutoRigFromParts(input);
   assert.equal(result.manifest.roleDictionaryVersion, AUTO_RIG_ROLE_DICTIONARY_VERSION);
   assert.deepEqual(result.manifest.source, {
@@ -151,6 +153,8 @@ test("records source identity, versioned roles, polygon masks, and pixel provena
   assert.equal(result.manifest.parts[0].mask.kind, "polygon");
   assert.equal(result.manifest.parts[0].provenance.segmentation, "manual-polygon");
   assert.equal(result.manifest.parts[0].provenance.pixels, "source");
+  assert.equal(result.manifest.parts[0].reviewed, true);
+  assert.equal(result.manifest.parts[0].occlusion, "unresolved");
 });
 
 test("rejects malformed source hashes and masks outside source coordinates", () => {
