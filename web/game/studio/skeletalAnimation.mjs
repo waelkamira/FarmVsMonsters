@@ -231,19 +231,21 @@ export function evaluateSkeletalClip(profileInput, clipId, elapsedMs) {
   const tracks = new Map(clip.tracks.map((track) => [track.boneId, track]));
   const bones = new Map(profile.bones.map((bone) => [bone.id, bone]));
   const world = new Map();
+  const localPose = new Map();
 
   function resolve(boneId) {
     if (world.has(boneId)) return world.get(boneId);
     const bone = bones.get(boneId);
     const base = { x: bone.x, y: bone.y, rotation: bone.rotation, scaleX: bone.scaleX, scaleY: bone.scaleY };
     const local = tracks.has(boneId) ? sampleTrack(tracks.get(boneId), base, timeMs) : base;
+    localPose.set(boneId, local);
     const result = bone.parentId === null ? local : compose(resolve(bone.parentId), local);
     world.set(boneId, result);
     return result;
   }
 
   for (const bone of profile.bones) resolve(bone.id);
-  return { clipId, timeMs, bones: Object.fromEntries(world) };
+  return { clipId, timeMs, localBones: Object.fromEntries(localPose), bones: Object.fromEntries(world) };
 }
 
 function transformPoint(transform, point) {
