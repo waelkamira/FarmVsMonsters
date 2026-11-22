@@ -71,7 +71,16 @@ Meta's official SAM 2 installation guidance recommends WSL with Ubuntu when inst
 
    This verifies both automatic and point-prompted SAM 2 inference against a generated test plant image. It does not replace validation with the actual FarmVsMonsters plant and monster artwork.
 
-10. In the Windows environment running the Studio Next.js app, set:
+10. Run the real-asset smoke test from the same directory after both SAM 2 and CLIP checkpoints are configured:
+
+   ```bash
+   python real_asset_smoke_test.py
+   ```
+
+   By default this tests the first 3×3 Hazelnut Level 1 frame and the Hyena idle asset from the checked-out repository. It runs SAM 2 segmentation followed by local CLIP role suggestions on both assets and prints the masks/suggestion counts plus per-region roles. A successful command proves model execution on real repository pixels, but the output still requires visual inspection in Studio; it does not prove pivots, clips, save/version behavior or Phaser gameplay.
+
+
+11. In the Windows environment running the Studio Next.js app, set:
 
    ```env
    STUDIO_LOCAL_AI_WORKER_URL=http://127.0.0.1:8765
