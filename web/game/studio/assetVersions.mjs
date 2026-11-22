@@ -21,6 +21,7 @@ export function snapshotStudioAsset(asset, versionNumber) {
     combat: copyCombat(asset.combat),
     animationProfile: copyJson(asset.animationProfile),
     rigProfile: copyJson(asset.rigProfile),
+    rigBuildManifest: copyJson(asset.rigBuildManifest),
     monsterProfile: copyJson(asset.monsterProfile),
     dependencies: copyJson(asset.dependencies)
   };
@@ -54,6 +55,7 @@ export function restoreStudioAssetRevision(asset, versionNumber, timestamp = new
     combat: copyCombat(target.combat),
     animationProfile: copyJson(target.animationProfile),
     rigProfile: copyJson(target.rigProfile),
+    rigBuildManifest: copyJson(target.rigBuildManifest),
     monsterProfile: copyJson(target.monsterProfile),
     dependencies: copyJson(target.dependencies),
     revision: currentRevision + 1,
@@ -79,6 +81,7 @@ export function cloneStudioAsset(asset, newId, newName, timestamp = new Date().t
     combat: copyCombat(asset.combat),
     animationProfile: copyJson(asset.animationProfile),
     rigProfile: copyJson(asset.rigProfile),
+    rigBuildManifest: copyJson(asset.rigBuildManifest),
     monsterProfile: copyJson(asset.monsterProfile),
     dependencies: copyJson(asset.dependencies),
     id,
