@@ -117,6 +117,8 @@ def normalize_prompt_points(points, width, height):
         if label not in (0, 1):
             raise ValueError("Prompt point labels must be 0 (negative) or 1 (positive).")
         normalized.append((x, y, label))
+    if not any(point[2] == 1 for point in normalized):
+        raise ValueError("At least one positive point is required for SAM 2 segmentation.")
     return normalized
 
 def detect_parts(payload):
