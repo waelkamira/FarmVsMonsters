@@ -346,7 +346,7 @@ test("Dust Skitter combines jump and burst movement multipliers", () => {
 
 test("phase-one wave scheduler preserves intermission, first spawn delay and interval cadence", () => {
   const intermission = resolveWaveSpawnStep({
-    wave: 2, waveSize: 5, spawnedThisWave: 0,
+    wave: 2, waveSize: 3, spawnedThisWave: 0,
     intermissionMs: 5000, spawnTimerMs: 1600, deltaMs: 1000
   });
   assert.equal(intermission.shouldSpawn, false);
@@ -363,7 +363,7 @@ test("phase-one wave scheduler preserves intermission, first spawn delay and int
   assert.equal(firstSpawn.spawnTimerMs, 4960);
 
   const waiting = resolveWaveSpawnStep({
-    wave: 2, waveSize: 5, spawnedThisWave: 1,
+    wave: 2, waveSize: 3, spawnedThisWave: 1,
     intermissionMs: 0, spawnTimerMs: 500, deltaMs: 100
   });
   assert.equal(waiting.shouldSpawn, false);
@@ -372,31 +372,31 @@ test("phase-one wave scheduler preserves intermission, first spawn delay and int
 
 test("phase-one wave scheduler spawns at most one monster per update and stops at roster size", () => {
   const lastSpawn = resolveWaveSpawnStep({
-    wave: 5, waveSize: 9, spawnedThisWave: 8,
+    wave: 5, waveSize: 6, spawnedThisWave: 5,
     intermissionMs: 0, spawnTimerMs: 0, deltaMs: 16
   });
   assert.equal(lastSpawn.shouldSpawn, true);
-  assert.equal(lastSpawn.spawnedThisWave, 9);
+  assert.equal(lastSpawn.spawnedThisWave, 6);
 
   const complete = resolveWaveSpawnStep({
-    wave: 5, waveSize: 9, spawnedThisWave: 9,
+    wave: 5, waveSize: 6, spawnedThisWave: 6,
     intermissionMs: 0, spawnTimerMs: 0, deltaMs: 5000
   });
   assert.equal(complete.shouldSpawn, false);
-  assert.equal(complete.spawnedThisWave, 9);
+  assert.equal(complete.spawnedThisWave, 6);
   assert.equal(complete.spawnTimerMs, 0);
 
   assert.throws(() => resolveWaveSpawnStep({
-    wave: 5, waveSize: 8, spawnedThisWave: 0,
+    wave: 5, waveSize: 5, spawnedThisWave: 0,
     intermissionMs: 0, spawnTimerMs: 0, deltaMs: 16
   }), /INVALID_WAVE_SPAWN_STATE/);
 });
 
 test("spawn composition stays fixed and validates only campaign-wide spawn indices", () => {
   assert.equal(resolveMonsterArchetype(1, 0), "cave-brute");
-  assert.equal(resolveMonsterArchetype(3, 1), "dust-skitter");
-  assert.equal(resolveMonsterArchetype(5, 4), "stonehide");
-  assert.equal(resolveMonsterArchetype(5, 1), "dust-skitter");
+  assert.equal(resolveMonsterArchetype(3, 1), "cave-brute");
+  assert.equal(resolveMonsterArchetype(5, 5), "stonehide");
+  assert.equal(resolveMonsterArchetype(5, 1), "cave-brute");
   assert.throws(() => resolveMonsterArchetype(1, 30), /INVALID_MONSTER_SPAWN_INDEX/);
 });
 
