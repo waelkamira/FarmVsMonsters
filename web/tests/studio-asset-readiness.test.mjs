@@ -139,7 +139,7 @@ test("readiness validates rig profiles and blocks missing or archived bitmap par
     ],
     attachments: [{ id: "muzzle", boneId: "root", x: 10, y: 0 }],
     hitboxes: [],
-    clips: []
+    clips: [{ id: "idle", durationMs: 1000, loop: true, tracks: [] }]
   };
   const part = { id: "head-part", type: "item", status: "published", path: "/assets/parts/head.png" };
   const valid = auditStudioAssetRegistry([validPlant({ rigProfile }), validProjectile(), part]);
@@ -155,7 +155,7 @@ test("readiness blocks skeletal part frame indices outside the referenced asset"
   const rigProfile = {
     version: 1, canvas: { width: 200, height: 200 },
     bones: [{ id: "root", parentId: null }, { id: "head", parentId: "root", part: { assetId: "head-part", frame: 2 } }],
-    attachments: [{ id: "muzzle", boneId: "root", x: 10, y: 0 }], hitboxes: [], clips: []
+    attachments: [{ id: "muzzle", boneId: "root", x: 10, y: 0 }], hitboxes: [], clips: [{ id: "idle", durationMs: 1000, loop: true, tracks: [] }]
   };
   const part = { id: "head-part", type: "item", status: "published", path: "/assets/parts/head.png", frameCount: 9, rows: 1, columns: 1, spriteSheet: false };
   const report = auditStudioAssetRegistry([validPlant({ rigProfile }), validProjectile(), part]);
@@ -167,7 +167,7 @@ test("readiness blocks rigged projectile plants without a muzzle attachment", ()
   const rigProfile = {
     version: 1, canvas: { width: 200, height: 200 },
     bones: [{ id: "root", parentId: null }],
-    attachments: [], hitboxes: [], clips: []
+    attachments: [], hitboxes: [], clips: [{ id: "idle", durationMs: 1000, loop: true, tracks: [] }]
   };
   const report = auditStudioAssetRegistry([validPlant({ rigProfile }), validProjectile()]);
   assert.equal(report.blocked, 1);
@@ -178,7 +178,7 @@ test("readiness blocks a skeletal profile with no bitmap parts", () => {
   const rigProfile = {
     version: 1, canvas: { width: 200, height: 200 },
     bones: [{ id: "root", parentId: null }],
-    attachments: [], hitboxes: [], clips: []
+    attachments: [], hitboxes: [], clips: [{ id: "idle", durationMs: 1000, loop: true, tracks: [] }]
   };
   const report = auditStudioAssetRegistry([validPlant({ rigProfile }), validProjectile()]);
   assert.equal(report.blocked, 1);

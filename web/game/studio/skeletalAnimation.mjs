@@ -148,6 +148,7 @@ export function createSkeletalRigProfile(input) {
   if (!Array.isArray(clipsInput) || clipsInput.length > MAX_CLIPS) {
     throw new RangeError("A rig may contain at most " + MAX_CLIPS + " animation clips.");
   }
+  if (clipsInput.length === 0) throw new RangeError("A rig requires at least one clip.");
   const boneById = new Map(bones.map((bone) => [bone.id, bone]));
   const clipIds = new Set();
   const clips = clipsInput.map((rawEntry, clipIndex) => {
