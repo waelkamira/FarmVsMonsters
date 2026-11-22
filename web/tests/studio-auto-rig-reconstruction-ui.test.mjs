@@ -45,3 +45,10 @@ test("Studio exposes local diffusion anatomical reconstruction with a prompt and
   assert.match(panel, /seed: data\.provenance\.seed/);
   assert.match(panel, /إعادة بناء تشريحية توليدية محلية/);
 });
+
+test("Studio accepts a movement description and applies it to editable rig clips", () => {
+  assert.match(panel, /وصف الحركة المطلوبة/);
+  assert.match(panel, /parseAutoRigMotionRequest\(motionPrompt/);
+  assert.match(panel, /applyAutoRigMotionRequest\(result\.profile, result\.manifest, motionRequest\)/);
+  assert.match(panel, /!motionPrompt\.trim\(\)/);
+});
