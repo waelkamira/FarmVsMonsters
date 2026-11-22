@@ -11,6 +11,11 @@ function finite(value, field, min, max, fallback) {
   return number;
 }
 
+function requireObject(value, field) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) throw new TypeError(field + " must be an object.");
+  return value;
+}
+
 function readId(value, field) {
   if (typeof value !== "string" || !ID_PATTERN.test(value)) {
     throw new TypeError(field + " must be a stable ID (1–64 safe characters).");
@@ -72,7 +77,8 @@ export function createSkeletalRigProfile(input) {
   }
 
   const boneIds = new Set();
-  const bones = input.bones.map((entry, index) => {
+  const bones = input.bones.map((rawEntry, index) => {
+    const entry = requireObject(rawEntry, "bones[" + index + "]");
     const id = readId(entry?.id, "bones[" + index + "].id");
     if (boneIds.has(id)) throw new RangeError("Duplicate bone ID: " + id + ".");
     boneIds.add(id);
@@ -95,7 +101,8 @@ export function createSkeletalRigProfile(input) {
     throw new RangeError("A rig may contain at most 128 attachment points.");
   }
   const attachmentIds = new Set();
-  const attachments = attachmentsInput.map((entry, index) => {
+  const attachments = attachmentsInput.map((rawEntry, index) => {
+    const entry = requireObject(rawEntry, "attachments[" + index + "]");
     const id = readId(entry?.id, "attachments[" + index + "].id");
     if (attachmentIds.has(id)) throw new RangeError("Duplicate attachment ID: " + id + ".");
     attachmentIds.add(id);
@@ -109,7 +116,8 @@ export function createSkeletalRigProfile(input) {
     throw new RangeError("A rig may contain at most 128 hitboxes.");
   }
   const hitboxIds = new Set();
-  const hitboxes = hitboxesInput.map((entry, index) => {
+  const hitboxes = hitboxesInput.map((rawEntry, index) => {
+    const entry = requireObject(rawEntry, "hitboxes[" + index + "]");
     const id = readId(entry?.id, "hitboxes[" + index + "].id");
     if (hitboxIds.has(id)) throw new RangeError("Duplicate hitbox ID: " + id + ".");
     hitboxIds.add(id);
@@ -129,7 +137,8 @@ export function createSkeletalRigProfile(input) {
     throw new RangeError("A rig may contain at most " + MAX_CLIPS + " animation clips.");
   }
   const clipIds = new Set();
-  const clips = clipsInput.map((entry, clipIndex) => {
+  const clips = clipsInput.map((rawEntry, clipIndex) => {
+    const entry = requireObject(rawEntry, "clips[" + clipIndex + "]");
     const id = readId(entry?.id, "clips[" + clipIndex + "].id");
     if (clipIds.has(id)) throw new RangeError("Duplicate animation clip ID: " + id + ".");
     clipIds.add(id);
@@ -139,7 +148,8 @@ export function createSkeletalRigProfile(input) {
       throw new RangeError("Each animation clip must contain a valid track list.");
     }
     const trackIds = new Set();
-    const tracks = entry.tracks.map((track, trackIndex) => {
+    const tracks = entry.tracks.map((rawTrack, trackIndex) => {
+      const track = requireObject(rawTrack, "clips[" + clipIndex + "].tracks[" + trackIndex + "]");
       const boneId = readId(track?.boneId, "clips[" + clipIndex + "].tracks[" + trackIndex + "].boneId");
       if (!boneIds.has(boneId)) throw new RangeError("Animation track references a missing bone.");
       if (trackIds.has(boneId)) throw new RangeError("A clip may only have one track per bone.");
@@ -148,7 +158,8 @@ export function createSkeletalRigProfile(input) {
         throw new RangeError("Each animation track must contain between 1 and " + MAX_KEYS_PER_TRACK + " keyframes.");
       }
       let previousTime = -1;
-      const keyframes = track.keyframes.map((key, keyIndex) => {
+      const keyframes = track.keyframes.map((rawKey, keyIndex) => {
+        const key = requireObject(rawKey, "clips[" + clipIndex + "].tracks[" + trackIndex + "].keyframes[" + keyIndex + "]");
         const timeMs = finite(key.timeMs, "keyframe.timeMs", 0, durationMs, 0);
         if (!Number.isInteger(timeMs) || timeMs <= previousTime) {
           throw new RangeError("Keyframes must use strictly increasing integer times.");
@@ -267,4 +278,9 @@ export function getSkeletalHitboxTransform(profileInput, evaluated, hitboxId) {
     height: hitbox.height * bone.scaleY * hitbox.scaleY,
     kind: hitbox.kind
   };
+}
+
+export function validateSkeletalRigProfile(input) {
+  try { return { valid: true, profile: createSkeletalRigProfile(input), errors: [] }; }
+  catch (error) { return { valid: false, profile: null, errors: [error.message] }; }
 }
