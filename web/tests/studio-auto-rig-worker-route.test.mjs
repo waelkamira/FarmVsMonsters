@@ -28,6 +28,7 @@ test("worker bridge validates image limits, task names, and worker geometry befo
   assert.match(source, /typeof x !== "number" \|\| typeof y !== "number"/);
   assert.match(source, /!Number\.isInteger\(label\)/);
   assert.match(source, /points\.push\(\{ x, y, label \}\)/);
+  assert.match(source, /\.\.\.\(points \? \{ points \} : \{\}\)/);
   assert.match(source, /validateAutoRigWorkerResponse/);
   assert.match(source, /status: 422/);
 });
