@@ -1,7 +1,8 @@
 # AI Auto-Rig Builder — Technical Plan
 
 ## Status
-- Planning and compatibility audit.
+- Phase 0 compatibility/licensing audit documented.
+- Phase 1 deterministic Auto-Rig core started: pure profile builder and regression tests added on the feature branch; execution/build verification is still pending.
 - This work is additive to the existing Hybrid Animation Engine branch.
 - Target integration: Asset & Animation Studio in web/, existing Phaser 3 runtime.
 - No third-party editor is embedded and no paid/cloud inference API is required by the design.
@@ -123,7 +124,9 @@ Templates target semantic roles and skip absent bones. Weapon attack timing must
 - No dependency is added to the web app during this phase.
 
 ### Phase 1 — deterministic Auto-Rig core
-- Implement pure JavaScript part-manifest validation, stable role/instance IDs, geometry helpers, deterministic parent-graph generation, pivot suggestions, and rig-profile output.
+- Initial implementation added at web/game/studio/autoRigBuilder.mjs: manifest validation, stable part-instance IDs, role aliases, deterministic parent graph, source-space to crop-space pivots, local bone transforms, muzzle attachment generation, static idle profile, and occlusion/unknown-role warnings.
+- Regression coverage added at web/tests/studio-auto-rig-builder.test.mjs.
+- Remaining in this phase: execute the new tests and build in the user's Windows environment, review the generated rig visually against real plant art, then harden the contract before Studio UI integration.
 - Add regression tests for missing/duplicate parts, multi-leaf instances, unknown roles, occlusion flags, muzzle requirements, stable IDs, and invalid geometry.
 - This phase can be tested without AI models.
 
