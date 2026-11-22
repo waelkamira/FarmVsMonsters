@@ -147,7 +147,7 @@ export async function POST(req) {
     }
   }
   let reconstruction;
-  if (body.task === "visible-donor-reconstruction" || body.task === "local-texture-inpaint" || body.task === "anatomical-inpaint") {
+  if (body.task === "visible-donor-reconstruction" || body.task === "local-texture-inpaint") {
     if (!validPolygon(body.targetPolygon, width, height) || (body.task === "visible-donor-reconstruction" && !validPolygon(body.sourcePolygon, width, height))) {
       return NextResponse.json({ error: "The hidden target and any required visible donor must be valid 3–512 point source-space polygons." }, { status: 400 });
     }
@@ -188,7 +188,7 @@ export async function POST(req) {
       }
       return NextResponse.json(workerData, { headers: { "Cache-Control": "no-store" } });
     }
-    if (body.task === "visible-donor-reconstruction" || body.task === "local-texture-inpaint") {
+    if (body.task === "visible-donor-reconstruction" || body.task === "local-texture-inpaint" || body.task === "anatomical-inpaint") {
       if (!validReconstructionResponse(workerData, width, height, body.task)) {
         return NextResponse.json({ error: "Worker returned invalid reconstructed image data or geometry." }, { status: 422 });
       }
