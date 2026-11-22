@@ -54,7 +54,7 @@ test("local saves remain active and client balances are never uploaded to cloud"
   assert.match(client, /progress_verified !== true/);
   assert.match(client, /cloud-progress-unverified/);
   assert.match(client, /coins_verified === true/);
-  assert.match(client, /Do not initialize a cloud row from browser-controlled local values/);
+  assert.match(client, /never import those unverified values/);
   assert.match(client, /coins_verified === true/);
   assert.doesNotMatch(client, /saveCloudProgress/);
   assert.doesNotMatch(battle, /syncPlayerProgress/);
@@ -110,12 +110,12 @@ test("Google OAuth CSRF state is preserved in the app callback URL, not sent as 
 
 test("plant catalog includes implemented starters and a locked upcoming roster", () => {
   const catalog = readFileSync(resolve(here, "../game/data/stageOnePlants.mjs"), "utf8");
-  for (const id of ["radish", "energy-mushroom", "pea-shooter", "thorn-wall", "sunflower", "ice-bloom", "double-radish", "pumpkin-guard", "explosive-berry", "fire-pepper"]) {
+  for (const id of ["radish", "energy-mushroom", "pea-shooter", "thorn-wall", "sunflower", "ice-bloom", "double-radish", "pumpkin-guard", "explosive-berry", "snow-thrower", "pineapple", "hazelnut", "mango", "electric-mushroom"]) {
     assert.match(catalog, new RegExp('id: "' + id + '"'));
   }
   assert.match(catalog, /implemented: true/);
   assert.match(catalog, /purchasable: false/);
-  assert.match(catalog, /coinPrice: 360/);
+  assert.match(catalog, /coinPrice: 300/);
 });
 
 test("plant purchase migration uses database-owned prices and an atomic transaction", () => {
