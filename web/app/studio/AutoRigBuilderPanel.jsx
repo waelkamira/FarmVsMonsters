@@ -601,7 +601,12 @@ export default function AutoRigBuilderPanel({
       {parts.length > 0 && <div style={{ marginTop: 12 }}>
         <b>الأجزاء المحددة ({parts.length}/63)</b>
         <ul>{parts.map((part) => <li key={part.id} style={{ marginTop: 5 }}>
-          {part.name} · {part.role} · {part.bounds.width}×{part.bounds.height}
+          {part.name} · {part.bounds.width}×{part.bounds.height}
+          <label style={{ display: "inline-flex", gap: 5, marginInlineStart: 8 }}>الدور
+            <select value={part.role} disabled={disabled || busy || generated} onChange={(event) => setParts((current) => current.map((item) => item.id === part.id ? { ...item, role: event.target.value, reviewed: false } : item))}>
+              {AUTO_RIG_ROLE_OPTIONS.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
+            </select>
+          </label>
           <label style={{ display: "inline-flex", gap: 5, marginInlineStart: 8 }}>
             <input type="checkbox" checked={part.reviewed === true} disabled={disabled || busy || generated} onChange={(event) => setParts((current) => current.map((item) => item.id === part.id ? { ...item, reviewed: event.target.checked } : item))} />
             تمت مراجعة الجزء
