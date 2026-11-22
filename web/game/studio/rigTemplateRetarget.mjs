@@ -1,3 +1,5 @@
+import { AUTO_RIG_ROLE_DICTIONARY_VERSION } from "./autoRigBuilder.mjs";
+
 const MAX_PARTS = 63;
 
 function minimumCostAssignment(costs) {
@@ -71,9 +73,12 @@ function center(bounds, canvas) {
 }
 
 function normalizedPivot(part, bounds) {
-  const pivot = part.pivot && Number.isFinite(part.pivot.x) && Number.isFinite(part.pivot.y)
-    ? part.pivot
-    : { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height / 2 };
+  if (part.pivot != null && (!Number.isFinite(part.pivot.x) || !Number.isFinite(part.pivot.y) ||
+      part.pivot.x < bounds.x || part.pivot.x > bounds.x + bounds.width ||
+      part.pivot.y < bounds.y || part.pivot.y > bounds.y + bounds.height)) {
+    throw new RangeError("Template part " + part.id + " pivot must lie inside its source bounds.");
+  }
+  const pivot = part.pivot || { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height / 2 };
   return {
     x: Math.max(0, Math.min(1, (pivot.x - bounds.x) / bounds.width)),
     y: Math.max(0, Math.min(1, (pivot.y - bounds.y) / bounds.height))
@@ -87,6 +92,10 @@ function normalizedPivot(part, bounds) {
 export function suggestRigTemplateRetarget(templateManifest, targetParts, targetCanvas) {
   if (!templateManifest || typeof templateManifest !== "object" || Array.isArray(templateManifest)) {
     throw new TypeError("A saved Auto-Rig template manifest is required.");
+  }
+  if (Number(templateManifest.version) !== 1 || templateManifest.builder !== "farmvsmonsters-auto-rig" ||
+      templateManifest.roleDictionaryVersion !== AUTO_RIG_ROLE_DICTIONARY_VERSION) {
+    throw new RangeError("Template manifest version, builder, or semantic role dictionary is incompatible.");
   }
   const templateCanvas = templateManifest.canvas;
   const sourceCanvas = {
