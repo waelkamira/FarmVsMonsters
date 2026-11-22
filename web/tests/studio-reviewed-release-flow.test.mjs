@@ -45,3 +45,17 @@ test("Studio UI describes review-based publishing and links the created pull req
   assert.match(uiSource, /لا يتغير فرع اللعبة إلا بعد مراجعة Pull Request ودمجه/);
   assert.doesNotMatch(uiSource, /تم النشر مباشرة في اللعبة/);
 });
+
+test("closed unmerged release requests are reconciled before the testing-state guard", () => {
+  const requestIndex = publishSource.indexOf("if(asset.releaseRequest?.number)");
+  const stateGuardIndex = publishSource.indexOf('if(asset.status!=="testing")');
+  assert.ok(requestIndex >= 0 && stateGuardIndex > requestIndex);
+});
+
+test("local registry mutations use snapshots, expected hashes, and the atomic store", () => {
+  assert.match(apiSource, /readLocalRegistrySnapshot,writeLocalRegistryAtomically/);
+  assert.match(apiSource, /async function localRegistrySnapshot\(\)/);
+  assert.match(apiSource, /async function saveLocalRegistry\(registry,expectedSha\)/);
+  assert.match(apiSource, /saveLocalRegistry\(next,registrySha\)/);
+  assert.match(apiSource, /saveLocalRegistry\(registry,registrySha\)/);
+});
