@@ -23,7 +23,7 @@ test("worker bridge validates image limits, task names, and worker geometry befo
   assert.match(source, /MAX_REQUEST_BODY_BYTES/);
   assert.match(source, /new TextEncoder\(\)\.encode\(rawBody\)\.byteLength/);
   assert.match(source, /4096/);
-  assert.match(source, /\["part-detection", "prompted-segmentation", "visible-donor-reconstruction"\]\.includes\(body\.task\)/);
+  assert.match(source, /local-texture-inpaint/);
   assert.match(source, /body\.points\.length > 32/);
   assert.match(source, /typeof x !== "number" \|\| typeof y !== "number"/);
   assert.match(source, /!Number\.isInteger\(label\)/);
@@ -43,4 +43,10 @@ test("worker bridge validates donor and target polygons and reviewable reconstru
   assert.match(source, /function validReconstructionResponse/);
   assert.match(source, /reviewRequired === true/);
   assert.match(source, /status: 422/);
+});
+
+test("worker bridge accepts only bounded target polygons for local texture inpainting", () => {
+  assert.match(source, /body\.task === "local-texture-inpaint"/);
+  assert.match(source, /inpaintRadius/);
+  assert.match(source, /opencv-telea-inpaint/);
 });
