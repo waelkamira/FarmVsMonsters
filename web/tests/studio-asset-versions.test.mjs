@@ -164,3 +164,18 @@ test("clones, snapshots, and restores the Auto-Rig authoring manifest independen
   restored.rigBuildManifest.source.sha256 = "c".repeat(64);
   assert.equal(edited.versions[0].rigBuildManifest.source.sha256, "a".repeat(64));
 });
+
+test("clones and restores Phaser Atlas metadata without sharing mutable frame lists", () => {
+  const atlas = { jsonPath: "/assets/plants/hero-atlas-a.json", frameCount: 24, frameNames: ["idle_00", "attack_00"], clips: { idle: ["idle_00"], attack: ["attack_00"] } };
+  const source = { id: "hero", type: "plant", path: "/assets/plants/hero-a.png", atlas, revision: 1 };
+  const clone = cloneStudioAsset(source, "hero-copy");
+  assert.deepEqual(clone.atlas, atlas);
+  assert.notEqual(clone.atlas, atlas);
+  assert.notEqual(clone.atlas.frameNames, atlas.frameNames);
+  const edited = createStudioAssetRevision(source, { ...source, atlas: { ...atlas, jsonPath: "/assets/plants/hero-atlas-b.json" } });
+  assert.deepEqual(edited.versions[0].atlas, atlas);
+  const restored = restoreStudioAssetRevision(edited, 1);
+  assert.deepEqual(restored.atlas, atlas);
+  restored.atlas.frameNames.push("corrupted");
+  assert.deepEqual(edited.versions[0].atlas.frameNames, ["idle_00", "attack_00"]);
+});
