@@ -38,3 +38,70 @@ export function circleIntersectsOrientedRectangle(circle, rectangle) {
   const nearestY = Math.max(-rect.height / 2, Math.min(rect.height / 2, localY));
   return Math.hypot(localX - nearestX, localY - nearestY) <= radius;
 }
+
+function readPolygon(value) {
+  const points = Array.isArray(value?.points) ? value.points : value;
+  if (!Array.isArray(points) || points.length < 3) throw new TypeError("A collision polygon requires at least three points.");
+  const normalized = points.map((point) => ({ x: Number(point?.x), y: Number(point?.y) }));
+  if (normalized.some((point) => !Number.isFinite(point.x) || !Number.isFinite(point.y))) {
+    throw new TypeError("Collision polygon points must have finite coordinates.");
+  }
+  return normalized;
+}
+
+function polygonAxes(points) {
+  return points.map((point, index) => {
+    const next = points[(index + 1) % points.length];
+    const dx = next.x - point.x, dy = next.y - point.y;
+    const length = Math.hypot(dx, dy);
+    if (length <= 1e-9) throw new TypeError("Collision polygons cannot contain zero-length edges.");
+    return { x: -dy / length, y: dx / length };
+  });
+}
+
+export function convexPolygonsOverlap(first, second) {
+  const a = readPolygon(first), b = readPolygon(second);
+  for (const axis of [...polygonAxes(a), ...polygonAxes(b)]) {
+    const project = (points) => {
+      let min = Infinity, max = -Infinity;
+      for (const point of points) {
+        const value = point.x * axis.x + point.y * axis.y;
+        min = Math.min(min, value);
+        max = Math.max(max, value);
+      }
+      return { min, max };
+    };
+    const rangeA = project(a), rangeB = project(b);
+    if (rangeA.max < rangeB.min || rangeB.max < rangeA.min) return false;
+  }
+  return true;
+}
+
+export function circleIntersectsConvexPolygon(circle, polygon) {
+  const x = Number(circle?.x), y = Number(circle?.y), radius = Number(circle?.radius);
+  if (![x, y, radius].every(Number.isFinite) || radius < 0) {
+    throw new TypeError("A collision circle requires finite coordinates and a non-negative radius.");
+  }
+  const points = readPolygon(polygon);
+  let inside = true;
+  let sign = 0;
+  for (let index = 0; index < points.length; index += 1) {
+    const a = points[index], b = points[(index + 1) % points.length];
+    const cross = (b.x - a.x) * (y - a.y) - (b.y - a.y) * (x - a.x);
+    if (Math.abs(cross) > 1e-9) {
+      const nextSign = Math.sign(cross);
+      if (sign && nextSign !== sign) inside = false;
+      sign = nextSign;
+    }
+  }
+  if (inside) return true;
+  for (let index = 0; index < points.length; index += 1) {
+    const a = points[index], b = points[(index + 1) % points.length];
+    const dx = b.x - a.x, dy = b.y - a.y;
+    const lengthSquared = dx * dx + dy * dy;
+    const amount = lengthSquared ? Math.max(0, Math.min(1, ((x - a.x) * dx + (y - a.y) * dy) / lengthSquared)) : 0;
+    const nearestX = a.x + amount * dx, nearestY = a.y + amount * dy;
+    if (Math.hypot(x - nearestX, y - nearestY) <= radius) return true;
+  }
+  return false;
+}
