@@ -3133,7 +3133,14 @@ export default class BattleScene extends Scene {
       }
     });
     rig._animationEvent = event;
-    rig.root.once("destroy", () => { event.remove(); rig._activeClipId = null; });
+    if (!rig._destroyListenerRegistered) {
+      rig._destroyListenerRegistered = true;
+      rig.root.once("destroy", () => {
+        rig._animationEvent?.remove?.();
+        rig._animationEvent = null;
+        rig._activeClipId = null;
+      });
+    }
     return true;
   }
 
