@@ -3125,22 +3125,41 @@ export default class BattleScene extends Scene {
       ? this.laneYs[rowIndex + 1] - this.laneYs[rowIndex]
       : this.laneYs[rowIndex] - this.laneYs[rowIndex - 1];
     const perspective = PhaserMath.Clamp(laneGap / 54, 0.62, 1.08);
-    if (this.textures.exists(textureKey)) {
-      const sheet = Boolean(studioPlant.spriteSheet);
-      const frame = this.textures.getFrame(textureKey, sheet ? "0" : undefined);
+    if (studioPlant.rigProfile || this.textures.exists(textureKey)) {
       const sizeFactor = PhaserMath.Clamp((Number(studioPlant.combat?.sizePercent) || 100) / 100, 0.25, 2);
       const height = 88 * perspective * sizeFactor;
-      const width = Math.min(height * (frame.realWidth / frame.realHeight), 100 * perspective * sizeFactor);
-      const idleFrame = String(studioPlant.animationProfile?.idle?.startFrame ?? 0);
-      const artwork = sheet
-        ? this.add.sprite(0, -height / 2 + 2, textureKey, idleFrame).setDisplaySize(width, height)
-        : this.add.image(0, -height / 2 + 2, textureKey).setDisplaySize(width, height);
-      artwork.setData("studioPlantSprite", true);
-      if (sheet) {
-        const idleAnimationKey = "studio-" + studioPlant.id + "-idle";
-        if (this.anims.exists(idleAnimationKey)) artwork.play(idleAnimationKey);
+      let rigRendered = false;
+      if (studioPlant.rigProfile && studioPlant.rigPartTextures) {
+        try {
+          const rig = createPhaserSkeletalRig(this, studioPlant.rigProfile, studioPlant.rigPartTextures);
+          const canvas = rig.profile.canvas;
+          const width = Math.min(height * (canvas.width / canvas.height), 100 * perspective * sizeFactor);
+          rig.root.setPosition(-canvas.width / 2, -canvas.height / 2 - height / 2 + 2);
+          rig.root.setScale(width / canvas.width, height / canvas.height);
+          container.add(rig.root);
+          container.setData("studioSkeletalRig", rig);
+          const idleClip = rig.profile.clips.find((entry) => entry.id === "idle") || rig.profile.clips[0];
+          if (idleClip) this.playStudioSkeletalRig(rig, idleClip.id);
+          rigRendered = true;
+        } catch (error) {
+          console.warn("Studio plant skeletal rig unavailable; preserving Sprite Sheet fallback:", studioPlant.id, error);
+        }
       }
-      container.add(artwork);
+      if (!rigRendered && this.textures.exists(textureKey)) {
+        const sheet = Boolean(studioPlant.spriteSheet);
+        const frame = this.textures.getFrame(textureKey, sheet ? "0" : undefined);
+        const width = Math.min(height * (frame.realWidth / frame.realHeight), 100 * perspective * sizeFactor);
+        const idleFrame = String(studioPlant.animationProfile?.idle?.startFrame ?? 0);
+        const artwork = sheet
+          ? this.add.sprite(0, -height / 2 + 2, textureKey, idleFrame).setDisplaySize(width, height)
+          : this.add.image(0, -height / 2 + 2, textureKey).setDisplaySize(width, height);
+        artwork.setData("studioPlantSprite", true);
+        if (sheet) {
+          const idleAnimationKey = "studio-" + studioPlant.id + "-idle";
+          if (this.anims.exists(idleAnimationKey)) artwork.play(idleAnimationKey);
+        }
+        container.add(artwork);
+      }
     }
     container.setData("studioPlantId", studioPlant.id);
     container.setData("studioBehavior", studioPlant.combat.mode);
