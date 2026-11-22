@@ -255,3 +255,12 @@ The Auto-Rig Builder is a permanent first-class Studio subsystem composed of the
 - Added focused route-contract tests and included the route and tests in Auto-Rig CI and ESLint.
 - Runtime configuration: optional `STUDIO_LOCAL_AI_WORKER_URL=http://127.0.0.1:8765`. Without a worker process, the health route intentionally reports offline/not configured; the bridge does not fabricate AI results.
 - Remaining: implement and package the actual local worker process and its model adapters; wire worker status and approved proposals into the Auto-Rig UI; add real plant/monster image fixtures and end-to-end validation.
+
+
+## 2026-11-22 — First local SAM 2 worker adapter
+- Added `web/local-ai-worker/worker.py`, a Python HTTP service bound exclusively to `127.0.0.1`. It exposes capability discovery and a SAM 2 automatic-mask generation endpoint matching the version-1 Studio worker protocol.
+- The worker requires locally installed PyTorch, the official SAM 2 package, a config, and a checkpoint path. It does not download model weights, call cloud inference, or expose a LAN listener.
+- Automatic masks are converted to simplified source-coordinate polygons and returned as reviewable proposals with bounds, confidence, and SAM 2/source-pixel provenance.
+- The Studio UI now requests the implemented `part-detection` capability instead of claiming text-prompted segmentation. Health status distinguishes ready from degraded worker state.
+- Added worker setup documentation and Python contract tests; CI now has a separate Python job to install image dependencies, compile the worker, and run its tests.
+- This is the first actual model adapter, not the completed AI feature set. Semantic plant/monster role classification, true prompt-conditioned segmentation, overlap/occlusion resolution, hidden-part reconstruction, and local Windows hardware validation remain outstanding. The worker cannot report ready until the user-side machine has SAM 2 and a checkpoint installed.
