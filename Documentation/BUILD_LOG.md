@@ -1112,3 +1112,5 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - Corrected muzzle attachment conversion to full plant-view world space, including parent position, scale, and rotation, before projectile launch coordinates are calculated.
 
 - Added `skeletalWorldTransform.mjs` and unit tests for parent translation, non-uniform scaling, rotation, defaults, and invalid transform values; BattleScene now shares this helper for muzzle and hitbox world coordinates.
+
+- Improved collision geometry for non-uniformly scaled characters: rig hitboxes are now transformed corner-by-corner into convex polygons and tested with SAT; projectile circles use polygon edge-distance tests instead of approximating a skewed shape as an oriented rectangle.
