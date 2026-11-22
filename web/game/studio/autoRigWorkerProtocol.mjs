@@ -1,6 +1,6 @@
 export const AUTO_RIG_WORKER_PROTOCOL_VERSION = 1;
 
-const CAPABILITIES = ["part-detection", "prompted-segmentation", "visible-donor-reconstruction"];
+const CAPABILITIES = ["part-detection", "prompted-segmentation", "visible-donor-reconstruction", "local-texture-inpaint"];
 
 function finite(value) {
   return typeof value === "number" && Number.isFinite(value);
