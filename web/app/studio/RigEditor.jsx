@@ -283,6 +283,7 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
     if (!canvas) return;
     const context = canvas.getContext("2d");
     const width = rig.canvas.width, height = rig.canvas.height;
+    context.setTransform(1, 0, 0, 1, 0, 0);
     context.clearRect(0, 0, canvas.width, canvas.height);
     context.fillStyle = "#111a11";
     context.fillRect(0, 0, canvas.width, canvas.height);
