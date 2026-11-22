@@ -59,9 +59,10 @@
 - Dependency-aware archive/replace/restore.
 - Optimistic concurrency on every mutation path.
 - Complete release package and dependency closure.
-- Review/approval workflow; immutable published revisions.
+- Replace the current direct-to-target-branch publish implementation with a staged release branch and PR review/approval workflow; immutable published revisions.
 - Atomic activation or equivalent single-pointer release; failed release must not change active content.
 - Rollback and reconciliation of PR state.
+- **Current blocker:** the inspected mainline PATCH publish route writes assets and catalog directly to the configured target branch (default `main`) and only then syncs registry state. It does not create a PR and can leave catalog/registry inconsistent. Phase 1 cannot close until this is replaced and verified.
 
 ### D. Quality foundation
 - Unit, API, integration, browser and live gameplay tests separated.
