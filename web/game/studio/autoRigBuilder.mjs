@@ -306,9 +306,12 @@ export function validateAutoRigBuildManifest(input, profileInput) {
     if (!input.source || Number(input.source.width) !== profile.canvas.width || Number(input.source.height) !== profile.canvas.height) {
       throw new RangeError("Auto-Rig source dimensions do not match the generated canvas.");
     }
+    if (input.source.assetId != null) readId(input.source.assetId, "manifest.source.assetId");
     if (input.source.sha256 != null && !/^[a-f0-9]{64}$/i.test(String(input.source.sha256))) {
       throw new TypeError("Auto-Rig source hash is invalid.");
     }
+    const sourceFrame = Number(input.source.frame ?? 0);
+    if (!Number.isInteger(sourceFrame) || sourceFrame < 0 || sourceFrame > 10000) throw new RangeError("Auto-Rig source frame is invalid.");
     if (!Array.isArray(input.parts) || input.parts.length < 1 || input.parts.length > 63) {
       throw new RangeError("Auto-Rig manifest must contain between 1 and 63 parts.");
     }
@@ -327,11 +330,7 @@ export function validateAutoRigBuildManifest(input, profileInput) {
         visited.add(parentId);
         parentId = byId.get(parentId)?.parentPartId || null;
       }
-      const bone = profile.bones.find((entry) => entry.id === "part-" + part.id);
-      if (!bone || bone.part?.assetId !== part.assetId) throw new RangeError("Manifest part " + part.id + " does not match a skeletal profile part bone.");
     }
-    const partBones = profile.bones.filter((bone) => bone.part);
-    if (partBones.length !== parts.length) throw new RangeError("Skeletal profile and Auto-Rig manifest contain different part counts.");
     return { valid: true, manifest: input, profile, errors: [] };
   } catch (error) {
     return { valid: false, manifest: null, profile: null, errors: [error.message] };
