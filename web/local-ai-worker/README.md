@@ -7,12 +7,13 @@ This optional inference process runs on the developer's machine and binds only t
 - Automatic SAM 2 mask proposals for visible image regions.
 - Positive/negative point-prompted segmentation with up to three alternative masks.
 - Local CLIP zero-shot visual role suggestions for SAM 2 crops (plant and monster taxonomies). Suggestions include top-class score and top-two margin; uncertain crops remain `unknown`, and no suggestion approves a rig part.
+- Optional local diffusion inpainting for author-marked hidden anatomical regions. It returns only a transparent target patch and records model, prompt, seed and review-required provenance.
 - Author-guided visible-donor pixel transfer: copy a manually selected visible source polygon into a manually marked hidden target polygon, optionally mirrored, producing a transparent PNG patch with explicit reconstruction provenance.
 - Local texture inpainting: apply OpenCV Telea inpainting only inside a manually marked target polygon and return a transparent patch. This fills local texture gaps from neighboring pixels; it does not infer anatomy or semantic structure.
 - Source-coordinate polygon masks, confidence values, and source-pixel provenance.
 - Transparent PNG input is composited onto white for inference and every predicted mask is clipped to non-transparent source pixels; the original source bytes are never changed.
 
-**Important:** SAM 2 returns geometric regions, not semantic labels. The new CLIP classifier compares masked image crops with a fixed plant/monster role vocabulary using a local model. It is a genuine image-text visual model, but it is zero-shot rather than fine-tuned on FarmVsMonsters artwork; softmax values are not calibrated probabilities. Low-margin results remain unknown. Human review remains mandatory. Generative anatomical completion is still not implemented by donor transfer or Telea; those remain deterministic pixel-copy and classical texture-fill aids only.
+**Important:** SAM 2 returns geometric regions, not semantic labels. The new CLIP classifier compares masked image crops with a fixed plant/monster role vocabulary using a local model. It is a genuine image-text visual model, but it is zero-shot rather than fine-tuned on FarmVsMonsters artwork; softmax values are not calibrated probabilities. Low-margin results remain unknown. Human review remains mandatory. The diffusion option is a general-purpose local inpainting model, not a FarmVsMonsters-fine-tuned anatomy model; it can hallucinate incorrect anatomy and every output must be inspected. Donor transfer and Telea remain deterministic pixel-copy and classical texture-fill aids only.
 
 ## Windows setup (recommended: WSL 2 + Ubuntu)
 
@@ -47,13 +48,22 @@ Meta's official SAM 2 installation guidance recommends WSL with Ubuntu when inst
 
    The model is loaded with `local_files_only=True`; if the directory is missing or incomplete, visual classification reports an explicit error. The OpenAI CLIP model card/license and files should be checked before redistribution. Model files are not committed to this repository.
 
-7. Start the worker:
+7. Optional: download a compatible Stable Diffusion inpainting checkpoint into a local directory (the worker never downloads weights). For example:
+
+   ```bash
+   hf download runwayml/stable-diffusion-inpainting --local-dir "$HOME/models/stable-diffusion-inpainting"
+   export FVM_INPAINT_MODEL_DIR="$HOME/models/stable-diffusion-inpainting"
+   ```
+
+   This checkpoint is governed by its own model card and CreativeML OpenRAIL terms. Review those terms before use or redistribution. The model is loaded with `local_files_only=True`; missing files produce an explicit unavailable capability. CPU inference is supported but may be slow. The output is a proposal, not a guaranteed anatomically correct reconstruction.
+
+8. Start the worker:
 
    ```bash
    bash start-worker-wsl.sh
    ```
 
-8. With the worker running, execute the local synthetic-image inference check:
+9. With the worker running, execute the local synthetic-image inference check:
 
    ```bash
    python smoke_test.py
@@ -61,7 +71,7 @@ Meta's official SAM 2 installation guidance recommends WSL with Ubuntu when inst
 
    This verifies both automatic and point-prompted SAM 2 inference against a generated test plant image. It does not replace validation with the actual FarmVsMonsters plant and monster artwork.
 
-9. In the Windows environment running the Studio Next.js app, set:
+10. In the Windows environment running the Studio Next.js app, set:
 
    ```env
    STUDIO_LOCAL_AI_WORKER_URL=http://127.0.0.1:8765
@@ -102,6 +112,6 @@ $env:FVM_AI_WORKER_PORT="8765"
 | OpenCV Telea local texture inpainting | Implemented for small surrounding-texture gaps; requires review |
 | Editable polygon proposals in Studio | Implemented |
 | Local CLIP zero-shot visual role suggestions | Implemented; must be run with local model files and reviewed; not FarmVsMonsters-fine-tuned |
-| Generative anatomical hidden-part reconstruction | Not implemented; donor transfer and Telea are not substitutes |
+| Local diffusion anatomical-region proposal | Implemented as general-purpose inpainting; not anatomy-fine-tuned; requires local checkpoint and human review |
 | Rig generation, pivots, starter clips, muzzle authoring | Implemented in Studio deterministic core |
 | Publish-time quality gate | Implemented; requires all author review checks |
