@@ -434,3 +434,14 @@ The Auto-Rig Builder is a permanent first-class Studio subsystem composed of the
 - Suggestions remain deliberately conservative (confidence below 0.7), do not mark parts as reviewed, do not approve masks, and never bypass the author’s role selection/review gate. Ambiguous shapes fall back to accessory with a low confidence.
 - Added focused tests for plant body/leaf suggestions, monster head/arm suggestions, and invalid geometry. Added the new test and module to Auto-Rig CI and ESLint.
 - This is a heuristic assist, not a trained visual classifier. Pixel-aware plant/monster classification remains a later model-backed milestone; hidden-pixel reconstruction is still not implemented.
+
+
+## 2026-11-22 — Author-guided visible-donor reconstruction (first reconstruction path)
+A first usable reconstruction workflow is now implemented as deterministic visible-pixel transfer:
+1. The author marks the hidden target polygon in source coordinates.
+2. The author marks a visible donor polygon (for example, the opposite leaf or arm).
+3. The loopback worker clips the donor to visible source pixels, optionally mirrors it, resizes the donor crop to the target bounds, and returns a transparent PNG patch.
+4. Studio composites the patch into the extracted part PNG, expands part bounds to include the target, and stores donor/target polygons, bounds, transform choice, and method in the versioned manifest.
+5. Pixel review is a separate explicit approval from the overall part review. The quality gate allows reconstructed pixels only after both reviews and resolved occlusion.
+
+**Capability boundary:** this is an author-guided symmetry/texture-copy operation, not generative inpainting. It works best when a genuinely corresponding visible region exists; it cannot invent an unseen leaf, limb, or anatomy from context. A future local generative inpainting model remains a separate requirement and must have explicit model/checkpoint provenance and the same fail-closed review gate. The worker advertises `visible-donor-reconstruction`, never `hidden-part-reconstruction`.
