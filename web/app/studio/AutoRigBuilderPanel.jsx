@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AUTO_RIG_ROLE_OPTIONS, analyzeAutoRigQuality, buildAutoRigFromParts } from "../../game/studio/autoRigBuilder.mjs";
+import { AUTO_RIG_ROLE_OPTIONS, analyzeAutoRigQuality, buildAutoRigFromParts, moveAutoRigPolygonVertex } from "../../game/studio/autoRigBuilder.mjs";
 
 function slug(value) {
   return String(value || "character").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "character";
@@ -286,16 +286,14 @@ export default function AutoRigBuilderPanel({
     const drag = draggingVertex.current;
     if (!drag || drag.pointerId !== event.pointerId || disabled || busy || generated) return;
     const point = canvasPoint(event);
-    setParts((current) => current.map((part) => part.id !== drag.partId ? part : {
-      ...part,
-      points: part.points.map((vertex, index) => index === drag.index ? {
-        x: Math.max(0, Math.min(image.width, point.x)),
-        y: Math.max(0, Math.min(image.height, point.y))
-      } : vertex),
-      bounds: polygonBounds(part.points.map((vertex, index) => index === drag.index ? {
-        x: Math.max(0, Math.min(image.width, point.x)),
-        y: Math.max(0, Math.min(image.height, point.y))
-      } : vertex))
+    setParts((current) => current.map((part) => {
+      if (part.id !== drag.partId) return part;
+      try {
+        const nextPoints = moveAutoRigPolygonVertex(part.points, drag.index, point, { width: image.width, height: image.height });
+        return { ...part, points: nextPoints, bounds: polygonBounds(nextPoints) };
+      } catch {
+        return part;
+      }
     }));
   }
 
