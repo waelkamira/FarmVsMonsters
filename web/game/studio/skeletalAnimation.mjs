@@ -136,6 +136,7 @@ export function createSkeletalRigProfile(input) {
   if (!Array.isArray(clipsInput) || clipsInput.length > MAX_CLIPS) {
     throw new RangeError("A rig may contain at most " + MAX_CLIPS + " animation clips.");
   }
+  const boneById = new Map(bones.map((bone) => [bone.id, bone]));
   const clipIds = new Set();
   const clips = clipsInput.map((rawEntry, clipIndex) => {
     const entry = requireObject(rawEntry, "clips[" + clipIndex + "]");
@@ -157,6 +158,7 @@ export function createSkeletalRigProfile(input) {
       if (!Array.isArray(track.keyframes) || track.keyframes.length < 1 || track.keyframes.length > MAX_KEYS_PER_TRACK) {
         throw new RangeError("Each animation track must contain between 1 and " + MAX_KEYS_PER_TRACK + " keyframes.");
       }
+      const boneBase = boneById.get(boneId);
       let previousTime = -1;
       const keyframes = track.keyframes.map((rawKey, keyIndex) => {
         const key = requireObject(rawKey, "clips[" + clipIndex + "].tracks[" + trackIndex + "].keyframes[" + keyIndex + "]");
@@ -165,7 +167,7 @@ export function createSkeletalRigProfile(input) {
           throw new RangeError("Keyframes must use strictly increasing integer times.");
         }
         previousTime = timeMs;
-        return { timeMs, ...readTransform(key, "keyframe") };
+        return { timeMs, ...readTransform(key, "keyframe", boneBase) };
       });
       return { boneId, keyframes };
     });
