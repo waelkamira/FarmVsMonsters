@@ -1540,3 +1540,13 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - CI on PR #89 head `351273a770696d997d80ccd41513ce31a91e67f1`: Auto-Rig subsystem validation passed (75/75 Node tests, 23/23 Python tests, focused lint, full-project lint diagnostics, production build, and WSL launcher syntax).
 - Broad Studio/Game and Web quality workflows still fail: 393/446 tests pass and 53 fail. The failures are in Phase 1 gameplay and legacy Studio contracts; they remain blockers and have not been waived.
 - Still pending: actual SAM 2 checkpoint inference on the target Windows/WSL machine, real plant/monster artwork acceptance, and BattleScene runtime acceptance. No model-backed semantic classifier or generative anatomical reconstruction is claimed.
+
+## 2026-11-22 — Auto-Rig production completion continuation
+
+- Added local CLIP zero-shot semantic classification for plant/monster region crops and switched the primary Studio role-suggestion button to the visual model. Low-confidence/margin results remain unassigned; no auto-approval.
+- Expanded Auto-Rig semantic role dictionary to cover plant roots/flowers/fruit and monster legs/feet. Bumped dictionary version to 1.1.0 and preserved compatibility with 1.0.0 Rig Library templates.
+- Added local diffusion inpainting for explicitly marked hidden anatomical regions. The output is a transparent target-only patch with model, prompt, seed, and review-required provenance. This is general-purpose inpainting, not an anatomy-fine-tuned model.
+- Added real repository asset smoke harness for Hazelnut Level 1 and Hyena idle; it requires local SAM 2 and CLIP checkpoints and has not yet been run on the user's Windows/WSL2 workstation.
+- Added tests for the classifier, generative reconstruction, API/UI/manifest contracts, and Phaser skeletal rig pose/attachment/hitbox/projectile-circle transforms.
+- CI baseline comparison from the last completed full-suite run: PR head had 53 failures vs 55 on main, with no new failing test names; two inherited source-contract tests already pass on the PR head. This is not a green full-suite result. Latest focused workflows are still running.
+- Remaining acceptance gates: target-machine checkpoint execution; visual inspection of real plant/monster outputs; real BattleScene gameplay with rigged plant and monster; full-suite baseline debt remediation; and no merge until all acceptance gates pass.
