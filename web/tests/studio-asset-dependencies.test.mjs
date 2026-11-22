@@ -171,3 +171,11 @@ test("Studio API validates skeletal part frame indices at save and release time"
   assert.match(routeSource, /partFrameCount/);
   assert.match(routeSource, /invalidRigFrame/);
 });
+
+test("BattleScene loads rig bitmap parts and uses skeletal plant and monster renderers", () => {
+  assert.match(battleSceneSource, /createPhaserSkeletalRig/);
+  assert.match(battleSceneSource, /studio-rig-part-/);
+  assert.match(battleSceneSource, /studioPlant\.rigProfile/);
+  assert.match(battleSceneSource, /studioMonster\?\.rigProfile/);
+  assert.match(battleSceneSource, /preserving Sprite Sheet fallback/);
+});
