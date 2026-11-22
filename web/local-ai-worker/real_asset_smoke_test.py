@@ -15,14 +15,17 @@ from worker import decode_image_data, detect_parts
 from visual_semantic_classifier import classify_regions
 
 
-def load_frame(path, columns=1, rows=1, frame_index=0):
+def load_frame(path, columns=1, rows=1, frame_index=0, frame_width=None, frame_height=None):
     image = cv2.imread(str(path), cv2.IMREAD_UNCHANGED)
     if image is None:
         raise RuntimeError("Could not read real game asset: " + str(path))
     height, width = image.shape[:2]
+    if frame_width and frame_height:
+        columns, rows = width // frame_width, height // frame_height
+    else:
+        frame_width, frame_height = width // columns, height // rows
     if columns < 1 or rows < 1 or frame_index < 0 or frame_index >= columns * rows:
         raise ValueError("Invalid sprite-sheet grid or frame index.")
-    frame_width, frame_height = width // columns, height // rows
     col, row = frame_index % columns, frame_index // columns
     frame = image[row * frame_height:(row + 1) * frame_height, col * frame_width:(col + 1) * frame_width]
     ok, encoded = cv2.imencode(".png", frame)
@@ -31,8 +34,8 @@ def load_frame(path, columns=1, rows=1, frame_index=0):
     return frame, "data:image/png;base64," + base64.b64encode(encoded.tobytes()).decode("ascii")
 
 
-def run_asset(path, character_type, columns, rows, frame_index):
-    frame, data_url = load_frame(path, columns, rows, frame_index)
+def run_asset(path, character_type, columns, rows, frame_index, frame_width=None, frame_height=None):
+    frame, data_url = load_frame(path, columns, rows, frame_index, frame_width, frame_height)
     height, width = frame.shape[:2]
     payload = {
         "canvas": {"width": width, "height": height},
@@ -64,14 +67,18 @@ def main():
     parser.add_argument("--plant", default="../public/assets/plants/hazelnut-level-1.png")
     parser.add_argument("--plant-columns", type=int, default=3)
     parser.add_argument("--plant-rows", type=int, default=3)
+    parser.add_argument("--plant-frame-width", type=int, default=341)
+    parser.add_argument("--plant-frame-height", type=int, default=341)
     parser.add_argument("--plant-frame", type=int, default=0)
     parser.add_argument("--monster", default="../public/assets/characters/monsters/hyena/hyena-idle.png")
     parser.add_argument("--monster-columns", type=int, default=1)
     parser.add_argument("--monster-rows", type=int, default=1)
+    parser.add_argument("--monster-frame-width", type=int, default=360)
+    parser.add_argument("--monster-frame-height", type=int, default=298)
     parser.add_argument("--monster-frame", type=int, default=0)
     args = parser.parse_args()
-    plant = run_asset(Path(args.plant), "plant", args.plant_columns, args.plant_rows, args.plant_frame)
-    monster = run_asset(Path(args.monster), "monster", args.monster_columns, args.monster_rows, args.monster_frame)
+    plant = run_asset(Path(args.plant), "plant", args.plant_columns, args.plant_rows, args.plant_frame, args.plant_frame_width, args.plant_frame_height)
+    monster = run_asset(Path(args.monster), "monster", args.monster_columns, args.monster_rows, args.monster_frame, args.monster_frame_width, args.monster_frame_height)
     print(json.dumps({"status": "passed", "assets": [plant, monster]}, ensure_ascii=False, indent=2))
 
 
