@@ -137,7 +137,7 @@ test("readiness validates rig profiles and blocks missing or archived bitmap par
       { id: "root", parentId: null },
       { id: "head", parentId: "root", part: { assetId: "head-part", frame: 0 } }
     ],
-    attachments: [],
+    attachments: [{ id: "muzzle", boneId: "root", x: 10, y: 0 }],
     hitboxes: [],
     clips: []
   };
