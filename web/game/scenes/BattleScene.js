@@ -2929,7 +2929,7 @@ export default class BattleScene extends Scene {
   plantSelected(col, row, type, returnPosition = null) {
     if (this.gameOver) return;
     const studioPlant = this.studioPlantsByType?.[type] || null;
-    if (!["radish", "mushroom", "pumpkin", "pineapple", "hazelnut", "mango", "snow-thrower", "electric-mushroom"].includes(type) && !studioPlant) return;
+    if (!["radish", "mushroom", "pumpkin", "pineapple", "hazelnut", "mango", "snow-thrower", "electric-mushroom", "corn-monster"].includes(type) && !studioPlant) return;
     if (!PLAYTEST_ALL_PLANTS && !studioPlant && !loadUnlockedPlantIds(window.localStorage).includes(type)) {
       this.setMessage("This plant is locked. Complete its campaign stage to unlock it.");
       return;
