@@ -177,17 +177,17 @@ export default function AutoRigBuilderPanel({
         credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          task: "prompted-segmentation",
+          task: "part-detection",
           canvas: { width: sourceCanvas.width, height: sourceCanvas.height },
           imageDataUrl: sourceCanvas.toDataURL("image/png"),
-          prompt: "Segment the visible character into independently movable semantic parts. Return editable source-coordinate polygon masks."
+          prompt: "Detect visible regions of the character and return editable source-coordinate polygon masks."
         })
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "تعذر تنفيذ التقسيم الذكي.");
       setAiProposals(data.proposals || []);
       setAiStatus("connected");
-      setMessage("اقترح المحرك " + (data.proposals || []).length + " جزءاً. راجع كل قناع واعتمده يدوياً قبل إنشاء الهيكل.");
+      setMessage("اكتشف المحرك " + (data.proposals || []).length + " جزءاً. راجع كل قناع واعتمده يدوياً قبل إنشاء الهيكل.");
     } catch (error) {
       setAiStatus("offline");
       setMessage(error.message);
@@ -381,7 +381,7 @@ export default function AutoRigBuilderPanel({
       <p>هذه مرحلة التفكيك الموجّه: ابدأ بالأجزاء الخلفية ثم الأمامية، وانقر حول كل جزء لرسم قناعه، ثم اختر دوره. سيُحفظ كل جزء كصورة PNG شفافة مستقلة، وتُقترح نقاط الدوران تلقائياً عند أقرب حدود اتصال مع الجزء الأب، ويمكن تعديلها لاحقاً في محرر الهيكل. كما تُنشأ مقاطع حركة ابتدائية للخمول والحركة والهجوم والإصابة والموت، وكلها قابلة للتعديل. عند استخدام Sprite Sheet تتم معالجة أول إطار فقط كصورة مرجعية. إذا كانت النبتة تطلق قذيفة، حدّد مصدر الإطلاق ونقطة muzzle هنا؛ أما بقية تفاصيل الارتباط فيمكن تعديلها لاحقاً في محرر الهيكل. لا يوجد استدلال AI تلقائي في هذه المرحلة بعد.</p>
       <div className="studio-actions" style={{ display: "flex", flexWrap: "wrap", gap: 8, margin: "10px 0" }}>
         <button type="button" disabled={disabled || aiBusy} onClick={checkAIWorker}>{aiBusy ? "جارٍ الاتصال..." : "فحص محرك AI المحلي"}</button>
-        <button type="button" disabled={disabled || aiBusy || generated || !image} onClick={requestAISegmentation}>{aiBusy ? "جارٍ تحليل الصورة..." : "اقتراح الأجزاء بالذكاء الاصطناعي"}</button>
+        <button type="button" disabled={disabled || aiBusy || generated || !image} onClick={requestAISegmentation}>{aiBusy ? "جارٍ تحليل الصورة..." : "اكتشاف الأجزاء وتقسيمها تلقائياً"}</button>
         <span className="studio-message" role="status">حالة المحرك: {aiStatus === "connected" ? "متصل" : aiStatus === "offline" ? "غير متصل" : aiStatus === "not-configured" ? "غير مهيأ" : "لم يُفحص"}</span>
       </div>
       {aiProposals.length > 0 && <div style={{ margin: "12px 0", padding: 12, border: "1px solid #d8dce5", borderRadius: 10 }}>
