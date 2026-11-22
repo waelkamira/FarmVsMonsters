@@ -114,6 +114,7 @@ The editor is a mode switch inside Asset & Animation Studio:
 - [x] Add explicit priority guards: death cannot be interrupted, frozen state survives stacked freeze hits and ordinary reactions, and attack/hit cannot be reset by idle/movement updates.
 - [x] Add integer frame snapping so timeline edits and drag operations always save validator-compatible keyframe timestamps.
 - [x] Extract oriented-rectangle and projectile-circle collision math into a pure module with unit tests for overlap, separation, rotation, tangency, and invalid geometry.
+- [x] Resolve projectile muzzle points through the complete plant container transform (position, scale, and rotation) before converting to lane coordinates.
 - [ ] Verify all state transitions and hitbox behavior in a live browser battle.
 
 ### Phase E — Full battle integration and verification
