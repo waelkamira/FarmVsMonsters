@@ -16,7 +16,7 @@ test("worker bridge requires same-origin JSON POST requests", () => {
   assert.ok(source.includes("function sameOriginPost(req)"));
   assert.ok(source.includes('origin !== new URL(req.url).origin'));
   assert.ok(source.includes('["same-origin", "same-site", "none"].includes(fetchSite)'));
-  assert.ok(source.includes('split(";", 1).trim().toLowerCase() === "application/json"') === false);
+  assert.ok(source.includes('(req.headers.get("content-type") || "").split(";", 1)[0].trim().toLowerCase() === "application/json"'));
   assert.ok(source.includes('Cross-origin or non-JSON requests are not allowed.'));
 });
 
