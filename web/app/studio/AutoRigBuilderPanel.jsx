@@ -327,7 +327,7 @@ export default function AutoRigBuilderPanel({
       if (part.id !== drag.partId) return part;
       try {
         const nextPoints = moveAutoRigPolygonVertex(part.points, drag.index, point, { width: image.width, height: image.height });
-        return { ...part, points: nextPoints, bounds: polygonBounds(nextPoints) };
+        return { ...part, points: nextPoints, bounds: polygonBounds(nextPoints), reviewed: false };
       } catch {
         return part;
       }
@@ -380,7 +380,7 @@ export default function AutoRigBuilderPanel({
       return;
     }
     setParts((current) => current.map((part) => part.id === occlusionTargetPartId
-      ? { ...part, occlusionMask: { kind: "polygon", points: occlusionPoints }, occlusion: "unresolved" }
+      ? { ...part, occlusionMask: { kind: "polygon", points: occlusionPoints }, occlusion: "unresolved", reviewed: false }
       : part));
     setOcclusionMode(false);
     setOcclusionPoints([]);
@@ -608,7 +608,7 @@ export default function AutoRigBuilderPanel({
           </label>
           <label style={{ display: "inline-flex", gap: 5, marginInlineStart: 8 }}>
             الاحتجاب
-            <select value={part.occlusion || "unresolved"} disabled={disabled || busy || generated} onChange={(event) => setParts((current) => current.map((item) => item.id === part.id ? { ...item, occlusion: event.target.value } : item))}>
+            <select value={part.occlusion || "unresolved"} disabled={disabled || busy || generated} onChange={(event) => setParts((current) => current.map((item) => item.id === part.id ? { ...item, occlusion: event.target.value, reviewed: false } : item))}>
               <option value="unresolved">غير محسوم</option>
               <option value="none">لا يوجد جزء مخفي</option>
             </select>
