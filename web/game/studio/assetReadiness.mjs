@@ -57,10 +57,10 @@ export function auditStudioAssetRegistry(input) {
       }
     }
     if (asset?.rigProfile && type === "plant" && asset.combat?.mode === "projectile" &&
-        !asset.rigProfile.attachments?.some((attachment) => attachment.id === "muzzle")) {
+        (!Array.isArray(asset.rigProfile.attachments) || !asset.rigProfile.attachments.some((attachment) => attachment?.id === "muzzle"))) {
       errors.push("النبتة الهيكلية التي تطلق قذيفة تحتاج نقطة تثبيت باسم muzzle.");
     }
-    if (asset?.rigProfile && !asset.rigProfile.bones?.some((bone) => bone?.part)) {
+    if (asset?.rigProfile && (!Array.isArray(asset.rigProfile.bones) || !asset.rigProfile.bones.some((bone) => bone?.part))) {
       errors.push("يجب أن يحتوي الهيكل على صورة جزء واحدة على الأقل.");
     }
     if (asset?.rigProfile) {
