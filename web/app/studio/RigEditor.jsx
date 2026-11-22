@@ -79,6 +79,28 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
       target[field] = value;
     });
   }
+  function updateBonePosition(x, y) {
+    update((next) => {
+      const target = next.bones.find((item) => item.id === selectedBoneId);
+      if (!target) return;
+      if (!clip) { target.x = x; target.y = y; return; }
+      const targetClip = next.clips.find((item) => item.id === selectedClipId);
+      if (!targetClip) { target.x = x; target.y = y; return; }
+      let track = targetClip.tracks.find((item) => item.boneId === selectedBoneId);
+      if (!track) {
+        const base = { x: target.x, y: target.y, rotation: target.rotation, scaleX: target.scaleX, scaleY: target.scaleY };
+        track = { boneId: selectedBoneId, keyframes: [{ timeMs: 0, ...base }, { timeMs: targetClip.durationMs, ...base }] };
+        targetClip.tracks.push(track);
+      }
+      const current = selectedPose?.localBones?.[selectedBoneId] || target;
+      const at = Math.min(targetClip.durationMs, Math.max(0, timeMs));
+      const frame = { timeMs: at, x, y, rotation: current.rotation, scaleX: current.scaleX, scaleY: current.scaleY };
+      const index = track.keyframes.findIndex((item) => item.timeMs === at);
+      if (index >= 0) track.keyframes[index] = frame;
+      else track.keyframes.push(frame);
+      track.keyframes.sort((a, b) => a.timeMs - b.timeMs);
+    });
+  }
   function addBone() {
     if (rig.bones.length >= 64) return;
     let boneIndex = 1;
@@ -304,8 +326,7 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
       const dy = (nextEvent.clientY - initial.clientY) * scaleY;
       const localX = (dx * Math.cos(parentRotation) + dy * Math.sin(parentRotation)) / parentScaleX;
       const localY = (-dx * Math.sin(parentRotation) + dy * Math.cos(parentRotation)) / parentScaleY;
-      updateBone("x", Math.round(initial.x + localX));
-      updateBone("y", Math.round(initial.y + localY));
+      updateBonePosition(Math.round(initial.x + localX), Math.round(initial.y + localY));
     };
     const up = () => { window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", up); };
     canvasRef.current.setPointerCapture?.(event.pointerId);
