@@ -310,6 +310,7 @@ export default function AutoRigBuilderPanel({
       if (!response.ok) throw new Error(data.error || "تعذر تنفيذ التقسيم الموجّه بالنقاط.");
       setAiProposals(data.proposals || []);
       setAiProposalRoles({});
+      setAiSemanticSuggestions({});
       setAiPromptMode(false);
       setAiStatus("connected");
       setMessage("أنشأ SAM 2 " + (data.proposals || []).length + " أقنعة بديلة وفق نقاطك. اختر القناع الأدق ثم عيّن دوره الدلالي.");
@@ -358,6 +359,7 @@ export default function AutoRigBuilderPanel({
       provenance: proposal.provenance || { segmentation: "model-mask", pixels: "source" }
     }]);
     setAiProposals((current) => current.filter((item) => item.id !== proposal.id));
+    setAiSemanticSuggestions((current) => { const next = { ...current }; delete next[proposal.id]; return next; });
     setMessage("تم اعتماد القناع المقترح كجزء قابل للتحرير. راجع حدوده ودوره قبل الحفظ.");
   }
 
