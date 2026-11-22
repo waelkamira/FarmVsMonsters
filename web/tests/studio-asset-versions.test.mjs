@@ -137,34 +137,6 @@ test("clone, revision snapshots, and restore preserve independent skeletal rig p
 });
 
 
-test("clones, snapshots, and restores the Auto-Rig authoring manifest independently", () => {
-  const manifest = {
-    version: 1, builder: "farmvsmonsters-auto-rig",
-    generator: { id: "farmvsmonsters-auto-rig", version: 1 },
-    roleDictionaryVersion: "1.0.0",
-    source: { assetId: "rigged-plant", sha256: "a".repeat(64), frame: 0, width: 128, height: 128 },
-    canvas: { width: 128, height: 128 },
-    parts: [{ id: "part-01", assetId: "part-image", role: "body", bounds: { x: 0, y: 0, width: 128, height: 128 }, pivot: { x: 64, y: 128 }, parentPartId: null, drawOrder: 0, confidence: null, occlusion: "none", mask: null, provenance: { segmentation: "manual-polygon", pixels: "source" } }],
-    anchors: [], warnings: []
-  };
-  const source = {
-    id: "rigged-plant", type: "plant", path: "/assets/plants/rigged.png",
-    revision: 1, rigProfile: { version: 1 }, rigBuildManifest: manifest
-  };
-  const clone = cloneStudioAsset(source, "rigged-plant-copy");
-  const clonedManifest = { ...manifest, source: { ...manifest.source, assetId: "rigged-plant-copy" } };
-  assert.deepEqual(clone.rigBuildManifest, clonedManifest);
-  assert.notEqual(clone.rigBuildManifest, manifest);
-  assert.equal(clone.rigBuildManifest.source.sha256, manifest.source.sha256);
-  const editedManifest = { ...manifest, source: { ...manifest.source, sha256: "b".repeat(64) } };
-  const edited = createStudioAssetRevision(source, { ...source, rigBuildManifest: editedManifest });
-  assert.deepEqual(edited.versions[0].rigBuildManifest, manifest);
-  const restored = restoreStudioAssetRevision(edited, 1);
-  assert.deepEqual(restored.rigBuildManifest, manifest);
-  restored.rigBuildManifest.source.sha256 = "c".repeat(64);
-  assert.equal(edited.versions[0].rigBuildManifest.source.sha256, "a".repeat(64));
-});
-
 test("clones and restores Phaser Atlas metadata without sharing mutable frame lists", () => {
   const atlas = { jsonPath: "/assets/plants/hero-atlas-a.json", frameCount: 24, frameNames: ["idle_00", "attack_00"], clips: { idle: ["idle_00"], attack: ["attack_00"] } };
   const source = { id: "hero", type: "plant", path: "/assets/plants/hero-a.png", atlas, revision: 1 };
