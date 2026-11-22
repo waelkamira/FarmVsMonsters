@@ -1092,6 +1092,20 @@ export default class BattleScene extends Scene {
       }
       preview.setData("inactivePlantType", plant.type);
     });
+    const emptySlotCount = Math.max(0, inactiveSlots - inactivePlants.length);
+    for (let index = 0; index < emptySlotCount; index += 1) {
+      const x = packetStartX + (selectedTypes.length + inactivePlants.length + index) * packetGap;
+      const emptySlot = this.add.container(x, 72).setDepth(45);
+      if (this.textures.exists("seed-slot-empty")) {
+        const source = this.textures.get("seed-slot-empty").getSourceImage();
+        const scale = Math.min(88 / source.width, 101.2 / source.height);
+        emptySlot.add(this.add.image(0, 0, "seed-slot-empty")
+          .setDisplaySize(source.width * scale * 0.8, source.height * scale * 0.8));
+      } else {
+        emptySlot.add(this.add.rectangle(0, 0, 80, 92, 0x3b352c, 0.45)
+          .setStrokeStyle(2, 0xbca77b, 0.8));
+      }
+    }
     plantOptions.filter((plant) => selectedTypes.includes(plant.type)).forEach((plant, index) => {
       this.plantCardsByType[plant.type] = this.createPlantCard(
         packetStartX + index * packetGap,
