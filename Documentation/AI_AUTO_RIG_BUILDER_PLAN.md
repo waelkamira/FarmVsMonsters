@@ -1,11 +1,13 @@
 # AI Auto-Rig Builder — Technical Plan
 
 ## Status
-- Phase 0 compatibility/licensing audit documented.
-- Phase 1 deterministic Auto-Rig core started: pure profile builder and regression tests added on the feature branch; execution/build verification is still pending.
-- This work is additive to the existing Hybrid Animation Engine branch.
-- Target integration: Asset & Animation Studio in web/, existing Phaser 3 runtime.
-- No third-party editor is embedded and no paid/cloud inference API is required by the design.
+- Phase 0 source-code compatibility/licensing review is documented. Final hardware/model-weight validation on the target Windows PC remains pending; no model weights are bundled or auto-downloaded.
+- Phase 1 deterministic Auto-Rig core is implemented on this feature branch and its focused tests, ESLint, and production build have passed in GitHub Actions.
+- Phase 2 permanent Studio workflow is integrated: guided manual/AI mask authoring, semantic role assignment, editable cutouts, source-space pivots/bones, starter clips, muzzle attachment workflow, quality reporting, asset-library discovery, and server-side publish gating.
+- Phase 3 local SAM 2 worker is implemented with automatic mask proposals and positive/negative point-prompt segmentation. Its focused Python/Node CI is active; the actual model is optional and must be installed locally by the developer.
+- Phase 4 semantic plant/monster classification and hidden-pixel reconstruction remain incomplete. SAM 2 masks are geometric proposals only; role assignment and author review remain explicit.
+- Phase 5 quality/publish gates and Rig Library discovery are implemented; reusable rig-template retargeting and live Phaser/browser acceptance remain outstanding.
+- This work is additive to the existing Hybrid Animation Engine branch and targets the existing Phaser 3 runtime. No third-party editor is embedded and no paid/cloud inference API is required.
 
 ## Product goal
 Turn one uploaded plant or monster illustration into a reviewable, editable, game-ready rig with the least possible manual preparation. The creator should upload the original image, choose or describe intended actions, review automatically extracted parts, and approve the generated rig. The system must preserve the original art and must never silently publish a low-quality result.
@@ -184,41 +186,40 @@ Templates target semantic roles and skip absent bones. Weapon attack timing must
 ## Implementation phases and acceptance gates
 
 ### Phase 0 — compatibility and licensing audit
-- Verify current branch and existing Hybrid Animation Engine contracts.
-- Pin exact source commits and license/NOTICE files for any reused code.
-- Test candidate segmentation/decomposition on representative FarmVsMonsters plant and monster artwork, not only anime samples.
-- Measure install size, RAM/VRAM, CPU/GPU time, and output quality on the actual development PC before selecting a default model.
-- No dependency is added to the web app during this phase.
+- Completed the source-code compatibility review and documented upstream licenses and model constraints.
+- No external model weights are bundled or downloaded automatically.
+- Still required: verify CPU/GPU capability, RAM/VRAM, install size, inference time, and output quality on the actual Windows development machine before recommending a SAM 2 checkpoint as the default.
 
 ### Phase 1 — deterministic Auto-Rig core
-- Initial implementation added at web/game/studio/autoRigBuilder.mjs: manifest validation, stable part-instance IDs, role aliases, deterministic parent graph, source-space to crop-space pivots, local bone transforms, muzzle attachment generation, static idle profile, and occlusion/unknown-role warnings.
-- Regression coverage added at web/tests/studio-auto-rig-builder.test.mjs.
-- Remaining in this phase: execute the new tests and build in the user's Windows environment, review the generated rig visually against real plant art, then harden the contract before Studio UI integration.
-- Add regression tests for missing/duplicate parts, multi-leaf instances, unknown roles, occlusion flags, muzzle requirements, stable IDs, and invalid geometry.
-- This phase can be tested without AI models.
+- Implemented `web/game/studio/autoRigBuilder.mjs`: versioned manifest validation, stable part-instance IDs, role aliases, deterministic parent graph, source/crop coordinate handling, pivots, local bone transforms, muzzle attachment generation, starter animation clips, and occlusion/unknown-role warnings.
+- Added geometry, manifest, readiness, confidence, explicit author-review, reconstruction-provenance, and muzzle regression coverage in `web/tests/studio-auto-rig-builder.test.mjs`.
+- Focused Auto-Rig tests, ESLint, and production build have passed in GitHub Actions on prior feature-branch commits. Continue to require green checks on the latest head before merge.
+- Remaining: validate output visually against representative plant and monster assets in the user's Windows browser/game environment.
 
 ### Phase 2 — permanent Studio subsystem and review workflow
-- Integrate the nine permanent modules (AI Part Detector, Smart Image Segmentation, Hidden Part Reconstruction, Auto Bone Generator, Auto Pivot Detection, Animation Generator, Weapon Attachment Builder, Rig Quality Validator, and Rig Library) into the normal Studio navigation and asset workflow.
-- Add a unified Auto-Rig workspace/wizard beside the existing Rig Editor, not a detached external app.
-- Support source image upload, proposals, role correction, mask review, reconstruction approval, pivot adjustment, bone tree editing, weapon/muzzle setup, animation generation, quality reports, and Rig Library save/retarget.
-- Save all approved outputs through the existing Studio asset API, version snapshots, dependencies, and explicit test/publish lifecycle.
-- Preserve the existing manual rig editor and Sprite Sheet workflow.
+- Integrated the guided Auto-Rig workspace into the existing Studio asset flow, preserving the manual Rig Editor and Sprite Sheet workflow.
+- Supports source preservation/hash, manual polygon authoring, SAM 2 proposal review, semantic role assignment, editable mask vertices, occlusion-region masks, per-part author review, cutout PNG asset creation, deterministic bones/pivots, starter clips, and muzzle attachment placement.
+- Saves part assets through the existing Studio asset API and stores the build manifest alongside the existing rig profile/version lifecycle; no parallel asset registry or animation runtime is introduced.
+- Added Rig Library discovery to the existing asset library (rigged/unrigged filters, part-role/bone/attachment search, and rig metadata).
+- Remaining: live browser validation, robust partial-upload cleanup/rollback, and real-asset workflow acceptance.
 
 ### Phase 3 — local segmentation worker
-- Add the optional localhost worker and SAM 2 prompt-based segmentation adapter.
-- Provide point/box prompts and mask refinement.
-- Validate Windows setup, CPU fallback, and local-only data flow.
+- Implemented the optional loopback Python worker and SAM 2 adapters for automatic mask proposals and positive/negative point-prompt segmentation.
+- Worker binds to `127.0.0.1`, requires locally installed weights, performs no hosted inference or automatic model downloads, validates source dimensions and payload sizes, rejects browser-origin/remote-host requests, and admits one inference at a time.
+- The worker preserves transparent PNG artwork by compositing alpha onto a neutral white inference background; original source bytes remain unchanged.
+- Added a Windows PowerShell launcher, setup guide, and Python unit tests. CI compiles the worker and exercises the protocol/geometry/image decoding behavior.
+- Remaining: install SAM 2 and a compatible checkpoint on the target PC, measure CPU/CUDA performance, and test with actual game artwork. The model is not bundled.
 
 ### Phase 4 — semantic decomposition and reconstruction
-- Evaluate See-through and other permissively licensed candidates against our stylized plant/monster art.
-- Add only models whose weights and all upstream terms are compatible with the project's distribution and intended commercial use.
-- Train/fine-tune a FarmVsMonsters part-role model only if a properly licensed, representative dataset becomes available.
+- Not complete. Current SAM 2 output consists of geometric masks, not semantic body/limb/weapon classification.
+- Add a separately evaluated local semantic detector/role classifier for stylized plants and monsters; every role remains editable and requires author approval.
+- Add hidden-part detection and inpainting only after evaluating commercial-use licenses, hardware requirements, output provenance, and before/after rollback. Until then, occluded regions remain explicitly unresolved and block animation readiness.
 
 ### Phase 5 — motion authoring, Rig Library, and production validation
-- Add reusable plant/monster motion templates and retargeting by semantic roles; expose them through the permanent Rig Library.
-- Complete Weapon Attachment Builder and Rig Quality Validator integration with the existing combat/runtime contracts.
-- Validate projectile muzzle position, hitboxes, animation state transitions, asset publication, and existing Sprite Sheet compatibility in live Chrome gameplay.
-- No merge to main until the full build, tests, and live browser/game acceptance gates pass.
+- Implemented starter animation clips through the existing rig profile, weapon/muzzle attachment authoring, Rig Quality Validator, explicit per-part review/occlusion gates, and server-side publish-time quality enforcement.
+- Implemented Rig Library discovery through the existing asset library; reusable role-based template retargeting and template version management are still outstanding.
+- Still required: validate muzzle/projectile origin, hitboxes, animation state transitions, asset publication, and Sprite Sheet fallback in live Chrome/Phaser gameplay.
+- No merge to main until the dependent Hybrid Animation Engine base is merged/ready and the full build, tests, and live browser/game acceptance gates pass.
 
 ## Initial acceptance criteria
 0. All nine named modules are permanent Studio capabilities, not an external or disposable utility.
