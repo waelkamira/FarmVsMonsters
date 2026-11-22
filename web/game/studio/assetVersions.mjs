@@ -21,7 +21,6 @@ export function snapshotStudioAsset(asset, versionNumber) {
     atlas: copyJson(asset.atlas),
     combat: copyCombat(asset.combat),
     animationProfile: copyJson(asset.animationProfile),
-    atlas: copyJson(asset.atlas),
     rigProfile: copyJson(asset.rigProfile),
     monsterProfile: copyJson(asset.monsterProfile),
     dependencies: copyJson(asset.dependencies)
@@ -81,6 +80,7 @@ export function cloneStudioAsset(asset, newId, newName, timestamp = new Date().t
     ...asset,
     combat: copyCombat(asset.combat),
     animationProfile: copyJson(asset.animationProfile),
+    atlas: copyJson(asset.atlas),
     rigProfile: copyJson(asset.rigProfile),
     monsterProfile: copyJson(asset.monsterProfile),
     dependencies: copyJson(asset.dependencies),
