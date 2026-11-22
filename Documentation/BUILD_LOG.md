@@ -1107,3 +1107,6 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - BattleScene uses oriented-rectangle SAT across all authored attack/hurt hitbox pairs and circle-vs-oriented-hurtbox checks for projectiles.
 - Monster state guards protect death and frozen states, preserve the pre-freeze animation across stacked freeze hits, and prevent idle/movement from resetting active attack/hit clips.
 - Validation still has not executed: the latest GitHub Actions jobs finish with runner_id=0 and no steps/logs. Live Chrome/Windows battle verification remains open.
+
+- Extracted oriented skeletal hitbox collision and projectile-circle intersection into `skeletalCollision.mjs`; added geometry unit tests (overlap, separation, rotation, tangency, invalid values).
+- Corrected muzzle attachment conversion to full plant-view world space, including parent position, scale, and rotation, before projectile launch coordinates are calculated.
