@@ -21,7 +21,7 @@ export function snapshotStudioAsset(asset, versionNumber) {
     combat: copyCombat(asset.combat),
     animationProfile: copyJson(asset.animationProfile),
     rigProfile: copyJson(asset.rigProfile),
-    rigBuildManifest: copyJson(asset.rigBuildManifest),
+    rigBuildManifest,
     monsterProfile: copyJson(asset.monsterProfile),
     dependencies: copyJson(asset.dependencies)
   };
@@ -76,6 +76,8 @@ export function cloneStudioAsset(asset, newId, newName, timestamp = new Date().t
     throw new TypeError("معرّف النسخة يجب أن يكون أحرفاً إنجليزية صغيرة وأرقاماً وشرطات فقط.");
   }
   if (!asset?.path || !asset?.type) throw new TypeError("لا يمكن نسخ أصل غير مكتمل.");
+  const rigBuildManifest = copyJson(asset.rigBuildManifest);
+  if (rigBuildManifest?.source) rigBuildManifest.source.assetId = id;
   return {
     ...asset,
     combat: copyCombat(asset.combat),
