@@ -115,6 +115,8 @@ The editor is a mode switch inside Asset & Animation Studio:
 ### Phase E — Full battle integration and verification
 - [x] Use rig attachment points for real projectile origins.
 - [x] Use pose-bound hitboxes for supported melee, bite, and projectile collisions.
+- [x] Preserve a frozen skeletal pose or play an optional frozen clip, then restore the previous movement/idle clip on thaw.
+- [x] Require the `muzzle` attachment for rigged projectile plants during save and Testing Lab readiness checks.
 - [ ] Verify a rigged plant and a rigged monster in a live Phaser battle.
 - [ ] Run tests, lint, production build, and Chrome verification on Windows.
 - [x] Update the Studio master plan and this plan with implementation evidence and remaining gates.
