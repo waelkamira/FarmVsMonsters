@@ -153,6 +153,31 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
     setSelectedClipId(id);
     setTimeMs(0);
   }
+  function applyPreset(preset) {
+    const stateId = preset === "breathing" ? "idle" : preset === "walk" ? "move" : "attack";
+    const stateNames = { idle: "خمول", move: "تنقل", attack: "هجوم" };
+    update((next) => {
+      let target = next.clips.find((item) => item.id === stateId);
+      if (!target) {
+        if (next.clips.length >= 16) return;
+        target = { id: stateId, name: stateNames[stateId], durationMs: preset === "recoil" ? 420 : preset === "walk" ? 800 : 1400, loop: stateId !== "attack", tracks: [] };
+        next.clips.push(target);
+      }
+      if (preset === "recoil") { target.durationMs = 420; target.loop = false; }
+      if (preset === "breathing") { target.durationMs = 1400; target.loop = true; }
+      if (preset === "walk") { target.durationMs = 800; target.loop = true; }
+      const base = selectedPose?.localBones?.[selectedBoneId] || bone;
+      let track = target.tracks.find((item) => item.boneId === selectedBoneId);
+      if (!track) { track = { boneId: selectedBoneId, keyframes: [] }; target.tracks.push(track); }
+      const frame = (time, patch = {}) => ({ timeMs: time, x: base.x, y: base.y, rotation: base.rotation, scaleX: base.scaleX, scaleY: base.scaleY, ...patch });
+      if (preset === "breathing") track.keyframes = [frame(0, { rotation: base.rotation - 3 }), frame(700, { rotation: base.rotation + 3 }), frame(1400, { rotation: base.rotation - 3 })];
+      else if (preset === "recoil") track.keyframes = [frame(0), frame(100, { rotation: base.rotation - 20 }), frame(240, { rotation: base.rotation + 5 }), frame(420)];
+      else track.keyframes = [frame(0), frame(400, { x: base.x + 8, y: base.y - 4 }), frame(800)];
+    });
+    setSelectedClipId(stateId);
+    setTimeMs(0);
+    setPlaying(false);
+  }
   function removeClip() {
     if (rig.clips.length <= 1 || !clip) return;
     const nextId = rig.clips.find((item) => item.id !== selectedClipId)?.id || rig.clips[0].id;
@@ -366,7 +391,7 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
         </div>
       </div>
       <div className="studio-rig-timeline">
-        <div className="studio-rig-timeline-head"><h5>مقاطع الحركة والإطارات المفتاحية</h5><div className="studio-rig-stage-actions"><button type="button" disabled={disabled || rig.clips.length >= 16} onClick={addClip}>＋ مقطع حركة</button><button type="button" disabled={disabled || rig.clips.length <= 1} onClick={removeClip}>حذف المقطع المحدد</button></div></div>
+        <div className="studio-rig-presets"><b>قوالب حركة قابلة للتعديل</b><button type="button" disabled={disabled} onClick={() => applyPreset("breathing")}>تنفس / تأرجح</button><button type="button" disabled={disabled} onClick={() => applyPreset("walk")}>دورة تنقل</button><button type="button" disabled={disabled} onClick={() => applyPreset("recoil")}>ارتداد الهجوم</button></div><div className="studio-rig-timeline-head"><h5>مقاطع الحركة والإطارات المفتاحية</h5><div className="studio-rig-stage-actions"><button type="button" disabled={disabled || rig.clips.length >= 16} onClick={addClip}>＋ مقطع حركة</button><button type="button" disabled={disabled || rig.clips.length <= 1} onClick={removeClip}>حذف المقطع المحدد</button></div></div>
         <div className="studio-rig-fields-grid">
           <label>المقطع<select value={selectedClipId} onChange={(event) => { setSelectedClipId(event.target.value); setTimeMs(0); setPlaying(false); }}>{rig.clips.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
           {clip && <><label>اسم المقطع<input value={clip.name} disabled={disabled} onChange={(event) => updateClip("name", event.target.value)}/></label><label>المدة (ms)<input type="number" min="1" max="60000" value={clip.durationMs} disabled={disabled} onChange={(event) => updateClip("durationMs", Number(event.target.value))}/></label><label className="studio-rig-check"><input type="checkbox" checked={clip.loop} disabled={disabled} onChange={(event) => updateClip("loop", event.target.checked)}/> تكرار المقطع</label></>}
