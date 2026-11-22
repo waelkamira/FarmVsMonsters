@@ -1532,3 +1532,11 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - Auto-Rig run `45050695811` passed: 75/75 Node tests, 20/20 Python tests, focused ESLint, full-project ESLint diagnostic step, Next.js production build, and WSL launcher syntax.
 - This smoke harness is now ready for execution on the target Windows/WSL machine, but no SAM 2 checkpoint inference on that machine is claimed. Real FarmVsMonsters plant/monster asset acceptance and Phaser BattleScene validation remain pending.
 - Broad Web Quality Gate `45050695795` and Studio/Game Validation `45050695748` remain separate repository-wide blockers; the latest completed broad suite in this branch family recorded 391 passed and 53 failed of 444.
+
+## 2026-11-22 — Auto-Rig local smoke gate hardening
+
+- Tightened `web/local-ai-worker/smoke_test.py` so a worker response is rejected when it contains malformed or duplicate IDs, invalid roles/confidence, non-integer or out-of-canvas bounds, malformed/degenerate polygons, polygons outside their crop bounds, or more than 63 proposals.
+- Added regression tests for duplicate IDs, confidence range, degenerate/crop-escaping polygons, and the proposal-count ceiling. Updated fixtures to satisfy the same response contract enforced by Studio.
+- CI on PR #89 head `351273a770696d997d80ccd41513ce31a91e67f1`: Auto-Rig subsystem validation passed (75/75 Node tests, 23/23 Python tests, focused lint, full-project lint diagnostics, production build, and WSL launcher syntax).
+- Broad Studio/Game and Web quality workflows still fail: 393/446 tests pass and 53 fail. The failures are in Phase 1 gameplay and legacy Studio contracts; they remain blockers and have not been waived.
+- Still pending: actual SAM 2 checkpoint inference on the target Windows/WSL machine, real plant/monster artwork acceptance, and BattleScene runtime acceptance. No model-backed semantic classifier or generative anatomical reconstruction is claimed.
