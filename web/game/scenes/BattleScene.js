@@ -377,7 +377,7 @@ export default class BattleScene extends Scene {
       const variant = monster.testOnly ? "testing" : "published";
       monster.rigPartTextures = Object.fromEntries((monster.rigParts || []).map((part) => {
         const textureKey = "studio-rig-part-" + variant + "-" + part.id;
-        if (this.textures.exists(textureKey) && part.spriteSheet) this.registerStudioGridSheet(textureKey, part.rows, part.columns);
+        if (this.textures.exists(textureKey)) this.registerStudioGridSheet(textureKey, part.rows || 1, part.columns || 1);
         return [part.id, textureKey];
       }));
     }
