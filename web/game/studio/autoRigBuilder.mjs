@@ -90,6 +90,7 @@ function readPart(raw, index, canvas) {
   if (x < 0 || y < 0 || width <= 0 || height <= 0 || x + width > canvas.width || y + height > canvas.height) {
     throw new RangeError("Part " + id + " bounds must be positive and fit inside the source canvas.");
   }
+  const pivotExplicit = raw.pivot != null;
   const pivot = raw.pivot || { x: x + width / 2, y: y + height / 2 };
   const pivotX = finite(pivot.x, "parts[" + index + "].pivot.x");
   const pivotY = finite(pivot.y, "parts[" + index + "].pivot.y");
@@ -125,7 +126,7 @@ function readPart(raw, index, canvas) {
   if (confidence !== null && (confidence < 0 || confidence > 1)) throw new RangeError("Part " + id + " confidence must be between 0 and 1.");
   return {
     id, assetId, role, side, frame, bounds: { x, y, width, height },
-    pivot: { x: pivotX, y: pivotY },
+    pivot: { x: pivotX, y: pivotY }, pivotExplicit,
     name: String(raw.name || role).slice(0, 80),
     confidence, mask, provenance: { segmentation, pixels },
     occlusion: raw.occlusion === "unresolved" ? "unresolved" : raw.occlusion === "reconstructed" ? "reconstructed" : "none",
@@ -153,6 +154,30 @@ function chooseParent(part, partsById, parts) {
   }
   return null;
 }
+function suggestAutoPivot(part, parent) {
+  if (!parent && ["body", "stem"].includes(part.role)) {
+    return { x: part.bounds.x + part.bounds.width / 2, y: part.bounds.y + part.bounds.height };
+  }
+  if (!parent) return { x: part.bounds.x + part.bounds.width / 2, y: part.bounds.y + part.bounds.height / 2 };
+  const polygon = part.mask?.points || [
+    { x: part.bounds.x, y: part.bounds.y },
+    { x: part.bounds.x + part.bounds.width, y: part.bounds.y },
+    { x: part.bounds.x + part.bounds.width, y: part.bounds.y + part.bounds.height },
+    { x: part.bounds.x, y: part.bounds.y + part.bounds.height }
+  ];
+  let best = null, bestDistance = Infinity;
+  for (let index = 0; index < polygon.length; index += 1) {
+    const a = polygon[index], b = polygon[(index + 1) % polygon.length];
+    const dx = b.x - a.x, dy = b.y - a.y;
+    const lengthSquared = dx * dx + dy * dy || 1;
+    const amount = Math.max(0, Math.min(1, ((parent.pivot.x - a.x) * dx + (parent.pivot.y - a.y) * dy) / lengthSquared));
+    const point = { x: a.x + amount * dx, y: a.y + amount * dy };
+    const distance = Math.hypot(point.x - parent.pivot.x, point.y - parent.pivot.y);
+    if (distance < bestDistance) { best = point; bestDistance = distance; }
+  }
+  return best || { x: part.bounds.x + part.bounds.width / 2, y: part.bounds.y + part.bounds.height / 2 };
+}
+
 function buildStaticClip(id, name, durationMs, loop, bones) {
   return {
     id, name, durationMs, fps: 24, loop,
@@ -210,6 +235,7 @@ export function buildAutoRigFromParts(input) {
       if (!pending.has(part.id)) continue;
       const parent = chooseParent(part, partsById, parts);
       if (parent && pending.has(parent.id)) continue;
+      if (!part.pivotExplicit) part.pivot = suggestAutoPivot(part, parent);
       const parentBoneId = parent ? "part-" + parent.id : "root";
       const parentPivot = parent ? parent.pivot : center;
       const boneId = "part-" + part.id;
