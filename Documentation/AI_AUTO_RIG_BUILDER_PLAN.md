@@ -289,3 +289,9 @@ The Auto-Rig Builder is a permanent first-class Studio subsystem composed of the
 - The validator returns a transparent 0–100 heuristic score, actionable warnings, and a separate `readyForAnimation` gate. It does not silently repair data or treat a high score as proof of visual correctness.
 - Integrated the report into the Auto-Rig Studio workflow so the user sees quality findings after generation.
 - Added tests for a fully reviewed rig, an unclassified role, and invalid manifests.
+
+
+## 2026-11-22 — Direct mask editing and stricter animation gate
+- Studio now lets the author select an accepted part and drag individual polygon vertices directly on the source preview. AI proposals remain visually distinct and cannot be edited as accepted data until the author explicitly assigns a semantic role and approves them.
+- Tightened `readyForAnimation`: a valid manifest alone is insufficient. All parts must have known semantic roles, editable masks, reviewed confidence, no low-confidence values, resolved occlusion, a SHA-256 source fingerprint, a primary body/stem, and no reconstructed pixels awaiting review.
+- Added regression coverage for missing source fingerprints and reconstructed-pixel provenance. The validator still reports heuristic quality separately from manifest validity.
