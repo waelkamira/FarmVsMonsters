@@ -310,7 +310,7 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
         const url = asset?.previewUrl || asset?.path;
         const image = url && imageCache.current.get(url);
         if (image?.complete && image.naturalWidth > 0) {
-          const rows = Math.max(1, Number(asset.rows) || 1), columns = Math.max(1, Number(asset.columns) || 1);
+          const rows = asset.spriteSheet ? Math.max(1, Number(asset.rows) || 1) : 1, columns = asset.spriteSheet ? Math.max(1, Number(asset.columns) || 1) : 1;
           const frameWidth = image.naturalWidth / columns, frameHeight = image.naturalHeight / rows;
           const frame = Math.max(0, Math.min(rows * columns - 1, Number(item.part.frame) || 0));
           context.drawImage(image, (frame % columns) * frameWidth, Math.floor(frame / columns) * frameHeight, frameWidth, frameHeight, -item.pivot.x, -item.pivot.y, frameWidth, frameHeight);
