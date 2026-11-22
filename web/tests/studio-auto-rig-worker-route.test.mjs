@@ -35,10 +35,10 @@ test("worker bridge validates image limits, task names, and worker geometry befo
 });
 
 test("worker bridge reads request and response streams with explicit byte ceilings", () => {
-  assert.match(source, /async function readBoundedBody\\(request, maxBytes\\)/);
+  assert.ok(source.includes("async function readBoundedBody(request, maxBytes)"));
   assert.match(source, /total > maxBytes/);
   assert.match(source, /readBoundedJsonResponse/);
-  assert.match(source, /2 \\* 1024 \\* 1024/);
+  assert.ok(source.includes("maxBytes = 2 * 1024 * 1024"));
 });
 
 test("worker bridge does not forward internal worker error response bodies", () => {
