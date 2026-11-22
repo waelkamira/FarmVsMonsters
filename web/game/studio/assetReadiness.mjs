@@ -66,6 +66,11 @@ export function auditStudioAssetRegistry(input) {
           const part = assets.find((candidate) => candidate?.id === bone.part.assetId);
           if (!part || part.status === "archived" || !safeAssetPath(part.path)) {
             errors.push("جزء الهيكل " + bone.id + " غير متاح أو مؤرشف: " + bone.part.assetId + ".");
+          } else {
+            const partFrameCount = Math.max(1, Number(part.frameCount || (Number(part.rows || 1) * Number(part.columns || 1)) || 1));
+            if (!Number.isInteger(partFrameCount) || bone.part.frame >= partFrameCount) {
+              errors.push("رقم إطار جزء الهيكل " + bone.id + " خارج عدد إطارات الأصل " + bone.part.assetId + ".");
+            }
           }
         }
       }
