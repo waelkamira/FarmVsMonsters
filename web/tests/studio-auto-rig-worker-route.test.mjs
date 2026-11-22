@@ -12,6 +12,14 @@ test("Studio worker bridge is a dynamic Node route with authenticated GET and PO
   assert.match(source, /if \(!authorized\(req\)\)/);
 });
 
+test("worker bridge requires same-origin JSON POST requests", () => {
+  assert.ok(source.includes("function sameOriginPost(req)"));
+  assert.ok(source.includes('origin !== new URL(req.url).origin'));
+  assert.ok(source.includes('["same-origin", "same-site", "none"].includes(fetchSite)'));
+  assert.ok(source.includes('split(";", 1).trim().toLowerCase() === "application/json"') === false);
+  assert.ok(source.includes('Cross-origin or non-JSON requests are not allowed.'));
+});
+
 test("worker bridge restricts upstream URL to HTTP loopback", () => {
   assert.match(source, /url\.protocol !== "http:"/);
   assert.match(source, /host === "localhost"/);
