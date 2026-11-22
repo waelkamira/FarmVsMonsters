@@ -3094,6 +3094,7 @@ export default class BattleScene extends Scene {
     if (!clip || !rig.root?.active) return false;
     rig._animationEvent?.remove?.();
     const startedAt = this.time.now;
+    rig._activeClipId = clipId;
     rig.play(clipId, 0);
     const event = this.time.addEvent({
       delay: 16,
@@ -3105,15 +3106,17 @@ export default class BattleScene extends Scene {
         if (onComplete && elapsed >= clip.durationMs) {
           event.remove();
           rig._animationEvent = null;
+          rig._activeClipId = null;
           onComplete();
         } else if (!clip.loop && elapsed >= clip.durationMs) {
           event.remove();
           rig._animationEvent = null;
+          rig._activeClipId = null;
         }
       }
     });
     rig._animationEvent = event;
-    rig.root.once("destroy", () => event.remove());
+    rig.root.once("destroy", () => { event.remove(); rig._activeClipId = null; });
     return true;
   }
 
@@ -3258,7 +3261,7 @@ export default class BattleScene extends Scene {
     const skeletalRig = plant.view.getData?.("studioSkeletalRig");
     if (skeletalRig) {
       const idleClip = skeletalRig.profile.clips.find((entry) => entry.id === "idle") || skeletalRig.profile.clips[0];
-      if (idleClip && (!skeletalRig._animationEvent || !skeletalRig._animationEvent.getProgress?.())) this.playStudioSkeletalRig(skeletalRig, idleClip.id);
+      if (idleClip && skeletalRig._activeClipId !== idleClip.id) this.playStudioSkeletalRig(skeletalRig, idleClip.id);
       return;
     }
     const sprite = plant.view.list?.find((child) =>
