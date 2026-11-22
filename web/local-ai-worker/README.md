@@ -1,44 +1,84 @@
 # Local Studio AI Worker (SAM 2)
 
-The optional inference process runs on loopback only. It makes no hosted inference calls and never downloads model weights.
+This optional inference process runs on the developer's machine and binds only to `127.0.0.1`. It makes no hosted inference calls and never downloads model checkpoints automatically. The Studio web app talks to it through the authenticated Next.js worker bridge.
 
-## Requirements
-- Python 3.10+
-- PyTorch installed for the local CPU/CUDA environment
-- Official Meta SAM 2 package installed
-- A SAM 2 config YAML and checkpoint already present locally
+## What it does today
 
-Install image dependencies:
-\`\`\`powershell
+- Automatic SAM 2 mask proposals for visible image regions.
+- Positive/negative point-prompted segmentation with up to three alternative masks.
+- Source-coordinate polygon masks, confidence values, and source-pixel provenance.
+- Transparent PNG input is composited onto white for inference; the original source bytes are never changed.
+
+**Important:** SAM 2 returns geometric regions, not semantic labels. It does not know whether a mask is a leaf, arm, head, weapon, or body. Assign each proposal a role in Studio and review its shape. Hidden-part reconstruction and semantic plant/monster classification are not implemented by this adapter.
+
+## Windows setup (recommended: WSL 2 + Ubuntu)
+
+Meta's official SAM 2 installation guidance recommends WSL with Ubuntu when installing on Windows. SAM 2 requires Python 3.10+, PyTorch 2.5.1+, and a matching torchvision build. See the [official SAM 2 installation guide](https://github.com/facebookresearch/sam2/blob/main/INSTALL.md) and [PyTorch installation selector](https://pytorch.org/get-started/locally/).
+
+1. Install WSL 2 with an Ubuntu distribution and open the Ubuntu terminal.
+2. Ensure Python 3.10+, `python3-venv`, and Git are installed.
+3. Navigate in WSL to this repository's `web/local-ai-worker` directory.
+4. Run the setup script:
+
+   ```bash
+   bash setup-wsl.sh
+   ```
+
+   The default script installs CPU-only PyTorch, clones the official SAM 2 source into your WSL user cache, installs SAM 2 with its optional CUDA extension disabled, and installs this worker's image dependencies. This is the safest baseline for machines without a confirmed NVIDIA/CUDA setup. If you have a compatible NVIDIA GPU, follow the PyTorch selector first and set `FVM_TORCH_INDEX_URL` to the matching wheel index before running setup; do not mix CPU and CUDA builds.
+
+5. Download the official **SAM 2.1 Hiera Tiny** checkpoint from the [SAM 2 model/checkpoint section](https://github.com/facebookresearch/sam2#download-checkpoints) and place it at:
+
+   ```text
+   ~/models/sam2.1_hiera_tiny.pt
+   ```
+
+   Model weights are deliberately not committed to this repository.
+
+6. Start the worker:
+
+   ```bash
+   bash start-worker-wsl.sh
+   ```
+
+7. In the Windows environment running the Studio Next.js app, set:
+
+   ```env
+   STUDIO_LOCAL_AI_WORKER_URL=http://127.0.0.1:8765
+   ```
+
+   Restart the web app, open Auto-Rig Builder, and select **فحص محرك AI المحلي**. WSL 2 localhost forwarding should make the worker reachable from Windows on port 8765. If your WSL networking configuration disables localhost forwarding, enable it in WSL settings before retrying.
+
+## Native Windows alternative
+
+A native Windows Python environment may work if PyTorch, torchvision, the official SAM 2 package, and OpenCV are all compatible with that machine. The official project recommends WSL/Ubuntu on Windows, so the PowerShell launcher is provided only as a best-effort alternative:
+
+```powershell
 python -m pip install -r requirements.txt
-\`\`\`
-
-Set local paths and start:
-\`\`\`powershell
-$env:SAM2_CONFIG="configs/sam2.1/sam2.1_hiera_t.yaml"
+$env:SAM2_CONFIG="C:\models\sam2\configs\sam2.1\sam2.1_hiera_t.yaml"
 $env:SAM2_CHECKPOINT="C:\models\sam2.1_hiera_tiny.pt"
 $env:FVM_AI_WORKER_PORT="8765"
-python worker.py
-\`\`\`
+.\start-worker.ps1
+```
 
-Set in the Studio web app environment:
-\`\`\`env
-STUDIO_LOCAL_AI_WORKER_URL=http://127.0.0.1:8765
-\`\`\`
+## Security and resource limits
 
-Restart the web app, open Auto-Rig Builder and select "فحص محرك AI المحلي". The worker advertises part-detection only after the SAM 2 model loads. It emits automatic masks as editable polygons. This adapter does not perform semantic body/limb/weapon classification, text-prompted segmentation, or hidden-pixel reconstruction.
-
-## Limits
-
-- The HTTP worker accepts only JSON requests whose Host header targets its exact loopback bind address and rejects requests carrying a browser Origin header. This prevents websites from using cross-site form posts to trigger local inference.
-- Only one inference request is admitted at a time; additional requests receive HTTP 429 rather than queuing unbounded image payloads and memory use.
-- Binds to 127.0.0.1 only.
+- Binds to `127.0.0.1` only; it is not a LAN service.
+- Accepts POST requests only with the exact loopback Host header, JSON content type, and no browser Origin header. This blocks cross-site browser form submissions from triggering local inference.
+- Admits one inference request at a time; concurrent requests receive HTTP 429 instead of building an unbounded queue.
 - No telemetry, cloud API, credentials, or automatic weight downloads.
-- Maximum image size 8 MB; maximum dimensions 4096 x 4096.
-- SAM 2 masks can overlap or split one character into many regions; review each mask. Transparent PNG pixels are composited onto white for inference so the original transparent background is not interpreted as black artwork.
-- Automatic SAM 2 proposals are geometric regions, not semantic part labels. Assign each proposal a role (body, leaf, arm, weapon, etc.) and review it in Studio.
-- Hidden-part reconstruction is not implemented by this adapter.
+- Maximum image size 8 MB; maximum dimensions 4096 × 4096.
+- Transparent PNG pixels are composited onto white for model input to avoid treating transparent pixels as black artwork.
+- SAM 2 masks may overlap or split one character into many regions; inspect and edit every accepted mask.
+- If the model/checkpoint is missing, health reports degraded and inference returns a clear error; no fake proposals are generated.
 
+## Model capability boundary
 
-## Interactive point-prompt segmentation
-The same local SAM 2 checkpoint also enables prompted segmentation. In Auto-Rig Builder, choose **تحديد نقاط AI**, select positive points (inside the target part) or negative points (outside the target), click the source image, then choose **تقسيم SAM 2 حسب النقاط**. SAM 2 returns up to three mask alternatives; inspect the overlays and accept only the correct region. Each accepted mask still requires a semantic role, geometry review, and explicit author approval.
+| Capability | Status |
+|---|---|
+| Automatic visible-region mask proposals | Implemented |
+| Positive/negative point-prompted masks | Implemented |
+| Editable polygon proposals in Studio | Implemented |
+| Semantic part-role classification | Not implemented; author assigns roles |
+| Hidden-part detection and pixel reconstruction | Not implemented |
+| Rig generation, pivots, starter clips, muzzle authoring | Implemented in Studio deterministic core |
+| Publish-time quality gate | Implemented; requires all author review checks |
