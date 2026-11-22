@@ -85,15 +85,19 @@
       "rows": 3,
       "columns": 3,
       "spriteSheet": true,
-      "status": "published",
+      "status": "draft",
       "createdAt": "2026-11-20T21:52:10.198Z",
-      "updatedAt": "2026-11-21T00:27:09.657Z",
+      "updatedAt": "2026-11-22T09:52:26.548Z",
       "combat": {
         "mode": "projectile",
         "projectile": {
           "id": "bamboo-throwing-level-1-projectile",
           "path": "/assets/projectiles/plants/bamboo-throwing-level-1-projectile-cbedc31ec96279864eaf335cd3f9594a067d085445f913348b6a7475e97fc27c.png",
-          "filename": "bamboo-throwing-level-1-projectile.png"
+          "filename": "bamboo-throwing-level-1-projectile.png",
+          "managed": false,
+          "frameCount": 1,
+          "rows": 1,
+          "columns": 1
         },
         "energyCost": 60,
         "hp": 150,
@@ -101,12 +105,96 @@
         "damage": 30,
         "range": 500,
         "projectileSpeed": 280,
+        "projectileHeight": 0,
+        "projectileEffectColor": "#ffc247",
+        "projectileRotation": 50,
+        "projectileTrajectoryType": "custom",
+        "projectilePathPoints": [
+          {
+            "progress": 0,
+            "x": 0,
+            "y": 0
+          },
+          {
+            "progress": 0.5,
+            "x": 0,
+            "y": 110
+          },
+          {
+            "progress": 1,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "projectileCurveX": 0,
+        "projectileCurveY": 110,
+        "projectileLaunchOffsetX": 14,
+        "projectileLaunchOffsetY": -30,
+        "projectileTargetOffsetX": 0,
+        "projectileTargetOffsetY": 0,
         "projectileCollisionRadius": 22,
         "energyAmount": 15,
-        "energyIntervalMs": 12000
+        "energyIntervalMs": 12000,
+        "sizePercent": 100
       },
-      "testingAt": "2026-11-21T00:27:23.116Z",
-      "publishedAt": "2026-11-21T00:28:42.201Z"
+      "testingAt": null,
+      "publishedAt": null,
+      "frameCount": 9,
+      "releaseRequest": null,
+      "archivedAt": null,
+      "restoredFromVersion": null,
+      "animationProfile": {
+        "idle": {
+          "startFrame": 0,
+          "endFrame": 0,
+          "fps": 6,
+          "loop": true
+        },
+        "move": {
+          "startFrame": 0,
+          "endFrame": 8,
+          "fps": 10,
+          "loop": true
+        },
+        "attack": {
+          "startFrame": 0,
+          "endFrame": 8,
+          "fps": 12,
+          "loop": false
+        }
+      },
+      "revision": 2,
+      "versions": [
+        {
+          "versionNumber": 1,
+          "savedAt": "2026-11-21T00:27:09.657Z",
+          "id": "bamboo-throwing-level-1",
+          "type": "plant",
+          "name": "bamboo-throwing-level-1",
+          "filename": "bamboo-throwing-level-1.png",
+          "path": "/assets/plants/bamboo-throwing-level-1.png",
+          "rows": 3,
+          "columns": 3,
+          "spriteSheet": true,
+          "combat": {
+            "mode": "projectile",
+            "projectile": {
+              "id": "bamboo-throwing-level-1-projectile",
+              "path": "/assets/projectiles/plants/bamboo-throwing-level-1-projectile-cbedc31ec96279864eaf335cd3f9594a067d085445f913348b6a7475e97fc27c.png",
+              "filename": "bamboo-throwing-level-1-projectile.png"
+            },
+            "energyCost": 60,
+            "hp": 150,
+            "cooldownMs": 1800,
+            "damage": 30,
+            "range": 500,
+            "projectileSpeed": 280,
+            "projectileCollisionRadius": 22,
+            "energyAmount": 15,
+            "energyIntervalMs": 12000
+          }
+        }
+      ]
     },
     {
       "id": "coconut-level-1",
