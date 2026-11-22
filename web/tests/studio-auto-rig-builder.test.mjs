@@ -358,6 +358,7 @@ test("polygon vertex editing clamps coordinates and rejects collapsed masks", ()
   const moved = moveAutoRigPolygonVertex(polygon, 0, { x: -20, y: 120 }, { width: 100, height: 100 });
   assert.deepEqual(moved[0], { x: 0, y: 100 });
   assert.deepEqual(polygon[0], { x: 10, y: 10 });
-  assert.throws(() => moveAutoRigPolygonVertex(polygon, 0, { x: 90, y: 90 }, { width: 100, height: 100 }), /collapse the mask polygon/);
+  const collinear = [{ x: 10, y: 10 }, { x: 50, y: 50 }, { x: 90, y: 90 }, { x: 10, y: 90 }];
+  assert.throws(() => moveAutoRigPolygonVertex(collinear, 3, { x: 100, y: 100 }, { width: 100, height: 100 }), /collapse the mask polygon/);
   assert.throws(() => moveAutoRigPolygonVertex(polygon, 8, { x: 1, y: 1 }, { width: 100, height: 100 }), /index is out of range/);
 });
