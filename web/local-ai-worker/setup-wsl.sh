@@ -11,6 +11,8 @@ command -v git >/dev/null || { echo "Git is required inside WSL Ubuntu."; exit 1
 python3 -c 'import sys; raise SystemExit(0 if sys.version_info >= (3,10) else 1)' || {
   echo "Python 3.10 or newer is required."; exit 1;
 }
+command -v curl >/dev/null || { echo "curl is required. Install it with: sudo apt-get install -y curl"; exit 1; }
+command -v sha256sum >/dev/null || { echo "sha256sum is required."; exit 1; }
 
 mkdir -p "$(dirname "$ENV_DIR")" "$(dirname "$SAM2_DIR")"
 python3 -m venv "$ENV_DIR"
@@ -33,7 +35,6 @@ python -m pip install -r "$WORKER_DIR/requirements.txt"
 
 # Download the small official SAM 2.1 checkpoint and only the PyTorch/safetensors
 # files needed by CLIP. Model weights stay outside the repository.
-command -v curl >/dev/null || { echo "curl is required. Install it with: sudo apt-get install -y curl"; exit 1; }
 MODEL_DIR="${FVM_MODEL_DIR:-$HOME/models}"
 CLIP_DIR="${FVM_CLIP_MODEL_DIR:-$MODEL_DIR/clip-vit-base-patch32}"
 SAM2_CHECKPOINT="$MODEL_DIR/sam2.1_hiera_tiny.pt"
@@ -83,5 +84,6 @@ PY
 
 echo
 echo "SAM 2 Python environment is ready."
-echo "Next: place a SAM 2.1 tiny checkpoint at: $HOME/models/sam2.1_hiera_tiny.pt"
-echo "Then run: bash \"$WORKER_DIR/start-worker-wsl.sh\""
+echo "SAM 2 checkpoint: $SAM2_CHECKPOINT"
+echo "CLIP model directory: $CLIP_DIR"
+echo "Next: run bash \"$WORKER_DIR/start-worker-wsl.sh\""
