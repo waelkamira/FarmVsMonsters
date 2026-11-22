@@ -155,3 +155,9 @@ test("Studio asset API validates and publishes the rig profile with plant and mo
   assert.match(routeSource, /form\.get\("rigProfile"\)/);
   assert.match(routeSource, /rigProfile:asset\.rigProfile\|\|null/);
 });
+
+test("release staging includes every referenced skeletal bitmap part", () => {
+  assert.match(routeSource, /getRigPartAssets/);
+  assert.match(routeSource, /stage skeletal part/);
+  assert.match(routeSource, /rigParts:rigPartAssets\.map/);
+});
