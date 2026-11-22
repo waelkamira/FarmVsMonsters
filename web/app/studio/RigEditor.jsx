@@ -42,7 +42,7 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
   const clip = rig.clips.find((item) => item.id === selectedClipId) || rig.clips[0];
   const selectedPose = useMemo(() => {
     if (!clip || !validation.valid) return null;
-    try { const frameMs = 1000 / (clip.fps || 24); return evaluateSkeletalClip(rig, clip.id, Math.round(timeMs / frameMs) * frameMs); } catch { return null; }
+    try { return evaluateSkeletalClip(rig, clip.id, snapSkeletalKeyframeTime(clip, timeMs)); } catch { return null; }
   }, [rig, clip, timeMs, validation.valid]);
   const bonePose = selectedPose?.localBones?.[selectedBoneId] || bone;
   useEffect(() => {
@@ -295,7 +295,7 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
     for (let y = 0; y <= height; y += 16) { context.beginPath(); context.moveTo(0, y); context.lineTo(width, y); context.stroke(); }
     let pose = null;
     if (clip && validation.valid) {
-      try { const frameMs = 1000 / (clip.fps || 24); pose = evaluateSkeletalClip(rig, clip.id, Math.round(timeMs / frameMs) * frameMs); } catch { pose = null; }
+      try { pose = evaluateSkeletalClip(rig, clip.id, snapSkeletalKeyframeTime(clip, timeMs)); } catch { pose = null; }
     }
     const local = pose?.localBones || Object.fromEntries(rig.bones.map((item) => [item.id, item]));
     const children = new Map(rig.bones.map((item) => [item.id, []]));
