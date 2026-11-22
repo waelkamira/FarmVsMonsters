@@ -1,8 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import { suggestRigTemplateRetarget } from "../game/studio/rigTemplateRetarget.mjs";
 
 const template = {
+  version: 1,
+  builder: "farmvsmonsters-auto-rig",
+  roleDictionaryVersion: "1.0.0",
   source: { assetId: "plant-template" },
   canvas: { width: 100, height: 100 },
   parts: [
@@ -88,4 +92,26 @@ test("rejects missing and cyclic parent references in a saved template", () => {
     { id: "stem", role: "stem", bounds: { x: 40, y: 20, width: 20, height: 70 } },
     { id: "leaf", role: "leaf", side: "left", bounds: { x: 10, y: 35, width: 30, height: 20 } }
   ], { width: 100, height: 100 }), /cycle/);
+});
+
+
+test("rejects incompatible template versions and pivots outside source bounds", () => {
+  assert.throws(() => suggestRigTemplateRetarget({ ...template, version: 2 }, [
+    { id: "stem", role: "stem", bounds: { x: 40, y: 20, width: 20, height: 70 } }
+  ], { width: 100, height: 100 }), /incompatible/);
+  const invalidPivot = {
+    ...template,
+    parts: [{ ...template.parts[0], pivot: { x: 99, y: 99 } }]
+  };
+  assert.throws(() => suggestRigTemplateRetarget(invalidPivot, [
+    { id: "stem", role: "stem", bounds: { x: 40, y: 20, width: 20, height: 70 } }
+  ], { width: 100, height: 100 }), /pivot must lie inside/);
+});
+
+const panelSource = await readFile(new URL("../app/studio/AutoRigBuilderPanel.jsx", import.meta.url), "utf8");
+test("Studio exposes reviewed template selection and prevents applying stale match previews", () => {
+  assert.match(panelSource, /suggestRigTemplateRetarget/);
+  assert.match(panelSource, /تطبيق الاقتراحات بعد المراجعة/);
+  assert.match(panelSource, /targetFingerprint !== targetPartsFingerprint/);
+  assert.match(panelSource, /parentPartId: part\.parentPartId/);
 });
