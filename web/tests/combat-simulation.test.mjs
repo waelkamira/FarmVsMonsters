@@ -405,8 +405,8 @@ test("resource Mushrooms never block a monster lane", () => {
   const mushroom = { type: "mushroom", row: 2, alive: true, id: "resource" };
   const result = selectLaneBlocker({
     plants: [
-      { plant: radish, localX: 15 },
-      { plant: mushroom, localX: 20 }
+      { plant: radish, localX: 8 },
+      { plant: mushroom, localX: 7 }
     ],
     row: 2,
     monsterLocalX: 10
