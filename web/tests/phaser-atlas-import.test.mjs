@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import { readPngDimensions, validatePhaserAtlasDocument } from "../game/studio/phaserAtlas.mjs";
 
 const sample = {
@@ -68,4 +69,13 @@ test("accepts Phaser JSONHash atlases when the optional meta block is absent", (
   }, { width: 300, height: 150 });
   assert.equal(result.valid, true);
   assert.deepEqual(result.clips, { idle: ["idle_00", "idle_01"] });
+});
+
+test("accepts the real Corn Monster Atlas already used by the game", async () => {
+  const json = JSON.parse(await readFile(new URL("../public/assets/plants/corn_monster.json", import.meta.url), "utf8"));
+  const png = await readFile(new URL("../public/assets/plants/corn_monster.png", import.meta.url));
+  const result = validatePhaserAtlasDocument(json, readPngDimensions(png));
+  assert.equal(result.valid, true, result.errors.join("، "));
+  assert.equal(result.frameCount, 24);
+  assert.deepEqual(Object.keys(result.clips).sort(), ["attack", "hurt", "idle"]);
 });
