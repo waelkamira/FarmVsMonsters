@@ -1936,3 +1936,23 @@ select option {
 .seed-select-start { background:linear-gradient(#d8f08d,#7fb44d); color:#203315; }
 @media(max-width:760px) { .seed-select-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:11px; } .seed-select-card { min-height:180px; } }
 @media(max-width:380px) { .seed-select-panel { padding:18px 12px; } .seed-select-card { min-height:165px; padding:10px 6px; } .seed-select-art { width:70px; height:68px; } .seed-select-card strong { font-size:13px; } }
+
+
+.farm-menu-wallet {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  width: fit-content;
+  margin: 0 auto 2px;
+  padding: 8px 16px;
+  border: 2px solid #fff0c5;
+  border-radius: 999px;
+  background: linear-gradient(145deg, #fff4ce, #e8c17f);
+  color: #60391f;
+  box-shadow: 0 3px 0 #9a6334, inset 0 1px 0 #fff;
+}
+.farm-menu-wallet > span { font-size: 19px; }
+.farm-menu-wallet strong { font: 1000 17px/1 Arial, sans-serif; }
+.farm-menu-wallet small { font-size: 10px; font-weight: 900; }
+.farm-menu-footer { flex-wrap: wrap; }
