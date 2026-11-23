@@ -103,6 +103,7 @@ export async function GET(req){
      ...asset,
      path:"/api/studio/assets?preview="+encodeURIComponent(asset.path),
      ...(asset.atlas?{atlas:{...asset.atlas,jsonPath:"/api/studio/assets?preview="+encodeURIComponent(asset.atlas.jsonPath)}}:{}),
+     ...(asset.audio?{audio:{...asset.audio,path:"/api/studio/assets?preview="+encodeURIComponent(asset.audio.path)}}:{}),
      rigParts:serializeRigParts(registry.assets||[],asset),
      ...(asset.combat?.projectile?{combat:{...asset.combat,projectile:{...asset.combat.projectile,frameCount:asset.combat.projectile.frameCount??1,rows:asset.combat.projectile.rows??1,columns:asset.combat.projectile.columns??1,path:"/api/studio/assets?preview="+encodeURIComponent(asset.combat.projectile.path)}}}:{})
     }));
