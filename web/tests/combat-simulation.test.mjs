@@ -188,7 +188,7 @@ test("lane blocker selection chooses the nearest living radish behind the monste
   assert.throws(() => selectLaneBlocker({ plants: [], row: 2, monsterLocalX: NaN }), /INVALID_LANE_BLOCKER_QUERY/);
 });
 
-test("projectile targeting preserves same-lane first-match and scaled hit radius", () => {
+test("projectile targeting chooses the nearest same-lane hit and scales the hit radius", () => {
   const first = { row: 1, localX: 1.1, alive: true, widthScale: 2, id: "first" };
   const closer = { row: 1, localX: 1.01, alive: true, id: "closer" };
   const result = selectProjectileTarget({
@@ -202,7 +202,7 @@ test("projectile targeting preserves same-lane first-match and scaled hit radius
     localX: 1,
     collisionRadius: 0.1
   });
-  assert.equal(result, first);
+  assert.equal(result, closer);
   assert.equal(selectProjectileTarget({ monsters: [], row: 1, localX: 1, collisionRadius: 0.1 }), null);
 });
 
