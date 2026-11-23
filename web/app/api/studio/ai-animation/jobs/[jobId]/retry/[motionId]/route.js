@@ -26,7 +26,6 @@ export async function POST(req, context) {
   if (!["rejected", "failed"].includes(motion.status)) return NextResponse.json({ error: "يمكن إعادة توليد الحركة بعد رفض الفيديو أو فشل التوليد فقط." }, { status: 409 });
   if (job.provider?.providerJobId && ["queued", "running", "generating"].includes(job.provider.status)) return NextResponse.json({ error: "لا تزال هناك مهمة توليد نشطة. زامنها أو انتظر انتهائها أولاً." }, { status: 409 });
   const image = await readFile(path.join(dir, job.source.path));
-  const providerJobId = null;
   const payload = {
     protocolVersion: 1, jobId,
     sourceImage: { mimeType: job.source.mimeType, base64: image.toString("base64"), background: "#0000FF" },
