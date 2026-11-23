@@ -1,5 +1,5 @@
 import { Scene, Input, Math as PhaserMath } from "phaser";
-import { layoutBattleHudButtons } from "./BattleHudButtons.js";
+import { createBattleHudButtons } from "./BattleHudButtons.js";
 import { translate } from "../../app/LocaleProvider";
 import { PhaserAssetManager } from "../services/assetManager.mjs";
 import { VFXManager } from "../vfx/VFXManager.mjs";
@@ -544,14 +544,7 @@ export default class BattleScene extends Scene {
     this.createFarmBackground();
     this.drawPlantingGrid();
     this.createHud();
-    this.createAudioControls();
-    this.createPauseControl();
-    this.createSettingsControl();
-    this.createSpeedControl();
-    this.createCollectionMenuControl();
-    this.createInventoryControl();
-    this.createQuickCollectionButtons();
-    layoutBattleHudButtons(this);
+    createBattleHudButtons(this);
     this.createCaveman();
     this.bindInput();
     this.events.once("shutdown", () => {
