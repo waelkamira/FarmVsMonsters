@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import base64
 import json
+import math
 import os
 import re
 import threading
@@ -159,6 +160,11 @@ def make_conditioning_frames(image: Image.Image, width: int, height: int, num_fr
     return first, video, mask
 
 
+def vace_frame_count(requested_frames: int) -> int:
+    """Wan VACE temporal frame count is 4N+1; round upward, never undershoot."""
+    return max(5, 4 * math.ceil((requested_frames - 1) / 4) + 1)
+
+
 def generate_motion(folder: Path, image: Image.Image, motion: Motion):
     import torch
     from diffusers.utils import export_to_video
@@ -166,7 +172,7 @@ def generate_motion(folder: Path, image: Image.Image, motion: Motion):
     pipe = get_pipeline()
     # Wan VACE temporal length follows 4N+1. The final sprite extractor resamples
     # the rendered clip to the exact frame count selected in Studio.
-    model_frames = max(5, 4 * round((motion.frames - 1) / 4) + 1)
+    model_frames = vace_frame_count(motion.frames)
     reference, video, mask = make_conditioning_frames(image, motion.width, motion.height, model_frames)
     generator_device = "cuda" if torch.cuda.is_available() else "cpu"
     generator = torch.Generator(device=generator_device)
