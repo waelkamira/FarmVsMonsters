@@ -1,0 +1,41 @@
+name: Battle HUD validation
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "web/game/scenes/BattleScene.js"
+      - "web/tests/wood-frame-inventory.test.mjs"
+      - "web/app/studio/**"
+      - ".github/workflows/battle-hud-validation.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: battle-hud-validation-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Focused HUD, Studio lint, and production build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Lint changed gameplay and Studio files
+        run: npx eslint game/scenes/BattleScene.js app/studio/ProjectileTrajectoryEditor.jsx app/studio/RigEditor.jsx app/studio/page.js
+      - name: Verify battle HUD layout regression tests
+        run: node --test --test-name-pattern="battle HUD controls use one evenly spaced|uploaded wood frame is loaded" tests/wood-frame-inventory.test.mjs
+      - name: Build production application
+        run: npm run build

@@ -45,11 +45,14 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      - name: Unit tests
-        run: npm test
+      - name: Focused battle HUD regression tests
+        run: node --test --test-name-pattern="battle HUD controls use one evenly spaced|uploaded wood frame is loaded" tests/wood-frame-inventory.test.mjs
 
       - name: Production build
         run: npm run build
+
+      - name: Full unit test suite
+        run: npm test
 
   local-ai-worker:
     name: Local AI worker contract
