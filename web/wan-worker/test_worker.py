@@ -4,7 +4,7 @@ from io import BytesIO
 
 from PIL import Image
 
-from worker import Motion, decode_source, make_conditioning_frames, validate_motion
+from worker import Motion, decode_source, make_conditioning_frames, validate_motion, vace_frame_count
 
 
 class WanWorkerContractTests(unittest.TestCase):
@@ -23,6 +23,10 @@ class WanWorkerContractTests(unittest.TestCase):
         motion = Motion(id="teleport", prompt="teleport")
         with self.assertRaises(ValueError):
             validate_motion(motion)
+
+    def test_vace_frame_count_rounds_up_to_4n_plus_1(self):
+        self.assertEqual(vace_frame_count(24), 25)
+        self.assertEqual(vace_frame_count(21), 21)
 
     def test_decode_png_source(self):
         output = BytesIO()
