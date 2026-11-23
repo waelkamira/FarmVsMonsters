@@ -179,13 +179,19 @@ export function selectProjectileTarget({ monsters, row, localX, collisionRadius 
     !Number.isFinite(localX) || !Number.isFinite(collisionRadius) || collisionRadius < 0
   ) throw new RangeError("INVALID_PROJECTILE_TARGET_QUERY");
 
-  // Preserve the live game's first-match rule (monster array order).
-  return monsters.find((monster) =>
-    monster?.alive &&
-    monster.row === row &&
-    Number.isFinite(monster.localX) &&
-    Math.abs(monster.localX - localX) <= collisionRadius * (monster.widthScale || 1)
-  ) ?? null;
+  // Match the live collision rule: choose the nearest eligible monster,
+  // preserving array order when two targets are equally close.
+  let nearest = null;
+  let nearestDistance = Infinity;
+  for (const monster of monsters) {
+    if (!monster?.alive || monster.row !== row || !Number.isFinite(monster.localX)) continue;
+    const distance = Math.abs(monster.localX - localX);
+    const hitRadius = collisionRadius * (monster.widthScale || 1);
+    if (distance > hitRadius || distance >= nearestDistance) continue;
+    nearest = monster;
+    nearestDistance = distance;
+  }
+  return nearest;
 }
 
 export function selectFarmerMeleeTarget({ monsters, row, farmerX, reach } = {}) {
