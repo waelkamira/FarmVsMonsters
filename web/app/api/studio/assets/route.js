@@ -152,7 +152,7 @@ export async function POST(req){
   for(const [motionId,meta] of Object.entries(motionAtlasInput)){
    if(!motionIds.has(motionId)||!meta||typeof meta!=="object")return NextResponse.json({error:"Invalid animation motion: "+motionId},{status:400});
    const mr=Number(meta.rows),mc=Number(meta.columns),mf=Number(meta.frameCount),fps=Number(meta.fps),fw=Number(meta.frameWidth||150),fh=Number(meta.frameHeight||150);
-   if(!Number.isInteger(mr)||!Number.isInteger(mc)||!Number.isInteger(mf)||mr<1||mc<1||mf<1||mf>24||mr*mc!==mf||!Number.isInteger(fps)||fps<1||fps>30||!Number.isInteger(fw)||fw<32||fw>512||!Number.isInteger(fh)||fh<32||fh>512)return NextResponse.json({error:"Invalid grid or timing metadata for "+motionId+"."},{status:400});
+   if(!Number.isInteger(mr)||!Number.isInteger(mc)||!Number.isInteger(mf)||mr<1||mc<1||mf<1||mf>24||mr*mc<mf||!Number.isInteger(fps)||fps<1||fps>30||!Number.isInteger(fw)||fw<32||fw>512||!Number.isInteger(fh)||fh<32||fh>512)return NextResponse.json({error:"Invalid grid or timing metadata for "+motionId+"."},{status:400});
    if(motionId==="idle")continue;
    const motionFile=form.get("motionFile_"+motionId);
    if(!motionFile||typeof motionFile.arrayBuffer!=="function"||motionFile.size<1||motionFile.size>STUDIO_MAX_UPLOAD_BYTES||motionFile.type!=="image/png")return NextResponse.json({error:"Missing or invalid PNG for motion "+motionId+"."},{status:400});
