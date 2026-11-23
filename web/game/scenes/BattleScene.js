@@ -5202,7 +5202,7 @@ export default class BattleScene extends Scene {
     const reaction = getMonsterReactionProfile(monster.kind);
     if (sprite?.active || monster.studioRig?.root?.active) {
       monster.hitAnimUntil = this.time.now + reaction.hitDurationMs;
-      this.playHyenaAnimation(monster, monster.studioRig ? "hyena-hit" : "hyena-idle", true);
+      this.playHyenaAnimation(monster, (monster.studioRig || monster.studioMonster) ? "hyena-hit" : "hyena-idle", true);
 
       if (sprite?.active) {
         if (monster.hitGlowEffect && sprite.postFX?.remove) {
