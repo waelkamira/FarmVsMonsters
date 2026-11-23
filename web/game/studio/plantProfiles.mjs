@@ -15,7 +15,7 @@ const LIMITS = Object.freeze({
   range: [24, 500],
   projectileSpeed: [60, 1200],
   projectileHeight: [-300, 300],
-  projectileRotation: [0, 360],
+  projectileRotation: [-360, 360],
   projectileCollisionRadius: [4, 100],
   energyAmount: [1, 100],
   energyIntervalMs: [1000, 120000],
