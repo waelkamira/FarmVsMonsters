@@ -1,4 +1,4 @@
-name: Battle HUD validation
+name: Battle HUD and button-column validation
 
 on:
   pull_request:
