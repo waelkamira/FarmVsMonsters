@@ -17,25 +17,26 @@ test("the dragon and captive princess enter during wave five and remain separate
 });
 
 test("the farmer automatically fires sling stones and the dragon has its own health bar", () => {
-  assert.match(scene, /boss\.shotCooldown -= delta/);
+  assert.match(scene, /boss\.shotCooldown = advanceCooldown\(boss\.shotCooldown, delta\)/);
+  assert.match(scene, /boss\.shotCooldown = PHASE_ONE_DRAGON\.farmerSlingIntervalMs/);
   assert.match(scene, /this\.playFarmerAction\("farmer-sling"\)/);
-  assert.match(scene, /this\.damageDragonBoss\(25\)/);
+  assert.match(scene, /this\.damageDragonBoss\(PHASE_ONE_DRAGON\.farmerSlingDamage\)/);
   assert.match(scene, /drawDragonHealthBar\(\)/);
   assert.match(scene, /this\.princessActor\.setPosition\(boss\.sprite\.x \+ 78, boss\.sprite\.y \+ 96\)/);
 });
 
 test("dragon fireballs attack living plants or the farmhouse", () => {
-  assert.match(scene, /boss\.attackCooldown = 3900/);
-  assert.match(scene, /const targetPlant = this\.plants\.filter\(\(plant\) => plant\.alive\)/);
-  assert.match(scene, /this\.houseHealth = Math\.max\(0, this\.houseHealth - 12\)/);
+  assert.match(scene, /boss\.attackCooldown = PHASE_ONE_DRAGON\.attackIntervalMs/);
+  assert.match(scene, /selectDragonFireballTarget\(this\.plants\)/);
+  assert.match(scene, /this\.houseHealth = Math\.max\(0, this\.houseHealth - PHASE_ONE_DRAGON\.fireballDamageToFarm\)/);
 });
 
 test("Phase 1 cannot finish until all ordinary monsters and the separate dragon are defeated", () => {
   const finish = scene.slice(scene.indexOf("  tryFinishPhaseOne() {"), scene.indexOf("  beginPrincessRescue() {"));
-  assert.match(finish, /this\.spawnedThisWave < this\.waveSize/);
-  assert.match(finish, /this\.monsters\.some\(\(monster\) => monster\.alive\)/);
-  assert.match(finish, /this\.dragonBoss\?\.alive/);
-  assert.match(scene, /if \(this\.dragonBoss\) \{[\s\S]*?this\.tryFinishPhaseOne\(\)/);
+  assert.match(finish, /canBeginPrincessRescue\(/);
+  assert.match(finish, /livingMonsterCount: this\.monsters\.filter\(\(monster\) => monster\.alive\)\.length/);
+  assert.match(finish, /dragonAlive: this\.dragonBoss\?\.alive/);
+  assert.match(scene, /this\.tryFinishPhaseOne\(\)/);
 });
 
 test("the rescue sequence picks up the princess, carries her home, then opens the victory screen", () => {
@@ -60,7 +61,7 @@ test("story artwork uses explicit user-owned asset paths and optional animation 
 });
 
 
-test("victory saves the unlocked campaign stage to the signed-in player's cloud account", () => {
-  assert.match(scene, /import \{ syncProgressAfterVictory \} from "\.\.\/services\/playerAccount\.mjs"/);
-  assert.match(scene, /unlockNextStage\(window\.localStorage, 1\);[\s\S]*?syncProgressAfterVictory\(\)/);
+test("victory records the unlocked campaign stage in local progress", () => {
+  assert.match(scene, /unlockNextStage\(window\.localStorage, 1\)/);
+  assert.doesNotMatch(scene, /syncProgressAfterVictory/);
 });
