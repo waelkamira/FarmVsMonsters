@@ -2064,51 +2064,58 @@ export default class BattleScene extends Scene {
   }
 
   createQuickCollectionButtons() {
-    // A shared translucent glass dock ties the two collection shortcuts together.
-    this.quickCollectionDock = this.add.container(1050, 625).setDepth(50);
-    const dockGlow = this.add.rectangle(0, 1, 112, 96, 0x17100a, 0.28);
-    const dock = this.add.rectangle(0, 0, 106, 88, 0x6b4929, 1)
-      .setStrokeStyle(3, 0xd5a66a, 1);
-    this.quickCollectionDock.add([dockGlow, dock]);
-
-    const makeButton = (x, tab, tint) => {
-      const button = this.add.container(x, 0);
-      const halo = this.add.circle(0, 0, 21, 0xffffff, 0.10);
-      const plate = this.add.circle(0, 0, 18, tint, 0.38)
-        .setStrokeStyle(1, 0xffffff, 0.72).setInteractive({ useHandCursor: true });
+    // Three independent floating shortcuts; deliberately no enclosing card or dock.
+    const makeButton = (x, kind, tint, tab) => {
+      const button = this.add.container(x, 625).setDepth(51);
+      const shadow = this.add.circle(0, 2, 23, 0x17100a, 0.38);
+      const rim = this.add.circle(0, 0, 21, 0x80552f, 1)
+        .setStrokeStyle(2.4, 0xf1d08b, 1);
+      const face = this.add.circle(0, 0, 16.5, tint, 1)
+        .setStrokeStyle(1, 0xfff0c8, 0.92)
+        .setInteractive({ useHandCursor: true });
       const icon = this.add.graphics();
-      icon.lineStyle(2.6, 0xffffff, 1);
-      if (tab === "plants") {
+      icon.lineStyle(2.3, 0xfff8e8, 1);
+      if (kind === "plants") {
         icon.lineBetween(0, 11, 0, -2);
         icon.lineBetween(0, 2, -8, -6);
         icon.lineBetween(0, -1, 8, -9);
         icon.strokeEllipse(-7, -7, 10, 7);
         icon.strokeEllipse(7, -10, 10, 7);
-        icon.lineBetween(-10, 12, 10, 12);
+        icon.lineBetween(-9, 12, 9, 12);
+      } else if (kind === "adventures") {
+        icon.strokeRoundedRect(-10, -11, 20, 23, 3);
+        icon.lineBetween(-5, -5, 5, -5);
+        icon.lineBetween(-5, 0, 3, 0);
+        icon.lineBetween(-5, 5, 5, 5);
+        icon.fillStyle(0xffd66f, 1);
+        icon.fillCircle(7, -8, 2.2);
       } else {
-        icon.fillStyle(0xffffff, 1);
-        icon.fillEllipse(0, 6, 14, 10);
-        icon.fillCircle(-8, -6, 3.2);
-        icon.fillCircle(-2, -11, 3.2);
-        icon.fillCircle(5, -11, 3.2);
-        icon.fillCircle(10, -5, 3.2);
+        icon.fillStyle(0xfff8e8, 1);
+        icon.fillRoundedRect(-10, -8, 20, 17, 5);
+        icon.fillCircle(-6, -9, 4);
+        icon.fillCircle(0, -12, 4);
+        icon.fillCircle(6, -9, 4);
+        icon.fillStyle(0x56351f, 1);
+        icon.fillCircle(-4, 0, 2);
+        icon.fillCircle(4, 0, 2);
+        icon.fillTriangle(-3, 5, 3, 5, 0, 8);
       }
-      button.add([halo, plate, icon]);
-      plate.on("pointerover", () => {
-        plate.setFillStyle(tint, 0.72);
-        button.setScale(1.06);
+      button.add([shadow, rim, face, icon]);
+      face.on("pointerover", () => {
+        face.setFillStyle(PhaserMath.Interpolation.Linear([tint, 0xffdf8a], 0.45));
+        button.setScale(1.08);
       });
-      plate.on("pointerout", () => {
-        plate.setFillStyle(tint, 0.38);
+      face.on("pointerout", () => {
+        face.setFillStyle(tint);
         button.setScale(1);
       });
-      plate.on("pointerdown", () => this.openCollectionMenuTab(tab));
-      this.quickCollectionDock.add(button);
+      face.on("pointerdown", () => this.openCollectionMenuTab(tab));
       return button;
     };
 
-    this.quickPlantsButton = makeButton(-34, "plants", 0x42c96b);
-    this.quickMonstersButton = makeButton(34, "monsters", 0x8b65e8);
+    this.quickPlantsButton = makeButton(958, "plants", 0x328b55, "plants");
+    this.quickAdventuresButton = makeButton(1028, "adventures", 0x397fb0, "phases");
+    this.quickMonstersButton = makeButton(1098, "monsters", 0x7952a8, "monsters");
   }
 
   openCollectionMenuTab(tab) {
@@ -2118,16 +2125,31 @@ export default class BattleScene extends Scene {
   }
 
   createCollectionMenuControl() {
+    // Compact journal emblem matching the floating battle shortcuts.
     const button = this.add.container(956, 27).setDepth(52);
-    const plate = this.add.circle(0, 0, 16, 0x9b6b39, 1)
-      .setStrokeStyle(2.5, 0xe6c58c, 1).setInteractive({ useHandCursor: true });
-    const label = this.add.text(0, 0, "▤", {
-      fontFamily: "Arial", fontSize: "20px", color: "#4b2e16", fontStyle: "bold"
-    }).setOrigin(0.5);
-    button.add([plate, label]);
-    plate.on("pointerover", () => plate.setFillStyle(0xffdf8a, 1).setScale(1.04));
-    plate.on("pointerout", () => plate.setFillStyle(0xe6c58c, 1).setScale(1));
-    plate.on("pointerdown", () => this.toggleCollectionMenu());
+    const shadow = this.add.circle(0, 2, 18, 0x17100a, 0.34);
+    const rim = this.add.circle(0, 0, 16, 0x80552f, 1)
+      .setStrokeStyle(2.2, 0xf1d08b, 1);
+    const face = this.add.circle(0, 0, 12.5, 0x477a55, 1)
+      .setStrokeStyle(1, 0xfff0c8, 0.9)
+      .setInteractive({ useHandCursor: true });
+    const book = this.add.graphics();
+    book.lineStyle(1.8, 0xfff8e8, 1);
+    book.strokeRoundedRect(-8, -7, 7, 14, 1.5);
+    book.strokeRoundedRect(1, -7, 7, 14, 1.5);
+    book.lineBetween(0, -6, 0, 7);
+    book.lineBetween(-6, -3, -3, -3);
+    book.lineBetween(3, -3, 6, -3);
+    button.add([shadow, rim, face, book]);
+    face.on("pointerover", () => {
+      face.setFillStyle(0x6ba66d);
+      button.setScale(1.07);
+    });
+    face.on("pointerout", () => {
+      face.setFillStyle(0x477a55);
+      button.setScale(1);
+    });
+    face.on("pointerdown", () => this.toggleCollectionMenu());
     this.collectionMenuControl = button;
     this.collectionMenuOpen = false;
   }
