@@ -220,7 +220,7 @@ export default class BattleScene extends Scene {
           if (!entry || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(entry.id || "") ||
               typeof entry.path !== "string" || !(entry.path.startsWith("/assets/") || entry.path.startsWith("/api/studio/assets?preview="))) continue;
           if(entry.atlas?.jsonPath)this.load.atlas("studio-monster-" + variant + "-" + entry.id, entry.path, entry.atlas.jsonPath);else this.load.image("studio-monster-" + variant + "-" + entry.id, entry.path);
-          if(entry.audio?.path && (entry.audio.path.startsWith("/assets/") || entry.audio.path.startsWith("/api/studio/assets?preview="))) this.load.audio("studio-character-audio-" + entry.id, entry.audio.path);
+          if(entry.audio?.path && (entry.audio.path.startsWith("/assets/") || entry.audio.path.startsWith("/api/studio/assets?preview="))) this.load.audio("studio-character-audio-" + variant + "-" + entry.id, entry.audio.path);
           queueRigPartTextures(entry, variant);
         }
       });
@@ -4139,7 +4139,7 @@ export default class BattleScene extends Scene {
       alive: true, trailTimer: 0
     });
     this.playThornSound();
-    if (plant.studioPlant?.id) this.playSfx("studio-character-audio-" + plant.studioPlant.id, this.effectsVolume, 80);
+    if (plant.studioPlant?.id) this.playSfx((plant.studioPlant.audioKey || "studio-character-audio-" + plant.studioPlant.id), this.effectsVolume, 80);
   }
 
   createFreezeImpact(x, y, plantType = "snow-thrower") {
