@@ -16,6 +16,9 @@ test("seed packet cards share a visual identity and preserve live cooldown state
   assert.match(scene, /const selectionFrame = this\.add\.rectangle/);
   assert.match(scene, /const namePlate = this\.add\.rectangle/);
   assert.match(scene, /const costPlate = this\.add\.rectangle/);
+  assert.match(scene, /this\.textures\.exists\("seed-card-frame"\)/);
+  assert.match(scene, /Math\.min\(86 \/ frameSource\.width, 98 \/ frameSource\.height\)/);
+  assert.match(scene, /panel, \.\.\.\(seedFrame \? \[seedFrame\] : \[\]\)/);
   assert.match(scene, /card\.setData\("cooldownOverlay", cooldownOverlay\)/);
   assert.match(scene, /card\.setData\("cooldownLabel", cooldownLabel\)/);
   assert.match(scene, /card\.setData\("selectionFrame", selectionFrame\)/);
