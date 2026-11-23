@@ -192,7 +192,7 @@ export async function POST(req){
  if(existing&&existing.type!==type)return NextResponse.json({error:"لا يمكن تغيير فئة الأصل أثناء التعديل."},{status:409});
  if(!hasFile&&(!replace||!existing))return NextResponse.json({error:"Choose a file for a new asset."},{status:400});
  if(hasFile&&(file.size>STUDIO_MAX_UPLOAD_BYTES||!config.accepts.includes(file.type)))return NextResponse.json({error:"Choose a supported file up to 8 MB."},{status:415});
- if(config.spriteSheet&&(!Number.isInteger(frameCount)||frameCount<1||frameCount>24||!Number.isInteger(rows)||!Number.isInteger(columns)||rows<1||columns<1||rows*columns!==frameCount))return NextResponse.json({error:"عدد الإطارات يجب أن يكون من 1 إلى 24، ويجب أن يطابق حاصل ضرب الصفوف والأعمدة."},{status:400});
+ if(config.spriteSheet&&(!Number.isInteger(frameCount)||frameCount<1||frameCount>24||!Number.isInteger(rows)||!Number.isInteger(columns)||rows<1||columns<1||rows*columns<frameCount))return NextResponse.json({error:"عدد الإطارات يجب أن يكون من 1 إلى 24، ويجب أن يطابق حاصل ضرب الصفوف والأعمدة."},{status:400});
  let animationProfile=null;
  if(config.spriteSheet&&(type==="plant"||type==="monster")){
   try{
@@ -238,7 +238,7 @@ export async function POST(req){
   const projectileFrameCount=Number(form.get("projectileFrameCount")||9);
   const projectileRows=Number(form.get("projectileRows")||1);
   const projectileColumns=Number(form.get("projectileColumns")||1);
-  if(hasProjectile&&(!Number.isInteger(projectileFrameCount)||projectileFrameCount<1||projectileFrameCount>24||!Number.isInteger(projectileRows)||!Number.isInteger(projectileColumns)||projectileRows<1||projectileColumns<1||projectileRows*projectileColumns!==projectileFrameCount))return NextResponse.json({error:"عدد إطارات القذيفة يجب أن يكون من 1 إلى 24، ويجب أن يطابق حاصل ضرب صفوفها وأعمدتها."},{status:400});
+  if(hasProjectile&&(!Number.isInteger(projectileFrameCount)||projectileFrameCount<1||projectileFrameCount>24||!Number.isInteger(projectileRows)||!Number.isInteger(projectileColumns)||projectileRows<1||projectileColumns<1||projectileRows*projectileColumns<projectileFrameCount))return NextResponse.json({error:"عدد إطارات القذيفة يجب أن يكون من 1 إلى 24، ويجب أن يطابق حاصل ضرب صفوفها وأعمدتها."},{status:400});
   const currentProjectile=behavior==="projectile"
     ?(hasProjectile
       ?{id:id+"-projectile",filename:id+"-projectile"+ext(projectileFile.type),path:"/assets/"+createImmutableAssetPath("projectiles/plants",id+"-projectile",ext(projectileFile.type),projectileBytes),managed:false,frameCount:projectileFrameCount,rows:projectileRows,columns:projectileColumns}
