@@ -21,7 +21,16 @@ const REGISTRY_PATH="web/game/data/studioAssetRegistry.json";
 const PUBLISHED_CATALOG_PATH="web/public/assets/studio-plant-catalog.json";
 const PUBLISHED_MONSTER_CATALOG_PATH="web/public/assets/studio-monster-catalog.json";
 function authorized(req){return verifyStudioSession(process.env.STUDIO_ADMIN_TOKEN||"",req.cookies.get(COOKIE)?.value||"");}
-function ext(type){return {"image/png":".png","image/webp":".webp","image/gif":".gif","audio/mpeg":".mp3","audio/wav":".wav","audio/ogg":".ogg","audio/mp4":".m4a","audio/webm":".webm"}[type]||"";}
+function ext(type){return {"image/png":".png","image/webp":".webp","image/gif":".gif","audio/mpeg":".mp3","audio/mp3":".mp3","audio/wav":".wav","audio/x-wav":".wav","audio/ogg":".ogg","audio/mp4":".m4a","audio/webm":".webm"}[type]||"";}
+function validStudioAudioBytes(type,bytes){
+ if(!bytes||bytes.length<4)return false;
+ if(type==="audio/mpeg"||type==="audio/mp3")return (bytes[0]===0x49&&bytes[1]===0x44&&bytes[2]===0x33)||(bytes[0]===0xff&&(bytes[1]&0xe0)===0xe0);
+ if(type==="audio/wav"||type==="audio/x-wav")return bytes.toString("ascii",0,4)==="RIFF"&&bytes.toString("ascii",8,12)==="WAVE";
+ if(type==="audio/ogg")return bytes.toString("ascii",0,4)==="OggS";
+ if(type==="audio/mp4")return bytes.toString("ascii",4,8)==="ftyp";
+ if(type==="audio/webm")return bytes[0]===0x1a&&bytes[1]===0x45&&bytes[2]===0xdf&&bytes[3]===0xa3;
+ return false;
+}
 function getRigPartAssets(assets,asset){const bones=Array.isArray(asset?.rigProfile?.bones)?asset.rigProfile.bones:[];const ids=[...new Set(bones.map(bone=>bone?.part?.assetId).filter(Boolean))];return ids.map(id=>assets.find(item=>item.id===id));}
 function getRigPartFrameCount(part){if(!part?.spriteSheet)return 1;const capacity=Math.max(1,Number(part.rows||1)*Number(part.columns||1));const count=Number(part.frameCount)||capacity;return Math.max(1,Math.min(capacity,Number.isInteger(count)?count:capacity));}
 function serializeRigParts(assets,asset){return getRigPartAssets(assets,asset).filter(part=>part&&["item","plant","monster","effect"].includes(part.type)&&part.status!=="archived"&&safeAssetPath(part.path)).map(part=>({id:part.id,name:part.name,type:part.type,path:process.env.STUDIO_STORAGE_DRIVER==="github"?"/api/studio/assets?preview="+encodeURIComponent(part.path):part.path,rows:part.spriteSheet?(part.rows||1):1,columns:part.spriteSheet?(part.columns||1):1,frameCount:getRigPartFrameCount(part),spriteSheet:Boolean(part.spriteSheet)}));}
@@ -140,8 +149,9 @@ export async function POST(req){
  if(type==="plant"&&STUDIO_RESERVED_PLANT_IDS.includes(id))return NextResponse.json({error:"هذا المعرّف محجوز لنبتة أساسية في اللعبة. اختر معرّفاً جديداً."},{status:409});
  const hasFile=Boolean(file&&typeof file.arrayBuffer==="function"&&file.size>0);
  const hasAudio=Boolean(audioFile&&typeof audioFile.arrayBuffer==="function"&&audioFile.size>0);
- if(hasAudio&&(!["plant","monster"].includes(type)||!ext(audioFile.type).startsWith(".")||!audioFile.type.startsWith("audio/")||audioFile.size>8*1024*1024))return NextResponse.json({error:"ارفع ملفاً صوتياً للنبات أو الوحش بصيغة MP3 أو WAV أو OGG أو M4A أو WebM وبحجم لا يتجاوز 8 MB."},{status:415});
+ if(hasAudio&&(!["plant","monster"].includes(type)||!ext(audioFile.type)||audioFile.size>8*1024*1024))return NextResponse.json({error:"ارفع ملفاً صوتياً للنبات أو الوحش بصيغة MP3 أو WAV أو OGG أو M4A أو WebM وبحجم لا يتجاوز 8 MB."},{status:415});
  const audioBytes=hasAudio?Buffer.from(await audioFile.arrayBuffer()):null;
+ if(hasAudio&&!validStudioAudioBytes(audioFile.type,audioBytes))return NextResponse.json({error:"صيغة الملف الصوتي لا تطابق محتواه الفعلي."},{status:415});
  const hasAtlas=uploadMode==="atlas"&&hasFile;
  const hasAtlasJson=Boolean(atlasJsonFile&&typeof atlasJsonFile.arrayBuffer==="function"&&atlasJsonFile.size>0);
  const hasProjectile=Boolean(projectileFile&&typeof projectileFile.arrayBuffer==="function"&&projectileFile.size>0);
@@ -441,7 +451,7 @@ export async function PATCH(req){
   const publishedAt=new Date().toISOString();
   const publishedRecord=isMonster
    ?{id:asset.id,name:asset.name,path:asset.path,...(asset.atlas?{atlas:asset.atlas}:{}),...(asset.audio?{audio:asset.audio}:{}),rows:asset.rows,columns:asset.columns,spriteSheet:asset.spriteSheet,animationProfile:asset.animationProfile||null,rigProfile:asset.rigProfile||null,rigParts:rigPartAssets.map(part=>({id:part.id,name:part.name,path:part.path,rows:part.spriteSheet?(part.rows||1):1,columns:part.spriteSheet?(part.columns||1):1,frameCount:getRigPartFrameCount(part),spriteSheet:Boolean(part.spriteSheet)})),monsterProfile:asset.monsterProfile,publishedAt}
-   :{id:asset.id,name:asset.name,path:asset.path,...(asset.atlas?{atlas:asset.atlas}:{}),rows:asset.rows,columns:asset.columns,spriteSheet:asset.spriteSheet,animationProfile:asset.animationProfile||null,rigProfile:asset.rigProfile||null,rigParts:rigPartAssets.map(part=>({id:part.id,name:part.name,path:part.path,rows:part.spriteSheet?(part.rows||1):1,columns:part.spriteSheet?(part.columns||1):1,frameCount:getRigPartFrameCount(part),spriteSheet:Boolean(part.spriteSheet)})),combat:asset.combat,publishedAt};
+   :{id:asset.id,name:asset.name,path:asset.path,...(asset.atlas?{atlas:asset.atlas}:{}),...(asset.audio?{audio:asset.audio}:{}),rows:asset.rows,columns:asset.columns,spriteSheet:asset.spriteSheet,animationProfile:asset.animationProfile||null,rigProfile:asset.rigProfile||null,rigParts:rigPartAssets.map(part=>({id:part.id,name:part.name,path:part.path,rows:part.spriteSheet?(part.rows||1):1,columns:part.columns||1,frameCount:getRigPartFrameCount(part),spriteSheet:Boolean(part.spriteSheet)})),combat:asset.combat,publishedAt};
   const collectionKey=isMonster?"monsters":"plants";
   const collection=Array.isArray(catalog[collectionKey])?catalog[collectionKey]:[];
   const existingIndex=collection.findIndex(item=>item.id===id);
