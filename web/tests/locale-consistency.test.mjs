@@ -21,7 +21,7 @@ test("localized campaign summary matches the authoritative Stage 1 wave schedule
 test("the How to Play screen explains that the Stage 1 dragon is separate from ordinary monsters", () => {
   assert.match(howToPlay, /30 ordinary monsters/);
   assert.match(howToPlay, /dragon.*counted separately as the boss/i);
-  assert.match(howToPlay, /التنين.*بشكل منفصل عن الوحوش العادية/);
+  assert.match(howToPlay, /التنين.*زعيم مستقل عن الوحوش العادية/);
 });
 
 test("Radish planting cost stays aligned across combat rules and player instructions", () => {
