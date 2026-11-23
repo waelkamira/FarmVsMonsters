@@ -78,3 +78,24 @@ jobs:
 
       - name: Run worker contract tests
         run: python -m unittest -v test_worker.py
+
+  wan-worker-contract:
+    name: Wan worker contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: web/wan-worker
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install lightweight contract dependencies
+        run: python -m pip install -r requirements-test.txt
+      - name: Compile worker and Colab launcher
+        run: python -m py_compile worker.py colab_start.py
+      - name: Run Wan worker contract tests
+        run: python -m unittest -v test_worker.py
