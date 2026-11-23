@@ -11,6 +11,29 @@ const ROOT = path.join(process.cwd(), ".autorig-workspace", "ai-animation", "job
 function githubHeaders(token) {
   return { Authorization: "Bearer " + token, Accept: "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28" };
 }
+async function putGithubFile(repository, branch, token, target, bytes, message) {
+  const apiPath = "https://api.github.com/repos/" + repository + "/contents/" + target.split("/").map(encodeURIComponent).join("/");
+  const headers = githubHeaders(token);
+  let existingSha = null;
+  const existingResponse = await fetch(apiPath + "?ref=" + encodeURIComponent(branch), { headers, cache: "no-store" });
+  if (existingResponse.ok) {
+    const existing = await existingResponse.json();
+    existingSha = existing.sha || null;
+    const normalized = String(existing.content || "").replace(/\\s/g, "");
+    const next = bytes.toString("base64");
+    if (normalized && normalized === next) return { path: target, url: existing.html_url || null, sha: existing.sha || null, unchanged: true };
+  } else if (existingResponse.status !== 404) {
+    const error = await existingResponse.json().catch(() => ({}));
+    throw new Error(error.message || "GitHub read failed (" + existingResponse.status + ") for " + target + ".");
+  }
+  const response = await fetch(apiPath, {
+    method: "PUT", headers: { ...headers, "Content-Type": "application/json" },
+    body: JSON.stringify({ message, branch, content: bytes.toString("base64"), ...(existingSha ? { sha: existingSha } : {}) })
+  });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(result.message || "GitHub upload failed (" + response.status + ") for " + target + ".");
+  return { path: target, url: result.content?.html_url || null, sha: result.commit?.sha || null, unchanged: false };
+}
 function safeSlug(value, fallback) {
   const slug = String(value || "").normalize("NFKD").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 48);
   return slug || fallback;
@@ -55,19 +78,7 @@ export async function POST(req, context) {
         const bytes = await readFile(path.join(dir, relative));
         if (bytes.length > 8 * 1024 * 1024) throw new Error("الملف " + filename + " يتجاوز حد 8 MB.");
         const target = rootPath + "/" + filename;
-        const response = await fetch("https://api.github.com/repos/" + repository + "/contents/" + target.split("/").map(encodeURIComponent).join("/"), {
-          method: "PUT", headers: { ...githubHeaders(token), "Content-Type": "application/json" },
-          body: JSON.stringify({ message: "studio: add approved AI animation " + slug + " " + motion.id, branch, content: bytes.toString("base64") })
-        });
-        const result = await response.json().catch(() => ({}));
-        if (!response.ok) throw new Error(result.message || "GitHub upload failed (" + response.status + ") for " + filename + ".");
-        files.push({ path: target, url: result.content?.html_url || null, sha: result.commit?.sha || null, contentType });
-      }
-    }
-    const manifestPath = rootPath + "/manifest.json";
-    const manifestResponse = await fetch("https://api.github.com/repos/" + repository + "/contents/" + manifestPath.split("/").map(encodeURIComponent).join("/"), {
-      method: "PUT", headers: { ...githubHeaders(token), "Content-Type": "application/json" },
-      body: JSON.stringify({ message: "studio: publish approved AI animation manifest " + slug, branch, content: Buffer.from(JSON.stringify(manifest, null, 2) + "\n").toString("base64") })
+        files.push({ ...(await putGithubFile(repository, branch, token, target, bytes, "studio: add approved AI animation " + slug + " " + motion.id)), contentType });\n").toString("base64") })
     });
     const manifestResult = await manifestResponse.json().catch(() => ({}));
     if (!manifestResponse.ok) throw new Error(manifestResult.message || "GitHub manifest upload failed (" + manifestResponse.status + ").");
