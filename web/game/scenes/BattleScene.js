@@ -3078,13 +3078,13 @@ export default class BattleScene extends Scene {
           monster.voiceCooldown = PhaserMath.Between(6500, 12500);
         }
       }
-      // Every living plant blocks monsters in its own lane. A monster must
-      // finish eating that plant before it can continue toward the farmhouse.
+      // Only defensive Radishes block monsters. Resource Mushrooms must never
+      // stop a lane or alter the bite clearance of a defensive plant.
       const monsterHalfWidth = monster.hyenaSprite
         ? monster.hyenaSprite.width * monster.hyenaSprite.scaleX * monster.view.scaleX * 0.5
         : monster.view.getBounds().width * 0.5;
       const widestBlockingPlantHalfWidth = this.plants.reduce((widest, plant) => {
-        if (!plant.alive || plant.row !== monster.row || !plant.view?.active) return widest;
+        if (!plant.alive || plant.type !== "radish" || plant.row !== monster.row || !plant.view?.active) return widest;
         return Math.max(widest, plant.view.getBounds().width * 0.5);
       }, 0);
       // Include a plant that the monster has just crossed by a few pixels.
