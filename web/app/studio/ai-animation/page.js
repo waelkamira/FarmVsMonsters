@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { AI_ANIMATION_MOTIONS, DEFAULT_NEGATIVE_PROMPT } from "../../../game/studio/aiAnimationPipeline.mjs";
+import { AI_ANIMATION_MOTIONS, DEFAULT_NEGATIVE_PROMPT } from "../../../game/studio/aiAnimationPipeline.mjs";\nimport PhaserSpritePreview from "./PhaserSpritePreview.jsx";
 import "./ai-animation.css";
 
 const INITIAL = Object.fromEntries(AI_ANIMATION_MOTIONS.map((motion) => [motion.id, {
@@ -57,7 +57,7 @@ export default function AiAnimationPage() {
             {videoUrl&&motion.status!=="rejected"?<video controls preload="metadata" src={videoUrl}/>:<label className="ai-video-upload">ارفع فيديو هذه الحركة بعد توليده من Wan<input type="file" accept="video/mp4,video/webm" disabled={busy} onChange={e=>uploadVideo(m.id,e.target.files?.[0])}/></label>}
             {motion.status==="video_review"&&<div className="ai-actions"><button disabled={busy} onClick={()=>jobAction("", "PATCH",{motionId:m.id,action:"approve-video"})}>اعتماد الفيديو</button><button disabled={busy} onClick={()=>jobAction("", "PATCH",{motionId:m.id,action:"reject-video"})}>رفض الفيديو</button></div>}
             {motion.status==="video_approved"&&<button className="ai-primary" disabled={busy} onClick={()=>jobAction("/process/"+m.id)}>تحويل الفيديو إلى إطارات</button>}
-            {spriteUrl&&<div className="ai-sprite-review"><img src={spriteUrl} alt={"Sprite Sheet "+m.id}/><a href={jsonUrl} target="_blank" rel="noreferrer">معاينة ملف JSON</a>{motion.validationPath&&<a href={"/api/studio/ai-animation/jobs/"+selectedJob.id+"/files/"+motion.validationPath} target="_blank" rel="noreferrer">تقرير الفحص</a>}{motion.processingWarnings?.length>0&&<p>{motion.processingWarnings.join(" · ")}</p>}</div>}
+            {spriteUrl&&<div className="ai-sprite-review"><img src={spriteUrl} alt={"Sprite Sheet "+m.id}/><PhaserSpritePreview src={spriteUrl} frameWidth={motion.frameWidth||150} frameHeight={motion.frameHeight||150} frameCount={motion.frames} fps={motion.fps} loop={motion.loop} label={m.label}/><a href={jsonUrl} target="_blank" rel="noreferrer">معاينة ملف JSON</a>{motion.validationPath&&<a href={"/api/studio/ai-animation/jobs/"+selectedJob.id+"/files/"+motion.validationPath} target="_blank" rel="noreferrer">تقرير الفحص</a>}{motion.processingWarnings?.length>0&&<p>{motion.processingWarnings.join(" · ")}</p>}</div>}
             {motion.status==="sprite_review"&&<div className="ai-actions"><button disabled={busy} onClick={()=>jobAction("", "PATCH",{motionId:m.id,action:"approve-sprites"})}>اعتماد الإطارات</button><button disabled={busy} onClick={()=>jobAction("", "PATCH",{motionId:m.id,action:"reject-sprites"})}>رفض الإطارات</button></div>}
             {motion.error&&<p className="ai-error">{motion.error}</p>}
           </article>;})}
