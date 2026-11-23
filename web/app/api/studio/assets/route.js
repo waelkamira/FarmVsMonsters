@@ -41,7 +41,11 @@ async function githubGetPullRequest(number,token){
 async function githubPut(filePath,bytes,message,token,branch,expectedSha){const api=githubUrl(filePath),headers=githubHeaders(token);const check=await fetch(api+"?ref="+encodeURIComponent(branch),{headers});let sha=null;if(check.ok)sha=(await check.json()).sha;else if(check.status!==404)throw Error("GitHub lookup failed ("+check.status+").");assertExpectedContentSha(expectedSha,sha);const saved=await fetch(api,{method:"PUT",headers:{...headers,"Content-Type":"application/json"},body:JSON.stringify({message,branch,content:Buffer.from(bytes).toString("base64"),...(sha?{sha}:{})})});if(!saved.ok){const data=await saved.json().catch(()=>({}));throw Error(data.message||"GitHub save failed ("+saved.status+").");}}
 async function localRegistry(){try{return JSON.parse(await readFile(path.join(process.cwd(),"game/data/studioAssetRegistry.json"),"utf8"));}catch(error){if(error.code==="ENOENT")return {version:1,assets:[]};throw error;}}
 async function saveLocalRegistry(registry){const target=path.join(process.cwd(),"game/data/studioAssetRegistry.json");await mkdir(path.dirname(target),{recursive:true});await writeFile(target,JSON.stringify(registry,null,2)+"\n","utf8");}
-function addPreviewUrls(registry){const github=process.env.STUDIO_STORAGE_DRIVER==="github";return {...registry,storage:process.env.STUDIO_STORAGE_DRIVER||"local",assets:(registry.assets||[]).map(asset=>({...asset,previewUrl:github?"/api/studio/assets?preview="+encodeURIComponent(asset.path):asset.path,rigParts:serializeRigParts(registry.assets||[],asset),...(asset.combat?.projectile?{combat:{...asset.combat,projectile:{...asset.combat.projectile,frameCount:asset.combat.projectile.frameCount??1,rows:asset.combat.projectile.rows??1,columns:asset.combat.projectile.columns??1,previewUrl:github?"/api/studio/assets?preview="+encodeURIComponent(asset.combat.projectile.path):asset.combat.projectile.path}}}:{})}))};}
+function serializeMotionAtlases(asset){
+ const github=process.env.STUDIO_STORAGE_DRIVER==="github";
+ return Object.fromEntries(Object.entries(asset?.motionAtlases||{}).map(([motionId,atlas])=>[motionId,{...atlas,path:github?"/api/studio/assets?preview="+encodeURIComponent(atlas.path):atlas.path}]));
+}
+function addPreviewUrls(registry){const github=process.env.STUDIO_STORAGE_DRIVER==="github";return {...registry,storage:process.env.STUDIO_STORAGE_DRIVER||"local",assets:(registry.assets||[]).map(asset=>({...asset,previewUrl:github?"/api/studio/assets?preview="+encodeURIComponent(asset.path):asset.path,rigParts:serializeRigParts(registry.assets||[],asset),motionAtlases:serializeMotionAtlases(asset),...(asset.combat?.projectile?{combat:{...asset.combat,projectile:{...asset.combat.projectile,frameCount:asset.combat.projectile.frameCount??1,rows:asset.combat.projectile.rows??1,columns:asset.combat.projectile.columns??1,previewUrl:github?"/api/studio/assets?preview="+encodeURIComponent(asset.combat.projectile.path):asset.combat.projectile.path}}}:{})}))};}
 function readCombatForm(form,projectile,existing){
  const previous=existing?.combat;
  return createStudioPlantCombatProfile({
@@ -85,7 +89,7 @@ export async function GET(req){
      if(!asset.releaseRequest?.number)return asset;
      try{return resolveStudioReleaseAsset(asset,await githubGetPullRequest(asset.releaseRequest.number,token));}catch{return asset;}
     }));
-    const monsters=candidates.filter(asset=>asset.status==="testing").map(asset=>({...asset,path:"/api/studio/assets?preview="+encodeURIComponent(asset.path),rigParts:serializeRigParts(registry.assets||[],asset)}));
+    const monsters=candidates.filter(asset=>asset.status==="testing").map(asset=>({...asset,path:"/api/studio/assets?preview="+encodeURIComponent(asset.path),rigParts:serializeRigParts(registry.assets||[],asset),motionAtlases:serializeMotionAtlases(asset)}));
     return NextResponse.json({version:1,monsters},{headers:{"Cache-Control":"private, no-store"}});
    }catch(error){return NextResponse.json({error:error.message||"Could not load testing monster catalog."},{status:502});}
   }
@@ -101,6 +105,7 @@ export async function GET(req){
      ...asset,
      path:"/api/studio/assets?preview="+encodeURIComponent(asset.path),
      rigParts:serializeRigParts(registry.assets||[],asset),
+     motionAtlases:serializeMotionAtlases(asset),
      ...(asset.combat?.projectile?{combat:{...asset.combat,projectile:{...asset.combat.projectile,frameCount:asset.combat.projectile.frameCount??1,rows:asset.combat.projectile.rows??1,columns:asset.combat.projectile.columns??1,path:"/api/studio/assets?preview="+encodeURIComponent(asset.combat.projectile.path)}}}:{})
     }));
     return NextResponse.json({version:1,plants},{headers:{"Cache-Control":"private, no-store"}});
@@ -137,6 +142,27 @@ export async function POST(req){
  const hasFile=Boolean(file&&typeof file.arrayBuffer==="function"&&file.size>0);
  const hasProjectile=Boolean(projectileFile&&typeof projectileFile.arrayBuffer==="function"&&projectileFile.size>0);
  const removeProjectile=String(form.get("removeProjectile")||"false")==="true";
+ let motionAtlasInput={};
+ try{const raw=String(form.get("motionAtlases")||"");motionAtlasInput=raw?JSON.parse(raw):{};}catch{return NextResponse.json({error:"Invalid motion atlas metadata."},{status:400});}
+ if(!motionAtlasInput||typeof motionAtlasInput!=="object"||Array.isArray(motionAtlasInput))return NextResponse.json({error:"Invalid motion atlas metadata."},{status:400});
+ const motionAtlasFiles=[];
+ const motionIds=new Set(["idle","walk","run","fly","attack","hurt","death"]);
+ if(Object.keys(motionAtlasInput).length){
+  if(!config.spriteSheet||!(type==="plant"||type==="monster")||!hasFile||!motionAtlasInput.idle)return NextResponse.json({error:"A multi-motion asset requires an idle Sprite Sheet as its main file."},{status:400});
+  for(const [motionId,meta] of Object.entries(motionAtlasInput)){
+   if(!motionIds.has(motionId)||!meta||typeof meta!=="object")return NextResponse.json({error:"Invalid animation motion: "+motionId},{status:400});
+   const mr=Number(meta.rows),mc=Number(meta.columns),mf=Number(meta.frameCount),fps=Number(meta.fps),fw=Number(meta.frameWidth||150),fh=Number(meta.frameHeight||150);
+   if(!Number.isInteger(mr)||!Number.isInteger(mc)||!Number.isInteger(mf)||mr<1||mc<1||mf<1||mf>24||mr*mc!==mf||!Number.isInteger(fps)||fps<1||fps>30||!Number.isInteger(fw)||fw<32||fw>512||!Number.isInteger(fh)||fh<32||fh>512)return NextResponse.json({error:"Invalid grid or timing metadata for "+motionId+"."},{status:400});
+   if(motionId==="idle")continue;
+   const motionFile=form.get("motionFile_"+motionId);
+   if(!motionFile||typeof motionFile.arrayBuffer!=="function"||motionFile.size<1||motionFile.size>STUDIO_MAX_UPLOAD_BYTES||motionFile.type!=="image/png")return NextResponse.json({error:"Missing or invalid PNG for motion "+motionId+"."},{status:400});
+   const motionBytes=Buffer.from(await motionFile.arrayBuffer());
+   const motionSignature=validateStudioAssetBytes("image/png",motionBytes);
+   if(!motionSignature.valid)return NextResponse.json({error:motionSignature.reason},{status:415});
+   const motionRelative=createImmutableAssetPath(config.folder,id+"-"+motionId,".png",motionBytes);
+   motionAtlasFiles.push({motionId,bytes:motionBytes,relative:motionRelative});
+  }
+ }
  const driver=process.env.STUDIO_STORAGE_DRIVER||"local";let old,registrySha;
  try{if(driver==="github"){const token=process.env.STUDIO_GITHUB_TOKEN,branch=process.env.STUDIO_GITHUB_BRANCH||"studio/assets";if(!token)return NextResponse.json({error:"STUDIO_GITHUB_TOKEN is required."},{status:503});const document=await githubGetDocument(REGISTRY_PATH,token,branch);old=document?JSON.parse(document.content):{version:1,assets:[]};registrySha=document?.sha??null;}else old=await localRegistry();}catch(error){return NextResponse.json({error:error.message},{status:502});}
  const index=old.assets.findIndex(a=>a.id===id);let existing=index>=0?old.assets[index]:null;
@@ -236,17 +262,20 @@ export async function POST(req){
  const bytes=hasFile?Buffer.from(await file.arrayBuffer()):null;
  if(hasFile){const signature=validateStudioAssetBytes(file.type,bytes);if(!signature.valid)return NextResponse.json({error:signature.reason},{status:415});}
  const relative=hasFile?createImmutableAssetPath(config.folder,id,extension,bytes):(existing?.path||"").replace(/^\/assets\//,"");
+ const motionAtlases=Object.keys(motionAtlasInput).length?Object.fromEntries(Object.entries(motionAtlasInput).map(([motionId,meta])=>[motionId,{...meta,path:"/assets/"+(motionId==="idle"?relative:motionAtlasFiles.find(item=>item.motionId===motionId)?.relative)}])):(existing?.motionAtlases||undefined);
  const now=new Date().toISOString();
- const record=createStudioAssetRevision(existing,{...(existing||{}),id,type,name:String(form.get("name")||id).trim().slice(0,80),filename:hasFile?id+extension:existing.filename,path:hasFile?"/assets/"+relative:existing.path,rows,columns,frameCount:config.spriteSheet?frameCount:1,spriteSheet:config.spriteSheet,status:"draft",releaseRequest:null,publishedAt:null,testingAt:null,archivedAt:null,restoredFromVersion:null,createdAt:existing?.createdAt||now,updatedAt:now,...(type==="plant"?{combat:combatProfile}:{}),...(type==="monster"?{monsterProfile}:{}),...(config.spriteSheet&&(type==="plant"||type==="monster")?{animationProfile,rigProfile}:{})});
+ const record=createStudioAssetRevision(existing,{...(existing||{}),id,type,name:String(form.get("name")||id).trim().slice(0,80),filename:hasFile?id+extension:existing.filename,path:hasFile?"/assets/"+relative:existing.path,rows,columns,frameCount:config.spriteSheet?frameCount:1,spriteSheet:config.spriteSheet,status:"draft",releaseRequest:null,publishedAt:null,testingAt:null,archivedAt:null,restoredFromVersion:null,createdAt:existing?.createdAt||now,updatedAt:now,...(type==="plant"?{combat:combatProfile}:{}),...(type==="monster"?{monsterProfile}:{}),...(config.spriteSheet&&(type==="plant"||type==="monster")?{animationProfile,rigProfile}:{}),...(motionAtlases?{motionAtlases}:{})});
  const next={...old,version:1,assets:existing?old.assets.map((a,i)=>i===index?record:a):[...old.assets,record]};
  try{
   if(driver==="github"){
    const token=process.env.STUDIO_GITHUB_TOKEN,branch=process.env.STUDIO_GITHUB_BRANCH||"studio/assets";
    if(hasFile)await githubPutImmutable("web/public/assets/"+relative,bytes,"studio: "+(existing?"replace ":"add ")+type+" "+id,token,branch);
+   for(const item of motionAtlasFiles)await githubPutImmutable("web/public/assets/"+item.relative,item.bytes,"studio: add "+type+" motion atlas "+id+" "+item.motionId,token,branch);
    if(hasProjectile){await githubPutImmutable("web/public/"+record.combat.projectile.path.replace(/^\//,""),projectileBytes,"studio: attach projectile to "+id,token,branch);}
    await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(next,null,2)+"\n"),"studio: "+(existing?"update ":"register ")+id,token,branch,registrySha);
   }else if(driver==="local"&&process.env.NODE_ENV!=="production"){
    if(hasFile){const target=path.join(process.cwd(),"public/assets",relative);await mkdir(path.dirname(target),{recursive:true});await writeFile(target,bytes);}
+   for(const item of motionAtlasFiles){const target=path.join(process.cwd(),"public/assets",item.relative);await mkdir(path.dirname(target),{recursive:true});await writeFile(target,item.bytes);}
    if(hasProjectile){const pTarget=path.join(process.cwd(),"public",record.combat.projectile.path.replace(/^\//,""));await mkdir(path.dirname(pTarget),{recursive:true});await writeFile(pTarget,projectileBytes);}
    await saveLocalRegistry(next);
   }else return NextResponse.json({error:"Production uploads require STUDIO_STORAGE_DRIVER=github and a configured GitHub token."},{status:503});
