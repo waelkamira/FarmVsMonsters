@@ -20,7 +20,7 @@ test("battle HUD controls use one evenly spaced, consistent top-right row", () =
   assert.match(scene, /hud-speed-button"\)\.setDisplaySize\(34, 34\)/);
   assert.match(scene, /hud-pause-button"\)\.setDisplaySize\(34, 34\)/);
   assert.match(scene, /hud-settings-button"\)\.setDisplaySize\(34, 34\)/);
-  assert.match(scene, /this\.quickCollectionDock = this\.add\.container\(1050, 625\)/);
+  assert.match(scene, /this\.quickAdventuresButton = makeButton\(1028, "adventures", 0x397fb0, "phases"\)/);\n  assert.match(scene, /this\.quickMonstersButton = makeButton\(1098, "monsters", 0x7952a8, "monsters"\)/);\n  assert.doesNotMatch(scene, /quickCollectionDock|0x6b4929/);\n  assert.match(scene, /this\.add\.container\(956, 27\)\.setDepth\(52\)/);
   assert.match(scene, /pointer\.x >= 1080 && pointer\.x <= 1120/);
 });
 
