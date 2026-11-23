@@ -23,7 +23,9 @@ test("all battle action buttons are positioned by the centralized right-column l
   assert.match(hud, /BATTLE_HUD_BUTTON_X = 1080/);
   assert.match(hud, /audioButtonBounds/);
   assert.doesNotMatch(scene, /quickCollectionDock|0x6b4929/);
-});\n\ntest("inventory shows saved plant unlocks, seed-bar membership, field counts, and live resources", () => {
+});
+
+test("inventory shows saved plant unlocks, seed-bar membership, field counts, and live resources", () => {
   assert.match(scene, /unlockedIds = loadUnlockedPlantIds\(window\.localStorage\)/);
   assert.match(scene, /farmVsMonsters\.selectedPlants/);
   assert.match(scene, /this\.plants\.filter\(\(item\) => item\.alive && item\.type === plant\.id\)/);
