@@ -6,7 +6,13 @@ test("every battle action button occupies one vertical column on the right", () 
   assert.equal(BATTLE_HUD_BUTTON_X, 1080);
   assert.equal(BATTLE_HUD_BUTTONS.length, 9);
   assert.deepEqual(BATTLE_HUD_BUTTONS.map(({ y }) => y), [82, 130, 178, 226, 274, 322, 370, 418, 466]);
-  assert.ok(BATTLE_HUD_BUTTONS.every(({ key }) => typeof key === "string"));
+  const keys = BATTLE_HUD_BUTTONS.map(({ key }) => key);
+  assert.deepEqual(keys, [
+    "pauseControl", "settingsControl", "speedControl", "audioButton",
+    "collectionMenuControl", "inventoryControl", "quickPlantsButton",
+    "quickAdventuresButton", "quickMonstersButton"
+  ]);
+  assert.equal(new Set(keys).size, keys.length, "each action must appear exactly once");
 });
 
 test("the layout positions all existing controls and moves the audio menu inward", () => {
