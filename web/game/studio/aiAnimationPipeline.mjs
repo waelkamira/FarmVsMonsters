@@ -20,7 +20,7 @@ export function createMotionSettings(motion, overrides = {}) {
   const durationSeconds = Number(overrides.durationSeconds ?? 2);
   const frameWidth = Number(overrides.frameWidth ?? 150);
   const frameHeight = Number(overrides.frameHeight ?? 150);
-  const columns = Number(overrides.columns ?? 6);
+  const columns = Math.min(frames, Number(overrides.columns ?? 6));
   if (!Number.isInteger(frames) || frames < 2 || frames > 96) throw new RangeError("Frame count must be between 2 and 96.");
   if (!Number.isInteger(fps) || fps < 1 || fps > 30) throw new RangeError("FPS must be between 1 and 30.");
   if (!Number.isInteger(width) || width < 64 || width > 1920 || !Number.isInteger(height) || height < 64 || height > 1080) throw new RangeError("Invalid video dimensions.");
