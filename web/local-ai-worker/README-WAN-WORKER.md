@@ -1,6 +1,6 @@
 # Wan video worker contract for FarmVsMonsters Studio
 
-This document defines the authenticated HTTP adapter expected by the AI Animation Studio. It deliberately does not pretend that the existing SAM 2 worker generates video: that worker only provides segmentation/mask proposals.
+This document defines the authenticated HTTP adapter used by the AI Animation Studio. Its implementation is `web/wan-worker/worker.py` (Wan 2.1 VACE 1.3B). The existing `web/local-ai-worker/worker.py` is a separate SAM 2 segmentation worker and does not generate video.
 
 ## Studio configuration
 
@@ -87,4 +87,4 @@ Failure response:
 - Never execute arbitrary prompts as shell commands.
 - Do not write generated output directly into the game's approved asset directory.
 
-The existing `web/local-ai-worker/worker.py` is a SAM 2 segmentation worker on port 8765; it is not a Wan video-generation server and must not be configured as this provider.
+The existing `web/local-ai-worker/worker.py` is a SAM 2 segmentation worker on port 8765; it is not a Wan video-generation server and must not be configured as this provider. For Colab T4 setup, see `web/wan-worker/README.md`.
