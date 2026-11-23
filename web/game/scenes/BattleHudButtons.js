@@ -41,3 +41,19 @@ export function layoutBattleHudButtons(scene) {
 
   return positioned;
 }
+
+/**
+ * Single entry point for creating and positioning the complete battle button set.
+ * Button behavior stays on the BattleScene instance; this module owns the HUD
+ * assembly order and the shared right-column layout.
+ */
+export function createBattleHudButtons(scene) {
+  scene.createAudioControls();
+  scene.createPauseControl();
+  scene.createSettingsControl();
+  scene.createSpeedControl();
+  scene.createCollectionMenuControl();
+  scene.createInventoryControl();
+  scene.createQuickCollectionButtons();
+  return layoutBattleHudButtons(scene);
+}
