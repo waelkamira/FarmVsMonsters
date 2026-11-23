@@ -24,24 +24,27 @@ export default function AccountPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
+    let active = true;
     const params = new URLSearchParams(window.location.search);
     const googleError = params.get("google_error");
-    if (params.get("google") === "connected") {
-      setMessage(ar ? "تم تسجيل الدخول باستخدام Google. الحفظ السحابي متوقف مؤقتاً أثناء تأمين تقدمك." : "Signed in with Google. Cloud saving is temporarily paused while progression security is upgraded.");
-    } else if (googleError) {
-      const messages = {
-        cloud_unconfigured: ar ? "خدمة الحسابات السحابية غير مهيأة بعد." : "Cloud accounts are not configured yet.",
-        google_denied: ar ? "تم إلغاء تسجيل الدخول باستخدام Google." : "Google sign-in was cancelled.",
-        oauth_invalid_state: ar ? "تعذر التحقق من طلب تسجيل الدخول. حاول مرة أخرى." : "The sign-in request could not be verified. Please try again.",
-        oauth_exchange_failed: ar ? "تعذر إكمال تسجيل الدخول باستخدام Google." : "Google sign-in could not be completed."
-      };
-      setError(messages[googleError] || (ar ? "حدث خطأ أثناء تسجيل الدخول." : "Google sign-in failed."));
-    }
-    if (params.has("google") || params.has("google_error")) {
-      window.history.replaceState({}, "", window.location.pathname);
-    }
+    queueMicrotask(() => {
+      if (!active) return;
+      if (params.get("google") === "connected") {
+        setMessage(ar ? "تم تسجيل الدخول باستخدام Google. الحفظ السحابي متوقف مؤقتاً أثناء تأمين تقدمك." : "Signed in with Google. Cloud saving is temporarily paused while progression security is upgraded.");
+      } else if (googleError) {
+        const messages = {
+          cloud_unconfigured: ar ? "خدمة الحسابات السحابية غير مهيأة بعد." : "Cloud accounts are not configured yet.",
+          google_denied: ar ? "تم إلغاء تسجيل الدخول باستخدام Google." : "Google sign-in was cancelled.",
+          oauth_invalid_state: ar ? "تعذر التحقق من طلب تسجيل الدخول. حاول مرة أخرى." : "The sign-in request could not be verified. Please try again.",
+          oauth_exchange_failed: ar ? "تعذر إكمال تسجيل الدخول باستخدام Google." : "Google sign-in could not be completed."
+        };
+        setError(messages[googleError] || (ar ? "حدث خطأ أثناء تسجيل الدخول." : "Google sign-in failed."));
+      }
+      if (params.has("google") || params.has("google_error")) {
+        window.history.replaceState({}, "", window.location.pathname);
+      }
+    });
 
-    let active = true;
     getPlayerSession()
       .then(async ({ user: current }) => {
         if (!active) return;
@@ -60,7 +63,7 @@ export default function AccountPage() {
       })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, []);
+  }, [ar]);
 
   async function submit(event) {
     event.preventDefault();
