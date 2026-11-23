@@ -19,6 +19,7 @@ import { createStudioMonsterProfile, resolveStudioMonsterRuntimeProfile, selectW
 const PLAYTEST_ALL_PLANTS = true;
 const ALL_PLAYTEST_PLANT_IDS = Object.freeze(["radish", "mushroom", "corn-monster", "pumpkin", "pineapple", "hazelnut", "mango", "snow-thrower", "electric-mushroom"]);
 import { createSeededRandom } from "../rules/seededRandom.mjs";
+import { canUsePlantPower, createPowerBurstSchedule, POWER_ABILITY_COST } from "../rules/powerAbility.mjs";
 import { createCombatEventLog, appendCombatEvent } from "../rules/combatEventLog.mjs";
 import gridCalibration from "../data/farm-grid-calibration.json";
 import soundAssets from "../data/sound-assets.json";
@@ -203,6 +204,7 @@ export default class BattleScene extends Scene {
           if (!entry || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(entry.id || "") ||
               typeof entry.path !== "string" || !(entry.path.startsWith("/assets/") || entry.path.startsWith("/api/studio/assets?preview="))) continue;
           if(entry.atlas?.jsonPath)this.load.atlas("studio-plant-" + variant + "-" + entry.id, entry.path, entry.atlas.jsonPath);else this.load.image("studio-plant-" + variant + "-" + entry.id, entry.path);
+          if(entry.audio?.path && (entry.audio.path.startsWith("/assets/") || entry.audio.path.startsWith("/api/studio/assets?preview="))) this.load.audio("studio-character-audio-" + entry.id, entry.audio.path);
           queueRigPartTextures(entry, variant);
           if (entry.combat?.mode === "projectile" && entry.combat.projectile?.path && (entry.combat.projectile.path.startsWith("/assets/") || entry.combat.projectile.path.startsWith("/api/studio/assets?preview="))) {
             this.load.image("studio-projectile-" + variant + "-" + entry.id, entry.combat.projectile.path);
@@ -218,6 +220,7 @@ export default class BattleScene extends Scene {
           if (!entry || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(entry.id || "") ||
               typeof entry.path !== "string" || !(entry.path.startsWith("/assets/") || entry.path.startsWith("/api/studio/assets?preview="))) continue;
           if(entry.atlas?.jsonPath)this.load.atlas("studio-monster-" + variant + "-" + entry.id, entry.path, entry.atlas.jsonPath);else this.load.image("studio-monster-" + variant + "-" + entry.id, entry.path);
+          if(entry.audio?.path && (entry.audio.path.startsWith("/assets/") || entry.audio.path.startsWith("/api/studio/assets?preview="))) this.load.audio("studio-character-audio-" + entry.id, entry.audio.path);
           queueRigPartTextures(entry, variant);
         }
       });
@@ -488,6 +491,7 @@ export default class BattleScene extends Scene {
     this.spawnTimer = PHASE_ONE_TIMING.firstMonsterSpawnDelayMs;
     this.waveIntermissionMs = 0;
     this.selectedPlant = null;
+    this.powerModeArmed = false;
     this.plants = [];
     this.seedPacketCooldowns = new Map();
     this.monsters = [];
@@ -1164,6 +1168,27 @@ export default class BattleScene extends Scene {
       stroke: "#24466b", strokeThickness: 3, resolution: 2,
       shadow: { offsetX: 0, offsetY: 2, color: "#17314f", blur: 5, fill: true }
     }).setOrigin(0.5, 1).setDepth(42);
+    const powerButton = this.add.container(1040, 618).setDepth(55);
+    const powerFrame = this.add.rectangle(0, 0, 132, 52, 0x3d1e58, 0.96).setStrokeStyle(3, 0xffd45b, 1).setInteractive({ useHandCursor: true });
+    this.powerButtonText = this.add.text(0, 0, "⚡ طاقة 50", { fontFamily: "Arial", fontSize: "15px", color: "#fff7ce", fontStyle: "bold", stroke: "#38204f", strokeThickness: 4, align: "center" }).setOrigin(0.5);
+    powerButton.add([powerFrame, this.powerButtonText]);
+    this.powerButton = powerButton;
+    powerFrame.on("pointerdown", () => {
+      if (this.gameOver) return;
+      if (this.powerModeArmed) {
+        this.powerModeArmed = false;
+        this.updatePowerButton();
+        this.setMessage("تم إلغاء وضع الطاقة الخاصة.");
+        return;
+      }
+      if (this.energy < POWER_ABILITY_COST) {
+        this.setMessage("تحتاج إلى " + POWER_ABILITY_COST + " طاقة لتفعيل الهجوم المتتالي.");
+        return;
+      }
+      this.powerModeArmed = true;
+      this.updatePowerButton();
+      this.setMessage("وضع الطاقة جاهز! انقر على نبتة هجومية لإطلاق 10 قذائف متتالية.");
+    });
   }
 
   createPlantCard(x, title, costLabel, type, drawIcon, imageKey = null, y = 619, locked = false) {
@@ -2649,7 +2674,15 @@ export default class BattleScene extends Scene {
       }
       if (this.gameOver || this.storySequenceActive || this.inventoryOpen) return;
       const { col, row } = this.worldToGrid(pointer.x, pointer.y);
-      if (row >= 0 && row < LANES && col >= 0 && col < COLUMNS) this.requestPlant(col, row);
+      if (row >= 0 && row < LANES && col >= 0 && col < COLUMNS) {
+        if (this.powerModeArmed) {
+          const targetPlant = this.plants.find(plant => plant.alive && plant.col === col && plant.row === row);
+          if (targetPlant) this.activatePlantPower(targetPlant);
+          else this.setMessage("انقر على نبتة هجومية مزروعة لتفعيل الطاقة الخاصة.");
+          return;
+        }
+        this.requestPlant(col, row);
+      }
     });
   }
 
@@ -3498,6 +3531,60 @@ export default class BattleScene extends Scene {
     }
   }
 
+  updatePowerButton() {
+    if (!this.powerButtonText?.active) return;
+    this.powerButtonText.setText(this.powerModeArmed ? "⚡ اختر نبتة" : "⚡ طاقة 50");
+    const frame = this.powerButton?.list?.[0];
+    if (frame?.setFillStyle) frame.setFillStyle(this.powerModeArmed ? 0xb85b22 : 0x3d1e58, 0.98);
+  }
+
+  activatePlantPower(plant) {
+    if (!canUsePlantPower(plant, this.energy)) {
+      this.setMessage(this.energy < POWER_ABILITY_COST
+        ? "لا توجد طاقة كافية للهجوم الخاص."
+        : "هذه النبتة لا تطلق قذائف؛ اختر نبتة هجومية.");
+      this.powerModeArmed = false;
+      this.updatePowerButton();
+      return;
+    }
+    const rangeByType = { radish: RADISH_CONFIG.range, pineapple: PINEAPPLE_CONFIG.range, hazelnut: HAZELNUT_CONFIG.range, mango: MANGO_CONFIG.range, "snow-thrower": SNOW_THROWER_CONFIG.range, "electric-mushroom": ELECTRIC_MUSHROOM_CONFIG.range, "corn-monster": CORN_MONSTER_CONFIG.range };
+    const findTarget = () => {
+      if (!plant.alive || this.gameOver) return null;
+      return selectProjectileTarget({
+        monsters: this.monsters,
+        row: plant.row,
+        localX: this.worldToLane(plant).localX,
+        collisionRadius: plant.studioPlant?.combat?.range ?? rangeByType[plant.type] ?? GRID_WIDTH,
+        requireAhead: true,
+        maxLocalX: GRID_WIDTH / 2,
+        excludeFrozenStage: plant.type === "snow-thrower" ? 5 : null
+      });
+    };
+    if (!findTarget()) {
+      this.setMessage("لا يوجد وحش في مسار هذه النبتة حالياً.");
+      this.powerModeArmed = false;
+      this.updatePowerButton();
+      return;
+    }
+    this.energy -= POWER_ABILITY_COST;
+    this.powerModeArmed = false;
+    this.updatePowerButton();
+    this.refreshHud();
+    this.setMessage("هجوم الطاقة! " + (plant.studioPlant?.name || plant.type) + " تطلق 10 قذائف متتالية!");
+    createPowerBurstSchedule().forEach((delay, index) => {
+      this.time.delayedCall(delay, () => {
+        if (this.gameOver || !plant.alive) return;
+        const target = findTarget();
+        if (!target) return;
+        this.fireThornProjectile(plant, target);
+        if (plant.view?.active) {
+          this.tweens.add({ targets: plant.view, scaleX: { from: 1, to: 1.08 }, scaleY: { from: 1, to: 1.08 }, duration: 65, yoyo: true });
+        }
+        if (index === 9) this.setMessage("اكتمل هجوم الطاقة المتتالي!");
+      });
+    });
+  }
+
   spawnStudioEnergy(plant, amount) {
     const pickupId = "pickup-" + this.nextEnergyPickupId++;
     const token = this.add.container(plant.x, plant.y - 64).setDepth(35);
@@ -3848,6 +3935,7 @@ export default class BattleScene extends Scene {
         plantType: plant.type, studioPlantId: plant.studioPlant.id
       });
       this.playThornSound();
+      if (plant.studioPlant?.id) this.playSfx("studio-character-audio-" + plant.studioPlant.id, this.effectsVolume, 80);
       return;
     }
     // Radish Level 1 launches its dedicated miniature radish bomb from the
@@ -4048,6 +4136,7 @@ export default class BattleScene extends Scene {
       alive: true, trailTimer: 0
     });
     this.playThornSound();
+    if (plant.studioPlant?.id) this.playSfx("studio-character-audio-" + plant.studioPlant.id, this.effectsVolume, 80);
   }
 
   createFreezeImpact(x, y, plantType = "snow-thrower") {
@@ -4303,6 +4392,7 @@ export default class BattleScene extends Scene {
       if (action === "attack" && !force && monster.hitAnimUntil > this.time.now) return;
       if (this.anims.exists(animationKey)) {
         const currentKey = sprite.anims.currentAnim?.key;
+        if (action === "attack" && (force || currentKey !== animationKey || !sprite.anims.isPlaying)) this.playSfx("studio-character-audio-" + monster.studioMonster.id, this.effectsVolume, 160);
         if (force || currentKey !== animationKey || !sprite.anims.isPlaying) sprite.play(animationKey);
       } else if (action === "move" && this.anims.exists("studio-monster-" + monster.studioMonster.id + "-idle")) {
         sprite.play("studio-monster-" + monster.studioMonster.id + "-idle");
