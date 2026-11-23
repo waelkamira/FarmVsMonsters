@@ -6,7 +6,7 @@ import PhaserSpritePreview from "./PhaserSpritePreview.jsx";
 import "./ai-animation.css";
 
 const INITIAL = Object.fromEntries(AI_ANIMATION_MOTIONS.map((motion) => [motion.id, {
-  selected: ["idle", "walk", "run", "attack"].includes(motion.id), frames: 24, fps: 12,
+  selected: false, frames: 24, fps: 12,
   width: 832, height: 480, durationSeconds: 2, frameWidth: 150, frameHeight: 150, columns: 6, steps: 20, guidanceScale: 5, prompt: motion.prompt, negativePrompt: DEFAULT_NEGATIVE_PROMPT
 }]));
 function statusLabel(status) {
