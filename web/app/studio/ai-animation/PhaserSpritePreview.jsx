@@ -9,7 +9,11 @@ export default function PhaserSpritePreview({ src, frameWidth = 150, frameHeight
   useEffect(() => {
     if (!host.current || !src) return undefined;
     let sprite = null;
-    let game = null;\n    let cancelled = false;\n    import("phaser").then(({ default: Phaser }) => {\n      if (cancelled) return;\n      const config = {
+    let game = null;
+    let cancelled = false;
+    import("phaser").then(({ default: Phaser }) => {
+      if (cancelled) return;
+      const config = {
       type: Phaser.CANVAS,
       width: 520,
       height: 300,
