@@ -1058,7 +1058,8 @@ export default class BattleScene extends Scene {
       !selectedTypes.includes(plant.type) && plant.type !== "mushroom"
     );
     const inactiveSlots = Math.max(0, packetSlotCount - selectedTypes.length);
-    inactivePlants.slice(0, inactiveSlots).forEach((plant, index) => {
+    const inactivePreviewCount = Math.min(inactivePlants.length, inactiveSlots);
+    inactivePlants.slice(0, inactivePreviewCount).forEach((plant, index) => {
       this.createPlantCard(
         packetStartX + (selectedTypes.length + index) * packetGap,
         plant.title,
@@ -1072,6 +1073,22 @@ export default class BattleScene extends Scene {
         true
       );
     });
+    const emptySlotCount = Math.max(0, inactiveSlots - inactivePreviewCount);
+    for (let index = 0; index < emptySlotCount; index += 1) {
+      const slot = this.add.container(
+        packetStartX + (selectedTypes.length + inactivePreviewCount + index) * packetGap,
+        72
+      ).setDepth(44);
+      if (this.textures.exists("seed-slot-empty")) {
+        const source = this.textures.get("seed-slot-empty").getSourceImage();
+        const scale = Math.min(88 / source.width, 101.2 / source.height);
+        slot.add(this.add.image(0, 0, "seed-slot-empty")
+          .setDisplaySize(source.width * scale * 0.86, source.height * scale * 0.86));
+      } else {
+        slot.add(this.add.rectangle(0, 0, 72, 82, 0x5b3c20, 0.25)
+          .setStrokeStyle(2, 0xc49a5a, 0.65));
+      }
+    }
     plantOptions.filter((plant) => selectedTypes.includes(plant.type)).forEach((plant, index) => {
       this.plantCardsByType[plant.type] = this.createPlantCard(
         packetStartX + index * packetGap,
