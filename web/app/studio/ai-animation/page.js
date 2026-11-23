@@ -1,7 +1,8 @@
 "use client";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { AI_ANIMATION_MOTIONS, DEFAULT_NEGATIVE_PROMPT } from "../../../game/studio/aiAnimationPipeline.mjs";\nimport PhaserSpritePreview from "./PhaserSpritePreview.jsx";
+import { AI_ANIMATION_MOTIONS, DEFAULT_NEGATIVE_PROMPT } from "../../../game/studio/aiAnimationPipeline.mjs";
+import PhaserSpritePreview from "./PhaserSpritePreview.jsx";
 import "./ai-animation.css";
 
 const INITIAL = Object.fromEntries(AI_ANIMATION_MOTIONS.map((motion) => [motion.id, {
