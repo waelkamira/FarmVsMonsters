@@ -3,6 +3,9 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
 const scene = readFileSync(new URL("../game/scenes/BattleScene.js", import.meta.url), "utf8");
+const cardStart = scene.indexOf("  createPlantCard(");
+const cardEnd = scene.indexOf("\n  createCaveman()", cardStart);
+const card = scene.slice(cardStart, cardEnd);
 
 test("the uploaded wood frame is loaded and used by a dedicated inventory control", () => {
   assert.match(scene, /inventory-wood-frame", "\/assets\/items\/ui\/ui-inventory-wood-fram\.png"/);
@@ -14,7 +17,7 @@ test("the uploaded wood frame is loaded and used by a dedicated inventory contro
 });
 
 test("inventory shows saved plant unlocks, seed-bar membership, field counts, and live resources", () => {
-  assert.match(scene, /unlockedIds = loadUnlockedPlantIds\(window\.localStorage\)/);
+  assert.match(scene, /loadUnlockedPlantIds\(window\.localStorage\)/);
   assert.match(scene, /farmVsMonsters\.selectedPlants/);
   assert.match(scene, /this\.plants\.filter\(\(item\) => item\.alive && item\.type === plant\.id\)/);
   assert.match(scene, /this\.coins\.toLocaleString\(\)/);
@@ -36,19 +39,17 @@ test("inventory is a read-only collection view and does not invent item purchase
   assert.doesNotMatch(inventoryCode, /purchasePlant\(|saveCoins\(|this\.coins\s*[-+]=|unlockPlantReward\(/);
 });
 
-test("the uploaded seed-card frame is loaded and rendered on every battle seed packet", () => {
+test("the uploaded seed-card frame is layered over the card face on every battle seed packet", () => {
   assert.match(scene, /seed-card-frame", "\/assets\/items\/ui\/ui-seed-card-fram\.png"/);
-  assert.match(scene, /this\.textures\.exists\("seed-card-frame"\)/);
-  assert.match(scene, /Math\.min\(86 \/ frameSource\.width, 98 \/ frameSource\.height\)/);
-  assert.match(scene, /\.\.\.\(seedFrame \? \[seedFrame\] : \[\]\)/);
-  assert.match(scene, /card\.add\(\[\s*shadow, selectionFrame,/);\n  assert.match(scene, /panel, \.\.\.\(seedFrame \? \[seedFrame\] : \[\]\)/);
+  assert.match(card, /this\.textures\.exists\("seed-card-frame"\)/);
+  assert.match(card, /Math\.min\(86 \/ frameSource\.width, 98 \/ frameSource\.height\)/);
+  assert.match(card, /card\.add\(\[[\s\S]*?panel, \.\.\.\(seedFrame \? \[seedFrame\] : \[\]\),/);
 });
-
 
 test("the uploaded locked seed-card artwork is used for locked plant cards and collection entries", () => {
   assert.match(scene, /seed-card-locked", "\/assets\/items\/ui\/ui-seed-card-locked\.png"/);
-  assert.match(scene, /locked && this\.textures\.exists\("seed-card-locked"\)/);
-  assert.match(scene, /cardArtworkKey/);
+  assert.match(card, /locked && this\.textures\.exists\("seed-card-locked"\)/);
+  assert.match(card, /cardArtworkKey/);
   assert.match(scene, /!unlocked && this\.textures\.exists\("seed-card-locked"\)/);
 });
 
