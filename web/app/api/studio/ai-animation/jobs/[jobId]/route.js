@@ -15,7 +15,7 @@ export async function GET(req, context) {
   if (!authorized(req)) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   const { jobId } = await context.params;
   if (!safeAiJobId(jobId)) return NextResponse.json({ error: "Invalid job ID." }, { status: 400 });
-  try { const job = await load(jobId); return NextResponse.json({ job, sourceUrl: "/api/studio/ai-animation/jobs/" + jobId + "/files/source" }, { headers: { "Cache-Control": "no-store" } }); }
+  try { const job = await load(jobId); return NextResponse.json({ job, sourceUrl: "/api/studio/ai-animation/jobs/" + jobId + "/files/" + job.source.path }, { headers: { "Cache-Control": "no-store" } }); }
   catch { return NextResponse.json({ error: "المهمة غير موجودة." }, { status: 404 }); }
 }
 export async function PATCH(req, context) {
