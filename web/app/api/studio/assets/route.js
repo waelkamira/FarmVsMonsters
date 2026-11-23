@@ -344,6 +344,12 @@ export async function PATCH(req){
    const remaining=registry.assets.filter((_,i)=>i!==index);
    const candidatePaths=[asset.path,asset.atlas?.jsonPath,asset.audio?.path,asset.combat?.projectile?.path].filter(safeAssetPath);
    const referenced=new Set(remaining.flatMap(item=>[item.path,item.atlas?.jsonPath,item.audio?.path,item.combat?.projectile?.path].filter(Boolean)));
+   for(const assetPath of new Set(candidatePaths)){
+    if(referenced.has(assetPath))continue;
+    const filePath="web/public"+assetPath;
+    await githubDeleteIfExists(filePath,"studio: delete unused asset file for "+id,token,storageBranch);
+    if(targetBranch!==storageBranch)await githubDeleteIfExists(filePath,"studio: delete published asset file for "+id,token,targetBranch);
+   }
    for(const [catalogPath,catalogKey] of [[PUBLISHED_CATALOG_PATH,"plants"],[PUBLISHED_MONSTER_CATALOG_PATH,"monsters"]]){
     const document=await githubGetDocument(catalogPath,token,targetBranch);
     if(!document)continue;
@@ -351,12 +357,6 @@ export async function PATCH(req){
     if(Array.isArray(catalog[catalogKey])){catalog[catalogKey]=catalog[catalogKey].filter(item=>item.id!==id);await githubPut(catalogPath,Buffer.from(JSON.stringify(catalog,null,2)+"\\n"),"studio: remove "+asset.type+" "+id,token,targetBranch,document.sha);}
    }
    await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify({...registry,assets:remaining},null,2)+"\\n"),"studio: permanently delete "+asset.type+" "+id,token,storageBranch,registrySha);
-   for(const assetPath of new Set(candidatePaths)){
-    if(referenced.has(assetPath))continue;
-    const filePath="web/public"+assetPath;
-    await githubDeleteIfExists(filePath,"studio: delete unused asset file for "+id,token,storageBranch);
-    if(targetBranch!==storageBranch)await githubDeleteIfExists(filePath,"studio: delete published asset file for "+id,token,targetBranch);
-   }
    return NextResponse.json({success:true,operation,deletedId:id,message:"تم حذف الشخصية من سجل Studio وكتالوج اللعبة وملفات GitHub غير المشتركة."});
   }
 
