@@ -8,6 +8,8 @@ on:
       - "web/game/scenes/BattleHudButtons.js"
       - "web/tests/battle-hud-buttons-layout.test.mjs"
       - "web/tests/wood-frame-inventory.test.mjs"
+      - "web/tests/studio-ui-layout.test.mjs"
+      - "web/tests/studio-plant-projectile-profile.test.mjs"
       - "web/app/studio/**"
       - ".github/workflows/battle-hud-validation.yml"
 
@@ -41,5 +43,7 @@ jobs:
         run: node --test tests/battle-hud-buttons-layout.test.mjs
       - name: Verify battle HUD integration regression tests
         run: node --test --test-name-pattern="all battle action buttons|uploaded wood frame is loaded" tests/wood-frame-inventory.test.mjs
+      - name: Verify Studio viewport and projectile profile regressions
+        run: node --test tests/studio-ui-layout.test.mjs tests/studio-plant-projectile-profile.test.mjs
       - name: Build production application
         run: npm run build
