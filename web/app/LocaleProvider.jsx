@@ -95,8 +95,19 @@ const LocaleContext = createContext({ locale: "ar", setLocale: () => {}, t: (v) 
 export function LocaleProvider({ children }) {
   const [locale, setLocaleState] = useState("ar");
   useEffect(() => {
-    const saved = window.localStorage.getItem("farmVsMonsters.language");
-    if (saved === "en" || saved === "ar") setLocaleState(saved);
+    let active = true;
+    let saved = null;
+    try {
+      saved = window.localStorage.getItem("farmVsMonsters.language");
+    } catch {
+      saved = null;
+    }
+    if (saved === "en" || saved === "ar") {
+      queueMicrotask(() => {
+        if (active) setLocaleState(saved);
+      });
+    }
+    return () => { active = false; };
   }, []);
   useEffect(() => { document.documentElement.lang = locale; document.documentElement.dir = locale === "ar" ? "rtl" : "ltr"; }, [locale]);
   const setLocale = (next) => {
