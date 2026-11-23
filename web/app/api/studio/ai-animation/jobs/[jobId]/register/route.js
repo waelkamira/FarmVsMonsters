@@ -63,7 +63,7 @@ export async function POST(req, context) {
   if (job.assetType === "monster") {
     form.set("monsterProfile", JSON.stringify({ baseArchetype: "cave-brute", hpMultiplier: 1, speedMultiplier: 1, damageMultiplier: 1, attackIntervalMultiplier: 1, widthScale: 1, heightScale: 1, spawnWeight: 0, firstWave: 1 }));
   } else {
-    form.set("behavior", "melee");
+    form.set("behavior", attack ? "melee" : "blocker");
     form.set("energyCost", "60");
     form.set("hp", "150");
     form.set("cooldownMs", "1800");
