@@ -6,8 +6,9 @@ const scene = readFileSync(new URL("../game/scenes/BattleScene.js", import.meta.
 
 test("the uploaded wood frame is loaded and used by a dedicated inventory control", () => {
   assert.match(scene, /inventory-wood-frame", "\/assets\/items\/ui\/ui-inventory-wood-fram\.png"/);
-  assert.match(scene, /createInventoryControl\(\)/);
-  assert.match(scene, /this\.add\.container\(920, 27\)\.setDepth\(52\)/);
+  const hud = readFileSync(new URL("../game/scenes/BattleHudButtons.js", import.meta.url), "utf8");
+  assert.match(hud, /function createInventoryControl\(\)/);
+  assert.match(hud, /this\.add\.container\(920, 27\)\.setDepth\(52\)/);
   assert.match(scene, /this\.add\.image\(0, 0, "inventory-wood-frame"\)\.setDisplaySize\(570, 620\)/);
   assert.match(scene, /const sheet = \["radish-level-1", "pineapple-level-1", "hazelnut-level-1", "mango-level-1", "snow-thrower-level-1"\]\.includes\(plant\.image\)/);
   assert.match(scene, /this\.add\.sprite\(x, y - 12, plant\.image, 0\)/);
@@ -42,7 +43,7 @@ test("opening inventory pauses the battle and prevents clicks from reaching batt
 
 test("inventory is a read-only collection view and does not invent item purchase or consumption", () => {
   const inventoryStart = scene.indexOf("  openInventory() {");
-  const inventoryEnd = scene.indexOf("  createPauseControl() {", inventoryStart);
+  const inventoryEnd = scene.indexOf("  openSettingsMenu() {", inventoryStart);
   assert.ok(inventoryStart >= 0 && inventoryEnd > inventoryStart);
   const inventoryCode = scene.slice(inventoryStart, inventoryEnd);
   assert.doesNotMatch(inventoryCode, /purchasePlant\(|saveCoins\(|this\.coins\s*[-+]=|unlockPlantReward\(/);
