@@ -2102,7 +2102,7 @@ export default class BattleScene extends Scene {
       }
       button.add([shadow, rim, face, icon]);
       face.on("pointerover", () => {
-        face.setFillStyle(PhaserMath.Interpolation.Linear([tint, 0xffdf8a], 0.45));
+        face.setFillStyle(0xffdf8a);
         button.setScale(1.08);
       });
       face.on("pointerout", () => {
