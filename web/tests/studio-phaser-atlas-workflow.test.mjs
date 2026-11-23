@@ -27,7 +27,7 @@ test("Phaser queues Atlas texture and JSON together and registers named animatio
   assert.match(battle, /this\.load\.atlas\("studio-monster-/);
   assert.match(battle, /frameNames\.map\(frame=>\(\{key:textureKey,frame\}\)\)/);
   assert.match(battle, /frameNames\.map\(frame=>\(\{key:monster\.textureKey,frame\}\)\)/);
-  assert.match(battle, /customMonsterIdleFrame = studioMonster\\?\\.atlas\\?\\.clips\\?\\.idle/);
+  assert.ok(battle.includes("const customMonsterIdleFrame = studioMonster?.atlas?.clips?.idle?.[0]"));
 });
 
 test("Auto-Rig builder UI and manifest fields are absent from the permanent Studio workflow", () => {
