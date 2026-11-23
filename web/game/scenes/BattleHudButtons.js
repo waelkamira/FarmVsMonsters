@@ -1,6 +1,3 @@
-import { Math as PhaserMath } from "phaser";
-import { translate } from "../../app/LocaleProvider";
-
 /**
  * Battle HUD button layout.
  *
@@ -62,7 +59,7 @@ function createAudioControls() {
       .setInteractive();
     const inset = this.add.rectangle(0, 0, 236, 206, 0x35bceb, 0.12)
       .setStrokeStyle(1, 0xa7e84f, 0.42);
-    const heading = this.add.text(0, -91, translate("TRIBE SOUND", window.localStorage.getItem("farmVsMonsters.language") || "ar"), {
+    const heading = this.add.text(0, -91, this.translate("TRIBE SOUND", window.localStorage.getItem("farmVsMonsters.language") || "ar"), {
       fontFamily: "Arial", fontSize: "15px", color: "#ffffff", fontStyle: "bold",
       stroke: "#17213d", strokeThickness: 3
     }).setOrigin(0.5).setData("localeKey", "TRIBE SOUND");
@@ -140,7 +137,7 @@ function createAudioControls() {
 
 function createAudioVolumeSlider(y, title, initialValue, onChange) {
     const container = this.add.container(0, y);
-    const label = this.add.text(-101, -10, translate(title, window.localStorage.getItem("farmVsMonsters.language") || "ar"), {
+    const label = this.add.text(-101, -10, this.translate(title, window.localStorage.getItem("farmVsMonsters.language") || "ar"), {
       fontFamily: "Arial", fontSize: "11px", color: "#ffffff", fontStyle: "bold", stroke: "#17213d", strokeThickness: 2
     }).setOrigin(0, 0.5).setData("localeKey", title);
     const track = this.add.rectangle(5, 12, 132, 8, 0xffffff, 0.24).setStrokeStyle(1, 0xffffff, 0.46).setInteractive({ useHandCursor: true });
@@ -153,7 +150,7 @@ function createAudioVolumeSlider(y, title, initialValue, onChange) {
     container.add([label, track, fill, knob, valueText]);
 
     const setValue = (rawValue, persist = true) => {
-      const value = Math.round(PhaserMath.Clamp(rawValue, 0, 100));
+      const value = Math.round(Math.max(0, Math.min(100, rawValue)));
       const knobX = -61 + value * 1.32;
       knob.setX(knobX);
       fill.width = value * 1.32;
@@ -352,7 +349,8 @@ function createSpeedControl() {
  * Button behavior stays on the BattleScene instance; this module owns the HUD
  * assembly order and the shared right-column layout.
  */
-export function createBattleHudButtons(scene) {
+export function createBattleHudButtons(scene, translateFn) {
+  scene.translate = translateFn;
   const methods = [
     createAudioControls,
     createAudioVolumeSlider,
