@@ -331,7 +331,7 @@ export default class BattleScene extends Scene {
           ? textureKey
           : "studio-plant-motion-" + (plant.testOnly ? "testing" : "published") + "-" + plant.id + "-" + motionId;
         const motionFrameCount = Math.max(1, Number(atlas.frameCount) || (Number(atlas.rows || 1) * Number(atlas.columns || 1)));
-        if (!this.textures.exists(motionTextureKey) || !this.registerStudioGridSheet(motionTextureKey, atlas.rows || 1, atlas.columns || 1)) continue;
+        if (!this.textures.exists(motionTextureKey) || (motionId !== "idle" && !this.registerStudioGridSheet(motionTextureKey, atlas.rows || 1, atlas.columns || 1))) continue;
         const animationKey = "studio-" + plant.id + "-" + motionId;
         if (!this.anims.exists(animationKey)) {
           this.anims.create({
