@@ -1750,9 +1750,9 @@ export default class BattleScene extends Scene {
     });
     this.input.on("pointerup", () => { this.activeAudioSlider = null; });
 
-    this.audioButton = this.add.container(1090, 27).setDepth(72);
-    const buttonHalo = this.add.rectangle(0, 1, 42, 36, 0x1b1008, 0.32);
-    const buttonBackground = this.add.rectangle(0, 0, 36, 32, 0xe6c58c, 1).setStrokeStyle(3, 0x4a2d18, 1);
+    this.audioButton = this.add.container(1100, 27).setDepth(52);
+    const buttonHalo = this.add.circle(0, 1, 18, 0x1b1008, 0.32);
+    const buttonBackground = this.add.circle(0, 0, 16, 0x9b6b39, 1).setStrokeStyle(2.5, 0xe6c58c, 1);
     const speaker = this.add.graphics();
     speaker.fillStyle(0x4b2e16, 1);
     speaker.fillRoundedRect(-11, -6, 7, 12, 2);
@@ -1777,8 +1777,8 @@ export default class BattleScene extends Scene {
         pointer.x <= this.audioMenuBounds.right &&
         pointer.y >= this.audioMenuBounds.top &&
         pointer.y <= this.audioMenuBounds.bottom;
-      const inButton = pointer.x >= 1065 && pointer.x <= 1115 &&
-        pointer.y >= 9 && pointer.y <= 59;
+      const inButton = pointer.x >= 1080 && pointer.x <= 1120 &&
+        pointer.y >= 7 && pointer.y <= 47;
       if (!inMenu && !inButton) {
         // The same outside click must only dismiss the menu; it must not
         // also trigger planting or another battlefield action.
@@ -2065,7 +2065,7 @@ export default class BattleScene extends Scene {
 
   createQuickCollectionButtons() {
     // A shared translucent glass dock ties the two collection shortcuts together.
-    this.quickCollectionDock = this.add.container(1010, 70).setDepth(47);
+    this.quickCollectionDock = this.add.container(1050, 625).setDepth(50);
     const dockGlow = this.add.rectangle(0, 1, 112, 96, 0x17100a, 0.28);
     const dock = this.add.rectangle(0, 0, 106, 88, 0x6b4929, 1)
       .setStrokeStyle(3, 0xd5a66a, 1);
@@ -2118,9 +2118,9 @@ export default class BattleScene extends Scene {
   }
 
   createCollectionMenuControl() {
-    const button = this.add.container(978, 27).setDepth(47);
-    const plate = this.add.rectangle(0, 0, 42, 36, 0xe6c58c, 1)
-      .setStrokeStyle(3, 0x4a2d18, 1).setInteractive({ useHandCursor: true });
+    const button = this.add.container(956, 27).setDepth(52);
+    const plate = this.add.circle(0, 0, 16, 0x9b6b39, 1)
+      .setStrokeStyle(2.5, 0xe6c58c, 1).setInteractive({ useHandCursor: true });
     const label = this.add.text(0, 0, "▤", {
       fontFamily: "Arial", fontSize: "20px", color: "#4b2e16", fontStyle: "bold"
     }).setOrigin(0.5);
@@ -2133,9 +2133,9 @@ export default class BattleScene extends Scene {
   }
 
   createInventoryControl() {
-    const button = this.add.container(930, 27).setDepth(49);
-    const plate = this.add.rectangle(0, 0, 38, 36, 0xe6c58c, 1)
-      .setStrokeStyle(3, 0x4a2d18, 1).setInteractive({ useHandCursor: true });
+    const button = this.add.container(920, 27).setDepth(52);
+    const plate = this.add.circle(0, 0, 16, 0x9b6b39, 1)
+      .setStrokeStyle(2.5, 0xe6c58c, 1).setInteractive({ useHandCursor: true });
     const icon = this.add.graphics();
     icon.lineStyle(2.4, 0x4b2e16, 1);
     icon.strokeRoundedRect(-9, -7, 18, 18, 4);
@@ -2483,10 +2483,10 @@ export default class BattleScene extends Scene {
   }
 
   createPauseControl() {
-    const button = this.add.container(968, 27).setDepth(46);
+    const button = this.add.container(1028, 27).setDepth(52);
     const artwork = this.textures.exists("hud-pause-button")
-      ? this.add.image(0, 0, "hud-pause-button").setDisplaySize(42, 42)
-      : this.add.circle(0, 0, 19, 0xe6c58c, 1).setStrokeStyle(3, 0x4a2d18, 1);
+      ? this.add.image(0, 0, "hud-pause-button").setDisplaySize(34, 34)
+      : this.add.circle(0, 0, 16, 0x9b6b39, 1).setStrokeStyle(2.5, 0xe6c58c, 1);
     artwork.setInteractive({ useHandCursor: true });
     button.add(artwork);
     artwork.on("pointerover", () => button.setScale(1.07));
@@ -2496,10 +2496,10 @@ export default class BattleScene extends Scene {
   }
 
   createSettingsControl() {
-    const button = this.add.container(1018, 27).setDepth(48);
+    const button = this.add.container(1064, 27).setDepth(52);
     const artwork = this.textures.exists("hud-settings-button")
-      ? this.add.image(0, 0, "hud-settings-button").setDisplaySize(42, 42)
-      : this.add.circle(0, 0, 19, 0xe6c58c, 1).setStrokeStyle(3, 0x4a2d18, 1);
+      ? this.add.image(0, 0, "hud-settings-button").setDisplaySize(34, 34)
+      : this.add.circle(0, 0, 16, 0x9b6b39, 1).setStrokeStyle(2.5, 0xe6c58c, 1);
     artwork.setInteractive({ useHandCursor: true });
     button.add(artwork);
     artwork.on("pointerover", () => button.setScale(1.07));
@@ -2510,12 +2510,12 @@ export default class BattleScene extends Scene {
 
   createSpeedControl() {
     this.gameSpeed = 1;
-    const button = this.add.container(918, 27).setDepth(47);
+    const button = this.add.container(992, 27).setDepth(52);
     const artwork = this.textures.exists("hud-speed-button")
-      ? this.add.image(0, 0, "hud-speed-button").setDisplaySize(42, 42)
-      : this.add.circle(0, 0, 19, 0xe6c58c, 1).setStrokeStyle(3, 0x4a2d18, 1);
-    const speedLabel = this.add.text(0, 25, "1×", {
-      fontFamily: "Arial", fontSize: "10px", color: "#fff4c8", fontStyle: "bold",
+      ? this.add.image(0, 0, "hud-speed-button").setDisplaySize(34, 34)
+      : this.add.circle(0, 0, 16, 0x9b6b39, 1).setStrokeStyle(2.5, 0xe6c58c, 1);
+    const speedLabel = this.add.text(0, 21, "1×", {
+      fontFamily: "Arial", fontSize: "9px", color: "#fff4c8", fontStyle: "bold",
       stroke: "#392719", strokeThickness: 2
     }).setOrigin(0.5).setDepth(49);
     artwork.setInteractive({ useHandCursor: true });
