@@ -1133,7 +1133,7 @@ export default class BattleScene extends Scene {
       const frame = isSpriteSheet ? texture.get("0") : texture.get();
       const frameWidth = Math.max(1, frame.cutWidth || frame.width || 1);
       const frameHeight = Math.max(1, frame.cutHeight || frame.height || 1);
-      iconScale = Math.min(52 / frameWidth, 49 / frameHeight);
+      iconScale = Math.min(52 / frameWidth, 42 / frameHeight);
       icon = isSpriteSheet
         ? this.add.sprite(0, -4, imageKey, frameName)
         : this.add.image(0, -4, imageKey);
