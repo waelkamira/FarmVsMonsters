@@ -1,16 +1,35 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale, LanguageToggle } from "./LocaleProvider";
 import { getPlayerSession, restoreOrInitializeCloudProgress } from "../game/services/playerAccount.mjs";
+import { loadSavedCoins } from "../game/rules/phaseOneRules.mjs";
 
 export default function HomePage() {
   const { locale } = useLocale();
   const arabic = locale === "ar";
   const router = useRouter();
   const [starting, setStarting] = useState(false);
+  const [savedCoins, setSavedCoins] = useState(0);
+
+  useEffect(() => {
+    const refreshSavedCoins = () => {
+      try {
+        setSavedCoins(loadSavedCoins(window.localStorage));
+      } catch {
+        setSavedCoins(0);
+      }
+    };
+    refreshSavedCoins();
+    window.addEventListener("focus", refreshSavedCoins);
+    window.addEventListener("storage", refreshSavedCoins);
+    return () => {
+      window.removeEventListener("focus", refreshSavedCoins);
+      window.removeEventListener("storage", refreshSavedCoins);
+    };
+  }, []);
 
   async function startAdventure() {
     if (starting) return;
@@ -55,6 +74,11 @@ export default function HomePage() {
             <p className="home-game-tagline">{arabic ? "ازرع جيشك، احمِ مزرعتك، وأنقذ الأميرة!" : "Grow your army. Defend your farm. Rescue the princess!"}</p>
           </div>
         </div>
+        <div className="farm-menu-wallet" aria-label={arabic ? "رصيد اللاعب المحفوظ" : "Saved player balance"}>
+          <span aria-hidden="true">🪙</span>
+          <strong>{savedCoins}</strong>
+          <small>{arabic ? "عملات محفوظة" : "Saved coins"}</small>
+        </div>
         <div className="farm-menu-actions">
           <button className="farm-menu-play" type="button" onClick={startAdventure} disabled={starting}>
             <span className="farm-menu-action-icon">⚔️</span>
@@ -65,8 +89,9 @@ export default function HomePage() {
           <Link className="farm-menu-option" href="/plants"><span>🌿</span><strong>{arabic ? "موسوعة النباتات" : "PLANT ALMANAC"}</strong><small>{arabic ? "تعرف على المدافعين" : "Meet your defenders"}</small></Link>
           <Link className="farm-menu-option" href="/monsters"><span>👾</span><strong>{arabic ? "دليل الوحوش" : "MONSTER ALMANAC"}</strong><small>{arabic ? "تعرف على أعدائك" : "Know your enemies"}</small></Link>
           <Link className="farm-menu-option" href="/settings"><span>⚙️</span><strong>{arabic ? "الإعدادات" : "OPTIONS"}</strong><small>{arabic ? "الصوت واللغة" : "Sound and language"}</small></Link>
+          <Link className="farm-menu-option" href="/account"><span>👤</span><strong>{arabic ? "حساب اللاعب" : "PLAYER ACCOUNT"}</strong><small>{arabic ? "الحساب اختياري" : "Account optional"}</small></Link>
         </div>
-        <div className="farm-menu-footer"><span>🌻 {arabic ? "كل حديقة لها أبطالها" : "EVERY GARDEN HAS ITS HEROES"}</span><span>{arabic ? "اختر وجهتك وابدأ المغامرة" : "PICK YOUR PATH AND PLAY"}</span></div>
+        <div className="farm-menu-footer"><span>🌻 {arabic ? "كل حديقة لها أبطالها" : "EVERY GARDEN HAS ITS HEROES"}</span><span>{arabic ? "اختر وجهتك وابدأ المغامرة" : "PICK YOUR PATH AND PLAY"}</span><span>{arabic ? "الحساب اختياري — العب كضيف" : "Account optional — play as guest"}</span></div>
       </section>
     </main>
   );
