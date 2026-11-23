@@ -39,7 +39,7 @@ Manifest entries use explicit keys, URLs, and types. Known spritesheets have exa
 
 Groups are reference-counted. Managers attached to the same Phaser Game share a serialized load queue, so two scenes cannot race to load and claim the same cache key. A group load is transactional: any per-file `loaderror` rejects the request, removes newly loaded sibling assets that have no live manager references, and leaves the group eligible for a clean retry. Failed keys are attached to the rejection as `failedKeys`. Partial groups are never marked as loaded.
 
-If a manager is destroyed during a batch, it waits for Phaser's loader completion before rolling back newly loaded files and releasing its scene reference. Releasing a group removes only assets loaded by the manager and only after the final reference is released. Call `releaseGroup` only after scene objects and animations using those textures have been destroyed. Assets loaded by the legacy scene preload are not claimed or removed by the manager.
+If a manager is destroyed during its own batch, it waits for Phaser's loader completion before rolling back only the files that request actually queued and releasing its scene reference. When a request has to wait for an existing legacy loader batch, it rechecks the cache after that batch completes; assets supplied by the legacy preload remain externally owned and are never rolled back by the waiting manager. Releasing a group removes only assets loaded by the manager and only after the final reference is released. Call `releaseGroup` only after scene objects and animations using those textures have been destroyed. Assets loaded by the legacy scene preload are not claimed or removed by the manager.
 
 ## Migration rules
 
