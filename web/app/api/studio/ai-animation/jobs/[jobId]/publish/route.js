@@ -70,14 +70,14 @@ export async function POST(req, context) {
       columns: motion.columns, durationSeconds: motion.durationSeconds,
       png: motion.id + ".png", atlasJson: motion.id + ".json",
       prompt: motion.prompt, negativePrompt: motion.negativePrompt,
-      validation: motion.validationPath ? motion.validationPath : null
+      validation: motion.validationPath ? motion.id + "-validation.json" : null
     }))
   };
   try {
     for (const motion of motions) {
       for (const [relative, filename, contentType] of [
         [motion.outputPath, motion.id + ".png", "image/png"],
-        [motion.atlasJsonPath, motion.id + ".json", "application/json"]
+        [motion.atlasJsonPath, motion.id + ".json", "application/json"],\n        ...(motion.validationPath ? [[motion.validationPath, motion.id + "-validation.json", "application/json"]] : [])
       ]) {
         const bytes = await readFile(path.join(dir, relative));
         if (bytes.length > 8 * 1024 * 1024) throw new Error("الملف " + filename + " يتجاوز حد 8 MB.");
