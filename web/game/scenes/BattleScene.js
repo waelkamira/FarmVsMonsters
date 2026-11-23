@@ -428,7 +428,7 @@ export default class BattleScene extends Scene {
           ? monster.textureKey
           : "studio-monster-motion-" + (monster.testOnly ? "testing" : "published") + "-" + monster.id + "-" + motionId;
         const motionFrameCount = Math.max(1, Number(atlas.frameCount) || (Number(atlas.rows || 1) * Number(atlas.columns || 1)));
-        if (!this.textures.exists(motionTextureKey) || !this.registerStudioGridSheet(motionTextureKey, atlas.rows || 1, atlas.columns || 1)) continue;
+        if (!this.textures.exists(motionTextureKey) || (motionId !== "idle" && !this.registerStudioGridSheet(motionTextureKey, atlas.rows || 1, atlas.columns || 1))) continue;
         const clipName = motionId === "walk" ? "move" : motionId;
         const animationKey = "studio-monster-" + monster.id + "-" + clipName;
         if (!this.anims.exists(animationKey)) {
@@ -4242,7 +4242,7 @@ export default class BattleScene extends Scene {
     const sprite = monster && monster.hyenaSprite;
     if (!sprite || !sprite.active) return;
     if (monster.studioMonster) {
-      const action = ["hyena-bite", "hyena-hit", "hyena-death"].includes(key) ? "attack" : ["hyena-walk", "hyena-run"].includes(key) ? "move" : "idle";
+      const action = key === "hyena-death" ? "death" : key === "hyena-hit" ? "hurt" : key === "hyena-bite" ? "attack" : key === "hyena-run" ? "run" : key === "hyena-walk" ? "move" : "idle";
       const animationKey = "studio-monster-" + monster.studioMonster.id + "-" + action;
       if (action === "attack" && !force && monster.hitAnimUntil > this.time.now) return;
       if (this.anims.exists(animationKey)) {
