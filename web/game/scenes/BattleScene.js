@@ -1108,12 +1108,21 @@ export default class BattleScene extends Scene {
     const cardArtworkKey = locked && this.textures.exists("seed-card-locked")
       ? "seed-card-locked"
       : "seed-card";
-    let seedFrame = null;
+    let seedArtwork = null;
     if (this.textures.exists(cardArtworkKey)) {
       const source = this.textures.get(cardArtworkKey).getSourceImage();
       const scale = Math.min(88 / source.width, 101.2 / source.height);
-      seedFrame = this.add.image(0, 0, cardArtworkKey)
+      seedArtwork = this.add.image(0, 0, cardArtworkKey)
         .setDisplaySize(source.width * scale * 0.86, source.height * scale * 0.86);
+    }
+    // The uploaded ornamental packet frame sits above the card face and
+    // keeps every plant packet visually consistent with the game's HUD art.
+    let seedFrame = null;
+    if (this.textures.exists("seed-card-frame")) {
+      const frameSource = this.textures.get("seed-card-frame").getSourceImage();
+      const frameScale = Math.min(86 / frameSource.width, 98 / frameSource.height);
+      seedFrame = this.add.image(0, 0, "seed-card-frame")
+        .setDisplaySize(frameSource.width * frameScale, frameSource.height * frameScale);
     }
 
     let icon;
@@ -1174,8 +1183,9 @@ export default class BattleScene extends Scene {
     card.setData("selectionFrame", selectionFrame);
     card.add([
       shadow, selectionFrame,
-      ...(seedFrame ? [seedFrame] : []),
-      panel, icon, namePlate, nameLabel, costPlate, cost,
+      ...(seedArtwork ? [seedArtwork] : []),
+      panel, ...(seedFrame ? [seedFrame] : []),
+      icon, namePlate, nameLabel, costPlate, cost,
       cooldownOverlay, cooldownLabel
     ]);
 
