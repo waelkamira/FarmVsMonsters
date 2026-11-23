@@ -1,11 +1,26 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { getProjectileTrajectoryOffset, getProjectileLaunchPoint } from "../../game/studio/projectileTrajectory.mjs";
 import gridCalibration from "../../game/data/farm-grid-calibration.json";
 
 const clamp=(v,min,max)=>Math.min(max,Math.max(min,Number(v)||0));
 const BOARD={width:840,height:525,columns:8,rows:5,cellSize:105};
 const DEFAULT_POINTS=[{progress:0,x:0,y:0},{progress:.5,x:0,y:110},{progress:1,x:0,y:0}];
+function createFrameClock({enabled,first,last,fps}){
+ let frame=first,timer=null;
+ const listeners=new Set();
+ const emit=()=>listeners.forEach(listener=>listener());
+ return {
+  subscribe(listener){
+   if(!enabled)return()=>{};
+   listeners.add(listener);
+   if(!timer&&last>first)timer=window.setInterval(()=>{frame=frame>=last?first:frame+1;emit();},1000/Math.max(1,fps||1));
+   return()=>{listeners.delete(listener);if(!listeners.size&&timer){window.clearInterval(timer);timer=null;}};
+  },
+  getSnapshot:()=>frame,
+  getServerSnapshot:()=>first
+ };
+}
 export default function ProjectileTrajectoryEditor({
  imageUrl,plantUrl,frameCount=1,rows=1,columns=1,
  plantFrameCount=1,plantRows=1,plantColumns=1,plantSizePercent=100,
@@ -15,23 +30,27 @@ export default function ProjectileTrajectoryEditor({
  speed,setSpeed,collisionRadius,setCollisionRadius,height,setHeight,
  rotation,setRotation,playing,setPlaying
 }){
- const [progress,setProgress]=useState(0);
+ const trajectoryKey=useMemo(()=>JSON.stringify([points,launchX,launchY,height,targetX,targetY]),[points,launchX,launchY,height,targetX,targetY]);
+ const [progressState,setProgressState]=useState({key:"",value:0});
+ const progress=progressState.key===trajectoryKey?progressState.value:0;
+ const setProgress=useCallback(next=>setProgressState(current=>({key:trajectoryKey,value:typeof next==="function"?next(current.key===trajectoryKey?current.value:0):next})),[trajectoryKey]);
  const [drag,setDrag]=useState(null);
  const [selectedPoint,setSelectedPoint]=useState(-1);
  const [imageSize,setImageSize]=useState({width:1,height:1});
  const [plantImageSize,setPlantImageSize]=useState({width:1,height:1});
- const [plantFrame,setPlantFrame]=useState(0);
+ const [plantFrame,setPlantFrame]=useState(clamp(idleStartFrame,0,Math.max(0,plantFrameCount-1)));
  const [plantPlaying,setPlantPlaying]=useState(false);
+ const plantFrameLast=Math.max(0,plantFrameCount-1);
+ const plantFrameClock=useMemo(()=>createFrameClock({enabled:plantPlaying,first:clamp(idleStartFrame,0,plantFrameLast),last:plantFrameLast,fps:plantFps}),[plantPlaying,idleStartFrame,plantFrameLast,plantFps]);
+ const animatedPlantFrame=useSyncExternalStore(plantFrameClock.subscribe,plantFrameClock.getSnapshot,plantFrameClock.getServerSnapshot);
+ const displayPlantFrame=plantPlaying?animatedPlantFrame:Math.min(plantFrameLast,Math.max(0,plantFrame));
  const [projectileFrame,setProjectileFrame]=useState(0);
  const [projectilePlaying,setProjectilePlaying]=useState(false);
  const [projectileFps,setProjectileFps]=useState(10);
- useEffect(()=>{if(!imageUrl){setImageSize({width:1,height:1});return;}const image=new window.Image();image.onload=()=>{setImageSize({width:image.naturalWidth,height:image.naturalHeight});};image.src=imageUrl;return()=>{image.onload=null;};},[imageUrl]);
- useEffect(()=>{if(!plantUrl){setPlantImageSize({width:1,height:1});return;}const image=new window.Image();image.onload=()=>setPlantImageSize({width:image.naturalWidth,height:image.naturalHeight});image.src=plantUrl;return()=>{image.onload=null;};},[plantUrl]);
- useEffect(()=>{setPlantFrame(clamp(idleStartFrame,0,Math.max(0,plantFrameCount-1)));setPlantPlaying(false);},[plantUrl,plantFrameCount,plantRows,plantColumns,idleStartFrame]);
- useEffect(()=>{if(!plantPlaying)return;const first=0;const last=Math.max(0,plantFrameCount-1);setPlantFrame(first);const timer=window.setInterval(()=>setPlantFrame(frame=>frame>=last?first:Math.min(last,frame+1)),1000/Math.max(1,plantFps||1));return()=>window.clearInterval(timer);},[plantPlaying,plantFps,plantFrameCount]);
- useEffect(()=>{if(!playing)return;let last=0,raf=0;const tick=now=>{if(!last)last=now;const dt=Math.min(64,now-last);last=now;setProgress(p=>Math.min(1,p+dt*Math.max(.05,speed)/24000));raf=requestAnimationFrame(tick);};raf=requestAnimationFrame(tick);return()=>cancelAnimationFrame(raf);},[playing,speed]);
+ useEffect(()=>{if(!imageUrl)return;const image=new window.Image();image.onload=()=>{setImageSize({width:image.naturalWidth,height:image.naturalHeight});};image.src=imageUrl;return()=>{image.onload=null;};},[imageUrl]);
+ useEffect(()=>{if(!plantUrl)return;const image=new window.Image();image.onload=()=>setPlantImageSize({width:image.naturalWidth,height:image.naturalHeight});image.src=plantUrl;return()=>{image.onload=null;};},[plantUrl]);
+ useEffect(()=>{if(!playing)return;let last=0,raf=0;const tick=now=>{if(!last)last=now;const dt=Math.min(64,now-last);last=now;setProgress(p=>Math.min(1,p+dt*Math.max(.05,speed)/24000));raf=requestAnimationFrame(tick);};raf=requestAnimationFrame(tick);return()=>cancelAnimationFrame(raf);},[playing,speed,setProgress]);
  useEffect(()=>{if(playing&&progress>=1)setPlaying(false);},[playing,progress,setPlaying]);
- useEffect(()=>{setProgress(0);},[points,launchX,launchY,height,targetX,targetY]);
  useEffect(()=>{if((!playing&&!projectilePlaying)||!imageUrl)return;const timer=window.setInterval(()=>setProjectileFrame(frame=>(frame+1)%Math.max(1,frameCount)),1000/Math.max(1,projectileFps));return()=>window.clearInterval(timer);},[playing,projectilePlaying,imageUrl,frameCount,projectileFps]);
  const laneOrigin={x:105,y:262.5};
  // Runtime plants are anchored 5px above the lane center in the upper rows.
@@ -51,7 +70,7 @@ export default function ProjectileTrajectoryEditor({
  const frameIndex=Math.min(Math.max(1,frameCount)-1,projectileFrame);
  const frameColumn=frameIndex%Math.max(1,columns),frameRow=Math.floor(frameIndex/Math.max(1,columns));
  const frameWidth=imageSize.width/Math.max(1,columns),frameHeight=imageSize.height/Math.max(1,rows);
- const safePlantFrame=Math.min(Math.max(0,plantFrameCount-1),plantFrame);
+ const safePlantFrame=displayPlantFrame;
  const plantColumn=safePlantFrame%Math.max(1,plantColumns),plantRow=Math.floor(safePlantFrame/Math.max(1,plantColumns));
  const plantFrameWidth=plantImageSize.width/Math.max(1,plantColumns),plantFrameHeight=plantImageSize.height/Math.max(1,plantRows);
  const plantScale=clamp(plantSizePercent,25,200)/100;
@@ -65,8 +84,8 @@ export default function ProjectileTrajectoryEditor({
  const movePointer=e=>{if(!drag)return;const p=pointerPosition(e);if(drag.type==="launch"){setLaunchX(Math.round(clamp(p.x-laneOrigin.x,-300,300)));setLaunchY(Math.round(clamp(p.y-laneOrigin.y,-300,300)));return;}if(drag.type==="waypoint"){const t=normalizedPoints[drag.index]?.progress;if(t==null)return;const base=baseAt(t),correction=headCorrectionAt(t);const next=normalizedPoints.map((item,index)=>index===drag.index?{...item,x:Math.round(clamp((p.x-base.x-correction.x),-1000,1000)),y:Math.round(clamp((base.y+correction.y-p.y),-1000,1000))}:item);setPoints(next);}};
  const addWaypoint=e=>{const p=pointerPosition(e);const t=clamp((p.x-start.x)/(end.x-start.x),.02,.98);if(normalizedPoints.length>=18||normalizedPoints.some(item=>Math.abs(item.progress-t)<.005))return;const base=baseAt(t),correction=headCorrectionAt(t);const next=[...normalizedPoints,{progress:Number(t.toFixed(3)),x:Math.round(clamp((p.x-base.x-correction.x),-1000,1000)),y:Math.round(clamp((base.y+correction.y-p.y),-1000,1000))}].sort((a,b)=>a.progress-b.progress);setPoints(next);setSelectedPoint(next.findIndex(item=>item.progress===Number(t.toFixed(3))));};
  const removeWaypoint=()=>{if(selectedPoint<=0||selectedPoint>=normalizedPoints.length-1)return;setPoints(normalizedPoints.filter((_,index)=>index!==selectedPoint));setSelectedPoint(-1);};
- const previousFrame=()=>setPlantFrame(frame=>Math.max(0,frame-1));
- const nextFrame=()=>setPlantFrame(frame=>Math.min(Math.max(0,plantFrameCount-1),frame+1));
+ const previousFrame=()=>{setPlantPlaying(false);setPlantFrame(Math.max(0,displayPlantFrame-1));};
+ const nextFrame=()=>{setPlantPlaying(false);setPlantFrame(Math.min(plantFrameLast,displayPlantFrame+1));};
  return <section className="studio-trajectory-editor studio-motion-editor">
   <div className="studio-trajectory-heading"><div><h4>محرر حركة النبتة والقذيفة</h4><small>انقر مرتين على المسار لإضافة دبوس واسحبه لتشكيل المسار. اسحب صورة القذيفة نفسها أو مقبض الإطلاق لضبط مكان خروجها وارتفاعها.</small></div><div className="studio-trajectory-actions"><button type="button" onClick={()=>{setProgress(0);setPlaying(false);}}>إعادة موضع التشغيل</button><button type="button" onClick={()=>{if(!playing&&progress>=1)setProgress(0);setPlaying(v=>!v);}}>{playing?"إيقاف القذيفة":"تشغيل المسار"}</button></div></div>
   <div className="studio-battle-preview-legend"><span>🌱 النبتة</span><span>☄️ القذيفة</span><span>● دبابيس المسار (انقر مرتين لإضافة)</span></div>
@@ -94,7 +113,7 @@ export default function ProjectileTrajectoryEditor({
   </svg>
   <label className="studio-motion-progress">موضع القذيفة على المسار<input type="range" min="0" max="1000" step="1" value={Math.round(progress*1000)} onChange={e=>{setPlaying(false);setProgress(Number(e.target.value)/1000);}}/><span>{Math.round(progress*100)}%</span></label>
   <div className="studio-motion-toolbar">
-   <div className="studio-motion-frame-controls"><b>معاينة إطارات النبتة</b><div className="studio-trajectory-actions"><button type="button" onClick={()=>setPlantFrame(0)}>الأول</button><button type="button" onClick={previousFrame}>◀ السابق</button><span>الإطار {plantFrame+1} / {Math.max(1,plantFrameCount)}</span><button type="button" onClick={nextFrame}>التالي ▶</button><button type="button" onClick={()=>setPlantFrame(Math.max(0,plantFrameCount-1))}>الأخير</button><button type="button" onClick={()=>setPlantPlaying(v=>!v)}>{plantPlaying?"إيقاف":"تشغيل الإطارات"}</button></div></div>
+   <div className="studio-motion-frame-controls"><b>معاينة إطارات النبتة</b><div className="studio-trajectory-actions"><button type="button" onClick={()=>{setPlantPlaying(false);setPlantFrame(0);}}>الأول</button><button type="button" onClick={previousFrame}>◀ السابق</button><span>الإطار {displayPlantFrame+1} / {Math.max(1,plantFrameCount)}</span><button type="button" onClick={nextFrame}>التالي ▶</button><button type="button" onClick={()=>{setPlantPlaying(false);setPlantFrame(plantFrameLast);}}>الأخير</button><button type="button" onClick={()=>{if(plantPlaying){setPlantFrame(animatedPlantFrame);setPlantPlaying(false);}else setPlantPlaying(true);}}>{plantPlaying?"إيقاف":"تشغيل الإطارات"}</button></div></div>
    <div className="studio-motion-frame-controls"><b>معاينة إطارات القذيفة</b><div className="studio-trajectory-actions"><button type="button" onClick={()=>setProjectileFrame(0)}>الأول</button><button type="button" onClick={()=>setProjectileFrame(frame=>Math.max(0,frame-1))}>◀</button><span>الإطار {projectileFrame+1} / {Math.max(1,frameCount)}</span><button type="button" onClick={()=>setProjectileFrame(frame=>Math.min(Math.max(0,frameCount-1),frame+1))}>التالي ▶</button><button type="button" onClick={()=>setProjectileFrame(Math.max(0,frameCount-1))}>الأخير</button><button type="button" onClick={()=>setProjectilePlaying(value=>{if(!value)setProjectileFrame(0);return !value;})}>{projectilePlaying?"إيقاف الإطارات":"تشغيل الإطارات"}</button></div><label className="studio-motion-fps">سرعة إطارات القذيفة<input type="range" min="1" max="24" value={projectileFps} onChange={e=>setProjectileFps(Number(e.target.value))}/><span>{projectileFps} FPS</span></label></div>
   </div>
   <div className="studio-grid studio-motion-settings">

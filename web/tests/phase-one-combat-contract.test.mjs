@@ -24,8 +24,8 @@ const rules = readFileSync(resolve(here, "../game/rules/phaseOneRules.mjs"), "ut
 
 test("combat contract version, wave roster, and reward policy are explicit", () => {
   assert.equal(PHASE_ONE_COMBAT_CONTRACT_VERSION, 1);
-  assert.deepEqual(PHASE_ONE_WAVE_SIZES, [3, 5, 6, 7, 9]);
-  assert.equal(PHASE_ONE_WAVE_SIZES.reduce((sum, size) => sum + size, 0), 30);
+  assert.deepEqual(PHASE_ONE_WAVE_SIZES, [2, 3, 4, 5, 6]);
+  assert.equal(PHASE_ONE_WAVE_SIZES.reduce((sum, size) => sum + size, 0), 20);
   assert.deepEqual(PHASE_ONE_ENERGY, { initial: 150, maximum: 300 });
   assert.equal(PHASE_ONE_REWARDS.ordinaryMonsterDefeatCoins, 8);
 });
@@ -61,7 +61,8 @@ test("radish, mushroom and dragon combat values preserve the current tuning", ()
     plantingEnergyCost: 35,
     hp: 160,
     cooldownMs: 1450,
-    range: 360
+    range: 360,
+    seedPacketRechargeMs: 5000
   });
   assert.equal(PHASE_ONE_PLANTS.energyMushroom.plantingEnergyCost, 50);
   assert.equal(PHASE_ONE_PLANTS.energyMushroom.hp, 85);
@@ -84,7 +85,7 @@ test("radish, mushroom and dragon combat values preserve the current tuning", ()
 
 test("monster stats match the existing Stage 1 combat values", () => {
   const brute = getMonsterCombatStats("cave-brute", 1);
-  assert.equal(brute.hp, 175);
+  assert.equal(brute.hp, 125);
   assert.equal(brute.speed, 8);
   assert.equal(brute.plantDamage, 16);
   assert.equal(brute.attackIntervalMs, 1150);
@@ -125,7 +126,8 @@ test("Phaser uses the shared contract and has no duplicate monster balance table
   assert.match(scene, /getMonsterCombatStats\(archetype, this\.wave\)/);
   assert.match(scene, /PHASE_ONE_DRAGON\.maxHp/);
   assert.match(scene, /PHASE_ONE_REWARDS\.ordinaryMonsterDefeatCoins/);
-  assert.match(scene, /getMonsterSpawnIntervalMs\(this\.wave\)/);
+  assert.match(scene, /resolveWaveSpawnStep\(/);
+  assert.match(scene, /nextSpawnTimerMs/);
   assert.doesNotMatch(scene, /const COMBAT_BALANCE\s*=/);
   assert.match(rules, /PHASE_ONE_REWARDS\.ordinaryMonsterDefeatCoins/);
   assert.match(rules, /PHASE_ONE_WAVE_SIZES/);

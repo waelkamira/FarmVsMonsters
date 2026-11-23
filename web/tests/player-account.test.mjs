@@ -21,8 +21,10 @@ test("player account screen provides sign-in and account creation", () => {
   assert.match(accountPage, /signUpPlayer/);
   assert.match(accountPage, /restoreOrInitializeCloudProgress/);
   assert.match(accountPage, /type="password"/);
-  assert.match(home, /href="\/account"/);
-  assert.match(stages, /href="\/account"/);
+  assert.match(accountPage, /Continue as Guest/);
+  assert.match(home, /getPlayerSession\(\)/);
+  assert.match(home, /restoreOrInitializeCloudProgress\(\)/);
+  assert.match(stages, /loadUnlockedStage\(window\.localStorage\)/);
 });
 
 test("account sessions use HttpOnly cookies and never expose a service-role key", () => {
@@ -54,7 +56,7 @@ test("local saves remain active and client balances are never uploaded to cloud"
   assert.match(client, /progress_verified !== true/);
   assert.match(client, /cloud-progress-unverified/);
   assert.match(client, /coins_verified === true/);
-  assert.match(client, /Do not initialize a cloud row from browser-controlled local values/);
+  assert.match(client, /never import those unverified values/);
   assert.match(client, /coins_verified === true/);
   assert.doesNotMatch(client, /saveCloudProgress/);
   assert.doesNotMatch(battle, /syncPlayerProgress/);
@@ -69,15 +71,14 @@ test("menus and account controls use high-contrast text and visible focus states
 
 
 test("playing as a guest never requires authentication and keeps local progress", () => {
-  assert.match(home, /href="\/stages"/);
-  assert.match(home, /اختياري|Optional/);
+  assert.match(home, /router\.push\("\/game"\)/);
+  assert.match(home, /catch \{/);
   assert.match(accountPage, /Continue as Guest/);
   assert.match(accountPage, /اللعب كضيف/);
   assert.match(client, /export function readLocalPlayerProgress/);
   assert.match(battle, /saveCoins\(window\.localStorage/);
   assert.match(accountRoute, /cloudAvailable: false/);
 });
-
 
 test("Google OAuth uses server-side PKCE and protects the callback with state", async () => {
   const start = readFileSync(resolve(here, "../app/api/player/account/google/route.js"), "utf8");
@@ -110,12 +111,12 @@ test("Google OAuth CSRF state is preserved in the app callback URL, not sent as 
 
 test("plant catalog includes implemented starters and a locked upcoming roster", () => {
   const catalog = readFileSync(resolve(here, "../game/data/stageOnePlants.mjs"), "utf8");
-  for (const id of ["radish", "energy-mushroom", "pea-shooter", "thorn-wall", "sunflower", "ice-bloom", "double-radish", "pumpkin-guard", "explosive-berry", "fire-pepper"]) {
+  for (const id of ["radish", "energy-mushroom", "pea-shooter", "thorn-wall", "sunflower", "ice-bloom", "double-radish", "pumpkin-guard", "explosive-berry", "snow-thrower", "pineapple", "hazelnut", "mango", "electric-mushroom"]) {
     assert.match(catalog, new RegExp('id: "' + id + '"'));
   }
   assert.match(catalog, /implemented: true/);
   assert.match(catalog, /purchasable: false/);
-  assert.match(catalog, /coinPrice: 360/);
+  assert.match(catalog, /coinPrice: 300/);
 });
 
 test("plant purchase migration uses database-owned prices and an atomic transaction", () => {

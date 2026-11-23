@@ -284,3 +284,8 @@
 .studio-clone-dialog label{display:grid;gap:7px;font-weight:700}
 .studio-clone-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:8px}
 .studio-clone-actions button:last-child{background:#d7a84f;color:#20190d;font-weight:800}
+
+.studio-delete-button{background:#8f2635!important;color:#fff!important;border:1px solid rgba(255,255,255,.24)!important}
+.studio-delete-button:hover:not(:disabled){background:#b42336!important;transform:translateY(-1px)}
+.studio-audio-upload{margin:14px 0;padding:14px;border:1px solid var(--studio-border,#ddd);border-radius:14px;background:rgba(127,127,127,.045)}
+.studio-audio-upload audio{display:block;max-width:100%}

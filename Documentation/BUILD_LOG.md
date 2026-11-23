@@ -1145,3 +1145,444 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 
 - Rig Editor playback follow-up: replaying a completed non-looping clip now resets the preview time to zero before starting; pausing mid-clip still resumes from the current frame. Added a regression assertion for replay behavior.
 - The isolated test harness was rerun after this UI fix: 104 test cases passed across the same 9 test groups. Full repository `node --test`, ESLint, Next.js build, and live browser battle verification remain blocked/unverified as noted above.
+
+
+## 2026-11-22 — AI Auto-Rig Builder architecture
+- Audited the current Hybrid Animation Engine branch and confirmed the active implementation is Phaser 3 in web/; the existing skeletal profile/evaluator and Rig Editor remain the target integration.
+- Evaluated Rigby2D (MIT OR Apache-2.0), Stretchy Studio (MIT), Segment Anything, and See-through as candidate references/adapters. The plan records their capabilities and limitations, including the fact that SAM masks are not semantic part labels, Rigby2D AutoRig requires already-separated layers, and See-through's anime-focused model weights have additional OpenRAIL terms and significant VRAM requirements.
+- Added Documentation/AI_AUTO_RIG_BUILDER_PLAN.md with the local-first architecture, stable semantic part roles, layer/occlusion handling, deterministic rig generation, optional inference worker, implementation phases, and acceptance criteria.
+- Decision: do not add a heavy model or paid/cloud API dependency to the web app. Start with a deterministic, testable Auto-Rig core and keep AI segmentation as an optional local worker.
+- Verification: repository branch/PR state and source files were inspected through GitHub. No application build or live game test was run in this documentation-only step.
+
+
+## 2026-11-22 — Deterministic Auto-Rig core (initial)
+- Added web/game/studio/autoRigBuilder.mjs. It accepts already-extracted part descriptors, validates source-space bounds/pivots and stable IDs, assigns deterministic parent bones from semantic roles, converts global pivots into cropped-image pivots and parent-local bone positions, and builds a version-1 skeletal profile through the existing validator.
+- Added explicit muzzle-anchor generation for projectile rigs; projectile rigs are rejected when the muzzle point is not confirmed.
+- Added warnings for unresolved occlusion, reconstructed/generated pixels, and unknown semantic roles. Multiple instances of the same role are supported.
+- Added web/tests/studio-auto-rig-builder.test.mjs for deterministic output, parent mapping, multi-instance roles, coordinate conversion, muzzle anchors, cycle/bounds/duplicate rejection, and provenance warnings.
+- Verification: files were committed and read-back is pending. The new Node test file, Next.js build, and live Chrome preview have not yet been executed. This core consumes extracted layer descriptors; it does not yet perform AI image segmentation or reconstruct hidden pixels.
+
+
+## 2026-11-22 — Auto-Rig Builder feature branch and draft PR
+- Created feature branch feat/studio-ai-auto-rig-builder from feat/studio-hybrid-animation-engine-mainline so this work remains isolated from main and explicitly depends on the Hybrid Animation Engine work in PR #88.
+- Opened draft PR #89 targeting the hybrid animation branch, not main: https://github.com/waelkamira/FarmVsMonsters/pull/89.
+- Read back the Auto-Rig module, regression test file, architecture plan, and build log from the feature branch. The test file currently contains 8 focused test cases.
+- The draft PR is intentionally not merge-ready. The new tests and full application checks have not yet been executed; live Chrome/gameplay validation remains required.
+
+
+## 2026-11-22 — Auto-Rig Builder adopted as a permanent Studio subsystem
+- Updated Documentation/AI_AUTO_RIG_BUILDER_PLAN.md to make the Auto-Rig system a first-class, permanent part of the Asset & Animation Studio rather than an external/temporary utility.
+- Defined all nine required product modules and their responsibilities: AI Part Detector, Smart Image Segmentation, Hidden Part Reconstruction, Auto Bone Generator, Auto Pivot Detection, Animation Generator, Weapon Attachment Builder, Rig Quality Validator, and Rig Library.
+- Added a shared integration contract: all modules use one versioned authoring manifest and emit the existing game-compatible skeletal rig profile and referenced assets. No parallel animation runtime or incompatible output format is allowed.
+- Required manual editability, reversibility, source preservation, confidence/provenance reporting, same-evaluator previews, existing Phaser muzzle/weapon behavior, and use of the existing Studio asset/version/dependency/publish lifecycle.
+- Expanded Phase 2 and Phase 5 and added acceptance criteria for all-nine-module integration, runtime parity, and reusable role-based rig templates.
+- This is a planning/documentation update only; no new module UI, model worker, or runtime feature was claimed as implemented. Build/tests/live gameplay remain unverified.
+
+## 2026-11-22 — Auto-Rig profile contract hardening
+- Reviewed the actual createSkeletalRigProfile / validateSkeletalRigProfile contract and the Phaser skeletal renderer. The canonical output remains rig-profile v1; the builder does not introduce a second runtime.
+- Corrected identifier limits: part instance IDs remain capped at 59 characters so the part- bone prefix stays within the engine's 64-character ID limit, while referenced asset IDs now use the full 64-character asset-ID allowance.
+- Made inferred parent selection stable across input ordering and less arbitrary when multiple instances share a semantic role: same-side candidates are preferred, then the nearest pivot, then a stable ID tie-break.
+- Hardened muzzle anchors: an anchor must reference a valid weapon/weapon-barrel part and lie inside or on that selected part's source-space bounds, in addition to remaining inside the source canvas.
+- Added contract regressions that validate generated profiles with the real runtime validator, evaluate the generated idle clip with the shared skeletal evaluator, and assert that the evaluated muzzle resolves to the corresponding canvas-centered source-space point. Added identifier, weapon-boundary, and parent-selection regressions.
+- GitHub Actions were triggered for the updated branch head. Both workflow jobs reported failure, but GitHub returned zero job steps and the job-log artifacts returned BlobNotFound; this provides no test/build output and does not establish a code failure or a passing test run. The Node test suite, lint, production build, and live Chrome gameplay validation remain unverified in this environment.
+- PR #89 remains unmerged and must remain draft until executable CI results and integrated Studio/gameplay validation are available.
+
+## 2026-11-22 — Guided Studio cutout workflow (first usable authoring slice)
+- Added AutoRigBuilderPanel to the normal plant/monster asset workflow. It can use a newly selected source image or an existing Studio asset and, for Sprite Sheets, isolates the first frame as the reference pose.
+- Added guided polygon-mask authoring: users outline each visible part, assign a stable semantic role and name, review/remove selections, and create transparent PNG cutouts without modifying the original source image.
+- Each cutout is saved as an ordinary Studio item asset through the existing authenticated asset API. The generated rig profile references those registered assets, so the existing asset dependency, version, readiness, and publishing lifecycle remains authoritative.
+- The generated profile is handed directly to the existing RigEditor for manual bone/pivot/clip/attachment review; it uses the same runtime profile format and evaluator. Projectile plants still require the user to add/confirm the muzzle attachment in RigEditor before save, as enforced by the existing API.
+- This is guided/manual segmentation, not automatic AI inference. AI Part Detector models, prompt-assisted segmentation, hidden-pixel reconstruction, undo/redo history, and bulk transactional rollback are not implemented yet. If a multi-part upload fails partway through, already-created cutout assets remain in the library and are reported for cleanup.
+- No executable test, lint, production build, or Chrome gameplay result is claimed for this UI addition. It remains subject to full CI and interactive validation before PR #89 can leave draft or be merged.
+- Follow-up CI check for the integrated Studio panel head (commit 50d47015dd4b3c096fb68f8e399397c005d53894): both Web quality gate and Studio/Game Validation again concluded failure with `steps: null`; no job steps or downloadable logs were exposed. This is still an infrastructure/runner observability blocker, not a usable code-test result. No green CI is claimed.
+
+## 2026-11-22 — Versioned Auto-Rig authoring manifest
+- Extended the builder manifest with a versioned semantic-role dictionary identifier, generator identity/version, source asset ID, optional SHA-256 source hash, source frame and dimensions.
+- Added validated source-space polygon masks (3–512 points) and explicit segmentation/pixel provenance for each part. Manual polygons are recorded as `manual-polygon` with original source pixels; reconstructed pixels remain a separate provenance state.
+- Connected the guided Studio panel to hash the original source bytes when Web Crypto is available and to pass the mask/provenance metadata into the canonical manifest. The source art remains unchanged; only cutout PNG derivatives are added to the existing Studio asset library.
+- Added regressions for source metadata, role dictionary version, mask persistence, provenance, malformed hashes, and out-of-canvas mask points. Test execution is still pending because the latest GitHub Actions attempts have not exposed runnable job steps or logs.
+- CI rechecked after the mask/provenance and upload-guard changes (head commit f95541272cbaa49cac563c9aee5b5607237988c9). Both required workflows again reported failure while their job payloads contained `steps: null` and no log URL; this environment still cannot expose an actual test/build trace. The branch is 26 commits ahead of its PR base and 0 behind at this checkpoint; merge remains blocked pending real executable validation.
+
+## 2026-11-22 — Shared semantic role dictionary
+- Moved the Studio role choices into the Auto-Rig builder's versioned role dictionary so the UI and deterministic generator consume the same canonical values instead of maintaining duplicate lists.
+- Added the missing jaw and weapon-muzzle semantic roles, including parent-role guidance for a muzzle-region part. The actual projectile launch point remains a separately confirmed `muzzle` attachment, not an inferred polygon role.
+- Added a regression that confirms the Studio option and generator agree on `weapon.muzzle` and do not emit an unknown-role warning for it.
+- Tightened reconstruction review semantics: generated-pixel warnings now also derive from the explicit `provenance.pixels = reconstructed` marker, even if the part's occlusion state was not separately set. Added a regression for this independent provenance path.
+
+## 2026-11-22 — Persisted Auto-Rig build manifest
+- Added a server-side manifest validator that checks builder/version identity, semantic dictionary version, source dimensions/hash/frame, part IDs/bounds/pivots, mask geometry, provenance, parent references, and cycles.
+- Studio now carries the generated authoring manifest alongside the editable skeletal profile and submits both through the existing asset API. The API validates and stores `rigBuildManifest` in the same versioned asset record as `rigProfile`; it does not create a separate storage or runtime system.
+- The manifest is retained as generation provenance while the user remains free to edit bones, pivots, clips, and attachments in RigEditor. Validation therefore checks the manifest's own integrity without freezing the current editable profile to the original generated bone layout.
+- Added regressions for manifest validation, invalid parent references, and the ability to add manual bones after generation. These tests have been authored but not executed in a working Node/CI runner.
+- The source-image replacement control now invalidates the prior Auto-Rig provenance manifest so a hash/mask record from an older source cannot silently be presented as current. Existing manually editable rig data is retained for review.
+
+## 2026-11-22 — Contact-aware automatic pivot suggestions
+- Added deterministic pivot inference for parts without a manually supplied pivot. Body/stem roots default to a base contact point; child parts use the closest point on their polygon mask (or bounds fallback) to the selected parent's pivot.
+- The guided polygon workflow now leaves pivots to the shared builder instead of assigning every part its polygon centroid. The generated local/cropped pivot is saved into the authoring manifest and remains editable in RigEditor.
+- Added a regression for a body/head pair proving the suggested pivots land on the expected base/neck contact positions and produce the expected parent-local bone transform.
+- Extended the existing asset-version snapshot/restore/clone logic to carry `rigBuildManifest` independently, so the authoring provenance survives edits, cloning, and restoring prior asset revisions. Added a regression covering deep-copy isolation across all three paths.
+
+## 2026-11-22 — First executable CI results and regression triage
+- The first fully initialized Studio/Game Validation runner completed dependency installation and executed the repository's Phase 1 gameplay test command on the Auto-Rig branch (commit `863282c41158e9fe27192fa8ab041acdba6ca021`). Result: 403 tests, 348 passed, 55 failed. Failures span combat replay, wave scheduling, Phase 1 gameplay, and existing Studio workflow assertions; they are not yet proven to be pre-existing because the PR-base run did not expose job steps/logs.
+- One failure was directly caused by this work: the existing hybrid-engine integration test expected the old asset-record suffix `rigProfile}:{})`. Updated that assertion to the new record shape containing `rigProfile,rigBuildManifest`.
+- The paired Web quality gate was cancelled while installing dependencies after the gameplay workflow failed; lint and production build did not run. A fresh pair of workflows has been triggered on the corrected commit `7da6ce1741d501fee28eb6a58c95d1a906e88c1a`; results are pending.
+- The new Auto-Rig-specific and asset-version tests did not appear in the failed-test list from the completed test run, but the full suite is not green. No merge or readiness claim is permitted until the remaining failures are triaged and lint/build complete.
+- Re-run on the updated asset-manifest/version changes completed dependency installation and executed all 404 Node tests (commit `b7a7873757de2181b281f41104df7d4a951a8bbd`): 350 passed, 54 failed. The Auto-Rig builder, manifest contract, and asset-version manifest tests are not among the failing tests; the updated hybrid-engine route assertion also no longer fails. The remaining failures are broad existing combat/gameplay/Studio UI expectations and still block the full gate. Lint and production build were skipped because the test step failed.
+
+## 2026-11-22 — Baseline comparison and isolated Auto-Rig quality gate
+- Re-ran the PR #89 base commit `1ffaca4b33d856572365c055e6b1165852da5f29` through the same Studio/Game Validation workflow. Baseline result: 385 tests, 331 passed, 54 failed. The Auto-Rig branch run had 404 tests, 350 passed, 54 failed. The same 54 pre-existing failures remain, while the branch adds 19 tests that pass and the one changed hybrid API assertion is now corrected. This confirms the full-suite red state is inherited from the PR #88 base rather than introduced by the Auto-Rig additions.
+- Added `.github/workflows/auto-rig-validation.yml` as an independent diagnostic gate. It runs the Auto-Rig builder tests, asset-version tests, and hybrid-engine integration tests, then runs ESLint and the production build in separate steps after the focused tests. This does not replace the full repository test gate; it isolates subsystem quality while the inherited 54 failures are tracked separately.
+- The isolated workflow was just added; its execution result is pending. The full repository suite remains red, and no merge/readiness claim is made until the focused gate, lint, build, and gameplay validation are green.
+
+## 2026-11-22 — Procedural starter animation generator
+- Replaced the static-only idle clip with five editable starter clips emitted in the existing rig-profile v1: `idle`, `move`, `attack`, `hit`, and `death`.
+- Motion targets are selected from the shared semantic role dictionary (body/stem, leaves, head, arms/hands, weapon/barrel). The clips are conservative procedural starting points, not model-generated final animation; all tracks and keyframes remain editable in RigEditor and are evaluated by the same skeletal runtime.
+- Added edge-case handling so a one-part rig or a rig whose first visual part is also a target role never receives duplicate tracks for one bone. Added tests that validate all five clips with the real profile validator/evaluator and cover single-part rigs.
+
+## 2026-11-22 — Focused Auto-Rig CI and lint triage
+- The new isolated workflow completed the targeted Auto-Rig builder, asset-version, and hybrid-engine contract tests successfully.
+- Its first full ESLint pass reported 9 errors and 16 warnings across the Studio page, RigEditor, ProjectileTrajectoryEditor, and the new AutoRigBuilderPanel. One error was in the new panel (synchronous state reset inside an effect); removed that unnecessary state update. The other reported errors are in pre-existing page/editor code and are not introduced by the Auto-Rig panel/module.
+- Updated the isolated workflow to run focused ESLint over the new panel, API route, Auto-Rig builder, and asset-version module as a blocking step; the full-project lint remains a visible diagnostic but no longer prevents the production build from running. The next run must confirm focused lint and build outcomes.
+
+## 2026-11-22 — Auto-Rig subsystem validation green
+- The independent Auto-Rig subsystem workflow completed successfully on commit `b90cd5f9c514ee62e01c4d3dab86981cacaaf4b0`: focused Auto-Rig/asset-version/hybrid contract tests passed; focused ESLint passed for `AutoRigBuilderPanel.jsx`, the Studio asset API route, `autoRigBuilder.mjs`, and `assetVersions.mjs`; the Next.js production build compiled and generated all 20 static pages successfully.
+- Full-project ESLint diagnostics still report 8 errors and 16 warnings, all in existing `ProjectileTrajectoryEditor.jsx`, `RigEditor.jsx`, and `page.js` code paths; none are in the focused Auto-Rig files. The full-project lint diagnostic is non-blocking in the new workflow so the build can run, but these existing lint issues remain open technical debt.
+- This is a green focused subsystem gate, not a green full repository gate. The inherited 54 full-suite test failures remain unchanged from the PR #88 base; the full repository must not be declared ready to merge on this evidence alone.
+
+## 2026-11-22 — Guided projectile emitter / muzzle authoring
+- Extended the guided Studio cutout workflow for projectile plants: the author selects an emitter part and clicks the muzzle point directly on the source-frame image. The point is validated against that emitter's bounds and saved as the existing rig-profile `muzzle` attachment.
+- Emitter choices include weapon, barrel, dedicated weapon-muzzle region, mouth, head, and face. This supports plants that fire from a mouth or body feature without inventing a separate weapon sprite; the runtime still consumes only the canonical `muzzle` attachment.
+- The page enables this step only when the plant behavior is `projectile`; the existing API requirement for a confirmed muzzle attachment remains authoritative. Added regression coverage for mouth and dedicated muzzle-region emitters.
+- Revalidated after guided muzzle/emitter UI and upload-resilience changes (Auto-Rig subsystem workflow run #46, commit `df42713c2fff5812aff2784270cb607b925a27a4`): focused tests, focused ESLint, and production build all passed. The full-project lint diagnostic remains at 8 inherited errors and 16 warnings outside the focused Auto-Rig files.
+- Final recheck after the generated-state lock and emitter selection safeguards (Auto-Rig subsystem workflow run #50, commit `4769fd31c5f56234891eef1f3eeedfbc7cab2d4a`): all focused contract tests passed, focused ESLint passed, and the production build completed successfully.
+
+
+## 2026-11-22 — Auto-Rig local AI integration layer
+- Added a versioned worker protocol that validates capability metadata, source-coordinate polygon masks, confidence, provenance, proposal IDs, and canvas bounds.
+- Added an authenticated Studio API bridge for worker health discovery and local inference dispatch. The bridge only permits loopback HTTP upstreams, validates image payloads and tasks, enforces timeouts, and rejects invalid worker geometry.
+- Added Studio UI controls to check worker availability, request prompted segmentation, inspect confidence-tagged proposals, and approve each proposal into the editable part list. Approval remains explicit; AI suggestions are not saved automatically.
+- Preserved AI confidence and segmentation provenance in the generated Auto-Rig manifest, including SAM 2 provenance.
+- Added focused worker protocol/route tests and CI coverage.
+- Not complete: the actual Python/local inference process, SAM 2 and semantic model adapters, hidden-part reconstruction, Rig Library, and end-to-end validation against a real game character still remain. No model installation or successful full build is claimed.
+
+
+## 2026-11-22 — First local SAM 2 worker adapter
+- Implemented a Python loopback-only worker process under `web/local-ai-worker`, with capability discovery and automatic SAM 2 mask generation using a locally configured checkpoint.
+- Converted SAM 2 masks to bounded, simplified source-coordinate polygon proposals for explicit review and approval in Studio.
+- Changed the Studio UI to request the implemented `part-detection` task and made capability health distinguish ready from degraded.
+- Added setup instructions, Python contract tests, and a dedicated CI job for Python dependency installation, syntax compilation, and worker tests.
+- Outstanding: install and run SAM 2 on the target Windows machine; add semantic plant/monster role classification, prompt-conditioned segmentation, occlusion handling, hidden-part reconstruction, Rig Library, animation generation, and real-asset end-to-end verification.
+
+
+## 2026-11-22 — SAM 2 proposal quality filtering
+- Added mask candidate filtering before polygon conversion: reject tiny regions and near-full-canvas background masks, rank by predicted-IoU × stability, suppress near-identical masks at IoU ≥ 0.92, and cap output at 63 proposals.
+- Added Python regression coverage for background/tiny-mask rejection and duplicate suppression.
+- This reduces obvious SAM 2 noise but does not solve semantic segmentation, overlapping-part interpretation, or occlusion reasoning; every proposal still requires visual review and role assignment.
+
+
+## 2026-11-22 — Windows worker launcher and review overlay
+- Added a PowerShell launcher that verifies local SAM 2 config/checkpoint paths and imports PyTorch, SAM 2, and OpenCV before starting the loopback service.
+- Added a blue dashed overlay for unapproved AI proposals and a green overlay for accepted parts; stale proposals are cleared when the source image changes.
+- Restricted the API bridge to the only implemented worker task (`part-detection`) so future reconstruction and prompted-segmentation tasks cannot be mistaken for available capabilities.
+
+
+## 2026-11-22 — Broader validation findings
+- Auto-Rig subsystem validation passed on the recent branch head available to CI: Python worker compile/tests, Auto-Rig/Studio contract tests, focused ESLint, full-project ESLint diagnostic step, and production build.
+- The separate Studio and Game Validation workflow failed in the existing broad game test suite: 363 passed and 54 failed out of 417. The failures are concentrated in Phase 1 combat/replay/wave scheduler, monster stats, planting/resource, and static Phaser integration assertions (for example `wood-frame-inventory.test.mjs`).
+- These failures are not Auto-Rig worker tests and were not changed as part of this Studio-only pass. They remain a repository-level blocker to claiming a fully green project or merging the dependent feature.
+
+
+## 2026-11-22 — Rig quality validator integration
+- Added `analyzeAutoRigQuality` to report manifest validity, editable-mask coverage, semantic-role confirmation, confidence review, occlusion resolution, source fingerprint presence, primary body/stem assignment, and reconstructed-pixel counts.
+- The validator returns a transparent 0–100 heuristic score, actionable warnings, and a separate `readyForAnimation` gate. It does not silently repair data or treat a high score as proof of visual correctness.
+- Integrated the report into the Auto-Rig Studio workflow so the user sees quality findings after generation.
+- Added tests for a fully reviewed rig, an unclassified role, and invalid manifests.
+
+
+## 2026-11-22 — Direct mask editing and stricter animation gate
+- Studio now lets the author select an accepted part and drag individual polygon vertices directly on the source preview. AI proposals remain visually distinct and cannot be edited as accepted data until the author explicitly assigns a semantic role and approves them.
+- Tightened `readyForAnimation`: a valid manifest alone is insufficient. All parts must have known semantic roles, editable masks, reviewed confidence, no low-confidence values, resolved occlusion, a SHA-256 source fingerprint, a primary body/stem, and no reconstructed pixels awaiting review.
+- Added regression coverage for missing source fingerprints and reconstructed-pixel provenance. The validator still reports heuristic quality separately from manifest validity.
+
+
+## 2026-11-22 — Explicit per-part review and occlusion assessment
+- Added a persisted `reviewed` flag to each manifest part; author review is now separate from model confidence. A high SAM 2 confidence score no longer silently counts as human approval.
+- New manual and AI-derived parts start unreviewed and with occlusion unresolved. Studio exposes an explicit review checkbox and an occlusion assessment selector for every part.
+- The animation readiness gate now requires all parts to be explicitly reviewed, all occlusion states resolved, and all prior source/mask/role/confidence requirements. This prevents an unexamined part from being treated as production-ready.
+- Updated quality-validator tests to distinguish missing model confidence from missing human review.
+
+
+## 2026-11-22 — Worker proxy hardening
+- The authenticated Studio bridge now checks declared and actual UTF-8 request-body size (12 MB) before JSON parsing, in addition to the existing 8 MB image payload and canvas-dimension limits.
+- Added a route-contract regression assertion for the body-size guard.
+
+
+## 2026-11-22 — Per-part quality gate and request validation follow-up
+- Clarified that model confidence is not equivalent to author approval. The manifest persists `reviewed` per part, while the Studio author separately resolves the occlusion state.
+- Any part flagged as reconstructed—whether by pixel provenance or occlusion status—blocks animation readiness until a future reconstruction-review workflow can verify it.
+- Extended quality tests to cover reconstructed occlusion independently from reconstructed pixel provenance.
+- Hardened the API route against oversized JSON bodies before parsing; Python worker body and image limits remain independently enforced.
+
+
+## 2026-11-22 — Studio Rig Library entry point
+- Extended the existing persistent asset library with a dedicated rig filter: all assets, assets with a linked skeletal rig, and assets without a rig.
+- Rigged asset rows now show bone count, attachment count, and the stored Auto-Rig manifest version when available. Selecting an item for editing reuses the existing Studio edit flow, preserving the current registry/version lifecycle instead of creating a parallel rig database.
+- Added the Studio library page to the existing production build validation path; focused lint remains scoped to the Auto-Rig component and its API/core modules to avoid expanding the lint gate into unrelated legacy page diagnostics.
+
+
+## 2026-11-22 — Publish-time Rig Quality gate
+- Publishing an asset with an Auto-Rig build manifest now runs `analyzeAutoRigQuality` again on the server. A manifest cannot be published unless its quality report is valid and `readyForAnimation` is true.
+- Publish rejection returns the structured quality report and actionable warning messages (unreviewed parts, unresolved occlusion, missing source fingerprint, unknown roles, low confidence, or reconstructed pixels).
+- Legacy skeletal assets without an Auto-Rig manifest retain their existing publish path; only assets carrying this versioned Auto-Rig authoring record are subject to the new gate.
+- Added a route-contract regression test and included it in the Auto-Rig CI test command.
+
+
+## 2026-11-22 — Latest CI verification (commit d81e77d)
+- Auto-Rig subsystem validation run `45031329290` completed successfully: local worker compile/tests, all Auto-Rig/quality/Studio contract tests (including the publish gate), focused ESLint, full-project ESLint diagnostic step, and Next.js production build all passed.
+- The separate Web Quality Gate run `45031329327` and Studio/Game Validation run `45031329353` failed in the broad Phase 1/game suite: 370 passed and 54 failed out of 424. Failures span combat/replay, monster balance/wave scheduling, planting/resources, account/catalog flows, and several pre-existing Studio source-contract assertions. These failures prevent a repository-wide green status; they are not failures in the focused Auto-Rig CI job.
+
+
+## 2026-11-22 — Rig Library semantic search
+- Extended the existing Studio library search to index Auto-Rig part IDs, semantic roles, part names, bone names, and attachment names in addition to asset metadata. This keeps Rig Library discovery inside the existing asset registry and search controls.
+
+
+## 2026-11-22 — Rig Library regression coverage
+- Added a focused source-contract test for the rigged/unrigged library filters and semantic search across part roles, bone names, and attachment names.
+- Included the new test in the Auto-Rig subsystem workflow so changes to the Studio Rig Library are covered by the same build and validation pipeline.
+
+
+## 2026-11-22 — Hidden-region mask authoring foundation
+- Added validated `occlusionMask` polygons to the versioned Auto-Rig manifest, stored in original source-image coordinates and constrained to the source canvas.
+- Studio can now enter a per-part hidden-region marking mode, draw and save the polygon region where the occluded part is expected to continue, and display saved regions as dashed amber overlays.
+- The quality report distinguishes unresolved occlusion with a supplied region mask from unresolved occlusion with no reconstruction target. The mask is preparation data only: no pixels are fabricated, and the rig remains blocked until a real reconstruction model and review flow exist.
+- Added regression tests for manifest persistence and out-of-canvas occlusion masks.
+
+
+## 2026-11-22 — Review invalidation on edits
+- Accepted part roles can now be corrected in the part list. Changing a role, dragging a polygon vertex, or changing the occlusion assessment invalidates the explicit author-review flag so stale approval cannot survive a substantive edit.
+- Re-drawing an occlusion region also clears the review flag and leaves the part unresolved.
+
+
+## 2026-11-22 — Latest focused validation (commit 1463e9f)
+- Auto-Rig subsystem run `45032089391` passed on the current feature commit: all Auto-Rig, worker-protocol, publish-gate, Rig Library, asset-version, and hybrid-engine contract tests; focused ESLint; full-project ESLint diagnostic step; production build; Python worker compile and tests.
+- The separate broad Web Quality Gate / Studio-Game test suite remains independent and has previously failed 54 of 424 tests; no claim of repository-wide green status is made.
+
+
+## 2026-11-22 — Interactive SAM 2 point prompting
+- Extended the local SAM 2 worker to load both `SAM2AutomaticMaskGenerator` and `SAM2ImagePredictor` from the same local checkpoint.
+- Added a prompted-segmentation endpoint supporting 1–32 positive/negative source-space point prompts and up to three mask alternatives per request.
+- Extended the authenticated Studio proxy to validate prompt count, coordinates, and binary labels before forwarding. The worker independently validates prompts and source image dimensions.
+- Studio now supports positive points (inside the target) and negative points (outside it), renders them on the source preview, and requests point-conditioned SAM 2 masks. Alternatives remain unapproved until the author selects one, assigns its semantic role, edits if necessary, and explicitly reviews it.
+- Added worker unit tests for valid and invalid point prompts. This is interactive SAM 2 segmentation, not semantic role classification or hidden-pixel generation.
+
+
+## 2026-11-22 — Prompted segmentation validation hardening
+- Prompt coordinates must be actual finite numeric source-space values; string/null coercion is rejected at both the authenticated API proxy and local worker.
+- Prompt labels must be integer 0/1 values, and every segmentation request must include at least one positive (inside-target) point. Negative points remain optional and refine exclusions.
+- Added worker and route-contract tests for strict coordinate/label validation and positive-point requirements.
+
+
+## 2026-11-22 — Latest point-prompt validation run
+- Auto-Rig subsystem run `45032986956` passed on commit `e11bbe2`: all Auto-Rig/worker protocol/quality/publish/Rig Library tests, Python worker tests (including fake-predictor point segmentation), focused ESLint, full-project ESLint diagnostic step, and Next.js production build.
+- The point-prompt pipeline now enforces numeric finite coordinates, integer binary labels, a positive target point, and optional negative exclusion points at both API and worker boundaries.
+
+
+## 2026-11-22 — Local inference worker security hardening
+- The SAM 2 worker now accepts POST requests only when the Host header matches its exact 127.0.0.1 bind/port, the media type is JSON, and no browser Origin header is present. This blocks cross-site browser form submissions from triggering local model inference.
+- A bounded single-request admission slot prevents concurrent uploads from accumulating while CPU/GPU inference is serialized; busy clients receive HTTP 429 and can retry.
+- Added worker unit coverage for accepted loopback requests and rejected browser-origin, remote-host, and non-JSON requests. The local-worker CI job compiles and runs these tests.
+
+
+## 2026-11-22 — Local AI worker security, alpha, and WSL setup
+- Hardened loopback POST requests: exact loopback Host, JSON content type, no browser Origin, and a single bounded inference slot (429 when busy).
+- Preserved source PNG alpha during model preprocessing by compositing transparent pixels onto white; added regression coverage for opaque/semitransparent/transparent pixels.
+- Added WSL 2 setup/start scripts for Windows users, defaulting to CPU PyTorch and installing official SAM 2 source without its optional CUDA extension. Model checkpoints remain manually installed.
+- Added shell syntax validation to the focused worker CI. Worker tests and WSL launcher syntax passed in run `45034810415`; the full Auto-Rig focused pipeline is still being rechecked on the latest head.
+- Clarified Studio UI copy: automatic SAM 2 results are visible-region masks, not semantic part labels. Role assignment and approval remain author-controlled.
+
+
+## 2026-11-22 — Transparent-canvas mask clipping
+- Extended alpha-aware decoding to return a source-visible pixel mask. Automatic and point-prompted SAM 2 masks are clipped to non-transparent pixels before polygon conversion, preventing the transparent canvas from being accepted as part of a character.
+- Added regression coverage for transparent/semitransparent pixel decoding and automatic mask clipping. The prompted-segmentation fixture now uses the alpha-aware decoder contract.
+
+
+## 2026-11-22 — Alpha-aware proposal clipping regression verification
+- Updated the prompted-segmentation test fixture to use the new alpha-aware decoder contract and added an automatic-mask regression proving that transparent canvas pixels are excluded from the proposal bounds.
+- The local-worker job passed all Python tests, Python compilation, and WSL launcher syntax checks in run `45035114044`. The paired Node/ESLint/production-build job is still running at the time of this note.
+
+
+## 2026-11-22 — Fail-closed occlusion defaults
+- Missing or unrecognized per-part occlusion metadata now normalizes to `unresolved`; only an explicit `none` assessment clears the occlusion gate. This prevents older or malformed manifests from silently asserting that no hidden pixels exist.
+- Added a regression proving that a manifest with a missing occlusion assessment cannot pass animation readiness.
+
+
+## 2026-11-22 — Rig Library duplication and manifest identity
+- Replaced the native browser prompts used by Studio asset cloning with an accessible in-app dialog (dialog semantics, modal state, initial focus, Escape cancellation, inline validation).
+- Cloning a rigged asset now deep-copies the skeletal profile and Auto-Rig authoring manifest, preserves the immutable source image and shared part dependencies, resets the clone to a new draft/version history, and rebinds the manifest's source asset ID to the new asset ID while retaining the original source hash.
+- Added the existing clone-dialog regression test to the focused Auto-Rig workflow and extended asset-version tests to verify independent manifest identity and copy behavior.
+- This provides safe draft duplication of a rigged asset; semantic template retargeting to a different character remains a later Rig Library capability.
+
+
+## 2026-11-22 — Rig Library search refinement and clone workflow verification
+- Rig Library semantic search now indexes both display names and stable IDs for bones and attachments, as well as part IDs, roles, and names.
+- Focused Auto-Rig run `45035533023` passed both Python worker tests and the Node Auto-Rig/Studio contract suite, including the accessible clone dialog, versioned rig-profile/manifest clone behavior, focused ESLint, full-project ESLint diagnostic step, and Next.js production build.
+
+
+## 2026-11-22 — Clone dialog regression and broad-suite delta
+- Preserved the existing asynchronous `cloneAsset(asset)` action signature while replacing native prompts with the accessible Studio dialog. The asset-cloning source-contract test now passes.
+- The latest broad Studio/Game test run recorded 374 passed and 53 failed out of 427 (run `45035732569`). The clone-dialog and clone-action failures were eliminated; remaining failures are concentrated in combat/replay/wave scheduling, monster stats and plant/resource contracts, plus older Studio/runtime source-contract expectations.
+- The focused Auto-Rig subsystem suite, worker suite, ESLint, and production build are green on the preceding feature-branch head; the new signature-only adjustment is included in the current re-run.
+
+
+## 2026-11-22 — Auto-Rig semantic role suggestions
+- Added a conservative geometry-only semantic role suggestion module for plant/monster cutouts, using relative bounds, center position, area, and aspect ratio.
+- Integrated a Studio action to suggest roles for SAM 2 proposals. Suggestions are explicitly non-authoritative: they do not approve masks, set author-review flags, or pass the quality gate automatically.
+- Added focused tests and included them in Auto-Rig CI and ESLint.
+- Verification pending: GitHub Actions must run against the latest branch head; local Windows/WSL SAM 2 and real asset-to-Phaser validation remain outstanding.
+
+- Follow-up runtime review found and fixed an escaped-regex defect in starter animation role matching: arm/hand bones now correctly become attack targets when no weapon part exists. Added a regression test for both arm and hand targets.
+
+
+## 2026-11-22 — Semantic classifier regression fixes and CI isolation
+- Inspected the actual GitHub Actions logs rather than relying on a workflow lookup that returned no runs. The first semantic-classifier CI attempt exposed two real defects: a monster arm was incorrectly categorized as a head due to an overly broad vertical threshold, and invalid canvas dimensions were not checked when the proposal list was empty.
+- Fixed both defects. The next Auto-Rig run passed all 60 Node tests and the separate local-worker job (Python compile/tests and WSL shell syntax).
+- That run then failed in focused ESLint because `web/app/studio/page.js` contains two pre-existing React hook lint errors unrelated to the Auto-Rig change (a function referenced before declaration and synchronous state updates in an effect). The workflow was adjusted to lint the changed Auto-Rig panel, API, and core modules without broadening the focused lint gate to that legacy page. The production build is still awaiting a clean run on the adjusted workflow.
+- The separate broad Studio/Game suite remains red (376 passed, 55 failed on the same feature head); it is a repository-level blocker and is not being waived.
+
+
+## 2026-11-22 — Focused Auto-Rig pipeline green after lint isolation
+- Auto-Rig subsystem workflow run `45045931453` passed on commit `b353bffc55b4cc1578bf180d4538399d831e9370`: all 60 Node contract/unit tests, focused ESLint, full-project ESLint diagnostic step, Next.js production build, Python worker compilation/tests, and WSL launcher syntax checks.
+- Subsequent UI transparency changes now display each geometry-based semantic suggestion's role, confidence, and rationale, and clear stale suggestions when the proposal set changes.
+- Removed `hidden-part-reconstruction` from the worker's supported capability allowlist until a real reconstruction backend exists; added a protocol regression to ensure an unsupported capability is ignored. The newest commits are awaiting their own CI run.
+- The broad Studio/Game validation remains a separate gate and has not passed; a prior run on the same feature line recorded 376 passing and 55 failing tests. Do not merge based solely on the focused Auto-Rig green result.
+
+
+## 2026-11-22 — Visible donor reconstruction path integrated into Studio
+- Added a loopback worker task `visible-donor-reconstruction`: validate source-space donor/target polygons, require visible donor pixels, reject overlap/degenerate geometry, optionally mirror the donor, transfer only donor-silhouette pixels into the target polygon, and return a bounded transparent PNG patch with explicit provenance.
+- The worker exposes this capability independently of SAM 2 weights, so the deterministic donor-transfer task remains available even when SAM 2 is degraded/offline, provided OpenCV/NumPy are installed. Generative inpainting is explicitly not advertised or claimed.
+- Integrated donor and target polygon authoring into Studio. The resulting patch is previewed and composited into the extracted PNG part. Bounds expand to include the reconstructed target region.
+- Persisted donor/target polygons, bounds, method, flip setting, pixel provenance, and a separate reconstruction-reviewed flag in the Auto-Rig manifest. Quality readiness now requires both pixel review and ordinary part review; unresolved reconstruction still fails closed.
+- Added worker, API-route, manifest-quality, and Studio UI contract tests. Auto-Rig run `45046682569` passed Node tests, focused ESLint, full-project lint diagnostics, production build, Python worker tests, Python compilation, and WSL launcher syntax. The newer donor/target-polygon provenance and UI contract-test commits are undergoing their own CI run.
+- Real Windows/WSL SAM 2 installation and a real asset's full Studio-to-Phaser battle validation remain outstanding. The donor-transfer method must not be represented as a generative model.
+
+
+## 2026-11-22 — Local texture inpainting added as a second reconstruction aid
+- Added a loopback worker task `local-texture-inpaint` using OpenCV Telea. It accepts only a manually drawn, bounded target polygon and a radius from 1 to 8, and returns a transparent PNG patch clipped to that target.
+- Added Studio control to invoke local inpainting without a donor part. The patch is previewed and composited into the extracted part, but remains unapproved until the author checks its separate reconstruction-review box.
+- Extended the API bridge, worker capability protocol, manifest normalizer, and quality metadata to distinguish `opencv-telea-inpaint` from `visible-donor-transfer`. Donor fields are required only for donor transfer; both methods require target polygon/bounds and explicit review.
+- Added Python pixel-level tests for Telea patch dimensions/alpha and invalid radius/too-small targets, plus Studio UI, API-route, worker-capability, and manifest regression tests.
+- Capability boundary: Telea is classical local texture interpolation, not semantic or anatomical reconstruction. It is appropriate only for small texture gaps. Large hidden limbs/leaves and unseen anatomy still need a local generative model with explicit checkpoint provenance and human review.
+- PR #88 was merged into `main` as `a642d676e186bb6ae59b5875585352a690ce40d7`; PR #89 was retargeted to `main` and remains draft. Auto-Rig and worker validation passed on the preceding donor-transfer checkpoint; the Telea additions are now under a fresh focused CI run.
+
+
+## 2026-11-22 — Hybrid engine integration and Auto-Rig reconstruction validation
+- PR #88 (Hybrid Animation Engine) merged into `main` at `a642d676e186bb6ae59b5875585352a690ce40d7`; Auto-Rig PR #89 now targets `main`.
+- Added author-guided visible-donor pixel transfer with optional horizontal mirroring, donor-alpha preservation, source/target polygon provenance, preview, and a separate pixel-review approval. Added local OpenCV Telea inpainting as a distinct texture-only fallback; neither method claims semantic/anatomical completion.
+- Updated the quality gate and tests so reconstructed pixels remain blocked until reconstruction review, overall part review, and occlusion resolution are complete.
+- Current Auto-Rig subsystem workflow on head `b9c1f7459215a47be90cce6dc7e756374347c654` passed, including worker compile/contract tests and focused Studio/API/manifest/quality checks.
+- Broad Studio/Game Validation and Web Quality Gate still fail in Phase 1 gameplay and legacy Studio source-contract tests (e.g. stale source-text assertions in `studio-plant-workflow.test.mjs` / `wood-frame-inventory.test.mjs`, and a `-0` versus `0` projectile assertion). These failures are outside the Auto-Rig-specific suite and remain merge blockers.
+- Still pending: actual SAM 2 checkpoint setup and inference on the target Windows/WSL machine, real plant/monster asset review in Studio, Studio-to-Phaser gameplay validation, semantic rig-template retargeting, and repository-wide green required checks.
+
+
+## 2026-11-22 — Latest Auto-Rig head validation (b1c4f251)
+- PR #89 head: `b1c4f2519b13376a4682b3d3998ed93ea009cce5`, targeting `main` at `a642d676e186bb6ae59b5875585352a690ce40d7`.
+- Auto-Rig subsystem workflow run `45048737662` completed successfully. The Node validation job passed all 67 tests, focused Auto-Rig ESLint, the full-project ESLint diagnostic step, and the Next.js production build. The separate local-worker job passed Python compilation, worker contract tests, and WSL launcher syntax validation.
+- Broad Web Quality Gate run `45048737596` and Studio/Game Validation run `45048737624` remain failed. The broad suite recorded 385 passing and 53 failing tests out of 438. Failures are in the pre-existing Phase 1 combat/replay/wave scheduling, monster roster/stats, planting/resources, and older Studio/runtime source-contract areas; the broad suite is not green and is not being waived.
+- The focused Auto-Rig pipeline is green, but this does not satisfy real-device acceptance. Still pending: install and configure the local SAM 2 checkpoint on the target Windows/WSL machine; run automatic and prompted segmentation against real plant and monster assets; inspect masks, crop alpha, pivots, generated starter clips, and muzzle placement; verify saved rig assets in the Phaser BattleScene including projectile origin and hit areas; implement model-backed semantic role classification and generative anatomical hidden-part reconstruction; implement Rig Library semantic template retargeting; and complete repository-level validation.
+- Do not mark PR #89 ready or merge until the local model and real-asset Studio-to-Phaser acceptance gates are completed. Do not describe geometry suggestions, donor transfer, or Telea texture inpainting as trained semantic classification or anatomical reconstruction.
+
+
+## 2026-11-22 — Reviewed semantic rig-template retargeting implementation
+- Added `web/game/studio/rigTemplateRetarget.mjs`: validates template/target manifests, performs deterministic one-to-one exact-role matching, respects explicit left/right sides, maps normalized pivots into target bounds, transfers draw order and only mapped parent relationships, and reports unmatched parts plus confidence.
+- Integrated template selection, match preview, and explicit apply into `AutoRigBuilderPanel.jsx`. Applying a template marks all affected parts unreviewed; it does not auto-approve or publish a rig.
+- Added four focused Node tests and wired the new module/test into the Auto-Rig GitHub Actions workflow.
+- Source edits are committed on the PR branch. CI for the new head has not yet been observed; do not report the new tests/build as passed until GitHub Actions completes.
+- The feature is a deterministic template-retargeting aid, not learned visual role classification, generative hidden-part completion, or a substitute for real-asset runtime acceptance.
+
+
+## 2026-11-22 — Verified semantic template-retarget CI (head c358e96f)
+- Auto-Rig subsystem run `45050027596` completed successfully: 71/71 Node tests, focused ESLint, full-project ESLint diagnostic step, Next.js production build, Python worker compile/tests, and WSL launcher syntax all passed.
+- The four new rig-template-retarget tests are included in the 71 passing focused tests.
+- Studio/Game Validation run `45050027543` remains red on the broad suite: 389 passed, 53 failed out of 442. This is four more total tests than the prior broad run, with the same failure count of 53; the broad gameplay/legacy Studio failures remain tracked and are not waived.
+- Web quality gate run `45050027482` was still in progress at the time of this log entry; its final state must be checked separately.
+- No real local SAM 2 checkpoint inference, target Windows/WSL image acceptance, or Studio-to-Phaser live asset test is claimed by CI.
+
+
+## 2026-11-22 — Retargeter hardening and verified CI (head 0968dafa)
+- Replaced greedy repeated-role matching with a rectangular Hungarian minimum-cost assignment, so repeated leaves/limbs are paired globally rather than by a locally nearest-first choice.
+- Added fail-closed validation for missing/cyclic template parent graphs. Explicit side mismatches are not matched; unmatched roles remain visible as unmatched instead of being forced into a false match.
+- Added target-part fingerprinting to the Studio preview. If an author edits the target masks/roles/geometry after preview, the apply action is disabled and stale mappings cannot be applied.
+- Auto-Rig subsystem run `45050364557` passed 73/73 Node tests, focused ESLint, full-project ESLint diagnostic step, Next.js production build, Python worker compile/tests, and WSL launcher syntax.
+- Broad Studio/Game run `45050364564` remains red at 391 passed / 53 failed out of 444. The same 53 pre-existing gameplay/legacy Studio test failures persist; the two added retarget tests pass in the broad run as well as focused CI.
+- Web quality gate run `45050364624` was still in progress at the time of this entry; verify its terminal state separately.
+- This remains deterministic template matching, not learned semantic classification or generative hidden-part reconstruction. Real local SAM 2 checkpoint and Studio-to-Phaser validation remain pending.
+
+
+## 2026-11-22 — Final retarget schema/graph validation (head a016aa51)
+- Retargeting now rejects incompatible manifest versions/builders/role dictionaries and pivots outside source-part bounds; it validates missing/cyclic parent references before matching.
+- Added focused tests for schema compatibility, invalid pivots, parent graph safety, global minimum-cost repeated-role assignment, and Studio preview/apply integration with stale-target protection.
+- Auto-Rig run `45050521931` completed successfully: 75/75 Node tests, focused ESLint, full-project ESLint diagnostic step, Next.js production build, worker Python compile/tests, and WSL launcher syntax all passed.
+- Studio/Game run `45050521955` remains red with the same 53 known broad gameplay/legacy Studio failures; the last completed broad run for this branch family recorded 391 passed / 53 failed of 444.
+- Web quality gate run `45050521990` remained in progress at this entry; verify separately. PR stays draft pending local-model and real-asset acceptance.
+
+
+## 2026-11-22 — Local SAM 2 smoke-test harness and CI (head 1ea655f2)
+- Added `web/local-ai-worker/smoke_test.py`: when the local worker and SAM 2 checkpoint are running, it generates a synthetic plant image, checks worker capabilities, exercises automatic part detection and positive/negative point-prompted segmentation, and validates source-space proposal geometry. It makes no cloud requests and uses no real game asset.
+- Added three Python tests for synthetic PNG generation and proposal-response validation; worker CI now compiles the smoke-test script and runs it with the worker contract suite.
+- Auto-Rig run `45050695811` passed: 75/75 Node tests, 20/20 Python tests, focused ESLint, full-project ESLint diagnostic step, Next.js production build, and WSL launcher syntax.
+- This smoke harness is now ready for execution on the target Windows/WSL machine, but no SAM 2 checkpoint inference on that machine is claimed. Real FarmVsMonsters plant/monster asset acceptance and Phaser BattleScene validation remain pending.
+- Broad Web Quality Gate `45050695795` and Studio/Game Validation `45050695748` remain separate repository-wide blockers; the latest completed broad suite in this branch family recorded 391 passed and 53 failed of 444.
+
+## 2026-11-22 — Auto-Rig local smoke gate hardening
+
+- Tightened `web/local-ai-worker/smoke_test.py` so a worker response is rejected when it contains malformed or duplicate IDs, invalid roles/confidence, non-integer or out-of-canvas bounds, malformed/degenerate polygons, polygons outside their crop bounds, or more than 63 proposals.
+- Added regression tests for duplicate IDs, confidence range, degenerate/crop-escaping polygons, and the proposal-count ceiling. Updated fixtures to satisfy the same response contract enforced by Studio.
+- CI on PR #89 head `351273a770696d997d80ccd41513ce31a91e67f1`: Auto-Rig subsystem validation passed (75/75 Node tests, 23/23 Python tests, focused lint, full-project lint diagnostics, production build, and WSL launcher syntax).
+- Broad Studio/Game and Web quality workflows still fail: 393/446 tests pass and 53 fail. The failures are in Phase 1 gameplay and legacy Studio contracts; they remain blockers and have not been waived.
+- Still pending: actual SAM 2 checkpoint inference on the target Windows/WSL machine, real plant/monster artwork acceptance, and BattleScene runtime acceptance. No model-backed semantic classifier or generative anatomical reconstruction is claimed.
+
+## 2026-11-22 — Auto-Rig production completion continuation
+
+- Added local CLIP zero-shot semantic classification for plant/monster region crops and switched the primary Studio role-suggestion button to the visual model. Low-confidence/margin results remain unassigned; no auto-approval.
+- Expanded Auto-Rig semantic role dictionary to cover plant roots/flowers/fruit and monster legs/feet. Bumped dictionary version to 1.1.0 and preserved compatibility with 1.0.0 Rig Library templates.
+- Added local diffusion inpainting for explicitly marked hidden anatomical regions. The output is a transparent target-only patch with model, prompt, seed, and review-required provenance. This is general-purpose inpainting, not an anatomy-fine-tuned model.
+- Added real repository asset smoke harness for Hazelnut Level 1 and Hyena idle; it requires local SAM 2 and CLIP checkpoints and has not yet been run on the user's Windows/WSL2 workstation.
+- Added tests for the classifier, generative reconstruction, API/UI/manifest contracts, and Phaser skeletal rig pose/attachment/hitbox/projectile-circle transforms.
+- CI baseline comparison from the last completed full-suite run: PR head had 53 failures vs 55 on main, with no new failing test names; two inherited source-contract tests already pass on the PR head. This is not a green full-suite result. Latest focused workflows are still running.
+- Remaining acceptance gates: target-machine checkpoint execution; visual inspection of real plant/monster outputs; real BattleScene gameplay with rigged plant and monster; full-suite baseline debt remediation; and no merge until all acceptance gates pass.
+
+## 2026-11-22 — Baseline gameplay and validation debt repairs
+
+- Restored Dust Skitter visual-only jump timing while keeping the monster's collision root on the ground; jump state now persists across ticks and large frame deltas are handled.
+- Restricted defensive blocking to living Radishes; resource Mushrooms and other producers no longer stop monsters or expand blocker overlap ranges.
+- Tightened combat event plant validation while preserving versioned Studio plant IDs such as bamboo-level-1.
+- Reconciled Phase 1 tests and roadmap with the canonical wave sizes 2/3/4/5/6 (20 Stage 1 monsters), current stage totals, monster archetype schedule, and deferred planting-charge flow.
+- Corrected replay fixtures to the canonical Cave Brute HP and scheduler sizes; normalized negative zero in projectile trajectory offsets.
+- Fixed starter seed loadout normalization order and projectile asset classification defaults.
+- Fixed React effect/state lint issues in Studio's trajectory preview, Rig Editor, and sprite-grid page without disabling lint rules.
+- Full-suite validation is being rerun; baseline failures are being investigated and corrected rather than skipped or hidden.
+
+## 2026-11-23 — Phaser Atlas workflow adopted; Auto-Rig retired
+
+- Replaced the Auto-Rig product direction with a direct Phaser Atlas import workflow for plants and monsters.
+- Removed the Auto-Rig Builder UI, worker API, local SAM/CLIP worker, builder modules, dedicated CI workflow, related documentation, and builder-specific tests.
+- Removed Auto-Rig build-manifest persistence and quality-gating references while retaining the separate manual skeletal rig editor/runtime for compatibility with existing assets.
+- Added a second Studio upload mode for selecting a `phaser_output` directory containing exactly one PNG and one JSON file. The server validates the Phaser Atlas structure, frame rectangles, frame names, image pairing, and size limits before saving the two files independently.
+- Saved Atlas JSON paths, frame names, and name-derived clip groups in the Studio asset registry; preserved that metadata through revisions and cloning; included both files in publishing and preview routes.
+- Updated Phaser BattleScene to load named-frame Atlas textures for Studio plants and monsters and register animations from their frame-name groups.
+- Added focused Atlas parser, upload-flow, BattleScene loading, and asset-version regression tests.
+- Validation is running on the current branch. No browser upload or live BattleScene playtest has been claimed yet; no merge to `main` is authorized.
+
+- Focused Phaser Atlas validation completed successfully on `876ace4756f260b261d628cbca3264ff7180ab02`: Atlas parser/import/version tests, ESLint on changed Studio/runtime modules, and production build all passed. The focused test includes the real Corn Monster PNG+JSON pair and confirms its 24 frames and idle/attack/hurt groups.
+- The broader existing Phase 1/full-suite workflows still fail on 12–18 unrelated legacy source-contract assertions (for example Electric Mushroom source-pattern checks, old wave-timer assumptions, and campaign/UI expectations). These are outside the Atlas/import changes; they were not bypassed. The PR remains unmerged.
+
+## 2026-11-23 — Studio character lifecycle, audio, and power attack
+
+- Added a permanent-delete action to every Studio asset row with a confirmation that names the selected asset and explains the irreversible scope.
+- The delete API checks dependent assets, removes the character from the published plant/monster catalog, removes its Studio registry entry, and deletes its artwork, Phaser Atlas JSON, character audio, and other unshared files from both the Studio storage branch and configured game branch. Shared files remain protected; a delete is rejected while dependent rig assets remain.
+- Added an optional character-specific audio upload for Studio plants and monsters (MP3, WAV, OGG, M4A, WebM, max 8 MB), with content-signature validation, preview, immutable storage, revision/clone/restore preservation, publishing, playtest preview, and Phaser attack playback.
+- Added the battle power button: arm the ability, click an existing ranged plant, spend 50 energy, then launch ten projectiles at 90 ms intervals, retargeting within that plant's lane.
+- Added focused regression tests for character deletion, audio metadata and playback, and power ability eligibility/scheduling.
+- CI for commit `75e1a3736c35bec7a14ed959ceed2d1d367228cb`: focused Phaser Atlas/Studio/audio/power tests passed; ESLint passed; production build passed.
+- The broader legacy Web validation, Web quality gate, and Studio/Game Validation still report the same 12 pre-existing Phase 1 gameplay assertion failures (395 passing, 12 failing). These failures are outside the new Atlas/audio/delete/power focused suite and remain unresolved.
+- No browser-driven Studio upload/delete, live Phaser playtest, or merge to `main` has been claimed or performed.

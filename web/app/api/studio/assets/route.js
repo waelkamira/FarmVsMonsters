@@ -1,5 +1,5 @@
 import {NextResponse} from "next/server";
-import {mkdir,readFile,writeFile} from "node:fs/promises";
+import {mkdir,readFile,writeFile,unlink} from "node:fs/promises";
 import path from "node:path";
 import {verifyStudioSession} from "../../../../game/studio/signedSession.mjs";
 import {STUDIO_ASSET_TYPES,STUDIO_ID_PATTERN,STUDIO_MAX_UPLOAD_BYTES,STUDIO_RESERVED_PLANT_IDS,validateStudioAssetBytes} from "../../../../game/studio/assetTypes.mjs";
@@ -12,6 +12,7 @@ import {getAssetDependents} from "../../../../game/studio/assetDependencies.mjs"
 import {createStudioAnimationProfile} from "../../../../game/studio/animationProfiles.mjs";
 import {createSkeletalRigProfile} from "../../../../game/studio/skeletalAnimation.mjs";
 import {createStudioMonsterProfile} from "../../../../game/studio/monsterProfiles.mjs";
+import {readPngDimensions,validatePhaserAtlasDocument} from "../../../../game/studio/phaserAtlas.mjs";
 import {safeAssetPath} from "../../../../game/studio/assetReadiness.mjs";
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
@@ -20,7 +21,16 @@ const REGISTRY_PATH="web/game/data/studioAssetRegistry.json";
 const PUBLISHED_CATALOG_PATH="web/public/assets/studio-plant-catalog.json";
 const PUBLISHED_MONSTER_CATALOG_PATH="web/public/assets/studio-monster-catalog.json";
 function authorized(req){return verifyStudioSession(process.env.STUDIO_ADMIN_TOKEN||"",req.cookies.get(COOKIE)?.value||"");}
-function ext(type){return {"image/png":".png","image/webp":".webp","image/gif":".gif","audio/mpeg":".mp3","audio/wav":".wav","audio/ogg":".ogg","audio/mp4":".m4a"}[type]||"";}
+function ext(type){return {"image/png":".png","image/webp":".webp","image/gif":".gif","audio/mpeg":".mp3","audio/mp3":".mp3","audio/wav":".wav","audio/x-wav":".wav","audio/ogg":".ogg","audio/mp4":".m4a","audio/webm":".webm"}[type]||"";}
+function validStudioAudioBytes(type,bytes){
+ if(!bytes||bytes.length<4)return false;
+ if(type==="audio/mpeg"||type==="audio/mp3")return (bytes[0]===0x49&&bytes[1]===0x44&&bytes[2]===0x33)||(bytes[0]===0xff&&(bytes[1]&0xe0)===0xe0);
+ if(type==="audio/wav"||type==="audio/x-wav")return bytes.toString("ascii",0,4)==="RIFF"&&bytes.toString("ascii",8,12)==="WAVE";
+ if(type==="audio/ogg")return bytes.toString("ascii",0,4)==="OggS";
+ if(type==="audio/mp4")return bytes.toString("ascii",4,8)==="ftyp";
+ if(type==="audio/webm")return bytes[0]===0x1a&&bytes[1]===0x45&&bytes[2]===0xdf&&bytes[3]===0xa3;
+ return false;
+}
 function getRigPartAssets(assets,asset){const bones=Array.isArray(asset?.rigProfile?.bones)?asset.rigProfile.bones:[];const ids=[...new Set(bones.map(bone=>bone?.part?.assetId).filter(Boolean))];return ids.map(id=>assets.find(item=>item.id===id));}
 function getRigPartFrameCount(part){if(!part?.spriteSheet)return 1;const capacity=Math.max(1,Number(part.rows||1)*Number(part.columns||1));const count=Number(part.frameCount)||capacity;return Math.max(1,Math.min(capacity,Number.isInteger(count)?count:capacity));}
 function serializeRigParts(assets,asset){return getRigPartAssets(assets,asset).filter(part=>part&&["item","plant","monster","effect"].includes(part.type)&&part.status!=="archived"&&safeAssetPath(part.path)).map(part=>({id:part.id,name:part.name,type:part.type,path:process.env.STUDIO_STORAGE_DRIVER==="github"?"/api/studio/assets?preview="+encodeURIComponent(part.path):part.path,rows:part.spriteSheet?(part.rows||1):1,columns:part.spriteSheet?(part.columns||1):1,frameCount:getRigPartFrameCount(part),spriteSheet:Boolean(part.spriteSheet)}));}
@@ -38,10 +48,11 @@ async function githubGetPullRequest(number,token){
  const pr=await response.json();
  return {number:pr.number,url:pr.html_url,state:pr.state,merged:Boolean(pr.merged),mergedAt:pr.merged_at||null};
 }
+async function githubDeleteIfExists(filePath,message,token,branch){const document=await githubGetDocument(filePath,token,branch);if(!document)return false;const response=await fetch(githubUrl(filePath),{method:"DELETE",headers:{...githubHeaders(token),"Content-Type":"application/json"},body:JSON.stringify({message,branch,sha:document.sha})});if(!response.ok){const data=await response.json().catch(()=>({}));throw Error(data.message||"GitHub delete failed ("+response.status+").");}return true;}
 async function githubPut(filePath,bytes,message,token,branch,expectedSha){const api=githubUrl(filePath),headers=githubHeaders(token);const check=await fetch(api+"?ref="+encodeURIComponent(branch),{headers});let sha=null;if(check.ok)sha=(await check.json()).sha;else if(check.status!==404)throw Error("GitHub lookup failed ("+check.status+").");assertExpectedContentSha(expectedSha,sha);const saved=await fetch(api,{method:"PUT",headers:{...headers,"Content-Type":"application/json"},body:JSON.stringify({message,branch,content:Buffer.from(bytes).toString("base64"),...(sha?{sha}:{})})});if(!saved.ok){const data=await saved.json().catch(()=>({}));throw Error(data.message||"GitHub save failed ("+saved.status+").");}}
 async function localRegistry(){try{return JSON.parse(await readFile(path.join(process.cwd(),"game/data/studioAssetRegistry.json"),"utf8"));}catch(error){if(error.code==="ENOENT")return {version:1,assets:[]};throw error;}}
 async function saveLocalRegistry(registry){const target=path.join(process.cwd(),"game/data/studioAssetRegistry.json");await mkdir(path.dirname(target),{recursive:true});await writeFile(target,JSON.stringify(registry,null,2)+"\n","utf8");}
-function addPreviewUrls(registry){const github=process.env.STUDIO_STORAGE_DRIVER==="github";return {...registry,storage:process.env.STUDIO_STORAGE_DRIVER||"local",assets:(registry.assets||[]).map(asset=>({...asset,previewUrl:github?"/api/studio/assets?preview="+encodeURIComponent(asset.path):asset.path,rigParts:serializeRigParts(registry.assets||[],asset),...(asset.combat?.projectile?{combat:{...asset.combat,projectile:{...asset.combat.projectile,frameCount:asset.combat.projectile.frameCount??1,rows:asset.combat.projectile.rows??1,columns:asset.combat.projectile.columns??1,previewUrl:github?"/api/studio/assets?preview="+encodeURIComponent(asset.combat.projectile.path):asset.combat.projectile.path}}}:{})}))};}
+function addPreviewUrls(registry){const github=process.env.STUDIO_STORAGE_DRIVER==="github";return {...registry,storage:process.env.STUDIO_STORAGE_DRIVER||"local",assets:(registry.assets||[]).map(asset=>({...asset,previewUrl:github?"/api/studio/assets?preview="+encodeURIComponent(asset.path):asset.path,...(asset.atlas?{atlas:{...asset.atlas,jsonPath:github?"/api/studio/assets?preview="+encodeURIComponent(asset.atlas.jsonPath):asset.atlas.jsonPath}}:{}),...(asset.audio?{audio:{...asset.audio,previewUrl:github?"/api/studio/assets?preview="+encodeURIComponent(asset.audio.path):asset.audio.path}}:{}),rigParts:serializeRigParts(registry.assets||[],asset),...(asset.combat?.projectile?{combat:{...asset.combat,projectile:{...asset.combat.projectile,frameCount:asset.combat.projectile.frameCount??1,rows:asset.combat.projectile.rows??1,columns:asset.combat.projectile.columns??1,previewUrl:github?"/api/studio/assets?preview="+encodeURIComponent(asset.combat.projectile.path):asset.combat.projectile.path}}}:{})}))};}
 function readCombatForm(form,projectile,existing){
  const previous=existing?.combat;
  return createStudioPlantCombatProfile({
@@ -85,7 +96,7 @@ export async function GET(req){
      if(!asset.releaseRequest?.number)return asset;
      try{return resolveStudioReleaseAsset(asset,await githubGetPullRequest(asset.releaseRequest.number,token));}catch{return asset;}
     }));
-    const monsters=candidates.filter(asset=>asset.status==="testing").map(asset=>({...asset,path:"/api/studio/assets?preview="+encodeURIComponent(asset.path),rigParts:serializeRigParts(registry.assets||[],asset)}));
+    const monsters=candidates.filter(asset=>asset.status==="testing").map(asset=>({...asset,path:"/api/studio/assets?preview="+encodeURIComponent(asset.path),...(asset.atlas?{atlas:{...asset.atlas,jsonPath:"/api/studio/assets?preview="+encodeURIComponent(asset.atlas.jsonPath)}}:{}),...(asset.audio?{audio:{...asset.audio,path:"/api/studio/assets?preview="+encodeURIComponent(asset.audio.path)}}:{}),rigParts:serializeRigParts(registry.assets||[],asset)}));
     return NextResponse.json({version:1,monsters},{headers:{"Cache-Control":"private, no-store"}});
    }catch(error){return NextResponse.json({error:error.message||"Could not load testing monster catalog."},{status:502});}
   }
@@ -100,6 +111,8 @@ export async function GET(req){
     const plants=candidates.filter(asset=>asset.status==="testing").map(asset=>({
      ...asset,
      path:"/api/studio/assets?preview="+encodeURIComponent(asset.path),
+     ...(asset.atlas?{atlas:{...asset.atlas,jsonPath:"/api/studio/assets?preview="+encodeURIComponent(asset.atlas.jsonPath)}}:{}),
+     ...(asset.audio?{audio:{...asset.audio,path:"/api/studio/assets?preview="+encodeURIComponent(asset.audio.path)}}:{}),
      rigParts:serializeRigParts(registry.assets||[],asset),
      ...(asset.combat?.projectile?{combat:{...asset.combat,projectile:{...asset.combat.projectile,frameCount:asset.combat.projectile.frameCount??1,rows:asset.combat.projectile.rows??1,columns:asset.combat.projectile.columns??1,path:"/api/studio/assets?preview="+encodeURIComponent(asset.combat.projectile.path)}}}:{})
     }));
@@ -108,7 +121,7 @@ export async function GET(req){
   }
   const preview=req.nextUrl.searchParams.get("preview");
   if(preview!==null){
-   const allowedTypes={".png":"image/png",".webp":"image/webp",".gif":"image/gif",".mp3":"audio/mpeg",".wav":"audio/wav",".ogg":"audio/ogg",".m4a":"audio/mp4"};
+   const allowedTypes={".png":"image/png",".webp":"image/webp",".gif":"image/gif",".mp3":"audio/mpeg",".wav":"audio/wav",".ogg":"audio/ogg",".m4a":"audio/mp4",".webm":"audio/webm",".json":"application/json"};
    const extension=path.extname(preview).toLowerCase();
    if(!preview.startsWith("/assets/")||preview.includes("..")||!allowedTypes[extension])return NextResponse.json({error:"Invalid asset preview path."},{status:400});
    try{const upstream=await fetch(githubUrl("web/public"+preview)+"?ref="+encodeURIComponent(branch),{headers:{...githubHeaders(token),Accept:"application/vnd.github.raw"}});if(!upstream.ok)return NextResponse.json({error:"GitHub preview failed ("+upstream.status+")."},{status:upstream.status===404?404:502});return new NextResponse(await upstream.arrayBuffer(),{headers:{"Content-Type":allowedTypes[extension],"Cache-Control":"private, max-age=300","X-Content-Type-Options":"nosniff"}});}catch(error){return NextResponse.json({error:error.message||"Preview fetch failed."},{status:502});}
@@ -131,10 +144,16 @@ export async function GET(req){
 export async function POST(req){
  if(!authorized(req))return NextResponse.json({error:"Unauthorized."},{status:401});
  let form;try{form=await req.formData();}catch{return NextResponse.json({error:"Invalid multipart upload."},{status:400});}
- const id=String(form.get("id")||"").trim().toLowerCase(),type=String(form.get("type")||""),config=STUDIO_ASSET_TYPES[type],file=form.get("file"),projectileFile=form.get("projectileFile"),rows=Number(form.get("rows")||1),columns=Number(form.get("columns")||1),frameCount=Number(form.get("frameCount")||9),replace=String(form.get("replace")||"false")==="true";
+ const id=String(form.get("id")||"").trim().toLowerCase(),type=String(form.get("type")||""),config=STUDIO_ASSET_TYPES[type],file=form.get("file"),audioFile=form.get("audioFile"),atlasJsonFile=form.get("atlasJsonFile"),uploadMode=String(form.get("uploadMode")||"spritesheet"),projectileFile=form.get("projectileFile"),rows=Number(form.get("rows")||1),columns=Number(form.get("columns")||1),frameCount=Number(form.get("frameCount")||9),replace=String(form.get("replace")||"false")==="true";
  if(!config||!STUDIO_ID_PATTERN.test(id)||id.length>64)return NextResponse.json({error:"Invalid category or ID. Use a lowercase slug up to 64 characters."},{status:400});
  if(type==="plant"&&STUDIO_RESERVED_PLANT_IDS.includes(id))return NextResponse.json({error:"هذا المعرّف محجوز لنبتة أساسية في اللعبة. اختر معرّفاً جديداً."},{status:409});
  const hasFile=Boolean(file&&typeof file.arrayBuffer==="function"&&file.size>0);
+ const hasAudio=Boolean(audioFile&&typeof audioFile.arrayBuffer==="function"&&audioFile.size>0);
+ if(hasAudio&&(!["plant","monster"].includes(type)||!ext(audioFile.type)||audioFile.size>8*1024*1024))return NextResponse.json({error:"ارفع ملفاً صوتياً للنبات أو الوحش بصيغة MP3 أو WAV أو OGG أو M4A أو WebM وبحجم لا يتجاوز 8 MB."},{status:415});
+ const audioBytes=hasAudio?Buffer.from(await audioFile.arrayBuffer()):null;
+ if(hasAudio&&!validStudioAudioBytes(audioFile.type,audioBytes))return NextResponse.json({error:"صيغة الملف الصوتي لا تطابق محتواه الفعلي."},{status:415});
+ const hasAtlas=uploadMode==="atlas"&&hasFile;
+ const hasAtlasJson=Boolean(atlasJsonFile&&typeof atlasJsonFile.arrayBuffer==="function"&&atlasJsonFile.size>0);
  const hasProjectile=Boolean(projectileFile&&typeof projectileFile.arrayBuffer==="function"&&projectileFile.size>0);
  const removeProjectile=String(form.get("removeProjectile")||"false")==="true";
  const driver=process.env.STUDIO_STORAGE_DRIVER||"local";let old,registrySha;
@@ -164,11 +183,15 @@ export async function POST(req){
  if(existing&&!replace)return NextResponse.json({error:"Asset ID already exists. اختر الأصل من المكتبة واستخدم زر التعديل."},{status:409});
  if(!existing&&replace)return NextResponse.json({error:"الأصل المطلوب تعديله غير موجود في المكتبة."},{status:404});
  if(existing&&existing.type!==type)return NextResponse.json({error:"لا يمكن تغيير فئة الأصل أثناء التعديل."},{status:409});
+ const usingAtlas=hasAtlas||(!hasFile&&Boolean(existing?.atlas));
  if(!hasFile&&(!replace||!existing))return NextResponse.json({error:"Choose a file for a new asset."},{status:400});
+ if(uploadMode==="atlas"&&!hasFile&&!existing?.atlas)return NextResponse.json({error:"اختر مجلد phaser_output الذي يحتوي PNG وJSON."},{status:400});
+ if(hasAtlas&&(!["plant","monster"].includes(type)||!hasFile||!hasAtlasJson||file.type!=="image/png"||atlasJsonFile.size>2*1024*1024))return NextResponse.json({error:"Phaser Output يحتاج ملف PNG وملف JSON صالحين، وهو متاح للنباتات والوحوش فقط. الحد الأقصى لـ JSON هو 2 MB."},{status:415});
+ if(!hasAtlas&&hasAtlasJson)return NextResponse.json({error:"ملف JSON مرفق دون اختيار وضع Phaser Atlas."},{status:400});
  if(hasFile&&(file.size>STUDIO_MAX_UPLOAD_BYTES||!config.accepts.includes(file.type)))return NextResponse.json({error:"Choose a supported file up to 8 MB."},{status:415});
- if(config.spriteSheet&&(!Number.isInteger(frameCount)||frameCount<1||frameCount>24||!Number.isInteger(rows)||!Number.isInteger(columns)||rows<1||columns<1||rows*columns!==frameCount))return NextResponse.json({error:"عدد الإطارات يجب أن يكون من 1 إلى 24، ويجب أن يطابق حاصل ضرب الصفوف والأعمدة."},{status:400});
+ if(config.spriteSheet&&!usingAtlas&&(!Number.isInteger(frameCount)||frameCount<1||frameCount>24||!Number.isInteger(rows)||!Number.isInteger(columns)||rows<1||columns<1||rows*columns!==frameCount))return NextResponse.json({error:"عدد الإطارات يجب أن يكون من 1 إلى 24، ويجب أن يطابق حاصل ضرب الصفوف والأعمدة."},{status:400});
  let animationProfile=null;
- if(config.spriteSheet&&(type==="plant"||type==="monster")){
+ if(config.spriteSheet&&!hasAtlas&&(type==="plant"||type==="monster")){
   try{
    const rawProfile=String(form.get("animationProfile")||"");
    const submittedProfile=rawProfile?JSON.parse(rawProfile):(existing?.animationProfile||null);
@@ -176,7 +199,7 @@ export async function POST(req){
   }catch(error){return NextResponse.json({error:error.message||"Invalid animation profile."},{status:400});}
  }
  let rigProfile=null;
- if(config.spriteSheet&&(type==="plant"||type==="monster")){
+ if(config.spriteSheet&&!hasAtlas&&(type==="plant"||type==="monster")){
   try{
    const rawRigProfile=String(form.get("rigProfile")||"");
    const submittedRigProfile=rawRigProfile?JSON.parse(rawRigProfile):(existing?.rigProfile||null);
@@ -235,18 +258,28 @@ export async function POST(req){
  if(!extension)return NextResponse.json({error:"Unknown file extension."},{status:415});
  const bytes=hasFile?Buffer.from(await file.arrayBuffer()):null;
  if(hasFile){const signature=validateStudioAssetBytes(file.type,bytes);if(!signature.valid)return NextResponse.json({error:signature.reason},{status:415});}
+ let atlasValidation=null,atlasJsonBytes=null;
+ if(hasAtlas){atlasJsonBytes=Buffer.from(await atlasJsonFile.arrayBuffer());if(atlasJsonBytes.length>2*1024*1024)return NextResponse.json({error:"ملف JSON يتجاوز 2 MB."},{status:413});const pngDimensions=readPngDimensions(bytes);if(!pngDimensions)return NextResponse.json({error:"تعذر قراءة أبعاد PNG."},{status:415});atlasValidation=validatePhaserAtlasDocument(atlasJsonBytes.toString("utf8"),pngDimensions);if(!atlasValidation.valid)return NextResponse.json({error:atlasValidation.errors.join("، ")},{status:400});if(atlasValidation.image&&atlasValidation.image.toLowerCase()!==file.name.toLowerCase())return NextResponse.json({error:"اسم الصورة داخل JSON لا يطابق ملف PNG المحدد ("+atlasValidation.image+")."},{status:400});}
  const relative=hasFile?createImmutableAssetPath(config.folder,id,extension,bytes):(existing?.path||"").replace(/^\/assets\//,"");
+ const atlasJsonRelative=hasAtlas?createImmutableAssetPath(config.folder,id+"-atlas",".json",atlasJsonBytes):(existing?.atlas?.jsonPath||"").replace(/^\/assets\//,"");
+ const audioRelative=hasAudio?createImmutableAssetPath("audio",id+"-voice",ext(audioFile.type),audioBytes):(existing?.audio?.path||"").replace(/^\/assets\//,"");
+ const audioRecord=hasAudio?{filename:id+"-voice"+ext(audioFile.type),path:"/assets/"+audioRelative,mimeType:audioFile.type}:existing?.audio||null;
+ const atlasRecord=hasAtlas?{frameCount:atlasValidation.frameCount,frameNames:atlasValidation.frameNames,clips:atlasValidation.clips,format:atlasValidation.format,filename:id+"-atlas.json",jsonPath:"/assets/"+atlasJsonRelative}:hasFile?null:(existing?.atlas||null);
  const now=new Date().toISOString();
- const record=createStudioAssetRevision(existing,{...(existing||{}),id,type,name:String(form.get("name")||id).trim().slice(0,80),filename:hasFile?id+extension:existing.filename,path:hasFile?"/assets/"+relative:existing.path,rows,columns,frameCount:config.spriteSheet?frameCount:1,spriteSheet:config.spriteSheet,status:"draft",releaseRequest:null,publishedAt:null,testingAt:null,archivedAt:null,restoredFromVersion:null,createdAt:existing?.createdAt||now,updatedAt:now,...(type==="plant"?{combat:combatProfile}:{}),...(type==="monster"?{monsterProfile}:{}),...(config.spriteSheet&&(type==="plant"||type==="monster")?{animationProfile,rigProfile}:{})});
+ const record=createStudioAssetRevision(existing,{...(existing||{}),id,type,name:String(form.get("name")||id).trim().slice(0,80),filename:hasFile?id+extension:existing.filename,path:hasFile?"/assets/"+relative:existing.path,rows:usingAtlas?1:rows,columns:usingAtlas?1:columns,frameCount:usingAtlas?(hasAtlas?atlasValidation.frameCount:existing.atlas.frameCount):(config.spriteSheet?frameCount:1),spriteSheet:config.spriteSheet,...(atlasRecord?{atlas:atlasRecord}:hasFile?{atlas:null}:{}),...(audioRecord?{audio:audioRecord}:{}),status:"draft",releaseRequest:null,publishedAt:null,testingAt:null,archivedAt:null,restoredFromVersion:null,createdAt:existing?.createdAt||now,updatedAt:now,...(type==="plant"?{combat:combatProfile}:{}),...(type==="monster"?{monsterProfile}:{}),...(config.spriteSheet&&(type==="plant"||type==="monster")?{animationProfile,rigProfile}:{})});
  const next={...old,version:1,assets:existing?old.assets.map((a,i)=>i===index?record:a):[...old.assets,record]};
  try{
   if(driver==="github"){
    const token=process.env.STUDIO_GITHUB_TOKEN,branch=process.env.STUDIO_GITHUB_BRANCH||"studio/assets";
    if(hasFile)await githubPutImmutable("web/public/assets/"+relative,bytes,"studio: "+(existing?"replace ":"add ")+type+" "+id,token,branch);
+   if(hasAtlas)await githubPutImmutable("web/public/assets/"+atlasJsonRelative,atlasJsonBytes,"studio: add Phaser Atlas JSON for "+id,token,branch);
+   if(hasAudio)await githubPutImmutable("web/public/assets/"+audioRelative,audioBytes,"studio: add character audio for "+id,token,branch);
    if(hasProjectile){await githubPutImmutable("web/public/"+record.combat.projectile.path.replace(/^\//,""),projectileBytes,"studio: attach projectile to "+id,token,branch);}
    await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(next,null,2)+"\n"),"studio: "+(existing?"update ":"register ")+id,token,branch,registrySha);
   }else if(driver==="local"&&process.env.NODE_ENV!=="production"){
    if(hasFile){const target=path.join(process.cwd(),"public/assets",relative);await mkdir(path.dirname(target),{recursive:true});await writeFile(target,bytes);}
+   if(hasAtlas){const atlasTarget=path.join(process.cwd(),"public/assets",atlasJsonRelative);await mkdir(path.dirname(atlasTarget),{recursive:true});await writeFile(atlasTarget,atlasJsonBytes);}
+   if(hasAudio){const audioTarget=path.join(process.cwd(),"public/assets",audioRelative);await mkdir(path.dirname(audioTarget),{recursive:true});await writeFile(audioTarget,audioBytes);}
    if(hasProjectile){const pTarget=path.join(process.cwd(),"public",record.combat.projectile.path.replace(/^\//,""));await mkdir(path.dirname(pTarget),{recursive:true});await writeFile(pTarget,projectileBytes);}
    await saveLocalRegistry(next);
   }else return NextResponse.json({error:"Production uploads require STUDIO_STORAGE_DRIVER=github and a configured GitHub token."},{status:503});
@@ -257,13 +290,26 @@ export async function PATCH(req){
  if(!authorized(req))return NextResponse.json({error:"Unauthorized."},{status:401});
  let body;try{body=await req.json();}catch{return NextResponse.json({error:"Invalid Studio action."},{status:400});}
  const id=String(body.id||"").trim(),operation=String(body.operation||"");
- if(!STUDIO_ID_PATTERN.test(id)||!["prepare-test","publish","archive","restore","restore-version","clone"].includes(operation))return NextResponse.json({error:"Invalid asset or operation."},{status:400});
+ if(!STUDIO_ID_PATTERN.test(id)||!["prepare-test","publish","archive","restore","restore-version","clone","delete"].includes(operation))return NextResponse.json({error:"Invalid asset or operation."},{status:400});
  const driver=process.env.STUDIO_STORAGE_DRIVER||"local";
  if(driver!=="github"){
-  if(operation!=="archive"&&operation!=="restore"&&operation!=="restore-version"&&operation!=="clone")return NextResponse.json({error:"Testing preparation and publishing require GitHub storage."},{status:503});
+  if(operation!=="archive"&&operation!=="restore"&&operation!=="restore-version"&&operation!=="clone"&&operation!=="delete")return NextResponse.json({error:"Testing preparation and publishing require GitHub storage."},{status:503});
   try{
    const registry=await localRegistry(),index=registry.assets.findIndex(asset=>asset.id===id);
    if(index<0)return NextResponse.json({error:"لم يتم العثور على الأصل في مكتبة Studio."},{status:404});
+   if(operation==="delete"){
+    const asset=registry.assets[index],dependents=getAssetDependents(registry.assets,id);
+    if(dependents.length)return NextResponse.json({error:"لا يمكن حذف هذه الشخصية لأن أصولاً أخرى تعتمد عليها: "+dependents.map(item=>item.assetName).join("، ")},{status:409});
+    const remaining=registry.assets.filter((_,i)=>i!==index);
+    const candidatePaths=[asset.path,asset.atlas?.jsonPath,asset.audio?.path,asset.combat?.projectile?.path].filter(safeAssetPath);
+    const referenced=new Set(remaining.flatMap(item=>[item.path,item.atlas?.jsonPath,item.audio?.path,item.combat?.projectile?.path].filter(Boolean)));
+    for(const assetPath of new Set(candidatePaths)){if(referenced.has(assetPath))continue;try{await unlink(path.join(process.cwd(),"public",assetPath.replace(/^[/]/,"")));}catch(error){if(error.code!=="ENOENT")throw error;}}
+    for(const [catalogPath,catalogKey] of [[PUBLISHED_CATALOG_PATH,"plants"],[PUBLISHED_MONSTER_CATALOG_PATH,"monsters"]]){
+      try{const target=path.join(process.cwd(),"public",catalogPath.replace(/^web[/]/,""));const catalog=JSON.parse(await readFile(target,"utf8"));if(Array.isArray(catalog[catalogKey])){catalog[catalogKey]=catalog[catalogKey].filter(item=>item.id!==id);await writeFile(target,JSON.stringify(catalog,null,2)+"\n","utf8");}}catch(error){if(error.code!=="ENOENT")throw error;}
+    }
+    registry.assets=remaining;await saveLocalRegistry(registry);
+    return NextResponse.json({success:true,operation,deletedId:id,message:"تم حذف الشخصية وملفاتها غير المشتركة نهائياً."});
+   }
    if(operation==="restore-version"&&registry.assets[index].releaseRequest?.number)return NextResponse.json({error:"لا يمكن استعادة إصدار مرتبط بطلب نشر قبل التحقق من حالته."},{status:409});
    if(operation==="archive"||operation==="restore-version"){
     const dependents=getAssetDependents(registry.assets,id);
@@ -292,6 +338,28 @@ export async function PATCH(req){
   const index=registry.assets.findIndex(asset=>asset.id===id);
   if(index<0)return NextResponse.json({error:"لم يتم العثور على الأصل في مكتبة Studio."},{status:404});
   let asset=registry.assets[index];
+  if(operation==="delete"){
+   const dependents=getAssetDependents(registry.assets,id);
+   if(dependents.length)return NextResponse.json({error:"لا يمكن حذف هذه الشخصية لأن أصولاً أخرى تعتمد عليها: "+dependents.map(item=>item.assetName).join("، ")},{status:409});
+   const remaining=registry.assets.filter((_,i)=>i!==index);
+   const candidatePaths=[asset.path,asset.atlas?.jsonPath,asset.audio?.path,asset.combat?.projectile?.path].filter(safeAssetPath);
+   const referenced=new Set(remaining.flatMap(item=>[item.path,item.atlas?.jsonPath,item.audio?.path,item.combat?.projectile?.path].filter(Boolean)));
+   for(const assetPath of new Set(candidatePaths)){
+    if(referenced.has(assetPath))continue;
+    const filePath="web/public"+assetPath;
+    await githubDeleteIfExists(filePath,"studio: delete unused asset file for "+id,token,storageBranch);
+    if(targetBranch!==storageBranch)await githubDeleteIfExists(filePath,"studio: delete published asset file for "+id,token,targetBranch);
+   }
+   for(const [catalogPath,catalogKey] of [[PUBLISHED_CATALOG_PATH,"plants"],[PUBLISHED_MONSTER_CATALOG_PATH,"monsters"]]){
+    const document=await githubGetDocument(catalogPath,token,targetBranch);
+    if(!document)continue;
+    const catalog=JSON.parse(document.content);
+    if(Array.isArray(catalog[catalogKey])){catalog[catalogKey]=catalog[catalogKey].filter(item=>item.id!==id);await githubPut(catalogPath,Buffer.from(JSON.stringify(catalog,null,2)+"\n"),"studio: remove "+asset.type+" "+id,token,targetBranch,document.sha);}
+   }
+   await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify({...registry,assets:remaining},null,2)+"\n"),"studio: permanently delete "+asset.type+" "+id,token,storageBranch,registrySha);
+   return NextResponse.json({success:true,operation,deletedId:id,message:"تم حذف الشخصية من سجل Studio وكتالوج اللعبة وملفات GitHub غير المشتركة."});
+  }
+
   if(operation==="clone"){
    const newId=String(body.newId||"").trim().toLowerCase();
    if(!STUDIO_ID_PATTERN.test(newId)||newId.length>64)return NextResponse.json({error:"معرّف النسخة غير صالح."},{status:400});
@@ -358,6 +426,8 @@ export async function PATCH(req){
   const artworkPath="web/public"+asset.path;
   const artworkBytes=await githubGetBytes(artworkPath,token,storageBranch);
   await githubPutImmutable(artworkPath,artworkBytes,"studio: publish "+asset.type+" artwork "+id,token,targetBranch);
+  if(asset.atlas?.jsonPath){if(!safeAssetPath(asset.atlas.jsonPath))return NextResponse.json({error:"مسار Phaser Atlas JSON غير صالح."},{status:409});const atlasPath="web/public"+asset.atlas.jsonPath;const atlasBytes=await githubGetBytes(atlasPath,token,storageBranch);await githubPutImmutable(atlasPath,atlasBytes,"studio: publish Phaser Atlas JSON "+id,token,targetBranch);}
+  if(asset.audio?.path){if(!safeAssetPath(asset.audio.path))return NextResponse.json({error:"مسار صوت الشخصية غير صالح."},{status:409});const audioPath="web/public"+asset.audio.path;const audioBytes=await githubGetBytes(audioPath,token,storageBranch);await githubPutImmutable(audioPath,audioBytes,"studio: publish character audio "+id,token,targetBranch);}
   const rigPartIds=[...new Set((asset.rigProfile?.bones||[]).map(bone=>bone?.part?.assetId).filter(Boolean))];
   const rigPartAssets=getRigPartAssets(registry.assets,asset);
   if(rigPartAssets.length!==rigPartIds.length||rigPartAssets.some(part=>!part||!["item","plant","monster","effect"].includes(part.type)||part.status==="archived"||!safeAssetPath(part.path)))return NextResponse.json({error:"يوجد جزء هيكلي مفقود أو غير صالح؛ أصلح تبعيات الهيكل قبل النشر."},{status:409});
@@ -380,8 +450,8 @@ export async function PATCH(req){
   const catalog=catalogDocument?JSON.parse(catalogDocument.content):(isMonster?{version:1,monsters:[]}:{version:1,plants:[]});
   const publishedAt=new Date().toISOString();
   const publishedRecord=isMonster
-   ?{id:asset.id,name:asset.name,path:asset.path,rows:asset.rows,columns:asset.columns,spriteSheet:asset.spriteSheet,animationProfile:asset.animationProfile||null,rigProfile:asset.rigProfile||null,rigParts:rigPartAssets.map(part=>({id:part.id,name:part.name,path:part.path,rows:part.spriteSheet?(part.rows||1):1,columns:part.spriteSheet?(part.columns||1):1,frameCount:getRigPartFrameCount(part),spriteSheet:Boolean(part.spriteSheet)})),monsterProfile:asset.monsterProfile,publishedAt}
-   :{id:asset.id,name:asset.name,path:asset.path,rows:asset.rows,columns:asset.columns,spriteSheet:asset.spriteSheet,animationProfile:asset.animationProfile||null,rigProfile:asset.rigProfile||null,rigParts:rigPartAssets.map(part=>({id:part.id,name:part.name,path:part.path,rows:part.spriteSheet?(part.rows||1):1,columns:part.spriteSheet?(part.columns||1):1,frameCount:getRigPartFrameCount(part),spriteSheet:Boolean(part.spriteSheet)})),combat:asset.combat,publishedAt};
+   ?{id:asset.id,name:asset.name,path:asset.path,...(asset.atlas?{atlas:asset.atlas}:{}),...(asset.audio?{audio:asset.audio}:{}),rows:asset.rows,columns:asset.columns,spriteSheet:asset.spriteSheet,animationProfile:asset.animationProfile||null,rigProfile:asset.rigProfile||null,rigParts:rigPartAssets.map(part=>({id:part.id,name:part.name,path:part.path,rows:part.spriteSheet?(part.rows||1):1,columns:part.spriteSheet?(part.columns||1):1,frameCount:getRigPartFrameCount(part),spriteSheet:Boolean(part.spriteSheet)})),monsterProfile:asset.monsterProfile,publishedAt}
+   :{id:asset.id,name:asset.name,path:asset.path,...(asset.atlas?{atlas:asset.atlas}:{}),...(asset.audio?{audio:asset.audio}:{}),rows:asset.rows,columns:asset.columns,spriteSheet:asset.spriteSheet,animationProfile:asset.animationProfile||null,rigProfile:asset.rigProfile||null,rigParts:rigPartAssets.map(part=>({id:part.id,name:part.name,path:part.path,rows:part.spriteSheet?(part.rows||1):1,columns:part.columns||1,frameCount:getRigPartFrameCount(part),spriteSheet:Boolean(part.spriteSheet)})),combat:asset.combat,publishedAt};
   const collectionKey=isMonster?"monsters":"plants";
   const collection=Array.isArray(catalog[collectionKey])?catalog[collectionKey]:[];
   const existingIndex=collection.findIndex(item=>item.id===id);

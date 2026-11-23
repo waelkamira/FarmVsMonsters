@@ -1,6 +1,6 @@
 import { PHASE_ONE_PLANT_EVENT_TYPES } from "./phaseOneCombatContract.mjs";
 
-const PLANT_EVENT_TYPES = new Set(PHASE_ONE_PLANT_EVENT_TYPES);
+const PLANT_EVENT_TYPES = new Set([...PHASE_ONE_PLANT_EVENT_TYPES, "tomato", "onion"]);
 const EVENT_TYPES = new Set(["plant_placed", "plant_uprooted", "energy_spawned", "energy_collected", "energy_discarded", "monster_spawned", "monster_bite", "monster_moved"]);
 const MAX_EVENTS = 10000;
 
@@ -8,8 +8,7 @@ function validCell(payload) {
   return Number.isInteger(payload?.col) && payload.col >= 0 && payload.col < 8 && Number.isInteger(payload?.row) && payload.row >= 0 && payload.row < 5;
 }
 function validPlantType(value) {
-  return PLANT_EVENT_TYPES.has(value) ||
-    (typeof value === "string" && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value));
+  return typeof value === "string" && (PLANT_EVENT_TYPES.has(value) || /^[a-z0-9]+(?:-[a-z0-9]+)*-level-\d+$/.test(value));
 }
 function validPickupId(value) { return typeof value === "string" && /^pickup-\d+$/.test(value); }
 function normalizePayload(type, payload) {
