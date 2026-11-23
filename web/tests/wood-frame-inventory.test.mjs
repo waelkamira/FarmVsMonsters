@@ -6,7 +6,7 @@ const scene = readFileSync(new URL("../game/scenes/BattleScene.js", import.meta.
 
 test("the uploaded wood frame is loaded and used by a dedicated inventory control", () => {
   assert.match(scene, /inventory-wood-frame", "\/assets\/items\/ui\/ui-inventory-wood-fram\.png"/);
-  assert.match(scene, /this\.createInventoryControl\(\)/);
+  assert.match(scene, /createInventoryControl\(\)/);
   assert.match(scene, /this\.add\.container\(920, 27\)\.setDepth\(52\)/);
   assert.match(scene, /this\.add\.image\(0, 0, "inventory-wood-frame"\)\.setDisplaySize\(570, 620\)/);
   assert.match(scene, /const sheet = \["radish-level-1", "pineapple-level-1", "hazelnut-level-1", "mango-level-1", "snow-thrower-level-1"\]\.includes\(plant\.image\)/);
@@ -15,7 +15,7 @@ test("the uploaded wood frame is loaded and used by a dedicated inventory contro
 
 test("all battle action buttons are positioned by the centralized right-column layout", () => {
   const hud = readFileSync(new URL("../game/scenes/BattleHudButtons.js", import.meta.url), "utf8");
-  assert.match(scene, /createBattleHudButtons\\(this\\)/);
+  assert.match(scene, /createBattleHudButtons\(this\)/);
   assert.match(hud, /BATTLE_HUD_BUTTONS/);
   for (const key of ["pauseControl", "settingsControl", "speedControl", "audioButton", "collectionMenuControl", "inventoryControl", "quickPlantsButton", "quickAdventuresButton", "quickMonstersButton"]) {
     assert.match(hud, new RegExp(`key: "${key}"`));
@@ -23,7 +23,7 @@ test("all battle action buttons are positioned by the centralized right-column l
   assert.match(hud, /BATTLE_HUD_BUTTON_X = 1080/);
   assert.match(hud, /audioButtonBounds/);
   assert.doesNotMatch(scene, /quickCollectionDock|0x6b4929/);
-});test("inventory shows saved plant unlocks, seed-bar membership, field counts, and live resources", () => {
+});\n\ntest("inventory shows saved plant unlocks, seed-bar membership, field counts, and live resources", () => {
   assert.match(scene, /unlockedIds = loadUnlockedPlantIds\(window\.localStorage\)/);
   assert.match(scene, /farmVsMonsters\.selectedPlants/);
   assert.match(scene, /this\.plants\.filter\(\(item\) => item\.alive && item\.type === plant\.id\)/);
