@@ -17,17 +17,17 @@ export function createMotionSettings(motion, overrides = {}) {
   const fps = Number(overrides.fps ?? 12);
   const width = Number(overrides.width ?? 832);
   const height = Number(overrides.height ?? 480);
-  const durationSeconds = Number(overrides.durationSeconds ?? 2);
+  const durationSeconds = Number(overrides.durationSeconds ?? 2);\n  const frameWidth = Number(overrides.frameWidth ?? 150);\n  const frameHeight = Number(overrides.frameHeight ?? 150);\n  const columns = Number(overrides.columns ?? 6);
   if (!Number.isInteger(frames) || frames < 2 || frames > 96) throw new RangeError("Frame count must be between 2 and 96.");
   if (!Number.isInteger(fps) || fps < 1 || fps > 30) throw new RangeError("FPS must be between 1 and 30.");
   if (!Number.isInteger(width) || width < 64 || width > 1920 || !Number.isInteger(height) || height < 64 || height > 1080) throw new RangeError("Invalid video dimensions.");
-  if (!Number.isFinite(durationSeconds) || durationSeconds < 0.5 || durationSeconds > 12) throw new RangeError("Video duration must be between 0.5 and 12 seconds.");
+  if (!Number.isFinite(durationSeconds) || durationSeconds < 0.5 || durationSeconds > 12) throw new RangeError("Video duration must be between 0.5 and 12 seconds.");\n  if (!Number.isInteger(frameWidth) || frameWidth < 32 || frameWidth > 512 || !Number.isInteger(frameHeight) || frameHeight < 32 || frameHeight > 512) throw new RangeError("Sprite frame dimensions must be between 32 and 512 pixels.");\n  if (!Number.isInteger(columns) || columns < 1 || columns > frames) throw new RangeError("Sprite sheet columns must be between 1 and the frame count.");
   return {
     id: known.id, label: known.label, english: known.english, loop: known.loop,
     selected: overrides.selected !== false,
     prompt: String(overrides.prompt ?? known.prompt).slice(0, 3000),
     negativePrompt: String(overrides.negativePrompt ?? DEFAULT_NEGATIVE_PROMPT).slice(0, 3000),
-    frames, fps, width, height, durationSeconds,
+    frames, fps, width, height, durationSeconds, frameWidth, frameHeight, columns,
     seed: Number.isInteger(overrides.seed) && overrides.seed >= 0 ? overrides.seed : null,
     status: "selected",
     videoPath: null, videoApprovedAt: null, spriteStatus: "not_started",
