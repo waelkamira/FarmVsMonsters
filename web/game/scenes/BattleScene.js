@@ -204,7 +204,7 @@ export default class BattleScene extends Scene {
           if (!entry || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(entry.id || "") ||
               typeof entry.path !== "string" || !(entry.path.startsWith("/assets/") || entry.path.startsWith("/api/studio/assets?preview="))) continue;
           if(entry.atlas?.jsonPath)this.load.atlas("studio-plant-" + variant + "-" + entry.id, entry.path, entry.atlas.jsonPath);else this.load.image("studio-plant-" + variant + "-" + entry.id, entry.path);
-          if(entry.audio?.path && (entry.audio.path.startsWith("/assets/") || entry.audio.path.startsWith("/api/studio/assets?preview="))) this.load.audio("studio-character-audio-" + entry.id, entry.audio.path);
+          if(entry.audio?.path && (entry.audio.path.startsWith("/assets/") || entry.audio.path.startsWith("/api/studio/assets?preview="))) this.load.audio("studio-character-audio-" + variant + "-" + entry.id, entry.audio.path);
           queueRigPartTextures(entry, variant);
           if (entry.combat?.mode === "projectile" && entry.combat.projectile?.path && (entry.combat.projectile.path.startsWith("/assets/") || entry.combat.projectile.path.startsWith("/api/studio/assets?preview="))) {
             this.load.image("studio-projectile-" + variant + "-" + entry.id, entry.combat.projectile.path);
@@ -297,7 +297,8 @@ export default class BattleScene extends Scene {
           ...entry,
           testOnly,
           textureKey: "studio-plant-" + variant + "-" + entry.id,
-          projectileTextureKey: "studio-projectile-" + variant + "-" + entry.id
+          projectileTextureKey: "studio-projectile-" + variant + "-" + entry.id,
+          audioKey: entry.audio?.path ? "studio-character-audio-" + variant + "-" + entry.id : null
         });
       }
     };
@@ -391,7 +392,8 @@ export default class BattleScene extends Scene {
             monsterProfile,
             animationProfile,
             testOnly,
-            textureKey: "studio-monster-" + variant + "-" + entry.id
+            textureKey: "studio-monster-" + variant + "-" + entry.id,
+            audioKey: entry.audio?.path ? "studio-character-audio-" + variant + "-" + entry.id : null
           });
         } catch (error) {
           console.warn("Skipping invalid Studio monster profile:", entry.id, error);
@@ -3578,7 +3580,8 @@ export default class BattleScene extends Scene {
         if (!target) return;
         this.fireThornProjectile(plant, target);
         if (plant.view?.active) {
-          this.tweens.add({ targets: plant.view, scaleX: { from: 1, to: 1.08 }, scaleY: { from: 1, to: 1.08 }, duration: 65, yoyo: true });
+          const baseScaleX = plant.view.scaleX || 1, baseScaleY = plant.view.scaleY || 1;
+          this.tweens.add({ targets: plant.view, scaleX: { from: baseScaleX, to: baseScaleX * 1.08 }, scaleY: { from: baseScaleY, to: baseScaleY * 1.08 }, duration: 65, yoyo: true });
         }
         if (index === 9) this.setMessage("اكتمل هجوم الطاقة المتتالي!");
       });
@@ -3935,7 +3938,7 @@ export default class BattleScene extends Scene {
         plantType: plant.type, studioPlantId: plant.studioPlant.id
       });
       this.playThornSound();
-      if (plant.studioPlant?.id) this.playSfx("studio-character-audio-" + plant.studioPlant.id, this.effectsVolume, 80);
+      if (plant.studioPlant?.id) this.playSfx((plant.studioPlant.audioKey || "studio-character-audio-" + plant.studioPlant.id), this.effectsVolume, 80);
       return;
     }
     // Radish Level 1 launches its dedicated miniature radish bomb from the
@@ -4392,7 +4395,7 @@ export default class BattleScene extends Scene {
       if (action === "attack" && !force && monster.hitAnimUntil > this.time.now) return;
       if (this.anims.exists(animationKey)) {
         const currentKey = sprite.anims.currentAnim?.key;
-        if (action === "attack" && (force || currentKey !== animationKey || !sprite.anims.isPlaying)) this.playSfx("studio-character-audio-" + monster.studioMonster.id, this.effectsVolume, 160);
+        if (action === "attack" && (force || currentKey !== animationKey || !sprite.anims.isPlaying)) this.playSfx((monster.studioMonster.audioKey || "studio-character-audio-" + monster.studioMonster.id), this.effectsVolume, 160);
         if (force || currentKey !== animationKey || !sprite.anims.isPlaying) sprite.play(animationKey);
       } else if (action === "move" && this.anims.exists("studio-monster-" + monster.studioMonster.id + "-idle")) {
         sprite.play("studio-monster-" + monster.studioMonster.id + "-idle");
