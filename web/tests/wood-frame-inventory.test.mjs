@@ -13,18 +13,17 @@ test("the uploaded wood frame is loaded and used by a dedicated inventory contro
   assert.match(scene, /this\.add\.sprite\(x, y - 12, plant\.image, 0\)/);
 });
 
-test("battle HUD controls use one evenly spaced, consistent top-right row", () => {
-  for (const x of [920, 956, 992, 1028, 1064, 1100]) {
-    assert.match(scene, new RegExp(`this\\.add\\.container\\(${x}, 27\\)\\.setDepth\\(52\\)`));
+test("all battle action buttons are positioned by the centralized right-column layout", () => {
+  const hud = readFileSync(new URL("../game/scenes/BattleHudButtons.js", import.meta.url), "utf8");
+  assert.match(scene, /layoutBattleHudButtons\\(this\\)/);
+  assert.match(hud, /BATTLE_HUD_BUTTONS/);
+  for (const key of ["pauseControl", "settingsControl", "speedControl", "audioButton", "collectionMenuControl", "inventoryControl", "quickPlantsButton", "quickAdventuresButton", "quickMonstersButton"]) {
+    assert.match(hud, new RegExp(`key: "${key}"`));
   }
-  assert.match(scene, /hud-speed-button"\)\.setDisplaySize\(34, 34\)/);
-  assert.match(scene, /hud-pause-button"\)\.setDisplaySize\(34, 34\)/);
-  assert.match(scene, /hud-settings-button"\)\.setDisplaySize\(34, 34\)/);
-  assert.match(scene, /this\.quickAdventuresButton = makeButton\(1028, "adventures", 0x397fb0, "phases"\)/);\n  assert.match(scene, /this\.quickMonstersButton = makeButton\(1098, "monsters", 0x7952a8, "monsters"\)/);\n  assert.doesNotMatch(scene, /quickCollectionDock|0x6b4929/);\n  assert.match(scene, /this\.add\.container\(956, 27\)\.setDepth\(52\)/);
-  assert.match(scene, /pointer\.x >= 1080 && pointer\.x <= 1120/);
-});
-
-test("inventory shows saved plant unlocks, seed-bar membership, field counts, and live resources", () => {
+  assert.match(hud, /BATTLE_HUD_BUTTON_X = 1080/);
+  assert.match(hud, /audioButtonBounds/);
+  assert.doesNotMatch(scene, /quickCollectionDock|0x6b4929/);
+});test("inventory shows saved plant unlocks, seed-bar membership, field counts, and live resources", () => {
   assert.match(scene, /unlockedIds = loadUnlockedPlantIds\(window\.localStorage\)/);
   assert.match(scene, /farmVsMonsters\.selectedPlants/);
   assert.match(scene, /this\.plants\.filter\(\(item\) => item\.alive && item\.type === plant\.id\)/);
