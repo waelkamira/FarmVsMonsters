@@ -43,7 +43,7 @@ export async function GET(req) {
     if (!entry.isDirectory() || !/^[a-f0-9-]{36}$/i.test(entry.name)) continue;
     try {
       const job = await readJob(entry.name);
-      jobs.push({ ...job, sourceUrl: "/api/studio/ai-animation/jobs/" + job.id + "/files/source" });
+      jobs.push({ ...job, sourceUrl: "/api/studio/ai-animation/jobs/" + job.id + "/files/" + job.source.path });
     } catch { /* Ignore incomplete workspace folders. */ }
   }
   jobs.sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt)));
@@ -89,5 +89,5 @@ export async function POST(req) {
   await mkdir(path.join(dir, "export"), { recursive: true });
   await writeFile(path.join(dir, job.source.path), bytes);
   await saveJob(job);
-  return NextResponse.json({ job: { ...job, sourceUrl: "/api/studio/ai-animation/jobs/" + id + "/files/source" } }, { status: 201 });
+  return NextResponse.json({ job: { ...job, sourceUrl: "/api/studio/ai-animation/jobs/" + id + "/files/" + job.source.path } }, { status: 201 });
 }
