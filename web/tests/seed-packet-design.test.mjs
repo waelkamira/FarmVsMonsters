@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 
 const scene = readFileSync(new URL("../game/scenes/BattleScene.js", import.meta.url), "utf8");
 const start = scene.indexOf("  createPlantCard(");
@@ -44,5 +45,5 @@ test("cooldown overlay references remain available to the HUD refresh loop", () 
 });
 
 test("BattleScene parses as valid JavaScript after the seed-card changes", () => {
-  execFileSync(process.execPath, ["--check", new URL("../game/scenes/BattleScene.js", import.meta.url)]);
+  execFileSync(process.execPath, ["--check", fileURLToPath(new URL("../game/scenes/BattleScene.js", import.meta.url))]);
 });
