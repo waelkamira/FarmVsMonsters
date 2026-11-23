@@ -16,11 +16,11 @@ export function validatePhaserAtlasDocument(input, imageDimensions = null) {
   const errors = [];
   if (!atlas || typeof atlas !== "object" || Array.isArray(atlas)) errors.push("يجب أن يكون JSON كائن Phaser Atlas.");
   const meta = atlas?.meta;
-  if (!meta || typeof meta !== "object") errors.push("بيانات meta مفقودة من Phaser Atlas.");
-  const image = typeof meta?.image === "string" ? meta.image.trim() : "";
-  const metaWidth = Number(meta?.size?.w), metaHeight = Number(meta?.size?.h);
+  const safeMeta = meta && typeof meta === "object" ? meta : {};
+  const image = typeof safeMeta.image === "string" ? safeMeta.image.trim() : "";
+  const metaWidth = Number(safeMeta.size?.w), metaHeight = Number(safeMeta.size?.h);
   const hasMetaSize = Number.isFinite(metaWidth) && Number.isFinite(metaHeight) && metaWidth > 0 && metaHeight > 0;
-  if (meta?.size && !hasMetaSize) errors.push("أبعاد الصورة في meta.size غير صالحة.");
+  if (safeMeta.size && !hasMetaSize) errors.push("أبعاد الصورة في meta.size غير صالحة.");
   if (imageDimensions && hasMetaSize && (metaWidth !== imageDimensions.width || metaHeight !== imageDimensions.height)) {
     errors.push("أبعاد PNG لا تطابق أبعاد meta.size في Phaser Atlas.");
   }
@@ -35,6 +35,9 @@ export function validatePhaserAtlasDocument(input, imageDimensions = null) {
   if (!entries.length) errors.push("لم يتم العثور على أي إطارات في frames.");
   if (entries.length > MAX_ATLAS_FRAMES) errors.push("عدد الإطارات يتجاوز الحد المسموح (512).");
 
+  const boundsWidth = hasMetaSize ? metaWidth : Number(imageDimensions?.width);
+  const boundsHeight = hasMetaSize ? metaHeight : Number(imageDimensions?.height);
+  const hasBounds = Number.isFinite(boundsWidth) && Number.isFinite(boundsHeight) && boundsWidth > 0 && boundsHeight > 0;
   const names = new Set();
   for (const [name, frame] of entries) {
     if (!SAFE_FRAME_NAME.test(name) || names.has(name)) errors.push("اسم إطار غير صالح أو مكرر: " + name);
@@ -43,7 +46,7 @@ export function validatePhaserAtlasDocument(input, imageDimensions = null) {
     const x = Number(rect?.x), y = Number(rect?.y), w = Number(rect?.w ?? rect?.width), h = Number(rect?.h ?? rect?.height);
     if (![x, y, w, h].every(Number.isFinite) || x < 0 || y < 0 || w <= 0 || h <= 0) {
       errors.push("مستطيل الإطار غير صالح: " + name);
-    } else if (hasMetaSize && (x + w > metaWidth || y + h > metaHeight)) {
+    } else if (hasBounds && (x + w > boundsWidth || y + h > boundsHeight)) {
       errors.push("الإطار يتجاوز حدود صورة Atlas: " + name);
     }
     const source = frame?.sourceSize;
