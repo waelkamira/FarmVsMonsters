@@ -4307,7 +4307,7 @@ export default class BattleScene extends Scene {
       } else if (action === "move" && this.anims.exists("studio-monster-" + monster.studioMonster.id + "-idle")) {
         sprite.play("studio-monster-" + monster.studioMonster.id + "-idle");
       } else if (action === "idle") {
-        sprite.setFrame(String(monster.studioMonster.animationProfile?.idle?.startFrame ?? 0));
+        sprite.setFrame(monster.studioMonster.atlas?.clips?.idle?.[0] || monster.studioMonster.atlas?.frameNames?.[0] || String(monster.studioMonster.animationProfile?.idle?.startFrame ?? 0));
       }
       return;
     }
