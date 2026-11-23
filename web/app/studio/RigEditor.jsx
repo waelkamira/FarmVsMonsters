@@ -58,13 +58,14 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
   }, [rig, clip, timeMs, validation.valid]);
   const bonePose = selectedPose?.localBones?.[selectedBoneId] || bone;
   // Keep selections valid when a newly loaded rig replaces the current rig.
-  // eslint-disable-next-line react-hooks/set-state-in-effect
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (!rig.bones.some((item) => item.id === selectedBoneId)) setSelectedBoneId(rig.bones[0]?.id || "root");
     if (!rig.clips.some((item) => item.id === selectedClipId)) setSelectedClipId(rig.clips[0]?.id || "");
     if (!rig.attachments.some((item) => item.id === selectedAttachmentId)) setSelectedAttachmentId(rig.attachments[0]?.id || "");
     if (!rig.hitboxes.some((item) => item.id === selectedHitboxId)) setSelectedHitboxId(rig.hitboxes[0]?.id || "");
   }, [rig.bones, rig.clips, rig.attachments, rig.hitboxes, selectedBoneId, selectedClipId, selectedAttachmentId, selectedHitboxId]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   function isDescendant(candidateId, ancestorId) {
     let current = rig.bones.find((item) => item.id === candidateId);
