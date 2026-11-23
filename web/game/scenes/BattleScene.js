@@ -410,6 +410,7 @@ export default class BattleScene extends Scene {
       if (!monster.spriteSheet || !this.registerStudioGridSheet(monster.textureKey, monster.rows, monster.columns)) continue;
       monster.runtimeReady = true;
       for (const [clipName, clip] of [["idle", monster.animationProfile.idle], ["move", monster.animationProfile.move], ["attack", monster.animationProfile.attack]]) {
+        if (monster.motionAtlases?.[clipName] || (clipName === "move" && monster.motionAtlases?.walk)) continue;
         if (clip.endFrame <= clip.startFrame) continue;
         const animationKey = "studio-monster-" + monster.id + "-" + clipName;
         if (!this.anims.exists(animationKey)) {
@@ -418,6 +419,24 @@ export default class BattleScene extends Scene {
             frames: this.anims.generateFrameNumbers(monster.textureKey, { start: clip.startFrame, end: clip.endFrame }),
             frameRate: clip.fps,
             repeat: clip.loop ? -1 : 0
+          });
+        }
+      }
+      for (const [motionId, atlas] of Object.entries(monster.motionAtlases || {})) {
+        if (!["idle", "walk", "run", "fly", "attack", "hurt", "death"].includes(motionId)) continue;
+        const motionTextureKey = motionId === "idle"
+          ? monster.textureKey
+          : "studio-monster-motion-" + (monster.testOnly ? "testing" : "published") + "-" + monster.id + "-" + motionId;
+        const motionFrameCount = Math.max(1, Number(atlas.frameCount) || (Number(atlas.rows || 1) * Number(atlas.columns || 1)));
+        if (!this.textures.exists(motionTextureKey) || !this.registerStudioGridSheet(motionTextureKey, atlas.rows || 1, atlas.columns || 1)) continue;
+        const clipName = motionId === "walk" ? "move" : motionId;
+        const animationKey = "studio-monster-" + monster.id + "-" + clipName;
+        if (!this.anims.exists(animationKey)) {
+          this.anims.create({
+            key: animationKey,
+            frames: this.anims.generateFrameNumbers(motionTextureKey, { start: 0, end: motionFrameCount - 1 }),
+            frameRate: Number(atlas.fps) || 12,
+            repeat: atlas.loop ? -1 : 0
           });
         }
       }
