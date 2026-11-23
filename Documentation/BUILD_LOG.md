@@ -1575,3 +1575,14 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 
 - Focused Phaser Atlas validation completed successfully on `876ace4756f260b261d628cbca3264ff7180ab02`: Atlas parser/import/version tests, ESLint on changed Studio/runtime modules, and production build all passed. The focused test includes the real Corn Monster PNG+JSON pair and confirms its 24 frames and idle/attack/hurt groups.
 - The broader existing Phase 1/full-suite workflows still fail on 12–18 unrelated legacy source-contract assertions (for example Electric Mushroom source-pattern checks, old wave-timer assumptions, and campaign/UI expectations). These are outside the Atlas/import changes; they were not bypassed. The PR remains unmerged.
+
+## 2026-11-23 — Studio character lifecycle, audio, and power attack
+
+- Added a permanent-delete action to every Studio asset row with a confirmation that names the selected asset and explains the irreversible scope.
+- The delete API checks dependent assets, removes the character from the published plant/monster catalog, removes its Studio registry entry, and deletes its artwork, Phaser Atlas JSON, character audio, and other unshared files from both the Studio storage branch and configured game branch. Shared files remain protected; a delete is rejected while dependent rig assets remain.
+- Added an optional character-specific audio upload for Studio plants and monsters (MP3, WAV, OGG, M4A, WebM, max 8 MB), with content-signature validation, preview, immutable storage, revision/clone/restore preservation, publishing, playtest preview, and Phaser attack playback.
+- Added the battle power button: arm the ability, click an existing ranged plant, spend 50 energy, then launch ten projectiles at 90 ms intervals, retargeting within that plant's lane.
+- Added focused regression tests for character deletion, audio metadata and playback, and power ability eligibility/scheduling.
+- CI for commit `75e1a3736c35bec7a14ed959ceed2d1d367228cb`: focused Phaser Atlas/Studio/audio/power tests passed; ESLint passed; production build passed.
+- The broader legacy Web validation, Web quality gate, and Studio/Game Validation still report the same 12 pre-existing Phase 1 gameplay assertion failures (395 passing, 12 failing). These failures are outside the new Atlas/audio/delete/power focused suite and remain unresolved.
+- No browser-driven Studio upload/delete, live Phaser playtest, or merge to `main` has been claimed or performed.
