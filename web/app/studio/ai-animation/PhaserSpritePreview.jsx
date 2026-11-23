@@ -5,7 +5,6 @@ export default function PhaserSpritePreview({ src, frameWidth = 150, frameHeight
   const host = useRef(null);
   const [scale, setScale] = useState(1);
   const [speed, setSpeed] = useState(fps);
-  useEffect(() => setSpeed(fps), [fps]);
   useEffect(() => {
     if (!host.current || !src) return undefined;
     let sprite = null;
