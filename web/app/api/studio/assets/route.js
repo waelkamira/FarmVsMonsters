@@ -354,9 +354,9 @@ export async function PATCH(req){
     const document=await githubGetDocument(catalogPath,token,targetBranch);
     if(!document)continue;
     const catalog=JSON.parse(document.content);
-    if(Array.isArray(catalog[catalogKey])){catalog[catalogKey]=catalog[catalogKey].filter(item=>item.id!==id);await githubPut(catalogPath,Buffer.from(JSON.stringify(catalog,null,2)+"\\n"),"studio: remove "+asset.type+" "+id,token,targetBranch,document.sha);}
+    if(Array.isArray(catalog[catalogKey])){catalog[catalogKey]=catalog[catalogKey].filter(item=>item.id!==id);await githubPut(catalogPath,Buffer.from(JSON.stringify(catalog,null,2)+"\n"),"studio: remove "+asset.type+" "+id,token,targetBranch,document.sha);}
    }
-   await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify({...registry,assets:remaining},null,2)+"\\n"),"studio: permanently delete "+asset.type+" "+id,token,storageBranch,registrySha);
+   await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify({...registry,assets:remaining},null,2)+"\n"),"studio: permanently delete "+asset.type+" "+id,token,storageBranch,registrySha);
    return NextResponse.json({success:true,operation,deletedId:id,message:"تم حذف الشخصية من سجل Studio وكتالوج اللعبة وملفات GitHub غير المشتركة."});
   }
 
