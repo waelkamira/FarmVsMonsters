@@ -21,13 +21,14 @@ export async function GET(request) {
   const state = randomBytes(32).toString("base64url");
   const verifier = randomBytes(48).toString("base64url");
   const challenge = createHash("sha256").update(verifier).digest("base64url");
-  const callback = new URL("/api/player/account/google/callback", request.url);\n  callback.searchParams.set("state", state);\n  const callbackUrl = callback.toString();
+  const callback = new URL("/api/player/account/google/callback", request.url);
+  callback.searchParams.set("state", state);
+  const callbackUrl = callback.toString();
   const authorizeUrl = new URL(config.url + "/auth/v1/authorize");
   authorizeUrl.searchParams.set("provider", "google");
   authorizeUrl.searchParams.set("redirect_to", callbackUrl);
   authorizeUrl.searchParams.set("code_challenge", challenge);
   authorizeUrl.searchParams.set("code_challenge_method", "s256");
-  authorizeUrl.searchParams.set("state", state);
 
   const response = NextResponse.redirect(authorizeUrl);
   const secure = process.env.NODE_ENV === "production";
