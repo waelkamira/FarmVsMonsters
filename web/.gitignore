@@ -5,3 +5,4 @@ build/
 coverage/
 .env*
 !.env.example
+\n# Local AI animation source files and generated media\n.autorig-workspace/\n
