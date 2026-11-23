@@ -8,8 +8,13 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 const COOKIE = "fvm_studio_session";
 const ROOT = path.join(process.cwd(), ".autorig-workspace", "ai-animation", "jobs");
+
 function githubHeaders(token) {
   return { Authorization: "Bearer " + token, Accept: "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28" };
+}
+function safeSlug(value, fallback) {
+  const slug = String(value || "").normalize("NFKD").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 48);
+  return slug || fallback;
 }
 async function putGithubFile(repository, branch, token, target, bytes, message) {
   const apiPath = "https://api.github.com/repos/" + repository + "/contents/" + target.split("/").map(encodeURIComponent).join("/");
@@ -20,24 +25,23 @@ async function putGithubFile(repository, branch, token, target, bytes, message) 
     const existing = await existingResponse.json();
     existingSha = existing.sha || null;
     const normalized = String(existing.content || "").replace(/\\s/g, "");
-    const next = bytes.toString("base64");
-    if (normalized && normalized === next) return { path: target, url: existing.html_url || null, sha: existing.sha || null, unchanged: true };
+    if (normalized && normalized === bytes.toString("base64")) {
+      return { path: target, url: existing.html_url || null, sha: existingSha, unchanged: true };
+    }
   } else if (existingResponse.status !== 404) {
     const error = await existingResponse.json().catch(() => ({}));
     throw new Error(error.message || "GitHub read failed (" + existingResponse.status + ") for " + target + ".");
   }
   const response = await fetch(apiPath, {
-    method: "PUT", headers: { ...headers, "Content-Type": "application/json" },
+    method: "PUT",
+    headers: { ...headers, "Content-Type": "application/json" },
     body: JSON.stringify({ message, branch, content: bytes.toString("base64"), ...(existingSha ? { sha: existingSha } : {}) })
   });
   const result = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(result.message || "GitHub upload failed (" + response.status + ") for " + target + ".");
   return { path: target, url: result.content?.html_url || null, sha: result.commit?.sha || null, unchanged: false };
 }
-function safeSlug(value, fallback) {
-  const slug = String(value || "").normalize("NFKD").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 48);
-  return slug || fallback;
-}
+
 export async function POST(req, context) {
   if (!verifyStudioSession(process.env.STUDIO_ADMIN_TOKEN || "", req.cookies.get(COOKIE)?.value || "")) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   const { jobId } = await context.params;
@@ -78,11 +82,16 @@ export async function POST(req, context) {
         const bytes = await readFile(path.join(dir, relative));
         if (bytes.length > 8 * 1024 * 1024) throw new Error("الملف " + filename + " يتجاوز حد 8 MB.");
         const target = rootPath + "/" + filename;
-        files.push({ ...(await putGithubFile(repository, branch, token, target, bytes, "studio: add approved AI animation " + slug + " " + motion.id)), contentType });\n").toString("base64") })
+        const saved = await putGithubFile(repository, branch, token, target, bytes, "studio: add approved AI animation " + slug + " " + motion.id);
+        files.push({ ...saved, contentType });
+      }
+    }
+    const manifestPath = rootPath + "/manifest.json";
+    const manifestBytes = Buffer.from(JSON.stringify(manifest, null, 2) + "\n");
+    files.push({
+      ...(await putGithubFile(repository, branch, token, manifestPath, manifestBytes, "studio: publish approved AI animation manifest " + slug)),
+      contentType: "application/json"
     });
-    const manifestResult = await manifestResponse.json().catch(() => ({}));
-    if (!manifestResponse.ok) throw new Error(manifestResult.message || "GitHub manifest upload failed (" + manifestResponse.status + ").");
-    files.push({ path: manifestPath, url: manifestResult.content?.html_url || null, sha: manifestResult.commit?.sha || null, contentType: "application/json" });
     job.github = { repository, branch, rootPath, files, publishedAt: manifest.publishedAt, status: "published" };
     job.status = "published_to_github";
     job.updatedAt = new Date().toISOString();
