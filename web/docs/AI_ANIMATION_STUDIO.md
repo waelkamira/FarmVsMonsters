@@ -35,9 +35,10 @@ Configure server-side only:
 
 - `FVM_WAN_WORKER_URL`
 - `FVM_WAN_WORKER_TOKEN`
-- `FVM_PYTHON_BIN` (optional; defaults to `python` on Windows and `python3` elsewhere)\n- `STUDIO_GITHUB_TOKEN` and `STUDIO_GITHUB_BRANCH` (needed only when publishing approved PNG/JSON packages to GitHub; default branch is `studio/assets`).
+- `FVM_PYTHON_BIN` (optional; defaults to `python` on Windows and `python3` elsewhere)
+- `STUDIO_GITHUB_TOKEN` and `STUDIO_GITHUB_BRANCH` (needed only when publishing approved PNG/JSON packages to GitHub; default branch is `studio/assets`).
 
-The video worker must implement `POST /v1/generate` and `GET /v1/jobs/{providerJobId}`, and serve completed MP4/WebM files from same-origin `downloadPath` values. Do not point this setting at the SAM 2 worker.
+The Wan worker implements `POST /v1/generate` and `GET /v1/jobs/{providerJobId}`, and serves completed MP4/WebM files from same-origin `downloadPath` values. Do not point this setting at the SAM 2 worker.
 
 ## Video extraction dependencies
 
