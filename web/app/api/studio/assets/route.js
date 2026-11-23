@@ -87,7 +87,7 @@ export async function GET(req){
      if(!asset.releaseRequest?.number)return asset;
      try{return resolveStudioReleaseAsset(asset,await githubGetPullRequest(asset.releaseRequest.number,token));}catch{return asset;}
     }));
-    const monsters=candidates.filter(asset=>asset.status==="testing").map(asset=>({...asset,path:"/api/studio/assets?preview="+encodeURIComponent(asset.path),...(asset.atlas?{atlas:{...asset.atlas,jsonPath:"/api/studio/assets?preview="+encodeURIComponent(asset.atlas.jsonPath)}}:{}),rigParts:serializeRigParts(registry.assets||[],asset)}));
+    const monsters=candidates.filter(asset=>asset.status==="testing").map(asset=>({...asset,path:"/api/studio/assets?preview="+encodeURIComponent(asset.path),...(asset.atlas?{atlas:{...asset.atlas,jsonPath:"/api/studio/assets?preview="+encodeURIComponent(asset.atlas.jsonPath)}}:{}),...(asset.audio?{audio:{...asset.audio,path:"/api/studio/assets?preview="+encodeURIComponent(asset.audio.path)}}:{}),rigParts:serializeRigParts(registry.assets||[],asset)}));
     return NextResponse.json({version:1,monsters},{headers:{"Cache-Control":"private, no-store"}});
    }catch(error){return NextResponse.json({error:error.message||"Could not load testing monster catalog."},{status:502});}
   }
@@ -111,7 +111,7 @@ export async function GET(req){
   }
   const preview=req.nextUrl.searchParams.get("preview");
   if(preview!==null){
-   const allowedTypes={".png":"image/png",".webp":"image/webp",".gif":"image/gif",".mp3":"audio/mpeg",".wav":"audio/wav",".ogg":"audio/ogg",".m4a":"audio/mp4",".json":"application/json"};
+   const allowedTypes={".png":"image/png",".webp":"image/webp",".gif":"image/gif",".mp3":"audio/mpeg",".wav":"audio/wav",".ogg":"audio/ogg",".m4a":"audio/mp4",".webm":"audio/webm",".json":"application/json"};
    const extension=path.extname(preview).toLowerCase();
    if(!preview.startsWith("/assets/")||preview.includes("..")||!allowedTypes[extension])return NextResponse.json({error:"Invalid asset preview path."},{status:400});
    try{const upstream=await fetch(githubUrl("web/public"+preview)+"?ref="+encodeURIComponent(branch),{headers:{...githubHeaders(token),Accept:"application/vnd.github.raw"}});if(!upstream.ok)return NextResponse.json({error:"GitHub preview failed ("+upstream.status+")."},{status:upstream.status===404?404:502});return new NextResponse(await upstream.arrayBuffer(),{headers:{"Content-Type":allowedTypes[extension],"Cache-Control":"private, max-age=300","X-Content-Type-Options":"nosniff"}});}catch(error){return NextResponse.json({error:error.message||"Preview fetch failed."},{status:502});}
