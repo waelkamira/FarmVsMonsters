@@ -292,9 +292,9 @@ export async function PATCH(req){
     const remaining=registry.assets.filter((_,i)=>i!==index);
     const candidatePaths=[asset.path,asset.atlas?.jsonPath,asset.audio?.path,asset.combat?.projectile?.path].filter(safeAssetPath);
     const referenced=new Set(remaining.flatMap(item=>[item.path,item.atlas?.jsonPath,item.audio?.path,item.combat?.projectile?.path].filter(Boolean)));
-    for(const assetPath of new Set(candidatePaths)){if(referenced.has(assetPath))continue;try{await unlink(path.join(process.cwd(),"public",assetPath.replace(/^\\//,"")));}catch(error){if(error.code!=="ENOENT")throw error;}}
+    for(const assetPath of new Set(candidatePaths)){if(referenced.has(assetPath))continue;try{await unlink(path.join(process.cwd(),"public",assetPath.replace(/^[/]/,"")));}catch(error){if(error.code!=="ENOENT")throw error;}}
     for(const [catalogPath,catalogKey] of [[PUBLISHED_CATALOG_PATH,"plants"],[PUBLISHED_MONSTER_CATALOG_PATH,"monsters"]]){
-      try{const target=path.join(process.cwd(),"public",catalogPath.replace(/^web\\/,""));const catalog=JSON.parse(await readFile(target,"utf8"));if(Array.isArray(catalog[catalogKey])){catalog[catalogKey]=catalog[catalogKey].filter(item=>item.id!==id);await writeFile(target,JSON.stringify(catalog,null,2)+"\\n","utf8");}}catch(error){if(error.code!=="ENOENT")throw error;}
+      try{const target=path.join(process.cwd(),"public",catalogPath.replace(/^web[/]/,""));const catalog=JSON.parse(await readFile(target,"utf8"));if(Array.isArray(catalog[catalogKey])){catalog[catalogKey]=catalog[catalogKey].filter(item=>item.id!==id);await writeFile(target,JSON.stringify(catalog,null,2)+"\n","utf8");}}catch(error){if(error.code!=="ENOENT")throw error;}
     }
     registry.assets=remaining;await saveLocalRegistry(registry);
     return NextResponse.json({success:true,operation,deletedId:id,message:"تم حذف الشخصية وملفاتها غير المشتركة نهائياً."});
