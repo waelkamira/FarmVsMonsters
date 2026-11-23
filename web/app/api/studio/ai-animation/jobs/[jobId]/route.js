@@ -25,6 +25,13 @@ export async function PATCH(req, context) {
   let body; try { body = await req.json(); } catch { return NextResponse.json({ error: "Invalid JSON." }, { status: 400 }); }
   try {
     const job = await load(jobId);
+    if (body.action === "registry-testing") {
+      if (!job.registry?.assetId) return NextResponse.json({ error: "لم يتم تسجيل الشخصية في مكتبة Studio." }, { status: 409 });
+      job.registry.status = "testing";
+      job.registry.testPreparedAt = new Date().toISOString();
+      await save(job);
+      return NextResponse.json({ job });
+    }
     const motion = job.motions?.[body.motionId];
     if (!motion) return NextResponse.json({ error: "الحركة غير موجودة في هذه المهمة." }, { status: 404 });
     assertMotionTransition(motion, body.action);
