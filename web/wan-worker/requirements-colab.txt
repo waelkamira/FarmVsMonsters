@@ -1,0 +1,8 @@
+diffusers==0.35.1
+transformers>=4.45.2,<5
+accelerate>=1.1.1
+fastapi>=0.115
+uvicorn[standard]>=0.32
+pillow>=10.4,<13
+imageio[ffmpeg]>=2.36
+ftfy>=6.3

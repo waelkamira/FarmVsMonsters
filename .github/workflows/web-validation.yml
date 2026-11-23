@@ -78,3 +78,47 @@ jobs:
 
       - name: Run worker contract tests
         run: python -m unittest -v test_worker.py
+
+  wan-worker-contract:
+    name: Wan worker contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: web/wan-worker
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install lightweight contract dependencies
+        run: python -m pip install -r requirements-test.txt
+      - name: Compile worker and Colab launcher
+        run: python -m py_compile worker.py colab_start.py
+      - name: Run Wan worker contract tests
+        run: python -m unittest -v test_worker.py
+
+  ai-animation-studio:
+    name: AI animation Studio checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Install web dependencies
+        run: npm ci
+      - name: Lint AI animation files
+        run: npx eslint app/studio/ai-animation/page.js app/studio/ai-animation/PhaserSpritePreview.jsx app/api/studio/ai-animation/jobs/route.js app/api/studio/ai-animation/jobs/[jobId]/route.js app/api/studio/ai-animation/jobs/[jobId]/videos/[motionId]/route.js app/api/studio/ai-animation/jobs/[jobId]/files/[...filePath]/route.js app/api/studio/ai-animation/jobs/[jobId]/process/[motionId]/route.js app/api/studio/ai-animation/jobs/[jobId]/generate/route.js app/api/studio/ai-animation/jobs/[jobId]/sync/route.js app/api/studio/ai-animation/jobs/[jobId]/publish/route.js app/api/studio/ai-animation/jobs/[jobId]/register/route.js app/api/studio/ai-animation/jobs/[jobId]/retry/[motionId]/route.js app/api/studio/assets/route.js game/scenes/BattleScene.js game/studio/aiAnimationPipeline.mjs
+      - name: Run AI animation unit tests
+        run: node --test tests/aiAnimationPipeline.test.mjs

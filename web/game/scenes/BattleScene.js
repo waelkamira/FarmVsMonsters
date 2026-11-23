@@ -200,6 +200,11 @@ export default class BattleScene extends Scene {
           if (!entry || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(entry.id || "") ||
               typeof entry.path !== "string" || !(entry.path.startsWith("/assets/") || entry.path.startsWith("/api/studio/assets?preview="))) continue;
           this.load.image("studio-plant-" + variant + "-" + entry.id, entry.path);
+          for (const [motionId, atlas] of Object.entries(entry.motionAtlases || {})) {
+            if (motionId === "idle" || !["walk", "run", "fly", "attack", "hurt", "death"].includes(motionId)) continue;
+            if (typeof atlas?.path !== "string" || !(atlas.path.startsWith("/assets/") || atlas.path.startsWith("/api/studio/assets?preview="))) continue;
+            this.load.image("studio-plant-motion-" + variant + "-" + entry.id + "-" + motionId, atlas.path);
+          }
           queueRigPartTextures(entry, variant);
           if (entry.combat?.mode === "projectile" && entry.combat.projectile?.path && (entry.combat.projectile.path.startsWith("/assets/") || entry.combat.projectile.path.startsWith("/api/studio/assets?preview="))) {
             this.load.image("studio-projectile-" + variant + "-" + entry.id, entry.combat.projectile.path);
@@ -215,6 +220,11 @@ export default class BattleScene extends Scene {
           if (!entry || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(entry.id || "") ||
               typeof entry.path !== "string" || !(entry.path.startsWith("/assets/") || entry.path.startsWith("/api/studio/assets?preview="))) continue;
           this.load.image("studio-monster-" + variant + "-" + entry.id, entry.path);
+          for (const [motionId, atlas] of Object.entries(entry.motionAtlases || {})) {
+            if (motionId === "idle" || !["walk", "run", "fly", "attack", "hurt", "death"].includes(motionId)) continue;
+            if (typeof atlas?.path !== "string" || !(atlas.path.startsWith("/assets/") || atlas.path.startsWith("/api/studio/assets?preview="))) continue;
+            this.load.image("studio-monster-motion-" + variant + "-" + entry.id + "-" + motionId, atlas.path);
+          }
           queueRigPartTextures(entry, variant);
         }
       });
@@ -302,6 +312,7 @@ export default class BattleScene extends Scene {
           ["attack", plant.animationProfile.attack]
         ];
         for (const [clipName, clip] of clips) {
+          if (plant.motionAtlases?.[clipName]) continue;
           if (clip.endFrame <= clip.startFrame) continue;
           const animationKey = "studio-" + plant.id + "-" + clipName;
           if (!this.anims.exists(animationKey)) {
@@ -312,6 +323,23 @@ export default class BattleScene extends Scene {
               repeat: clip.loop ? -1 : 0
             });
           }
+        }
+      }
+      for (const [motionId, atlas] of Object.entries(plant.motionAtlases || {})) {
+        if (!["idle", "walk", "run", "fly", "attack", "hurt", "death"].includes(motionId)) continue;
+        const motionTextureKey = motionId === "idle"
+          ? textureKey
+          : "studio-plant-motion-" + (plant.testOnly ? "testing" : "published") + "-" + plant.id + "-" + motionId;
+        const motionFrameCount = Math.max(1, Number(atlas.frameCount) || (Number(atlas.rows || 1) * Number(atlas.columns || 1)));
+        if (!this.textures.exists(motionTextureKey) || (motionId !== "idle" && !this.registerStudioGridSheet(motionTextureKey, atlas.rows || 1, atlas.columns || 1))) continue;
+        const animationKey = "studio-" + plant.id + "-" + motionId;
+        if (!this.anims.exists(animationKey)) {
+          this.anims.create({
+            key: animationKey,
+            frames: this.anims.generateFrameNumbers(motionTextureKey, { start: 0, end: motionFrameCount - 1 }),
+            frameRate: Number(atlas.fps) || 12,
+            repeat: atlas.loop ? -1 : 0
+          });
         }
       }
     }
@@ -382,6 +410,7 @@ export default class BattleScene extends Scene {
       if (!monster.spriteSheet || !this.registerStudioGridSheet(monster.textureKey, monster.rows, monster.columns)) continue;
       monster.runtimeReady = true;
       for (const [clipName, clip] of [["idle", monster.animationProfile.idle], ["move", monster.animationProfile.move], ["attack", monster.animationProfile.attack]]) {
+        if (monster.motionAtlases?.[clipName] || (clipName === "move" && monster.motionAtlases?.walk)) continue;
         if (clip.endFrame <= clip.startFrame) continue;
         const animationKey = "studio-monster-" + monster.id + "-" + clipName;
         if (!this.anims.exists(animationKey)) {
@@ -390,6 +419,24 @@ export default class BattleScene extends Scene {
             frames: this.anims.generateFrameNumbers(monster.textureKey, { start: clip.startFrame, end: clip.endFrame }),
             frameRate: clip.fps,
             repeat: clip.loop ? -1 : 0
+          });
+        }
+      }
+      for (const [motionId, atlas] of Object.entries(monster.motionAtlases || {})) {
+        if (!["idle", "walk", "run", "fly", "attack", "hurt", "death"].includes(motionId)) continue;
+        const motionTextureKey = motionId === "idle"
+          ? monster.textureKey
+          : "studio-monster-motion-" + (monster.testOnly ? "testing" : "published") + "-" + monster.id + "-" + motionId;
+        const motionFrameCount = Math.max(1, Number(atlas.frameCount) || (Number(atlas.rows || 1) * Number(atlas.columns || 1)));
+        if (!this.textures.exists(motionTextureKey) || (motionId !== "idle" && !this.registerStudioGridSheet(motionTextureKey, atlas.rows || 1, atlas.columns || 1))) continue;
+        const clipName = motionId === "walk" ? "move" : motionId;
+        const animationKey = "studio-monster-" + monster.id + "-" + clipName;
+        if (!this.anims.exists(animationKey)) {
+          this.anims.create({
+            key: animationKey,
+            frames: this.anims.generateFrameNumbers(motionTextureKey, { start: 0, end: motionFrameCount - 1 }),
+            frameRate: Number(atlas.fps) || 12,
+            repeat: atlas.loop ? -1 : 0
           });
         }
       }
@@ -4195,7 +4242,7 @@ export default class BattleScene extends Scene {
     const sprite = monster && monster.hyenaSprite;
     if (!sprite || !sprite.active) return;
     if (monster.studioMonster) {
-      const action = ["hyena-bite", "hyena-hit", "hyena-death"].includes(key) ? "attack" : ["hyena-walk", "hyena-run"].includes(key) ? "move" : "idle";
+      const action = key === "hyena-death" ? "death" : key === "hyena-hit" ? "hurt" : key === "hyena-bite" ? "attack" : key === "hyena-run" ? "run" : key === "hyena-walk" ? "move" : "idle";
       const animationKey = "studio-monster-" + monster.studioMonster.id + "-" + action;
       if (action === "attack" && !force && monster.hitAnimUntil > this.time.now) return;
       if (this.anims.exists(animationKey)) {
@@ -4402,7 +4449,7 @@ export default class BattleScene extends Scene {
         if (this.anims.exists(idleKey)) hyenaSprite.play(idleKey);
         hyenaSprite.on("animationcomplete", (animation) => {
           if (!monsterRecord || !monsterRecord.alive) return;
-          if (animation.key === "studio-monster-" + studioMonster.id + "-attack") this.playHyenaAnimation(monsterRecord, "hyena-idle", true);
+          if (animation.key === "studio-monster-" + studioMonster.id + "-attack" || animation.key === "studio-monster-" + studioMonster.id + "-hurt") this.playHyenaAnimation(monsterRecord, "hyena-idle", true);
         });
       } else {
         hyenaSprite.play("hyena-idle");
@@ -5155,7 +5202,7 @@ export default class BattleScene extends Scene {
     const reaction = getMonsterReactionProfile(monster.kind);
     if (sprite?.active || monster.studioRig?.root?.active) {
       monster.hitAnimUntil = this.time.now + reaction.hitDurationMs;
-      this.playHyenaAnimation(monster, monster.studioRig ? "hyena-hit" : "hyena-idle", true);
+      this.playHyenaAnimation(monster, (monster.studioRig || monster.studioMonster) ? "hyena-hit" : "hyena-idle", true);
 
       if (sprite?.active) {
         if (monster.hitGlowEffect && sprite.postFX?.remove) {
@@ -5290,6 +5337,16 @@ export default class BattleScene extends Scene {
     // Brief warm-red pulse on the plant artwork each time the hyena bites.
     // Only image children support tint; fallback vector art still gets a pulse.
     const artwork = (plant.view.list || []).filter((child) => child?.active);
+    const studioPlantId = plant.view.getData?.("studioPlantId");
+    const studioSprite = artwork.find((child) => child.getData?.("studioPlantSprite"));
+    const hurtAnimation = studioPlantId ? "studio-" + studioPlantId + "-hurt" : null;
+    if (studioSprite?.active && hurtAnimation && this.anims.exists(hurtAnimation)) {
+      studioSprite.play(hurtAnimation);
+      studioSprite.once("animationcomplete", () => {
+        const idleAnimation = "studio-" + studioPlantId + "-idle";
+        if (plant.alive && studioSprite.active && this.anims.exists(idleAnimation)) studioSprite.play(idleAnimation);
+      });
+    }
     for (const child of artwork) {
       if (typeof child.setTint === "function") {
         child.setTint(0xff7777);
@@ -5323,7 +5380,14 @@ export default class BattleScene extends Scene {
 
   destroyPlant(plant) {
     if (!plant.alive) return;
-    plant.alive = false; plant.view.destroy();
+    const studioPlantId = plant.view?.getData?.("studioPlantId");
+    const studioSprite = (plant.view?.list || []).find((child) => child?.active && child.getData?.("studioPlantSprite"));
+    const deathAnimation = studioPlantId ? "studio-" + studioPlantId + "-death" : null;
+    plant.alive = false;
+    if (studioSprite?.active && deathAnimation && this.anims.exists(deathAnimation)) {
+      studioSprite.play(deathAnimation);
+      studioSprite.once("animationcomplete", () => { if (plant.view?.active) plant.view.destroy(); });
+    } else if (plant.view?.active) plant.view.destroy();
     if (plant.energyCounter) plant.energyCounter.destroy();
     const defeatedMessages = {
       mushroom: "An energy mushroom has been eaten!",
