@@ -20,6 +20,7 @@ export async function POST(req, context) {
   const dir = path.join(ROOT, jobId);
   let job;
   try { job = JSON.parse(await readFile(path.join(dir, "job.json"), "utf8")); } catch { return NextResponse.json({ error: "المهمة غير موجودة." }, { status: 404 }); }
+  if (job.provider?.providerJobId && ["queued", "running", "generating"].includes(job.provider.status)) return NextResponse.json({ error: "هناك مهمة توليد نشطة بالفعل. زامنها أو انتظر انتهائها." }, { status: 409 });
   const image = await readFile(path.join(dir, job.source.path));
   const motions = job.selectedMotionIds.map((id) => job.motions[id]).filter(Boolean);
   if (!motions.length) return NextResponse.json({ error: "لا توجد حركات مختارة." }, { status: 409 });
