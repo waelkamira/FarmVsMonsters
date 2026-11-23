@@ -1,4 +1,5 @@
 import { Scene, Input, Math as PhaserMath } from "phaser";
+import { layoutBattleHudButtons } from "./BattleHudButtons.js";
 import { translate } from "../../app/LocaleProvider";
 import { PhaserAssetManager } from "../services/assetManager.mjs";
 import { VFXManager } from "../vfx/VFXManager.mjs";
@@ -550,6 +551,7 @@ export default class BattleScene extends Scene {
     this.createCollectionMenuControl();
     this.createInventoryControl();
     this.createQuickCollectionButtons();
+    layoutBattleHudButtons(this);
     this.createCaveman();
     this.bindInput();
     this.events.once("shutdown", () => {
@@ -1777,8 +1779,10 @@ export default class BattleScene extends Scene {
         pointer.x <= this.audioMenuBounds.right &&
         pointer.y >= this.audioMenuBounds.top &&
         pointer.y <= this.audioMenuBounds.bottom;
-      const inButton = pointer.x >= 1080 && pointer.x <= 1120 &&
-        pointer.y >= 7 && pointer.y <= 47;
+      const buttonBounds = this.audioButtonBounds;
+      const inButton = buttonBounds && pointer.x >= buttonBounds.left &&
+        pointer.x <= buttonBounds.right && pointer.y >= buttonBounds.top &&
+        pointer.y <= buttonBounds.bottom;
       if (!inMenu && !inButton) {
         // The same outside click must only dismiss the menu; it must not
         // also trigger planting or another battlefield action.
@@ -1816,7 +1820,7 @@ export default class BattleScene extends Scene {
         this.resumeGameAudio();
       }
     };
-    const setFromPointer = (pointer) => setValue((pointer.x - (990 - 61)) / 1.32);
+    const setFromPointer = (pointer) => setValue((pointer.x - (this.audioMenu.x - 61)) / 1.32);
     track.on("pointerdown", (pointer) => {
       this.activeAudioSlider = setFromPointer;
       setFromPointer(pointer);
