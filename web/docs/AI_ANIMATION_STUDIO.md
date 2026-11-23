@@ -29,13 +29,13 @@ This is build workspace data, not an approved runtime asset location. Keep it ig
 
 ## Video worker connection
 
-The existing local AI worker at `web/local-ai-worker/worker.py` is a SAM 2 segmentation worker. It does not generate videos. The Wan integration therefore uses the separate protocol in `web/local-ai-worker/README-WAN-WORKER.md`.
+The existing local AI worker at `web/local-ai-worker/worker.py` is a SAM 2 segmentation worker. The separate Wan 2.1 VACE 1.3B GPU worker is implemented in `web/wan-worker/worker.py`; Colab T4 setup and a temporary authenticated Cloudflare tunnel are documented in `web/wan-worker/README.md`. The HTTP contract is documented in `web/local-ai-worker/README-WAN-WORKER.md`.
 
 Configure server-side only:
 
 - `FVM_WAN_WORKER_URL`
 - `FVM_WAN_WORKER_TOKEN`
-- `FVM_PYTHON_BIN` (optional; defaults to `python` on Windows and `python3` elsewhere)
+- `FVM_PYTHON_BIN` (optional; defaults to `python` on Windows and `python3` elsewhere)\n- `STUDIO_GITHUB_TOKEN` and `STUDIO_GITHUB_BRANCH` (needed only when publishing approved PNG/JSON packages to GitHub; default branch is `studio/assets`).
 
 The video worker must implement `POST /v1/generate` and `GET /v1/jobs/{providerJobId}`, and serve completed MP4/WebM files from same-origin `downloadPath` values. Do not point this setting at the SAM 2 worker.
 
