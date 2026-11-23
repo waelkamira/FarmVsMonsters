@@ -37,5 +37,7 @@ jobs:
         run: npx eslint game/scenes/BattleScene.js app/studio/ProjectileTrajectoryEditor.jsx app/studio/RigEditor.jsx app/studio/page.js
       - name: Verify battle HUD layout regression tests
         run: node --test --test-name-pattern="battle HUD controls use one evenly spaced|uploaded wood frame is loaded" tests/wood-frame-inventory.test.mjs
+      - name: Verify Studio viewport and projectile profile regressions
+        run: node --test tests/studio-ui-layout.test.mjs tests/studio-plant-projectile-profile.test.mjs
       - name: Build production application
         run: npm run build
