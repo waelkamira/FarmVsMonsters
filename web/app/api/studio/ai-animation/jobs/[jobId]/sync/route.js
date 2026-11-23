@@ -26,7 +26,7 @@ export async function POST(req, context) {
     const data = await statusResponse.json().catch(() => ({}));
     if (!statusResponse.ok) return NextResponse.json({ error: data.error || "تعذر قراءة حالة Worker." }, { status: 502 });
     job.provider.status = data.status || "running";
-    if (data.status === "completed" && Array.isArray(data.videos)) {
+    if (Array.isArray(data.videos)) {
       for (const item of data.videos) {
         const motion = job.motions?.[item.motionId];
         if (!motion || !job.selectedMotionIds.includes(item.motionId) || typeof item.downloadPath !== "string" || !item.downloadPath.startsWith("/v1/jobs/")) continue;
