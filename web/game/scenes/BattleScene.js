@@ -544,7 +544,7 @@ export default class BattleScene extends Scene {
     this.createFarmBackground();
     this.drawPlantingGrid();
     this.createHud();
-    createBattleHudButtons(this);
+    createBattleHudButtons(this, translate);
     this.createCaveman();
     this.bindInput();
     this.events.once("shutdown", () => {
