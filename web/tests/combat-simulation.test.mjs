@@ -398,3 +398,23 @@ test("spawn composition stays fixed and validates only campaign-wide spawn indic
   assert.equal(resolveMonsterArchetype(5, 1), "dust-skitter");
   assert.throws(() => resolveMonsterArchetype(1, 30), /INVALID_MONSTER_SPAWN_INDEX/);
 });
+
+
+test("resource Mushrooms never block a monster lane", () => {
+  const radish = { type: "radish", row: 2, alive: true, id: "defender" };
+  const mushroom = { type: "mushroom", row: 2, alive: true, id: "resource" };
+  const result = selectLaneBlocker({
+    plants: [
+      { plant: radish, localX: 15 },
+      { plant: mushroom, localX: 20 }
+    ],
+    row: 2,
+    monsterLocalX: 10
+  });
+  assert.equal(result, radish);
+  assert.equal(selectLaneBlocker({
+    plants: [{ plant: mushroom, localX: 20 }],
+    row: 2,
+    monsterLocalX: 10
+  }), null);
+});
