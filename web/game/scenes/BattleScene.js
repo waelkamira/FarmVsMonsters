@@ -3372,18 +3372,14 @@ export default class BattleScene extends Scene {
         shot.trailTimer = 48;
       }
 
-      // A Radish projectile can damage monsters in its own lane only.
-      let hit = null;
-      let nearestHitDistance = Infinity;
-      for (const monster of this.monsters) {
-        if (!monster?.alive || monster.row !== shot.row ||
-            !Number.isFinite(monster.localX)) continue;
-        const horizontalDistance = Math.abs(monster.localX - shot.localX);
-        const hitRadius = (shot.collisionRadius || PHASE_ONE_PLANTS.radish.projectileCollisionRadius) * (monster.widthScale || 1);
-        if (horizontalDistance > hitRadius || horizontalDistance >= nearestHitDistance) continue;
-        hit = monster;
-        nearestHitDistance = horizontalDistance;
-      }
+      // Projectile collision is resolved by the shared pure kernel so the
+      // live Phaser scene and deterministic tests use identical target rules.
+      const hit = selectProjectileTarget({
+        monsters: this.monsters,
+        row: shot.row,
+        localX: shot.localX,
+        collisionRadius: shot.collisionRadius || PHASE_ONE_PLANTS.radish.projectileCollisionRadius
+      });
 
       if (hit) {
         this.createProjectileImpact(projectileX, projectileY);
