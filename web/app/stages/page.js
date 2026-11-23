@@ -46,11 +46,14 @@ export default function StagesPage() {
   useEffect(() => {
     let active = true;
 
-    try {
-      setUnlockedStage(loadUnlockedStage(window.localStorage));
-    } catch {
-      setUnlockedStage(1);
-    }
+    queueMicrotask(() => {
+      if (!active) return;
+      try {
+        setUnlockedStage(loadUnlockedStage(window.localStorage));
+      } catch {
+        setUnlockedStage(1);
+      }
+    });
 
     async function restoreAccountProgress() {
       try {
