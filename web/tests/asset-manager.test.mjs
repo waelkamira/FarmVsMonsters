@@ -255,3 +255,52 @@ test("reference-counts audio cache entries and removes them after the final rele
   firstManager.destroy();
   secondManager.destroy();
 });
+
+
+test("rechecks the cache after waiting for a legacy Phaser loader batch", async () => {
+  const scene = createScene();
+  scene.load.isLoading = () => true;
+  const manager = new PhaserAssetManager(scene, {
+    manifest: {
+      groups: {
+        legacy: [{ key: "legacy-preloaded", url: "/assets/legacy.png", type: "image" }]
+      }
+    }
+  });
+
+  const pendingLoad = manager.loadGroup("legacy");
+  await new Promise((resolve) => setImmediate(resolve));
+
+  // Simulate BattleScene.preload completing this key while the manager waits.
+  scene.textures.keys.add("legacy-preloaded");
+  scene.load.isLoading = () => false;
+  scene.load.emit("complete");
+
+  const result = await pendingLoad;
+  assert.deepEqual(result, { group: "legacy", loaded: 0, skipped: 1 });
+  assert.equal(scene.load.startCount, 0);
+  manager.releaseGroup("legacy");
+  assert.equal(scene.textures.exists("legacy-preloaded"), true);
+  manager.destroy();
+});
+
+test("does not roll back an externally loaded asset when destroyed while waiting", async () => {
+  const scene = createScene();
+  scene.load.isLoading = () => true;
+  const manager = new PhaserAssetManager(scene, {
+    manifest: {
+      groups: {
+        legacy: [{ key: "legacy-preloaded", url: "/assets/legacy.png", type: "image" }]
+      }
+    }
+  });
+
+  const pendingLoad = manager.loadGroup("legacy");
+  await new Promise((resolve) => setImmediate(resolve));
+  scene.textures.keys.add("legacy-preloaded");
+
+  manager.destroy();
+  await assert.rejects(pendingLoad, /Asset manager has been destroyed/);
+  assert.equal(scene.textures.exists("legacy-preloaded"), true);
+  assert.equal(manager.getStats().referencedAssets, 0);
+});
