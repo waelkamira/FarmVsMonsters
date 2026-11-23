@@ -200,6 +200,11 @@ export default class BattleScene extends Scene {
           if (!entry || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(entry.id || "") ||
               typeof entry.path !== "string" || !(entry.path.startsWith("/assets/") || entry.path.startsWith("/api/studio/assets?preview="))) continue;
           this.load.image("studio-plant-" + variant + "-" + entry.id, entry.path);
+          for (const [motionId, atlas] of Object.entries(entry.motionAtlases || {})) {
+            if (motionId === "idle" || !["walk", "run", "fly", "attack", "hurt", "death"].includes(motionId)) continue;
+            if (typeof atlas?.path !== "string" || !(atlas.path.startsWith("/assets/") || atlas.path.startsWith("/api/studio/assets?preview="))) continue;
+            this.load.image("studio-plant-motion-" + variant + "-" + entry.id + "-" + motionId, atlas.path);
+          }
           queueRigPartTextures(entry, variant);
           if (entry.combat?.mode === "projectile" && entry.combat.projectile?.path && (entry.combat.projectile.path.startsWith("/assets/") || entry.combat.projectile.path.startsWith("/api/studio/assets?preview="))) {
             this.load.image("studio-projectile-" + variant + "-" + entry.id, entry.combat.projectile.path);
@@ -215,6 +220,11 @@ export default class BattleScene extends Scene {
           if (!entry || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(entry.id || "") ||
               typeof entry.path !== "string" || !(entry.path.startsWith("/assets/") || entry.path.startsWith("/api/studio/assets?preview="))) continue;
           this.load.image("studio-monster-" + variant + "-" + entry.id, entry.path);
+          for (const [motionId, atlas] of Object.entries(entry.motionAtlases || {})) {
+            if (motionId === "idle" || !["walk", "run", "fly", "attack", "hurt", "death"].includes(motionId)) continue;
+            if (typeof atlas?.path !== "string" || !(atlas.path.startsWith("/assets/") || atlas.path.startsWith("/api/studio/assets?preview="))) continue;
+            this.load.image("studio-monster-motion-" + variant + "-" + entry.id + "-" + motionId, atlas.path);
+          }
           queueRigPartTextures(entry, variant);
         }
       });
@@ -302,6 +312,7 @@ export default class BattleScene extends Scene {
           ["attack", plant.animationProfile.attack]
         ];
         for (const [clipName, clip] of clips) {
+          if (plant.motionAtlases?.[clipName]) continue;
           if (clip.endFrame <= clip.startFrame) continue;
           const animationKey = "studio-" + plant.id + "-" + clipName;
           if (!this.anims.exists(animationKey)) {
@@ -312,6 +323,23 @@ export default class BattleScene extends Scene {
               repeat: clip.loop ? -1 : 0
             });
           }
+        }
+      }
+      for (const [motionId, atlas] of Object.entries(plant.motionAtlases || {})) {
+        if (!["idle", "walk", "run", "fly", "attack", "hurt", "death"].includes(motionId)) continue;
+        const motionTextureKey = motionId === "idle"
+          ? textureKey
+          : "studio-plant-motion-" + (plant.testOnly ? "testing" : "published") + "-" + plant.id + "-" + motionId;
+        const motionFrameCount = Math.max(1, Number(atlas.frameCount) || (Number(atlas.rows || 1) * Number(atlas.columns || 1)));
+        if (!this.textures.exists(motionTextureKey) || !this.registerStudioGridSheet(motionTextureKey, atlas.rows || 1, atlas.columns || 1)) continue;
+        const animationKey = "studio-" + plant.id + "-" + motionId;
+        if (!this.anims.exists(animationKey)) {
+          this.anims.create({
+            key: animationKey,
+            frames: this.anims.generateFrameNumbers(motionTextureKey, { start: 0, end: motionFrameCount - 1 }),
+            frameRate: Number(atlas.fps) || 12,
+            repeat: atlas.loop ? -1 : 0
+          });
         }
       }
     }
