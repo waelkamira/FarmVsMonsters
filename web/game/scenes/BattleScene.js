@@ -1145,7 +1145,7 @@ export default class BattleScene extends Scene {
 
     const namePlate = this.add.rectangle(0, -34, 64, 15, 0x355d2b, 0.96)
       .setStrokeStyle(1, 0xe4c16e, 0.95);
-    const nameLabel = this.add.text(0, -34, String(title || type).replace(/\\s+/g, " ").slice(0, 15), {
+    const nameLabel = this.add.text(0, -34, String(title || type).replace(/\s+/g, " ").slice(0, 15), {
       fontFamily: "Arial", fontSize: "8px", color: "#fff7d8", fontStyle: "bold",
       stroke: "#243d1d", strokeThickness: 2, resolution: 2,
       align: "center"
