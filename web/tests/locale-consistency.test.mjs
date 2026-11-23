@@ -28,6 +28,6 @@ test("Radish planting cost stays aligned across combat rules and player instruct
   assert.equal(PHASE_ONE_PLANTS.radish.plantingEnergyCost, 35);
   assert.equal(STAGE_ONE_PLANTS.find((plant) => plant.id === "radish")?.energyCost, 35);
   assert.match(localeProvider, /Radish card \(35 energy\)/);
-  assert.match(localeProvider, /بطاقة الفجل \\(٣٥ طاقة\\)/);
+  assert.match(localeProvider, /بطاقة الفجل \(٣٥ طاقة\)/);
   assert.match(howToPlay, /Radish card \\(35 energy\\)/);
 });
