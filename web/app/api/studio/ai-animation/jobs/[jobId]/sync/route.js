@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { verifyStudioSession } from "../../../../../../../../game/studio/signedSession.mjs";
-import { safeAiJobId } from "../../../../../../../../game/studio/aiAnimationPipeline.mjs";
+import { verifyStudioSession } from "../../../../../../../game/studio/signedSession.mjs";
+import { safeAiJobId } from "../../../../../../../game/studio/aiAnimationPipeline.mjs";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 const COOKIE = "fvm_studio_session";
