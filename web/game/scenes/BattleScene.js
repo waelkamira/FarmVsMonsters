@@ -2512,8 +2512,8 @@ export default class BattleScene extends Scene {
     this.gameSpeed = 1;
     const button = this.add.container(992, 27).setDepth(52);
     const artwork = this.textures.exists("hud-speed-button")
-      ? this.add.image(0, 0, "hud-speed-button").setDisplaySize(42, 42)
-      : this.add.circle(0, 0, 19, 0xe6c58c, 1).setStrokeStyle(3, 0x4a2d18, 1);
+      ? this.add.image(0, 0, "hud-speed-button").setDisplaySize(34, 34)
+      : this.add.circle(0, 0, 16, 0x9b6b39, 1).setStrokeStyle(2.5, 0xe6c58c, 1);
     const speedLabel = this.add.text(0, 21, "1×", {
       fontFamily: "Arial", fontSize: "9px", color: "#fff4c8", fontStyle: "bold",
       stroke: "#392719", strokeThickness: 2
