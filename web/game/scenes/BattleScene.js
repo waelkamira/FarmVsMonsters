@@ -5337,6 +5337,16 @@ export default class BattleScene extends Scene {
     // Brief warm-red pulse on the plant artwork each time the hyena bites.
     // Only image children support tint; fallback vector art still gets a pulse.
     const artwork = (plant.view.list || []).filter((child) => child?.active);
+    const studioPlantId = plant.view.getData?.("studioPlantId");
+    const studioSprite = artwork.find((child) => child.getData?.("studioPlantSprite"));
+    const hurtAnimation = studioPlantId ? "studio-" + studioPlantId + "-hurt" : null;
+    if (studioSprite?.active && hurtAnimation && this.anims.exists(hurtAnimation)) {
+      studioSprite.play(hurtAnimation);
+      studioSprite.once("animationcomplete", () => {
+        const idleAnimation = "studio-" + studioPlantId + "-idle";
+        if (plant.alive && studioSprite.active && this.anims.exists(idleAnimation)) studioSprite.play(idleAnimation);
+      });
+    }
     for (const child of artwork) {
       if (typeof child.setTint === "function") {
         child.setTint(0xff7777);
@@ -5370,7 +5380,14 @@ export default class BattleScene extends Scene {
 
   destroyPlant(plant) {
     if (!plant.alive) return;
-    plant.alive = false; plant.view.destroy();
+    const studioPlantId = plant.view?.getData?.("studioPlantId");
+    const studioSprite = (plant.view?.list || []).find((child) => child?.active && child.getData?.("studioPlantSprite"));
+    const deathAnimation = studioPlantId ? "studio-" + studioPlantId + "-death" : null;
+    plant.alive = false;
+    if (studioSprite?.active && deathAnimation && this.anims.exists(deathAnimation)) {
+      studioSprite.play(deathAnimation);
+      studioSprite.once("animationcomplete", () => { if (plant.view?.active) plant.view.destroy(); });
+    } else if (plant.view?.active) plant.view.destroy();
     if (plant.energyCounter) plant.energyCounter.destroy();
     const defeatedMessages = {
       mushroom: "An energy mushroom has been eaten!",
