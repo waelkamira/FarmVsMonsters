@@ -1572,3 +1572,6 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - Updated Phaser BattleScene to load named-frame Atlas textures for Studio plants and monsters and register animations from their frame-name groups.
 - Added focused Atlas parser, upload-flow, BattleScene loading, and asset-version regression tests.
 - Validation is running on the current branch. No browser upload or live BattleScene playtest has been claimed yet; no merge to `main` is authorized.
+
+- Focused Phaser Atlas validation completed successfully on `876ace4756f260b261d628cbca3264ff7180ab02`: Atlas parser/import/version tests, ESLint on changed Studio/runtime modules, and production build all passed. The focused test includes the real Corn Monster PNG+JSON pair and confirms its 24 frames and idle/attack/hurt groups.
+- The broader existing Phase 1/full-suite workflows still fail on 12–18 unrelated legacy source-contract assertions (for example Electric Mushroom source-pattern checks, old wave-timer assumptions, and campaign/UI expectations). These are outside the Atlas/import changes; they were not bypassed. The PR remains unmerged.
