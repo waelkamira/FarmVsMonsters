@@ -77,7 +77,8 @@ export async function POST(req, context) {
     for (const motion of motions) {
       for (const [relative, filename, contentType] of [
         [motion.outputPath, motion.id + ".png", "image/png"],
-        [motion.atlasJsonPath, motion.id + ".json", "application/json"],\n        ...(motion.validationPath ? [[motion.validationPath, motion.id + "-validation.json", "application/json"]] : [])
+        [motion.atlasJsonPath, motion.id + ".json", "application/json"],
+        ...(motion.validationPath ? [[motion.validationPath, motion.id + "-validation.json", "application/json"]] : [])
       ]) {
         const bytes = await readFile(path.join(dir, relative));
         if (bytes.length > 8 * 1024 * 1024) throw new Error("الملف " + filename + " يتجاوز حد 8 MB.");
