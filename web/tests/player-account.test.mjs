@@ -54,7 +54,9 @@ test("local saves remain active and client balances are never uploaded to cloud"
   assert.match(client, /progress_verified !== true/);
   assert.match(client, /cloud-progress-unverified/);
   assert.match(client, /coins_verified === true/);
-  assert.match(client, /Do not initialize a cloud row from browser-controlled local values/);
+  assert.match(client, /if \(!cloud \|\| cloud\.progress_verified !== true\)/);
+  assert.match(client, /progress: local/);
+  assert.match(client, /reason: cloud \? "cloud-progress-unverified"/);
   assert.match(client, /coins_verified === true/);
   assert.doesNotMatch(client, /saveCloudProgress/);
   assert.doesNotMatch(battle, /syncPlayerProgress/);
@@ -64,7 +66,8 @@ test("menus and account controls use high-contrast text and visible focus states
   assert.match(styles, /--text-primary:\s*#fff9e9/i);
   assert.match(styles, /\.account-form input:focus/);
   assert.match(styles, /\.stage-lock-label[\s\S]*?background:#17100b/);
-  assert.match(battle, /strokeThickness: 4, resolution: 2/);
+  assert.match(battle, /stroke: "#17213d", strokeThickness: 3/);
+  assert.match(battle, /setInteractive\(\{ useHandCursor: true \}\)/);
 });
 
 
