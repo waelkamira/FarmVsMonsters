@@ -12,13 +12,24 @@ export default function SettingsPage() {
   const [values, setValues] = useState({ musicVolume: 70, effectsVolume: 80, projectileVolume: 65 });
   const [ready, setReady] = useState(false);
   useEffect(() => {
+    let active = true;
     const next = {};
     controls.forEach(({ key, initial }) => {
-      const raw = window.localStorage.getItem("farmVsMonsters.audio." + key);
+      let raw = null;
+      try {
+        raw = window.localStorage.getItem("farmVsMonsters.audio." + key);
+      } catch {
+        raw = null;
+      }
       const stored = Number(raw);
       next[key] = raw !== null && Number.isFinite(stored) ? Math.max(0, Math.min(100, stored)) : initial;
     });
-    setValues(next); setReady(true);
+    queueMicrotask(() => {
+      if (!active) return;
+      setValues(next);
+      setReady(true);
+    });
+    return () => { active = false; };
   }, []);
   function changeVolume(key, value) {
     const volume = Number(value);
