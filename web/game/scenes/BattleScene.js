@@ -1052,46 +1052,25 @@ export default class BattleScene extends Scene {
     const packetStartX = 164;
     const packetGap = selectedTypes.length > 7 ? 78 : 90;
     const packetSlotCount = Math.max(9, selectedTypes.length);
-    // Fill unused seed slots with previews of implemented plants that are
-    // not in the current loadout. Their artwork is intentionally dimmed and
-    // non-interactive so the player can see upcoming choices without selecting them.
+    // Keep every packet on the same visual system. Inactive Studio plants are
+    // previews only, but use the same frame, title plate and energy badge.
     const inactivePlants = plantOptions.filter((plant) =>
       !selectedTypes.includes(plant.type) && plant.type !== "mushroom"
     );
     const inactiveSlots = Math.max(0, packetSlotCount - selectedTypes.length);
-    const cardSource = this.textures.exists("seed-card")
-      ? this.textures.get("seed-card").getSourceImage()
-      : null;
-    const cardScale = cardSource ? Math.min(88 / cardSource.width, 101.2 / cardSource.height) : 1;
     inactivePlants.slice(0, inactiveSlots).forEach((plant, index) => {
-      const x = packetStartX + (selectedTypes.length + index) * packetGap;
-      const preview = this.add.container(x, 72).setDepth(45);
-      if (cardSource) {
-        preview.add(this.add.image(0, 0, "seed-card")
-          .setDisplaySize(cardSource.width * cardScale * 0.8, cardSource.height * cardScale * 0.8));
-      }
-      if (this.textures.exists(plant.image)) {
-        const texture = this.textures.get(plant.image);
-        const isSheet = ["pineapple-level-1", "hazelnut-level-1", "mango-level-1", "snow-thrower-level-1", "radish-level-1", "electric-mushroom-level-1"].includes(plant.image) || Boolean(plant.studioPlant?.spriteSheet);
-        const frame = isSheet ? texture.get("0") : texture.get();
-        // Use the actual frame rectangle and a single bounded scale so a
-        // source sheet's full-image dimensions can never enlarge the preview.
-        const frameWidth = Math.max(1, frame.cutWidth || frame.width || 1);
-        const frameHeight = Math.max(1, frame.cutHeight || frame.height || 1);
-        const thumbnailScale = Math.min(54 / frameWidth, 46 / frameHeight);
-        const thumbnail = isSheet
-          ? this.add.sprite(0, -8, plant.image, "0").setScale(thumbnailScale)
-          : this.add.image(0, -8, plant.image).setScale(thumbnailScale);
-        preview.add(thumbnail);
-        // Keep inactive plant previews recognizable with a lighter dark overlay.
-        preview.add(this.add.rectangle(0, -8, 56, 48, 0x000000, 0.32));
-        // Show the plant's energy cost even while it is not in the active loadout.
-        preview.add(this.add.text(0, 26.4, "🍄" + plant.cost, {
-          fontFamily: "Arial", fontSize: "13px", color: "#fff0bd", fontStyle: "bold",
-          stroke: "#3d2817", strokeThickness: 2, resolution: 2, align: "center"
-        }).setOrigin(0.5).setScale(0.855));
-      }
-      preview.setData("inactivePlantType", plant.type);
+      this.createPlantCard(
+        packetStartX + (selectedTypes.length + index) * packetGap,
+        plant.title,
+        String(plant.cost),
+        plant.type,
+        null,
+        plant.image,
+        72,
+        false,
+        false,
+        true
+      );
     });
     plantOptions.filter((plant) => selectedTypes.includes(plant.type)).forEach((plant, index) => {
       this.plantCardsByType[plant.type] = this.createPlantCard(
