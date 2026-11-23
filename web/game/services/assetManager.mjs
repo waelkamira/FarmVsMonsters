@@ -201,20 +201,28 @@ export class PhaserAssetManager {
           throw new Error(`Spritesheet "${entry.key}" has no frameConfig`);
         }
       }
-      const pending = entries.filter((entry) => !this.hasAsset(entry.key, entry.type));
-      this.metrics.requested += pending.length;
+      const initiallyPending = entries.filter((entry) => !this.hasAsset(entry.key, entry.type));
       const loader = this.scene.load;
+      let loadedByManager = [];
 
-      if (pending.length > 0) {
+      if (initiallyPending.length > 0) {
         try {
           await this.waitForLoaderIdle(loader);
           if (this.destroyed) throw new Error("Asset manager has been destroyed");
-          await this.loadPendingAssets(loader, groupName, pending);
+
+          // A legacy preload or another loader owner may have populated these
+          // cache keys while this request waited for Phaser to become idle.
+          // Recheck before queueing so those resources remain externally owned.
+          loadedByManager = entries.filter((entry) => !this.hasAsset(entry.key, entry.type));
+          this.metrics.requested += loadedByManager.length;
+          if (loadedByManager.length > 0) {
+            await this.loadPendingAssets(loader, groupName, loadedByManager);
+          }
           if (this.destroyed) throw new Error("Asset manager has been destroyed");
         } catch (error) {
-          // Phaser continues after per-file load errors. Roll back successful
-          // siblings so a retry starts from a clean, unowned group.
-          this.rollbackPendingAssets(pending);
+          // Roll back only files this request actually queued. A failed wait
+          // must never remove an asset loaded by a legacy Phaser preload.
+          if (loadedByManager.length > 0) this.rollbackPendingAssets(loadedByManager);
           throw error;
         }
       }
@@ -227,7 +235,7 @@ export class PhaserAssetManager {
             key: entry.key,
             type: entry.type || "image",
             references: 0,
-            owned: pending.some((item) => item.key === entry.key && (item.type || "image") === (entry.type || "image"))
+            owned: loadedByManager.some((item) => item.key === entry.key && (item.type || "image") === (entry.type || "image"))
           };
           this.sharedResources.set(resourceId, resource);
         }
@@ -236,7 +244,7 @@ export class PhaserAssetManager {
       }
       this.groups.set(groupName, { entries, references: 1 });
       if (typeof options.onProgress === "function") options.onProgress(1);
-      return { group: groupName, loaded: pending.length, skipped: entries.length - pending.length };
+      return { group: groupName, loaded: loadedByManager.length, skipped: entries.length - loadedByManager.length };
     });
   }
 
