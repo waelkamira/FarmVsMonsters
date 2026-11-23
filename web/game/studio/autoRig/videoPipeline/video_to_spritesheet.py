@@ -30,8 +30,9 @@ def bbox(image):
 def extract(video, folder, count, info, background, start_seconds, clip_duration):
     rate = count / clip_duration
     filters = [f"fps={rate:.10f}"]
-    if background == "green":
-        filters.append("chromakey=0x00FF00:0.16:0.08")
+    if background in ("green", "blue"):
+        color = "0x0000FF" if background == "blue" else "0x00FF00"
+        filters.append(f"chromakey={color}:0.16:0.08")
     filters.append("format=rgba")
     target = folder / "frame-%04d.png"
     command(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-ss", str(start_seconds),
@@ -102,7 +103,7 @@ def main():
     p.add_argument("--height", type=int, default=150)
     p.add_argument("--columns", type=int, default=6)
     p.add_argument("--margin", type=int, default=4)
-    p.add_argument("--background", choices=["green", "alpha", "none"], default="green")
+    p.add_argument("--background", choices=["blue", "green", "alpha", "none"], default="blue")
     a = p.parse_args()
     if not a.input.is_file():
         raise FileNotFoundError(a.input)
