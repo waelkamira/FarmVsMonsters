@@ -24,7 +24,7 @@ async function putGithubFile(repository, branch, token, target, bytes, message) 
   if (existingResponse.ok) {
     const existing = await existingResponse.json();
     existingSha = existing.sha || null;
-    const normalized = String(existing.content || "").replace(/\\s/g, "");
+    const normalized = String(existing.content || "").replace(/\s/g, "");
     if (normalized && normalized === bytes.toString("base64")) {
       return { path: target, url: existing.html_url || null, sha: existingSha, unchanged: true };
     }
