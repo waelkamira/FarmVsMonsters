@@ -4449,7 +4449,7 @@ export default class BattleScene extends Scene {
         if (this.anims.exists(idleKey)) hyenaSprite.play(idleKey);
         hyenaSprite.on("animationcomplete", (animation) => {
           if (!monsterRecord || !monsterRecord.alive) return;
-          if (animation.key === "studio-monster-" + studioMonster.id + "-attack") this.playHyenaAnimation(monsterRecord, "hyena-idle", true);
+          if (animation.key === "studio-monster-" + studioMonster.id + "-attack" || animation.key === "studio-monster-" + studioMonster.id + "-hurt") this.playHyenaAnimation(monsterRecord, "hyena-idle", true);
         });
       } else {
         hyenaSprite.play("hyena-idle");
