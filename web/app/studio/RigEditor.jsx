@@ -57,6 +57,8 @@ export default function RigEditor({ profile, onChange, assets = [], currentAsset
     try { return evaluateSkeletalClip(rig, clip.id, snapSkeletalKeyframeTime(clip, timeMs)); } catch { return null; }
   }, [rig, clip, timeMs, validation.valid]);
   const bonePose = selectedPose?.localBones?.[selectedBoneId] || bone;
+  // Keep selections valid when a newly loaded rig replaces the current rig.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
     if (!rig.bones.some((item) => item.id === selectedBoneId)) setSelectedBoneId(rig.bones[0]?.id || "root");
     if (!rig.clips.some((item) => item.id === selectedClipId)) setSelectedClipId(rig.clips[0]?.id || "");

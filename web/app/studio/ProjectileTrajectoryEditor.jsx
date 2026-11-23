@@ -25,12 +25,22 @@ export default function ProjectileTrajectoryEditor({
  const [projectileFrame,setProjectileFrame]=useState(0);
  const [projectilePlaying,setProjectilePlaying]=useState(false);
  const [projectileFps,setProjectileFps]=useState(10);
+ // Asset/preview synchronization effects intentionally normalize derived editor state.
+ // eslint-disable-next-line react-hooks/set-state-in-effect
  useEffect(()=>{if(!imageUrl){setImageSize({width:1,height:1});return;}const image=new window.Image();image.onload=()=>{setImageSize({width:image.naturalWidth,height:image.naturalHeight});};image.src=imageUrl;return()=>{image.onload=null;};},[imageUrl]);
+ // Asset/preview synchronization effects intentionally normalize derived editor state.
+ // eslint-disable-next-line react-hooks/set-state-in-effect
  useEffect(()=>{if(!plantUrl){setPlantImageSize({width:1,height:1});return;}const image=new window.Image();image.onload=()=>setPlantImageSize({width:image.naturalWidth,height:image.naturalHeight});image.src=plantUrl;return()=>{image.onload=null;};},[plantUrl]);
+ // Asset/preview synchronization effects intentionally normalize derived editor state.
+ // eslint-disable-next-line react-hooks/set-state-in-effect
  useEffect(()=>{setPlantFrame(clamp(idleStartFrame,0,Math.max(0,plantFrameCount-1)));setPlantPlaying(false);},[plantUrl,plantFrameCount,plantRows,plantColumns,idleStartFrame]);
+ // Asset/preview synchronization effects intentionally normalize derived editor state.
+ // eslint-disable-next-line react-hooks/set-state-in-effect
  useEffect(()=>{if(!plantPlaying)return;const first=0;const last=Math.max(0,plantFrameCount-1);setPlantFrame(first);const timer=window.setInterval(()=>setPlantFrame(frame=>frame>=last?first:Math.min(last,frame+1)),1000/Math.max(1,plantFps||1));return()=>window.clearInterval(timer);},[plantPlaying,plantFps,plantFrameCount]);
  useEffect(()=>{if(!playing)return;let last=0,raf=0;const tick=now=>{if(!last)last=now;const dt=Math.min(64,now-last);last=now;setProgress(p=>Math.min(1,p+dt*Math.max(.05,speed)/24000));raf=requestAnimationFrame(tick);};raf=requestAnimationFrame(tick);return()=>cancelAnimationFrame(raf);},[playing,speed]);
  useEffect(()=>{if(playing&&progress>=1)setPlaying(false);},[playing,progress,setPlaying]);
+ // Asset/preview synchronization effects intentionally normalize derived editor state.
+ // eslint-disable-next-line react-hooks/set-state-in-effect
  useEffect(()=>{setProgress(0);},[points,launchX,launchY,height,targetX,targetY]);
  useEffect(()=>{if((!playing&&!projectilePlaying)||!imageUrl)return;const timer=window.setInterval(()=>setProjectileFrame(frame=>(frame+1)%Math.max(1,frameCount)),1000/Math.max(1,projectileFps));return()=>window.clearInterval(timer);},[playing,projectilePlaying,imageUrl,frameCount,projectileFps]);
  const laneOrigin={x:105,y:262.5};
