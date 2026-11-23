@@ -40,6 +40,14 @@ test("retains projectile tuning values without attaching a projectile to other b
   assert.equal(profile.projectileRotation, 180);
 });
 
+test("accepts and preserves negative projectile rotation", () => {
+  const profile = createStudioPlantCombatProfile({
+    behavior: "melee",
+    projectileRotation: -45
+  });
+  assert.equal(profile.projectileRotation, -45);
+});
+
 test("rejects invalid projectile tuning values", () => {
   assert.throws(
     () => createStudioPlantCombatProfile({ behavior: "melee", projectileSpeed: 59 }),
@@ -55,6 +63,10 @@ test("rejects invalid projectile tuning values", () => {
   );
   assert.throws(
     () => createStudioPlantCombatProfile({ behavior: "melee", projectileRotation: 361 }),
+    /projectileRotation/
+  );
+  assert.throws(
+    () => createStudioPlantCombatProfile({ behavior: "melee", projectileRotation: -361 }),
     /projectileRotation/
   );
 });
