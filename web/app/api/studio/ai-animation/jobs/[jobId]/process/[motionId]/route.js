@@ -45,8 +45,8 @@ export async function POST(req, context) {
   try {
     const command = process.env.FVM_PYTHON_BIN || (process.platform === "win32" ? "python" : "python3");
     const result = await run(command, [SCRIPT, "--input", input, "--output-dir", output, "--name", job.id + "-" + motionId,
-      "--frames", String(motion.frames), "--fps", String(motion.fps), "--width", "150", "--height", "150",
-      "--columns", String(Math.min(6, motion.frames)), "--background", "blue"], process.cwd());
+      "--frames", String(motion.frames), "--fps", String(motion.fps), "--width", String(motion.frameWidth || 150), "--height", String(motion.frameHeight || 150),
+      "--columns", String(Math.min(motion.columns || 6, motion.frames)), "--background", "blue"], process.cwd());
     const validationPath = path.join(output, "validation.json");
     const validation = JSON.parse(await readFile(validationPath, "utf8"));
     motion.outputPath = "export/" + motionId + "/" + job.id + "-" + motionId + ".png";
