@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import Phaser from "phaser";
 
 export default function PhaserSpritePreview({ src, frameWidth = 150, frameHeight = 150, frameCount = 24, fps = 12, loop = true, label = "معاينة Phaser" }) {
   const host = useRef(null);
@@ -10,7 +9,7 @@ export default function PhaserSpritePreview({ src, frameWidth = 150, frameHeight
   useEffect(() => {
     if (!host.current || !src) return undefined;
     let sprite = null;
-    const config = {
+    let game = null;\n    let cancelled = false;\n    import("phaser").then(({ default: Phaser }) => {\n      if (cancelled) return;\n      const config = {
       type: Phaser.CANVAS,
       width: 520,
       height: 300,
