@@ -10,9 +10,13 @@ on:
       - "web/game/studio/phaserAtlas.mjs"
       - "web/game/studio/assetVersions.mjs"
       - "web/game/scenes/BattleScene.js"
+      - "web/game/rules/powerAbility.mjs"
+      - "web/app/studio/studio.css"
       - "web/tests/phaser-atlas-import.test.mjs"
       - "web/tests/studio-phaser-atlas-workflow.test.mjs"
       - "web/tests/studio-asset-versions.test.mjs"
+      - "web/tests/studio-character-audio.test.mjs"
+      - "web/tests/power-ability.test.mjs"
       - ".github/workflows/phaser-atlas-validation.yml"
   pull_request:
     paths:
@@ -47,9 +51,9 @@ jobs:
           cache: npm
           cache-dependency-path: web/package-lock.json
       - run: npm ci
-      - name: Run focused Phaser Atlas and Studio version tests
-        run: node --test tests/phaser-atlas-import.test.mjs tests/studio-phaser-atlas-workflow.test.mjs tests/studio-asset-versions.test.mjs
+      - name: Run Phaser Atlas, character audio, power ability and Studio version tests
+        run: node --test tests/phaser-atlas-import.test.mjs tests/studio-phaser-atlas-workflow.test.mjs tests/studio-asset-versions.test.mjs tests/studio-character-audio.test.mjs tests/power-ability.test.mjs
       - name: Lint changed Studio and runtime modules
-        run: npx eslint app/studio/page.js app/api/studio/assets/route.js game/studio/phaserAtlas.mjs game/studio/assetVersions.mjs game/scenes/BattleScene.js
+        run: npx eslint app/studio/page.js app/api/studio/assets/route.js game/studio/phaserAtlas.mjs game/studio/assetVersions.mjs game/rules/powerAbility.mjs game/scenes/BattleScene.js
       - name: Build production application
         run: npm run build
