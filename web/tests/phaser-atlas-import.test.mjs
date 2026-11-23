@@ -58,3 +58,14 @@ test("checks atlas frame bounds and meta dimensions against the PNG header", () 
   const outside = { frames: { edge: { frame: { x: 590, y: 0, w: 20, h: 10 } } }, meta: { size: { w: 600, h: 150 } } };
   assert.ok(validatePhaserAtlasDocument(outside).errors.some(message => message.includes("يتجاوز حدود")));
 });
+
+test("accepts Phaser JSONHash atlases when the optional meta block is absent", () => {
+  const result = validatePhaserAtlasDocument({
+    frames: {
+      "idle_00": { frame: { x: 0, y: 0, w: 150, h: 150 } },
+      "idle_01": { frame: { x: 150, y: 0, w: 150, h: 150 } }
+    }
+  }, { width: 300, height: 150 });
+  assert.equal(result.valid, true);
+  assert.deepEqual(result.clips, { idle: ["idle_00", "idle_01"] });
+});
