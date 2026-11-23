@@ -1169,6 +1169,8 @@ export default class BattleScene extends Scene {
 
     card.setData("cooldownOverlay", cooldownOverlay);
     card.setData("cooldownLabel", cooldownLabel);
+    panel.setData("cooldownOverlay", cooldownOverlay);
+    panel.setData("cooldownLabel", cooldownLabel);
     card.setData("selectionFrame", selectionFrame);
     card.add([
       shadow, selectionFrame,
