@@ -17,22 +17,22 @@ export function createMotionSettings(motion, overrides = {}) {
   const fps = Number(overrides.fps ?? 12);
   const width = Number(overrides.width ?? 832);
   const height = Number(overrides.height ?? 480);
-  const durationSeconds = Number(overrides.durationSeconds ?? 2);
+  const durationSeconds = Number(overrides.durationSeconds ?? 2);\n  const steps = Number(overrides.steps ?? 20);\n  const guidanceScale = Number(overrides.guidanceScale ?? 5);
   const frameWidth = Number(overrides.frameWidth ?? 150);
   const frameHeight = Number(overrides.frameHeight ?? 150);
   const columns = Math.min(frames, Number(overrides.columns ?? 6));
   if (!Number.isInteger(frames) || frames < 2 || frames > 96) throw new RangeError("Frame count must be between 2 and 96.");
   if (!Number.isInteger(fps) || fps < 1 || fps > 30) throw new RangeError("FPS must be between 1 and 30.");
-  if (!Number.isInteger(width) || width < 64 || width > 1920 || !Number.isInteger(height) || height < 64 || height > 1080) throw new RangeError("Invalid video dimensions.");
+  if (!Number.isInteger(width) || width < 256 || width > 832 || width % 16 !== 0 || !Number.isInteger(height) || height < 256 || height > 480 || height % 16 !== 0) throw new RangeError("Wan VACE dimensions must be multiples of 16 within 256–832 × 256–480.");
   if (!Number.isFinite(durationSeconds) || durationSeconds < 0.5 || durationSeconds > 12) throw new RangeError("Video duration must be between 0.5 and 12 seconds.");
   if (!Number.isInteger(frameWidth) || frameWidth < 32 || frameWidth > 512 || !Number.isInteger(frameHeight) || frameHeight < 32 || frameHeight > 512) throw new RangeError("Sprite frame dimensions must be between 32 and 512 pixels.");
-  if (!Number.isInteger(columns) || columns < 1 || columns > frames) throw new RangeError("Sprite sheet columns must be between 1 and the frame count.");
+  if (!Number.isInteger(columns) || columns < 1 || columns > frames) throw new RangeError("Sprite sheet columns must be between 1 and the frame count.");\n  if (!Number.isInteger(steps) || steps < 8 || steps > 40 || !Number.isFinite(guidanceScale) || guidanceScale < 1 || guidanceScale > 10) throw new RangeError("Wan inference settings are outside the supported range.");
   return {
     id: known.id, label: known.label, english: known.english, loop: known.loop,
     selected: overrides.selected !== false,
     prompt: String(overrides.prompt ?? known.prompt).slice(0, 3000),
     negativePrompt: String(overrides.negativePrompt ?? DEFAULT_NEGATIVE_PROMPT).slice(0, 3000),
-    frames, fps, width, height, durationSeconds, frameWidth, frameHeight, columns,
+    frames, fps, width, height, durationSeconds, frameWidth, frameHeight, columns, steps, guidanceScale,
     seed: Number.isInteger(overrides.seed) && overrides.seed >= 0 ? overrides.seed : null,
     status: "selected",
     videoPath: null, videoApprovedAt: null, spriteStatus: "not_started",
