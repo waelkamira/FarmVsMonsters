@@ -1092,57 +1092,124 @@ export default class BattleScene extends Scene {
     }).setOrigin(0.5, 1).setDepth(42);
   }
 
-  createPlantCard(x, title, costLabel, type, drawIcon, imageKey = null, y = 619, locked = false) {
+  createPlantCard(
+    x, title, costLabel, type, drawIcon, imageKey = null, y = 619,
+    locked = false, interactive = true, inactive = false
+  ) {
     const card = this.add.container(x, y).setDepth(45);
-    const cardArtworkKey = locked && this.textures.exists("seed-card-locked") ? "seed-card-locked" : "seed-card";
+    const selected = this.selectedPlant === type && !inactive && !locked;
+    const shadow = this.add.rectangle(2, 3, 82, 96, 0x24170d, 0.34);
+    const selectionFrame = this.add.rectangle(
+      0, 0, 82, 96,
+      selected ? 0x8fcf4c : 0x5b3c20,
+      selected ? 0.22 : 0.08
+    ).setStrokeStyle(selected ? 3 : 1.5, selected ? 0xffd76a : 0x9b7040, 0.95);
+
+    const cardArtworkKey = locked && this.textures.exists("seed-card-locked")
+      ? "seed-card-locked"
+      : "seed-card";
     let seedFrame = null;
     if (this.textures.exists(cardArtworkKey)) {
       const source = this.textures.get(cardArtworkKey).getSourceImage();
       const scale = Math.min(88 / source.width, 101.2 / source.height);
-      seedFrame = this.add.image(0, 0, cardArtworkKey).setDisplaySize(source.width * scale * 0.8, source.height * scale * 0.8);
+      seedFrame = this.add.image(0, 0, cardArtworkKey)
+        .setDisplaySize(source.width * scale * 0.86, source.height * scale * 0.86);
     }
-    const plantHeight = 46;
+
     let icon;
     let iconScale = 1;
     if (imageKey && this.textures.exists(imageKey)) {
-      const gridSheet = imageKey === "mango-level-1" || imageKey === "radish-level-1" || imageKey === "snow-thrower-level-1" || imageKey === "electric-mushroom-level-1" || Boolean(this.studioPlantsByType?.[type]?.spriteSheet);
-      const frame = this.textures.getFrame(imageKey, gridSheet ? "0" : undefined);
-      // Bound every seed icon by both dimensions using its frame rectangle.
+      const texture = this.textures.get(imageKey);
+      const studioPlant = this.studioPlantsByType?.[type]
+        || this.studioPlants?.find((plant) => plant.id === type);
+      const frameZeroExists = Boolean(texture.frames?.["0"]);
+      const isSpriteSheet = frameZeroExists && (
+        ["pineapple-level-1", "hazelnut-level-1", "mango-level-1",
+          "snow-thrower-level-1", "radish-level-1", "electric-mushroom-level-1"].includes(imageKey)
+        || Boolean(studioPlant?.spriteSheet)
+        || Number(texture.frameTotal) > 1
+      );
+      const frameName = isSpriteSheet ? "0" : undefined;
+      const frame = isSpriteSheet ? texture.get("0") : texture.get();
       const frameWidth = Math.max(1, frame.cutWidth || frame.width || 1);
       const frameHeight = Math.max(1, frame.cutHeight || frame.height || 1);
-      iconScale = Math.min(54 / frameWidth, plantHeight / frameHeight);
-      icon = gridSheet
-        ? this.add.sprite(0, -8, imageKey, "0").setScale(iconScale)
-        : this.add.image(0, -8, imageKey).setScale(iconScale);
+      iconScale = Math.min(52 / frameWidth, 49 / frameHeight);
+      icon = isSpriteSheet
+        ? this.add.sprite(0, -5, imageKey, frameName)
+        : this.add.image(0, -5, imageKey);
+      icon.setScale(iconScale);
     } else {
       icon = this.add.graphics();
       if (drawIcon) drawIcon(icon);
     }
-    // Preserve the frame-fit scale; applying 0.95 as an absolute scale here
-    // would enlarge 341–418px source frames to nearly their original size.
-    icon.setScale(iconScale * 0.95 * 0.95);
-    const cost = this.add.text(0, 26.4, locked ? "🔒" : "🍄" + costLabel, {
-      fontFamily: "Arial", fontSize: "13px", color: "#fff0bd", fontStyle: "bold",
-      stroke: "#3d2817", strokeThickness: 2, resolution: 2, align: "center"
-    }).setOrigin(0.5).setScale(0.855);
-    const cooldownOverlay = this.add.rectangle(0, -1, 64, 72, 0x1a160f, 0.72).setVisible(false);
-    const cooldownLabel = this.add.text(0, -1, "", { fontFamily: "Arial", fontSize: "20px", color: "#fff4d6", fontStyle: "bold", stroke: "#382312", strokeThickness: 4, resolution: 2 }).setOrigin(0.5).setVisible(false);
-    card.setData("cooldownOverlay", cooldownOverlay); card.setData("cooldownLabel", cooldownLabel);
-    const panel = this.add.rectangle(0, 0, 80, 92, 0xffffff, 0).setInteractive({ useHandCursor: true });
-    panel.setData("cooldownOverlay", cooldownOverlay); panel.setData("cooldownLabel", cooldownLabel);
-    card.add([...(seedFrame ? [seedFrame] : []), panel, icon, cost, cooldownOverlay, cooldownLabel]);
-    if (locked) card.setAlpha(0.78);
-    panel.on("pointerover", () => { card.setScale(1.04); });
-    panel.on("pointerout", () => { card.setScale(1); });
-    panel.on("pointerdown", () => {
-      if (this.gameOver) return;
-      if (locked) { this.setMessage(title + " is coming soon. Its combat ability is not ready yet."); return; }
-      if (this.getSeedPacketCooldownRemaining(type) > 0) { this.setMessage("This seed packet is recharging. Wait for it to recover."); return; }
-      this.selectedPlant = type;
-      Object.entries(this.plantCardsByType || {}).forEach(([plantType, plantCard]) => plantCard.setAlpha(plantType === type ? 1 : 0.9));
-      const hints = { radish: "Radish Level 1 chosen. Launches miniature radish bombs down its lane.", mushroom: "Mushroom chosen. Collect its energy when it appears.", pumpkin: "Pumpkin chosen. A durable lane blocker.", hazelnut: "Hazelnut chosen. Fires hazelnut bombs in its lane.", mango: "Mango chosen. Launches a curved mango bomb onto monsters in its lane.", "snow-thrower": "Snow Thrower chosen. Freezes the first monster hit for 2.6 seconds.", "electric-mushroom": "Electric Mushroom chosen. Fires cyan electric bolts down its lane." };
-      this.setMessage(hints[type] || "Plant chosen."); this.refreshHud();
-    });
+
+    const namePlate = this.add.rectangle(0, -34, 64, 15, 0x355d2b, 0.96)
+      .setStrokeStyle(1, 0xe4c16e, 0.95);
+    const nameLabel = this.add.text(0, -34, String(title || type).replace(/\\s+/g, " ").slice(0, 15), {
+      fontFamily: "Arial", fontSize: "8px", color: "#fff7d8", fontStyle: "bold",
+      stroke: "#243d1d", strokeThickness: 2, resolution: 2,
+      align: "center"
+    }).setOrigin(0.5).setScale(0.95);
+
+    const costPlate = this.add.rectangle(0, 31, 54, 17, 0x4b6f2c, 0.98)
+      .setStrokeStyle(1.5, 0xf0cc75, 1);
+    const cost = this.add.text(0, 31, locked ? "🔒" : "🍄 " + costLabel, {
+      fontFamily: "Arial", fontSize: "11px", color: "#fff3c5", fontStyle: "bold",
+      stroke: "#2e421e", strokeThickness: 2, resolution: 2, align: "center"
+    }).setOrigin(0.5);
+
+    const panel = this.add.rectangle(0, 0, 82, 96, 0xffffff, 0);
+    if (interactive && !locked && !inactive) panel.setInteractive({ useHandCursor: true });
+
+    const cooldownOverlay = this.add.rectangle(0, 0, 70, 82, 0x1a160f, 0.76).setVisible(false);
+    const cooldownLabel = this.add.text(0, 0, "", {
+      fontFamily: "Arial", fontSize: "20px", color: "#fff4d6", fontStyle: "bold",
+      stroke: "#382312", strokeThickness: 4, resolution: 2
+    }).setOrigin(0.5).setVisible(false);
+
+    card.setData("cooldownOverlay", cooldownOverlay);
+    card.setData("cooldownLabel", cooldownLabel);
+    card.setData("selectionFrame", selectionFrame);
+    card.add([
+      shadow, selectionFrame,
+      ...(seedFrame ? [seedFrame] : []),
+      panel, icon, namePlate, nameLabel, costPlate, cost,
+      cooldownOverlay, cooldownLabel
+    ]);
+
+    if (locked || inactive) card.setAlpha(inactive ? 0.72 : 0.82);
+    if (interactive && !locked && !inactive) {
+      panel.on("pointerover", () => { card.setScale(1.045); });
+      panel.on("pointerout", () => { card.setScale(1); });
+      panel.on("pointerdown", () => {
+        if (this.gameOver) return;
+        if (this.getSeedPacketCooldownRemaining(type) > 0) {
+          this.setMessage("This seed packet is recharging. Wait for it to recover.");
+          return;
+        }
+        this.selectedPlant = type;
+        Object.entries(this.plantCardsByType || {}).forEach(([plantType, plantCard]) => {
+          const isSelected = plantType === type;
+          plantCard.setAlpha(isSelected ? 1 : 0.92);
+          const outline = plantCard.getData("selectionFrame");
+          if (outline) {
+            outline.setFillStyle(isSelected ? 0x8fcf4c : 0x5b3c20, isSelected ? 0.22 : 0.08);
+            outline.setStrokeStyle(isSelected ? 3 : 1.5, isSelected ? 0xffd76a : 0x9b7040, 0.95);
+          }
+        });
+        const hints = {
+          radish: "Radish Level 1 chosen. Launches miniature radish bombs down its lane.",
+          mushroom: "Mushroom chosen. Collect its energy when it appears.",
+          pumpkin: "Pumpkin chosen. A durable lane blocker.",
+          hazelnut: "Hazelnut chosen. Fires hazelnut bombs in its lane.",
+          mango: "Mango chosen. Launches a curved mango bomb onto monsters in its lane.",
+          "snow-thrower": "Snow Thrower chosen. Freezes the first monster hit for 2.6 seconds.",
+          "electric-mushroom": "Electric Mushroom chosen. Fires cyan electric bolts down its lane."
+        };
+        this.setMessage(hints[type] || "Plant chosen.");
+        this.refreshHud();
+      });
+    }
     return card;
   }
 
