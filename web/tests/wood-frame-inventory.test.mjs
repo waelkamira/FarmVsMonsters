@@ -16,7 +16,7 @@ test("the uploaded wood frame is loaded and used by a dedicated inventory contro
 
 test("all battle action buttons are positioned by the centralized right-column layout", () => {
   const hud = readFileSync(new URL("../game/scenes/BattleHudButtons.js", import.meta.url), "utf8");
-  assert.match(scene, /createBattleHudButtons\(this\)/);
+  assert.match(scene, /createBattleHudButtons\(this,\s*translate\)/);
   assert.match(hud, /BATTLE_HUD_BUTTONS/);
   for (const key of ["pauseControl", "settingsControl", "speedControl", "audioButton", "collectionMenuControl", "inventoryControl", "quickPlantsButton", "quickAdventuresButton", "quickMonstersButton"]) {
     assert.match(hud, new RegExp(`key: "${key}"`));
