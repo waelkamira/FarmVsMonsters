@@ -41,7 +41,7 @@ test("the uploaded seed-card frame is loaded and rendered on every battle seed p
   assert.match(scene, /this\.textures\.exists\("seed-card-frame"\)/);
   assert.match(scene, /Math\.min\(86 \/ frameSource\.width, 98 \/ frameSource\.height\)/);
   assert.match(scene, /\.\.\.\(seedFrame \? \[seedFrame\] : \[\]\)/);
-  assert.match(scene, /card\.add\(\[halo, packetFrame, packetRim, panel, \.\.\.\(seedFrame \? \[seedFrame\] : \[\]\), icon/);
+  assert.match(scene, /card\.add\(\[\s*shadow, selectionFrame,/);\n  assert.match(scene, /panel, \.\.\.\(seedFrame \? \[seedFrame\] : \[\]\)/);
 });
 
 
@@ -54,8 +54,9 @@ test("the uploaded locked seed-card artwork is used for locked plant cards and c
 
 test("the uploaded empty seed-slot artwork fills unused loadout positions", () => {
   assert.match(scene, /seed-slot-empty", "\/assets\/items\/ui\/ui-seed-slot-empty\.png"/);
-  assert.match(scene, /const packetSlotCount = 7/);
-  assert.match(scene, /if \(type\) continue/);
-  assert.match(scene, /"seed-slot-empty"\)/);
+  assert.match(scene, /const packetSlotCount = Math\.max\(9, selectedTypes\.length\)/);
+  assert.match(scene, /const emptySlotCount = Math\.max\(0, inactiveSlots - inactivePreviewCount\)/);
+  assert.match(scene, /this\.textures\.exists\("seed-slot-empty"\)/);
+  assert.match(scene, /this\.add\.image\(0, 0, "seed-slot-empty"\)/);
   assert.match(scene, /\.setDepth\(44\)/);
 });
