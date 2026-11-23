@@ -4486,7 +4486,7 @@ export default class BattleScene extends Scene {
       }
     }
     const customMonsterTexture = studioMonster?.textureKey;
-    const customMonsterIdleFrame = String(studioMonster?.animationProfile?.idle?.startFrame ?? 0);
+    const customMonsterIdleFrame = studioMonster?.atlas?.clips?.idle?.[0] || studioMonster?.atlas?.frameNames?.[0] || String(studioMonster?.animationProfile?.idle?.startFrame ?? 0);
     const hyenaSprite = studioRig ? null : customMonsterTexture && this.textures.exists(customMonsterTexture)
       ? this.add.sprite(0, 0, customMonsterTexture, customMonsterIdleFrame).setOrigin(0.5, 1).setFlipX(true).setScale(0.918)
       : this.hyenaAnimationsReady
