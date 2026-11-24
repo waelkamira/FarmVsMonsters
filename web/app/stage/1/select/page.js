@@ -7,14 +7,14 @@ import { useLocale, LanguageToggle } from "../../../LocaleProvider";
 import { loadUnlockedPlantIds } from "../../../../game/rules/phaseOneRules.mjs";
 
 const PLANTS = [
-  { id: "radish", name: "Radish Level 1", ar: "الفجل المستوى الأول", role: "Lane attacker", roleAr: "مهاجم للمسار", cost: 35, image: "/assets/plants/radish-level-1.png" },
+  { id: "radish", name: "Radish Level 1", ar: "الفجل المستوى الأول", role: "Lane attacker", roleAr: "مهاجم للمسار", cost: 35, image: "/assets/plants/radish-level-1.png", spriteSheet: true, rows: 3, columns: 3, frameCount: 9 },
   { id: "mushroom", name: "Energy Mushroom", ar: "فطر الطاقة", role: "Energy producer · Required", roleAr: "منتج الطاقة · أساسي", cost: 50, image: "/assets/plants/mushroom.png", required: true },
   { id: "pumpkin", name: "Pumpkin", ar: "اليقطين", role: "Heavy blocker", roleAr: "حاجز دفاعي", cost: 75, image: "/assets/plants/pumpkin.png" },
-  { id: "pineapple", name: "Pineapple L1", ar: "الأناناس L1", role: "Arcing bomb attacker", roleAr: "قاذف قنابل مقوسة", cost: 70, image: "/assets/plants/pineapple-level-1.png" },
-  { id: "hazelnut", name: "Hazelnut L1", ar: "البندق L1", role: "Arcing bomb attacker", roleAr: "قاذف قنابل مقوسة", cost: 65, image: "/assets/plants/hazelnut-level-1.png" },
-  { id: "mango", name: "Mango L1", ar: "المانجو L1", role: "Arcing bomb attacker", roleAr: "قاذف قنابل مقوسة", cost: 70, image: "/assets/plants/mango-level-1.png" },
-  { id: "snow-thrower", name: "Snow Thrower L1", ar: "قاذف الثلج L1", role: "Freeze support", roleAr: "دعم بالتجميد", cost: 90, image: "/assets/plants/Snow-thrower-level-1.png" },
-  { id: "electric-mushroom", name: "Electric Mushroom L1", ar: "الفطر الكهربائي L1", role: "Electric lane attacker", roleAr: "مهاجم كهربائي للمسار", cost: 85, image: "/assets/plants/Electric-mushroom-level-1.png", spriteSheet: true },
+  { id: "pineapple", name: "Pineapple L1", ar: "الأناناس L1", role: "Arcing bomb attacker", roleAr: "قاذف قنابل مقوسة", cost: 70, image: "/assets/plants/pineapple-level-1.png", spriteSheet: true, rows: 3, columns: 3, frameCount: 9 },
+  { id: "hazelnut", name: "Hazelnut L1", ar: "البندق L1", role: "Arcing bomb attacker", roleAr: "قاذف قنابل مقوسة", cost: 65, image: "/assets/plants/hazelnut-level-1.png", spriteSheet: true, rows: 3, columns: 3, frameCount: 9 },
+  { id: "mango", name: "Mango L1", ar: "المانجو L1", role: "Arcing bomb attacker", roleAr: "قاذف قنابل مقوسة", cost: 70, image: "/assets/plants/mango-level-1.png", spriteSheet: true, rows: 3, columns: 3, frameCount: 9 },
+  { id: "snow-thrower", name: "Snow Thrower L1", ar: "قاذف الثلج L1", role: "Freeze support", roleAr: "دعم بالتجميد", cost: 90, image: "/assets/plants/Snow-thrower-level-1.png", spriteSheet: true, rows: 3, columns: 3, frameCount: 9 },
+  { id: "electric-mushroom", name: "Electric Mushroom L1", ar: "الفطر الكهربائي L1", role: "Electric lane attacker", roleAr: "مهاجم كهربائي للمسار", cost: 85, image: "/assets/plants/Electric-mushroom-level-1.png", spriteSheet: true, rows: 3, columns: 3, frameCount: 9, spriteSheet: true },
 ];
 
 const STARTER_LOADOUT = ["radish", "mushroom"];
@@ -67,6 +67,9 @@ export default function StageOneSeedSelectionPage() {
         cost: plant.combat?.energyCost ?? 60,
         image: plant.path,
         spriteSheet: Boolean(plant.spriteSheet),
+        rows: Number(plant.rows)||1,
+        columns: Number(plant.columns)||1,
+        frameCount: Number(plant.frameCount)||((Number(plant.rows)||1)*(Number(plant.columns)||1)),
         studio: true,
         testing: testing.some((candidate) => candidate.id === plant.id)
       }));
@@ -176,7 +179,7 @@ export default function StageOneSeedSelectionPage() {
                     ? { aspectRatio: plant.id === "radish" ? "302 / 359" : "1 / 1" }
                     : undefined}
                 >
-                  <img src={plant.image} alt="" />
+                  {(plant.spriteSheet && Number(plant.frameCount)>1) ? <span aria-hidden="true" className="seed-select-first-frame" style={{backgroundImage:"url("+JSON.stringify(plant.image)+")",backgroundSize:(Math.max(1,Number(plant.columns)||1)*100)+"% "+(Math.max(1,Number(plant.rows)||1)*100)+"%",backgroundPosition:"left top"}}/> : <img src={plant.image} alt="" />}
                 </span>
                 <strong>{ar ? plant.ar : plant.name}</strong>
                 <small>{ar ? plant.roleAr : plant.role}</small>
