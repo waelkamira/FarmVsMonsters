@@ -41,6 +41,11 @@ export const ELECTRIC_MUSHROOM_CONFIG = Object.freeze({
   ...PHASE_ONE_PLANTS["electric-mushroom"],
   cost: PHASE_ONE_PLANTS["electric-mushroom"].plantingEnergyCost
 });
+export const CORN_MONSTER_CONFIG = Object.freeze({
+  label: "Corn Monster",
+  ...PHASE_ONE_PLANTS["corn-monster"],
+  cost: PHASE_ONE_PLANTS["corn-monster"].plantingEnergyCost
+});
 
 export const collectEnergy = resolveEnergyPickup;
 export function isWaveComplete(spawnedCount, waveSize, livingMonsterCount) {

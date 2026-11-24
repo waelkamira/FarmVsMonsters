@@ -2,12 +2,13 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { createCombatEventLog, appendCombatEvent, validateCombatEventLog } from "../game/rules/combatEventLog.mjs";
 import { replayCombatEventLog, PHASE_ONE_RULES_VERSION } from "../game/rules/combatReplay.mjs";
+import { PHASE_ONE_PLANT_EVENT_TYPES } from "../game/rules/phaseOneCombatContract.mjs";
 const INTERVAL = 12000;
 function makeLog(actions) { return actions.reduce((log, action) => appendCombatEvent(log, action), createCombatEventLog({ seed: 123, rulesVersion: PHASE_ONE_RULES_VERSION })); }
 function ev(tick, type, payload) { return { tick, type, payload }; }
 
 test("combat event log accepts every plant type supported by the battle scene", () => {
- const supported = ["radish", "mushroom", "tomato", "pumpkin", "onion"];
+ const supported = PHASE_ONE_PLANT_EVENT_TYPES;
  for (const type of supported) {
   const log = makeLog([ev(0, "plant_placed", { type, col: 1, row: 2 }), ev(1, "plant_uprooted", { type, col: 1, row: 2 })]);
   assert.equal(log.events.length, 2);

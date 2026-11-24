@@ -47,6 +47,17 @@ test("mushroom placement uses the shared plant cost and health", () => {
   assert.equal(result.plant.energyCost, 50);
 });
 
+test("Corn Monster placement and uprooting use its shared 70-energy contract", () => {
+  const placed = resolvePlantPlacement({ energy: 100, plants: [], type: "corn-monster", col: 3, row: 2, columns: 8, rows: 5 });
+  assert.equal(placed.ok, true);
+  assert.equal(placed.energy, 30);
+  assert.equal(placed.plant.hp, 140);
+  assert.equal(placed.plant.energyCost, 70);
+  assert.deepEqual(resolvePlantUproot({ energy: 30, plant: placed.plant }), {
+    ok: true, reason: "PLANT_UPROOTED", energy: 100, refund: 70
+  });
+});
+
 test("placement rejects unknown plants, occupied cells, invalid coordinates and insufficient energy", () => {
   const occupied = [{ type: "radish", col: 1, row: 1, alive: true }];
   const cases = [

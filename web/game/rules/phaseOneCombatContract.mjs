@@ -80,6 +80,11 @@ export const PHASE_ONE_PLANTS = Object.freeze({
     freezeDurationMs: 2600, plantingEnergyCost: 90, seedPacketRechargeMs: 18000, hp: 150,
     cooldownMs: 3600, range: 360
   }),
+  // Corn Monster prototype values; rebalance after a hands-on combat playtest.
+  "corn-monster": Object.freeze({
+    projectileDamage: 34, projectileSpeed: 300, projectileCollisionRadius: 22,
+    plantingEnergyCost: 70, seedPacketRechargeMs: 10000, hp: 140, cooldownMs: 1900, range: 360
+  }),
   // Electric Mushroom is a visual/combat playtest prototype; tune after hands-on VFX review.
   "electric-mushroom": Object.freeze({
     projectileDamage: 22, projectileSpeed: 350, projectileCollisionRadius: 26,
