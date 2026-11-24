@@ -10,7 +10,7 @@ export default function StageRosterManager({kind}){
  const isMonster=kind==="monster";
  const [stage,setStage]=useState(1),[assets,setAssets]=useState([]),[config,setConfig]=useState(EMPTY),[sha,setSha]=useState(null);
  const [selectedId,setSelectedId]=useState(""),[quantity,setQuantity]=useState(1),[wave,setWave]=useState(1);
- const [interval,setInterval]=useState(1800),[delay,setDelay]=useState(0);
+ const [interval,setInterval]=useState(5000),[delay,setDelay]=useState(0);
  const [hp,setHp]=useState(1),[speed,setSpeed]=useState(1),[damage,setDamage]=useState(1),[attack,setAttack]=useState(1);
  const [busy,setBusy]=useState(false),[message,setMessage]=useState("");
  const entries=config.stages?.[String(stage)]?.[isMonster?"monsters":"plants"]||[];
