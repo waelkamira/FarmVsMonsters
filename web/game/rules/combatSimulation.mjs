@@ -387,12 +387,13 @@ export function resolveWaveSpawnStep({
   spawnedThisWave,
   intermissionMs,
   spawnTimerMs,
+  spawnIntervalMs,
   deltaMs
 } = {}) {
   if (
     !Number.isInteger(totalWaves) || totalWaves !== PHASE_ONE_WAVE_SIZES.length ||
     !Number.isInteger(wave) || wave < 1 || wave > totalWaves ||
-    !Number.isInteger(waveSize) || waveSize !== PHASE_ONE_WAVE_SIZES[wave - 1] ||
+    !Number.isInteger(waveSize) || waveSize < 0 || waveSize > 500 ||
     !Number.isInteger(spawnedThisWave) || spawnedThisWave < 0 || spawnedThisWave > waveSize ||
     !Number.isFinite(intermissionMs) || intermissionMs < 0 ||
     !Number.isFinite(spawnTimerMs) ||
@@ -411,7 +412,7 @@ export function resolveWaveSpawnStep({
     if (nextSpawnTimerMs <= 0) {
       shouldSpawn = true;
       nextSpawnedThisWave += 1;
-      nextSpawnTimerMs = getMonsterSpawnIntervalMs(wave);
+      nextSpawnTimerMs = Number.isFinite(spawnIntervalMs) ? Math.max(100, spawnIntervalMs) : getMonsterSpawnIntervalMs(wave);
     }
   }
 
