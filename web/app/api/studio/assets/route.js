@@ -67,26 +67,40 @@ async function hydratePlantLibrary(registry,token,branch,expectedRegistrySha){
  let changed=false;
  for(const source of uniqueManifestAssets.filter(asset=>!/-bomb(?:-|\.)/i.test(asset.url))){
   const id=plantIdFromPath(source.url);
-  if(!id||known.has(id))continue;
+  if(!id)continue;
+  const existing=known.get(id);
   const catalogPlant=published.get(id);
   const frame=source.frameConfig;
+  const frameCount=Number(source.frameCount)||(
+   frame&&source.width&&source.height
+    ?Math.max(1,Math.floor(source.width/frame.frameWidth)*Math.floor(source.height/frame.frameHeight))
+    :1
+  );
   const record={
-   id,type:"plant",name:catalogPlant?.name||id,path:source.url,
+   ...(existing||{}),
+   id,type:"plant",name:catalogPlant?.name||existing?.name||id,path:source.url,
    filename:path.basename(source.url),
-   rows:frame&&source.height?Math.max(1,Math.floor(source.height/frame.frameHeight)):1,
-   columns:frame&&source.width?Math.max(1,Math.floor(source.width/frame.frameWidth)):1,
-   frameCount:frame?Math.max(1,Math.floor(source.width/frame.frameWidth)*Math.floor(source.height/frame.frameHeight)):1,
-   spriteSheet:source.type==="spritesheet",
-   status:catalogPlant?"published":"draft",
-   createdAt:catalogPlant?.publishedAt||new Date().toISOString(),
+   rows:Number(source.rows)|| (frame&&source.height?Math.max(1,Math.floor(source.height/frame.frameHeight)):1),
+   columns:Number(source.columns)|| (frame&&source.width?Math.max(1,Math.floor(source.width/frame.frameWidth)):frameCount),
+   frameCount,
+   spriteSheet:Boolean(source.spriteSheet||source.type==="spritesheet"),
+   status:existing?.type==="monster"?"draft":(existing?.status|| (catalogPlant?"published":"draft")),
+   createdAt:existing?.createdAt||catalogPlant?.publishedAt||new Date().toISOString(),
    updatedAt:new Date().toISOString(),
-   ...(catalogPlant?.combat?{combat:catalogPlant.combat}:{}),
-   ...(source.animationProfile?{animationProfile:source.animationProfile}:{}),
-   ...(source.atlasMetadataPath?{atlasMetadataPath:source.atlasMetadataPath}:{}),
-   ...(source.sourceFormat?{sourceFormat:source.sourceFormat}:{}),
-   ...(source.atlasClips?{atlasClips:source.atlasClips}:{})
+   ...(catalogPlant?.combat?{combat:catalogPlant.combat}:existing?.combat?{combat:existing.combat}:{}),
+   ...(existing?.animationProfile?{animationProfile:existing.animationProfile}:source.animationProfile?{animationProfile:source.animationProfile}:{}),
+   ...(source.atlasMetadataPath?{atlasMetadataPath:source.atlasMetadataPath}:existing?.atlasMetadataPath?{atlasMetadataPath:existing.atlasMetadataPath}:{}),
+   ...(source.sourceFormat?{sourceFormat:source.sourceFormat}:existing?.sourceFormat?{sourceFormat:existing.sourceFormat}:{}),
+   ...(source.atlasClips?{atlasClips:source.atlasClips}:existing?.atlasClips?{atlasClips:existing.atlasClips}:{})
   };
-  registry.assets.push(record);known.set(id,record);changed=true;
+  if(existing?.type==="monster")delete record.monsterProfile;
+  const changedRecord=!existing||JSON.stringify(existing)!==JSON.stringify(record);
+  if(!changedRecord)continue;
+  if(existing){
+   const index=registry.assets.findIndex(asset=>asset.id===id);
+   if(index>=0)registry.assets[index]=record;
+  }else registry.assets.push(record);
+  known.set(id,record);changed=true;
  }
  for(const plant of catalog.plants||[]){
   if(known.has(plant.id))continue;
@@ -169,7 +183,20 @@ export async function GET(req){
    const allowedTypes={".png":"image/png",".webp":"image/webp",".gif":"image/gif",".mp3":"audio/mpeg",".wav":"audio/wav",".ogg":"audio/ogg",".m4a":"audio/mp4"};
    const extension=path.extname(preview).toLowerCase();
    if(!preview.startsWith("/assets/")||preview.includes("..")||!allowedTypes[extension])return NextResponse.json({error:"Invalid asset preview path."},{status:400});
-   try{let upstream=await fetch(githubUrl("web/public"+preview)+"?ref="+encodeURIComponent(branch),{headers:{...githubHeaders(token),Accept:"application/vnd.github.raw"}});if(upstream.status===404){const targetBranch=process.env.STUDIO_PUBLISH_BRANCH||"main";if(targetBranch!==branch)upstream=await fetch(githubUrl("web/public"+preview)+"?ref="+encodeURIComponent(targetBranch),{headers:{...githubHeaders(token),Accept:"application/vnd.github.raw"}});}if(!upstream.ok)return NextResponse.json({error:"GitHub preview failed ("+upstream.status+")."},{status:upstream.status===404?404:502});return new NextResponse(await upstream.arrayBuffer(),{headers:{"Content-Type":allowedTypes[extension],"Cache-Control":"private, max-age=300","X-Content-Type-Options":"nosniff"}});}catch(error){return NextResponse.json({error:error.message||"Preview fetch failed."},{status:502});}
+   const timeoutSignal=AbortSignal.timeout(12_000);
+   try{
+    let upstream=await fetch(githubUrl("web/public"+preview)+"?ref="+encodeURIComponent(branch),{headers:{...githubHeaders(token),Accept:"application/vnd.github.raw"},signal:timeoutSignal});
+    if(upstream.status===404){
+     const targetBranch=process.env.STUDIO_PUBLISH_BRANCH||"main";
+     if(targetBranch!==branch)upstream=await fetch(githubUrl("web/public"+preview)+"?ref="+encodeURIComponent(targetBranch),{headers:{...githubHeaders(token),Accept:"application/vnd.github.raw"},signal:timeoutSignal});
+    }
+    if(!upstream.ok)return NextResponse.json({error:"GitHub preview failed ("+upstream.status+")."},{status:upstream.status===404?404:502});
+    const bytes=await upstream.arrayBuffer();
+    return new NextResponse(bytes,{headers:{"Content-Type":allowedTypes[extension],"Cache-Control":"private, max-age=300","X-Content-Type-Options":"nosniff"}});
+   }catch(error){
+    const timedOut=timeoutSignal.aborted||error?.name==="TimeoutError"||error?.name==="AbortError";
+    return NextResponse.json({error:timedOut?"GitHub preview timed out after 12 seconds.":(error.message||"Preview fetch failed.")},{status:timedOut?504:502});
+   }
   }
   try{
    const document=await githubGetDocument(REGISTRY_PATH,token,branch);
