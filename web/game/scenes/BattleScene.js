@@ -252,7 +252,10 @@ export default class BattleScene extends Scene {
     this.stageMonsterRosterConfigured = this.stageEncounterConfig?.monstersConfigured === true;
     this.stageMonsterEntries = (this.stageEncounterConfig?.monsters || []).filter(entry => entry.enabled !== false);
     this.totalConfiguredMonsters = this.stageMonsterRosterConfigured
-      ? this.stageMonsterEntries.reduce((sum, entry) => sum + Math.max(1, Number(entry.count) || 1), 0)
+      ? Array.from({ length: PHASE_ONE_WAVE_SIZES.length }, (_, index) => Math.min(500,
+          this.stageMonsterEntries.filter(entry => Number(entry.wave) === index + 1)
+            .reduce((sum, entry) => sum + Math.max(1, Number(entry.count) || 1), 0)
+        )).reduce((sum, count) => sum + count, 0)
       : PHASE_ONE_TOTAL_MONSTERS;
     this.stagePlantRosterConfigured = this.stageEncounterConfig?.plantsConfigured === true;
     this.stagePlantEntries = (this.stageEncounterConfig?.plants || []).filter(entry => entry.enabled !== false);
