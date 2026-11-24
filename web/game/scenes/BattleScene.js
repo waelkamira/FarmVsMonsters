@@ -2183,6 +2183,7 @@ export default class BattleScene extends Scene {
         { id: "mango", title: isArabic ? "المانجو" : "Mango", image: "mango-level-1", config: MANGO_CONFIG },
         { id: "snow-thrower", title: isArabic ? "قاذف الثلج" : "Snow Thrower", image: "snow-thrower-level-1", config: SNOW_THROWER_CONFIG },
         { id: "electric-mushroom", title: isArabic ? "الفطر الكهربائي" : "Electric Mushroom", image: "electric-mushroom-level-1", config: ELECTRIC_MUSHROOM_CONFIG },
+        { id: "corn-monster", title: isArabic ? "وحش الذرة" : "Corn Monster", image: "corn-monster", config: CORN_MONSTER_CONFIG },
       ];
       const selected = catalog.find((plant) => plant.id === this.inventorySelectedPlant) || catalog[0];
       addText(0, -112, isArabic
@@ -3003,6 +3004,7 @@ export default class BattleScene extends Scene {
           : type === "corn-monster" ? "cornMonsterSprite" : "snow-throwerThrowSprite";
         animatedPlant.setData(animationDataKey, true);
         plant.add(animatedPlant);
+        if (type === "corn-monster" && this.anims.exists("corn-monster-idle")) animatedPlant.play("corn-monster-idle");
       } else {
         plant.add(this.add.image(0, -height / 2 + 2, texture).setDisplaySize(Math.min(width, maxWidth), height));
       }
@@ -3111,7 +3113,7 @@ export default class BattleScene extends Scene {
         }
         continue;
       }
-      const configs = { radish: RADISH_CONFIG, pineapple: PINEAPPLE_CONFIG, hazelnut: HAZELNUT_CONFIG, mango: MANGO_CONFIG, "snow-thrower": SNOW_THROWER_CONFIG, "electric-mushroom": ELECTRIC_MUSHROOM_CONFIG };
+      const configs = { radish: RADISH_CONFIG, pineapple: PINEAPPLE_CONFIG, hazelnut: HAZELNUT_CONFIG, mango: MANGO_CONFIG, "snow-thrower": SNOW_THROWER_CONFIG, "electric-mushroom": ELECTRIC_MUSHROOM_CONFIG, "corn-monster": CORN_MONSTER_CONFIG };
       const config = configs[plant.type] || (studioProfile ? {
         cooldownMs: studioProfile.cooldownMs,
         cooldown: studioProfile.cooldownMs,
