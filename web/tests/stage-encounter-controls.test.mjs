@@ -47,6 +47,11 @@ test("stage seed selection respects only enabled plants for a configured stage",
  const selection=read("app/stage/1/select/page.js");
  assert.match(selection,/plantsConfigured/);
  assert.match(selection,/entry\.enabled !== false/);
+ assert.match(selection,/new URLSearchParams\(window\.location\.search\)\.get\("stage"\)/);
+ assert.match(selection,/stages\?\.\[String\(activeStage\)\]/);
+ assert.match(selection,/router\.push\("\/game\?stage=" \+ stageNumber\)/);
+ assert.match(selection,/setStagePlantsConfigured\(configuredStage\?\.plantsConfigured === true\)/);
+ assert.match(selection,/selectedPlants\.length < minimumSeeds/);
 });
 
 test("configured first spawn delay is not overwritten and dragon waits for the configured final spawn",()=>{
