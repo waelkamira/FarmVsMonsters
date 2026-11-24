@@ -1063,48 +1063,13 @@ export default class BattleScene extends Scene {
     // Fill unused seed slots with previews of implemented plants that are
     // not in the current loadout. Their artwork is intentionally dimmed and
     // non-interactive so the player can see upcoming choices without selecting them.
-    const inactivePlants = plantOptions.filter((plant) =>
-      !selectedTypes.includes(plant.type) && plant.type !== "mushroom"
-    );
-    const cardFrameKey = this.textures.exists("seed-card-frame") ? "seed-card-frame" : "seed-card";
+    // Empty slots remain visible and non-interactive until the player equips
+    // an unlocked plant in the pre-battle loadout.
     for (let slotIndex = selectedTypes.length; slotIndex < packetSlotCount; slotIndex += 1) {
-      const plant = inactivePlants[slotIndex - selectedTypes.length];
       const x = packetStartX + slotIndex * packetGap;
-      if (!plant) {
-        if (this.textures.exists("seed-slot-empty")) {
-          this.add.image(x, 72, "seed-slot-empty").setDisplaySize(70, 90).setDepth(44);
-        }
-        continue;
+      if (this.textures.exists("seed-slot-empty")) {
+        this.add.image(x, 72, "seed-slot-empty").setDisplaySize(70, 90).setDepth(44);
       }
-      const preview = this.add.container(x, 72).setDepth(45);
-      const lockedFrameKey = !availableTypes.has(plant.type) && this.textures.exists("seed-card-locked")
-        ? "seed-card-locked"
-        : cardFrameKey;
-      if (this.textures.exists(lockedFrameKey)) {
-        const source = this.textures.get(lockedFrameKey).getSourceImage();
-        const scale = Math.min(86 / source.width, 98 / source.height);
-        preview.add(this.add.image(0, 0, lockedFrameKey)
-          .setDisplaySize(source.width * scale * 0.8, source.height * scale * 0.8));
-      }
-      if (this.textures.exists(plant.image)) {
-        const texture = this.textures.get(plant.image);
-        const isSheet = ["pineapple-level-1", "hazelnut-level-1", "mango-level-1", "snow-thrower-level-1", "radish-level-1", "electric-mushroom-level-1"].includes(plant.image) || Boolean(plant.studioPlant?.spriteSheet);
-        const frame = isSheet ? texture.get("0") : texture.get();
-        // Derive preview dimensions from the actual frame, never the full sheet.
-        const frameWidth = Math.max(1, frame.cutWidth || frame.width || 1);
-        const frameHeight = Math.max(1, frame.cutHeight || frame.height || 1);
-        const thumbnailScale = Math.min(54 / frameWidth, 46 / frameHeight);
-        const thumbnail = isSheet
-          ? this.add.sprite(0, -8, plant.image, "0").setScale(thumbnailScale)
-          : this.add.image(0, -8, plant.image).setScale(thumbnailScale);
-        preview.add(thumbnail);
-        preview.add(this.add.rectangle(0, -8, 56, 48, 0x000000, 0.32));
-        preview.add(this.add.text(0, 26.4, availableTypes.has(plant.type) ? "🍄" + plant.cost : "🔒", {
-          fontFamily: "Arial", fontSize: "13px", color: "#fff0bd", fontStyle: "bold",
-          stroke: "#3d2817", strokeThickness: 2, resolution: 2, align: "center"
-        }).setOrigin(0.5).setScale(0.855));
-      }
-      preview.setData("inactivePlantType", plant.type);
     }
     plantOptions.filter((plant) => selectedTypes.includes(plant.type)).forEach((plant, index) => {
       this.plantCardsByType[plant.type] = this.createPlantCard(
