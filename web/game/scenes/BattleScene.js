@@ -2658,7 +2658,7 @@ export default class BattleScene extends Scene {
       return;
     }
     this.recordCombatEvent("plant_placed", { type, col, row });
-    const configs = { radish: RADISH_CONFIG, mushroom: MUSHROOM_CONFIG, pumpkin: PUMPKIN_CONFIG, pineapple: PINEAPPLE_CONFIG, hazelnut: HAZELNUT_CONFIG, mango: MANGO_CONFIG, "snow-thrower": SNOW_THROWER_CONFIG, "electric-mushroom": ELECTRIC_MUSHROOM_CONFIG };
+    const configs = { radish: RADISH_CONFIG, mushroom: MUSHROOM_CONFIG, pumpkin: PUMPKIN_CONFIG, pineapple: PINEAPPLE_CONFIG, hazelnut: HAZELNUT_CONFIG, mango: MANGO_CONFIG, "snow-thrower": SNOW_THROWER_CONFIG, "electric-mushroom": ELECTRIC_MUSHROOM_CONFIG, "corn-monster": CORN_MONSTER_CONFIG };
     const studioProfile = studioPlant?.combat;
     const config = configs[type] || (studioProfile ? {
       cost: studioProfile.energyCost,
@@ -3396,6 +3396,30 @@ export default class BattleScene extends Scene {
       } else this.fireThornProjectile(plant, target);
       return;
     }
+    // Corn Monster uses named Atlas frames and emits one kernel at attack_06.
+    // The completion fallback guarantees a shot if frame-update callbacks are missed.
+    if (plant.type === "corn-monster" && plant.view?.active) {
+      const sprite = plant.view.list.find((child) => child?.getData?.("cornMonsterSprite"));
+      if (sprite?.active && this.anims.exists("corn-monster-attack")) {
+        if (plant.cornMonsterThrowing) return;
+        plant.cornMonsterThrowing = true;
+        let launched = false;
+        const onAttackFrame = (_animation, frame) => {
+          if (launched || frame?.textureFrame !== "attack_06") return;
+          launched = true;
+          if (plant.alive && target?.alive && !this.gameOver) this.fireThornProjectile(plant, target);
+        };
+        sprite.on("animationupdate", onAttackFrame);
+        sprite.once("animationcomplete", () => {
+          sprite.off("animationupdate", onAttackFrame);
+          if (sprite.active && this.anims.exists("corn-monster-idle")) sprite.play("corn-monster-idle");
+          plant.cornMonsterThrowing = false;
+          if (!launched && plant.alive && target?.alive && !this.gameOver) this.fireThornProjectile(plant, target);
+        });
+        sprite.play("corn-monster-attack");
+        return;
+      }
+    }
     // Electric Mushroom compresses and releases its cap before the bolt is created.
     // The short vertical anticipation is kept separate from idle scale breathing.
     if (plant.type === "electric-mushroom" && !electricCharged && plant.view?.active) {
@@ -3569,6 +3593,13 @@ export default class BattleScene extends Scene {
       const midpointY = plant.y - displayHeight / 2 + 2;
       launchOffsetX = displayWidth / 2;
       launchOffsetY = midpointY - laneOrigin.y;
+    } else if (plant.type === "corn-monster") {
+      const frame = this.textures.getFrame("corn-monster", "idle_00");
+      const perspectiveScale = plant.view?.getData?.("pineapplePerspectiveScale") || 1;
+      const displayHeight = 112 * perspectiveScale;
+      const displayWidth = Math.min(displayHeight * (frame.realWidth / frame.realHeight), 116 * perspectiveScale);
+      launchOffsetX = displayWidth * 0.38;
+      launchOffsetY = -(displayHeight * 0.58);
     } else if (plant.type === "electric-mushroom") {
       const frame = this.textures.exists("electric-mushroom-level-1")
         ? this.textures.getFrame("electric-mushroom-level-1", "0")
@@ -3612,6 +3643,13 @@ export default class BattleScene extends Scene {
         plantProjectile.setDisplaySize(30, 30);
       }
       view.add(plantProjectile);
+    } else if (plant.type === "corn-monster") {
+      const frame = this.textures.getFrame("corn-monster", "idle_00");
+      const perspectiveScale = plant.view?.getData?.("pineapplePerspectiveScale") || 1;
+      const displayHeight = 112 * perspectiveScale;
+      const displayWidth = Math.min(displayHeight * (frame.realWidth / frame.realHeight), 116 * perspectiveScale);
+      launchOffsetX = displayWidth * 0.38;
+      launchOffsetY = -(displayHeight * 0.58);
     } else if (plant.type === "electric-mushroom") {
       // A compact lightning glyph keeps the projectile readable without borrowing another plant's art.
       const electricGlow = this.add.circle(0, 0, 12, 0x65d9ff, 0.24);
