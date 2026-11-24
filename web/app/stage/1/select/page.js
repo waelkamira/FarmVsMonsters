@@ -85,7 +85,8 @@ export default function StageOneSeedSelectionPage() {
       const safeUnlocked = [...new Set([...STARTER_LOADOUT, ...unlocked, ...nextPlants.map((plant) => plant.id), ...studioIds])];
       setUnlockedIds(safeUnlocked);
       try {
-        const saved = JSON.parse(window.localStorage.getItem("farmVsMonsters.selectedPlants") || "null");
+        const stageSelectionKey = "farmVsMonsters.selectedPlants.stage." + activeStage;
+        const saved = JSON.parse(window.localStorage.getItem(stageSelectionKey) || (activeStage === 1 ? window.localStorage.getItem("farmVsMonsters.selectedPlants") : "null"));
         const validSaved = Array.isArray(saved)
           ? saved.filter((id) => safeUnlocked.includes(id) && nextPlants.some((plant) => plant.id === id))
           : [];
@@ -125,7 +126,9 @@ export default function StageOneSeedSelectionPage() {
       return;
     }
     try {
-      window.localStorage.setItem("farmVsMonsters.selectedPlants", JSON.stringify(selectedPlants.map((plant) => plant.id)));
+      const savedSelection = JSON.stringify(selectedPlants.map((plant) => plant.id));
+      window.localStorage.setItem("farmVsMonsters.selectedPlants.stage." + stageNumber, savedSelection);
+      if (stageNumber === 1) window.localStorage.setItem("farmVsMonsters.selectedPlants", savedSelection);
       router.push("/game?stage=" + stageNumber);
     } catch {
       setNotice(ar ? "تعذر حفظ التشكيلة. تحقق من إعدادات التخزين في المتصفح." : "Could not save your loadout. Check browser storage settings.");
