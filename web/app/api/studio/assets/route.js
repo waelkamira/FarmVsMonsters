@@ -35,7 +35,7 @@ async function hydratePlantLibrary(registry,token,branch,expectedRegistrySha){
  const known=new Map((registry.assets||[]).map(asset=>[asset.id,asset]));
  const published=new Map((catalog.plants||[]).map(plant=>[plant.id,plant]));
  let changed=false;
- for(const source of (manifest.assets||[]).filter(asset=>asset.group==="plants"&&asset.url&&!/-bomb(?:-|\\.)/i.test(asset.url))){
+ for(const source of (manifest.assets||[]).filter(asset=>asset.group==="plants"&&asset.url&&!/-bomb(?:-|\.)/i.test(asset.url))){
   const id=plantIdFromPath(source.url);
   if(!id||known.has(id))continue;
   const catalogPlant=published.get(id);
