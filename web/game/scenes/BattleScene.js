@@ -1059,31 +1059,42 @@ export default class BattleScene extends Scene {
     this.plantCardsByType = {};
     const packetStartX = 164;
     const packetGap = selectedTypes.length > 5 ? 78 : 90;
-    const packetSlotCount = Math.max(9, selectedTypes.length);
+    const packetSlotCount = MAX_SEED_PACKETS;
     // Fill unused seed slots with previews of implemented plants that are
     // not in the current loadout. Their artwork is intentionally dimmed and
     // non-interactive so the player can see upcoming choices without selecting them.
     const inactivePlants = plantOptions.filter((plant) =>
       !selectedTypes.includes(plant.type) && plant.type !== "mushroom"
     );
-    const inactiveSlots = Math.max(0, packetSlotCount - selectedTypes.length);
-    const cardSource = this.textures.exists("seed-card")
-      ? this.textures.get("seed-card").getSourceImage()
+    const cardFrameKey = this.textures.exists("seed-card-frame") ? "seed-card-frame" : "seed-card";
+    const cardSource = this.textures.exists(cardFrameKey)
+      ? this.textures.get(cardFrameKey).getSourceImage()
       : null;
-    const cardScale = cardSource ? Math.min(88 / cardSource.width, 101.2 / cardSource.height) : 1;
-    inactivePlants.slice(0, inactiveSlots).forEach((plant, index) => {
-      const x = packetStartX + (selectedTypes.length + index) * packetGap;
+    const cardScale = cardSource ? Math.min(86 / cardSource.width, 98 / cardSource.height) : 1;
+    for (let slotIndex = selectedTypes.length; slotIndex < packetSlotCount; slotIndex += 1) {
+      const plant = inactivePlants[slotIndex - selectedTypes.length];
+      const x = packetStartX + slotIndex * packetGap;
+      if (!plant) {
+        if (this.textures.exists("seed-slot-empty")) {
+          this.add.image(x, 72, "seed-slot-empty").setDisplaySize(70, 90).setDepth(44);
+        }
+        continue;
+      }
       const preview = this.add.container(x, 72).setDepth(45);
-      if (cardSource) {
-        preview.add(this.add.image(0, 0, "seed-card")
-          .setDisplaySize(cardSource.width * cardScale * 0.8, cardSource.height * cardScale * 0.8));
+      const lockedFrameKey = !availableTypes.has(plant.type) && this.textures.exists("seed-card-locked")
+        ? "seed-card-locked"
+        : cardFrameKey;
+      if (this.textures.exists(lockedFrameKey)) {
+        const source = this.textures.get(lockedFrameKey).getSourceImage();
+        const scale = Math.min(86 / source.width, 98 / source.height);
+        preview.add(this.add.image(0, 0, lockedFrameKey)
+          .setDisplaySize(source.width * scale * 0.8, source.height * scale * 0.8));
       }
       if (this.textures.exists(plant.image)) {
         const texture = this.textures.get(plant.image);
         const isSheet = ["pineapple-level-1", "hazelnut-level-1", "mango-level-1", "snow-thrower-level-1", "radish-level-1", "electric-mushroom-level-1"].includes(plant.image) || Boolean(plant.studioPlant?.spriteSheet);
         const frame = isSheet ? texture.get("0") : texture.get();
-        // Use the actual frame rectangle and a single bounded scale so a
-        // source sheet's full-image dimensions can never enlarge the preview.
+        // Derive preview dimensions from the actual frame, never the full sheet.
         const frameWidth = Math.max(1, frame.cutWidth || frame.width || 1);
         const frameHeight = Math.max(1, frame.cutHeight || frame.height || 1);
         const thumbnailScale = Math.min(54 / frameWidth, 46 / frameHeight);
@@ -1091,16 +1102,14 @@ export default class BattleScene extends Scene {
           ? this.add.sprite(0, -8, plant.image, "0").setScale(thumbnailScale)
           : this.add.image(0, -8, plant.image).setScale(thumbnailScale);
         preview.add(thumbnail);
-        // Keep inactive plant previews recognizable with a lighter dark overlay.
         preview.add(this.add.rectangle(0, -8, 56, 48, 0x000000, 0.32));
-        // Show the plant's energy cost even while it is not in the active loadout.
-        preview.add(this.add.text(0, 26.4, "🍄" + plant.cost, {
+        preview.add(this.add.text(0, 26.4, availableTypes.has(plant.type) ? "🍄" + plant.cost : "🔒", {
           fontFamily: "Arial", fontSize: "13px", color: "#fff0bd", fontStyle: "bold",
           stroke: "#3d2817", strokeThickness: 2, resolution: 2, align: "center"
         }).setOrigin(0.5).setScale(0.855));
       }
       preview.setData("inactivePlantType", plant.type);
-    });
+    }
     plantOptions.filter((plant) => selectedTypes.includes(plant.type)).forEach((plant, index) => {
       this.plantCardsByType[plant.type] = this.createPlantCard(
         packetStartX + index * packetGap,
@@ -1123,11 +1132,11 @@ export default class BattleScene extends Scene {
 
   createPlantCard(x, title, costLabel, type, drawIcon, imageKey = null, y = 619, locked = false) {
     const card = this.add.container(x, y).setDepth(45);
-    const cardArtworkKey = locked && this.textures.exists("seed-card-locked") ? "seed-card-locked" : "seed-card";
+    const cardArtworkKey = locked && this.textures.exists("seed-card-locked") ? "seed-card-locked" : this.textures.exists("seed-card-frame") ? "seed-card-frame" : "seed-card";
     let seedFrame = null;
     if (this.textures.exists(cardArtworkKey)) {
       const source = this.textures.get(cardArtworkKey).getSourceImage();
-      const scale = Math.min(88 / source.width, 101.2 / source.height);
+      const scale = Math.min(86 / source.width, 98 / source.height);
       seedFrame = this.add.image(0, 0, cardArtworkKey).setDisplaySize(source.width * scale * 0.8, source.height * scale * 0.8);
     }
     const plantHeight = 46;
