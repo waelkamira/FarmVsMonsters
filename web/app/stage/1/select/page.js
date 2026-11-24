@@ -41,9 +41,10 @@ export default function StageOneSeedSelectionPage() {
       } catch { return []; }
     };
     (async () => {
-      const [published, testing] = await Promise.all([
+      const [published, testing, stageSettings] = await Promise.all([
         readCatalog("/assets/studio-plant-catalog.json"),
-        readCatalog("/api/studio/assets?catalog=testing")
+        readCatalog("/api/studio/assets?catalog=testing"),
+        fetch("/api/studio/stage-encounters", { cache: "no-store" }).then(response => response.ok ? response.json() : null).catch(() => null)
       ]);
       if (!active) return;
       const studioPlants = [...published, ...testing].map((plant) => ({
@@ -65,7 +66,10 @@ export default function StageOneSeedSelectionPage() {
         testing: testing.some((candidate) => candidate.id === plant.id)
       }));
       const plantMap = new Map([...PLANTS, ...studioPlants].map((plant) => [plant.id, plant]));
-      const nextPlants = [...plantMap.values()];
+      const configuredStage = stageSettings?.stages?.["1"];
+      const nextPlants = configuredStage?.plantsConfigured
+        ? [...plantMap.values()].filter(plant => configuredStage.plants.some(entry => entry.enabled !== false && entry.id === plant.id))
+        : [...plantMap.values()];
       setPlantCatalog(nextPlants);
       let unlocked = STARTER_LOADOUT;
       try { unlocked = loadUnlockedPlantIds(window.localStorage); } catch { /* Starter seeds remain available. */ }
