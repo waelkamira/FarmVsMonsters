@@ -13,6 +13,13 @@ function readFps(value, field, fallback) {
   }
   return number;
 }
+function readSpeedMultiplier(value) {
+  const number = Number(value ?? 1);
+  if (!Number.isFinite(number) || number < 0.1 || number > 5) {
+    throw new RangeError("speedMultiplier must be a finite number between 0.1 and 5.");
+  }
+  return Math.round(number * 100) / 100;
+}
 function readClip(input, name, maxFrame, defaults) {
   const clip = input && typeof input === "object" ? input : {};
   const startFrame = readFrame(clip.startFrame, name + ".startFrame", maxFrame, defaults.startFrame);
@@ -33,6 +40,7 @@ export function createStudioAnimationProfile(input, frameCount) {
   const profile = input && typeof input === "object" ? input : {};
   const maxFrame = count - 1;
   return Object.freeze({
+    speedMultiplier: readSpeedMultiplier(profile.speedMultiplier),
     idle: readClip(profile.idle, "idle", maxFrame, { startFrame: 0, endFrame: 0, fps: DEFAULT_FPS.idle }),
     move: readClip(profile.move, "move", maxFrame, { startFrame: 0, endFrame: maxFrame, fps: 10 }),
     attack: readClip(profile.attack, "attack", maxFrame, { startFrame: 0, endFrame: maxFrame, fps: DEFAULT_FPS.attack })

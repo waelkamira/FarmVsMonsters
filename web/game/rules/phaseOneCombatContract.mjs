@@ -4,7 +4,7 @@
 export const PHASE_ONE_COMBAT_CONTRACT_VERSION = 1;
 
 // Stage 1 is a guided onboarding campaign: 20 ordinary monsters in five readable waves.
-export const PHASE_ONE_WAVE_SIZES = Object.freeze([2, 3, 4, 5, 6]);
+export const PHASE_ONE_WAVE_SIZES = Object.freeze([3, 5, 6, 7, 9]);
 export const PHASE_ONE_BOARD = Object.freeze({ columns: 8, rows: 5, laneWidth: 420.823, spawnLocalX: 238.4115, homeLocalX: -300 });
 export function getPlantLaneLocalX(col) {
   if (!Number.isInteger(col) || col < 0 || col >= PHASE_ONE_BOARD.columns) throw new RangeError("INVALID_PLANT_COLUMN");
@@ -122,7 +122,7 @@ export const PHASE_ONE_MONSTER_SCALING = Object.freeze({
 
 export const PHASE_ONE_MONSTERS = Object.freeze({
   "cave-brute": Object.freeze({
-    hitsToDefeat: 5,
+    hitsToDefeat: 7,
     speedMultiplier: 1,
     maxSpeed: 30,
     plantDamage: 16,
@@ -188,7 +188,7 @@ export function getMonsterCombatStats(archetype, wave) {
   }
 
   const hp = profile.hitsToDefeat
-    ? PHASE_ONE_PLANTS.radish.projectileDamage * profile.hitsToDefeat + (wave - 1) * 8
+    ? PHASE_ONE_PLANTS.radish.projectileDamage * profile.hitsToDefeat
     : Math.round((PHASE_ONE_MONSTER_SCALING.baseHp + Math.floor(wave * PHASE_ONE_MONSTER_SCALING.hpPerWave)) * profile.hpMultiplier);
   const baseSpeed = Math.min(PHASE_ONE_MONSTER_SCALING.maxBaseSpeed, PHASE_ONE_MONSTER_SCALING.baseSpeed + (wave - 1) * PHASE_ONE_MONSTER_SCALING.speedPerWave);
 

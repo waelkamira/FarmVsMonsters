@@ -4,6 +4,7 @@ import { createStudioAnimationProfile, validateStudioAnimationProfile } from "..
 
 test("creates a safe default idle and attack animation for a sprite sheet", () => {
   const profile = createStudioAnimationProfile(null, 9);
+  assert.equal(profile.speedMultiplier, 1);
   assert.deepEqual(profile.idle, { startFrame: 0, endFrame: 0, fps: 6, loop: true });
   assert.deepEqual(profile.move, { startFrame: 0, endFrame: 8, fps: 10, loop: true });
   assert.deepEqual(profile.attack, { startFrame: 0, endFrame: 8, fps: 12, loop: false });
@@ -17,6 +18,12 @@ test("retains custom frame ranges and frame rates", () => {
   assert.equal(profile.idle.loop, true);
   assert.equal(profile.attack.fps, 18);
   assert.equal(profile.attack.loop, false);
+});
+test("supports a per-asset animation speed multiplier and rejects values outside its limits", () => {
+  assert.equal(createStudioAnimationProfile({ speedMultiplier: 3 }, 9).speedMultiplier, 3);
+  assert.equal(createStudioAnimationProfile({ speedMultiplier: 1.25 }, 9).speedMultiplier, 1.25);
+  assert.equal(validateStudioAnimationProfile({ speedMultiplier: 0.09 }, 9).valid, false);
+  assert.equal(validateStudioAnimationProfile({ speedMultiplier: 5.01 }, 9).valid, false);
 });
 test("rejects frame indices outside the actual sprite sheet", () => {
   assert.equal(validateStudioAnimationProfile({ attack: { startFrame: 0, endFrame: 9 } }, 9).valid, false);

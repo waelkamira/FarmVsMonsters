@@ -26,6 +26,17 @@ function getRigPartFrameCount(part){if(!part?.spriteSheet)return 1;const capacit
 function serializeRigParts(assets,asset){return getRigPartAssets(assets,asset).filter(part=>part&&["item","plant","monster","effect"].includes(part.type)&&part.status!=="archived"&&safeAssetPath(part.path)).map(part=>({id:part.id,name:part.name,type:part.type,path:process.env.STUDIO_STORAGE_DRIVER==="github"?"/api/studio/assets?preview="+encodeURIComponent(part.path):part.path,rows:part.spriteSheet?(part.rows||1):1,columns:part.spriteSheet?(part.columns||1):1,frameCount:getRigPartFrameCount(part),spriteSheet:Boolean(part.spriteSheet)}));}
 function githubHeaders(token){return {Authorization:"Bearer "+token,Accept:"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28"};}
 function githubUrl(filePath){return "https://api.github.com/repos/"+(process.env.STUDIO_GITHUB_REPOSITORY||"waelkamira/FarmVsMonsters")+"/contents/"+filePath;}
+async function githubPreviewAsset(filePath,token,branch){
+ const controller=new AbortController();
+ const timeout=setTimeout(()=>controller.abort(),120_000);
+ try{
+  const response=await fetch(githubUrl(filePath)+"?ref="+encodeURIComponent(branch),{headers:{...githubHeaders(token),Accept:"application/vnd.github.raw"},signal:controller.signal});
+  const bytes=response.ok?Buffer.from(await response.arrayBuffer()):null;
+  return {response,bytes};
+ }finally{
+  clearTimeout(timeout);
+ }
+}
 async function githubGetDocument(filePath,token,branch){const response=await fetch(githubUrl(filePath)+"?ref="+encodeURIComponent(branch),{headers:githubHeaders(token)});if(response.status===404)return null;if(!response.ok)throw Error("GitHub read failed ("+response.status+").");const data=await response.json();return {content:Buffer.from(data.content||"","base64").toString("utf8"),sha:data.sha};}
 async function githubGet(filePath,token,branch){const document=await githubGetDocument(filePath,token,branch);return document?.content??null;}
 async function githubGetBytes(filePath,token,branch){let response=await fetch(githubUrl(filePath)+"?ref="+encodeURIComponent(branch),{headers:{...githubHeaders(token),Accept:"application/vnd.github.raw"}});if(response.status===404){const targetBranch=process.env.STUDIO_PUBLISH_BRANCH||"main";if(targetBranch!==branch)response=await fetch(githubUrl(filePath)+"?ref="+encodeURIComponent(targetBranch),{headers:{...githubHeaders(token),Accept:"application/vnd.github.raw"}});}if(!response.ok)throw Error("GitHub asset read failed ("+response.status+"): "+filePath);return Buffer.from(await response.arrayBuffer());}
@@ -183,19 +194,17 @@ export async function GET(req){
    const allowedTypes={".png":"image/png",".webp":"image/webp",".gif":"image/gif",".mp3":"audio/mpeg",".wav":"audio/wav",".ogg":"audio/ogg",".m4a":"audio/mp4"};
    const extension=path.extname(preview).toLowerCase();
    if(!preview.startsWith("/assets/")||preview.includes("..")||!allowedTypes[extension])return NextResponse.json({error:"Invalid asset preview path."},{status:400});
-   const timeoutSignal=AbortSignal.timeout(12_000);
    try{
-    let upstream=await fetch(githubUrl("web/public"+preview)+"?ref="+encodeURIComponent(branch),{headers:{...githubHeaders(token),Accept:"application/vnd.github.raw"},signal:timeoutSignal});
-    if(upstream.status===404){
+    let upstream=await githubPreviewAsset("web/public"+preview,token,branch);
+    if(upstream.response.status===404){
      const targetBranch=process.env.STUDIO_PUBLISH_BRANCH||"main";
-     if(targetBranch!==branch)upstream=await fetch(githubUrl("web/public"+preview)+"?ref="+encodeURIComponent(targetBranch),{headers:{...githubHeaders(token),Accept:"application/vnd.github.raw"},signal:timeoutSignal});
+     if(targetBranch!==branch)upstream=await githubPreviewAsset("web/public"+preview,token,targetBranch);
     }
-    if(!upstream.ok)return NextResponse.json({error:"GitHub preview failed ("+upstream.status+")."},{status:upstream.status===404?404:502});
-    const bytes=await upstream.arrayBuffer();
-    return new NextResponse(bytes,{headers:{"Content-Type":allowedTypes[extension],"Cache-Control":"private, max-age=300","X-Content-Type-Options":"nosniff"}});
+    if(!upstream.response.ok)return NextResponse.json({error:"GitHub preview failed ("+upstream.response.status+")."},{status:upstream.response.status===404?404:502});
+    return new NextResponse(upstream.bytes,{headers:{"Content-Type":allowedTypes[extension],"Cache-Control":"private, max-age=300","X-Content-Type-Options":"nosniff"}});
    }catch(error){
-    const timedOut=timeoutSignal.aborted||error?.name==="TimeoutError"||error?.name==="AbortError";
-    return NextResponse.json({error:timedOut?"GitHub preview timed out after 12 seconds.":(error.message||"Preview fetch failed.")},{status:timedOut?504:502});
+    const timedOut=error?.name==="TimeoutError"||error?.name==="AbortError";
+    return NextResponse.json({error:timedOut?"GitHub preview timed out after 120 seconds.":(error.message||"Preview fetch failed.")},{status:timedOut?504:502});
    }
   }
   try{
@@ -259,7 +268,7 @@ export async function POST(req){
   try{
    const rawProfile=String(form.get("animationProfile")||"");
    const submittedProfile=rawProfile?JSON.parse(rawProfile):(existing?.animationProfile||null);
-   animationProfile=createStudioAnimationProfile(submittedProfile,rows*columns);
+   animationProfile=createStudioAnimationProfile({...submittedProfile,speedMultiplier:submittedProfile?.speedMultiplier??existing?.animationProfile?.speedMultiplier},rows*columns);
   }catch(error){return NextResponse.json({error:error.message||"Invalid animation profile."},{status:400});}
  }
  let rigProfile=null;

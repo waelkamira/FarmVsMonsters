@@ -108,7 +108,7 @@ for (const absolutePath of paths) {
   const override = SPRITESHEET_OVERRIDES[relativePath] || {};
   let atlasMetadata = null;
   if (IMAGE_EXTENSIONS.has(extension)) {
-    const atlasPath = absolutePath.replace(/\\.[^.]+$/, ".json");
+    const atlasPath = absolutePath.replace(/\.[^.]+$/, ".json");
     try {
       const atlas = JSON.parse(await readFile(atlasPath, "utf8"));
       const candidate = buildAtlasMetadata(relativePath, atlas, imageDimensions(buffer, extension));

@@ -6,6 +6,7 @@ const page = readFileSync(new URL("../app/studio/page.js", import.meta.url), "ut
 const css = readFileSync(new URL("../app/studio/studio.css", import.meta.url), "utf8");
 const editor = readFileSync(new URL("../app/studio/ProjectileTrajectoryEditor.jsx", import.meta.url), "utf8");
 const profile = readFileSync(new URL("../game/studio/plantProfiles.mjs", import.meta.url), "utf8");
+const assetDetails = readFileSync(new URL("../app/studio/assets/[id]/page.js", import.meta.url), "utf8");
 
 test("Studio asset library is five viewport-heights tall and scrolls its own list", () => {
   assert.match(page, /className="studio-panel studio-library-panel"/);
@@ -29,6 +30,23 @@ test("Studio animation preview defaults to all frames and supports selecting one
   assert.match(page, /صف الحركة \(0 = كل الصفوف\)<input type="number" min="0"/);
   assert.match(page, /القيمة 0 تعرض جميع إطارات Sprite Sheet بالتتابع/);
   assert.match(page, /function cancelEdit\(\)\{setAnimationRow\(0\);setAnimationPlaying\(false\);/);
+});
+
+test("Studio defines a per-plant and per-monster animation speed multiplier", () => {
+  assert.match(page, /مضاعف سرعة الأنيميشن/);
+  assert.match(page, /speedMultiplier:1,idle:/);
+  assert.match(page, /animationProfile\.speedMultiplier\?\?editingAsset\?\.animationProfile\?\.speedMultiplier\?\?1/);
+  assert.match(page, /const previewFps=animationFps\*Number\(animationProfile\.speedMultiplier/);
+  assert.match(page, /1000\/previewFps/);
+  assert.match(assetDetails, /asset\.animationProfile\.speedMultiplier \?\? 1/);
+});
+
+test("Studio animation preview supports precise previous and next frame stepping", () => {
+  assert.match(page, /function stepPreviewFrame\(direction\)\{setAnimationPlaying\(false\);setPreviewFrameColumn\(current=>\(current\+direction\+previewFrameCount\)%previewFrameCount\);\}/);
+  assert.match(page, /aria-label="الإطار السابق" onClick=\{\(\)=>stepPreviewFrame\(-1\)\}/);
+  assert.match(page, /aria-label="الإطار التالي" onClick=\{\(\)=>stepPreviewFrame\(1\)\}/);
+  assert.match(page, /الإطار \{safePreviewFrame\+1\} من \{previewFrameCount\}/);
+  assert.match(css, /\.studio-frame-navigation\{display:flex/);
 });
 
 

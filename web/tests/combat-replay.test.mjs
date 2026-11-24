@@ -7,7 +7,7 @@ function makeLog(actions) { return actions.reduce((log, action) => appendCombatE
 function ev(tick, type, payload) { return { tick, type, payload }; }
 
 test("combat event log accepts every plant type supported by the battle scene", () => {
- const supported = ["radish", "mushroom", "tomato", "pumpkin", "onion"];
+ const supported = ["radish", "mushroom", "pumpkin", "pineapple", "hazelnut", "mango", "snow-thrower", "electric-mushroom"];
  for (const type of supported) {
   const log = makeLog([ev(0, "plant_placed", { type, col: 1, row: 2 }), ev(1, "plant_uprooted", { type, col: 1, row: 2 })]);
   assert.equal(log.events.length, 2);

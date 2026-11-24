@@ -1,86 +1,133 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-24T12:01:45.711Z",
-  "assetCount": 93,
-  "totalBytes": 27902723,
+  "generatedAt": "2026-11-24T17:29:55.451Z",
+  "assetCount": 94,
+  "totalBytes": 28449069,
   "groups": {
     "audio": [
       {
         "key": "sfx-coin-collect",
         "url": "/assets/audio/sfx/coin-collect.ogg",
-        "type": "audio"
+        "type": "audio",
+        "group": "audio",
+        "bytes": 25394,
+        "sha256": "8a91f969e932df709df80ee124d86a51389eed9b67f22e5e716bc2bbf60d8dab"
       },
       {
         "key": "sfx-defeat",
         "url": "/assets/audio/sfx/defeat.ogg",
-        "type": "audio"
+        "type": "audio",
+        "group": "audio",
+        "bytes": 9215,
+        "sha256": "eba17ecb2a426bfd4a8a6acff5f8a86202b6424a77af0fd842e37809a1ab6d81"
       },
       {
         "key": "sfx-grass-step-01",
         "url": "/assets/audio/sfx/grass-step-01.ogg",
-        "type": "audio"
+        "type": "audio",
+        "group": "audio",
+        "bytes": 8290,
+        "sha256": "9d49497777405d78d7cf7f2888e28277f3a23192300cfd1d79d54876b20f479f"
       },
       {
         "key": "sfx-grass-step-02",
         "url": "/assets/audio/sfx/grass-step-02.ogg",
-        "type": "audio"
+        "type": "audio",
+        "group": "audio",
+        "bytes": 8313,
+        "sha256": "fb28781bd22b2eefdc14077f1adf5c94d7fe9c3a130194633b55f3e0d39d9f04"
       },
       {
         "key": "sfx-monster-bite",
         "url": "/assets/audio/sfx/monster-bite.ogg",
-        "type": "audio"
+        "type": "audio",
+        "group": "audio",
+        "bytes": 20870,
+        "sha256": "480ee82b690136ea9db6966a3c3033356b8274752795c4e37afd6b6defcfacff"
       },
       {
         "key": "sfx-monster-defeat",
         "url": "/assets/audio/sfx/monster-defeat.ogg",
-        "type": "audio"
+        "type": "audio",
+        "group": "audio",
+        "bytes": 11617,
+        "sha256": "b33a8f14068aec24ec69ba85e5e87fdc41228975f6a1a3e44a6e7d6fc3d9f8d8"
       },
       {
         "key": "sfx-monster-hit",
         "url": "/assets/audio/sfx/monster-hit.ogg",
-        "type": "audio"
+        "type": "audio",
+        "group": "audio",
+        "bytes": 8800,
+        "sha256": "486988aa2d6440ffc4c62a0e8ccf3c23673ba84424bd4723378d451b7255eb5c"
       },
       {
         "key": "sfx-monster-jump",
         "url": "/assets/audio/sfx/monster-jump.ogg",
-        "type": "audio"
+        "type": "audio",
+        "group": "audio",
+        "bytes": 6872,
+        "sha256": "d28d1b07397de1cd7db2058facae0930372f31d6d945f08303ba996b37ebf06d"
       },
       {
         "key": "sfx-monster-land",
         "url": "/assets/audio/sfx/monster-land.ogg",
-        "type": "audio"
+        "type": "audio",
+        "group": "audio",
+        "bytes": 6575,
+        "sha256": "1723a9fd25103ed41af06054814e84e65f4a772bac86ab2dc927da93d9592ff5"
       },
       {
         "key": "sfx-plant-dig",
         "url": "/assets/audio/sfx/plant-dig.ogg",
-        "type": "audio"
+        "type": "audio",
+        "group": "audio",
+        "bytes": 9370,
+        "sha256": "d00c2b3c9fff07e376145c8c8c45c90e5084ec192f6ce0387db233f7b86f1486"
       },
       {
         "key": "sfx-plant-rustle",
         "url": "/assets/audio/sfx/plant-rustle.ogg",
-        "type": "audio"
+        "type": "audio",
+        "group": "audio",
+        "bytes": 16508,
+        "sha256": "ddb93a3671233f95da0e0b10367f082f7eb42fa6caaddcf776410aa8833c747d"
       },
       {
         "key": "sfx-thorn-impact",
         "url": "/assets/audio/sfx/thorn-impact.ogg",
-        "type": "audio"
+        "type": "audio",
+        "group": "audio",
+        "bytes": 5827,
+        "sha256": "f0e982611e97512fee5f777986b67e8b435434b601f94992ec044f7e89fb5acb"
       },
       {
         "key": "sfx-thorn-launch",
         "url": "/assets/audio/sfx/thorn-launch.ogg",
-        "type": "audio"
+        "type": "audio",
+        "group": "audio",
+        "bytes": 15532,
+        "sha256": "4cd96dc630bed9840c15f1dd2306da2cc56a4da26a5d3f1a03c5a7265ac5e54f"
       },
       {
         "key": "sfx-victory",
         "url": "/assets/audio/sfx/victory.ogg",
-        "type": "audio"
+        "type": "audio",
+        "group": "audio",
+        "bytes": 14169,
+        "sha256": "33b17a9a9a2397c62b285c52c33a907fdffb476909c99e42dde603f6a7a8b12c"
       }
     ],
     "backgrounds": [
       {
         "key": "backgrounds-farm-battlefield",
         "url": "/assets/backgrounds/farm-battlefield.jpeg",
-        "type": "image"
+        "type": "image",
+        "group": "backgrounds",
+        "bytes": 56081,
+        "sha256": "f8fdb783dcbf3a1bfb026dd1242fa2530203d3cc43270c061fc48ff9f21acc85",
+        "width": 1080,
+        "height": 599
       }
     ],
     "characters/farmer": [
@@ -88,508 +135,741 @@
         "key": "farmer-attack",
         "url": "/assets/characters/farmer/farmer-attack.png",
         "type": "spritesheet",
+        "group": "characters/farmer",
+        "bytes": 460124,
+        "sha256": "b1d80b9b176c0a3c9f31c9f9a85726e80e09b2887f5f9957e61dc445b8a08cc8",
         "frameConfig": {
           "frameWidth": 180,
           "frameHeight": 360
-        }
+        },
+        "width": 1080,
+        "height": 360
       },
       {
         "key": "farmer-collect",
         "url": "/assets/characters/farmer/farmer-collect.png",
         "type": "spritesheet",
+        "group": "characters/farmer",
+        "bytes": 598589,
+        "sha256": "765f23dc9b38ac4188a1cbfc6d2ecd9f4b0cde34c45d4b0d02fa339d3acd7762",
         "frameConfig": {
           "frameWidth": 180,
           "frameHeight": 360
-        }
+        },
+        "width": 1080,
+        "height": 360
       },
       {
         "key": "farmer-death",
         "url": "/assets/characters/farmer/farmer-death.png",
         "type": "spritesheet",
+        "group": "characters/farmer",
+        "bytes": 388574,
+        "sha256": "9e34a0636dffe7fa156bd259df5a4e8cdf6353b97e36e9edf51125714ca9aa39",
         "frameConfig": {
           "frameWidth": 152,
           "frameHeight": 430
-        }
+        },
+        "width": 914,
+        "height": 430
       },
       {
         "key": "farmer-hit",
         "url": "/assets/characters/farmer/farmer-hit.png",
         "type": "spritesheet",
+        "group": "characters/farmer",
+        "bytes": 475771,
+        "sha256": "a6647eb6f551925e3eb124c0b05d7692d6c6c717ef77c3c719aebfb3b634e558",
         "frameConfig": {
           "frameWidth": 152,
           "frameHeight": 430
-        }
+        },
+        "width": 914,
+        "height": 430
       },
       {
         "key": "farmer-idle",
         "url": "/assets/characters/farmer/farmer-idle.png",
         "type": "spritesheet",
+        "group": "characters/farmer",
+        "bytes": 492063,
+        "sha256": "e8d4018b0c7a59a90d7b3ca9e7feb41a5be9a5b79fc2342016e3a6445a32bcf0",
         "frameConfig": {
           "frameWidth": 540,
           "frameHeight": 360
-        }
+        },
+        "width": 1080,
+        "height": 720
       },
       {
         "key": "farmer-jump",
         "url": "/assets/characters/farmer/farmer-jump.png",
         "type": "spritesheet",
+        "group": "characters/farmer",
+        "bytes": 602627,
+        "sha256": "cb782d549e1f08e24005a0922e1acac8c60965e3f7fc6db1101a043338159f36",
         "frameConfig": {
           "frameWidth": 216,
           "frameHeight": 720
-        }
+        },
+        "width": 1080,
+        "height": 720
       },
       {
         "key": "farmer-plant",
         "url": "/assets/characters/farmer/farmer-plant.png",
         "type": "spritesheet",
+        "group": "characters/farmer",
+        "bytes": 632940,
+        "sha256": "3d6c93f5069f0942377cd600f4367c01de7d53042f33fca04d0e434cad90f3dc",
         "frameConfig": {
           "frameWidth": 360,
           "frameHeight": 430
-        }
+        },
+        "width": 2160,
+        "height": 430
       },
       {
         "key": "farmer-run",
         "url": "/assets/characters/farmer/farmer-run.png",
         "type": "spritesheet",
+        "group": "characters/farmer",
+        "bytes": 702835,
+        "sha256": "9442fed03ac27f9d600904835a004802332f612737d04adefb28bd0163d8fc99",
         "frameConfig": {
           "frameWidth": 360,
           "frameHeight": 430
-        }
+        },
+        "width": 2160,
+        "height": 430
       },
       {
         "key": "farmer-uproot",
         "url": "/assets/characters/farmer/farmer-uproot.png",
         "type": "spritesheet",
+        "group": "characters/farmer",
+        "bytes": 632940,
+        "sha256": "3d6c93f5069f0942377cd600f4367c01de7d53042f33fca04d0e434cad90f3dc",
         "frameConfig": {
           "frameWidth": 360,
           "frameHeight": 430
-        }
+        },
+        "width": 2160,
+        "height": 430
       },
       {
         "key": "farmer-walk",
         "url": "/assets/characters/farmer/farmer-walk.png",
         "type": "spritesheet",
+        "group": "characters/farmer",
+        "bytes": 931791,
+        "sha256": "b82e48c2277d0299042f9ef0a7c95afa5084845e690b3462168af96bbb9689f3",
         "frameConfig": {
           "frameWidth": 360,
           "frameHeight": 430
-        }
+        },
+        "width": 2880,
+        "height": 430
       }
     ],
     "characters/monsters": [
       {
         "key": "characters-monsters-01-01",
         "url": "/assets/characters/monsters/01/01.png",
-        "type": "image"
+        "type": "image",
+        "group": "characters/monsters",
+        "bytes": 850606,
+        "sha256": "c07ab241d0076edfff5f0b847f2a3aaaa1286ace5eecda0039e36c0cae47f18e",
+        "width": 1080,
+        "height": 806
       },
       {
         "key": "characters-monsters-hyena-frozen-hyena-level-1",
         "url": "/assets/characters/monsters/hyena/frozen-hyena-level-1.png",
-        "type": "image"
+        "type": "image",
+        "group": "characters/monsters",
+        "bytes": 1308722,
+        "sha256": "60e3762a36d5ff36635132357d7ab2b63f3c097c021bf0fb631a35dd87c848a8",
+        "width": 1024,
+        "height": 1024
       },
       {
         "key": "characters-monsters-hyena-frozen-hyena-level-2",
         "url": "/assets/characters/monsters/hyena/frozen-hyena-level-2.png",
-        "type": "image"
+        "type": "image",
+        "group": "characters/monsters",
+        "bytes": 1818631,
+        "sha256": "85c12d901577ce91c1586d2d5b534f71ee551ec096b5e03523de82c4d0d20050",
+        "width": 1416,
+        "height": 1119
       },
       {
         "key": "hyena-bite",
         "url": "/assets/characters/monsters/hyena/hyena-bite.png",
         "type": "spritesheet",
+        "group": "characters/monsters",
+        "bytes": 647180,
+        "sha256": "e57b6fb5a8d74ad1f1766a27d329b9ff237749080396fbede6142722b0a50eb5",
         "frameConfig": {
           "frameWidth": 360,
           "frameHeight": 447
-        }
+        },
+        "width": 1080,
+        "height": 894
       },
       {
         "key": "hyena-death",
         "url": "/assets/characters/monsters/hyena/hyena-death.png",
         "type": "spritesheet",
+        "group": "characters/monsters",
+        "bytes": 511996,
+        "sha256": "f4d6ee56bb344a9debfca2e06342b8b36c56635c753dcfee48b6175c8e0fe829",
         "frameConfig": {
           "frameWidth": 360,
           "frameHeight": 447
-        }
+        },
+        "width": 1080,
+        "height": 894
       },
       {
         "key": "hyena-hit",
         "url": "/assets/characters/monsters/hyena/hyena-hit.png",
         "type": "spritesheet",
+        "group": "characters/monsters",
+        "bytes": 263467,
+        "sha256": "a012804ecf013feec943bbf5ab69427078ca0ecfc57bacc68ac7a6c94645da9f",
         "frameConfig": {
           "frameWidth": 360,
           "frameHeight": 894
-        }
+        },
+        "width": 1080,
+        "height": 894
       },
       {
         "key": "hyena-idle",
         "url": "/assets/characters/monsters/hyena/hyena-idle.png",
         "type": "spritesheet",
+        "group": "characters/monsters",
+        "bytes": 340460,
+        "sha256": "2184287354f1968efc0495fe74ec32699d360fcc78b752cc7698bfc85c635859",
         "frameConfig": {
           "frameWidth": 360,
           "frameHeight": 298
-        }
+        },
+        "width": 1080,
+        "height": 298
       },
       {
         "key": "characters-monsters-hyena-hyena-jump",
         "url": "/assets/characters/monsters/hyena/hyena-jump.png",
-        "type": "image"
+        "type": "image",
+        "group": "characters/monsters",
+        "bytes": 507809,
+        "sha256": "b17e339f1ee106a1cd091f81f28f9985a93e6bfecb7013f94a6f5a4e24ae3eff",
+        "width": 1080,
+        "height": 894
       },
       {
         "key": "characters-monsters-hyena-hyena-run",
         "url": "/assets/characters/monsters/hyena/hyena-run.png",
-        "type": "image"
+        "type": "image",
+        "group": "characters/monsters",
+        "bytes": 981151,
+        "sha256": "8dcffb491c0bc50d4de4393634127e92903d74b2bc35f2a6ff48ef255135d5c1",
+        "width": 1080,
+        "height": 889
       },
       {
         "key": "hyena-run",
         "url": "/assets/characters/monsters/hyena/hyena-run1.png",
         "type": "spritesheet",
+        "group": "characters/monsters",
+        "bytes": 702079,
+        "sha256": "f3ff3e2d901eaf039e286e51cf9c621b29a168ea2d8a81950e98b40d666beaee",
         "frameConfig": {
           "frameWidth": 367,
           "frameHeight": 298
-        }
+        },
+        "width": 1101,
+        "height": 894
       },
       {
         "key": "hyena-walk",
         "url": "/assets/characters/monsters/hyena/hyena-walk.png",
         "type": "spritesheet",
+        "group": "characters/monsters",
+        "bytes": 848741,
+        "sha256": "d0ffaca6157221b563c49fea45fa93a5f44927a45f64e3dbf799f1a8ba0091b0",
         "frameConfig": {
           "frameWidth": 360,
           "frameHeight": 298
-        }
+        },
+        "width": 1080,
+        "height": 894
       }
     ],
     "items/currency": [
       {
         "key": "items-currency-gold-coin-sprite",
         "url": "/assets/items/currency/gold-coin-sprite.png",
-        "type": "image"
+        "type": "image",
+        "group": "items/currency",
+        "bytes": 259271,
+        "sha256": "94967937bc837d54cde6b3f85afe455decc9cefbc6ce4cccc8e6978303e7c45f",
+        "width": 353,
+        "height": 707
       },
       {
         "key": "gold-coin",
         "url": "/assets/items/currency/gold-coin.png",
         "type": "spritesheet",
+        "group": "items/currency",
+        "bytes": 345442,
+        "sha256": "15c0f5cda17a24582250fe1770b0a5acb219f20cea486781459d2d7a6d3e9e14",
         "frameConfig": {
           "frameWidth": 170,
           "frameHeight": 170
-        }
+        },
+        "width": 500,
+        "height": 500
       }
     ],
     "items/ui": [
       {
         "key": "items-ui-cute-farm-house-health-icon",
         "url": "/assets/items/ui/Cute farm-house health icon.png",
-        "type": "image"
+        "type": "image",
+        "group": "items/ui",
+        "bytes": 47344,
+        "sha256": "5ef72c4f300cb775642cfb2054aaefebc9a2b054398357fbec6fbe039dfe24b1",
+        "width": 147,
+        "height": 138
       },
       {
         "key": "items-ui-cute-monster-wave-indicator-icon",
         "url": "/assets/items/ui/Cute monster-wave indicator icon.png",
-        "type": "image"
+        "type": "image",
+        "group": "items/ui",
+        "bytes": 53586,
+        "sha256": "356e2c3bda8f5e1cde07be3aba196a959f01b635f67d788ee7642d9126db1e78",
+        "width": 172,
+        "height": 139
       },
       {
         "key": "items-ui-decorative-fantasy-leaves--mushrooms-and-golden-ornaments-as-one-grouped-asset",
         "url": "/assets/items/ui/Decorative fantasy leaves, mushrooms and golden ornaments as one grouped asset.png",
-        "type": "image"
+        "type": "image",
+        "group": "items/ui",
+        "bytes": 57280,
+        "sha256": "a0bed848ed25324e89391cbec5ddedd41e14f81292fd083c02f7ea2ddaa8e89f",
+        "width": 205,
+        "height": 130
       },
       {
         "key": "items-ui-empty-wooden-wave-number-badge",
         "url": "/assets/items/ui/Empty wooden wave-number badge.png",
-        "type": "image"
+        "type": "image",
+        "group": "items/ui",
+        "bytes": 56219,
+        "sha256": "af859477b95c726f098a12f2649afd375cc202410a06c8c71ec6c2007e820adf",
+        "width": 215,
+        "height": 134
       },
       {
         "key": "items-ui-golden-orange-progress-fill-segment",
         "url": "/assets/items/ui/Golden-orange progress fill segment.png",
-        "type": "image"
+        "type": "image",
+        "group": "items/ui",
+        "bytes": 228738,
+        "sha256": "c81b78df27fab2773462cefab10d241aa49c75729e20f959582f33360aa5612a",
+        "width": 1041,
+        "height": 216
       },
       {
         "key": "items-ui-mushroom-currency-counter-frame",
         "url": "/assets/items/ui/Mushroom currency counter frame.png",
-        "type": "image"
+        "type": "image",
+        "group": "items/ui",
+        "bytes": 36537,
+        "sha256": "beec0efcc064d702e9ca038eb2325fd4f2be8533864106b1853a7cf2a7b1e423",
+        "width": 215,
+        "height": 84
       },
       {
         "key": "items-ui-round-wooden-pause-button-with-pause-symbol",
         "url": "/assets/items/ui/Round wooden pause button with pause symbol.png",
-        "type": "image"
+        "type": "image",
+        "group": "items/ui",
+        "bytes": 68434,
+        "sha256": "c825bb10bb43ac41e41b4148eb18de68bb9899129b26c1c3da12d2357e844352",
+        "width": 230,
+        "height": 171
       },
       {
         "key": "items-ui-round-wooden-settings-button-with-golden-gear",
         "url": "/assets/items/ui/Round wooden settings button with golden gear.png",
-        "type": "image"
+        "type": "image",
+        "group": "items/ui",
+        "bytes": 62555,
+        "sha256": "8a616a59839e8b87aa2675e83be7440cc7ba682febbf6651e62cad7670685163",
+        "width": 176,
+        "height": 176
       },
       {
         "key": "items-ui-round-wooden-speed-button-with-fast-forward-symbol",
         "url": "/assets/items/ui/Round wooden speed button with fast-forward symbol.png",
-        "type": "image"
+        "type": "image",
+        "group": "items/ui",
+        "bytes": 74907,
+        "sha256": "06d3bd365c65d104aeed88296282670a0dfedc7a7f9e00c10f245ed30aab3a29",
+        "width": 217,
+        "height": 176
       },
       {
         "key": "items-ui-small-wave-progress-marker",
         "url": "/assets/items/ui/Small wave progress marker.png",
-        "type": "image"
+        "type": "image",
+        "group": "items/ui",
+        "bytes": 29914,
+        "sha256": "dd520e4a598da6b6f07b6dad45bb87d59ceae6714f685287aa2d2dddbe867c2e",
+        "width": 100,
+        "height": 146
       },
       {
         "key": "items-ui-wooden-attack-wave-progress-bar-frame",
         "url": "/assets/items/ui/Wooden attack-wave progress bar frame.png",
-        "type": "image"
+        "type": "image",
+        "group": "items/ui",
+        "bytes": 162336,
+        "sha256": "884e6d5d97e00f6f799d19dfbb1a5039ab8eb2b352390e43000a2f4fd9720b6f",
+        "width": 1041,
+        "height": 153
       },
       {
         "key": "items-ui-background",
         "url": "/assets/items/ui/background.jpeg",
-        "type": "image"
+        "type": "image",
+        "group": "items/ui",
+        "bytes": 73910,
+        "sha256": "3f80ad055aa9b4307a826a329bec11918619cef7a3a01702fe0dc11a568deb76",
+        "width": 1080,
+        "height": 602
       },
       {
         "key": "items-ui-logo",
         "url": "/assets/items/ui/logo.png",
-        "type": "image"
+        "type": "image",
+        "group": "items/ui",
+        "bytes": 1181343,
+        "sha256": "ee4d4ba27c0d0bbc167d0526a8be495e27151a935302697de84222eaf53db1d5",
+        "width": 1080,
+        "height": 720
       },
       {
         "key": "items-ui-start-button",
         "url": "/assets/items/ui/start-button.png",
-        "type": "image"
+        "type": "image",
+        "group": "items/ui",
+        "bytes": 368438,
+        "sha256": "c92de916430d6453c6c99438d9d91516e591af53b71b3434f4fbf36f2d833e0a",
+        "width": 1080,
+        "height": 602
       },
       {
         "key": "items-ui-ui-inventory-wood-fram",
         "url": "/assets/items/ui/ui-inventory-wood-fram.png",
-        "type": "image"
+        "type": "image",
+        "group": "items/ui",
+        "bytes": 78544,
+        "sha256": "002fab49c1cbfc19a495692bce7d269224476ebd45f113a37e12ff5b2266ae7a",
+        "width": 355,
+        "height": 386
       },
       {
         "key": "items-ui-ui-monster-card",
         "url": "/assets/items/ui/ui-monster-card.png",
-        "type": "image"
+        "type": "image",
+        "group": "items/ui",
+        "bytes": 135054,
+        "sha256": "62b0d3efb88f21d298fd266ada60436fbdd7c15f95c8931eb7dd35f83905a161",
+        "width": 271,
+        "height": 271
       },
       {
         "key": "items-ui-ui-mushroom-card",
         "url": "/assets/items/ui/ui-mushroom-card.png",
-        "type": "image"
+        "type": "image",
+        "group": "items/ui",
+        "bytes": 123366,
+        "sha256": "24fa14b665fd04e2207dc429bcfbc6437df8948436e7cb29745b8be0484d5d66",
+        "width": 277,
+        "height": 286
       },
       {
         "key": "items-ui-ui-seed-card-fram",
         "url": "/assets/items/ui/ui-seed-card-fram.png",
-        "type": "image"
+        "type": "image",
+        "group": "items/ui",
+        "bytes": 18717,
+        "sha256": "38950cca947b3a8f4d3c6f0378a1fe078dbc944326d39d5a68e7fbc2bb63f04b",
+        "width": 157,
+        "height": 175
       },
       {
         "key": "items-ui-ui-seed-card-locked",
         "url": "/assets/items/ui/ui-seed-card-locked.png",
-        "type": "image"
+        "type": "image",
+        "group": "items/ui",
+        "bytes": 22739,
+        "sha256": "15992da8e609d277a491474aa48def24800982fad7b995f8069df2442c5a8e00",
+        "width": 133,
+        "height": 173
       },
       {
         "key": "items-ui-ui-seed-card",
         "url": "/assets/items/ui/ui-seed-card.png",
-        "type": "image"
+        "type": "image",
+        "group": "items/ui",
+        "bytes": 112485,
+        "sha256": "880f4dcc8a433b3c97924b59bfb9ba66dfcca3fb98c13e6037f381ab8527343c",
+        "width": 270,
+        "height": 281
       },
       {
         "key": "items-ui-ui-seed-slot-empty",
         "url": "/assets/items/ui/ui-seed-slot-empty.png",
-        "type": "image"
+        "type": "image",
+        "group": "items/ui",
+        "bytes": 18102,
+        "sha256": "d60ae6ec308eb027e414a848a56372d8ecdf4614c4cbf1576a15eaacd0fa1f91",
+        "width": 165,
+        "height": 203
       }
     ],
     "monster-icons": [
       {
         "key": "monster-icons-alpha-brute",
         "url": "/assets/monster-icons/alpha-brute.svg",
-        "type": "svg"
+        "type": "svg",
+        "group": "monster-icons",
+        "bytes": 730,
+        "sha256": "818db13ab81902fbf01c4dc0d50ce16fed147885c7f10cae9fb438e0a3898b39",
+        "width": 64,
+        "height": 64
       },
       {
         "key": "monster-icons-cave-brute",
         "url": "/assets/monster-icons/cave-brute.svg",
-        "type": "svg"
+        "type": "svg",
+        "group": "monster-icons",
+        "bytes": 643,
+        "sha256": "fd9237f788afc015253766d2ac15db1f386395d9c773ff15491e3d3223915d05",
+        "width": 64,
+        "height": 64
       },
       {
         "key": "monster-icons-dragon",
         "url": "/assets/monster-icons/dragon.svg",
-        "type": "svg"
+        "type": "svg",
+        "group": "monster-icons",
+        "bytes": 742,
+        "sha256": "dd5adab338723f7fd8f1677a3dfd86a6d9dd0d29dcda0178971257a8056782bb",
+        "width": 64,
+        "height": 64
       },
       {
         "key": "monster-icons-dust-skitter",
         "url": "/assets/monster-icons/dust-skitter.svg",
-        "type": "svg"
+        "type": "svg",
+        "group": "monster-icons",
+        "bytes": 700,
+        "sha256": "f9869a546c2361bd9b77bc31afdd9710dda6e594057151681b83d243e6c3ae2b",
+        "width": 64,
+        "height": 64
       },
       {
         "key": "monster-icons-stonehide",
         "url": "/assets/monster-icons/stonehide.svg",
-        "type": "svg"
+        "type": "svg",
+        "group": "monster-icons",
+        "bytes": 746,
+        "sha256": "f6c87077f8af09d9fb5da4bc9e03e1e5c26f42358200639f20532f08f459de00",
+        "width": 64,
+        "height": 64
       }
     ],
     "plant-icons": [
       {
         "key": "plant-icons-double-radish",
         "url": "/assets/plant-icons/double-radish.svg",
-        "type": "svg"
+        "type": "svg",
+        "group": "plant-icons",
+        "bytes": 752,
+        "sha256": "5d02ffcec5b3333c6ec7538dc331921e3050410c0a91b5663e1796209f600dd7",
+        "width": 64,
+        "height": 64
       },
       {
         "key": "plant-icons-explosive-berry",
         "url": "/assets/plant-icons/explosive-berry.svg",
-        "type": "svg"
+        "type": "svg",
+        "group": "plant-icons",
+        "bytes": 667,
+        "sha256": "9653f388e1acd17f44ecde87da87ae4d179e5ec30719a36d131e16c7f065a4f6",
+        "width": 64,
+        "height": 64
       },
       {
         "key": "plant-icons-ice-bloom",
         "url": "/assets/plant-icons/ice-bloom.svg",
-        "type": "svg"
+        "type": "svg",
+        "group": "plant-icons",
+        "bytes": 637,
+        "sha256": "bbb6538343cf51b25ea09bb9838a7856c7c430a13f2dd30adb77a649e388190e",
+        "width": 64,
+        "height": 64
       },
       {
         "key": "plant-icons-mushroom",
         "url": "/assets/plant-icons/mushroom.svg",
-        "type": "svg"
+        "type": "svg",
+        "group": "plant-icons",
+        "bytes": 254,
+        "sha256": "07efd6be932567a7570962021eec7a75e5e7adac749df535432a056e8e4c12d7",
+        "width": 64,
+        "height": 64
       },
       {
         "key": "plant-icons-pea-shooter",
         "url": "/assets/plant-icons/pea-shooter.svg",
-        "type": "svg"
+        "type": "svg",
+        "group": "plant-icons",
+        "bytes": 620,
+        "sha256": "95ce448cf1f486859b564ba7cb478e75c0a8da0e996a1a060f191bd0725e972e",
+        "width": 64,
+        "height": 64
       },
       {
         "key": "plant-icons-pumpkin-guard",
         "url": "/assets/plant-icons/pumpkin-guard.svg",
-        "type": "svg"
+        "type": "svg",
+        "group": "plant-icons",
+        "bytes": 661,
+        "sha256": "bf0a9327b39593bb566001647a9a6898f1e555288afb924c86d55d41a146c045",
+        "width": 64,
+        "height": 64
       },
       {
         "key": "plant-icons-radish",
         "url": "/assets/plant-icons/radish.svg",
-        "type": "svg"
+        "type": "svg",
+        "group": "plant-icons",
+        "bytes": 249,
+        "sha256": "89c2c3283650aac0148f705dc3193843f3f3736a1d2cbd82ecc614c36a9c8388",
+        "width": 64,
+        "height": 64
       },
       {
         "key": "plant-icons-sunflower",
         "url": "/assets/plant-icons/sunflower.svg",
-        "type": "svg"
+        "type": "svg",
+        "group": "plant-icons",
+        "bytes": 965,
+        "sha256": "5a17f568061b4a3ce9bfb898b9aca68c23f9b4030d69aebec129b85083e61b03",
+        "width": 64,
+        "height": 64
       },
       {
         "key": "plant-icons-thorn-wall",
         "url": "/assets/plant-icons/thorn-wall.svg",
-        "type": "svg"
+        "type": "svg",
+        "group": "plant-icons",
+        "bytes": 500,
+        "sha256": "567d7c2c19dce9ef5116bb65d0b0735db6223a5eed8e654f4ffd1d144606559d",
+        "width": 64,
+        "height": 64
       }
     ],
     "plants": [
       {
         "key": "plants-electric-mushroom-level-1",
         "url": "/assets/plants/Electric-mushroom-level-1.png",
-        "type": "image"
+        "type": "image",
+        "group": "plants",
+        "bytes": 366074,
+        "sha256": "22d8f60a35bac3067319880ae8d98be0ba8ac017aaabbbdff8a677ca3d6574a2",
+        "width": 512,
+        "height": 512
       },
       {
         "key": "plants-onion",
         "url": "/assets/plants/Onion.png",
-        "type": "image"
+        "type": "image",
+        "group": "plants",
+        "bytes": 183749,
+        "sha256": "9633b9828c5999489ab0a84b161de5e8a69b85cd1c29f67bd3eebb517a61e2a6",
+        "width": 340,
+        "height": 500
       },
       {
         "key": "plants-snow-thrower-bomb-level-1",
         "url": "/assets/plants/Snow-thrower-bomb-level-1.png",
-        "type": "image"
+        "type": "image",
+        "group": "plants",
+        "bytes": 42516,
+        "sha256": "a97e7d6df5f33783a4e9a0b1191b54782e7bc88a8f495ab8cf337fbb3d21c1eb",
+        "width": 142,
+        "height": 174
       },
       {
         "key": "plants-snow-thrower-level-1",
         "url": "/assets/plants/Snow-thrower-level-1.png",
-        "type": "image"
+        "type": "image",
+        "group": "plants",
+        "bytes": 922038,
+        "sha256": "6997411f7bc36323cfdac000402672f006f00e7b0f1aaf05dfd5491eae66e0ae",
+        "width": 1080,
+        "height": 869
       },
       {
         "key": "plants-bamboo-level-1",
         "url": "/assets/plants/bamboo-level-1.png",
-        "type": "image"
+        "type": "image",
+        "group": "plants",
+        "bytes": 1534772,
+        "sha256": "f80b2cc0e83b411718cef691bc7eabefc0b29b324567a4c352f2ef6c8a45bcc9",
+        "width": 1254,
+        "height": 1254
       },
       {
         "key": "plants-bamboo-throwing-level-1",
         "url": "/assets/plants/bamboo-throwing-level-1.png",
-        "type": "image"
+        "type": "image",
+        "group": "plants",
+        "bytes": 1056574,
+        "sha256": "b9829bedb4d8d65e3c98ec2b51a72ae60023aae30b504870b716974ea343c225",
+        "width": 1024,
+        "height": 1024
       },
       {
-        "key": "plants-hazelnut-level-1-bomb",
-        "url": "/assets/plants/hazelnut-level-1-bomb.png",
-        "type": "image"
-      },
-      {
-        "key": "hazelnut-level-1",
-        "url": "/assets/plants/hazelnut-level-1.png",
-        "type": "spritesheet",
-        "frameConfig": {
-          "frameWidth": 341,
-          "frameHeight": 341,
-          "margin": 0,
-          "spacing": 0
-        }
-      },
-      {
-        "key": "plants-mango-level-1-bomb",
-        "url": "/assets/plants/mango-level-1-bomb.png",
-        "type": "image"
-      },
-      {
-        "key": "plants-mango-level-1",
-        "url": "/assets/plants/mango-level-1.png",
-        "type": "image"
-      },
-      {
-        "key": "plants-mushroom",
-        "url": "/assets/plants/mushroom.png",
-        "type": "image"
-      },
-      {
-        "key": "plants-pineapple-level-1-bomb",
-        "url": "/assets/plants/pineapple-level-1-bomb.png",
-        "type": "image"
-      },
-      {
-        "key": "pineapple-level-1",
-        "url": "/assets/plants/pineapple-level-1.png",
-        "type": "spritesheet",
-        "frameConfig": {
-          "frameWidth": 418,
-          "frameHeight": 418,
-          "margin": 0,
-          "spacing": 0
-        }
-      },
-      {
-        "key": "plants-pumpkin",
-        "url": "/assets/plants/pumpkin.png",
-        "type": "image"
-      },
-      {
-        "key": "plants-radish-level-1-bomb",
-        "url": "/assets/plants/radish-level-1-bomb.png",
-        "type": "image"
-      },
-      {
-        "key": "plants-radish-level-1",
-        "url": "/assets/plants/radish-level-1.png",
-        "type": "image"
-      },
-      {
-        "key": "plants-radish",
-        "url": "/assets/plants/radish.png",
-        "type": "image"
-      },
-      {
-        "key": "plants-tomato",
-        "url": "/assets/plants/tomato.png",
-        "type": "image"
-      },
-      {
-        "key": "corn-monster",
+        "key": "plants-corn_monster",
         "url": "/assets/plants/corn_monster.png",
         "type": "spritesheet",
-        "width": 3600,
-        "height": 150,
+        "group": "plants",
+        "bytes": 546346,
+        "sha256": "503fb2ea388dcc390f2158a6415dc9495334a9a89d61818a85d8063fc200b577",
         "frameConfig": {
           "frameWidth": 150,
           "frameHeight": 150,
           "margin": 0,
           "spacing": 0
         },
-        "animationProfile": {
-          "idle": {
-            "startFrame": 0,
-            "endFrame": 7,
-            "fps": 8,
-            "loop": true
-          },
-          "move": {
-            "startFrame": 0,
-            "endFrame": 7,
-            "fps": 8,
-            "loop": true
-          },
-          "attack": {
-            "startFrame": 8,
-            "endFrame": 17,
-            "fps": 12,
-            "loop": false
-          }
-        },
-        "atlasMetadataPath": "/assets/plants/corn_monster.json",
+        "spriteSheet": true,
+        "frameCount": 24,
+        "rows": 1,
+        "columns": 24,
         "sourceFormat": "phaser-atlas",
+        "atlasMetadataPath": "/assets/plants/corn_monster.json",
         "atlasClips": {
           "idle": {
             "startFrame": 0,
@@ -603,19 +883,163 @@
             "startFrame": 18,
             "endFrame": 23
           }
-        }
+        },
+        "width": 3600,
+        "height": 150
+      },
+      {
+        "key": "plants-hazelnut-level-1-bomb",
+        "url": "/assets/plants/hazelnut-level-1-bomb.png",
+        "type": "image",
+        "group": "plants",
+        "bytes": 12727,
+        "sha256": "4aa90bd07adc316ec99df8259f3d820332d512b7214d7fd42bae5ad966145614",
+        "width": 97,
+        "height": 94
+      },
+      {
+        "key": "hazelnut-level-1",
+        "url": "/assets/plants/hazelnut-level-1.png",
+        "type": "spritesheet",
+        "group": "plants",
+        "bytes": 1115104,
+        "sha256": "bb4f13c4fb621a1bc6df25f56d49d234017af56b32cdf7fbf86bca35aabec307",
+        "frameConfig": {
+          "frameWidth": 341,
+          "frameHeight": 341,
+          "margin": 0,
+          "spacing": 0
+        },
+        "width": 1024,
+        "height": 1024
+      },
+      {
+        "key": "plants-mango-level-1-bomb",
+        "url": "/assets/plants/mango-level-1-bomb.png",
+        "type": "image",
+        "group": "plants",
+        "bytes": 13603,
+        "sha256": "1c03b4cd9d7ed56f49662e0b43b5bea6ccf5ca87b998c688577e1e99fe68d21c",
+        "width": 163,
+        "height": 90
+      },
+      {
+        "key": "plants-mango-level-1",
+        "url": "/assets/plants/mango-level-1.png",
+        "type": "image",
+        "group": "plants",
+        "bytes": 555859,
+        "sha256": "86222bcaf66e1504d625d4cb61f6ff6472176eef5039fa6beeed62e45102a49c",
+        "width": 1080,
+        "height": 806
+      },
+      {
+        "key": "plants-mushroom",
+        "url": "/assets/plants/mushroom.png",
+        "type": "image",
+        "group": "plants",
+        "bytes": 198036,
+        "sha256": "b7b663d22535a851018b6831c009615490187a5da06e33c31cee11da850158fa",
+        "width": 353,
+        "height": 400
+      },
+      {
+        "key": "plants-pineapple-level-1-bomb",
+        "url": "/assets/plants/pineapple-level-1-bomb.png",
+        "type": "image",
+        "group": "plants",
+        "bytes": 17728,
+        "sha256": "7048ba180547511daf0373977b3f2719f9fe2b1cab34c2c79b474f63fc003427",
+        "width": 168,
+        "height": 103
+      },
+      {
+        "key": "pineapple-level-1",
+        "url": "/assets/plants/pineapple-level-1.png",
+        "type": "spritesheet",
+        "group": "plants",
+        "bytes": 1910895,
+        "sha256": "f04f8c2359dbe73dbde055fdade1651af6cb4d5a227bec1d64302649b9bc822f",
+        "frameConfig": {
+          "frameWidth": 418,
+          "frameHeight": 418,
+          "margin": 0,
+          "spacing": 0
+        },
+        "width": 1254,
+        "height": 1254
+      },
+      {
+        "key": "plants-pumpkin",
+        "url": "/assets/plants/pumpkin.png",
+        "type": "image",
+        "group": "plants",
+        "bytes": 255083,
+        "sha256": "8556d9594e3ef6e40aa60dfa8e4aa37798cea4844d18f6d38a88523fe9621523",
+        "width": 500,
+        "height": 500
+      },
+      {
+        "key": "plants-radish-level-1-bomb",
+        "url": "/assets/plants/radish-level-1-bomb.png",
+        "type": "image",
+        "group": "plants",
+        "bytes": 5292,
+        "sha256": "eed33cde592cba25c165b1d53a277b765c129083e8a2984063c31876c6ce27de",
+        "width": 70,
+        "height": 63
+      },
+      {
+        "key": "plants-radish-level-1",
+        "url": "/assets/plants/radish-level-1.png",
+        "type": "image",
+        "group": "plants",
+        "bytes": 622722,
+        "sha256": "e346e54712f6b219411977f1b6804f2a422de4712aff0d033fbab32f057d310b",
+        "width": 908,
+        "height": 1079
+      },
+      {
+        "key": "plants-radish",
+        "url": "/assets/plants/radish.png",
+        "type": "image",
+        "group": "plants",
+        "bytes": 210248,
+        "sha256": "8ad43555fcf47177114004b54aa92a216b4453f2fee7aa13a94752e42e442dd0",
+        "width": 331,
+        "height": 451
+      },
+      {
+        "key": "plants-tomato",
+        "url": "/assets/plants/tomato.png",
+        "type": "image",
+        "group": "plants",
+        "bytes": 309869,
+        "sha256": "3155502e591aefd9bde4bde5ee623442789168fa99c646f651e79aa441a12005",
+        "width": 500,
+        "height": 500
       }
     ],
     "projectiles": [
       {
         "key": "projectiles-plants-bamboo-throwing-level-1-projectile-cbedc31ec96279864eaf335cd3f9594a067d085445f913348b6a7475e97fc27c",
         "url": "/assets/projectiles/plants/bamboo-throwing-level-1-projectile-cbedc31ec96279864eaf335cd3f9594a067d085445f913348b6a7475e97fc27c.png",
-        "type": "image"
+        "type": "image",
+        "group": "projectiles",
+        "bytes": 13948,
+        "sha256": "cbedc31ec96279864eaf335cd3f9594a067d085445f913348b6a7475e97fc27c",
+        "width": 121,
+        "height": 45
       },
       {
         "key": "projectiles-plants-bamboo-throwing-level-1-projectile",
         "url": "/assets/projectiles/plants/bamboo-throwing-level-1-projectile.png",
-        "type": "image"
+        "type": "image",
+        "group": "projectiles",
+        "bytes": 9230,
+        "sha256": "251662e3c0caa6c03a8264cfee2e9cc28af6bd632c485ce4cb6c0e71faf13610",
+        "width": 106,
+        "height": 82
       }
     ]
   },
@@ -1449,6 +1873,42 @@
       "sha256": "b9829bedb4d8d65e3c98ec2b51a72ae60023aae30b504870b716974ea343c225",
       "width": 1024,
       "height": 1024
+    },
+    {
+      "key": "plants-corn_monster",
+      "url": "/assets/plants/corn_monster.png",
+      "type": "spritesheet",
+      "group": "plants",
+      "bytes": 546346,
+      "sha256": "503fb2ea388dcc390f2158a6415dc9495334a9a89d61818a85d8063fc200b577",
+      "frameConfig": {
+        "frameWidth": 150,
+        "frameHeight": 150,
+        "margin": 0,
+        "spacing": 0
+      },
+      "spriteSheet": true,
+      "frameCount": 24,
+      "rows": 1,
+      "columns": 24,
+      "sourceFormat": "phaser-atlas",
+      "atlasMetadataPath": "/assets/plants/corn_monster.json",
+      "atlasClips": {
+        "idle": {
+          "startFrame": 0,
+          "endFrame": 7
+        },
+        "attack": {
+          "startFrame": 8,
+          "endFrame": 17
+        },
+        "hurt": {
+          "startFrame": 18,
+          "endFrame": 23
+        }
+      },
+      "width": 3600,
+      "height": 150
     },
     {
       "key": "plants-hazelnut-level-1-bomb",

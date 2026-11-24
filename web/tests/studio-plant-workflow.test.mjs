@@ -68,6 +68,14 @@ test("Studio exposes plant size and applies it in the Phaser runtime",()=>{
   assert.match(battleScene,/studioPlant\.combat\?\.sizePercent/);
 });
 
+test("Studio saves per-asset animation speed and applies it to plant and monster playback",()=>{
+  assert.match(studioPage,/مضاعف سرعة الأنيميشن/);
+  assert.match(assetsRoute,/speedMultiplier:submittedProfile\?\.speedMultiplier\?\?existing\?\.animationProfile\?\.speedMultiplier/);
+  assert.match(battleScene,/frameRate: clip\.fps \* plant\.animationProfile\.speedMultiplier/);
+  assert.match(battleScene,/frameRate: clip\.fps \* monster\.animationProfile\.speedMultiplier/);
+  assert.match(battleScene,/update\(delta \* \(rig\._animationSpeedMultiplier \?\? 1\)\)/);
+});
+
 test("all built-in plants are unlocked in the current roster while loadout remains capped at seven",()=>{
   assert.match(selector,/nextPlants\.map\(\(plant\) => plant\.id\)/);
   assert.match(selector,/MAX_SEEDS = 7/);
@@ -125,6 +133,13 @@ test("testing catalog is served directly from the Studio staging branch with pro
   assert.match(assetsRoute, /Cache-Control.*private, no-store/);
   assert.match(studioPage, /متاحة الآن للاختبار مباشرة داخل اللعبة/);
   assert.doesNotMatch(studioPage, /شغّل npm run studio:sync لمزامنتها/);
+});
+
+test("GitHub-backed sprite previews finish downloading before returning the image response", () => {
+  assert.match(assetsRoute, /async function githubPreviewAsset\(filePath,token,branch\)\{[\s\S]*?const timeout=setTimeout\(\(\)=>controller\.abort\(\),120_000\);[\s\S]*?const response=await fetch\([\s\S]*?Buffer\.from\(await response\.arrayBuffer\(\)\)[\s\S]*?finally\{[\s\S]*?clearTimeout\(timeout\);/);
+  assert.match(assetsRoute, /githubPreviewAsset\("web\/public"\+preview,token,branch\)/);
+  assert.match(assetsRoute, /new NextResponse\(upstream\.bytes/);
+  assert.doesNotMatch(assetsRoute, /new NextResponse\(upstream\.body/);
 });
 
 test("every registered asset can be opened for editing and metadata-only edits keep the current file", () => {

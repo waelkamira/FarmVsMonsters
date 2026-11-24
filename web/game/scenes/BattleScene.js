@@ -326,7 +326,7 @@ export default class BattleScene extends Scene {
             this.anims.create({
               key: animationKey,
               frames: this.anims.generateFrameNumbers(textureKey, { start: clip.startFrame, end: clip.endFrame }),
-              frameRate: clip.fps,
+              frameRate: clip.fps * plant.animationProfile.speedMultiplier,
               repeat: clip.loop ? -1 : 0
             });
           }
@@ -406,7 +406,7 @@ export default class BattleScene extends Scene {
           this.anims.create({
             key: animationKey,
             frames: this.anims.generateFrameNumbers(monster.textureKey, { start: clip.startFrame, end: clip.endFrame }),
-            frameRate: clip.fps,
+            frameRate: clip.fps * monster.animationProfile.speedMultiplier,
             repeat: clip.loop ? -1 : 0
           });
         }
@@ -2867,7 +2867,7 @@ export default class BattleScene extends Scene {
         const now = this.time.now;
         const delta = Math.max(0, Math.min(80, now - previousAt));
         previousAt = now;
-        rig.applyPose(rig._animationController.update(delta));
+        rig.applyPose(rig._animationController.update(delta * (rig._animationSpeedMultiplier ?? 1)));
         if (onComplete && rig._animationController.elapsedMs >= clip.durationMs) {
           event.remove();
           rig._animationEvent = null;
@@ -2954,6 +2954,7 @@ export default class BattleScene extends Scene {
       if (studioPlant.rigProfile && studioPlant.rigPartTextures) {
         try {
           const rig = createPhaserSkeletalRig(this, studioPlant.rigProfile, studioPlant.rigPartTextures);
+          rig._animationSpeedMultiplier = studioPlant.animationProfile.speedMultiplier;
           const canvas = rig.profile.canvas;
           const width = Math.min(height * (canvas.width / canvas.height), 100 * perspective * sizeFactor);
           rig.root.setPosition(-canvas.width / 2, -canvas.height / 2 - height / 2 + 2);
@@ -4155,6 +4156,7 @@ export default class BattleScene extends Scene {
     if (studioMonster?.rigProfile && studioMonster.rigPartTextures) {
       try {
         studioRig = createPhaserSkeletalRig(this, studioMonster.rigProfile, studioMonster.rigPartTextures);
+        studioRig._animationSpeedMultiplier = studioMonster.animationProfile.speedMultiplier;
         const canvas = studioRig.profile.canvas;
         studioRig.root.setPosition(-canvas.width / 2, -canvas.height);
         studioRig.root.setScale(0.918 * 360 / canvas.width, 0.918 * 298 / canvas.height);
