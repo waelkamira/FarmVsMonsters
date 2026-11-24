@@ -8,7 +8,8 @@ export const SEED_PACKET_IDS = Object.freeze([
   "pineapple",
   "hazelnut",
   "mango",
-  "snow-thrower"
+  "snow-thrower",
+  "electric-mushroom"
 ]);
 
 export const REQUIRED_STARTER_SEEDS = Object.freeze(["radish", "mushroom"]);
