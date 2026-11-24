@@ -251,6 +251,8 @@ export default class BattleScene extends Scene {
     this.stageEncounterConfig = this.cache.json.get("stage-encounter-config")?.stages?.["1"] || null;
     this.stageMonsterRosterConfigured = this.stageEncounterConfig?.monstersConfigured === true;
     this.stageMonsterEntries = (this.stageEncounterConfig?.monsters || []).filter(entry => entry.enabled !== false);
+    this.stagePlantRosterConfigured = this.stageEncounterConfig?.plantsConfigured === true;
+    this.stagePlantEntries = (this.stageEncounterConfig?.plants || []).filter(entry => entry.enabled !== false);
     this.vfxManager = new VFXManager(this, { registry: createDefaultVFXRegistry(), limits: { maxActiveBursts: 24 } });
     this.events.once("shutdown", () => {
       this.vfxManager?.destroy();
@@ -2620,6 +2622,15 @@ export default class BattleScene extends Scene {
     if (this.gameOver) return;
     const studioPlant = this.studioPlantsByType?.[type] || null;
     if (!["radish", "mushroom", "pumpkin", "pineapple", "hazelnut", "mango", "snow-thrower", "electric-mushroom"].includes(type) && !studioPlant) return;
+    const stagePlantEntry = this.stagePlantEntries.find(entry => entry.id === type);
+    if (this.stagePlantRosterConfigured && !stagePlantEntry) {
+      this.setMessage("هذه النبتة مخفية من المرحلة الحالية. يمكنك تفعيلها من استديو إدارة نباتات المراحل.");
+      return;
+    }
+    if (stagePlantEntry && this.plants.filter(plant => plant.type === type).length >= stagePlantEntry.count) {
+      this.setMessage("وصلت إلى الحد الأقصى لهذه النبتة في المرحلة: " + stagePlantEntry.count + ".");
+      return;
+    }
     if (!PLAYTEST_ALL_PLANTS && !studioPlant && !loadUnlockedPlantIds(window.localStorage).includes(type)) {
       this.setMessage("This plant is locked. Complete its campaign stage to unlock it.");
       return;
@@ -3802,7 +3813,7 @@ export default class BattleScene extends Scene {
 
   getStageWaveSize(wave) {
     if (!this.stageMonsterRosterConfigured) return PHASE_ONE_WAVE_SIZES[wave - 1] || 0;
-    return this.getStageWaveEntries(wave).reduce((sum, entry) => sum + Math.max(1, Number(entry.count) || 1), 0);
+    return Math.min(500, this.getStageWaveEntries(wave).reduce((sum, entry) => sum + Math.max(1, Number(entry.count) || 1), 0));
   }
 
   getStageMonsterEntry(spawnIndex = 0) {
@@ -5136,6 +5147,10 @@ export default class BattleScene extends Scene {
     const clearedWave = this.wave;
     if (isPhaseOneVictory(this.wave, this.totalWaves, this.spawnedThisWave, this.waveSize, this.monsters.length)) {
       // The dragon is a separate boss and is never included in ordinary wave counts.
+      if (!this.dragonBoss) {
+        this.beginDragonEncounter();
+        return;
+      }
       if (this.dragonBoss) {
         this.tryFinishPhaseOne();
         if (this.dragonBoss.alive) this.setMessage("The ordinary monsters are defeated. Finish the dragon to rescue the princess!");
