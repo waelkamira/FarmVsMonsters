@@ -1,5 +1,5 @@
 "use client";
-import {useCallback,useEffect,useMemo,useState} from "react";
+import {useEffect,useMemo,useState} from "react";
 import Link from "next/link";
 import "./stage-roster.css";
 
@@ -15,17 +15,22 @@ export default function StageRosterManager({kind}){
  const [busy,setBusy]=useState(false),[message,setMessage]=useState("");
  const entries=config.stages?.[String(stage)]?.[isMonster?"monsters":"plants"]||[];
  const available=useMemo(()=>[...BUILT_INS[kind].map(([id,name])=>({id,name,type:kind,builtin:true})),...assets.filter(a=>a.type===kind&&a.status!=="archived"&&(a.status==="published"||a.status==="testing"))].filter((item,index,all)=>all.findIndex(other=>other.id===item.id)===index),[assets,kind]);
- const load=useCallback(async()=>{
-  const [a,c]=await Promise.all([
-   fetch("/api/studio/assets",{cache:"no-store",credentials:"same-origin"}),
-   fetch("/api/studio/stage-encounters",{cache:"no-store",credentials:"same-origin"})
-  ]);
-  const ad=await a.json(),cd=await c.json();
-  if(!a.ok)throw Error(ad.error||"تعذر تحميل مكتبة الأصول");
-  if(!c.ok)throw Error(cd.error||"تعذر تحميل إعدادات المراحل");
-  setAssets(ad.assets||[]);setConfig(cd);setSha(cd.sha||null);
+ useEffect(()=>{
+  let cancelled=false;
+  async function load(){
+   const [a,c]=await Promise.all([
+    fetch("/api/studio/assets",{cache:"no-store",credentials:"same-origin"}),
+    fetch("/api/studio/stage-encounters",{cache:"no-store",credentials:"same-origin"})
+   ]);
+   const ad=await a.json(),cd=await c.json();
+   if(!a.ok)throw Error(ad.error||"تعذر تحميل مكتبة الأصول");
+   if(!c.ok)throw Error(cd.error||"تعذر تحميل إعدادات المراحل");
+   if(cancelled)return;
+   setAssets(ad.assets||[]);setConfig(cd);setSha(cd.sha||null);
+  }
+  load().catch(error=>{if(!cancelled)setMessage(error.message);});
+  return ()=>{cancelled=true;};
  },[kind]);
- useEffect(()=>{load().catch(e=>setMessage(e.message));},[load]);
  function updateEntries(next){
   setConfig(current=>({...current,stages:{...current.stages,[String(stage)]:{...(current.stages?.[String(stage)]||{monsters:[],plants:[]}),[isMonster?"monsters":"plants"]:next,[isMonster?"monstersConfigured":"plantsConfigured"]:true}}}));
  }
