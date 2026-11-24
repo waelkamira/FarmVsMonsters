@@ -54,4 +54,6 @@ test("Phaser uses first frame for all built-in seed icons and keeps one-frame St
   assert.match(battleScene, /plant\.spriteSheet = Boolean\(plant\.spriteSheet && frameCount > 1\)/);
   assert.match(battleScene, /studioMonster\.spriteSheet/);
   assert.match(battleScene, /studioMonster\.frameCount > 1/);
+  assert.match(battleScene, /artwork\.setData\("studioPlantSprite", sheet\)/);
+  assert.match(battleScene, /if \(typeof sprite\.stop === "function"\) sprite\.stop\(\)/);
 });
