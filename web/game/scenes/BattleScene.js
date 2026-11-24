@@ -5165,9 +5165,8 @@ export default class BattleScene extends Scene {
     this.waveDefeatedMonsters = 0;
     this.waveSize = this.getStageWaveSize(this.wave);
     const nextStageMonster = this.getStageMonsterEntry(0);
-    if (nextStageMonster?.firstSpawnDelayMs > 0) this.spawnTimer = nextStageMonster.firstSpawnDelayMs;
     this.waveIntermissionMs = PHASE_ONE_TIMING.waveIntermissionMs;
-    this.spawnTimer = PHASE_ONE_TIMING.nextWaveSpawnDelayMs;
+    this.spawnTimer = nextStageMonster?.firstSpawnDelayMs > 0 ? nextStageMonster.firstSpawnDelayMs : PHASE_ONE_TIMING.nextWaveSpawnDelayMs;
     this.setMessage(
       "Wave " + clearedWave + " cleared. Prepare for wave " + this.wave +
       ": " + this.waveSize + " monsters in 5 seconds."
