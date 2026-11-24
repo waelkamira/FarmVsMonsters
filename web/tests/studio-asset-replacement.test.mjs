@@ -51,7 +51,7 @@ test("stage roster plant and monster thumbnails crop sprite sheets to frame zero
 test("Phaser uses first frame for all built-in seed icons and keeps one-frame Studio assets as images", () => {
   assert.match(battleScene, /"pineapple-level-1", "hazelnut-level-1"/);
   assert.match(battleScene, /studioPlantsByType\[type\]\.frameCount > 1/);
-  assert.match(battleScene, /studioPlant\.spriteSheet = Boolean\(plant\.spriteSheet && frameCount > 1\)/);
+  assert.match(battleScene, /plant\.spriteSheet = Boolean\(plant\.spriteSheet && frameCount > 1\)/);
   assert.match(battleScene, /studioMonster\.spriteSheet/);
   assert.match(battleScene, /studioMonster\.frameCount > 1/);
 });
