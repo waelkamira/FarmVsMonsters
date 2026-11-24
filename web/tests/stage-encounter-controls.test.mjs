@@ -29,6 +29,7 @@ test("battle consumes configured monster counts, timings, strength and plant lim
  const battle=read("game/scenes/BattleScene.js");
  assert.match(battle,/stage-encounter-config/);
  assert.match(battle,/getStageWaveSize/);
+ assert.match(battle,/totalConfiguredMonsters/);
  assert.match(battle,/spawnIntervalMs:\s*this\.getStageMonsterEntry/);
  assert.match(battle,/stageEntry\.hpMultiplier/);
  assert.match(battle,/stageEntry\.speedMultiplier/);
