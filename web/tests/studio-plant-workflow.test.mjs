@@ -142,8 +142,9 @@ test("Studio exposes editable projectile controls with per-field Arabic explanat
     assert.ok(studioPage.includes(field));
   }
   for(const label of ["سرعة القذيفة","ارتفاع مسار القذيفة","لون تأثير القذيفة","زاوية دوران القذيفة"]){
-    assert.ok(studioPage.includes(label));
+    assert.ok((studioPage + projectileEditor).includes(label));
   }
+  assert.match(projectileEditor,/studio-field-help/);
   assert.match(studioPage,/studio-field-help/);
   assert.match(assetsRoute,/projectileHeight/);
   assert.match(assetsRoute,/projectileEffectColor/);
@@ -153,12 +154,12 @@ test("Studio exposes editable projectile controls with per-field Arabic explanat
   assert.match(battleScene,/projectileRotation/);
 });
 
-test("published Studio plants are included in the default seven-slot loadout",()=>{
+test("published Studio plants are included in the default six-slot loadout",()=>{
   assert.match(selector,/defaultStudioPlants = studioPlants\.map/);
   assert.match(selector,/const availableIds = new Set\(nextPlants\.map\(\(plant\) => plant\.id\)\)/);
   assert.match(selector,/STARTER_LOADOUT\.filter\(\(id\) => availableIds\.has\(id\)\)/);
   assert.match(selector,/defaultStudioPlants\.filter\(\(id\) => availableIds\.has\(id\)\)/);
-  assert.match(selector,/MAX_SEEDS = 7/);
+  assert.match(selector,/MAX_SEEDS = 6/);
 });
 
 test("Studio persists validated idle and attack animation profiles into Phaser runtime",()=>{
