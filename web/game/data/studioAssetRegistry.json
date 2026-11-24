@@ -15,10 +15,30 @@
       "createdAt": "2026-11-22T20:20:34.630Z",
       "updatedAt": "2026-11-24T16:30:00.000Z",
       "animationProfile": {
-        "idle": { "startFrame": 0, "endFrame": 7, "fps": 8, "loop": true },
-        "move": { "startFrame": 0, "endFrame": 7, "fps": 8, "loop": true },
-        "attack": { "startFrame": 8, "endFrame": 17, "fps": 12, "loop": false },
-        "hurt": { "startFrame": 18, "endFrame": 23, "fps": 10, "loop": false }
+        "idle": {
+          "startFrame": 0,
+          "endFrame": 7,
+          "fps": 8,
+          "loop": true
+        },
+        "move": {
+          "startFrame": 0,
+          "endFrame": 7,
+          "fps": 8,
+          "loop": true
+        },
+        "attack": {
+          "startFrame": 8,
+          "endFrame": 17,
+          "fps": 12,
+          "loop": false
+        },
+        "hurt": {
+          "startFrame": 18,
+          "endFrame": 23,
+          "fps": 10,
+          "loop": false
+        }
       },
       "monsterProfile": {
         "baseArchetype": "cave-brute",
@@ -34,9 +54,63 @@
       "atlasMetadataPath": "/assets/plants/corn_monster.json",
       "sourceFormat": "phaser-atlas",
       "atlasClips": {
-        "idle": { "startFrame": 0, "endFrame": 7 },
-        "attack": { "startFrame": 8, "endFrame": 17 },
-        "hurt": { "startFrame": 18, "endFrame": 23 }
+        "idle": {
+          "startFrame": 0,
+          "endFrame": 7
+        },
+        "attack": {
+          "startFrame": 8,
+          "endFrame": 17
+        },
+        "hurt": {
+          "startFrame": 18,
+          "endFrame": 23
+        }
+      }
+    },
+    {
+      "id": "monster-01",
+      "type": "monster",
+      "name": "Monster 01",
+      "path": "/assets/characters/monsters/01/01.png",
+      "filename": "01.png",
+      "rows": 1,
+      "columns": 1,
+      "frameCount": 1,
+      "spriteSheet": false,
+      "status": "testing",
+      "createdAt": "2026-11-24T13:54:12.000Z",
+      "updatedAt": "2026-11-24T17:00:00.000Z",
+      "animationProfile": {
+        "idle": {
+          "startFrame": 0,
+          "endFrame": 0,
+          "fps": 6,
+          "loop": true
+        },
+        "move": {
+          "startFrame": 0,
+          "endFrame": 0,
+          "fps": 10,
+          "loop": true
+        },
+        "attack": {
+          "startFrame": 0,
+          "endFrame": 0,
+          "fps": 12,
+          "loop": false
+        }
+      },
+      "monsterProfile": {
+        "baseArchetype": "cave-brute",
+        "hpMultiplier": 1,
+        "speedMultiplier": 1,
+        "damageMultiplier": 1,
+        "attackIntervalMultiplier": 1,
+        "widthScale": 1,
+        "heightScale": 1,
+        "spawnWeight": 0,
+        "firstWave": 1
       }
     }
   ]
