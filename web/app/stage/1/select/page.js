@@ -92,9 +92,11 @@ export default function StageOneSeedSelectionPage() {
         const defaultStudioPlants = studioPlants.map((plant) => plant.id);
         // Newly published Studio plants are unlocked and equipped by default;
         // the seven-slot limit applies only to the active loadout, not the catalog.
-        setSelected([...new Set([...STARTER_LOADOUT, ...defaultStudioPlants, ...validSaved])].slice(0, MAX_SEEDS));
+        const availableIds = new Set(nextPlants.map((plant) => plant.id));
+        setSelected([...new Set([...STARTER_LOADOUT.filter((id) => availableIds.has(id)), ...defaultStudioPlants.filter((id) => availableIds.has(id)), ...validSaved])].slice(0, MAX_SEEDS));
       } catch {
-        setSelected([...new Set([...STARTER_LOADOUT, ...studioPlants.map((plant) => plant.id)])].slice(0, MAX_SEEDS));
+        const availableIds = new Set(nextPlants.map((plant) => plant.id));
+        setSelected([...new Set([...STARTER_LOADOUT.filter((id) => availableIds.has(id)), ...studioPlants.map((plant) => plant.id).filter((id) => availableIds.has(id))])].slice(0, MAX_SEEDS));
       }
     })();
     return () => { active = false; };
@@ -115,8 +117,11 @@ export default function StageOneSeedSelectionPage() {
   }
 
   function beginBattle() {
-    if (!selected.includes("mushroom") || selected.length < 2) {
-      setNotice(ar ? "احتفظ بفطر الطاقة واختر نبتة أخرى على الأقل." : "Keep the Energy Mushroom and choose at least one other plant.");
+    const hasMushroom = selectedPlants.some((plant) => plant.id === "mushroom");
+    const minimumSeeds = stagePlantsConfigured ? 1 : 2;
+    const mustKeepMushroom = !stagePlantsConfigured || plantCatalog.some((plant) => plant.id === "mushroom");
+    if (selectedPlants.length < minimumSeeds || (mustKeepMushroom && !hasMushroom)) {
+      setNotice(ar ? "اختر نباتاً متاحاً واحداً على الأقل، واحتفظ بفطر الطاقة إذا كان ضمن نباتات هذه المرحلة." : "Choose at least one available plant, and keep the Energy Mushroom if it is part of this stage.");
       return;
     }
     try {
