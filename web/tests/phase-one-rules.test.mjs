@@ -202,7 +202,7 @@ test("a farmhouse defeat aborts the rest of the current simulation frame", () =>
 
 test("terminal results clean up pending Mushroom pickups and their expiry timers", () => {
   const create = scene.slice(scene.indexOf("  create() {"), scene.indexOf("  drawField() {"));
-  const production = scene.slice(scene.indexOf("  spawnMushroomEnergy(plant) {"), scene.indexOf("  fireThorn(plant"));
+  const production = scene.slice(scene.indexOf("  spawnMushroomEnergy(plant) {"), scene.indexOf("  spawnStudioEnergy(plant"));
   const endGame = scene.slice(scene.indexOf("  endGame(won) {"), scene.indexOf("  createGameOverButton("));
   assert.match(create, /this\.energyPickups = \[\]/);
   assert.match(production, /this\.energyPickups\.push\(token\)/);
@@ -368,10 +368,10 @@ test("campaign progression safely falls back to stage one for corrupt or unavail
 test("stage selection reflects saved unlocks without linking unfinished stages into gameplay", () => {
   const stagePage = readFileSync(resolve(here, "../app/stages/page.js"), "utf8");
   assert.match(stagePage, /loadUnlockedStage\(window\.localStorage\)/);
-  assert.match(stagePage, /stage <= unlockedStage/);
-  assert.match(stagePage, /Unlocked · In development/);
+  assert.match(stagePage, /unlockedStage >= 2/);
+  assert.match(stagePage, /UNLOCKED · INTRO/);
   assert.match(stagePage, /href="\/stage\/1"/);
-  assert.match(scene, /won = Boolean\(won && this\.phaseOneStoryState === "complete"\)/);
+  assert.match(scene, /won = Boolean\(won && \(this\.stageNumber !== 1 \|\| this\.phaseOneStoryState === "complete"\)\)/);
   assert.match(scene, /unlockNextStage\(window\.localStorage, 1\)/);
 });
 
