@@ -498,3 +498,5 @@
 .studio-clone-dialog-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}
 .studio-clone-dialog-actions button{min-height:42px;padding:9px 16px;border:1px solid #9aacc7;border-radius:10px;background:#304768;color:#fff;font-weight:800;cursor:pointer}
 .studio-clone-dialog-actions button:disabled{opacity:.55;cursor:not-allowed}
+
+.studio-facing-toggle{display:inline-flex;align-items:center;justify-content:center;gap:8px;margin:10px 0 2px;padding:9px 14px;border:1px solid #a98b50;border-radius:9px;background:#3e5128;color:#fff0cb;font-weight:800;cursor:pointer}.studio-facing-toggle[aria-pressed="true"]{border-color:#b8ef83;background:#294126;color:#d8f3c8}.studio-facing-toggle:focus-visible{outline:2px solid #f1cc7e;outline-offset:3px}
