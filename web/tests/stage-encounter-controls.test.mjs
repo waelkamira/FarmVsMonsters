@@ -61,3 +61,10 @@ test("configured first spawn delay is not overwritten and dragon waits for the c
  assert.match(battle,/this\.wave === this\.totalWaves && this\.spawnedThisWave === this\.waveSize\) this\.beginDragonEncounter\(\)/);
  assert.doesNotMatch(battle,/this\.wave === 5 && this\.spawnedThisWave === 2/);
 });
+
+
+test("non-story configured stages can finish without requiring the Stage 1 dragon rescue",()=>{
+ const battle=read("game/scenes/BattleScene.js");
+ assert.match(battle,/won = Boolean\(won && \(this\.stageNumber !== 1 \|\| this\.phaseOneStoryState === "complete"\)\)/);
+ assert.match(battle,/if \(won && this\.stageNumber === 1\)/);
+});
