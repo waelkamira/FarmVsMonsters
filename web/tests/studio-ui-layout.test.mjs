@@ -37,6 +37,7 @@ test("Studio shows the same test and publish action controls for new plant and m
   assert.match(page, /\(a\.type===\"plant\"\|\|a\.type===\"monster\"\)&&<>/);
   assert.match(page, /data-testid=\"studio-prepare-test\" disabled=\{!authenticated\|\|busy\|\|a\.status!==\"draft\"\}/);
   assert.match(page, /data-testid=\"studio-publish\" disabled=\{!authenticated\|\|busy\|\|a\.status!==\"testing\"\}/);
-  assert.match(page, /اختيار الوحش للاختبار/);
+  assert.match(page, /اختبار الوحش داخل اللعبة/);
+  assert.match(page, /الأصل متاح الآن للاختبار مباشرة داخل اللعبة/);
   assert.match(css, /\.studio-list \.studio-asset-row>\.studio-asset-actions\{display:flex!important;visibility:visible!important/);
 });
