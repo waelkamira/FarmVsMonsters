@@ -1981,14 +1981,14 @@
       "columns": 4,
       "frameCount": 12,
       "spriteSheet": true,
-      "status": "testing",
+      "status": "draft",
       "releaseRequest": null,
       "publishedAt": null,
-      "testingAt": "2026-11-24T23:13:50.377Z",
+      "testingAt": null,
       "archivedAt": null,
       "restoredFromVersion": null,
       "createdAt": "2026-11-24T11:50:19.334Z",
-      "updatedAt": "2026-11-24T23:13:21.669Z",
+      "updatedAt": "2026-11-24T23:15:25.375Z",
       "monsterProfile": {
         "baseArchetype": "cave-brute",
         "hpMultiplier": 1,
@@ -1996,7 +1996,7 @@
         "damageMultiplier": 1,
         "attackIntervalMultiplier": 1,
         "widthScale": 1,
-        "heightScale": 1,
+        "heightScale": 2,
         "spawnWeight": 0,
         "firstWave": 1
       },
@@ -2022,7 +2022,7 @@
         }
       },
       "rigProfile": null,
-      "revision": 3,
+      "revision": 4,
       "versions": [
         {
           "versionNumber": 1,
@@ -2072,6 +2072,52 @@
         {
           "versionNumber": 2,
           "savedAt": "2026-11-24T21:52:16.038Z",
+          "id": "01",
+          "type": "monster",
+          "name": "01",
+          "filename": "01.png",
+          "path": "/assets/monsters/01-c07ab241d0076edfff5f0b847f2a3aaaa1286ace5eecda0039e36c0cae47f18e.png",
+          "rows": 3,
+          "columns": 4,
+          "spriteSheet": true,
+          "combat": null,
+          "animationProfile": {
+            "speedMultiplier": 1,
+            "idle": {
+              "startFrame": 0,
+              "endFrame": 0,
+              "fps": 6,
+              "loop": true
+            },
+            "move": {
+              "startFrame": 0,
+              "endFrame": 8,
+              "fps": 10,
+              "loop": true
+            },
+            "attack": {
+              "startFrame": 0,
+              "endFrame": 8,
+              "fps": 12,
+              "loop": false
+            }
+          },
+          "rigProfile": null,
+          "monsterProfile": {
+            "baseArchetype": "cave-brute",
+            "hpMultiplier": 1,
+            "speedMultiplier": 1,
+            "damageMultiplier": 1,
+            "attackIntervalMultiplier": 1,
+            "widthScale": 1,
+            "heightScale": 1,
+            "spawnWeight": 0,
+            "firstWave": 1
+          }
+        },
+        {
+          "versionNumber": 3,
+          "savedAt": "2026-11-24T23:13:21.669Z",
           "id": "01",
           "type": "monster",
           "name": "01",
