@@ -370,6 +370,23 @@ test("phase-one wave scheduler preserves intermission, first spawn delay and int
   assert.equal(waiting.spawnTimerMs, 400);
 });
 
+test("stage wave scheduler accepts configured counts, empty waves and custom spawn cadence", () => {
+  const custom = resolveWaveSpawnStep({
+    wave: 2, waveSize: 10, spawnedThisWave: 0,
+    intermissionMs: 0, spawnTimerMs: 0, spawnIntervalMs: 2750, deltaMs: 16
+  });
+  assert.equal(custom.shouldSpawn, true);
+  assert.equal(custom.spawnedThisWave, 1);
+  assert.equal(custom.spawnTimerMs, 2750);
+
+  const empty = resolveWaveSpawnStep({
+    wave: 3, waveSize: 0, spawnedThisWave: 0,
+    intermissionMs: 0, spawnTimerMs: 0, deltaMs: 16
+  });
+  assert.equal(empty.shouldSpawn, false);
+  assert.equal(empty.spawnedThisWave, 0);
+});
+
 test("phase-one wave scheduler spawns at most one monster per update and stops at roster size", () => {
   const lastSpawn = resolveWaveSpawnStep({
     wave: 5, waveSize: 9, spawnedThisWave: 8,
@@ -386,8 +403,13 @@ test("phase-one wave scheduler spawns at most one monster per update and stops a
   assert.equal(complete.spawnedThisWave, 9);
   assert.equal(complete.spawnTimerMs, 0);
 
-  assert.throws(() => resolveWaveSpawnStep({
+  const shorterConfiguredWave = resolveWaveSpawnStep({
     wave: 5, waveSize: 8, spawnedThisWave: 0,
+    intermissionMs: 0, spawnTimerMs: 0, deltaMs: 16
+  });
+  assert.equal(shorterConfiguredWave.shouldSpawn, true);
+  assert.throws(() => resolveWaveSpawnStep({
+    wave: 5, waveSize: 501, spawnedThisWave: 0,
     intermissionMs: 0, spawnTimerMs: 0, deltaMs: 16
   }), /INVALID_WAVE_SPAWN_STATE/);
 });

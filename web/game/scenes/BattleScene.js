@@ -228,6 +228,7 @@ export default class BattleScene extends Scene {
     queueStudioMonsterCatalog("studio-test-monster-catalog");
     this.load.json("studio-published-monster-catalog", "/assets/studio-monster-catalog.json");
     this.load.json("studio-test-monster-catalog", "/api/studio/assets?catalog=testing-monsters");
+    this.load.json("stage-encounter-config", "/api/studio/stage-encounters");
     this.load.on("loaderror", (file) => {
       if (file.key === "farm-battlefield") this.backgroundAssetFailed = true;
       if (file.key === "radish-level-1") this.radishAssetFailed = true;
@@ -247,6 +248,17 @@ export default class BattleScene extends Scene {
 
   create() {
     this.isPaused = false;
+    this.stageEncounterConfig = this.cache.json.get("stage-encounter-config")?.stages?.["1"] || null;
+    this.stageMonsterRosterConfigured = this.stageEncounterConfig?.monstersConfigured === true;
+    this.stageMonsterEntries = (this.stageEncounterConfig?.monsters || []).filter(entry => entry.enabled !== false);
+    this.totalConfiguredMonsters = this.stageMonsterRosterConfigured
+      ? Array.from({ length: PHASE_ONE_WAVE_SIZES.length }, (_, index) => Math.min(500,
+          this.stageMonsterEntries.filter(entry => Number(entry.wave) === index + 1)
+            .reduce((sum, entry) => sum + Math.max(1, Number(entry.count) || 1), 0)
+        )).reduce((sum, count) => sum + count, 0)
+      : PHASE_ONE_TOTAL_MONSTERS;
+    this.stagePlantRosterConfigured = this.stageEncounterConfig?.plantsConfigured === true;
+    this.stagePlantEntries = (this.stageEncounterConfig?.plants || []).filter(entry => entry.enabled !== false);
     this.vfxManager = new VFXManager(this, { registry: createDefaultVFXRegistry(), limits: { maxActiveBursts: 24 } });
     this.events.once("shutdown", () => {
       this.vfxManager?.destroy();
@@ -441,7 +453,9 @@ export default class BattleScene extends Scene {
     this.totalWaves = PHASE_ONE_WAVE_SIZES.length;
     this.spawnedThisWave = 0;
     this.waveDefeatedMonsters = 0;
-    this.waveSize = PHASE_ONE_WAVE_SIZES[0];
+    this.waveSize = this.getStageWaveSize(1);
+    const firstStageMonster = this.getStageMonsterEntry(0);
+    this.spawnTimer = firstStageMonster?.firstSpawnDelayMs > 0 ? firstStageMonster.firstSpawnDelayMs : PHASE_ONE_TIMING.firstMonsterSpawnDelayMs;
     this.totalSpawnedMonsters = 0;
     this.totalDefeatedMonsters = 0;
     this.totalPlantsPlanted = 0;
@@ -2345,6 +2359,7 @@ export default class BattleScene extends Scene {
       spawnedThisWave: this.spawnedThisWave,
       intermissionMs: this.waveIntermissionMs,
       spawnTimerMs: this.spawnTimer,
+      spawnIntervalMs: this.getStageMonsterEntry(this.spawnedThisWave)?.spawnIntervalMs,
       deltaMs
     });
     this.waveIntermissionMs = spawnStep.intermissionMs;
@@ -2613,6 +2628,15 @@ export default class BattleScene extends Scene {
     if (this.gameOver) return;
     const studioPlant = this.studioPlantsByType?.[type] || null;
     if (!["radish", "mushroom", "pumpkin", "pineapple", "hazelnut", "mango", "snow-thrower", "electric-mushroom"].includes(type) && !studioPlant) return;
+    const stagePlantEntry = this.stagePlantEntries.find(entry => entry.id === type);
+    if (this.stagePlantRosterConfigured && !stagePlantEntry) {
+      this.setMessage("هذه النبتة مخفية من المرحلة الحالية. يمكنك تفعيلها من استديو إدارة نباتات المراحل.");
+      return;
+    }
+    if (stagePlantEntry && this.plants.filter(plant => plant.type === type).length >= stagePlantEntry.count) {
+      this.setMessage("وصلت إلى الحد الأقصى لهذه النبتة في المرحلة: " + stagePlantEntry.count + ".");
+      return;
+    }
     if (!PLAYTEST_ALL_PLANTS && !studioPlant && !loadUnlockedPlantIds(window.localStorage).includes(type)) {
       this.setMessage("This plant is locked. Complete its campaign stage to unlock it.");
       return;
@@ -3789,6 +3813,26 @@ export default class BattleScene extends Scene {
     });
   }
 
+  getStageWaveEntries(wave) {
+    return this.stageMonsterEntries.filter(entry => Number(entry.wave) === wave);
+  }
+
+  getStageWaveSize(wave) {
+    if (!this.stageMonsterRosterConfigured) return PHASE_ONE_WAVE_SIZES[wave - 1] || 0;
+    return Math.min(500, this.getStageWaveEntries(wave).reduce((sum, entry) => sum + Math.max(1, Number(entry.count) || 1), 0));
+  }
+
+  getStageMonsterEntry(spawnIndex = 0) {
+    if (!this.stageMonsterRosterConfigured) return null;
+    let offset = Math.max(0, spawnIndex);
+    for (const entry of this.getStageWaveEntries(this.wave)) {
+      const count = Math.max(1, Number(entry.count) || 1);
+      if (offset < count) return entry;
+      offset -= count;
+    }
+    return null;
+  }
+
   monsterArchetypeFor(spawnIndex) {
     return resolveMonsterArchetype(this.wave, spawnIndex);
   }
@@ -3982,13 +4026,23 @@ export default class BattleScene extends Scene {
 
   spawnMonster(spawnIndex = this.spawnedThisWave) {
     const row = this.simulationRandom.nextInt(0, LANES - 1);
-    const studioMonster = this.selectStudioMonsterForSpawn();
-    const archetype = studioMonster?.monsterProfile?.baseArchetype || this.monsterArchetypeFor(spawnIndex);
+    const stageEntry = this.getStageMonsterEntry(spawnIndex);
+    const studioMonster = stageEntry ? (this.studioMonstersById?.[stageEntry.id] || null) : this.selectStudioMonsterForSpawn();
+    const knownArchetypes = ["cave-brute", "dust-skitter", "stonehide", "alpha-brute"];
+    const archetype = studioMonster?.monsterProfile?.baseArchetype || (knownArchetypes.includes(stageEntry?.id) ? stageEntry.id : this.monsterArchetypeFor(spawnIndex));
     try { recordMonsterDiscovery(window.localStorage, archetype); } catch { /* Bestiary tracking must never interrupt battle. */ }
     const baseProfile = getMonsterCombatStats(archetype, this.wave);
-    const profile = studioMonster
+    const resolvedProfile = studioMonster
       ? resolveStudioMonsterRuntimeProfile(baseProfile, studioMonster.monsterProfile)
       : baseProfile;
+    const profile = stageEntry ? {
+      ...resolvedProfile,
+      hp: Math.max(1, Math.round(resolvedProfile.hp * (Number(stageEntry.hpMultiplier) || 1))),
+      maxHp: Math.max(1, Math.round(resolvedProfile.maxHp * (Number(stageEntry.hpMultiplier) || 1))),
+      speed: resolvedProfile.speed * (Number(stageEntry.speedMultiplier) || 1),
+      plantDamage: Math.max(1, Math.round(resolvedProfile.plantDamage * (Number(stageEntry.damageMultiplier) || 1))),
+      attackIntervalMs: Math.max(100, Math.round(resolvedProfile.attackIntervalMs * (Number(stageEntry.attackIntervalMultiplier) || 1)))
+    } : resolvedProfile;
     const hp = profile.hp;
     const speed = profile.speed;
     const spawn = this.monsterLanePoint(SPAWN_LOCAL_X, row);
@@ -5099,6 +5153,10 @@ export default class BattleScene extends Scene {
     const clearedWave = this.wave;
     if (isPhaseOneVictory(this.wave, this.totalWaves, this.spawnedThisWave, this.waveSize, this.monsters.length)) {
       // The dragon is a separate boss and is never included in ordinary wave counts.
+      if (!this.dragonBoss) {
+        this.beginDragonEncounter();
+        return;
+      }
       if (this.dragonBoss) {
         this.tryFinishPhaseOne();
         if (this.dragonBoss.alive) this.setMessage("The ordinary monsters are defeated. Finish the dragon to rescue the princess!");
@@ -5111,9 +5169,10 @@ export default class BattleScene extends Scene {
     this.wave += 1;
     this.spawnedThisWave = 0;
     this.waveDefeatedMonsters = 0;
-    this.waveSize = PHASE_ONE_WAVE_SIZES[this.wave - 1];
+    this.waveSize = this.getStageWaveSize(this.wave);
+    const nextStageMonster = this.getStageMonsterEntry(0);
     this.waveIntermissionMs = PHASE_ONE_TIMING.waveIntermissionMs;
-    this.spawnTimer = PHASE_ONE_TIMING.nextWaveSpawnDelayMs;
+    this.spawnTimer = nextStageMonster?.firstSpawnDelayMs > 0 ? nextStageMonster.firstSpawnDelayMs : PHASE_ONE_TIMING.nextWaveSpawnDelayMs;
     this.setMessage(
       "Wave " + clearedWave + " cleared. Prepare for wave " + this.wave +
       ": " + this.waveSize + " monsters in 5 seconds."
@@ -5320,7 +5379,7 @@ export default class BattleScene extends Scene {
       "🪙 " + this.coins,
       this.houseHealth + "%",
       "🌱 " + this.livingPlantCount(),
-      "👾 " + this.totalDefeatedMonsters + "/" + PHASE_ONE_TOTAL_MONSTERS,
+      "👾 " + this.totalDefeatedMonsters + "/" + this.totalConfiguredMonsters,
     ];
     if (this.energyValueText) this.energyValueText.setText(String(this.energy));
     if (this.hudValueTexts) {
