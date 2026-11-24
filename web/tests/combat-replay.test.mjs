@@ -15,7 +15,7 @@ test("combat event log accepts every plant type supported by the battle scene", 
   assert.equal(validateCombatEventLog(log), true);
   assert.equal(log.events[0].payload.type, type);
  }
- assert.throws(() => makeLog([ev(0, "plant_placed", { type: "unknown-plant", col: 1, row: 2 })]), /INVALID_PLANT_EVENT/);
+ assert.throws(() => makeLog([ev(0, "plant_placed", { type: "unknown plant", col: 1, row: 2 })]), /INVALID_PLANT_EVENT/);
 });
 
 test("mushroom produces a 15-energy collectible after its 12-second cycle and it can be collected once", () => {
