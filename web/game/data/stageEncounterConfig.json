@@ -4,8 +4,8 @@
     "1": {
       "monsters": [
         {
-          "key": "corn-monster-w1-first",
-          "id": "corn-monster",
+          "key": "monster-01-w1-first",
+          "id": "01",
           "count": 1,
           "wave": 1,
           "spawnIntervalMs": 5080,
