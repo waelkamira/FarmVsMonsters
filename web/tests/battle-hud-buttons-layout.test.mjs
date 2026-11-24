@@ -48,20 +48,20 @@ test("layout tolerates controls that are not present yet", () => {
 test("attack progress bar and attack counter are anchored at the extreme upper-right", async () => {
   const { readFileSync } = await import("node:fs");
   const scene = readFileSync(new URL("../game/scenes/BattleScene.js", import.meta.url), "utf8");
-  assert.match(scene, /waveProgressFrame = this\\.add\\.image\\(883, 68, "hud-wave-frame"\\)/);
-  assert.match(scene, /waveProgressTrack = this\\.add\\.rectangle\\(883, 68, 158, 10/);
-  assert.match(scene, /waveIcon = this\\.add\\.image\\(1027, 68, "hud-wave-icon"\\)/);
-  assert.match(scene, /waveBadge = this\\.add\\.image\\(1080, 68, "hud-wave-badge"\\)/);
-  assert.match(scene, /waveText = this\\.add\\.text\\(1080, 68, "1\\/5"/);
-  assert.match(scene, /waveProgressMarker\\?\\.setX\\(804 \\+ trackWidth \\* progress\\)/);
+  assert.match(scene, /waveProgressFrame = this\.add\.image\(883, 68, "hud-wave-frame"\)/);
+  assert.match(scene, /waveProgressTrack = this\.add\.rectangle\(883, 68, 158, 10/);
+  assert.match(scene, /waveIcon = this\.add\.image\(1027, 68, "hud-wave-icon"\)/);
+  assert.match(scene, /waveBadge = this\.add\.image\(1080, 68, "hud-wave-badge"\)/);
+  assert.match(scene, /waveText = this\.add\.text\(1080, 68, "1\/5"/);
+  assert.match(scene, /waveProgressMarker\?\.setX\(804 \+ trackWidth \* progress\)/);
 });
 
 test("seed packets show a draggable seven-slot scrollbar only above seven active plants", () => {
-  assert.match(scene, /const hasScrollableSeedBank = selectedTypes\\.length > 7/);
-  assert.match(scene, /const seedViewportWidth = 7 \\* 78/);
-  assert.match(scene, /this\\.seedPacketLayer\\.setMask\\(seedMaskGraphics\\.createGeometryMask\\(\\)\\)/);
-  assert.match(scene, /this\\.input\\.setDraggable\\(thumb\\)/);
-  assert.match(scene, /thumb\\.on\\("drag",/);
-  assert.match(scene, /track\\.on\\("pointerdown",/);
-  assert.match(scene, /if \\(hasScrollableSeedBank\\) \\{/);
+  assert.match(scene, /const hasScrollableSeedBank = selectedTypes\.length > 7/);
+  assert.match(scene, /const seedViewportWidth = 7 \* 78/);
+  assert.match(scene, /this\.seedPacketLayer\.setMask\(seedMaskGraphics\.createGeometryMask\(\)\)/);
+  assert.match(scene, /this\.input\.setDraggable\(thumb\)/);
+  assert.match(scene, /thumb\.on\("drag",/);
+  assert.match(scene, /track\.on\("pointerdown",/);
+  assert.match(scene, /if \(hasScrollableSeedBank\) \{/);
 });
