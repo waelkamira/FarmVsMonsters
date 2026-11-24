@@ -52,7 +52,8 @@ async function writeLocal(value){
 async function readGithub(){
  const token=process.env.STUDIO_GITHUB_TOKEN;
  if(!token)throw new Error("STUDIO_GITHUB_TOKEN is required.");
- const response=await fetch(githubUrl()+"?ref=main",{headers:githubHeaders(token),cache:"no-store"});
+ const storageBranch=process.env.STUDIO_GITHUB_BRANCH||"studio/assets";
+ const response=await fetch(githubUrl()+"?ref="+encodeURIComponent(storageBranch),{headers:githubHeaders(token),cache:"no-store"});
  if(response.status===404)return {config:DEFAULT_CONFIG,sha:null};
  if(!response.ok)throw new Error("GitHub read failed ("+response.status+").");
  const data=await response.json();
@@ -61,12 +62,13 @@ async function readGithub(){
 async function writeGithub(config,expectedSha){
  const token=process.env.STUDIO_GITHUB_TOKEN;
  if(!token)throw new Error("STUDIO_GITHUB_TOKEN is required.");
- const current=await fetch(githubUrl()+"?ref=main",{headers:githubHeaders(token),cache:"no-store"});
+ const storageBranch=process.env.STUDIO_GITHUB_BRANCH||"studio/assets";
+ const current=await fetch(githubUrl()+"?ref="+encodeURIComponent(storageBranch),{headers:githubHeaders(token),cache:"no-store"});
  let sha=null;
  if(current.ok)sha=(await current.json()).sha;
  else if(current.status!==404)throw new Error("GitHub lookup failed ("+current.status+").");
  if(expectedSha!==undefined&&expectedSha!==sha)return {conflict:true};
- const saved=await fetch(githubUrl(),{method:"PUT",headers:{...githubHeaders(token),"Content-Type":"application/json"},body:JSON.stringify({message:"Configure stage monster and plant rosters",branch:"main",content:Buffer.from(JSON.stringify(config,null,2)+"\n").toString("base64"),...(sha?{sha}:{})})});
+ const saved=await fetch(githubUrl(),{method:"PUT",headers:{...githubHeaders(token),"Content-Type":"application/json"},body:JSON.stringify({message:"Configure stage monster and plant rosters",branch:storageBranch,content:Buffer.from(JSON.stringify(config,null,2)+"\n").toString("base64"),...(sha?{sha}:{})})});
  if(!saved.ok){const data=await saved.json().catch(()=>({}));throw new Error(data.message||"GitHub save failed ("+saved.status+").");}
  const savedData=await saved.json().catch(()=>({}));
  return {conflict:false,sha:savedData.content?.sha||null};
