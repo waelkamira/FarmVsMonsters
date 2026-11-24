@@ -24,8 +24,8 @@ const rules = readFileSync(resolve(here, "../game/rules/phaseOneRules.mjs"), "ut
 
 test("combat contract version, wave roster, and reward policy are explicit", () => {
   assert.equal(PHASE_ONE_COMBAT_CONTRACT_VERSION, 1);
-  assert.deepEqual(PHASE_ONE_WAVE_SIZES, [3, 5, 6, 7, 9]);
-  assert.equal(PHASE_ONE_WAVE_SIZES.reduce((sum, size) => sum + size, 0), 30);
+  assert.deepEqual(PHASE_ONE_WAVE_SIZES, [2, 3, 4, 5, 6]);
+  assert.equal(PHASE_ONE_WAVE_SIZES.reduce((sum, size) => sum + size, 0), 20);
   assert.deepEqual(PHASE_ONE_ENERGY, { initial: 150, maximum: 300 });
   assert.equal(PHASE_ONE_REWARDS.ordinaryMonsterDefeatCoins, 8);
 });
@@ -60,6 +60,7 @@ test("radish, mushroom and dragon combat values preserve the current tuning", ()
     projectileSpeed: 320,
     projectileCollisionRadius: 24,
     plantingEnergyCost: 35,
+    seedPacketRechargeMs: 5000,
     hp: 160,
     cooldownMs: 1450,
     range: 360
