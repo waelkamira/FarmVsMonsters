@@ -251,6 +251,9 @@ export default class BattleScene extends Scene {
     this.stageEncounterConfig = this.cache.json.get("stage-encounter-config")?.stages?.["1"] || null;
     this.stageMonsterRosterConfigured = this.stageEncounterConfig?.monstersConfigured === true;
     this.stageMonsterEntries = (this.stageEncounterConfig?.monsters || []).filter(entry => entry.enabled !== false);
+    this.totalConfiguredMonsters = this.stageMonsterRosterConfigured
+      ? this.stageMonsterEntries.reduce((sum, entry) => sum + Math.max(1, Number(entry.count) || 1), 0)
+      : PHASE_ONE_TOTAL_MONSTERS;
     this.stagePlantRosterConfigured = this.stageEncounterConfig?.plantsConfigured === true;
     this.stagePlantEntries = (this.stageEncounterConfig?.plants || []).filter(entry => entry.enabled !== false);
     this.vfxManager = new VFXManager(this, { registry: createDefaultVFXRegistry(), limits: { maxActiveBursts: 24 } });
@@ -5373,7 +5376,7 @@ export default class BattleScene extends Scene {
       "🪙 " + this.coins,
       this.houseHealth + "%",
       "🌱 " + this.livingPlantCount(),
-      "👾 " + this.totalDefeatedMonsters + "/" + PHASE_ONE_TOTAL_MONSTERS,
+      "👾 " + this.totalDefeatedMonsters + "/" + this.totalConfiguredMonsters,
     ];
     if (this.energyValueText) this.energyValueText.setText(String(this.energy));
     if (this.hudValueTexts) {
