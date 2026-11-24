@@ -28,4 +28,5 @@ test("Studio animation preview defaults to all frames and supports selecting one
   assert.match(page, /const previewRowIndex=animationRow===0\?Math\.floor\(safePreviewFrame\/columns\):safeAnimationRow-1/);
   assert.match(page, /صف الحركة \(0 = كل الصفوف\)<input type="number" min="0"/);
   assert.match(page, /القيمة 0 تعرض جميع إطارات Sprite Sheet بالتتابع/);
+  assert.match(page, /function cancelEdit\(\)\{setAnimationRow\(0\);setAnimationPlaying\(false\);/);
 });
