@@ -2,8 +2,141 @@
   "version": 1,
   "stages": {
     "1": {
-      "monsters": [],
-      "plants": [],
+      "monsters": [
+        {
+          "key": "cave-w1",
+          "id": "cave-brute",
+          "count": 2,
+          "wave": 1,
+          "spawnIntervalMs": 1800,
+          "firstSpawnDelayMs": 0,
+          "hpMultiplier": 1,
+          "speedMultiplier": 1,
+          "damageMultiplier": 1,
+          "attackIntervalMultiplier": 1,
+          "enabled": true
+        },
+        {
+          "key": "cave-w2",
+          "id": "cave-brute",
+          "count": 3,
+          "wave": 2,
+          "spawnIntervalMs": 1800,
+          "firstSpawnDelayMs": 0,
+          "hpMultiplier": 1,
+          "speedMultiplier": 1,
+          "damageMultiplier": 1,
+          "attackIntervalMultiplier": 1,
+          "enabled": true
+        },
+        {
+          "key": "cave-w3",
+          "id": "cave-brute",
+          "count": 4,
+          "wave": 3,
+          "spawnIntervalMs": 1600,
+          "firstSpawnDelayMs": 0,
+          "hpMultiplier": 1,
+          "speedMultiplier": 1,
+          "damageMultiplier": 1,
+          "attackIntervalMultiplier": 1,
+          "enabled": true
+        },
+        {
+          "key": "cave-w4",
+          "id": "cave-brute",
+          "count": 4,
+          "wave": 4,
+          "spawnIntervalMs": 1400,
+          "firstSpawnDelayMs": 0,
+          "hpMultiplier": 1,
+          "speedMultiplier": 1,
+          "damageMultiplier": 1,
+          "attackIntervalMultiplier": 1,
+          "enabled": true
+        },
+        {
+          "key": "skitter-w4",
+          "id": "dust-skitter",
+          "count": 1,
+          "wave": 4,
+          "spawnIntervalMs": 1400,
+          "firstSpawnDelayMs": 0,
+          "hpMultiplier": 1,
+          "speedMultiplier": 1,
+          "damageMultiplier": 1,
+          "attackIntervalMultiplier": 1,
+          "enabled": true
+        },
+        {
+          "key": "cave-w5",
+          "id": "cave-brute",
+          "count": 5,
+          "wave": 5,
+          "spawnIntervalMs": 1200,
+          "firstSpawnDelayMs": 0,
+          "hpMultiplier": 1,
+          "speedMultiplier": 1,
+          "damageMultiplier": 1,
+          "attackIntervalMultiplier": 1,
+          "enabled": true
+        },
+        {
+          "key": "stonehide-w5",
+          "id": "stonehide",
+          "count": 1,
+          "wave": 5,
+          "spawnIntervalMs": 1200,
+          "firstSpawnDelayMs": 0,
+          "hpMultiplier": 1,
+          "speedMultiplier": 1,
+          "damageMultiplier": 1,
+          "attackIntervalMultiplier": 1,
+          "enabled": true
+        }
+      ],
+      "plants": [
+        {
+          "id": "radish",
+          "count": 1,
+          "enabled": true
+        },
+        {
+          "id": "mushroom",
+          "count": 1,
+          "enabled": true
+        },
+        {
+          "id": "pumpkin",
+          "count": 1,
+          "enabled": true
+        },
+        {
+          "id": "pineapple",
+          "count": 1,
+          "enabled": true
+        },
+        {
+          "id": "hazelnut",
+          "count": 1,
+          "enabled": true
+        },
+        {
+          "id": "mango",
+          "count": 1,
+          "enabled": true
+        },
+        {
+          "id": "snow-thrower",
+          "count": 1,
+          "enabled": true
+        },
+        {
+          "id": "electric-mushroom",
+          "count": 1,
+          "enabled": true
+        }
+      ],
       "monstersConfigured": false,
       "plantsConfigured": false
     }
