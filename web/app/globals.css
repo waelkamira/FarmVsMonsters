@@ -2387,3 +2387,17 @@ body {
 .seed-select-catalog-scroll{max-height:min(62vh,680px);overflow-y:auto;overscroll-behavior:contain;padding:8px;scrollbar-width:thin;}
 .seed-select-catalog-scroll::-webkit-scrollbar{width:10px}
 .seed-select-catalog-scroll::-webkit-scrollbar-thumb{background:#9a7b4b;border:2px solid #251b12;border-radius:99px}
+
+
+/* Compact access to campaign and optional player accounts on the minimal home screen. */
+.codex-home-utility-links {
+  position: absolute; top: 22px; left: 22px; z-index: 30;
+  display: flex; flex-wrap: wrap; gap: 10px;
+}
+.codex-home-utility-links a {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: 40px; padding: 8px 14px; border: 1px solid #ffffff66;
+  border-radius: 999px; color: #fff; text-decoration: none;
+  background: #17100b99; backdrop-filter: blur(12px); font-weight: 800;
+}
+.codex-home-utility-links a:focus-visible { outline: 3px solid #ffe28a; outline-offset: 3px; }

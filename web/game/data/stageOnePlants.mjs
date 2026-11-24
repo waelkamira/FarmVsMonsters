@@ -179,6 +179,18 @@ export const STAGE_ONE_PLANTS = Object.freeze([
     descriptionAr: "ينفذ حركة شحن كهربائية من تسعة إطارات قبل إطلاق صاعقة سماوية على الوحوش في مساره.",
     energyCost: 80, coinPrice: 0, status: "active", implemented: true, purchasable: false, image: null,
     stats: ["115 HP", "22 damage", "1850 ms cooldown"], statsAr: ["١١٥ صحة", "ضرر ٢٢", "فاصل هجوم ١٨٥٠ مللي ثانية"]
+  },
+  {
+    id: "fire-pepper",
+    assetPath: "/assets/plants/fire-pepper.png",
+    name: "Fire Pepper",
+    nameAr: "الفلفل الناري",
+    role: "Area fire attacker",
+    roleAr: "مهاجم ناري جماعي",
+    description: "A planned fire plant reserved for a later campaign unlock.",
+    descriptionAr: "نبتة نارية مخطط لها وتُفتح في مرحلة لاحقة من الحملة.",
+    energyCost: 100, coinPrice: 360, status: "planned", implemented: false, purchasable: false, image: null,
+    stats: ["Area damage", "Future unlock"], statsAr: ["ضرر جماعي", "فتح مستقبلي"]
   }
 ]);
 

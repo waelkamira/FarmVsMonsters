@@ -49,9 +49,10 @@ test("Electric Mushroom uses its own electric projectile and VFX identity", () =
 });
 
 test("Electric Mushroom passes the same seed-card-to-soil planting config lookup as other plants", () => {
-  assert.match(sceneSource, /const plantConfigs = \\{[^}]*"electric-mushroom": ELECTRIC_MUSHROOM_CONFIG/);
-  assert.match(sceneSource, /const plantConfig = plantConfigs\\[this\\.selectedPlant\\]/);
-  assert.match(sceneSource, /if \\(!plantConfig\\) \\{/);
+  assert.ok(sceneSource.includes("const plantConfigs = {"));
+  assert.ok(sceneSource.includes('"electric-mushroom": ELECTRIC_MUSHROOM_CONFIG'));
+  assert.ok(sceneSource.includes("const plantConfig = plantConfigs[this.selectedPlant]"));
+  assert.ok(sceneSource.includes("if (!plantConfig) {"));
 });
 
 test("Electric Mushroom is available in the plant collection and its seed selection feedback", () => {

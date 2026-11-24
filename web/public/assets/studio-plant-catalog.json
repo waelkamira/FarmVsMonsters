@@ -100,6 +100,167 @@
         "sizePercent": 100
       },
       "publishedAt": "2026-11-22T10:11:12.454Z"
+    },
+    {
+      "id": "pepper-flamethrower-level-1",
+      "name": "Pepper-flamethrower-level-1",
+      "path": "/assets/plants/pepper-flamethrower-level-1.png",
+      "rows": 3,
+      "columns": 3,
+      "spriteSheet": true,
+      "animationProfile": {
+        "idle": {
+          "startFrame": 0,
+          "endFrame": 0,
+          "fps": 6,
+          "loop": true
+        },
+        "move": {
+          "startFrame": 0,
+          "endFrame": 8,
+          "fps": 10,
+          "loop": true
+        },
+        "attack": {
+          "startFrame": 0,
+          "endFrame": 8,
+          "fps": 12,
+          "loop": false
+        }
+      },
+      "rigProfile": null,
+      "rigParts": [],
+      "combat": {
+        "mode": "projectile",
+        "projectile": {
+          "id": "pepper-flamethrower-level-1-projectile",
+          "path": "/assets/projectiles/plants/pepper-flamethrower-level-1-projectile-30572f40a67eec42f4ceec6b79ed9017a0313f2a524dcf916a2226301990a207.png",
+          "filename": "pepper-flamethrower-level-1-projectile.png",
+          "managed": false,
+          "frameCount": 1,
+          "rows": 1,
+          "columns": 1
+        },
+        "energyCost": 60,
+        "hp": 150,
+        "cooldownMs": 1800,
+        "damage": 30,
+        "range": 500,
+        "projectileSpeed": 280,
+        "projectileHeight": 0,
+        "projectileEffectColor": "#ffc247",
+        "projectileRotation": -25,
+        "projectileTrajectoryType": "custom",
+        "projectilePathPoints": [
+          {
+            "progress": 0,
+            "x": 0,
+            "y": 0
+          },
+          {
+            "progress": 0.5,
+            "x": -2,
+            "y": 52
+          },
+          {
+            "progress": 1,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "projectileCurveX": 0,
+        "projectileCurveY": 110,
+        "projectileLaunchOffsetX": 41,
+        "projectileLaunchOffsetY": -44,
+        "projectileTargetOffsetX": 0,
+        "projectileTargetOffsetY": 0,
+        "projectileCollisionRadius": 22,
+        "energyAmount": 15,
+        "energyIntervalMs": 12000,
+        "sizePercent": 100
+      },
+      "publishedAt": "2026-11-24T18:45:02.559Z"
+    },
+    {
+      "id": "electric-mushroom-level-1",
+      "name": "electric-mushroom-level-1",
+      "path": "/assets/plants/Electric-mushroom-level-1.png",
+      "rows": 1,
+      "columns": 1,
+      "spriteSheet": false,
+      "animationProfile": {
+        "speedMultiplier": 1,
+        "idle": {
+          "startFrame": 0,
+          "endFrame": 0,
+          "fps": 6,
+          "loop": true
+        },
+        "move": {
+          "startFrame": 0,
+          "endFrame": 0,
+          "fps": 10,
+          "loop": true
+        },
+        "attack": {
+          "startFrame": 0,
+          "endFrame": 0,
+          "fps": 12,
+          "loop": false
+        }
+      },
+      "rigProfile": null,
+      "rigParts": [],
+      "combat": {
+        "mode": "projectile",
+        "projectile": {
+          "id": "electric-mushroom-level-1-projectile",
+          "path": "/assets/projectiles/plants/electric-mushroom-level-1-projectile-2774aab52483e625bdc814d0743758c7b260638dfc1f3b88603e6c291aa58706.png",
+          "filename": "electric-mushroom-level-1-projectile.png",
+          "managed": false,
+          "frameCount": 9,
+          "rows": 3,
+          "columns": 3
+        },
+        "energyCost": 60,
+        "hp": 150,
+        "cooldownMs": 1800,
+        "damage": 30,
+        "range": 180,
+        "projectileSpeed": 280,
+        "projectileHeight": 0,
+        "projectileEffectColor": "#ffc247",
+        "projectileRotation": 0,
+        "projectileTrajectoryType": "custom",
+        "projectilePathPoints": [
+          {
+            "progress": 0,
+            "x": 0,
+            "y": 0
+          },
+          {
+            "progress": 0.5,
+            "x": 0,
+            "y": 110
+          },
+          {
+            "progress": 1,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "projectileCurveX": 0,
+        "projectileCurveY": 110,
+        "projectileLaunchOffsetX": 14,
+        "projectileLaunchOffsetY": -30,
+        "projectileTargetOffsetX": 0,
+        "projectileTargetOffsetY": 0,
+        "projectileCollisionRadius": 22,
+        "energyAmount": 15,
+        "energyIntervalMs": 12000,
+        "sizePercent": 100
+      },
+      "publishedAt": "2026-11-24T19:50:51.766Z"
     }
   ]
 }

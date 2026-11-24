@@ -151,8 +151,8 @@ test("Phaser delegates monster and projectile lane movement to the simulation ke
   assert.match(scene, /selectProjectileTarget\(/);
   assert.match(scene, /selectFarmerMeleeTarget\(/);
   assert.match(scene, /selectDragonFireballTarget\(/);
-  assert.match(scene, /targetPlant\.hp = applyHitPointsDamage\(/);
-  assert.match(scene, /monster\.attackCooldown = advanceCooldown\(/);
+  assert.match(scene, /applyHitPointsDamage\(/);
+  assert.match(scene, /monster\.attackCooldown = bite\.cooldownMs/);
   assert.match(scene, /boss\.shotCooldown = advanceCooldown\(/);
   assert.match(scene, /boss\.attackCooldown = advanceCooldown\(/);
   assert.match(scene, /plant\.cooldown = advanceCooldown\(/);
@@ -443,7 +443,8 @@ test("Phaser registers Snow Thrower assets and freezes monsters without HP damag
   assert.match(scene, /snow-thrower-level-1/);
   assert.match(scene, /Snow-thrower-bomb-level-1\.png/);
   assert.match(scene, /frozen-hyena-level-1/);
-  assert.match(scene, /freezeMonster\(hit, shot\.freezeDurationMs\)/);
+  assert.match(scene, /this\.freezeMonster\(hit\)/);
+  assert.match(scene, /monster\.freezeStage = Math\.min\(5, \(monster\.freezeStage \|\| 0\) \+ 1\)/);
   assert.match(scene, /restoreMonsterAfterFreeze/);
 });
 

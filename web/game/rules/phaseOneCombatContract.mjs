@@ -3,7 +3,7 @@
 // client consume the same rules instead of maintaining separate balance tables.
 export const PHASE_ONE_COMBAT_CONTRACT_VERSION = 1;
 
-// Stage 1 is a guided onboarding campaign: 20 ordinary monsters in five readable waves.
+// Stage 1 is a guided onboarding campaign: 30 ordinary monsters in five readable waves.
 export const PHASE_ONE_WAVE_SIZES = Object.freeze([3, 5, 6, 7, 9]);
 export const PHASE_ONE_BOARD = Object.freeze({ columns: 8, rows: 5, laneWidth: 420.823, spawnLocalX: 238.4115, homeLocalX: -300 });
 export function getPlantLaneLocalX(col) {

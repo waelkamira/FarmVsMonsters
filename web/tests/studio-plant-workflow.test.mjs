@@ -5,14 +5,16 @@ import { readFileSync } from "node:fs";
 const here = new URL(".", import.meta.url);
 const read = (relative) => readFileSync(new URL(relative, here), "utf8");
 const studioPage = read("../app/studio/page.js");
+const projectileEditor = read("../app/studio/ProjectileTrajectoryEditor.jsx");
 const assetsRoute = read("../app/api/studio/assets/route.js");
+const releaseLifecycle = read("../game/studio/releaseLifecycle.mjs");
 const battleScene = read("../game/scenes/BattleScene.js");
 const selector = read("../app/stage/1/select/page.js");
 const syncScript = read("../scripts/sync-studio-test-assets.mjs");
 
 test("Studio supports safe duplication for every registered asset type",()=>{
-  assert.match(studioPage,/async function cloneAsset\(asset\)/);
-  assert.match(studioPage,/onClick=\{\(\)=>cloneAsset\(a\)\}/);
+  assert.match(studioPage,/function beginCloneAsset\(asset\)/);
+  assert.match(studioPage,/onClick=\{\(\)=>beginCloneAsset\(a\)\}/);
   assert.match(assetsRoute,/operation==="clone"/);
   assert.match(assetsRoute,/cloneStudioAsset\(asset,newId,body\.newName\)/);
 });
@@ -48,8 +50,8 @@ test("Studio can preview a selected Sprite Sheet row with adjustable playback sp
   assert.match(studioPage,/animationPlaying/);
   assert.match(studioPage,/animationFps/);
   assert.match(studioPage,/setAnimationPlaying\(value=>!value\)/);
-  assert.match(studioPage,/studio-sprite-play/);
-  assert.match(studioPage,/steps\(\$\{columns\}\)/);
+  assert.match(studioPage,/studio-animation-controls/);
+  assert.match(studioPage,/backgroundPosition:/);
 });
 
 test("Studio provides a live size preview for the selected or edited plant",()=>{
@@ -68,6 +70,7 @@ test("Studio exposes plant size and applies it in the Phaser runtime",()=>{
   assert.match(battleScene,/studioPlant\.combat\?\.sizePercent/);
 });
 
+<<<<<<< HEAD
 test("Studio saves per-asset animation speed and applies it to plant and monster playback",()=>{
   assert.match(studioPage,/مضاعف سرعة الأنيميشن/);
   assert.match(assetsRoute,/speedMultiplier:submittedProfile\?\.speedMultiplier\?\?existing\?\.animationProfile\?\.speedMultiplier/);
@@ -77,10 +80,13 @@ test("Studio saves per-asset animation speed and applies it to plant and monster
 });
 
 test("all built-in plants are unlocked in the current roster while loadout remains capped at seven",()=>{
+=======
+test("campaign plant unlocks are respected and the active loadout remains capped at six",()=>{
+>>>>>>> 55db517c020c66ee5e4d771a60ebab4d79132600
   assert.match(selector,/nextPlants\.map\(\(plant\) => plant\.id\)/);
-  assert.match(selector,/MAX_SEEDS = 7/);
-  assert.match(battleScene,/const PLAYTEST_ALL_PLANTS = true/);
-  assert.match(battleScene,/\.slice\(0, 7\)/);
+  assert.match(selector,/MAX_SEEDS = 6/);
+  assert.match(battleScene,/const PLAYTEST_ALL_PLANTS = false/);
+  assert.match(battleScene,/normalizeSeedLoadout\(preferredLoadout/);
 });
 
 test("Studio requires manual behavior selection and only links a projectile in projectile mode", () => {
@@ -98,10 +104,10 @@ test("Studio requires manual behavior selection and only links a projectile in p
 test("Studio enforces draft-to-testing-to-published and publishes the catalog only after testing", () => {
   assert.match(assetsRoute, /"prepare-test","publish"/);
   assert.match(assetsRoute, /asset\.status!=="testing"/);
-  assert.match(assetsRoute, /status:"testing"/);
-  assert.match(assetsRoute, /status:"published"/);
+  assert.match(releaseLifecycle, /status: "testing"/);
+  assert.match(releaseLifecycle, /status: "published"/);
   assert.match(assetsRoute, /PUBLISHED_CATALOG_PATH/);
-  assert.match(assetsRoute, /githubPutImmutable\("web\/public"\+asset\.path/);
+  assert.match(assetsRoute, /const artworkPath="web\/public"\+asset\.path/);
 });
 
 test("local sync downloads only testing plants and writes the exact local runtime catalog path", () => {
@@ -119,7 +125,7 @@ test("seed selection and Phaser runtime load the live authenticated Studio testi
   assert.match(battleScene, /api\/studio\/assets\?catalog=testing/);
   assert.match(battleScene, /const testingTypes = \(this\.studioPlants \|\| \[\]\)/);
   assert.match(battleScene, /\.filter\(\(plant\) => plant\.testOnly\)/);
-  assert.match(battleScene, /\.slice\(0, 7\)/);
+  assert.match(battleScene, /normalizeSeedLoadout\(preferredLoadout/);
   assert.match(battleScene, /studioPlantsByType/);
   assert.match(battleScene, /spawnStudioEnergy/);
   assert.match(battleScene, /fireThornProjectile/);
@@ -131,7 +137,7 @@ test("testing catalog is served directly from the Studio staging branch with pro
   assert.match(assetsRoute, /asset\.status==="testing"/);
   assert.match(assetsRoute, /api\/studio\/assets\?preview=/);
   assert.match(assetsRoute, /Cache-Control.*private, no-store/);
-  assert.match(studioPage, /متاحة الآن للاختبار مباشرة داخل اللعبة/);
+  assert.match(studioPage, /متاح الآن للاختبار مباشرة داخل اللعبة/);
   assert.doesNotMatch(studioPage, /شغّل npm run studio:sync لمزامنتها/);
 });
 
@@ -157,8 +163,9 @@ test("Studio exposes editable projectile controls with per-field Arabic explanat
     assert.ok(studioPage.includes(field));
   }
   for(const label of ["سرعة القذيفة","ارتفاع مسار القذيفة","لون تأثير القذيفة","زاوية دوران القذيفة"]){
-    assert.ok(studioPage.includes(label));
+    assert.ok((studioPage + projectileEditor).includes(label));
   }
+  assert.match(projectileEditor,/studio-field-help/);
   assert.match(studioPage,/studio-field-help/);
   assert.match(assetsRoute,/projectileHeight/);
   assert.match(assetsRoute,/projectileEffectColor/);
@@ -168,12 +175,12 @@ test("Studio exposes editable projectile controls with per-field Arabic explanat
   assert.match(battleScene,/projectileRotation/);
 });
 
-test("published Studio plants are included in the default seven-slot loadout",()=>{
+test("published Studio plants are included in the default six-slot loadout",()=>{
   assert.match(selector,/defaultStudioPlants = studioPlants\.map/);
   assert.match(selector,/const availableIds = new Set\(nextPlants\.map\(\(plant\) => plant\.id\)\)/);
   assert.match(selector,/STARTER_LOADOUT\.filter\(\(id\) => availableIds\.has\(id\)\)/);
   assert.match(selector,/defaultStudioPlants\.filter\(\(id\) => availableIds\.has\(id\)\)/);
-  assert.match(selector,/MAX_SEEDS = 7/);
+  assert.match(selector,/MAX_SEEDS = 6/);
 });
 
 test("Studio persists validated idle and attack animation profiles into Phaser runtime",()=>{

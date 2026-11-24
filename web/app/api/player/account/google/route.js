@@ -29,7 +29,6 @@ export async function GET(request) {
   authorizeUrl.searchParams.set("redirect_to", callbackUrl);
   authorizeUrl.searchParams.set("code_challenge", challenge);
   authorizeUrl.searchParams.set("code_challenge_method", "s256");
-  authorizeUrl.searchParams.set("state", state);
 
   const response = NextResponse.redirect(authorizeUrl);
   const secure = process.env.NODE_ENV === "production";

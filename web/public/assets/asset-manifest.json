@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-24T17:29:55.451Z",
-  "assetCount": 94,
-  "totalBytes": 28449069,
+  "generatedAt": "2026-11-24T20:06:01.174Z",
+  "assetCount": 97,
+  "totalBytes": 29468317,
   "groups": {
     "audio": [
       {
@@ -944,6 +944,16 @@
         "height": 400
       },
       {
+        "key": "plants-pepper-flamethrower-level-1",
+        "url": "/assets/plants/pepper-flamethrower-level-1.png",
+        "type": "image",
+        "group": "plants",
+        "bytes": 956469,
+        "sha256": "82106b186c2dc11a460efe8a9ad268302f28ce86deb1321ffd6e989f68a20834",
+        "width": 1024,
+        "height": 1024
+      },
+      {
         "key": "plants-pineapple-level-1-bomb",
         "url": "/assets/plants/pineapple-level-1-bomb.png",
         "type": "image",
@@ -1040,6 +1050,26 @@
         "sha256": "251662e3c0caa6c03a8264cfee2e9cc28af6bd632c485ce4cb6c0e71faf13610",
         "width": 106,
         "height": 82
+      },
+      {
+        "key": "projectiles-plants-electric-mushroom-level-1-projectile-2774aab52483e625bdc814d0743758c7b260638dfc1f3b88603e6c291aa58706",
+        "url": "/assets/projectiles/plants/electric-mushroom-level-1-projectile-2774aab52483e625bdc814d0743758c7b260638dfc1f3b88603e6c291aa58706.png",
+        "type": "image",
+        "group": "projectiles",
+        "bytes": 12065,
+        "sha256": "2774aab52483e625bdc814d0743758c7b260638dfc1f3b88603e6c291aa58706",
+        "width": 87,
+        "height": 64
+      },
+      {
+        "key": "projectiles-plants-pepper-flamethrower-level-1-projectile-30572f40a67eec42f4ceec6b79ed9017a0313f2a524dcf916a2226301990a207",
+        "url": "/assets/projectiles/plants/pepper-flamethrower-level-1-projectile-30572f40a67eec42f4ceec6b79ed9017a0313f2a524dcf916a2226301990a207.png",
+        "type": "image",
+        "group": "projectiles",
+        "bytes": 50714,
+        "sha256": "30572f40a67eec42f4ceec6b79ed9017a0313f2a524dcf916a2226301990a207",
+        "width": 213,
+        "height": 114
       }
     ]
   },
@@ -1967,6 +1997,16 @@
       "height": 400
     },
     {
+      "key": "plants-pepper-flamethrower-level-1",
+      "url": "/assets/plants/pepper-flamethrower-level-1.png",
+      "type": "image",
+      "group": "plants",
+      "bytes": 956469,
+      "sha256": "82106b186c2dc11a460efe8a9ad268302f28ce86deb1321ffd6e989f68a20834",
+      "width": 1024,
+      "height": 1024
+    },
+    {
       "key": "plants-pineapple-level-1-bomb",
       "url": "/assets/plants/pineapple-level-1-bomb.png",
       "type": "image",
@@ -2061,6 +2101,26 @@
       "sha256": "251662e3c0caa6c03a8264cfee2e9cc28af6bd632c485ce4cb6c0e71faf13610",
       "width": 106,
       "height": 82
+    },
+    {
+      "key": "projectiles-plants-electric-mushroom-level-1-projectile-2774aab52483e625bdc814d0743758c7b260638dfc1f3b88603e6c291aa58706",
+      "url": "/assets/projectiles/plants/electric-mushroom-level-1-projectile-2774aab52483e625bdc814d0743758c7b260638dfc1f3b88603e6c291aa58706.png",
+      "type": "image",
+      "group": "projectiles",
+      "bytes": 12065,
+      "sha256": "2774aab52483e625bdc814d0743758c7b260638dfc1f3b88603e6c291aa58706",
+      "width": 87,
+      "height": 64
+    },
+    {
+      "key": "projectiles-plants-pepper-flamethrower-level-1-projectile-30572f40a67eec42f4ceec6b79ed9017a0313f2a524dcf916a2226301990a207",
+      "url": "/assets/projectiles/plants/pepper-flamethrower-level-1-projectile-30572f40a67eec42f4ceec6b79ed9017a0313f2a524dcf916a2226301990a207.png",
+      "type": "image",
+      "group": "projectiles",
+      "bytes": 50714,
+      "sha256": "30572f40a67eec42f4ceec6b79ed9017a0313f2a524dcf916a2226301990a207",
+      "width": 213,
+      "height": 114
     }
   ]
 }

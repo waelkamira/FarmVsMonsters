@@ -16,10 +16,11 @@ import { transformRigHitboxToWorld, transformRigPointToWorld } from "../studio/s
 import { getProjectileTrajectoryOffset, getProjectileHeadCorrection, getProjectileLaunchPoint } from "../studio/projectileTrajectory.mjs";
 import { createStudioMonsterProfile, resolveStudioMonsterRuntimeProfile, selectWeightedStudioMonster } from "../studio/monsterProfiles.mjs";
 
-// Temporary playtest mode exposes every implemented built-in plant; campaign progression data remains intact.
-const PLAYTEST_ALL_PLANTS = true;
+// Campaign progression controls built-in plant availability; Studio test assets remain separately gated.
+const PLAYTEST_ALL_PLANTS = false;
 const ALL_PLAYTEST_PLANT_IDS = Object.freeze(["radish", "mushroom", "pumpkin", "pineapple", "hazelnut", "mango", "snow-thrower", "electric-mushroom"]);
 import { createSeededRandom } from "../rules/seededRandom.mjs";
+import { normalizeSeedLoadout, MAX_SEED_PACKETS } from "../rules/seedLoadout.mjs";
 import { createCombatEventLog, appendCombatEvent } from "../rules/combatEventLog.mjs";
 import gridCalibration from "../data/farm-grid-calibration.json";
 import soundAssets from "../data/sound-assets.json";
@@ -183,6 +184,14 @@ export default class BattleScene extends Scene {
       this.load.audio(asset.key, asset.path);
     }
     const queuedRigPartTextures = new Set();
+    // Studio keeps stable texture keys per asset ID. A scene restart can therefore
+    // otherwise retain the previous image from Phaser's global texture/animation caches.
+    const clearStudioTexture = (key) => {
+      if (this.textures.exists(key)) this.textures.remove(key);
+    };
+    const clearStudioAnimation = (key) => {
+      if (this.anims.exists(key)) this.anims.remove(key);
+    };
     const queueRigPartTextures = (entry, variant) => {
       for (const part of entry.rigParts || []) {
         if (!part || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(part.id || "") || typeof part.path !== "string" ||
@@ -190,6 +199,7 @@ export default class BattleScene extends Scene {
         const key = "studio-rig-part-" + variant + "-" + part.id;
         if (queuedRigPartTextures.has(key)) continue;
         queuedRigPartTextures.add(key);
+        clearStudioTexture(key);
         this.load.image(key, part.path);
       }
     };
@@ -200,10 +210,17 @@ export default class BattleScene extends Scene {
         for (const entry of entries) {
           if (!entry || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(entry.id || "") ||
               typeof entry.path !== "string" || !(entry.path.startsWith("/assets/") || entry.path.startsWith("/api/studio/assets?preview="))) continue;
-          this.load.image("studio-plant-" + variant + "-" + entry.id, entry.path);
+          const plantTextureKey = "studio-plant-" + variant + "-" + entry.id;
+          clearStudioTexture(plantTextureKey);
+          clearStudioAnimation("studio-" + entry.id + "-idle");
+          clearStudioAnimation("studio-" + entry.id + "-attack");
+          this.load.image(plantTextureKey, entry.path);
           queueRigPartTextures(entry, variant);
           if (entry.combat?.mode === "projectile" && entry.combat.projectile?.path && (entry.combat.projectile.path.startsWith("/assets/") || entry.combat.projectile.path.startsWith("/api/studio/assets?preview="))) {
-            this.load.image("studio-projectile-" + variant + "-" + entry.id, entry.combat.projectile.path);
+            const projectileTextureKey = "studio-projectile-" + variant + "-" + entry.id;
+            clearStudioTexture(projectileTextureKey);
+            clearStudioAnimation("studio-projectile-" + entry.id);
+            this.load.image(projectileTextureKey, entry.combat.projectile.path);
           }
         }
       });
@@ -215,7 +232,12 @@ export default class BattleScene extends Scene {
         for (const entry of entries) {
           if (!entry || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(entry.id || "") ||
               typeof entry.path !== "string" || !(entry.path.startsWith("/assets/") || entry.path.startsWith("/api/studio/assets?preview="))) continue;
-          this.load.image("studio-monster-" + variant + "-" + entry.id, entry.path);
+          const monsterTextureKey = "studio-monster-" + variant + "-" + entry.id;
+          clearStudioTexture(monsterTextureKey);
+          clearStudioAnimation("studio-monster-" + entry.id + "-idle");
+          clearStudioAnimation("studio-monster-" + entry.id + "-move");
+          clearStudioAnimation("studio-monster-" + entry.id + "-attack");
+          this.load.image(monsterTextureKey, entry.path);
           queueRigPartTextures(entry, variant);
         }
       });
@@ -1038,7 +1060,7 @@ export default class BattleScene extends Scene {
         PLAYTEST_ALL_PLANTS || unlocked.has(type)
       ));
       const saved = JSON.parse(window.localStorage.getItem("farmVsMonsters.selectedPlants") || "null");
-      // All implemented plants are available during playtesting; campaign unlock data remains unchanged.
+      // Apply the same six-packet limit and starter ordering as pre-battle selection.
       const testingTypes = (this.studioPlants || [])
         .filter((plant) => plant.testOnly)
         .map((plant) => plant.id)
@@ -1048,8 +1070,7 @@ export default class BattleScene extends Scene {
         : Array.isArray(saved)
           ? ["mushroom", "radish", ...testingTypes, ...saved.filter((type) => availableTypes.has(type))]
           : [...availableTypes];
-      // Ignore old saved loadouts in playtest mode and equip every implemented built-in plant.
-      selectedTypes = [...new Set(preferredLoadout.filter((type) => availableTypes.has(type)))];
+      selectedTypes = normalizeSeedLoadout(preferredLoadout, [...availableTypes], [...availableTypes]);
     } catch {
       // Storage failures keep the starter loadout playable.
       selectedTypes = ["radish", "mushroom"];
@@ -1058,49 +1079,19 @@ export default class BattleScene extends Scene {
     if (!selectedTypes.includes("radish")) selectedTypes.push("radish");
     this.plantCardsByType = {};
     const packetStartX = 164;
-    const packetGap = selectedTypes.length > 7 ? 78 : 90;
-    const packetSlotCount = Math.max(9, selectedTypes.length);
+    const packetGap = selectedTypes.length > 5 ? 78 : 90;
+    const packetSlotCount = MAX_SEED_PACKETS;
     // Fill unused seed slots with previews of implemented plants that are
     // not in the current loadout. Their artwork is intentionally dimmed and
     // non-interactive so the player can see upcoming choices without selecting them.
-    const inactivePlants = plantOptions.filter((plant) =>
-      !selectedTypes.includes(plant.type) && plant.type !== "mushroom"
-    );
-    const inactiveSlots = Math.max(0, packetSlotCount - selectedTypes.length);
-    const cardSource = this.textures.exists("seed-card")
-      ? this.textures.get("seed-card").getSourceImage()
-      : null;
-    const cardScale = cardSource ? Math.min(88 / cardSource.width, 101.2 / cardSource.height) : 1;
-    inactivePlants.slice(0, inactiveSlots).forEach((plant, index) => {
-      const x = packetStartX + (selectedTypes.length + index) * packetGap;
-      const preview = this.add.container(x, 72).setDepth(45);
-      if (cardSource) {
-        preview.add(this.add.image(0, 0, "seed-card")
-          .setDisplaySize(cardSource.width * cardScale * 0.8, cardSource.height * cardScale * 0.8));
+    // Empty slots remain visible and non-interactive until the player equips
+    // an unlocked plant in the pre-battle loadout.
+    for (let slotIndex = selectedTypes.length; slotIndex < packetSlotCount; slotIndex += 1) {
+      const x = packetStartX + slotIndex * packetGap;
+      if (this.textures.exists("seed-slot-empty")) {
+        this.add.image(x, 72, "seed-slot-empty").setDisplaySize(70, 90).setDepth(44);
       }
-      if (this.textures.exists(plant.image)) {
-        const texture = this.textures.get(plant.image);
-        const isSheet = ["pineapple-level-1", "hazelnut-level-1", "mango-level-1", "snow-thrower-level-1", "radish-level-1", "electric-mushroom-level-1"].includes(plant.image) || Boolean(plant.studioPlant?.spriteSheet);
-        const frame = isSheet ? texture.get("0") : texture.get();
-        // Use the actual frame rectangle and a single bounded scale so a
-        // source sheet's full-image dimensions can never enlarge the preview.
-        const frameWidth = Math.max(1, frame.cutWidth || frame.width || 1);
-        const frameHeight = Math.max(1, frame.cutHeight || frame.height || 1);
-        const thumbnailScale = Math.min(54 / frameWidth, 46 / frameHeight);
-        const thumbnail = isSheet
-          ? this.add.sprite(0, -8, plant.image, "0").setScale(thumbnailScale)
-          : this.add.image(0, -8, plant.image).setScale(thumbnailScale);
-        preview.add(thumbnail);
-        // Keep inactive plant previews recognizable with a lighter dark overlay.
-        preview.add(this.add.rectangle(0, -8, 56, 48, 0x000000, 0.32));
-        // Show the plant's energy cost even while it is not in the active loadout.
-        preview.add(this.add.text(0, 26.4, "🍄" + plant.cost, {
-          fontFamily: "Arial", fontSize: "13px", color: "#fff0bd", fontStyle: "bold",
-          stroke: "#3d2817", strokeThickness: 2, resolution: 2, align: "center"
-        }).setOrigin(0.5).setScale(0.855));
-      }
-      preview.setData("inactivePlantType", plant.type);
-    });
+    }
     plantOptions.filter((plant) => selectedTypes.includes(plant.type)).forEach((plant, index) => {
       this.plantCardsByType[plant.type] = this.createPlantCard(
         packetStartX + index * packetGap,
@@ -1123,11 +1114,11 @@ export default class BattleScene extends Scene {
 
   createPlantCard(x, title, costLabel, type, drawIcon, imageKey = null, y = 619, locked = false) {
     const card = this.add.container(x, y).setDepth(45);
-    const cardArtworkKey = locked && this.textures.exists("seed-card-locked") ? "seed-card-locked" : "seed-card";
+    const cardArtworkKey = locked && this.textures.exists("seed-card-locked") ? "seed-card-locked" : this.textures.exists("seed-card-frame") ? "seed-card-frame" : "seed-card";
     let seedFrame = null;
     if (this.textures.exists(cardArtworkKey)) {
       const source = this.textures.get(cardArtworkKey).getSourceImage();
-      const scale = Math.min(88 / source.width, 101.2 / source.height);
+      const scale = Math.min(86 / source.width, 98 / source.height);
       seedFrame = this.add.image(0, 0, cardArtworkKey).setDisplaySize(source.width * scale * 0.8, source.height * scale * 0.8);
     }
     const plantHeight = 46;
@@ -2174,8 +2165,8 @@ export default class BattleScene extends Scene {
           ? [...new Set([...loadUnlockedPlantIds(window.localStorage), ...ALL_PLAYTEST_PLANT_IDS])]
           : loadUnlockedPlantIds(window.localStorage);
         const saved = JSON.parse(window.localStorage.getItem("farmVsMonsters.selectedPlants") || "null");
-        if (Array.isArray(saved)) selectedTypes = saved;
-        else selectedTypes = unlockedIds;
+        if (Array.isArray(saved)) selectedTypes = normalizeSeedLoadout(saved, unlockedIds, unlockedIds);
+        else selectedTypes = normalizeSeedLoadout(unlockedIds, unlockedIds, unlockedIds);
       } catch {
         // Starter plants remain visible if browser storage is unavailable.
       }
@@ -4431,7 +4422,7 @@ export default class BattleScene extends Scene {
         monster.x = bitePosition.x;
         monster.y = bitePosition.y;
         monster.view.setPosition(bitePosition.x, bitePosition.y);
-        if (monster.hyenaSprite?.active) monster.hyenaSprite.y = 0;
+        if (monster.hyenaSprite?.active) monster.hyenaSprite.y = jumpOffset;
         monster.replayMoveElapsedMs += delta;
         const movementTick = Math.floor(this.combatClockMs);
         if (enteringBiteRange || monster.replayLastBlockerCol !== blocker.col || monster.replayMoveElapsedMs >= 500) {
@@ -4493,20 +4484,24 @@ export default class BattleScene extends Scene {
       let jumpOffset = 0;
       if (monster.kind === "dust-skitter") {
         const profile = monster.combatProfile;
-        const jumpWillStart = false;
-        const jumpWillLand = false;
+        const jumpWillStart = !monster.isJumping && monster.jumpCooldown - delta <= 0;
+        const jumpWillLand = monster.isJumping && monster.jumpElapsed + delta >= monster.jumpDuration;
         const burstWillStart = monster.burstCooldown - delta <= 0 && monster.burstRemaining <= 0;
         const motion = resolveDustSkitterMotionStep({
-          isJumping: false,
+          isJumping: monster.isJumping,
           jumpCooldownMs: monster.jumpCooldown,
           jumpElapsedMs: monster.jumpElapsed,
           jumpDurationMs: monster.jumpDuration,
           deltaMs: delta,
-          jumpSpeedMultiplier: 1,
-          jumpVisualHeight: 0,
-          visualScale: 1,
-          nextJumpDurationMs: null,
-          nextJumpResetCooldownMs: null,
+          jumpSpeedMultiplier: profile.jumpSpeedMultiplier,
+          jumpVisualHeight: 34,
+          visualScale: monster.view.scaleY,
+          nextJumpDurationMs: jumpWillStart
+            ? this.simulationRandom.nextInt(profile.jumpDurationMinMs, profile.jumpDurationMaxMs)
+            : null,
+          nextJumpResetCooldownMs: jumpWillLand
+            ? this.simulationRandom.nextInt(profile.jumpResetCooldownMinMs, profile.jumpResetCooldownMaxMs)
+            : null,
           burstCooldownMs: monster.burstCooldown,
           burstRemainingMs: monster.burstRemaining,
           burstDurationMs: profile.burstDurationMs,
@@ -4514,7 +4509,7 @@ export default class BattleScene extends Scene {
           nextBurstCooldownMs: burstWillStart
             ? this.simulationRandom.nextInt(profile.burstCooldownMinMs, profile.burstCooldownMaxMs)
             : null,
-          enableJump: false
+          enableJump: true
         });
         monster.isJumping = motion.isJumping;
         monster.jumpCooldown = motion.jumpCooldownMs;
@@ -4824,32 +4819,34 @@ export default class BattleScene extends Scene {
 
       // A Radish projectile can damage monsters in its own lane only.
       let hit = null;
-      let nearestHitDistance = Infinity;
       let firstSnowHitLocalX = Infinity;
-      for (const monster of this.monsters) {
-        if (!monster?.alive || monster.row !== shot.row ||
-            !Number.isFinite(monster.localX)) continue;
-        if (shot.freeze && monster.freezeStage >= 5) continue;
-        if (!this.studioProjectileHitsMonster(shot, monster, projectileX, projectileY)) continue;
-        const horizontalDistance = Math.abs(monster.localX - shot.localX);
-        const hitRadius = (shot.collisionRadius || PHASE_ONE_PLANTS.radish.projectileCollisionRadius) * (monster.widthScale || 1);
-        if (shot.freeze) {
-          // Snow shots travel toward increasing lane X. Test the whole swept
-          // segment so a fast frame cannot skip a hyena between two positions.
-          // If it crosses more than one, freeze the first one along the path.
+      const projectileCandidates = this.monsters.filter((monster) =>
+        monster?.alive &&
+        monster.row === shot.row &&
+        Number.isFinite(monster.localX) &&
+        this.studioProjectileHitsMonster(shot, monster, projectileX, projectileY)
+      );
+      if (shot.freeze) {
+        // Snow shots travel toward increasing lane X. Test the whole swept
+        // segment so a fast frame cannot skip a hyena between two positions.
+        // If it crosses more than one, freeze the first one along the path.
+        for (const monster of projectileCandidates) {
+          if (monster.freezeStage >= 5) continue;
+          const hitRadius = (shot.collisionRadius || PHASE_ONE_PLANTS.radish.projectileCollisionRadius) * (monster.widthScale || 1);
           const sweptStart = previousShotLocalX - hitRadius;
           const sweptEnd = shot.localX + hitRadius;
           if (monster.localX < sweptStart || monster.localX > sweptEnd ||
               monster.localX >= firstSnowHitLocalX) continue;
           hit = monster;
           firstSnowHitLocalX = monster.localX;
-          continue;
         }
-        // Preserve the existing nearest-hit behavior for Radish and other
-        // damage projectiles.
-        if (horizontalDistance > hitRadius || horizontalDistance >= nearestHitDistance) continue;
-        hit = monster;
-        nearestHitDistance = horizontalDistance;
+      } else {
+        hit = selectProjectileTarget({
+          monsters: projectileCandidates,
+          row: shot.row,
+          localX: shot.localX,
+          collisionRadius: shot.collisionRadius || PHASE_ONE_PLANTS.radish.projectileCollisionRadius
+        });
       }
 
       if (hit) {
