@@ -27,7 +27,7 @@ export default function StageRosterManager({kind}){
  },[kind]);
  useEffect(()=>{load().catch(e=>setMessage(e.message));},[load]);
  function updateEntries(next){
-  setConfig(current=>({...current,stages:{...current.stages,[String(stage)]:{...(current.stages?.[String(stage)]||{monsters:[],plants:[]}),[isMonster?"monsters":"plants"]:next}}}));
+  setConfig(current=>({...current,stages:{...current.stages,[String(stage)]:{...(current.stages?.[String(stage)]||{monsters:[],plants:[]}),[isMonster?"monsters":"plants"]:next,[isMonster?"monstersConfigured":"plantsConfigured"]:true}}}));
  }
  function add(){
   if(!selectedId)return;
