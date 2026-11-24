@@ -3134,7 +3134,7 @@ export default class BattleScene extends Scene {
       const target = this.monsters
         .filter((monster) => monster.alive && monster.row === plant.row &&
           Number.isFinite(monster.localX) &&
-          monster.localX - plantLaneX <= (studioProfile?.range ?? GRID_WIDTH) &&
+          monster.localX - plantLaneX <= (studioProfile?.range ?? (plant.type === "corn-monster" ? CORN_MONSTER_CONFIG.range : GRID_WIDTH)) &&
           !(plant.type === "snow-thrower" && monster.freezeStage >= 5) &&
           // Start firing the instant the monster crosses the lawn's far/right edge.
           // Keep targeting only monsters ahead of this plant in the same lane.
