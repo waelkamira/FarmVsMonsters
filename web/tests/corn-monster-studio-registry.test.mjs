@@ -48,3 +48,10 @@ test("Monster 01 is registered as a testing monster using its shipped 3x4 artwor
   assert.ok(manifestEntry);
   assert.equal(manifestEntry.url, monster.path);
 });
+
+
+test("Corn Monster belongs to the plant roster and never appears in a monster wave", () => {
+  const stage = encounters.stages["1"];
+  assert.ok(stage.plants.some((entry) => entry.id === "corn-monster" && entry.enabled));
+  assert.ok(stage.monsters.every((entry) => entry.id !== "corn-monster"));
+});
