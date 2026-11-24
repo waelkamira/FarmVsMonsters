@@ -966,25 +966,28 @@ export default class BattleScene extends Scene {
 
     // Attack level and live progress are grouped together in the upper-right HUD.
     // The progress bar sits immediately left of the current attack counter.
-    this.waveProgressFrame = this.add.image(810, 68, "hud-wave-frame")
+    // Keep the attack counter and its progress bar on the same top row as
+    // the monster counter (y=16). The bar sits immediately beside the attack
+    // counter, with enough separation from the right-side action controls.
+    const waveHud = { barX: 690, barY: 16, barStartX: 611, labelY: 39, iconX: 824, badgeX: 884 };
+    this.waveProgressFrame = this.add.image(waveHud.barX, waveHud.barY, "hud-wave-frame")
       .setDisplaySize(200, 38).setDepth(42);
-    this.waveProgressTrack = this.add.rectangle(810, 68, 158, 10, 0x392719, 0.72)
+    this.waveProgressTrack = this.add.rectangle(waveHud.barX, waveHud.barY, 158, 10, 0x392719, 0.72)
       .setStrokeStyle(1, 0x8e6338, 0.8).setDepth(43);
-    this.waveProgressFill = this.add.image(731, 68, "hud-wave-fill")
+    this.waveProgressFill = this.add.image(waveHud.barStartX, waveHud.barY, "hud-wave-fill")
       .setOrigin(0, 0.5).setDisplaySize(2, 9).setDepth(44);
-    this.waveProgressMarker = this.add.image(731, 68, "hud-wave-marker")
+    this.waveProgressMarker = this.add.image(waveHud.barStartX, waveHud.barY, "hud-wave-marker")
       .setDisplaySize(18, 18).setDepth(45);
-    this.waveProgressLabel = this.add.text(810, 94, "DEFEATED 0/2", {
+    this.waveProgressLabel = this.add.text(waveHud.barX, waveHud.labelY, "DEFEATED 0/2", {
       fontFamily: "Arial", fontSize: "9px", color: "#ffe8b5", fontStyle: "bold",
       stroke: "#392719", strokeThickness: 2, resolution: 2
     }).setOrigin(0.5).setDepth(44);
 
-    // The attack counter is directly beside the progress bar, toward the right edge.
-    this.waveIcon = this.add.image(954, 68, "hud-wave-icon")
+    this.waveIcon = this.add.image(waveHud.iconX, waveHud.barY, "hud-wave-icon")
       .setDisplaySize(30, 30).setDepth(44);
-    this.waveBadge = this.add.image(1007, 68, "hud-wave-badge")
+    this.waveBadge = this.add.image(waveHud.badgeX, waveHud.barY, "hud-wave-badge")
       .setDisplaySize(46, 40).setDepth(43);
-    this.waveText = this.add.text(1007, 68, "1/5", {
+    this.waveText = this.add.text(waveHud.badgeX, waveHud.barY, "1/5", {
       fontFamily: "Arial", fontSize: "13px", color: "#fff4c8", fontStyle: "bold",
       stroke: "#392719", strokeThickness: 3, resolution: 2,
       align: "center"
@@ -5400,7 +5403,7 @@ export default class BattleScene extends Scene {
       const trackWidth = 158;
       const fillWidth = Math.max(2, trackWidth * progress);
       this.waveProgressFill.setDisplaySize(fillWidth, 10);
-      this.waveProgressMarker?.setX(731 + trackWidth * progress);
+      this.waveProgressMarker?.setX(611 + trackWidth * progress);
       this.waveProgressLabel?.setText("DEFEATED " + defeated + "/" + this.waveSize);
     }
     for (const [type, panel] of Object.entries(this.plantCardsByType || {})) {
