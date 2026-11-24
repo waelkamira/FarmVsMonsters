@@ -35,7 +35,7 @@ function normalizeConfig(value){
    count:Math.max(1,Math.min(500,Math.floor(Number(item.count)||1))),
    enabled:item.enabled!==false
   })).filter(item=>/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(item.id));
-  stages[stage]={monsters,plants};
+  stages[stage]={monsters,plants,monstersConfigured:raw?.monstersConfigured===true,plantsConfigured:raw?.plantsConfigured===true};
  }
  if(!stages["1"])stages["1"]={monsters:[],plants:[]};
  return {version:1,stages};
