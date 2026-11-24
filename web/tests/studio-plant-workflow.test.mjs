@@ -172,3 +172,10 @@ test("Studio persists validated idle and attack animation profiles into Phaser r
   assert.match(battleScene,/\["attack", plant\.animationProfile\.attack\]/);
   assert.match(battleScene,/plant\.studioPlant\.animationProfile\?\.idle\?\.startFrame/);
 });
+
+test("Studio imports plant assets from grouped manifests and preserves named Phaser Atlas animation metadata",()=>{
+  assert.match(assetsRoute,/Object\.entries\(source\.groups\|\|\{\}\)/);
+  assert.match(assetsRoute,/source\.animationProfile/);
+  assert.match(assetsRoute,/source\.atlasMetadataPath/);
+  assert.match(assetsRoute,/source\.atlasClips/);
+});

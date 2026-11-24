@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-20T14:17:57.097Z",
-  "assetCount": 88,
-  "totalBytes": 24437593,
+  "generatedAt": "2026-11-24T04:23:54.506Z",
+  "assetCount": 89,
+  "totalBytes": 24993047.5,
   "groups": {
     "audio": [
       {
@@ -540,6 +540,55 @@
         "key": "plants-tomato",
         "url": "/assets/plants/tomato.png",
         "type": "image"
+      },
+      {
+        "key": "corn-monster",
+        "url": "/assets/plants/corn_monster.png",
+        "type": "spritesheet",
+        "width": 3600,
+        "height": 150,
+        "frameConfig": {
+          "frameWidth": 150,
+          "frameHeight": 150,
+          "margin": 0,
+          "spacing": 0
+        },
+        "animationProfile": {
+          "idle": {
+            "startFrame": 0,
+            "endFrame": 7,
+            "fps": 8,
+            "loop": true
+          },
+          "move": {
+            "startFrame": 0,
+            "endFrame": 7,
+            "fps": 8,
+            "loop": true
+          },
+          "attack": {
+            "startFrame": 8,
+            "endFrame": 17,
+            "fps": 12,
+            "loop": false
+          }
+        },
+        "atlasMetadataPath": "/assets/plants/corn_monster.json",
+        "sourceFormat": "phaser-atlas",
+        "atlasClips": {
+          "idle": {
+            "startFrame": 0,
+            "endFrame": 7
+          },
+          "attack": {
+            "startFrame": 8,
+            "endFrame": 17
+          },
+          "hurt": {
+            "startFrame": 18,
+            "endFrame": 23
+          }
+        }
       }
     ]
   },

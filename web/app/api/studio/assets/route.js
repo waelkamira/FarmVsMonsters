@@ -55,7 +55,11 @@ async function hydratePlantLibrary(registry,token,branch,expectedRegistrySha){
  ]);
  const manifest=manifestRaw?JSON.parse(manifestRaw):{assets:[]};
  const publishedManifest=publishedManifestRaw?JSON.parse(publishedManifestRaw):{assets:[]};
- const manifestAssets=[...(manifest.assets||[]),...(publishedManifest.assets||[])];
+ const flattenManifestAssets=(source)=>[
+  ...(Array.isArray(source.assets)?source.assets:[]),
+  ...Object.entries(source.groups||{}).flatMap(([group,items])=>(Array.isArray(items)?items:[]).map(asset=>({...asset,group})))
+ ];
+ const manifestAssets=[...flattenManifestAssets(manifest),...flattenManifestAssets(publishedManifest)];
  const uniqueManifestAssets=[...new Map(manifestAssets.filter(asset=>asset.group==="plants"&&asset.url).map(asset=>[asset.url,asset])).values()];
  const catalog=catalogRaw?JSON.parse(catalogRaw):{plants:[]};
  const known=new Map((registry.assets||[]).map(asset=>[asset.id,asset]));
@@ -76,7 +80,11 @@ async function hydratePlantLibrary(registry,token,branch,expectedRegistrySha){
    status:catalogPlant?"published":"draft",
    createdAt:catalogPlant?.publishedAt||new Date().toISOString(),
    updatedAt:new Date().toISOString(),
-   ...(catalogPlant?.combat?{combat:catalogPlant.combat}:{})
+   ...(catalogPlant?.combat?{combat:catalogPlant.combat}:{}),
+   ...(source.animationProfile?{animationProfile:source.animationProfile}:{}),
+   ...(source.atlasMetadataPath?{atlasMetadataPath:source.atlasMetadataPath}:{}),
+   ...(source.sourceFormat?{sourceFormat:source.sourceFormat}:{}),
+   ...(source.atlasClips?{atlasClips:source.atlasClips}:{})
   };
   registry.assets.push(record);known.set(id,record);changed=true;
  }
