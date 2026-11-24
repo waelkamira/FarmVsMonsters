@@ -950,36 +950,31 @@ export default class BattleScene extends Scene {
       }).setOrigin(0, 0.5).setDepth(44);
     });
 
-    // Wave identity: monster-wave artwork, wooden number badge and live count.
-    this.waveIcon = this.add.image(568, 25, "hud-wave-icon")
-      .setDisplaySize(34, 34).setDepth(44);
-    this.waveBadge = this.add.image(610, 25, "hud-wave-badge")
-      .setDisplaySize(48, 44).setDepth(43);
-    this.waveText = this.add.text(610, 25, "1/5", {
+    // Attack level and live progress are grouped together in the upper-right HUD.
+    // The progress bar sits immediately left of the current attack counter.
+    this.waveProgressFrame = this.add.image(810, 68, "hud-wave-frame")
+      .setDisplaySize(200, 38).setDepth(42);
+    this.waveProgressTrack = this.add.rectangle(810, 68, 158, 10, 0x392719, 0.72)
+      .setStrokeStyle(1, 0x8e6338, 0.8).setDepth(43);
+    this.waveProgressFill = this.add.image(731, 68, "hud-wave-fill")
+      .setOrigin(0, 0.5).setDisplaySize(2, 9).setDepth(44);
+    this.waveProgressMarker = this.add.image(731, 68, "hud-wave-marker")
+      .setDisplaySize(18, 18).setDepth(45);
+    this.waveProgressLabel = this.add.text(810, 94, "DEFEATED 0/2", {
+      fontFamily: "Arial", fontSize: "9px", color: "#ffe8b5", fontStyle: "bold",
+      stroke: "#392719", strokeThickness: 2, resolution: 2
+    }).setOrigin(0.5).setDepth(44);
+
+    // The attack counter is directly beside the progress bar, toward the right edge.
+    this.waveIcon = this.add.image(954, 68, "hud-wave-icon")
+      .setDisplaySize(30, 30).setDepth(44);
+    this.waveBadge = this.add.image(1007, 68, "hud-wave-badge")
+      .setDisplaySize(46, 40).setDepth(43);
+    this.waveText = this.add.text(1007, 68, "1/5", {
       fontFamily: "Arial", fontSize: "13px", color: "#fff4c8", fontStyle: "bold",
       stroke: "#392719", strokeThickness: 3, resolution: 2,
       align: "center"
     }).setOrigin(0.5).setDepth(45);
-
-    // Layer the live progress fill and marker inside the uploaded wooden frame.
-    this.waveProgressFrame = this.add.image(772, 25, "hud-wave-frame")
-      .setDisplaySize(218, 43).setDepth(42);
-    this.waveProgressTrack = this.add.rectangle(772, 25, 174, 11, 0x392719, 0.72)
-      .setStrokeStyle(1, 0x8e6338, 0.8).setDepth(43);
-    this.waveProgressFill = this.add.image(685, 25, "hud-wave-fill")
-      .setOrigin(0, 0.5).setDisplaySize(2, 10).setDepth(44);
-    this.waveProgressMarker = this.add.image(685, 25, "hud-wave-marker")
-      .setDisplaySize(20, 20).setDepth(45);
-    this.waveProgressLabel = this.add.text(772, 52, "DEFEATED 0/2", {
-      fontFamily: "Arial", fontSize: "10px", color: "#ffe8b5", fontStyle: "bold",
-      stroke: "#392719", strokeThickness: 2, resolution: 2
-    }).setOrigin(0.5).setDepth(44);
-
-    // The grouped ornament is intentionally small and kept outside the playfield.
-    if (this.textures.exists("hud-decorations")) {
-      this.add.image(886, 68, "hud-decorations")
-        .setDisplaySize(72, 38).setDepth(41).setAlpha(0.9);
-    }
 
         // Short PvZ-style announcement banner. It is reused between waves instead
     // of allocating new display objects every time a wave begins.
@@ -5338,10 +5333,10 @@ export default class BattleScene extends Scene {
       // Progress reflects defeated enemies, not merely how many have spawned.
       const defeated = Math.min(this.waveDefeatedMonsters || 0, this.waveSize);
       const progress = this.waveSize > 0 ? PhaserMath.Clamp(defeated / this.waveSize, 0, 1) : 0;
-      const trackWidth = 174;
+      const trackWidth = 158;
       const fillWidth = Math.max(2, trackWidth * progress);
       this.waveProgressFill.setDisplaySize(fillWidth, 10);
-      this.waveProgressMarker?.setX(685 + trackWidth * progress);
+      this.waveProgressMarker?.setX(731 + trackWidth * progress);
       this.waveProgressLabel?.setText("DEFEATED " + defeated + "/" + this.waveSize);
     }
     for (const [type, panel] of Object.entries(this.plantCardsByType || {})) {
