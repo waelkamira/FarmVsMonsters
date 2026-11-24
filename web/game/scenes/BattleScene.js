@@ -2386,7 +2386,7 @@ export default class BattleScene extends Scene {
       if (this.stageMonsterRosterConfigured && nextEntry && nextEntry.key !== spawnedEntry?.key) {
         this.spawnTimer = Math.max(0, Number(nextEntry.firstSpawnDelayMs) || 0);
       }
-      if (this.stageNumber === 1 && this.wave === this.totalWaves && this.spawnedThisWave === this.waveSize) this.beginDragonEncounter();
+      if (this.stageNumber === 1 && this.wave === this.totalWaves && this.spawnedThisWave === 2) this.beginDragonEncounter();
     }
     this.updatePlants(deltaMs);
     this.updateMonsters(dt, deltaMs);
