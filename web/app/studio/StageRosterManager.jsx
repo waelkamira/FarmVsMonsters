@@ -54,7 +54,7 @@ export default function StageRosterManager({kind}){
    setAssets(ad.assets||[]);setConfig(cd);setSha(cd.sha||null);setMessage("");
   }catch(error){setMessage(error.message);}finally{setLoading(false);}
  },[]);
- useEffect(()=>{load();},[load]);
+ useEffect(()=>{let active=true;Promise.resolve().then(()=>{if(active)load();});return()=>{active=false;};},[load]);
  function updateEntries(next){
   setConfig(current=>({...current,stages:{...current.stages,[String(stage)]:{...(current.stages?.[String(stage)]||{monsters:[],plants:[]}),[isMonster?"monsters":"plants"]:next,[isMonster?"monstersConfigured":"plantsConfigured"]:true}}}));
  }
