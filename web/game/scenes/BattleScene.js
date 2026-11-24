@@ -460,7 +460,9 @@ export default class BattleScene extends Scene {
     this.waveDefeatedMonsters = 0;
     this.waveSize = this.getStageWaveSize(1);
     const firstStageMonster = this.getStageMonsterEntry(0);
-    this.spawnTimer = firstStageMonster?.firstSpawnDelayMs > 0 ? firstStageMonster.firstSpawnDelayMs : PHASE_ONE_TIMING.firstMonsterSpawnDelayMs;
+    this.spawnTimer = this.stageMonsterRosterConfigured && firstStageMonster
+      ? Math.max(0, Number(firstStageMonster.firstSpawnDelayMs) || 0)
+      : PHASE_ONE_TIMING.firstMonsterSpawnDelayMs;
     this.totalSpawnedMonsters = 0;
     this.totalDefeatedMonsters = 0;
     this.totalPlantsPlanted = 0;
@@ -5181,7 +5183,9 @@ export default class BattleScene extends Scene {
     this.waveSize = this.getStageWaveSize(this.wave);
     const nextStageMonster = this.getStageMonsterEntry(0);
     this.waveIntermissionMs = PHASE_ONE_TIMING.waveIntermissionMs;
-    this.spawnTimer = nextStageMonster?.firstSpawnDelayMs > 0 ? nextStageMonster.firstSpawnDelayMs : PHASE_ONE_TIMING.nextWaveSpawnDelayMs;
+    this.spawnTimer = this.stageMonsterRosterConfigured && nextStageMonster
+      ? Math.max(0, Number(nextStageMonster.firstSpawnDelayMs) || 0)
+      : PHASE_ONE_TIMING.nextWaveSpawnDelayMs;
     this.setMessage(
       "Wave " + clearedWave + " cleared. Prepare for wave " + this.wave +
       ": " + this.waveSize + " monsters in 5 seconds."
