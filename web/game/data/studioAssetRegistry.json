@@ -3,7 +3,7 @@
   "assets": [
     {
       "id": "corn-monster",
-      "type": "monster",
+      "type": "plant",
       "name": "Corn Monster",
       "path": "/assets/plants/corn_monster.png",
       "filename": "corn_monster.png",
@@ -39,17 +39,6 @@
           "fps": 10,
           "loop": false
         }
-      },
-      "monsterProfile": {
-        "baseArchetype": "cave-brute",
-        "hpMultiplier": 1,
-        "speedMultiplier": 1,
-        "damageMultiplier": 1,
-        "attackIntervalMultiplier": 1,
-        "widthScale": 1,
-        "heightScale": 1,
-        "spawnWeight": 0,
-        "firstWave": 1
       },
       "atlasMetadataPath": "/assets/plants/corn_monster.json",
       "sourceFormat": "phaser-atlas",
