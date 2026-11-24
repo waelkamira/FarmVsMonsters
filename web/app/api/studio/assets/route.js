@@ -47,15 +47,21 @@ function plantIdFromPath(assetPath){
  return filename.replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
 }
 async function hydratePlantLibrary(registry,token,branch,expectedRegistrySha){
- const manifestRaw=await githubGet("web/public/assets/asset-manifest.json",token,branch);
  const catalogBranch=process.env.STUDIO_PUBLISH_BRANCH||"main";
- const catalogRaw=await githubGet(PUBLISHED_CATALOG_PATH,token,catalogBranch);
+ const [manifestRaw,publishedManifestRaw,catalogRaw]=await Promise.all([
+  githubGet("web/public/assets/asset-manifest.json",token,branch),
+  catalogBranch===branch?Promise.resolve(null):githubGet("web/public/assets/asset-manifest.json",token,catalogBranch),
+  githubGet(PUBLISHED_CATALOG_PATH,token,catalogBranch)
+ ]);
  const manifest=manifestRaw?JSON.parse(manifestRaw):{assets:[]};
+ const publishedManifest=publishedManifestRaw?JSON.parse(publishedManifestRaw):{assets:[]};
+ const manifestAssets=[...(manifest.assets||[]),...(publishedManifest.assets||[])];
+ const uniqueManifestAssets=[...new Map(manifestAssets.filter(asset=>asset.group==="plants"&&asset.url).map(asset=>[asset.url,asset])).values()];
  const catalog=catalogRaw?JSON.parse(catalogRaw):{plants:[]};
  const known=new Map((registry.assets||[]).map(asset=>[asset.id,asset]));
  const published=new Map((catalog.plants||[]).map(plant=>[plant.id,plant]));
  let changed=false;
- for(const source of (manifest.assets||[]).filter(asset=>asset.group==="plants"&&asset.url&&!/-bomb(?:-|\.)/i.test(asset.url))){
+ for(const source of uniqueManifestAssets.filter(asset=>!/-bomb(?:-|\.)/i.test(asset.url))){
   const id=plantIdFromPath(source.url);
   if(!id||known.has(id))continue;
   const catalogPlant=published.get(id);
