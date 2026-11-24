@@ -2381,7 +2381,7 @@ export default class BattleScene extends Scene {
       this.spawnMonster(spawnIndex);
       this.spawnedThisWave = spawnStep.spawnedThisWave;
       this.totalSpawnedMonsters += 1;
-      if (this.wave === this.totalWaves && this.spawnedThisWave === this.waveSize) this.beginDragonEncounter();
+      if (this.stageNumber === 1 && this.wave === this.totalWaves && this.spawnedThisWave === this.waveSize) this.beginDragonEncounter();
     }
     this.updatePlants(deltaMs);
     this.updateMonsters(dt, deltaMs);
@@ -5156,6 +5156,11 @@ export default class BattleScene extends Scene {
 
     const clearedWave = this.wave;
     if (isPhaseOneVictory(this.wave, this.totalWaves, this.spawnedThisWave, this.waveSize, this.monsters.length)) {
+      // Stage one owns the dragon rescue encounter; other configured stages end after their waves.
+      if (this.stageNumber !== 1) {
+        this.endGame(true);
+        return;
+      }
       // The dragon is a separate boss and is never included in ordinary wave counts.
       if (!this.dragonBoss) {
         this.beginDragonEncounter();
