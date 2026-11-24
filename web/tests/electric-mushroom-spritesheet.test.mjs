@@ -45,7 +45,6 @@ test("Electric Mushroom is registered and played as a nine-frame plant animation
   assert.match(scene, /generateFrameNumbers\("electric-mushroom-level-1", \{ start: 0, end: 8 \}\)/);
   assert.match(scene, /this\.textures\.getFrame\(texture, \["pineapple", "hazelnut", "mango", "snow-thrower", "electric-mushroom"\]\.includes\(type\) \? "0" : undefined\)/);
   assert.match(scene, /"electric-mushroomThrowSprite"/);
-  assert.match(scene, /imageKey === "electric-mushroom-level-1"/);
-  assert.match(scene, /imageKey === "electric-mushroom-level-1"/);
+  assert.match(scene, /"electric-mushroom-level-1"\]\.includes\(imageKey\)/);
   assert.match(scene, /"snow-thrower", "electric-mushroom"\]\.includes\(plant\.type\)/);
 });

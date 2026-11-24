@@ -19,12 +19,17 @@ const BUILTIN_IMAGES={
   stonehide:"/assets/monster-icons/stonehide.svg","alpha-brute":"/assets/monster-icons/alpha-brute.svg"
  }
 };
+const BUILTIN_SHEETS=new Set(["radish","pineapple","hazelnut","mango","snow-thrower","electric-mushroom"]);
 const makeKey=()=> "entry-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,7);
 function assetImage(asset,kind){return asset?.previewUrl||asset?.path||BUILTIN_IMAGES[kind]?.[asset?.id]||"";}
 function AssetImage({asset,kind,large=false}) {
  const src=assetImage(asset,kind);
+ const frameCount=Math.max(1,Number(asset?.frameCount)||((Number(asset?.rows)||1)*(Number(asset?.columns)||1)));
+ const spriteSheet=frameCount>1&&(asset?.spriteSheet===true||BUILTIN_SHEETS.has(asset?.id));
+ const rows=Math.max(1,Number(asset?.rows)||(BUILTIN_SHEETS.has(asset?.id)?3:1));
+ const columns=Math.max(1,Number(asset?.columns)||(BUILTIN_SHEETS.has(asset?.id)?3:1));
  return <div className={"stage-roster-image"+(large?" is-large":"")}>
-  {src?<img src={src} alt={asset?.name||asset?.id||"صورة الأصل"} loading="lazy" onError={event=>{event.currentTarget.style.display="none";}}/>:<span aria-hidden="true">{kind==="monster"?"👾":"🌱"}</span>}
+  {src?(spriteSheet?<div role="img" aria-label={asset?.name||asset?.id||"صورة الأصل"} className="stage-roster-first-frame" style={{backgroundImage:"url("+JSON.stringify(src)+")",backgroundSize:(columns*100)+"% "+(rows*100)+"%",backgroundPosition:"left top"}}/>:<img src={src} alt={asset?.name||asset?.id||"صورة الأصل"} loading="lazy" onError={event=>{event.currentTarget.style.display="none";}}/>):<span aria-hidden="true">{kind==="monster"?"👾":"🌱"}</span>}
  </div>;
 }
 export default function StageRosterManager({kind}){
@@ -35,10 +40,9 @@ export default function StageRosterManager({kind}){
  const [hp,setHp]=useState(1),[speed,setSpeed]=useState(1),[damage,setDamage]=useState(1),[attack,setAttack]=useState(1);
  const [busy,setBusy]=useState(false),[loading,setLoading]=useState(true),[message,setMessage]=useState("");
  const entries=config.stages?.[String(stage)]?.[isMonster?"monsters":"plants"]||[];
- const selectable=useMemo(()=>[...BUILT_INS[kind].map(([id,name])=>({id,name,type:kind,builtin:true})),...assets.filter(a=>a.type===kind&&a.status!=="archived"&&(a.status==="published"||a.status==="testing"))].filter((item,index,all)=>all.findIndex(other=>other.id===item.id)===index),[assets,kind]);
- const assetById=useMemo(()=>new Map([...BUILT_INS[kind].map(([id,name])=>[id,{id,name,type:kind,builtin:true}]),...assets.filter(a=>a.type===kind)]),[assets,kind]);
+ const selectable=useMemo(()=>[...BUILT_INS[kind].map(([id,name])=>({id,name,type:kind,builtin:true,...(BUILTIN_SHEETS.has(id)?{spriteSheet:true,rows:3,columns:3,frameCount:9}:{})})),...assets.filter(a=>a.type===kind&&a.status!=="archived"&&(a.status==="published"||a.status==="testing"))].filter((item,index,all)=>all.findIndex(other=>other.id===item.id)===index),[assets,kind]);
+ const assetById=useMemo(()=>new Map([...BUILT_INS[kind].map(([id,name])=>[id,{id,name,type:kind,builtin:true,...(BUILTIN_SHEETS.has(id)?{spriteSheet:true,rows:3,columns:3,frameCount:9}:{})}]),...assets.filter(a=>a.type===kind)]),[assets,kind]);
  const load=useCallback(async()=>{
-  setLoading(true);
   try{
    const [a,c]=await Promise.all([
     fetch("/api/studio/assets",{cache:"no-store",credentials:"same-origin"}),
@@ -50,7 +54,7 @@ export default function StageRosterManager({kind}){
    setAssets(ad.assets||[]);setConfig(cd);setSha(cd.sha||null);setMessage("");
   }catch(error){setMessage(error.message);}finally{setLoading(false);}
  },[]);
- useEffect(()=>{load();},[load]);
+ useEffect(()=>{let active=true;Promise.resolve().then(()=>{if(active)load();});return()=>{active=false;};},[load]);
  function updateEntries(next){
   setConfig(current=>({...current,stages:{...current.stages,[String(stage)]:{...(current.stages?.[String(stage)]||{monsters:[],plants:[]}),[isMonster?"monsters":"plants"]:next,[isMonster?"monstersConfigured":"plantsConfigured"]:true}}}));
  }
@@ -89,7 +93,7 @@ export default function StageRosterManager({kind}){
    {entries.length===0?<p className="stage-roster-empty">لا توجد {isMonster?"وحوش":"نباتات"} مضافة يدوياً لهذه المرحلة بعد. أضف من المكتبة أعلاه.</p>:entries.map((entry,index)=>{const asset=assetById.get(entry.id);return <article className={!entry.enabled?"is-hidden":""} key={entry.key||entry.id+"-"+index}><div className="stage-roster-asset"><AssetImage asset={asset} kind={kind}/><div><b>{asset?.name||entry.id}</b><small>{entry.id} · {entry.enabled?"ظاهر في المرحلة":"مخفي من المرحلة"}</small></div></div><label>العدد<input type="number" min="1" max="500" value={entry.count} onChange={e=>patch(index,{count:Math.max(1,Math.min(500,Number(e.target.value)||1))})}/></label>{isMonster&&<><label>الموجة<input type="number" min="1" max={stage===1?5:10} value={entry.wave} onChange={e=>patch(index,{wave:Math.max(1,Math.min(stage===1?5:10,Number(e.target.value)||1))})}/></label><label>فاصل الظهور ms<input type="number" min="100" max="60000" value={entry.spawnIntervalMs} onChange={e=>patch(index,{spawnIntervalMs:Math.max(100,Number(e.target.value)||100)})}/></label><label>تأخير أول ظهور ms<input type="number" min="0" max="120000" value={entry.firstSpawnDelayMs} onChange={e=>patch(index,{firstSpawnDelayMs:Math.max(0,Number(e.target.value)||0)})}/></label><label>الصحة ×<input type="number" min=".1" max="10" step=".1" value={entry.hpMultiplier} onChange={e=>patch(index,{hpMultiplier:Number(e.target.value)||1})}/></label><label>السرعة ×<input type="number" min=".1" max="5" step=".1" value={entry.speedMultiplier} onChange={e=>patch(index,{speedMultiplier:Number(e.target.value)||1})}/></label><label>الضرر ×<input type="number" min=".1" max="10" step=".1" value={entry.damageMultiplier} onChange={e=>patch(index,{damageMultiplier:Number(e.target.value)||1})}/></label><label>فاصل الهجوم ×<input type="number" min=".1" max="10" step=".1" value={entry.attackIntervalMultiplier} onChange={e=>patch(index,{attackIntervalMultiplier:Number(e.target.value)||1})}/></label></>}
    <div className="stage-roster-actions"><button type="button" onClick={()=>patch(index,{enabled:!entry.enabled})}>{entry.enabled?"إخفاء من المرحلة":"إظهار في المرحلة"}</button><button type="button" className="danger" onClick={()=>remove(index)}>إزالة من إعداد المرحلة</button></div></article>})}
   </section>
-  <footer className="stage-roster-footer"><span role="status">{message}</span><div><button type="button" className="secondary" onClick={load} disabled={busy||loading}>إعادة تحميل</button><button type="button" onClick={save} disabled={busy||loading}>{busy?"جارٍ الحفظ…":"حفظ إعدادات المرحلة"}</button></div></footer>
+  <footer className="stage-roster-footer"><span role="status">{message}</span><div><button type="button" className="secondary" onClick={()=>{setLoading(true);load();}} disabled={busy||loading}>إعادة تحميل</button><button type="button" onClick={save} disabled={busy||loading}>{busy?"جارٍ الحفظ…":"حفظ إعدادات المرحلة"}</button></div></footer>
   <p className="stage-roster-note">الإخفاء والإزالة هنا يخصان المرحلة المحددة فقط ولا يحذفان الأصل من المكتبة. الحفظ يحدّث إعدادات المرحلة التي يقرأها محرك المعركة واختيار النباتات؛ لا تُضاف الأصول المخصصة إلى المعركة إلا بعد نشرها من الاستديو. إعدادات القصة الخاصة بالمرحلة الأولى تبقى منفصلة عن بقية المراحل.</p>
  </main>;
 }
