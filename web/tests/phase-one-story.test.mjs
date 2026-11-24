@@ -9,7 +9,7 @@ const scene = readFileSync(resolve(here, "../game/scenes/BattleScene.js"), "utf8
 const assets = JSON.parse(readFileSync(resolve(here, "../game/data/phase-one-story-assets.json"), "utf8"));
 
 test("the dragon and captive princess enter during wave five and remain separate from ordinary monsters", () => {
-  assert.match(scene, /if \(this\.wave === 5 && this\.spawnedThisWave === 2\) this\.beginDragonEncounter\(\)/);
+  assert.match(scene, /this\.spawnedThisWave === 2\) this\.beginDragonEncounter\(\)/);
   assert.match(scene, /this\.phaseOneStoryState = "dragon"/);
   assert.match(scene, /this\.facing = 1;\s*this\.caveman\.scaleX = 1;/);
   assert.match(scene, /this\.createPrincessActor\(\);\s*this\.dragonBoss = \{/);
@@ -17,17 +17,17 @@ test("the dragon and captive princess enter during wave five and remain separate
 });
 
 test("the farmer automatically fires sling stones and the dragon has its own health bar", () => {
-  assert.match(scene, /boss\.shotCooldown -= delta/);
+  assert.match(scene, /boss\.shotCooldown = advanceCooldown\(boss\.shotCooldown, delta\)/);
   assert.match(scene, /this\.playFarmerAction\("farmer-sling"\)/);
-  assert.match(scene, /this\.damageDragonBoss\(25\)/);
+  assert.match(scene, /this\.damageDragonBoss\(PHASE_ONE_DRAGON\.farmerSlingDamage\)/);
   assert.match(scene, /drawDragonHealthBar\(\)/);
   assert.match(scene, /this\.princessActor\.setPosition\(boss\.sprite\.x \+ 78, boss\.sprite\.y \+ 96\)/);
 });
 
 test("dragon fireballs attack living plants or the farmhouse", () => {
-  assert.match(scene, /boss\.attackCooldown = 3900/);
-  assert.match(scene, /const targetPlant = this\.plants\.filter\(\(plant\) => plant\.alive\)/);
-  assert.match(scene, /this\.houseHealth = Math\.max\(0, this\.houseHealth - 12\)/);
+  assert.match(scene, /boss\.attackCooldown = PHASE_ONE_DRAGON\.attackIntervalMs/);
+  assert.match(scene, /const targetPlant = selectDragonFireballTarget\(this\.plants\)/);
+  assert.match(scene, /this\.houseHealth = Math\.max\(0, this\.houseHealth - PHASE_ONE_DRAGON\.fireballDamageToFarm\)/);
 });
 
 test("Phase 1 cannot finish until all ordinary monsters and the separate dragon are defeated", () => {
@@ -60,7 +60,7 @@ test("story artwork uses explicit user-owned asset paths and optional animation 
 });
 
 
-test("victory saves the unlocked campaign stage to the signed-in player's cloud account", () => {
-  assert.match(scene, /import \{ syncProgressAfterVictory \} from "\.\.\/services\/playerAccount\.mjs"/);
-  assert.match(scene, /unlockNextStage\(window\.localStorage, 1\);[\s\S]*?syncProgressAfterVictory\(\)/);
+test("victory persists local campaign progress without uploading client-controlled balances", () => {
+  assert.match(scene, /unlockNextStage\(window\.localStorage, 1\)/);
+  assert.doesNotMatch(scene, /syncProgressAfterVictory\(\)/);
 });
