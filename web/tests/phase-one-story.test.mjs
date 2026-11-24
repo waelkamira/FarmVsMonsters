@@ -62,6 +62,6 @@ test("story artwork uses explicit user-owned asset paths and optional animation 
 
 
 test("victory records the unlocked campaign stage in local progress", () => {
-  assert.match(scene, /unlockNextStage\(window\.localStorage, 1\)/);
+  assert.match(scene, /unlockNextStage\(getBrowserStorage\(window\), 1\)/);
   assert.doesNotMatch(scene, /syncProgressAfterVictory/);
 });

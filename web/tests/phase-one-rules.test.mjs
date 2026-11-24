@@ -313,7 +313,7 @@ test("pause scene resumes, restarts and removes its keyboard listeners safely", 
 });
 
 test("home menu reads the saved coin wallet", () => {
-  assert.match(homePage, /loadSavedCoins\(window\.localStorage\)/);
+  assert.match(homePage, /loadSavedCoins\(getBrowserStorage\(window\)\)/);
   assert.match(homePage, /Saved player balance/);
 });
 
@@ -468,13 +468,13 @@ test("campaign progression safely falls back to stage one for corrupt or unavail
 
 test("stage selection reflects saved unlocks without linking unfinished stages into gameplay", () => {
   const stagePage = readFileSync(resolve(here, "../app/stages/page.js"), "utf8");
-  assert.match(stagePage, /loadUnlockedStage\(window\.localStorage\)/);
+  assert.match(stagePage, /loadUnlockedStage\(getBrowserStorage\(window\)\)/);
   assert.match(stagePage, /const isSecondIntroUnlocked = isFirstMission && isSecondWorld && unlockedStage >= 2/);
   assert.match(stagePage, /href="\/stage\/1"/);
   assert.match(stagePage, /href="\/stage\/2"/);
   assert.match(stagePage, /return <span className=\{className\}/);
   assert.match(scene, /won = Boolean\(won && this\.phaseOneStoryState === "complete"\)/);
-  assert.match(scene, /unlockNextStage\(window\.localStorage, 1\)/);
+  assert.match(scene, /unlockNextStage\(getBrowserStorage\(window\), 1\)/);
 });
 
 
