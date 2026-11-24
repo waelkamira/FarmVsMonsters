@@ -13,10 +13,10 @@ export const SEED_PACKET_IDS = Object.freeze([
 
 export const REQUIRED_STARTER_SEEDS = Object.freeze(["radish", "mushroom"]);
 
-export function normalizeSeedLoadout(selectedIds, unlockedIds) {
+export function normalizeSeedLoadout(selectedIds, unlockedIds, allowedIds = SEED_PACKET_IDS) {
   const unlocked = new Set(
     Array.isArray(unlockedIds)
-      ? unlockedIds.filter((id) => SEED_PACKET_IDS.includes(id))
+      ? unlockedIds.filter((id) => allowedIds.includes(id))
       : REQUIRED_STARTER_SEEDS
   );
   REQUIRED_STARTER_SEEDS.forEach((id) => unlocked.add(id));
