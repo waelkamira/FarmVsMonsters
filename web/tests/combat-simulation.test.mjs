@@ -443,7 +443,8 @@ test("Phaser registers Snow Thrower assets and freezes monsters without HP damag
   assert.match(scene, /snow-thrower-level-1/);
   assert.match(scene, /Snow-thrower-bomb-level-1\.png/);
   assert.match(scene, /frozen-hyena-level-1/);
-  assert.match(scene, /this\.freezeMonster\(hit\)/);\n  assert.match(scene, /monster\.freezeStage = Math\.min\(5, \(monster\.freezeStage \|\| 0\) \+ 1\)/);
+  assert.match(scene, /this\.freezeMonster\(hit\)/);
+  assert.match(scene, /monster\.freezeStage = Math\.min\(5, \(monster\.freezeStage \|\| 0\) \+ 1\)/);
   assert.match(scene, /restoreMonsterAfterFreeze/);
 });
 
