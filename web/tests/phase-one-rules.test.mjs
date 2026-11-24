@@ -2,6 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { selectLaneBlocker } from "../game/rules/combatSimulation.mjs";
+import { PHASE_ONE_MONSTERS, getStonehideIncomingDamageMultiplier } from "../game/rules/phaseOneCombatContract.mjs";
 import { dirname, resolve } from "node:path";
 import {
   PHASE_ONE_WAVE_SIZES,
@@ -162,7 +164,7 @@ test("mushroom is resource-only and its pickups expire after 12 seconds", () => 
 });
 
 test("Mushroom production always creates a full collectible; the energy cap is applied at pickup", () => {
-  const production = scene.slice(scene.indexOf("spawnMushroomEnergy(plant) {"), scene.indexOf("fireThorn(plant"));
+  const production = scene.slice(scene.indexOf("spawnMushroomEnergy(plant) {"), scene.indexOf("spawnStudioEnergy(plant"));
   assert.match(production, /const amount = MUSHROOM_CONFIG\.energy;/);
   assert.doesNotMatch(production, /Math\.min\(MUSHROOM_CONFIG\.energy, MAX_ENERGY - this\.energy\)/);
   assert.match(production, /collectEnergy\(this\.energy, amount\)/);
@@ -170,8 +172,15 @@ test("Mushroom production always creates a full collectible; the energy cap is a
 
 test("resource Mushrooms never stop monsters; only living Radishes are defensive blockers", () => {
   const updateMonsters = scene.slice(scene.indexOf("  updateMonsters(dt, delta) {"), scene.indexOf("  updateProjectiles(dt) {"));
-  assert.match(updateMonsters, /p\.alive && p\.type === "radish" && p\.row === monster\.row/);
-  assert.doesNotMatch(updateMonsters, /p\.alive && p\.row === monster\.row/);
+  assert.match(updateMonsters, /selectLaneBlocker\(/);
+  assert.equal(selectLaneBlocker({
+    plants: [{ plant: { type: "mushroom", row: 1, alive: true }, localX: -1 }],
+    row: 1, monsterLocalX: 0
+  }), null);
+  assert.equal(selectLaneBlocker({
+    plants: [{ plant: { type: "radish", row: 1, alive: true }, localX: -1 }],
+    row: 1, monsterLocalX: 0
+  }).type, "radish");
 });
 
 test("the first monster crossing the final line ends the game immediately", () => {
@@ -187,8 +196,8 @@ test("uprooting a plant does not switch the stationary farmer to an action anima
 });
 
 test("a farmhouse defeat aborts the rest of the current simulation frame", () => {
-  const update = scene.slice(scene.indexOf("  update(_time, delta) {"), scene.indexOf("  // Sort world characters"));
-  assert.match(update, /this\.updateMonsters\(dt, delta\);\s*if \(this\.gameOver\) return;\s*this\.updateDepthSorting\(\);/);
+  const update = scene.slice(scene.indexOf("  update(_time, delta) {"), scene.indexOf("  showWaveAnnouncement(wave) {"));
+  assert.match(update, /this\.updateMonsters\(dt, deltaMs\);\s*if \(this\.gameOver\) return;[\s\S]*?this\.updateDepthSorting\(\);/);
 });
 
 test("terminal results clean up pending Mushroom pickups and their expiry timers", () => {
@@ -220,7 +229,7 @@ test("monster archetype composition introduces threats in measured waves", () =>
 });
 
 test("Dust Skitters perform periodic visual hops while remaining grounded by plant collisions", () => {
-  const spawn = scene.slice(scene.indexOf("  spawnMonster("), scene.indexOf("  updateMonsters(dt, delta) {"));
+  const spawn = scene.slice(scene.lastIndexOf("  spawnMonster("), scene.indexOf("  updateMonsters(dt, delta) {"));
   const update = scene.slice(scene.indexOf("  updateMonsters(dt, delta) {"), scene.indexOf("  updateProjectiles(dt) {"));
   assert.match(spawn, /jumpCooldown: archetype === "dust-skitter"/);
   assert.match(spawn, /jumpDuration: 560/);
@@ -235,21 +244,24 @@ test("Dust Skitters perform periodic visual hops while remaining grounded by pla
 
 test("all three monster profiles and Stonehide bracing damage reduction remain wired", () => {
   for (const kind of ["cave-brute", "dust-skitter", "stonehide"]) {
-    assert.ok(scene.includes(`"${kind}": {`), `missing ${kind} profile`);
+    assert.ok(PHASE_ONE_MONSTERS[kind], `missing ${kind} profile`);
   }
-  assert.match(scene, /return monster\.braced \? armorMultiplier \* 0\.55 : armorMultiplier/);
+  assert.equal(getStonehideIncomingDamageMultiplier(false), 0.7);
+  assert.equal(getStonehideIncomingDamageMultiplier(true), 0.385);
 });
 
 test("requestPlant uses the imported centralized plant configs", () => {
   const requestPlant = scene.slice(scene.indexOf("requestPlant(col, row) {"), scene.indexOf("updatePlantingMovement(dt) {"));
-  assert.match(requestPlant, /this\.selectedPlant === "mushroom" \? MUSHROOM_CONFIG : RADISH_CONFIG/);
-  assert.doesNotMatch(requestPlant, /\b(?:MUSHROOM|RADISH)\b(?!_CONFIG)/);
+  assert.match(requestPlant, /const plantConfigs = \{/);
+  assert.match(requestPlant, /"electric-mushroom": ELECTRIC_MUSHROOM_CONFIG/);
+  assert.match(requestPlant, /const plantConfig = plantConfigs\[this\.selectedPlant\]/);
 });
 
 test("planting validates occupancy and energy before charging", () => {
-  assert.match(scene, /if \(this\.energy < config\.cost \|\| this\.plants\.some\(\(p\) => p\.alive && p\.col === col && p\.row === row\)\)/);
-  assert.match(scene, /this\.energy -= config\.cost/);
-  assert.match(scene, /this\.plants\.push\(plant\)/);
+  const requestPlant = scene.slice(scene.indexOf("requestPlant(col, row) {"), scene.indexOf("updatePlantingMovement(dt) {"));
+  assert.match(requestPlant, /const existingPlant = this\.plants\.find\(\(plant\) => plant\.alive && plant\.col === col && plant\.row === row\)/);
+  assert.match(requestPlant, /if \(this\.energy < plantConfig\.cost\)/);
+  assert.match(scene, /resolvePlantPlacement\(/);
   assert.match(scene, /this\.totalPlantsPlanted \+= 1/);
 });
 
@@ -257,7 +269,7 @@ test("monster defeat is guarded against duplicate rewards", () => {
   assert.match(scene, /if \(monster\.hp > 0 \|\| !monster\.alive\) return/);
   assert.match(scene, /monster\.alive = false/);
   assert.match(scene, /this\.totalDefeatedMonsters \+= 1/);
-  assert.match(scene, /this\.coins \+= MONSTER_KILL_COIN_REWARD/);
+  assert.match(scene, /this\.coins \+= PHASE_ONE_REWARDS\.ordinaryMonsterDefeatCoins/);
   assert.match(scene, /this\.registry\.set\(["']coins["'], this\.coins\)/);
 });
 
@@ -283,7 +295,7 @@ test("battle scene uses the shared pure rules rather than duplicate balancing co
 });
 
 test("pause, terminal-state and retry guards remain present", () => {
-  assert.match(scene, /if \(this\.gameOver \|\| this\.isPaused\) return/);
+  assert.match(scene, /if \(this\.gameOver \|\| this\.isPaused \|\| this\.collectionMenuOpen \|\| this\.inventoryOpen\) return/);
   assert.match(scene, /if \(this\.gameOver \|\| this\.isPaused \|\| !this\.scene\.isActive\(\)\) return/);
   assert.match(scene, /this\.scene\.restart\(\)/);
   assert.match(scene, /this\.stopBackgroundMusic\(\)/);
@@ -305,7 +317,7 @@ test("home menu reads the saved coin wallet", () => {
 
 test("player guidance and roadmap match the current Phase 1 balance", () => {
   assert.match(guide, /15-energy collectible every 12 seconds/);
-  assert.match(gamePage, /Collect glowing Mushroom energy/);
+  assert.match(gamePage, /Collect Mushroom energy/);
   assert.match(scene, /createCollectionMenuControl\(\)/);
   assert.match(scene, /this\.collectionMenuTab = "phases"/);
   assert.match(scene, /"treasure-cave-menu"/);
@@ -335,7 +347,8 @@ test("campaign progression unlocks the next stage only through a valid completio
   assert.deepEqual(JSON.parse(values.get(CAMPAIGN_PROGRESS_KEY)), {
     version: 1,
     unlockedStage: 2,
-    completedStages: [1]
+    completedStages: [1],
+    unlockedPlantIds: ["radish", "mushroom"]
   });
 
   assert.equal(unlockNextStage(storage, CAMPAIGN_STAGE_COUNT), true);
@@ -364,7 +377,7 @@ test("stage selection reflects saved unlocks without linking unfinished stages i
 
 test("wave transitions include a pausable five-second preparation window without changing wave sizes", () => {
   const create = scene.slice(scene.indexOf("  create() {"), scene.indexOf("  drawField() {"));
-  const update = scene.slice(scene.indexOf("  update(_time, delta) {"), scene.indexOf("  // Sort world characters"));
+  const update = scene.slice(scene.indexOf("  update(_time, delta) {"), scene.indexOf("  showWaveAnnouncement(wave) {"));
   const progress = scene.slice(scene.indexOf("  checkWaveProgress() {"), scene.indexOf("  playVictoryMusic() {"));
   assert.match(create, /this\.waveIntermissionMs = 0/);
   assert.match(update, /resolveWaveSpawnStep\(/);
@@ -372,7 +385,7 @@ test("wave transitions include a pausable five-second preparation window without
   assert.match(update, /if \(spawnStep\.shouldSpawn\)/);
   assert.match(update, /this\.spawnMonster\(spawnIndex\)/);
   assert.match(progress, /this\.waveIntermissionMs = PHASE_ONE_TIMING\.waveIntermissionMs/);
-  assert.match(progress, /this\.spawnTimer = PHASE_ONE_TIMING\.nextWaveSpawnDelayMs/);
+  assert.match(progress, /PHASE_ONE_TIMING\.nextWaveSpawnDelayMs/);
   assert.deepEqual(PHASE_ONE_WAVE_SIZES, [3, 5, 6, 7, 9]);
   assert.match(scene, /if \(this\.gameOver \|\| this\.isPaused \|\| this\.collectionMenuOpen\) return/);
 });
