@@ -409,3 +409,81 @@
   .studio-list .studio-asset-row{row-gap:0!important}
   .studio-list .studio-asset-row>.studio-asset-actions{gap:4px!important}
 }
+
+
+/* Asset cards use a real visual stack: thumbnail, then actions, in one flow.
+   Metadata stays in the neighboring column and can never push actions down. */
+.studio-list .studio-asset-row{
+  display:grid!important;
+  grid-template-columns:minmax(88px,112px) minmax(0,1fr)!important;
+  grid-template-rows:auto!important;
+  align-items:start!important;
+  align-content:start!important;
+  column-gap:14px!important;
+  row-gap:0!important;
+}
+.studio-list .studio-asset-row>.studio-asset-visual{
+  grid-column:1!important;
+  grid-row:1!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:stretch!important;
+  align-self:start!important;
+  justify-self:stretch!important;
+  gap:0!important;
+  min-width:0!important;
+  width:100%!important;
+  margin:0!important;
+  padding:0!important;
+}
+.studio-list .studio-asset-row>.studio-asset-visual>.studio-thumb,
+.studio-list .studio-asset-row>.studio-asset-visual>.studio-thumb-fallback{
+  display:block;
+  flex:0 0 auto!important;
+  width:100%!important;
+  aspect-ratio:1!important;
+  height:auto!important;
+  min-width:0!important;
+  min-height:0!important;
+  max-width:100%!important;
+  margin:0!important;
+  align-self:stretch!important;
+  box-sizing:border-box!important;
+}
+.studio-list .studio-asset-row>.studio-asset-visual>.studio-thumb-fallback{
+  display:none;
+}
+.studio-list .studio-asset-row>.studio-asset-visual>.studio-asset-actions{
+  display:flex!important;
+  flex-direction:column!important;
+  flex-wrap:nowrap!important;
+  align-items:stretch!important;
+  gap:5px!important;
+  width:100%!important;
+  min-width:0!important;
+  margin:0!important;
+  padding:0!important;
+  position:static!important;
+}
+.studio-list .studio-asset-row>.studio-asset-visual>.studio-asset-actions>*{
+  box-sizing:border-box;
+  width:100%;
+  max-width:100%;
+  min-width:0;
+  margin:0;
+}
+.studio-list .studio-asset-row>.studio-asset-meta{
+  grid-column:2!important;
+  grid-row:1!important;
+  align-self:start!important;
+  min-width:0!important;
+  width:100%!important;
+  margin:0!important;
+}
+@media(max-width:560px){
+  .studio-list .studio-asset-row{
+    grid-template-columns:88px minmax(0,1fr)!important;
+    column-gap:10px!important;
+  }
+  .studio-list .studio-asset-row>.studio-asset-visual>.studio-asset-actions{gap:4px!important}
+}
