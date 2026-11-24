@@ -228,6 +228,7 @@ export default class BattleScene extends Scene {
     queueStudioMonsterCatalog("studio-test-monster-catalog");
     this.load.json("studio-published-monster-catalog", "/assets/studio-monster-catalog.json");
     this.load.json("studio-test-monster-catalog", "/api/studio/assets?catalog=testing-monsters");
+    this.load.json("stage-encounter-config", "/api/studio/stage-encounters");
     this.load.on("loaderror", (file) => {
       if (file.key === "farm-battlefield") this.backgroundAssetFailed = true;
       if (file.key === "radish-level-1") this.radishAssetFailed = true;
@@ -247,6 +248,9 @@ export default class BattleScene extends Scene {
 
   create() {
     this.isPaused = false;
+    this.stageEncounterConfig = this.cache.json.get("stage-encounter-config")?.stages?.["1"] || null;
+    this.stageMonsterRosterConfigured = this.stageEncounterConfig?.monstersConfigured === true;
+    this.stageMonsterEntries = (this.stageEncounterConfig?.monsters || []).filter(entry => entry.enabled !== false);
     this.vfxManager = new VFXManager(this, { registry: createDefaultVFXRegistry(), limits: { maxActiveBursts: 24 } });
     this.events.once("shutdown", () => {
       this.vfxManager?.destroy();
@@ -441,7 +445,9 @@ export default class BattleScene extends Scene {
     this.totalWaves = PHASE_ONE_WAVE_SIZES.length;
     this.spawnedThisWave = 0;
     this.waveDefeatedMonsters = 0;
-    this.waveSize = PHASE_ONE_WAVE_SIZES[0];
+    this.waveSize = this.getStageWaveSize(1);
+    const firstStageMonster = this.getStageMonsterEntry(0);
+    this.spawnTimer = firstStageMonster?.firstSpawnDelayMs > 0 ? firstStageMonster.firstSpawnDelayMs : PHASE_ONE_TIMING.firstMonsterSpawnDelayMs;
     this.totalSpawnedMonsters = 0;
     this.totalDefeatedMonsters = 0;
     this.totalPlantsPlanted = 0;
@@ -2345,6 +2351,7 @@ export default class BattleScene extends Scene {
       spawnedThisWave: this.spawnedThisWave,
       intermissionMs: this.waveIntermissionMs,
       spawnTimerMs: this.spawnTimer,
+      spawnIntervalMs: this.getStageMonsterEntry(this.spawnedThisWave)?.spawnIntervalMs,
       deltaMs
     });
     this.waveIntermissionMs = spawnStep.intermissionMs;
@@ -3789,6 +3796,26 @@ export default class BattleScene extends Scene {
     });
   }
 
+  getStageWaveEntries(wave) {
+    return this.stageMonsterEntries.filter(entry => Number(entry.wave) === wave);
+  }
+
+  getStageWaveSize(wave) {
+    if (!this.stageMonsterRosterConfigured) return PHASE_ONE_WAVE_SIZES[wave - 1] || 0;
+    return this.getStageWaveEntries(wave).reduce((sum, entry) => sum + Math.max(1, Number(entry.count) || 1), 0);
+  }
+
+  getStageMonsterEntry(spawnIndex = 0) {
+    if (!this.stageMonsterRosterConfigured) return null;
+    let offset = Math.max(0, spawnIndex);
+    for (const entry of this.getStageWaveEntries(this.wave)) {
+      const count = Math.max(1, Number(entry.count) || 1);
+      if (offset < count) return entry;
+      offset -= count;
+    }
+    return null;
+  }
+
   monsterArchetypeFor(spawnIndex) {
     return resolveMonsterArchetype(this.wave, spawnIndex);
   }
@@ -3982,13 +4009,23 @@ export default class BattleScene extends Scene {
 
   spawnMonster(spawnIndex = this.spawnedThisWave) {
     const row = this.simulationRandom.nextInt(0, LANES - 1);
-    const studioMonster = this.selectStudioMonsterForSpawn();
-    const archetype = studioMonster?.monsterProfile?.baseArchetype || this.monsterArchetypeFor(spawnIndex);
+    const stageEntry = this.getStageMonsterEntry(spawnIndex);
+    const studioMonster = stageEntry ? (this.studioMonstersById?.[stageEntry.id] || null) : this.selectStudioMonsterForSpawn();
+    const knownArchetypes = ["cave-brute", "dust-skitter", "stonehide", "alpha-brute"];
+    const archetype = studioMonster?.monsterProfile?.baseArchetype || (knownArchetypes.includes(stageEntry?.id) ? stageEntry.id : this.monsterArchetypeFor(spawnIndex));
     try { recordMonsterDiscovery(window.localStorage, archetype); } catch { /* Bestiary tracking must never interrupt battle. */ }
     const baseProfile = getMonsterCombatStats(archetype, this.wave);
-    const profile = studioMonster
+    const resolvedProfile = studioMonster
       ? resolveStudioMonsterRuntimeProfile(baseProfile, studioMonster.monsterProfile)
       : baseProfile;
+    const profile = stageEntry ? {
+      ...resolvedProfile,
+      hp: Math.max(1, Math.round(resolvedProfile.hp * (Number(stageEntry.hpMultiplier) || 1))),
+      maxHp: Math.max(1, Math.round(resolvedProfile.maxHp * (Number(stageEntry.hpMultiplier) || 1))),
+      speed: resolvedProfile.speed * (Number(stageEntry.speedMultiplier) || 1),
+      plantDamage: Math.max(1, Math.round(resolvedProfile.plantDamage * (Number(stageEntry.damageMultiplier) || 1))),
+      attackIntervalMs: Math.max(100, Math.round(resolvedProfile.attackIntervalMs * (Number(stageEntry.attackIntervalMultiplier) || 1)))
+    } : resolvedProfile;
     const hp = profile.hp;
     const speed = profile.speed;
     const spawn = this.monsterLanePoint(SPAWN_LOCAL_X, row);
@@ -5111,7 +5148,9 @@ export default class BattleScene extends Scene {
     this.wave += 1;
     this.spawnedThisWave = 0;
     this.waveDefeatedMonsters = 0;
-    this.waveSize = PHASE_ONE_WAVE_SIZES[this.wave - 1];
+    this.waveSize = this.getStageWaveSize(this.wave);
+    const nextStageMonster = this.getStageMonsterEntry(0);
+    if (nextStageMonster?.firstSpawnDelayMs > 0) this.spawnTimer = nextStageMonster.firstSpawnDelayMs;
     this.waveIntermissionMs = PHASE_ONE_TIMING.waveIntermissionMs;
     this.spawnTimer = PHASE_ONE_TIMING.nextWaveSpawnDelayMs;
     this.setMessage(
