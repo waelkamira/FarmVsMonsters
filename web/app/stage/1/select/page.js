@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useLocale, LanguageToggle } from "../../../LocaleProvider";
 import { loadUnlockedPlantIds } from "../../../../game/rules/phaseOneRules.mjs";
 
@@ -24,9 +24,7 @@ export default function StageOneSeedSelectionPage() {
   const { locale } = useLocale();
   const ar = locale === "ar";
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const requestedStage = Number(searchParams.get("stage"));
-  const stageNumber = Number.isInteger(requestedStage) ? Math.max(1, Math.min(100, requestedStage)) : 1;
+  const [stageNumber, setStageNumber] = useState(1);
   const [unlockedIds, setUnlockedIds] = useState(STARTER_LOADOUT);
   const [selected, setSelected] = useState(STARTER_LOADOUT);
   const [plantCatalog, setPlantCatalog] = useState(PLANTS);
@@ -36,6 +34,9 @@ export default function StageOneSeedSelectionPage() {
 
   useEffect(() => {
     let active = true;
+    const requestedStage = Number(new URLSearchParams(window.location.search).get("stage"));
+    const activeStage = Number.isInteger(requestedStage) ? Math.max(1, Math.min(100, requestedStage)) : 1;
+    setStageNumber(activeStage);
     const readCatalog = async (url) => {
       try {
         const response = await fetch(url, { cache: "no-store" });
@@ -70,7 +71,7 @@ export default function StageOneSeedSelectionPage() {
         testing: testing.some((candidate) => candidate.id === plant.id)
       }));
       const plantMap = new Map([...PLANTS, ...studioPlants].map((plant) => [plant.id, plant]));
-      const configuredStage = stageSettings?.stages?.[String(stageNumber)];
+      const configuredStage = stageSettings?.stages?.[String(activeStage)];
       setStagePlantsConfigured(configuredStage?.plantsConfigured === true);
       const plantAliases = {radish:["radish","radish-level-1"],mushroom:["mushroom","energy-mushroom"],pumpkin:["pumpkin","pumpkin-level-1"],pineapple:["pineapple","pineapple-level-1"],hazelnut:["hazelnut","hazelnut-level-1"],mango:["mango","mango-level-1"],"snow-thrower":["snow-thrower","snow-thrower-level-1"],"electric-mushroom":["electric-mushroom","electric-mushroom-level-1"]};
       const nextPlants = configuredStage?.plantsConfigured
@@ -97,7 +98,7 @@ export default function StageOneSeedSelectionPage() {
       }
     })();
     return () => { active = false; };
-  }, [stageNumber]);
+  }, []);
 
   function togglePlant(plant) {
     if (plant.required) return;
