@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useLocale, LanguageToggle } from "../LocaleProvider";
+import { readStorageValue, writeStorageValue } from "../../game/services/browserStorage.mjs";
 const controls = [
   { key: "musicVolume", label: "Background music", initial: 70 },
   { key: "effectsVolume", label: "Sound effects", initial: 80 },
@@ -15,12 +16,7 @@ export default function SettingsPage() {
     let active = true;
     const next = {};
     controls.forEach(({ key, initial }) => {
-      let raw = null;
-      try {
-        raw = window.localStorage.getItem("farmVsMonsters.audio." + key);
-      } catch {
-        raw = null;
-      }
+      const raw = readStorageValue(window, "farmVsMonsters.audio." + key, null);
       const stored = Number(raw);
       next[key] = raw !== null && Number.isFinite(stored) ? Math.max(0, Math.min(100, stored)) : initial;
     });
@@ -34,7 +30,7 @@ export default function SettingsPage() {
   function changeVolume(key, value) {
     const volume = Number(value);
     setValues((current) => ({ ...current, [key]: volume }));
-    window.localStorage.setItem("farmVsMonsters.audio." + key, String(volume));
+    writeStorageValue(window, "farmVsMonsters.audio." + key, volume);
   }
   return <main className="info-shell"><section className="info-card">
     <LanguageToggle />

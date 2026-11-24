@@ -1,5 +1,6 @@
 import { Scene } from "phaser";
 import { translate } from "../../app/LocaleProvider";
+import { readBrowserLocale, readStorageValue, writeStorageValue } from "../services/browserStorage.mjs";
 
 const AUDIO_CHANNELS = [
   { key: "musicVolume", label: "Background music", initial: 70 },
@@ -40,9 +41,7 @@ export default class PauseScene extends Scene {
   }
 
   locale() {
-    return typeof window !== "undefined"
-      ? window.localStorage.getItem("farmVsMonsters.language") || "ar"
-      : "ar";
+    return readBrowserLocale(typeof window !== "undefined" ? window : null);
   }
 
   tr(value) {
@@ -84,7 +83,7 @@ export default class PauseScene extends Scene {
   }
 
   readVolume(key, initial) {
-    const raw = window.localStorage.getItem("farmVsMonsters.audio." + key);
+    const raw = readStorageValue(window, "farmVsMonsters.audio." + key, null);
     const value = Number(raw);
     return raw !== null && Number.isFinite(value) ? Math.max(0, Math.min(100, value)) : initial;
   }
@@ -115,7 +114,7 @@ export default class PauseScene extends Scene {
 
   changeVolume(channel, amount) {
     const next = Math.max(0, Math.min(100, this.readVolume(channel.key, channel.initial) + amount));
-    window.localStorage.setItem("farmVsMonsters.audio." + channel.key, String(next));
+    writeStorageValue(window, "farmVsMonsters.audio." + channel.key, next);
     this.drawCurrentMenu();
   }
 

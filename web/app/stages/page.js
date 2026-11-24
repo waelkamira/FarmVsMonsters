@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useLocale, LanguageToggle } from "../LocaleProvider";
 import { loadUnlockedStage } from "../../game/rules/phaseOneRules.mjs";
+import { getBrowserStorage } from "../../game/services/browserStorage.mjs";
 import { getPlayerSession, restoreOrInitializeCloudProgress } from "../../game/services/playerAccount.mjs";
 import { CAMPAIGN_WORLDS, MISSIONS_PER_WORLD } from "../../game/data/campaignWorlds.mjs";
 
@@ -49,7 +50,7 @@ export default function StagesPage() {
     queueMicrotask(() => {
       if (!active) return;
       try {
-        setUnlockedStage(loadUnlockedStage(window.localStorage));
+        setUnlockedStage(loadUnlockedStage(getBrowserStorage(window)));
       } catch {
         setUnlockedStage(1);
       }

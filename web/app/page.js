@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useLocale, LanguageToggle } from "./LocaleProvider";
 import { getPlayerSession, restoreOrInitializeCloudProgress } from "../game/services/playerAccount.mjs";
 import { loadSavedCoins } from "../game/rules/phaseOneRules.mjs";
+import { getBrowserStorage } from "../game/services/browserStorage.mjs";
 
 export default function HomePage() {
   const { locale } = useLocale();
@@ -17,7 +18,7 @@ export default function HomePage() {
   useEffect(() => {
     const refreshSavedCoins = () => {
       try {
-        setSavedCoins(loadSavedCoins(window.localStorage));
+        setSavedCoins(loadSavedCoins(getBrowserStorage(window)));
       } catch {
         setSavedCoins(0);
       }

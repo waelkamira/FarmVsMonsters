@@ -1,6 +1,12 @@
 import { Scene, Input, Math as PhaserMath } from "phaser";
 import { translate } from "../../app/LocaleProvider";
 import { PhaserAssetManager } from "../services/assetManager.mjs";
+import {
+  getBrowserStorage,
+  readBrowserLocale,
+  readStorageValue,
+  writeStorageValue
+} from "../services/browserStorage.mjs";
 import { createSeededRandom } from "../rules/seededRandom.mjs";
 import { createCombatEventLog, appendCombatEvent } from "../rules/combatEventLog.mjs";
 import gridCalibration from "../data/farm-grid-calibration.json";
@@ -166,7 +172,7 @@ export default class BattleScene extends Scene {
       if (this.lastMessage) this.setMessage(this.lastMessage);
       const refreshLocalized = (items) => items.forEach((item) => {
         const key = item?.getData?.("localeKey");
-        if (key && item.setText) item.setText(translate(key, window.localStorage.getItem("farmVsMonsters.language") || "ar"));
+        if (key && item.setText) item.setText(translate(key, readBrowserLocale(window)));
         if (item?.list) refreshLocalized(item.list);
       });
       refreshLocalized(this.children.list);
@@ -176,7 +182,7 @@ export default class BattleScene extends Scene {
     this.energy = INITIAL_ENERGY;
     let savedCoins = 0;
     try {
-      savedCoins = loadSavedCoins(window.localStorage);
+      savedCoins = loadSavedCoins(getBrowserStorage(window));
     } catch {
       // The battle remains playable when browser storage is unavailable.
     }
@@ -338,9 +344,9 @@ export default class BattleScene extends Scene {
     g.fillStyle(0xf0d6a5, 1); g.fillTriangle(145, 354, 130, 380, 160, 380);
     g.fillStyle(0x9b4d58, 1); g.fillCircle(145, 342, 15);
     g.fillStyle(0xf3c96d, 1); g.fillCircle(145, 346, 9);
-    this.add.text(145, 386, translate("PRINCESS", window.localStorage.getItem("farmVsMonsters.language") || "ar"), { fontFamily: "Arial", fontSize: "10px", color: "#fff4d4", fontStyle: "bold" }).setOrigin(0.5).setData("localeKey", "PRINCESS");
-    this.add.text(94, 555, translate("FARMHOUSE", window.localStorage.getItem("farmVsMonsters.language") || "ar"), { fontFamily: "Arial", fontSize: "13px", color: "#fff3d4", fontStyle: "bold" }).setOrigin(0.5).setData("localeKey", "FARMHOUSE");
-    this.add.text(1000, 95, translate("MONSTER GATE", window.localStorage.getItem("farmVsMonsters.language") || "ar"), { fontFamily: "Arial", fontSize: "13px", color: "#563c2c", fontStyle: "bold" }).setOrigin(0.5).setData("localeKey", "MONSTER GATE");
+    this.add.text(145, 386, translate("PRINCESS", readBrowserLocale(window)), { fontFamily: "Arial", fontSize: "10px", color: "#fff4d4", fontStyle: "bold" }).setOrigin(0.5).setData("localeKey", "PRINCESS");
+    this.add.text(94, 555, translate("FARMHOUSE", readBrowserLocale(window)), { fontFamily: "Arial", fontSize: "13px", color: "#fff3d4", fontStyle: "bold" }).setOrigin(0.5).setData("localeKey", "FARMHOUSE");
+    this.add.text(1000, 95, translate("MONSTER GATE", readBrowserLocale(window)), { fontFamily: "Arial", fontSize: "13px", color: "#563c2c", fontStyle: "bold" }).setOrigin(0.5).setData("localeKey", "MONSTER GATE");
   }
 
   createFarmBackground() {
@@ -660,7 +666,7 @@ export default class BattleScene extends Scene {
     ];
     let savedLoadout = null;
     try {
-      savedLoadout = JSON.parse(window.localStorage.getItem("farmVsMonsters.selectedPlants") || "null");
+      savedLoadout = JSON.parse(readStorageValue(window, "farmVsMonsters.selectedPlants", "null"));
     } catch {
       // A malformed or unavailable saved loadout falls back to the Stage 1 core.
     }
@@ -1238,31 +1244,20 @@ export default class BattleScene extends Scene {
   }
 
   readAudioPreference(key, fallback) {
-    try {
-      const stored = window.localStorage.getItem("farmVsMonsters.audio." + key);
-      return stored === null ? fallback : stored === "true";
-    } catch (error) {
-      return fallback;
-    }
+    const stored = readStorageValue(window, "farmVsMonsters.audio." + key, null);
+    return stored === null ? fallback : stored === "true";
   }
 
   saveAudioPreference(key, value) {
-    try {
-      window.localStorage.setItem("farmVsMonsters.audio." + key, String(value));
-    } catch (error) {
-      // Audio preferences still remain active for the current game session.
-    }
+    // Keep the in-memory preference active even when browser storage is blocked.
+    writeStorageValue(window, "farmVsMonsters.audio." + key, value);
   }
 
   readAudioVolume(key, fallback) {
-    try {
-      const stored = window.localStorage.getItem("farmVsMonsters.audio." + key);
-      if (stored === null) return fallback;
-      const value = Number(stored);
-      return Number.isFinite(value) ? PhaserMath.Clamp(value, 0, 100) : fallback;
-    } catch (error) {
-      return fallback;
-    }
+    const stored = readStorageValue(window, "farmVsMonsters.audio." + key, null);
+    if (stored === null) return fallback;
+    const value = Number(stored);
+    return Number.isFinite(value) ? PhaserMath.Clamp(value, 0, 100) : fallback;
   }
 
   saveAudioPreferences() {
@@ -1297,7 +1292,7 @@ export default class BattleScene extends Scene {
       .setInteractive();
     const inset = this.add.rectangle(0, 0, 236, 206, 0x35bceb, 0.12)
       .setStrokeStyle(1, 0xa7e84f, 0.42);
-    const heading = this.add.text(0, -91, translate("TRIBE SOUND", window.localStorage.getItem("farmVsMonsters.language") || "ar"), {
+    const heading = this.add.text(0, -91, translate("TRIBE SOUND", readBrowserLocale(window)), {
       fontFamily: "Arial", fontSize: "15px", color: "#ffffff", fontStyle: "bold",
       stroke: "#17213d", strokeThickness: 3
     }).setOrigin(0.5).setData("localeKey", "TRIBE SOUND");
@@ -1373,7 +1368,7 @@ export default class BattleScene extends Scene {
 
   createAudioVolumeSlider(y, title, initialValue, onChange) {
     const container = this.add.container(0, y);
-    const label = this.add.text(-101, -10, translate(title, window.localStorage.getItem("farmVsMonsters.language") || "ar"), {
+    const label = this.add.text(-101, -10, translate(title, readBrowserLocale(window)), {
       fontFamily: "Arial", fontSize: "11px", color: "#ffffff", fontStyle: "bold", stroke: "#17213d", strokeThickness: 2
     }).setOrigin(0, 0.5).setData("localeKey", title);
     const track = this.add.rectangle(5, 12, 132, 8, 0xffffff, 0.24).setStrokeStyle(1, 0xffffff, 0.46).setInteractive({ useHandCursor: true });
@@ -1756,7 +1751,7 @@ export default class BattleScene extends Scene {
     if (!this.collectionMenuLayer) return;
     this.collectionMenuTabs.removeAll(true);
     this.collectionMenuContent.removeAll(true);
-    const locale = typeof window !== "undefined" ? window.localStorage.getItem("farmVsMonsters.language") || "ar" : "ar";
+    const locale = readBrowserLocale(typeof window !== "undefined" ? window : null);
     const tabs = [
       ["phases", locale === "ar" ? "المراحل" : "PHASES"],
       ["plants", locale === "ar" ? "النباتات" : "PLANTS"],
@@ -3500,7 +3495,7 @@ export default class BattleScene extends Scene {
     this.coins += PHASE_ONE_REWARDS.ordinaryMonsterDefeatCoins;
     this.registry.set("coins", this.coins);
     try {
-      saveCoins(window.localStorage, this.coins);
+      saveCoins(getBrowserStorage(window), this.coins);
     } catch {
       // A blocked storage API must never interrupt combat or reward handling.
     }
@@ -3662,9 +3657,9 @@ export default class BattleScene extends Scene {
     this.plantingTarget = null;
     this.returnTarget = null;
     this.farmerPlanting = false;
-    const locale = typeof window !== "undefined" ? window.localStorage.getItem("farmVsMonsters.language") || "ar" : "ar";
+    const locale = readBrowserLocale(typeof window !== "undefined" ? window : null);
     this.setMessage(won ? "VICTORY! The farm is safe." : "GAME OVER — The monsters reached the final line.");
-    if (won) { try { unlockNextStage(window.localStorage, 1); } catch { /* Keep the local game result even if storage is unavailable. */ } }
+    if (won) { try { unlockNextStage(getBrowserStorage(window), 1); } catch { /* Keep the local game result even if storage is unavailable. */ } }
     this.add.rectangle(560, 340, 1120, 680, 0x10170f, 0.72).setDepth(60);
     if (won) {
       this.stopBackgroundMusic();
@@ -3807,7 +3802,7 @@ export default class BattleScene extends Scene {
       .setStrokeStyle(1, 0xffffff, 0.82)
       .setInteractive({ useHandCursor: true });
     const inset = this.add.rectangle(0, 0, 180, 48, color, 0.62).setStrokeStyle(1, 0xffffff, 0.68);
-    const locale = typeof window !== "undefined" ? window.localStorage.getItem("farmVsMonsters.language") || "ar" : "ar";
+    const locale = readBrowserLocale(typeof window !== "undefined" ? window : null);
     const text = this.add.text(0, 0, translate(label, locale), {
       fontFamily: "Arial", fontSize: "16px", color: "#ffffff", fontStyle: "bold",
       stroke: "#17213d", strokeThickness: 3
@@ -3821,7 +3816,7 @@ export default class BattleScene extends Scene {
 
   setMessage(message) {
     this.lastMessage = message;
-    const locale = typeof window !== "undefined" ? window.localStorage.getItem("farmVsMonsters.language") || "ar" : "ar";
+    const locale = readBrowserLocale(typeof window !== "undefined" ? window : null);
     this.messageText.setText(translate(message, locale));
   }
 
