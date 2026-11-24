@@ -1132,14 +1132,15 @@ export default class BattleScene extends Scene {
     let icon;
     let iconScale = 1;
     if (imageKey && this.textures.exists(imageKey)) {
-      const gridSheet = imageKey === "mango-level-1" || imageKey === "radish-level-1" || imageKey === "snow-thrower-level-1" || imageKey === "electric-mushroom-level-1" || Boolean(this.studioPlantsByType?.[type]?.spriteSheet);
-      const frame = this.textures.getFrame(imageKey, gridSheet ? "0" : undefined);
+      const gridSheet = imageKey === "mango-level-1" || imageKey === "radish-level-1" || imageKey === "snow-thrower-level-1" || imageKey === "electric-mushroom-level-1" || imageKey === "corn-monster" || Boolean(this.studioPlantsByType?.[type]?.spriteSheet);
+      const frameName = type === "corn-monster" ? "idle_00" : "0";
+      const frame = this.textures.getFrame(imageKey, gridSheet ? frameName : undefined);
       // Bound every seed icon by both dimensions using its frame rectangle.
       const frameWidth = Math.max(1, frame.cutWidth || frame.width || 1);
       const frameHeight = Math.max(1, frame.cutHeight || frame.height || 1);
       iconScale = Math.min(54 / frameWidth, plantHeight / frameHeight);
       icon = gridSheet
-        ? this.add.sprite(0, -8, imageKey, "0").setScale(iconScale)
+        ? this.add.sprite(0, -8, imageKey, frameName).setScale(iconScale)
         : this.add.image(0, -8, imageKey).setScale(iconScale);
     } else {
       icon = this.add.graphics();
