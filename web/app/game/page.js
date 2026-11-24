@@ -20,7 +20,8 @@ const PLANT_PACKETS = [
   { id: "pineapple", image: "/assets/plants/pineapple-level-1.png", en: "Pineapple", ar: "الأناناس", cost: 70, roleEn: "Heavy projectile", roleAr: "قذيفة قوية" },
   { id: "hazelnut", image: "/assets/plants/hazelnut-level-1.png", en: "Hazelnut", ar: "البندق", cost: 65, roleEn: "Lane shooter", roleAr: "قاذف في المسار" },
   { id: "mango", image: "/assets/plants/mango-level-1.png", en: "Mango", ar: "المانجو", cost: 70, roleEn: "Curved projectile", roleAr: "قذيفة منحنية" },
-  { id: "snow-thrower", image: "/assets/plants/Snow-thrower-level-1.png", en: "Snow Thrower", ar: "قاذف الثلج", cost: 90, roleEn: "Freezes monsters", roleAr: "يجمد الوحوش" },\n  { id: "electric-mushroom", image: "/assets/plants/Electric-mushroom-level-1.png", en: "Electric Mushroom", ar: "الفطر الكهربائي", cost: 80, roleEn: "Electric lane attacker", roleAr: "مهاجم كهربائي للمسار" }
+  { id: "snow-thrower", image: "/assets/plants/Snow-thrower-level-1.png", en: "Snow Thrower", ar: "قاذف الثلج", cost: 90, roleEn: "Freezes monsters", roleAr: "يجمد الوحوش" },
+  { id: "electric-mushroom", image: "/assets/plants/Electric-mushroom-level-1.png", en: "Electric Mushroom", ar: "الفطر الكهربائي", cost: 80, roleEn: "Electric lane attacker", roleAr: "مهاجم كهربائي للمسار" }
 ];
 
 
