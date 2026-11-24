@@ -2974,6 +2974,7 @@ export default class BattleScene extends Scene {
         container.add(artwork);
       }
     }
+    container.setScale(studioPlant.flipX ? -1 : 1, 1);
     container.setData("studioPlantId", studioPlant.id);
     container.setData("studioBehavior", studioPlant.combat.mode);
     this.tweens.add({ targets: container, scaleY: 1.025, duration: 1450, ease: "Sine.easeInOut", yoyo: true, repeat: -1 });
@@ -4148,7 +4149,7 @@ export default class BattleScene extends Scene {
         studioRig = createPhaserSkeletalRig(this, studioMonster.rigProfile, studioMonster.rigPartTextures);
         const canvas = studioRig.profile.canvas;
         studioRig.root.setPosition(-canvas.width / 2, -canvas.height);
-        studioRig.root.setScale(0.918 * 360 / canvas.width, 0.918 * 298 / canvas.height);
+        studioRig.root.setScale((studioMonster.flipX ? -1 : 1) * 0.918 * 360 / canvas.width, 0.918 * 298 / canvas.height);
         view.add(studioRig.root);
         view.setData("studioSkeletalRig", studioRig);
         const idleClip = resolveSkeletalIdleClip(studioRig.profile) || studioRig.profile.clips[0];
@@ -4174,6 +4175,7 @@ export default class BattleScene extends Scene {
       view.add(hyenaSprite);
       hyenaSprite.setTint(tierTint);
       if (studioMonster) {
+        hyenaSprite.setFlipX(!studioMonster.flipX);
         const idleKey = "studio-monster-" + studioMonster.id + "-idle";
         if (this.anims.exists(idleKey)) hyenaSprite.play(idleKey);
         hyenaSprite.on("animationcomplete", (animation) => {
