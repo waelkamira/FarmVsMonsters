@@ -4429,7 +4429,7 @@ export default class BattleScene extends Scene {
         monster.x = bitePosition.x;
         monster.y = bitePosition.y;
         monster.view.setPosition(bitePosition.x, bitePosition.y);
-        if (monster.hyenaSprite?.active) monster.hyenaSprite.y = 0;
+        if (monster.hyenaSprite?.active) monster.hyenaSprite.y = jumpOffset;
         monster.replayMoveElapsedMs += delta;
         const movementTick = Math.floor(this.combatClockMs);
         if (enteringBiteRange || monster.replayLastBlockerCol !== blocker.col || monster.replayMoveElapsedMs >= 500) {
@@ -4491,20 +4491,24 @@ export default class BattleScene extends Scene {
       let jumpOffset = 0;
       if (monster.kind === "dust-skitter") {
         const profile = monster.combatProfile;
-        const jumpWillStart = false;
-        const jumpWillLand = false;
+        const jumpWillStart = !monster.isJumping && monster.jumpCooldown - delta <= 0;
+        const jumpWillLand = monster.isJumping && monster.jumpElapsed + delta >= monster.jumpDuration;
         const burstWillStart = monster.burstCooldown - delta <= 0 && monster.burstRemaining <= 0;
         const motion = resolveDustSkitterMotionStep({
-          isJumping: false,
+          isJumping: monster.isJumping,
           jumpCooldownMs: monster.jumpCooldown,
           jumpElapsedMs: monster.jumpElapsed,
           jumpDurationMs: monster.jumpDuration,
           deltaMs: delta,
-          jumpSpeedMultiplier: 1,
-          jumpVisualHeight: 0,
-          visualScale: 1,
-          nextJumpDurationMs: null,
-          nextJumpResetCooldownMs: null,
+          jumpSpeedMultiplier: profile.jumpSpeedMultiplier,
+          jumpVisualHeight: 34,
+          visualScale: monster.view.scaleY,
+          nextJumpDurationMs: jumpWillStart
+            ? this.simulationRandom.nextInt(profile.jumpDurationMinMs, profile.jumpDurationMaxMs)
+            : null,
+          nextJumpResetCooldownMs: jumpWillLand
+            ? this.simulationRandom.nextInt(profile.jumpResetCooldownMinMs, profile.jumpResetCooldownMaxMs)
+            : null,
           burstCooldownMs: monster.burstCooldown,
           burstRemainingMs: monster.burstRemaining,
           burstDurationMs: profile.burstDurationMs,
@@ -4512,7 +4516,7 @@ export default class BattleScene extends Scene {
           nextBurstCooldownMs: burstWillStart
             ? this.simulationRandom.nextInt(profile.burstCooldownMinMs, profile.burstCooldownMaxMs)
             : null,
-          enableJump: false
+          enableJump: true
         });
         monster.isJumping = motion.isJumping;
         monster.jumpCooldown = motion.jumpCooldownMs;
