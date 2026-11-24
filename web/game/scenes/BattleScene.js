@@ -462,7 +462,6 @@ export default class BattleScene extends Scene {
     this.energyCollected = 0;
     this.elapsedBattleMs = 0;
     this.combatClockMs = 0;
-    this.spawnTimer = PHASE_ONE_TIMING.firstMonsterSpawnDelayMs;
     this.waveIntermissionMs = 0;
     this.selectedPlant = null;
     this.plants = [];
@@ -2377,7 +2376,7 @@ export default class BattleScene extends Scene {
       this.spawnMonster(spawnIndex);
       this.spawnedThisWave = spawnStep.spawnedThisWave;
       this.totalSpawnedMonsters += 1;
-      if (this.wave === 5 && this.spawnedThisWave === 2) this.beginDragonEncounter();
+      if (this.wave === this.totalWaves && this.spawnedThisWave === this.waveSize) this.beginDragonEncounter();
     }
     this.updatePlants(deltaMs);
     this.updateMonsters(dt, deltaMs);
