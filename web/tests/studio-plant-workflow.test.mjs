@@ -12,7 +12,7 @@ const syncScript = read("../scripts/sync-studio-test-assets.mjs");
 
 test("Studio supports safe duplication for every registered asset type",()=>{
   assert.match(studioPage,/function beginCloneAsset\(asset\)/);
-  assert.match(studioPage,/onClick=\{\(\)=>cloneAsset\(a\)\}/);
+  assert.match(studioPage,/onClick=\{\(\)=>beginCloneAsset\(a\)\}/);
   assert.match(assetsRoute,/operation==="clone"/);
   assert.match(assetsRoute,/cloneStudioAsset\(asset,newId,body\.newName\)/);
 });
