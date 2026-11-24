@@ -148,6 +148,11 @@
           "id": "electric-mushroom",
           "count": 1,
           "enabled": true
+        },
+        {
+          "id": "corn-monster",
+          "count": 1,
+          "enabled": true
         }
       ],
       "monstersConfigured": true,
