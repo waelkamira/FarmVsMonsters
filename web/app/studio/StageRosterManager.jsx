@@ -56,7 +56,7 @@ export default function StageRosterManager({kind}){
   }catch(error){setMessage(error.message);}finally{setBusy(false);}
  }
  return <main className="stage-roster-shell" dir="rtl">
-  <header className="stage-roster-head"><div><small>FARM VS MONSTERS · STUDIO</small><h1>{isMonster?"إدارة وحوش المراحل":"إدارة نباتات المراحل"}</h1><p>{isMonster?"حدد الوحوش التي تظهر في كل مرحلة، عددها، قوتها، وتوقيت دخولها.":"اعرف النباتات المتاحة في المرحلة، أضفها أو أخفها وحدد عدد مرات استخدامها دون حذف الأصل من المكتبة."}</p></div><Link href="/studio">العودة إلى الاستديو</Link></header>
+  <header className="stage-roster-head"><div><small>FARM VS MONSTERS · STUDIO</small><h1>{isMonster?"إدارة وحوش المراحل":"إدارة نباتات المراحل"}</h1><p>{isMonster?"حدد الوحوش التي تظهر في كل مرحلة، عددها، قوتها، وتوقيت دخولها.":"اعرف النباتات المتاحة في المرحلة، أضفها أو أخفها وحدد عدد مرات استخدامها دون حذف الأصل من المكتبة."}</p></div><div className="stage-roster-head-actions"><Link href={"/game?stage="+stage}>اختبار هذه المرحلة في المعركة</Link><Link href="/studio">العودة إلى الاستديو</Link></div></header>
   <section className="stage-roster-toolbar">
    <label>رقم المرحلة<input type="number" min="1" max="100" value={stage} onChange={e=>setStage(Math.max(1,Math.min(100,Number(e.target.value)||1)))}/></label>
    <label>اختر {isMonster?"الوحش":"النبتة"}<select value={selectedId} onChange={e=>setSelectedId(e.target.value)}><option value="">اختر من المكتبة</option>{available.map(a=><option key={a.id} value={a.id}>{a.name||a.id} · {a.id}</option>)}</select></label>
