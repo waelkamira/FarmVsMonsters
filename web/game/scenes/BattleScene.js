@@ -2972,7 +2972,7 @@ export default class BattleScene extends Scene {
         const artwork = sheet
           ? this.add.sprite(0, -height / 2 + 2, textureKey, idleFrame).setDisplaySize(width, height)
           : this.add.image(0, -height / 2 + 2, textureKey).setDisplaySize(width, height);
-        artwork.setData("studioPlantSprite", true);
+        artwork.setData("studioPlantSprite", sheet);
         if (sheet) {
           const idleAnimationKey = "studio-" + studioPlant.id + "-idle";
           if (this.anims.exists(idleAnimationKey)) artwork.play(idleAnimationKey);
@@ -4612,8 +4612,8 @@ export default class BattleScene extends Scene {
         monster.frozenAnimationKey = "hyena-idle";
         monster.frozenSpriteSize = { width: sprite.displayWidth, height: sprite.displayHeight };
       }
-      sprite.stop();
-      if (monster.frozenTextureKey) {
+      if (typeof sprite.stop === "function") sprite.stop();
+      if (monster.frozenTextureKey && typeof sprite.setFrame === "function") {
         sprite.setTexture(monster.frozenTextureKey);
         monster.freezeFrameIndex = (monster.freezeStage - 1) * 2;
         sprite.setFrame(String(monster.freezeFrameIndex));
