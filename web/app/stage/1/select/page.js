@@ -18,7 +18,7 @@ const PLANTS = [
 ];
 
 const STARTER_LOADOUT = ["radish", "mushroom"];
-const MAX_SEEDS = 7;
+const MAX_SEEDS = 6;
 
 export default function StageOneSeedSelectionPage() {
   const { locale } = useLocale();
