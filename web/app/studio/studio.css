@@ -284,8 +284,8 @@
 .studio-clone-dialog label{display:grid;gap:7px;font-weight:700}
 .studio-clone-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:8px}
 .studio-clone-actions button:last-child{background:#d7a84f;color:#20190d;font-weight:800}
-/* Keep the asset library as tall as the available screen and let its list use the remaining space. */
-.studio-library-panel{height:calc(100vh - 40px);height:calc(100svh - 40px);min-height:560px;display:flex;flex-direction:column;min-width:0}
+/* Asset library is deliberately five viewport-heights tall; its asset list remains independently scrollable. */
+.studio-library-panel{height:500vh;height:500svh;min-height:2500px;max-height:none;align-self:start;display:flex;flex-direction:column;min-width:0}
 .studio-library-panel>.studio-list{flex:1;min-height:0;max-height:none;overflow-y:auto;scrollbar-gutter:stable}
 .studio-library-panel>.studio-empty{flex:1;min-height:0}
-@media(max-width:800px){.studio-library-panel{height:calc(100vh - 24px);height:calc(100svh - 24px);min-height:520px}}
+@media(max-width:800px){.studio-library-panel{height:500vh;height:500svh;min-height:2500px}}
