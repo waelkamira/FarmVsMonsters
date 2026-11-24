@@ -7,6 +7,7 @@ const read = (relative) => readFileSync(new URL(relative, here), "utf8");
 const studioPage = read("../app/studio/page.js");
 const projectileEditor = read("../app/studio/ProjectileTrajectoryEditor.jsx");
 const assetsRoute = read("../app/api/studio/assets/route.js");
+const releaseLifecycle = read("../game/studio/releaseLifecycle.mjs");
 const battleScene = read("../game/scenes/BattleScene.js");
 const selector = read("../app/stage/1/select/page.js");
 const syncScript = read("../scripts/sync-studio-test-assets.mjs");
@@ -91,8 +92,8 @@ test("Studio requires manual behavior selection and only links a projectile in p
 test("Studio enforces draft-to-testing-to-published and publishes the catalog only after testing", () => {
   assert.match(assetsRoute, /"prepare-test","publish"/);
   assert.match(assetsRoute, /asset\.status!=="testing"/);
-  assert.match(assetsRoute, /status:"testing"/);
-  assert.match(assetsRoute, /status:"published"/);
+  assert.match(releaseLifecycle, /status: "testing"/);
+  assert.match(releaseLifecycle, /status: "published"/);
   assert.match(assetsRoute, /PUBLISHED_CATALOG_PATH/);
   assert.match(assetsRoute, /const artworkPath="web\/public"\+asset\.path/);
 });
