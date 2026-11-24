@@ -24,6 +24,13 @@ export default function StageOneSeedSelectionPage() {
   const { locale } = useLocale();
   const ar = locale === "ar";
   const router = useRouter();
+  const [stageNumber, setStageNumber] = useState(1);
+  const stageSelectionKey = "farmVsMonsters.selectedPlants.stage." + stageNumber;
+
+  useEffect(() => {
+    const requested = Number(new URLSearchParams(window.location.search).get("stage"));
+    if (Number.isInteger(requested) && requested >= 1 && requested <= 100) setStageNumber(requested);
+  }, []);
   const [unlockedIds, setUnlockedIds] = useState(STARTER_LOADOUT);
   const [selected, setSelected] = useState(STARTER_LOADOUT);
   const [plantCatalog, setPlantCatalog] = useState(PLANTS);
@@ -66,7 +73,7 @@ export default function StageOneSeedSelectionPage() {
         testing: testing.some((candidate) => candidate.id === plant.id)
       }));
       const plantMap = new Map([...PLANTS, ...studioPlants].map((plant) => [plant.id, plant]));
-      const configuredStage = stageSettings?.stages?.["1"];
+      const configuredStage = stageSettings?.stages?.[String(stageNumber)];
       const plantAliases = {radish:["radish","radish-level-1"],mushroom:["mushroom","energy-mushroom"],pumpkin:["pumpkin","pumpkin-level-1"],pineapple:["pineapple","pineapple-level-1"],hazelnut:["hazelnut","hazelnut-level-1"],mango:["mango","mango-level-1"],"snow-thrower":["snow-thrower","snow-thrower-level-1"],"electric-mushroom":["electric-mushroom","electric-mushroom-level-1"]};
       const nextPlants = configuredStage?.plantsConfigured
         ? [...plantMap.values()].filter(plant => configuredStage.plants.some(entry => entry.enabled !== false && (entry.id === plant.id || (plantAliases[plant.id] || []).includes(entry.id))))
@@ -79,7 +86,7 @@ export default function StageOneSeedSelectionPage() {
       const safeUnlocked = [...new Set([...STARTER_LOADOUT, ...unlocked, ...nextPlants.map((plant) => plant.id), ...studioIds])];
       setUnlockedIds(safeUnlocked);
       try {
-        const saved = JSON.parse(window.localStorage.getItem("farmVsMonsters.selectedPlants") || "null");
+        const saved = JSON.parse(window.localStorage.getItem(stageSelectionKey) || (stageNumber === 1 ? window.localStorage.getItem("farmVsMonsters.selectedPlants") : "null"));
         const validSaved = Array.isArray(saved)
           ? saved.filter((id) => safeUnlocked.includes(id) && nextPlants.some((plant) => plant.id === id))
           : [];
@@ -92,7 +99,7 @@ export default function StageOneSeedSelectionPage() {
       }
     })();
     return () => { active = false; };
-  }, []);
+  }, [stageNumber, stageSelectionKey]);
 
   function togglePlant(plant) {
     if (plant.required) return;
@@ -114,8 +121,10 @@ export default function StageOneSeedSelectionPage() {
       return;
     }
     try {
-      window.localStorage.setItem("farmVsMonsters.selectedPlants", JSON.stringify(selectedPlants.map((plant) => plant.id)));
-      router.push("/game");
+      const savedSelection = JSON.stringify(selectedPlants.map((plant) => plant.id));
+      window.localStorage.setItem(stageSelectionKey, savedSelection);
+      if (stageNumber === 1) window.localStorage.setItem("farmVsMonsters.selectedPlants", savedSelection);
+      router.push("/game?stage=" + stageNumber);
     } catch {
       setNotice(ar ? "تعذر حفظ التشكيلة. تحقق من إعدادات التخزين في المتصفح." : "Could not save your loadout. Check browser storage settings.");
     }
