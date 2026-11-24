@@ -36,3 +36,14 @@ export function getSpriteFrameRectangles(width, height, rows, columns) {
 
   return frames;
 }
+
+export function resolveSpriteThumbnailGrid(frameCount, rows, columns) {
+  const count = Math.max(1, Math.min(24, Number(frameCount) || 1));
+  const safeRows = Math.max(1, Number(rows) || 1);
+  const safeColumns = Math.max(1, Number(columns) || 1);
+  if (Number.isInteger(safeRows) && Number.isInteger(safeColumns) && safeRows * safeColumns === count) {
+    return { rows: safeRows, columns: safeColumns };
+  }
+  const fallbackColumns = Math.ceil(Math.sqrt(count));
+  return { rows: Math.ceil(count / fallbackColumns), columns: fallbackColumns };
+}
