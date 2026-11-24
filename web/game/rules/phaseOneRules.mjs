@@ -36,6 +36,12 @@ export const PINEAPPLE_CONFIG = Object.freeze({ label: "Pineapple", ...PHASE_ONE
 export const HAZELNUT_CONFIG = Object.freeze({ label: "Hazelnut", ...PHASE_ONE_PLANTS.hazelnut, cost: PHASE_ONE_PLANTS.hazelnut.plantingEnergyCost });
 export const MANGO_CONFIG = Object.freeze({ label: "Mango", ...PHASE_ONE_PLANTS.mango, cost: PHASE_ONE_PLANTS.mango.plantingEnergyCost });
 export const SNOW_THROWER_CONFIG = Object.freeze({ label: "Snow Thrower", ...PHASE_ONE_PLANTS.snowThrower, cost: PHASE_ONE_PLANTS.snowThrower.plantingEnergyCost });
+export const CORN_MONSTER_CONFIG = Object.freeze({
+  label: "Corn Monster",
+  ...PHASE_ONE_PLANTS["corn-monster"],
+  cost: PHASE_ONE_PLANTS["corn-monster"].plantingEnergyCost
+});
+
 export const ELECTRIC_MUSHROOM_CONFIG = Object.freeze({
   label: "Electric Mushroom",
   ...PHASE_ONE_PLANTS["electric-mushroom"],
