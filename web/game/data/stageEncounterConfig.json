@@ -3,7 +3,9 @@
   "stages": {
     "1": {
       "monsters": [],
-      "plants": []
+      "plants": [],
+      "monstersConfigured": false,
+      "plantsConfigured": false
     }
   }
 }
