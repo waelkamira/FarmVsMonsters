@@ -1049,7 +1049,7 @@ export default class BattleScene extends Scene {
         : Array.isArray(saved)
           ? ["mushroom", "radish", ...testingTypes, ...saved.filter((type) => availableTypes.has(type))]
           : [...availableTypes];
-      selectedTypes = normalizeSeedLoadout(preferredLoadout, [...availableTypes]);
+      selectedTypes = normalizeSeedLoadout(preferredLoadout, [...availableTypes], [...availableTypes]);
     } catch {
       // Storage failures keep the starter loadout playable.
       selectedTypes = ["radish", "mushroom"];
@@ -2179,8 +2179,8 @@ export default class BattleScene extends Scene {
           ? [...new Set([...loadUnlockedPlantIds(window.localStorage), ...ALL_PLAYTEST_PLANT_IDS])]
           : loadUnlockedPlantIds(window.localStorage);
         const saved = JSON.parse(window.localStorage.getItem("farmVsMonsters.selectedPlants") || "null");
-        if (Array.isArray(saved)) selectedTypes = normalizeSeedLoadout(saved, unlockedIds);
-        else selectedTypes = normalizeSeedLoadout(unlockedIds, unlockedIds);
+        if (Array.isArray(saved)) selectedTypes = normalizeSeedLoadout(saved, unlockedIds, unlockedIds);
+        else selectedTypes = normalizeSeedLoadout(unlockedIds, unlockedIds, unlockedIds);
       } catch {
         // Starter plants remain visible if browser storage is unavailable.
       }
