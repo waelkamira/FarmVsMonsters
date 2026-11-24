@@ -3,7 +3,7 @@
   "assets": [
     {
       "id": "corn-monster",
-      "type": "plant",
+      "type": "monster",
       "name": "Corn Monster",
       "path": "/assets/plants/corn_monster.png",
       "filename": "corn_monster.png",
@@ -11,50 +11,32 @@
       "columns": 24,
       "frameCount": 24,
       "spriteSheet": true,
-      "status": "draft",
+      "status": "testing",
       "createdAt": "2026-11-22T20:20:34.630Z",
-      "updatedAt": "2026-11-24T00:00:00.000Z",
+      "updatedAt": "2026-11-24T16:30:00.000Z",
       "animationProfile": {
-        "idle": {
-          "startFrame": 0,
-          "endFrame": 7,
-          "fps": 8,
-          "loop": true
-        },
-        "move": {
-          "startFrame": 0,
-          "endFrame": 7,
-          "fps": 8,
-          "loop": true
-        },
-        "attack": {
-          "startFrame": 8,
-          "endFrame": 17,
-          "fps": 12,
-          "loop": false
-        },
-        "hurt": {
-          "startFrame": 18,
-          "endFrame": 23,
-          "fps": 10,
-          "loop": false
-        }
+        "idle": { "startFrame": 0, "endFrame": 7, "fps": 8, "loop": true },
+        "move": { "startFrame": 0, "endFrame": 7, "fps": 8, "loop": true },
+        "attack": { "startFrame": 8, "endFrame": 17, "fps": 12, "loop": false },
+        "hurt": { "startFrame": 18, "endFrame": 23, "fps": 10, "loop": false }
+      },
+      "monsterProfile": {
+        "baseArchetype": "cave-brute",
+        "hpMultiplier": 1,
+        "speedMultiplier": 1,
+        "damageMultiplier": 1,
+        "attackIntervalMultiplier": 1,
+        "widthScale": 1,
+        "heightScale": 1,
+        "spawnWeight": 0,
+        "firstWave": 1
       },
       "atlasMetadataPath": "/assets/plants/corn_monster.json",
       "sourceFormat": "phaser-atlas",
       "atlasClips": {
-        "idle": {
-          "startFrame": 0,
-          "endFrame": 7
-        },
-        "attack": {
-          "startFrame": 8,
-          "endFrame": 17
-        },
-        "hurt": {
-          "startFrame": 18,
-          "endFrame": 23
-        }
+        "idle": { "startFrame": 0, "endFrame": 7 },
+        "attack": { "startFrame": 8, "endFrame": 17 },
+        "hurt": { "startFrame": 18, "endFrame": 23 }
       }
     }
   ]
