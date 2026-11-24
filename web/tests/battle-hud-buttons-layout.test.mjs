@@ -48,10 +48,12 @@ test("layout tolerates controls that are not present yet", () => {
 test("attack progress bar and attack counter share the upper-right HUD row", async () => {
   const { readFileSync } = await import("node:fs");
   const scene = readFileSync(new URL("../game/scenes/BattleScene.js", import.meta.url), "utf8");
-  assert.match(scene, /waveProgressFrame = this\.add\.image\(810, 68, "hud-wave-frame"\)/);
-  assert.match(scene, /waveProgressTrack = this\.add\.rectangle\(810, 68, 158, 10/);
-  assert.match(scene, /waveIcon = this\.add\.image\(954, 68, "hud-wave-icon"\)/);
-  assert.match(scene, /waveBadge = this\.add\.image\(1007, 68, "hud-wave-badge"\)/);
-  assert.match(scene, /waveText = this\.add\.text\(1007, 68, "1\/5"/);
-  assert.match(scene, /waveProgressMarker\?\.setX\(731 \+ trackWidth \* progress\)/);
+  assert.match(scene, /const waveHud = \{ barX: 690, barY: 16, barStartX: 611, labelY: 39, iconX: 824, badgeX: 884 \}/);
+  assert.match(scene, /waveProgressFrame = this\.add\.image\(waveHud\.barX, waveHud\.barY, "hud-wave-frame"\)/);
+  assert.match(scene, /waveProgressTrack = this\.add\.rectangle\(waveHud\.barX, waveHud\.barY, 158, 10/);
+  assert.match(scene, /waveIcon = this\.add\.image\(waveHud\.iconX, waveHud\.barY, "hud-wave-icon"\)/);
+  assert.match(scene, /waveBadge = this\.add\.image\(waveHud\.badgeX, waveHud\.barY, "hud-wave-badge"\)/);
+  assert.match(scene, /waveText = this\.add\.text\(waveHud\.badgeX, waveHud\.barY, "1\/5"/);
+  assert.match(scene, /waveProgressMarker\?\.setX\(611 \+ trackWidth \* progress\)/);
+  assert.match(scene, /counter\.x \+ width \/ 2 - 2, 16, width, 27/);
 });
