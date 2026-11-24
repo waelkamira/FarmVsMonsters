@@ -36,7 +36,6 @@ export default function StageOneSeedSelectionPage() {
     let active = true;
     const requestedStage = Number(new URLSearchParams(window.location.search).get("stage"));
     const activeStage = Number.isInteger(requestedStage) ? Math.max(1, Math.min(100, requestedStage)) : 1;
-    setStageNumber(activeStage);
     const readCatalog = async (url) => {
       try {
         const response = await fetch(url, { cache: "no-store" });
@@ -52,6 +51,7 @@ export default function StageOneSeedSelectionPage() {
         fetch("/api/studio/stage-encounters", { cache: "no-store" }).then(response => response.ok ? response.json() : null).catch(() => null)
       ]);
       if (!active) return;
+      setStageNumber(activeStage);
       const studioPlants = [...published, ...testing].map((plant) => ({
         id: plant.id,
         name: plant.name || plant.id,
