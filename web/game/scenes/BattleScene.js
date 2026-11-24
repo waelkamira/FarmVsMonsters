@@ -307,8 +307,11 @@ export default class BattleScene extends Scene {
             typeof entry.path !== "string" || !(entry.path.startsWith("/assets/") || entry.path.startsWith("/api/studio/assets?preview=")) ||
             !entry.combat?.mode) continue;
         const variant = testOnly ? "testing" : "published";
+        const plantFrameCount = Math.max(1, Number(entry.frameCount) || ((Number(entry.rows) || 1) * (Number(entry.columns) || 1)));
         studioPlantMap.set(entry.id, {
           ...entry,
+          frameCount: plantFrameCount,
+          spriteSheet: Boolean(entry.spriteSheet && plantFrameCount > 1),
           testOnly,
           textureKey: "studio-plant-" + variant + "-" + entry.id,
           projectileTextureKey: "studio-projectile-" + variant + "-" + entry.id
@@ -329,7 +332,8 @@ export default class BattleScene extends Scene {
     this.studioPlantsByType = Object.fromEntries(this.studioPlants.map((plant) => [plant.id, plant]));
     for (const plant of this.studioPlants) {
       const textureKey = plant.textureKey;
-      const frameCount = Math.max(1, (Number(plant.rows) || 1) * (Number(plant.columns) || 1));
+      const frameCount = Math.max(1, Number(plant.frameCount) || ((Number(plant.rows) || 1) * (Number(plant.columns) || 1)));
+      plant.spriteSheet = Boolean(plant.spriteSheet && frameCount > 1);
       try {
         plant.animationProfile = createStudioAnimationProfile(plant.animationProfile, frameCount);
       } catch {
@@ -391,11 +395,13 @@ export default class BattleScene extends Scene {
             typeof entry.path !== "string" || !(entry.path.startsWith("/assets/") || entry.path.startsWith("/api/studio/assets?preview="))) continue;
         try {
           const monsterProfile = createStudioMonsterProfile(entry.monsterProfile);
-          const frameCount = Math.max(1, (Number(entry.rows) || 1) * (Number(entry.columns) || 1));
+          const frameCount = Math.max(1, Number(entry.frameCount) || ((Number(entry.rows) || 1) * (Number(entry.columns) || 1)));
           const animationProfile = createStudioAnimationProfile(entry.animationProfile, frameCount);
           const variant = testOnly ? "testing" : "published";
           studioMonsterMap.set(entry.id, {
             ...entry,
+            frameCount,
+            spriteSheet: Boolean(entry.spriteSheet && frameCount > 1),
             monsterProfile,
             animationProfile,
             testOnly,
@@ -419,7 +425,7 @@ export default class BattleScene extends Scene {
     }
     this.studioMonstersById = Object.fromEntries(this.studioMonsters.map((monster) => [monster.id, monster]));
     for (const monster of this.studioMonsters) {
-      if (!monster.spriteSheet || !this.registerStudioGridSheet(monster.textureKey, monster.rows, monster.columns)) continue;
+      if (!monster.spriteSheet || monster.frameCount <= 1 || !this.registerStudioGridSheet(monster.textureKey, monster.rows, monster.columns)) continue;
       monster.runtimeReady = true;
       for (const [clipName, clip] of [["idle", monster.animationProfile.idle], ["move", monster.animationProfile.move], ["attack", monster.animationProfile.attack]]) {
         if (clip.endFrame <= clip.startFrame) continue;
@@ -1125,7 +1131,7 @@ export default class BattleScene extends Scene {
     let icon;
     let iconScale = 1;
     if (imageKey && this.textures.exists(imageKey)) {
-      const gridSheet = imageKey === "mango-level-1" || imageKey === "radish-level-1" || imageKey === "snow-thrower-level-1" || imageKey === "electric-mushroom-level-1" || Boolean(this.studioPlantsByType?.[type]?.spriteSheet);
+      const gridSheet = ["mango-level-1", "radish-level-1", "pineapple-level-1", "hazelnut-level-1", "snow-thrower-level-1", "electric-mushroom-level-1"].includes(imageKey) || Boolean(this.studioPlantsByType?.[type]?.spriteSheet && this.studioPlantsByType[type].frameCount > 1);
       const frame = this.textures.getFrame(imageKey, gridSheet ? "0" : undefined);
       // Bound every seed icon by both dimensions using its frame rectangle.
       const frameWidth = Math.max(1, frame.cutWidth || frame.width || 1);
@@ -2200,7 +2206,7 @@ export default class BattleScene extends Scene {
           .setInteractive({ useHandCursor: true });
         content.add(card);
         if (unlocked && this.textures.exists(plant.image)) {
-          const sheet = ["radish-level-1", "pineapple-level-1", "hazelnut-level-1", "mango-level-1", "snow-thrower-level-1"].includes(plant.image);
+          const sheet = ["radish-level-1", "pineapple-level-1", "hazelnut-level-1", "mango-level-1", "snow-thrower-level-1", "electric-mushroom-level-1"].includes(plant.image);
           const icon = sheet
             ? this.add.sprite(x, y - 12, plant.image, 0).setDisplaySize(48, 48)
             : this.add.image(x, y - 12, plant.image).setDisplaySize(48, 48);
@@ -3970,7 +3976,7 @@ export default class BattleScene extends Scene {
         if (force || currentKey !== animationKey || !sprite.anims.isPlaying) sprite.play(animationKey);
       } else if (action === "move" && this.anims.exists("studio-monster-" + monster.studioMonster.id + "-idle")) {
         sprite.play("studio-monster-" + monster.studioMonster.id + "-idle");
-      } else if (action === "idle") {
+      } else if (action === "idle" && monster.studioMonster.spriteSheet && monster.studioMonster.frameCount > 1) {
         sprite.setFrame(String(monster.studioMonster.animationProfile?.idle?.startFrame ?? 0));
       }
       return;
@@ -4162,7 +4168,9 @@ export default class BattleScene extends Scene {
     const customMonsterTexture = studioMonster?.textureKey;
     const customMonsterIdleFrame = String(studioMonster?.animationProfile?.idle?.startFrame ?? 0);
     const hyenaSprite = studioRig ? null : customMonsterTexture && this.textures.exists(customMonsterTexture)
-      ? this.add.sprite(0, 0, customMonsterTexture, customMonsterIdleFrame).setOrigin(0.5, 1).setFlipX(true).setScale(0.918)
+      ? (studioMonster.spriteSheet && studioMonster.frameCount > 1
+        ? this.add.sprite(0, 0, customMonsterTexture, customMonsterIdleFrame)
+        : this.add.image(0, 0, customMonsterTexture)).setOrigin(0.5, 1).setFlipX(true).setScale(0.918)
       : this.hyenaAnimationsReady
         ? this.add.sprite(0, 0, "hyena-idle", 0).setOrigin(0.5, 1).setFlipX(true).setScale(0.918)
         : null;
