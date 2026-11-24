@@ -22,7 +22,7 @@ test("stage roster controls default to one and keep hiding separate from asset d
  assert.match(manager,/enabled:!entry\.enabled/);
  assert.match(manager,/لا يتم حذف أي ملف أو أصل/);
  assert.match(manager,/spawnIntervalMs/);
- assert.match(manager,/\/game\?stage=\"\+stage/);
+ assert.match(manager,/\/stage\/1\/select\?stage=\"\+stage/);
  assert.match(manager,/hpMultiplier/);
 });
 
