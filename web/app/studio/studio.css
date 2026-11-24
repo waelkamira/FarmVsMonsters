@@ -487,3 +487,14 @@
   }
   .studio-list .studio-asset-row>.studio-asset-visual>.studio-asset-actions{gap:4px!important}
 }
+
+
+.studio-dialog-backdrop{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:20px;background:rgba(8,12,24,.72);backdrop-filter:blur(8px)}
+.studio-clone-dialog{width:min(440px,100%);padding:24px;border:1px solid rgba(255,255,255,.32);border-radius:20px;background:#17233b;color:#fff;box-shadow:0 24px 80px rgba(0,0,0,.45)}
+.studio-clone-dialog h2{margin:0 0 18px;font-size:22px}
+.studio-clone-dialog label{display:grid;gap:7px;margin:14px 0;font-weight:800}
+.studio-clone-dialog input{width:100%;min-height:44px;padding:10px 12px;border:1px solid #9aacc7;border-radius:10px;background:#0d1729;color:#fff}
+.studio-clone-dialog input:focus-visible,.studio-clone-dialog button:focus-visible{outline:3px solid #f6cf6d;outline-offset:3px}
+.studio-clone-dialog-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}
+.studio-clone-dialog-actions button{min-height:42px;padding:9px 16px;border:1px solid #9aacc7;border-radius:10px;background:#304768;color:#fff;font-weight:800;cursor:pointer}
+.studio-clone-dialog-actions button:disabled{opacity:.55;cursor:not-allowed}
