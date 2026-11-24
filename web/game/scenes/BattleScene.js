@@ -5190,7 +5190,7 @@ export default class BattleScene extends Scene {
   endGame(won) {
     if (this.gameOver) return;
     // A campaign win is valid only after the dragon is defeated and the rescue sequence completes.
-    won = Boolean(won && this.phaseOneStoryState === "complete");
+    won = Boolean(won && (this.stageNumber !== 1 || this.phaseOneStoryState === "complete"));
     this.gameOver = true;
     // Collectibles are no longer usable after a terminal result; remove their
     // expiry timers and idle tweens instead of leaving disabled pickups visible.
@@ -5205,7 +5205,7 @@ export default class BattleScene extends Scene {
     this.farmerPlanting = false;
     const locale = typeof window !== "undefined" ? window.localStorage.getItem("farmVsMonsters.language") || "ar" : "ar";
     this.setMessage(won ? "VICTORY! The farm is safe." : "GAME OVER — The monsters reached the final line.");
-    if (won) {
+    if (won && this.stageNumber === 1) {
       try {
         unlockNextStage(window.localStorage, 1);
         unlockPlantReward(window.localStorage, 1);
