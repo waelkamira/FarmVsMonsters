@@ -4,19 +4,6 @@
     "1": {
       "monsters": [
         {
-          "key": "corn-monster-w1-first",
-          "id": "corn-monster",
-          "count": 1,
-          "wave": 1,
-          "spawnIntervalMs": 5080,
-          "firstSpawnDelayMs": 0,
-          "hpMultiplier": 1,
-          "speedMultiplier": 1,
-          "damageMultiplier": 1,
-          "attackIntervalMultiplier": 1,
-          "enabled": true
-        },
-        {
           "key": "cave-w1",
           "id": "cave-brute",
           "count": 2,
