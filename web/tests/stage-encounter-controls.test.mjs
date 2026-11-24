@@ -53,6 +53,7 @@ test("stage seed selection respects only enabled plants for a configured stage",
  assert.match(selection,/router\.push\("\/game\?stage=" \+ stageNumber\)/);
  assert.match(selection,/setStagePlantsConfigured\(configuredStage\?\.plantsConfigured === true\)/);
  assert.match(selection,/farmVsMonsters\.selectedPlants\.stage\.\" \+ activeStage/);
+ assert.match(selection,/window\.localStorage\.setItem\("farmVsMonsters\.selectedPlants", savedSelection\)/);
  assert.match(selection,/selectedPlants\.length < minimumSeeds/);
 });
 
