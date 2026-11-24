@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-24T04:23:54.506Z",
-  "assetCount": 89,
-  "totalBytes": 24983939,
+  "generatedAt": "2026-11-24T12:01:45.711Z",
+  "assetCount": 93,
+  "totalBytes": 27902723,
   "groups": {
     "audio": [
       {
@@ -176,6 +176,11 @@
       }
     ],
     "characters/monsters": [
+      {
+        "key": "characters-monsters-01-01",
+        "url": "/assets/characters/monsters/01/01.png",
+        "type": "image"
+      },
       {
         "key": "characters-monsters-hyena-frozen-hyena-level-1",
         "url": "/assets/characters/monsters/hyena/frozen-hyena-level-1.png",
@@ -470,6 +475,16 @@
         "type": "image"
       },
       {
+        "key": "plants-bamboo-level-1",
+        "url": "/assets/plants/bamboo-level-1.png",
+        "type": "image"
+      },
+      {
+        "key": "plants-bamboo-throwing-level-1",
+        "url": "/assets/plants/bamboo-throwing-level-1.png",
+        "type": "image"
+      },
+      {
         "key": "plants-hazelnut-level-1-bomb",
         "url": "/assets/plants/hazelnut-level-1-bomb.png",
         "type": "image"
@@ -589,6 +604,18 @@
             "endFrame": 23
           }
         }
+      }
+    ],
+    "projectiles": [
+      {
+        "key": "projectiles-plants-bamboo-throwing-level-1-projectile-cbedc31ec96279864eaf335cd3f9594a067d085445f913348b6a7475e97fc27c",
+        "url": "/assets/projectiles/plants/bamboo-throwing-level-1-projectile-cbedc31ec96279864eaf335cd3f9594a067d085445f913348b6a7475e97fc27c.png",
+        "type": "image"
+      },
+      {
+        "key": "projectiles-plants-bamboo-throwing-level-1-projectile",
+        "url": "/assets/projectiles/plants/bamboo-throwing-level-1-projectile.png",
+        "type": "image"
       }
     ]
   },
@@ -854,6 +881,16 @@
       },
       "width": 2880,
       "height": 430
+    },
+    {
+      "key": "characters-monsters-01-01",
+      "url": "/assets/characters/monsters/01/01.png",
+      "type": "image",
+      "group": "characters/monsters",
+      "bytes": 850606,
+      "sha256": "c07ab241d0076edfff5f0b847f2a3aaaa1286ace5eecda0039e36c0cae47f18e",
+      "width": 1080,
+      "height": 806
     },
     {
       "key": "characters-monsters-hyena-frozen-hyena-level-1",
@@ -1394,6 +1431,26 @@
       "height": 869
     },
     {
+      "key": "plants-bamboo-level-1",
+      "url": "/assets/plants/bamboo-level-1.png",
+      "type": "image",
+      "group": "plants",
+      "bytes": 1534772,
+      "sha256": "f80b2cc0e83b411718cef691bc7eabefc0b29b324567a4c352f2ef6c8a45bcc9",
+      "width": 1254,
+      "height": 1254
+    },
+    {
+      "key": "plants-bamboo-throwing-level-1",
+      "url": "/assets/plants/bamboo-throwing-level-1.png",
+      "type": "image",
+      "group": "plants",
+      "bytes": 1056574,
+      "sha256": "b9829bedb4d8d65e3c98ec2b51a72ae60023aae30b504870b716974ea343c225",
+      "width": 1024,
+      "height": 1024
+    },
+    {
       "key": "plants-hazelnut-level-1-bomb",
       "url": "/assets/plants/hazelnut-level-1-bomb.png",
       "type": "image",
@@ -1524,6 +1581,26 @@
       "sha256": "3155502e591aefd9bde4bde5ee623442789168fa99c646f651e79aa441a12005",
       "width": 500,
       "height": 500
+    },
+    {
+      "key": "projectiles-plants-bamboo-throwing-level-1-projectile-cbedc31ec96279864eaf335cd3f9594a067d085445f913348b6a7475e97fc27c",
+      "url": "/assets/projectiles/plants/bamboo-throwing-level-1-projectile-cbedc31ec96279864eaf335cd3f9594a067d085445f913348b6a7475e97fc27c.png",
+      "type": "image",
+      "group": "projectiles",
+      "bytes": 13948,
+      "sha256": "cbedc31ec96279864eaf335cd3f9594a067d085445f913348b6a7475e97fc27c",
+      "width": 121,
+      "height": 45
+    },
+    {
+      "key": "projectiles-plants-bamboo-throwing-level-1-projectile",
+      "url": "/assets/projectiles/plants/bamboo-throwing-level-1-projectile.png",
+      "type": "image",
+      "group": "projectiles",
+      "bytes": 9230,
+      "sha256": "251662e3c0caa6c03a8264cfee2e9cc28af6bd632c485ce4cb6c0e71faf13610",
+      "width": 106,
+      "height": 82
     }
   ]
 }
