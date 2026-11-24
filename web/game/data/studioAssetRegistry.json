@@ -1628,6 +1628,59 @@
           "endFrame": 23
         }
       }
+    },
+    {
+      "id": "01",
+      "type": "monster",
+      "name": "01",
+      "filename": "01.png",
+      "path": "/assets/monsters/01-c07ab241d0076edfff5f0b847f2a3aaaa1286ace5eecda0039e36c0cae47f18e.png",
+      "rows": 3,
+      "columns": 4,
+      "frameCount": 12,
+      "spriteSheet": true,
+      "status": "draft",
+      "releaseRequest": null,
+      "publishedAt": null,
+      "testingAt": null,
+      "archivedAt": null,
+      "restoredFromVersion": null,
+      "createdAt": "2026-11-24T11:50:19.334Z",
+      "updatedAt": "2026-11-24T11:50:19.334Z",
+      "monsterProfile": {
+        "baseArchetype": "cave-brute",
+        "hpMultiplier": 1,
+        "speedMultiplier": 1,
+        "damageMultiplier": 1,
+        "attackIntervalMultiplier": 1,
+        "widthScale": 1,
+        "heightScale": 1,
+        "spawnWeight": 0,
+        "firstWave": 1
+      },
+      "animationProfile": {
+        "idle": {
+          "startFrame": 0,
+          "endFrame": 0,
+          "fps": 6,
+          "loop": true
+        },
+        "move": {
+          "startFrame": 0,
+          "endFrame": 8,
+          "fps": 10,
+          "loop": true
+        },
+        "attack": {
+          "startFrame": 0,
+          "endFrame": 8,
+          "fps": 12,
+          "loop": false
+        }
+      },
+      "rigProfile": null,
+      "revision": 1,
+      "versions": []
     }
   ]
 }
