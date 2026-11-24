@@ -1,3 +1,4 @@
+import {resolveWaveSpawnStep} from "../game/rules/combatSimulation.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
@@ -67,4 +68,18 @@ test("non-story configured stages can finish without requiring the Stage 1 drago
  const battle=read("game/scenes/BattleScene.js");
  assert.match(battle,/won = Boolean\(won && \(this\.stageNumber !== 1 \|\| this\.phaseOneStoryState === "complete"\)\)/);
  assert.match(battle,/if \(won && this\.stageNumber === 1\)/);
+});
+
+
+test("configured stages support up to ten waves in the shared spawn simulation",()=>{
+ const step=resolveWaveSpawnStep({wave:6,totalWaves:10,waveSize:2,spawnedThisWave:0,intermissionMs:0,spawnTimerMs:0,spawnIntervalMs:900,deltaMs:16});
+ assert.equal(step.shouldSpawn,true);
+ assert.equal(step.spawnedThisWave,1);
+});
+
+test("configured zero and per-entry first-spawn delays are honored",()=>{
+ const battle=read("game/scenes/BattleScene.js");
+ assert.match(battle,/this\.stageMonsterRosterConfigured && firstStageMonster \? Math\.max\(0, Number\(firstStageMonster\.firstSpawnDelayMs\) \|\| 0\)/);
+ assert.match(battle,/nextEntry\.key !== spawnedEntry\?\.key/);
+ assert.match(battle,/Math\.max\(0, Number\(nextEntry\.firstSpawnDelayMs\) \|\| 0\)/);
 });
