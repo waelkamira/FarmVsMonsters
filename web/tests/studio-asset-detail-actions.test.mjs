@@ -24,7 +24,7 @@ test("asset lifecycle actions call the authenticated Studio API and refresh the 
 
 test("asset detail edit action opens the existing Studio edit workflow", () => {
   assert.match(studio, /new URLSearchParams\(window\.location\.search\)\.get\("edit"\)/);
-  assert.match(studio, /beginReplace\(target\)/);
+  assert.match(studio, /beginReplace\(target,sourceAssets\)/);
   assert.match(studio, /editRequestHandled\.current=true/);
 });
 
