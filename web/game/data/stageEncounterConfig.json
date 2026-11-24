@@ -6,7 +6,7 @@
         {
           "key": "monster-01-w1-first",
           "id": "01",
-          "count": 1,
+          "count": 3,
           "wave": 1,
           "spawnIntervalMs": 5080,
           "firstSpawnDelayMs": 0,
@@ -27,7 +27,7 @@
           "speedMultiplier": 1,
           "damageMultiplier": 1,
           "attackIntervalMultiplier": 1,
-          "enabled": true
+          "enabled": false
         },
         {
           "key": "cave-w2",
@@ -40,7 +40,7 @@
           "speedMultiplier": 1,
           "damageMultiplier": 1,
           "attackIntervalMultiplier": 1,
-          "enabled": true
+          "enabled": false
         },
         {
           "key": "cave-w3",
@@ -53,7 +53,7 @@
           "speedMultiplier": 1,
           "damageMultiplier": 1,
           "attackIntervalMultiplier": 1,
-          "enabled": true
+          "enabled": false
         },
         {
           "key": "cave-w4",
@@ -66,7 +66,7 @@
           "speedMultiplier": 1,
           "damageMultiplier": 1,
           "attackIntervalMultiplier": 1,
-          "enabled": true
+          "enabled": false
         },
         {
           "key": "skitter-w4",
@@ -79,7 +79,7 @@
           "speedMultiplier": 1,
           "damageMultiplier": 1,
           "attackIntervalMultiplier": 1,
-          "enabled": true
+          "enabled": false
         },
         {
           "key": "cave-w5",
@@ -92,7 +92,7 @@
           "speedMultiplier": 1,
           "damageMultiplier": 1,
           "attackIntervalMultiplier": 1,
-          "enabled": true
+          "enabled": false
         },
         {
           "key": "stonehide-w5",
@@ -105,7 +105,7 @@
           "speedMultiplier": 1,
           "damageMultiplier": 1,
           "attackIntervalMultiplier": 1,
-          "enabled": true
+          "enabled": false
         }
       ],
       "plants": [
