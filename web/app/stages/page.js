@@ -81,7 +81,7 @@ export default function StagesPage() {
   return (
     <main className="campaign-map-shell" dir={ar ? "rtl" : "ltr"}>
       <div className="campaign-map-topbar">
-        <Link className="campaign-map-back" href="/">{ar ? "← القائمة الرئيسية" : "← Main Menu"}</Link>
+        <Link className="campaign-map-back" href="/">{ar ? "← القائمة الرئيسية" : "← Main Menu"}</Link>\n        <Link className="campaign-map-account" href="/account">{ar ? "حساب اللاعب" : "Player Account"}</Link>
         <LanguageToggle />
       </div>
 
