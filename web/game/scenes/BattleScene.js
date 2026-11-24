@@ -1067,8 +1067,9 @@ export default class BattleScene extends Scene {
       !selectedTypes.includes(plant.type) && plant.type !== "mushroom"
     );
     const inactiveSlots = Math.max(0, packetSlotCount - selectedTypes.length);
-    const cardSource = this.textures.exists("seed-card")
-      ? this.textures.get("seed-card").getSourceImage()
+    const packetFrameKey = this.textures.exists("seed-card-frame") ? "seed-card-frame" : "seed-card";
+    const cardSource = this.textures.exists(packetFrameKey)
+      ? this.textures.get(packetFrameKey).getSourceImage()
       : null;
     const cardScale = cardSource ? Math.min(88 / cardSource.width, 101.2 / cardSource.height) : 1;
     inactivePlants.slice(0, inactiveSlots).forEach((plant, index) => {
@@ -1102,6 +1103,22 @@ export default class BattleScene extends Scene {
       }
       preview.setData("inactivePlantType", plant.type);
     });
+    // If the roster has fewer inactive previews than available packet spaces,
+    // render the supplied empty-slot artwork rather than leaving a visual gap.
+    const renderedInactiveCount = Math.min(inactivePlants.length, inactiveSlots);
+    for (let index = renderedInactiveCount; index < inactiveSlots; index += 1) {
+      const x = packetStartX + (selectedTypes.length + index) * packetGap;
+      const emptySlot = this.add.container(x, 72).setDepth(45);
+      if (this.textures.exists("seed-slot-empty")) {
+        const source = this.textures.get("seed-slot-empty").getSourceImage();
+        const scale = Math.min(68 / source.width, 82 / source.height);
+        emptySlot.add(this.add.image(0, 0, "seed-slot-empty")
+          .setDisplaySize(source.width * scale, source.height * scale));
+      } else {
+        emptySlot.add(this.add.rectangle(0, 0, 68, 82, 0x6d5539, 0.35)
+          .setStrokeStyle(2, 0xe6c58c, 0.8));
+      }
+    }
     plantOptions.filter((plant) => selectedTypes.includes(plant.type)).forEach((plant, index) => {
       this.plantCardsByType[plant.type] = this.createPlantCard(
         packetStartX + index * packetGap,
@@ -1124,7 +1141,9 @@ export default class BattleScene extends Scene {
 
   createPlantCard(x, title, costLabel, type, drawIcon, imageKey = null, y = 619, locked = false) {
     const card = this.add.container(x, y).setDepth(45);
-    const cardArtworkKey = locked && this.textures.exists("seed-card-locked") ? "seed-card-locked" : "seed-card";
+    const cardArtworkKey = locked && this.textures.exists("seed-card-locked")
+      ? "seed-card-locked"
+      : this.textures.exists("seed-card-frame") ? "seed-card-frame" : "seed-card";
     let seedFrame = null;
     if (this.textures.exists(cardArtworkKey)) {
       const source = this.textures.get(cardArtworkKey).getSourceImage();
