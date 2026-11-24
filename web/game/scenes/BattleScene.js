@@ -184,6 +184,14 @@ export default class BattleScene extends Scene {
       this.load.audio(asset.key, asset.path);
     }
     const queuedRigPartTextures = new Set();
+    // Studio keeps stable texture keys per asset ID. A scene restart can therefore
+    // otherwise retain the previous image from Phaser's global texture/animation caches.
+    const clearStudioTexture = (key) => {
+      if (this.textures.exists(key)) this.textures.remove(key);
+    };
+    const clearStudioAnimation = (key) => {
+      if (this.anims.exists(key)) this.anims.remove(key);
+    };
     const queueRigPartTextures = (entry, variant) => {
       for (const part of entry.rigParts || []) {
         if (!part || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(part.id || "") || typeof part.path !== "string" ||
@@ -191,6 +199,7 @@ export default class BattleScene extends Scene {
         const key = "studio-rig-part-" + variant + "-" + part.id;
         if (queuedRigPartTextures.has(key)) continue;
         queuedRigPartTextures.add(key);
+        clearStudioTexture(key);
         this.load.image(key, part.path);
       }
     };
@@ -201,10 +210,17 @@ export default class BattleScene extends Scene {
         for (const entry of entries) {
           if (!entry || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(entry.id || "") ||
               typeof entry.path !== "string" || !(entry.path.startsWith("/assets/") || entry.path.startsWith("/api/studio/assets?preview="))) continue;
-          this.load.image("studio-plant-" + variant + "-" + entry.id, entry.path);
+          const plantTextureKey = "studio-plant-" + variant + "-" + entry.id;
+          clearStudioTexture(plantTextureKey);
+          clearStudioAnimation("studio-" + entry.id + "-idle");
+          clearStudioAnimation("studio-" + entry.id + "-attack");
+          this.load.image(plantTextureKey, entry.path);
           queueRigPartTextures(entry, variant);
           if (entry.combat?.mode === "projectile" && entry.combat.projectile?.path && (entry.combat.projectile.path.startsWith("/assets/") || entry.combat.projectile.path.startsWith("/api/studio/assets?preview="))) {
-            this.load.image("studio-projectile-" + variant + "-" + entry.id, entry.combat.projectile.path);
+            const projectileTextureKey = "studio-projectile-" + variant + "-" + entry.id;
+            clearStudioTexture(projectileTextureKey);
+            clearStudioAnimation("studio-projectile-" + entry.id);
+            this.load.image(projectileTextureKey, entry.combat.projectile.path);
           }
         }
       });
@@ -216,7 +232,12 @@ export default class BattleScene extends Scene {
         for (const entry of entries) {
           if (!entry || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(entry.id || "") ||
               typeof entry.path !== "string" || !(entry.path.startsWith("/assets/") || entry.path.startsWith("/api/studio/assets?preview="))) continue;
-          this.load.image("studio-monster-" + variant + "-" + entry.id, entry.path);
+          const monsterTextureKey = "studio-monster-" + variant + "-" + entry.id;
+          clearStudioTexture(monsterTextureKey);
+          clearStudioAnimation("studio-monster-" + entry.id + "-idle");
+          clearStudioAnimation("studio-monster-" + entry.id + "-move");
+          clearStudioAnimation("studio-monster-" + entry.id + "-attack");
+          this.load.image(monsterTextureKey, entry.path);
           queueRigPartTextures(entry, variant);
         }
       });
