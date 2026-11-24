@@ -11,7 +11,7 @@ const selector = read("../app/stage/1/select/page.js");
 const syncScript = read("../scripts/sync-studio-test-assets.mjs");
 
 test("Studio supports safe duplication for every registered asset type",()=>{
-  assert.match(studioPage,/async function cloneAsset\(asset\)/);
+  assert.match(studioPage,/function beginCloneAsset\(asset\)/);
   assert.match(studioPage,/onClick=\{\(\)=>cloneAsset\(a\)\}/);
   assert.match(assetsRoute,/operation==="clone"/);
   assert.match(assetsRoute,/cloneStudioAsset\(asset,newId,body\.newName\)/);
@@ -48,8 +48,8 @@ test("Studio can preview a selected Sprite Sheet row with adjustable playback sp
   assert.match(studioPage,/animationPlaying/);
   assert.match(studioPage,/animationFps/);
   assert.match(studioPage,/setAnimationPlaying\(value=>!value\)/);
-  assert.match(studioPage,/studio-sprite-play/);
-  assert.match(studioPage,/steps\(\$\{columns\}\)/);
+  assert.match(studioPage,/studio-animation-controls/);
+  assert.match(studioPage,/backgroundPosition:/);
 });
 
 test("Studio provides a live size preview for the selected or edited plant",()=>{
@@ -93,7 +93,7 @@ test("Studio enforces draft-to-testing-to-published and publishes the catalog on
   assert.match(assetsRoute, /status:"testing"/);
   assert.match(assetsRoute, /status:"published"/);
   assert.match(assetsRoute, /PUBLISHED_CATALOG_PATH/);
-  assert.match(assetsRoute, /githubPutImmutable\("web\/public"\+asset\.path/);
+  assert.match(assetsRoute, /const artworkPath="web\/public"\+asset\.path/);
 });
 
 test("local sync downloads only testing plants and writes the exact local runtime catalog path", () => {
@@ -123,7 +123,7 @@ test("testing catalog is served directly from the Studio staging branch with pro
   assert.match(assetsRoute, /asset\.status==="testing"/);
   assert.match(assetsRoute, /api\/studio\/assets\?preview=/);
   assert.match(assetsRoute, /Cache-Control.*private, no-store/);
-  assert.match(studioPage, /متاحة الآن للاختبار مباشرة داخل اللعبة/);
+  assert.match(studioPage, /متاح الآن للاختبار مباشرة داخل اللعبة/);
   assert.doesNotMatch(studioPage, /شغّل npm run studio:sync لمزامنتها/);
 });
 
