@@ -27,7 +27,7 @@ function plantIdFromPath(assetPath){
  const filename=path.basename(assetPath||"").replace(/\\.[^.]+$/,"").toLowerCase();
  return filename.replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
 }
-async function hydratePlantLibrary(registry,token,branch){
+async function hydratePlantLibrary(registry,token,branch,expectedRegistrySha){
  const manifestRaw=await githubGet("web/public/assets/asset-manifest.json",token,branch);
  const catalogRaw=await githubGet(PUBLISHED_CATALOG_PATH,token,branch);
  const manifest=manifestRaw?JSON.parse(manifestRaw):{assets:[]};
@@ -109,7 +109,7 @@ export async function GET(req){
    if(!preview.startsWith("/assets/")||preview.includes("..")||!allowedTypes[extension])return NextResponse.json({error:"Invalid asset preview path."},{status:400});
    try{const upstream=await fetch(githubUrl("web/public"+preview)+"?ref="+encodeURIComponent(branch),{headers:{...githubHeaders(token),Accept:"application/vnd.github.raw"}});if(!upstream.ok)return NextResponse.json({error:"GitHub preview failed ("+upstream.status+")."},{status:upstream.status===404?404:502});return new NextResponse(await upstream.arrayBuffer(),{headers:{"Content-Type":allowedTypes[extension],"Cache-Control":"private, max-age=300","X-Content-Type-Options":"nosniff"}});}catch(error){return NextResponse.json({error:error.message||"Preview fetch failed."},{status:502});}
   }
-  try{const raw=await githubGet(REGISTRY_PATH,token,branch);const registry=raw?JSON.parse(raw):{version:1,assets:[]};const hydrated=await hydratePlantLibrary(registry,token,branch);return NextResponse.json(addPreviewUrls(hydrated));}catch(error){return NextResponse.json({error:error.message},{status:502});}
+  try{const document=await githubGetDocument(REGISTRY_PATH,token,branch);const registry=document?JSON.parse(document.content):{version:1,assets:[]};const hydrated=await hydratePlantLibrary(registry,token,branch,document?.sha??null);return NextResponse.json(addPreviewUrls(hydrated));}catch(error){return NextResponse.json({error:error.message},{status:502});}
  }
  return NextResponse.json(addPreviewUrls(await localRegistry()));
 }
