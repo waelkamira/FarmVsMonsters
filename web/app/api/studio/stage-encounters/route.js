@@ -71,7 +71,7 @@ async function writeGithub(config,expectedSha){
  const savedData=await saved.json().catch(()=>({}));
  return {conflict:false,sha:savedData.content?.sha||null};
 }
-export async function GET(req){
+export async function GET(){
  try{
   const driver=process.env.STUDIO_STORAGE_DRIVER||"local";
   const result=driver==="github"?await readGithub():{config:await readLocal(),sha:null};
