@@ -17,7 +17,7 @@ test("Studio exposes dedicated stage monster and plant management screens",()=>{
 
 test("stage roster controls default to one and keep hiding separate from asset deletion",()=>{
  const manager=read("app/studio/StageRosterManager.jsx");
- assert.match(manager,/useState\(1\).*quantity/);
+ assert.match(manager,/quantity,setQuantity\]=useState\(1\)/);
  assert.match(manager,/count:quantity/);
  assert.match(manager,/enabled:!entry\.enabled/);
  assert.match(manager,/لا يتم حذف أي ملف أو أصل/);
@@ -29,7 +29,7 @@ test("battle consumes configured monster counts, timings, strength and plant lim
  const battle=read("game/scenes/BattleScene.js");
  assert.match(battle,/stage-encounter-config/);
  assert.match(battle,/getStageWaveSize/);
- assert.match(battle,/spawnIntervalMs:this\.getStageMonsterEntry/);
+ assert.match(battle,/spawnIntervalMs:\s*this\.getStageMonsterEntry/);
  assert.match(battle,/stageEntry\.hpMultiplier/);
  assert.match(battle,/stageEntry\.speedMultiplier/);
  assert.match(battle,/stagePlantRosterConfigured/);
