@@ -54,7 +54,6 @@ test("the uploaded seed-card frame is loaded and rendered on every battle seed p
   assert.match(scene, /this\.textures\.exists\("seed-card-frame"\)/);
   assert.match(scene, /Math\.min\(86 \/ source\.width, 98 \/ source\.height\)/);
   assert.match(scene, /card\.add\(\[\.\.\.\(seedFrame \? \[seedFrame\] : \[\]\), panel, icon, cost/);
-  assert.match(scene, /card\.add\(\[\.\.\.\(seedFrame \? \[seedFrame\] : \[\]\), panel, icon, cost/);
 });
 
 
