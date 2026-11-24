@@ -68,7 +68,8 @@ async function writeGithub(config,expectedSha){
  if(expectedSha!==undefined&&expectedSha!==sha)return {conflict:true};
  const saved=await fetch(githubUrl(),{method:"PUT",headers:{...githubHeaders(token),"Content-Type":"application/json"},body:JSON.stringify({message:"Configure stage monster and plant rosters",branch:"main",content:Buffer.from(JSON.stringify(config,null,2)+"\n").toString("base64"),...(sha?{sha}:{})})});
  if(!saved.ok){const data=await saved.json().catch(()=>({}));throw new Error(data.message||"GitHub save failed ("+saved.status+").");}
- return {conflict:false};
+ const savedData=await saved.json().catch(()=>({}));
+ return {conflict:false,sha:savedData.content?.sha||null};
 }
 export async function GET(req){
  try{
@@ -83,10 +84,12 @@ export async function PATCH(req){
  const config=normalizeConfig(body.config);
  try{
   const driver=process.env.STUDIO_STORAGE_DRIVER||"local";
+  let savedSha=null;
   if(driver==="github"){
    const result=await writeGithub(config,body.sha);
    if(result.conflict)return NextResponse.json({error:"تغير إعداد المرحلة منذ تحميل الصفحة. أعد تحميل الإعدادات قبل الحفظ."},{status:409});
+   savedSha=result.sha;
   }else await writeLocal(config);
-  return NextResponse.json({success:true,config,storage:driver});
+  return NextResponse.json({success:true,config,storage:driver,sha:savedSha});
  }catch(error){return NextResponse.json({error:error.message||"Could not save stage settings."},{status:502});}
 }
