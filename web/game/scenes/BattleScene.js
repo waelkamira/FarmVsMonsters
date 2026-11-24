@@ -952,25 +952,25 @@ export default class BattleScene extends Scene {
 
     // Attack level and live progress are grouped together in the upper-right HUD.
     // The progress bar sits immediately left of the current attack counter.
-    this.waveProgressFrame = this.add.image(810, 68, "hud-wave-frame")
+    this.waveProgressFrame = this.add.image(883, 68, "hud-wave-frame")
       .setDisplaySize(200, 38).setDepth(42);
-    this.waveProgressTrack = this.add.rectangle(810, 68, 158, 10, 0x392719, 0.72)
+    this.waveProgressTrack = this.add.rectangle(883, 68, 158, 10, 0x392719, 0.72)
       .setStrokeStyle(1, 0x8e6338, 0.8).setDepth(43);
-    this.waveProgressFill = this.add.image(731, 68, "hud-wave-fill")
+    this.waveProgressFill = this.add.image(804, 68, "hud-wave-fill")
       .setOrigin(0, 0.5).setDisplaySize(2, 9).setDepth(44);
-    this.waveProgressMarker = this.add.image(731, 68, "hud-wave-marker")
+    this.waveProgressMarker = this.add.image(804, 68, "hud-wave-marker")
       .setDisplaySize(18, 18).setDepth(45);
-    this.waveProgressLabel = this.add.text(810, 94, "DEFEATED 0/2", {
+    this.waveProgressLabel = this.add.text(883, 94, "DEFEATED 0/2", {
       fontFamily: "Arial", fontSize: "9px", color: "#ffe8b5", fontStyle: "bold",
       stroke: "#392719", strokeThickness: 2, resolution: 2
     }).setOrigin(0.5).setDepth(44);
 
-    // The attack counter is directly beside the progress bar, toward the right edge.
-    this.waveIcon = this.add.image(954, 68, "hud-wave-icon")
+    // Keep the attack counter and its progress bar together at the extreme top-right.
+    this.waveIcon = this.add.image(1027, 68, "hud-wave-icon")
       .setDisplaySize(30, 30).setDepth(44);
-    this.waveBadge = this.add.image(1007, 68, "hud-wave-badge")
+    this.waveBadge = this.add.image(1080, 68, "hud-wave-badge")
       .setDisplaySize(46, 40).setDepth(43);
-    this.waveText = this.add.text(1007, 68, "1/5", {
+    this.waveText = this.add.text(1080, 68, "1/5", {
       fontFamily: "Arial", fontSize: "13px", color: "#fff4c8", fontStyle: "bold",
       stroke: "#392719", strokeThickness: 3, resolution: 2,
       align: "center"
@@ -1040,22 +1040,27 @@ export default class BattleScene extends Scene {
     if (!selectedTypes.includes("radish")) selectedTypes.push("radish");
     this.plantCardsByType = {};
     const packetStartX = 164;
-    const packetGap = selectedTypes.length > 7 ? 78 : 90;
+    const hasScrollableSeedBank = selectedTypes.length > 7;
+    const packetGap = hasScrollableSeedBank ? 78 : 90;
     const packetSlotCount = Math.max(9, selectedTypes.length);
-    // Fill unused seed slots with previews of implemented plants that are
-    // not in the current loadout. Their artwork is intentionally dimmed and
-    // non-interactive so the player can see upcoming choices without selecting them.
+    // Inactive previews share the same clipped, draggable row as active seed packets.
     const inactivePlants = plantOptions.filter((plant) =>
       !selectedTypes.includes(plant.type) && plant.type !== "mushroom"
     );
     const inactiveSlots = Math.max(0, packetSlotCount - selectedTypes.length);
+    const displayedPacketCount = selectedTypes.length + Math.min(inactivePlants.length, inactiveSlots);
+    const seedViewportX = packetStartX - 38;
+    const seedViewportWidth = 7 * 78;
+    const seedContentWidth = Math.max(seedViewportWidth, displayedPacketCount * packetGap);
+    this.seedPacketLayer = this.add.container(0, 0).setDepth(45);
+
     const cardSource = this.textures.exists("seed-card")
       ? this.textures.get("seed-card").getSourceImage()
       : null;
     const cardScale = cardSource ? Math.min(88 / cardSource.width, 101.2 / cardSource.height) : 1;
     inactivePlants.slice(0, inactiveSlots).forEach((plant, index) => {
       const x = packetStartX + (selectedTypes.length + index) * packetGap;
-      const preview = this.add.container(x, 72).setDepth(45);
+      const preview = this.add.container(x, 72);
       if (cardSource) {
         preview.add(this.add.image(0, 0, "seed-card")
           .setDisplaySize(cardSource.width * cardScale * 0.8, cardSource.height * cardScale * 0.8));
@@ -1064,8 +1069,6 @@ export default class BattleScene extends Scene {
         const texture = this.textures.get(plant.image);
         const isSheet = ["pineapple-level-1", "hazelnut-level-1", "mango-level-1", "snow-thrower-level-1", "radish-level-1", "electric-mushroom-level-1"].includes(plant.image) || Boolean(plant.studioPlant?.spriteSheet);
         const frame = isSheet ? texture.get("0") : texture.get();
-        // Use the actual frame rectangle and a single bounded scale so a
-        // source sheet's full-image dimensions can never enlarge the preview.
         const frameWidth = Math.max(1, frame.cutWidth || frame.width || 1);
         const frameHeight = Math.max(1, frame.cutHeight || frame.height || 1);
         const thumbnailScale = Math.min(54 / frameWidth, 46 / frameHeight);
@@ -1073,18 +1076,17 @@ export default class BattleScene extends Scene {
           ? this.add.sprite(0, -8, plant.image, "0").setScale(thumbnailScale)
           : this.add.image(0, -8, plant.image).setScale(thumbnailScale);
         preview.add(thumbnail);
-        // Keep inactive plant previews recognizable with a lighter dark overlay.
         preview.add(this.add.rectangle(0, -8, 56, 48, 0x000000, 0.32));
-        // Show the plant's energy cost even while it is not in the active loadout.
         preview.add(this.add.text(0, 26.4, "🍄" + plant.cost, {
           fontFamily: "Arial", fontSize: "13px", color: "#fff0bd", fontStyle: "bold",
           stroke: "#3d2817", strokeThickness: 2, resolution: 2, align: "center"
         }).setOrigin(0.5).setScale(0.855));
       }
       preview.setData("inactivePlantType", plant.type);
+      this.seedPacketLayer.add(preview);
     });
     plantOptions.filter((plant) => selectedTypes.includes(plant.type)).forEach((plant, index) => {
-      this.plantCardsByType[plant.type] = this.createPlantCard(
+      const card = this.createPlantCard(
         packetStartX + index * packetGap,
         plant.title,
         String(plant.cost),
@@ -1093,7 +1095,69 @@ export default class BattleScene extends Scene {
         plant.image,
         72
       );
+      this.seedPacketLayer.add(card);
+      this.plantCardsByType[plant.type] = card;
     });
+
+    // A seven-slot viewport keeps every seed packet the same size. The thumb
+    // is only created for loadouts containing more than seven active plants.
+    if (hasScrollableSeedBank) {
+      const seedMaskGraphics = this.make.graphics({ x: 0, y: 0, add: false });
+      seedMaskGraphics.fillStyle(0xffffff, 1);
+      seedMaskGraphics.fillRect(seedViewportX, 18, seedViewportWidth, 108);
+      this.seedPacketMaskGraphics = seedMaskGraphics;
+      this.seedPacketLayer.setMask(seedMaskGraphics.createGeometryMask());
+
+      const trackY = 132;
+      const track = this.add.rectangle(
+        seedViewportX + seedViewportWidth / 2, trackY, seedViewportWidth, 7, 0x4a2d18, 0.82
+      ).setStrokeStyle(1, 0xd1a66b, 0.9).setDepth(46);
+      const thumbWidth = Math.max(42, seedViewportWidth * seedViewportWidth / seedContentWidth);
+      const thumbTravel = seedViewportWidth - thumbWidth;
+      const thumb = this.add.rectangle(
+        seedViewportX + thumbWidth / 2, trackY, thumbWidth, 11, 0xe8bd65, 1
+      ).setStrokeStyle(1, 0x754a25, 1).setDepth(47)
+        .setInteractive({ useHandCursor: true });
+      this.seedPacketScrollThumb = thumb;
+      this.seedPacketScrollState = {
+        minOffset: seedViewportWidth - seedContentWidth,
+        maxOffset: 0,
+        trackX: seedViewportX,
+        trackWidth: seedViewportWidth,
+        thumbWidth,
+        thumbTravel,
+        offset: 0
+      };
+      this.input.setDraggable(thumb);
+      thumb.on("drag", (pointer, dragX) => {
+        const state = this.seedPacketScrollState;
+        if (!state || state.thumbTravel <= 0) return;
+        const nextThumbX = PhaserMath.Clamp(
+          dragX, state.trackX + state.thumbWidth / 2,
+          state.trackX + state.trackWidth - state.thumbWidth / 2
+        );
+        const progress = (nextThumbX - (state.trackX + state.thumbWidth / 2)) / state.thumbTravel;
+        state.offset = state.minOffset * progress;
+        this.seedPacketLayer.setX(state.offset);
+        thumb.setX(nextThumbX);
+      });
+      thumb.on("dragend", () => thumb.setFillStyle(0xe8bd65, 1));
+      thumb.on("pointerover", () => thumb.setFillStyle(0xffd98b, 1));
+      thumb.on("pointerout", () => thumb.setFillStyle(0xe8bd65, 1));
+      track.setInteractive();
+      track.on("pointerdown", (pointer) => {
+        const state = this.seedPacketScrollState;
+        if (!state || state.thumbTravel <= 0) return;
+        const nextThumbX = PhaserMath.Clamp(
+          pointer.x, state.trackX + state.thumbWidth / 2,
+          state.trackX + state.trackWidth - state.thumbWidth / 2
+        );
+        const progress = (nextThumbX - (state.trackX + state.thumbWidth / 2)) / state.thumbTravel;
+        state.offset = state.minOffset * progress;
+        this.seedPacketLayer.setX(state.offset);
+        thumb.setX(nextThumbX);
+      });
+    }
 
     this.messageText = this.add.text(560, 574, "", {
       fontFamily: "Arial", fontSize: "15px", color: "#ffffff", fontStyle: "bold",
@@ -5336,7 +5400,7 @@ export default class BattleScene extends Scene {
       const trackWidth = 158;
       const fillWidth = Math.max(2, trackWidth * progress);
       this.waveProgressFill.setDisplaySize(fillWidth, 10);
-      this.waveProgressMarker?.setX(731 + trackWidth * progress);
+      this.waveProgressMarker?.setX(804 + trackWidth * progress);
       this.waveProgressLabel?.setText("DEFEATED " + defeated + "/" + this.waveSize);
     }
     for (const [type, panel] of Object.entries(this.plantCardsByType || {})) {
