@@ -21,7 +21,7 @@ function normalizeConfig(value){
    key:String(item.key||item.id+"-"+(item.wave||1)+"-"+index),
    id:String(item.id||"").trim().toLowerCase(),
    count:Math.max(1,Math.min(500,Math.floor(Number(item.count)||1))),
-   wave:Math.max(1,Math.min(10,Math.floor(Number(item.wave)||1))),
+   wave:Math.max(1,Math.min(stage==="1"?5:10,Math.floor(Number(item.wave)||1))),
    spawnIntervalMs:Math.max(100,Math.min(60000,Math.floor(Number(item.spawnIntervalMs)||1800))),
    firstSpawnDelayMs:Math.max(0,Math.min(120000,Math.floor(Number(item.firstSpawnDelayMs)||0))),
    hpMultiplier:Math.max(.1,Math.min(10,Number(item.hpMultiplier)||1)),
