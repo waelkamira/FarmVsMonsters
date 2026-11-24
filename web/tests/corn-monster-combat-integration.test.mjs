@@ -6,6 +6,7 @@ import { dirname, resolve } from "node:path";
 import { CORN_MONSTER_CONFIG } from "../game/rules/phaseOneRules.mjs";
 import { PHASE_ONE_PLANTS, PHASE_ONE_PLANT_EVENT_TYPES } from "../game/rules/phaseOneCombatContract.mjs";
 import { resolvePlantPlacement } from "../game/rules/combatSimulation.mjs";
+import { STAGE_ONE_PLANTS } from "../game/data/stageOnePlants.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const scene = readFileSync(resolve(here, "../game/scenes/BattleScene.js"), "utf8");
@@ -62,4 +63,14 @@ test("Corn Monster placement deducts the canonical energy cost and applies its H
   assert.equal(result.energy, 30);
   assert.equal(result.plant.type, "corn-monster");
   assert.equal(result.plant.hp, 140);
+});
+
+
+test("Corn Monster is represented in the Stage 1 plant encyclopedia", () => {
+  const entry = STAGE_ONE_PLANTS.find((plant) => plant.id === "corn-monster");
+  assert.ok(entry);
+  assert.equal(entry.name, "Corn Monster");
+  assert.equal(entry.energyCost, 70);
+  assert.equal(entry.implemented, true);
+  assert.equal(entry.purchasable, false);
 });
