@@ -14,6 +14,7 @@ const PLANT_RULES = Object.freeze({
   mango: PHASE_ONE_PLANTS.mango,
   "snow-thrower": PHASE_ONE_PLANTS.snowThrower,
   "electric-mushroom": PHASE_ONE_PLANTS["electric-mushroom"],
+  "corn-monster": PHASE_ONE_PLANTS["corn-monster"],
   "fire-pepper": PHASE_ONE_PLANTS["fire-pepper"]
 });
 
