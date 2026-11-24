@@ -2387,3 +2387,40 @@ body {
 .seed-select-catalog-scroll{max-height:min(62vh,680px);overflow-y:auto;overscroll-behavior:contain;padding:8px;scrollbar-width:thin;}
 .seed-select-catalog-scroll::-webkit-scrollbar{width:10px}
 .seed-select-catalog-scroll::-webkit-scrollbar-thumb{background:#9a7b4b;border:2px solid #251b12;border-radius:99px}
+
+
+/* The /game route is a distraction-free battlefield view with no site chrome. */
+.game-shell-arena-only {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100svh;
+  padding: 0;
+  overflow: hidden;
+  background: #17100b;
+}
+.game-panel-arena-only {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  max-width: none;
+  min-height: 100vh;
+  min-height: 100svh;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  overflow: hidden;
+}
+.game-panel-arena-only .phaser-host {
+  width: min(100vw, calc(100svh * 1120 / 680));
+  min-height: 0;
+  aspect-ratio: 1120 / 680;
+}
+.game-panel-arena-only .phaser-host canvas {
+  max-width: 100%;
+  max-height: 100%;
+}
