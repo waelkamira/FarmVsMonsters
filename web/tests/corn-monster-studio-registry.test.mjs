@@ -7,20 +7,19 @@ const encounters = JSON.parse(readFileSync(new URL("../game/data/stageEncounterC
 const atlas = JSON.parse(readFileSync(new URL("../public/assets/plants/corn_monster.json", import.meta.url), "utf8"));
 const manifest = JSON.parse(readFileSync(new URL("../public/assets/asset-manifest.json", import.meta.url), "utf8"));
 
-test("Corn Monster is registered as a Studio-testable monster with its 24-frame Phaser Atlas", () => {
+test("Corn Monster is registered as a Studio-testable plant with its 24-frame Phaser Atlas", () => {
   const matches = registry.assets.filter((asset) => asset.id === "corn-monster");
   assert.equal(matches.length, 1);
-  const monster = matches[0];
-  assert.equal(monster.type, "monster");
-  assert.equal(monster.status, "testing");
-  assert.equal(monster.path, "/assets/plants/corn_monster.png");
-  assert.equal(monster.atlasMetadataPath, "/assets/plants/corn_monster.json");
-  assert.equal(monster.sourceFormat, "phaser-atlas");
-  assert.equal(monster.rows * monster.columns, 24);
-  assert.equal(monster.monsterProfile.baseArchetype, "cave-brute");
-  assert.equal(monster.monsterProfile.firstWave, 1);
+  const plant = matches[0];
+  assert.equal(plant.type, "plant");
+  assert.equal(plant.status, "testing");
+  assert.equal(plant.path, "/assets/plants/corn_monster.png");
+  assert.equal(plant.atlasMetadataPath, "/assets/plants/corn_monster.json");
+  assert.equal(plant.sourceFormat, "phaser-atlas");
+  assert.equal(plant.rows * plant.columns, 24);
+  assert.equal(plant.monsterProfile, undefined);
   assert.equal(Object.keys(atlas.frames).length, 24);
-  assert.deepEqual(Object.keys(monster.atlasClips).sort(), ["attack", "hurt", "idle"]);
+  assert.deepEqual(Object.keys(plant.atlasClips).sort(), ["attack", "hurt", "idle"]);
 });
 
 test("Monster 01 is the guaranteed first spawn in stage 1 wave 1", () => {
