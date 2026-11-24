@@ -70,6 +70,19 @@ test("Studio exposes plant size and applies it in the Phaser runtime",()=>{
   assert.match(battleScene,/studioPlant\.combat\?\.sizePercent/);
 });
 
+test("Studio facing toggle is previewed, persisted, published, and applied by Phaser",()=>{
+  assert.match(studioPage,/\[flipX,setFlipX\]=useState\(false\)/);
+  assert.match(studioPage,/عكس اتجاه الشخصية/);
+  assert.match(studioPage,/aria-pressed=\{flipX\}/);
+  assert.match(studioPage,/scaleX\(\$\{flipX\?-1:1\}\)/);
+  assert.match(studioPage,/flipX:String\(flipX\)/);
+  assert.match(assetsRoute,/flipX:form\.get\("flipX"\)==="true"/);
+  assert.match(assetsRoute,/flipX:Boolean\(asset\.flipX\)/);
+  assert.match(battleScene,/container\.setScale\(studioPlant\.flipX \? -1 : 1, 1\)/);
+  assert.match(battleScene,/studioMonster\.flipX \? -1 : 1/);
+  assert.match(battleScene,/hyenaSprite\.setFlipX\(!studioMonster\.flipX\)/);
+});
+
 test("campaign plant unlocks are respected and the active loadout remains capped at six",()=>{
   assert.match(selector,/nextPlants\.map\(\(plant\) => plant\.id\)/);
   assert.match(selector,/MAX_SEEDS = 6/);
