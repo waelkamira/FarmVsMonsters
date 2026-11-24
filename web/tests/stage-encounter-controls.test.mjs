@@ -57,7 +57,7 @@ test("stage seed selection respects only enabled plants for a configured stage",
 
 test("configured first spawn delay is not overwritten and dragon waits for the configured final spawn",()=>{
  const battle=read("game/scenes/BattleScene.js");
- assert.match(battle,/const firstStageMonster = this\.getStageMonsterEntry\(0\);\s*this\.spawnTimer = firstStageMonster\?\.firstSpawnDelayMs > 0 \? firstStageMonster\.firstSpawnDelayMs : PHASE_ONE_TIMING\.firstMonsterSpawnDelayMs;/);
+ assert.match(battle,/const firstStageMonster = this\.getStageMonsterEntry\(0\);\s*this\.spawnTimer = this\.stageMonsterRosterConfigured && firstStageMonster \? Math\.max\(0, Number\(firstStageMonster\.firstSpawnDelayMs\) \|\| 0\) : PHASE_ONE_TIMING\.firstMonsterSpawnDelayMs;/);
  assert.doesNotMatch(battle,/this\.combatClockMs = 0;\s*this\.spawnTimer = PHASE_ONE_TIMING\.firstMonsterSpawnDelayMs;/);
  assert.match(battle,/this\.wave === this\.totalWaves && this\.spawnedThisWave === this\.waveSize\) this\.beginDragonEncounter\(\)/);
  assert.doesNotMatch(battle,/this\.wave === 5 && this\.spawnedThisWave === 2/);
