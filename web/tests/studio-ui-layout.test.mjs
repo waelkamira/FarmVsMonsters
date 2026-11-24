@@ -30,3 +30,13 @@ test("Studio animation preview defaults to all frames and supports selecting one
   assert.match(page, /القيمة 0 تعرض جميع إطارات Sprite Sheet بالتتابع/);
   assert.match(page, /function cancelEdit\(\)\{setAnimationRow\(0\);setAnimationPlaying\(false\);/);
 });
+
+
+test("Studio shows the same test and publish action controls for new plant and monster assets", () => {
+  assert.match(page, /data-asset-type=\{a\.type\} data-asset-status=\{a\.status\}/);
+  assert.match(page, /\(a\.type===\"plant\"\|\|a\.type===\"monster\"\)&&<>/);
+  assert.match(page, /data-testid=\"studio-prepare-test\" disabled=\{!authenticated\|\|busy\|\|a\.status!==\"draft\"\}/);
+  assert.match(page, /data-testid=\"studio-publish\" disabled=\{!authenticated\|\|busy\|\|a\.status!==\"testing\"\}/);
+  assert.match(page, /اختيار الوحش للاختبار/);
+  assert.match(css, /\.studio-list \.studio-asset-row>\.studio-asset-actions\{display:flex!important;visibility:visible!important/);
+});
