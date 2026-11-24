@@ -67,7 +67,7 @@ test("the uploaded locked seed-card artwork is used for locked plant cards and c
 test("the uploaded empty seed-slot artwork fills unused loadout positions", () => {
   assert.match(scene, /seed-slot-empty", "\/assets\/items\/ui\/ui-seed-slot-empty\.png"/);
   assert.match(scene, /const packetSlotCount = MAX_SEED_PACKETS/);
-  assert.match(scene, /if \(!plant\) \{/);
+  assert.match(scene, /for \(let slotIndex = selectedTypes\.length; slotIndex < packetSlotCount; slotIndex \+= 1\)/);
   assert.match(scene, /"seed-slot-empty"\)/);
   assert.match(scene, /\.setDepth\(44\)/);
 });
