@@ -16,10 +16,11 @@ import { transformRigHitboxToWorld, transformRigPointToWorld } from "../studio/s
 import { getProjectileTrajectoryOffset, getProjectileHeadCorrection, getProjectileLaunchPoint } from "../studio/projectileTrajectory.mjs";
 import { createStudioMonsterProfile, resolveStudioMonsterRuntimeProfile, selectWeightedStudioMonster } from "../studio/monsterProfiles.mjs";
 
-// Temporary playtest mode exposes every implemented built-in plant; campaign progression data remains intact.
-const PLAYTEST_ALL_PLANTS = true;
+// Campaign progression controls built-in plant availability; Studio test assets remain separately gated.
+const PLAYTEST_ALL_PLANTS = false;
 const ALL_PLAYTEST_PLANT_IDS = Object.freeze(["radish", "mushroom", "pumpkin", "pineapple", "hazelnut", "mango", "snow-thrower", "electric-mushroom"]);
 import { createSeededRandom } from "../rules/seededRandom.mjs";
+import { normalizeSeedLoadout, MAX_SEED_PACKETS } from "../rules/seedLoadout.mjs";
 import { createCombatEventLog, appendCombatEvent } from "../rules/combatEventLog.mjs";
 import gridCalibration from "../data/farm-grid-calibration.json";
 import soundAssets from "../data/sound-assets.json";
@@ -1038,7 +1039,7 @@ export default class BattleScene extends Scene {
         PLAYTEST_ALL_PLANTS || unlocked.has(type)
       ));
       const saved = JSON.parse(window.localStorage.getItem("farmVsMonsters.selectedPlants") || "null");
-      // All implemented plants are available during playtesting; campaign unlock data remains unchanged.
+      // Apply the same six-packet limit and starter ordering as pre-battle selection.
       const testingTypes = (this.studioPlants || [])
         .filter((plant) => plant.testOnly)
         .map((plant) => plant.id)
@@ -1048,8 +1049,7 @@ export default class BattleScene extends Scene {
         : Array.isArray(saved)
           ? ["mushroom", "radish", ...testingTypes, ...saved.filter((type) => availableTypes.has(type))]
           : [...availableTypes];
-      // Ignore old saved loadouts in playtest mode and equip every implemented built-in plant.
-      selectedTypes = [...new Set(preferredLoadout.filter((type) => availableTypes.has(type)))];
+      selectedTypes = normalizeSeedLoadout(preferredLoadout, [...availableTypes]);
     } catch {
       // Storage failures keep the starter loadout playable.
       selectedTypes = ["radish", "mushroom"];
@@ -1058,7 +1058,7 @@ export default class BattleScene extends Scene {
     if (!selectedTypes.includes("radish")) selectedTypes.push("radish");
     this.plantCardsByType = {};
     const packetStartX = 164;
-    const packetGap = selectedTypes.length > 7 ? 78 : 90;
+    const packetGap = selectedTypes.length > 5 ? 78 : 90;
     const packetSlotCount = Math.max(9, selectedTypes.length);
     // Fill unused seed slots with previews of implemented plants that are
     // not in the current loadout. Their artwork is intentionally dimmed and
@@ -2174,8 +2174,8 @@ export default class BattleScene extends Scene {
           ? [...new Set([...loadUnlockedPlantIds(window.localStorage), ...ALL_PLAYTEST_PLANT_IDS])]
           : loadUnlockedPlantIds(window.localStorage);
         const saved = JSON.parse(window.localStorage.getItem("farmVsMonsters.selectedPlants") || "null");
-        if (Array.isArray(saved)) selectedTypes = saved;
-        else selectedTypes = unlockedIds;
+        if (Array.isArray(saved)) selectedTypes = normalizeSeedLoadout(saved, unlockedIds);
+        else selectedTypes = normalizeSeedLoadout(unlockedIds, unlockedIds);
       } catch {
         // Starter plants remain visible if browser storage is unavailable.
       }
