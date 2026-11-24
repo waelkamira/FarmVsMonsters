@@ -14,7 +14,7 @@ const PLANTS = [
   { id: "hazelnut", name: "Hazelnut L1", ar: "البندق L1", role: "Arcing bomb attacker", roleAr: "قاذف قنابل مقوسة", cost: 65, image: "/assets/plants/hazelnut-level-1.png", spriteSheet: true, rows: 3, columns: 3, frameCount: 9 },
   { id: "mango", name: "Mango L1", ar: "المانجو L1", role: "Arcing bomb attacker", roleAr: "قاذف قنابل مقوسة", cost: 70, image: "/assets/plants/mango-level-1.png", spriteSheet: true, rows: 3, columns: 3, frameCount: 9 },
   { id: "snow-thrower", name: "Snow Thrower L1", ar: "قاذف الثلج L1", role: "Freeze support", roleAr: "دعم بالتجميد", cost: 90, image: "/assets/plants/Snow-thrower-level-1.png", spriteSheet: true, rows: 3, columns: 3, frameCount: 9 },
-  { id: "electric-mushroom", name: "Electric Mushroom L1", ar: "الفطر الكهربائي L1", role: "Electric lane attacker", roleAr: "مهاجم كهربائي للمسار", cost: 85, image: "/assets/plants/Electric-mushroom-level-1.png", spriteSheet: true, rows: 3, columns: 3, frameCount: 9, spriteSheet: true },
+  { id: "electric-mushroom", name: "Electric Mushroom L1", ar: "الفطر الكهربائي L1", role: "Electric lane attacker", roleAr: "مهاجم كهربائي للمسار", cost: 85, image: "/assets/plants/Electric-mushroom-level-1.png", spriteSheet: true, rows: 3, columns: 3, frameCount: 9 },
 ];
 
 const STARTER_LOADOUT = ["radish", "mushroom"];
