@@ -1067,10 +1067,6 @@ export default class BattleScene extends Scene {
       !selectedTypes.includes(plant.type) && plant.type !== "mushroom"
     );
     const cardFrameKey = this.textures.exists("seed-card-frame") ? "seed-card-frame" : "seed-card";
-    const cardSource = this.textures.exists(cardFrameKey)
-      ? this.textures.get(cardFrameKey).getSourceImage()
-      : null;
-    const cardScale = cardSource ? Math.min(86 / cardSource.width, 98 / cardSource.height) : 1;
     for (let slotIndex = selectedTypes.length; slotIndex < packetSlotCount; slotIndex += 1) {
       const plant = inactivePlants[slotIndex - selectedTypes.length];
       const x = packetStartX + slotIndex * packetGap;
