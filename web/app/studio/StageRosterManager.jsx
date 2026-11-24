@@ -70,6 +70,6 @@ export default function StageRosterManager({kind}){
    <div className="stage-roster-actions"><button type="button" onClick={()=>patch(index,{enabled:!entry.enabled})}>{entry.enabled?"إخفاء من المرحلة":"إظهار في المرحلة"}</button><button type="button" className="danger" onClick={()=>remove(index)}>إزالة من إعداد المرحلة</button></div></article>})}
   </section>
   <footer className="stage-roster-footer"><span>{message}</span><button type="button" onClick={save} disabled={busy}>{busy?"جارٍ الحفظ…":"حفظ إعدادات المرحلة"}</button></footer>
-  <p className="stage-roster-note">الإخفاء والإزالة هنا يخصان المرحلة المحددة فقط. لا يتم حذف أي ملف أو أصل من مكتبة الأصول. زر اختبار المرحلة يفتح المعركة مباشرة بإعدادات رقم المرحلة المحدد، بما فيها الموجات والوحوش والنباتات. تسلسل الحملة القصصي الحالي ما زال يبدأ من المرحلة الأولى.</p>
+  <p className="stage-roster-note">الإخفاء والإزالة هنا يخصان المرحلة المحددة فقط. لا يتم حذف أي ملف أو أصل من مكتبة الأصول. زر اختبار المرحلة يفتح شاشة تجهيز المعركة برقم المرحلة المحدد؛ وبعد بدء القتال يقرأ المحرك إعدادات موجات الوحوش وقوتها وتوقيتها وحدود النباتات الخاصة بتلك المرحلة. تسلسل الحملة القصصي الحالي ما زال يبدأ من المرحلة الأولى.</p>
  </main>;
 }
