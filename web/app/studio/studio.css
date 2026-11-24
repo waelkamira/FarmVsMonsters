@@ -548,7 +548,6 @@
   object-fit:contain!important;
 }
 .studio-list .studio-asset-row>.studio-asset-visual>.studio-thumb-sprite{
-  background-size:var(--studio-thumb-columns,1) * 100% var(--studio-thumb-rows,1) * 100%!important;
   background-position:left top!important;background-repeat:no-repeat!important;
   background-origin:border-box!important;
 }
