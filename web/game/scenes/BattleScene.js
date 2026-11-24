@@ -2187,6 +2187,7 @@ export default class BattleScene extends Scene {
         { id: "mango", title: isArabic ? "المانجو" : "Mango", image: "mango-level-1", config: MANGO_CONFIG },
         { id: "snow-thrower", title: isArabic ? "قاذف الثلج" : "Snow Thrower", image: "snow-thrower-level-1", config: SNOW_THROWER_CONFIG },
         { id: "electric-mushroom", title: isArabic ? "الفطر الكهربائي" : "Electric Mushroom", image: "electric-mushroom-level-1", config: ELECTRIC_MUSHROOM_CONFIG },
+        { id: "corn-monster", title: isArabic ? "وحش الذرة" : "Corn Monster", image: "corn-monster", config: CORN_MONSTER_CONFIG },
       ];
       const selected = catalog.find((plant) => plant.id === this.inventorySelectedPlant) || catalog[0];
       addText(0, -112, isArabic
