@@ -1042,7 +1042,7 @@ export default class BattleScene extends Scene {
     const packetStartX = 164;
     const hasScrollableSeedBank = selectedTypes.length > 7;
     const packetGap = hasScrollableSeedBank ? 78 : 90;
-    const packetSlotCount = Math.max(9, selectedTypes.length);
+    const packetSlotCount = 7;
     // Inactive previews share the same clipped, draggable row as active seed packets.
     const inactivePlants = plantOptions.filter((plant) =>
       !selectedTypes.includes(plant.type) && plant.type !== "mushroom"
