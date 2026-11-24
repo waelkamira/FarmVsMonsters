@@ -59,6 +59,7 @@ test("radish, mushroom and dragon combat values preserve the current tuning", ()
     projectileSpeed: 320,
     projectileCollisionRadius: 24,
     plantingEnergyCost: 35,
+    seedPacketRechargeMs: 5000,
     hp: 160,
     cooldownMs: 1450,
     range: 360
