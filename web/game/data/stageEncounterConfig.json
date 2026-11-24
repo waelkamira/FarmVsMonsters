@@ -132,19 +132,6 @@
           "damageMultiplier": 1,
           "attackIntervalMultiplier": 1,
           "enabled": true
-        },
-        {
-          "key": "stonehide-w5",
-          "id": "stonehide",
-          "count": 1,
-          "wave": 5,
-          "spawnIntervalMs": 4600,
-          "firstSpawnDelayMs": 0,
-          "hpMultiplier": 1,
-          "speedMultiplier": 1,
-          "damageMultiplier": 1,
-          "attackIntervalMultiplier": 1,
-          "enabled": true
         }
       ],
       "plants": [
