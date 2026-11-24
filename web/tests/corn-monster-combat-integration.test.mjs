@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 import { CORN_MONSTER_CONFIG } from "../game/rules/phaseOneRules.mjs";
 import { PHASE_ONE_PLANTS, PHASE_ONE_PLANT_EVENT_TYPES } from "../game/rules/phaseOneCombatContract.mjs";
+import { resolvePlantPlacement } from "../game/rules/combatSimulation.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const scene = readFileSync(resolve(here, "../game/scenes/BattleScene.js"), "utf8");
@@ -43,4 +44,22 @@ test("Corn Monster Atlas and battle integration are complete at the source level
   assert.match(scene, /frame\?\.textureFrame !== "attack_06"/);
   assert.match(scene, /plant\.type === "corn-monster" \? CORN_MONSTER_CONFIG/);
   assert.match(scene, /golden kernel with green husk leaves/);
+});
+
+
+test("Corn Monster placement deducts the canonical energy cost and applies its HP", () => {
+  const result = resolvePlantPlacement({
+    energy: 100,
+    plants: [],
+    type: "corn-monster",
+    col: 2,
+    row: 1,
+    columns: 8,
+    rows: 5
+  });
+  assert.equal(result.ok, true);
+  assert.equal(result.reason, "PLANT_PLACED");
+  assert.equal(result.energy, 30);
+  assert.equal(result.plant.type, "corn-monster");
+  assert.equal(result.plant.hp, 140);
 });
