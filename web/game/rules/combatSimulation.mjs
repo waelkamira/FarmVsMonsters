@@ -391,7 +391,7 @@ export function resolveWaveSpawnStep({
   deltaMs
 } = {}) {
   if (
-    !Number.isInteger(totalWaves) || totalWaves !== PHASE_ONE_WAVE_SIZES.length ||
+    !Number.isInteger(totalWaves) || totalWaves < 1 || totalWaves > 10 ||
     !Number.isInteger(wave) || wave < 1 || wave > totalWaves ||
     !Number.isInteger(waveSize) || waveSize < 0 || waveSize > 500 ||
     !Number.isInteger(spawnedThisWave) || spawnedThisWave < 0 || spawnedThisWave > waveSize ||
