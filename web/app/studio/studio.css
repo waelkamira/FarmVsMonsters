@@ -383,3 +383,29 @@
     padding:7px 5px;
   }
 }
+
+
+/* Tighten the thumbnail/action stack: both occupy consecutive intrinsic-height
+   grid rows, with zero row gap so the first control touches the thumbnail edge. */
+.studio-list .studio-asset-row{
+  grid-template-rows:max-content max-content!important;
+  row-gap:0!important;
+  align-content:start!important;
+  align-items:start!important;
+}
+.studio-list .studio-asset-row>.studio-thumb,
+.studio-list .studio-asset-row>.studio-thumb-fallback{
+  display:block;
+  margin:0!important;
+  align-self:start!important;
+}
+.studio-list .studio-asset-row>.studio-asset-actions{
+  margin:0!important;
+  padding-top:0!important;
+  align-self:start!important;
+  gap:5px!important;
+}
+@media(max-width:560px){
+  .studio-list .studio-asset-row{row-gap:0!important}
+  .studio-list .studio-asset-row>.studio-asset-actions{gap:4px!important}
+}
