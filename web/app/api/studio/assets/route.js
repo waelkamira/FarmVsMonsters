@@ -24,7 +24,7 @@ async function localRegistry(){try{return JSON.parse(await readFile(path.join(pr
 async function saveLocalRegistry(registry){const target=path.join(process.cwd(),"game/data/studioAssetRegistry.json");await mkdir(path.dirname(target),{recursive:true});await writeFile(target,JSON.stringify(registry,null,2)+"\n","utf8");}
 function addPreviewUrls(registry){const github=process.env.STUDIO_STORAGE_DRIVER==="github";return {...registry,storage:process.env.STUDIO_STORAGE_DRIVER||"local",assets:(registry.assets||[]).map(asset=>({...asset,previewUrl:github?"/api/studio/assets?preview="+encodeURIComponent(asset.path):asset.path,...(asset.combat?.projectile?{combat:{...asset.combat,projectile:{...asset.combat.projectile,previewUrl:github?"/api/studio/assets?preview="+encodeURIComponent(asset.combat.projectile.path):asset.combat.projectile.path}}}:{})}))};}
 function plantIdFromPath(assetPath){
- const filename=path.basename(assetPath||"").replace(/\\.[^.]+$/,"").toLowerCase();
+ const filename=path.basename(assetPath||"").replace(/\.[^.]+$/,"").toLowerCase();
  return filename.replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
 }
 async function hydratePlantLibrary(registry,token,branch,expectedRegistrySha){
@@ -60,7 +60,7 @@ async function hydratePlantLibrary(registry,token,branch,expectedRegistrySha){
  }
  if(changed){
   registry.version=1;
-  await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(registry,null,2)+"\\n"),"studio: import existing game plants into asset library",token,branch,null);
+  await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(registry,null,2)+"\n"),"studio: import existing game plants into asset library",token,branch,expectedRegistrySha);
  }
  return registry;
 }
