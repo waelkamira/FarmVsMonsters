@@ -403,8 +403,13 @@ test("phase-one wave scheduler spawns at most one monster per update and stops a
   assert.equal(complete.spawnedThisWave, 9);
   assert.equal(complete.spawnTimerMs, 0);
 
-  assert.throws(() => resolveWaveSpawnStep({
+  const shorterConfiguredWave = resolveWaveSpawnStep({
     wave: 5, waveSize: 8, spawnedThisWave: 0,
+    intermissionMs: 0, spawnTimerMs: 0, deltaMs: 16
+  });
+  assert.equal(shorterConfiguredWave.shouldSpawn, true);
+  assert.throws(() => resolveWaveSpawnStep({
+    wave: 5, waveSize: 501, spawnedThisWave: 0,
     intermissionMs: 0, spawnTimerMs: 0, deltaMs: 16
   }), /INVALID_WAVE_SPAWN_STATE/);
 });
