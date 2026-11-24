@@ -38,3 +38,11 @@ test("asset detail stage-management links resolve to the dedicated plant and mon
   assert.match(rosterManager, /\[selectedId,setSelectedId\][\s\S]*\[quantity,setQuantity\]=useState\(1\)/);
   assert.match(rosterManager, /count:Math\.min\(500,x\.count\+quantity\)/);
 });
+
+test("Studio declares the requested-edit handler before the session effect invokes it", () => {
+  const declaration = studio.indexOf("function openRequestedEdit(sourceAssets)");
+  const sessionEffect = studio.indexOf("if(active)openRequestedEdit(loadedAssets)");
+  assert.ok(declaration >= 0, "requested-edit handler should exist");
+  assert.ok(sessionEffect >= 0, "session effect should invoke the handler after assets load");
+  assert.ok(declaration < sessionEffect, "handler must be declared before the effect uses it");
+});
