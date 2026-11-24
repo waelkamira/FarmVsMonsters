@@ -10,7 +10,7 @@ test("the uploaded wood frame is loaded and used by a dedicated inventory contro
   assert.match(hud, /function createInventoryControl\(\)/);
   assert.match(hud, /this\.add\.container\(920, 27\)\.setDepth\(52\)/);
   assert.match(scene, /this\.add\.image\(0, 0, "inventory-wood-frame"\)\.setDisplaySize\(570, 620\)/);
-  assert.match(scene, /const sheet = \["radish-level-1", "pineapple-level-1", "hazelnut-level-1", "mango-level-1", "snow-thrower-level-1"\]\.includes\(plant\.image\)/);
+  assert.match(scene, /const sheet = \["radish-level-1", "pineapple-level-1", "hazelnut-level-1", "mango-level-1", "snow-thrower-level-1", "electric-mushroom-level-1"\]\.includes\(plant\.image\)/);
   assert.match(scene, /this\.add\.sprite\(x, y - 12, plant\.image, 0\)/);
 });
 
