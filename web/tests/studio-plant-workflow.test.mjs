@@ -71,6 +71,7 @@ test("Studio exposes plant size and applies it in the Phaser runtime",()=>{
 });
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 test("Studio saves per-asset animation speed and applies it to plant and monster playback",()=>{
   assert.match(studioPage,/مضاعف سرعة الأنيميشن/);
   assert.match(assetsRoute,/speedMultiplier:submittedProfile\?\.speedMultiplier\?\?existing\?\.animationProfile\?\.speedMultiplier/);
@@ -81,6 +82,21 @@ test("Studio saves per-asset animation speed and applies it to plant and monster
 
 test("all built-in plants are unlocked in the current roster while loadout remains capped at seven",()=>{
 =======
+=======
+test("Studio facing toggle is previewed, persisted, published, and applied by Phaser",()=>{
+  assert.match(studioPage,/\[flipX,setFlipX\]=useState\(false\)/);
+  assert.match(studioPage,/عكس اتجاه الشخصية/);
+  assert.match(studioPage,/aria-pressed=\{flipX\}/);
+  assert.match(studioPage,/scaleX\(\$\{flipX\?-1:1\}\)/);
+  assert.match(studioPage,/flipX:String\(flipX\)/);
+  assert.match(assetsRoute,/flipX:form\.get\("flipX"\)==="true"/);
+  assert.match(assetsRoute,/flipX:Boolean\(asset\.flipX\)/);
+  assert.match(battleScene,/container\.setScale\(studioPlant\.flipX \? -1 : 1, 1\)/);
+  assert.match(battleScene,/studioMonster\.flipX \? -1 : 1/);
+  assert.match(battleScene,/hyenaSprite\.setFlipX\(!studioMonster\.flipX\)/);
+});
+
+>>>>>>> 94308844e8fafb18f10aab78b8d4ff5f851a3174
 test("campaign plant unlocks are respected and the active loadout remains capped at six",()=>{
 >>>>>>> 55db517c020c66ee5e4d771a60ebab4d79132600
   assert.match(selector,/nextPlants\.map\(\(plant\) => plant\.id\)/);
