@@ -164,7 +164,8 @@ test("mushroom is resource-only and its pickups expire after 12 seconds", () => 
 });
 
 test("Mushroom production always creates a full collectible; the energy cap is applied at pickup", () => {
-  const production = scene.slice(scene.indexOf("spawnMushroomEnergy(plant) {"), scene.indexOf("fireThorn(plant"));
+  const mushroomStart = scene.indexOf("spawnMushroomEnergy(plant) {");
+  const production = scene.slice(mushroomStart, scene.indexOf("fireThorn(plant", mushroomStart));
   assert.match(production, /const amount = MUSHROOM_CONFIG\.energy;/);
   assert.doesNotMatch(production, /Math\.min\(MUSHROOM_CONFIG\.energy, MAX_ENERGY - this\.energy\)/);
   assert.match(production, /collectEnergy\(this\.energy, amount\)/);
