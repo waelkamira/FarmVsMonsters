@@ -203,7 +203,8 @@ test("a farmhouse defeat aborts the rest of the current simulation frame", () =>
 
 test("terminal results clean up pending Mushroom pickups and their expiry timers", () => {
   const create = scene.slice(scene.indexOf("  create() {"), scene.indexOf("  drawField() {"));
-  const production = scene.slice(scene.indexOf("  spawnMushroomEnergy(plant) {"), scene.indexOf("  spawnStudioEnergy(plant"));
+  const mushroomStart = scene.indexOf("  spawnMushroomEnergy(plant) {");
+  const production = scene.slice(mushroomStart, scene.indexOf("  fireThorn(plant", mushroomStart));
   const endGame = scene.slice(scene.indexOf("  endGame(won) {"), scene.indexOf("  createGameOverButton("));
   assert.match(create, /this\.energyPickups = \[\]/);
   assert.match(production, /this\.energyPickups\.push\(token\)/);
