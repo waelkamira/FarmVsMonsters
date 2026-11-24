@@ -51,7 +51,7 @@ test("Electric Mushroom uses its own electric projectile and VFX identity", () =
 test("Electric Mushroom passes the same seed-card-to-soil planting config lookup as other plants", () => {
   assert.ok(sceneSource.includes("const plantConfigs = {"));
   assert.ok(sceneSource.includes('"electric-mushroom": ELECTRIC_MUSHROOM_CONFIG'));
-  assert.match(sceneSource, /const plantConfig = plantConfigs\\[this\\.selectedPlant\\]/);
+  assert.ok(sceneSource.includes("const plantConfig = plantConfigs[this.selectedPlant]"));
   assert.match(sceneSource, /if \\(!plantConfig\\) \\{/);
 });
 
