@@ -56,7 +56,9 @@ test("attack progress bar and attack counter are anchored at the extreme upper-r
   assert.match(scene, /waveProgressMarker\?\.setX\(804 \+ trackWidth \* progress\)/);
 });
 
-test("seed packets show a draggable seven-slot scrollbar only above seven active plants", () => {
+test("seed packets show a draggable seven-slot scrollbar only above seven active plants", async () => {
+  const { readFileSync } = await import("node:fs");
+  const scene = readFileSync(new URL("../game/scenes/BattleScene.js", import.meta.url), "utf8");
   assert.match(scene, /const hasScrollableSeedBank = selectedTypes\.length > 7/);
   assert.match(scene, /const seedViewportWidth = 7 \* 78/);
   assert.match(scene, /this\.seedPacketLayer\.setMask\(seedMaskGraphics\.createGeometryMask\(\)\)/);
