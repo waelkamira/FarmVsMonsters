@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { selectLaneBlocker } from "../game/rules/combatSimulation.mjs";
-import { PHASE_ONE_MONSTERS, getStonehideIncomingDamageMultiplier } from "../game/rules/phaseOneCombatContract.mjs";
+import { PHASE_ONE_MONSTERS, PHASE_ONE_REWARDS, getStonehideIncomingDamageMultiplier } from "../game/rules/phaseOneCombatContract.mjs";
 import { dirname, resolve } from "node:path";
 import {
   PHASE_ONE_WAVE_SIZES,
@@ -310,9 +310,10 @@ test("pause scene resumes, restarts and removes its keyboard listeners safely", 
   assert.match(scene, /this\.events\.once\("shutdown", \(\) => this\.input\.keyboard\.off\("keydown-P", this\.pauseGame, this\)\)/);
 });
 
-test("home menu reads the saved coin wallet", () => {
-  assert.match(homePage, /loadSavedCoins\(window\.localStorage\)/);
-  assert.match(homePage, /Saved player balance/);
+test("home menu restores authenticated cloud progress and keeps guest entry", () => {
+  assert.match(homePage, /getPlayerSession\(\)/);
+  assert.match(homePage, /restoreOrInitializeCloudProgress\(\)/);
+  assert.match(homePage, /router\.push\("\/game"\)/);
 });
 
 test("player guidance and roadmap match the current Phase 1 balance", () => {
@@ -387,7 +388,7 @@ test("wave transitions include a pausable five-second preparation window without
   assert.match(progress, /this\.waveIntermissionMs = PHASE_ONE_TIMING\.waveIntermissionMs/);
   assert.match(progress, /PHASE_ONE_TIMING\.nextWaveSpawnDelayMs/);
   assert.deepEqual(PHASE_ONE_WAVE_SIZES, [3, 5, 6, 7, 9]);
-  assert.match(scene, /if \(this\.gameOver \|\| this\.isPaused \|\| this\.collectionMenuOpen\) return/);
+  assert.match(scene, /if \(this\.gameOver \|\| this\.isPaused \|\| this\.collectionMenuOpen \|\| this\.inventoryOpen\) return/);
 });
 
 
