@@ -68,11 +68,11 @@ test("Studio exposes plant size and applies it in the Phaser runtime",()=>{
   assert.match(battleScene,/studioPlant\.combat\?\.sizePercent/);
 });
 
-test("all built-in plants are unlocked in the current roster while loadout remains capped at seven",()=>{
+test("campaign plant unlocks are respected and the active loadout remains capped at six",()=>{
   assert.match(selector,/nextPlants\.map\(\(plant\) => plant\.id\)/);
-  assert.match(selector,/MAX_SEEDS = 7/);
-  assert.match(battleScene,/const PLAYTEST_ALL_PLANTS = true/);
-  assert.match(battleScene,/\.slice\(0, 7\)/);
+  assert.match(selector,/MAX_SEEDS = 6/);
+  assert.match(battleScene,/const PLAYTEST_ALL_PLANTS = false/);
+  assert.match(battleScene,/normalizeSeedLoadout\(preferredLoadout/);
 });
 
 test("Studio requires manual behavior selection and only links a projectile in projectile mode", () => {
