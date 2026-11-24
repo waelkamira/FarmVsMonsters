@@ -126,7 +126,8 @@ test("Phaser uses the shared contract and has no duplicate monster balance table
   assert.match(scene, /getMonsterCombatStats\(archetype, this\.wave\)/);
   assert.match(scene, /PHASE_ONE_DRAGON\.maxHp/);
   assert.match(scene, /PHASE_ONE_REWARDS\.ordinaryMonsterDefeatCoins/);
-  assert.match(scene, /PHASE_ONE_TIMING\.waveIntermissionMs/);\n  assert.match(scene, /resolveWaveSpawnStep\(/);
+  assert.match(scene, /PHASE_ONE_TIMING\.waveIntermissionMs/);
+  assert.match(scene, /resolveWaveSpawnStep\(/);
   assert.doesNotMatch(scene, /const COMBAT_BALANCE\s*=/);
   assert.match(rules, /PHASE_ONE_REWARDS\.ordinaryMonsterDefeatCoins/);
   assert.match(rules, /PHASE_ONE_WAVE_SIZES/);
