@@ -27,3 +27,14 @@ test("asset detail edit action opens the existing Studio edit workflow", () => {
   assert.match(studio, /beginReplace\(target\)/);
   assert.match(studio, /editRequestHandled\.current=true/);
 });
+
+test("asset detail stage-management links resolve to the dedicated plant and monster roster pages", () => {
+  const monsterRoute = readFileSync(new URL("../app/studio/stages/monsters/page.js", import.meta.url), "utf8");
+  const plantRoute = readFileSync(new URL("../app/studio/stages/plants/page.js", import.meta.url), "utf8");
+  const rosterManager = readFileSync(new URL("../app/studio/StageRosterManager.jsx", import.meta.url), "utf8");
+  assert.match(detail, /asset\.type === "monster" \? "\/studio\/stages\/monsters" : "\/studio\/stages\/plants"/);
+  assert.match(monsterRoute, /StageRosterManager kind="monster"/);
+  assert.match(plantRoute, /StageRosterManager kind="plant"/);
+  assert.match(rosterManager, /\[selectedId,setSelectedId\][\s\S]*\[quantity,setQuantity\]=useState\(1\)/);
+  assert.match(rosterManager, /count:Math\.min\(500,x\.count\+quantity\)/);
+});
