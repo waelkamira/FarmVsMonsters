@@ -19,7 +19,9 @@ export function buildAtlasMetadata(relativePath, atlas, dimensions) {
   const xPositions = [...new Set(frames.map((frame) => frame.x))];
   const yPositions = [...new Set(frames.map((frame) => frame.y))];
   const uniformGrid = widths.length === 1 && heights.length === 1 &&
-    xPositions.length * yPositions.length === frames.length;
+    xPositions.length * yPositions.length === frames.length &&
+    xPositions.every((x, index) => x === xPositions[0] + index * widths[0]) &&
+    yPositions.every((y, index) => y === yPositions[0] + index * heights[0]);
   const clipsByName = new Map();
   for (const frame of frames) {
     const match = frame.name.match(/^(.+?)_\d+$/);
@@ -34,8 +36,10 @@ export function buildAtlasMetadata(relativePath, atlas, dimensions) {
     type: "spritesheet",
     spriteSheet: true,
     frameCount: frames.length,
-    rows: yPositions.length,
-    columns: xPositions.length,
+    // Atlas frame coordinates are not necessarily a rectangular sprite-sheet grid.
+    // Keep a logical capacity equal to the actual frame count; frameConfig is emitted only for a verified grid.
+    rows: 1,
+    columns: frames.length,
     ...(uniformGrid ? {
       frameConfig: {
         frameWidth: widths[0],
