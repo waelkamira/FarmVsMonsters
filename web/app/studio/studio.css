@@ -289,3 +289,8 @@
 .studio-library-panel>.studio-list{flex:1;min-height:0;max-height:none;overflow-y:auto;scrollbar-gutter:stable}
 .studio-library-panel>.studio-empty{flex:1;min-height:0}
 @media(max-width:800px){.studio-library-panel{height:500vh;height:500svh;min-height:2500px}}
+
+/* Keep the asset action bar visible and consistent for plant and monster cards. */
+.studio-list .studio-asset-row>.studio-asset-actions{display:flex!important;visibility:visible!important;opacity:1!important;align-items:center;flex-wrap:wrap;gap:8px;grid-column:1/-1;width:100%;min-width:0;position:relative;z-index:1}
+.studio-asset-actions>.studio-prepare-test-button:disabled,.studio-asset-actions>.studio-publish-button:disabled{opacity:.5;cursor:not-allowed}
+.studio-asset-actions>.studio-publish-button:not(:disabled){border-color:#719b65;background:#294126;color:#d8f3c8}
