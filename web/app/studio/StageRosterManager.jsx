@@ -1,5 +1,5 @@
 "use client";
-import {useEffect,useMemo,useState} from "react";
+import {useCallback,useEffect,useMemo,useState} from "react";
 import Link from "next/link";
 import "./stage-roster.css";
 
@@ -37,8 +37,7 @@ export default function StageRosterManager({kind}){
  const entries=config.stages?.[String(stage)]?.[isMonster?"monsters":"plants"]||[];
  const selectable=useMemo(()=>[...BUILT_INS[kind].map(([id,name])=>({id,name,type:kind,builtin:true})),...assets.filter(a=>a.type===kind&&a.status!=="archived"&&(a.status==="published"||a.status==="testing"))].filter((item,index,all)=>all.findIndex(other=>other.id===item.id)===index),[assets,kind]);
  const assetById=useMemo(()=>new Map([...BUILT_INS[kind].map(([id,name])=>[id,{id,name,type:kind,builtin:true}]),...assets.filter(a=>a.type===kind)]),[assets,kind]);
- const selectedAsset=assetById.get(selectedId)||selectable.find(a=>a.id===selectedId);
- async function load(){
+ const load=useCallback(async()=>{
   setLoading(true);
   try{
    const [a,c]=await Promise.all([
@@ -50,8 +49,8 @@ export default function StageRosterManager({kind}){
    if(!c.ok)throw Error(cd.error||"تعذر تحميل إعدادات المراحل");
    setAssets(ad.assets||[]);setConfig(cd);setSha(cd.sha||null);setMessage("");
   }catch(error){setMessage(error.message);}finally{setLoading(false);}
- }
- useEffect(()=>{load();},[kind]);
+ },[]);
+ useEffect(()=>{load();},[load]);
  function updateEntries(next){
   setConfig(current=>({...current,stages:{...current.stages,[String(stage)]:{...(current.stages?.[String(stage)]||{monsters:[],plants:[]}),[isMonster?"monsters":"plants"]:next,[isMonster?"monstersConfigured":"plantsConfigured"]:true}}}));
  }
