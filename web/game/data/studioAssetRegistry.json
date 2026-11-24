@@ -10,7 +10,7 @@
       "rows": 3,
       "columns": 3,
       "spriteSheet": true,
-      "status": "testing",
+      "status": "published",
       "createdAt": "2026-11-20T16:17:16.849Z",
       "updatedAt": "2026-11-24T00:09:41.346Z",
       "combat": {
@@ -63,7 +63,7 @@
         "sizePercent": 100
       },
       "testingAt": "2026-11-24T00:09:56.487Z",
-      "publishedAt": null,
+      "publishedAt": "2026-11-24T18:45:02.559Z",
       "frameCount": 9,
       "releaseRequest": null,
       "archivedAt": null,
