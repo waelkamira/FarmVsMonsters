@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
+import { PHASE_ONE_DRAGON } from "../game/rules/phaseOneCombatContract.mjs";
+import { advanceCooldown, selectDragonFireballTarget } from "../game/rules/combatSimulation.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const scene = readFileSync(resolve(here, "../game/scenes/BattleScene.js"), "utf8");
