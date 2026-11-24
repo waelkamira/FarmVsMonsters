@@ -325,7 +325,7 @@ test("player guidance and roadmap match the current Phase 1 balance", () => {
   assert.match(scene, /this\.collectionMenuTab = "phases"/);
   assert.match(scene, /"treasure-cave-menu"/);
   assert.match(scene, /"dragon-boss"/);
-  assert.match(scene, /const startFrame = key === "hyena-bite" \? 6 : 0/);
+  assert.match(scene, /const startFrame = 0/);
   assert.match(scene, /generateFrameNumbers\(key, \{ start: startFrame, end: endFrame \}\)/);
   assert.match(scene, /this\.playHyenaAnimation\(monster, "hyena-bite"\)/);
   assert.doesNotMatch(scene, /monster\.hyenaSprite\.anims\.pause\(\)/);
