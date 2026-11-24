@@ -164,7 +164,7 @@ test("mushroom is resource-only and its pickups expire after 12 seconds", () => 
 });
 
 test("Mushroom production always creates a full collectible; the energy cap is applied at pickup", () => {
-  const production = scene.slice(scene.indexOf("spawnMushroomEnergy(plant) {"), scene.indexOf("spawnStudioEnergy(plant"));
+  const production = scene.slice(scene.indexOf("spawnMushroomEnergy(plant) {"), scene.indexOf("fireThorn(plant"));
   assert.match(production, /const amount = MUSHROOM_CONFIG\.energy;/);
   assert.doesNotMatch(production, /Math\.min\(MUSHROOM_CONFIG\.energy, MAX_ENERGY - this\.energy\)/);
   assert.match(production, /collectEnergy\(this\.energy, amount\)/);
@@ -236,7 +236,7 @@ test("Dust Skitters perform periodic visual hops while remaining grounded by pla
   assert.match(update, /resolveDustSkitterMotionStep\(/);
   assert.match(update, /jumpVisualHeight: 34/);
   assert.match(update, /monster\.hyenaSprite\.y = jumpOffset/);
-  assert.match(update, /if \(withinBiteRange\) \{\s*if \(monster\.isJumping\)/);
+  assert.match(update, /if \(withinBiteRange\) \{[\s\S]*?if \(monster\.isJumping\)/);
   assert.match(update, /monster\.isJumping = false;\s*monster\.jumpElapsed = 0;/);
   assert.doesNotMatch(spawn, /\bshadow\b/i, "characters must not receive ground shadows");
   assert.doesNotMatch(update, /monster\.shadow/, "monster movement must not update a ground shadow");
@@ -319,7 +319,7 @@ test("home menu restores authenticated cloud progress and keeps guest entry", ()
 test("player guidance and roadmap match the current Phase 1 balance", () => {
   assert.match(guide, /15-energy collectible every 12 seconds/);
   assert.match(gamePage, /Collect Mushroom energy/);
-  assert.match(scene, /createCollectionMenuControl\(\)/);
+  assert.match(scene, /this\.toggleCollectionMenu\(\)/);
   assert.match(scene, /this\.collectionMenuTab = "phases"/);
   assert.match(scene, /"treasure-cave-menu"/);
   assert.match(scene, /"dragon-boss"/);
