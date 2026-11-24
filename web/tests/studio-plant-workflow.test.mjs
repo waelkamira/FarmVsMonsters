@@ -5,6 +5,7 @@ import { readFileSync } from "node:fs";
 const here = new URL(".", import.meta.url);
 const read = (relative) => readFileSync(new URL(relative, here), "utf8");
 const studioPage = read("../app/studio/page.js");
+const projectileEditor = read("../app/studio/ProjectileTrajectoryEditor.jsx");
 const assetsRoute = read("../app/api/studio/assets/route.js");
 const battleScene = read("../game/scenes/BattleScene.js");
 const selector = read("../app/stage/1/select/page.js");
