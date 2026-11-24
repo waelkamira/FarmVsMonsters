@@ -7,9 +7,9 @@ const css = readFileSync(new URL("../app/studio/studio.css", import.meta.url), "
 const editor = readFileSync(new URL("../app/studio/ProjectileTrajectoryEditor.jsx", import.meta.url), "utf8");
 const profile = readFileSync(new URL("../game/studio/plantProfiles.mjs", import.meta.url), "utf8");
 
-test("Studio asset library fills the available viewport and scrolls its own list", () => {
+test("Studio asset library is five viewport-heights tall and scrolls its own list", () => {
   assert.match(page, /className="studio-panel studio-library-panel"/);
-  assert.match(css, /\.studio-library-panel\{height:calc\(100vh - 40px\)/);
+  assert.match(css, /\.studio-library-panel\{height:500vh;height:500svh;min-height:2500px;max-height:none/);
   assert.match(css, /\.studio-library-panel>\.studio-list\{flex:1;min-height:0;max-height:none;overflow-y:auto/);
   assert.doesNotMatch(css, /\.studio-list\{[^}]*max-height:320px/);
 });
