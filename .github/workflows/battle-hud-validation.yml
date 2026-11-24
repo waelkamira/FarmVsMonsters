@@ -43,6 +43,8 @@ jobs:
         run: node --test tests/battle-hud-buttons-layout.test.mjs
       - name: Verify battle HUD integration regressions
         run: node --test --test-name-pattern="all battle action buttons|uploaded wood frame is loaded" tests/wood-frame-inventory.test.mjs
+      - name: Verify stage roster and encounter integration
+        run: node --test tests/stage-encounter-controls.test.mjs
       - name: Verify Studio viewport and projectile profile regressions
         run: node --test tests/studio-ui-layout.test.mjs tests/studio-plant-projectile-profile.test.mjs
       - name: Build production application
