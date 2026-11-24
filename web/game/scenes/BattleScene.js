@@ -460,7 +460,7 @@ export default class BattleScene extends Scene {
     this.waveDefeatedMonsters = 0;
     this.waveSize = this.getStageWaveSize(1);
     const firstStageMonster = this.getStageMonsterEntry(0);
-    this.spawnTimer = firstStageMonster?.firstSpawnDelayMs > 0 ? firstStageMonster.firstSpawnDelayMs : PHASE_ONE_TIMING.firstMonsterSpawnDelayMs;
+    this.spawnTimer = this.stageMonsterRosterConfigured && firstStageMonster ? Math.max(0, Number(firstStageMonster.firstSpawnDelayMs) || 0) : PHASE_ONE_TIMING.firstMonsterSpawnDelayMs;
     this.totalSpawnedMonsters = 0;
     this.totalDefeatedMonsters = 0;
     this.totalPlantsPlanted = 0;
@@ -2381,6 +2381,11 @@ export default class BattleScene extends Scene {
       this.spawnMonster(spawnIndex);
       this.spawnedThisWave = spawnStep.spawnedThisWave;
       this.totalSpawnedMonsters += 1;
+      const spawnedEntry = this.getStageMonsterEntry(spawnIndex);
+      const nextEntry = this.getStageMonsterEntry(this.spawnedThisWave);
+      if (this.stageMonsterRosterConfigured && nextEntry && nextEntry.key !== spawnedEntry?.key) {
+        this.spawnTimer = Math.max(0, Number(nextEntry.firstSpawnDelayMs) || 0);
+      }
       if (this.stageNumber === 1 && this.wave === this.totalWaves && this.spawnedThisWave === this.waveSize) this.beginDragonEncounter();
     }
     this.updatePlants(deltaMs);
@@ -5181,7 +5186,7 @@ export default class BattleScene extends Scene {
     this.waveSize = this.getStageWaveSize(this.wave);
     const nextStageMonster = this.getStageMonsterEntry(0);
     this.waveIntermissionMs = PHASE_ONE_TIMING.waveIntermissionMs;
-    this.spawnTimer = nextStageMonster?.firstSpawnDelayMs > 0 ? nextStageMonster.firstSpawnDelayMs : PHASE_ONE_TIMING.nextWaveSpawnDelayMs;
+    this.spawnTimer = this.stageMonsterRosterConfigured && nextStageMonster ? Math.max(0, Number(nextStageMonster.firstSpawnDelayMs) || 0) : PHASE_ONE_TIMING.nextWaveSpawnDelayMs;
     this.setMessage(
       "Wave " + clearedWave + " cleared. Prepare for wave " + this.wave +
       ": " + this.waveSize + " monsters in 5 seconds."
@@ -5200,7 +5205,7 @@ export default class BattleScene extends Scene {
   endGame(won) {
     if (this.gameOver) return;
     // A campaign win is valid only after the dragon is defeated and the rescue sequence completes.
-    won = Boolean(won && this.phaseOneStoryState === "complete");
+    won = Boolean(won && (this.stageNumber !== 1 || this.phaseOneStoryState === "complete"));
     this.gameOver = true;
     // Collectibles are no longer usable after a terminal result; remove their
     // expiry timers and idle tweens instead of leaving disabled pickups visible.
@@ -5215,7 +5220,7 @@ export default class BattleScene extends Scene {
     this.farmerPlanting = false;
     const locale = typeof window !== "undefined" ? window.localStorage.getItem("farmVsMonsters.language") || "ar" : "ar";
     this.setMessage(won ? "VICTORY! The farm is safe." : "GAME OVER — The monsters reached the final line.");
-    if (won) {
+    if (won && this.stageNumber === 1) {
       try {
         unlockNextStage(window.localStorage, 1);
         unlockPlantReward(window.localStorage, 1);

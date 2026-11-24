@@ -24,14 +24,18 @@ export default function StageOneSeedSelectionPage() {
   const { locale } = useLocale();
   const ar = locale === "ar";
   const router = useRouter();
+  const [stageNumber, setStageNumber] = useState(1);
   const [unlockedIds, setUnlockedIds] = useState(STARTER_LOADOUT);
   const [selected, setSelected] = useState(STARTER_LOADOUT);
   const [plantCatalog, setPlantCatalog] = useState(PLANTS);
+  const [stagePlantsConfigured, setStagePlantsConfigured] = useState(false);
   const [notice, setNotice] = useState("");
   const selectedPlants = useMemo(() => plantCatalog.filter((plant) => unlockedIds.includes(plant.id) && selected.includes(plant.id)), [plantCatalog, selected, unlockedIds]);
 
   useEffect(() => {
     let active = true;
+    const requestedStage = Number(new URLSearchParams(window.location.search).get("stage"));
+    const activeStage = Number.isInteger(requestedStage) ? Math.max(1, Math.min(100, requestedStage)) : 1;
     const readCatalog = async (url) => {
       try {
         const response = await fetch(url, { cache: "no-store" });
@@ -47,6 +51,7 @@ export default function StageOneSeedSelectionPage() {
         fetch("/api/studio/stage-encounters", { cache: "no-store" }).then(response => response.ok ? response.json() : null).catch(() => null)
       ]);
       if (!active) return;
+      setStageNumber(activeStage);
       const studioPlants = [...published, ...testing].map((plant) => ({
         id: plant.id,
         name: plant.name || plant.id,
@@ -66,7 +71,8 @@ export default function StageOneSeedSelectionPage() {
         testing: testing.some((candidate) => candidate.id === plant.id)
       }));
       const plantMap = new Map([...PLANTS, ...studioPlants].map((plant) => [plant.id, plant]));
-      const configuredStage = stageSettings?.stages?.["1"];
+      const configuredStage = stageSettings?.stages?.[String(activeStage)];
+      setStagePlantsConfigured(configuredStage?.plantsConfigured === true);
       const plantAliases = {radish:["radish","radish-level-1"],mushroom:["mushroom","energy-mushroom"],pumpkin:["pumpkin","pumpkin-level-1"],pineapple:["pineapple","pineapple-level-1"],hazelnut:["hazelnut","hazelnut-level-1"],mango:["mango","mango-level-1"],"snow-thrower":["snow-thrower","snow-thrower-level-1"],"electric-mushroom":["electric-mushroom","electric-mushroom-level-1"]};
       const nextPlants = configuredStage?.plantsConfigured
         ? [...plantMap.values()].filter(plant => configuredStage.plants.some(entry => entry.enabled !== false && (entry.id === plant.id || (plantAliases[plant.id] || []).includes(entry.id))))
@@ -79,16 +85,19 @@ export default function StageOneSeedSelectionPage() {
       const safeUnlocked = [...new Set([...STARTER_LOADOUT, ...unlocked, ...nextPlants.map((plant) => plant.id), ...studioIds])];
       setUnlockedIds(safeUnlocked);
       try {
-        const saved = JSON.parse(window.localStorage.getItem("farmVsMonsters.selectedPlants") || "null");
+        const stageSelectionKey = "farmVsMonsters.selectedPlants.stage." + activeStage;
+        const saved = JSON.parse(window.localStorage.getItem(stageSelectionKey) || (activeStage === 1 ? window.localStorage.getItem("farmVsMonsters.selectedPlants") : "null"));
         const validSaved = Array.isArray(saved)
           ? saved.filter((id) => safeUnlocked.includes(id) && nextPlants.some((plant) => plant.id === id))
           : [];
         const defaultStudioPlants = studioPlants.map((plant) => plant.id);
         // Newly published Studio plants are unlocked and equipped by default;
         // the seven-slot limit applies only to the active loadout, not the catalog.
-        setSelected([...new Set([...STARTER_LOADOUT, ...defaultStudioPlants, ...validSaved])].slice(0, MAX_SEEDS));
+        const availableIds = new Set(nextPlants.map((plant) => plant.id));
+        setSelected([...new Set([...STARTER_LOADOUT.filter((id) => availableIds.has(id)), ...defaultStudioPlants.filter((id) => availableIds.has(id)), ...validSaved])].slice(0, MAX_SEEDS));
       } catch {
-        setSelected([...new Set([...STARTER_LOADOUT, ...studioPlants.map((plant) => plant.id)])].slice(0, MAX_SEEDS));
+        const availableIds = new Set(nextPlants.map((plant) => plant.id));
+        setSelected([...new Set([...STARTER_LOADOUT.filter((id) => availableIds.has(id)), ...studioPlants.map((plant) => plant.id).filter((id) => availableIds.has(id))])].slice(0, MAX_SEEDS));
       }
     })();
     return () => { active = false; };
@@ -109,13 +118,19 @@ export default function StageOneSeedSelectionPage() {
   }
 
   function beginBattle() {
-    if (!selected.includes("mushroom") || selected.length < 2) {
-      setNotice(ar ? "احتفظ بفطر الطاقة واختر نبتة أخرى على الأقل." : "Keep the Energy Mushroom and choose at least one other plant.");
+    const hasMushroom = selectedPlants.some((plant) => plant.id === "mushroom");
+    const minimumSeeds = stagePlantsConfigured ? 1 : 2;
+    const mustKeepMushroom = !stagePlantsConfigured || plantCatalog.some((plant) => plant.id === "mushroom");
+    if (selectedPlants.length < minimumSeeds || (mustKeepMushroom && !hasMushroom)) {
+      setNotice(ar ? "اختر نباتاً متاحاً واحداً على الأقل، واحتفظ بفطر الطاقة إذا كان ضمن نباتات هذه المرحلة." : "Choose at least one available plant, and keep the Energy Mushroom if it is part of this stage.");
       return;
     }
     try {
-      window.localStorage.setItem("farmVsMonsters.selectedPlants", JSON.stringify(selectedPlants.map((plant) => plant.id)));
-      router.push("/game");
+      const savedSelection = JSON.stringify(selectedPlants.map((plant) => plant.id));
+      window.localStorage.setItem("farmVsMonsters.selectedPlants.stage." + stageNumber, savedSelection);
+      // The battle runtime consumes the active loadout key; keep it in sync while preserving each stage saved selection.
+      window.localStorage.setItem("farmVsMonsters.selectedPlants", savedSelection);
+      router.push("/game?stage=" + stageNumber);
     } catch {
       setNotice(ar ? "تعذر حفظ التشكيلة. تحقق من إعدادات التخزين في المتصفح." : "Could not save your loadout. Check browser storage settings.");
     }

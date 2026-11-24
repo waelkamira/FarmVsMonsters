@@ -155,7 +155,9 @@ test("Studio exposes editable projectile controls with per-field Arabic explanat
 
 test("published Studio plants are included in the default seven-slot loadout",()=>{
   assert.match(selector,/defaultStudioPlants = studioPlants\.map/);
-  assert.match(selector,/STARTER_LOADOUT, \.\.\.defaultStudioPlants/);
+  assert.match(selector,/const availableIds = new Set\(nextPlants\.map\(\(plant\) => plant\.id\)\)/);
+  assert.match(selector,/STARTER_LOADOUT\.filter\(\(id\) => availableIds\.has\(id\)\)/);
+  assert.match(selector,/defaultStudioPlants\.filter\(\(id\) => availableIds\.has\(id\)\)/);
   assert.match(selector,/MAX_SEEDS = 7/);
 });
 
