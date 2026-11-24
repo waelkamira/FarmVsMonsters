@@ -225,12 +225,12 @@
       "name": "bamboo-level-1",
       "filename": "bamboo-level-1.png",
       "path": "/assets/plants/bamboo-level-1.png",
-      "rows": 3,
-      "columns": 3,
-      "spriteSheet": true,
+      "rows": 1,
+      "columns": 1,
+      "spriteSheet": false,
       "status": "published",
       "createdAt": "2026-11-20T16:34:22.262Z",
-      "updatedAt": "2026-11-20T20:37:26.840Z",
+      "updatedAt": "2026-11-24T15:19:09.989Z",
       "combat": {
         "mode": "melee",
         "projectile": null,
@@ -245,7 +245,8 @@
         "energyIntervalMs": 12000
       },
       "testingAt": "2026-11-20T20:37:50.889Z",
-      "publishedAt": "2026-11-20T20:40:49.469Z"
+      "publishedAt": "2026-11-20T20:40:49.469Z",
+      "frameCount": 1
     },
     {
       "id": "bamboo-throwing-level-1",
@@ -253,12 +254,12 @@
       "name": "bamboo-throwing-level-1",
       "filename": "bamboo-throwing-level-1.png",
       "path": "/assets/plants/bamboo-throwing-level-1.png",
-      "rows": 3,
-      "columns": 3,
-      "spriteSheet": true,
+      "rows": 1,
+      "columns": 1,
+      "spriteSheet": false,
       "status": "testing",
       "createdAt": "2026-11-20T21:52:10.198Z",
-      "updatedAt": "2026-11-22T09:52:26.548Z",
+      "updatedAt": "2026-11-24T15:19:09.989Z",
       "combat": {
         "mode": "projectile",
         "projectile": {
@@ -310,7 +311,7 @@
       },
       "testingAt": "2026-11-22T09:52:35.136Z",
       "publishedAt": null,
-      "frameCount": 9,
+      "frameCount": 1,
       "releaseRequest": {
         "number": 85,
         "url": "https://github.com/waelkamira/FarmVsMonsters/pull/85",
@@ -1431,7 +1432,7 @@
       "spriteSheet": false,
       "status": "draft",
       "createdAt": "2026-11-24T04:16:00.506Z",
-      "updatedAt": "2026-11-24T04:16:00.506Z"
+      "updatedAt": "2026-11-24T15:19:09.989Z"
     },
     {
       "id": "snow-thrower-level-1",
@@ -1445,7 +1446,7 @@
       "spriteSheet": false,
       "status": "draft",
       "createdAt": "2026-11-24T04:16:00.506Z",
-      "updatedAt": "2026-11-24T04:16:00.506Z"
+      "updatedAt": "2026-11-24T15:19:09.989Z"
     },
     {
       "id": "hazelnut-level-1",
@@ -1453,13 +1454,13 @@
       "name": "hazelnut-level-1",
       "path": "/assets/plants/hazelnut-level-1.png",
       "filename": "hazelnut-level-1.png",
-      "rows": 3,
-      "columns": 3,
-      "frameCount": 9,
+      "rows": 1,
+      "columns": 1,
+      "frameCount": 1,
       "spriteSheet": true,
       "status": "draft",
       "createdAt": "2026-11-24T04:16:00.506Z",
-      "updatedAt": "2026-11-24T04:16:00.506Z"
+      "updatedAt": "2026-11-24T15:19:09.989Z"
     },
     {
       "id": "mango-level-1",
@@ -1473,7 +1474,7 @@
       "spriteSheet": false,
       "status": "draft",
       "createdAt": "2026-11-24T04:16:00.506Z",
-      "updatedAt": "2026-11-24T04:16:00.506Z"
+      "updatedAt": "2026-11-24T15:19:09.989Z"
     },
     {
       "id": "mushroom",
@@ -1487,7 +1488,7 @@
       "spriteSheet": false,
       "status": "draft",
       "createdAt": "2026-11-24T04:16:00.506Z",
-      "updatedAt": "2026-11-24T04:16:00.506Z"
+      "updatedAt": "2026-11-24T15:19:09.989Z"
     },
     {
       "id": "pineapple-level-1",
@@ -1495,13 +1496,13 @@
       "name": "pineapple-level-1",
       "path": "/assets/plants/pineapple-level-1.png",
       "filename": "pineapple-level-1.png",
-      "rows": 3,
-      "columns": 3,
-      "frameCount": 9,
+      "rows": 1,
+      "columns": 1,
+      "frameCount": 1,
       "spriteSheet": true,
       "status": "draft",
       "createdAt": "2026-11-24T04:16:00.506Z",
-      "updatedAt": "2026-11-24T04:16:00.506Z"
+      "updatedAt": "2026-11-24T15:19:09.989Z"
     },
     {
       "id": "pumpkin",
@@ -1515,7 +1516,7 @@
       "spriteSheet": false,
       "status": "draft",
       "createdAt": "2026-11-24T04:16:00.506Z",
-      "updatedAt": "2026-11-24T04:16:00.506Z"
+      "updatedAt": "2026-11-24T15:19:09.989Z"
     },
     {
       "id": "radish-level-1",
@@ -1529,7 +1530,7 @@
       "spriteSheet": false,
       "status": "draft",
       "createdAt": "2026-11-24T04:16:00.506Z",
-      "updatedAt": "2026-11-24T04:16:00.506Z"
+      "updatedAt": "2026-11-24T15:19:09.989Z"
     },
     {
       "id": "radish",
@@ -1543,7 +1544,7 @@
       "spriteSheet": false,
       "status": "draft",
       "createdAt": "2026-11-24T04:16:00.506Z",
-      "updatedAt": "2026-11-24T04:16:00.506Z"
+      "updatedAt": "2026-11-24T15:19:09.989Z"
     },
     {
       "id": "tomato",
@@ -1557,7 +1558,7 @@
       "spriteSheet": false,
       "status": "draft",
       "createdAt": "2026-11-24T04:16:00.506Z",
-      "updatedAt": "2026-11-24T04:16:00.506Z"
+      "updatedAt": "2026-11-24T15:19:09.989Z"
     },
     {
       "id": "electric-mushroom-level-1",
@@ -1571,7 +1572,7 @@
       "spriteSheet": false,
       "status": "draft",
       "createdAt": "2026-11-24T04:16:00.506Z",
-      "updatedAt": "2026-11-24T04:16:00.506Z"
+      "updatedAt": "2026-11-24T15:19:09.989Z"
     },
     {
       "id": "corn-monster",
@@ -1585,7 +1586,7 @@
       "spriteSheet": true,
       "status": "testing",
       "createdAt": "2026-11-22T20:20:34.630Z",
-      "updatedAt": "2026-11-24T00:00:00.000Z",
+      "updatedAt": "2026-11-24T15:19:09.990Z",
       "animationProfile": {
         "idle": {
           "startFrame": 0,
