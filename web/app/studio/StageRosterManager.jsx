@@ -19,12 +19,17 @@ const BUILTIN_IMAGES={
   stonehide:"/assets/monster-icons/stonehide.svg","alpha-brute":"/assets/monster-icons/alpha-brute.svg"
  }
 };
+const BUILTIN_SHEETS=new Set(["radish","pineapple","hazelnut","mango","snow-thrower","electric-mushroom"]);
 const makeKey=()=> "entry-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,7);
 function assetImage(asset,kind){return asset?.previewUrl||asset?.path||BUILTIN_IMAGES[kind]?.[asset?.id]||"";}
 function AssetImage({asset,kind,large=false}) {
  const src=assetImage(asset,kind);
+ const frameCount=Math.max(1,Number(asset?.frameCount)||((Number(asset?.rows)||1)*(Number(asset?.columns)||1)));
+ const spriteSheet=frameCount>1&&(asset?.spriteSheet===true||BUILTIN_SHEETS.has(asset?.id));
+ const rows=Math.max(1,Number(asset?.rows)||(BUILTIN_SHEETS.has(asset?.id)?3:1));
+ const columns=Math.max(1,Number(asset?.columns)||(BUILTIN_SHEETS.has(asset?.id)?3:1));
  return <div className={"stage-roster-image"+(large?" is-large":"")}>
-  {src?<img src={src} alt={asset?.name||asset?.id||"صورة الأصل"} loading="lazy" onError={event=>{event.currentTarget.style.display="none";}}/>:<span aria-hidden="true">{kind==="monster"?"👾":"🌱"}</span>}
+  {src?(spriteSheet?<div role="img" aria-label={asset?.name||asset?.id||"صورة الأصل"} className="stage-roster-first-frame" style={{backgroundImage:"url("+JSON.stringify(src)+")",backgroundSize:(columns*100)+"% "+(rows*100)+"%",backgroundPosition:"left top"}}/>:<img src={src} alt={asset?.name||asset?.id||"صورة الأصل"} loading="lazy" onError={event=>{event.currentTarget.style.display="none";}}/>):<span aria-hidden="true">{kind==="monster"?"👾":"🌱"}</span>}
  </div>;
 }
 export default function StageRosterManager({kind}){
@@ -35,7 +40,7 @@ export default function StageRosterManager({kind}){
  const [hp,setHp]=useState(1),[speed,setSpeed]=useState(1),[damage,setDamage]=useState(1),[attack,setAttack]=useState(1);
  const [busy,setBusy]=useState(false),[loading,setLoading]=useState(true),[message,setMessage]=useState("");
  const entries=config.stages?.[String(stage)]?.[isMonster?"monsters":"plants"]||[];
- const selectable=useMemo(()=>[...BUILT_INS[kind].map(([id,name])=>({id,name,type:kind,builtin:true})),...assets.filter(a=>a.type===kind&&a.status!=="archived"&&(a.status==="published"||a.status==="testing"))].filter((item,index,all)=>all.findIndex(other=>other.id===item.id)===index),[assets,kind]);
+ const selectable=useMemo(()=>[...BUILT_INS[kind].map(([id,name])=>({id,name,type:kind,builtin:true,...(BUILTIN_SHEETS.has(id)?{spriteSheet:true,rows:3,columns:3,frameCount:9}:{})})),...assets.filter(a=>a.type===kind&&a.status!=="archived"&&(a.status==="published"||a.status==="testing"))].filter((item,index,all)=>all.findIndex(other=>other.id===item.id)===index),[assets,kind]);
  const assetById=useMemo(()=>new Map([...BUILT_INS[kind].map(([id,name])=>[id,{id,name,type:kind,builtin:true}]),...assets.filter(a=>a.type===kind)]),[assets,kind]);
  const load=useCallback(async()=>{
   setLoading(true);
