@@ -4,6 +4,7 @@ import Link from "next/link";
 import "./stage-roster.css";
 
 const EMPTY={version:1,stages:{"1":{monsters:[],plants:[]}}};
+const BUILT_INS={plant:[["radish","الفجل"],["mushroom","فطر الطاقة"],["pumpkin","اليقطين"],["pineapple","الأناناس"],["hazelnut","البندق"],["mango","المانجو"],["snow-thrower","قاذف الثلج"],["electric-mushroom","الفطر الكهربائي"]],monster:[["cave-brute","الوحش المتوازن"],["dust-skitter","الوحش السريع"],["stonehide","الوحش المدرع"],["alpha-brute","الوحش العملاق"]]};
 const makeKey=()=> "entry-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,7);
 export default function StageRosterManager({kind}){
  const isMonster=kind==="monster";
@@ -13,7 +14,7 @@ export default function StageRosterManager({kind}){
  const [hp,setHp]=useState(1),[speed,setSpeed]=useState(1),[damage,setDamage]=useState(1),[attack,setAttack]=useState(1);
  const [busy,setBusy]=useState(false),[message,setMessage]=useState("");
  const entries=config.stages?.[String(stage)]?.[isMonster?"monsters":"plants"]||[];
- const available=useMemo(()=>assets.filter(a=>a.type===kind&&a.status!=="archived"&&(a.status==="published"||a.status==="testing")), [assets,kind]);
+ const available=useMemo(()=>[...BUILT_INS[kind].map(([id,name])=>({id,name,type:kind,builtin:true})),...assets.filter(a=>a.type===kind&&a.status!=="archived"&&(a.status==="published"||a.status==="testing"))].filter((item,index,all)=>all.findIndex(other=>other.id===item.id)===index),[assets,kind]);
  const load=useCallback(async()=>{
   const [a,c]=await Promise.all([
    fetch("/api/studio/assets",{cache:"no-store",credentials:"same-origin"}),
@@ -23,7 +24,7 @@ export default function StageRosterManager({kind}){
   if(!a.ok)throw Error(ad.error||"تعذر تحميل مكتبة الأصول");
   if(!c.ok)throw Error(cd.error||"تعذر تحميل إعدادات المراحل");
   setAssets(ad.assets||[]);setConfig(cd);setSha(cd.sha||null);
-  setSelectedId(current=>current||((ad.assets||[]).find(x=>x.type===kind&&x.status!=="archived")?.id||""));
+  setSelectedId(current=>current||(BUILT_INS[kind][0]?.[0]||""));
  },[kind]);
  useEffect(()=>{load().catch(e=>setMessage(e.message));},[load]);
  function updateEntries(next){
