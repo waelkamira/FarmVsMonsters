@@ -4826,32 +4826,34 @@ export default class BattleScene extends Scene {
 
       // A Radish projectile can damage monsters in its own lane only.
       let hit = null;
-      let nearestHitDistance = Infinity;
       let firstSnowHitLocalX = Infinity;
-      for (const monster of this.monsters) {
-        if (!monster?.alive || monster.row !== shot.row ||
-            !Number.isFinite(monster.localX)) continue;
-        if (shot.freeze && monster.freezeStage >= 5) continue;
-        if (!this.studioProjectileHitsMonster(shot, monster, projectileX, projectileY)) continue;
-        const horizontalDistance = Math.abs(monster.localX - shot.localX);
-        const hitRadius = (shot.collisionRadius || PHASE_ONE_PLANTS.radish.projectileCollisionRadius) * (monster.widthScale || 1);
-        if (shot.freeze) {
-          // Snow shots travel toward increasing lane X. Test the whole swept
-          // segment so a fast frame cannot skip a hyena between two positions.
-          // If it crosses more than one, freeze the first one along the path.
+      const projectileCandidates = this.monsters.filter((monster) =>
+        monster?.alive &&
+        monster.row === shot.row &&
+        Number.isFinite(monster.localX) &&
+        this.studioProjectileHitsMonster(shot, monster, projectileX, projectileY)
+      );
+      if (shot.freeze) {
+        // Snow shots travel toward increasing lane X. Test the whole swept
+        // segment so a fast frame cannot skip a hyena between two positions.
+        // If it crosses more than one, freeze the first one along the path.
+        for (const monster of projectileCandidates) {
+          if (monster.freezeStage >= 5) continue;
+          const hitRadius = (shot.collisionRadius || PHASE_ONE_PLANTS.radish.projectileCollisionRadius) * (monster.widthScale || 1);
           const sweptStart = previousShotLocalX - hitRadius;
           const sweptEnd = shot.localX + hitRadius;
           if (monster.localX < sweptStart || monster.localX > sweptEnd ||
               monster.localX >= firstSnowHitLocalX) continue;
           hit = monster;
           firstSnowHitLocalX = monster.localX;
-          continue;
         }
-        // Preserve the existing nearest-hit behavior for Radish and other
-        // damage projectiles.
-        if (horizontalDistance > hitRadius || horizontalDistance >= nearestHitDistance) continue;
-        hit = monster;
-        nearestHitDistance = horizontalDistance;
+      } else {
+        hit = selectProjectileTarget({
+          monsters: projectileCandidates,
+          row: shot.row,
+          localX: shot.localX,
+          collisionRadius: shot.collisionRadius || PHASE_ONE_PLANTS.radish.projectileCollisionRadius
+        });
       }
 
       if (hit) {
