@@ -28,7 +28,7 @@ function githubHeaders(token){return {Authorization:"Bearer "+token,Accept:"appl
 function githubUrl(filePath){return "https://api.github.com/repos/"+(process.env.STUDIO_GITHUB_REPOSITORY||"waelkamira/FarmVsMonsters")+"/contents/"+filePath;}
 async function githubGetDocument(filePath,token,branch){const response=await fetch(githubUrl(filePath)+"?ref="+encodeURIComponent(branch),{headers:githubHeaders(token)});if(response.status===404)return null;if(!response.ok)throw Error("GitHub read failed ("+response.status+").");const data=await response.json();return {content:Buffer.from(data.content||"","base64").toString("utf8"),sha:data.sha};}
 async function githubGet(filePath,token,branch){const document=await githubGetDocument(filePath,token,branch);return document?.content??null;}
-async function githubGetBytes(filePath,token,branch){const response=await fetch(githubUrl(filePath)+"?ref="+encodeURIComponent(branch),{headers:{...githubHeaders(token),Accept:"application/vnd.github.raw"}});if(response.status===404)throw Error("Asset not found in staging branch: "+filePath);if(!response.ok)throw Error("GitHub asset read failed ("+response.status+").");return Buffer.from(await response.arrayBuffer());}
+async function githubGetBytes(filePath,token,branch){let response=await fetch(githubUrl(filePath)+"?ref="+encodeURIComponent(branch),{headers:{...githubHeaders(token),Accept:"application/vnd.github.raw"}});if(response.status===404){const targetBranch=process.env.STUDIO_PUBLISH_BRANCH||"main";if(targetBranch!==branch)response=await fetch(githubUrl(filePath)+"?ref="+encodeURIComponent(targetBranch),{headers:{...githubHeaders(token),Accept:"application/vnd.github.raw"}});}if(!response.ok)throw Error("GitHub asset read failed ("+response.status+"): "+filePath);return Buffer.from(await response.arrayBuffer());}
 async function githubPutImmutable(filePath,bytes,message,token,branch){const api=githubUrl(filePath),headers=githubHeaders(token);const verify=async()=>{const response=await fetch(api+"?ref="+encodeURIComponent(branch),{headers:{...headers,Accept:"application/vnd.github.raw"}});if(response.status===404)return false;if(!response.ok)throw Error("GitHub immutable asset lookup failed ("+response.status+").");return Buffer.from(await response.arrayBuffer()).equals(bytes);};if(await verify())return;const saved=await fetch(api,{method:"PUT",headers:{...headers,"Content-Type":"application/json"},body:JSON.stringify({message,branch,content:Buffer.from(bytes).toString("base64")})});if(saved.ok)return;if(await verify())return;const data=await saved.json().catch(()=>({}));throw Error(data.message||"GitHub immutable asset save failed ("+saved.status+").");}
 function githubApiUrl(endpoint){return "https://api.github.com/repos/"+(process.env.STUDIO_GITHUB_REPOSITORY||"waelkamira/FarmVsMonsters")+endpoint;}
 async function githubGetPullRequest(number,token){
@@ -42,6 +42,56 @@ async function githubPut(filePath,bytes,message,token,branch,expectedSha){const 
 async function localRegistry(){try{return JSON.parse(await readFile(path.join(process.cwd(),"game/data/studioAssetRegistry.json"),"utf8"));}catch(error){if(error.code==="ENOENT")return {version:1,assets:[]};throw error;}}
 async function saveLocalRegistry(registry){const target=path.join(process.cwd(),"game/data/studioAssetRegistry.json");await mkdir(path.dirname(target),{recursive:true});await writeFile(target,JSON.stringify(registry,null,2)+"\n","utf8");}
 function addPreviewUrls(registry){const github=process.env.STUDIO_STORAGE_DRIVER==="github";return {...registry,storage:process.env.STUDIO_STORAGE_DRIVER||"local",assets:(registry.assets||[]).map(asset=>({...asset,previewUrl:github?"/api/studio/assets?preview="+encodeURIComponent(asset.path):asset.path,rigParts:serializeRigParts(registry.assets||[],asset),...(asset.combat?.projectile?{combat:{...asset.combat,projectile:{...asset.combat.projectile,frameCount:asset.combat.projectile.frameCount??1,rows:asset.combat.projectile.rows??1,columns:asset.combat.projectile.columns??1,previewUrl:github?"/api/studio/assets?preview="+encodeURIComponent(asset.combat.projectile.path):asset.combat.projectile.path}}}:{})}))};}
+function plantIdFromPath(assetPath){
+ const filename=path.basename(assetPath||"").replace(/\.[^.]+$/,"").toLowerCase();
+ return filename.replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
+}
+async function hydratePlantLibrary(registry,token,branch,expectedRegistrySha){
+ const catalogBranch=process.env.STUDIO_PUBLISH_BRANCH||"main";
+ const [manifestRaw,publishedManifestRaw,catalogRaw]=await Promise.all([
+  githubGet("web/public/assets/asset-manifest.json",token,branch),
+  catalogBranch===branch?Promise.resolve(null):githubGet("web/public/assets/asset-manifest.json",token,catalogBranch),
+  githubGet(PUBLISHED_CATALOG_PATH,token,catalogBranch)
+ ]);
+ const manifest=manifestRaw?JSON.parse(manifestRaw):{assets:[]};
+ const publishedManifest=publishedManifestRaw?JSON.parse(publishedManifestRaw):{assets:[]};
+ const manifestAssets=[...(manifest.assets||[]),...(publishedManifest.assets||[])];
+ const uniqueManifestAssets=[...new Map(manifestAssets.filter(asset=>asset.group==="plants"&&asset.url).map(asset=>[asset.url,asset])).values()];
+ const catalog=catalogRaw?JSON.parse(catalogRaw):{plants:[]};
+ const known=new Map((registry.assets||[]).map(asset=>[asset.id,asset]));
+ const published=new Map((catalog.plants||[]).map(plant=>[plant.id,plant]));
+ let changed=false;
+ for(const source of uniqueManifestAssets.filter(asset=>!/-bomb(?:-|\.)/i.test(asset.url))){
+  const id=plantIdFromPath(source.url);
+  if(!id||known.has(id))continue;
+  const catalogPlant=published.get(id);
+  const frame=source.frameConfig;
+  const record={
+   id,type:"plant",name:catalogPlant?.name||id,path:source.url,
+   filename:path.basename(source.url),
+   rows:frame&&source.height?Math.max(1,Math.floor(source.height/frame.frameHeight)):1,
+   columns:frame&&source.width?Math.max(1,Math.floor(source.width/frame.frameWidth)):1,
+   frameCount:frame?Math.max(1,Math.floor(source.width/frame.frameWidth)*Math.floor(source.height/frame.frameHeight)):1,
+   spriteSheet:source.type==="spritesheet",
+   status:catalogPlant?"published":"draft",
+   createdAt:catalogPlant?.publishedAt||new Date().toISOString(),
+   updatedAt:new Date().toISOString(),
+   ...(catalogPlant?.combat?{combat:catalogPlant.combat}:{})
+  };
+  registry.assets.push(record);known.set(id,record);changed=true;
+ }
+ for(const plant of catalog.plants||[]){
+  if(known.has(plant.id))continue;
+  const record={...plant,type:"plant",filename:path.basename(plant.path||""),status:"published",createdAt:plant.publishedAt||new Date().toISOString(),updatedAt:new Date().toISOString()};
+  registry.assets.push(record);known.set(plant.id,record);changed=true;
+ }
+ if(changed){
+  registry.version=1;
+  await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(registry,null,2)+"\n"),"studio: import existing game plants into asset library",token,branch,expectedRegistrySha);
+ }
+ return registry;
+}
+
 function readCombatForm(form,projectile,existing){
  const previous=existing?.combat;
  return createStudioPlantCombatProfile({
@@ -111,12 +161,13 @@ export async function GET(req){
    const allowedTypes={".png":"image/png",".webp":"image/webp",".gif":"image/gif",".mp3":"audio/mpeg",".wav":"audio/wav",".ogg":"audio/ogg",".m4a":"audio/mp4"};
    const extension=path.extname(preview).toLowerCase();
    if(!preview.startsWith("/assets/")||preview.includes("..")||!allowedTypes[extension])return NextResponse.json({error:"Invalid asset preview path."},{status:400});
-   try{const upstream=await fetch(githubUrl("web/public"+preview)+"?ref="+encodeURIComponent(branch),{headers:{...githubHeaders(token),Accept:"application/vnd.github.raw"}});if(!upstream.ok)return NextResponse.json({error:"GitHub preview failed ("+upstream.status+")."},{status:upstream.status===404?404:502});return new NextResponse(await upstream.arrayBuffer(),{headers:{"Content-Type":allowedTypes[extension],"Cache-Control":"private, max-age=300","X-Content-Type-Options":"nosniff"}});}catch(error){return NextResponse.json({error:error.message||"Preview fetch failed."},{status:502});}
+   try{let upstream=await fetch(githubUrl("web/public"+preview)+"?ref="+encodeURIComponent(branch),{headers:{...githubHeaders(token),Accept:"application/vnd.github.raw"}});if(upstream.status===404){const targetBranch=process.env.STUDIO_PUBLISH_BRANCH||"main";if(targetBranch!==branch)upstream=await fetch(githubUrl("web/public"+preview)+"?ref="+encodeURIComponent(targetBranch),{headers:{...githubHeaders(token),Accept:"application/vnd.github.raw"}});}if(!upstream.ok)return NextResponse.json({error:"GitHub preview failed ("+upstream.status+")."},{status:upstream.status===404?404:502});return new NextResponse(await upstream.arrayBuffer(),{headers:{"Content-Type":allowedTypes[extension],"Cache-Control":"private, max-age=300","X-Content-Type-Options":"nosniff"}});}catch(error){return NextResponse.json({error:error.message||"Preview fetch failed."},{status:502});}
   }
   try{
-   const raw=await githubGet(REGISTRY_PATH,token,branch);
-   const registry=raw?JSON.parse(raw):{version:1,assets:[]};
-   const assets=await Promise.all((registry.assets||[]).map(async asset=>{
+   const document=await githubGetDocument(REGISTRY_PATH,token,branch);
+   const registry=document?JSON.parse(document.content):{version:1,assets:[]};
+   const hydrated=await hydratePlantLibrary(registry,token,branch,document?.sha??null);
+   const assets=await Promise.all((hydrated.assets||[]).map(async asset=>{
     if(!asset.releaseRequest?.number)return asset;
     try{
      const pr=await githubGetPullRequest(asset.releaseRequest.number,token);
@@ -133,7 +184,7 @@ export async function POST(req){
  let form;try{form=await req.formData();}catch{return NextResponse.json({error:"Invalid multipart upload."},{status:400});}
  const id=String(form.get("id")||"").trim().toLowerCase(),type=String(form.get("type")||""),config=STUDIO_ASSET_TYPES[type],file=form.get("file"),projectileFile=form.get("projectileFile"),rows=Number(form.get("rows")||1),columns=Number(form.get("columns")||1),frameCount=Number(form.get("frameCount")||9),replace=String(form.get("replace")||"false")==="true";
  if(!config||!STUDIO_ID_PATTERN.test(id)||id.length>64)return NextResponse.json({error:"Invalid category or ID. Use a lowercase slug up to 64 characters."},{status:400});
- if(type==="plant"&&STUDIO_RESERVED_PLANT_IDS.includes(id))return NextResponse.json({error:"هذا المعرّف محجوز لنبتة أساسية في اللعبة. اختر معرّفاً جديداً."},{status:409});
+
  const hasFile=Boolean(file&&typeof file.arrayBuffer==="function"&&file.size>0);
  const hasProjectile=Boolean(projectileFile&&typeof projectileFile.arrayBuffer==="function"&&projectileFile.size>0);
  const removeProjectile=String(form.get("removeProjectile")||"false")==="true";
@@ -150,6 +201,7 @@ export async function POST(req){
    if(existing.releaseRequest?.state==="open")return NextResponse.json({error:"هناك طلب مراجعة نشر مفتوح لهذا الأصل. انتظر إغلاقه قبل تعديله."},{status:409});
   }catch(error){return NextResponse.json({error:error.message||"تعذر التحقق من طلب النشر الحالي."},{status:502});}
  }
+ if(type==="plant"&&STUDIO_RESERVED_PLANT_IDS.includes(id)&&!existing)return NextResponse.json({error:"هذا المعرّف محجوز لنبتة أساسية في اللعبة. اختر معرّفاً جديداً."},{status:409});
  const projectileAssetId=String(form.get("projectileAssetId")||"").trim();
  const selectedProjectileAsset=projectileAssetId?old.assets.find(asset=>asset.id===projectileAssetId&&asset.type==="plantProjectile"):null;
  if(projectileAssetId&&type!=="plant")return NextResponse.json({error:"يمكن ربط القذائف بالنباتات فقط."},{status:400});
