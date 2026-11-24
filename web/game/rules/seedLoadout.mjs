@@ -36,7 +36,12 @@ export function normalizeSeedLoadout(selectedIds, unlockedIds) {
     }
   }
 
-  return selected;
+  // Keep the two starter packets in their canonical order, followed by
+  // the player's remaining valid selections.
+  return [
+    ...REQUIRED_STARTER_SEEDS,
+    ...selected.filter((id) => !REQUIRED_STARTER_SEEDS.includes(id))
+  ].slice(0, MAX_SEED_PACKETS);
 }
 
 export function createDefaultSeedLoadout(unlockedIds) {
