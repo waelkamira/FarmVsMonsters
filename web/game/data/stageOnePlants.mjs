@@ -169,6 +169,25 @@ export const STAGE_ONE_PLANTS = Object.freeze([
   },
 
   {
+    id: "corn-monster",
+    assetPath: "/assets/plants/corn_monster.png",
+    name: "Corn Monster",
+    nameAr: "وحش الذرة",
+    role: "Lane projectile attacker",
+    roleAr: "مهاجم بمقذوفات ضمن المسار",
+    description: "Plays its 10-frame attack animation and launches a golden corn kernel down its own lane.",
+    descriptionAr: "ينفذ حركة هجوم من عشرة إطارات ويطلق حبة ذرة ذهبية ضمن مساره.",
+    energyCost: 70,
+    coinPrice: 0,
+    status: "active",
+    implemented: true,
+    purchasable: false,
+    image: null,
+    stats: ["140 HP", "34 damage", "1900 ms cooldown"],
+    statsAr: ["١٤٠ صحة", "ضرر ٣٤", "فاصل هجوم ١٩٠٠ مللي ثانية"]
+  },
+
+  {
     id: "electric-mushroom",
     assetPath: "/assets/plants/Electric-mushroom-level-1.png",
     name: "Electric Mushroom Level 1",
