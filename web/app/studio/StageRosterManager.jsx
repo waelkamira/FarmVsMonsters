@@ -1,5 +1,5 @@
 "use client";
-import {useCallback,useEffect,useMemo,useState} from "react";
+import {useEffect,useMemo,useState} from "react";
 import Link from "next/link";
 import "./stage-roster.css";
 
@@ -15,17 +15,22 @@ export default function StageRosterManager({kind}){
  const [busy,setBusy]=useState(false),[message,setMessage]=useState("");
  const entries=config.stages?.[String(stage)]?.[isMonster?"monsters":"plants"]||[];
  const available=useMemo(()=>[...BUILT_INS[kind].map(([id,name])=>({id,name,type:kind,builtin:true})),...assets.filter(a=>a.type===kind&&a.status!=="archived"&&(a.status==="published"||a.status==="testing"))].filter((item,index,all)=>all.findIndex(other=>other.id===item.id)===index),[assets,kind]);
- const load=useCallback(async()=>{
-  const [a,c]=await Promise.all([
-   fetch("/api/studio/assets",{cache:"no-store",credentials:"same-origin"}),
-   fetch("/api/studio/stage-encounters",{cache:"no-store",credentials:"same-origin"})
-  ]);
-  const ad=await a.json(),cd=await c.json();
-  if(!a.ok)throw Error(ad.error||"تعذر تحميل مكتبة الأصول");
-  if(!c.ok)throw Error(cd.error||"تعذر تحميل إعدادات المراحل");
-  setAssets(ad.assets||[]);setConfig(cd);setSha(cd.sha||null);
+ useEffect(()=>{
+  let cancelled=false;
+  async function load(){
+   const [a,c]=await Promise.all([
+    fetch("/api/studio/assets",{cache:"no-store",credentials:"same-origin"}),
+    fetch("/api/studio/stage-encounters",{cache:"no-store",credentials:"same-origin"})
+   ]);
+   const ad=await a.json(),cd=await c.json();
+   if(!a.ok)throw Error(ad.error||"تعذر تحميل مكتبة الأصول");
+   if(!c.ok)throw Error(cd.error||"تعذر تحميل إعدادات المراحل");
+   if(cancelled)return;
+   setAssets(ad.assets||[]);setConfig(cd);setSha(cd.sha||null);
+  }
+  load().catch(error=>{if(!cancelled)setMessage(error.message);});
+  return ()=>{cancelled=true;};
  },[kind]);
- useEffect(()=>{load().catch(e=>setMessage(e.message));},[load]);
  function updateEntries(next){
   setConfig(current=>({...current,stages:{...current.stages,[String(stage)]:{...(current.stages?.[String(stage)]||{monsters:[],plants:[]}),[isMonster?"monsters":"plants"]:next,[isMonster?"monstersConfigured":"plantsConfigured"]:true}}}));
  }
@@ -51,7 +56,7 @@ export default function StageRosterManager({kind}){
   }catch(error){setMessage(error.message);}finally{setBusy(false);}
  }
  return <main className="stage-roster-shell" dir="rtl">
-  <header className="stage-roster-head"><div><small>FARM VS MONSTERS · STUDIO</small><h1>{isMonster?"إدارة وحوش المراحل":"إدارة نباتات المراحل"}</h1><p>{isMonster?"حدد الوحوش التي تظهر في كل مرحلة، عددها، قوتها، وتوقيت دخولها.":"اعرف النباتات المتاحة في المرحلة، أضفها أو أخفها وحدد عدد مرات استخدامها دون حذف الأصل من المكتبة."}</p></div><Link href="/studio">العودة إلى الاستديو</Link></header>
+  <header className="stage-roster-head"><div><small>FARM VS MONSTERS · STUDIO</small><h1>{isMonster?"إدارة وحوش المراحل":"إدارة نباتات المراحل"}</h1><p>{isMonster?"حدد الوحوش التي تظهر في كل مرحلة، عددها، قوتها، وتوقيت دخولها.":"اعرف النباتات المتاحة في المرحلة، أضفها أو أخفها وحدد عدد مرات استخدامها دون حذف الأصل من المكتبة."}</p></div><div className="stage-roster-head-actions"><Link href={"/game?stage="+stage}>اختبار هذه المرحلة في المعركة</Link><Link href="/studio">العودة إلى الاستديو</Link></div></header>
   <section className="stage-roster-toolbar">
    <label>رقم المرحلة<input type="number" min="1" max="100" value={stage} onChange={e=>setStage(Math.max(1,Math.min(100,Number(e.target.value)||1)))}/></label>
    <label>اختر {isMonster?"الوحش":"النبتة"}<select value={selectedId} onChange={e=>setSelectedId(e.target.value)}><option value="">اختر من المكتبة</option>{available.map(a=><option key={a.id} value={a.id}>{a.name||a.id} · {a.id}</option>)}</select></label>
@@ -65,6 +70,6 @@ export default function StageRosterManager({kind}){
    <div className="stage-roster-actions"><button type="button" onClick={()=>patch(index,{enabled:!entry.enabled})}>{entry.enabled?"إخفاء من المرحلة":"إظهار في المرحلة"}</button><button type="button" className="danger" onClick={()=>remove(index)}>إزالة من إعداد المرحلة</button></div></article>})}
   </section>
   <footer className="stage-roster-footer"><span>{message}</span><button type="button" onClick={save} disabled={busy}>{busy?"جارٍ الحفظ…":"حفظ إعدادات المرحلة"}</button></footer>
-  <p className="stage-roster-note">الإخفاء والإزالة هنا يخصان المرحلة المحددة فقط. لا يتم حذف أي ملف أو أصل من مكتبة الأصول. المعركة الموصولة حالياً بالمحرك هي المرحلة الأولى؛ إعدادات أرقام المراحل الأخرى تُحفظ لتوصيلها عند تجهيز معاركها.</p>
+  <p className="stage-roster-note">الإخفاء والإزالة هنا يخصان المرحلة المحددة فقط. لا يتم حذف أي ملف أو أصل من مكتبة الأصول. زر اختبار المرحلة يفتح شاشة تجهيز المعركة برقم المرحلة المحدد؛ وبعد بدء القتال يقرأ المحرك إعدادات موجات الوحوش وقوتها وتوقيتها وحدود النباتات الخاصة بتلك المرحلة. تسلسل الحملة القصصي الحالي ما زال يبدأ من المرحلة الأولى.</p>
  </main>;
 }

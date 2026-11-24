@@ -248,11 +248,16 @@ export default class BattleScene extends Scene {
 
   create() {
     this.isPaused = false;
-    this.stageEncounterConfig = this.cache.json.get("stage-encounter-config")?.stages?.["1"] || null;
+    const requestedStage = Number(new URLSearchParams(window.location.search).get("stage"));
+    this.stageNumber = Number.isInteger(requestedStage) ? Math.max(1, Math.min(100, requestedStage)) : 1;
+    this.stageEncounterConfig = this.cache.json.get("stage-encounter-config")?.stages?.[String(this.stageNumber)] || null;
     this.stageMonsterRosterConfigured = this.stageEncounterConfig?.monstersConfigured === true;
     this.stageMonsterEntries = (this.stageEncounterConfig?.monsters || []).filter(entry => entry.enabled !== false);
+    this.stageWaveCount = this.stageMonsterRosterConfigured
+      ? Math.max(1, ...this.stageMonsterEntries.map(entry => Math.max(1, Number(entry.wave) || 1)))
+      : PHASE_ONE_WAVE_SIZES.length;
     this.totalConfiguredMonsters = this.stageMonsterRosterConfigured
-      ? Array.from({ length: PHASE_ONE_WAVE_SIZES.length }, (_, index) => Math.min(500,
+      ? Array.from({ length: this.stageWaveCount }, (_, index) => Math.min(500,
           this.stageMonsterEntries.filter(entry => Number(entry.wave) === index + 1)
             .reduce((sum, entry) => sum + Math.max(1, Number(entry.count) || 1), 0)
         )).reduce((sum, count) => sum + count, 0)
@@ -450,7 +455,7 @@ export default class BattleScene extends Scene {
     this.registry.set("coins", this.coins);
     this.houseHealth = 100;
     this.wave = 1;
-    this.totalWaves = PHASE_ONE_WAVE_SIZES.length;
+    this.totalWaves = this.stageWaveCount;
     this.spawnedThisWave = 0;
     this.waveDefeatedMonsters = 0;
     this.waveSize = this.getStageWaveSize(1);
@@ -2376,7 +2381,7 @@ export default class BattleScene extends Scene {
       this.spawnMonster(spawnIndex);
       this.spawnedThisWave = spawnStep.spawnedThisWave;
       this.totalSpawnedMonsters += 1;
-      if (this.wave === this.totalWaves && this.spawnedThisWave === this.waveSize) this.beginDragonEncounter();
+      if (this.stageNumber === 1 && this.wave === this.totalWaves && this.spawnedThisWave === this.waveSize) this.beginDragonEncounter();
     }
     this.updatePlants(deltaMs);
     this.updateMonsters(dt, deltaMs);
@@ -5151,6 +5156,11 @@ export default class BattleScene extends Scene {
 
     const clearedWave = this.wave;
     if (isPhaseOneVictory(this.wave, this.totalWaves, this.spawnedThisWave, this.waveSize, this.monsters.length)) {
+      // Stage one owns the dragon rescue encounter; other configured stages end after their waves.
+      if (this.stageNumber !== 1) {
+        this.endGame(true);
+        return;
+      }
       // The dragon is a separate boss and is never included in ordinary wave counts.
       if (!this.dragonBoss) {
         this.beginDragonEncounter();

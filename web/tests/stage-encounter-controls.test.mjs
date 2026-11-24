@@ -22,12 +22,18 @@ test("stage roster controls default to one and keep hiding separate from asset d
  assert.match(manager,/enabled:!entry\.enabled/);
  assert.match(manager,/لا يتم حذف أي ملف أو أصل/);
  assert.match(manager,/spawnIntervalMs/);
+ assert.match(manager,/\/game\?stage=\"\+stage/);
  assert.match(manager,/hpMultiplier/);
 });
 
 test("battle consumes configured monster counts, timings, strength and plant limits",()=>{
  const battle=read("game/scenes/BattleScene.js");
  assert.match(battle,/stage-encounter-config/);
+ assert.match(battle,/new URLSearchParams\(window\.location\.search\)\.get\("stage"\)/);
+ assert.match(battle,/stages\?\.\[String\(this\.stageNumber\)\]/);
+ assert.match(battle,/this\.totalWaves = this\.stageWaveCount/);
+ assert.match(battle,/this\.stageNumber === 1 && this\.wave === this\.totalWaves/);
+ assert.match(battle,/if \(this\.stageNumber !== 1\) \{\s*this\.endGame\(true\)/);
  assert.match(battle,/getStageWaveSize/);
  assert.match(battle,/totalConfiguredMonsters/);
  assert.match(battle,/spawnIntervalMs:\s*this\.getStageMonsterEntry/);
