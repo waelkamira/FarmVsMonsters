@@ -37,6 +37,34 @@ export default function StudioAssetDetailsPage() {
     })();
     return () => { active = false; };
   }, [id]);
+  const [busy, setBusy] = useState(false);
+  const [actionMessage, setActionMessage] = useState("");
+  async function runAssetAction(operation) {
+    setBusy(true);
+    setActionMessage("");
+    try {
+      const response = await fetch("/api/studio/assets", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ id: asset.id, operation })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "تعذر تنفيذ الإجراء.");
+      const refreshed = await fetch("/api/studio/assets", { cache: "no-store", credentials: "same-origin" });
+      const refreshedData = await refreshed.json();
+      if (!refreshed.ok) throw new Error(refreshedData.error || "تم تنفيذ الإجراء، لكن تعذر تحديث تفاصيل الأصل.");
+      const nextAssets = Array.isArray(refreshedData.assets) ? refreshedData.assets : [];
+      const nextAsset = nextAssets.find((item) => item.id === asset.id);
+      setAssets(nextAssets);
+      if (nextAsset) setAsset(nextAsset);
+      setActionMessage(operation === "prepare-test" ? "أصبح الأصل جاهزاً للاختبار داخل اللعبة." : operation === "publish" ? "تم نشر الأصل بنجاح." : operation === "archive" ? "تمت أرشفة الأصل مع الاحتفاظ بملفاته." : "تمت استعادة الأصل.");
+    } catch (actionError) {
+      setActionMessage(actionError.message || "فشل تنفيذ الإجراء.");
+    } finally {
+      setBusy(false);
+    }
+  }
   const report = useMemo(() => asset ? buildAssetDependencyReport(assets, asset.id) : null, [assets, asset]);
   if (state === "loading") return <main className="studio-shell" dir="rtl"><section className="studio-detail-panel">جارٍ تحميل تفاصيل الأصل…</section></main>;
   if (state === "error") return <main className="studio-shell" dir="rtl"><section className="studio-detail-panel"><h1>تعذر فتح صفحة الأصل</h1><p>{error}</p><Link href="/studio">العودة إلى Studio</Link>{error.toLowerCase().includes("unauthorized") && <p>سجّل الدخول إلى Studio أولاً ثم افتح صفحة التفاصيل.</p>}</section></main>;
@@ -50,6 +78,18 @@ export default function StudioAssetDetailsPage() {
       <div className="studio-detail-summary"><span className="studio-detail-status">{STATUS_LABELS[asset.status] || asset.status || "غير محدد"}</span><h2>معلومات الأصل</h2>
         <DetailRow label="المعرّف" value={asset.id} /><DetailRow label="النوع" value={TYPE_LABELS[asset.type] || asset.type} /><DetailRow label="اسم الملف" value={asset.filename} /><DetailRow label="مسار الملف" value={asset.path} /><DetailRow label="تاريخ الإنشاء" value={asset.createdAt} /><DetailRow label="آخر تعديل" value={asset.updatedAt} /><DetailRow label="تم نسخه من" value={asset.clonedFrom} />
       </div>
+    </section>
+    <section className="studio-detail-panel studio-detail-actions-panel">
+      <h2>إجراءات الأصل</h2>
+      <div className="studio-asset-actions">
+        <Link className="studio-asset-details-link" href={"/studio?edit=" + encodeURIComponent(asset.id)}>تعديل الأصل</Link>
+        {asset.status === "draft" && (asset.type === "plant" || asset.type === "monster") && <button type="button" disabled={busy} onClick={() => runAssetAction("prepare-test")}>{asset.type === "monster" ? "اختبار الوحش داخل اللعبة" : "اختبار داخل اللعبة"}</button>}
+        {asset.status === "testing" && (asset.type === "plant" || asset.type === "monster") && <button type="button" disabled={busy} onClick={() => runAssetAction("publish")}>{asset.type === "monster" ? "نشر الوحش الآن" : "نشر الآن"}</button>}
+        {(asset.status === "draft" || asset.status === "testing") && <button type="button" disabled={busy} onClick={() => window.confirm("أرشفة هذا الأصل؟ ستبقى ملفاته محفوظة ويمكن استعادته.") && runAssetAction("archive")}>أرشفة</button>}
+        {asset.status === "archived" && <button type="button" disabled={busy} onClick={() => runAssetAction("restore")}>استعادة</button>}
+        {(asset.type === "monster" || asset.type === "plant") && <Link className="studio-asset-details-link" href={asset.type === "monster" ? "/studio/stages/monsters" : "/studio/stages/plants"}>{asset.type === "monster" ? "إدارة وحوش المراحل" : "إدارة نباتات المراحل"}</Link>}
+      </div>
+      {actionMessage && <p className="studio-message" role="status" aria-live="polite">{actionMessage}</p>}
     </section>
     {asset.type === "monster" && asset.monsterProfile && <section className="studio-detail-panel"><h2>خصائص الوحش في المعركة</h2><div className="studio-detail-grid"><DetailRow label="نموذج السلوك" value={asset.monsterProfile.baseArchetype}/><DetailRow label="مضاعف الصحة" value={asset.monsterProfile.hpMultiplier}/><DetailRow label="مضاعف السرعة" value={asset.monsterProfile.speedMultiplier}/><DetailRow label="مضاعف الضرر" value={asset.monsterProfile.damageMultiplier}/><DetailRow label="مضاعف زمن الهجوم" value={asset.monsterProfile.attackIntervalMultiplier}/><DetailRow label="مقياس العرض" value={asset.monsterProfile.widthScale}/><DetailRow label="مقياس الارتفاع" value={asset.monsterProfile.heightScale}/><DetailRow label="وزن الظهور" value={asset.monsterProfile.spawnWeight}/><DetailRow label="أول موجة" value={asset.monsterProfile.firstWave}/></div><p className="studio-detail-muted">وزن الظهور صفر يعني أن الوحش غير مضاف إلى جدول الموجات.</p></section>}
     {asset.type === "plant" && <section className="studio-detail-panel"><h2>إعدادات النبتة داخل اللعبة</h2><div className="studio-detail-grid">
