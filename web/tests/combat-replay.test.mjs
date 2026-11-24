@@ -2,19 +2,20 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { createCombatEventLog, appendCombatEvent, validateCombatEventLog } from "../game/rules/combatEventLog.mjs";
 import { replayCombatEventLog, PHASE_ONE_RULES_VERSION } from "../game/rules/combatReplay.mjs";
+import { PHASE_ONE_PLANT_EVENT_TYPES } from "../game/rules/phaseOneCombatContract.mjs";
 const INTERVAL = 12000;
 function makeLog(actions) { return actions.reduce((log, action) => appendCombatEvent(log, action), createCombatEventLog({ seed: 123, rulesVersion: PHASE_ONE_RULES_VERSION })); }
 function ev(tick, type, payload) { return { tick, type, payload }; }
 
 test("combat event log accepts every plant type supported by the battle scene", () => {
- const supported = ["radish", "mushroom", "tomato", "pumpkin", "onion"];
+ const supported = PHASE_ONE_PLANT_EVENT_TYPES;
  for (const type of supported) {
   const log = makeLog([ev(0, "plant_placed", { type, col: 1, row: 2 }), ev(1, "plant_uprooted", { type, col: 1, row: 2 })]);
   assert.equal(log.events.length, 2);
   assert.equal(validateCombatEventLog(log), true);
   assert.equal(log.events[0].payload.type, type);
  }
- assert.throws(() => makeLog([ev(0, "plant_placed", { type: "unknown-plant", col: 1, row: 2 })]), /INVALID_PLANT_EVENT/);
+ assert.throws(() => makeLog([ev(0, "plant_placed", { type: "unknown plant", col: 1, row: 2 })]), /INVALID_PLANT_EVENT/);
 });
 
 test("mushroom produces a 15-energy collectible after its 12-second cycle and it can be collected once", () => {
@@ -54,7 +55,7 @@ test("replay validates the five-wave monster roster, archetypes and exact combat
   ev(0,"monster_spawned",{monsterId:"monster-1",wave:1,spawnIndex:0,row:2,archetype:"cave-brute",hp:175,speed:8,localX:238.4115}),
   ev(1000,"monster_spawned",{monsterId:"monster-2",wave:1,spawnIndex:1,row:1,archetype:"cave-brute",hp:175,speed:8,localX:238.4115}),
   ev(2000,"monster_spawned",{monsterId:"monster-3",wave:1,spawnIndex:2,row:4,archetype:"cave-brute",hp:175,speed:8,localX:238.4115}),
-  ev(3000,"monster_spawned",{monsterId:"monster-4",wave:2,spawnIndex:0,row:0,archetype:"cave-brute",hp:175,speed:9.35,localX:238.4115})
+  ev(3000,"monster_spawned",{monsterId:"monster-4",wave:2,spawnIndex:0,row:0,archetype:"cave-brute",hp:183,speed:9.35,localX:238.4115})
  ]);
  const result=replayCombatEventLog(log); assert.equal(result.ok,true); assert.equal(result.state.monsters.length,4); assert.equal(result.state.currentWave,2); assert.equal(result.state.spawnedInWave,1);
 });

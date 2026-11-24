@@ -59,6 +59,7 @@ test("radish, mushroom and dragon combat values preserve the current tuning", ()
     projectileSpeed: 320,
     projectileCollisionRadius: 24,
     plantingEnergyCost: 35,
+    seedPacketRechargeMs: 5000,
     hp: 160,
     cooldownMs: 1450,
     range: 360
@@ -125,7 +126,8 @@ test("Phaser uses the shared contract and has no duplicate monster balance table
   assert.match(scene, /getMonsterCombatStats\(archetype, this\.wave\)/);
   assert.match(scene, /PHASE_ONE_DRAGON\.maxHp/);
   assert.match(scene, /PHASE_ONE_REWARDS\.ordinaryMonsterDefeatCoins/);
-  assert.match(scene, /getMonsterSpawnIntervalMs\(this\.wave\)/);
+  assert.match(scene, /PHASE_ONE_TIMING\.waveIntermissionMs/);
+  assert.match(scene, /resolveWaveSpawnStep\(/);
   assert.doesNotMatch(scene, /const COMBAT_BALANCE\s*=/);
   assert.match(rules, /PHASE_ONE_REWARDS\.ordinaryMonsterDefeatCoins/);
   assert.match(rules, /PHASE_ONE_WAVE_SIZES/);

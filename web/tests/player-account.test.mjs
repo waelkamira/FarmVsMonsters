@@ -54,7 +54,7 @@ test("local saves remain active and client balances are never uploaded to cloud"
   assert.match(client, /progress_verified !== true/);
   assert.match(client, /cloud-progress-unverified/);
   assert.match(client, /coins_verified === true/);
-  assert.match(client, /Do not initialize a cloud row from browser-controlled local values/);
+  assert.match(client, /Legacy cloud stages and balances were previously writable by clients/);
   assert.match(client, /coins_verified === true/);
   assert.doesNotMatch(client, /saveCloudProgress/);
   assert.doesNotMatch(battle, /syncPlayerProgress/);

@@ -29,7 +29,7 @@ test("event log validation detects tampered sequences and payloads", () => {
 
 
 test("combat event log accepts placement and uprooting for all six playable plant types", () => {
-  for (const type of ["radish", "mushroom", "tomato", "pumpkin", "onion", "pineapple"]) {
+  for (const type of ["radish", "mushroom", "pumpkin", "pineapple", "hazelnut", "mango", "snow-thrower", "electric-mushroom"]) {
     let log = createCombatEventLog({ seed: 7, rulesVersion: "phase-one-v1" });
     log = appendCombatEvent(log, { tick: 1, type: "plant_placed", payload: { type, col: 3, row: 2 } });
     log = appendCombatEvent(log, { tick: 2, type: "plant_uprooted", payload: { type, col: 3, row: 2 } });
