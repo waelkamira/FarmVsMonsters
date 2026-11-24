@@ -284,11 +284,13 @@
 .studio-clone-dialog label{display:grid;gap:7px;font-weight:700}
 .studio-clone-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:8px}
 .studio-clone-actions button:last-child{background:#d7a84f;color:#20190d;font-weight:800}
-/* Asset library is deliberately five viewport-heights tall; its asset list remains independently scrollable. */
-.studio-library-panel{height:500vh;height:500svh;min-height:2500px;max-height:none;align-self:start;display:flex;flex-direction:column;min-width:0}
-.studio-library-panel>.studio-list{flex:1;min-height:0;max-height:none;overflow-y:auto;scrollbar-gutter:stable}
-.studio-library-panel>.studio-empty{flex:1;min-height:0}
-@media(max-width:800px){.studio-library-panel{height:500vh;height:500svh;min-height:2500px}}
+/* Keep the library natural-height: oversized fixed heights stretched grid rows and
+   separated every asset's action buttons from its thumbnail. */
+.studio-library-panel{height:auto;min-height:0;max-height:none;align-self:start;display:flex;flex-direction:column;min-width:0}
+.studio-library-panel>.studio-list{flex:0 1 auto;min-height:0;max-height:min(78vh,1000px);align-content:start;grid-auto-rows:max-content;overflow-y:auto;scrollbar-gutter:stable}
+.studio-library-panel>.studio-empty{flex:0 0 auto;min-height:180px}
+.studio-list .studio-asset-row{align-content:start;grid-auto-rows:max-content}
+@media(max-width:800px){.studio-library-panel{height:auto;min-height:0}.studio-library-panel>.studio-list{max-height:72vh}}
 
 /* Keep the asset action bar visible and consistent for plant and monster cards. */
 .studio-list .studio-asset-row>.studio-asset-actions{display:flex!important;visibility:visible!important;opacity:1!important;align-items:center;flex-wrap:wrap;gap:8px;grid-column:1/-1;width:100%;min-width:0;position:relative;z-index:1}
