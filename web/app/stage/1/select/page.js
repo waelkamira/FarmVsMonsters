@@ -128,7 +128,8 @@ export default function StageOneSeedSelectionPage() {
     try {
       const savedSelection = JSON.stringify(selectedPlants.map((plant) => plant.id));
       window.localStorage.setItem("farmVsMonsters.selectedPlants.stage." + stageNumber, savedSelection);
-      if (stageNumber === 1) window.localStorage.setItem("farmVsMonsters.selectedPlants", savedSelection);
+      // The battle runtime consumes the active loadout key; keep it in sync while preserving each stage saved selection.
+      window.localStorage.setItem("farmVsMonsters.selectedPlants", savedSelection);
       router.push("/game?stage=" + stageNumber);
     } catch {
       setNotice(ar ? "تعذر حفظ التشكيلة. تحقق من إعدادات التخزين في المتصفح." : "Could not save your loadout. Check browser storage settings.");
