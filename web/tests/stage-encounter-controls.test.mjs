@@ -85,3 +85,28 @@ test("configured zero and per-entry first-spawn delays are honored",()=>{
  assert.match(battle,/nextEntry\.key !== spawnedEntry\?\.key/);
  assert.match(battle,/Math\.max\(0, Number\(nextEntry\.firstSpawnDelayMs\) \|\| 0\)/);
 });
+
+
+test("stage roster management shows real plant and monster artwork for library and configured entries",()=>{
+ const manager=read("app/studio/StageRosterManager.jsx");
+ assert.match(manager,/BUILTIN_IMAGES/);
+ assert.match(manager,/previewUrl\|\|asset\?\.path/);
+ assert.match(manager,/stage-roster-asset-grid/);
+ assert.match(manager,/<AssetImage asset=\{asset\} kind=\{kind\}/);
+ assert.match(manager,/assetById\.get\(entry\.id\)/);
+ assert.match(manager,/\/assets\/monster-icons\/cave-brute\.svg/);
+ assert.match(manager,/\/assets\/plants\/radish-level-1\.png/);
+ const styles=read("app/studio/stage-roster.css");
+ assert.match(styles,/\.stage-roster-image/);
+ assert.match(styles,/\.stage-roster-asset-card\.is-selected/);
+});
+
+test("stage roster saves remain connected to the same runtime encounter API",()=>{
+ const manager=read("app/studio/StageRosterManager.jsx");
+ const battle=read("game/scenes/BattleScene.js");
+ const selection=read("app/stage/1/select/page.js");
+ assert.match(manager,/fetch\("\/api\/studio\/stage-encounters"/);
+ assert.match(manager,/method:"PATCH"/);
+ assert.match(battle,/this\.load\.json\("stage-encounter-config", "\/api\/studio\/stage-encounters"\)/);
+ assert.match(selection,/fetch\("\/api\/studio\/stage-encounters"/);
+});
