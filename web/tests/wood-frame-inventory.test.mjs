@@ -56,7 +56,7 @@ test("the uploaded seed-card frame is loaded and rendered on every battle seed p
   assert.match(scene, /const packetFrameKey = this\.textures\.exists\("seed-card-frame"\) \? "seed-card-frame" : "seed-card"/);
   assert.match(scene, /Math\.min\(88 \/ cardSource\.width, 101\.2 \/ cardSource\.height\)/);
   assert.match(scene, /\.\.\.\(seedFrame \? \[seedFrame\] : \[\]\)/);
-  assert.match(scene, /card\.add\(\[halo, packetFrame, packetRim, panel, \.\.\.\(seedFrame \? \[seedFrame\] : \[\]\), icon/);
+  assert.match(scene, /card\.add\(\[\.\.\.\(seedFrame \? \[seedFrame\] : \[\]\), panel, icon, cost, cooldownOverlay, cooldownLabel\]\)/);
 });
 
 
