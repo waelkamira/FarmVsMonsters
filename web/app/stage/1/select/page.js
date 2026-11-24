@@ -24,13 +24,12 @@ export default function StageOneSeedSelectionPage() {
   const { locale } = useLocale();
   const ar = locale === "ar";
   const router = useRouter();
-  const [stageNumber, setStageNumber] = useState(1);
-  const stageSelectionKey = "farmVsMonsters.selectedPlants.stage." + stageNumber;
-
-  useEffect(() => {
+  const [stageNumber] = useState(() => {
+    if (typeof window === "undefined") return 1;
     const requested = Number(new URLSearchParams(window.location.search).get("stage"));
-    if (Number.isInteger(requested) && requested >= 1 && requested <= 100) setStageNumber(requested);
-  }, []);
+    return Number.isInteger(requested) && requested >= 1 && requested <= 100 ? requested : 1;
+  });
+  const stageSelectionKey = "farmVsMonsters.selectedPlants.stage." + stageNumber;
   const [unlockedIds, setUnlockedIds] = useState(STARTER_LOADOUT);
   const [selected, setSelected] = useState(STARTER_LOADOUT);
   const [plantCatalog, setPlantCatalog] = useState(PLANTS);
