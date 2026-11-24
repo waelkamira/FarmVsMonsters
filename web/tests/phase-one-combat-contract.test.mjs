@@ -24,8 +24,8 @@ const rules = readFileSync(resolve(here, "../game/rules/phaseOneRules.mjs"), "ut
 
 test("combat contract version, wave roster, and reward policy are explicit", () => {
   assert.equal(PHASE_ONE_COMBAT_CONTRACT_VERSION, 1);
-  assert.deepEqual(PHASE_ONE_WAVE_SIZES, [3, 5, 6, 7, 9]);
-  assert.equal(PHASE_ONE_WAVE_SIZES.reduce((sum, size) => sum + size, 0), 30);
+  assert.deepEqual(PHASE_ONE_WAVE_SIZES, [2, 3, 4, 5, 6]);
+  assert.equal(PHASE_ONE_WAVE_SIZES.reduce((sum, size) => sum + size, 0), 20);
   assert.deepEqual(PHASE_ONE_ENERGY, { initial: 150, maximum: 300 });
   assert.equal(PHASE_ONE_REWARDS.ordinaryMonsterDefeatCoins, 8);
 });
@@ -39,7 +39,8 @@ test("active Stage 1 plant encyclopedia matches combat costs and available artwo
     hazelnut: "hazelnut",
     mango: "mango",
     "snow-thrower": "snowThrower",
-    "electric-mushroom": "electric-mushroom"
+    "electric-mushroom": "electric-mushroom",
+    "corn-monster": "corn-monster"
   };
   const activePlants = STAGE_ONE_PLANTS.filter((plant) => plant.implemented);
   assert.deepEqual(
@@ -59,6 +60,7 @@ test("radish, mushroom and dragon combat values preserve the current tuning", ()
     projectileSpeed: 320,
     projectileCollisionRadius: 24,
     plantingEnergyCost: 35,
+    seedPacketRechargeMs: 5000,
     hp: 160,
     cooldownMs: 1450,
     range: 360
@@ -68,6 +70,11 @@ test("radish, mushroom and dragon combat values preserve the current tuning", ()
   assert.equal(PHASE_ONE_PLANTS.energyMushroom.energyPerPickup, 15);
   assert.equal(PHASE_ONE_PLANTS.energyMushroom.productionIntervalMs, 12000);
   assert.equal(PHASE_ONE_PLANTS.energyMushroom.pickupTtlMs, 12000);
+  assert.deepEqual(PHASE_ONE_PLANTS["corn-monster"], {
+    projectileDamage: 34, projectileSpeed: 300, projectileCollisionRadius: 22,
+    plantingEnergyCost: 70, seedPacketRechargeMs: 10000, hp: 140,
+    cooldownMs: 1900, range: 360
+  });
 
   assert.deepEqual(PHASE_ONE_DRAGON, {
     maxHp: 750,
@@ -123,6 +130,10 @@ test("wave pacing is shared and rejects invalid wave numbers", () => {
 
 test("Phaser uses the shared contract and has no duplicate monster balance table", () => {
   assert.match(scene, /getMonsterCombatStats\(archetype, this\.wave\)/);
+  assert.match(scene, /load\.atlas\("corn-monster"/);
+  assert.match(scene, /corn-monster-attack/);
+  assert.match(scene, /attack_06/);
+  assert.match(scene, /CORN_MONSTER_CONFIG/);
   assert.match(scene, /PHASE_ONE_DRAGON\.maxHp/);
   assert.match(scene, /PHASE_ONE_REWARDS\.ordinaryMonsterDefeatCoins/);
   assert.match(scene, /getMonsterSpawnIntervalMs\(this\.wave\)/);
