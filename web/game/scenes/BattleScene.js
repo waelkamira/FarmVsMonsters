@@ -3005,6 +3005,7 @@ export default class BattleScene extends Scene {
           : type === "electric-mushroom" ? "electric-mushroomThrowSprite"
           : type === "corn-monster" ? "cornMonsterSprite" : "snow-throwerThrowSprite";
         animatedPlant.setData(animationDataKey, true);
+        if (type === "corn-monster" && this.anims.exists("corn-monster-idle")) animatedPlant.play("corn-monster-idle");
         plant.add(animatedPlant);
       } else {
         plant.add(this.add.image(0, -height / 2 + 2, texture).setDisplaySize(Math.min(width, maxWidth), height));
