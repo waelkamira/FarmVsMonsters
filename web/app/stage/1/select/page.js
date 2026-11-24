@@ -67,8 +67,9 @@ export default function StageOneSeedSelectionPage() {
       }));
       const plantMap = new Map([...PLANTS, ...studioPlants].map((plant) => [plant.id, plant]));
       const configuredStage = stageSettings?.stages?.["1"];
+      const plantAliases = {radish:["radish","radish-level-1"],mushroom:["mushroom","energy-mushroom"],pumpkin:["pumpkin","pumpkin-level-1"],pineapple:["pineapple","pineapple-level-1"],hazelnut:["hazelnut","hazelnut-level-1"],mango:["mango","mango-level-1"],"snow-thrower":["snow-thrower","snow-thrower-level-1"],"electric-mushroom":["electric-mushroom","electric-mushroom-level-1"]};
       const nextPlants = configuredStage?.plantsConfigured
-        ? [...plantMap.values()].filter(plant => configuredStage.plants.some(entry => entry.enabled !== false && entry.id === plant.id))
+        ? [...plantMap.values()].filter(plant => configuredStage.plants.some(entry => entry.enabled !== false && (entry.id === plant.id || (plantAliases[plant.id] || []).includes(entry.id))))
         : [...plantMap.values()];
       setPlantCatalog(nextPlants);
       let unlocked = STARTER_LOADOUT;
