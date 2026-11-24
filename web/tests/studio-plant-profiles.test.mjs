@@ -63,6 +63,7 @@ test("projectile arc, effect color, and rotation settings are validated and reta
   assert.equal(profile.projectileEffectColor,"#32aaff");
   assert.equal(profile.projectileRotation,135);
   assert.equal(validateStudioPlantCombatProfile({behavior:"projectile",projectile,projectileHeight:301}).valid,false);
-  assert.equal(validateStudioPlantCombatProfile({behavior:"projectile",projectile,projectileRotation:-1}).valid,true);\n  assert.equal(validateStudioPlantCombatProfile({behavior:"projectile",projectile,projectileRotation:-361}).valid,false);
+  assert.equal(validateStudioPlantCombatProfile({behavior:"projectile",projectile,projectileRotation:-1}).valid,true);
+  assert.equal(validateStudioPlantCombatProfile({behavior:"projectile",projectile,projectileRotation:-361}).valid,false);
   assert.equal(validateStudioPlantCombatProfile({behavior:"projectile",projectile,projectileEffectColor:"red"}).valid,false);
 });
