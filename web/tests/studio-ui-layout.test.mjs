@@ -19,3 +19,13 @@ test("Studio projectile rotation accepts signed degrees and persists negative va
   assert.match(editor, /clamp\(rotation,-360,360\)/);
   assert.match(profile, /projectileRotation: \[-360, 360\]/);
 });
+
+
+test("Studio animation preview defaults to all frames and supports selecting one row", () => {
+  assert.match(page, /\[animationRow,setAnimationRow\]=useState\(0\)/);
+  assert.match(page, /const totalFrames=animationRow===0\?rows\*columns:columns/);
+  assert.match(page, /const previewFrameCount=animationRow===0\?rows\*columns:columns/);
+  assert.match(page, /const previewRowIndex=animationRow===0\?Math\.floor\(safePreviewFrame\/columns\):safeAnimationRow-1/);
+  assert.match(page, /صف الحركة \(0 = كل الصفوف\)<input type="number" min="0"/);
+  assert.match(page, /القيمة 0 تعرض جميع إطارات Sprite Sheet بالتتابع/);
+});
