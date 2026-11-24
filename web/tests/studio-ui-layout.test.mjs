@@ -19,3 +19,24 @@ test("Studio projectile rotation accepts signed degrees and persists negative va
   assert.match(editor, /clamp\(rotation,-360,360\)/);
   assert.match(profile, /projectileRotation: \[-360, 360\]/);
 });
+
+
+test("Studio animation preview defaults to all frames and supports selecting one row", () => {
+  assert.match(page, /\[animationRow,setAnimationRow\]=useState\(0\)/);
+  assert.match(page, /const totalFrames=animationRow===0\?rows\*columns:columns/);
+  assert.match(page, /const previewFrameCount=animationRow===0\?rows\*columns:columns/);
+  assert.match(page, /const previewRowIndex=animationRow===0\?Math\.floor\(safePreviewFrame\/columns\):safeAnimationRow-1/);
+  assert.match(page, /صف الحركة \(0 = كل الصفوف\)<input type="number" min="0"/);
+  assert.match(page, /القيمة 0 تعرض جميع إطارات Sprite Sheet بالتتابع/);
+  assert.match(page, /function cancelEdit\(\)\{setAnimationRow\(0\);setAnimationPlaying\(false\);/);
+});
+
+
+test("Studio shows the same test and publish action controls for new plant and monster assets", () => {
+  assert.match(page, /data-asset-type=\{a\.type\} data-asset-status=\{a\.status\}/);
+  assert.match(page, /\(a\.type===\"plant\"\|\|a\.type===\"monster\"\)&&<>/);
+  assert.match(page, /data-testid=\"studio-prepare-test\" disabled=\{!authenticated\|\|busy\|\|a\.status!==\"draft\"\}/);
+  assert.match(page, /data-testid=\"studio-publish\" disabled=\{!authenticated\|\|busy\|\|a\.status!==\"testing\"\}/);
+  assert.match(page, /اختيار الوحش للاختبار/);
+  assert.match(css, /\.studio-list \.studio-asset-row>\.studio-asset-actions\{display:flex!important;visibility:visible!important/);
+});
