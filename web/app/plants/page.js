@@ -1,32 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+
 import { useLocale, LanguageToggle } from "../LocaleProvider";
-import { loadSavedCoins } from "../../game/rules/phaseOneRules.mjs";
+
 import { STAGE_ONE_PLANTS } from "../../game/data/stageOnePlants.mjs";
 import CatalogThumb from "../components/CatalogThumb";
 
 export default function PlantsPage() {
   const { locale } = useLocale();
   const ar = locale === "ar";
-  const [coins, setCoins] = useState(0);
-
-  useEffect(() => {
-    const refresh = () => {
-      try {
-        setCoins(loadSavedCoins(window.localStorage));
-      } catch { setCoins(0); }
-    };
-    refresh();
-    window.addEventListener("storage", refresh);
-    window.addEventListener("farm-coins-change", refresh);
-    return () => {
-      window.removeEventListener("storage", refresh);
-      window.removeEventListener("farm-coins-change", refresh);
-    };
-  }, []);
-
   // The full plant encyclopedia is open during the current development/playtest period.
   const activePlants = STAGE_ONE_PLANTS;
   const plannedPlants = STAGE_ONE_PLANTS.filter((plant) => !plant.implemented);
