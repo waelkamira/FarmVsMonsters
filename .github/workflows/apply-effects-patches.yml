@@ -56,3 +56,5 @@ jobs:
           else
             echo "No changes to commit."
           fi
+
+# Trigger integration run after the workflow was enabled on main.
