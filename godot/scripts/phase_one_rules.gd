@@ -59,35 +59,11 @@ const MONSTER_SCALING: Dictionary = {
 }
 
 const MONSTERS: Dictionary = {
-	"cave-brute": {
+	"monster-01": {
 		"hits_to_defeat": 7, "speed_multiplier": 1.0, "max_speed": 30.0,
 		"plant_damage": 16, "attack_interval_ms": 1150.0,
 		"incoming_damage_multiplier": 1.0, "width_scale": 1.0, "height_scale": 1.0,
 		"wobble_duration_ms": 520.0
-	},
-	"dust-skitter": {
-		"hp_multiplier": 0.52, "speed_multiplier": 1.7, "max_speed": 36.0,
-		"plant_damage": 8, "attack_interval_ms": 850.0,
-		"incoming_damage_multiplier": 1.0, "width_scale": 0.62, "height_scale": 0.68,
-		"wobble_duration_ms": 350.0, "burst_duration_ms": 420.0,
-		"initial_burst_cooldown_min_ms": 1500.0, "initial_burst_cooldown_max_ms": 2300.0,
-		"burst_speed_multiplier": 1.65, "jump_speed_multiplier": 1.12,
-		"burst_cooldown_min_ms": 3000.0, "burst_cooldown_max_ms": 3900.0,
-		"jump_duration_min_ms": 480.0, "jump_duration_max_ms": 620.0,
-		"jump_cooldown_min_ms": 1100.0, "jump_cooldown_max_ms": 2600.0,
-		"jump_reset_cooldown_min_ms": 2100.0, "jump_reset_cooldown_max_ms": 3400.0
-	},
-	"stonehide": {
-		"hp_multiplier": 2.2, "speed_multiplier": 0.62, "max_speed": 19.0,
-		"plant_damage": 23, "attack_interval_ms": 1450.0,
-		"incoming_damage_multiplier": 0.7, "braced_incoming_damage_multiplier": 0.55,
-		"width_scale": 1.35, "height_scale": 1.3, "wobble_duration_ms": 760.0
-	},
-	"alpha-brute": {
-		"hits_to_defeat": 14, "speed_multiplier": 0.48, "max_speed": 15.0,
-		"plant_damage": 32, "attack_interval_ms": 1350.0,
-		"incoming_damage_multiplier": 0.85, "width_scale": 2.0, "height_scale": 2.0,
-		"wobble_duration_ms": 900.0
 	}
 }
 
@@ -136,10 +112,9 @@ static func monster_combat_stats(archetype: String, wave: int) -> Dictionary:
 	profile["speed"] = minf(float(profile.max_speed), base_speed * float(profile.speed_multiplier))
 	return profile
 
-static func stonehide_incoming_damage_multiplier(is_braced: bool) -> float:
-	var profile: Dictionary = MONSTERS["stonehide"]
-	var multiplier: float = float(profile.incoming_damage_multiplier)
-	return multiplier * float(profile.braced_incoming_damage_multiplier) if is_braced else multiplier
+static func monster_incoming_damage_multiplier() -> float:
+	return float(MONSTERS["monster-01"].incoming_damage_multiplier)
+
 
 static func resolve_plant_placement(energy: float, plants: Array, plant_type: String,
 		column: int, row: int, columns: int = BOARD_COLUMNS, rows: int = BOARD_ROWS) -> Dictionary:
@@ -371,13 +346,8 @@ static func resolve_dust_skitter_motion_step(state: Dictionary) -> Dictionary:
 static func monster_archetype(wave: int, spawn_index: int) -> String:
 	if wave < 1 or wave > WAVE_SIZES.size() or spawn_index < 0 or spawn_index >= total_stage_one_monsters():
 		return ""
-	if wave >= 4 and (spawn_index + 1) % 10 == 0:
-		return "alpha-brute"
-	if wave >= 5 and (spawn_index + 1) % 5 == 0:
-		return "stonehide"
-	if wave >= 3 and spawn_index % 3 == 1:
-		return "dust-skitter"
-	return "cave-brute"
+	return "monster-01"
+
 
 static func resolve_wave_spawn_step(state: Dictionary) -> Dictionary:
 	var wave: int = int(state.get("wave", 0))

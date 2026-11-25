@@ -113,15 +113,15 @@ func _process(delta: float) -> void:
 	queue_redraw()
 
 func _setup_snow_thrower_test() -> void:
-	# A controlled lane test: one guaranteed Hyena and one Snow Thrower.
+	# A controlled lane test: one guaranteed Monster 01 and one Snow Thrower.
 	# The standard wave spawner is disabled so the interaction is easy to inspect.
 	energy = Rules.MAX_ENERGY
 	selected_plant = "snow-thrower"
-	_spawn_monster(2, "cave-brute")
+	_spawn_monster(2, "monster-01")
 	spawned_this_wave = Rules.WAVE_SIZES[0]
 	# Column 2 keeps the monster inside the Snow Thrower's 360-unit firing range.
 	_commit_plant(2, 2, "snow-thrower", farmer_sprite.position, signf(farmer_sprite.scale.x))
-	status_label.text = "SNOW TEST: watch the Snow Thrower freeze the Hyena for 2.6 seconds."
+	status_label.text = "SNOW TEST: watch the Snow Thrower freeze the Monster 01 for 2.6 seconds."
 	_refresh_hud()
 
 func _build_audio() -> void:
@@ -494,30 +494,20 @@ func _append_sheet_animation(frames: SpriteFrames, animation_name: String,
 func _make_monster_sprite(archetype: String, sprite_scale: float) -> AnimatedSprite2D:
 	if monster_sprite_frames == null:
 		monster_sprite_frames = SpriteFrames.new()
-		_append_sheet_animation(monster_sprite_frames, "idle", "res://assets/characters/monsters/hyena/hyena-idle.png", 3, 1, 4.0, true)
-		_append_sheet_animation(monster_sprite_frames, "walk", "res://assets/monsters/hyena/hyena-walk.png", 3, 3, 8.0, true)
-		_append_sheet_animation(monster_sprite_frames, "run", "res://assets/monsters/hyena/hyena-run.png", 3, 3, 12.0, true)
-		_append_sheet_animation(monster_sprite_frames, "bite", "res://assets/monsters/hyena/hyena-bite.png", 3, 2, 8.0, true)
-		_append_sheet_animation(monster_sprite_frames, "hit", "res://assets/monsters/hyena/hyena-hit.png", 3, 1, 12.0, false)
-		_append_sheet_animation(monster_sprite_frames, "death", "res://assets/monsters/hyena/hyena-death.png", 3, 2, 8.0, false)
-		_append_sheet_animation(monster_sprite_frames, "frozen", "res://assets/monsters/hyena/frozen-hyena-level-1.png", 1, 1, 1.0, false)
+		var texture: Texture2D = load("res://assets/characters/monsters/01/01.png")
+		for animation_name in ["idle", "walk", "run", "bite", "hit", "death", "frozen"]:
+			monster_sprite_frames.add_animation(animation_name)
+			monster_sprite_frames.set_animation_speed(animation_name, 1.0)
+			monster_sprite_frames.set_animation_loop(animation_name, animation_name in ["idle", "walk", "run"])
+			monster_sprite_frames.add_frame(animation_name, texture)
 	var sprite := AnimatedSprite2D.new()
 	sprite.sprite_frames = monster_sprite_frames
-	sprite.animation = "run" if archetype == "dust-skitter" else "walk"
-	sprite.set_meta("archetype", archetype)
+	sprite.animation = "walk"
+	sprite.set_meta("archetype", "monster-01")
 	sprite.scale = Vector2.ONE * sprite_scale
 	sprite.play()
 	sprite.animation_finished.connect(_on_monster_animation_finished.bind(sprite))
 	return sprite
-
-func _on_monster_animation_finished(sprite: AnimatedSprite2D) -> void:
-	if not is_instance_valid(sprite):
-		return
-	if sprite.animation == "hit":
-		var archetype := str(sprite.get_meta("archetype", "cave-brute"))
-		sprite.play("run" if archetype == "dust-skitter" else "walk")
-	elif sprite.animation == "death":
-		sprite.queue_free()
 
 func _create_farmer_sprite() -> void:
 	var frames := SpriteFrames.new()
@@ -722,8 +712,7 @@ func _farmer_attack() -> void:
 		status_label.text = "No monster is close enough for the club."
 		return
 	var club_multiplier := float(target.incoming_damage_multiplier)
-	if str(target.kind) == "stonehide" and bool(target.braced):
-		club_multiplier = Rules.stonehide_incoming_damage_multiplier(true)
+	
 	_play_sfx("monster-hit", 0.08)
 	target.hp = Rules.apply_hit_points_damage(
 		float(target.hp), FARMER_CLUB_DAMAGE * club_multiplier).hp
@@ -1036,9 +1025,9 @@ func _spawn_monster(forced_row: int = -1, forced_archetype: String = "") -> void
 		monster_sprite.position = screen_position
 		monster_sprite.z_index = int(screen_position.y)
 		match archetype:
-			"dust-skitter": monster_sprite.modulate = Color("#b4d39c")
-			"stonehide": monster_sprite.modulate = Color("#a4b0b7")
-			"alpha-brute": monster_sprite.modulate = Color("#c47b69")
+			"monster-01": monster_sprite.modulate = Color("#b4d39c")
+			"monster-01": monster_sprite.modulate = Color("#a4b0b7")
+			"monster-01": monster_sprite.modulate = Color("#c47b69")
 		add_child(monster_sprite)
 	var monster_base_tint := monster_sprite.modulate if monster_sprite != null else Color.WHITE
 	monsters.append({
@@ -1049,7 +1038,7 @@ func _spawn_monster(forced_row: int = -1, forced_archetype: String = "") -> void
 		"speed": float(profile.speed), "width_scale": float(profile.width_scale),
 		"plant_damage": float(profile.plant_damage), "attack_interval_ms": float(profile.attack_interval_ms),
 		"attack_cooldown_ms": 0.0, "incoming_damage_multiplier": float(profile.incoming_damage_multiplier),
-		"burst_cooldown_ms": rng.randf_range(float(profile.get("initial_burst_cooldown_min_ms", 0.0)), float(profile.get("initial_burst_cooldown_max_ms", 0.0))) if archetype == "dust-skitter" else 0.0,
+		"burst_cooldown_ms": rng.randf_range(float(profile.get("initial_burst_cooldown_min_ms", 0.0)), float(profile.get("initial_burst_cooldown_max_ms", 0.0))) if archetype == "monster-01" else 0.0,
 		"burst_remaining_ms": 0.0, "burst_duration_ms": float(profile.get("burst_duration_ms", 0.0)),
 		"burst_speed_multiplier": float(profile.get("burst_speed_multiplier", 1.0)),
 		"burst_cooldown_min_ms": float(profile.get("burst_cooldown_min_ms", 0.0)),
@@ -1190,7 +1179,7 @@ func _update_monsters(delta: float, delta_ms: float) -> void:
 		var movement_multiplier := _update_dust_skitter_burst(monster, delta_ms)
 		if within_bite_range:
 			monster.local_x = float(blocker.local_x)
-			monster.braced = str(monster.kind) == "stonehide"
+			monster.braced = str(monster.kind) == "monster-01"
 			var bite_position := _to_screen(_lane_point(float(monster.local_x), row))
 			monster.x = bite_position.x
 			monster.y = bite_position.y
@@ -1237,7 +1226,7 @@ func _update_monsters(delta: float, delta_ms: float) -> void:
 		if monster_sprite != null and is_instance_valid(monster_sprite):
 			monster_sprite.position = monster_position
 			monster_sprite.z_index = int(monster_position.y)
-			var moving_animation := "run" if str(monster.kind) == "dust-skitter" else "walk"
+			var moving_animation := "run" if str(monster.kind) == "monster-01" else "walk"
 			if monster_sprite.animation != moving_animation and monster_sprite.animation != "hit" and monster_sprite.animation != "death":
 				monster_sprite.play(moving_animation)
 		if float(monster.local_x) <= Rules.BOARD_HOME_LOCAL_X:
@@ -1254,7 +1243,7 @@ func _freeze_projectile_target(row: int, projectile_local_x: float,
 		return false
 	var applied := _apply_monster_freeze(target, duration_ms)
 	if applied and is_instance_valid(status_label):
-		status_label.text = "SNOW HIT! Hyena frozen for %.1f seconds." % (duration_ms / 1000.0)
+		status_label.text = "SNOW HIT! Monster 01 frozen for %.1f seconds." % (duration_ms / 1000.0)
 	return applied
 
 func _apply_monster_freeze(monster: Dictionary, duration_ms: float = Rules.MONSTER_FREEZE_DURATION_MS) -> bool:
@@ -1267,7 +1256,7 @@ func _apply_monster_freeze(monster: Dictionary, duration_ms: float = Rules.MONST
 		if not monster.has("base_tint"):
 			monster.base_tint = sprite.modulate
 		sprite.modulate = Rules.MONSTER_FREEZE_TINT
-		_set_monster_freeze_visual(sprite, str(monster.get("kind", "cave-brute")), true)
+		_set_monster_freeze_visual(sprite, str(monster.get("kind", "monster-01")), true)
 	return true
 
 func _set_monster_freeze_visual(sprite: AnimatedSprite2D, archetype: String, is_frozen: bool) -> void:
@@ -1277,7 +1266,7 @@ func _set_monster_freeze_visual(sprite: AnimatedSprite2D, archetype: String, is_
 		if sprite.sprite_frames.has_animation("frozen") and sprite.animation != "frozen":
 			sprite.play("frozen")
 	elif sprite.animation == "frozen":
-		sprite.play("run" if archetype == "dust-skitter" else "walk")
+		sprite.play("run" if archetype == "monster-01" else "walk")
 
 func _monster_can_bite_farmer(monster: Dictionary) -> bool:
 	if farmer_sprite == null or not is_instance_valid(farmer_sprite):
@@ -1313,7 +1302,7 @@ func _damage_farmer(damage: float) -> void:
 	_refresh_hud()
 
 func _update_dust_skitter_burst(monster: Dictionary, delta_ms: float) -> float:
-	if str(monster.kind) != "dust-skitter":
+	if false:
 		return 1.0
 	var burst_will_start := float(monster.burst_cooldown_ms) - delta_ms <= 0.0 and float(monster.burst_remaining_ms) <= 0.0
 	var next_burst_cooldown: Variant = null
@@ -1377,8 +1366,7 @@ func _update_projectiles(delta: float) -> void:
 						projectile_sprite.queue_free()
 					break
 				var damage_multiplier := float(monster.incoming_damage_multiplier)
-				if str(monster.kind) == "stonehide" and bool(monster.braced):
-					damage_multiplier = Rules.stonehide_incoming_damage_multiplier(true)
+				
 				monster.hp = Rules.apply_hit_points_damage(float(monster.hp), float(projectile.damage) * damage_multiplier).hp
 				projectile.alive = false
 				_play_sfx("thorn-impact" if str(projectile.plant_type) == "radish" else "monster-hit", 0.08)
@@ -1471,11 +1459,11 @@ func _draw() -> void:
 		draw_string(get_theme_default_font(), pickup_position + Vector2(-4.0 * pickup_scale, 4.0 * pickup_scale), "+", HORIZONTAL_ALIGNMENT_LEFT, -1, maxi(10, roundi(13.0 * pickup_scale)), Color("#5b4217"))
 	for monster in monsters:
 		var depth_scale := float(monster.depth_scale)
-		if str(monster.kind) == "dust-skitter" and float(monster.get("burst_fx_ms", 0.0)) > 0.0:
+		if str(monster.kind) == "monster-01" and float(monster.get("burst_fx_ms", 0.0)) > 0.0:
 			var dust_alpha := clampf(float(monster.burst_fx_ms) / 300.0, 0.0, 1.0) * 0.55
 			draw_circle(Vector2(monster.x - 18.0 * depth_scale, monster.y + 12.0 * depth_scale), 10.0 * depth_scale, Color(0.82, 0.78, 0.66, dust_alpha))
 			draw_circle(Vector2(monster.x - 32.0 * depth_scale, monster.y + 15.0 * depth_scale), 6.0 * depth_scale, Color(0.82, 0.78, 0.66, dust_alpha * 0.8))
-		if str(monster.kind) == "stonehide" and bool(monster.braced):
+		if str(monster.kind) == "monster-01" and bool(monster.braced):
 			var brace_radius := 44.0 * depth_scale * float(monster.width_scale)
 			draw_arc(Vector2(monster.x, monster.y + 6.0 * depth_scale), brace_radius, deg_to_rad(198.0), deg_to_rad(342.0), 28, Color("#d8d0b5"), 3.0 * depth_scale, true)
 			draw_arc(Vector2(monster.x, monster.y + 6.0 * depth_scale), brace_radius + 5.0 * depth_scale, deg_to_rad(205.0), deg_to_rad(335.0), 24, Color("#a9a18b"), 2.0 * depth_scale, true)
