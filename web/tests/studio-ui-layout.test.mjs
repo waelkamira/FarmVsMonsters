@@ -50,9 +50,12 @@ test("Studio animation preview supports precise previous and next frame stepping
 });
 
 test("Studio plant and monster previews can toggle horizontal character direction", () => {
-  assert.match(page, /\[plantPreviewFlipped,setPlantPreviewFlipped\]=useState\(false\)/);
-  assert.match(page, /scaleX\(\$\{plantPreviewFlipped\?-1:1\}\) scale\(\$\{type==="plant"\?plantSizePercent\/100:1\}\)/);
-  assert.match(page, /\(type==="plant"\|\|type==="monster"\)&&<div className="studio-direction-controls"><button type="button" aria-pressed=\{plantPreviewFlipped\} onClick=\{\(\)=>setPlantPreviewFlipped\(current=>!current\)\}>Flip Character Direction<\/button><\/div>/);
+  assert.match(page, /\[flipX,setFlipX\]=useState\(false\)/);
+  assert.match(page, /scaleX\(\$\{flipX\?-1:1\}\) scale\(\$\{type==="plant"\?plantSizePercent\/100:1\}\)/);
+  assert.match(page, /\(type==="plant"\|\|type==="monster"\)&&<div className="studio-direction-controls"><button type="button" aria-pressed=\{flipX\} onClick=\{\(\)=>setFlipX\(value=>!value\)\}>Flip Character Direction<\/button><\/div>/);
+  assert.match(page, /setFlipX\(Boolean\(asset\.flipX\)\)/);
+  assert.match(page, /flipX:String\(flipX\)/);
+  assert.match(page, /setPlantSizePercent\(100\);setFlipX\(false\);setAnimationProfile/);
   assert.match(css, /\.studio-direction-controls button\{/);
 });
 
