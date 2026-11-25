@@ -12,7 +12,7 @@ test("Studio exposes permanent deletion for every asset type with an explicit co
   assert.doesNotMatch(page, /\(a\.type==="plant"\|\|a\.type==="monster"\)&&<button[^>]*studio-delete-button/);
   assert.match(page, /role="alertdialog"[^>]*aria-modal="true"/);
   assert.match(page, /تأكيد الحذف النهائي/);
-  assert.match(page, /لا يمكن التراجع عن هذه العملية/);
+  assert.match(page, /الأصول المنشورة لا يمكن حذفها بهذه العملية/);
   assert.match(page, /operation:"delete"/);
   assert.match(css, /\.studio-delete-button/);
   assert.match(css, /\.studio-delete-confirm/);
