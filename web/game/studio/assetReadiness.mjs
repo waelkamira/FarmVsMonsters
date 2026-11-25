@@ -4,6 +4,7 @@ import { validateStudioAnimationProfile } from "./animationProfiles.mjs";
 import { validateSkeletalRigProfile } from "./skeletalAnimation.mjs";
 import { createStudioMonsterProfile } from "./monsterProfiles.mjs";
 import { buildAssetDependencyReport } from "./assetDependencies.mjs";
+import { validateCharacterStateAnimations } from "./characterStateAnimations.mjs";
 
 export function safeAssetPath(value) {
   if (typeof value !== "string" || !value.startsWith("/assets/")) return false;
@@ -22,7 +23,7 @@ export function applyStudioAssetFileAudit(report, assets, statusByPath = {}) {
   const sourceAssets = Array.isArray(assets) ? assets : [];
   const auditedAssets = report.assets.map((entry, index) => {
     const source = sourceAssets[index];
-    const paths = [...new Set([source?.path, source?.combat?.projectile?.path].filter((value) => safeAssetPath(value)))];
+    const paths = [...new Set([source?.path, source?.combat?.projectile?.path, ...Object.values(source?.stateAnimations || {}).map((state) => state?.path)].filter((value) => safeAssetPath(value)))];
     const fileChecks = paths.map((assetPath) => {
       checkedPaths.add(assetPath);
       const status = statusByPath[assetPath] === "present" || statusByPath[assetPath] === "missing" ? statusByPath[assetPath] : "unknown";
@@ -125,6 +126,10 @@ export function auditStudioAssetRegistry(input) {
           }
         }
       }
+    }
+    if (asset?.stateAnimations) {
+      const stateValidation = validateCharacterStateAnimations(asset.stateAnimations);
+      if (!stateValidation.valid) stateValidation.errors.forEach((message) => errors.push("حالات الشخصية: " + message));
     }
     if (type === "monster") {
       try { createStudioMonsterProfile(asset.monsterProfile); }

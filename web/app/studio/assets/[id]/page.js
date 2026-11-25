@@ -8,6 +8,7 @@ import "../../studio.css";
 import EffectPicker from "../../EffectPicker.jsx";
 import EffectBadges from "../../EffectBadges.jsx";
 import SpriteThumbnail from "../../../components/SpriteThumbnail.jsx";
+import CharacterStateWorkbench from "../../CharacterStateWorkbench.jsx";
 
 const TYPE_LABELS = { plant: "نبات", monster: "وحش", plantProjectile: "قذيفة نبات", monsterProjectile: "قذيفة وحش", effect: "مؤثر", item: "عنصر", audio: "صوت" };
 const STATUS_LABELS = { draft: "مسودة", testing: "جاهز للاختبار", approved: "بانتظار المراجعة", published: "منشور", archived: "مؤرشف" };
@@ -98,6 +99,7 @@ export default function StudioAssetDetailsPage() {
       </div>
       {actionMessage && <p className="studio-message" role="status" aria-live="polite">{actionMessage}</p>}
     </section>
+    {(asset.type === "plant" || asset.type === "monster") && <CharacterStateWorkbench key={asset.id} asset={asset} onSaved={(updated) => updated && setAsset((current) => ({ ...current, ...updated }))} />}
     {(asset.type === "plant" || asset.type === "monster") && <EffectPicker key={asset.id} asset={asset} onSaved={(updated) => updated && setAsset((current) => ({ ...current, ...updated }))} />}
     {asset.type === "monster" && asset.monsterProfile && <section className="studio-detail-panel"><h2>خصائص الوحش في المعركة</h2><div className="studio-detail-grid"><DetailRow label="نموذج السلوك" value={asset.monsterProfile.baseArchetype}/><DetailRow label="مضاعف الصحة" value={asset.monsterProfile.hpMultiplier}/><DetailRow label="مضاعف السرعة" value={asset.monsterProfile.speedMultiplier}/><DetailRow label="مضاعف الضرر" value={asset.monsterProfile.damageMultiplier}/><DetailRow label="مضاعف زمن الهجوم" value={asset.monsterProfile.attackIntervalMultiplier}/><DetailRow label="مقياس العرض" value={asset.monsterProfile.widthScale}/><DetailRow label="مقياس الارتفاع" value={asset.monsterProfile.heightScale}/><DetailRow label="وزن الظهور" value={asset.monsterProfile.spawnWeight}/><DetailRow label="أول موجة" value={asset.monsterProfile.firstWave}/></div><p className="studio-detail-muted">وزن الظهور صفر يعني أن الوحش غير مضاف إلى جدول الموجات.</p></section>}
     {asset.type === "plant" && <section className="studio-detail-panel"><h2>إعدادات النبتة داخل اللعبة</h2><div className="studio-detail-grid">

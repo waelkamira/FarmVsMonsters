@@ -27,6 +27,7 @@ import soundAssets from "../data/sound-assets.json";
 import effectSoundAssets from "../data/effect-sound-assets.json";
 import { EffectDirector } from "../vfx/effects/EffectDirector.mjs";
 import { resolveAssignedEffectIds } from "../vfx/effects/effectAssignments.mjs";
+import { getEffect } from "../vfx/effects/effectLibrary.mjs";
 import {
   PHASE_ONE_WAVE_SIZES,
   PHASE_ONE_TOTAL_MONSTERS,
@@ -199,6 +200,17 @@ export default class BattleScene extends Scene {
         this.load.image(key, part.path);
       }
     };
+    const queueCharacterStateTextures = (entry, variant, kind) => {
+      for (const [stateId, state] of Object.entries(entry.stateAnimations || {})) {
+        const statePath = state?.previewUrl || state?.path;
+        if (!state || !/^[a-z0-9-]+$/.test(stateId) || typeof statePath !== "string" ||
+            !(statePath.startsWith("/assets/") || statePath.startsWith("/api/studio/assets?preview="))) continue;
+        const key = "studio-" + kind + "-state-" + variant + "-" + entry.id + "-" + stateId;
+        clearStudioTexture(key);
+        clearStudioAnimation("studio-" + kind + "-" + entry.id + "-state-" + stateId);
+        this.load.image(key, statePath);
+      }
+    };
     const queueStudioCatalog = (catalogKey) => {
       this.load.once("filecomplete-json-" + catalogKey, () => {
         const entries = this.cache.json.get(catalogKey)?.plants || [];
@@ -212,6 +224,7 @@ export default class BattleScene extends Scene {
           clearStudioAnimation("studio-" + entry.id + "-attack");
           this.load.image(plantTextureKey, entry.path);
           queueRigPartTextures(entry, variant);
+          queueCharacterStateTextures(entry, variant, "plant");
           if (entry.combat?.mode === "projectile" && entry.combat.projectile?.path && (entry.combat.projectile.path.startsWith("/assets/") || entry.combat.projectile.path.startsWith("/api/studio/assets?preview="))) {
             const projectileTextureKey = "studio-projectile-" + variant + "-" + entry.id;
             clearStudioTexture(projectileTextureKey);
@@ -235,6 +248,7 @@ export default class BattleScene extends Scene {
           clearStudioAnimation("studio-monster-" + entry.id + "-attack");
           this.load.image(monsterTextureKey, entry.path);
           queueRigPartTextures(entry, variant);
+          queueCharacterStateTextures(entry, variant, "monster");
         }
       });
     };
@@ -326,7 +340,8 @@ export default class BattleScene extends Scene {
           spriteSheet: Boolean(entry.spriteSheet && plantFrameCount > 1),
           testOnly,
           textureKey: "studio-plant-" + variant + "-" + entry.id,
-          projectileTextureKey: "studio-projectile-" + variant + "-" + entry.id
+          projectileTextureKey: "studio-projectile-" + variant + "-" + entry.id,
+          stateAnimationTextureKeys: Object.fromEntries(Object.keys(entry.stateAnimations || {}).map((stateId) => [stateId, "studio-plant-state-" + variant + "-" + entry.id + "-" + stateId]))
         });
       }
     };
@@ -341,6 +356,19 @@ export default class BattleScene extends Scene {
         return [part.id, textureKey];
       }));
     }
+    const registerCharacterStateAnimations = (asset, kind) => {
+      for (const [stateId, state] of Object.entries(asset.stateAnimations || {})) {
+        const textureKey = asset.stateAnimationTextureKeys?.[stateId];
+        const frameCount = Math.max(1, Number(state.frameCount) || Number(state.rows || 1) * Number(state.columns || 1));
+        const rows = Math.max(1, Number(state.rows) || 1);
+        const columns = Math.max(1, Number(state.columns) || 1);
+        if (!textureKey || !this.textures.exists(textureKey) || rows * columns !== frameCount || !this.registerStudioGridSheet(textureKey, rows, columns)) continue;
+        const animationKey = "studio-" + kind + "-" + asset.id + "-state-" + stateId;
+        if (!this.anims.exists(animationKey) && frameCount > 1) {
+          this.anims.create({ key: animationKey, frames: this.anims.generateFrameNumbers(textureKey, { start: 0, end: frameCount - 1 }), frameRate: Math.max(1, Math.min(30, Number(state.fps) || 10)), repeat: state.loop === false ? 0 : -1 });
+        }
+      }
+    };
     this.studioPlantsByType = Object.fromEntries(this.studioPlants.map((plant) => [plant.id, plant]));
     for (const plant of this.studioPlants) {
       const textureKey = plant.textureKey;
@@ -371,6 +399,7 @@ export default class BattleScene extends Scene {
           }
         }
       }
+      registerCharacterStateAnimations(plant, "plant");
     }
     // Register each attached projectile Sprite Sheet only after Phaser has loaded
     // its image, using the independent grid saved with that projectile.
@@ -418,7 +447,8 @@ export default class BattleScene extends Scene {
             monsterProfile,
             animationProfile,
             testOnly,
-            textureKey: "studio-monster-" + variant + "-" + entry.id
+            textureKey: "studio-monster-" + variant + "-" + entry.id,
+            stateAnimationTextureKeys: Object.fromEntries(Object.keys(entry.stateAnimations || {}).map((stateId) => [stateId, "studio-monster-state-" + variant + "-" + entry.id + "-" + stateId]))
           });
         } catch (error) {
           console.warn("Skipping invalid Studio monster profile:", entry.id, error);
@@ -453,6 +483,7 @@ export default class BattleScene extends Scene {
           });
         }
       }
+      registerCharacterStateAnimations(monster, "monster");
     }
     if (this.textures.exists("snow-thrower-level-1") && !this.anims.exists("snow-thrower-level-1-throw")) {
       const available = Object.keys(this.textures.get("snow-thrower-level-1").frames).filter((name) => name !== "__BASE").length;
@@ -3062,6 +3093,7 @@ export default class BattleScene extends Scene {
     if (studioPlant.rigProfile || this.textures.exists(textureKey)) {
       const sizeFactor = PhaserMath.Clamp((Number(studioPlant.combat?.sizePercent) || 100) / 100, 0.25, 2);
       const height = 88 * perspective * sizeFactor;
+      container.setData("studioCharacterBounds", { x: 0, y: -height / 2 + 2, width: Math.min(height * ((Number(studioPlant.rigProfile?.canvas?.width) || 1) / (Number(studioPlant.rigProfile?.canvas?.height) || 1)), 100 * perspective * sizeFactor), height });
       let rigRendered = false;
       if (studioPlant.rigProfile && studioPlant.rigPartTextures) {
         try {
@@ -3816,8 +3848,65 @@ export default class BattleScene extends Scene {
     return view?.active ? { x: view.x, y: view.y + yOffset, view } : null;
   }
 
+  applyCharacterStateFromEffects(effectIds, trigger, point) {
+    if (trigger !== "hit" && trigger !== "damaged") return;
+    const view = point?.view;
+    if (!view?.active) return;
+    const plantId = view.getData?.("studioPlantId");
+    const monsterId = view.getData?.("studioMonsterId");
+    const asset = plantId ? this.studioPlantsByType?.[plantId] : monsterId ? this.studioMonstersById?.[monsterId] : null;
+    if (!asset?.stateAnimations || !asset.stateAnimationTextureKeys) return;
+    const stateId = (effectIds || []).find((id) => asset.stateAnimations[id] && asset.stateAnimationTextureKeys[id] && this.textures.exists(asset.stateAnimationTextureKeys[id]));
+    if (!stateId) return;
+    const kind = plantId ? "plant" : "monster";
+    const textureKey = asset.stateAnimationTextureKeys[stateId];
+    const animationKey = "studio-" + kind + "-" + asset.id + "-state-" + stateId;
+    const rigRoot = view.getData("studioSkeletalRig")?.root || null;
+    const baseSprite = view.getData("studioStatusBaseSprite") ||
+      (view.list || []).find((child) => child?.active && child.texture?.key === asset.textureKey) || null;
+    if (!baseSprite?.active && !rigRoot?.active) return;
+    const oldTimer = view.getData("studioStatusRestoreTimer");
+    if (oldTimer?.remove) oldTimer.remove(false);
+    const oldOverlay = view.getData("studioStatusOverlay");
+    if (oldOverlay?.active) oldOverlay.destroy();
+    if (baseSprite?.active) baseSprite.setVisible(false);
+    if (rigRoot?.active) rigRoot.setVisible(false);
+    const bounds = view.getData("studioCharacterBounds") || {};
+    const overlay = this.add.sprite(
+      baseSprite?.x ?? bounds.x ?? 0,
+      baseSprite?.y ?? bounds.y ?? 0,
+      textureKey,
+      0
+    )
+      .setOrigin(baseSprite?.originX ?? 0.5, baseSprite?.originY ?? 1)
+      .setScale(baseSprite?.scaleX ?? 1, baseSprite?.scaleY ?? 1)
+      .setFlipX(Boolean(baseSprite?.flipX))
+      .setAlpha(baseSprite?.alpha ?? 1);
+    if (!baseSprite && bounds.width && bounds.height) overlay.setDisplaySize(bounds.width, bounds.height);
+    view.add(overlay);
+    if (this.anims.exists(animationKey)) overlay.play(animationKey);
+    view.setData("studioStatusBaseSprite", baseSprite);
+    view.setData("studioStatusRigRoot", rigRoot);
+    view.setData("studioStatusOverlay", overlay);
+    const definition = getEffect(stateId);
+    const duration = Math.max(350, ...(definition?.layers || []).map((layer) => (Number(layer.delay) || 0) + (Number(layer.life || layer.ms) || 0)));
+    const timer = this.time.delayedCall(duration, () => {
+      if (baseSprite?.active) baseSprite.setVisible(true);
+      if (rigRoot?.active) rigRoot.setVisible(true);
+      if (overlay.active) overlay.destroy();
+      if (view.active) {
+        view.setData("studioStatusBaseSprite", null);
+        view.setData("studioStatusRigRoot", null);
+        view.setData("studioStatusOverlay", null);
+        view.setData("studioStatusRestoreTimer", null);
+      }
+    });
+    view.setData("studioStatusRestoreTimer", timer);
+  }
+
   playEffects(effectIds, trigger, point, extra = {}) {
     if (!this.effectDirector || !effectIds?.length || !point) return;
+    this.applyCharacterStateFromEffects(effectIds, trigger, point);
     this.effectDirector.playAssigned(effectIds, trigger, { ...point, ...extra });
   }
 
@@ -4182,6 +4271,10 @@ export default class BattleScene extends Scene {
     const speed = profile.speed;
     const spawn = this.monsterLanePoint(SPAWN_LOCAL_X, row);
     const view = this.add.container(spawn.x, spawn.y).setDepth(10 + spawn.y / 1000);
+    if (studioMonster?.id) {
+      view.setData("studioMonsterId", studioMonster.id);
+      view.setData("studioCharacterBounds", { x: 0, y: 0, width: 360, height: 298 });
+    }
     view.setAlpha(0);
 
     // Scale each creature against the measured gap of its perspective lane.
