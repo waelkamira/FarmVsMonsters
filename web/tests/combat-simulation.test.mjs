@@ -49,7 +49,7 @@ test("mushroom placement uses the shared plant cost and health", () => {
 test("placement rejects unknown plants, occupied cells, invalid coordinates and insufficient energy", () => {
   const occupied = [{ type: "radish", col: 1, row: 1, alive: true }];
   const cases = [
-    [{ energy: 150, plants: [], type: "dragon", col: 0, row: 0, columns: 8, rows: 5 }, "UNKNOWN_PLANT_TYPE"],
+    [{ energy: 150, plants: [], type: "unknown-plant", col: 0, row: 0, columns: 8, rows: 5 }, "UNKNOWN_PLANT_TYPE"],
     [{ energy: 150, plants: occupied, type: "mushroom", col: 1, row: 1, columns: 8, rows: 5 }, "CELL_OCCUPIED"],
     [{ energy: 150, plants: [], type: "radish", col: 8, row: 0, columns: 8, rows: 5 }, "CELL_OUT_OF_BOUNDS"],
     [{ energy: 150, plants: [], type: "radish", col: 0, row: -1, columns: 8, rows: 5 }, "CELL_OUT_OF_BOUNDS"],
