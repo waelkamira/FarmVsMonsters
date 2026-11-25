@@ -18,11 +18,32 @@ function readClip(input, name, maxFrame, defaults) {
   const startFrame = readFrame(clip.startFrame, name + ".startFrame", maxFrame, defaults.startFrame);
   const endFrame = readFrame(clip.endFrame, name + ".endFrame", maxFrame, defaults.endFrame);
   if (endFrame < startFrame) throw new RangeError(name + " endFrame must be greater than or equal to startFrame.");
+  const frameCount = endFrame - startFrame + 1;
+  const suppliedDurations = clip.frameDurationsMs;
+  let frameDurationsMs = null;
+  if (suppliedDurations != null) {
+    if (!Array.isArray(suppliedDurations) || suppliedDurations.length !== frameCount) {
+      throw new RangeError(name + ".frameDurationsMs must contain one duration for each frame in the clip.");
+    }
+    frameDurationsMs = Object.freeze(suppliedDurations.map((value, index) => {
+      const duration = Number(value);
+      if (!Number.isFinite(duration) || duration < 16 || duration > 2000) {
+        throw new RangeError(name + ".frameDurationsMs[" + index + "] must be between 16 and 2000 milliseconds.");
+      }
+      return Math.round(duration);
+    }));
+  }
+  const effectiveDurations = frameDurationsMs || (
+    name === "attack" && frameCount >= 3
+      ? Object.freeze(Array.from({ length: frameCount }, (_, index) => index < 2 ? 180 : 70))
+      : null
+  );
   return Object.freeze({
     startFrame,
     endFrame,
     fps: readFps(clip.fps, name + ".fps", defaults.fps),
-    loop: name === "idle" || name === "move" ? true : Boolean(clip.loop ?? false)
+    loop: name === "idle" || name === "move" ? true : Boolean(clip.loop ?? false),
+    ...(effectiveDurations ? { frameDurationsMs: effectiveDurations } : {})
   });
 }
 export function createStudioAnimationProfile(input, frameCount) {

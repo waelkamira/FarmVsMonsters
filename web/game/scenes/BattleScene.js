@@ -342,7 +342,8 @@ export default class BattleScene extends Scene {
           if (!this.anims.exists(animationKey)) {
             this.anims.create({
               key: animationKey,
-              frames: this.anims.generateFrameNumbers(textureKey, { start: clip.startFrame, end: clip.endFrame }),
+              frames: this.anims.generateFrameNumbers(textureKey, { start: clip.startFrame, end: clip.endFrame })
+                .map((frame, index) => ({ ...frame, ...(clip.frameDurationsMs ? { duration: clip.frameDurationsMs[index] } : {}) })),
               frameRate: clip.fps,
               repeat: clip.loop ? -1 : 0
             });
@@ -424,7 +425,8 @@ export default class BattleScene extends Scene {
         if (!this.anims.exists(animationKey)) {
           this.anims.create({
             key: animationKey,
-            frames: this.anims.generateFrameNumbers(monster.textureKey, { start: clip.startFrame, end: clip.endFrame }),
+            frames: this.anims.generateFrameNumbers(monster.textureKey, { start: clip.startFrame, end: clip.endFrame })
+              .map((frame, index) => ({ ...frame, ...(clip.frameDurationsMs ? { duration: clip.frameDurationsMs[index] } : {}) })),
             frameRate: clip.fps,
             repeat: clip.loop ? -1 : 0
           });
@@ -4204,7 +4206,7 @@ export default class BattleScene extends Scene {
       braceCue,
       maxHp: hp,
       tierTint,
-      hitFlashGraphic: g, hitFlashTimer: null, hyenaSprite, hitAnimUntil: 0,
+      hitFlashGraphic: g, hitFlashTimer: null, hitStopTimer: null, hitStopRestore: null, hyenaSprite, hitAnimUntil: 0,
       attackCooldown: 0, freezeRemainingMs: 0, freezeStage: 0, freezeFrameIndex: 0,
       freezeFullHoldMs: 0, freezeRecoveryMs: 0, iceBiteCooldownMs: 3600, frozenTextureKey: null,
       frozenAnimationKey: null, frozenSpriteSize: null, alive: true, view, dustTimer: 0,
@@ -4883,11 +4885,50 @@ export default class BattleScene extends Scene {
     }
   }
 
+  applyMonsterHitStop(monster, durationMs = 80) {
+    if (!monster || monster.freezeStage > 0) return;
+    // Pause only the struck character: combat simulation, other characters and
+    // projectiles continue normally. A white fill makes the first impact frame pop.
+    if (monster.hitStopTimer) {
+      monster.hitStopTimer.remove(false);
+      monster.hitStopTimer = null;
+    } else {
+      const candidates = [
+        monster.hyenaSprite,
+        ...(monster.view?.list || []),
+        ...(monster.studioRig?.root?.list || [])
+      ];
+      const targets = [...new Set(candidates)].filter((target) =>
+        target?.active && (target.anims || typeof target.setTintFill === "function")
+      );
+      monster.hitStopRestore = targets.map((target) => {
+        const wasPlaying = Boolean(target.anims?.isPlaying);
+        if (wasPlaying) target.anims.pause();
+        if (typeof target.setTintFill === "function") target.setTintFill(0xffffff);
+        return { target, wasPlaying };
+      });
+    }
+    monster.hitStopTimer = this.time.delayedCall(Math.max(16, durationMs), () => {
+      for (const { target, wasPlaying } of monster.hitStopRestore || []) {
+        if (!target?.active) continue;
+        if (target === monster.hyenaSprite && Number.isFinite(monster.tierTint) && monster.tierTint !== 0xffffff) {
+          target.setTint?.(monster.tierTint);
+        } else {
+          target.clearTint?.();
+        }
+        if (wasPlaying && monster.alive && target.anims?.isPaused) target.anims.resume();
+      }
+      monster.hitStopRestore = null;
+      monster.hitStopTimer = null;
+    });
+  }
+
   flashMonsterOnHit(monster, plantType = "radish") {
     if (!monster || !monster.alive || monster.freezeStage > 0) return;
 
     // Keep the monster artwork unchanged. A restrained projectile-colored
     // glow traces only its silhouette; recoil and squash are reduced by half.
+    this.applyMonsterHitStop(monster, 80);
     const sprite = monster.hyenaSprite;
     const hitColor = getProjectileVFXProfile(plantType)?.tint ?? 0x9bdc72;
     const reaction = getMonsterReactionProfile(monster.kind);
