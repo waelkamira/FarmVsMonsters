@@ -11,6 +11,13 @@ export default function PhaserGame() {
   const [status, setStatus] = useState("loading");
   const [errorMessage, setErrorMessage] = useState("");
   const [isPortraitPhone, setIsPortraitPhone] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  useEffect(() => {
+    const updateFullscreen = () => setIsFullscreen(Boolean(document.fullscreenElement));
+    document.addEventListener("fullscreenchange", updateFullscreen);
+    return () => document.removeEventListener("fullscreenchange", updateFullscreen);
+  }, []);
 
   useEffect(() => {
     const updateOrientation = () => {
@@ -109,7 +116,7 @@ export default function PhaserGame() {
           }
         }}
       >
-        {locale === "ar" ? "ملء الشاشة" : "Full screen"}
+        {locale === "ar" ? (isFullscreen ? "إنهاء ملء الشاشة" : "ملء الشاشة") : (isFullscreen ? "Exit full screen" : "Full screen")}
       </button>
       {status === "loading" && (
         <div className="game-status" role="status" aria-live="polite">
