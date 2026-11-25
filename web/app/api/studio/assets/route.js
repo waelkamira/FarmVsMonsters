@@ -589,8 +589,8 @@ for(const part of rigPartAssets){if(!safeAssetPath(part.path))return NextRespons
 if(asset.type==="plant"&&asset.combat.mode==="projectile"){if(!safeAssetPath(asset.combat.projectile?.path))return NextResponse.json({error:"The linked projectile asset is missing."},{status:409});if(!sourceFiles.has(asset.combat.projectile.path))sourceFiles.set(asset.combat.projectile.path,await githubGetBytes("web/public"+asset.combat.projectile.path,token,storageBranch));}
 
 const releaseBranch=createStudioReleaseBranchName(id,randomUUID().replace(/-/g,"").slice(0,8));
-await githubCreateBranch(releaseBranch,targetBranch,token);
 releaseBranchForCleanup=releaseBranch;
+await githubCreateBranch(releaseBranch,targetBranch,token);
 for(const [assetPath,bytes] of sourceFiles)await githubPutImmutable("web/public"+assetPath,bytes,"stage "+asset.type+" release dependency for "+id,token,releaseBranch);
 
 const isMonster=asset.type==="monster";
