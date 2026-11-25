@@ -7,15 +7,15 @@
  * areas preserve comfortable touch targets after Scale.FIT on landscape phones.
  */
 export const BATTLE_HUD_BUTTONS = Object.freeze([
-  { key: "pauseControl", label: "pause", y: 64 },
-  { key: "settingsControl", label: "settings", y: 134 },
-  { key: "speedControl", label: "speed", y: 204 },
-  { key: "audioButton", label: "audio", y: 274 },
-  { key: "collectionMenuControl", label: "farm-journal", y: 344 },
-  { key: "inventoryControl", label: "inventory", y: 414 },
+  { key: "pauseControl", label: "pause", y: 52 },
+  { key: "settingsControl", label: "settings", y: 124 },
+  { key: "speedControl", label: "speed", y: 196 },
+  { key: "audioButton", label: "audio", y: 268 },
+  { key: "collectionMenuControl", label: "farm-journal", y: 340 },
+  { key: "inventoryControl", label: "inventory", y: 412 },
   { key: "quickPlantsButton", label: "plants", y: 484 },
-  { key: "quickAdventuresButton", label: "adventures", y: 554 },
-  { key: "quickMonstersButton", label: "monsters", y: 624 }
+  { key: "quickAdventuresButton", label: "adventures", y: 556 },
+  { key: "quickMonstersButton", label: "monsters", y: 628 }
 ]);
 
 export const BATTLE_HUD_BUTTON_X = 1080;
@@ -51,7 +51,7 @@ export function layoutBattleHudButtons(scene) {
     scene.audioMenu.setPosition(930, 350);
   }
   scene.audioMenuBounds = { left: 800, right: 1060, top: 230, bottom: 470 };
-  scene.audioButtonBounds = { left: 1042, right: 1120, top: 236, bottom: 312 };
+  scene.audioButtonBounds = { left: 1042, right: 1120, top: 230, bottom: 306 };
 
   return positioned;
 }
