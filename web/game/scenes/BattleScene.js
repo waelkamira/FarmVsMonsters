@@ -4911,7 +4911,11 @@ export default class BattleScene extends Scene {
     monster.hitStopTimer = this.time.delayedCall(Math.max(16, durationMs), () => {
       for (const { target, wasPlaying } of monster.hitStopRestore || []) {
         if (!target?.active) continue;
-        target.clearTint?.();
+        if (target === monster.hyenaSprite && Number.isFinite(monster.tierTint) && monster.tierTint !== 0xffffff) {
+          target.setTint?.(monster.tierTint);
+        } else {
+          target.clearTint?.();
+        }
         if (wasPlaying && monster.alive && target.anims?.isPaused) target.anims.resume();
       }
       monster.hitStopRestore = null;
