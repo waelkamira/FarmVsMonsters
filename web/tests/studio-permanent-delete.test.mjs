@@ -75,3 +75,12 @@ test("GitHub permanent deletion cleans hydration manifests on storage and game b
   assert.match(githubDeleteBranch, /if\(targetBranch!==storageBranch\)await removeGithubAssetManifestReferences\(candidatePaths,token,targetBranch\)/);
   assert.ok(fileDelete > deleteStart && registrySave > fileDelete, "manifest/catalog cleanup and file deletion happen before registry removal");
 });
+
+
+test("Permanent deletion reconciles both the asset manifest and asset audit in local and GitHub storage", () => {
+  assert.match(route, /const ASSET_AUDIT_PATH="web\/public\/assets\/asset-audit\.json"/);
+  assert.match(route, /function synchronizeAssetAudit\(audit,manifest\)/);
+  assert.match(route, /await writeFile\(auditPath,JSON\.stringify\(audit,null,2\)/);
+  assert.match(route, /githubGetDocument\(ASSET_AUDIT_PATH,token,branch\)/);
+  assert.match(route, /reconcile asset audit after permanent deletion/);
+});
