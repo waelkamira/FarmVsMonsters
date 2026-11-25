@@ -91,6 +91,6 @@ test("GitHub preview reads are cached and have a per-branch fallback timeout", (
 
 
 test("Local permanent deletion writes published catalogs under web/public without duplicating public", () => {
-  assert.match(route, /path\.join\(process\.cwd\(\),catalogPath\.replace\(\/\^web\\\\\/\/,\"\"\)\)/);
-  assert.doesNotMatch(route, /path\.join\(process\.cwd\(\),\"public\",catalogPath\.replace/);
+  assert.ok(route.includes('path.join(process.cwd(),catalogPath.replace(/^web\//,""));'));
+  assert.doesNotMatch(route, /path\.join\(process\.cwd\(\),"public",catalogPath\.replace/);
 });
