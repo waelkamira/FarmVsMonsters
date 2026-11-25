@@ -45,4 +45,8 @@ test("Deletion removes linked catalog entries and owned files without deleting s
   assert.match(route, /asset\?\.audio\?\.path/);
   assert.match(route, /asset\?\.combat\?\.projectile\?\.path/);
   assert.match(route, /function assetPathStillUsed\(assets,assetPath\)/);
+  assert.match(route, /function removeManifestAssetReferences\(manifest,assetPaths\)/);
+  assert.match(route, /removeLocalAssetManifestReferences\(candidatePaths\)/);
+  assert.match(route, /removeGithubAssetManifestReferences\(candidatePaths,token,storageBranch\)/);
+  assert.match(route, /manifest\.assetCount=Object\.values\(manifest\.groups\)/);
 });
