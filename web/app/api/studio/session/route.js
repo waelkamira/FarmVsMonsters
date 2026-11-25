@@ -74,7 +74,7 @@ export async function POST(request) {
 
   const expected = adminToken();
   const signingSecret = sessionSecret();
-  if (!expected || !signingSecret) return sessionUnavailable();
+  if (!expected || !signingSecret || expected === signingSecret) return sessionUnavailable();
 
   const supplied = typeof body?.token === "string" ? body.token : "";
   const expectedBytes = Buffer.from(expected);
