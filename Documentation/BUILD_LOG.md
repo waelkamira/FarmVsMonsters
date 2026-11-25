@@ -1169,3 +1169,12 @@ Production rollout requires setting the two new independent secrets and the shar
 - Added regression tests for orientation detection, resolution, fullscreen support, touch hit areas, and HUD layout.
 
 The game remains authored in a fixed 1120×680 landscape coordinate space. CI can validate code, tests, lint, and build; physical touch-target feel, fullscreen behavior, and visual readability still require testing on actual Android/iOS devices.
+
+## 2026-11-25 — Missing asset reference containment (E-05)
+
+- Removed the seven absent Phase 1 story artwork requests from the Phaser preload queue. The design contract remains in `phase-one-story-assets.json` with `runtimeEnabled: false` and `awaiting-art` status until the authored files are committed.
+- Changed seven planned plant PNG references to `assetPath: null` plus `plannedAssetPath`; their encyclopedia cards continue using the committed local SVG catalogue icons. Existing Pumpkin artwork remains mapped to the committed `pumpkin.png`.
+- Changed missing projectile artwork references to `assetPath: null` plus `plannedAssetPath`, and corrected the Pumpkin Guard source-art mapping to the existing Pumpkin file. Existing Pineapple projectile art remains active.
+- Added regression tests verifying every non-null plant/projectile runtime path exists, pending art is not requested by Phaser, and the planned plant icons exist.
+
+This removes guaranteed 404/loaderror requests and stops the data contracts from presenting absent art as available runtime assets. It does not create the missing dragon/princess/farmer story illustrations or the future plant/projectile sprites; those remain explicitly pending art production.
