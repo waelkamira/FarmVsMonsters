@@ -197,3 +197,18 @@ test("Studio imports plant assets from grouped manifests and preserves named Pha
   assert.match(assetsRoute,/source\.atlasMetadataPath/);
   assert.match(assetsRoute,/source\.atlasClips/);
 });
+
+test("Studio preview proxy bounds the fetch and response-body read, returning 504 on timeout",()=>{
+  assert.match(assetsRoute,/const controller=new AbortController\(\)/);
+  assert.match(assetsRoute,/setTimeout\(\(\)=>controller\.abort\(\),12_000\)/);
+  assert.match(assetsRoute,/signal:controller\.signal/);
+  assert.match(assetsRoute,/Buffer\.from\(await response\.arrayBuffer\(\)\)/);
+  assert.match(assetsRoute,/status:timedOut\?504:502/);
+});
+
+test("Studio plant hydration repairs a misclassified registry entry without writing unchanged records",()=>{
+  assert.match(assetsRoute,/const existing=known\.get\(id\)/);
+  assert.match(assetsRoute,/existing\?\.type==="monster"\?"draft"/);
+  assert.match(assetsRoute,/if\(existing\?\.type==="monster"\)delete record\.monsterProfile/);
+  assert.match(assetsRoute,/JSON\.stringify\(comparable\(existing\)\)===JSON\.stringify\(comparable\(record\)\)/);
+});
