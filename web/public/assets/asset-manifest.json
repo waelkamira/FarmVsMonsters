@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-24T12:01:45.711Z",
-  "assetCount": 93,
-  "totalBytes": 27902723,
+  "generatedAt": "2026-11-25T14:51:39.807Z",
+  "assetCount": 90,
+  "totalBytes": 27198857,
   "groups": {
     "audio": [
       {
@@ -460,11 +460,6 @@
         "type": "image"
       },
       {
-        "key": "plants-onion",
-        "url": "/assets/plants/Onion.png",
-        "type": "image"
-      },
-      {
         "key": "plants-snow-thrower-bomb-level-1",
         "url": "/assets/plants/Snow-thrower-bomb-level-1.png",
         "type": "image"
@@ -544,16 +539,6 @@
       {
         "key": "plants-radish-level-1",
         "url": "/assets/plants/radish-level-1.png",
-        "type": "image"
-      },
-      {
-        "key": "plants-radish",
-        "url": "/assets/plants/radish.png",
-        "type": "image"
-      },
-      {
-        "key": "plants-tomato",
-        "url": "/assets/plants/tomato.png",
         "type": "image"
       },
       {
@@ -1401,16 +1386,6 @@
       "height": 512
     },
     {
-      "key": "plants-onion",
-      "url": "/assets/plants/Onion.png",
-      "type": "image",
-      "group": "plants",
-      "bytes": 183749,
-      "sha256": "9633b9828c5999489ab0a84b161de5e8a69b85cd1c29f67bd3eebb517a61e2a6",
-      "width": 340,
-      "height": 500
-    },
-    {
       "key": "plants-snow-thrower-bomb-level-1",
       "url": "/assets/plants/Snow-thrower-bomb-level-1.png",
       "type": "image",
@@ -1561,26 +1536,6 @@
       "sha256": "e346e54712f6b219411977f1b6804f2a422de4712aff0d033fbab32f057d310b",
       "width": 908,
       "height": 1079
-    },
-    {
-      "key": "plants-radish",
-      "url": "/assets/plants/radish.png",
-      "type": "image",
-      "group": "plants",
-      "bytes": 210248,
-      "sha256": "8ad43555fcf47177114004b54aa92a216b4453f2fee7aa13a94752e42e442dd0",
-      "width": 331,
-      "height": 451
-    },
-    {
-      "key": "plants-tomato",
-      "url": "/assets/plants/tomato.png",
-      "type": "image",
-      "group": "plants",
-      "bytes": 309869,
-      "sha256": "3155502e591aefd9bde4bde5ee623442789168fa99c646f651e79aa441a12005",
-      "width": 500,
-      "height": 500
     },
     {
       "key": "projectiles-plants-bamboo-throwing-level-1-projectile-cbedc31ec96279864eaf335cd3f9594a067d085445f913348b6a7475e97fc27c",
