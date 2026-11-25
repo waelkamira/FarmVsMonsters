@@ -83,12 +83,7 @@ const CELL_W = GRID_WIDTH / COLUMNS;
 const CELL_H = GRID_HEIGHT / LANES;
 // Reversible visual rarity palette for the current monster 01 archetypes.
 // White is the baseline; stronger archetypes receive progressively richer tints.
-const MONSTER_TIER_TINTS = {
-  "retired-variant": 0xd7e1e8, // lighter scout: below standard durability
-  "retired-variant": 0xffffff,  // standard monster 01
-  "retired-variant": 0x579bff,   // reinforced monster 01
-  "retired-variant": 0xffc247  // giant alpha
-};
+const MONSTER_TIER_TINTS = { "monster-01": 0xffffff };
 const HOME_LOCAL_X = -300;
 const CAVEMAN_RETURN_SPEED = 420;
 const SPAWN_LOCAL_X = GRID_WIDTH / 2 + 28;
@@ -2188,7 +2183,7 @@ export default class BattleScene extends Scene {
         addLabel(0, 60, locale === "ar" ? "مغارة الكنز — بانتظار رسم المغارة" : "TREASURE CAVE — ARTWORK PENDING", 18);
       }
       addLabel(0, 185, (locale === "ar" ? "رصيدك الحالي: " : "CURRENT BALANCE: ") + this.coins.toLocaleString() + "  🪙", 25, "#ffffff");
-      addLabel(0, 270, locale === "ar" ? "كل ضبع مهزوم يمنحك 8 نقود. ستُضاف آلية شراء النباتات لاحقاً." : "Each defeated monster 01 awards 8 coins. Plant purchases will be added later.", 13, "#ffffff");
+      addLabel(0, 270, locale === "ar" ? "كل وحش 01 مهزوم يمنحك 8 نقود. ستُضاف آلية شراء النباتات لاحقاً." : "Each defeated Monster 01 awards 8 coins. Plant purchases will be added later.", 13, "#ffffff");
     } else {
       addLabel(0, -8, locale === "ar" ? "دليل الوحوش — نقاط الصحة وقوة الهجوم" : "Monster field guide — health and attack strength", 17);
       addRow(55, "monster-01-idle", locale === "ar" ? "الوحش 01" : "Monster 01", (locale === "ar" ? "الصحة: 69 + 4 لكل موجة · الضرر: 16" : "HP: 69 + 4 per wave · Damage: 16"));
@@ -4374,7 +4369,7 @@ export default class BattleScene extends Scene {
     } else if (false && spawnIndex === 4) {
       this.setMessage("A Monster 01 is approaching: slow, heavily plated, and tough to stop.");
     } else if (false) {
-      this.setMessage("ALPHA BRUTE! A giant raider with double health and crushing bites is approaching!");
+      this.setMessage("Monster 01 is approaching.");
     }
 
     monsterRecord = {
