@@ -3851,7 +3851,13 @@ export default class BattleScene extends Scene {
       .setScale(baseSprite?.scaleX ?? 1, baseSprite?.scaleY ?? 1)
       .setFlipX(Boolean(baseSprite?.flipX))
       .setAlpha(baseSprite?.alpha ?? 1);
-    if (!baseSprite && bounds.width && bounds.height) overlay.setDisplaySize(bounds.width, bounds.height);
+    if (!baseSprite && bounds.width && bounds.height) {
+      const stateFrame = this.textures.getFrame(textureKey, 0);
+      const frameWidth = Math.max(1, stateFrame?.realWidth || stateFrame?.width || bounds.width);
+      const frameHeight = Math.max(1, stateFrame?.realHeight || stateFrame?.height || bounds.height);
+      const fitScale = Math.min(bounds.width / frameWidth, bounds.height / frameHeight);
+      overlay.setScale(fitScale);
+    }
     view.add(overlay);
     if (this.anims.exists(animationKey)) overlay.play(animationKey);
     view.setData("studioStatusBaseSprite", baseSprite);
