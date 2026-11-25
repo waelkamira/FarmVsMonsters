@@ -34,15 +34,15 @@ jobs:
 
       - name: Export browser build
         run: |
-          mkdir -p build
+          mkdir -p godot/build
           godot --headless --path godot --export-release "Web" build/index.html
-          test -s build/index.html
+          test -s godot/build/index.html
 
       - name: Package local browser build
         run: |
-          cp godot/WEB_BUILD.md build/README-WEB-LOCAL.txt
-          cd build
-          zip -r ../farm-vs-monsters-web-local.zip .
+          cp godot/WEB_BUILD.md godot/build/README-WEB-LOCAL.txt
+          cd godot/build
+          zip -r ../../farm-vs-monsters-web-local.zip .
 
       - name: Upload downloadable browser build
         uses: actions/upload-artifact@v4
