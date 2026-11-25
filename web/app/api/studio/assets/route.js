@@ -48,12 +48,13 @@ async function githubDeleteIfExists(filePath,message,token,branch){
  return true;
 }
 function assetOwnedPaths(asset){
- return [...new Set([asset?.path,asset?.atlas?.jsonPath,asset?.audio?.path,asset?.combat?.projectile?.path].filter((value)=>typeof value==="string"&&safeAssetPath(value)))];
-}
-function assetPathStillUsed(assets,assetPath){
- return assets.some((item)=>[item.path,item.atlas?.jsonPath,item.audio?.path,item.combat?.projectile?.path].includes(assetPath));
-}
-function removeManifestAssetReferences(manifest,assetPaths){
+  const snapshots=[asset,...(Array.isArray(asset?.versions)?asset.versions:[])];
+  return [...new Set(snapshots.flatMap(snapshot=>[snapshot?.path,snapshot?.atlasMetadataPath,snapshot?.atlas?.jsonPath,snapshot?.audio?.path,snapshot?.combat?.projectile?.path]).filter((value)=>typeof value==="string"&&safeAssetPath(value)))];
+ }
+ function assetPathStillUsed(assets,assetPath){
+  return assets.some(item=>[item,...(Array.isArray(item?.versions)?item.versions:[])].some(snapshot=>[snapshot?.path,snapshot?.atlasMetadataPath,snapshot?.atlas?.jsonPath,snapshot?.audio?.path,snapshot?.combat?.projectile?.path].includes(assetPath)));
+ }
+ function removeManifestAssetReferences(manifest,assetPaths){
   const removed=new Set(assetPaths);
   if(Array.isArray(manifest.assets))manifest.assets=manifest.assets.filter((item)=>!removed.has(item?.url));
   if(manifest.groups&&typeof manifest.groups==="object"){
