@@ -1196,3 +1196,10 @@ This removes guaranteed 404/loaderror requests and stops the data contracts from
 - Preserved dependency protection so a projectile or other referenced asset cannot be deleted while another asset still depends on it.
 - Updated regression tests to require the delete action for every library asset type and verify both storage drivers no longer impose the old type restriction.
 - CI and runtime deletion behavior remain pending the pull-request checks; no live asset was deleted during this change.
+
+## 2026-11-25 — Electric combat shock reactions
+- Added a reusable, short-lived lightning arc for electric projectile impacts, with cyan/white flicker, local recoil, squash-and-stretch, and a restrained camera impact.
+- Wired the effect into built-in Electric Mushroom hits and Studio-authored electric projectile hits without changing damage, collision, projectile timing, or lane rules.
+- Added a shared electric-hit hook for configured electric monster bites against plants; it activates only when the monster combat profile explicitly declares an electric damage/attack type.
+- Added regression coverage for both electric projectile paths, effect cleanup timing, and the configured electric-monster counter path.
+- No existing monster archetype currently declares an electric bite profile; the monster-side visual path is ready for a future Studio-authored/configured electric monster and does not invent a new enemy ability.
