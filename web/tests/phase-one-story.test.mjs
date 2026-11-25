@@ -57,7 +57,15 @@ test("story artwork uses explicit user-owned asset paths and optional animation 
   for (const key of ["farmer-sling", "farmer-rescue", "farmer-carry", "dragon-boss", "phase-one-princess-captive", "phase-one-princess-rescued", "phase-one-emblem"]) {
     assert.ok(keys.includes(key), "missing story asset contract: " + key);
   }
-  for (const asset of assets.assets) assert.ok(asset.path.startsWith("/assets/"));
+  assert.equal(assets.runtimeEnabled, false);
+  for (const asset of assets.assets) {
+    assert.ok(asset.path.startsWith("/assets/"));
+    assert.equal(asset.runtimeEnabled, false);
+    assert.equal(asset.status, "awaiting-art");
+    assert.doesNotMatch(scene, new RegExp(`this\\.load\\.(?:image|spritesheet)\\("[^"]+", "\\${asset.path.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\  for (const asset of assets.assets) assert.ok(asset.path.startsWith("/assets/"));
+  assert.match(scene, /Optional sheets are validated independently/);")}"`));
+  }
+  assert.match(scene, /Phase 1 story artwork is not in the asset bundle yet/);
   assert.match(scene, /Optional sheets are validated independently/);
 });
 
