@@ -45,3 +45,15 @@ test("non-uniform Phaser Atlas frames do not get an unsafe grid frameConfig", ()
   assert.equal(metadata.type, "image");
   assert.equal(metadata.spriteSheet, false);
 });
+
+test("Atlas frames with outer padding are not treated as zero-margin Sprite Sheets", () => {
+  const metadata = buildAtlasMetadata("padded.png", {
+    frames: {
+      frame_00: { frame: { x: 4, y: 4, w: 20, h: 20 } },
+      frame_01: { frame: { x: 24, y: 4, w: 20, h: 20 } }
+    }
+  }, { width: 48, height: 28 });
+  assert.equal(metadata.type, "image");
+  assert.equal(metadata.spriteSheet, false);
+  assert.equal(metadata.frameConfig, undefined);
+});
