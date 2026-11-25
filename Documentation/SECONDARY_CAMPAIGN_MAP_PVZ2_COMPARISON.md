@@ -1,3 +1,5 @@
+> **Implementation override — 2026-11-25:** The dragon/boss encounter is retired from the active game and all current asset catalogs. Stage 1 now ends after the five Monster 01 waves. Do not restore dragon artwork, runtime logic, UI, or encounter references unless the user explicitly requests its later reintroduction. Older design notes below are historical/future proposals and are superseded by this override.
+
 # Farm Vs Monsters — Secondary Campaign Map Plan
 ## Comparative study of Plants vs. Zombies 2 Adventure Mode
 
