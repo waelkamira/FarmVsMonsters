@@ -52,3 +52,12 @@ test("Deletion removes linked catalog entries and owned files without deleting s
   assert.match(route, /removeGithubAssetManifestReferences\(candidatePaths,token,storageBranch\)/);
   assert.match(route, /manifest\.assetCount=Object\.values\(manifest\.groups\)/);
 });
+
+test("Local permanent deletion never calls GitHub-only cleanup helpers", () => {
+  const localStart = route.indexOf('if(driver!=="github"){', route.indexOf("export async function PATCH"));
+  const githubStart = route.indexOf('const token=process.env.STUDIO_GITHUB_TOKEN,storageBranch=', localStart);
+  assert.ok(localStart >= 0 && githubStart > localStart, "local and GitHub storage branches are distinct");
+  const localBranch = route.slice(localStart, githubStart);
+  assert.match(localBranch, /await removeLocalAssetManifestReferences\(candidatePaths\)/);
+  assert.doesNotMatch(localBranch, /removeGithubAssetManifestReferences|targetBranch|storageBranch|\btoken\b/);
+});
