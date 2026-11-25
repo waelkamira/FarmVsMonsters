@@ -35,7 +35,7 @@ test("Studio animation preview defaults to all frames and supports selecting one
 test("Studio shows the same test and publish action controls for new plant and monster assets", () => {
   assert.match(page, /data-asset-type=\{a\.type\} data-asset-status=\{a\.status\}/);
   assert.match(page, /\(a\.type===\"plant\"\|\|a\.type===\"monster\"\)&&<>/);
-  assert.match(page, /data-testid=\"studio-prepare-test\" disabled=\{!authenticated\|\|busy\|\|a\.status!==\"draft\"\}/);
+  assert.match(page, /data-testid=\"studio-prepare-test\" disabled=\{!authenticated\|\|busy\|\|a\.assetAvailability===\"awaiting-upload\"\|\|a\.status!==\"draft\"\}/);
   assert.match(page, /data-testid=\"studio-publish\" disabled=\{!authenticated\|\|busy\|\|a\.status!==\"testing\"\}/);
   assert.match(page, /اختبار الوحش داخل اللعبة/);
   assert.match(page, /الأصل متاح الآن للاختبار مباشرة داخل اللعبة/);
