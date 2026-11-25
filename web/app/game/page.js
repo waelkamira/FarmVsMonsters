@@ -11,17 +11,18 @@ import {
   SEED_LOADOUT_STORAGE_KEY
 } from "../../game/rules/seedLoadout.mjs";
 import { useLocale, LanguageToggle } from "../LocaleProvider";
+import SpriteThumbnail from "../components/SpriteThumbnail.jsx";
 import { readStorageSnapshot, subscribeToBrowserStorage } from "../../game/hooks/browserStorage.mjs";
 
 const PLANT_PACKETS = [
-  { id: "radish", image: "/assets/plants/radish-level-1.png", en: "Radish", ar: "الفجل", cost: 35, roleEn: "Lane attacker", roleAr: "مهاجم المسار" },
+  { id: "radish", image: "/assets/plants/radish-level-1.png", rows: 3, columns: 3, frameCount: 9, en: "Radish", ar: "الفجل", cost: 35, roleEn: "Lane attacker", roleAr: "مهاجم المسار" },
   { id: "mushroom", image: "/assets/plants/mushroom.png", en: "Energy Mushroom", ar: "فطر الطاقة", cost: 50, roleEn: "Produces energy", roleAr: "ينتج الطاقة" },
   { id: "pumpkin", image: "/assets/plants/pumpkin.png", en: "Pumpkin", ar: "اليقطين", cost: 75, roleEn: "Defensive wall", roleAr: "جدار دفاعي" },
-  { id: "pineapple", image: "/assets/plants/pineapple-level-1.png", en: "Pineapple", ar: "الأناناس", cost: 70, roleEn: "Heavy projectile", roleAr: "قذيفة قوية" },
-  { id: "hazelnut", image: "/assets/plants/hazelnut-level-1.png", en: "Hazelnut", ar: "البندق", cost: 65, roleEn: "Lane shooter", roleAr: "قاذف في المسار" },
-  { id: "mango", image: "/assets/plants/mango-level-1.png", en: "Mango", ar: "المانجو", cost: 70, roleEn: "Curved projectile", roleAr: "قذيفة منحنية" },
-  { id: "snow-thrower", image: "/assets/plants/Snow-thrower-level-1.png", en: "Snow Thrower", ar: "قاذف الثلج", cost: 90, roleEn: "Freezes monsters", roleAr: "يجمد الوحوش" },
-  { id: "electric-mushroom", image: "/assets/plants/Electric-mushroom-level-1.png", en: "Electric Mushroom", ar: "الفطر الكهربائي", cost: 80, roleEn: "Electric lane attacker", roleAr: "مهاجم كهربائي للمسار" }
+  { id: "pineapple", image: "/assets/plants/pineapple-level-1.png", rows: 3, columns: 3, frameCount: 9, en: "Pineapple", ar: "الأناناس", cost: 70, roleEn: "Heavy projectile", roleAr: "قذيفة قوية" },
+  { id: "hazelnut", image: "/assets/plants/hazelnut-level-1.png", rows: 3, columns: 3, frameCount: 9, en: "Hazelnut", ar: "البندق", cost: 65, roleEn: "Lane shooter", roleAr: "قاذف في المسار" },
+  { id: "mango", image: "/assets/plants/mango-level-1.png", rows: 3, columns: 3, frameCount: 9, en: "Mango", ar: "المانجو", cost: 70, roleEn: "Curved projectile", roleAr: "قذيفة منحنية" },
+  { id: "snow-thrower", image: "/assets/plants/Snow-thrower-level-1.png", rows: 3, columns: 3, frameCount: 9, en: "Snow Thrower", ar: "قاذف الثلج", cost: 90, roleEn: "Freezes monsters", roleAr: "يجمد الوحوش" },
+  { id: "electric-mushroom", image: "/assets/plants/Electric-mushroom-level-1.png", rows: 3, columns: 3, frameCount: 9, en: "Electric Mushroom", ar: "الفطر الكهربائي", cost: 80, roleEn: "Electric lane attacker", roleAr: "مهاجم كهربائي للمسار" }
 ];
 
 
@@ -111,7 +112,7 @@ export default function GamePage() {
             aria-label={`${arabic ? plant.ar : plant.en}: ${isSelected ? t("Selected") : t("Not selected")}`}
           >
             <span className="seed-choice-check">{!isUnlocked ? "🔒" : isSelected ? "✓" : "+"}</span>
-            <span className="seed-choice-art"><img src={plant.image} alt="" loading="lazy" /></span>
+            <span className="seed-choice-art"><SpriteThumbnail src={plant.image} rows={plant.rows || 1} columns={plant.columns || 1} frameCount={plant.frameCount || 1} alt="" className="seed-choice-art-media" decorative /></span>
             <strong>{arabic ? plant.ar : plant.en}</strong>
             <small>{arabic ? plant.roleAr : plant.roleEn}</small>
             <span className="seed-choice-cost">🍄 {plant.cost}</span>
