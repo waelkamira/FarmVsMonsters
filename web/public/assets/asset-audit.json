@@ -1,49 +1,19 @@
 {
   "schemaVersion": 1,
   "generatedAt": "2026-11-25T15:04:00.613Z",
-  "assetCount": 91,
-  "totalBytes": 27745203,
+  "assetCount": 77,
+  "totalBytes": 19812148,
   "groups": {
-    "audio": {
-      "assetCount": 14,
-      "totalBytes": 167352
-    },
-    "backgrounds": {
-      "assetCount": 1,
-      "totalBytes": 56081
-    },
-    "characters/farmer": {
-      "assetCount": 10,
-      "totalBytes": 5918254
-    },
-    "characters/monsters": {
-      "assetCount": 11,
-      "totalBytes": 8780842
-    },
-    "items/currency": {
-      "assetCount": 2,
-      "totalBytes": 604713
-    },
-    "items/ui": {
-      "assetCount": 21,
-      "totalBytes": 3010548
-    },
-    "monster-icons": {
-      "assetCount": 5,
-      "totalBytes": 3561
-    },
-    "plant-icons": {
-      "assetCount": 9,
-      "totalBytes": 5305
-    },
-    "plants": {
-      "assetCount": 16,
-      "totalBytes": 9175369
-    },
-    "projectiles": {
-      "assetCount": 2,
-      "totalBytes": 23178
-    }
+    "audio": 14,
+    "backgrounds": 1,
+    "characters/farmer": 10,
+    "characters/monsters": 1,
+    "items/currency": 2,
+    "items/ui": 21,
+    "monster-icons": 1,
+    "plant-icons": 9,
+    "plants": 16,
+    "projectiles": 2
   },
   "exactDuplicates": [
     {
@@ -53,12 +23,6 @@
     }
   ],
   "largeFiles": [
-    {
-      "key": "characters-monsters-hyena-frozen-hyena-level-2",
-      "url": "/assets/characters/monsters/hyena/frozen-hyena-level-2.png",
-      "type": "image",
-      "bytes": 1818631
-    },
     {
       "key": "pineapple-level-1",
       "url": "/assets/plants/pineapple-level-1.png",
@@ -155,60 +119,6 @@
       "frameConfig": {
         "frameWidth": 360,
         "frameHeight": 430
-      }
-    },
-    {
-      "key": "hyena-bite",
-      "url": "/assets/characters/monsters/hyena/hyena-bite.png",
-      "bytes": 647180,
-      "frameConfig": {
-        "frameWidth": 360,
-        "frameHeight": 447
-      }
-    },
-    {
-      "key": "hyena-death",
-      "url": "/assets/characters/monsters/hyena/hyena-death.png",
-      "bytes": 511996,
-      "frameConfig": {
-        "frameWidth": 360,
-        "frameHeight": 447
-      }
-    },
-    {
-      "key": "hyena-hit",
-      "url": "/assets/characters/monsters/hyena/hyena-hit.png",
-      "bytes": 263467,
-      "frameConfig": {
-        "frameWidth": 360,
-        "frameHeight": 894
-      }
-    },
-    {
-      "key": "hyena-idle",
-      "url": "/assets/characters/monsters/hyena/hyena-idle.png",
-      "bytes": 340460,
-      "frameConfig": {
-        "frameWidth": 360,
-        "frameHeight": 298
-      }
-    },
-    {
-      "key": "hyena-run",
-      "url": "/assets/characters/monsters/hyena/hyena-run1.png",
-      "bytes": 702079,
-      "frameConfig": {
-        "frameWidth": 367,
-        "frameHeight": 298
-      }
-    },
-    {
-      "key": "hyena-walk",
-      "url": "/assets/characters/monsters/hyena/hyena-walk.png",
-      "bytes": 848741,
-      "frameConfig": {
-        "frameWidth": 360,
-        "frameHeight": 298
       }
     },
     {
