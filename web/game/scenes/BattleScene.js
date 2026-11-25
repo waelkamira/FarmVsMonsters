@@ -5293,6 +5293,10 @@ export default class BattleScene extends Scene {
 
   checkWaveProgress() {
     if (this.gameOver || !isWaveComplete(this.spawnedThisWave, this.waveSize, this.monsters.length)) return;
+    if (this.stageNumber !== 1) {
+      this.endGame(true);
+      return;
+    }
 
     const clearedWave = this.wave;
     if (isPhaseOneVictory(this.wave, this.totalWaves, this.spawnedThisWave, this.waveSize, this.monsters.length)) {
@@ -5312,7 +5316,7 @@ export default class BattleScene extends Scene {
       ": " + this.waveSize + " monsters in 5 seconds."
     );
     this.showWaveAnnouncement(this.wave);
-    if (this.wave === this.totalWaves) this.ambientFx?.escalateFinalWave();
+    if (this.stageNumber === 1 && this.wave === this.totalWaves) this.ambientFx?.escalateFinalWave();
   }
 
   playVictoryMusic() {
