@@ -27,6 +27,7 @@ import soundAssets from "../data/sound-assets.json";
 import effectSoundAssets from "../data/effect-sound-assets.json";
 import { EffectDirector } from "../vfx/effects/EffectDirector.mjs";
 import { resolveAssignedEffectIds } from "../vfx/effects/effectAssignments.mjs";
+import { getEffect } from "../vfx/effects/effectLibrary.mjs";
 import {
   PHASE_ONE_WAVE_SIZES,
   PHASE_ONE_TOTAL_MONSTERS,
@@ -199,6 +200,17 @@ export default class BattleScene extends Scene {
         this.load.image(key, part.path);
       }
     };
+    const queueCharacterStateTextures = (entry, variant, kind) => {
+      for (const [stateId, state] of Object.entries(entry.stateAnimations || {})) {
+        const statePath = state?.previewUrl || state?.path;
+        if (!state || !/^[a-z0-9-]+$/.test(stateId) || typeof statePath !== "string" ||
+            !(statePath.startsWith("/assets/") || statePath.startsWith("/api/studio/assets?preview="))) continue;
+        const key = "studio-" + kind + "-state-" + variant + "-" + entry.id + "-" + stateId;
+        clearStudioTexture(key);
+        clearStudioAnimation("studio-" + kind + "-" + entry.id + "-state-" + stateId);
+        this.load.image(key, statePath);
+      }
+    };
     const queueStudioCatalog = (catalogKey) => {
       this.load.once("filecomplete-json-" + catalogKey, () => {
         const entries = this.cache.json.get(catalogKey)?.plants || [];
@@ -212,6 +224,7 @@ export default class BattleScene extends Scene {
           clearStudioAnimation("studio-" + entry.id + "-attack");
           this.load.image(plantTextureKey, entry.path);
           queueRigPartTextures(entry, variant);
+          queueCharacterStateTextures(entry, variant, "plant");
           if (entry.combat?.mode === "projectile" && entry.combat.projectile?.path && (entry.combat.projectile.path.startsWith("/assets/") || entry.combat.projectile.path.startsWith("/api/studio/assets?preview="))) {
             const projectileTextureKey = "studio-projectile-" + variant + "-" + entry.id;
             clearStudioTexture(projectileTextureKey);
@@ -235,6 +248,7 @@ export default class BattleScene extends Scene {
           clearStudioAnimation("studio-monster-" + entry.id + "-attack");
           this.load.image(monsterTextureKey, entry.path);
           queueRigPartTextures(entry, variant);
+          queueCharacterStateTextures(entry, variant, "monster");
         }
       });
     };
