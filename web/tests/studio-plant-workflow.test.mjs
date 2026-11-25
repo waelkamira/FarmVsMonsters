@@ -200,7 +200,7 @@ test("Studio imports plant assets from grouped manifests and preserves named Pha
 
 test("Studio preview proxy bounds the fetch and response-body read, returning 504 on timeout",()=>{
   assert.match(assetsRoute,/const controller=new AbortController\(\)/);
-  assert.match(assetsRoute,/setTimeout\(\(\)=>controller\.abort\(\),12_000\)/);
+  assert.match(assetsRoute,/setTimeout\(\(\)=>controller\.abort\(\),30_000\)/);
   assert.match(assetsRoute,/signal:controller\.signal/);
   assert.match(assetsRoute,/Buffer\.from\(await response\.arrayBuffer\(\)\)/);
   assert.match(assetsRoute,/status:timedOut\?504:502/);
