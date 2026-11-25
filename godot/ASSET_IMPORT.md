@@ -46,3 +46,10 @@ All imported files are byte-for-byte copies of existing tracked assets. Their or
 
 - `assets/characters/monsters/01/01.png` is the single approved ordinary enemy image, mirrored at `web/public/assets/characters/monsters/01/01.png`.
 - The Godot battle loads this image once and uses it for idle, movement, bite, hit, death, and frozen display states until dedicated Monster 01 animation sheets are authored.
+
+
+## Approved ordinary monster
+
+- `assets/characters/monsters/01/01.png` is the sole approved ordinary monster artwork. It is mirrored from `web/public/assets/characters/monsters/01/01.png`.
+- Until dedicated animation sheets are authored, Godot reuses this image for all ordinary-monster display states.
+

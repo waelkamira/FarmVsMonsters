@@ -24,7 +24,6 @@ Each stage is a complete rescue story with a beginning, escalation, climax, and 
 
 1. **Dragon's introduction:** Establish the new territory and show its dragon, its monster followers, and the captive wife held behind the enemy front. The player should immediately understand who the captor is and whom they are trying to rescue.
 2. **Monster assault:** The farmer defends using the starter plants available in the first stage. The waves begin gently and increase in pressure gradually; early enemies are few, slow, and easy to understand. Do not overwhelm a new player before they learn the controls and plant roles.
-3. **Dragon intervention:** In Stage 1, the small ordinary dragon begins appearing at the start of the final wave (Wave 5 in the current structure), while a few hyenas/ordinary followers may still remain. It moves left and right behind the battlefield and launches clearly telegraphed fireballs toward plants and the farm. Followers continue fighting during the dragon's arrival.
 4. **Boss climax:** Once all ordinary followers have been defeated, the dragon remains alone as the final boss. The farmer automatically fires stones from his slingshot when the dragon is within range; this requires no player clicking and does not happen before the dragon appears. The dragon and all required followers must be defeated before victory.
 5. **Rescue:** The dragon is defeated, the wife's restraints are released, and the farmer reunites with her. This is a distinct victory beat, not an instantly skipped transition.
 6. **Reward and celebration:** Present the stage result and earned reward. Preserve the approved treasure-cave ritual: the farmer carries the stage's gold to the cave, opens it with “Open Sesame” / «افتح يا سمسم», and deposits the reward exactly once.
@@ -62,7 +61,6 @@ The campaign is organized into themed territories. A territory may contain one o
 
 Every new stage must offer meaningful changes rather than simply increasing enemy health. Difficulty must climb in small, fair steps across the campaign; teach each new mechanic before testing it under pressure. The first stage must be forgiving enough to make a new player want to continue, not punish them with an immediate swarm. The approved ordinary-monster totals are 30 in Stage 1, 31 in Stage 2, 32 in Stage 3, then +1 per subsequent stage (Stage N = 29 + N). These are totals across all waves in each stage; dragon bosses are tracked separately. Wave-by-wave distribution remains a balancing decision. Do not add new plant types until the battlefield environment, stage composition, buttons/controls, and menus are finalized; introduce additional plants gradually afterward.
 
-Every stage must also have its own distinctive illustrated logo/emblem that communicates its characters and conflict. Stage 1's emblem should feature the farmer facing the dragon, the captive wife centered behind them, small evil hyenas below, and a few defensive plants.
 
 - A distinct territory, battlefield background, atmosphere, and environmental identity.
 - A different dragon design, personality, attack pattern, and boss behavior.
@@ -113,3 +111,4 @@ These details require separate approval; this document does not assume answers:
 - The final number and names of dragons, territories, plants, and monster factions.
 - The dragon boss's exact battlefield entry, health model, attack phases, and counter mechanics.
 - Whether the wife has any gameplay support role during a stage, or remains a narrative character in the background.
+

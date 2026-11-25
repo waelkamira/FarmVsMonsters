@@ -79,7 +79,6 @@ BATTLE
 - Caveman controls and pathing: select Radish, click a valid empty cell, walk/run to it, plant, and return to the original position/facing.
 - Consistent farmer scale, foot anchor, correct depth behind the planted object, and clean idle/walk/run/plant/return/club/hurt/death states where used.
 - Radish remains fixed in its cell, has readable idle/hurt/death behavior, and automatically fires its own projectile/attack.
-- Three Phase 1 monster archetypes (Cave-brute, Dust-skitter, Stonehide) with lane-aware movement, distinct durability/speed/attack profiles, plant eating/attacking, hurt flash, death disappearance, and farmhouse breach.
 - Health/damage/death rules for the Radish, monster, and farmhouse/princess objective.
 - Emergency mode: club combat is enabled only after the last living defender dies; it is disabled as soon as a new defender is planted.
 - Starting energy, correct cost deduction at successful planting, and the complete Energy Mushroom loop: timed production, visible collectible energy, click-to-collect, collection feedback, and the energy cap.
@@ -131,7 +130,6 @@ The user will create and provide the cave artwork later. Do not invent final cav
 
 ## Phase 2 — Core gameplay polish, first dragon stage, and resource economy
 
-- Tune Radish health, attack cadence, projectile speed/damage, Mushroom cost/production/collection, Cave-brute/Dust-skitter/Stonehide health/speed/damage, wave pacing, starting energy, and objective health.
 - Expand the resource loop with clear production timing, pickup feedback, collection animation, sound, and anti-duplication safeguards.
 - Add clear feedback for insufficient energy, successful collection, cooldowns, and unavailable cells.
 - Add satisfying plant/monster hit reactions, eating sounds, projectile impacts, death timing, and readable combat effects.
@@ -203,7 +201,6 @@ The user will create and provide the cave artwork later. Do not invent final cav
 - Phase 1 now exposes both Radish and Energy Mushroom cards. The Mushroom produces a full 15-energy collectible every 12 seconds even when the energy bank is full; the player must click each pickup before its 12-second expiry, and the 300-energy cap is applied at collection. Mushrooms are resource plants, not defensive plants, and do not block emergency club combat. Browser verification is still required.
 - Farmer frame-count validation was added on 2026-11-14.
 - The Phase 1 code now uses 3 / 5 / 6 / 7 / 9 ordinary monsters (30 total). Stage 2 targets 31, Stage 3 targets 32, then +1 per stage. The dragon boss is counted separately; the sixth-wave loop remains removed.
-- Phase 1 currently includes three monster archetypes: Cave-brute, Dust-skitter, and Stonehide. Stonehide braces while eating, reducing incoming damage; it is intended to require layered defense rather than a single Radish.
 - The battle HUD now tracks total campaign defeats out of 30 and the current wave's defeats out of that wave's target; the per-wave counter resets only when the previous wave is fully cleared.
 - Current code still triggers ordinary final-wave Victory after all scheduled monsters die; this is not yet correct for the approved story stage. Replace it with the Wave 5 dragon sequence, automatic slingshot combat, and rescue ending before declaring victory.
 - Monsters that breach the farm now stop at the home boundary and damage farmhouse health on their attack cadence; defeat occurs only when home health reaches zero.
@@ -214,7 +211,6 @@ The user will create and provide the cave artwork later. Do not invent final cav
 - The planting lifecycle now locks the caveman through travel, planting animation, and return travel. New planting requests, manual movement, and emergency club attacks cannot overlap an active planting/return action; game-over also cancels pending planting callbacks. Browser verification is still required.
 - Audio resume no longer triggers the opening soundtrack note twice after a suspended Web Audio context resumes.
 - Monsters now treat only living Radishes as defensive blockers; resource Mushrooms do not stop, delay, or redirect a monster lane. A farmhouse defeat also aborts the remainder of the current simulation frame immediately. Pending Mushroom pickups and their expiry timers are cleared when a victory or defeat result opens.
-- The Phase 1 resource loop starts with 150 energy, costs 35 for a Radish and 50 for a Mushroom, awards 8 coins per defeated monster, and produces a full 15-energy collectible per Mushroom every 12 seconds; the 300-energy cap is applied only when the pickup is collected. Radish health is 160; the baseline Cave-brute deals 16 damage every 1.15 seconds, while Stonehide deals 23 every 1.45 seconds and reduces incoming damage while braced. Runtime balance still requires playtesting.
 - Therefore **Phase 1 remains IN PROGRESS**. Next: verify the Radish and Mushroom battle loops, all three monster archetypes, wave/result flow, objective breach/health behavior, pause/audio lifecycle, screen transitions, production build, and victory/defeat/restart playthrough matrix.
 
 ## Work order from here
@@ -236,8 +232,6 @@ The Node.js test suite in `web/tests/phase-one-rules.test.mjs` covers:
 - Starting energy, plant costs/health, Mushroom production interval and pickup lifetime.
 - Energy collection at the 300 cap, including full, negative, and out-of-range inputs.\n- Plant purchase transaction validation, exact coin deduction, duplicate-unlock protection, and missing/invalid-price rejection.
 - Radish-only defensive counting and the resource-only Mushroom rule.
-- Cave-brute, Dust-skitter, and Stonehide composition by wave.
-- Stonehide bracing damage reduction.
 - Plant placement validation before charging energy.
 - Idempotent monster defeat rewards and defeat counters.
 - Wave-clear and final-victory gates.
@@ -255,7 +249,6 @@ Run from `web/` with `npm test`. GitHub Actions is configured to run the suite, 
 - Stage 1 is shown as available; later stages are visibly locked pending campaign progression. No unsupported unlock claims are made.
 - Plant entries show existing thumbnails and their current energy costs. Coin purchases remain disabled until new plant prices and purchase rules are approved.
 - The cave panel displays the saved coin balance and a clear art placeholder. The cave background image is not yet in the repository and is awaiting the user's artwork.
-- Monster entries show existing hyena artwork and actual HP scaling/damage rules; the dragon is listed separately.
 - Menu opening pauses battle simulation and blocks planting clicks until the menu closes.
 - Updated the home screen's monster count and regression tests. Automated execution and browser visual verification remain pending.
 
@@ -265,3 +258,4 @@ Run from `web/` with `npm test`. GitHub Actions is configured to run the suite, 
 - The map is a visual roadmap, not a claim that all 110 missions exist. Stage 1 mission 01 is the only implemented battle entry. Stage 2's introductory page is shown as unlocked only when the current saved progression unlocks Stage 2; its battle is still marked as under development.
 - Future regions and unimplemented missions remain locked. This screen does not change the existing ten-stage progression rules or the five-wave Stage 1 battle.
 - Acceptance checks still required: responsive browser review (desktop and mobile), Arabic/English direction and wrapping review, verify guest and saved-progress unlock states, and confirm the Stage 1 link opens the existing intro. Run `npm test` and `npm run build` from `web/` before calling this screen verified.
+

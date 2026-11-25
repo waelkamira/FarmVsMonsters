@@ -719,11 +719,9 @@
 
 
 ## 2026-11-15 — Approved Stage 1 story and fair-difficulty decisions
-- Recorded the user's decision that the small ordinary dragon begins appearing at the start of the final wave (Wave 5 in the current structure), while a few hyenas/ordinary followers may still remain. The dragon moves left/right behind the battlefield and attacks with telegraphed fireballs.
 - Recorded automatic slingshot behavior: the farmer throws stones at the dragon automatically when it is present and within range; no player clicking is required. The user will provide the dragon character sheet later. Stage 1 uses a normal dragon, not a cart-mounted dragon.
 - Replaced the 100-monster fixed design target with a clear balance requirement: retain five waves for now, but reduce/rebalance the current excessive enemy volume through playtesting. Early waves must be forgiving, slow, and teachable; difficulty increases gradually with recovery intervals and introduced counterplay.
 - Recorded the production order: finalize the battlefield environment, stage presentation, controls/buttons, HUD, menus, and visual language before adding further plant types. Keep the current starter plant/resource setup in the meantime; introduce new plants gradually later.
-- Added a distinct illustrated emblem/logo requirement for each stage; Stage 1's emblem composition is farmer versus dragon, captive wife centered behind, small evil hyenas below, and defensive plants.
 - Updated the Phase 1 acceptance target so the first complete playable stage includes the dragon, automatic slingshot, rescue, reunion, and celebration.
 - Documentation only: these decisions are recorded in the plan/roadmap/story documents. Gameplay code has not yet been changed or browser-verified as part of this documentation update.
 
@@ -735,7 +733,6 @@
 - The previous 100-monster first-stage schedule is obsolete and must be replaced in gameplay code and corresponding tests. No runtime code changed in this documentation update.
 
 ## 2026-11-15 — Phase 1 dragon boss and princess rescue flow
-- Added a separate dragon boss encounter shortly after wave 5 begins, once two ordinary hyenas have entered; the boss is not included in ordinary monster wave counts.
 - Added automatic farmer sling attacks, a dedicated dragon health bar, dragon movement with the captive princess beside it, and fireball attacks against living plants or the farmhouse.
 - Phase 1 victory now waits for every ordinary monster and the dragon to be defeated.
 - Added the rescue sequence: the farmer reaches the princess, picks her up, carries her back to the farmhouse, and only then opens the victory screen.
@@ -753,22 +750,15 @@
 - Stage list shows ten stages; Stage 1 is available and later stages display lock/key status.
 - Plant list uses the existing Radish and Mushroom thumbnails and displays their energy planting costs. Future coin purchases are explicitly not enabled yet.
 - Coin tab displays the saved balance and awaits the user-designed cave background asset.
-- Monster guide uses current hyena sprite art and explains health scaling and plant damage; dragon is separate.
 - Updated the home page counter and focused regression assertions.
 - Not yet run: npm test, npm run build, or in-browser visual validation. Cave background art is not yet present.
 
 
-## 2026-11-15 — Hyena feeding animation
-- Hyenas now stop at the plant without pausing their sprite animation.
-- The authored hyena-bite sheet loops continuously during feeding, keeping the monster's world position fixed while its bite/body animation plays.
 - The monster returns to its walking/running animation after the plant is destroyed.
 - No sprite scaling, foot-position offsets, or ground shadows were added.
 - Automated test execution and in-browser visual confirmation remain pending.
 
 
-## 2026-11-15 — Fix hyena sinking during plant eating
-- Corrected the hyena bite animation to use authored frames 6–8 from the final row of `hyena-bite.png`, rather than incorrectly playing frames 0–5.
-- Kept the hyena's world position fixed while eating and preserved the looping bite animation; no character images or sprite dimensions were changed.
 - Added a regression assertion for the bite frame range. Automated test/build execution and in-browser visual verification are still pending.
 
 
@@ -814,7 +804,6 @@
 
 
 ## 2026-11-15 — Shared Stage 1 combat contract and replay RNG foundation
-- Added `web/game/rules/phaseOneCombatContract.mjs`, a versioned, renderer-independent source for Stage 1 waves, energy, plant combat values, all four monster profiles, Dust Skitter timing/movement, dragon combat, spawn pacing, and the existing 8-coin ordinary-monster reward.
 - Refactored `phaseOneRules.mjs` and `BattleScene.js` to consume the shared contract instead of duplicating monster HP, movement, damage, dragon, reward, and wave pacing constants. Existing balance values and wave counts were preserved.
 - Added `web/game/rules/seededRandom.mjs` with deterministic xorshift32 and unbiased integer sampling for future server/client replay. It is not yet wired into BattleScene; existing Phaser random calls remain client-side until session seed flow and simulation replay are implemented.
 - Added tests in `phase-one-combat-contract.test.mjs` and `seeded-random.test.mjs` covering exact current values, deterministic sequences, input validation, and shared-contract usage.
@@ -852,7 +841,6 @@
 - Added pure `resolveMonsterLaneStep` and `resolveProjectileLaneStep` functions to `combatSimulation.mjs`.
 - BattleScene now delegates monster movement/clamping at plant bite reach and projectile local-coordinate advancement to these functions. This preserves the current delta-time movement formula and prevents fast monsters from stepping through a blocking plant.
 - Expanded `combat-simulation.test.mjs` with lane-step, projectile-step, invalid-input, and Phaser integration coverage.
-- Movement modifiers, collision detection, bite reach geometry, and Dust Skitter jump/burst scheduling are still resolved in BattleScene and remain future extraction work.
 
 
 
@@ -866,10 +854,8 @@
 
 
 
-## 2026-11-15 — Extract attack cooldowns and Dust Skitter motion
 - Added `advanceCooldown`, `resolveBiteAttack`, and `resolveDustSkitterMotionStep` to the pure combat kernel.
 - Wired shared cooldown advancement into regular monster attack timers, Radish firing, and both dragon attack timers. Bite-ready checks and interval resets now use the shared bite resolver.
-- Moved Dust Skitter jump/burst timing state transitions and movement multipliers out of Phaser. Existing Phaser random ranges are sampled only when a jump/burst transition requires a duration, then passed to the pure resolver.
 - Preserved visual-only jump behavior: jump offset does not alter logical lane position or collision. Preserved burst duration, cooldown ranges, jump duration/reset ranges, and simultaneous jump/burst speed multipliers.
 - Expanded combat simulation tests to 20 cases, including cooldown boundaries, jump start/landing, burst first-frame timing, and combined movement multipliers.
 - Source verification confirms old inline Skitter timing block and direct cooldown decrements were replaced. No local test/build/browser run was performed; GitHub Actions runner allocation is still failing before job steps.
@@ -886,7 +872,6 @@
 
 
 ## 2026-11-16 — Deterministic client simulation sampling
-- Added a scene-scoped seeded random stream for monster lane selection and Dust Skitter jump/burst gameplay timing samples.
 - Kept cosmetic voice randomness outside the simulation stream.
 - The client seed is explicitly provisional and cannot establish authoritative wins or rewards; server-issued session seeds and replay validation remain future work.
 - Existing wave sizes, spawn cadence, archetype composition, movement multipliers, and random sampling ranges are unchanged.
@@ -933,13 +918,11 @@ Validation follow-up: corrected monster ID regex validation and added malformed-
 ## 2026-11-16 — Monster lane movement replay
 - Added periodic movement checkpoints with lane distance, elapsed combat time, and nearest Radish blocker.
 - Replay derives the blocker from the lane state and clamps movement through the shared lane-step resolver; it rejects movement exceeding archetype speed bounds, clock mismatches, and incorrect blockers.
-- Added focused movement replay tests. This is a checkpoint-based validation slice, not yet a complete deterministic frame simulation; Dust Skitter random state, projectile hits, deaths, farm breach and boss resolution remain open. Tests/build not executed locally.
 
 
 Coordinate correction: movement replay now uses calibrated lane width/spawn position, and a checkpoint is forced when entering bite range so the replay cannot accept a bite from an outdated distant position. Focused bite fixtures now include the actual lane traversal. Tests/build still not executed in this environment.
 
 
-Movement replay hardening: added configured-speed checks for standard monsters, bounded lower/upper speed checks for Dust Skitters, and clock checkpoints during stationary bite cycles. The anti-tunneling fixture now traverses the full calibrated lane distance; negative movement distance is rejected at the event-log boundary. No test/build run succeeded in this environment.
 
 
 Final anti-tunneling check: replay now compares the claimed travelled distance with the distance actually produced by the shared clamped lane-step resolver. A log that claims the monster crossed the blocking Radish is rejected instead of silently clamping the replay position.
@@ -989,7 +972,6 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 
 ## 2026-11-19 — PvZ wave announcements and live defeat progress
 - Added a reusable animated wave announcement banner to the battle HUD. It appears at the start of Stage 1 and whenever the next wave is unlocked, without creating new Phaser display objects on every transition.
-- Added distinct warning styling and copy for wave 4 (the fast Dust Skitter scout) and wave 5 (the armoured Stonehide). Arabic and English announcement text are included.
 - Corrected the wave progress bar semantics: it now tracks monsters actually defeated in the current wave, rather than monsters merely spawned. This makes the bar reflect real combat progress.
 - Preserved the existing five-wave roster, spawn intervals, five-second intermission, archetype schedule, and dragon trigger.
 - Added focused source-integration tests for announcement coverage, late-wave warnings, reusable banner lifecycle, and defeated-monster progress.
@@ -998,7 +980,6 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 
 ## 2026-11-19 — Monster arrival presentation
 - Added a small Phaser-only arrival cue for each ordinary monster: a tier-colored ground ring expands and fades while a few lightweight dust puffs disperse.
-- Arrival colors distinguish the Dust Skitter scout, Stonehide armoured monster, Alpha Brute, and standard cave brute without changing their combat stats or artwork.
 - Monsters now reveal with a short scale/opacity entrance animation. The logical spawn coordinates and lane movement remain unchanged; the entrance tween deliberately avoids controlling position because the movement system owns each monster's position every simulation update.
 - Effects self-destroy after their short animation to avoid accumulating display objects.
 - Added focused source-integration assertions for tier colors, cleanup, and preservation of logical spawn coordinates.
@@ -1181,7 +1162,6 @@ This removes guaranteed 404/loaderror requests and stops the data contracts from
 
 
 ## 2026-11-25 — Comedic Game Juice pass
-- Added reusable proportional squash-and-stretch reactions for monster, plant, boss impacts and Dust Skitter jump take-off/landing.
 - Added elastic 120% arrival/pickup pops that settle to exact scale, plus soft body follow-through on monster defeat.
 - Added bounded 0.9–1.1 sound playback-rate variation for repeated SFX.
 - Added small camera shake and thresholded boss zoom punches for heavy moments.
@@ -1203,3 +1183,4 @@ This removes guaranteed 404/loaderror requests and stops the data contracts from
 - Added a shared electric-hit hook for configured electric monster bites against plants; it activates only when the monster combat profile explicitly declares an electric damage/attack type.
 - Added regression coverage for both electric projectile paths, effect cleanup timing, and the configured electric-monster counter path.
 - No existing monster archetype currently declares an electric bite profile; the monster-side visual path is ready for a future Studio-authored/configured electric monster and does not invent a new enemy ability.
+
