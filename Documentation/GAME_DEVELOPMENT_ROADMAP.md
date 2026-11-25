@@ -1,3 +1,5 @@
+> **Implementation override — 2026-11-25:** The dragon/boss encounter is retired from the active game and all current asset catalogs. Stage 1 now ends after the five Monster 01 waves. Do not restore dragon artwork, runtime logic, UI, or encounter references unless the user explicitly requests its later reintroduction. Older design notes below are historical/future proposals and are superseded by this override.
+
 # Farm Vs Monsters — Master Development Roadmap
 
 **Authority:** This document defines the detailed implementation checklist, screen flow, and acceptance criteria. The strategic product direction, ten success factors, full phase map, success metrics, and schedule are governed by [GLOBAL_GAME_SUCCESS_MASTER_PLAN.md](GLOBAL_GAME_SUCCESS_MASTER_PLAN.md). If details conflict, follow the master plan and the latest explicit user decisions.
