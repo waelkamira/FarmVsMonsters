@@ -65,13 +65,6 @@ export async function signInPlayer(email, password) {
   });
 }
 
-export async function signUpPlayer(email, password) {
-  return requestJson("/api/player/account", {
-    method: "POST",
-    body: JSON.stringify({ action: "signup", email, password })
-  });
-}
-
 export async function signOutPlayer() {
   return requestJson("/api/player/account", { method: "DELETE" });
 }
