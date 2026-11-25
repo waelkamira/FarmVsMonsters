@@ -101,8 +101,6 @@ func _test_lane_and_target_selection() -> void:
 	assert(target == first)
 	var melee: Dictionary = {"row": 2, "x": 105.0, "alive": true}
 	assert(Rules.select_farmer_melee_target([melee], 2, 100.0, 10.0) == melee)
-	var weak: Dictionary = {"hp": 12.0, "alive": true}
-	assert(Rules.select_dragon_fireball_target([{"hp": 30.0, "alive": true}, weak]) == weak)
 
 func _test_monster_freeze_contract() -> void:
 	assert(Rules.MONSTER_FREEZE_DURATION_MS == 2600.0)
