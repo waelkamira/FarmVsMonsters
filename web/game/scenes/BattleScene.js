@@ -56,7 +56,6 @@ import {
   selectLaneBlocker,
   selectProjectileTarget,
   selectFarmerMeleeTarget,
-  selectDragonFireballTarget,
   advanceCooldown,
   resolveBiteAttack,
   resolveMonsterMovementEffectsStep,
@@ -64,7 +63,6 @@ import {
   resolveMonsterArchetype
 } from "../rules/combatSimulation.mjs";
 import {
-  PHASE_ONE_DRAGON,
   PHASE_ONE_PLANTS,
   PHASE_ONE_FARMER,
   PHASE_ONE_TIMING,
@@ -538,7 +536,6 @@ export default class BattleScene extends Scene {
     this.farmerPlanting = false;
     this.phaseOneStoryState = "battle";
     this.storySequenceActive = false;
-    this.dragonBoss = null;
     this.princessActor = null;
     this.gameOver = false;
     this.monster01AnimationsReady = this.createMonster01Animations();
@@ -1443,7 +1440,7 @@ export default class BattleScene extends Scene {
     const currentKey = this.cavemanVisual.anims.currentAnim?.key;
     const actionAnimations = [
       "farmer-plant", "farmer-uproot", "farmer-attack",
-      "farmer-hit", "farmer-death", "farmer-collect", "farmer-sling", "farmer-rescue"
+      "farmer-hit", "farmer-death", "farmer-collect", "farmer-rescue"
     ];
     if (actionAnimations.includes(currentKey) && this.cavemanVisual.anims.isPlaying && key !== currentKey) return;
     if (currentKey === key && this.cavemanVisual.anims.isPlaying) return;
@@ -1470,7 +1467,6 @@ export default class BattleScene extends Scene {
     // Optional sheets are validated independently so unfinished story art
     // never disables the existing farmer animations.
     const definitions = [
-      ["farmer-sling", 6, 9, 0],
       ["farmer-rescue", 6, 8, 0],
       ["farmer-carry", 6, 8, -1]
     ];
@@ -1501,189 +1497,16 @@ export default class BattleScene extends Scene {
       .setDepth(8.6);
   }
 
-  beginDragonEncounter() {
-    if (this.dragonBoss || this.phaseOneStoryState !== "battle") return;
-    this.phaseOneStoryState = "dragon";
-    this.facing = 1;
-    this.caveman.scaleX = 1;
-    this.createPrincessActor();
-    this.dragonBoss = {
-      hp: PHASE_ONE_DRAGON.maxHp, maxHp: PHASE_ONE_DRAGON.maxHp, alive: true,
-      attackCooldown: PHASE_ONE_DRAGON.dragonInitialAttackDelayMs, shotCooldown: PHASE_ONE_DRAGON.farmerSlingInitialDelayMs, sprite: null
-    };
-    if (this.textures.exists("dragon-boss")) {
-      const texture = this.textures.get("dragon-boss");
-      const frames = Object.keys(texture.frames).filter((name) => name !== "__BASE").length;
-      this.dragonBoss.sprite = this.add.sprite(930, 145, "dragon-boss", 0)
-        .setOrigin(0.5, 1).setDisplaySize(220, 220).setDepth(8.2);
-      if (frames > 1) {
-        if (!this.anims.exists("dragon-boss-idle")) {
-          this.anims.create({
-            key: "dragon-boss-idle",
-            frames: this.anims.generateFrameNumbers("dragon-boss", { start: 0, end: frames - 1 }),
-            frameRate: 7, repeat: -1
-          });
-        }
-        this.dragonBoss.sprite.play("dragon-boss-idle");
-      }
-      this.tweens.add({
-        targets: this.dragonBoss.sprite,
-        x: { from: 835, to: 1010 }, y: { from: 140, to: 165 },
-        duration: 2600, ease: "Sine.easeInOut", yoyo: true, repeat: -1
-      });
-    }
-    this.dragonHealthBar = this.add.graphics().setDepth(56);
-    this.dragonHealthLabel = this.add.text(910, 55, "DRAGON", {
-      fontFamily: "Arial", fontSize: "17px", color: "#ffffff",
-      fontStyle: "bold", stroke: "#090503", strokeThickness: 5, resolution: 2
-    }).setOrigin(0.5).setDepth(57);
-    this.drawDragonHealthBar();
-    this.setMessage("The dragon has arrived! The farmer is loading his sling.");
-  }
-
-  drawDragonHealthBar() {
-    if (!this.dragonBoss || !this.dragonHealthBar?.active) return;
-    const ratio = PhaserMath.Clamp(this.dragonBoss.hp / this.dragonBoss.maxHp, 0, 1);
-    this.dragonHealthBar.clear();
-    this.dragonHealthBar.fillStyle(0x24150f, 0.9);
-    this.dragonHealthBar.fillRoundedRect(756, 66, 308, 23, 8);
-    this.dragonHealthBar.fillStyle(0x5b1710, 1);
-    this.dragonHealthBar.fillRoundedRect(760, 70, 300, 15, 6);
-    this.dragonHealthBar.fillStyle(0xff4b3e, 1);
-    this.dragonHealthBar.fillRoundedRect(760, 70, 300 * ratio, 15, 6);
-    this.dragonHealthBar.lineStyle(3, 0xffe0a2, 1);
-    this.dragonHealthBar.strokeRoundedRect(756, 66, 308, 23, 8);
-  }
-
-  updateDragonBoss(delta) {
-    const boss = this.dragonBoss;
-    if (!boss?.alive || this.phaseOneStoryState !== "dragon") return;
-    if (boss.sprite?.active && this.princessActor?.active) {
-      this.princessActor.setPosition(boss.sprite.x + 78, boss.sprite.y + 96);
-    }
-    boss.shotCooldown = advanceCooldown(boss.shotCooldown, delta);
-    if (boss.shotCooldown <= 0) {
-      boss.shotCooldown = PHASE_ONE_DRAGON.farmerSlingIntervalMs;
-      if (this.anims.exists("farmer-sling") && this.cavemanVisual?.active) {
-        this.playFarmerAction("farmer-sling");
-      }
-      const startX = this.caveman.x + this.facing * 28;
-      const startY = this.caveman.y - 52;
-      const targetX = boss.sprite?.x ?? 930;
-      const targetY = (boss.sprite?.y ?? 145) + 22;
-      const stone = this.add.circle(startX, startY, 7, 0xb9a58b, 1)
-        .setStrokeStyle(2, 0x66513c, 1).setDepth(52);
-      this.tweens.add({
-        targets: stone, x: targetX - 18, y: targetY,
-        duration: PhaserMath.Clamp(Math.abs(targetX - startX) / 0.62, 380, 1050),
-        ease: "Quad.easeIn",
-        onComplete: () => {
-          if (stone.active) stone.destroy();
-          if (boss.alive && !this.gameOver) this.damageDragonBoss(PHASE_ONE_DRAGON.farmerSlingDamage);
-        }
-      });
-    }
-
-    boss.attackCooldown = advanceCooldown(boss.attackCooldown, delta);
-    if (boss.attackCooldown <= 0) {
-      boss.attackCooldown = PHASE_ONE_DRAGON.attackIntervalMs;
-      const targetPlant = selectDragonFireballTarget(this.plants);
-      const targetX = targetPlant ? targetPlant.x : 92;
-      const targetY = targetPlant ? targetPlant.y - 18 : 490;
-
-      // Telegraph the chosen impact point before the projectile is launched.
-      // The marker is visual only; damage and target resolution remain unchanged.
-      const warning = this.add.circle(targetX, targetY, 24, 0xff5b32, 0.18)
-        .setStrokeStyle(4, 0xffc15c, 0.98).setDepth(54);
-      const warningCore = this.add.circle(targetX, targetY, 8, 0xffe39a, 0.75)
-        .setDepth(54);
-      this.tweens.add({
-        targets: [warning, warningCore],
-        scale: 1.45,
-        alpha: 0,
-        duration: 520,
-        ease: "Cubic.easeOut",
-        onComplete: () => {
-          if (warning.active) warning.destroy();
-          if (warningCore.active) warningCore.destroy();
-          if (this.gameOver || this.storySequenceActive || this.collectionMenuOpen || !boss.alive) return;
-          const fireball = this.add.circle(boss.sprite?.x ?? 930, (boss.sprite?.y ?? 145) - 38, 15, 0xff762e, 1)
-            .setStrokeStyle(3, 0xffd16c, 1).setDepth(53);
-          this.tweens.add({
-            targets: fireball, x: targetX, y: targetY, scale: 1.45,
-            duration: PHASE_ONE_DRAGON.fireballTravelMs, ease: "Quad.easeIn",
-            onComplete: () => {
-              if (fireball.active) fireball.destroy();
-              if (this.gameOver || this.storySequenceActive || this.collectionMenuOpen) return;
-              if (targetPlant?.alive) {
-                targetPlant.hp = applyHitPointsDamage(targetPlant.hp, PHASE_ONE_DRAGON.fireballDamageToPlant).hp;
-                this.flashEatenPlant(targetPlant);
-                if (targetPlant.hp <= 0) this.destroyPlant(targetPlant);
-              } else {
-                this.houseHealth = Math.max(0, this.houseHealth - PHASE_ONE_DRAGON.fireballDamageToFarm);
-                if (this.houseHealth <= 0) this.endGame(false);
-                this.refreshHud();
-              }
-            }
-          });
-        }
-      });
-    }
-  }
-
-  damageDragonBoss(amount) {
-    const boss = this.dragonBoss;
-    if (!boss?.alive || amount <= 0) return;
-    boss.hp = applyHitPointsDamage(boss.hp, amount).hp;
-    if (boss.sprite?.active) {
-      this.applySquashStretch(boss.sprite, { preX: 0.9, preY: 1.12, impactX: 1.16, impactY: 0.78, durationMs: 190 });
-      this.juiceCameraImpact({ heavy: true, zoomPunch: boss.hp <= boss.maxHp * 0.3 });
-      const sprite = boss.sprite;
-      if (boss.hitStopTimer) {
-        boss.hitStopTimer.remove(false);
-      } else {
-        boss.hitStopWasPlaying = Boolean(sprite.anims?.isPlaying);
-        if (boss.hitStopWasPlaying) sprite.anims.pause();
-      }
-      sprite.setTintFill?.(0xffffff);
-      boss.hitStopTimer = this.time.delayedCall(80, () => {
-        if (!sprite.active) return;
-        sprite.clearTint?.();
-        sprite.setTint?.(0xffc078);
-        if (boss.hitStopWasPlaying && boss.alive && sprite.anims?.isPaused) sprite.anims.resume();
-        boss.hitStopWasPlaying = false;
-        boss.hitStopTimer = null;
-        this.time.delayedCall(110, () => {
-          if (sprite.active) sprite.clearTint?.();
-        });
-      });
-    }
-    this.drawDragonHealthBar();
-    if (boss.hp > 0) return;
-    boss.alive = false;
-    this.juiceCameraImpact({ heavy: true, zoomPunch: true });
-    this.dragonHealthBar?.destroy();
-    this.dragonHealthLabel?.destroy();
-    if (boss.sprite?.active) {
-      this.tweens.killTweensOf(boss.sprite);
-      this.tweens.add({
-        targets: boss.sprite, alpha: 0, y: boss.sprite.y - 22, duration: 650,
-        onComplete: () => boss.sprite?.destroy()
-      });
-    }
-    this.playMonsterDefeatSound();
-    this.setMessage("The dragon has fallen! The farmer is going to rescue the princess.");
-    this.tryFinishPhaseOne();
-  }
-
   tryFinishPhaseOne() {
     if (
-      this.phaseOneStoryState !== "dragon" ||
+      this.stageNumber !== 1 ||
       this.wave !== this.totalWaves ||
       this.spawnedThisWave < this.waveSize ||
       this.monsters.some((monster) => monster.alive) ||
-      this.dragonBoss?.alive
+      this.storySequenceActive ||
+      this.phaseOneStoryState === "complete"
     ) return;
+    this.createPrincessActor();
     this.beginPrincessRescue();
   }
 
@@ -2510,12 +2333,10 @@ export default class BattleScene extends Scene {
       if (this.stageMonsterRosterConfigured && nextEntry && nextEntry.key !== spawnedEntry?.key) {
         this.spawnTimer = Math.max(0, Number(nextEntry.firstSpawnDelayMs) || 0);
       }
-      if (this.stageNumber === 1 && this.wave === this.totalWaves && this.spawnedThisWave === this.waveSize) this.beginDragonEncounter();
     }
     this.updatePlants(deltaMs);
     this.updateMonsters(dt, deltaMs);
     if (this.gameOver) return;
-    this.updateDragonBoss(deltaMs);
     if (this.storySequenceActive || this.gameOver) {
       this.refreshHud();
       return;
@@ -5536,28 +5357,12 @@ export default class BattleScene extends Scene {
 
   checkWaveProgress() {
     if (this.gameOver || !isWaveComplete(this.spawnedThisWave, this.waveSize, this.monsters.length)) return;
-
     const clearedWave = this.wave;
     if (isPhaseOneVictory(this.wave, this.totalWaves, this.spawnedThisWave, this.waveSize, this.monsters.length)) {
-      // Stage one owns the dragon rescue encounter; other configured stages end after their waves.
-      if (this.stageNumber !== 1) {
-        this.endGame(true);
-        return;
-      }
-      // The dragon is a separate boss and is never included in ordinary wave counts.
-      if (!this.dragonBoss) {
-        this.beginDragonEncounter();
-        return;
-      }
-      if (this.dragonBoss) {
-        this.tryFinishPhaseOne();
-        if (this.dragonBoss.alive) this.setMessage("The ordinary monsters are defeated. Finish the dragon to rescue the princess!");
-        return;
-      }
-      this.endGame(true);
+      if (this.stageNumber === 1) this.tryFinishPhaseOne();
+      else this.endGame(true);
       return;
     }
-
     this.wave += 1;
     this.spawnedThisWave = 0;
     this.waveDefeatedMonsters = 0;
