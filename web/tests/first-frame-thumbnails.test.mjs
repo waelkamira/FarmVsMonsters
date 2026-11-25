@@ -14,7 +14,7 @@ const battle = read("../game/scenes/BattleScene.js");
 const styles = read("../app/globals.css");
 
 test("shared thumbnail renderer crops multi-frame sheets to frame zero and preserves one-frame images", () => {
-  assert.match(thumbnail, /if \(!isSpriteSheet\) return <img/);
+  assert.match(thumbnail, /if \(!isSpriteSheet\) \{\s*return <img/);
   assert.match(thumbnail, /backgroundPosition: "left top"/);
   assert.match(thumbnail, /backgroundSize: `\$\{grid\.columns \* 100\}% \$\{grid\.rows \* 100\}%`/);
   assert.deepEqual(resolveSpriteThumbnailGrid(9, 3, 3), { rows: 3, columns: 3 });
