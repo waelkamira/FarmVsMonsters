@@ -11,9 +11,6 @@ function FramePreview({ src, rows = 1, columns = 1, frameCount = 1, fps = 8, loo
   const canvasRef = useRef(null);
   const count = Math.max(1, Number(frameCount) || 1);
   useEffect(() => {
-    setFrame(0);
-  }, [src, rows, columns, count]);
-  useEffect(() => {
     if (!src || count < 2) return;
     const delay = Math.max(33, 1000 / Math.max(1, Math.min(30, Number(fps) || 8)));
     const timer = window.setInterval(() => setFrame((current) => current + 1 >= count ? (loop ? 0 : current) : current + 1), delay);
@@ -213,7 +210,7 @@ export default function CharacterStateWorkbench({ asset, onSaved }) {
       <div className="studio-state-tabs" role="tablist" aria-label="حركات الشخصية">
         {clips.map((item) => <button key={item.id} type="button" className={selectedClip === item.id ? "active" : ""} onClick={() => setSelectedClip(item.id)}>{item.label}</button>)}
       </div>
-      <FramePreview src={baseClipUrl} rows={asset.rows || 1} columns={asset.columns || 1} frameCount={baseClipCount} fps={clip.fps || 8} loop={clip.loop !== false} startFrame={clip.startFrame || 0} label={asset.name + " " + selectedClip} />
+      <FramePreview key={"base-" + selectedClip + "-" + baseClipUrl + "-" + baseClipCount} src={baseClipUrl} rows={asset.rows || 1} columns={asset.columns || 1} frameCount={baseClipCount} fps={clip.fps || 8} loop={clip.loop !== false} startFrame={clip.startFrame || 0} label={asset.name + " " + selectedClip} />
       <p className="studio-detail-muted">المقطع المحدد يستخدم الإطارات {clip.startFrame ?? 0} إلى {clip.endFrame ?? 0} من الصورة الأساسية. راجع تناسق الوضعيات قبل إضافة حالات التأثير.</p>
     </section>
 
@@ -225,7 +222,7 @@ export default function CharacterStateWorkbench({ asset, onSaved }) {
         </select>
       </label>
       <p className="studio-detail-muted">{selectedStateDefinition.hint} هذه الإطارات خاصة بمظهر الشخصية، ويمكن استخدامها مع مؤثرات الجسيمات والصوت من مكتبة التأثيرات.</p>
-      {selectedStateData && <div className="studio-state-saved"><b>الإطارات المحفوظة حالياً</b><FramePreview src={selectedStateData.previewUrl || selectedStateData.path} rows={selectedStateData.rows} columns={selectedStateData.columns} frameCount={selectedStateData.frameCount} fps={selectedStateData.fps} loop={selectedStateData.loop !== false} label={selectedStateDefinition.label} /><small>{selectedStateData.rows} × {selectedStateData.columns} · {selectedStateData.frameCount} إطار · {selectedStateData.fps} FPS</small></div>}
+      {selectedStateData && <div className="studio-state-saved"><b>الإطارات المحفوظة حالياً</b><FramePreview key={"saved-" + selectedState + "-" + selectedStateData.path} src={selectedStateData.previewUrl || selectedStateData.path} rows={selectedStateData.rows} columns={selectedStateData.columns} frameCount={selectedStateData.frameCount} fps={selectedStateData.fps} loop={selectedStateData.loop !== false} label={selectedStateDefinition.label} /><small>{selectedStateData.rows} × {selectedStateData.columns} · {selectedStateData.frameCount} إطار · {selectedStateData.fps} FPS</small></div>}
       <div className="studio-state-effect-preview">
         <div className="studio-state-section-head"><h4>معاينة التأثير فوق الشخصية</h4><span>نفس بيانات تأثيرات المعركة</span></div>
         <label>التأثير المراد تجربته
@@ -239,7 +236,7 @@ export default function CharacterStateWorkbench({ asset, onSaved }) {
       <label className="studio-state-upload">رفع Sprite Sheet للحالة
         <input type="file" accept="image/png,image/webp" onChange={(event) => { setFile(event.target.files?.[0] || null); event.target.value = ""; }} />
       </label>
-      {file && <div className="studio-state-new-preview"><b>معاينة قبل الحفظ</b><FramePreview src={previewUrl} rows={grid.rows} columns={grid.columns} frameCount={grid.frameCount} fps={fps} loop={loop} label={"معاينة " + selectedStateDefinition.label} />
+      {file && <div className="studio-state-new-preview"><b>معاينة قبل الحفظ</b><FramePreview key={"new-" + selectedState + "-" + grid.rows + "-" + grid.columns + "-" + grid.frameCount} src={previewUrl} rows={grid.rows} columns={grid.columns} frameCount={grid.frameCount} fps={fps} loop={loop} label={"معاينة " + selectedStateDefinition.label} />
         <div className="studio-state-grid-controls">
           <label>الصفوف<input type="number" min="1" max="24" value={grid.rows} onChange={(event) => setGrid((current) => { const rows = Math.max(1, Math.min(24, Number(event.target.value) || 1)); const frameCount = rows * current.columns; return frameCount <= 24 ? { ...current, rows, frameCount } : current; })} /></label>
           <label>الأعمدة<input type="number" min="1" max="24" value={grid.columns} onChange={(event) => setGrid((current) => { const columns = Math.max(1, Math.min(24, Number(event.target.value) || 1)); const frameCount = current.rows * columns; return frameCount <= 24 ? { ...current, columns, frameCount } : current; })} /></label>
