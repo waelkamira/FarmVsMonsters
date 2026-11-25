@@ -7,12 +7,12 @@
       "name": "Pepper-flamethrower-level-1",
       "filename": "pepper-flamethrower-level-1.png",
       "path": "/assets/plants/pepper-flamethrower-level-1.png",
-      "rows": 3,
-      "columns": 3,
-      "spriteSheet": true,
+      "rows": 1,
+      "columns": 1,
+      "spriteSheet": false,
       "status": "published",
       "createdAt": "2026-11-20T16:17:16.849Z",
-      "updatedAt": "2026-11-24T00:09:41.346Z",
+      "updatedAt": "2026-11-25T21:52:59.965Z",
       "combat": {
         "mode": "projectile",
         "projectile": {
@@ -64,7 +64,7 @@
       },
       "testingAt": "2026-11-24T00:09:56.487Z",
       "publishedAt": "2026-11-24T18:45:02.559Z",
-      "frameCount": 9,
+      "frameCount": 1,
       "releaseRequest": null,
       "archivedAt": null,
       "restoredFromVersion": null,
@@ -1440,13 +1440,13 @@
       "name": "hazelnut-level-1",
       "path": "/assets/plants/hazelnut-level-1.png",
       "filename": "hazelnut-level-1.png",
-      "rows": 1,
-      "columns": 1,
-      "frameCount": 1,
+      "rows": 3,
+      "columns": 3,
+      "frameCount": 9,
       "spriteSheet": true,
       "status": "draft",
       "createdAt": "2026-11-24T04:16:00.506Z",
-      "updatedAt": "2026-11-25T10:23:13.875Z"
+      "updatedAt": "2026-11-25T21:52:59.965Z"
     },
     {
       "id": "mango-level-1",
@@ -1482,13 +1482,13 @@
       "name": "pineapple-level-1",
       "path": "/assets/plants/pineapple-level-1.png",
       "filename": "pineapple-level-1.png",
-      "rows": 1,
-      "columns": 1,
-      "frameCount": 1,
+      "rows": 3,
+      "columns": 3,
+      "frameCount": 9,
       "spriteSheet": true,
       "status": "draft",
       "createdAt": "2026-11-24T04:16:00.506Z",
-      "updatedAt": "2026-11-25T10:23:13.875Z"
+      "updatedAt": "2026-11-25T21:52:59.965Z"
     },
     {
       "id": "pumpkin",
@@ -2057,12 +2057,12 @@
       "path": "/assets/plants/corn_monster.png",
       "filename": "corn_monster.png",
       "rows": 1,
-      "columns": 1,
-      "frameCount": 1,
+      "columns": 24,
+      "frameCount": 24,
       "spriteSheet": true,
       "status": "testing",
       "createdAt": "2026-11-22T20:20:34.630Z",
-      "updatedAt": "2026-11-25T19:39:24.392Z",
+      "updatedAt": "2026-11-25T21:52:59.965Z",
       "animationProfile": {
         "idle": {
           "startFrame": 0,
