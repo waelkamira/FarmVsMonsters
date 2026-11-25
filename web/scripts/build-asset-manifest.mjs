@@ -74,12 +74,7 @@ const SPRITESHEET_OVERRIDES = {
   "characters/farmer/farmer-hit.png": { key: "farmer-hit", type: "spritesheet", frameConfig: { frameWidth: 152, frameHeight: 430 } },
   "characters/farmer/farmer-death.png": { key: "farmer-death", type: "spritesheet", frameConfig: { frameWidth: 152, frameHeight: 430 } },
   "characters/monsters/dragon/dragon-boss.png": { key: "dragon-boss", type: "spritesheet", frameConfig: { frameWidth: 512, frameHeight: 512 } },
-  "characters/monsters/hyena/hyena-idle.png": { key: "hyena-idle", type: "spritesheet", frameConfig: { frameWidth: 360, frameHeight: 298 } },
-  "characters/monsters/hyena/hyena-walk.png": { key: "hyena-walk", type: "spritesheet", frameConfig: { frameWidth: 360, frameHeight: 298 } },
-  "characters/monsters/hyena/hyena-run1.png": { key: "hyena-run", type: "spritesheet", frameConfig: { frameWidth: 367, frameHeight: 298 } },
-  "characters/monsters/hyena/hyena-bite.png": { key: "hyena-bite", type: "spritesheet", frameConfig: { frameWidth: 360, frameHeight: 447 } },
-  "characters/monsters/hyena/hyena-hit.png": { key: "hyena-hit", type: "spritesheet", frameConfig: { frameWidth: 360, frameHeight: 894 } },
-  "characters/monsters/hyena/hyena-death.png": { key: "hyena-death", type: "spritesheet", frameConfig: { frameWidth: 360, frameHeight: 447 } }
+  "characters/monsters/01/01.png": { key: "monster-01", type: "image" },
 };
 
 function groupFor(relativePath) {

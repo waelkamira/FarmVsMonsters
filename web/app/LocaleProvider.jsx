@@ -52,7 +52,6 @@ const translations = {
   "Energy is full. Defeat monsters or spend energy before collecting more.": "الطاقة ممتلئة. اهزم الوحوش أو أنفق بعض الطاقة قبل جمع المزيد.",
   "A Monster 01 has joined the raid: quick, but easier to bring down.": "انضم الوحش 01 إلى الهجوم: سريع لكنه أسهل في الهزيمة.",
   "A Monster 01 is approaching: slow, heavily plated, and tough to stop.": "الوحش 01 يقترب: بطيء ومدرع بشدة ويصعب إيقافه.",
-  "ALPHA BRUTE! A giant raider with double health and crushing bites is approaching!": "الوحش 01! وحش ضخم بضعف الطاقة وعضّات ساحقة يقترب!",
   "EMERGENCY! The last radish has fallen. Move close and press SPACE to swing the club.": "طوارئ! سقطت آخر نبتة فجل. اقترب واضغط المسافة لضرب الوحش بالهراوة.",
   "RADISH": "الفجل", "MUSHROOM": "الفطر", "Music": "الموسيقى", "Effects": "المؤثرات", "Projectiles": "المقذوفات",
   "Choose Radish to defend or Mushroom to produce energy, then click an empty soil cell.": "اختر الفجل للدفاع أو الفطر لإنتاج الطاقة، ثم انقر على خلية ترابية فارغة.",
