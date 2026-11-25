@@ -24,9 +24,15 @@ jobs:
           sudo apt-get install -y ffmpeg
           python -m pip install --upgrade pip
           python -m pip install numpy scipy
-      - name: Generate original CC0 sound effects
+      - name: Generate original CC0 sound effects only when missing
         working-directory: web
-        run: python scripts/generate-effect-sounds.py
+        run: |
+          count=$(find public/assets/audio/effects -maxdepth 1 -name '*.ogg' | wc -l)
+          if [ "$count" -lt 26 ]; then
+            python scripts/generate-effect-sounds.py
+          else
+            echo "All 26 generated OGG assets already exist; keeping their committed bytes."
+          fi
       - name: Run focused effect-library tests
         working-directory: web
         run: node --test tests/effect-library.test.mjs tests/effect-director.test.mjs
@@ -39,5 +45,6 @@ jobs:
             echo "Generated audio is already up to date."
           else
             git commit -m "chore(audio): generate Studio effects sound assets"
+            git pull --rebase origin feat/studio-effects-library
             git push origin HEAD:feat/studio-effects-library
           fi
