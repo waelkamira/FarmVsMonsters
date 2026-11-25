@@ -608,3 +608,8 @@
   .studio-list .studio-asset-row{grid-template-columns:104px minmax(0,1fr)!important}
   .studio-list .studio-asset-row>.studio-asset-meta>b{font-size:15px!important}
 }
+
+
+/* Asset detail pages use the same first-frame thumbnail contract as Studio libraries. */
+.studio-detail-media .studio-detail-art{display:block;max-width:100%;max-height:280px;object-fit:contain}
+.studio-detail-media .studio-detail-art.is-sprite-sheet{width:min(100%,280px);height:auto;aspect-ratio:1;background-repeat:no-repeat;background-position:left top}
