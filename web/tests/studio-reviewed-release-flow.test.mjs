@@ -57,3 +57,17 @@ test("closed unmerged release requests are reconciled before the testing-state g
 test("archiving after a closed unmerged release returns the asset to testing before transition", () => {
   assert.match(apiSource, /candidate=\{\.\.\.asset,status:"testing",releaseRequest:null\}/);
 });
+
+test("permanent deletion cannot mutate the published game branch", () => {
+  const patchStart = apiSource.indexOf("export async function PATCH");
+  const firstDelete = apiSource.indexOf('if(operation==="delete"){', patchStart);
+  const deleteStart = apiSource.indexOf('if(operation==="delete"){', firstDelete + 1);
+  const deleteEnd = apiSource.indexOf('if(operation==="clone"){', deleteStart);
+  const deleteSource = apiSource.slice(deleteStart, deleteEnd);
+  assert.match(deleteSource, /asset\.status==="published"/);
+  assert.match(deleteSource, /release\?\.merged/);
+  assert.match(deleteSource, /collection\.some\(item=>item\.id===id\)/);
+  assert.match(deleteSource, /isPublishedPathReferenced/);
+  assert.doesNotMatch(deleteSource, /githubPut\(catalogPath/);
+  assert.doesNotMatch(deleteSource, /githubDeleteIfExists\([^\n]+targetBranch/);
+});
