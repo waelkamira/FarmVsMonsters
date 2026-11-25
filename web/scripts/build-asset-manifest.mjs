@@ -117,7 +117,7 @@ for (const absolutePath of paths) {
       if (error.code !== "ENOENT") throw error;
     }
   }
-  const metadata = atlasMetadata || override;
+  const metadata = { ...override, ...(atlasMetadata || {}) };
   const type = metadata.type || (AUDIO_EXTENSIONS.has(extension) ? "audio" : extension === ".svg" ? "svg" : "image");
   const fileName = path.basename(relativePath, extension);
   const defaultKey = type === "audio" && relativePath.startsWith("audio/sfx/") ? `sfx-${fileName}` : assetKey(relativePath);
