@@ -49,3 +49,8 @@ test("monster hitstop begins after the impact animation is selected", async () =
   assert.ok(impactClip >= 0);
   assert.ok(hitstop > impactClip);
 });
+
+test("monster hitstop suspends only the struck monster's simulation step", async () => {
+  const source = await readFile(new URL("../game/scenes/BattleScene.js", import.meta.url), "utf8");
+  assert.match(source, /if \(monster\.hitStopTimer\) continue;/);
+});
