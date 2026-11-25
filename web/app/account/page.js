@@ -6,8 +6,7 @@ import { LanguageToggle, useLocale } from "../LocaleProvider";
 import {
   getPlayerSession,
   signInPlayer,
-  signOutPlayer,
-  restoreOrInitializeCloudProgress
+  signOutPlayer
 } from "../../game/services/playerAccount.mjs";
 
 function subscribeToLocation(callback) {
@@ -34,7 +33,7 @@ export default function AccountPage() {
   const params = new URLSearchParams(search);
   const googleError = params.get("google_error");
   const oauthMessage = params.get("google") === "connected"
-    ? (ar ? "تم تسجيل الدخول باستخدام Google. الحفظ السحابي متوقف مؤقتاً أثناء تأمين تقدمك." : "Signed in with Google. Cloud saving is temporarily paused while progression security is upgraded.")
+    ? (ar ? "تسجيل الدخول باستخدام Google متوقف مؤقتاً." : "Google sign-in is temporarily paused.")
     : "";
   const oauthErrorMessages = {
     cloud_unconfigured: ar ? "خدمة الحسابات السحابية غير مهيأة بعد." : "Cloud accounts are not configured yet.",
@@ -54,13 +53,8 @@ export default function AccountPage() {
       .then(async ({ user: current }) => {
         if (!active) return;
         setUser(current);
-        if (current) {
-          try {
-            await restoreOrInitializeCloudProgress();
-            if (active && !hasOAuthFeedback) setMessage(ar ? "تم التحقق من الحساب. تقدم اللعب غير محفوظ في الحساب أو على الجهاز حالياً." : "Your account is connected. Game progress is not currently saved to this account or device.");
-          } catch (reason) {
-            if (active && !hasOAuthFeedback) setError(reason.message);
-          }
+        if (current && !hasOAuthFeedback) {
+          setMessage(ar ? "تم التحقق من الحساب. تقدم اللعب غير محفوظ في الحساب أو على الجهاز حالياً." : "Your account is connected. Game progress is not currently saved to this account or device.");
         }
       })
       .catch((reason) => {
@@ -78,7 +72,6 @@ export default function AccountPage() {
     try {
       const result = await signInPlayer(email, password);
       setUser(result.user);
-      await restoreOrInitializeCloudProgress();
       setMessage(ar ? "تم تسجيل الدخول. لكن تقدم اللعبة لا يُحفظ بعد؛ الحساب ليس نسخة احتياطية لتقدمك." : "Signed in. Game progress is not saved yet; this account is not a backup of your progress.");
       setPassword("");
     } catch (reason) {
