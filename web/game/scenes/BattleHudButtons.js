@@ -3,21 +3,35 @@
  *
  * Keep every in-battle action shortcut in this one registry so the right-side
  * column can be reordered or resized without hunting through BattleScene.
- * Coordinates are in the fixed 1120 × 680 Phaser game-space.
+ * Coordinates are in the fixed 1120 × 680 Phaser game-space. The enlarged hit
+ * areas preserve comfortable touch targets after Scale.FIT on landscape phones.
  */
 export const BATTLE_HUD_BUTTONS = Object.freeze([
-  { key: "pauseControl", label: "pause", y: 82 },
-  { key: "settingsControl", label: "settings", y: 130 },
-  { key: "speedControl", label: "speed", y: 178 },
-  { key: "audioButton", label: "audio", y: 226 },
-  { key: "collectionMenuControl", label: "farm-journal", y: 274 },
-  { key: "inventoryControl", label: "inventory", y: 322 },
-  { key: "quickPlantsButton", label: "plants", y: 370 },
-  { key: "quickAdventuresButton", label: "adventures", y: 418 },
-  { key: "quickMonstersButton", label: "monsters", y: 466 }
+  { key: "pauseControl", label: "pause", y: 64 },
+  { key: "settingsControl", label: "settings", y: 134 },
+  { key: "speedControl", label: "speed", y: 204 },
+  { key: "audioButton", label: "audio", y: 274 },
+  { key: "collectionMenuControl", label: "farm-journal", y: 344 },
+  { key: "inventoryControl", label: "inventory", y: 414 },
+  { key: "quickPlantsButton", label: "plants", y: 484 },
+  { key: "quickAdventuresButton", label: "adventures", y: 554 },
+  { key: "quickMonstersButton", label: "monsters", y: 624 }
 ]);
 
 export const BATTLE_HUD_BUTTON_X = 1080;
+export const BATTLE_HUD_TOUCH_TARGET_SIZE = 76;
+
+function setTouchTarget(gameObject, width = BATTLE_HUD_TOUCH_TARGET_SIZE, height = BATTLE_HUD_TOUCH_TARGET_SIZE) {
+  const hitArea = { x: -width / 2, y: -height / 2, width, height };
+  gameObject.setInteractive({
+    useHandCursor: true,
+    hitArea,
+    hitAreaCallback: (area, x, y) =>
+      x >= area.x && x <= area.x + area.width &&
+      y >= area.y && y <= area.y + area.height
+  });
+  return gameObject;
+}
 
 export function layoutBattleHudButtons(scene) {
   if (!scene) return [];
@@ -37,7 +51,7 @@ export function layoutBattleHudButtons(scene) {
     scene.audioMenu.setPosition(930, 350);
   }
   scene.audioMenuBounds = { left: 800, right: 1060, top: 230, bottom: 470 };
-  scene.audioButtonBounds = { left: 1056, right: 1120, top: 202, bottom: 250 };
+  scene.audioButtonBounds = { left: 1042, right: 1120, top: 236, bottom: 312 };
 
   return positioned;
 }
@@ -106,7 +120,7 @@ function createAudioControls() {
     speaker.arc(3, 0, 10, -0.85, 0.85, false);
     speaker.strokePath();
     this.audioButton.add([buttonHalo, buttonBackground, speaker]);
-    buttonBackground.setInteractive({ useHandCursor: true });
+    setTouchTarget(buttonBackground);
     buttonBackground.on("pointerover", () => buttonBackground.setFillStyle(0xffdf8a, 1));
     buttonBackground.on("pointerout", () => buttonBackground.setFillStyle(0xe6c58c, 1));
     buttonBackground.on("pointerdown", () => {
@@ -140,10 +154,12 @@ function createAudioVolumeSlider(y, title, initialValue, onChange) {
     const label = this.add.text(-101, -10, this.translate(title, window.localStorage.getItem("farmVsMonsters.language") || "ar"), {
       fontFamily: "Arial", fontSize: "11px", color: "#ffffff", fontStyle: "bold", stroke: "#17213d", strokeThickness: 2
     }).setOrigin(0, 0.5).setData("localeKey", title);
-    const track = this.add.rectangle(5, 12, 132, 8, 0xffffff, 0.24).setStrokeStyle(1, 0xffffff, 0.46).setInteractive({ useHandCursor: true });
+    const track = this.add.rectangle(5, 12, 132, 8, 0xffffff, 0.24).setStrokeStyle(1, 0xffffff, 0.46);
+    setTouchTarget(track, 160, 44);
     const fill = this.add.rectangle(-61, 12, 0, 5, 0xa7e84f, 1).setOrigin(0, 0.5);
     const knob = this.add.circle(-61, 12, 8, 0xffca45, 0.9)
-      .setStrokeStyle(1, 0xffffff, 0.9).setInteractive({ useHandCursor: true });
+      .setStrokeStyle(1, 0xffffff, 0.9);
+    setTouchTarget(knob, 44, 44);
     const valueText = this.add.text(96, -10, Math.round(initialValue) + "%", {
       fontFamily: "Arial", fontSize: "11px", color: "#ffffff", fontStyle: "bold", stroke: "#17213d", strokeThickness: 2
     }).setOrigin(1, 0.5);
@@ -197,8 +213,8 @@ function createQuickCollectionButtons() {
       const rim = this.add.circle(0, 0, 21, 0x80552f, 1)
         .setStrokeStyle(2.4, 0xf1d08b, 1);
       const face = this.add.circle(0, 0, 16.5, tint, 1)
-        .setStrokeStyle(1, 0xfff0c8, 0.92)
-        .setInteractive({ useHandCursor: true });
+        .setStrokeStyle(1, 0xfff0c8, 0.92);
+      setTouchTarget(face);
       const icon = this.add.graphics();
       icon.lineStyle(2.3, 0xfff8e8, 1);
       if (kind === "plants") {
@@ -251,8 +267,8 @@ function createCollectionMenuControl() {
     const rim = this.add.circle(0, 0, 16, 0x80552f, 1)
       .setStrokeStyle(2.2, 0xf1d08b, 1);
     const face = this.add.circle(0, 0, 12.5, 0x477a55, 1)
-      .setStrokeStyle(1, 0xfff0c8, 0.9)
-      .setInteractive({ useHandCursor: true });
+      .setStrokeStyle(1, 0xfff0c8, 0.9);
+    setTouchTarget(face);
     const book = this.add.graphics();
     book.lineStyle(1.8, 0xfff8e8, 1);
     book.strokeRoundedRect(-8, -7, 7, 14, 1.5);
@@ -276,8 +292,8 @@ function createCollectionMenuControl() {
 
 function createInventoryControl() {
     const button = this.add.container(920, 27).setDepth(52);
-    const plate = this.add.circle(0, 0, 16, 0x9b6b39, 1)
-      .setStrokeStyle(2.5, 0xe6c58c, 1).setInteractive({ useHandCursor: true });
+    const plate = this.add.circle(0, 0, 16, 0x9b6b39, 1);
+    setTouchTarget(plate);
     const icon = this.add.graphics();
     icon.lineStyle(2.4, 0x4b2e16, 1);
     icon.strokeRoundedRect(-9, -7, 18, 18, 4);
@@ -298,7 +314,7 @@ function createPauseControl() {
     const artwork = this.textures.exists("hud-pause-button")
       ? this.add.image(0, 0, "hud-pause-button").setDisplaySize(34, 34)
       : this.add.circle(0, 0, 16, 0x9b6b39, 1).setStrokeStyle(2.5, 0xe6c58c, 1);
-    artwork.setInteractive({ useHandCursor: true });
+    setTouchTarget(artwork);
     button.add(artwork);
     artwork.on("pointerover", () => button.setScale(1.07));
     artwork.on("pointerout", () => button.setScale(1));
@@ -311,7 +327,7 @@ function createSettingsControl() {
     const artwork = this.textures.exists("hud-settings-button")
       ? this.add.image(0, 0, "hud-settings-button").setDisplaySize(34, 34)
       : this.add.circle(0, 0, 16, 0x9b6b39, 1).setStrokeStyle(2.5, 0xe6c58c, 1);
-    artwork.setInteractive({ useHandCursor: true });
+    setTouchTarget(artwork);
     button.add(artwork);
     artwork.on("pointerover", () => button.setScale(1.07));
     artwork.on("pointerout", () => button.setScale(1));
@@ -329,7 +345,7 @@ function createSpeedControl() {
       fontFamily: "Arial", fontSize: "9px", color: "#fff4c8", fontStyle: "bold",
       stroke: "#392719", strokeThickness: 2
     }).setOrigin(0.5).setDepth(49);
-    artwork.setInteractive({ useHandCursor: true });
+    setTouchTarget(artwork);
     button.add([artwork, speedLabel]);
     artwork.on("pointerover", () => button.setScale(1.07));
     artwork.on("pointerout", () => button.setScale(1));
