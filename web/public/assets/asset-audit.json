@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-24T12:01:45.709Z",
-  "assetCount": 93,
-  "totalBytes": 27902723,
+  "generatedAt": "2026-11-25T15:04:00.613Z",
+  "assetCount": 91,
+  "totalBytes": 27745203,
   "groups": {
     "audio": {
       "assetCount": 14,
@@ -37,8 +37,8 @@
       "totalBytes": 5305
     },
     "plants": {
-      "assetCount": 18,
-      "totalBytes": 9332889
+      "assetCount": 16,
+      "totalBytes": 9175369
     },
     "projectiles": {
       "assetCount": 2,
@@ -240,6 +240,34 @@
         "frameHeight": 418,
         "margin": 0,
         "spacing": 0
+      }
+    },
+    {
+      "key": "corn-monster",
+      "url": "/assets/plants/corn_monster.png",
+      "bytes": 546346,
+      "frameConfig": {
+        "frameWidth": 150,
+        "frameHeight": 150,
+        "margin": 0,
+        "spacing": 0
+      },
+      "sourceFormat": "phaser-atlas",
+      "atlasMetadataPath": "/assets/plants/corn_monster.json",
+      "frameCount": 24,
+      "atlasClips": {
+        "idle": {
+          "startFrame": 0,
+          "endFrame": 7
+        },
+        "attack": {
+          "startFrame": 8,
+          "endFrame": 17
+        },
+        "hurt": {
+          "startFrame": 18,
+          "endFrame": 23
+        }
       }
     }
   ]

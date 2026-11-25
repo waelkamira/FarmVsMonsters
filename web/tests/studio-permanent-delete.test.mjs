@@ -40,15 +40,57 @@ test("Permanent deletion is authenticated, dependency-guarded, and supported by 
 test("Deletion removes linked catalog entries and owned files without deleting shared paths", () => {
   assert.match(route, /PUBLISHED_CATALOG_PATH,"plants"/);
   assert.match(route, /PUBLISHED_MONSTER_CATALOG_PATH,"monsters"/);
-  assert.match(route, /function assetOwnedPaths\(asset\)/);
-  assert.match(route, /filter\(\(value\)=>typeof value==="string"&&safeAssetPath\(value\)\)/);
+  assert.match(route, /import \{assetOwnedPaths,assetPathStillUsed,removeManifestAssetReferences,synchronizeAssetAudit\}/);
+  assert.match(route, /assetOwnedPaths\(asset\)/);
   assert.ok(route.includes('import {mkdir,readFile,writeFile,unlink} from "node:fs/promises"'));
-  assert.match(route, /asset\?\.atlas\?\.jsonPath/);
-  assert.match(route, /asset\?\.audio\?\.path/);
-  assert.match(route, /asset\?\.combat\?\.projectile\?\.path/);
-  assert.match(route, /function assetPathStillUsed\(assets,assetPath\)/);
-  assert.match(route, /function removeManifestAssetReferences\(manifest,assetPaths\)/);
+  assert.match(route, /assetPathStillUsed\(remaining,assetPath\)/);
+  assert.match(route, /removeManifestAssetReferences\(JSON\.parse/);
   assert.match(route, /removeLocalAssetManifestReferences\(candidatePaths\)/);
   assert.match(route, /removeGithubAssetManifestReferences\(candidatePaths,token,storageBranch\)/);
-  assert.match(route, /manifest\.assetCount=Object\.values\(manifest\.groups\)/);
+});
+
+test("Local permanent deletion never calls GitHub-only cleanup helpers", () => {
+  const localStart = route.indexOf('if(driver!=="github"){', route.indexOf("export async function PATCH"));
+  const githubStart = route.indexOf('const token=process.env.STUDIO_GITHUB_TOKEN,storageBranch=', localStart);
+  assert.ok(localStart >= 0 && githubStart > localStart, "local and GitHub storage branches are distinct");
+  const localBranch = route.slice(localStart, githubStart);
+  assert.match(localBranch, /await removeLocalAssetManifestReferences\(candidatePaths\)/);
+  assert.doesNotMatch(localBranch, /removeGithubAssetManifestReferences|targetBranch|storageBranch|\btoken\b/);
+});
+
+
+test("GitHub permanent deletion cleans hydration manifests on storage and game branches before deleting files", () => {
+  const patchStart = route.indexOf("export async function PATCH");
+  const githubStart = route.indexOf('const token=process.env.STUDIO_GITHUB_TOKEN,storageBranch=', patchStart);
+  const deleteStart = route.indexOf('if(operation==="delete"){', githubStart);
+  const fileDelete = route.indexOf("await githubDeleteIfExists(filePath", deleteStart);
+  const registrySave = route.indexOf('await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify({...registry,assets:remaining}', deleteStart);
+  assert.ok(githubStart > patchStart && deleteStart > githubStart, "GitHub delete branch is present");
+  const githubDeleteBranch = route.slice(deleteStart, fileDelete);
+  assert.match(githubDeleteBranch, /await removeGithubAssetManifestReferences\(candidatePaths,token,storageBranch\)/);
+  assert.match(githubDeleteBranch, /if\(targetBranch!==storageBranch\)await removeGithubAssetManifestReferences\(candidatePaths,token,targetBranch\)/);
+  assert.ok(fileDelete > deleteStart && registrySave > fileDelete, "manifest/catalog cleanup and file deletion happen before registry removal");
+});
+
+
+test("Permanent deletion reconciles both the asset manifest and asset audit in local and GitHub storage", () => {
+  assert.match(route, /const ASSET_AUDIT_PATH="web\/public\/assets\/asset-audit\.json"/);
+  assert.match(route, /synchronizeAssetAudit\(JSON\.parse\(auditDocument\.content\),manifest\)/);
+  assert.match(route, /await writeFile\(auditPath,JSON\.stringify\(audit,null,2\)/);
+  assert.match(route, /githubGetDocument\(ASSET_AUDIT_PATH,token,branch\)/);
+  assert.match(route, /reconcile asset audit after permanent deletion/);
+});
+
+
+test("GitHub preview reads are cached and have a per-branch fallback timeout", () => {
+  assert.match(route, /const previewCache=new Map\(\)/);
+  assert.match(route, /expiresAt>Date\.now\(\)/);
+  assert.match(route, /setTimeout\(\(\)=>controller\.abort\(\),30_000\)/);
+  assert.match(route, /GitHub preview timed out after 30 seconds/);
+});
+
+
+test("Local permanent deletion writes published catalogs under web/public without duplicating public", () => {
+  assert.ok(route.includes('path.join(process.cwd(),catalogPath.replace(/^web'));
+  assert.doesNotMatch(route, /path\.join\(process\.cwd\(\),"public",catalogPath\.replace/);
 });

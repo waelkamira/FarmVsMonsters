@@ -299,3 +299,22 @@ test("does not resolve unsupported rig-part asset types", () => {
   assert.equal(report.dependencies[0].resolved, false);
   assert.equal(report.unresolved.length, 1);
 });
+
+
+test("historical revisions keep their files and managed dependencies alive", () => {
+  const assets = [
+    {
+      id: "owner",
+      type: "plant",
+      path: "/assets/plants/owner-current.png",
+      versions: [{
+        versionNumber: 1,
+        path: "/assets/plants/owner-old.png",
+        combat: { projectile: { id: "old-shot", path: "/assets/projectiles/old-shot.png", managed: true } }
+      }]
+    },
+    { id: "old-shot", type: "plantProjectile", path: "/assets/projectiles/old-shot.png" }
+  ];
+  const report = buildAssetDependencyReport(assets, "old-shot");
+  assert.deepEqual(report.dependents.map((item) => item.assetId), ["owner"]);
+});

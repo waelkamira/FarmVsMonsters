@@ -6,11 +6,14 @@ import { dirname, resolve } from "node:path";
 import { STAGE_ONE_PLANTS } from "../game/data/stageOnePlants.mjs";
 import { PLANT_PROJECTILE_DESIGNS } from "../game/data/projectileDesigns.mjs";
 
+
 const here = dirname(fileURLToPath(import.meta.url));
 const publicRoot = resolve(here, "../public");
 const catalogThumb = readFileSync(resolve(here, "../app/components/CatalogThumb.js"), "utf8");
 const battleScene = readFileSync(resolve(here, "../game/scenes/BattleScene.js"), "utf8");
 const storyAssets = JSON.parse(readFileSync(resolve(here, "../game/data/phase-one-story-assets.json"), "utf8"));
+const assetManifest = JSON.parse(readFileSync(resolve(here, "../public/assets/asset-manifest.json"), "utf8"));
+const assetAudit = JSON.parse(readFileSync(resolve(here, "../public/assets/asset-audit.json"), "utf8"));
 
 function publicAssetExists(path) {
   return existsSync(resolve(publicRoot, path.replace(/^\//, "")));
@@ -65,5 +68,19 @@ test("missing Phase 1 story art remains documented but is not requested by the P
     assert.equal(asset.status, "awaiting-art");
     assert.equal(publicAssetExists(asset.path), false);
     assert.equal(preload.includes(asset.path), false);
+  }
+});
+
+
+test("committed asset manifest contains no missing public files", () => {
+  assert.equal(assetManifest.assetCount, assetManifest.assets.length);
+  assert.equal(assetAudit.assetCount, assetManifest.assetCount);
+  assert.equal(assetAudit.totalBytes, assetManifest.totalBytes);
+  const manifestUrls = new Set(assetManifest.assets.map((asset) => asset.url));
+  for (const asset of assetManifest.assets) {
+    assert.ok(publicAssetExists(asset.url), "manifest points to missing public asset: " + asset.url);
+  }
+  for (const group of Object.values(assetManifest.groups)) {
+    for (const asset of group) assert.ok(manifestUrls.has(asset.url), "group contains an asset missing from the canonical manifest: " + asset.url);
   }
 });
