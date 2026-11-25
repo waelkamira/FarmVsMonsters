@@ -1173,7 +1173,7 @@ The game remains authored in a fixed 1120×680 landscape coordinate space. CI ca
 ## 2026-11-25 — Missing asset reference containment (E-05)
 
 - Removed the seven absent Phase 1 story artwork requests from the Phaser preload queue. The design contract remains in `phase-one-story-assets.json` with `runtimeEnabled: false` and `awaiting-art` status until the authored files are committed.
-- Changed seven planned plant PNG references to `assetPath: null` plus `plannedAssetPath`; their encyclopedia cards continue using the committed local SVG catalogue icons. Existing Pumpkin artwork remains mapped to the committed `pumpkin.png`.
+- Changed seven planned plant PNG references to `assetPath: null` plus `plannedAssetPath`; their encyclopedia cards use committed local SVG catalogue icons where available, and Fire Pepper uses its Twemoji fallback because its local SVG is also absent. Existing Pumpkin artwork remains mapped to the committed `pumpkin.png`.
 - Changed missing projectile artwork references to `assetPath: null` plus `plannedAssetPath`, and corrected the Pumpkin Guard source-art mapping to the existing Pumpkin file. Existing Pineapple projectile art remains active.
 - Added regression tests verifying every non-null plant/projectile runtime path exists, pending art is not requested by Phaser, and the planned plant icons exist.
 
