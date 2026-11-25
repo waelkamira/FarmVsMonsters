@@ -1,4 +1,4 @@
-> **Implementation override — 2026-11-25:** The dragon/boss encounter is retired from the active game and all current asset catalogs. Stage 1 now ends after the five Monster 01 waves. Do not restore dragon artwork, runtime logic, UI, or encounter references unless the user explicitly requests its later reintroduction. Older design notes below are historical/future proposals and are superseded by this override.
+> **Current implementation — 2026-11-25:** Stage 1 contains five waves of Monster 01 only and ends when the waves are cleared. No separate boss encounter is active.
 
 # Farm Vs Monsters — Global Success Master Plan
 
@@ -15,13 +15,10 @@
 
 ## 1. Product vision
 
-Farm Vs Monsters is an original 2D strategy-defense adventure about a farmer fighting through monster armies and evil dragons to rescue his wife. Each stage is a complete rescue adventure: a different dragon captures her in a different territory, commands a distinct monster force, and threatens the farmer's farm with a signature boss attack. The farmer defeats that dragon and its followers, rescues his wife, shares a meaningful reunion and victory celebration, then prepares for the next territory and the next dragon. Between battles, victories and rewards help the farm and the player's long-term progress grow.
 
 The intended emotional promise:
 
-**“Defeat the dragon. Rescue your wife. Celebrate the victory. Then face the next dragon in a new land.”**
 
-The campaign's clear final objective is to defeat the ultimate dragon ruler, end the dragons' threat, and secure lasting peace for the land. The wife is rescued at the end of every successfully completed stage; she is not kept captive for the entire campaign.
 
 The game should be instantly understandable, charming to watch, satisfying to master, and substantial enough to support a long single-player journey. The objective is a high-quality game players choose to revisit—not manipulative or compulsive design.
 
@@ -43,18 +40,11 @@ Do not copy its characters, plant designs, monster designs, animations, sounds, 
 
 ### The campaign's core story and stage promise
 
-The farmer's wife is captured by the evil dragon who rules or occupies the territory featured in each stage. At the opening of every stage, show that stage's distinct dragon behind its monster front with the captive wife visibly restrained beside/behind it. The player immediately understands the objective: defeat the dragon and its monster followers, then rescue her.
 
 Every stage must deliver this complete arc:
-1. Introduce a new land, its dragon, its monster faction, and the captive wife.
-2. Defend the farm through escalating monster waves while the dragon threatens the battlefield.
-3. Escalate into an active dragon boss encounter with readable, fair attacks that can threaten both the farmer and plants.
-4. Require the defeat of the dragon and all required surviving followers before victory is declared.
 5. Release the wife and show a distinct reunion/celebration. This rescue is a real completed story beat, not a temporary animation before an immediate re-kidnapping.
 6. Present the stage result and earned reward, then perform the approved treasure-cave ceremony.
-7. Give the player a calm breathing space before revealing the next land and its different dragon, who becomes the next captor and rescue objective.
 
-The next dragon must not interrupt the reunion or instantly undo the rescue. The emotional pause after each rescue is mandatory. The campaign ends only when the final dragon ruler is defeated and the wider threat is resolved.
 
 ## 2. The ten success factors and how this game will apply them
 
@@ -154,11 +144,8 @@ These are approved constraints unless the user explicitly changes them.
 - Energy is a separate resource used for planting.
 - Do not add shadows beneath any character.
 - No permanent procedural fallback characters in place of missing authored monster artwork. Missing critical art should produce a clear diagnostic/loading state, not a different character.
-- **Campaign-stage enemy-count progression:** Stage 1 targets 30 ordinary monsters/followers total; Stage 2 targets 31; Stage 3 targets 32; each subsequent stage adds one ordinary monster (Stage N = 29 + N). These are totals across all waves in a stage, not per-wave counts. Dragon bosses are tracked separately and are not included in the ordinary-monster total.
 - The current prototype's 100-monster schedule is obsolete as a design target and must be replaced. Stage 1's exact per-wave distribution of its 30 ordinary monsters will be tuned through playtesting. Keep the opening forgiving and ensure the player has enough time/resources to learn and defend.
 - Difficulty must rise gradually across waves and stages. Early encounters use fewer, slower, less durable enemies, generous recovery windows, and clear teaching moments. Add pressure through carefully introduced enemy combinations and timing only after the player has learned the relevant response. Avoid sudden difficulty spikes and immediate unavoidable losses.
-- Once the dragon is present and within attack range, the farmer automatically uses the slingshot to throw stones at it. This automatic ranged attack is dragon-phase-only; do not use the slingshot before the dragon appears. The user will supply the dragon character sheet later; do not invent or substitute final dragon artwork.
-- Victory only after all required ordinary followers and the dragon are defeated. Defeat occurs when farmhouse health reaches zero.
 - Restart must reset all battle entities, timers, counters, projectiles, input locks, audio state, and result flags.
 
 ### Signature victory ritual: the treasure cave (approved concept)
@@ -227,8 +214,6 @@ Scope:
 8. Verify monster variants and size/health/damage/speed relationships without unintended scale changes during animations.
 9. Verify emergency club combat starts only when no living defensive plant remains and stops immediately after a new defender is planted.
 10. Verify the five-wave structure with a rebalanced, forgiving enemy count and spawn pacing; do not treat 100 monsters as mandatory. Verify wave counters, home damage, and victory/defeat conditions.
-11. Integrate the Stage 1 dragon into the final wave: it appears at Wave 5 start while a few followers may remain, moves behind the battlefield, attacks with telegraphed fireballs, and remains as the final boss after its followers are defeated.
-12. Verify the farmer's automatic slingshot attack begins only after the dragon appears and only while it is in range. The user supplies the dragon character sheet later; until then, do not fabricate final dragon art.
 11. Verify Pause truly freezes timers, movement, attacks, spawns, projectiles, and relevant audio; Resume does not jump timers or duplicate sound.
 12. Verify complete restart cleanup and no duplicate listeners, stale callbacks, or entities.
 13. Verify all key sounds and actual volume sliders.
@@ -260,9 +245,7 @@ Exit gate:
 Work:
 - Tune farmer speed, planting timing, plant durability/attack cadence, projectile speed, monster speed/damage/health, bite timing, and home durability.
 - Tune wave pacing so each wave has a readable rhythm: introduction, pressure, short relief, escalation.
-- Stage 1's dragon, captive-wife presentation, automatic slingshot counter, and rescue ending are part of the first complete Phase 1 playable slice—not a later phase. Phase 2 may polish their feel and balance, but must not postpone their initial implementation.
 - Build the first rescue ending: release the wife, show a short farmer-wife reunion and celebration, present the stage result, then run the treasure-cave reward ritual. Give the player a deliberate quiet interval before the next-stage reveal.
-- Keep the current five-wave structure as the first stage's wave framework; it is not five separate campaign stages. Stage 1 targets 30 ordinary monsters, Stage 2 targets 31, Stage 3 targets 32, then +1 ordinary monster per stage (Stage N = 29 + N). Dragon bosses are counted separately. Stage 1's dragon and rescue are required parts of Phase 1.
 - Improve hit reactions, eating feedback, projectile impacts, death, reward collection, wave transition, victory, and defeat.
 - Make UI feedback precise: selected plant, insufficient energy, occupied cell, pickup available/expired, monster breach, objective danger, and wave completion.
 - Add short contextual tutorial prompts and a first-session learning flow; allow replay or disabling of basic hints.
@@ -313,8 +296,6 @@ Work:
   - disruptive or sneaky monster;
   - boss and boss minions.
 - Bosses need multiple readable phases, attack warnings, a clear health UI, and satisfying defeat/reward sequences.
-- Develop the dragon-boss system as a distinct encounter layer: each campaign stage has its own dragon captor, silhouette, personality, sound, signature attack, boss phases, and counterplay. A dragon must threaten both the farmer and plant defenses in clearly telegraphed ways.
-- Dragon defeat is a required stage-completion condition, alongside clearing all required surviving followers. A dragon cannot be treated as background decoration or bypassed by merely surviving ordinary waves.
 - Build encounter combinations and lane compositions rather than simply raising stats.
 
 Exit gate:
@@ -351,15 +332,9 @@ Exit gate:
 
 ## Phase 6 — Campaign, world map, level design, and progression
 
-**Goal:** create a long, well-paced single-player rescue adventure in which every stage has a clear dragon, a monster army, a new territory, and a meaningful reunion.
 
 Work:
 - Design a world map with distinct regions, visual themes, enemy ecology, and progression.
-- Structure the campaign as a sequence of complete rescue stages. Every stage introduces a different dragon captor, a distinct territory, its own monster faction, and new plant choices or tactical combinations.
-- At the start of each stage, show the captive wife with that stage's dragon behind the monster front. The player objective must be understandable before the first wave begins.
-- At stage end, require all scheduled waves to be complete, all required monster followers defeated, the dragon boss defeated, and farmhouse health above zero; only then trigger the wife's release and reunion.
-- After the reunion, reward presentation, and treasure-cave ceremony, give the player a calm interval before introducing the next territory and its new dragon. Do not immediately interrupt or nullify the rescue.
-- Build campaign escalation toward a final dragon ruler. Defeating that final boss must end the dragons' wider threat and provide a definitive story ending.
 - Create a level template: objective, lanes/grid, background, enemy schedule, special rule, available loadout, reward, difficulty target, and completion criteria.
 - Build a campaign progression that introduces mechanics before testing them in combinations.
 - Add optional challenge stages, bonus objectives, hidden discoveries, and replay goals.
@@ -473,10 +448,8 @@ This is the intended complete product map. Items are targets, not claims that th
 | Monster AI and bestiary | Lane pressure and special threats | Phases 1 and 4 |
 | Energy and Coins | Separate tactical and reward economies | Phases 1–2 |
 | Waves and bosses | Encounter pacing and milestones | Phases 1, 4, 6 |
-| Dragon captors and boss encounters | Stage climax, signature threat, and required victory condition | Phases 2, 4, 6 |
 | Wife rescue and reunion sequence | Clear emotional payoff at the end of every stage | Phases 2, 6 |
 | Territory-specific monster factions and plants | Distinct tactical identity for each rescue stage | Phases 3, 4, 6 |
-| Campaign finale | Defeat the final dragon ruler and resolve the central threat | Phase 6 |
 | Battle HUD and results | Readability and feedback | Phases 1–2 |
 | Audio and animation | Game feel and character | Phases 1–2 |
 | Persistent save/progression | Preserve player investment | Phases 5–7 |
@@ -615,7 +588,6 @@ Do not delay quality to maximize raw content count. A smaller set of excellent, 
 
 ## 11. Short game summary
 
-Farm Vs Monsters is a hand-drawn 2D strategy-defense adventure. A farmer fights monster armies and a different evil dragon in each stage to rescue his wife. Every stage ends with the dragon and its required followers defeated, the wife freed, and the couple reunited before the next land and captor are introduced. Distinct territories, dragon abilities, monster factions, and plant strategies keep each rescue adventure fresh. The treasure cave turns earned stage rewards into a visible celebration of progress, while the final dragon ruler provides the campaign's definitive ending.
 
 **North star:** Every stage must make the player understand whom they are fighting, why they are fighting, what counts as victory, and whom they will rescue.
 
