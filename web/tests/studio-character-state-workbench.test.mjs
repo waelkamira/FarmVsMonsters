@@ -110,4 +110,9 @@ test("asset file audit checks every custom state sprite sheet path", () => {
 });
 
 
-test("permanent deletion owns state sheets across all revisions and protects shared state paths", () => {\n  const asset = { id: "brute", path: "/assets/monsters/brute.png", stateAnimations: { burn: { path: "/assets/monsters/states/burn.png" } }, versions: [{ path: "/assets/monsters/old.png", stateAnimations: { freeze: { path: "/assets/monsters/states/freeze.png" } } }] };\n  assert.deepEqual(assetOwnedPaths(asset).sort(), ["/assets/monsters/brute.png", "/assets/monsters/old.png", "/assets/monsters/states/burn.png", "/assets/monsters/states/freeze.png"].sort());\n  assert.equal(assetPathStillUsed([{ id: "other", stateAnimations: { burn: { path: "/assets/monsters/states/burn.png" } } }], "/assets/monsters/states/burn.png"), true);\n  assert.equal(assetPathStillUsed([], "/assets/monsters/states/freeze.png"), false);\n});\n
+test("permanent deletion owns state sheets across all revisions and protects shared state paths", () => {
+  const asset = { id: "brute", path: "/assets/monsters/brute.png", stateAnimations: { burn: { path: "/assets/monsters/states/burn.png" } }, versions: [{ path: "/assets/monsters/old.png", stateAnimations: { freeze: { path: "/assets/monsters/states/freeze.png" } } }] };
+  assert.deepEqual(assetOwnedPaths(asset).sort(), ["/assets/monsters/brute.png", "/assets/monsters/old.png", "/assets/monsters/states/burn.png", "/assets/monsters/states/freeze.png"].sort());
+  assert.equal(assetPathStillUsed([{ id: "other", stateAnimations: { burn: { path: "/assets/monsters/states/burn.png" } } }], "/assets/monsters/states/burn.png"), true);
+  assert.equal(assetPathStillUsed([], "/assets/monsters/states/freeze.png"), false);
+});
