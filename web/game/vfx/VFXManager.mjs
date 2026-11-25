@@ -100,6 +100,7 @@ export class VFXManager {
         targets: visual,
         alpha: 0,
         scale: targetScale,
+        angle: Number(config.rotationDegrees) || 0,
         duration,
         ease: "Cubic.easeOut",
         onComplete: () => this.#release(visual, effectId, { stopTween: false })

@@ -1571,12 +1571,32 @@ export default class BattleScene extends Scene {
     if (!boss?.alive || amount <= 0) return;
     boss.hp = applyHitPointsDamage(boss.hp, amount).hp;
     if (boss.sprite?.active) {
-      boss.sprite.setTint(0xffc078);
-      this.time.delayedCall(110, () => { if (boss.sprite?.active) boss.sprite.clearTint(); });
+      this.applySquashStretch(boss.sprite, { preX: 0.9, preY: 1.12, impactX: 1.16, impactY: 0.78, durationMs: 190 });
+      this.juiceCameraImpact({ heavy: true, zoomPunch: boss.hp <= boss.maxHp * 0.3 });
+      const sprite = boss.sprite;
+      if (boss.hitStopTimer) {
+        boss.hitStopTimer.remove(false);
+      } else {
+        boss.hitStopWasPlaying = Boolean(sprite.anims?.isPlaying);
+        if (boss.hitStopWasPlaying) sprite.anims.pause();
+      }
+      sprite.setTintFill?.(0xffffff);
+      boss.hitStopTimer = this.time.delayedCall(80, () => {
+        if (!sprite.active) return;
+        sprite.clearTint?.();
+        sprite.setTint?.(0xffc078);
+        if (boss.hitStopWasPlaying && boss.alive && sprite.anims?.isPaused) sprite.anims.resume();
+        boss.hitStopWasPlaying = false;
+        boss.hitStopTimer = null;
+        this.time.delayedCall(110, () => {
+          if (sprite.active) sprite.clearTint?.();
+        });
+      });
     }
     this.drawDragonHealthBar();
     if (boss.hp > 0) return;
     boss.alive = false;
+    this.juiceCameraImpact({ heavy: true, zoomPunch: true });
     this.dragonHealthBar?.destroy();
     this.dragonHealthLabel?.destroy();
     if (boss.sprite?.active) {
@@ -1796,13 +1816,67 @@ export default class BattleScene extends Scene {
       : -Infinity;
     if (cooldownMs > 0 && now - lastPlayed < cooldownMs) return false;
     try {
-      this.sound.play(key, { volume: PhaserMath.Clamp(volume / 100, 0, 1) });
+      // Small per-play rate variation keeps repeated cartoon impacts from sounding mechanical.
+      this.sound.play(key, {
+        volume: PhaserMath.Clamp(volume / 100, 0, 1),
+        rate: PhaserMath.FloatBetween(0.9, 1.1)
+      });
       if (this.sfxCooldowns) this.sfxCooldowns.set(key, now);
       return true;
     } catch {
       // Sound is optional; never let a failed audio device interrupt gameplay.
       return false;
     }
+  }
+
+  applySquashStretch(target, {
+    preX = 0.9,
+    preY = 1.12,
+    impactX = 1.14,
+    impactY = 0.8,
+    durationMs = 150
+  } = {}) {
+    if (!target?.active || !this.tweens) return false;
+    const baseX = Number.isFinite(target.__juiceBaseScaleX) ? target.__juiceBaseScaleX : (target.scaleX || 1);
+    const baseY = Number.isFinite(target.__juiceBaseScaleY) ? target.__juiceBaseScaleY : (target.scaleY || 1);
+    target.__juiceBaseScaleX = baseX;
+    target.__juiceBaseScaleY = baseY;
+    this.tweens.killTweensOf(target);
+    target.setScale(baseX * preX, baseY * preY);
+    this.tweens.add({
+      targets: target,
+      scaleX: baseX * impactX,
+      scaleY: baseY * impactY,
+      duration: Math.max(70, durationMs),
+      ease: "Back.easeOut",
+      yoyo: true,
+      hold: 24,
+      onComplete: () => {
+        if (target.active) target.setScale(baseX, baseY);
+      }
+    });
+    return true;
+  }
+
+  juiceCameraImpact({ heavy = false, zoomPunch = false } = {}) {
+    const camera = this.cameras?.main;
+    if (!camera || this.gameOver) return false;
+    camera.shake(heavy ? 130 : 90, heavy ? 0.0038 : 0.0018);
+    if (zoomPunch) {
+      const baseZoom = Number.isFinite(camera.__juiceBaseZoom) ? camera.__juiceBaseZoom : (camera.zoom || 1);
+      camera.__juiceBaseZoom = baseZoom;
+      this.cameraJuiceTween?.stop?.();
+      this.cameraJuiceTween = this.tweens.add({
+        targets: camera,
+        zoom: baseZoom * (heavy ? 1.055 : 1.025),
+        duration: 90,
+        ease: "Quad.easeOut",
+        yoyo: true,
+        hold: 45,
+        onComplete: () => { if (camera) camera.setZoom?.(baseZoom); }
+      });
+    }
+    return true;
   }
 
   playHyenaVoice(kind = "growl", intensity = 1) {
@@ -3182,6 +3256,13 @@ export default class BattleScene extends Scene {
   spawnStudioEnergy(plant, amount) {
     const pickupId = "pickup-" + this.nextEnergyPickupId++;
     const token = this.add.container(plant.x, plant.y - 64).setDepth(35);
+    token.setScale(0.02);
+    this.tweens.add({
+      targets: token, scale: 1.2, duration: 230, ease: "Back.easeOut",
+      onComplete: () => {
+        if (token.active) this.tweens.add({ targets: token, scale: 1, duration: 95, ease: "Sine.easeOut" });
+      }
+    });
     token.setSize(42, 42).setInteractive();
     if (token.input) token.input.cursor = "pointer";
     token.add([
@@ -3229,6 +3310,13 @@ export default class BattleScene extends Scene {
     const pickupId = `pickup-${this.nextEnergyPickupId++}`;
     this.recordCombatEvent("energy_spawned", { sourceCol: plant.col, sourceRow: plant.row, pickupId, amount });
     const token = this.add.container(plant.x, plant.y - 66).setDepth(35);
+    token.setScale(0.02);
+    this.tweens.add({
+      targets: token, scale: 1.2, duration: 230, ease: "Back.easeOut",
+      onComplete: () => {
+        if (token.active) this.tweens.add({ targets: token, scale: 1, duration: 95, ease: "Sine.easeOut" });
+      }
+    });
     token.combatPickupId = pickupId;
     token.combatPickupConsumed = false;
     this.energyPickups.push(token);
@@ -4013,13 +4101,24 @@ export default class BattleScene extends Scene {
     const finalScaleY = monsterScale * profile.heightScale;
     view.setScale(finalScaleX * 0.72, finalScaleY * 0.72);
     this.createMonsterArrivalEffect(spawn, laneGap, archetype);
+    this.vfxManager?.play("spawn-pop", spawn.x, spawn.y + laneGap * 0.18, {
+      tint: archetype === "stonehide" ? 0xc8c1a8 : 0xffe39b,
+      count: 6, durationMs: 260, endScale: 1.45
+    });
     this.tweens.add({
       targets: view,
       alpha: 1,
-      scaleX: finalScaleX,
-      scaleY: finalScaleY,
+      scaleX: finalScaleX * 1.12,
+      scaleY: finalScaleY * 1.12,
       duration: archetype === "dust-skitter" ? 260 : archetype === "stonehide" ? 520 : 400,
-      ease: archetype === "dust-skitter" ? "Cubic.easeOut" : "Back.Out"
+      ease: archetype === "dust-skitter" ? "Cubic.easeOut" : "Back.Out",
+      onComplete: () => {
+        if (!view.active) return;
+        this.tweens.add({
+          targets: view, scaleX: finalScaleX, scaleY: finalScaleY,
+          duration: 110, ease: "Sine.easeOut"
+        });
+      }
     });
 
     const g = this.add.graphics();
@@ -4290,6 +4389,9 @@ export default class BattleScene extends Scene {
 
     for (const monster of this.monsters) {
       if (!monster.alive) continue;
+      // Hold this creature's position and attack state for the brief impact
+      // pause; all other actors and the shared battle clock keep progressing.
+      if (monster.hitStopTimer) continue;
       if (!iceEaters.has(monster)) {
         monster.isEatingIce = false;
         monster.iceTargetId = null;
@@ -4467,6 +4569,17 @@ export default class BattleScene extends Scene {
             : null,
           enableJump: true
         });
+        if (jumpWillStart) {
+          this.applySquashStretch(monster.hyenaSprite?.active ? monster.hyenaSprite : monster.view, {
+            preX: 0.82, preY: 1.2, impactX: 0.94, impactY: 1.08, durationMs: 180
+          });
+        }
+        if (jumpWillLand) {
+          this.applySquashStretch(monster.hyenaSprite?.active ? monster.hyenaSprite : monster.view, {
+            preX: 0.9, preY: 1.12, impactX: 1.2, impactY: 0.72, durationMs: 165
+          });
+          this.createFootstepDust(monster.x, monster.y + 6, monster.view.scaleY * 0.9);
+        }
         monster.isJumping = motion.isJumping;
         monster.jumpCooldown = motion.jumpCooldownMs;
         monster.jumpElapsed = motion.jumpElapsedMs;
@@ -4928,13 +5041,15 @@ export default class BattleScene extends Scene {
 
     // Keep the monster artwork unchanged. A restrained projectile-colored
     // glow traces only its silhouette; recoil and squash are reduced by half.
-    this.applyMonsterHitStop(monster, 80);
     const sprite = monster.hyenaSprite;
     const hitColor = getProjectileVFXProfile(plantType)?.tint ?? 0x9bdc72;
     const reaction = getMonsterReactionProfile(monster.kind);
     if (sprite?.active || monster.studioRig?.root?.active) {
       monster.hitAnimUntil = this.time.now + reaction.hitDurationMs;
       this.playHyenaAnimation(monster, monster.studioRig ? "hyena-hit" : "hyena-idle", true);
+      // Pause after switching to the impact clip so the new first-hit pose,
+      // not the previous idle frame, is what gets held for 80ms.
+      this.applyMonsterHitStop(monster, 80);
 
       if (sprite?.active) {
         if (monster.hitGlowEffect && sprite.postFX?.remove) {
@@ -4944,24 +5059,24 @@ export default class BattleScene extends Scene {
         if (sprite.postFX?.addGlow) {
           monster.hitGlowEffect = sprite.postFX.addGlow(hitColor, reaction.glowRadius, 0, false, 0.1, 12);
         }
-        this.tweens.killTweensOf(sprite);
         const baseX = Number.isFinite(monster.hitRecoilBaseX) ? monster.hitRecoilBaseX : sprite.x;
         monster.hitRecoilBaseX = baseX;
         sprite.x = baseX;
-        sprite.setScale(0.918);
+        this.applySquashStretch(sprite, {
+          preX: 0.9,
+          preY: 1.13,
+          impactX: Math.max(1.08, reaction.squashX),
+          impactY: Math.min(0.9, reaction.squashY),
+          durationMs: Math.max(120, Math.round(reaction.hitDurationMs * 0.72))
+        });
         this.tweens.add({
           targets: sprite,
           x: baseX + reaction.recoilPx,
-          scaleX: reaction.squashX,
-          scaleY: reaction.squashY,
           duration: Math.max(45, Math.round(reaction.hitDurationMs * 0.32)),
           ease: "Quad.easeOut",
           yoyo: true,
           onComplete: () => {
-            if (sprite.active) {
-              sprite.x = baseX;
-              sprite.setScale(0.918);
-            }
+            if (sprite.active) sprite.x = baseX;
           }
         });
       }
@@ -4991,6 +5106,14 @@ export default class BattleScene extends Scene {
     this.playMonsterHitSound();
     if (monster.hyenaSprite) this.playHyenaVoice("yelp", 0.82);
     this.flashMonsterOnHit(monster, plantType);
+    if ((monster.kind === "stonehide" || monster.kind === "alpha-brute") && monster.hp <= monster.maxHp * 0.3) {
+      this.vfxManager?.play("dizzy-stars", monster.x, monster.y - 58, {
+        tint: 0xffdf62, count: 3, durationMs: 680, endScale: 1.2, rotationDegrees: 260, shape: "star"
+      });
+    }
+    if (monster.kind === "stonehide" || monster.kind === "alpha-brute") {
+      this.juiceCameraImpact({ heavy: monster.kind === "alpha-brute" });
+    }
     this.damageMonsterIfNeeded(monster);
   }
 
@@ -5003,6 +5126,13 @@ export default class BattleScene extends Scene {
     }
     this.createMonsterDefeatBurst(monster.x, monster.y, monster.view && monster.view.scaleY);
     this.createMonsterDefeatMotes(monster);
+    this.createFootstepDust(monster.x, monster.y + 18, (monster.view?.scaleY || 1) * 1.25);
+    this.vfxManager?.play("dust-puff", monster.x, monster.y + 12, {
+      tint: 0xd9c7a5, count: 7, durationMs: 320, endScale: 1.7
+    });
+    if (monster.kind === "stonehide" || monster.kind === "alpha-brute") {
+      this.juiceCameraImpact({ heavy: monster.kind === "alpha-brute" });
+    }
     this.playMonsterDefeatSound();
     if (monster.hyenaSprite) this.playHyenaVoice("yelp", 0.88);
     // Play the authored death sequence before removing the creature.
@@ -5014,6 +5144,8 @@ export default class BattleScene extends Scene {
         this.tweens.add({
           targets: monster.view,
           alpha: 0,
+          angle: monster.view.angle + (monster.row % 2 === 0 ? 18 : -18),
+          y: monster.view.y + 18,
           scale: (monster.view.scaleX || 1) * 0.82,
           duration: 760,
           delay: 120,
@@ -5026,6 +5158,8 @@ export default class BattleScene extends Scene {
         this.tweens.add({
           targets: monster.view,
           alpha: 0,
+          angle: monster.view.angle + (monster.row % 2 === 0 ? 18 : -18),
+          y: monster.view.y + 18,
           scale: (monster.view.scaleX || 1) * 0.82,
           duration: 430,
           ease: "Cubic.easeIn",
@@ -5056,28 +5190,81 @@ export default class BattleScene extends Scene {
     this.refreshHud();
   }
 
+  applyPlantHitStop(plant, durationMs = 80) {
+    if (!plant?.alive || !plant.view?.active) return;
+    if (plant.hitStopTimer) {
+      plant.hitStopTimer.remove(false);
+      plant.hitStopTimer = null;
+    } else {
+      // Walk nested containers too: Studio rigs may put animated sprites
+      // one level below the plant's root container.
+      const targets = [];
+      const visit = (node) => {
+        if (!node?.active) return;
+        if (node.anims || typeof node.setTintFill === "function") targets.push(node);
+        for (const child of node.list || []) visit(child);
+      };
+      visit(plant.view);
+      plant.hitStopRestore = [...new Set(targets)].map((target) => {
+        const wasPlaying = Boolean(target.anims?.isPlaying);
+        if (wasPlaying) target.anims.pause();
+        target.setTintFill?.(0xffffff);
+        return { target, wasPlaying };
+      });
+      if (!targets.some((target) => typeof target.setTintFill === "function")) {
+        plant.view.setAlpha(0.72);
+        plant.hitStopRootFlash = true;
+      }
+    }
+    plant.hitStopTimer = this.time.delayedCall(Math.max(16, durationMs), () => {
+      for (const { target, wasPlaying } of plant.hitStopRestore || []) {
+        if (!target?.active) continue;
+        target.clearTint?.();
+        if (wasPlaying && plant.alive && target.anims?.isPaused) target.anims.resume();
+      }
+      if (plant.hitStopRootFlash && plant.view?.active) plant.view.setAlpha(1);
+      plant.hitStopRootFlash = false;
+      plant.hitStopRestore = null;
+      plant.hitStopTimer = null;
+    });
+  }
+
   flashEatenPlant(plant) {
     if (!plant?.alive || !plant.view?.active) return;
-    // Brief warm-red pulse on the plant artwork each time the hyena bites.
-    // Only image children support tint; fallback vector art still gets a pulse.
+    // White impact flash + 80ms local hitstop first; the warm-red bite pulse
+    // follows it so the two signals never overwrite one another.
+    this.applyPlantHitStop(plant, 80);
     const artwork = (plant.view.list || []).filter((child) => child?.active);
-    for (const child of artwork) {
-      if (typeof child.setTint === "function") {
-        child.setTint(0xff7777);
-        this.tweens.killTweensOf(child);
-        this.tweens.add({
-          targets: child,
-          alpha: 0.58,
-          duration: 90,
-          yoyo: true,
-          onComplete: () => {
-            if (child.active) {
-              child.clearTint?.();
-              child.setAlpha(1);
+    const squashTarget = artwork.find((child) => typeof child.setScale === "function") || plant.view;
+    this.time.delayedCall(100, () => {
+      if (plant.alive && squashTarget?.active) {
+        this.applySquashStretch(squashTarget, { preX: 0.88, preY: 1.14, impactX: 1.18, impactY: 0.76, durationMs: 175 });
+      }
+    });
+    this.time.delayedCall(80, () => {
+      if (!plant.alive || !plant.view?.active) return;
+      let tinted = false;
+      for (const child of artwork) {
+        if (!child?.active) continue;
+        if (typeof child.setTint === "function") {
+          tinted = true;
+          child.setTint(0xff7777);
+          this.tweens.killTweensOf(child);
+          this.tweens.add({
+            targets: child,
+            alpha: 0.58,
+            duration: 90,
+            yoyo: true,
+            onComplete: () => {
+              if (child.active) {
+                child.clearTint?.();
+                child.setAlpha(1);
+              }
             }
-          }
-        });
-      } else {
+          });
+        }
+      }
+      if (!tinted) {
         this.tweens.killTweensOf(plant.view);
         this.tweens.add({
           targets: plant.view,
@@ -5089,7 +5276,7 @@ export default class BattleScene extends Scene {
           }
         });
       }
-    }
+    });
   }
 
   destroyPlant(plant) {

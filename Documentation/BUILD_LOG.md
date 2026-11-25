@@ -1178,3 +1178,13 @@ The game remains authored in a fixed 1120×680 landscape coordinate space. CI ca
 - Added regression tests verifying every non-null plant/projectile runtime path exists, pending art is not requested by Phaser, and the planned plant icons exist.
 
 This removes guaranteed 404/loaderror requests and stops the data contracts from presenting absent art as available runtime assets. It does not create the missing dragon/princess/farmer story illustrations or the future plant/projectile sprites; those remain explicitly pending art production.
+
+
+## 2026-11-25 — Comedic Game Juice pass
+- Added reusable proportional squash-and-stretch reactions for monster, plant, boss impacts and Dust Skitter jump take-off/landing.
+- Added elastic 120% arrival/pickup pops that settle to exact scale, plus soft body follow-through on monster defeat.
+- Added bounded 0.9–1.1 sound playback-rate variation for repeated SFX.
+- Added small camera shake and thresholded boss zoom punches for heavy moments.
+- Reused the existing bounded footstep-dust system and added registered procedural spawn, dust and rotating dizzy-star effects.
+- Kept effects cosmetic: no combat damage, movement authority, collision, replay, or reward rules were changed.
+- Detached accessories and independent eye tracking remain gated on explicit per-part/eye metadata; current sprite-sheet assets do not expose safe detachable parts or separate pupil nodes.

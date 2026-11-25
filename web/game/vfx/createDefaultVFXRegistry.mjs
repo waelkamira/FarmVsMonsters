@@ -33,5 +33,8 @@ export function createDefaultVFXRegistry() {
     }
   }
 
+  registry.register("dust-puff", { kind: "burst", tint: 0xd9c7a5, count: 7, durationMs: 320, depth: 28, endScale: 1.7 });
+  registry.register("dizzy-stars", { kind: "burst", shape: "star", tint: 0xffdf62, count: 3, durationMs: 680, depth: 48, endScale: 1.2, rotationDegrees: 260 });
+  registry.register("spawn-pop", { kind: "burst", tint: 0xffe39b, count: 6, durationMs: 260, depth: 31, endScale: 1.45 });
   return registry;
 }
