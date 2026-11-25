@@ -65,7 +65,7 @@ async function hydratePlantLibrary(registry,token,branch,expectedRegistrySha){
  const known=new Map((registry.assets||[]).map(asset=>[asset.id,asset]));
  const published=new Map((catalog.plants||[]).map(plant=>[plant.id,plant]));
  let changed=false;
- for(const source of uniqueManifestAssets.filter(asset=>!/-bomb(?:-|\\.)/i.test(asset.url))){
+ for(const source of uniqueManifestAssets.filter(asset=>!/-bomb(?:-|\.)/i.test(asset.url))){
   const id=plantIdFromPath(source.url);
   if(!id)continue;
   const existing=known.get(id);
@@ -110,7 +110,7 @@ async function hydratePlantLibrary(registry,token,branch,expectedRegistrySha){
  }
  if(changed){
   registry.version=1;
-  await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(registry,null,2)+"\\n"),"studio: reconcile imported plant assets",token,branch,expectedRegistrySha);
+  await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(registry,null,2)+"\n"),"studio: reconcile imported plant assets",token,branch,expectedRegistrySha);
  }
  return registry;
 }
