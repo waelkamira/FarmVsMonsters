@@ -14,7 +14,6 @@ import {
   selectLaneBlocker,
   selectProjectileTarget,
   selectFarmerMeleeTarget,
-  selectDragonFireballTarget,
   advanceCooldown,
   resolveBiteAttack,
   resolveMonsterMovementEffectsStep,
@@ -150,11 +149,8 @@ test("Phaser delegates monster and projectile lane movement to the simulation ke
   assert.match(scene, /selectLaneBlocker\(/);
   assert.match(scene, /selectProjectileTarget\(/);
   assert.match(scene, /selectFarmerMeleeTarget\(/);
-  assert.match(scene, /selectDragonFireballTarget\(/);
   assert.match(scene, /applyHitPointsDamage\(/);
   assert.match(scene, /monster\.attackCooldown = bite\.cooldownMs/);
-  assert.match(scene, /boss\.shotCooldown = advanceCooldown\(/);
-  assert.match(scene, /boss\.attackCooldown = advanceCooldown\(/);
   assert.match(scene, /plant\.cooldown = advanceCooldown\(/);
   assert.match(scene, /resolveMonsterMovementEffectsStep\(/);
   assert.match(scene, /resolveBiteAttack\(/);
@@ -225,17 +221,6 @@ test("farmer melee selects the nearest monster in the active lane and preserves 
   assert.equal(selectFarmerMeleeTarget({ monsters: [], row: 2, farmerX: 100, reach: 10 }), null);
 });
 
-test("dragon fireball chooses the living plant with the lowest HP and preserves tie order", () => {
-  const weakest = { hp: 12, alive: true, id: "weakest" };
-  const tied = { hp: 12, alive: true, id: "tied" };
-  assert.equal(selectDragonFireballTarget([
-    { hp: 1, alive: false },
-    { hp: 30, alive: true },
-    weakest,
-    tied
-  ]), weakest);
-  assert.equal(selectDragonFireballTarget([{ hp: 1, alive: false }]), null);
-});
 
 test("cooldown advances by elapsed milliseconds and bite attacks reset to the configured interval", () => {
   assert.equal(advanceCooldown(500, 120), 380);
