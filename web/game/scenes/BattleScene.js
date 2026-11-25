@@ -3552,6 +3552,11 @@ export default class BattleScene extends Scene {
         dropPhase: "horizontal", alive: true, trailTimer: 0,
         plantType: plant.type, studioPlantId: plant.studioPlant.id
       });
+      if (String(plant.type).includes("electric")) {
+        this.applySquashStretch(plant.view, {
+          preX: 0.9, preY: 1.13, impactX: 1.16, impactY: 0.84, durationMs: 170
+        });
+      }
       this.playThornSound();
       return;
     }
@@ -3733,6 +3738,11 @@ export default class BattleScene extends Scene {
       dropPhase: "horizontal",
       alive: true, trailTimer: 0
     });
+    if (plant.type === "electric-mushroom") {
+      this.applySquashStretch(plant.view, {
+        preX: 0.9, preY: 1.13, impactX: 1.16, impactY: 0.84, durationMs: 170
+      });
+    }
     this.playThornSound();
   }
 
@@ -4524,6 +4534,18 @@ export default class BattleScene extends Scene {
           blocker.hp = applyHitPointsDamage(blocker.hp, monster.plantDamage).hp;
           this.playMonsterBiteSound();
           this.flashEatenPlant(blocker);
+          const electricBite = monster.combatProfile?.damageType === "electric" ||
+            monster.combatProfile?.attackType === "electric" ||
+            monster.studioMonster?.combat?.damageType === "electric";
+          if (electricBite) {
+            const monsterBounds = monster.view?.getBounds?.();
+            this.createElectricShockEffect(
+              monsterBounds?.centerX ?? monster.x,
+              monsterBounds?.top ?? monster.y - 24,
+              blocker,
+              "plant"
+            );
+          }
           if (blocker.hp <= 0) this.destroyPlant(blocker);
         }
         continue;
@@ -4864,6 +4886,15 @@ export default class BattleScene extends Scene {
       if (studioHeadTarget && studioHeadTarget.progress >= 1) {
         shot.view.setPosition(studioHeadTarget.x, studioHeadTarget.y);
         this.createProjectileImpact(studioHeadTarget.x, studioHeadTarget.y, shot.plantType, shot.projectileEffectColor);
+        if (String(shot.plantType).includes("electric")) {
+          const source = this.lanePoint(shot.startLocalX, shot.row);
+          this.createElectricShockEffect(
+            source.x + (shot.launchOffsetX || 0),
+            source.y + (shot.launchOffsetY || 0),
+            shot.target,
+            "monster"
+          );
+        }
         this.playThornImpactSound();
         this.applyMonsterDamage(
           shot.target,
@@ -4927,6 +4958,15 @@ export default class BattleScene extends Scene {
           continue;
         }
         this.createProjectileImpact(projectileX, projectileY, shot.plantType, shot.projectileEffectColor);
+        if (String(shot.plantType).includes("electric")) {
+          const source = this.lanePoint(shot.startLocalX, shot.row);
+          this.createElectricShockEffect(
+            source.x + (shot.launchOffsetX || 0),
+            source.y + (shot.launchOffsetY || 0),
+            hit,
+            "monster"
+          );
+        }
         this.playThornImpactSound();
         this.applyMonsterDamage(
           hit, shot.damage * this.incomingMonsterDamageMultiplier(hit), shot.plantType
@@ -5098,6 +5138,74 @@ export default class BattleScene extends Scene {
       if (graphic?.active) graphic.setBlendMode(0);
       monster.hitFlashTimer = null;
     });
+  }
+
+  createElectricShockEffect(sourceX, sourceY, target, targetKind = "monster") {
+    const view = target?.view;
+    if (!target?.alive || !view?.active || !Number.isFinite(sourceX) || !Number.isFinite(sourceY)) return false;
+
+    const sprite = targetKind === "monster"
+      ? (target.hyenaSprite?.active ? target.hyenaSprite : target.studioRig?.root?.list?.find((node) => node?.active && typeof node.setTintFill === "function"))
+      : (view.list || []).find((node) => node?.active && typeof node.setTintFill === "function");
+    const bounds = view.getBounds?.();
+    const endX = bounds?.centerX ?? view.x;
+    const endY = bounds ? bounds.top + Math.min(22, bounds.height * 0.18) : view.y - 24;
+    const baseSpriteX = sprite?.x;
+    const originalTint = targetKind === "monster" ? (target.tierTint ?? 0xffffff) : null;
+    const lightning = this.add.graphics().setDepth(Math.max(24, (view.depth ?? 0) + 8));
+    let pulse = 0;
+
+    const drawBolt = () => {
+      if (!lightning.active || !target.alive || !view.active) return;
+      lightning.clear();
+      const points = [{ x: sourceX, y: sourceY }];
+      const segments = 5;
+      for (let index = 1; index < segments; index += 1) {
+        const t = index / segments;
+        points.push({
+          x: PhaserMath.Linear(sourceX, endX, t) + PhaserMath.Between(-13, 13),
+          y: PhaserMath.Linear(sourceY, endY, t) + PhaserMath.Between(-11, 11)
+        });
+      }
+      points.push({ x: endX, y: endY });
+      lightning.lineStyle(8, 0x35cfff, 0.24);
+      lightning.beginPath();
+      lightning.moveTo(points[0].x, points[0].y);
+      for (const point of points.slice(1)) lightning.lineTo(point.x, point.y);
+      lightning.strokePath();
+      lightning.lineStyle(3, 0xe9fcff, 0.98);
+      lightning.beginPath();
+      lightning.moveTo(points[0].x, points[0].y);
+      for (const point of points.slice(1)) lightning.lineTo(point.x, point.y);
+      lightning.strokePath();
+
+      if (sprite?.active) {
+        sprite.x = baseSpriteX + PhaserMath.Between(-4, 4);
+        if (typeof sprite.setTintFill === "function") {
+          if (pulse % 2 === 0) sprite.setTintFill(0xffffff);
+          else sprite.setTint(0x35aaff);
+        }
+      }
+      pulse += 1;
+    };
+
+    drawBolt();
+    const shockTimer = this.time.addEvent({ delay: 48, repeat: 10, callback: drawBolt });
+    this.applySquashStretch(sprite?.active ? sprite : view, {
+      preX: 0.86, preY: 1.16, impactX: 1.24, impactY: 0.72, durationMs: 185
+    });
+    this.time.delayedCall(560, () => {
+      shockTimer.remove(false);
+      if (lightning.active) lightning.destroy();
+      if (sprite?.active) {
+        if (Number.isFinite(baseSpriteX)) sprite.x = baseSpriteX;
+        if (targetKind === "monster" && originalTint !== 0xffffff) sprite.setTint?.(originalTint);
+        else sprite.clearTint?.();
+      }
+      if (targetKind === "monster" && target.alive) this.playHyenaVoice("yelp", 0.72);
+    });
+    this.juiceCameraImpact({ heavy: false });
+    return true;
   }
 
   applyMonsterDamage(monster, amount, plantType = "radish") {
