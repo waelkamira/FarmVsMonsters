@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 import {
   getBrowserStorage,
+  normalizeBrowserLocale,
   readBrowserLocale,
   readStorageValue,
   writeStorageValue
@@ -49,11 +50,26 @@ test("storage writes stringify values and report blocked writes without throwing
   assert.equal(writeStorageValue({ localStorage: { setItem() { throw new Error("quota"); } } }, "volume", 0), false);
 });
 
-test("browser locale accepts only the supported Arabic and English values", () => {
+test("browser locale accepts only supported values and normalizes invalid fallbacks", () => {
+  assert.equal(normalizeBrowserLocale("en"), "en");
+  assert.equal(normalizeBrowserLocale("ar"), "ar");
+  assert.equal(normalizeBrowserLocale("fr"), "ar");
+  assert.equal(normalizeBrowserLocale("fr", "en"), "en");
+  assert.equal(normalizeBrowserLocale("fr", "de"), "ar");
   assert.equal(readBrowserLocale({ localStorage: { getItem: () => "en" } }), "en");
   assert.equal(readBrowserLocale({ localStorage: { getItem: () => "ar" } }), "ar");
   assert.equal(readBrowserLocale({ localStorage: { getItem: () => "fr" } }), "ar");
-  assert.equal(readBrowserLocale(null), "ar");
+  assert.equal(readBrowserLocale(null, "en"), "en");
+  assert.equal(readBrowserLocale(null, "de"), "ar");
+});
+
+test("locale provider normalizes requested values before state, persistence and events", () => {
+  const source = readFileSync(resolve(here, "../app/LocaleProvider.jsx"), "utf8");
+  assert.match(source, /const nextLocale = normalizeBrowserLocale\(next, locale\)/);
+  assert.match(source, /setLocaleState\(nextLocale\)/);
+  assert.match(source, /writeStorageValue\(window, "farmVsMonsters\.language", nextLocale\)/);
+  assert.match(source, /detail: nextLocale/);
+  assert.match(source, /if \(typeof window !== "undefined"\)/);
 });
 
 test("game and settings entry points never access localStorage without the safe adapter", () => {
