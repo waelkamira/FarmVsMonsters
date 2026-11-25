@@ -88,10 +88,14 @@ export async function POST(request) {
   if (action !== "signin" && action !== "signup") {
     return NextResponse.json({ error: "Unsupported account action." }, { status: 400 });
   }
+  if (action === "signup") {
+    return NextResponse.json({
+      error: "New player registration is temporarily paused until secure cloud progress saving is available.",
+      code: "PLAYER_REGISTRATION_PAUSED"
+    }, { status: 410 });
+  }
 
-  const endpoint = action === "signup"
-    ? api.url + "/auth/v1/signup"
-    : api.url + "/auth/v1/token?grant_type=password";
+  const endpoint = api.url + "/auth/v1/token?grant_type=password";
   const authResponse = await fetch(endpoint, {
     method: "POST",
     headers: { apikey: api.key, "Content-Type": "application/json" },
