@@ -16,7 +16,6 @@ const LOCAL_PLANT_ICONS = {
   "ice-bloom": "/assets/plant-icons/ice-bloom.svg",
   "double-radish": "/assets/plant-icons/double-radish.svg",
   "explosive-berry": "/assets/plant-icons/explosive-berry.svg",
-  "fire-pepper": "/assets/plant-icons/fire-pepper.svg"
 };
 
 const SPRITE_SHEET_PLANTS = new Set(["radish", "mango", "pineapple", "hazelnut", "snow-thrower", "electric-mushroom"]);
