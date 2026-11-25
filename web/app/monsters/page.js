@@ -86,13 +86,6 @@ export default function MonstersPage() {
             </article>
           ))}
         </div>
-        <h2 className="collection-section-title">{ar ? "زعيم المرحلة" : "Stage boss"}</h2>
-        <div className="collection-card">
-          <CatalogThumb id="dragon" label={ar ? "التنين الشرير" : "The Evil Dragon"} className="monster-thumb boss-thumb" />
-          <h2>{ar ? "التنين الشرير" : "The Evil Dragon"}</h2>
-          <p>{ar ? "زعيم مستقل عن عدد الوحوش العادية. يظهر في الموجة الخامسة، ويجب هزيمته بعد أتباعه لتحرير الأميرة." : "A separate boss, not included in the ordinary monster count. It appears in Wave 5 and must be defeated after its followers to rescue the princess."}</p>
-          <span className="collection-status">{ar ? "زعيم المرحلة الأولى" : "STAGE ONE BOSS"}</span>
-        </div>
         <nav className="info-nav collection-back">
           <Link className="secondary-link" href="/">{ar ? "القائمة الرئيسية" : "Main Menu"}</Link>
           <Link className="secondary-link" href="/plants">{ar ? "قائمة النباتات" : "Plant Collection"}</Link>
