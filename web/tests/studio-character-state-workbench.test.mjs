@@ -63,7 +63,7 @@ test("Studio exposes the workbench before effect assignment and persists status 
   assert.match(workbench, /stateAnimationFile/);
   assert.match(route, /validateCharacterStateAnimation/);
   assert.match(route, /createImmutableAssetPath\(config\.folder\+"\/states"/);
-  assert.match(route, /githubPutImmutable\("web\/public\/assets\/"+stateRelative/);
+  assert.ok(route.includes('githubPutImmutable("web/public/assets/"+stateRelative'));
   assert.match(route, /stateAnimations/);
 });
 
