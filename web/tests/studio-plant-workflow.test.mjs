@@ -80,7 +80,7 @@ test("Studio facing toggle is previewed, persisted, published, and applied by Ph
   assert.match(assetsRoute,/flipX:Boolean\(asset\.flipX\)/);
   assert.match(battleScene,/container\.setScale\(studioPlant\.flipX \? -1 : 1, 1\)/);
   assert.match(battleScene,/studioMonster\.flipX \? -1 : 1/);
-  assert.match(battleScene,/hyenaSprite\.setFlipX\(!studioMonster\.flipX\)/);
+  assert.match(battleScene,/monster01Sprite\.setFlipX\(!studioMonster\.flipX\)/);
 });
 
 test("campaign plant unlocks are respected and the active loadout remains capped at six",()=>{
