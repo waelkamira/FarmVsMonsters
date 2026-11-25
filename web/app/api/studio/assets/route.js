@@ -65,28 +65,43 @@ async function hydratePlantLibrary(registry,token,branch,expectedRegistrySha){
  const known=new Map((registry.assets||[]).map(asset=>[asset.id,asset]));
  const published=new Map((catalog.plants||[]).map(plant=>[plant.id,plant]));
  let changed=false;
- for(const source of uniqueManifestAssets.filter(asset=>!/-bomb(?:-|\.)/i.test(asset.url))){
+ for(const source of uniqueManifestAssets.filter(asset=>!/-bomb(?:-|\\.)/i.test(asset.url))){
   const id=plantIdFromPath(source.url);
-  if(!id||known.has(id))continue;
+  if(!id)continue;
+  const existing=known.get(id);
   const catalogPlant=published.get(id);
   const frame=source.frameConfig;
+  const frameCount=Number(source.frameCount)||(
+   frame&&source.width&&source.height
+    ?Math.max(1,Math.floor(source.width/frame.frameWidth)*Math.floor(source.height/frame.frameHeight))
+    :1
+  );
   const record={
-   id,type:"plant",name:catalogPlant?.name||id,path:source.url,
+   ...(existing||{}),
+   id,type:"plant",name:catalogPlant?.name||existing?.name||id,path:source.url,
    filename:path.basename(source.url),
-   rows:frame&&source.height?Math.max(1,Math.floor(source.height/frame.frameHeight)):1,
-   columns:frame&&source.width?Math.max(1,Math.floor(source.width/frame.frameWidth)):1,
-   frameCount:frame?Math.max(1,Math.floor(source.width/frame.frameWidth)*Math.floor(source.height/frame.frameHeight)):1,
-   spriteSheet:source.type==="spritesheet",
-   status:catalogPlant?"published":"draft",
-   createdAt:catalogPlant?.publishedAt||new Date().toISOString(),
-   updatedAt:new Date().toISOString(),
-   ...(catalogPlant?.combat?{combat:catalogPlant.combat}:{}),
-   ...(source.animationProfile?{animationProfile:source.animationProfile}:{}),
-   ...(source.atlasMetadataPath?{atlasMetadataPath:source.atlasMetadataPath}:{}),
-   ...(source.sourceFormat?{sourceFormat:source.sourceFormat}:{}),
-   ...(source.atlasClips?{atlasClips:source.atlasClips}:{})
+   rows:Number(source.rows)||(frame&&source.height?Math.max(1,Math.floor(source.height/frame.frameHeight)):1),
+   columns:Number(source.columns)||(frame&&source.width?Math.max(1,Math.floor(source.width/frame.frameWidth)):frameCount),
+   frameCount,
+   spriteSheet:Boolean(source.spriteSheet||source.type==="spritesheet"),
+   status:existing?.type==="monster"?"draft":(existing?.status||(catalogPlant?"published":"draft")),
+   createdAt:existing?.createdAt||catalogPlant?.publishedAt||new Date().toISOString(),
+   updatedAt:existing?.updatedAt||new Date().toISOString(),
+   ...(catalogPlant?.combat?{combat:catalogPlant.combat}:existing?.combat?{combat:existing.combat}:{}),
+   ...(existing?.animationProfile?{animationProfile:existing.animationProfile}:source.animationProfile?{animationProfile:source.animationProfile}:{}),
+   ...(source.atlasMetadataPath?{atlasMetadataPath:source.atlasMetadataPath}:existing?.atlasMetadataPath?{atlasMetadataPath:existing.atlasMetadataPath}:{}),
+   ...(source.sourceFormat?{sourceFormat:source.sourceFormat}:existing?.sourceFormat?{sourceFormat:existing.sourceFormat}:{}),
+   ...(source.atlasClips?{atlasClips:source.atlasClips}:existing?.atlasClips?{atlasClips:existing.atlasClips}:{})
   };
-  registry.assets.push(record);known.set(id,record);changed=true;
+  if(existing?.type==="monster")delete record.monsterProfile;
+  const comparable=(value)=>{const copy={...value};delete copy.updatedAt;return copy;};
+  if(existing&&JSON.stringify(comparable(existing))===JSON.stringify(comparable(record)))continue;
+  record.updatedAt=new Date().toISOString();
+  if(existing){
+   const index=registry.assets.findIndex(asset=>asset.id===id);
+   if(index>=0)registry.assets[index]=record;
+  }else registry.assets.push(record);
+  known.set(id,record);changed=true;
  }
  for(const plant of catalog.plants||[]){
   if(known.has(plant.id))continue;
@@ -95,11 +110,10 @@ async function hydratePlantLibrary(registry,token,branch,expectedRegistrySha){
  }
  if(changed){
   registry.version=1;
-  await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(registry,null,2)+"\n"),"studio: import existing game plants into asset library",token,branch,expectedRegistrySha);
+  await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(registry,null,2)+"\\n"),"studio: reconcile imported plant assets",token,branch,expectedRegistrySha);
  }
  return registry;
 }
-
 function readCombatForm(form,projectile,existing){
  const previous=existing?.combat;
  return createStudioPlantCombatProfile({
