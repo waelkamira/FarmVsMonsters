@@ -88,3 +88,9 @@ test("GitHub preview reads are cached and have a per-branch fallback timeout", (
   assert.match(route, /setTimeout\(\(\)=>controller\.abort\(\),30_000\)/);
   assert.match(route, /GitHub preview timed out after 30 seconds/);
 });
+
+
+test("Local permanent deletion writes published catalogs under web/public without duplicating public", () => {
+  assert.match(route, /path\.join\(process\.cwd\(\),catalogPath\.replace\(\/\^web\\\\\/\/,\"\"\)\)/);
+  assert.doesNotMatch(route, /path\.join\(process\.cwd\(\),\"public\",catalogPath\.replace/);
+});
