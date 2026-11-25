@@ -3218,46 +3218,6 @@ export default class BattleScene extends Scene {
   }
 
 
-  spawnStudioEnergy(plant, amount) {
-    const pickupId = "pickup-" + this.nextEnergyPickupId++;
-    const token = this.add.container(plant.x, plant.y - 64).setDepth(35);
-    token.setSize(42, 42).setInteractive();
-    if (token.input) token.input.cursor = "pointer";
-    token.add([
-      this.add.circle(0, 0, 17, 0x8fce70, 0.96).setStrokeStyle(3, 0xffefb0, 1),
-      this.add.text(0, 0, "+" + amount, { fontFamily: "Arial", fontSize: "13px", color: "#fff8d7", fontStyle: "bold", stroke: "#38502b", strokeThickness: 3 }).setOrigin(0.5)
-    ]);
-    token.studioPickupId = pickupId;
-    this.energyPickups.push(token);
-    token.on("pointerdown", () => {
-      if (!token.active || token.studioConsumed) return;
-      token.studioConsumed = true;
-      const collection = collectEnergy(this.energy, amount);
-      this.energy = collection.energy;
-      if (collection.collected > 0) {
-        this.recordCombatEvent("energy_collected", { pickupId, amount: collection.collected });
-        this.playEnergyCollectSound();
-        this.setMessage("Collected " + collection.collected + " energy from " + (plant.studioPlant.name || plant.type) + ".");
-      } else {
-        this.recordCombatEvent("energy_discarded", { pickupId });
-        this.setMessage("Energy is full. Spend energy before collecting more.");
-      }
-      this.energyPickups = this.energyPickups.filter((pickup) => pickup !== token);
-      if (token.expiryTimer) token.expiryTimer.remove(false);
-      token.destroy();
-      this.refreshHud();
-    });
-    this.tweens.add({ targets: token, y: token.y - 9, duration: 700, ease: "Sine.easeInOut", yoyo: true, repeat: -1 });
-    token.expiryTimer = this.time.delayedCall(MUSHROOM_PICKUP_TTL_MS, () => {
-      if (token.active) {
-        this.energyPickups = this.energyPickups.filter((pickup) => pickup !== token);
-        this.recordCombatEvent("energy_discarded", { pickupId });
-        token.destroy();
-      }
-    });
-    this.recordCombatEvent("energy_spawned", { sourceCol: plant.col, sourceRow: plant.row, pickupId, amount });
-  }
-
   spawnMushroomEnergy(plant) {
     // Production creates a full collectible regardless of the current bank.
     // The energy cap is applied only when the player collects it, so spending
