@@ -6,7 +6,7 @@ test("every battle action button occupies one vertical column on the right", () 
   assert.equal(BATTLE_HUD_BUTTON_X, 1080);
   assert.equal(BATTLE_HUD_BUTTONS.length, 9);
   assert.equal(BATTLE_HUD_TOUCH_TARGET_SIZE, 76);
-  assert.deepEqual(BATTLE_HUD_BUTTONS.map(({ y }) => y), [64, 134, 204, 274, 344, 414, 484, 554, 624]);
+  assert.deepEqual(BATTLE_HUD_BUTTONS.map(({ y }) => y), [52, 124, 196, 268, 340, 412, 484, 556, 628]);
   const keys = BATTLE_HUD_BUTTONS.map(({ key }) => key);
   assert.deepEqual(keys, [
     "pauseControl", "settingsControl", "speedControl", "audioButton",
@@ -36,13 +36,13 @@ test("the layout positions all existing controls and moves the audio menu inward
   }
   assert.deepEqual([scene.audioMenu.x, scene.audioMenu.y], [930, 350]);
   assert.deepEqual(scene.audioMenuBounds, { left: 800, right: 1060, top: 230, bottom: 470 });
-  assert.deepEqual(scene.audioButtonBounds, { left: 1042, right: 1120, top: 236, bottom: 312 });
+  assert.deepEqual(scene.audioButtonBounds, { left: 1042, right: 1120, top: 230, bottom: 306 });
 });
 
 test("layout tolerates controls that are not present yet", () => {
   const scene = {};
   assert.deepEqual(layoutBattleHudButtons(scene), []);
-  assert.deepEqual(scene.audioButtonBounds, { left: 1056, right: 1120, top: 202, bottom: 250 });
+  assert.deepEqual(scene.audioButtonBounds, { left: 1042, right: 1120, top: 230, bottom: 306 });
 });
 
 
