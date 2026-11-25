@@ -597,6 +597,7 @@ export default class BattleScene extends Scene {
 
     this.drawField();
     this.createFarmBackground();
+    this.drawBattlefieldGlassCells();
     this.drawPlantingGrid();
     this.createHud();
     createBattleHudButtons(this, translate);
@@ -901,6 +902,30 @@ export default class BattleScene extends Scene {
     };
   }
 
+
+  // Translucent gradient/glass overlay for each battlefield soil cell.
+  // This stays behind plants, monsters and UI and uses the existing calibrated mesh.
+  drawBattlefieldGlassCells() {
+    const glass = this.add.graphics().setDepth(-4.2);
+    const interpolate = (a, b, t) => ({ x: PhaserMath.Linear(a.x, b.x, t), y: PhaserMath.Linear(a.y, b.y, t) });
+    for (let row = 0; row < LANES; row += 1) {
+      for (let col = 0; col < COLUMNS; col += 1) {
+        const cell = this.cellPolygon(col, row);
+        const [tl, tr, br, bl] = cell;
+        const tm = interpolate(tl, tr, 0.5), bm = interpolate(bl, br, 0.5);
+        const leftMid = interpolate(tl, bl, 0.5), rightMid = interpolate(tr, br, 0.5);
+        const center = interpolate(tm, bm, 0.5);
+        // Upper yellow-green wash and lower green wash approximate the vertical gradient
+        // while following the perspective quad rather than drawing axis-aligned rectangles.
+        glass.fillStyle(0xf7f76e, 0.24); glass.fillPoints([tl, tr, center, leftMid], true);
+        glass.fillStyle(0x68b301, 0.25); glass.fillPoints([leftMid, center, br, bl], true);
+        glass.fillStyle(0xffffff, 0.09); glass.fillPoints([tl, tr, rightMid, center], true);
+        glass.lineStyle(1.25, 0xffffff, 0.24); glass.strokePoints(cell, true);
+      }
+    }
+    this.events.once("shutdown", () => glass.destroy());
+  }
+
   drawPlantingGrid() {
     // The background artwork owns the visible soil grid. This lightweight
     // overlay only previews the one cell currently under the pointer.
@@ -1136,6 +1161,13 @@ export default class BattleScene extends Scene {
       const scale = Math.min(86 / source.width, 98 / source.height);
       seedFrame = this.add.image(0, 0, cardArtworkKey).setDisplaySize(source.width * scale * 0.8, source.height * scale * 0.8);
     }
+    // Glass gradient overlay sits above the existing artwork frame and below content.
+    const cardGlass = this.add.graphics();
+    cardGlass.fillStyle(0xf7f76e, 0.28); cardGlass.fillRoundedRect(-35, -38, 70, 37, 8);
+    cardGlass.fillStyle(0x68b301, 0.30); cardGlass.fillRoundedRect(-35, -1, 70, 39, 8);
+    cardGlass.fillStyle(0xffffff, 0.16); cardGlass.fillRoundedRect(-35, -38, 70, 76, 8);
+    cardGlass.lineStyle(1.2, 0xffffff, 0.42); cardGlass.strokeRoundedRect(-35, -38, 70, 76, 8);
+    card.add(cardGlass);
     const plantHeight = 46;
     let icon;
     let iconScale = 1;
