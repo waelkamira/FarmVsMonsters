@@ -82,7 +82,7 @@ jobs:
           once('import { EffectDirector } from "../vfx/effects/EffectDirector.mjs";',
                'import { EffectDirector } from "../vfx/effects/EffectDirector.mjs";\nimport { AmbientFX } from "../vfx/effects/AmbientFX.mjs";','AmbientFX import');
           once('      this.effectDirector = null;\n    });\n    // Uploaded 3×3 plant/monster sheets',
-               '      this.effectDirector = null;\n    });\n    this.ambientFx = new AmbientFX(this, {\n      reducedMotion: typeof window !== "undefined" && Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches)\n    });\n    this.ambientFx.applyStageAtmosphere(this.stageNumber || 1);\n    this.events.once("shutdown", () => { this.ambientFx?.destroy(); this.ambientFx = null; });\n    // Uploaded 3×3 plant/monster sheets','AmbientFX lifecycle');
+               '      this.effectDirector = null;\n    });\n    this.ambientFx = new AmbientFX(this, {\n      reducedMotion: typeof window !== "undefined" && Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches)\n    });\n    this.ambientFx.applyStageAtmosphere(this.stageNumber);\n    this.events.once("shutdown", () => { this.ambientFx?.destroy(); this.ambientFx = null; });\n    // Uploaded 3×3 plant/monster sheets','AmbientFX lifecycle');
           once('      monster.view.setPosition(position.x, position.y);',
                '      monster.view.setPosition(position.x, position.y);\n      this.ambientFx?.spawnFootstepDust(monster, position.x, position.y, delta);','monster footstep dust');
           once('    this.showWaveAnnouncement(this.wave);',
