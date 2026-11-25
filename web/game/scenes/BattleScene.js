@@ -1572,14 +1572,20 @@ export default class BattleScene extends Scene {
     boss.hp = applyHitPointsDamage(boss.hp, amount).hp;
     if (boss.sprite?.active) {
       const sprite = boss.sprite;
-      const wasPlaying = Boolean(sprite.anims?.isPlaying);
-      if (wasPlaying) sprite.anims.pause();
+      if (boss.hitStopTimer) {
+        boss.hitStopTimer.remove(false);
+      } else {
+        boss.hitStopWasPlaying = Boolean(sprite.anims?.isPlaying);
+        if (boss.hitStopWasPlaying) sprite.anims.pause();
+      }
       sprite.setTintFill?.(0xffffff);
-      this.time.delayedCall(80, () => {
+      boss.hitStopTimer = this.time.delayedCall(80, () => {
         if (!sprite.active) return;
         sprite.clearTint?.();
         sprite.setTint?.(0xffc078);
-        if (wasPlaying && boss.alive && sprite.anims?.isPaused) sprite.anims.resume();
+        if (boss.hitStopWasPlaying && boss.alive && sprite.anims?.isPaused) sprite.anims.resume();
+        boss.hitStopWasPlaying = false;
+        boss.hitStopTimer = null;
         this.time.delayedCall(110, () => {
           if (sprite.active) sprite.clearTint?.();
         });
@@ -4939,13 +4945,15 @@ export default class BattleScene extends Scene {
 
     // Keep the monster artwork unchanged. A restrained projectile-colored
     // glow traces only its silhouette; recoil and squash are reduced by half.
-    this.applyMonsterHitStop(monster, 80);
     const sprite = monster.hyenaSprite;
     const hitColor = getProjectileVFXProfile(plantType)?.tint ?? 0x9bdc72;
     const reaction = getMonsterReactionProfile(monster.kind);
     if (sprite?.active || monster.studioRig?.root?.active) {
       monster.hitAnimUntil = this.time.now + reaction.hitDurationMs;
       this.playHyenaAnimation(monster, monster.studioRig ? "hyena-hit" : "hyena-idle", true);
+      // Pause after switching to the impact clip so the new first-hit pose,
+      // not the previous idle frame, is what gets held for 80ms.
+      this.applyMonsterHitStop(monster, 80);
 
       if (sprite?.active) {
         if (monster.hitGlowEffect && sprite.postFX?.remove) {
