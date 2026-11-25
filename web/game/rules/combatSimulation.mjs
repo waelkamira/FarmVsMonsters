@@ -261,7 +261,7 @@ export function resolveBiteAttack({ cooldownMs, deltaMs, intervalMs } = {}) {
   });
 }
 
-export function resolveDustSkitterMotionStep({
+export function resolveMonsterMovementEffectsStep({
   isJumping,
   jumpCooldownMs,
   jumpElapsedMs,
@@ -288,7 +288,7 @@ export function resolveDustSkitterMotionStep({
     (enableJump && (jumpSpeedMultiplier <= 0 || visualScale < 0)) ||
     burstDurationMs < 0 || burstSpeedMultiplier <= 0 ||
     (isJumping && (!Number.isFinite(jumpDurationMs) || jumpDurationMs <= 0))
-  ) throw new RangeError("INVALID_DUST_SKITTER_STEP");
+  ) throw new RangeError("INVALID_MONSTER_MOVEMENT_EFFECTS_STEP");
 
   let jumping = isJumping;
   let jumpElapsed = jumpElapsedMs;
@@ -308,7 +308,7 @@ export function resolveDustSkitterMotionStep({
     jumpCooldown = advanceCooldown(jumpCooldown, deltaMs);
     if (!jumping && jumpCooldown <= 0) {
       if (!Number.isFinite(nextJumpDurationMs) || nextJumpDurationMs <= 0) {
-        throw new RangeError("MISSING_DUST_SKITTER_JUMP_DURATION");
+        throw new RangeError("MISSING_MONSTER_JUMP_DURATION");
       }
       jumping = true;
       jumpElapsed = 0;
@@ -325,7 +325,7 @@ export function resolveDustSkitterMotionStep({
         jumping = false;
         jumpElapsed = 0;
         if (!Number.isFinite(nextJumpResetCooldownMs) || nextJumpResetCooldownMs < 0) {
-          throw new RangeError("MISSING_DUST_SKITTER_JUMP_RESET");
+          throw new RangeError("MISSING_MONSTER_JUMP_RESET");
         }
         jumpCooldown = nextJumpResetCooldownMs;
         jumpLanded = true;
@@ -339,7 +339,7 @@ export function resolveDustSkitterMotionStep({
   let burstStarted = false;
   if (burstCooldown <= 0 && burstRemaining <= 0) {
     if (!Number.isFinite(nextBurstCooldownMs) || nextBurstCooldownMs < 0) {
-      throw new RangeError("MISSING_DUST_SKITTER_BURST_RESET");
+      throw new RangeError("MISSING_MONSTER_BURST_RESET");
     }
     burstRemaining = burstDurationMs;
     burstCooldown = nextBurstCooldownMs;
@@ -366,22 +366,12 @@ export function resolveDustSkitterMotionStep({
 }
 
 export function resolveMonsterArchetype(wave, spawnIndex) {
-  if (
-    !Number.isInteger(wave) || wave < 1 || wave > PHASE_ONE_WAVE_SIZES.length ||
-    !Number.isInteger(spawnIndex) || spawnIndex < 0 ||
-    spawnIndex >= PHASE_ONE_WAVE_SIZES.reduce((sum, count) => sum + count, 0)
-  ) throw new RangeError("INVALID_MONSTER_SPAWN_INDEX");
-
-  // Stage 1 introduces faster scouts in waves 3–4, then mixes scouts,
-  // armoured Stonehides and later Alpha Brutes into the final encounter.
-  if (wave <= 2) return "cave-brute";
-  if (wave === 3 || wave === 4) {
-    return spawnIndex === 1 || spawnIndex === 4 ? "dust-skitter" : "cave-brute";
+  if (!Number.isInteger(wave) || wave < 1 || wave > PHASE_ONE_WAVE_SIZES.length ||
+      !Number.isInteger(spawnIndex) || spawnIndex < 0 ||
+      spawnIndex >= PHASE_ONE_WAVE_SIZES.reduce((sum, count) => sum + count, 0)) {
+    throw new RangeError("INVALID_MONSTER_SPAWN_INDEX");
   }
-  if ((spawnIndex + 1) % 10 === 0) return "alpha-brute";
-  if ((spawnIndex + 1) % 5 === 0) return "stonehide";
-  if (spawnIndex % 3 === 1) return "dust-skitter";
-  return "cave-brute";
+  return "monster-01";
 }
 
 export function resolveWaveSpawnStep({

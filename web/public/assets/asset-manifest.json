@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "generatedAt": "2026-11-25T15:04:00.613Z",
-  "assetCount": 91,
-  "totalBytes": 27745203,
+  "assetCount": 77,
+  "totalBytes": 19812148,
   "groups": {
     "audio": [
       {
@@ -180,80 +180,6 @@
         "key": "characters-monsters-01-01",
         "url": "/assets/characters/monsters/01/01.png",
         "type": "image"
-      },
-      {
-        "key": "characters-monsters-hyena-frozen-hyena-level-1",
-        "url": "/assets/characters/monsters/hyena/frozen-hyena-level-1.png",
-        "type": "image"
-      },
-      {
-        "key": "characters-monsters-hyena-frozen-hyena-level-2",
-        "url": "/assets/characters/monsters/hyena/frozen-hyena-level-2.png",
-        "type": "image"
-      },
-      {
-        "key": "hyena-bite",
-        "url": "/assets/characters/monsters/hyena/hyena-bite.png",
-        "type": "spritesheet",
-        "frameConfig": {
-          "frameWidth": 360,
-          "frameHeight": 447
-        }
-      },
-      {
-        "key": "hyena-death",
-        "url": "/assets/characters/monsters/hyena/hyena-death.png",
-        "type": "spritesheet",
-        "frameConfig": {
-          "frameWidth": 360,
-          "frameHeight": 447
-        }
-      },
-      {
-        "key": "hyena-hit",
-        "url": "/assets/characters/monsters/hyena/hyena-hit.png",
-        "type": "spritesheet",
-        "frameConfig": {
-          "frameWidth": 360,
-          "frameHeight": 894
-        }
-      },
-      {
-        "key": "hyena-idle",
-        "url": "/assets/characters/monsters/hyena/hyena-idle.png",
-        "type": "spritesheet",
-        "frameConfig": {
-          "frameWidth": 360,
-          "frameHeight": 298
-        }
-      },
-      {
-        "key": "characters-monsters-hyena-hyena-jump",
-        "url": "/assets/characters/monsters/hyena/hyena-jump.png",
-        "type": "image"
-      },
-      {
-        "key": "characters-monsters-hyena-hyena-run",
-        "url": "/assets/characters/monsters/hyena/hyena-run.png",
-        "type": "image"
-      },
-      {
-        "key": "hyena-run",
-        "url": "/assets/characters/monsters/hyena/hyena-run1.png",
-        "type": "spritesheet",
-        "frameConfig": {
-          "frameWidth": 367,
-          "frameHeight": 298
-        }
-      },
-      {
-        "key": "hyena-walk",
-        "url": "/assets/characters/monsters/hyena/hyena-walk.png",
-        "type": "spritesheet",
-        "frameConfig": {
-          "frameWidth": 360,
-          "frameHeight": 298
-        }
       }
     ],
     "items/currency": [
@@ -381,28 +307,8 @@
     ],
     "monster-icons": [
       {
-        "key": "monster-icons-alpha-brute",
-        "url": "/assets/monster-icons/alpha-brute.svg",
-        "type": "svg"
-      },
-      {
-        "key": "monster-icons-cave-brute",
-        "url": "/assets/monster-icons/cave-brute.svg",
-        "type": "svg"
-      },
-      {
         "key": "monster-icons-dragon",
         "url": "/assets/monster-icons/dragon.svg",
-        "type": "svg"
-      },
-      {
-        "key": "monster-icons-dust-skitter",
-        "url": "/assets/monster-icons/dust-skitter.svg",
-        "type": "svg"
-      },
-      {
-        "key": "monster-icons-stonehide",
-        "url": "/assets/monster-icons/stonehide.svg",
         "type": "svg"
       }
     ],
@@ -545,49 +451,11 @@
         "key": "corn-monster",
         "url": "/assets/plants/corn_monster.png",
         "type": "spritesheet",
-        "width": 3600,
-        "height": 150,
         "frameConfig": {
           "frameWidth": 150,
           "frameHeight": 150,
           "margin": 0,
           "spacing": 0
-        },
-        "animationProfile": {
-          "idle": {
-            "startFrame": 0,
-            "endFrame": 7,
-            "fps": 8,
-            "loop": true
-          },
-          "move": {
-            "startFrame": 0,
-            "endFrame": 7,
-            "fps": 8,
-            "loop": true
-          },
-          "attack": {
-            "startFrame": 8,
-            "endFrame": 17,
-            "fps": 12,
-            "loop": false
-          }
-        },
-        "atlasMetadataPath": "/assets/plants/corn_monster.json",
-        "sourceFormat": "phaser-atlas",
-        "atlasClips": {
-          "idle": {
-            "startFrame": 0,
-            "endFrame": 7
-          },
-          "attack": {
-            "startFrame": 8,
-            "endFrame": 17
-          },
-          "hurt": {
-            "startFrame": 18,
-            "endFrame": 23
-          }
         }
       }
     ],
@@ -878,130 +746,6 @@
       "height": 806
     },
     {
-      "key": "characters-monsters-hyena-frozen-hyena-level-1",
-      "url": "/assets/characters/monsters/hyena/frozen-hyena-level-1.png",
-      "type": "image",
-      "group": "characters/monsters",
-      "bytes": 1308722,
-      "sha256": "60e3762a36d5ff36635132357d7ab2b63f3c097c021bf0fb631a35dd87c848a8",
-      "width": 1024,
-      "height": 1024
-    },
-    {
-      "key": "characters-monsters-hyena-frozen-hyena-level-2",
-      "url": "/assets/characters/monsters/hyena/frozen-hyena-level-2.png",
-      "type": "image",
-      "group": "characters/monsters",
-      "bytes": 1818631,
-      "sha256": "85c12d901577ce91c1586d2d5b534f71ee551ec096b5e03523de82c4d0d20050",
-      "width": 1416,
-      "height": 1119
-    },
-    {
-      "key": "hyena-bite",
-      "url": "/assets/characters/monsters/hyena/hyena-bite.png",
-      "type": "spritesheet",
-      "group": "characters/monsters",
-      "bytes": 647180,
-      "sha256": "e57b6fb5a8d74ad1f1766a27d329b9ff237749080396fbede6142722b0a50eb5",
-      "frameConfig": {
-        "frameWidth": 360,
-        "frameHeight": 447
-      },
-      "width": 1080,
-      "height": 894
-    },
-    {
-      "key": "hyena-death",
-      "url": "/assets/characters/monsters/hyena/hyena-death.png",
-      "type": "spritesheet",
-      "group": "characters/monsters",
-      "bytes": 511996,
-      "sha256": "f4d6ee56bb344a9debfca2e06342b8b36c56635c753dcfee48b6175c8e0fe829",
-      "frameConfig": {
-        "frameWidth": 360,
-        "frameHeight": 447
-      },
-      "width": 1080,
-      "height": 894
-    },
-    {
-      "key": "hyena-hit",
-      "url": "/assets/characters/monsters/hyena/hyena-hit.png",
-      "type": "spritesheet",
-      "group": "characters/monsters",
-      "bytes": 263467,
-      "sha256": "a012804ecf013feec943bbf5ab69427078ca0ecfc57bacc68ac7a6c94645da9f",
-      "frameConfig": {
-        "frameWidth": 360,
-        "frameHeight": 894
-      },
-      "width": 1080,
-      "height": 894
-    },
-    {
-      "key": "hyena-idle",
-      "url": "/assets/characters/monsters/hyena/hyena-idle.png",
-      "type": "spritesheet",
-      "group": "characters/monsters",
-      "bytes": 340460,
-      "sha256": "2184287354f1968efc0495fe74ec32699d360fcc78b752cc7698bfc85c635859",
-      "frameConfig": {
-        "frameWidth": 360,
-        "frameHeight": 298
-      },
-      "width": 1080,
-      "height": 298
-    },
-    {
-      "key": "characters-monsters-hyena-hyena-jump",
-      "url": "/assets/characters/monsters/hyena/hyena-jump.png",
-      "type": "image",
-      "group": "characters/monsters",
-      "bytes": 507809,
-      "sha256": "b17e339f1ee106a1cd091f81f28f9985a93e6bfecb7013f94a6f5a4e24ae3eff",
-      "width": 1080,
-      "height": 894
-    },
-    {
-      "key": "characters-monsters-hyena-hyena-run",
-      "url": "/assets/characters/monsters/hyena/hyena-run.png",
-      "type": "image",
-      "group": "characters/monsters",
-      "bytes": 981151,
-      "sha256": "8dcffb491c0bc50d4de4393634127e92903d74b2bc35f2a6ff48ef255135d5c1",
-      "width": 1080,
-      "height": 889
-    },
-    {
-      "key": "hyena-run",
-      "url": "/assets/characters/monsters/hyena/hyena-run1.png",
-      "type": "spritesheet",
-      "group": "characters/monsters",
-      "bytes": 702079,
-      "sha256": "f3ff3e2d901eaf039e286e51cf9c621b29a168ea2d8a81950e98b40d666beaee",
-      "frameConfig": {
-        "frameWidth": 367,
-        "frameHeight": 298
-      },
-      "width": 1101,
-      "height": 894
-    },
-    {
-      "key": "hyena-walk",
-      "url": "/assets/characters/monsters/hyena/hyena-walk.png",
-      "type": "spritesheet",
-      "group": "characters/monsters",
-      "bytes": 848741,
-      "sha256": "d0ffaca6157221b563c49fea45fa93a5f44927a45f64e3dbf799f1a8ba0091b0",
-      "frameConfig": {
-        "frameWidth": 360,
-        "frameHeight": 298
-      },
-      "width": 1080,
-      "height": 894
-    },
-    {
       "key": "items-currency-gold-coin-sprite",
       "url": "/assets/items/currency/gold-coin-sprite.png",
       "type": "image",
@@ -1236,52 +980,12 @@
       "height": 203
     },
     {
-      "key": "monster-icons-alpha-brute",
-      "url": "/assets/monster-icons/alpha-brute.svg",
-      "type": "svg",
-      "group": "monster-icons",
-      "bytes": 730,
-      "sha256": "818db13ab81902fbf01c4dc0d50ce16fed147885c7f10cae9fb438e0a3898b39",
-      "width": 64,
-      "height": 64
-    },
-    {
-      "key": "monster-icons-cave-brute",
-      "url": "/assets/monster-icons/cave-brute.svg",
-      "type": "svg",
-      "group": "monster-icons",
-      "bytes": 643,
-      "sha256": "fd9237f788afc015253766d2ac15db1f386395d9c773ff15491e3d3223915d05",
-      "width": 64,
-      "height": 64
-    },
-    {
       "key": "monster-icons-dragon",
       "url": "/assets/monster-icons/dragon.svg",
       "type": "svg",
       "group": "monster-icons",
       "bytes": 742,
       "sha256": "dd5adab338723f7fd8f1677a3dfd86a6d9dd0d29dcda0178971257a8056782bb",
-      "width": 64,
-      "height": 64
-    },
-    {
-      "key": "monster-icons-dust-skitter",
-      "url": "/assets/monster-icons/dust-skitter.svg",
-      "type": "svg",
-      "group": "monster-icons",
-      "bytes": 700,
-      "sha256": "f9869a546c2361bd9b77bc31afdd9710dda6e594057151681b83d243e6c3ae2b",
-      "width": 64,
-      "height": 64
-    },
-    {
-      "key": "monster-icons-stonehide",
-      "url": "/assets/monster-icons/stonehide.svg",
-      "type": "svg",
-      "group": "monster-icons",
-      "bytes": 746,
-      "sha256": "f6c87077f8af09d9fb5da4bc9e03e1e5c26f42358200639f20532f08f459de00",
       "width": 64,
       "height": 64
     },

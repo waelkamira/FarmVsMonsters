@@ -1403,7 +1403,7 @@ input[type=range] {accent-color:var(--ui-lime);}
     linear-gradient(180deg,rgba(31,135,190,.08),rgba(19,90,125,.02) 38%,rgba(13,76,46,.12) 75%,rgba(13,70,42,.3)),
     linear-gradient(90deg,rgba(10,45,62,.12),transparent 32%,transparent 72%,rgba(10,45,62,.1));
 }
-.battlefield-farmer,.battlefield-hyena,.battlefield-plant{
+.battlefield-farmer,.battlefield-plant{
   position:absolute;
   z-index:2;
   display:block;
@@ -1428,27 +1428,14 @@ input[type=range] {accent-color:var(--ui-lime);}
   max-width:none;
   object-fit:fill;
 }
-.battlefield-hyena{
-  width:clamp(104px,12vw,166px);
-  aspect-ratio:360 / 298;
-  height:auto;
-  filter:drop-shadow(0 4px 3px rgba(17,49,38,.18));
-}
-.battlefield-hyena img{
-  position:absolute;
-  top:0;
-  display:block;
-  width:400%;
-  height:100%;
-  max-width:none;
-  object-fit:fill;
-}
-.battlefield-hyena-one{right:19%;bottom:13%}
-.battlefield-hyena-one img{left:0}
-.battlefield-hyena-two{right:7%;bottom:24%;transform:scale(.88)}
-.battlefield-hyena-two img{left:-100%}
-.battlefield-hyena-three{right:35%;bottom:5%;transform:scale(.78)}
-.battlefield-hyena-three img{left:-200%}
+
+
+
+
+
+
+
+
 .battlefield-plant{
   width:clamp(58px,7vw,98px);
   aspect-ratio:1;
@@ -1495,10 +1482,10 @@ input[type=range] {accent-color:var(--ui-lime);}
   .world-hero{top:16%;left:58%;width:64vw;padding:12px 10px;border-radius:22px}
   .world-title{font-size:clamp(32px,8vw,54px)}
   .battlefield-farmer{left:13%;bottom:10%;width:clamp(116px,27vw,166px)}
-  .battlefield-hyena{width:clamp(78px,19vw,120px)}
-  .battlefield-hyena-one{right:14%;bottom:14%}
-  .battlefield-hyena-two{right:1%;bottom:26%}
-  .battlefield-hyena-three{right:37%;bottom:5%}
+  
+  
+  
+  
   .battlefield-plant-radish{left:4%;bottom:8%}
   .battlefield-plant-mushroom{left:49%;bottom:4%}
   .battlefield-plant-radish-small{right:1%;bottom:6%}
@@ -1507,7 +1494,7 @@ input[type=range] {accent-color:var(--ui-lime);}
   .world-hero{left:60%;top:18%;width:61vw}
   .world-story-badge{font-size:8px}
   .battlefield-farmer{left:10%;width:108px}
-  .battlefield-hyena-three{display:none}
+  
 }
 
 
@@ -1815,9 +1802,9 @@ select option {
  .farm-menu-option small{font-size:8px}
  .farm-menu-footer{font-size:8px;padding-top:8px}
  .battlefield-farmer{left:4%;bottom:auto;top:16%;width:clamp(95px,25vw,145px)}
- .battlefield-hyena-one{right:5%;bottom:auto;top:17%}
- .battlefield-hyena-two{right:25%;bottom:auto;top:7%}
- .battlefield-hyena-three{display:none}
+ 
+ 
+ 
  .battlefield-plant-radish{left:5%;bottom:48%}
  .battlefield-plant-mushroom{left:48%;bottom:46%}
  .battlefield-plant-radish-small{right:4%;bottom:48%}

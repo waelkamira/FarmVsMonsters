@@ -4,7 +4,7 @@ import { createStudioMonsterProfile, resolveStudioMonsterRuntimeProfile, selectW
 
 test("creates a safe default monster profile with custom spawning disabled", () => {
   const profile = createStudioMonsterProfile();
-  assert.equal(profile.baseArchetype, "cave-brute");
+  assert.equal(profile.baseArchetype, "monster-01");
   assert.equal(profile.spawnWeight, 0);
   assert.equal(profile.firstWave, 1);
 });

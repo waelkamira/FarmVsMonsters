@@ -36,7 +36,7 @@ test("skeletal attack and hurt hitboxes participate in battle collision", () => 
 
 test("legacy Sprite Sheet rendering remains the fallback when a rig cannot render", () => {
   assert.ok(battleScene.includes("if (!rigRendered && this.textures.exists(textureKey))"));
-  assert.ok(battleScene.includes("const hyenaSprite = studioRig ? null : customMonsterTexture"));
+  assert.ok(battleScene.includes("const monster01Sprite = studioRig ? null : customMonsterTexture"));
   assert.ok(battleScene.includes("preserving Sprite Sheet fallback"));
 });
 

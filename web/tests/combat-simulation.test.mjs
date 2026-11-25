@@ -17,7 +17,7 @@ import {
   selectDragonFireballTarget,
   advanceCooldown,
   resolveBiteAttack,
-  resolveDustSkitterMotionStep,
+  resolveMonsterMovementEffectsStep,
   resolveWaveSpawnStep,
   resolveMonsterArchetype
 } from "../game/rules/combatSimulation.mjs";
@@ -156,7 +156,7 @@ test("Phaser delegates monster and projectile lane movement to the simulation ke
   assert.match(scene, /boss\.shotCooldown = advanceCooldown\(/);
   assert.match(scene, /boss\.attackCooldown = advanceCooldown\(/);
   assert.match(scene, /plant\.cooldown = advanceCooldown\(/);
-  assert.match(scene, /resolveDustSkitterMotionStep\(/);
+  assert.match(scene, /resolveMonsterMovementEffectsStep\(/);
   assert.match(scene, /resolveBiteAttack\(/);
 });
 
@@ -250,8 +250,8 @@ test("cooldown advances by elapsed milliseconds and bite attacks reset to the co
   assert.throws(() => advanceCooldown(100, -1), /INVALID_COOLDOWN_STEP/);
 });
 
-test("Dust Skitter jump starts, advances visually, and lands without changing lane position", () => {
-  const started = resolveDustSkitterMotionStep({
+test("Monster 01 jump starts, advances visually, and lands without changing lane position", () => {
+  const started = resolveMonsterMovementEffectsStep({
     isJumping: false,
     jumpCooldownMs: 20,
     jumpElapsedMs: 0,
@@ -274,7 +274,7 @@ test("Dust Skitter jump starts, advances visually, and lands without changing la
   assert.ok(started.jumpOffset < 0);
   assert.equal(started.movementMultiplier, 1.12);
 
-  const landed = resolveDustSkitterMotionStep({
+  const landed = resolveMonsterMovementEffectsStep({
     isJumping: true,
     jumpCooldownMs: 800,
     jumpElapsedMs: 480,
@@ -298,8 +298,8 @@ test("Dust Skitter jump starts, advances visually, and lands without changing la
   assert.equal(landed.jumpCooldownMs, 2400);
 });
 
-test("Dust Skitter burst begins and consumes its first frame exactly as the live scene did", () => {
-  const step = resolveDustSkitterMotionStep({
+test("Monster 01 burst begins and consumes its first frame exactly as the live scene did", () => {
+  const step = resolveMonsterMovementEffectsStep({
     isJumping: false,
     jumpCooldownMs: 1000,
     jumpElapsedMs: 0,
@@ -322,8 +322,8 @@ test("Dust Skitter burst begins and consumes its first frame exactly as the live
   assert.equal(step.movementMultiplier, 1.65);
 });
 
-test("Dust Skitter combines jump and burst movement multipliers", () => {
-  const step = resolveDustSkitterMotionStep({
+test("Monster 01 combines jump and burst movement multipliers", () => {
+  const step = resolveMonsterMovementEffectsStep({
     isJumping: true,
     jumpCooldownMs: 900,
     jumpElapsedMs: 100,
@@ -415,10 +415,10 @@ test("phase-one wave scheduler spawns at most one monster per update and stops a
 });
 
 test("spawn composition stays fixed and validates only campaign-wide spawn indices", () => {
-  assert.equal(resolveMonsterArchetype(1, 0), "cave-brute");
-  assert.equal(resolveMonsterArchetype(3, 1), "dust-skitter");
-  assert.equal(resolveMonsterArchetype(5, 4), "stonehide");
-  assert.equal(resolveMonsterArchetype(5, 1), "dust-skitter");
+  assert.equal(resolveMonsterArchetype(1, 0), "monster-01");
+  assert.equal(resolveMonsterArchetype(3, 1), "monster-01");
+  assert.equal(resolveMonsterArchetype(5, 4), "monster-01");
+  assert.equal(resolveMonsterArchetype(5, 1), "monster-01");
   assert.throws(() => resolveMonsterArchetype(1, 30), /INVALID_MONSTER_SPAWN_INDEX/);
 });
 
@@ -442,7 +442,7 @@ test("monster freeze timer immobilizes for 2600ms and then thaws", () => {
 test("Phaser registers Snow Thrower assets and freezes monsters without HP damage", () => {
   assert.match(scene, /snow-thrower-level-1/);
   assert.match(scene, /Snow-thrower-bomb-level-1\.png/);
-  assert.match(scene, /frozen-hyena-level-1/);
+  assert.match(scene, /characters\/monsters\/01\/01\.png/);
   assert.match(scene, /this\.freezeMonster\(hit\)/);
   assert.match(scene, /monster\.freezeStage = Math\.min\(5, \(monster\.freezeStage \|\| 0\) \+ 1\)/);
   assert.match(scene, /restoreMonsterAfterFreeze/);

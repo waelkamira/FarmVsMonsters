@@ -44,7 +44,7 @@ test("dragon boss impact pauses only its sprite for 80ms and restores animation"
 
 test("monster hitstop begins after the impact animation is selected", async () => {
   const source = await readFile(new URL("../game/scenes/BattleScene.js", import.meta.url), "utf8");
-  const impactClip = source.indexOf('this.playHyenaAnimation(monster, monster.studioRig ? "hyena-hit"');
+  const impactClip = source.indexOf('this.playMonster01Animation(monster, monster.studioRig ? "monster-01-hit"');
   const hitstop = source.indexOf("this.applyMonsterHitStop(monster, 80)", impactClip);
   assert.ok(impactClip >= 0);
   assert.ok(hitstop > impactClip);

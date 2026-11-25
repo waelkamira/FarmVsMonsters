@@ -8,7 +8,7 @@ func _initialize() -> void:
 	_test_monster_stats_and_wave_pacing()
 	_test_plant_transactions()
 	_test_lane_and_target_selection()
-	_test_cooldowns_and_dust_skitter()
+	_test_cooldowns_and_movement_effects()
 	_test_monster_freeze_contract()
 	_test_farmer_planting_route_geometry()
 	print("Godot Stage 1 combat-core smoke tests passed.")
@@ -39,22 +39,14 @@ func _test_contract_and_plant_costs() -> void:
 	assert(is_equal_approx(Rules.monster_spawn_interval_ms(5), 4600.0))
 
 func _test_monster_stats_and_wave_pacing() -> void:
-	var brute: Dictionary = Rules.monster_combat_stats("cave-brute", 1)
-	assert(brute.hp == 175 and is_equal_approx(brute.speed, 8.0))
-	assert(brute.plant_damage == 16 and brute.attack_interval_ms == 1150.0)
-	var skitter: Dictionary = Rules.monster_combat_stats("dust-skitter", 1)
-	assert(skitter.hp == 36 and is_equal_approx(skitter.speed, 13.6))
-	assert(skitter.burst_duration_ms == 420.0 and skitter.jump_speed_multiplier == 1.12)
-	var stonehide: Dictionary = Rules.monster_combat_stats("stonehide", 1)
-	assert(stonehide.hp == 152 and is_equal_approx(stonehide.speed, 4.96))
-	assert(is_equal_approx(Rules.stonehide_incoming_damage_multiplier(false), 0.7))
-	assert(is_equal_approx(Rules.stonehide_incoming_damage_multiplier(true), 0.385))
-	var alpha: Dictionary = Rules.monster_combat_stats("alpha-brute", 1)
-	assert(alpha.hp == 350 and is_equal_approx(alpha.speed, 3.84))
-	assert(Rules.monster_archetype(1, 1) == "cave-brute")
-	assert(Rules.monster_archetype(3, 1) == "dust-skitter")
-	assert(Rules.monster_archetype(5, 4) == "stonehide")
-	assert(Rules.monster_archetype(5, 9) == "alpha-brute")
+	var monster: Dictionary = Rules.monster_combat_stats("monster-01", 1)
+	assert(monster.hp == 175 and is_equal_approx(monster.speed, 8.0))
+	assert(monster.plant_damage == 16 and monster.attack_interval_ms == 1150.0)
+	assert(is_equal_approx(Rules.monster_incoming_damage_multiplier(), 1.0))
+	assert(Rules.monster_archetype(1, 1) == "monster-01")
+	assert(Rules.monster_archetype(3, 1) == "monster-01")
+	assert(Rules.monster_archetype(5, 4) == "monster-01")
+	assert(Rules.monster_archetype(5, 9) == "monster-01")
 	var spawn: Dictionary = Rules.resolve_wave_spawn_step({
 		"wave": 2, "wave_size": 5, "spawned_this_wave": 0,
 		"intermission_ms": 0.0, "spawn_timer_ms": 100.0, "delta_ms": 120.0
@@ -125,16 +117,16 @@ func _test_monster_freeze_contract() -> void:
 	assert(Rules.select_freeze_target([small_target, large_target], 1, 16.0, 1.5) == large_target)
 	assert(Rules.select_freeze_target([small_target, large_target], 2, 10.0, 20.0) == null)
 	var battle = LiveBattle.new()
-	var frozen_sprite := battle._make_monster_sprite("cave-brute", 0.22)
+	var frozen_sprite := battle._make_monster_sprite("monster-01", 0.22)
 	assert(frozen_sprite != null and frozen_sprite.sprite_frames.has_animation("frozen"))
 	var frozen_monster := {"alive": true, "freeze_remaining_ms": 0.0, "braced": true, "sprite": frozen_sprite, "base_tint": Color.WHITE}
 	assert(battle._apply_monster_freeze(frozen_monster))
 	assert(frozen_sprite.animation == "frozen")
-	battle._set_monster_freeze_visual(frozen_sprite, "cave-brute", false)
+	battle._set_monster_freeze_visual(frozen_sprite, "monster-01", false)
 	assert(frozen_sprite.animation == "walk")
-	battle._set_monster_freeze_visual(frozen_sprite, "dust-skitter", true)
+	battle._set_monster_freeze_visual(frozen_sprite, "monster-01", true)
 	assert(frozen_sprite.animation == "frozen")
-	battle._set_monster_freeze_visual(frozen_sprite, "dust-skitter", false)
+	battle._set_monster_freeze_visual(frozen_sprite, "monster-01", false)
 	assert(frozen_sprite.animation == "run")
 	frozen_sprite.free()
 	assert(is_equal_approx(battle._plant_frame_width("snow-thrower"), 360.0))
@@ -175,7 +167,7 @@ func _test_farmer_planting_route_geometry() -> void:
 func _test_cooldowns_and_dust_skitter() -> void:
 	var bite: Dictionary = Rules.resolve_bite_attack(40.0, 50.0, 900.0)
 	assert(bite.should_attack and bite.cooldown_ms == 900.0)
-	var jump: Dictionary = Rules.resolve_dust_skitter_motion_step({
+	var jump: Dictionary = Rules.resolve_monster_movement_effects_step({
 		"is_jumping": false, "jump_cooldown_ms": 20.0, "jump_elapsed_ms": 0.0,
 		"jump_duration_ms": 500.0, "delta_ms": 40.0, "jump_speed_multiplier": 1.12,
 		"jump_visual_height": 34.0, "visual_scale": 0.68,
@@ -187,7 +179,7 @@ func _test_cooldowns_and_dust_skitter() -> void:
 	assert(jump.is_jumping and jump.jump_started)
 	assert(jump.jump_elapsed_ms == 40.0 and jump.jump_offset < 0.0)
 	assert(is_equal_approx(jump.movement_multiplier, 1.12))
-	var burst: Dictionary = Rules.resolve_dust_skitter_motion_step({
+	var burst: Dictionary = Rules.resolve_monster_movement_effects_step({
 		"is_jumping": false, "jump_cooldown_ms": 1000.0, "jump_elapsed_ms": 0.0,
 		"jump_duration_ms": 500.0, "delta_ms": 20.0, "jump_speed_multiplier": 1.12,
 		"jump_visual_height": 34.0, "visual_scale": 0.68,
@@ -198,7 +190,7 @@ func _test_cooldowns_and_dust_skitter() -> void:
 	})
 	assert(burst.burst_started and burst.burst_remaining_ms == 400.0)
 	assert(burst.burst_cooldown_ms == 3300.0)
-	var burst_only: Dictionary = Rules.resolve_dust_skitter_motion_step({
+	var burst_only: Dictionary = Rules.resolve_monster_movement_effects_step({
 		"is_jumping": false, "enable_jump": false, "delta_ms": 50.0,
 		"burst_cooldown_ms": 10.0, "burst_remaining_ms": 0.0,
 		"burst_duration_ms": 420.0, "burst_speed_multiplier": 1.65,

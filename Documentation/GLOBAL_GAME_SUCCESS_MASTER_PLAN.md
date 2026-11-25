@@ -140,7 +140,6 @@ These are approved constraints unless the user explicitly changes them.
 - Main target first: Windows desktop browser. Android, iOS, and packaged desktop come later.
 - Main branch: `main`.
 - The art direction is 2D hand-drawn cartoon with original characters. The old 3D direction is superseded.
-- The farmer and hyena sprite sheets are user-created assets. Do not crop, recolor, resize, or replace them without a clear request.
 
 ### Battlefield and combat
 - Battlefield grid: 5 lanes × 8 columns (40 cells), aligned to the approved perspective battlefield art. Cells are not assumed to be perfectly square.
@@ -151,15 +150,12 @@ These are approved constraints unless the user explicitly changes them.
 - The farmer must not fight while a living defensive plant remains. Emergency club combat is available only after the last defender is destroyed; planting a new defender ends emergency combat.
 - Monster kills award Coins, not energy.
 - Energy is a separate resource used for planting.
-- Hyenas stop at a living plant and eat it. They must not pass through or stand on top of the plant while eating. Jumping over plants is a possible future mechanic for a specifically designed later enemy/level, not part of the current behavior.
 - Do not add shadows beneath any character.
 - No permanent procedural fallback characters in place of missing authored monster artwork. Missing critical art should produce a clear diagnostic/loading state, not a different character.
 - **Campaign-stage enemy-count progression:** Stage 1 targets 30 ordinary monsters/followers total; Stage 2 targets 31; Stage 3 targets 32; each subsequent stage adds one ordinary monster (Stage N = 29 + N). These are totals across all waves in a stage, not per-wave counts. Dragon bosses are tracked separately and are not included in the ordinary-monster total.
 - The current prototype's 100-monster schedule is obsolete as a design target and must be replaced. Stage 1's exact per-wave distribution of its 30 ordinary monsters will be tuned through playtesting. Keep the opening forgiving and ensure the player has enough time/resources to learn and defend.
 - Difficulty must rise gradually across waves and stages. Early encounters use fewer, slower, less durable enemies, generous recovery windows, and clear teaching moments. Add pressure through carefully introduced enemy combinations and timing only after the player has learned the relevant response. Avoid sudden difficulty spikes and immediate unavoidable losses.
-- At the start of the final wave of Stage 1 (Wave 5 in the current five-wave structure), the small dragon begins appearing while a small number of ordinary monsters/hyenas may still remain. The dragon moves behind the battlefield, shifts left and right, and launches clearly telegraphed fireballs. The ordinary followers continue fighting; after they are defeated, the dragon remains as the final boss.
 - Once the dragon is present and within attack range, the farmer automatically uses the slingshot to throw stones at it. This automatic ranged attack is dragon-phase-only; do not use the slingshot before the dragon appears. The user will supply the dragon character sheet later; do not invent or substitute final dragon artwork.
-- Stage 1 uses a normal small dragon, not a dragon on a wooden cart. The cart-and-two-hyena presentation is reserved for a later, stronger dragon stage.
 - Victory only after all required ordinary followers and the dragon are defeated. Defeat occurs when farmhouse health reaches zero.
 - Restart must reset all battle entities, timers, counters, projectiles, input locks, audio state, and result flags.
 
@@ -181,13 +177,8 @@ After the player wins a stage:
 **Economy distinction:** Stage earnings are awarded according to the approved reward rules. The cave is the visual treasury/presentation of the player's accumulated wealth; it must not accidentally count the same reward twice. Decide and document whether the cave total mirrors the player's spendable Coins or represents a separate non-spendable lifetime treasure statistic before implementing the economy connection. Do not silently merge these concepts.
 
 ### Current art and behavior priorities
-- Preserve user-authored farmer and hyena sprite sheets and their approved direction.
 - Correct sprite frame counts, frame spacing, foot baseline, origins, scale, and depth before tuning decorative effects.
-- The recent hyena issue—sinking below ground during plant eating—must be resolved and visually verified before the battle phase is considered complete.
 - A missing/short idle sheet must be handled safely according to actual available frames; do not crash due solely to an expected count mismatch.
-- Keep the previously approved fix that prevents a procedural monster fallback from replacing hyena art.
-- Keep the stronger hyena hit flash previously requested; do not increase character scale during eating.
-- During eating, hyena size and ground position must remain stable; its mouth/bite animation may move only as the authored frames require.
 - The monster must stop before the plant, face it, and remain at ground level. The plant should show readable eating damage/flash feedback and a matching eating sound.
 
 ---
@@ -231,8 +222,6 @@ Scope:
 3. Verify farmer movement, planting, return-to-start, foot anchor, facing, scale, animation, and input locks.
 4. Verify Radish selection, valid placement, automatic attack, projectile, health, damage, death, and cell release.
 5. Verify Energy Mushroom production, collectible appearance, collection, expiry, energy cap, and feedback.
-6. Verify hyena Idle/Walk/Run/Bite/Hit/Death sheets and transitions. Fix the eating-ground-position bug first. Keep the hyena in front/behind the correct scene objects using consistent depth sorting.
-7. Verify that hyenas stop at plants, never overlap/pass them while eating, damage the plant over time, play the eating sound, and resume movement only after the plant is destroyed.
 8. Verify monster variants and size/health/damage/speed relationships without unintended scale changes during animations.
 9. Verify emergency club combat starts only when no living defensive plant remains and stops immediately after a new defender is planted.
 10. Verify the five-wave structure with a rebalanced, forgiving enemy count and spawn pacing; do not treat 100 monsters as mandatory. Verify wave counters, home damage, and victory/defeat conditions.
@@ -251,14 +240,12 @@ Required manual play matrix:
 - Multiple plants in one lane and in different lanes.
 - Mushroom collection at full and near-full energy.
 - Last defender destroyed → emergency combat → new defender planted.
-- Hyena eating and plant destruction.
 - All monster size variants and animations.
 
 Exit gate:
 - Production build passes.
 - No blocking console/runtime errors.
 - At least three complete real-browser playthroughs are recorded (victory, defeat, restart).
-- The hyena remains grounded and never overlaps the plant while eating.
 - No critical stuck animation, broken transition, duplicate reward, or unrecoverable battle state.
 - Phase checklist is signed off in the build log.
 
@@ -282,7 +269,6 @@ Work:
 - Define the reward ledger and decide whether the cave displays spendable Coins or a separate lifetime-wealth total. Ensure exact-once reward credit and prevent duplicate deposits on replay/retry.
 - Add difficulty options only if testing demonstrates a need; keep the intended default balanced.
 - Do not add further plant types until the battlefield environment, stage composition, gameplay controls/buttons, menus, and HUD visual language have been approved. Keep the currently approved starter plant/resource setup while those foundations are finalized; later plant additions must be introduced gradually with clear tutorials and matching enemy counters.
-- Give every campaign stage its own distinctive illustrated emblem/logo that communicates its central conflict and cast (for Stage 1: farmer versus dragon, the captive wife centered behind them, small menacing hyenas, and defensive plants).
 
 Exit gate:
 - New players can explain the objective and perform the core actions without coaching.
@@ -315,7 +301,6 @@ Exit gate:
 
 Work:
 - Build a bestiary with visual silhouette, behavior, stats, telegraph, counter, reward, animation, and sound for each monster.
-- Expand beyond hyena variants into distinct archetypes, introduced gradually:
   - basic lane walker;
   - fast/light monster;
   - large/high-health monster;
@@ -325,8 +310,6 @@ Work:
   - shield/defensive monster;
   - disruptive or sneaky monster;
   - boss and boss minions.
-- Preserve the hyena as an identifiable signature monster; size variants must have corresponding stat changes and readable special traits.
-- Make special attacks telegraphed and counterable. Any future jump-over-plant ability must be introduced as a distinct mechanic with a clear warning and counter, not silently added to ordinary hyenas.
 - Bosses need multiple readable phases, attack warnings, a clear health UI, and satisfying defeat/reward sequences.
 - Develop the dragon-boss system as a distinct encounter layer: each campaign stage has its own dragon captor, silhouette, personality, sound, signature attack, boss phases, and counterplay. A dragon must threaten both the farmer and plant defenses in clearly telegraphed ways.
 - Dragon defeat is a required stage-completion condition, alongside clearing all required surviving followers. A dragon cannot be treated as background decoration or bypassed by merely surviving ordinary waves.
@@ -617,7 +600,6 @@ Do not delay quality to maximize raw content count. A smaller set of excellent, 
 ## 10. Immediate next actions from the current project state
 
 1. Inspect the current `main` branch and verify the exact state of the Phaser battle code and tests.
-2. Fix and visually verify the hyena sinking/overlap behavior while eating a plant. Preserve its authored sprite sheets, stable size, hit flash, and no-shadow rule.
 3. Verify the farmer's movement, planting, and return sequence with the latest user-edited sheets.
 4. Verify Radish defense, Mushroom energy production/collection, monster damage, wave progression, home health, and victory/defeat.
 5. Run the production build and the available automated rules tests; resolve failures that block Phase 1.
@@ -634,3 +616,4 @@ Do not delay quality to maximize raw content count. A smaller set of excellent, 
 Farm Vs Monsters is a hand-drawn 2D strategy-defense adventure. A farmer fights monster armies and a different evil dragon in each stage to rescue his wife. Every stage ends with the dragon and its required followers defeated, the wife freed, and the couple reunited before the next land and captor are introduced. Distinct territories, dragon abilities, monster factions, and plant strategies keep each rescue adventure fresh. The treasure cave turns earned stage rewards into a visible celebration of progress, while the final dragon ruler provides the campaign's definitive ending.
 
 **North star:** Every stage must make the player understand whom they are fighting, why they are fighting, what counts as victory, and whom they will rescue.
+

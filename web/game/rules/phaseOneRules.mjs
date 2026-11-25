@@ -146,7 +146,7 @@ export function unlockNextStage(_storage, _completedStage) {
 }
 
 
-export const CAMPAIGN_MONSTER_IDS = Object.freeze(["cave-brute", "dust-skitter", "stonehide", "alpha-brute"]);
+export const CAMPAIGN_MONSTER_IDS = Object.freeze(["monster-01"]);
 
 export function loadDiscoveredMonsterIds(storage) {
   const data = readCampaignProgress(storage);

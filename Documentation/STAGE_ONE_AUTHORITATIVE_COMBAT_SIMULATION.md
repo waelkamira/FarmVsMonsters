@@ -20,7 +20,6 @@ Version 1 centralizes:
 - Stage 1 wave sizes: 3, 5, 6, 7, 9 ordinary monsters;
 - starting and maximum energy;
 - radish and energy mushroom combat/economy values;
-- all four monster archetype health, speed, attack, armor, and Dust Skitter movement parameters;
 - dragon health, farmer sling damage/cadence, fireball damage and timing;
 - farmer club damage/reach, radish projectile speed/collision radius, monster scaling formulas;
 - 8 coins per ordinary monster defeat;
@@ -54,8 +53,6 @@ The shared contract and seeded PRNG are foundations, not the simulator. The PRNG
 - player action validation and energy economy;
 - monster targeting and bite cadence;
 - projectile movement and collision ordering;
-- Stonehide brace state;
-- Dust Skitter deterministic random schedule;
 - dragon targeting and fireball resolution;
 - loss and victory terminal rules.
 
@@ -93,7 +90,6 @@ Current row selection, burst/jump timings, and several cosmetic effects still us
 
 `BattleScene.js` now delegates planting, uprooting, monster bite damage, projectile damage, and dragon damage to these pure functions. The existing 8×5 grid, 35/50 planting costs, full manual refund behavior, 300 energy pickup cap, damage amounts, and 8-coin ordinary-monster reward remain unchanged.
 
-This is a first kernel extraction, not a complete simulation. Monster movement, target selection, collision geometry, projectile travel, wave scheduling, Dust Skitter gameplay randomness, dragon targeting, and victory/loss transitions still need to move into deterministic simulation functions. The client still owns the live battle and local reward display; cloud rewards remain disabled.
 
 
 ## Target selection extraction (implemented)
@@ -106,7 +102,6 @@ The pure combat kernel now also owns target selection:
 BattleScene supplies current world-to-lane positions and visual collision dimensions, while the pure functions decide which entity is selected. This is intentionally a boundary step: Phaser still owns coordinate projection, sprite bounds, projectile presentation/tweens, attack cooldowns, and the actual encounter loop. Dragon fireball plant damage now also uses the shared HP resolver.
 
 
-## Attack timing and Dust Skitter motion extraction (implemented)
 - `advanceCooldown` now handles elapsed-time advancement for ordinary monster bites, Radish firing, and both dragon attack timers.
 - `resolveBiteAttack` owns the bite-ready decision and interval reset while the scene retains the existing damage/audio/visual side effects.
 - `resolveDustSkitterMotionStep` owns jump/burst state transitions, elapsed durations, jump visual offset, and combined movement multipliers. The scene samples the existing Phaser random duration ranges only at transition boundaries and passes those samples into the pure resolver; random behavior has not yet been replaced with the server-seeded RNG.
@@ -119,12 +114,10 @@ The pure combat kernel now resolves the Stage 1 spawn schedule:
 - It consumes the current wave, configured roster size, spawned count, intermission, spawn timer, and elapsed milliseconds.
 - It returns whether exactly one monster should spawn this update, the next spawned count, remaining intermission, and next spawn timer.
 - Wave sizes and intervals are validated against the central phase-one contract; the five-second preparation window and the existing first/next spawn delays are preserved.
-- Monster archetype composition is also resolved in the kernel (Cave Brute, Dust Skitter, Stonehide, Alpha Brute). The legacy `phaseOneRules.mjs` export remains as a compatibility alias.
 Phaser still chooses the visual lane using its current random source, creates sprites/effects, and starts the dragon encounter after the second ordinary spawn in wave five. Lane selection is not yet deterministic or server-authoritative.
 
 
 ## Client-seeded random sampling (implemented as a development boundary)
-- `BattleScene` now creates one client-local unsigned 32-bit seed when a battle scene starts and uses `createSeededRandom` for monster lane selection and Dust Skitter initial/transition jump and burst timing samples.
 - This makes those gameplay-affecting random choices reproducible when the same local seed is supplied to the same scene logic. The seed is not accepted from a player as proof and is not trusted by a server.
 - Cosmetic voice timing/selection, animation, and incidental presentation randomness remain separate from the simulation stream.
 - The next authoritative step is to issue the seed from a server-created session and move the same deterministic rules into a server replay validator. Until then, client combat outcomes and locally generated seeds remain untrusted; cloud rewards and progression writes stay disabled.
@@ -167,14 +160,12 @@ Pickup identity hardening: collectible IDs are now globally monotonic for the ba
 
 ## Monster lane movement replay
 - Spawn events now include the canonical lane-local starting coordinate. Periodic movement checkpoints record travelled distance, elapsed combat-clock time, nearest blocking radish column, and a bounded bite-clearance value.
-- Replay derives the nearest living radish in the same lane, checks the elapsed clock and maximum archetype movement speed (including the existing Dust Skitter jump/burst upper bound), and runs `resolveMonsterLaneStep` to clamp movement at the blocker. It rejects forged speed, incorrect blockers, and movement through a defender.
-- Checkpoints are periodic and emitted when the blocking target changes; they are not yet a frame-by-frame authoritative simulation. Exact Dust Skitter random-state replay and damage/death/projectile/farm-breach resolution remain outstanding. Client logs are still untrusted and no rewards are granted from them.
 
 
 Coordinate and bite-range correction: replay now uses the calibrated 420.823-unit board width and the actual spawn coordinate (238.4115) shared with the scene, rather than treating board columns as unit-spaced. Bite events are preceded by a movement checkpoint when the monster enters bite range, and replay rejects bites while the monster is still outside the target's clearance.
 
 
-Movement replay hardening: non-Dust-Skitter archetypes must match their configured base movement speed after the shared lane-step clamp; Dust Skitters are bounded between their base speed and the combined jump/burst maximum pending exact PRNG-state replay. Movement checkpoints continue during chewing so stationary bite time is not incorrectly counted as travel time. Bite entry always forces a fresh position checkpoint.
 
 
 The replay also reconciles each claimed movement distance against the resolved, blocker-clamped displacement; it rejects events that claim travel through a Radish even if the reconstructed position would otherwise be clamped.
+

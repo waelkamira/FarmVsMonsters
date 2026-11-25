@@ -109,9 +109,9 @@ Prefer small, reviewable branches. Never report a source read-back as a successf
 - Keep `godot/` as a paused reference.
 - Preserve existing asset files and stable Phaser asset keys.
 - The provisional 150×150 plant-frame convention is not a reason to override actual source-sheet dimensions. Inspect each sheet and use its real frame geometry.
-- Preserve the accepted `hyena-run1` animation crop and timing unless explicitly asked to change it.
 - Keep the existing approved battle rules and visual assets unless a verified defect or explicit product decision requires a change.
 
 ## Current execution note
 
 Phase 0 is in progress. The repository's latest `main` commits have already repaired the undefined `largeFiles` reference and added the asset audit JSON output. This work adds pure, testable audit helpers and regression tests, aligns the manifest and audit timestamps, and documents the asset pipeline before the broader runtime audit continues. See `Documentation/STRATEGY_EXECUTION_LOG.md`.
+

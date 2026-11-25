@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { selectLaneBlocker } from "../game/rules/combatSimulation.mjs";
-import { PHASE_ONE_MONSTERS, PHASE_ONE_REWARDS, getStonehideIncomingDamageMultiplier } from "../game/rules/phaseOneCombatContract.mjs";
+import { PHASE_ONE_MONSTERS, PHASE_ONE_REWARDS, getMonsterIncomingDamageMultiplier } from "../game/rules/phaseOneCombatContract.mjs";
 import { dirname, resolve } from "node:path";
 import {
   PHASE_ONE_WAVE_SIZES,
@@ -213,42 +213,19 @@ test("terminal results clean up pending Mushroom pickups and their expiry timers
   assert.match(endGame, /this\.energyPickups = \[\]/);
 });
 
-test("monster archetype composition introduces threats in measured waves", () => {
-  for (let i = 0; i < 10; i += 1) {
-    assert.equal(monsterArchetypeFor(1, i), "cave-brute");
-    assert.equal(monsterArchetypeFor(2, i), "cave-brute");
-  }
-  for (const wave of [3, 4]) {
-    assert.equal(monsterArchetypeFor(wave, 1), "dust-skitter");
-    assert.equal(monsterArchetypeFor(wave, 0), "cave-brute");
-    assert.equal(monsterArchetypeFor(wave, 4), "dust-skitter");
-  }
-  for (let i = 0; i < 30; i += 1) {
-    const expected = (i + 1) % 10 === 0 ? "alpha-brute" : (i + 1) % 5 === 0 ? "stonehide" : i % 3 === 1 ? "dust-skitter" : "cave-brute";
-    assert.equal(monsterArchetypeFor(5, i), expected);
-  }
+test("all ordinary waves use the single approved Monster 01 archetype", () => {
+  for (let wave = 1; wave <= 5; wave += 1) for (let i = 0; i < 30; i += 1) assert.equal(monsterArchetypeFor(wave, i), "monster-01");
 });
 
-test("Dust Skitters perform periodic visual hops while remaining grounded by plant collisions", () => {
-  const spawn = scene.slice(scene.lastIndexOf("  spawnMonster("), scene.indexOf("  updateMonsters(dt, delta) {"));
-  const update = scene.slice(scene.indexOf("  updateMonsters(dt, delta) {"), scene.indexOf("  updateProjectiles(dt) {"));
-  assert.match(spawn, /jumpCooldown: archetype === "dust-skitter"/);
-  assert.match(spawn, /jumpDuration: 560/);
-  assert.match(update, /resolveDustSkitterMotionStep\(/);
-  assert.match(update, /jumpVisualHeight: 34/);
-  assert.match(update, /monster\.hyenaSprite\.y = jumpOffset/);
-  assert.match(update, /if \(withinBiteRange\) \{[\s\S]*?if \(monster\.isJumping\)/);
-  assert.match(update, /monster\.isJumping = false;\s*monster\.jumpElapsed = 0;/);
-  assert.doesNotMatch(spawn, /\bshadow\b/i, "characters must not receive ground shadows");
-  assert.doesNotMatch(update, /monster\.shadow/, "monster movement must not update a ground shadow");
+test("Monster 01 uses the approved single-image artwork without retired variant logic", () => {
+  assert.match(scene, /\/assets\/characters\/monsters\/01\/01\.png/);
+  assert.doesNotMatch(scene, /hyena|cave-brute|dust-skitter|stonehide|alpha-brute/i);
 });
 
-test("all three monster profiles and Stonehide bracing damage reduction remain wired", () => {
-  for (const kind of ["cave-brute", "dust-skitter", "stonehide"]) {
-    assert.ok(PHASE_ONE_MONSTERS[kind], `missing ${kind} profile`);
-  }
-  assert.equal(getStonehideIncomingDamageMultiplier(false), 0.7);
-  assert.equal(getStonehideIncomingDamageMultiplier(true), 0.385);
+test("the only implemented monster profile is Monster 01", () => {
+  assert.ok(PHASE_ONE_MONSTERS["monster-01"]);
+  assert.equal(Object.keys(PHASE_ONE_MONSTERS).length, 1);
+  assert.equal(getMonsterIncomingDamageMultiplier(), 1);
 });
 
 test("requestPlant uses the imported centralized plant configs", () => {
@@ -324,13 +301,9 @@ test("player guidance and roadmap match the current Phase 1 balance", () => {
   assert.match(scene, /this\.collectionMenuTab = "phases"/);
   assert.match(scene, /"treasure-cave-menu"/);
   assert.match(scene, /"dragon-boss"/);
-  assert.match(scene, /const startFrame = 0/);
-  assert.match(scene, /generateFrameNumbers\(key, \{ start: startFrame, end: endFrame \}\)/);
-  assert.match(scene, /this\.playHyenaAnimation\(monster, "hyena-bite"\)/);
-  assert.doesNotMatch(scene, /monster\.hyenaSprite\.anims\.pause\(\)/);
-  assert.match(roadmap, /3 \/ 5 \/ 6 \/ 7 \/ 9/);
-  assert.match(roadmap, /full 15-energy collectible per Mushroom every 12 seconds/);
-  assert.match(roadmap, /Cave-brute, Dust-skitter, Stonehide/);
+  assert.match(scene, /this\.playMonster01Animation\(monster, "monster-01-bite"\)/);
+  assert.doesNotMatch(scene, /hyena|cave-brute|dust-skitter|stonehide|alpha-brute/i);
+  assert.match(roadmap, /Monster 01/);
   assert.doesNotMatch(roadmap, /25 collectible energy per Mushroom every 8 seconds/i);
 });
 

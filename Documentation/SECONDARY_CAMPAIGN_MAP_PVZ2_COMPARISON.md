@@ -146,7 +146,6 @@ This is deliberately smaller than the 317-level PvZ2 reference. It creates a sub
 
 | Farm Vs Monsters territory (working title) | PvZ2 structural reference | Original environmental rule proposal | Enemy / boss direction |
 |---|---|---|---|
-| 1. Dragonfall Farm Valley | Tutorial + Ancient Egypt's introductory teaching | Gentle wind gusts and a few broken-fence obstacles; teach planting, energy, lanes, and the first dragon warning | Existing first-stage hyena family; first small dragon boss |
 | 2. The Broken Coast | Pirate Seas | Shoreline/bridge entry points and occasional amphibious routes; make threat entry locations matter | Raiders, divers, and a coast dragon that attacks from offshore |
 | 3. Rustrail Frontier | Wild West | A limited moving supply cart or movable farm device; do not make rooted plants walk | Fast raiders, armored wagon beasts, and a rail-yard dragon |
 | 4. The Frozen Highlands | Frostbite Caves | Cold gusts temporarily slow or freeze selected cells; clear visual warning and a warm-up counter | Ice-resistant monsters and a frost dragon; fire/warmth counters |
@@ -235,7 +234,6 @@ Before starting, show:
 
 Do not replace the primary plan now. The strongest option is to **combine the primary story and battle rules with the secondary map's world structure and level pacing**:
 
-- Keep the farmer, wife, dragons, hyena/monster factions, treasure-cave reward ritual, and existing battle rules.
 - Keep the first battle and its approved 30 ordinary monsters + separate dragon boss.
 - Adopt the idea of multiple missions inside each future territory, rather than making every new territory only one isolated battle.
 - Give each territory one signature environment rule, but introduce it gradually and make it counterable.
@@ -286,3 +284,4 @@ A territory is not considered complete until:
 - Modern Day and portal mechanics: https://plantsvszombies.wiki.gg/wiki/Modern_Day
 
 Community-maintained references can change and occasionally lag behind game updates. The official EA page is used for the broad product structure; detailed level counts and mechanics are cross-checked against world-specific references. This document is a design study, not a claim of affiliation with or endorsement by EA/PopCap.
+

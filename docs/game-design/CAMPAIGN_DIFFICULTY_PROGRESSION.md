@@ -31,19 +31,12 @@ Ordinary monsters: **20**, in five waves. The dragon boss remains separate.
 
 | Wave | Ordinary enemies | Composition | Intended lesson |
 |---|---:|---|---|
-| 1 | 2 | 2 Cave Brutes | Learn placement and projectile impact; generous time to react |
-| 2 | 3 | 3 Cave Brutes | Establish a second defensive line and collect energy |
-| 3 | 4 | 4 Cave Brutes | Sustain a simple defence over a longer wave |
-| 4 | 5 | 4 Cave Brutes + 1 Dust Skitter (last) | First fast enemy; only one, clearly isolated |
-| 5 | 6 | 5 Cave Brutes + 1 Stonehide (last) | First armoured enemy; familiar enemies provide context |
 
 Spawn spacing remains wave-based. Keep the first three waves slow and predictable; don't shorten spawn intervals just because the wave number increases.
 
 ### Stage 1 enemy health and speed
 
-Cave Brute health is deliberately readable in Radish hits. Radish projectile damage is 25.
 
-| Wave | Cave Brute HP | Radish hits to defeat | Base movement speed |
 |---|---:|---:|---:|
 | 1 | 125 | 5 | 8.00 |
 | 2 | 133 | 6 | 9.35 |
@@ -52,9 +45,6 @@ Cave Brute health is deliberately readable in Radish hits. Radish projectile dam
 | 5 | 157 | 7 | 13.40 |
 
 Special enemies retain their existing archetype multipliers:
-- Dust Skitter: 0.52× the wave baseline HP, 1.7× movement speed, 8 plant damage. Stage 1 has one, in wave 4.
-- Stonehide: 2.2× the wave baseline HP, 0.62× movement speed, and 0.7× incoming damage. Stage 1 has one, in wave 5.
-- Alpha Brute: not used in Stage 1; reserve it for a later campaign reveal.
 
 ### Stage 1 plant / weapon balance (LIVE contract values)
 
@@ -80,17 +70,8 @@ Ordinary monsters: **25**, suggested wave sizes **3 / 4 / 5 / 6 / 7**.
 
 | Wave | Count | Planned composition | Teaching purpose |
 |---|---:|---|---|
-| 1 | 3 | 3 Cave Brutes | Warm-up; reinforce Stage 1 |
-| 2 | 4 | 3 Cave Brutes + 1 Dust Skitter | Revisit the scout in a mixed wave |
-| 3 | 5 | 4 Cave Brutes + 1 Stonehide | Revisit armour with support |
-| 4 | 6 | 4 Cave Brutes + 1 Dust Skitter + 1 Stonehide | First deliberate mixed threat |
-| 5 | 7 | 5 Cave Brutes + 1 Dust Skitter + 1 Stonehide | Longer final wave, still no Alpha Brute |
 
 Planned Stage 2 durability targets:
-- Cave Brute: 150–175 HP (6–7 Radish hits).
-- Dust Skitter: 0.52× the Cave Brute wave baseline; never more than two in one wave.
-- Stonehide: 2.0× the Cave Brute wave baseline and 0.7× incoming damage; at most one in the first three waves and two in the final wave.
-- No Alpha Brute and no new boss in Stage 2.
 
 Stage 2 should not secretly buff every weapon. Keep the Stage 1 damage values initially, then playtest whether the new combinations are fair. If Stage 2 is too hard, first reduce enemy count or spawn pressure before increasing weapon damage.
 
@@ -106,7 +87,6 @@ These counts are ordinary enemies per stage; they are pacing targets for the 10-
 | 4 | 36 | Teach counterplay to that ability |
 | 5 | 42 | Mid-campaign challenge / bonus-style breather |
 | 6 | 48 | Combine two previously learned abilities |
-| 7 | 55 | Introduce Alpha Brute sparingly |
 | 8 | 62 | Enemy combinations and lane pressure |
 | 9 | 70 | Multi-wave endurance and resource planning |
 | 10 | 80 | Final campaign challenge and boss finale |
@@ -115,7 +95,6 @@ These counts are ordinary enemies per stage; they are pacing targets for the 10-
 
 - A first-time player can understand the core loop before the first wave becomes threatening.
 - Stage 1 waves 1–3 can be won with the starter Radish and sensible placement.
-- The first Dust Skitter and first Stonehide are isolated enough that their behaviour is legible.
 - A failed attempt feels recoverable: the player can identify what to improve rather than feeling overwhelmed.
 - Do not raise monster HP, movement speed, and spawn frequency together in one stage.
 - Tune after real playtests; the numeric targets above are a starting balance, not a substitute for observed win rates and player comprehension.
@@ -144,7 +123,6 @@ Available from the beginning:
 | Complete Stage 4 | **Mango** | Adds a more specialised curved/aimed projectile after the player has mastered lane targeting |
 | Complete Stage 5 | **Snow Thrower** | Introduces crowd control only after the player has enough experience to understand timing and freeze value |
 | Complete Stage 6 | Plant upgrade / level-up material | Shift rewards from roster breadth toward mastery |
-| Complete Stage 7 | Advanced plant variant or cosmetic | Reward mastery while introducing the Alpha Brute threat |
 | Complete Stage 8 | Additional upgrade material | Prepare the player for endurance |
 | Complete Stage 9 | Premium-looking cosmetic / bonus currency | Give a meaningful pre-finale reward without trivialising the final challenge |
 | Complete Stage 10 | Final evolution / campaign trophy | Long-term completion reward |
@@ -163,3 +141,4 @@ Available from the beginning:
 ### Implementation gate
 
 The campaign map continues to use `CAMPAIGN_PROGRESS_KEY` for stage access. The first reward now uses that same record. The cloud progress API does not yet carry a plant-reward field, so local plant unlocks are explicitly preserved when verified cloud stage progress is restored. Future rewards must follow the same rule and should become cloud-backed only after the server progress contract is extended.
+
