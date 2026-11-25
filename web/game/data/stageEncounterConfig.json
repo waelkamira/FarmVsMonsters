@@ -20,17 +20,17 @@
       "plants": [
         {
           "id": "radish",
-          "count": 26,
+          "count": 100,
           "enabled": true
         },
         {
           "id": "mushroom",
-          "count": 1,
+          "count": 100,
           "enabled": true
         },
         {
           "id": "pumpkin",
-          "count": 1,
+          "count": 100,
           "enabled": true
         },
         {
@@ -45,7 +45,7 @@
         },
         {
           "id": "mango",
-          "count": 1,
+          "count": 100,
           "enabled": true
         },
         {
