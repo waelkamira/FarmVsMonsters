@@ -72,7 +72,7 @@ The release branch includes the complete referenced rig-part set and linked proj
 
 The Studio library offers a reversible archive action for draft and testing plants. Archiving changes the registry status to `archived` and hides the plant from the testing catalog; it does not delete the plant image, projectile, or metadata. The restore action returns the plant to `draft`, after which it must be prepared and tested again.
 
-A plant with an open release request cannot be archived until that request is closed. A closed, unmerged request returns the asset to `testing` before archiving. A plant whose release request has been merged is already published and cannot be archived through this action; removing it from the live catalog requires a separate reviewed release change. Hard deletion is intentionally not exposed in this workflow.
+A plant with an open release request cannot be archived until that request is closed. A closed, unmerged request returns the asset to `testing` before archiving. A plant whose release request has been merged is already published and cannot be archived through this action; removing it from the live catalog requires a separate reviewed release change. Hard deletion is limited to unpublished, unreferenced assets in the Studio storage branch. Published assets and files referenced by a published catalog cannot be deleted directly; their removal requires a separate reviewed release change.
 
 ## Status transitions
 
