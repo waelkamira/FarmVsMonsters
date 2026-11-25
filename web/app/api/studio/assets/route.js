@@ -382,19 +382,29 @@ export async function POST(req){
  if(!extension)return NextResponse.json({error:"Unknown file extension."},{status:415});
  const bytes=hasFile?Buffer.from(await file.arrayBuffer()):null;
  if(hasFile){const signature=validateStudioAssetBytes(file.type,bytes);if(!signature.valid)return NextResponse.json({error:signature.reason},{status:415});}
+ const stateAnimationBytes=hasStateAnimation?Buffer.from(await stateAnimationFile.arrayBuffer()):null;
+ if(hasStateAnimation){const signature=validateStudioAssetBytes(stateAnimationFile.type,stateAnimationBytes);if(!signature.valid)return NextResponse.json({error:signature.reason},{status:415});}
  const relative=hasFile?createImmutableAssetPath(config.folder,id,extension,bytes):(existing?.path||"").replace(/^\/assets\//,"");
+ const stateExtension=hasStateAnimation?ext(stateAnimationFile.type):null;
+ const stateRelative=hasStateAnimation?createImmutableAssetPath(config.folder+"/states",id+"-"+stateId,stateExtension,stateAnimationBytes):null;
+ const statePath=stateRelative?"/assets/"+stateRelative:null;
+ const stateLoop=String(form.get("stateLoop")||"true")==="true";
+ const stateAnimations=hasStateAnimation?{...(existing?.stateAnimations||{}),[stateId]:{stateId,path:statePath,rows:stateRows,columns:stateColumns,frameCount:stateFrameCount,fps:stateFps,loop:stateLoop,spriteSheet:true,updatedAt:new Date().toISOString()}}:(existing?.stateAnimations||{});
+ if(hasStateAnimation){const validation=validateCharacterStateAnimation({stateId,path:statePath,rows:stateRows,columns:stateColumns,frameCount:stateFrameCount,fps:stateFps,loop:stateLoop});if(!validation.valid)return NextResponse.json({error:validation.errors.join(" ")},{status:400});}
  const now=new Date().toISOString();
- const record=createStudioAssetRevision(existing,{...(existing||{}),id,type,name:String(form.get("name")||id).trim().slice(0,80),filename:hasFile?id+extension:existing.filename,path:hasFile?"/assets/"+relative:existing.path,rows,columns,frameCount:config.spriteSheet?frameCount:1,spriteSheet:config.spriteSheet,status:"draft",releaseRequest:null,publishedAt:null,testingAt:null,archivedAt:null,restoredFromVersion:null,createdAt:existing?.createdAt||now,updatedAt:now,...(type==="plant"?{combat:combatProfile}:{}),...(type==="monster"?{monsterProfile}:{}),flipX:form.get("flipX")==="true",...(existing?.effects?.length?{effects:existing.effects}:{}),...(config.spriteSheet&&(type==="plant"||type==="monster")?{animationProfile,rigProfile}:{})});
+ const record=createStudioAssetRevision(existing,{...(existing||{}),id,type,name:String(form.get("name")||id).trim().slice(0,80),filename:hasFile?id+extension:existing.filename,path:hasFile?"/assets/"+relative:existing.path,rows,columns,frameCount:config.spriteSheet?frameCount:1,spriteSheet:config.spriteSheet,status:"draft",releaseRequest:null,publishedAt:null,testingAt:null,archivedAt:null,restoredFromVersion:null,createdAt:existing?.createdAt||now,updatedAt:now,...(type==="plant"?{combat:combatProfile}:{}),...(type==="monster"?{monsterProfile}:{}),flipX:form.get("flipX")==="true",...(existing?.effects?.length?{effects:existing.effects}:{}),...(Object.keys(stateAnimations).length?{stateAnimations}:{}),...(config.spriteSheet&&(type==="plant"||type==="monster")?{animationProfile,rigProfile}:{})});
  if(hasFile)delete record.assetAvailability;
  const next={...old,version:1,assets:existing?old.assets.map((a,i)=>i===index?record:a):[...old.assets,record]};
  try{
   if(driver==="github"){
    const token=process.env.STUDIO_GITHUB_TOKEN,branch=process.env.STUDIO_GITHUB_BRANCH||"studio/assets";
    if(hasFile)await githubPutImmutable("web/public/assets/"+relative,bytes,"studio: "+(existing?"replace ":"add ")+type+" "+id,token,branch);
+   if(hasStateAnimation)await githubPutImmutable("web/public/assets/"+stateRelative,stateAnimationBytes,"studio: add "+stateId+" state animation for "+id,token,branch);
    if(hasProjectile){await githubPutImmutable("web/public/"+record.combat.projectile.path.replace(/^\//,""),projectileBytes,"studio: attach projectile to "+id,token,branch);}
    await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(next,null,2)+"\n"),"studio: "+(existing?"update ":"register ")+id,token,branch,registrySha);
   }else if(driver==="local"&&process.env.NODE_ENV!=="production"){
    if(hasFile){const target=path.join(process.cwd(),"public/assets",relative);await mkdir(path.dirname(target),{recursive:true});await writeFile(target,bytes);}
+   if(hasStateAnimation){const stateTarget=path.join(process.cwd(),"public/assets",stateRelative);await mkdir(path.dirname(stateTarget),{recursive:true});await writeFile(stateTarget,stateAnimationBytes);}
    if(hasProjectile){const pTarget=path.join(process.cwd(),"public",record.combat.projectile.path.replace(/^\//,""));await mkdir(path.dirname(pTarget),{recursive:true});await writeFile(pTarget,projectileBytes);}
    await saveLocalRegistry(next);
   }else return NextResponse.json({error:"Production uploads require STUDIO_STORAGE_DRIVER=github and a configured GitHub token."},{status:503});
