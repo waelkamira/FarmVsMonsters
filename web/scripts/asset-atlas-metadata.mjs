@@ -11,15 +11,23 @@ export function buildAtlasMetadata(relativePath, atlas, dimensions) {
     if (dimensions && (x + w > dimensions.width || y + h > dimensions.height)) {
       throw new Error(`Phaser Atlas frame "${name}" exceeds image bounds in "${relativePath}"`);
     }
-    return { name, index, x, y, w, h };
+    return { name, index, x, y, w, h, rotated: value?.rotated, trimmed: value?.trimmed };
   });
 
   const widths = [...new Set(frames.map((frame) => frame.w))];
   const heights = [...new Set(frames.map((frame) => frame.h))];
   const xPositions = [...new Set(frames.map((frame) => frame.x))].sort((a, b) => a - b);
   const yPositions = [...new Set(frames.map((frame) => frame.y))].sort((a, b) => a - b);
+  const columns = xPositions.length;
+  const rows = yPositions.length;
   const uniformGrid = widths.length === 1 && heights.length === 1 &&
-    xPositions.length * yPositions.length === frames.length &&
+    columns * rows === frames.length &&
+    frames.every((frame, index) =>
+      frame.x === xPositions[index % columns] &&
+      frame.y === yPositions[Math.floor(index / columns)] &&
+      frame.rotated !== true &&
+      frame.trimmed !== true
+    ) &&
     xPositions.every((x, index) => x === xPositions[0] + index * widths[0]) &&
     yPositions.every((y, index) => y === yPositions[0] + index * heights[0]);
   const clipsByName = new Map();
@@ -33,11 +41,11 @@ export function buildAtlasMetadata(relativePath, atlas, dimensions) {
   }
 
   return {
-    type: "spritesheet",
-    spriteSheet: true,
+    type: uniformGrid ? "spritesheet" : "image",
+    spriteSheet: uniformGrid,
     frameCount: frames.length,
-    rows: 1,
-    columns: frames.length,
+    rows: uniformGrid ? rows : 1,
+    columns: uniformGrid ? columns : 1,
     ...(uniformGrid ? {
       frameConfig: { frameWidth: widths[0], frameHeight: heights[0], margin: 0, spacing: 0 }
     } : {}),
