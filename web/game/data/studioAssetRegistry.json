@@ -1421,20 +1421,6 @@
       ]
     },
     {
-      "id": "onion",
-      "type": "plant",
-      "name": "onion",
-      "path": "/assets/plants/Onion.png",
-      "filename": "Onion.png",
-      "rows": 1,
-      "columns": 1,
-      "frameCount": 1,
-      "spriteSheet": false,
-      "status": "draft",
-      "createdAt": "2026-11-24T04:16:00.506Z",
-      "updatedAt": "2026-11-25T10:23:13.874Z"
-    },
-    {
       "id": "snow-thrower-level-1",
       "type": "plant",
       "name": "snow-thrower-level-1",
