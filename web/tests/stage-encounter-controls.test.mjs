@@ -33,7 +33,6 @@ test("battle consumes configured monster counts, timings, strength and plant lim
  assert.match(battle,/new URLSearchParams\(window\.location\.search\)\.get\("stage"\)/);
  assert.match(battle,/stages\?\.\[String\(this\.stageNumber\)\]/);
  assert.match(battle,/this\.totalWaves = this\.stageWaveCount/);
- assert.match(battle,/this\.stageNumber === 1 && this\.wave === this\.totalWaves/);
  assert.match(battle,/if \(this\.stageNumber !== 1\) \{\s*this\.endGame\(true\)/);
  assert.match(battle,/getStageWaveSize/);
  assert.match(battle,/totalConfiguredMonsters/);
@@ -57,16 +56,16 @@ test("stage seed selection respects only enabled plants for a configured stage",
  assert.match(selection,/selectedPlants\.length < minimumSeeds/);
 });
 
-test("configured first spawn delay is not overwritten and dragon waits for the configured final spawn",()=>{
+test("configured first spawn delay is not overwritten and the final wave triggers rescue after it is cleared",()=>{
  const battle=read("game/scenes/BattleScene.js");
  assert.match(battle,/const firstStageMonster = this\.getStageMonsterEntry\(0\);\s*this\.spawnTimer = this\.stageMonsterRosterConfigured && firstStageMonster \? Math\.max\(0, Number\(firstStageMonster\.firstSpawnDelayMs\) \|\| 0\) : PHASE_ONE_TIMING\.firstMonsterSpawnDelayMs;/);
  assert.doesNotMatch(battle,/this\.combatClockMs = 0;\s*this\.spawnTimer = PHASE_ONE_TIMING\.firstMonsterSpawnDelayMs;/);
- assert.match(battle,/this\.wave === this\.totalWaves && this\.spawnedThisWave === this\.waveSize\) this\.tryFinishPhaseOne\(\)/);
+ assert.match(battle,/this\.stageNumber === 1\) this\.tryFinishPhaseOne\(\)/);
  assert.doesNotMatch(battle,/this\.wave === 5 && this\.spawnedThisWave === 2/);
 });
 
 
-test("non-story configured stages can finish without requiring the Stage 1 dragon rescue",()=>{
+test("non-story configured stages can finish without requiring the Stage 1 rescue sequence",()=>{
  const battle=read("game/scenes/BattleScene.js");
  assert.match(battle,/won = Boolean\(won && \(this\.stageNumber !== 1 \|\| this\.phaseOneStoryState === "complete"\)\)/);
  assert.doesNotMatch(battle,/if \(won && this\.stageNumber === 1\)/);
