@@ -56,6 +56,7 @@ test("Studio exposes the workbench before effect assignment and persists status 
   const details = readFileSync(new URL("../app/studio/assets/[id]/page.js", import.meta.url), "utf8");
   const workbench = readFileSync(new URL("../app/studio/CharacterStateWorkbench.jsx", import.meta.url), "utf8");
   const route = readFileSync(new URL("../app/api/studio/assets/route.js", import.meta.url), "utf8");
+  const battle = readFileSync(new URL("../game/scenes/BattleScene.js", import.meta.url), "utf8");
   assert.match(details, /CharacterStateWorkbench/);
   assert.ok(details.indexOf("CharacterStateWorkbench") < details.indexOf("<EffectPicker"));
   assert.match(workbench, /CHARACTER_STATUS_STATES/);
@@ -65,6 +66,11 @@ test("Studio exposes the workbench before effect assignment and persists status 
   assert.match(route, /createImmutableAssetPath\(config\.folder\+"\/states"/);
   assert.ok(route.includes('githubPutImmutable("web/public/assets/"+stateRelative'));
   assert.match(route, /stateAnimations/);
+  assert.match(route, /addStatePreviewUrls/);
+  assert.match(battle, /queueCharacterStateTextures/);
+  assert.match(battle, /registerCharacterStateAnimations/);
+  assert.match(battle, /applyCharacterStateFromEffects/);
+  assert.match(battle, /studioStatusOverlay/);
 });
 
 test("asset file audit checks every custom state sprite sheet path", () => {
