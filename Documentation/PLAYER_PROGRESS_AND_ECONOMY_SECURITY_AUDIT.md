@@ -94,3 +94,14 @@ Wave timing and monster archetype selection are now pure shared rules. However, 
 - Added regression coverage for forged local balances, forged local stage unlocks, and client-side reward removal.
 
 This is a fail-closed containment, not the final authoritative economy. The browser still runs the combat simulation, so no online currency or campaign reward is issued. The remaining implementation is the server-owned game-session/replay validator and an idempotent database completion transaction. Do not mark E-01 fully resolved or re-enable rewards until that pipeline exists, is tested against replay/concurrency/forgery, and the required Supabase migration is applied to the live project.
+
+
+## 2026-11-25 — Pause new account registration until cloud progress is safe (E-02)
+
+- Removed the create-account option from the player account screen. The screen now states plainly that neither local nor cloud game progress is currently saved.
+- Kept email/password sign-in for existing accounts, but changed all success and sign-out messages so they do not claim that progress is saved or synchronized.
+- The account API now rejects `action: "signup"` with HTTP 410 and code `PLAYER_REGISTRATION_PAUSED`, so hiding the button is not the only protection.
+- Disabled both Google OAuth entry and callback routes while registration is paused; the provider flow could otherwise create new Supabase users even with the email signup UI hidden.
+- Removed the client-side `signUpPlayer` helper and added regression tests for the UI, API guard, and disabled Google routes.
+
+New player registration will remain disabled until a server-authoritative progression save path is implemented, tested, and deployed. Existing accounts can still authenticate, but sign-in is not a promise that gameplay progress is backed up.
