@@ -23,7 +23,7 @@ export function applyStudioAssetFileAudit(report, assets, statusByPath = {}) {
   const sourceAssets = Array.isArray(assets) ? assets : [];
   const auditedAssets = report.assets.map((entry, index) => {
     const source = sourceAssets[index];
-    const paths = [...new Set([source?.path, source?.combat?.projectile?.path].filter((value) => safeAssetPath(value)))];
+    const paths = [...new Set([source?.path, source?.combat?.projectile?.path, ...Object.values(source?.stateAnimations || {}).map((state) => state?.path)].filter((value) => safeAssetPath(value)))];
     const fileChecks = paths.map((assetPath) => {
       checkedPaths.add(assetPath);
       const status = statusByPath[assetPath] === "present" || statusByPath[assetPath] === "missing" ? statusByPath[assetPath] : "unknown";
