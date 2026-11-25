@@ -2013,7 +2013,6 @@ export default class BattleScene extends Scene {
       addRow(145, "monster-01-idle", locale === "ar" ? "الوحش 01" : "Monster 01", (locale === "ar" ? "52% من صحة العادي · الضرر: 8" : "52% of brute HP · Damage: 8"));
       addRow(235, "monster-01-idle", locale === "ar" ? "الوحش 01" : "Monster 01", (locale === "ar" ? "220% من صحة العادي · الضرر: 23" : "220% of brute HP · Damage: 23"));
       addRow(325, "monster-01-idle", locale === "ar" ? "الوحش 01" : "Monster 01", (locale === "ar" ? "الصحة: 350 · ضرر النبات: 32" : "HP: 350 · Plant damage: 32"));
-      addRow(415, "dragon-boss", locale === "ar" ? "التنين الزعيم" : "Dragon Boss", locale === "ar" ? "زعيم مستقل · شريط صحة خاص" : "Separate boss · dedicated health bar");
     }
   }
 
@@ -5387,7 +5386,7 @@ export default class BattleScene extends Scene {
 
   endGame(won) {
     if (this.gameOver) return;
-    // A campaign win is valid only after the dragon is defeated and the rescue sequence completes.
+    // Stage 1 victory is valid only after its post-wave rescue sequence completes.
     won = Boolean(won && (this.stageNumber !== 1 || this.phaseOneStoryState === "complete"));
     this.gameOver = true;
     // Collectibles are no longer usable after a terminal result; remove their
