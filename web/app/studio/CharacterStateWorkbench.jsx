@@ -103,7 +103,7 @@ export default function CharacterStateWorkbench({ asset, onSaved }) {
   const baseClipCount = Math.max(1, Number(clip.endFrame) - Number(clip.startFrame) + 1);
   const baseClipUrl = asset.previewUrl || asset.path;
   const previewEffect = getEffect(previewEffectId);
-  const effectTarget = file && previewUrl ? { path: previewUrl, rows: grid.rows, columns: grid.columns, frameCount: grid.frameCount, fps, loop, startFrame: 0 } : selectedStateData ? { ...selectedStateData, path: "/api/studio/assets?preview=" + encodeURIComponent(selectedStateData.path), startFrame: 0 } : { path: baseClipUrl, rows: asset.rows || 1, columns: asset.columns || 1, frameCount: baseClipCount, fps: clip.fps || 8, loop: clip.loop !== false, startFrame: clip.startFrame || 0 };
+  const effectTarget = file && previewUrl ? { path: previewUrl, rows: grid.rows, columns: grid.columns, frameCount: grid.frameCount, fps, loop, startFrame: 0 } : selectedStateData ? { ...selectedStateData, path: selectedStateData.previewUrl || selectedStateData.path, startFrame: 0 } : { path: baseClipUrl, rows: asset.rows || 1, columns: asset.columns || 1, frameCount: baseClipCount, fps: clip.fps || 8, loop: clip.loop !== false, startFrame: clip.startFrame || 0 };
 
   useEffect(() => () => { if (previewUrl) URL.revokeObjectURL(previewUrl); }, [previewUrl]);
   useEffect(() => {
@@ -225,7 +225,7 @@ export default function CharacterStateWorkbench({ asset, onSaved }) {
         </select>
       </label>
       <p className="studio-detail-muted">{selectedStateDefinition.hint} هذه الإطارات خاصة بمظهر الشخصية، ويمكن استخدامها مع مؤثرات الجسيمات والصوت من مكتبة التأثيرات.</p>
-      {selectedStateData && <div className="studio-state-saved"><b>الإطارات المحفوظة حالياً</b><FramePreview src={"/api/studio/assets?preview=" + encodeURIComponent(selectedStateData.path)} rows={selectedStateData.rows} columns={selectedStateData.columns} frameCount={selectedStateData.frameCount} fps={selectedStateData.fps} loop={selectedStateData.loop !== false} label={selectedStateDefinition.label} /><small>{selectedStateData.rows} × {selectedStateData.columns} · {selectedStateData.frameCount} إطار · {selectedStateData.fps} FPS</small></div>}
+      {selectedStateData && <div className="studio-state-saved"><b>الإطارات المحفوظة حالياً</b><FramePreview src={selectedStateData.previewUrl || selectedStateData.path} rows={selectedStateData.rows} columns={selectedStateData.columns} frameCount={selectedStateData.frameCount} fps={selectedStateData.fps} loop={selectedStateData.loop !== false} label={selectedStateDefinition.label} /><small>{selectedStateData.rows} × {selectedStateData.columns} · {selectedStateData.frameCount} إطار · {selectedStateData.fps} FPS</small></div>}
       <div className="studio-state-effect-preview">
         <div className="studio-state-section-head"><h4>معاينة التأثير فوق الشخصية</h4><span>نفس بيانات تأثيرات المعركة</span></div>
         <label>التأثير المراد تجربته
