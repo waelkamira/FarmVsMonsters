@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-25T15:04:00.613Z",
-  "assetCount": 77,
-  "totalBytes": 19812148,
+  "generatedAt": "2026-11-25T20:11:05.884Z",
+  "assetCount": 76,
+  "totalBytes": 19811406,
   "groups": {
     "audio": [
       {
@@ -303,13 +303,6 @@
         "key": "items-ui-ui-seed-slot-empty",
         "url": "/assets/items/ui/ui-seed-slot-empty.png",
         "type": "image"
-      }
-    ],
-    "monster-icons": [
-      {
-        "key": "monster-icons-dragon",
-        "url": "/assets/monster-icons/dragon.svg",
-        "type": "svg"
       }
     ],
     "plant-icons": [
@@ -978,16 +971,6 @@
       "sha256": "d60ae6ec308eb027e414a848a56372d8ecdf4614c4cbf1576a15eaacd0fa1f91",
       "width": 165,
       "height": 203
-    },
-    {
-      "key": "monster-icons-dragon",
-      "url": "/assets/monster-icons/dragon.svg",
-      "type": "svg",
-      "group": "monster-icons",
-      "bytes": 742,
-      "sha256": "dd5adab338723f7fd8f1677a3dfd86a6d9dd0d29dcda0178971257a8056782bb",
-      "width": 64,
-      "height": 64
     },
     {
       "key": "plant-icons-double-radish",
