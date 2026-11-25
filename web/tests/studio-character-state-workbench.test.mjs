@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import { validateCharacterStateAnimation, validateCharacterStateAnimations } from "../game/studio/characterStateAnimations.mjs";
 import { applyStudioAssetFileAudit } from "../game/studio/assetReadiness.mjs";
 import { cloneStudioAsset, createStudioAssetRevision, restoreStudioAssetRevision } from "../game/studio/assetVersions.mjs";
+import { assetOwnedPaths, assetPathStillUsed } from "../game/studio/assetDeletion.mjs";
 
 const validState = {
   stateId: "burn",
@@ -58,6 +59,7 @@ test("Studio exposes the workbench before effect assignment and persists status 
   const effectPreview = readFileSync(new URL("../game/vfx/effects/effectPreview.mjs", import.meta.url), "utf8");
   const route = readFileSync(new URL("../app/api/studio/assets/route.js", import.meta.url), "utf8");
   const battle = readFileSync(new URL("../game/scenes/BattleScene.js", import.meta.url), "utf8");
+  const deletion = readFileSync(new URL("../game/studio/assetDeletion.mjs", import.meta.url), "utf8");
   assert.match(details, /CharacterStateWorkbench/);
   assert.ok(details.indexOf("CharacterStateWorkbench") < details.indexOf("<EffectPicker"));
   assert.match(workbench, /CHARACTER_STATUS_STATES/);
@@ -106,3 +108,6 @@ test("asset file audit checks every custom state sprite sheet path", () => {
   assert.ok(audited.assets[0].errors.some((message) => message.includes("brute-burn.png")));
   assert.equal(audited.fileAudit.checked, 2);
 });
+
+
+test("permanent deletion owns state sheets across all revisions and protects shared state paths", () => {\n  const asset = { id: "brute", path: "/assets/monsters/brute.png", stateAnimations: { burn: { path: "/assets/monsters/states/burn.png" } }, versions: [{ path: "/assets/monsters/old.png", stateAnimations: { freeze: { path: "/assets/monsters/states/freeze.png" } } }] };\n  assert.deepEqual(assetOwnedPaths(asset).sort(), ["/assets/monsters/brute.png", "/assets/monsters/old.png", "/assets/monsters/states/burn.png", "/assets/monsters/states/freeze.png"].sort());\n  assert.equal(assetPathStillUsed([{ id: "other", stateAnimations: { burn: { path: "/assets/monsters/states/burn.png" } } }], "/assets/monsters/states/burn.png"), true);\n  assert.equal(assetPathStillUsed([], "/assets/monsters/states/freeze.png"), false);\n});\n
