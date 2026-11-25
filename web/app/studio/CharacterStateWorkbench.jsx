@@ -241,6 +241,8 @@ export default function CharacterStateWorkbench({ asset, onSaved }) {
       </label>
       {file && <div className="studio-state-new-preview"><b>معاينة قبل الحفظ</b><FramePreview src={previewUrl} rows={grid.rows} columns={grid.columns} frameCount={grid.frameCount} fps={fps} loop={loop} label={"معاينة " + selectedStateDefinition.label} />
         <div className="studio-state-grid-controls">
+          <label>الصفوف<input type="number" min="1" max="24" value={grid.rows} onChange={(event) => setGrid((current) => { const rows = Math.max(1, Math.min(24, Number(event.target.value) || 1)); const frameCount = rows * current.columns; return frameCount <= 24 ? { ...current, rows, frameCount } : current; })} /></label>
+          <label>الأعمدة<input type="number" min="1" max="24" value={grid.columns} onChange={(event) => setGrid((current) => { const columns = Math.max(1, Math.min(24, Number(event.target.value) || 1)); const frameCount = current.rows * columns; return frameCount <= 24 ? { ...current, columns, frameCount } : current; })} /></label>
           <label>عدد الإطارات<input type="number" min="1" max="24" value={grid.frameCount} onChange={(event) => setGrid((current) => { const frameCount = Math.max(1, Math.min(24, Number(event.target.value) || 1)); return { ...current, frameCount, columns: frameCount, rows: 1 }; })} /></label>
           <label>سرعة الحركة<input type="number" min="1" max="30" value={fps} onChange={(event) => setFps(Math.max(1, Math.min(30, Number(event.target.value) || 1)))} /></label>
           <label className="studio-state-loop"><input type="checkbox" checked={loop} onChange={(event) => setLoop(event.target.checked)} /> تكرار مستمر</label>
