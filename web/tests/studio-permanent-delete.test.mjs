@@ -61,3 +61,17 @@ test("Local permanent deletion never calls GitHub-only cleanup helpers", () => {
   assert.match(localBranch, /await removeLocalAssetManifestReferences\(candidatePaths\)/);
   assert.doesNotMatch(localBranch, /removeGithubAssetManifestReferences|targetBranch|storageBranch|\btoken\b/);
 });
+
+
+test("GitHub permanent deletion cleans hydration manifests on storage and game branches before deleting files", () => {
+  const patchStart = route.indexOf("export async function PATCH");
+  const githubStart = route.indexOf('const token=process.env.STUDIO_GITHUB_TOKEN,storageBranch=', patchStart);
+  const deleteStart = route.indexOf('if(operation==="delete"){', githubStart);
+  const fileDelete = route.indexOf("await githubDeleteIfExists(filePath", deleteStart);
+  const registrySave = route.indexOf('await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify({...registry,assets:remaining}', deleteStart);
+  assert.ok(githubStart > patchStart && deleteStart > githubStart, "GitHub delete branch is present");
+  const githubDeleteBranch = route.slice(deleteStart, fileDelete);
+  assert.match(githubDeleteBranch, /await removeGithubAssetManifestReferences\(candidatePaths,token,storageBranch\)/);
+  assert.match(githubDeleteBranch, /if\(targetBranch!==storageBranch\)await removeGithubAssetManifestReferences\(candidatePaths,token,targetBranch\)/);
+  assert.ok(fileDelete > deleteStart && registrySave > fileDelete, "manifest/catalog cleanup and file deletion happen before registry removal");
+});
