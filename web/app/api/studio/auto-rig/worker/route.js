@@ -11,7 +11,7 @@ const MAX_REQUEST_BODY_BYTES = 12 * 1024 * 1024;
 const WORKER_TIMEOUT_MS = 85_000;
 
 function authorized(req) {
-  return verifyStudioSession(process.env.STUDIO_ADMIN_TOKEN || "", req.cookies.get(COOKIE)?.value || "");
+  return verifyStudioSession(process.env.STUDIO_SESSION_SECRET || "", req.cookies.get(COOKIE)?.value || "");
 }
 
 function sameOriginPost(req) {
