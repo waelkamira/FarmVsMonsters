@@ -95,7 +95,7 @@ test("stage roster management shows real plant and monster artwork for library a
  assert.match(manager,/stage-roster-asset-grid/);
  assert.match(manager,/<AssetImage asset=\{asset\} kind=\{kind\}/);
  assert.match(manager,/assetById\.get\(entry\.id\)/);
- assert.match(manager,/\/assets\/monster-icons\/cave-brute\.svg/);
+ assert.match(manager,/\/assets\/characters\/monsters\/01\/01\.png/);
  assert.match(manager,/\/assets\/plants\/radish-level-1\.png/);
  const styles=read("app/studio/stage-roster.css");
  assert.match(styles,/\.stage-roster-image/);
