@@ -15,7 +15,8 @@ export function assetOwnedPaths(asset) {
     snapshot?.atlasMetadataPath,
     snapshot?.atlas?.jsonPath,
     snapshot?.audio?.path,
-    snapshot?.combat?.projectile?.path
+    snapshot?.combat?.projectile?.path,
+    ...Object.values(snapshot?.stateAnimations || {}).map((state) => state?.path)
   ]).filter((value) => typeof value === "string" && safeAssetPath(value)))];
 }
 
@@ -26,7 +27,8 @@ export function assetPathStillUsed(assets, assetPath) {
       snapshot?.atlasMetadataPath,
       snapshot?.atlas?.jsonPath,
       snapshot?.audio?.path,
-      snapshot?.combat?.projectile?.path
+      snapshot?.combat?.projectile?.path,
+      ...Object.values(snapshot?.stateAnimations || {}).map((state) => state?.path)
     ].includes(assetPath))
   );
 }
