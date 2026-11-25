@@ -22,8 +22,12 @@ export function buildAtlasMetadata(relativePath, atlas, dimensions) {
   const yPositions = [...new Set(frames.map((frame) => frame.y))].sort((a, b) => a - b);
   const columns = xPositions.length;
   const rows = yPositions.length;
-  const uniformGrid = widths.length === 1 && heights.length === 1 &&
+  const uniformGrid = Boolean(dimensions) &&
+    widths.length === 1 && heights.length === 1 &&
     columns * rows === frames.length &&
+    xPositions[0] === 0 && yPositions[0] === 0 &&
+    dimensions.width === columns * widths[0] &&
+    dimensions.height === rows * heights[0] &&
     frames.every((frame, index) =>
       frame.x === xPositions[index % columns] &&
       frame.y === yPositions[Math.floor(index / columns)] &&
