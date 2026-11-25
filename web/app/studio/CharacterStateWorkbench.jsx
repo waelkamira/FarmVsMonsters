@@ -127,8 +127,23 @@ export default function CharacterStateWorkbench({ asset, onSaved }) {
         const scale = Math.min(1, 112 / sourceWidth, 124 / sourceHeight);
         const drawWidth = sourceWidth * scale;
         const drawHeight = sourceHeight * scale;
+        let scaleX = 1;
+        let scaleY = 1;
+        let shake = 0;
+        for (const layer of effect.layers) {
+          const layerProgress = (elapsed - (layer.delay || 0)) / (layer.life || 1);
+          if (layer.type === "squash" && layerProgress >= 0 && layerProgress <= 1) {
+            const amount = layer.from ? 1 - layerProgress : Math.sin(Math.PI * layerProgress);
+            scaleX = 1 + ((layer.sx || 1) - 1) * amount;
+            scaleY = layer.from ? .2 + .8 * layerProgress : 1 + ((layer.sy || 1) - 1) * amount;
+          }
+          if (layer.type === "shake" && elapsed < layer.ms) shake = Math.max(shake, layer.intensity * 900 * (1 - elapsed / layer.ms));
+        }
+        const jitterX = Math.sin(elapsed * .071) * shake;
+        const jitterY = Math.cos(elapsed * .083) * shake;
         context.save();
-        context.translate(centerX, centerY);
+        context.translate(centerX + jitterX, centerY + jitterY);
+        context.scale(scaleX, scaleY);
         context.fillStyle = "rgba(0,0,0,.28)";
         context.beginPath();
         context.ellipse(0, drawHeight * .43, drawWidth * .34, 5, 0, 0, Math.PI * 2);
