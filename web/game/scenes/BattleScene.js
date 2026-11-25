@@ -3816,8 +3816,52 @@ export default class BattleScene extends Scene {
     return view?.active ? { x: view.x, y: view.y + yOffset, view } : null;
   }
 
+  applyCharacterStateFromEffects(effectIds, trigger, point) {
+    if (trigger !== "hit" && trigger !== "damaged") return;
+    const view = point?.view;
+    if (!view?.active) return;
+    const plantId = view.getData?.("studioPlantId");
+    const monsterId = view.getData?.("studioMonsterId");
+    const asset = plantId ? this.studioPlantsByType?.[plantId] : monsterId ? this.studioMonstersById?.[monsterId] : null;
+    if (!asset?.stateAnimations || !asset.stateAnimationTextureKeys) return;
+    const stateId = (effectIds || []).find((id) => asset.stateAnimations[id] && asset.stateAnimationTextureKeys[id] && this.textures.exists(asset.stateAnimationTextureKeys[id]));
+    if (!stateId) return;
+    const kind = plantId ? "plant" : "monster";
+    const textureKey = asset.stateAnimationTextureKeys[stateId];
+    const animationKey = "studio-" + kind + "-" + asset.id + "-state-" + stateId;
+    const baseSprite = view.getData("studioStatusBaseSprite") || (view.list || []).find((child) => child?.active && child.texture?.key === asset.textureKey);
+    if (!baseSprite?.active) return;
+    const oldTimer = view.getData("studioStatusRestoreTimer");
+    if (oldTimer?.remove) oldTimer.remove(false);
+    const oldOverlay = view.getData("studioStatusOverlay");
+    if (oldOverlay?.active) oldOverlay.destroy();
+    baseSprite.setVisible(false);
+    const overlay = this.add.sprite(baseSprite.x, baseSprite.y, textureKey, 0)
+      .setOrigin(baseSprite.originX ?? 0.5, baseSprite.originY ?? 1)
+      .setScale(baseSprite.scaleX ?? 1, baseSprite.scaleY ?? 1)
+      .setFlipX(Boolean(baseSprite.flipX))
+      .setAlpha(baseSprite.alpha ?? 1);
+    view.add(overlay);
+    if (this.anims.exists(animationKey)) overlay.play(animationKey);
+    view.setData("studioStatusBaseSprite", baseSprite);
+    view.setData("studioStatusOverlay", overlay);
+    const definition = getEffect(stateId);
+    const duration = Math.max(350, ...(definition?.layers || []).map((layer) => (Number(layer.delay) || 0) + (Number(layer.life || layer.ms) || 0)));
+    const timer = this.time.delayedCall(duration, () => {
+      if (baseSprite.active) baseSprite.setVisible(true);
+      if (overlay.active) overlay.destroy();
+      if (view.active) {
+        view.setData("studioStatusBaseSprite", null);
+        view.setData("studioStatusOverlay", null);
+        view.setData("studioStatusRestoreTimer", null);
+      }
+    });
+    view.setData("studioStatusRestoreTimer", timer);
+  }
+
   playEffects(effectIds, trigger, point, extra = {}) {
     if (!this.effectDirector || !effectIds?.length || !point) return;
+    this.applyCharacterStateFromEffects(effectIds, trigger, point);
     this.effectDirector.playAssigned(effectIds, trigger, { ...point, ...extra });
   }
 
