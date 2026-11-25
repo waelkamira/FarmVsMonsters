@@ -167,7 +167,7 @@ func _test_farmer_planting_route_geometry() -> void:
 func _test_cooldowns_and_dust_skitter() -> void:
 	var bite: Dictionary = Rules.resolve_bite_attack(40.0, 50.0, 900.0)
 	assert(bite.should_attack and bite.cooldown_ms == 900.0)
-	var jump: Dictionary = Rules.resolve_dust_skitter_motion_step({
+	var jump: Dictionary = Rules.resolve_monster_movement_effects_step({
 		"is_jumping": false, "jump_cooldown_ms": 20.0, "jump_elapsed_ms": 0.0,
 		"jump_duration_ms": 500.0, "delta_ms": 40.0, "jump_speed_multiplier": 1.12,
 		"jump_visual_height": 34.0, "visual_scale": 0.68,
@@ -179,7 +179,7 @@ func _test_cooldowns_and_dust_skitter() -> void:
 	assert(jump.is_jumping and jump.jump_started)
 	assert(jump.jump_elapsed_ms == 40.0 and jump.jump_offset < 0.0)
 	assert(is_equal_approx(jump.movement_multiplier, 1.12))
-	var burst: Dictionary = Rules.resolve_dust_skitter_motion_step({
+	var burst: Dictionary = Rules.resolve_monster_movement_effects_step({
 		"is_jumping": false, "jump_cooldown_ms": 1000.0, "jump_elapsed_ms": 0.0,
 		"jump_duration_ms": 500.0, "delta_ms": 20.0, "jump_speed_multiplier": 1.12,
 		"jump_visual_height": 34.0, "visual_scale": 0.68,
@@ -190,7 +190,7 @@ func _test_cooldowns_and_dust_skitter() -> void:
 	})
 	assert(burst.burst_started and burst.burst_remaining_ms == 400.0)
 	assert(burst.burst_cooldown_ms == 3300.0)
-	var burst_only: Dictionary = Rules.resolve_dust_skitter_motion_step({
+	var burst_only: Dictionary = Rules.resolve_monster_movement_effects_step({
 		"is_jumping": false, "enable_jump": false, "delta_ms": 50.0,
 		"burst_cooldown_ms": 10.0, "burst_remaining_ms": 0.0,
 		"burst_duration_ms": 420.0, "burst_speed_multiplier": 1.65,

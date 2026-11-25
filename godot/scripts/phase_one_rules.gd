@@ -272,7 +272,7 @@ static func resolve_bite_attack(cooldown_ms: float, delta_ms: float, interval_ms
 	var should_attack: bool = remaining <= 0.0
 	return {"should_attack": should_attack, "cooldown_ms": interval_ms if should_attack else remaining}
 
-static func resolve_dust_skitter_motion_step(state: Dictionary) -> Dictionary:
+static func resolve_monster_movement_effects_step(state: Dictionary) -> Dictionary:
 	var jumping: bool = bool(state.get("is_jumping", false))
 	var enable_jump: bool = bool(state.get("enable_jump", true))
 	var delta_ms: float = float(state.get("delta_ms", NAN))
