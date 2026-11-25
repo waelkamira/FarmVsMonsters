@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { inferSpriteGrid } from "../../game/studio/spriteSheetGrid.mjs";
 import { CHARACTER_STATUS_STATES } from "../../game/studio/characterStateAnimations.mjs";
 
-function FramePreview({ src, rows = 1, columns = 1, frameCount = 1, fps = 8, loop = true, label }) {
+function FramePreview({ src, rows = 1, columns = 1, frameCount = 1, fps = 8, loop = true, label, startFrame = 0 }) {
   const [frame, setFrame] = useState(0);
   const count = Math.max(1, Number(frameCount) || 1);
   useEffect(() => {
@@ -138,7 +138,7 @@ export default function CharacterStateWorkbench({ asset, onSaved }) {
       <div className="studio-state-tabs" role="tablist" aria-label="حركات الشخصية">
         {clips.map((item) => <button key={item.id} type="button" className={selectedClip === item.id ? "active" : ""} onClick={() => setSelectedClip(item.id)}>{item.label}</button>)}
       </div>
-      <FramePreview src={baseClipUrl} rows={asset.rows || 1} columns={asset.columns || 1} frameCount={baseClipCount} fps={clip.fps || 8} loop={clip.loop !== false} label={asset.name + " " + selectedClip} />
+      <FramePreview src={baseClipUrl} rows={asset.rows || 1} columns={asset.columns || 1} frameCount={baseClipCount} fps={clip.fps || 8} loop={clip.loop !== false} startFrame={clip.startFrame || 0} label={asset.name + " " + selectedClip} />
       <p className="studio-detail-muted">المقطع المحدد يستخدم الإطارات {clip.startFrame ?? 0} إلى {clip.endFrame ?? 0} من الصورة الأساسية. راجع تناسق الوضعيات قبل إضافة حالات التأثير.</p>
     </section>
 
