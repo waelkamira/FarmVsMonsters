@@ -1,4 +1,50 @@
 {
   "version": 1,
-  "monsters": []
+  "monsters": [
+    {
+      "id": "01",
+      "name": "01",
+      "path": "/assets/monsters/01-c07ab241d0076edfff5f0b847f2a3aaaa1286ace5eecda0039e36c0cae47f18e.png",
+      "rows": 3,
+      "columns": 4,
+      "spriteSheet": true,
+      "animationProfile": {
+        "speedMultiplier": 1,
+        "idle": {
+          "startFrame": 0,
+          "endFrame": 0,
+          "fps": 6,
+          "loop": true
+        },
+        "move": {
+          "startFrame": 0,
+          "endFrame": 8,
+          "fps": 10,
+          "loop": true
+        },
+        "attack": {
+          "startFrame": 0,
+          "endFrame": 8,
+          "fps": 12,
+          "loop": false
+        }
+      },
+      "rigProfile": null,
+      "rigParts": [],
+      "monsterProfile": {
+        "baseArchetype": "monster-01",
+        "hpMultiplier": 1,
+        "speedMultiplier": 1,
+        "damageMultiplier": 1,
+        "attackIntervalMultiplier": 1,
+        "widthScale": 1,
+        "heightScale": 1.5,
+        "spawnWeight": 0,
+        "firstWave": 1
+      },
+      "flipX": true,
+      "effects": [],
+      "publishedAt": "2026-11-25T20:16:45.839Z"
+    }
+  ]
 }
