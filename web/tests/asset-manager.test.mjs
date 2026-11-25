@@ -35,7 +35,7 @@ function createScene(game = {}, sharedTextures = null) {
 test("loads a manifest group once and skips already cached textures", async () => {
   const scene = createScene();
   const manager = new PhaserAssetManager(scene, {
-    manifest: { groups: { plants: [{ key: "radish", url: "/assets/plants/radish.png", type: "image" }] } }
+    manifest: { groups: { plants: [{ key: "radish-level-1", url: "/assets/plants/radish-level-1.png", type: "image" }] } }
   });
 
   const first = await manager.loadGroup("plants");
@@ -43,7 +43,7 @@ test("loads a manifest group once and skips already cached textures", async () =
 
   assert.deepEqual(first, { group: "plants", loaded: 1, skipped: 0 });
   assert.deepEqual(second, { group: "plants", loaded: 0, skipped: 1 });
-  assert.equal(scene.textures.exists("radish"), true);
+  assert.equal(scene.textures.exists("radish-level-1"), true);
   assert.equal(manager.getStats().referencedAssets, 1);
   manager.destroy();
 });
