@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { inferSpriteGrid } from "../../game/studio/spriteSheetGrid.mjs";
 import { CHARACTER_STATUS_STATES } from "../../game/studio/characterStateAnimations.mjs";
-import { getEffect } from "../../game/vfx/effects/effectLibrary.mjs";
+import { getEffect, listEffects } from "../../game/vfx/effects/effectLibrary.mjs";
 import { createEffectPreview } from "../../game/vfx/effects/effectPreview.mjs";
 
 function FramePreview({ src, rows = 1, columns = 1, frameCount = 1, fps = 8, loop = true, label, startFrame = 0 }) {
@@ -82,7 +82,7 @@ function appendExistingCombat(form, asset) {
 export default function CharacterStateWorkbench({ asset, onSaved }) {
   const [selectedClip, setSelectedClip] = useState("idle");
   const [selectedState, setSelectedState] = useState(CHARACTER_STATUS_STATES[0].id);
-  const [previewEffectId, setPreviewEffectId] = useState("burn");
+  const [previewEffectId, setPreviewEffectId] = useState(() => listEffects({ appliesTo: asset.type })[0]?.id || "burn");
   const effectCanvasRef = useRef(null);
   const effectPreviewRef = useRef(null);
   const [file, setFile] = useState(null);
@@ -99,6 +99,7 @@ export default function CharacterStateWorkbench({ asset, onSaved }) {
   const baseFrameCount = Math.max(1, Number(asset.frameCount) || Number(asset.rows || 1) * Number(asset.columns || 1));
   const baseClipCount = Math.max(1, Number(clip.endFrame) - Number(clip.startFrame) + 1);
   const baseClipUrl = asset.previewUrl || asset.path;
+  const availablePreviewEffects = useMemo(() => listEffects({ appliesTo: asset.type }), [asset.type]);
   const previewEffect = getEffect(previewEffectId);
   const effectTarget = file && previewUrl ? { path: previewUrl, rows: grid.rows, columns: grid.columns, frameCount: grid.frameCount, fps, loop, startFrame: 0 } : selectedStateData ? { ...selectedStateData, path: selectedStateData.previewUrl || selectedStateData.path, startFrame: 0 } : { path: baseClipUrl, rows: asset.rows || 1, columns: asset.columns || 1, frameCount: baseClipCount, fps: clip.fps || 8, loop: clip.loop !== false, startFrame: clip.startFrame || 0 };
 
@@ -227,7 +228,7 @@ export default function CharacterStateWorkbench({ asset, onSaved }) {
         <div className="studio-state-section-head"><h4>معاينة التأثير فوق الشخصية</h4><span>نفس بيانات تأثيرات المعركة</span></div>
         <label>التأثير المراد تجربته
           <select value={previewEffectId} onChange={(event) => setPreviewEffectId(event.target.value)}>
-            {CHARACTER_STATUS_STATES.map((state) => <option key={state.effectId} value={state.effectId}>{state.label}</option>)}
+            {availablePreviewEffects.map((effect) => <option key={effect.id} value={effect.id}>{effect.nameAr}</option>)}
           </select>
         </label>
         <canvas ref={effectCanvasRef} width="320" height="220" className="studio-character-effect-preview" aria-label={"معاينة " + (previewEffect?.nameAr || "التأثير") + " فوق الشخصية"} />
