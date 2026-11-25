@@ -1,12 +1,13 @@
 import {NextResponse} from "next/server";
 import {mkdir,readFile,writeFile,unlink} from "node:fs/promises";
+import {randomUUID} from "node:crypto";
 import path from "node:path";
 import {verifyStudioSession} from "../../../../game/studio/signedSession.mjs";
 import {STUDIO_ASSET_TYPES,STUDIO_ID_PATTERN,STUDIO_MAX_UPLOAD_BYTES,STUDIO_RESERVED_PLANT_IDS,validateStudioAssetBytes} from "../../../../game/studio/assetTypes.mjs";
 import {createStudioPlantCombatProfile} from "../../../../game/studio/plantProfiles.mjs";
 import {assertExpectedContentSha} from "../../../../game/studio/registryConcurrency.mjs";
 import {createImmutableAssetPath} from "../../../../game/studio/immutableAssetPath.mjs";
-import {resolveStudioReleaseAsset,transitionStudioAssetStatus} from "../../../../game/studio/releaseLifecycle.mjs";
+import {createStudioReleaseBranchName,resolveStudioReleaseAsset,transitionStudioAssetStatus} from "../../../../game/studio/releaseLifecycle.mjs";
 import {cloneStudioAsset,createStudioAssetRevision,restoreStudioAssetRevision} from "../../../../game/studio/assetVersions.mjs";
 import {getAssetDependents} from "../../../../game/studio/assetDependencies.mjs";
 import {createStudioAnimationProfile} from "../../../../game/studio/animationProfiles.mjs";
@@ -32,6 +33,25 @@ async function githubGet(filePath,token,branch){const document=await githubGetDo
 async function githubGetBytes(filePath,token,branch){let response=await fetch(githubUrl(filePath)+"?ref="+encodeURIComponent(branch),{headers:{...githubHeaders(token),Accept:"application/vnd.github.raw"}});if(response.status===404){const targetBranch=process.env.STUDIO_PUBLISH_BRANCH||"main";if(targetBranch!==branch)response=await fetch(githubUrl(filePath)+"?ref="+encodeURIComponent(targetBranch),{headers:{...githubHeaders(token),Accept:"application/vnd.github.raw"}});}if(!response.ok)throw Error("GitHub asset read failed ("+response.status+"): "+filePath);return Buffer.from(await response.arrayBuffer());}
 async function githubPutImmutable(filePath,bytes,message,token,branch){const api=githubUrl(filePath),headers=githubHeaders(token);const verify=async()=>{const response=await fetch(api+"?ref="+encodeURIComponent(branch),{headers:{...headers,Accept:"application/vnd.github.raw"}});if(response.status===404)return false;if(!response.ok)throw Error("GitHub immutable asset lookup failed ("+response.status+").");return Buffer.from(await response.arrayBuffer()).equals(bytes);};if(await verify())return;const saved=await fetch(api,{method:"PUT",headers:{...headers,"Content-Type":"application/json"},body:JSON.stringify({message,branch,content:Buffer.from(bytes).toString("base64")})});if(saved.ok)return;if(await verify())return;const data=await saved.json().catch(()=>({}));throw Error(data.message||"GitHub immutable asset save failed ("+saved.status+").");}
 function githubApiUrl(endpoint){return "https://api.github.com/repos/"+(process.env.STUDIO_GITHUB_REPOSITORY||"waelkamira/FarmVsMonsters")+endpoint;}
+async function githubCreateBranch(branchName,baseBranch,token){
+ const ref=await fetch(githubApiUrl("/git/ref/heads/"+encodeURIComponent(baseBranch)),{headers:githubHeaders(token)});
+ if(!ref.ok)throw Error("تعذر قراءة فرع النشر الأساسي ("+ref.status+").");
+ const data=await ref.json(),sha=data.object?.sha;
+ if(!sha)throw Error("لم يتم العثور على commit صالح لفرع النشر الأساسي.");
+ const created=await fetch(githubApiUrl("/git/refs"),{method:"POST",headers:{...githubHeaders(token),"Content-Type":"application/json"},body:JSON.stringify({ref:"refs/heads/"+branchName,sha})});
+ if(!created.ok){const error=await created.json().catch(()=>({}));throw Error(error.message||"تعذر إنشاء فرع إصدار المراجعة ("+created.status+").");}
+ return sha;
+}
+async function githubDeleteBranch(branchName,token){
+ const response=await fetch(githubApiUrl("/git/refs/heads/"+encodeURIComponent(branchName)),{method:"DELETE",headers:githubHeaders(token)});
+ if(!response.ok&&response.status!==404){const error=await response.json().catch(()=>({}));throw Error(error.message||"تعذر تنظيف فرع الإصدار غير المكتمل.");}
+}
+async function githubCreatePullRequest(head,base,title,body,token){
+ const response=await fetch(githubApiUrl("/pulls"),{method:"POST",headers:{...githubHeaders(token),"Content-Type":"application/json"},body:JSON.stringify({head,base,title,body,draft:false})});
+ if(!response.ok){const error=await response.json().catch(()=>({}));const failure=Error(response.status===403||response.status===404?"تعذر إنشاء طلب المراجعة. يحتاج رمز GitHub إلى صلاحية Pull requests: Read and write إضافة إلى Contents: Read and write.":error.message||"GitHub pull request creation failed ("+response.status+").");failure.status=response.status;throw failure;}
+ const pr=await response.json();
+ return {number:pr.number,url:pr.html_url,state:pr.state,merged:Boolean(pr.merged),mergedAt:pr.merged_at||null};
+}
 async function githubGetPullRequest(number,token){
  const response=await fetch(githubApiUrl("/pulls/"+Number(number)),{headers:githubHeaders(token)});
  if(response.status===404)return null;
@@ -63,6 +83,13 @@ function removeManifestAssetReferences(manifest,assetPaths){
  }else if(Array.isArray(manifest.assets))manifest.assetCount=manifest.assets.length;
  return manifest;
 }
+async function removeGithubAssetManifestReferences(assetPaths,token,branch){
+ const filePath="web/public/assets/asset-manifest.json";
+ const document=await githubGetDocument(filePath,token,branch);
+ if(!document)return;
+ const manifest=removeManifestAssetReferences(JSON.parse(document.content),assetPaths);
+ await githubPut(filePath,Buffer.from(JSON.stringify(manifest,null,2)+"\n"),"studio: remove deleted asset references from manifest",token,branch,document.sha);
+}
 async function removeLocalAssetManifestReferences(assetPaths){
  const target=path.join(process.cwd(),"public/assets/asset-manifest.json");
  try{
@@ -71,13 +98,7 @@ async function removeLocalAssetManifestReferences(assetPaths){
   await writeFile(target,JSON.stringify(updated,null,2)+"\n","utf8");
  }catch(error){if(error.code!=="ENOENT")throw error;}
 }
-async function removeGithubAssetManifestReferences(assetPaths,token,branch){
- const filePath="web/public/assets/asset-manifest.json";
- const document=await githubGetDocument(filePath,token,branch);
- if(!document)return;
- const manifest=removeManifestAssetReferences(JSON.parse(document.content),assetPaths);
- await githubPut(filePath,Buffer.from(JSON.stringify(manifest,null,2)+"\n"),"studio: remove deleted asset references from manifest",token,branch,document.sha);
-}
+
 async function githubPut(filePath,bytes,message,token,branch,expectedSha){const api=githubUrl(filePath),headers=githubHeaders(token);const check=await fetch(api+"?ref="+encodeURIComponent(branch),{headers});let sha=null;if(check.ok)sha=(await check.json()).sha;else if(check.status!==404)throw Error("GitHub lookup failed ("+check.status+").");assertExpectedContentSha(expectedSha,sha);const saved=await fetch(api,{method:"PUT",headers:{...headers,"Content-Type":"application/json"},body:JSON.stringify({message,branch,content:Buffer.from(bytes).toString("base64"),...(sha?{sha}:{})})});if(!saved.ok){const data=await saved.json().catch(()=>({}));throw Error(data.message||"GitHub save failed ("+saved.status+").");}}
 async function localRegistrySnapshot(){return readLocalRegistrySnapshot(path.join(process.cwd(),"game/data/studioAssetRegistry.json"));}
 async function localRegistry(){return (await localRegistrySnapshot()).registry;}
@@ -271,7 +292,7 @@ export async function POST(req){
  const hasProjectile=Boolean(projectileFile&&typeof projectileFile.arrayBuffer==="function"&&projectileFile.size>0);
  const removeProjectile=String(form.get("removeProjectile")||"false")==="true";
  const driver=process.env.STUDIO_STORAGE_DRIVER||"local";let old,registrySha;
- try{if(driver==="github"){const token=process.env.STUDIO_GITHUB_TOKEN,branch=process.env.STUDIO_GITHUB_BRANCH||"studio/assets";if(!token)return NextResponse.json({error:"STUDIO_GITHUB_TOKEN is required."},{status:503});const document=await githubGetDocument(REGISTRY_PATH,token,branch);old=document?JSON.parse(document.content):{version:1,assets:[]};registrySha=document?.sha??null;}else{const snapshot=await localRegistrySnapshot();old=snapshot.registry;registrySha=snapshot.sha;}}catch(error){return NextResponse.json({error:error.message},{status:502});}
+ try{if(driver==="github"){const token=process.env.STUDIO_GITHUB_TOKEN,branch=process.env.STUDIO_GITHUB_BRANCH||"studio/assets",targetBranch=process.env.STUDIO_PUBLISH_BRANCH||"main";if(branch===targetBranch)return NextResponse.json({error:"يجب أن يكون فرع تخزين Studio منفصلاً عن فرع اللعبة المنشور لحماية النشر والمراجعة."},{status:409});if(!token)return NextResponse.json({error:"STUDIO_GITHUB_TOKEN is required."},{status:503});const document=await githubGetDocument(REGISTRY_PATH,token,branch);old=document?JSON.parse(document.content):{version:1,assets:[]};registrySha=document?.sha??null;}else{const snapshot=await localRegistrySnapshot();old=snapshot.registry;registrySha=snapshot.sha;}}catch(error){return NextResponse.json({error:error.message},{status:502});}
  const index=old.assets.findIndex(a=>a.id===id);let existing=index>=0?old.assets[index]:null;
  if(existing?.releaseRequest?.number){
   if(driver!=="github")return NextResponse.json({error:"لا يمكن تعديل أصل له طلب مراجعة نشر قبل التحقق من حالة الطلب."},{status:409});
@@ -411,8 +432,6 @@ export async function PATCH(req){
      if(!target.startsWith(root))return NextResponse.json({error:"مسار ملف الأصل خارج مجلد الأصول المسموح."},{status:409});
     }
     await removeLocalAssetManifestReferences(candidatePaths);
-    await removeGithubAssetManifestReferences(candidatePaths,token,storageBranch);
-   if(targetBranch!==storageBranch)await removeGithubAssetManifestReferences(candidatePaths,token,targetBranch);
    for(const [catalogPath,key] of [[PUBLISHED_CATALOG_PATH,"plants"],[PUBLISHED_MONSTER_CATALOG_PATH,"monsters"]]){
      const target=path.join(process.cwd(),"public",catalogPath.replace(/^web\//,""));
      try{const catalog=JSON.parse(await readFile(target,"utf8"));if(Array.isArray(catalog[key])){catalog[key]=catalog[key].filter((item)=>item.id!==id);await writeFile(target,JSON.stringify(catalog,null,2)+"\n","utf8");}}catch(error){if(error.code!=="ENOENT")throw error;}
@@ -436,49 +455,53 @@ export async function PATCH(req){
     if(registry.assets.some(asset=>asset.id===newId))return NextResponse.json({error:"يوجد أصل بهذا المعرّف بالفعل."},{status:409});
     if(registry.assets[index].type==="plant"&&STUDIO_RESERVED_PLANT_IDS.includes(newId))return NextResponse.json({error:"هذا المعرّف محجوز لنبتة أساسية."},{status:409});
     const clone=cloneStudioAsset(registry.assets[index],newId,body.newName);
-    registry.assets.push(clone);await saveLocalRegistry(registry,registrySha);
+    registry.assets.push(clone);await saveLocalRegistry(registry);
     return NextResponse.json({success:true,operation,asset:clone,message:"تم إنشاء نسخة جديدة كمسودة مستقلة."});
    }
    let updated;
    try{updated=operation==="restore-version"?restoreStudioAssetRevision(registry.assets[index],body.versionNumber):transitionStudioAssetStatus(registry.assets[index],operation);}
    catch(error){return NextResponse.json({error:error.message},{status:409});}
-   registry.assets[index]=updated;await saveLocalRegistry(registry,registrySha);
+   registry.assets[index]=updated;await saveLocalRegistry(registry);
    return NextResponse.json({success:true,operation,asset:updated,message:operation==="archive"?"تمت أرشفة الأصل مع الاحتفاظ بملفاته.":operation==="restore"?"تمت استعادة الأصل كمسودة.":"تمت استعادة الإصدار السابق كمسودة جديدة."});
   }catch(error){return NextResponse.json({error:error.message||"Studio lifecycle action failed."},{status:error.code==="STUDIO_WRITE_CONFLICT"?409:500});}
  }
  const token=process.env.STUDIO_GITHUB_TOKEN,storageBranch=process.env.STUDIO_GITHUB_BRANCH||"studio/assets",targetBranch=process.env.STUDIO_PUBLISH_BRANCH||"main";
+ if(storageBranch===targetBranch)return NextResponse.json({error:"يجب أن يكون فرع تخزين Studio منفصلاً عن فرع اللعبة المنشور لحماية النشر والمراجعة."},{status:409});
  if(!token)return NextResponse.json({error:"STUDIO_GITHUB_TOKEN is required."},{status:503});
+ let releaseBranchForCleanup=null;
+ let releasePullRequestAttempted=false;
  try{
   const registryDocument=await githubGetDocument(REGISTRY_PATH,token,storageBranch),registry=registryDocument?JSON.parse(registryDocument.content):{version:1,assets:[]},registrySha=registryDocument?.sha??null;
   const index=registry.assets.findIndex(asset=>asset.id===id);
   if(index<0)return NextResponse.json({error:"لم يتم العثور على الأصل في مكتبة Studio."},{status:404});
   let asset=registry.assets[index];
   if(operation==="delete"){
-
    const dependents=getAssetDependents(registry.assets,id);
    if(dependents.length)return NextResponse.json({error:"لا يمكن حذف الأصل لأن أصولاً أخرى تعتمد عليه: "+dependents.map(item=>item.assetName).join("، ")},{status:409});
+   if(asset.status==="published")return NextResponse.json({error:"لا يمكن حذف أصل منشور مباشرة. إزالة المحتوى المنشور يجب أن تمر بطلب إصدار ومراجعة منفصل."},{status:409});
    if(asset.releaseRequest?.number){
     const release=await githubGetPullRequest(asset.releaseRequest.number,token);
     if(release?.state==="open")return NextResponse.json({error:"يوجد طلب نشر مفتوح لهذا الأصل. أغلق طلب المراجعة أولاً ثم أعد الحذف."},{status:409});
+    if(release?.merged)return NextResponse.json({error:"هذا الأصل منشور عبر طلب مراجعة مدمج. أزل نشره بطلب إصدار مراجعة منفصل قبل الحذف."},{status:409});
    }
-   const remaining=registry.assets.filter((_,i)=>i!==index);
-   const candidatePaths=assetOwnedPaths(asset).filter((assetPath)=>!assetPathStillUsed(remaining,assetPath));
+   const publishedCatalogs=[];
    for(const [catalogPath,key] of [[PUBLISHED_CATALOG_PATH,"plants"],[PUBLISHED_MONSTER_CATALOG_PATH,"monsters"]]){
     const document=await githubGetDocument(catalogPath,token,targetBranch);
-    if(!document)continue;
-    const catalog=JSON.parse(document.content);
-    if(Array.isArray(catalog[key])&&catalog[key].some((item)=>item.id===id)){
-     catalog[key]=catalog[key].filter((item)=>item.id!==id);
-     await githubPut(catalogPath,Buffer.from(JSON.stringify(catalog,null,2)+"\n"),"studio: remove "+asset.type+" "+id,token,targetBranch,document.sha);
-    }
+    const catalog=document?JSON.parse(document.content):(key==="plants"?{plants:[]}:{monsters:[]});
+    const collection=Array.isArray(catalog[key])?catalog[key]:[];
+    if(collection.some(item=>item.id===id))return NextResponse.json({error:"ما زال هذا الأصل موجوداً في كتالوج اللعبة المنشور. أزل نشره عبر طلب مراجعة قبل الحذف."},{status:409});
+    publishedCatalogs.push(...collection);
    }
+   const remaining=registry.assets.filter((_,i)=>i!==index);
+   const isPublishedPathReferenced=assetPath=>publishedCatalogs.some(item=>item.path===assetPath||(item.rigParts||[]).some(part=>part.path===assetPath)||item.combat?.projectile?.path===assetPath);
+   const candidatePaths=assetOwnedPaths(asset).filter(assetPath=>!assetPathStillUsed(remaining,assetPath)&&!isPublishedPathReferenced(assetPath));
+   await removeGithubAssetManifestReferences(candidatePaths,token,storageBranch);
    for(const assetPath of candidatePaths){
     const filePath="web/public"+assetPath;
-    await githubDeleteIfExists(filePath,"studio: delete unused asset file for "+id,token,storageBranch);
-    if(targetBranch!==storageBranch)await githubDeleteIfExists(filePath,"studio: delete published asset file for "+id,token,targetBranch);
+    await githubDeleteIfExists(filePath,"studio: delete unused storage asset file for "+id,token,storageBranch);
    }
    await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify({...registry,assets:remaining},null,2)+"\n"),"studio: permanently delete "+asset.type+" "+id,token,storageBranch,registrySha);
-   return NextResponse.json({success:true,operation,deletedId:id,message:"تم حذف الأصل من سجل Studio وكتالوج اللعبة وملفات GitHub غير المشتركة."});
+   return NextResponse.json({success:true,operation,deletedId:id,message:"تم حذف الأصل من سجل Studio وملفات فرع التخزين غير المشتركة. لم يتم تعديل فرع اللعبة المنشور."});
   }
 
   if(operation==="clone"){
@@ -520,7 +543,7 @@ export async function PATCH(req){
    if(operation==="archive"&&asset.releaseRequest?.number){
     const previousRequest=await githubGetPullRequest(asset.releaseRequest.number,token);
     if(previousRequest?.state==="open"||previousRequest?.merged)return NextResponse.json({error:"أغلق طلب مراجعة النشر المفتوح أولاً. لا يمكن أرشفة محتوى منشور؛ أزل نشره بطلب إصدار منفصل."},{status:409});
-    candidate={...asset,releaseRequest:null};
+    candidate={...asset,status:"testing",releaseRequest:null};
    }
    let updated;
    try{updated=transitionStudioAssetStatus(candidate,operation);}
@@ -539,51 +562,77 @@ export async function PATCH(req){
    return NextResponse.json({success:true,operation,asset:updated,message:asset.type==="monster"?"الوحش جاهز للاختبار داخل اللعبة.":"النبتة جاهزة للاختبار داخل اللعبة."});
   }
   if(operation!=="publish")return NextResponse.json({error:"عملية Studio غير معروفة."},{status:400});
-  if(asset.status!=="testing")return NextResponse.json({error:"يجب تجهيز الأصل للاختبار والتحقق منه داخل اللعبة أولاً."},{status:409});
-  if(!safeAssetPath(asset.path))return NextResponse.json({error:"Invalid asset path."},{status:400});
+if(!safeAssetPath(asset.path))return NextResponse.json({error:"Invalid asset path."},{status:400});
 
-  // Publish directly to the configured game branch. The catalog is written last,
-  // so assets are never made visible to the game before their files are present.
-  const artworkPath="web/public"+asset.path;
-  const artworkBytes=await githubGetBytes(artworkPath,token,storageBranch);
-  await githubPutImmutable(artworkPath,artworkBytes,"studio: publish "+asset.type+" artwork "+id,token,targetBranch);
-  const rigPartIds=[...new Set((asset.rigProfile?.bones||[]).map(bone=>bone?.part?.assetId).filter(Boolean))];
-  const rigPartAssets=getRigPartAssets(registry.assets,asset);
-  if(rigPartAssets.length!==rigPartIds.length||rigPartAssets.some(part=>!part||!["item","plant","monster","effect"].includes(part.type)||part.status==="archived"||!safeAssetPath(part.path)))return NextResponse.json({error:"يوجد جزء هيكلي مفقود أو غير صالح؛ أصلح تبعيات الهيكل قبل النشر."},{status:409});
-  const rigPartById=new Map(rigPartAssets.filter(Boolean).map(part=>[part.id,part]));
-  const invalidRigFrame=(asset.rigProfile?.bones||[]).some(bone=>{if(!bone?.part)return false;const part=rigPartById.get(bone.part.assetId);const count=getRigPartFrameCount(part);return !part||!Number.isInteger(count)||bone.part.frame>=count;});
-  if(invalidRigFrame)return NextResponse.json({error:"يوجد إطار غير صالح في أحد أجزاء الهيكل؛ صحح رقم الإطار قبل النشر."},{status:409});
-  for(const part of rigPartAssets){if(part.path===asset.path||part.path===asset.combat?.projectile?.path)continue;const partBytes=await githubGetBytes("web/public"+part.path,token,storageBranch);await githubPutImmutable("web/public"+part.path,partBytes,"studio: publish skeletal part "+part.id+" for "+asset.type+" "+id,token,targetBranch);}
-
-
-  if(asset.type==="plant"&&asset.combat.mode==="projectile"){
-   if(!safeAssetPath(asset.combat.projectile?.path))return NextResponse.json({error:"The linked projectile asset is missing."},{status:409});
-   const projectilePath="web/public"+asset.combat.projectile.path;
-   const projectileBytes=await githubGetBytes(projectilePath,token,storageBranch);
-   await githubPutImmutable(projectilePath,projectileBytes,"studio: publish plant projectile "+id,token,targetBranch);
-  }
-
-  const isMonster=asset.type==="monster";
-  const catalogPath=isMonster?PUBLISHED_MONSTER_CATALOG_PATH:PUBLISHED_CATALOG_PATH;
-  const catalogDocument=await githubGetDocument(catalogPath,token,targetBranch);
-  const catalog=catalogDocument?JSON.parse(catalogDocument.content):(isMonster?{version:1,monsters:[]}:{version:1,plants:[]});
-  const publishedAt=new Date().toISOString();
-  const publishedRecord=isMonster
-   ?{id:asset.id,name:asset.name,path:asset.path,rows:asset.rows,columns:asset.columns,spriteSheet:asset.spriteSheet,animationProfile:asset.animationProfile||null,rigProfile:asset.rigProfile||null,rigParts:rigPartAssets.map(part=>({id:part.id,name:part.name,path:part.path,rows:part.spriteSheet?(part.rows||1):1,columns:part.spriteSheet?(part.columns||1):1,frameCount:getRigPartFrameCount(part),spriteSheet:Boolean(part.spriteSheet)})),monsterProfile:asset.monsterProfile,flipX:Boolean(asset.flipX),publishedAt}
-   :{id:asset.id,name:asset.name,path:asset.path,rows:asset.rows,columns:asset.columns,spriteSheet:asset.spriteSheet,animationProfile:asset.animationProfile||null,rigProfile:asset.rigProfile||null,rigParts:rigPartAssets.map(part=>({id:part.id,name:part.name,path:part.path,rows:part.spriteSheet?(part.rows||1):1,columns:part.spriteSheet?(part.columns||1):1,frameCount:getRigPartFrameCount(part),spriteSheet:Boolean(part.spriteSheet)})),combat:asset.combat,flipX:Boolean(asset.flipX),publishedAt};
-  const collectionKey=isMonster?"monsters":"plants";
-  const collection=Array.isArray(catalog[collectionKey])?catalog[collectionKey]:[];
-  const existingIndex=collection.findIndex(item=>item.id===id);
-  catalog[collectionKey]=existingIndex>=0?collection.map((item,i)=>i===existingIndex?publishedRecord:item):[...collection,publishedRecord];
-  catalog.version=1;
-  await githubPut(catalogPath,Buffer.from(JSON.stringify(catalog,null,2)+"\n"),"studio: publish "+asset.type+" "+id,token,targetBranch,catalogDocument?.sha??null);
-
-  const publishedAsset={...asset,status:"published",publishedAt,releaseRequest:null};
+if(asset.releaseRequest?.number){
+ const previousRequest=await githubGetPullRequest(asset.releaseRequest.number,token);
+ if(previousRequest?.state==="open")return NextResponse.json({success:true,operation:"publish-requested",asset,reviewUrl:previousRequest.url,reviewNumber:previousRequest.number,releaseBranch:asset.releaseRequest.branch,alreadyRequested:true,message:"يوجد طلب مراجعة مفتوح لهذا الأصل بالفعل."});
+ if(previousRequest?.merged){
+  const publishedAsset={...asset,status:"published",publishedAt:previousRequest.mergedAt||asset.publishedAt,releaseRequest:{...asset.releaseRequest,state:"merged"}};
   registry.assets[index]=publishedAsset;
-  let registrySyncWarning=null;
+  await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(registry,null,2)+"\n"),"studio: reconcile merged release "+id,token,storageBranch,registrySha);
+  return NextResponse.json({success:true,operation:"published",asset:publishedAsset,reviewUrl:previousRequest.url,reviewNumber:previousRequest.number,alreadyPublished:true,message:"تم دمج طلب النشر مسبقاً وأصبحت النسخة منشورة."});
+ }
+ asset={...asset,status:"testing",releaseRequest:null};
+ registry.assets[index]=asset;
+}
+if(asset.status!=="testing")return NextResponse.json({error:"يجب تجهيز الأصل للاختبار والتحقق منه داخل اللعبة أولاً."},{status:409});
+
+const rigPartIds=[...new Set((asset.rigProfile?.bones||[]).map(bone=>bone?.part?.assetId).filter(Boolean))];
+const rigPartAssets=getRigPartAssets(registry.assets,asset);
+if(rigPartAssets.length!==rigPartIds.length||rigPartAssets.some(part=>!part||!["item","plant","monster","effect"].includes(part.type)||part.status==="archived"||!safeAssetPath(part.path)))return NextResponse.json({error:"يوجد جزء هيكلي مفقود أو غير صالح؛ أصلح تبعيات الهيكل قبل طلب النشر."},{status:409});
+const rigPartById=new Map(rigPartAssets.filter(Boolean).map(part=>[part.id,part]));
+const invalidRigFrame=(asset.rigProfile?.bones||[]).some(bone=>{if(!bone?.part)return false;const part=rigPartById.get(bone.part.assetId),count=getRigPartFrameCount(part);return !part||!Number.isInteger(count)||bone.part.frame>=count;});
+if(invalidRigFrame)return NextResponse.json({error:"يوجد إطار غير صالح في أحد أجزاء الهيكل؛ صحح رقم الإطار قبل طلب النشر."},{status:409});
+
+const sourceFiles=new Map();
+sourceFiles.set(asset.path,await githubGetBytes("web/public"+asset.path,token,storageBranch));
+for(const part of rigPartAssets){if(!safeAssetPath(part.path))return NextResponse.json({error:"مسار أحد أجزاء الهيكل غير صالح."},{status:409});if(!sourceFiles.has(part.path))sourceFiles.set(part.path,await githubGetBytes("web/public"+part.path,token,storageBranch));}
+if(asset.type==="plant"&&asset.combat.mode==="projectile"){if(!safeAssetPath(asset.combat.projectile?.path))return NextResponse.json({error:"The linked projectile asset is missing."},{status:409});if(!sourceFiles.has(asset.combat.projectile.path))sourceFiles.set(asset.combat.projectile.path,await githubGetBytes("web/public"+asset.combat.projectile.path,token,storageBranch));}
+
+const releaseBranch=createStudioReleaseBranchName(id,randomUUID().replace(/-/g,"").slice(0,8));
+releaseBranchForCleanup=releaseBranch;
+await githubCreateBranch(releaseBranch,targetBranch,token);
+for(const [assetPath,bytes] of sourceFiles)await githubPutImmutable("web/public"+assetPath,bytes,"stage "+asset.type+" release dependency for "+id,token,releaseBranch);
+
+const isMonster=asset.type==="monster";
+const catalogPath=isMonster?PUBLISHED_MONSTER_CATALOG_PATH:PUBLISHED_CATALOG_PATH;
+const catalogDocument=await githubGetDocument(catalogPath,token,targetBranch);
+const catalog=catalogDocument?JSON.parse(catalogDocument.content):(isMonster?{version:1,monsters:[]}:{version:1,plants:[]});
+const publishedAt=new Date().toISOString();
+const rigParts=rigPartAssets.map(part=>({id:part.id,name:part.name,path:part.path,rows:part.spriteSheet?(part.rows||1):1,columns:part.spriteSheet?(part.columns||1):1,frameCount:getRigPartFrameCount(part),spriteSheet:Boolean(part.spriteSheet)}));
+const publishedRecord=isMonster?{id:asset.id,name:asset.name,path:asset.path,rows:asset.rows,columns:asset.columns,spriteSheet:asset.spriteSheet,animationProfile:asset.animationProfile||null,rigProfile:asset.rigProfile||null,rigParts,monsterProfile:asset.monsterProfile,flipX:Boolean(asset.flipX),publishedAt}:{id:asset.id,name:asset.name,path:asset.path,rows:asset.rows,columns:asset.columns,spriteSheet:asset.spriteSheet,animationProfile:asset.animationProfile||null,rigProfile:asset.rigProfile||null,rigParts,combat:asset.combat,flipX:Boolean(asset.flipX),publishedAt};
+const collectionKey=isMonster?"monsters":"plants";
+const collection=Array.isArray(catalog[collectionKey])?catalog[collectionKey]:[];
+const existingIndex=collection.findIndex(item=>item.id===id);
+catalog[collectionKey]=existingIndex>=0?collection.map((item,i)=>i===existingIndex?publishedRecord:item):[...collection,publishedRecord];
+catalog.version=1;
+await githubPut(catalogPath,Buffer.from(JSON.stringify(catalog,null,2)+"\n"),"stage "+asset.type+" catalog release "+id,token,releaseBranch,catalogDocument?.sha??null);
+
+releasePullRequestAttempted=true;
+let pr;
+try{pr=await githubCreatePullRequest(releaseBranch,targetBranch,"Publish "+asset.type+": "+asset.name+" ("+id+")","## Studio content release\n\n- Type: "+asset.type+"\n- ID: "+id+"\n- Revision: "+(asset.revision||1)+"\n- Includes the immutable source asset, the complete referenced rig-part set, linked projectile when applicable, and the updated published catalog.\n- Asset lifecycle, rig schema, frame references and dependency checks were validated before staging.\n\n**Required before merge:** review the diff and complete the live Phaser gameplay/browser verification for this exact revision. Merging this pull request activates the content on the target game branch. The Studio action does not merge it automatically.",token);}catch(error){if([403,404,422].includes(error.status))releasePullRequestAttempted=false;throw error;}
+
+const requested={...asset,status:"approved",releaseRequest:{number:pr.number,url:pr.url,branch:releaseBranch,state:"open",createdAt:new Date().toISOString()}};
+registry.assets[index]=requested;
+let registrySyncWarning=null;
+try{await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(registry,null,2)+"\n"),"studio: request "+asset.type+" release "+id,token,storageBranch,registrySha);}
+catch(error){
+ if(error.code==="STUDIO_WRITE_CONFLICT"){
   try{
-   await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(registry,null,2)+"\n"),"studio: mark "+asset.type+" published "+id,token,storageBranch,registrySha);
-  }catch(error){registrySyncWarning=error.message;}
-  return NextResponse.json({success:true,operation:"published",asset:publishedAsset,publishedAt,targetBranch,registrySyncWarning,message:asset.type==="monster"?"تم نشر الوحش مباشرة في اللعبة دون طلب مراجعة.":"تم نشر النبتة مباشرة في اللعبة دون طلب مراجعة."});
- }catch(error){return NextResponse.json({error:error.message||"Studio action failed."},{status:error.code==="STUDIO_WRITE_CONFLICT"?409:502});}
+   const latestDocument=await githubGetDocument(REGISTRY_PATH,token,storageBranch);
+   const latestRegistry=latestDocument?JSON.parse(latestDocument.content):{version:1,assets:[]};
+   const latestIndex=latestRegistry.assets.findIndex(item=>item.id===id);
+   const latestAsset=latestIndex>=0?latestRegistry.assets[latestIndex]:null;
+   if(!latestAsset||Number(latestAsset.revision||1)!==Number(asset.revision||1)||latestAsset.updatedAt!==asset.updatedAt||(latestAsset.releaseRequest?.number&&latestAsset.releaseRequest.number!==pr.number))throw new Error("تم إنشاء طلب المراجعة، لكن الأصل تغير في المكتبة أثناء النشر. لا يمكن تحديث حالته دون مراجعة التعارض. رابط الطلب: "+pr.url);
+   latestRegistry.assets[latestIndex]=requested;
+   await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(latestRegistry,null,2)+"\n"),"studio: reconcile release request "+id,token,storageBranch,latestDocument?.sha??null);
+  }catch(syncError){registrySyncWarning=syncError.message;}
+ }else registrySyncWarning=error.message;
+}
+return NextResponse.json({success:true,operation:"publish-requested",asset:requested,reviewUrl:pr.url,reviewNumber:pr.number,releaseBranch,targetBranch,registrySyncWarning,message:registrySyncWarning?"تم إنشاء طلب مراجعة النشر، لكن تعذر تحديث حالة الأصل في مكتبة Studio. احتفظ برابط المراجعة.":"تم إنشاء طلب مراجعة النشر. لن يتغير فرع اللعبة الأساسي حتى تتم مراجعة الطلب ودمجه."});
+ }catch(error){
+  if(releaseBranchForCleanup&&!releasePullRequestAttempted){try{await githubDeleteBranch(releaseBranchForCleanup,token);}catch(cleanupError){error.message=(error.message||"Studio action failed.")+" Cleanup warning: "+cleanupError.message;}}
+  return NextResponse.json({error:error.message||"Studio action failed."},{status:error.code==="STUDIO_WRITE_CONFLICT"?409:502});
+}
 }
