@@ -305,13 +305,7 @@
         "type": "image"
       }
     ],
-    "monster-icons": [
-      {
-        "key": "monster-icons-dragon",
-        "url": "/assets/monster-icons/dragon.svg",
-        "type": "svg"
-      }
-    ],
+    "monster-icons": [],
     "plant-icons": [
       {
         "key": "plant-icons-double-radish",
