@@ -719,32 +719,32 @@
 
 
 ## 2026-11-15 — Approved Stage 1 story and fair-difficulty decisions
-- Recorded automatic slingshot behavior: the farmer throws stones at the dragon automatically when it is present and within range; no player clicking is required. The user will provide the dragon character sheet later. Stage 1 uses a normal dragon, not a cart-mounted dragon.
+- Recorded automatic ranged attack behavior: the farmer throws stones at the final enemy automatically when it is present and within range; no player clicking is required. The user will provide the final enemy character sheet later. Stage 1 uses a normal final enemy, not a cart-mounted final enemy.
 - Replaced the 100-monster fixed design target with a clear balance requirement: retain five waves for now, but reduce/rebalance the current excessive enemy volume through playtesting. Early waves must be forgiving, slow, and teachable; difficulty increases gradually with recovery intervals and introduced counterplay.
 - Recorded the production order: finalize the battlefield environment, stage presentation, controls/buttons, HUD, menus, and visual language before adding further plant types. Keep the current starter plant/resource setup in the meantime; introduce new plants gradually later.
-- Updated the Phase 1 acceptance target so the first complete playable stage includes the dragon, automatic slingshot, rescue, reunion, and celebration.
+- Updated the Phase 1 acceptance target so the first complete playable stage includes the final enemy, automatic ranged attack, rescue, reunion, and celebration.
 - Documentation only: these decisions are recorded in the plan/roadmap/story documents. Gameplay code has not yet been changed or browser-verified as part of this documentation update.
 
 
 ## 2026-11-15 — Campaign monster-count progression approved
 - User approved 30 ordinary monsters total in Stage 1, 31 in Stage 2, 32 in Stage 3, then +1 ordinary monster for each subsequent stage (Stage N = 29 + N).
-- Counts are totals per campaign stage across its waves, not per-wave counts. Dragon bosses are tracked separately from ordinary monster/follower totals.
+- Counts are totals per campaign stage across its waves, not per-wave counts. final encounters are tracked separately from ordinary monster/follower totals.
 - Stage 1 retains five waves; exact distribution of its 30 ordinary monsters across those waves will be tuned to keep the opening easy, readable, and fair.
 - The previous 100-monster first-stage schedule is obsolete and must be replaced in gameplay code and corresponding tests. No runtime code changed in this documentation update.
 
-## 2026-11-15 — Phase 1 dragon boss and princess rescue flow
-- Added automatic farmer sling attacks, a dedicated dragon health bar, dragon movement with the captive princess beside it, and fireball attacks against living plants or the farmhouse.
-- Phase 1 victory now waits for every ordinary monster and the dragon to be defeated.
+## 2026-11-15 — Phase 1 final encounter and princess rescue flow
+- Added automatic farmer sling attacks, a dedicated final enemy health bar, final enemy movement with the captive princess beside it, and projectile attacks attacks against living plants or the farmhouse.
+- Phase 1 victory now waits for every ordinary monster and the final enemy to be defeated.
 - Added the rescue sequence: the farmer reaches the princess, picks her up, carries her back to the farmhouse, and only then opens the victory screen.
 - Added optional user-authored asset slots and web/game/data/phase-one-story-assets.json; missing story artwork does not replace or modify existing character art.
 - Added focused story-flow tests in web/tests/phase-one-story.test.mjs.
-- Asset contract: farmer story sheets use 360×430 frames (6 frames each); dragon sheet uses 512×512 frames; captive and rescued princess poses are separate standalone PNGs; emblem is a standalone PNG.
+- Asset contract: farmer story sheets use 360×430 frames (6 frames each); final enemy sheet uses 512×512 frames; captive and rescued princess poses are separate standalone PNGs; emblem is a standalone PNG.
 - Validation status: source and tests were updated, but browser gameplay, visual placement, and the web build still require execution in a local checkout after the user supplies the story artwork.
 
 
 
 ## 2026-11-15 — Phase 1 balance and in-game collection menu
-- Changed Stage 1 ordinary monster total from 100 to 30 across five waves: 3 / 5 / 6 / 7 / 9. Dragon boss is separate.
+- Changed Stage 1 ordinary monster total from 100 to 30 across five waves: 3 / 5 / 6 / 7 / 9. final encounter is separate.
 - Added campaign stage count helper for Stages 1–10: 30–39 ordinary monsters, increasing by one per stage.
 - Added a pause-on-open in-game journal menu with tabs for stages, plants, cave/coins, and monsters.
 - Stage list shows ten stages; Stage 1 is available and later stages display lock/key status.
@@ -804,11 +804,11 @@
 
 
 ## 2026-11-15 — Shared Stage 1 combat contract and replay RNG foundation
-- Refactored `phaseOneRules.mjs` and `BattleScene.js` to consume the shared contract instead of duplicating monster HP, movement, damage, dragon, reward, and wave pacing constants. Existing balance values and wave counts were preserved.
+- Refactored `phaseOneRules.mjs` and `BattleScene.js` to consume the shared contract instead of duplicating monster HP, movement, damage, final enemy, reward, and wave pacing constants. Existing balance values and wave counts were preserved.
 - Added `web/game/rules/seededRandom.mjs` with deterministic xorshift32 and unbiased integer sampling for future server/client replay. It is not yet wired into BattleScene; existing Phaser random calls remain client-side until session seed flow and simulation replay are implemented.
 - Added tests in `phase-one-combat-contract.test.mjs` and `seeded-random.test.mjs` covering exact current values, deterministic sequences, input validation, and shared-contract usage.
 - Added `Documentation/STAGE_ONE_AUTHORITATIVE_COMBAT_SIMULATION.md` describing the server-authoritative replay design, trust boundaries, deterministic requirements, rollout, and acceptance tests.
-- No economy values were changed: each ordinary monster still awards 8 local coins; dragon reward remains separate/unconfigured. Cloud progress and currency writes remain disabled pending a trusted server simulator.
+- No economy values were changed: each ordinary monster still awards 8 local coins; final enemy reward remains separate/unconfigured. Cloud progress and currency writes remain disabled pending a trusted server simulator.
 - Validation: GitHub source read/write only. No local npm test, lint, production build, browser test, or live Supabase migration was run.
 
 
@@ -829,7 +829,7 @@
 
 ## 2026-11-15 — First pure combat simulation kernel extracted
 - Added `web/game/rules/combatSimulation.mjs` with pure resolvers for plant placement, uprooting/refunds, energy pickups, and HP damage.
-- Wired BattleScene to use those resolvers for planting, manual uprooting, monster bites, projectile hits, and dragon damage. Moved energy pickup calculation behind the same pure module while retaining the existing phaseOneRules export.
+- Wired BattleScene to use those resolvers for planting, manual uprooting, monster bites, projectile hits, and final enemy damage. Moved energy pickup calculation behind the same pure module while retaining the existing phaseOneRules export.
 - Uproot refunds are now checked against the plant catalog rather than trusting a mutable per-plant refund value. The existing exact refund behavior is preserved; refunds can still exceed the normal 300 pickup cap, matching the current game.
 - Added `web/tests/combat-simulation.test.mjs` with 9 test cases covering valid/invalid placements, occupied cells, energy costs, destroyed plants, refund integrity, pickup caps, HP damage, and Phaser integration.
 - No balance changes: plant costs remain 35/50, HP remains unchanged, energy pickup cap remains 300, and ordinary monster rewards remain 8 coins.
@@ -845,9 +845,9 @@
 
 
 ## 2026-11-15 — Extract combat target selection
-- Added pure selectors in `web/game/rules/combatSimulation.mjs` for nearest Radish lane blocker, projectile collision target, farmer melee target, and dragon fireball plant target.
-- Updated BattleScene to delegate all four target choices to the shared kernel. Existing selection semantics are preserved: nearest Radish behind each monster (mushrooms do not block), first eligible monster in projectile array order, nearest monster in the farmer's lane with stable tie order, and lowest-HP living plant for dragon fireballs.
-- Dragon fireball plant damage now also uses the shared HP damage resolver.
+- Added pure selectors in `web/game/rules/combatSimulation.mjs` for nearest Radish lane blocker, projectile collision target, farmer melee target, and final enemy projectile attacks plant target.
+- Updated BattleScene to delegate all four target choices to the shared kernel. Existing selection semantics are preserved: nearest Radish behind each monster (mushrooms do not block), first eligible monster in projectile array order, nearest monster in the farmer's lane with stable tie order, and lowest-HP living plant for final enemy projectile attacks.
+- final enemy projectile attacks plant damage now also uses the shared HP damage resolver.
 - Expanded `web/tests/combat-simulation.test.mjs` to 16 test cases, including target selection, lane restrictions, collision radius/width scaling, tie handling, and Phaser integration assertions.
 - The Phaser scene still owns world-to-lane projection, rendered collision dimensions, attack cooldowns, tweens, and encounter orchestration. This extraction does not make the client authoritative.
 - Validation remains source inspection only; no local test/build/browser run was possible in this execution, and GitHub Actions runner allocation remains unresolved.
@@ -855,7 +855,7 @@
 
 
 - Added `advanceCooldown`, `resolveBiteAttack`, and `resolveDustSkitterMotionStep` to the pure combat kernel.
-- Wired shared cooldown advancement into regular monster attack timers, Radish firing, and both dragon attack timers. Bite-ready checks and interval resets now use the shared bite resolver.
+- Wired shared cooldown advancement into regular monster attack timers, Radish firing, and both final enemy attack timers. Bite-ready checks and interval resets now use the shared bite resolver.
 - Preserved visual-only jump behavior: jump offset does not alter logical lane position or collision. Preserved burst duration, cooldown ranges, jump duration/reset ranges, and simultaneous jump/burst speed multipliers.
 - Expanded combat simulation tests to 20 cases, including cooldown boundaries, jump start/landing, burst first-frame timing, and combined movement multipliers.
 - Source verification confirms old inline Skitter timing block and direct cooldown decrements were replaced. No local test/build/browser run was performed; GitHub Actions runner allocation is still failing before job steps.
@@ -866,7 +866,7 @@
 - Added `resolveWaveSpawnStep` to the pure combat kernel. It owns intermission countdown, spawn timer advancement, one-spawn-per-update decisions, and spawned-count progression.
 - The scheduler validates wave number and roster size against the phase-one contract, preserving [3, 5, 6, 7, 9] ordinary monsters, first-spawn/next-wave delays, the five-second intermission, and the per-wave spawn interval formula.
 - Moved monster archetype selection into `resolveMonsterArchetype`; kept `phaseOneRules.mjs` compatibility export backed by the shared resolver.
-- BattleScene now consumes the scheduler output and retains only Phaser-specific lane randomness, sprite construction, effects, and the existing dragon trigger after the second ordinary monster in wave five.
+- BattleScene now consumes the scheduler output and retains only Phaser-specific lane randomness, sprite construction, effects, and the existing final enemy trigger after the second ordinary monster in wave five.
 - Added three kernel test cases for intermission and spawn cadence, roster boundaries, and archetype composition. Updated scene integration assertions to the extracted scheduler and existing Skitter resolver.
 - No wave sizes, enemy stats, reward values, or boss conditions were intentionally changed. No local tests/build/browser run was performed; CI runner allocation remains unresolved.
 
@@ -973,7 +973,7 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 ## 2026-11-19 — PvZ wave announcements and live defeat progress
 - Added a reusable animated wave announcement banner to the battle HUD. It appears at the start of Stage 1 and whenever the next wave is unlocked, without creating new Phaser display objects on every transition.
 - Corrected the wave progress bar semantics: it now tracks monsters actually defeated in the current wave, rather than monsters merely spawned. This makes the bar reflect real combat progress.
-- Preserved the existing five-wave roster, spawn intervals, five-second intermission, archetype schedule, and dragon trigger.
+- Preserved the existing five-wave roster, spawn intervals, five-second intermission, archetype schedule, and final enemy trigger.
 - Added focused source-integration tests for announcement coverage, late-wave warnings, reusable banner lifecycle, and defeated-monster progress.
 - Verification status: GitHub source read-back only. Node tests, Next.js build, and browser gameplay still need to be run locally; no runtime success is claimed.
 
@@ -986,10 +986,10 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - Verification: GitHub source read-back only. Node tests, Next.js build, and in-browser Phaser gameplay remain unexecuted in this environment.
 
 
-## 2026-11-19 — Dragon boss attack telegraph
-- Added a visible impact warning at the dragon's selected target before each fireball launches: an expanding outer ring and bright center marker remain visible for 520ms.
+## 2026-11-19 — final encounter attack telegraph
+- Added a visible impact warning at the final enemy's selected target before each projectile attacks launches: an expanding outer ring and bright center marker remain visible for 520ms.
 - The warning is placed on the currently selected plant, or at the farmhouse impact point when no valid plant target exists, giving the player a readable reaction window.
-- Fireball travel duration, damage, target selection, boss attack interval, and defeat/rescue conditions are unchanged. The telegraph is presentation-only and uses the existing Phaser scene clock/tween lifecycle.
+- projectile attacks travel duration, damage, target selection, boss attack interval, and defeat/rescue conditions are unchanged. The telegraph is presentation-only and uses the existing Phaser scene clock/tween lifecycle.
 - The delayed launch is cancelled if the boss dies or the battle enters a terminal/story/menu state before the warning completes.
 - Added focused source-integration assertions for the warning marker, lead time, and cancellation guard.
 - Verification: GitHub source read-back only. Node tests, Next.js build, and actual browser playtest remain unexecuted.
@@ -1048,7 +1048,7 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - Added `VFXManager`, named effect presets, and a rolling frame-time quality monitor with Ultra/High/Performance budgets and fixed-quality override support.
 - Connected the manager to BattleScene and routed existing plant projectile and ice impacts through the new VFX presets; combat damage/status rules remain untouched.
 - Added a named VFX registry and focused Node tests for adaptive quality, fixed quality, invalid inputs, and concurrency caps.
-- Added the first dragon fireball impact cue; it remains presentation-only and does not alter target selection or damage.
+- Added the first final enemy projectile attacks impact cue; it remains presentation-only and does not alter target selection or damage.
 - Current implementation uses Phaser procedural geometry and the built-in white particle texture when available. Sprite-sheet playback is supported by explicit keys but still needs authored effect sheets and registry metadata; renderer-specific shader pipelines remain an optional follow-up after compatibility testing.
 - Verification: GitHub source edits only. Tests, lint, production build, and Chrome/Windows visual/performance profiling have not been executed; do not treat runtime integration as verified.
 
@@ -1158,7 +1158,7 @@ The game remains authored in a fixed 1120×680 landscape coordinate space. CI ca
 - Changed missing projectile artwork references to `assetPath: null` plus `plannedAssetPath`, and corrected the Pumpkin Guard source-art mapping to the existing Pumpkin file. Existing Pineapple projectile art remains active.
 - Added regression tests verifying every non-null plant/projectile runtime path exists, pending art is not requested by Phaser, and the planned plant icons exist.
 
-This removes guaranteed 404/loaderror requests and stops the data contracts from presenting absent art as available runtime assets. It does not create the missing dragon/princess/farmer story illustrations or the future plant/projectile sprites; those remain explicitly pending art production.
+This removes guaranteed 404/loaderror requests and stops the data contracts from presenting absent art as available runtime assets. It does not create the missing final enemy/princess/farmer story illustrations or the future plant/projectile sprites; those remain explicitly pending art production.
 
 
 ## 2026-11-25 — Comedic Game Juice pass
