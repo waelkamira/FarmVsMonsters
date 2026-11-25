@@ -73,7 +73,9 @@ function assetOwnedPaths(asset){
   const liveUrls=new Set(all.map(item=>item.url));
   audit.assetCount=all.length;
   audit.totalBytes=all.reduce((total,item)=>total+(Number(item?.bytes)||0),0);
-  audit.groups=Object.fromEntries(Object.entries(manifest.groups||{}).map(([name,items])=>[name,{assetCount:items.length,totalBytes:items.reduce((total,item)=>total+(Number(item?.bytes)||0),0)}]));
+  const groupTotals=new Map();
+  for(const item of all){const name=item.group||"misc",current=groupTotals.get(name)||{assetCount:0,totalBytes:0};current.assetCount+=1;current.totalBytes+=Number(item.bytes)||0;groupTotals.set(name,current);}
+  audit.groups=Object.fromEntries(groupTotals);
   audit.largeFiles=(audit.largeFiles||[]).filter(item=>liveUrls.has(item.url));
   audit.spritesheets=(audit.spritesheets||[]).filter(item=>liveUrls.has(item.url));
   audit.exactDuplicates=(audit.exactDuplicates||[]).filter(item=>liveUrls.has("/assets/"+item.file)&&liveUrls.has("/assets/"+item.identicalTo));
