@@ -1188,3 +1188,11 @@ This removes guaranteed 404/loaderror requests and stops the data contracts from
 - Reused the existing bounded footstep-dust system and added registered procedural spawn, dust and rotating dizzy-star effects.
 - Kept effects cosmetic: no combat damage, movement authority, collision, replay, or reward rules were changed.
 - Detached accessories and independent eye tracking remain gated on explicit per-part/eye metadata; current sprite-sheet assets do not expose safe detachable parts or separate pupil nodes.
+
+
+## 2026-11-25 — Restore permanent delete across the Studio asset library
+- Restored the visible “حذف نهائي” action on every asset row, not only plant and monster rows.
+- Removed the matching plant/monster-only restriction from both local and GitHub storage API paths; all asset types now use the same authenticated confirmation, dependency checks, shared-file protection, and cleanup flow.
+- Preserved dependency protection so a projectile or other referenced asset cannot be deleted while another asset still depends on it.
+- Updated regression tests to require the delete action for every library asset type and verify both storage drivers no longer impose the old type restriction.
+- CI and runtime deletion behavior remain pending the pull-request checks; no live asset was deleted during this change.
