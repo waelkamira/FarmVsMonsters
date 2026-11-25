@@ -95,6 +95,7 @@ test("a failed shared rate-limit store never falls back to an unshared productio
 test("Studio login compares the admin token but signs cookies with a separate secret", () => {
   assert.match(sessionRoute, /STUDIO_ADMIN_TOKEN/);
   assert.match(sessionRoute, /STUDIO_SESSION_SECRET/);
+  assert.match(sessionRoute, /expected === signingSecret/);
   assert.match(sessionRoute, /createStudioSession\(signingSecret\)/);
   assert.match(sessionRoute, /consumeStudioLoginAttempt/);
   assert.match(sessionRoute, /status: 429/);
