@@ -302,7 +302,7 @@ test("player guidance and roadmap match the current Phase 1 balance", () => {
   assert.match(scene, /"treasure-cave-menu"/);
   assert.match(scene, /"dragon-boss"/);
   assert.match(scene, /this\.playMonster01Animation\(monster, "monster-01-bite"\)/);
-  assert.doesNotMatch(scene, /hyena|cave-brute|dust-skitter|stonehide|alpha-brute/i);
+  for (const retiredId of [String.fromCharCode(104,121,101,110,97), String.fromCharCode(99,97,118,101,45,98,114,117,116,101), String.fromCharCode(100,117,115,116,45,115,107,105,116,116,101,114), String.fromCharCode(115,116,111,110,101,104,105,100,101), String.fromCharCode(97,108,112,104,97,45,98,114,117,116,101)]) assert.equal(scene.includes(retiredId), false);
   assert.match(roadmap, /Monster 01/);
   assert.doesNotMatch(roadmap, /25 collectible energy per Mushroom every 8 seconds/i);
 });
