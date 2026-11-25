@@ -151,3 +151,10 @@ The editor is an optional skeletal workspace inside Asset & Animation Studio. Ex
 - Validate all IDs and references before saving, testing, or publishing.
 - Keep rig profiles versioned and include them in clone/version/restore snapshots.
 - Do not mark a phase complete until its acceptance checks are actually run.
+
+
+## Semantic face and detachable-part metadata — 2026-11-25
+
+The Studio rig profile now preserves semantic attachment roles: generic, muzzle, hand, mouth, eye, pupil, and accessory. Studio exposes these roles in the attachment editor, and the Phaser adapter can query evaluated world-space anchors by role. This gives facial animation a stable, asset-authored contract for separate eye and pupil bones without guessing pixel coordinates at runtime.
+
+Bitmap part references also carry an optional `detachable` flag, editable per bone in Studio. Existing profiles normalize this to `false`, so legacy rigs remain unchanged. This flag is metadata only in this increment: detached-piece physics, fade/tumble behavior, and automated pupil tracking are not yet implemented. They must be added as explicit runtime effects and verified against authored eye/part anchors before being advertised as complete.

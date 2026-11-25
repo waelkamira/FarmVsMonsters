@@ -101,7 +101,8 @@ export function createSkeletalRigProfile(input) {
     };
     const part = entry.part == null ? null : {
       assetId: readId(entry.part.assetId, "bones[" + index + "].part.assetId"),
-      frame: finite(entry.part.frame, "bones[" + index + "].part.frame", 0, 10000, 0)
+      frame: finite(entry.part.frame, "bones[" + index + "].part.frame", 0, 10000, 0),
+      detachable: Boolean(entry.part.detachable)
     };
     if (part && !Number.isInteger(part.frame)) throw new RangeError("Sprite frame indices must be integers.");
     return { id, name: String(entry.name ?? id).slice(0, 80), parentId, ...readTransform(entry, "bones[" + index + "]"), pivot, part };
@@ -120,7 +121,9 @@ export function createSkeletalRigProfile(input) {
     attachmentIds.add(id);
     const boneId = readId(entry.boneId, "attachments[" + index + "].boneId");
     if (!boneIds.has(boneId)) throw new RangeError("Attachment " + id + " references a missing bone.");
-    return { id, name: String(entry.name ?? id).slice(0, 80), boneId, ...readTransform(entry, "attachments[" + index + "]") };
+    const allowedKinds = new Set(["generic", "muzzle", "hand", "mouth", "eye", "pupil", "accessory"]);
+    const kind = allowedKinds.has(entry.kind) ? entry.kind : "generic";
+    return { id, name: String(entry.name ?? id).slice(0, 80), boneId, kind, ...readTransform(entry, "attachments[" + index + "]") };
   });
 
   const hitboxesInput = input.hitboxes ?? [];
@@ -281,6 +284,20 @@ export function getSkeletalAttachmentTransform(profileInput, evaluated, attachme
   if (!bone) throw new TypeError("Evaluated pose does not contain attachment bone " + attachment.boneId + ".");
   const point = transformPoint(bone, attachment);
   return { ...point, rotation: bone.rotation + attachment.rotation, scaleX: bone.scaleX * attachment.scaleX, scaleY: bone.scaleY * attachment.scaleY };
+}
+
+
+export function getSkeletalAttachmentsByKind(profileInput, evaluated, kind) {
+  const profile = profileInput?.attachments ? profileInput : createSkeletalRigProfile(profileInput);
+  const requestedKind = String(kind || "generic");
+  return profile.attachments
+    .filter((attachment) => attachment.kind === requestedKind)
+    .map((attachment) => ({
+      id: attachment.id,
+      name: attachment.name,
+      kind: attachment.kind,
+      ...getSkeletalAttachmentTransform(profile, evaluated, attachment.id)
+    }));
 }
 
 export function getSkeletalHitboxTransform(profileInput, evaluated, hitboxId) {

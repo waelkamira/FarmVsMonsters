@@ -2,6 +2,7 @@ import {
   createSkeletalRigProfile,
   evaluateSkeletalClip,
   getSkeletalAttachmentTransform,
+  getSkeletalAttachmentsByKind,
   getSkeletalHitboxTransform
 } from "./skeletalAnimation.mjs";
 
@@ -115,6 +116,23 @@ export function createPhaserSkeletalRig(scene, profileInput, partTextures = {}, 
         scaleX: point.scaleX * scaleX,
         scaleY: point.scaleY * scaleY
       };
+    },
+    getAttachmentsByKind(kind) {
+      if (!currentPose) throw new Error("Play or apply a skeletal pose before resolving attachments.");
+      return getSkeletalAttachmentsByKind(profile, currentPose, kind).map((point) => {
+        const rotation = Number(root.rotation) || 0;
+        const scaleX = Number(root.scaleX) || 1;
+        const scaleY = Number(root.scaleY) || 1;
+        const x = point.x * scaleX, y = point.y * scaleY;
+        return {
+          ...point,
+          x: root.x + x * Math.cos(rotation) - y * Math.sin(rotation),
+          y: root.y + x * Math.sin(rotation) + y * Math.cos(rotation),
+          rotation: point.rotation + rotation * 180 / Math.PI,
+          scaleX: point.scaleX * scaleX,
+          scaleY: point.scaleY * scaleY
+        };
+      });
     },
     getHitbox(id) {
       if (!currentPose) throw new Error("Play or apply a skeletal pose before resolving hitboxes.");
