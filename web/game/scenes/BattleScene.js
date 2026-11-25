@@ -5093,7 +5093,7 @@ export default class BattleScene extends Scene {
     const armorMultiplier = monster.incomingDamageMultiplier || 1;
     // Bracing cuts a further 45% from incoming hits, but only while the
     // Monster 01 is stationary and actively biting a plant.
-    return monster.kind === 'stonehide' ? getMonster 01IncomingDamageMultiplier(monster.braced) : armorMultiplier;
+    return armorMultiplier * getMonsterIncomingDamageMultiplier();
   }
 
   createMonsterDefeatMotes(monster) {
