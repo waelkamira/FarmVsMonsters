@@ -40,6 +40,7 @@ test("Deletion removes linked catalog entries and owned files without deleting s
   assert.match(route, /PUBLISHED_CATALOG_PATH,"plants"/);
   assert.match(route, /PUBLISHED_MONSTER_CATALOG_PATH,"monsters"/);
   assert.match(route, /function assetOwnedPaths\(asset\)/);
+  assert.match(route, /filter\(\(value\)=>typeof value==="string"&&safeAssetPath\(value\)\)/);
   assert.ok(route.includes('import {mkdir,readFile,writeFile,unlink} from "node:fs/promises"'));
   assert.match(route, /asset\?\.atlas\?\.jsonPath/);
   assert.match(route, /asset\?\.audio\?\.path/);
