@@ -38,6 +38,19 @@ async function githubGetPullRequest(number,token){
  const pr=await response.json();
  return {number:pr.number,url:pr.html_url,state:pr.state,merged:Boolean(pr.merged),mergedAt:pr.merged_at||null};
 }
+async function githubDeleteIfExists(filePath,message,token,branch){
+ const document=await githubGetDocument(filePath,token,branch);
+ if(!document)return false;
+ const response=await fetch(githubUrl(filePath),{method:"DELETE",headers:{...githubHeaders(token),"Content-Type":"application/json"},body:JSON.stringify({message,branch,sha:document.sha})});
+ if(!response.ok){const data=await response.json().catch(()=>({}));throw Error(data.message||"GitHub delete failed ("+response.status+").");}
+ return true;
+}
+function assetOwnedPaths(asset){
+ return [...new Set([asset?.path,asset?.atlas?.jsonPath,asset?.audio?.path,asset?.combat?.projectile?.path].filter((value)=>typeof value==="string"&&safeAssetPath(value)))];
+}
+function assetPathStillUsed(assets,assetPath){
+ return assets.some((item)=>[item.path,item.atlas?.jsonPath,item.audio?.path,item.combat?.projectile?.path].includes(assetPath));
+}
 async function githubPut(filePath,bytes,message,token,branch,expectedSha){const api=githubUrl(filePath),headers=githubHeaders(token);const check=await fetch(api+"?ref="+encodeURIComponent(branch),{headers});let sha=null;if(check.ok)sha=(await check.json()).sha;else if(check.status!==404)throw Error("GitHub lookup failed ("+check.status+").");assertExpectedContentSha(expectedSha,sha);const saved=await fetch(api,{method:"PUT",headers:{...headers,"Content-Type":"application/json"},body:JSON.stringify({message,branch,content:Buffer.from(bytes).toString("base64"),...(sha?{sha}:{})})});if(!saved.ok){const data=await saved.json().catch(()=>({}));throw Error(data.message||"GitHub save failed ("+saved.status+").");}}
 async function localRegistry(){try{return JSON.parse(await readFile(path.join(process.cwd(),"game/data/studioAssetRegistry.json"),"utf8"));}catch(error){if(error.code==="ENOENT")return {version:1,assets:[]};throw error;}}
 async function saveLocalRegistry(registry){const target=path.join(process.cwd(),"game/data/studioAssetRegistry.json");await mkdir(path.dirname(target),{recursive:true});await writeFile(target,JSON.stringify(registry,null,2)+"\n","utf8");}
@@ -350,13 +363,37 @@ export async function PATCH(req){
  if(!authorized(req))return NextResponse.json({error:"Unauthorized."},{status:401});
  let body;try{body=await req.json();}catch{return NextResponse.json({error:"Invalid Studio action."},{status:400});}
  const id=String(body.id||"").trim(),operation=String(body.operation||"");
- if(!STUDIO_ID_PATTERN.test(id)||!["prepare-test","publish","archive","restore","restore-version","clone"].includes(operation))return NextResponse.json({error:"Invalid asset or operation."},{status:400});
+ if(!STUDIO_ID_PATTERN.test(id)||!["prepare-test","publish","archive","restore","restore-version","clone","delete"].includes(operation))return NextResponse.json({error:"Invalid asset or operation."},{status:400});
  const driver=process.env.STUDIO_STORAGE_DRIVER||"local";
  if(driver!=="github"){
-  if(operation!=="archive"&&operation!=="restore"&&operation!=="restore-version"&&operation!=="clone")return NextResponse.json({error:"Testing preparation and publishing require GitHub storage."},{status:503});
+  if(operation!=="archive"&&operation!=="restore"&&operation!=="restore-version"&&operation!=="clone"&&operation!=="delete")return NextResponse.json({error:"Testing preparation and publishing require GitHub storage."},{status:503});
   try{
    const registry=await localRegistry(),index=registry.assets.findIndex(asset=>asset.id===id);
    if(index<0)return NextResponse.json({error:"لم يتم العثور على الأصل في مكتبة Studio."},{status:404});
+   if(operation==="delete"){
+    const asset=registry.assets[index];
+    if(!["plant","monster"].includes(asset.type))return NextResponse.json({error:"الحذف النهائي متاح للنباتات والوحوش فقط."},{status:409});
+    const dependents=getAssetDependents(registry.assets,id);
+    if(dependents.length)return NextResponse.json({error:"لا يمكن حذف الأصل لأن أصولاً أخرى تعتمد عليه: "+dependents.map(item=>item.assetName).join("، ")},{status:409});
+    const remaining=registry.assets.filter((_,i)=>i!==index);
+    const candidatePaths=assetOwnedPaths(asset).filter((assetPath)=>!assetPathStillUsed(remaining,assetPath));
+    for(const assetPath of candidatePaths){
+     const target=path.resolve(process.cwd(),"public",assetPath.replace(/^\\/+/, ""));
+     const root=path.resolve(process.cwd(),"public")+path.sep;
+     if(!target.startsWith(root))return NextResponse.json({error:"مسار ملف الأصل خارج مجلد الأصول المسموح."},{status:409});
+    }
+    for(const assetPath of candidatePaths){
+     const target=path.resolve(process.cwd(),"public",assetPath.replace(/^\\/+/, ""));
+     try{await unlink(target);}catch(error){if(error.code!=="ENOENT")throw error;}
+    }
+    for(const [catalogPath,key] of [[PUBLISHED_CATALOG_PATH,"plants"],[PUBLISHED_MONSTER_CATALOG_PATH,"monsters"]]){
+     const target=path.join(process.cwd(),"public",catalogPath.replace(/^web\\//,""));
+     try{const catalog=JSON.parse(await readFile(target,"utf8"));if(Array.isArray(catalog[key])){catalog[key]=catalog[key].filter((item)=>item.id!==id);await writeFile(target,JSON.stringify(catalog,null,2)+"\\n","utf8");}}catch(error){if(error.code!=="ENOENT")throw error;}
+    }
+    registry.assets=remaining;
+    await saveLocalRegistry(registry);
+    return NextResponse.json({success:true,operation,deletedId:id,message:"تم حذف الأصل وملفاته غير المشتركة من المكتبة المحلية."});
+   }
    if(operation==="restore-version"&&registry.assets[index].releaseRequest?.number)return NextResponse.json({error:"لا يمكن استعادة إصدار مرتبط بطلب نشر قبل التحقق من حالته."},{status:409});
    if(operation==="archive"||operation==="restore-version"){
     const dependents=getAssetDependents(registry.assets,id);
