@@ -164,7 +164,7 @@ export default function CharacterStateWorkbench({ asset, onSaved }) {
       <p className="studio-detail-muted">{selectedStateDefinition.hint} هذه الإطارات خاصة بمظهر الشخصية، ويمكن استخدامها مع مؤثرات الجسيمات والصوت من مكتبة التأثيرات.</p>
       {selectedStateData && <div className="studio-state-saved"><b>الإطارات المحفوظة حالياً</b><FramePreview src={"/api/studio/assets?preview=" + encodeURIComponent(selectedStateData.path)} rows={selectedStateData.rows} columns={selectedStateData.columns} frameCount={selectedStateData.frameCount} fps={selectedStateData.fps} loop={selectedStateData.loop !== false} label={selectedStateDefinition.label} /><small>{selectedStateData.rows} × {selectedStateData.columns} · {selectedStateData.frameCount} إطار · {selectedStateData.fps} FPS</small></div>}
       <label className="studio-state-upload">رفع Sprite Sheet للحالة
-        <input type="file" accept="image/png,image/webp" onChange={(event) => setFile(event.target.files?.[0] || null)} />
+        <input type="file" accept="image/png,image/webp" onChange={(event) => { setFile(event.target.files?.[0] || null); event.target.value = ""; }} />
       </label>
       {file && <div className="studio-state-new-preview"><b>معاينة قبل الحفظ</b><FramePreview src={previewUrl} rows={grid.rows} columns={grid.columns} frameCount={grid.frameCount} fps={fps} loop={loop} label={"معاينة " + selectedStateDefinition.label} />
         <div className="studio-state-grid-controls">
