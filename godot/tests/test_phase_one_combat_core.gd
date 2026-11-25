@@ -39,18 +39,10 @@ func _test_contract_and_plant_costs() -> void:
 	assert(is_equal_approx(Rules.monster_spawn_interval_ms(5), 4600.0))
 
 func _test_monster_stats_and_wave_pacing() -> void:
-	var brute: Dictionary = Rules.monster_combat_stats("monster-01", 1)
-	assert(brute.hp == 175 and is_equal_approx(brute.speed, 8.0))
-	assert(brute.plant_damage == 16 and brute.attack_interval_ms == 1150.0)
-	var skitter: Dictionary = Rules.monster_combat_stats("monster-01", 1)
-	assert(skitter.hp == 36 and is_equal_approx(skitter.speed, 13.6))
-	assert(skitter.burst_duration_ms == 420.0 and skitter.jump_speed_multiplier == 1.12)
-	var monster-01: Dictionary = Rules.monster_combat_stats("monster-01", 1)
-	assert(monster-01.hp == 152 and is_equal_approx(monster-01.speed, 4.96))
-	assert(is_equal_approx(Rules.monster-01_incoming_damage_multiplier(false), 0.7))
-	assert(is_equal_approx(Rules.monster-01_incoming_damage_multiplier(true), 0.385))
-	var alpha: Dictionary = Rules.monster_combat_stats("monster-01", 1)
-	assert(alpha.hp == 350 and is_equal_approx(alpha.speed, 3.84))
+	var monster: Dictionary = Rules.monster_combat_stats("monster-01", 1)
+	assert(monster.hp == 175 and is_equal_approx(monster.speed, 8.0))
+	assert(monster.plant_damage == 16 and monster.attack_interval_ms == 1150.0)
+	assert(is_equal_approx(Rules.monster_incoming_damage_multiplier(), 1.0))
 	assert(Rules.monster_archetype(1, 1) == "monster-01")
 	assert(Rules.monster_archetype(3, 1) == "monster-01")
 	assert(Rules.monster_archetype(5, 4) == "monster-01")
@@ -60,7 +52,7 @@ func _test_monster_stats_and_wave_pacing() -> void:
 		"intermission_ms": 0.0, "spawn_timer_ms": 100.0, "delta_ms": 120.0
 	})
 	assert(spawn.should_spawn and spawn.spawned_this_wave == 1)
-	assert(is_equal_approx(spawn.spawn_timer_ms, 4960.0))
+	assert(is_equal_approx(spawn.spawn_timer_ms, 4960.0)
 
 func _test_plant_transactions() -> void:
 	var placed: Dictionary = Rules.resolve_plant_placement(150.0, [], "radish", 2, 3)
