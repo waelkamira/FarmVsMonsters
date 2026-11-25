@@ -16,11 +16,14 @@ const battle = readFileSync(resolve(here, "../game/scenes/BattleScene.js"), "utf
 const styles = readFileSync(resolve(here, "../app/globals.css"), "utf8");
 
 
-test("player account screen provides sign-in and account creation", () => {
+test("player account screen permits existing-account sign-in but hides new registration", () => {
   assert.match(accountPage, /signInPlayer/);
-  assert.match(accountPage, /signUpPlayer/);
+  assert.doesNotMatch(accountPage, /signUpPlayer|Create account|إنشاء حساب/);
   assert.match(accountPage, /restoreOrInitializeCloudProgress/);
+  assert.match(accountPage, /Game progress is not currently saved/);
   assert.match(accountPage, /type="password"/);
+  assert.match(accountRoute, /PLAYER_REGISTRATION_PAUSED/);
+  assert.match(accountRoute, /status: 410/);
   assert.match(home, /href="\/account"/);
   assert.match(stages, /href="\/account"/);
 });
@@ -87,15 +90,14 @@ test("playing as a guest never requires authentication and is restricted to unve
 });
 
 
-test("Google OAuth uses server-side PKCE and protects the callback with state", async () => {
+test("Google OAuth is fail-closed while registration and secure cloud saves are paused", async () => {
   const start = readFileSync(resolve(here, "../app/api/player/account/google/route.js"), "utf8");
   const callback = readFileSync(resolve(here, "../app/api/player/account/google/callback/route.js"), "utf8");
-  assert.match(accountPage, /Continue with Google|المتابعة باستخدام Google/);
-  assert.match(start, /code_challenge_method/);
-  assert.match(start, /httpOnly: true/);
-  assert.match(callback, /timingSafeEqual/);
-  assert.match(callback, /grant_type=pkce/);
-  assert.match(callback, /farm_player_access/);
+  assert.doesNotMatch(accountPage, /Continue with Google|المتابعة باستخدام Google|google-signin-button/);
+  assert.match(start, /registration_paused/);
+  assert.match(callback, /registration_paused/);
+  assert.doesNotMatch(start, /auth\/v1\/authorize/);
+  assert.doesNotMatch(callback, /grant_type=pkce/);
 });
 
 test("player data migration provisions private profile, settings, achievement and inventory tables", () => {
@@ -109,11 +111,13 @@ test("player data migration provisions private profile, settings, achievement an
 });
 
 
-test("Google OAuth CSRF state is preserved in the app callback URL, not sent as Supabase authorize state", async () => {
+test("disabled Google OAuth endpoints never begin or complete an authorization flow", async () => {
   const start = readFileSync(resolve(here, "../app/api/player/account/google/route.js"), "utf8");
-  assert.match(start, /callback\.searchParams\.set\("state", state\)/);
-  assert.match(start, /redirect_to/);
-  assert.doesNotMatch(start, /authorizeUrl\.searchParams\.set\("state"/);
+  const callback = readFileSync(resolve(here, "../app/api/player/account/google/callback/route.js"), "utf8");
+  assert.match(start, /NextResponse\.redirect/);
+  assert.match(callback, /NextResponse\.redirect/);
+  assert.match(start, /registration_paused/);
+  assert.match(callback, /registration_paused/);
 });
 
 test("plant catalog includes implemented starters and a locked upcoming roster", () => {
