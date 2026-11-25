@@ -623,3 +623,6 @@
 
 .studio-clone-dialog-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:14px}
 .studio-clone-dialog-actions button:last-child{background:#d7a84f;color:#20190d;font-weight:800}
+
+.studio-clone-dialog-actions .studio-delete-confirm{background:#a8322b!important;color:#fff!important;border:1px solid #ef8a80;font-weight:900}
+.studio-clone-dialog-actions .studio-delete-confirm:hover:not(:disabled){background:#c43d34!important}
