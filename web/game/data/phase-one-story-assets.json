@@ -3,22 +3,12 @@
   "note": "The farmer rescue artwork is pending. Story artwork paths are design targets only and are not queued until authored files exist.",
   "assets": [
     {
-      "key": "farmer-sling",
-      "path": "/assets/characters/farmer/farmer-sling.png",
-      "frameWidth": 360,
-      "frameHeight": 430,
-      "frames": 6,
-      "purpose": "Farmer aims and fires the sling automatically at the dragon.",
-      "status": "awaiting-art",
-      "runtimeEnabled": false
-    },
-    {
       "key": "farmer-rescue",
       "path": "/assets/characters/farmer/farmer-rescue.png",
       "frameWidth": 360,
       "frameHeight": 430,
       "frames": 6,
-      "purpose": "Farmer reaches down and lifts the princess after the dragon is defeated.",
+      "purpose": "Farmer reaches down and lifts the princess after all monsters are defeated.",
       "status": "awaiting-art",
       "runtimeEnabled": false
     },
@@ -36,7 +26,7 @@
       "key": "phase-one-princess-captive",
       "path": "/assets/characters/princess/princess-captive.png",
       "type": "image",
-      "purpose": "Bound/captive pose shown beside the dragon during the final wave.",
+      "purpose": "Bound/captive pose shown during the final wave.",
       "status": "awaiting-art",
       "runtimeEnabled": false
     },
