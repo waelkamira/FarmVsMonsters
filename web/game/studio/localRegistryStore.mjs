@@ -36,18 +36,35 @@ async function acquireExclusiveLock(lockPath, staleLockMs) {
 
   const lockStat = await stat(lockPath).catch((error) => error.code === "ENOENT" ? null : Promise.reject(error));
   if (lockStat && Date.now() - lockStat.mtimeMs > staleLockMs) {
-    const stalePath = lockPath + ".stale-" + randomUUID();
+    let ownerPid = null;
     try {
-      // Atomic rename ensures only one contender can claim a stale lock.
-      await rename(lockPath, stalePath);
-      await unlink(stalePath).catch(() => {});
+      ownerPid = Number(JSON.parse(await readFile(lockPath, "utf8")).pid);
+    } catch {
+      // A malformed old lock can be reclaimed after the stale threshold.
+    }
+    let ownerAlive = false;
+    if (Number.isInteger(ownerPid) && ownerPid > 0) {
       try {
-        return await open(lockPath, "wx");
+        process.kill(ownerPid, 0);
+        ownerAlive = true;
       } catch (error) {
-        if (error.code !== "EEXIST") throw error;
+        ownerAlive = error.code !== "ESRCH";
       }
-    } catch (error) {
-      if (error.code !== "ENOENT") throw error;
+    }
+    if (!ownerAlive) {
+      const stalePath = lockPath + ".stale-" + randomUUID();
+      try {
+        // Atomic rename ensures only one contender can claim a stale lock.
+        await rename(lockPath, stalePath);
+        await unlink(stalePath).catch(() => {});
+        try {
+          return await open(lockPath, "wx");
+        } catch (error) {
+          if (error.code !== "EEXIST") throw error;
+        }
+      } catch (error) {
+        if (error.code !== "ENOENT") throw error;
+      }
     }
   }
 
@@ -55,6 +72,9 @@ async function acquireExclusiveLock(lockPath, staleLockMs) {
 }
 
 export async function writeLocalRegistryAtomically(targetPath, registry, expectedSha, options = {}) {
+  if (!registry || typeof registry !== "object" || !Array.isArray(registry.assets)) {
+    throw new TypeError("Refusing to write an invalid Studio asset registry.");
+  }
   const lockPath = targetPath + ".lock";
   const staleLockMs = Number.isFinite(options.staleLockMs)
     ? Math.max(60_000, options.staleLockMs)
