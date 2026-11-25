@@ -83,6 +83,8 @@ test("Studio exposes the workbench before effect assignment and persists status 
   assert.match(battle, /studioStatusRigRoot/);
   assert.match(battle, /studioCharacterBounds/);
   assert.match(battle, /rigRoot\.setVisible\(false\)/);
+  assert.match(battle, /const fitScale = Math\.min\(bounds\.width \/ frameWidth, bounds\.height \/ frameHeight\)/);
+  assert.ok(battle.indexOf("registerCharacterStateAnimations(monster, \"monster\");") < battle.indexOf("if (!monster.spriteSheet || monster.frameCount <= 1"));
 });
 
 test("asset file audit checks every custom state sprite sheet path", () => {
