@@ -230,7 +230,7 @@
       "spriteSheet": false,
       "status": "published",
       "createdAt": "2026-11-20T16:34:22.262Z",
-      "updatedAt": "2026-11-25T02:15:04.327Z",
+      "updatedAt": "2026-11-25T02:19:00.475Z",
       "combat": {
         "mode": "melee",
         "projectile": null,
@@ -259,7 +259,7 @@
       "spriteSheet": false,
       "status": "testing",
       "createdAt": "2026-11-20T21:52:10.198Z",
-      "updatedAt": "2026-11-25T02:15:04.327Z",
+      "updatedAt": "2026-11-25T02:19:00.475Z",
       "combat": {
         "mode": "projectile",
         "projectile": {
@@ -1432,7 +1432,7 @@
       "spriteSheet": false,
       "status": "draft",
       "createdAt": "2026-11-24T04:16:00.506Z",
-      "updatedAt": "2026-11-25T02:15:04.326Z"
+      "updatedAt": "2026-11-25T02:19:00.474Z"
     },
     {
       "id": "snow-thrower-level-1",
@@ -1446,7 +1446,7 @@
       "spriteSheet": false,
       "status": "draft",
       "createdAt": "2026-11-24T04:16:00.506Z",
-      "updatedAt": "2026-11-25T02:15:04.326Z"
+      "updatedAt": "2026-11-25T02:19:00.474Z"
     },
     {
       "id": "hazelnut-level-1",
@@ -1460,7 +1460,7 @@
       "spriteSheet": true,
       "status": "draft",
       "createdAt": "2026-11-24T04:16:00.506Z",
-      "updatedAt": "2026-11-25T02:15:04.326Z"
+      "updatedAt": "2026-11-25T02:19:00.474Z"
     },
     {
       "id": "mango-level-1",
@@ -1474,7 +1474,7 @@
       "spriteSheet": false,
       "status": "draft",
       "createdAt": "2026-11-24T04:16:00.506Z",
-      "updatedAt": "2026-11-25T02:15:04.326Z"
+      "updatedAt": "2026-11-25T02:19:00.474Z"
     },
     {
       "id": "mushroom",
@@ -1488,7 +1488,7 @@
       "spriteSheet": false,
       "status": "draft",
       "createdAt": "2026-11-24T04:16:00.506Z",
-      "updatedAt": "2026-11-25T02:15:04.326Z"
+      "updatedAt": "2026-11-25T02:19:00.474Z"
     },
     {
       "id": "pineapple-level-1",
@@ -1502,7 +1502,7 @@
       "spriteSheet": true,
       "status": "draft",
       "createdAt": "2026-11-24T04:16:00.506Z",
-      "updatedAt": "2026-11-25T02:15:04.326Z"
+      "updatedAt": "2026-11-25T02:19:00.474Z"
     },
     {
       "id": "pumpkin",
@@ -1516,7 +1516,7 @@
       "spriteSheet": false,
       "status": "draft",
       "createdAt": "2026-11-24T04:16:00.506Z",
-      "updatedAt": "2026-11-25T02:15:04.326Z"
+      "updatedAt": "2026-11-25T02:19:00.474Z"
     },
     {
       "id": "radish-level-1",
@@ -1527,10 +1527,10 @@
       "rows": 1,
       "columns": 1,
       "frameCount": 1,
-      "spriteSheet": true,
+      "spriteSheet": false,
       "status": "draft",
       "createdAt": "2026-11-24T04:16:00.506Z",
-      "updatedAt": "2026-11-25T02:18:35.791Z",
+      "updatedAt": "2026-11-25T02:19:00.474Z",
       "releaseRequest": null,
       "publishedAt": null,
       "testingAt": null,
@@ -1637,7 +1637,7 @@
       "spriteSheet": false,
       "status": "draft",
       "createdAt": "2026-11-24T04:16:00.506Z",
-      "updatedAt": "2026-11-25T02:15:04.326Z"
+      "updatedAt": "2026-11-25T02:19:00.474Z"
     },
     {
       "id": "tomato",
@@ -1651,7 +1651,7 @@
       "spriteSheet": false,
       "status": "draft",
       "createdAt": "2026-11-24T04:16:00.506Z",
-      "updatedAt": "2026-11-25T02:15:04.326Z"
+      "updatedAt": "2026-11-25T02:19:00.474Z"
     },
     {
       "id": "electric-mushroom-level-1",
@@ -1665,7 +1665,7 @@
       "spriteSheet": false,
       "status": "testing",
       "createdAt": "2026-11-24T04:16:00.506Z",
-      "updatedAt": "2026-11-25T02:15:04.327Z",
+      "updatedAt": "2026-11-25T02:19:00.474Z",
       "releaseRequest": null,
       "publishedAt": null,
       "testingAt": "2026-11-25T00:42:30.265Z",
@@ -2104,7 +2104,7 @@
       "spriteSheet": true,
       "status": "testing",
       "createdAt": "2026-11-22T20:20:34.630Z",
-      "updatedAt": "2026-11-25T02:15:04.327Z",
+      "updatedAt": "2026-11-25T02:19:00.475Z",
       "animationProfile": {
         "idle": {
           "startFrame": 0,
