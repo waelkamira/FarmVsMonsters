@@ -53,7 +53,7 @@
 .studio-state-tabs button{border:1px solid rgba(208,188,143,.25);border-radius:10px;padding:8px 14px;background:#202b20;color:#e8e2cc;font-weight:800}
 .studio-state-tabs button.active{background:#526b36;border-color:#b5d77b;color:#fff}
 .studio-state-preview-wrap{width:min(100%,340px);display:grid;gap:8px;justify-items:stretch;margin:0 auto}
-.studio-state-preview{width:100%;height:250px;border:1px solid rgba(225,205,160,.28);border-radius:14px;background-color:#141c16;background-repeat:no-repeat;background-origin:border-box;image-rendering:pixelated;box-shadow:inset 0 0 28px rgba(0,0,0,.28);background-position:left top}
+.studio-state-preview{display:block;width:auto;height:auto;max-width:100%;max-height:250px;margin:0 auto;border:1px solid rgba(225,205,160,.28);border-radius:14px;background-color:#141c16;image-rendering:pixelated;object-fit:contain;box-shadow:inset 0 0 28px rgba(0,0,0,.28)}
 .studio-state-preview-meta{display:flex;justify-content:space-between;color:#d5d9c2;font-size:12px}
 .studio-state-preview-wrap>input[type=range]{width:100%;accent-color:#b4d477}
 .studio-state-select,.studio-state-upload{display:grid;gap:7px;color:#f1e7cb;font-weight:800}
