@@ -378,18 +378,18 @@ export async function PATCH(req){
     const remaining=registry.assets.filter((_,i)=>i!==index);
     const candidatePaths=assetOwnedPaths(asset).filter((assetPath)=>!assetPathStillUsed(remaining,assetPath));
     for(const assetPath of candidatePaths){
-     const target=path.resolve(process.cwd(),"public",assetPath.replace(/^\\/+/, ""));
+     const target=path.resolve(process.cwd(),"public",assetPath.replace(/^\/+/, ""));
      const root=path.resolve(process.cwd(),"public")+path.sep;
      if(!target.startsWith(root))return NextResponse.json({error:"مسار ملف الأصل خارج مجلد الأصول المسموح."},{status:409});
     }
     for(const [catalogPath,key] of [[PUBLISHED_CATALOG_PATH,"plants"],[PUBLISHED_MONSTER_CATALOG_PATH,"monsters"]]){
-     const target=path.join(process.cwd(),"public",catalogPath.replace(/^web\\//,""));
-     try{const catalog=JSON.parse(await readFile(target,"utf8"));if(Array.isArray(catalog[key])){catalog[key]=catalog[key].filter((item)=>item.id!==id);await writeFile(target,JSON.stringify(catalog,null,2)+"\\n","utf8");}}catch(error){if(error.code!=="ENOENT")throw error;}
+     const target=path.join(process.cwd(),"public",catalogPath.replace(/^web\//,""));
+     try{const catalog=JSON.parse(await readFile(target,"utf8"));if(Array.isArray(catalog[key])){catalog[key]=catalog[key].filter((item)=>item.id!==id);await writeFile(target,JSON.stringify(catalog,null,2)+"\n","utf8");}}catch(error){if(error.code!=="ENOENT")throw error;}
     }
     registry.assets=remaining;
     await saveLocalRegistry(registry);
     for(const assetPath of candidatePaths){
-     const target=path.resolve(process.cwd(),"public",assetPath.replace(/^\\/+/, ""));
+     const target=path.resolve(process.cwd(),"public",assetPath.replace(/^\/+/, ""));
      try{await unlink(target);}catch(error){if(error.code!=="ENOENT")throw error;}
     }
     return NextResponse.json({success:true,operation,deletedId:id,message:"تم حذف الأصل وملفاته غير المشتركة من المكتبة المحلية."});
@@ -438,10 +438,10 @@ export async function PATCH(req){
     const catalog=JSON.parse(document.content);
     if(Array.isArray(catalog[key])&&catalog[key].some((item)=>item.id===id)){
      catalog[key]=catalog[key].filter((item)=>item.id!==id);
-     await githubPut(catalogPath,Buffer.from(JSON.stringify(catalog,null,2)+"\\n"),"studio: remove "+asset.type+" "+id,token,targetBranch,document.sha);
+     await githubPut(catalogPath,Buffer.from(JSON.stringify(catalog,null,2)+"\n"),"studio: remove "+asset.type+" "+id,token,targetBranch,document.sha);
     }
    }
-   await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify({...registry,assets:remaining},null,2)+"\\n"),"studio: permanently delete "+asset.type+" "+id,token,storageBranch,registrySha);
+   await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify({...registry,assets:remaining},null,2)+"\n"),"studio: permanently delete "+asset.type+" "+id,token,storageBranch,registrySha);
    for(const assetPath of candidatePaths){
     const filePath="web/public"+assetPath;
     await githubDeleteIfExists(filePath,"studio: delete unused asset file for "+id,token,storageBranch);
