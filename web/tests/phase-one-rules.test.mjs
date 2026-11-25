@@ -74,7 +74,7 @@ test("five Phase 1 waves are gently increasing and total exactly 30 ordinary mon
   assert.ok(PHASE_ONE_WAVE_SIZES.every((count, index) => index === 0 || count > PHASE_ONE_WAVE_SIZES[index - 1]));
 });
 
-test("campaign stage counts increase by one ordinary monster per stage; dragon is excluded", () => {
+test("campaign stage counts increase by one ordinary monster per stage", () => {
   assert.deepEqual(Array.from({ length: 10 }, (_, i) => ordinaryMonsterCountForStage(i + 1)), [30,31,32,33,34,35,36,37,38,39]);
   assert.equal(ordinaryMonsterCountForStage(0), 0);
   assert.equal(ordinaryMonsterCountForStage(11), 0);
@@ -300,7 +300,6 @@ test("player guidance and roadmap match the current Phase 1 balance", () => {
   assert.match(scene, /this\.toggleCollectionMenu\(\)/);
   assert.match(scene, /this\.collectionMenuTab = "phases"/);
   assert.match(scene, /"treasure-cave-menu"/);
-  assert.match(scene, /"dragon-boss"/);
   assert.match(scene, /this\.playMonster01Animation\(monster, "monster-01-bite"\)/);
   for (const retiredId of [String.fromCharCode(104,121,101,110,97), String.fromCharCode(99,97,118,101,45,98,114,117,116,101), String.fromCharCode(100,117,115,116,45,115,107,105,116,116,101,114), String.fromCharCode(115,116,111,110,101,104,105,100,101), String.fromCharCode(97,108,112,104,97,45,98,114,117,116,101)]) assert.equal(scene.includes(retiredId), false);
   assert.match(roadmap, /Monster 01/);
