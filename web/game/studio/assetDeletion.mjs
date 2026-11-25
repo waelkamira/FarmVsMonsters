@@ -31,14 +31,30 @@ export function assetPathStillUsed(assets, assetPath) {
   );
 }
 
+function cleanManifestEntry(item, removed) {
+  if (!item || typeof item !== "object") return item;
+  if (removed.has(item.url)) return null;
+  const next = { ...item };
+  if (removed.has(next.atlasMetadataPath)) delete next.atlasMetadataPath;
+  if (next.atlas && typeof next.atlas === "object" && removed.has(next.atlas.jsonPath)) {
+    next.atlas = { ...next.atlas };
+    delete next.atlas.jsonPath;
+  }
+  return next;
+}
+
+function cleanManifestList(items, removed) {
+  return items.map((item) => cleanManifestEntry(item, removed)).filter(Boolean);
+}
+
 export function removeManifestAssetReferences(manifest, assetPaths) {
   const removed = new Set(assetPaths);
   if (Array.isArray(manifest.assets)) {
-    manifest.assets = manifest.assets.filter((item) => !removed.has(item?.url));
+    manifest.assets = cleanManifestList(manifest.assets, removed);
   }
   if (manifest.groups && typeof manifest.groups === "object") {
     for (const [group, items] of Object.entries(manifest.groups)) {
-      if (Array.isArray(items)) manifest.groups[group] = items.filter((item) => !removed.has(item?.url));
+      if (Array.isArray(items)) manifest.groups[group] = cleanManifestList(items, removed);
     }
   }
   const all = manifestEntries(manifest);
