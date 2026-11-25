@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="الدوخة">
+<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#af9028"/><stop offset="1" stop-color="#412200"/></linearGradient></defs>
+<rect x="2" y="2" width="60" height="60" rx="16" fill="url(#g)"/>
+<rect x="2" y="2" width="60" height="60" rx="16" fill="none" stroke="#fff4" stroke-width="2"/>
+<polygon fill="#fff" stroke="#0003" stroke-width="1.2" stroke-linejoin="round" points="32,7 34.9,14 42.5,14.6 36.8,19.5 38.5,26.9 32,23 25.5,26.9 27.2,19.5 21.5,14.6 29.1,14"/><polygon fill="#fff" stroke="#0003" stroke-width="1.2" stroke-linejoin="round" points="14,33 16.4,38.8 22.6,39.2 17.8,43.2 19.3,49.3 14,46 8.7,49.3 10.2,43.2 5.4,39.2 11.6,38.8"/><polygon fill="#fff" stroke="#0003" stroke-width="1.2" stroke-linejoin="round" points="50,33 52.4,38.8 58.6,39.2 53.8,43.2 55.3,49.3 50,46 44.7,49.3 46.2,43.2 41.4,39.2 47.6,38.8"/><ellipse cx="32" cy="50" rx="22" ry="5" fill="none" stroke="#fff6" stroke-width="2.5"/>
+</svg>

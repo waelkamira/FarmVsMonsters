@@ -24,6 +24,9 @@ import { normalizeSeedLoadout, MAX_SEED_PACKETS } from "../rules/seedLoadout.mjs
 import { createCombatEventLog, appendCombatEvent } from "../rules/combatEventLog.mjs";
 import gridCalibration from "../data/farm-grid-calibration.json";
 import soundAssets from "../data/sound-assets.json";
+import effectSoundAssets from "../data/effect-sound-assets.json";
+import { EffectDirector } from "../vfx/effects/EffectDirector.mjs";
+import { resolveAssignedEffectIds } from "../vfx/effects/effectAssignments.mjs";
 import {
   PHASE_ONE_WAVE_SIZES,
   PHASE_ONE_TOTAL_MONSTERS,
@@ -173,6 +176,9 @@ export default class BattleScene extends Scene {
     for (const asset of soundAssets.assets) {
       this.load.audio(asset.key, asset.path);
     }
+    for (const asset of effectSoundAssets.assets) {
+      this.load.audio(asset.key, asset.path);
+    }
     const queuedRigPartTextures = new Set();
     // Studio keeps stable texture keys per asset ID. A scene restart can therefore
     // otherwise retain the previous image from Phaser's global texture/animation caches.
@@ -280,6 +286,15 @@ export default class BattleScene extends Scene {
     this.events.once("shutdown", () => {
       this.vfxManager?.destroy();
       this.vfxManager = null;
+    });
+    // مكتبة التأثيرات (صورة + صوت) المعيّنة من الاستوديو. تجميلية فقط.
+    this.effectDirector = new EffectDirector(this, {
+      getVolume: () => this.effectsVolume,
+      reducedMotion: typeof window !== "undefined" && Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches)
+    });
+    this.events.once("shutdown", () => {
+      this.effectDirector?.destroy();
+      this.effectDirector = null;
     });
     // Uploaded 3×3 plant/monster sheets are cropped using source dimensions,
     // exactly like Mango: nine named Phaser frames, with no assumed cell size.
@@ -1607,6 +1622,7 @@ export default class BattleScene extends Scene {
       });
     }
     this.playMonsterDefeatSound();
+    this.playEffects(this.effectIdsForMonster(monster), "death", this.effectPoint(monster.view), { facing: -1 });
     this.setMessage("The dragon has fallen! The farmer is going to rescue the princess.");
     this.tryFinishPhaseOne();
   }
@@ -2777,6 +2793,7 @@ export default class BattleScene extends Scene {
       plant.idlePhaseMs = ((col * 137) + (row * 223)) % Math.max(1, idleProfile.durationMs);
     }
     this.plants.push(plant);
+    this.startEntityEffects(plant, this.effectIdsForPlantType(type), plant.view, 1);
     this.totalPlantsPlanted += 1;
     if (type === "radish") this.hasPlantedDefender = true;
     this.playPlantSound();
@@ -3221,6 +3238,7 @@ export default class BattleScene extends Scene {
         const applyStudioHit = () => {
           if (!plant.alive || !target.alive || (studioProfile.mode === "contact" && !target.isEating) || this.gameOver) return;
           if (skeletalRig && target.studioRig && !this.studioRigHitboxesOverlap(skeletalRig, plant.view, target.studioRig, target.view)) return;
+          this.playEffects(this.effectIdsForPlantType(plant.type), "fire", this.effectPoint(plant.view));
           this.applyMonsterDamage(target, studioProfile.damage, plant.type);
           this.createProjectileImpact(target.view?.x ?? plant.x, target.view?.y ?? plant.y - 22, plant.type);
           this.damageMonsterIfNeeded(target);
@@ -3539,6 +3557,7 @@ export default class BattleScene extends Scene {
         ? Number.parseInt(profile.projectileEffectColor.slice(1), 16)
         : 0xffc247;
       view.setRotation((Number(profile.projectileRotation) || 0) * Math.PI / 180);
+      this.playEffects(this.effectIdsForPlantType(plant.type), "fire", { x: launchPoint.x, y: launchPoint.y, view: plant.view });
       this.projectiles.push({
         view, localX, row, target, startLocalX: localX, targetLocalX: Math.max(localX + 1, target.localX),
         launchOffsetX, launchOffsetY, speed: profile.projectileSpeed,
@@ -3725,6 +3744,7 @@ export default class BattleScene extends Scene {
       : plant.type === "snow-thrower" ? SNOW_THROWER_CONFIG
       : plant.type === "electric-mushroom" ? ELECTRIC_MUSHROOM_CONFIG
       : RADISH_CONFIG;
+    this.playEffects(this.effectIdsForPlantType(plant.type), "fire", { x: launchX, y: launchY, view: plant.view });
     this.projectiles.push({
       view, localX, row, startRow: row, targetRow, target, plantType: plant.type,
       startLocalX: localX, targetLocalX,
@@ -3744,6 +3764,32 @@ export default class BattleScene extends Scene {
       });
     }
     this.playThornSound();
+  }
+
+  // ---- مكتبة التأثيرات: تحديد التأثيرات المعيّنة وتشغيلها ----
+  effectIdsForPlantType(type) {
+    const studioPlant = this.studioPlantsByType?.[type] || null;
+    return resolveAssignedEffectIds({ studioEntry: studioPlant, builtinPlantType: studioPlant ? null : type });
+  }
+
+  effectIdsForMonster(monster) {
+    return resolveAssignedEffectIds({ studioEntry: monster?.studioMonster || null });
+  }
+
+  effectPoint(view, yOffset = -34) {
+    return view?.active ? { x: view.x, y: view.y + yOffset, view } : null;
+  }
+
+  playEffects(effectIds, trigger, point, extra = {}) {
+    if (!this.effectDirector || !effectIds?.length || !point) return;
+    this.effectDirector.playAssigned(effectIds, trigger, { ...point, ...extra });
+  }
+
+  startEntityEffects(entity, effectIds, view, facing = 1) {
+    if (!this.effectDirector || !effectIds?.length) return;
+    this.playEffects(effectIds, "spawn", this.effectPoint(view), { facing });
+    this.effectDirector.startAuras(effectIds, () =>
+      (entity.alive && view?.active ? { x: view.x, y: view.y - 34, view, facing } : null));
   }
 
   createFreezeImpact(x, y, plantType = "snow-thrower") {
@@ -4324,6 +4370,7 @@ export default class BattleScene extends Scene {
       voiceCooldown: PhaserMath.Between(4200, 8500)
     };
     this.monsters.push(monsterRecord);
+    this.startEntityEffects(monsterRecord, this.effectIdsForMonster(monsterRecord), monsterRecord.view, -1);
     this.recordCombatEvent("monster_spawned", {
       monsterId: monsterRecord.combatId, wave: this.wave, spawnIndex, row, archetype,
       hp, speed, localX: SPAWN_LOCAL_X
@@ -4534,6 +4581,9 @@ export default class BattleScene extends Scene {
           blocker.hp = applyHitPointsDamage(blocker.hp, monster.plantDamage).hp;
           this.playMonsterBiteSound();
           this.flashEatenPlant(blocker);
+          this.playEffects(this.effectIdsForMonster(monster), "fire", this.effectPoint(monster.view), { facing: -1 });
+          this.playEffects(this.effectIdsForMonster(monster), "hit", this.effectPoint(blocker.view), { facing: -1 });
+          this.playEffects(this.effectIdsForPlantType(blocker.type), "damaged", this.effectPoint(blocker.view));
           const electricBite = monster.combatProfile?.damageType === "electric" ||
             monster.combatProfile?.attackType === "electric" ||
             monster.studioMonster?.combat?.damageType === "electric";
@@ -4907,6 +4957,7 @@ export default class BattleScene extends Scene {
         continue;
       }
 
+    this.playEffects(this.effectIdsForPlantType(plant.type), "death", this.effectPoint(plant.view));
       shot.trailTimer -= dt * 1000;
       if (shot.trailTimer <= 0) {
         this.createProjectileTrail(projectileX - 5, trailPositionY, shot.plantType, shot.projectileEffectColor);
@@ -4952,6 +5003,7 @@ export default class BattleScene extends Scene {
       if (hit) {
         if (shot.freeze) {
           this.createFreezeImpact(projectileX, projectileY, shot.plantType);
+          this.playEffects(this.effectIdsForPlantType(shot.plantType), "hit", this.effectPoint(hit.view));
           this.freezeMonster(hit);
           shot.alive = false;
           shot.view.destroy();
@@ -4996,6 +5048,13 @@ export default class BattleScene extends Scene {
     this.projectiles = this.projectiles.filter((shot) => shot.alive);
   }
 
+    // الهراوة تستدعي هذه الدالة بلا نوع نبتة؛ لا تُفعَّل تأثيرات نبتة في تلك الحالة.
+    const attackedByPlant = arguments.length >= 3;
+    const effectPoint = this.effectPoint(monster.view);
+    if (effectPoint) {
+      if (attackedByPlant) this.playEffects(this.effectIdsForPlantType(plantType), "hit", effectPoint);
+      this.playEffects(this.effectIdsForMonster(monster), "damaged", effectPoint, { facing: -1 });
+    }
   incomingMonsterDamageMultiplier(monster) {
     const armorMultiplier = monster.incomingDamageMultiplier || 1;
     // Bracing cuts a further 45% from incoming hits, but only while the

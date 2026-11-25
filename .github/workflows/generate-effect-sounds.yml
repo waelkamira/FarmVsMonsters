@@ -1,0 +1,40 @@
+name: Generate Studio effect audio
+on:
+  push:
+    branches: [feat/studio-effects-library]
+    paths:
+      - "web/scripts/generate-effect-sounds.py"
+      - ".github/workflows/generate-effect-sounds.yml"
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/studio-effects-library
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install audio generation dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+          python -m pip install --upgrade pip
+          python -m pip install numpy scipy
+      - name: Generate original CC0 sound effects
+        working-directory: web
+        run: python scripts/generate-effect-sounds.py
+      - name: Commit generated OGG assets
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add web/public/assets/audio/effects/*.ogg web/game/data/effect-sound-assets.json
+          if git diff --cached --quiet; then
+            echo "Generated audio is already up to date."
+          else
+            git commit -m "chore(audio): generate Studio effects sound assets"
+            git push origin HEAD:feat/studio-effects-library
+          fi
