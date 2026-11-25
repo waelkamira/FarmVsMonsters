@@ -73,6 +73,7 @@ export function auditStudioAssetRegistry(input) {
     if (!STUDIO_ID_PATTERN.test(id)) errors.push("المعرّف البرمجي غير صالح.");
     if ((idCounts.get(id) || 0) > 1) errors.push("يوجد أكثر من أصل يحمل المعرّف نفسه.");
     if (!safeAssetPath(asset?.path)) errors.push("مسار ملف الأصل غير صالح أو غير آمن.");
+    if (asset?.assetAvailability === "awaiting-upload") errors.push("ملف الرسومات لم يُرفع بعد؛ لا يمكن اعتبار الأصل جاهزاً للاختبار أو النشر.");
     const frameCount = Math.max(1, Number(asset?.rows || 1) * Number(asset?.columns || 1));
     if (config?.spriteSheet && (!Number.isInteger(Number(asset.rows)) || !Number.isInteger(Number(asset.columns)) ||
         Number(asset.rows) < 1 || Number(asset.columns) < 1 || frameCount > 100)) {
