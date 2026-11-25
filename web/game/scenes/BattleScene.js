@@ -1571,8 +1571,19 @@ export default class BattleScene extends Scene {
     if (!boss?.alive || amount <= 0) return;
     boss.hp = applyHitPointsDamage(boss.hp, amount).hp;
     if (boss.sprite?.active) {
-      boss.sprite.setTint(0xffc078);
-      this.time.delayedCall(110, () => { if (boss.sprite?.active) boss.sprite.clearTint(); });
+      const sprite = boss.sprite;
+      const wasPlaying = Boolean(sprite.anims?.isPlaying);
+      if (wasPlaying) sprite.anims.pause();
+      sprite.setTintFill?.(0xffffff);
+      this.time.delayedCall(80, () => {
+        if (!sprite.active) return;
+        sprite.clearTint?.();
+        sprite.setTint?.(0xffc078);
+        if (wasPlaying && boss.alive && sprite.anims?.isPaused) sprite.anims.resume();
+        this.time.delayedCall(110, () => {
+          if (sprite.active) sprite.clearTint?.();
+        });
+      });
     }
     this.drawDragonHealthBar();
     if (boss.hp > 0) return;
@@ -5056,28 +5067,75 @@ export default class BattleScene extends Scene {
     this.refreshHud();
   }
 
+  applyPlantHitStop(plant, durationMs = 80) {
+    if (!plant?.alive || !plant.view?.active) return;
+    if (plant.hitStopTimer) {
+      plant.hitStopTimer.remove(false);
+      plant.hitStopTimer = null;
+    } else {
+      // Walk nested containers too: Studio rigs may put animated sprites
+      // one level below the plant's root container.
+      const targets = [];
+      const visit = (node) => {
+        if (!node?.active) return;
+        if (node.anims || typeof node.setTintFill === "function") targets.push(node);
+        for (const child of node.list || []) visit(child);
+      };
+      visit(plant.view);
+      plant.hitStopRestore = [...new Set(targets)].map((target) => {
+        const wasPlaying = Boolean(target.anims?.isPlaying);
+        if (wasPlaying) target.anims.pause();
+        target.setTintFill?.(0xffffff);
+        return { target, wasPlaying };
+      });
+      if (!targets.some((target) => typeof target.setTintFill === "function")) {
+        plant.view.setAlpha(0.72);
+        plant.hitStopRootFlash = true;
+      }
+    }
+    plant.hitStopTimer = this.time.delayedCall(Math.max(16, durationMs), () => {
+      for (const { target, wasPlaying } of plant.hitStopRestore || []) {
+        if (!target?.active) continue;
+        target.clearTint?.();
+        if (wasPlaying && plant.alive && target.anims?.isPaused) target.anims.resume();
+      }
+      if (plant.hitStopRootFlash && plant.view?.active) plant.view.setAlpha(1);
+      plant.hitStopRootFlash = false;
+      plant.hitStopRestore = null;
+      plant.hitStopTimer = null;
+    });
+  }
+
   flashEatenPlant(plant) {
     if (!plant?.alive || !plant.view?.active) return;
-    // Brief warm-red pulse on the plant artwork each time the hyena bites.
-    // Only image children support tint; fallback vector art still gets a pulse.
+    // White impact flash + 80ms local hitstop first; the warm-red bite pulse
+    // follows it so the two signals never overwrite one another.
+    this.applyPlantHitStop(plant, 80);
     const artwork = (plant.view.list || []).filter((child) => child?.active);
-    for (const child of artwork) {
-      if (typeof child.setTint === "function") {
-        child.setTint(0xff7777);
-        this.tweens.killTweensOf(child);
-        this.tweens.add({
-          targets: child,
-          alpha: 0.58,
-          duration: 90,
-          yoyo: true,
-          onComplete: () => {
-            if (child.active) {
-              child.clearTint?.();
-              child.setAlpha(1);
+    this.time.delayedCall(80, () => {
+      if (!plant.alive || !plant.view?.active) return;
+      let tinted = false;
+      for (const child of artwork) {
+        if (!child?.active) continue;
+        if (typeof child.setTint === "function") {
+          tinted = true;
+          child.setTint(0xff7777);
+          this.tweens.killTweensOf(child);
+          this.tweens.add({
+            targets: child,
+            alpha: 0.58,
+            duration: 90,
+            yoyo: true,
+            onComplete: () => {
+              if (child.active) {
+                child.clearTint?.();
+                child.setAlpha(1);
+              }
             }
-          }
-        });
-      } else {
+          });
+        }
+      }
+      if (!tinted) {
         this.tweens.killTweensOf(plant.view);
         this.tweens.add({
           targets: plant.view,
@@ -5089,7 +5147,7 @@ export default class BattleScene extends Scene {
           }
         });
       }
-    }
+    });
   }
 
   destroyPlant(plant) {
