@@ -60,3 +60,14 @@ test("Electric Mushroom is available in the plant collection and its seed select
   assert.match(sceneSource, /"electric-mushroom": "Electric Mushroom chosen\. Fires cyan electric bolts down its lane\."/);
   assert.match(sceneSource, /"electric-mushroom": ELECTRIC_MUSHROOM_CONFIG/);
 });
+
+test("Electric projectile hits create a bounded lightning shock reaction", () => {
+  assert.match(sceneSource, /createElectricShockEffect\(sourceX, sourceY, target, targetKind = "monster"\)/);
+  assert.match(sceneSource, /lightning\.lineStyle\(8, 0x35cfff, 0\.24\)/);
+  assert.match(sceneSource, /lightning\.lineStyle\(3, 0xe9fcff, 0\.98\)/);
+  assert.match(sceneSource, /delay: 48, repeat: 10, callback: drawBolt/);
+  assert.match(sceneSource, /impact\) \{[\s\S]*?createElectricShockEffect\(projectileX, projectileY, hit, "monster"\)/);
+  assert.match(sceneSource, /createElectricShockEffect\(studioHeadTarget\.x, studioHeadTarget\.y, shot\.target, "monster"\)/);
+  assert.match(sceneSource, /const electricBite = monster\.combatProfile\?\.damageType === "electric"/);
+  assert.match(sceneSource, /createElectricShockEffect\([\s\S]*?blocker,[\s\S]*?"plant"/);
+});
