@@ -76,14 +76,12 @@ export default function StageTwoIntroPage() {
 
         <p className="stage-story">
           {ar
-            ? "بعد إنقاذ الأميرة من تنين المرحلة الأولى، تبدأ مغامرة جديدة. يظهر قوة جديدة من الوحوش، وتبدأ مهمة المزارع من جديد: حماية الأرض، هزيمة الأتباع، هزيمة الأعداء وحماية الأرض."
-            : "After rescuing the princess from the first dragon, a new adventure begins. A new force of monsters appears. The farmer's mission begins again: defend the land, defeat the followers, defeat the enemies and protect the land."}
+            ? "تبدأ مغامرة جديدة في أرض مختلفة، وتظهر قوة جديدة من الوحوش. على المزارع حماية الأرض والتصدي للمهاجمين."
+            : "A new adventure begins on a different territory. A new force of monsters appears, and the farmer must defend the land."}
         </p>
 
         <div className="stage-cast-grid stage-two-cast-grid">
-          <CatalogThumb id="dragon" label={ar ? "تنين المرحلة الثانية" : "Stage Two dragon"} className="stage-cast-thumb" />
           <CatalogThumb id="monster-01" label={ar ? "جيش الوحوش" : "Monster army"} className="stage-cast-thumb" />
-          <CatalogThumb id="princess" label={ar ? "الأميرة الأسيرة" : "Captive princess"} className="stage-cast-thumb" />
         </div>
 
         <div className="stage-briefing stage-two-briefing">
