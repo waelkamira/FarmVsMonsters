@@ -102,13 +102,15 @@ test("Studio requires manual behavior selection and only links a projectile in p
   assert.match(assetsRoute, /removeProjectile/);
 });
 
-test("Studio enforces draft-to-testing-to-published and publishes the catalog only after testing", () => {
+test("Studio enforces draft-to-testing-to-reviewed-publication and stages the catalog after testing", () => {
   assert.match(assetsRoute, /"prepare-test","publish"/);
   assert.match(assetsRoute, /asset\.status!=="testing"/);
   assert.match(releaseLifecycle, /status: "testing"/);
   assert.match(releaseLifecycle, /status: "published"/);
   assert.match(assetsRoute, /PUBLISHED_CATALOG_PATH/);
-  assert.match(assetsRoute, /const artworkPath="web\/public"\+asset\.path/);
+  assert.match(assetsRoute, /sourceFiles\.set\(asset\.path/);
+  assert.match(assetsRoute, /githubCreateBranch\(releaseBranch,targetBranch,token\)/);
+  assert.match(assetsRoute, /githubCreatePullRequest\(/);
 });
 
 test("local sync downloads only testing plants and writes the exact local runtime catalog path", () => {
@@ -138,7 +140,7 @@ test("testing catalog is served directly from the Studio staging branch with pro
   assert.match(assetsRoute, /asset\.status==="testing"/);
   assert.match(assetsRoute, /api\/studio\/assets\?preview=/);
   assert.match(assetsRoute, /Cache-Control.*private, no-store/);
-  assert.match(studioPage, /متاح الآن للاختبار مباشرة داخل اللعبة/);
+  assert.match(studioPage, /الأصل متاح الآن للاختبار داخل اللعبة/);
   assert.doesNotMatch(studioPage, /شغّل npm run studio:sync لمزامنتها/);
 });
 
