@@ -108,7 +108,9 @@ test("Studio enforces draft-to-testing-to-reviewed-publication and stages the ca
   assert.match(releaseLifecycle, /status: "testing"/);
   assert.match(releaseLifecycle, /status: "published"/);
   assert.match(assetsRoute, /PUBLISHED_CATALOG_PATH/);
-  assert.match(assetsRoute, /const artworkPath="web\/public"\+asset\.path/);
+  assert.match(assetsRoute, /sourceFiles\.set\(asset\.path/);
+  assert.match(assetsRoute, /githubCreateBranch\(releaseBranch,targetBranch,token\)/);
+  assert.match(assetsRoute, /githubCreatePullRequest\(/);
 });
 
 test("local sync downloads only testing plants and writes the exact local runtime catalog path", () => {
