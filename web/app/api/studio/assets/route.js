@@ -466,6 +466,8 @@ export async function PATCH(req){
  }
  const token=process.env.STUDIO_GITHUB_TOKEN,storageBranch=process.env.STUDIO_GITHUB_BRANCH||"studio/assets",targetBranch=process.env.STUDIO_PUBLISH_BRANCH||"main";
  if(!token)return NextResponse.json({error:"STUDIO_GITHUB_TOKEN is required."},{status:503});
+ let releaseBranchForCleanup=null;
+ let releasePullRequestAttempted=false;
  try{
   const registryDocument=await githubGetDocument(REGISTRY_PATH,token,storageBranch),registry=registryDocument?JSON.parse(registryDocument.content):{version:1,assets:[]},registrySha=registryDocument?.sha??null;
   const index=registry.assets.findIndex(asset=>asset.id===id);
@@ -538,7 +540,7 @@ export async function PATCH(req){
    if(operation==="archive"&&asset.releaseRequest?.number){
     const previousRequest=await githubGetPullRequest(asset.releaseRequest.number,token);
     if(previousRequest?.state==="open"||previousRequest?.merged)return NextResponse.json({error:"أغلق طلب مراجعة النشر المفتوح أولاً. لا يمكن أرشفة محتوى منشور؛ أزل نشره بطلب إصدار منفصل."},{status:409});
-    candidate={...asset,releaseRequest:null};
+    candidate={...asset,status:"testing",releaseRequest:null};
    }
    let updated;
    try{updated=transitionStudioAssetStatus(candidate,operation);}
@@ -557,51 +559,76 @@ export async function PATCH(req){
    return NextResponse.json({success:true,operation,asset:updated,message:asset.type==="monster"?"الوحش جاهز للاختبار داخل اللعبة.":"النبتة جاهزة للاختبار داخل اللعبة."});
   }
   if(operation!=="publish")return NextResponse.json({error:"عملية Studio غير معروفة."},{status:400});
-  if(asset.status!=="testing")return NextResponse.json({error:"يجب تجهيز الأصل للاختبار والتحقق منه داخل اللعبة أولاً."},{status:409});
-  if(!safeAssetPath(asset.path))return NextResponse.json({error:"Invalid asset path."},{status:400});
+if(!safeAssetPath(asset.path))return NextResponse.json({error:"Invalid asset path."},{status:400});
 
-  // Publish directly to the configured game branch. The catalog is written last,
-  // so assets are never made visible to the game before their files are present.
-  const artworkPath="web/public"+asset.path;
-  const artworkBytes=await githubGetBytes(artworkPath,token,storageBranch);
-  await githubPutImmutable(artworkPath,artworkBytes,"studio: publish "+asset.type+" artwork "+id,token,targetBranch);
-  const rigPartIds=[...new Set((asset.rigProfile?.bones||[]).map(bone=>bone?.part?.assetId).filter(Boolean))];
-  const rigPartAssets=getRigPartAssets(registry.assets,asset);
-  if(rigPartAssets.length!==rigPartIds.length||rigPartAssets.some(part=>!part||!["item","plant","monster","effect"].includes(part.type)||part.status==="archived"||!safeAssetPath(part.path)))return NextResponse.json({error:"يوجد جزء هيكلي مفقود أو غير صالح؛ أصلح تبعيات الهيكل قبل النشر."},{status:409});
-  const rigPartById=new Map(rigPartAssets.filter(Boolean).map(part=>[part.id,part]));
-  const invalidRigFrame=(asset.rigProfile?.bones||[]).some(bone=>{if(!bone?.part)return false;const part=rigPartById.get(bone.part.assetId);const count=getRigPartFrameCount(part);return !part||!Number.isInteger(count)||bone.part.frame>=count;});
-  if(invalidRigFrame)return NextResponse.json({error:"يوجد إطار غير صالح في أحد أجزاء الهيكل؛ صحح رقم الإطار قبل النشر."},{status:409});
-  for(const part of rigPartAssets){if(part.path===asset.path||part.path===asset.combat?.projectile?.path)continue;const partBytes=await githubGetBytes("web/public"+part.path,token,storageBranch);await githubPutImmutable("web/public"+part.path,partBytes,"studio: publish skeletal part "+part.id+" for "+asset.type+" "+id,token,targetBranch);}
-
-
-  if(asset.type==="plant"&&asset.combat.mode==="projectile"){
-   if(!safeAssetPath(asset.combat.projectile?.path))return NextResponse.json({error:"The linked projectile asset is missing."},{status:409});
-   const projectilePath="web/public"+asset.combat.projectile.path;
-   const projectileBytes=await githubGetBytes(projectilePath,token,storageBranch);
-   await githubPutImmutable(projectilePath,projectileBytes,"studio: publish plant projectile "+id,token,targetBranch);
-  }
-
-  const isMonster=asset.type==="monster";
-  const catalogPath=isMonster?PUBLISHED_MONSTER_CATALOG_PATH:PUBLISHED_CATALOG_PATH;
-  const catalogDocument=await githubGetDocument(catalogPath,token,targetBranch);
-  const catalog=catalogDocument?JSON.parse(catalogDocument.content):(isMonster?{version:1,monsters:[]}:{version:1,plants:[]});
-  const publishedAt=new Date().toISOString();
-  const publishedRecord=isMonster
-   ?{id:asset.id,name:asset.name,path:asset.path,rows:asset.rows,columns:asset.columns,spriteSheet:asset.spriteSheet,animationProfile:asset.animationProfile||null,rigProfile:asset.rigProfile||null,rigParts:rigPartAssets.map(part=>({id:part.id,name:part.name,path:part.path,rows:part.spriteSheet?(part.rows||1):1,columns:part.spriteSheet?(part.columns||1):1,frameCount:getRigPartFrameCount(part),spriteSheet:Boolean(part.spriteSheet)})),monsterProfile:asset.monsterProfile,flipX:Boolean(asset.flipX),publishedAt}
-   :{id:asset.id,name:asset.name,path:asset.path,rows:asset.rows,columns:asset.columns,spriteSheet:asset.spriteSheet,animationProfile:asset.animationProfile||null,rigProfile:asset.rigProfile||null,rigParts:rigPartAssets.map(part=>({id:part.id,name:part.name,path:part.path,rows:part.spriteSheet?(part.rows||1):1,columns:part.spriteSheet?(part.columns||1):1,frameCount:getRigPartFrameCount(part),spriteSheet:Boolean(part.spriteSheet)})),combat:asset.combat,flipX:Boolean(asset.flipX),publishedAt};
-  const collectionKey=isMonster?"monsters":"plants";
-  const collection=Array.isArray(catalog[collectionKey])?catalog[collectionKey]:[];
-  const existingIndex=collection.findIndex(item=>item.id===id);
-  catalog[collectionKey]=existingIndex>=0?collection.map((item,i)=>i===existingIndex?publishedRecord:item):[...collection,publishedRecord];
-  catalog.version=1;
-  await githubPut(catalogPath,Buffer.from(JSON.stringify(catalog,null,2)+"\n"),"studio: publish "+asset.type+" "+id,token,targetBranch,catalogDocument?.sha??null);
-
-  const publishedAsset={...asset,status:"published",publishedAt,releaseRequest:null};
+if(asset.releaseRequest?.number){
+ const previousRequest=await githubGetPullRequest(asset.releaseRequest.number,token);
+ if(previousRequest?.state==="open")return NextResponse.json({success:true,operation:"publish-requested",asset,reviewUrl:previousRequest.url,reviewNumber:previousRequest.number,releaseBranch:asset.releaseRequest.branch,alreadyRequested:true,message:"يوجد طلب مراجعة مفتوح لهذا الأصل بالفعل."});
+ if(previousRequest?.merged){
+  const publishedAsset={...asset,status:"published",publishedAt:previousRequest.mergedAt||asset.publishedAt,releaseRequest:{...asset.releaseRequest,state:"merged"}};
   registry.assets[index]=publishedAsset;
-  let registrySyncWarning=null;
+  await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(registry,null,2)+"\n"),"studio: reconcile merged release "+id,token,storageBranch,registrySha);
+  return NextResponse.json({success:true,operation:"published",asset:publishedAsset,reviewUrl:previousRequest.url,reviewNumber:previousRequest.number,alreadyPublished:true,message:"تم دمج طلب النشر مسبقاً وأصبحت النسخة منشورة."});
+ }
+ asset={...asset,status:"testing",releaseRequest:null};
+ registry.assets[index]=asset;
+}
+if(asset.status!=="testing")return NextResponse.json({error:"يجب تجهيز الأصل للاختبار والتحقق منه داخل اللعبة أولاً."},{status:409});
+
+const rigPartIds=[...new Set((asset.rigProfile?.bones||[]).map(bone=>bone?.part?.assetId).filter(Boolean))];
+const rigPartAssets=getRigPartAssets(registry.assets,asset);
+if(rigPartAssets.length!==rigPartIds.length||rigPartAssets.some(part=>!part||!["item","plant","monster","effect"].includes(part.type)||part.status==="archived"||!safeAssetPath(part.path)))return NextResponse.json({error:"يوجد جزء هيكلي مفقود أو غير صالح؛ أصلح تبعيات الهيكل قبل طلب النشر."},{status:409});
+const rigPartById=new Map(rigPartAssets.filter(Boolean).map(part=>[part.id,part]));
+const invalidRigFrame=(asset.rigProfile?.bones||[]).some(bone=>{if(!bone?.part)return false;const part=rigPartById.get(bone.part.assetId),count=getRigPartFrameCount(part);return !part||!Number.isInteger(count)||bone.part.frame>=count;});
+if(invalidRigFrame)return NextResponse.json({error:"يوجد إطار غير صالح في أحد أجزاء الهيكل؛ صحح رقم الإطار قبل طلب النشر."},{status:409});
+
+const sourceFiles=new Map();
+sourceFiles.set(asset.path,await githubGetBytes("web/public"+asset.path,token,storageBranch));
+for(const part of rigPartAssets){if(!safeAssetPath(part.path))return NextResponse.json({error:"مسار أحد أجزاء الهيكل غير صالح."},{status:409});if(!sourceFiles.has(part.path))sourceFiles.set(part.path,await githubGetBytes("web/public"+part.path,token,storageBranch));}
+if(asset.type==="plant"&&asset.combat.mode==="projectile"){if(!safeAssetPath(asset.combat.projectile?.path))return NextResponse.json({error:"The linked projectile asset is missing."},{status:409});if(!sourceFiles.has(asset.combat.projectile.path))sourceFiles.set(asset.combat.projectile.path,await githubGetBytes("web/public"+asset.combat.projectile.path,token,storageBranch));}
+
+const releaseBranch=createStudioReleaseBranchName(id,randomUUID().replace(/-/g,"").slice(0,8));
+await githubCreateBranch(releaseBranch,targetBranch,token);
+releaseBranchForCleanup=releaseBranch;
+for(const [assetPath,bytes] of sourceFiles)await githubPutImmutable("web/public"+assetPath,bytes,"stage "+asset.type+" release dependency for "+id,token,releaseBranch);
+
+const isMonster=asset.type==="monster";
+const catalogPath=isMonster?PUBLISHED_MONSTER_CATALOG_PATH:PUBLISHED_CATALOG_PATH;
+const catalogDocument=await githubGetDocument(catalogPath,token,targetBranch);
+const catalog=catalogDocument?JSON.parse(catalogDocument.content):(isMonster?{version:1,monsters:[]}:{version:1,plants:[]});
+const publishedAt=new Date().toISOString();
+const rigParts=rigPartAssets.map(part=>({id:part.id,name:part.name,path:part.path,rows:part.spriteSheet?(part.rows||1):1,columns:part.spriteSheet?(part.columns||1):1,frameCount:getRigPartFrameCount(part),spriteSheet:Boolean(part.spriteSheet)}));
+const publishedRecord=isMonster?{id:asset.id,name:asset.name,path:asset.path,rows:asset.rows,columns:asset.columns,spriteSheet:asset.spriteSheet,animationProfile:asset.animationProfile||null,rigProfile:asset.rigProfile||null,rigParts,monsterProfile:asset.monsterProfile,flipX:Boolean(asset.flipX),publishedAt}:{id:asset.id,name:asset.name,path:asset.path,rows:asset.rows,columns:asset.columns,spriteSheet:asset.spriteSheet,animationProfile:asset.animationProfile||null,rigProfile:asset.rigProfile||null,rigParts,combat:asset.combat,flipX:Boolean(asset.flipX),publishedAt};
+const collectionKey=isMonster?"monsters":"plants";
+const collection=Array.isArray(catalog[collectionKey])?catalog[collectionKey]:[];
+const existingIndex=collection.findIndex(item=>item.id===id);
+catalog[collectionKey]=existingIndex>=0?collection.map((item,i)=>i===existingIndex?publishedRecord:item):[...collection,publishedRecord];
+catalog.version=1;
+await githubPut(catalogPath,Buffer.from(JSON.stringify(catalog,null,2)+"\n"),"stage "+asset.type+" catalog release "+id,token,releaseBranch,catalogDocument?.sha??null);
+
+releasePullRequestAttempted=true;
+let pr;
+try{pr=await githubCreatePullRequest(releaseBranch,targetBranch,"Publish "+asset.type+": "+asset.name+" ("+id+")","## Studio content release\n\n- Type: "+asset.type+"\n- ID: "+id+"\n- Revision: "+(asset.revision||1)+"\n- Includes the immutable source asset, the complete referenced rig-part set, linked projectile when applicable, and the updated published catalog.\n- Asset lifecycle, rig schema, frame references and dependency checks were validated before staging.\n\n**Required before merge:** review the diff and complete the live Phaser gameplay/browser verification for this exact revision. Merging this pull request activates the content on the target game branch. The Studio action does not merge it automatically.",token);}catch(error){if([403,404,422].includes(error.status))releasePullRequestAttempted=false;throw error;}
+
+const requested={...asset,status:"approved",releaseRequest:{number:pr.number,url:pr.url,branch:releaseBranch,state:"open",createdAt:new Date().toISOString()}};
+registry.assets[index]=requested;
+let registrySyncWarning=null;
+try{await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(registry,null,2)+"\n"),"studio: request "+asset.type+" release "+id,token,storageBranch,registrySha);}
+catch(error){
+ if(error.code==="STUDIO_WRITE_CONFLICT"){
   try{
-   await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(registry,null,2)+"\n"),"studio: mark "+asset.type+" published "+id,token,storageBranch,registrySha);
-  }catch(error){registrySyncWarning=error.message;}
-  return NextResponse.json({success:true,operation:"published",asset:publishedAsset,publishedAt,targetBranch,registrySyncWarning,message:asset.type==="monster"?"تم نشر الوحش مباشرة في اللعبة دون طلب مراجعة.":"تم نشر النبتة مباشرة في اللعبة دون طلب مراجعة."});
- }catch(error){return NextResponse.json({error:error.message||"Studio action failed."},{status:error.code==="STUDIO_WRITE_CONFLICT"?409:502});}
+   const latestDocument=await githubGetDocument(REGISTRY_PATH,token,storageBranch);
+   const latestRegistry=latestDocument?JSON.parse(latestDocument.content):{version:1,assets:[]};
+   const latestIndex=latestRegistry.assets.findIndex(item=>item.id===id);
+   const latestAsset=latestIndex>=0?latestRegistry.assets[latestIndex]:null;
+   if(!latestAsset||Number(latestAsset.revision||1)!==Number(asset.revision||1)||latestAsset.updatedAt!==asset.updatedAt||(latestAsset.releaseRequest?.number&&latestAsset.releaseRequest.number!==pr.number))throw new Error("تم إنشاء طلب المراجعة، لكن الأصل تغير في المكتبة أثناء النشر. لا يمكن تحديث حالته دون مراجعة التعارض. رابط الطلب: "+pr.url);
+   latestRegistry.assets[latestIndex]=requested;
+   await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(latestRegistry,null,2)+"\n"),"studio: reconcile release request "+id,token,storageBranch,latestDocument?.sha??null);
+  }catch(syncError){registrySyncWarning=syncError.message;}
+ }else registrySyncWarning=error.message;
+}
+return NextResponse.json({success:true,operation:"publish-requested",asset:requested,reviewUrl:pr.url,reviewNumber:pr.number,releaseBranch,targetBranch,registrySyncWarning,message:registrySyncWarning?"تم إنشاء طلب مراجعة النشر، لكن تعذر تحديث حالة الأصل في مكتبة Studio. احتفظ برابط المراجعة.":"تم إنشاء طلب مراجعة النشر. لن يتغير فرع اللعبة الأساسي حتى تتم مراجعة الطلب ودمجه."});
+ }catch(error){
+  if(releaseBranchForCleanup&&!releasePullRequestAttempted){try{await githubDeleteBranch(releaseBranchForCleanup,token);}catch(cleanupError){error.message=(error.message||"Studio action failed.")+" Cleanup warning: "+cleanupError.message;}}
+  return NextResponse.json({error:error.message||"Studio action failed."},{status:error.code==="STUDIO_WRITE_CONFLICT"?409:502});
 }
