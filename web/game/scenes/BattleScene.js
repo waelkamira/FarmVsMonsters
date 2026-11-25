@@ -289,7 +289,13 @@ export default class BattleScene extends Scene {
     });
     // مكتبة التأثيرات (صورة + صوت) المعيّنة من الاستوديو. تجميلية فقط.
     this.effectDirector = new EffectDirector(this, {
-      getVolume: () => this.effectsVolume,
+      // Respect Phaser's master mute/volume. Do not read an unset scene.effectsVolume:
+      // an undefined value is interpreted as zero and would silently disable all FX audio.
+      getVolume: () => {
+        if (this.sound?.mute) return 0;
+        const masterVolume = Number(this.sound?.volume);
+        return Math.round((Number.isFinite(masterVolume) ? masterVolume : 1) * 100);
+      },
       reducedMotion: typeof window !== "undefined" && Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches)
     });
     this.events.once("shutdown", () => {
