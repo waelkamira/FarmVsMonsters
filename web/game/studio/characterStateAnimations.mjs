@@ -17,7 +17,7 @@ export function validateCharacterStateAnimation(input, { maxFrames = 24 } = {}) 
   const fps = Number(input?.fps ?? 10);
   const path = input?.path;
   if (!STATE_IDS.has(stateId)) errors.push("حالة الشخصية غير مدعومة.");
-  if (typeof path !== "string" || !path.startsWith("/assets/") || /[?#\\\\]/.test(path) || path.split("/").some((part) => part === "." || part === ".." || !part)) errors.push("مسار إطارات الحالة غير صالح.");
+  if (typeof path !== "string" || !path.startsWith("/assets/") || /[?#\\\\]/.test(path) || path.slice(1).split("/").some((part) => part === "." || part === ".." || !part)) errors.push("مسار إطارات الحالة غير صالح.");
   if (!Number.isInteger(rows) || rows < 1 || rows > 24) errors.push("عدد صفوف الحالة يجب أن يكون بين 1 و24.");
   if (!Number.isInteger(columns) || columns < 1 || columns > 24) errors.push("عدد أعمدة الحالة يجب أن يكون بين 1 و24.");
   if (!Number.isInteger(frameCount) || frameCount < 1 || frameCount > maxFrames || rows * columns !== frameCount) errors.push("عدد إطارات الحالة يجب أن يطابق الصفوف × الأعمدة وألا يتجاوز " + maxFrames + ".");
