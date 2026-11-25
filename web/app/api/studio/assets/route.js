@@ -51,6 +51,32 @@ function assetOwnedPaths(asset){
 function assetPathStillUsed(assets,assetPath){
  return assets.some((item)=>[item.path,item.atlas?.jsonPath,item.audio?.path,item.combat?.projectile?.path].includes(assetPath));
 }
+function removeManifestAssetReferences(manifest,assetPaths){
+ const removed=new Set(assetPaths);
+ if(Array.isArray(manifest.assets))manifest.assets=manifest.assets.filter((item)=>!removed.has(item?.url));
+ if(manifest.groups&&typeof manifest.groups==="object"){
+  for(const [group,items] of Object.entries(manifest.groups)){
+   if(Array.isArray(items))manifest.groups[group]=items.filter((item)=>!removed.has(item?.url));
+  }
+  manifest.assetCount=Object.values(manifest.groups).reduce((total,items)=>total+(Array.isArray(items)?items.length:0),0);
+ }else if(Array.isArray(manifest.assets))manifest.assetCount=manifest.assets.length;
+ return manifest;
+}
+async function removeLocalAssetManifestReferences(assetPaths){
+ const target=path.join(process.cwd(),"public/assets/asset-manifest.json");
+ try{
+  const manifest=JSON.parse(await readFile(target,"utf8"));
+  const updated=removeManifestAssetReferences(manifest,assetPaths);
+  await writeFile(target,JSON.stringify(updated,null,2)+"\n","utf8");
+ }catch(error){if(error.code!=="ENOENT")throw error;}
+}
+async function removeGithubAssetManifestReferences(assetPaths,token,branch){
+ const filePath="web/public/assets/asset-manifest.json";
+ const document=await githubGetDocument(filePath,token,branch);
+ if(!document)return;
+ const manifest=removeManifestAssetReferences(JSON.parse(document.content),assetPaths);
+ await githubPut(filePath,Buffer.from(JSON.stringify(manifest,null,2)+"\n"),"studio: remove deleted asset references from manifest",token,branch,document.sha);
+}
 async function githubPut(filePath,bytes,message,token,branch,expectedSha){const api=githubUrl(filePath),headers=githubHeaders(token);const check=await fetch(api+"?ref="+encodeURIComponent(branch),{headers});let sha=null;if(check.ok)sha=(await check.json()).sha;else if(check.status!==404)throw Error("GitHub lookup failed ("+check.status+").");assertExpectedContentSha(expectedSha,sha);const saved=await fetch(api,{method:"PUT",headers:{...headers,"Content-Type":"application/json"},body:JSON.stringify({message,branch,content:Buffer.from(bytes).toString("base64"),...(sha?{sha}:{})})});if(!saved.ok){const data=await saved.json().catch(()=>({}));throw Error(data.message||"GitHub save failed ("+saved.status+").");}}
 async function localRegistry(){try{return JSON.parse(await readFile(path.join(process.cwd(),"game/data/studioAssetRegistry.json"),"utf8"));}catch(error){if(error.code==="ENOENT")return {version:1,assets:[]};throw error;}}
 async function saveLocalRegistry(registry){const target=path.join(process.cwd(),"game/data/studioAssetRegistry.json");await mkdir(path.dirname(target),{recursive:true});await writeFile(target,JSON.stringify(registry,null,2)+"\n","utf8");}
@@ -382,7 +408,10 @@ export async function PATCH(req){
      const root=path.resolve(process.cwd(),"public")+path.sep;
      if(!target.startsWith(root))return NextResponse.json({error:"مسار ملف الأصل خارج مجلد الأصول المسموح."},{status:409});
     }
-    for(const [catalogPath,key] of [[PUBLISHED_CATALOG_PATH,"plants"],[PUBLISHED_MONSTER_CATALOG_PATH,"monsters"]]){
+    await removeLocalAssetManifestReferences(candidatePaths);
+    await removeGithubAssetManifestReferences(candidatePaths,token,storageBranch);
+   if(targetBranch!==storageBranch)await removeGithubAssetManifestReferences(candidatePaths,token,targetBranch);
+   for(const [catalogPath,key] of [[PUBLISHED_CATALOG_PATH,"plants"],[PUBLISHED_MONSTER_CATALOG_PATH,"monsters"]]){
      const target=path.join(process.cwd(),"public",catalogPath.replace(/^web\//,""));
      try{const catalog=JSON.parse(await readFile(target,"utf8"));if(Array.isArray(catalog[key])){catalog[key]=catalog[key].filter((item)=>item.id!==id);await writeFile(target,JSON.stringify(catalog,null,2)+"\n","utf8");}}catch(error){if(error.code!=="ENOENT")throw error;}
     }
