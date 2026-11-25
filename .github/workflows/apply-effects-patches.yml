@@ -1,0 +1,58 @@
+name: Integrate effects library patches
+
+on:
+  push:
+    branches:
+      - feat/complete-effects-library-integration
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply-and-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/complete-effects-library-integration
+          fetch-depth: 0
+      - name: Apply patch 1 and patch 2 safely
+        shell: bash
+        run: |
+          set -euo pipefail
+          apply_or_skip() {
+            local patch="$1"
+            if git apply --check "$patch"; then
+              git apply "$patch"
+              echo "Applied $patch"
+            elif git apply --reverse --check "$patch"; then
+              echo "Already applied: $patch"
+            else
+              echo "::error::Patch does not apply cleanly: $patch"
+              git apply --reject "$patch" || true
+              git status --short
+              exit 1
+            fi
+          }
+          apply_or_skip "web/files/0001-feat-studio-effects-library-26-effects-with-Arabic-n (3).patch"
+          apply_or_skip "web/files/0002-feat-vfx-7-Game-Juice-effects-wobble-hop-jitter-spee.patch"
+      - name: Inspect and validate patch result
+        working-directory: web
+        run: |
+          set -euo pipefail
+          node --version
+          node --test tests/effect-library.test.mjs tests/effect-director.test.mjs tests/effect-juice.test.mjs tests/effect-ambient.test.mjs
+      - name: Commit integrated effects
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -n "$(git status --porcelain)" ]]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add -A
+            git commit -m "feat(vfx): integrate complete effects library and game juice"
+            git push origin HEAD:feat/complete-effects-library-integration
+          else
+            echo "No changes to commit."
+          fi
