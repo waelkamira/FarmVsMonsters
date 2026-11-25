@@ -1,32 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+
 import { useLocale, LanguageToggle } from "../LocaleProvider";
-import { loadSavedCoins } from "../../game/rules/phaseOneRules.mjs";
+
 import { STAGE_ONE_PLANTS } from "../../game/data/stageOnePlants.mjs";
 import CatalogThumb from "../components/CatalogThumb";
 
 export default function PlantsPage() {
   const { locale } = useLocale();
   const ar = locale === "ar";
-  const [coins, setCoins] = useState(0);
-
-  useEffect(() => {
-    const refresh = () => {
-      try {
-        setCoins(loadSavedCoins(window.localStorage));
-      } catch { setCoins(0); }
-    };
-    refresh();
-    window.addEventListener("storage", refresh);
-    window.addEventListener("farm-coins-change", refresh);
-    return () => {
-      window.removeEventListener("storage", refresh);
-      window.removeEventListener("farm-coins-change", refresh);
-    };
-  }, []);
-
   // The full plant encyclopedia is open during the current development/playtest period.
   const activePlants = STAGE_ONE_PLANTS;
   const plannedPlants = STAGE_ONE_PLANTS.filter((plant) => !plant.implemented);
@@ -45,8 +28,8 @@ export default function PlantsPage() {
             : "All plants are currently visible in the roster. Plants with implemented gameplay can be selected for battle; concepts still in development remain clearly marked."}
         </p>
         <div className="collection-wallet">
-          <strong>{ar ? "رصيد العملات على هذا الجهاز" : "Coins saved on this device"}</strong>
-          <strong>🪙 {coins.toLocaleString()} {ar ? "عملة" : "COINS"}</strong>
+          <strong>{ar ? "العملات والمكافآت معطّلة في النسخة التجريبية المحلية" : "Coins and rewards are disabled in local playtest mode"}</strong>
+          <strong>{ar ? "لا تُمنح عملات أو تُحفظ مكافآت قبل تفعيل التحقق الآمن من الخادم" : "No coins or rewards are issued until server verification is enabled"}</strong>
         </div>
 
         <div className="collection-summary">

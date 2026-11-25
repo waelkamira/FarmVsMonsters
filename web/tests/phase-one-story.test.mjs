@@ -62,7 +62,10 @@ test("story artwork uses explicit user-owned asset paths and optional animation 
 });
 
 
-test("victory persists local campaign progress without uploading client-controlled balances", () => {
-  assert.match(scene, /unlockNextStage\(window\.localStorage, 1\)/);
+test("client victory remains a playtest result and never persists campaign rewards", () => {
+  assert.doesNotMatch(scene, /unlockNextStage\(window\.localStorage/);
+  assert.doesNotMatch(scene, /unlockPlantReward\(window\.localStorage/);
+  assert.match(scene, /A local victory is a playtest result/);
+  assert.match(scene, /LOCAL PLAYTEST · PROGRESS AND REWARDS NOT SAVED/);
   assert.doesNotMatch(scene, /syncProgressAfterVictory\(\)/);
 });

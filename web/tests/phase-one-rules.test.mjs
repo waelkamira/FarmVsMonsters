@@ -96,16 +96,15 @@ test("initial energy, plant costs, HP and mushroom production are centralized", 
 });
 
 
-test("coin progression persists safely across browser sessions", () => {
-  const values = new Map();
+test("client-controlled storage cannot create or restore an authoritative coin balance", () => {
+  const values = new Map([[PROGRESSION_STORAGE_KEY, JSON.stringify({ version: 1, coins: 999999 })]]);
   const storage = {
     getItem(key) { return values.has(key) ? values.get(key) : null; },
     setItem(key, value) { values.set(key, value); }
   };
   assert.equal(loadSavedCoins(storage), 0);
-  assert.equal(saveCoins(storage, 24), true);
-  assert.equal(values.has(PROGRESSION_STORAGE_KEY), true);
-  assert.equal(loadSavedCoins(storage), 24);
+  assert.equal(saveCoins(storage, 24), false);
+  assert.equal(loadSavedCoins(storage), 0);
   assert.equal(normalizeCoins(-1), 0);
   assert.equal(normalizeCoins(1.5), 0);
   assert.equal(normalizeCoins(Number.MAX_SAFE_INTEGER + 1), 0);
@@ -267,12 +266,12 @@ test("planting validates occupancy and energy before charging", () => {
   assert.match(scene, /this\.totalPlantsPlanted \+= 1/);
 });
 
-test("monster defeat is guarded against duplicate rewards", () => {
+test("monster defeat is guarded against duplicate kill counts and never grants client currency", () => {
   assert.match(scene, /if \(monster\.hp > 0 \|\| !monster\.alive\) return/);
   assert.match(scene, /monster\.alive = false/);
   assert.match(scene, /this\.totalDefeatedMonsters \+= 1/);
-  assert.match(scene, /this\.coins \+= PHASE_ONE_REWARDS\.ordinaryMonsterDefeatCoins/);
-  assert.match(scene, /this\.registry\.set\(["']coins["'], this\.coins\)/);
+  assert.doesNotMatch(scene, /this\.coins \+= PHASE_ONE_REWARDS/);
+  assert.match(scene, /Local combat is a playtest sandbox/);
 });
 
 test("a wave clears only after all scheduled monsters spawn and all living monsters die", () => {
@@ -336,34 +335,24 @@ test("player guidance and roadmap match the current Phase 1 balance", () => {
 });
 
 
-test("campaign progression unlocks the next stage only through a valid completion write", () => {
-  const values = new Map();
+test("browser storage and client victory claims cannot unlock campaign stages", () => {
+  const values = new Map([[CAMPAIGN_PROGRESS_KEY, JSON.stringify({ version: 1, unlockedStage: 10, completedStages: [1,2,3,4,5,6,7,8,9] })]]);
   const storage = {
     getItem: (key) => values.has(key) ? values.get(key) : null,
     setItem: (key, value) => values.set(key, value)
   };
-
   assert.equal(loadUnlockedStage(storage), 1);
-  assert.equal(unlockNextStage(storage, 0), false);
-  assert.equal(unlockNextStage(storage, 1), true);
-  assert.equal(loadUnlockedStage(storage), 2);
-  assert.deepEqual(JSON.parse(values.get(CAMPAIGN_PROGRESS_KEY)), {
-    version: 1,
-    unlockedStage: 2,
-    completedStages: [1],
-    unlockedPlantIds: ["radish", "mushroom"]
-  });
-
-  assert.equal(unlockNextStage(storage, CAMPAIGN_STAGE_COUNT), true);
-  assert.equal(loadUnlockedStage(storage), CAMPAIGN_STAGE_COUNT);
-  assert.equal(unlockNextStage(storage, CAMPAIGN_STAGE_COUNT + 1), false);
+  assert.equal(unlockNextStage(storage, 1), false);
+  assert.equal(loadUnlockedStage(storage), 1);
+  assert.equal(unlockNextStage(storage, CAMPAIGN_STAGE_COUNT), false);
+  assert.equal(loadUnlockedStage(storage), 1);
 });
 
 test("campaign progression safely falls back to stage one for corrupt or unavailable storage", () => {
   assert.equal(loadUnlockedStage(null), 1);
   assert.equal(loadUnlockedStage({ getItem: () => "not-json" }), 1);
   assert.equal(loadUnlockedStage({ getItem: () => JSON.stringify({ version: 9, unlockedStage: 8 }) }), 1);
-  assert.equal(loadUnlockedStage({ getItem: () => JSON.stringify({ version: 1, unlockedStage: 999 }) }), CAMPAIGN_STAGE_COUNT);
+  assert.equal(loadUnlockedStage({ getItem: () => JSON.stringify({ version: 1, unlockedStage: 999 }) }), 1);
   assert.equal(unlockNextStage({ getItem: () => null, setItem: () => { throw new Error("quota"); } }, 1), false);
 });
 
@@ -374,7 +363,7 @@ test("stage selection reflects saved unlocks without linking unfinished stages i
   assert.match(stagePage, /UNLOCKED · INTRO/);
   assert.match(stagePage, /href="\/stage\/1"/);
   assert.match(scene, /won = Boolean\(won && \(this\.stageNumber !== 1 \|\| this\.phaseOneStoryState === "complete"\)\)/);
-  assert.match(scene, /unlockNextStage\(window\.localStorage, 1\)/);
+  assert.doesNotMatch(scene, /unlockNextStage\(window\.localStorage/);
 });
 
 

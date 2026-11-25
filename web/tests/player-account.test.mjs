@@ -44,12 +44,18 @@ test("cloud progress is read-only for clients until trusted game results exist",
   assert.doesNotMatch(progressRoute, /resolution=merge-duplicates/);
 });
 
-test("local saves remain active and client balances are never uploaded to cloud", () => {
+test("client-local currency and unlocks are disabled until server verification exists", () => {
   const lockdown = readFileSync(resolve(here, "../supabase/migrations/004_lock_unverified_player_progress.sql"), "utf8");
   assert.match(lockdown, /revoke insert, update on public\.player_progress from anon, authenticated/i);
   assert.match(lockdown, /coins_verified boolean not null default false/i);
   assert.match(lockdown, /progress_verified boolean not null default false/i);
   assert.match(lockdown, /COIN_BALANCE_NOT_VERIFIED/);
+  const rules = readFileSync(resolve(here, "../game/rules/phaseOneRules.mjs"), "utf8");
+  assert.match(rules, /export function loadSavedCoins\(_storage\) \{\s*return 0;/);
+  assert.match(rules, /export function saveCoins\(_storage, _value\) \{\s*return false;/);
+  assert.match(rules, /export function loadUnlockedStage\(_storage\) \{\s*return 1;/);
+  assert.match(rules, /export function unlockNextStage\(_storage, _completedStage\) \{\s*return false;/);
+  assert.match(rules, /export function unlockPlantReward\(_storage, _completedStage\) \{\s*return false;/);
   assert.match(client, /restoreOrInitializeCloudProgress/);
   assert.match(client, /progress_verified !== true/);
   assert.match(client, /cloud-progress-unverified/);
@@ -68,13 +74,15 @@ test("menus and account controls use high-contrast text and visible focus states
 });
 
 
-test("playing as a guest never requires authentication and keeps local progress", () => {
+test("playing as a guest never requires authentication and is restricted to unverified playtest progress", () => {
   assert.match(home, /href="\/stages"/);
   assert.match(home, /اختياري|Optional/);
   assert.match(accountPage, /Continue as Guest/);
   assert.match(accountPage, /اللعب كضيف/);
   assert.match(client, /export function readLocalPlayerProgress/);
-  assert.match(battle, /saveCoins\(window\.localStorage/);
+  assert.match(battle, /Local combat is a playtest sandbox/);
+  assert.doesNotMatch(battle, /saveCoins\(window\.localStorage/);
+  assert.doesNotMatch(battle, /unlockNextStage\(window\.localStorage/);
   assert.match(accountRoute, /cloudAvailable: false/);
 });
 

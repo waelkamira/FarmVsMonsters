@@ -29,8 +29,6 @@ import {
   PHASE_ONE_TOTAL_MONSTERS,
   INITIAL_ENERGY,
   MUSHROOM_PICKUP_TTL_MS,
-  loadSavedCoins,
-  saveCoins,
   RADISH_CONFIG,
   MUSHROOM_CONFIG,
   PUMPKIN_CONFIG,
@@ -42,9 +40,7 @@ import {
   collectEnergy,
   isWaveComplete,
   isPhaseOneVictory,
-  unlockNextStage,
   loadUnlockedPlantIds,
-  unlockPlantReward,
   recordMonsterDiscovery
 } from "../rules/phaseOneRules.mjs";
 import {
@@ -68,7 +64,6 @@ import {
   PHASE_ONE_PLANTS,
   PHASE_ONE_FARMER,
   PHASE_ONE_TIMING,
-  PHASE_ONE_REWARDS,
   getMonsterCombatStats,
   getStonehideIncomingDamageMultiplier
 } from "../rules/phaseOneCombatContract.mjs";
@@ -474,14 +469,9 @@ export default class BattleScene extends Scene {
     window.addEventListener("farm-language-change", this.languageChangeHandler);
     this.events.once("shutdown", () => window.removeEventListener("farm-language-change", this.languageChangeHandler));
     this.energy = INITIAL_ENERGY;
-    let savedCoins = 0;
-    try {
-      savedCoins = loadSavedCoins(window.localStorage);
-    } catch {
-      // The battle remains playable when browser storage is unavailable.
-    }
-    this.coins = savedCoins;
-    this.registry.set("coins", this.coins);
+    // Local combat is a playtest sandbox; unverified browser currency is disabled.
+    this.coins = 0;
+    this.registry.set("coins", 0);
     this.houseHealth = 100;
     this.wave = 1;
     this.totalWaves = this.stageWaveCount;
@@ -5019,9 +5009,8 @@ export default class BattleScene extends Scene {
     this.createMonsterDefeatMotes(monster);
     this.playMonsterDefeatSound();
     if (monster.hyenaSprite) this.playHyenaVoice("yelp", 0.88);
-    this.playCoinRewardSound();
-    // Play the authored death sequence before removing the creature. The
-    // reward and wave counters are still granted immediately and exactly once.
+    // Play the authored death sequence before removing the creature.
+    // Currency is intentionally not granted by client-side combat outcomes.
     if (monster.view && monster.view.active) {
       this.tweens.killTweensOf(monster.view);
       if ((monster.hyenaSprite && monster.hyenaSprite.active) || monster.studioRig?.root?.active) {
@@ -5049,13 +5038,6 @@ export default class BattleScene extends Scene {
           }
         });
       }
-    }
-    this.coins += PHASE_ONE_REWARDS.ordinaryMonsterDefeatCoins;
-    this.registry.set("coins", this.coins);
-    try {
-      saveCoins(window.localStorage, this.coins);
-    } catch {
-      // A blocked storage API must never interrupt combat or reward handling.
     }
     this.totalDefeatedMonsters += 1;
     this.waveDefeatedMonsters += 1;
@@ -5228,14 +5210,7 @@ export default class BattleScene extends Scene {
     this.farmerPlanting = false;
     const locale = typeof window !== "undefined" ? window.localStorage.getItem("farmVsMonsters.language") || "ar" : "ar";
     this.setMessage(won ? "VICTORY! The farm is safe." : "GAME OVER — The monsters reached the final line.");
-    if (won && this.stageNumber === 1) {
-      try {
-        unlockNextStage(window.localStorage, 1);
-        unlockPlantReward(window.localStorage, 1);
-      } catch {
-        // The victory remains valid even if local progression storage is unavailable.
-      }
-    }
+    // A local victory is a playtest result, not proof for currency or campaign unlocks.
     this.add.rectangle(560, 340, 1120, 680, 0x10170f, 0.72).setDepth(60);
     if (won) {
       this.stopBackgroundMusic();
@@ -5284,7 +5259,7 @@ export default class BattleScene extends Scene {
       const seconds = String(elapsedSeconds % 60).padStart(2, "0");
       this.add.rectangle(560, 355, 360, 34, 0x42c96b, 0.62)
         .setStrokeStyle(1, 0xffffff, 0.76).setDepth(63);
-      this.add.text(560, 355, locale === "ar" ? "تم فتح المرحلة الثانية ونبتة Pumpkin!" : "STAGE 2 + PUMPKIN UNLOCKED!", {
+      this.add.text(560, 355, locale === "ar" ? "إنجاز تجريبي · التقدم والمكافآت غير محفوظة" : "LOCAL PLAYTEST · PROGRESS AND REWARDS NOT SAVED", {
         fontFamily: "Arial", fontSize: locale === "ar" ? "16px" : "15px",
         color: "#ffffff", fontStyle: "bold", stroke: "#14523d", strokeThickness: 3
       }).setOrigin(0.5).setDepth(64);

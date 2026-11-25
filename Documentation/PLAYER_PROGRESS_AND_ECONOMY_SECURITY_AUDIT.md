@@ -43,7 +43,7 @@ Once that trust boundary exists, one database transaction should:
 - Blocked plant purchases unless both the progression and coin balance are verified. Existing balances are retained, not silently erased.
 - Removed browser-side victory upload and removed local-to-cloud balance promotion.
 - Cloud restore ignores all legacy stage and coin values unless the database explicitly marks progression as verified; it copies the coin balance only when the database separately marks coins verified.
-- Kept guest play, local stage progression, and local coin saving active; account UI and setup documentation disclose the temporary cloud-sync pause.
+- Guest play remains available, but browser-local coins and campaign unlocks are no longer accepted or persisted. Local battle results are explicitly playtest-only until a trusted server completion pipeline exists.
 
 ## Remaining before cloud progression and currency can be re-enabled
 
@@ -83,3 +83,14 @@ Combat extraction now includes shared cooldown advancement and pure Dust Skitter
 
 
 Wave timing and monster archetype selection are now pure shared rules. However, Phaser still chooses spawn lanes through its local random source, and all spawn decisions still execute client-side. This does not establish a trusted replay validator or server-side reward authority.
+
+
+## 2026-11-25 — Fail-closed local economy containment (E-01)
+
+- Disabled browser-local coin reads and writes. Existing values in local storage are ignored rather than imported into the displayed wallet.
+- Removed per-monster coin awards from the Phaser client. Defeat counters and combat presentation continue to work, but a client-side kill cannot mint currency.
+- Disabled local stage and plant reward unlock writes, and local stage/plant unlock readers now return only the starter state. Editing browser storage can no longer unlock campaign content through these helpers.
+- Updated the victory banner to identify the result as a local playtest and state that progression and rewards are not saved.
+- Added regression coverage for forged local balances, forged local stage unlocks, and client-side reward removal.
+
+This is a fail-closed containment, not the final authoritative economy. The browser still runs the combat simulation, so no online currency or campaign reward is issued. The remaining implementation is the server-owned game-session/replay validator and an idempotent database completion transaction. Do not mark E-01 fully resolved or re-enable rewards until that pipeline exists, is tested against replay/concurrency/forgery, and the required Supabase migration is applied to the live project.
