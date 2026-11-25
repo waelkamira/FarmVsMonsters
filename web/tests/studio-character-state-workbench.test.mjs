@@ -55,12 +55,17 @@ test("status animation sheets are preserved by asset revisions, restore and clon
 test("Studio exposes the workbench before effect assignment and persists status sheets through the authenticated upload route", () => {
   const details = readFileSync(new URL("../app/studio/assets/[id]/page.js", import.meta.url), "utf8");
   const workbench = readFileSync(new URL("../app/studio/CharacterStateWorkbench.jsx", import.meta.url), "utf8");
+  const effectPreview = readFileSync(new URL("../game/vfx/effects/effectPreview.mjs", import.meta.url), "utf8");
   const route = readFileSync(new URL("../app/api/studio/assets/route.js", import.meta.url), "utf8");
   const battle = readFileSync(new URL("../game/scenes/BattleScene.js", import.meta.url), "utf8");
   assert.match(details, /CharacterStateWorkbench/);
   assert.ok(details.indexOf("CharacterStateWorkbench") < details.indexOf("<EffectPicker"));
   assert.match(workbench, /CHARACTER_STATUS_STATES/);
   assert.match(workbench, /FramePreview/);
+  assert.match(workbench, /الصفوف/);
+  assert.match(workbench, /الأعمدة/);
+  assert.match(workbench, /targetRenderer/);
+  assert.match(effectPreview, /targetRenderer = null/);
   assert.match(workbench, /stateAnimationFile/);
   assert.match(route, /validateCharacterStateAnimation/);
   assert.match(route, /createImmutableAssetPath\(config\.folder\+"\/states"/);
