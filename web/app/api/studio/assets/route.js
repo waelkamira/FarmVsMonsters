@@ -13,6 +13,7 @@ import {createStudioAnimationProfile} from "../../../../game/studio/animationPro
 import {createSkeletalRigProfile} from "../../../../game/studio/skeletalAnimation.mjs";
 import {createStudioMonsterProfile} from "../../../../game/studio/monsterProfiles.mjs";
 import {safeAssetPath} from "../../../../game/studio/assetReadiness.mjs";
+import {assetOwnedPaths,assetPathStillUsed,removeManifestAssetReferences,synchronizeAssetAudit} from "../../../../game/studio/assetDeletion.mjs";
 import {validateEffectSelection} from "../../../../game/vfx/effects/effectAssignments.mjs";
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
@@ -47,42 +48,7 @@ async function githubDeleteIfExists(filePath,message,token,branch){
  if(!response.ok){const data=await response.json().catch(()=>({}));throw Error(data.message||"GitHub delete failed ("+response.status+").");}
  return true;
 }
-function assetOwnedPaths(asset){
-  const snapshots=[asset,...(Array.isArray(asset?.versions)?asset.versions:[])];
-  return [...new Set(snapshots.flatMap(snapshot=>[snapshot?.path,snapshot?.atlasMetadataPath,snapshot?.atlas?.jsonPath,snapshot?.audio?.path,snapshot?.combat?.projectile?.path]).filter((value)=>typeof value==="string"&&safeAssetPath(value)))];
- }
- function assetPathStillUsed(assets,assetPath){
-  return assets.some(item=>[item,...(Array.isArray(item?.versions)?item.versions:[])].some(snapshot=>[snapshot?.path,snapshot?.atlasMetadataPath,snapshot?.atlas?.jsonPath,snapshot?.audio?.path,snapshot?.combat?.projectile?.path].includes(assetPath)));
- }
- function removeManifestAssetReferences(manifest,assetPaths){
-  const removed=new Set(assetPaths);
-  if(Array.isArray(manifest.assets))manifest.assets=manifest.assets.filter((item)=>!removed.has(item?.url));
-  if(manifest.groups&&typeof manifest.groups==="object"){
-   for(const [group,items] of Object.entries(manifest.groups)){
-    if(Array.isArray(items))manifest.groups[group]=items.filter((item)=>!removed.has(item?.url));
-   }
-  }
-  const all=Array.isArray(manifest.assets)?manifest.assets:Object.values(manifest.groups||{}).flatMap(items=>Array.isArray(items)?items:[]);
-  manifest.assetCount=all.length;
-  manifest.totalBytes=all.reduce((total,item)=>total+(Number(item?.bytes)||0),0);
-  manifest.generatedAt=new Date().toISOString();
-  return manifest;
- }
- function synchronizeAssetAudit(audit,manifest){
-  const all=Array.isArray(manifest.assets)?manifest.assets:Object.values(manifest.groups||{}).flatMap(items=>Array.isArray(items)?items:[]);
-  const liveUrls=new Set(all.map(item=>item.url));
-  audit.assetCount=all.length;
-  audit.totalBytes=all.reduce((total,item)=>total+(Number(item?.bytes)||0),0);
-  const groupTotals=new Map();
-  for(const item of all){const name=item.group||"misc",current=groupTotals.get(name)||{assetCount:0,totalBytes:0};current.assetCount+=1;current.totalBytes+=Number(item.bytes)||0;groupTotals.set(name,current);}
-  audit.groups=Object.fromEntries(groupTotals);
-  audit.largeFiles=(audit.largeFiles||[]).filter(item=>liveUrls.has(item.url));
-  audit.spritesheets=(audit.spritesheets||[]).filter(item=>liveUrls.has(item.url));
-  audit.exactDuplicates=(audit.exactDuplicates||[]).filter(item=>liveUrls.has("/assets/"+item.file)&&liveUrls.has("/assets/"+item.identicalTo));
-  audit.generatedAt=manifest.generatedAt||new Date().toISOString();
-  return audit;
- }
- async function removeLocalAssetManifestReferences(assetPaths){
+async function removeLocalAssetManifestReferences(assetPaths){
   const target=path.join(process.cwd(),"public/assets/asset-manifest.json");
   try{
    const manifest=removeManifestAssetReferences(JSON.parse(await readFile(target,"utf8")),assetPaths);
