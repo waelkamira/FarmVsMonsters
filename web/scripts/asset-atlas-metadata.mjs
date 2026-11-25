@@ -1,5 +1,7 @@
 export function buildAtlasMetadata(relativePath, atlas, dimensions) {
-  const entries = Object.entries(atlas?.frames || {});
+  const entries = Array.isArray(atlas?.frames)
+    ? atlas.frames.map((value, index) => [String(value?.filename || value?.name || index), value])
+    : Object.entries(atlas?.frames || {});
   if (!entries.length) return null;
 
   const frames = entries.map(([name, value], index) => {
