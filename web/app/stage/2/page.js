@@ -82,7 +82,7 @@ export default function StageTwoIntroPage() {
 
         <div className="stage-cast-grid stage-two-cast-grid">
           <CatalogThumb id="dragon" label={ar ? "تنين المرحلة الثانية" : "Stage Two dragon"} className="stage-cast-thumb" />
-          <CatalogThumb id="cave-brute" label={ar ? "جيش الوحوش" : "Monster army"} className="stage-cast-thumb" />
+          <CatalogThumb id="monster-01" label={ar ? "جيش الوحوش" : "Monster army"} className="stage-cast-thumb" />
           <CatalogThumb id="princess" label={ar ? "الأميرة الأسيرة" : "Captive princess"} className="stage-cast-thumb" />
         </div>
 
