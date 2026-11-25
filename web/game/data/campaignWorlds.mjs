@@ -7,8 +7,8 @@ export const CAMPAIGN_WORLDS = Object.freeze([
     subtitleAr: "بداية رحلة الإنقاذ من أرض المزرعة",
     theme: "farm",
     icon: "🌻",
-    description: "Rolling fields, familiar farm paths, and the first dragon's siege.",
-    descriptionAr: "حقول خضراء وطرق المزرعة المألوفة وحصار التنين الأول.",
+    description: "Rolling fields, familiar farm paths, and the first monster siege.",
+    descriptionAr: "حقول خضراء وطرق المزرعة المألوفة وحصار الوحوش الأول.",
     currentStage: 1
   },
   {
@@ -114,8 +114,8 @@ export const CAMPAIGN_WORLDS = Object.freeze([
     id: "riftbound-citadel",
     name: "The Riftbound Citadel",
     ar: "قلعة الصدوع",
-    subtitle: "The final stand against the dragon ruler",
-    subtitleAr: "المواجهة الأخيرة ضد سيد التنانين",
+    subtitle: "The final stand against the monster army",
+    subtitleAr: "المواجهة الأخيرة ضد جيش الوحوش",
     theme: "rift",
     icon: "🐉",
     description: "A final stronghold where the campaign's learned threats converge.",
