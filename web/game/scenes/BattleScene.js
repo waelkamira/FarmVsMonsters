@@ -4101,11 +4101,13 @@ export default class BattleScene extends Scene {
     const finalScaleY = monsterScale * profile.heightScale;
     view.setScale(finalScaleX * 0.72, finalScaleY * 0.72);
     this.createMonsterArrivalEffect(spawn, laneGap, archetype);
+    this.vfxManager?.play("spawn-pop", spawn.x, spawn.y + laneGap * 0.18, {
+      tint: archetype === "stonehide" ? 0xc8c1a8 : 0xffe39b,
+      count: 6, durationMs: 260, endScale: 1.45
+    });
     this.tweens.add({
       targets: view,
       alpha: 1,
-      scaleX: finalScaleX,
-      scaleY: finalScaleY,
       scaleX: finalScaleX * 1.12,
       scaleY: finalScaleY * 1.12,
       duration: archetype === "dust-skitter" ? 260 : archetype === "stonehide" ? 520 : 400,
@@ -4625,13 +4627,6 @@ export default class BattleScene extends Scene {
       const position = this.monsterLanePoint(monster.localX, monster.row);
       monster.x = position.x; monster.y = position.y;
       monster.view.setPosition(position.x, position.y);
-      if (!withinBiteRange) {
-        monster.dustTimer = Math.max(0, (monster.dustTimer || 0) - delta);
-        if (monster.dustTimer <= 0) {
-          this.createFootstepDust(position.x - 9, position.y + 5, monster.view.scaleY * 0.72);
-          monster.dustTimer = monster.kind === "dust-skitter" ? 210 : 360;
-        }
-      }
       if (monster.hyenaSprite?.active) monster.hyenaSprite.y = 0;
       if ((monster.hyenaSprite || monster.studioRig) && monster.hitAnimUntil <= this.time.now) {
         // The corrected 15-frame run sheet belongs to the fast hyena.
@@ -5111,6 +5106,11 @@ export default class BattleScene extends Scene {
     this.playMonsterHitSound();
     if (monster.hyenaSprite) this.playHyenaVoice("yelp", 0.82);
     this.flashMonsterOnHit(monster, plantType);
+    if ((monster.kind === "stonehide" || monster.kind === "alpha-brute") && monster.hp <= monster.maxHp * 0.3) {
+      this.vfxManager?.play("dizzy-stars", monster.x, monster.y - 58, {
+        tint: 0xffdf62, count: 3, durationMs: 680, endScale: 1.2, rotationDegrees: 260, shape: "star"
+      });
+    }
     if (monster.kind === "stonehide" || monster.kind === "alpha-brute") {
       this.juiceCameraImpact({ heavy: monster.kind === "alpha-brute" });
     }
@@ -5127,6 +5127,9 @@ export default class BattleScene extends Scene {
     this.createMonsterDefeatBurst(monster.x, monster.y, monster.view && monster.view.scaleY);
     this.createMonsterDefeatMotes(monster);
     this.createFootstepDust(monster.x, monster.y + 18, (monster.view?.scaleY || 1) * 1.25);
+    this.vfxManager?.play("dust-puff", monster.x, monster.y + 12, {
+      tint: 0xd9c7a5, count: 7, durationMs: 320, endScale: 1.7
+    });
     if (monster.kind === "stonehide" || monster.kind === "alpha-brute") {
       this.juiceCameraImpact({ heavy: monster.kind === "alpha-brute" });
     }
@@ -5141,6 +5144,8 @@ export default class BattleScene extends Scene {
         this.tweens.add({
           targets: monster.view,
           alpha: 0,
+          angle: monster.view.angle + (monster.row % 2 === 0 ? 18 : -18),
+          y: monster.view.y + 18,
           scale: (monster.view.scaleX || 1) * 0.82,
           duration: 760,
           delay: 120,
@@ -5153,6 +5158,8 @@ export default class BattleScene extends Scene {
         this.tweens.add({
           targets: monster.view,
           alpha: 0,
+          angle: monster.view.angle + (monster.row % 2 === 0 ? 18 : -18),
+          y: monster.view.y + 18,
           scale: (monster.view.scaleX || 1) * 0.82,
           duration: 430,
           ease: "Cubic.easeIn",
@@ -5229,7 +5236,7 @@ export default class BattleScene extends Scene {
     this.applyPlantHitStop(plant, 80);
     const artwork = (plant.view.list || []).filter((child) => child?.active);
     const squashTarget = artwork.find((child) => typeof child.setScale === "function") || plant.view;
-    this.time.delayedCall(80, () => {
+    this.time.delayedCall(100, () => {
       if (plant.alive && squashTarget?.active) {
         this.applySquashStretch(squashTarget, { preX: 0.88, preY: 1.14, impactX: 1.18, impactY: 0.76, durationMs: 175 });
       }
