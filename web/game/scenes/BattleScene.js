@@ -356,6 +356,19 @@ export default class BattleScene extends Scene {
         return [part.id, textureKey];
       }));
     }
+    const registerCharacterStateAnimations = (asset, kind) => {
+      for (const [stateId, state] of Object.entries(asset.stateAnimations || {})) {
+        const textureKey = asset.stateAnimationTextureKeys?.[stateId];
+        const frameCount = Math.max(1, Number(state.frameCount) || Number(state.rows || 1) * Number(state.columns || 1));
+        const rows = Math.max(1, Number(state.rows) || 1);
+        const columns = Math.max(1, Number(state.columns) || 1);
+        if (!textureKey || !this.textures.exists(textureKey) || rows * columns !== frameCount || !this.registerStudioGridSheet(textureKey, rows, columns)) continue;
+        const animationKey = "studio-" + kind + "-" + asset.id + "-state-" + stateId;
+        if (!this.anims.exists(animationKey) && frameCount > 1) {
+          this.anims.create({ key: animationKey, frames: this.anims.generateFrameNumbers(textureKey, { start: 0, end: frameCount - 1 }), frameRate: Math.max(1, Math.min(30, Number(state.fps) || 10)), repeat: state.loop === false ? 0 : -1 });
+        }
+      }
+    };
     this.studioPlantsByType = Object.fromEntries(this.studioPlants.map((plant) => [plant.id, plant]));
     for (const plant of this.studioPlants) {
       const textureKey = plant.textureKey;
@@ -386,6 +399,7 @@ export default class BattleScene extends Scene {
           }
         }
       }
+      registerCharacterStateAnimations(plant, "plant");
     }
     // Register each attached projectile Sprite Sheet only after Phaser has loaded
     // its image, using the independent grid saved with that projectile.
@@ -469,6 +483,7 @@ export default class BattleScene extends Scene {
           });
         }
       }
+      registerCharacterStateAnimations(monster, "monster");
     }
     if (this.textures.exists("snow-thrower-level-1") && !this.anims.exists("snow-thrower-level-1-throw")) {
       const available = Object.keys(this.textures.get("snow-thrower-level-1").frames).filter((name) => name !== "__BASE").length;
