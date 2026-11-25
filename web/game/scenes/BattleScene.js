@@ -4182,6 +4182,7 @@ export default class BattleScene extends Scene {
     const speed = profile.speed;
     const spawn = this.monsterLanePoint(SPAWN_LOCAL_X, row);
     const view = this.add.container(spawn.x, spawn.y).setDepth(10 + spawn.y / 1000);
+    if (studioMonster?.id) view.setData("studioMonsterId", studioMonster.id);
     view.setAlpha(0);
 
     // Scale each creature against the measured gap of its perspective lane.
