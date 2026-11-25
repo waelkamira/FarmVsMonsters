@@ -56,7 +56,6 @@ import {
   selectLaneBlocker,
   selectProjectileTarget,
   selectFarmerMeleeTarget,
-  selectDragonFireballTarget,
   advanceCooldown,
   resolveBiteAttack,
   resolveMonsterMovementEffectsStep,
@@ -64,7 +63,6 @@ import {
   resolveMonsterArchetype
 } from "../rules/combatSimulation.mjs";
 import {
-  PHASE_ONE_DRAGON,
   PHASE_ONE_PLANTS,
   PHASE_ONE_FARMER,
   PHASE_ONE_TIMING,
@@ -536,10 +534,7 @@ export default class BattleScene extends Scene {
     this.plantingTarget = null;
     this.returnTarget = null;
     this.farmerPlanting = false;
-    this.phaseOneStoryState = "battle";
     this.storySequenceActive = false;
-    this.dragonBoss = null;
-    this.princessActor = null;
     this.gameOver = false;
     this.monster01AnimationsReady = this.createMonster01Animations();
     if (this.textures.exists("radish-level-1")) {
@@ -1492,248 +1487,6 @@ export default class BattleScene extends Scene {
     }
   }
 
-  createPrincessActor() {
-    // The princess is only rendered from the user's authored asset.
-    if (!this.textures.exists("phase-one-princess-captive")) return;
-    this.princessActor = this.add.image(995, 270, "phase-one-princess-captive")
-      .setOrigin(0.5, 1)
-      .setDisplaySize(66, 96)
-      .setDepth(8.6);
-  }
-
-  beginDragonEncounter() {
-    if (this.dragonBoss || this.phaseOneStoryState !== "battle") return;
-    this.phaseOneStoryState = "dragon";
-    this.facing = 1;
-    this.caveman.scaleX = 1;
-    this.createPrincessActor();
-    this.dragonBoss = {
-      hp: PHASE_ONE_DRAGON.maxHp, maxHp: PHASE_ONE_DRAGON.maxHp, alive: true,
-      attackCooldown: PHASE_ONE_DRAGON.dragonInitialAttackDelayMs, shotCooldown: PHASE_ONE_DRAGON.farmerSlingInitialDelayMs, sprite: null
-    };
-    if (this.textures.exists("dragon-boss")) {
-      const texture = this.textures.get("dragon-boss");
-      const frames = Object.keys(texture.frames).filter((name) => name !== "__BASE").length;
-      this.dragonBoss.sprite = this.add.sprite(930, 145, "dragon-boss", 0)
-        .setOrigin(0.5, 1).setDisplaySize(220, 220).setDepth(8.2);
-      if (frames > 1) {
-        if (!this.anims.exists("dragon-boss-idle")) {
-          this.anims.create({
-            key: "dragon-boss-idle",
-            frames: this.anims.generateFrameNumbers("dragon-boss", { start: 0, end: frames - 1 }),
-            frameRate: 7, repeat: -1
-          });
-        }
-        this.dragonBoss.sprite.play("dragon-boss-idle");
-      }
-      this.tweens.add({
-        targets: this.dragonBoss.sprite,
-        x: { from: 835, to: 1010 }, y: { from: 140, to: 165 },
-        duration: 2600, ease: "Sine.easeInOut", yoyo: true, repeat: -1
-      });
-    }
-    this.dragonHealthBar = this.add.graphics().setDepth(56);
-    this.dragonHealthLabel = this.add.text(910, 55, "DRAGON", {
-      fontFamily: "Arial", fontSize: "17px", color: "#ffffff",
-      fontStyle: "bold", stroke: "#090503", strokeThickness: 5, resolution: 2
-    }).setOrigin(0.5).setDepth(57);
-    this.drawDragonHealthBar();
-    this.setMessage("The dragon has arrived! The farmer is loading his sling.");
-  }
-
-  drawDragonHealthBar() {
-    if (!this.dragonBoss || !this.dragonHealthBar?.active) return;
-    const ratio = PhaserMath.Clamp(this.dragonBoss.hp / this.dragonBoss.maxHp, 0, 1);
-    this.dragonHealthBar.clear();
-    this.dragonHealthBar.fillStyle(0x24150f, 0.9);
-    this.dragonHealthBar.fillRoundedRect(756, 66, 308, 23, 8);
-    this.dragonHealthBar.fillStyle(0x5b1710, 1);
-    this.dragonHealthBar.fillRoundedRect(760, 70, 300, 15, 6);
-    this.dragonHealthBar.fillStyle(0xff4b3e, 1);
-    this.dragonHealthBar.fillRoundedRect(760, 70, 300 * ratio, 15, 6);
-    this.dragonHealthBar.lineStyle(3, 0xffe0a2, 1);
-    this.dragonHealthBar.strokeRoundedRect(756, 66, 308, 23, 8);
-  }
-
-  updateDragonBoss(delta) {
-    const boss = this.dragonBoss;
-    if (!boss?.alive || this.phaseOneStoryState !== "dragon") return;
-    if (boss.sprite?.active && this.princessActor?.active) {
-      this.princessActor.setPosition(boss.sprite.x + 78, boss.sprite.y + 96);
-    }
-    boss.shotCooldown = advanceCooldown(boss.shotCooldown, delta);
-    if (boss.shotCooldown <= 0) {
-      boss.shotCooldown = PHASE_ONE_DRAGON.farmerSlingIntervalMs;
-      if (this.anims.exists("farmer-sling") && this.cavemanVisual?.active) {
-        this.playFarmerAction("farmer-sling");
-      }
-      const startX = this.caveman.x + this.facing * 28;
-      const startY = this.caveman.y - 52;
-      const targetX = boss.sprite?.x ?? 930;
-      const targetY = (boss.sprite?.y ?? 145) + 22;
-      const stone = this.add.circle(startX, startY, 7, 0xb9a58b, 1)
-        .setStrokeStyle(2, 0x66513c, 1).setDepth(52);
-      this.tweens.add({
-        targets: stone, x: targetX - 18, y: targetY,
-        duration: PhaserMath.Clamp(Math.abs(targetX - startX) / 0.62, 380, 1050),
-        ease: "Quad.easeIn",
-        onComplete: () => {
-          if (stone.active) stone.destroy();
-          if (boss.alive && !this.gameOver) this.damageDragonBoss(PHASE_ONE_DRAGON.farmerSlingDamage);
-        }
-      });
-    }
-
-    boss.attackCooldown = advanceCooldown(boss.attackCooldown, delta);
-    if (boss.attackCooldown <= 0) {
-      boss.attackCooldown = PHASE_ONE_DRAGON.attackIntervalMs;
-      const targetPlant = selectDragonFireballTarget(this.plants);
-      const targetX = targetPlant ? targetPlant.x : 92;
-      const targetY = targetPlant ? targetPlant.y - 18 : 490;
-
-      // Telegraph the chosen impact point before the projectile is launched.
-      // The marker is visual only; damage and target resolution remain unchanged.
-      const warning = this.add.circle(targetX, targetY, 24, 0xff5b32, 0.18)
-        .setStrokeStyle(4, 0xffc15c, 0.98).setDepth(54);
-      const warningCore = this.add.circle(targetX, targetY, 8, 0xffe39a, 0.75)
-        .setDepth(54);
-      this.tweens.add({
-        targets: [warning, warningCore],
-        scale: 1.45,
-        alpha: 0,
-        duration: 520,
-        ease: "Cubic.easeOut",
-        onComplete: () => {
-          if (warning.active) warning.destroy();
-          if (warningCore.active) warningCore.destroy();
-          if (this.gameOver || this.storySequenceActive || this.collectionMenuOpen || !boss.alive) return;
-          const fireball = this.add.circle(boss.sprite?.x ?? 930, (boss.sprite?.y ?? 145) - 38, 15, 0xff762e, 1)
-            .setStrokeStyle(3, 0xffd16c, 1).setDepth(53);
-          this.tweens.add({
-            targets: fireball, x: targetX, y: targetY, scale: 1.45,
-            duration: PHASE_ONE_DRAGON.fireballTravelMs, ease: "Quad.easeIn",
-            onComplete: () => {
-              if (fireball.active) fireball.destroy();
-              if (this.gameOver || this.storySequenceActive || this.collectionMenuOpen) return;
-              if (targetPlant?.alive) {
-                targetPlant.hp = applyHitPointsDamage(targetPlant.hp, PHASE_ONE_DRAGON.fireballDamageToPlant).hp;
-                this.flashEatenPlant(targetPlant);
-                if (targetPlant.hp <= 0) this.destroyPlant(targetPlant);
-              } else {
-                this.houseHealth = Math.max(0, this.houseHealth - PHASE_ONE_DRAGON.fireballDamageToFarm);
-                if (this.houseHealth <= 0) this.endGame(false);
-                this.refreshHud();
-              }
-            }
-          });
-        }
-      });
-    }
-  }
-
-  damageDragonBoss(amount) {
-    const boss = this.dragonBoss;
-    if (!boss?.alive || amount <= 0) return;
-    boss.hp = applyHitPointsDamage(boss.hp, amount).hp;
-    if (boss.sprite?.active) {
-      this.applySquashStretch(boss.sprite, { preX: 0.9, preY: 1.12, impactX: 1.16, impactY: 0.78, durationMs: 190 });
-      this.juiceCameraImpact({ heavy: true, zoomPunch: boss.hp <= boss.maxHp * 0.3 });
-      const sprite = boss.sprite;
-      if (boss.hitStopTimer) {
-        boss.hitStopTimer.remove(false);
-      } else {
-        boss.hitStopWasPlaying = Boolean(sprite.anims?.isPlaying);
-        if (boss.hitStopWasPlaying) sprite.anims.pause();
-      }
-      sprite.setTintFill?.(0xffffff);
-      boss.hitStopTimer = this.time.delayedCall(80, () => {
-        if (!sprite.active) return;
-        sprite.clearTint?.();
-        sprite.setTint?.(0xffc078);
-        if (boss.hitStopWasPlaying && boss.alive && sprite.anims?.isPaused) sprite.anims.resume();
-        boss.hitStopWasPlaying = false;
-        boss.hitStopTimer = null;
-        this.time.delayedCall(110, () => {
-          if (sprite.active) sprite.clearTint?.();
-        });
-      });
-    }
-    this.drawDragonHealthBar();
-    if (boss.hp > 0) return;
-    boss.alive = false;
-    this.juiceCameraImpact({ heavy: true, zoomPunch: true });
-    this.dragonHealthBar?.destroy();
-    this.dragonHealthLabel?.destroy();
-    if (boss.sprite?.active) {
-      this.tweens.killTweensOf(boss.sprite);
-      this.tweens.add({
-        targets: boss.sprite, alpha: 0, y: boss.sprite.y - 22, duration: 650,
-        onComplete: () => boss.sprite?.destroy()
-      });
-    }
-    this.playMonsterDefeatSound();
-    this.setMessage("The dragon has fallen! The farmer is going to rescue the princess.");
-    this.tryFinishPhaseOne();
-  }
-
-  tryFinishPhaseOne() {
-    if (
-      this.phaseOneStoryState !== "dragon" ||
-      this.wave !== this.totalWaves ||
-      this.spawnedThisWave < this.waveSize ||
-      this.monsters.some((monster) => monster.alive) ||
-      this.dragonBoss?.alive
-    ) return;
-    this.beginPrincessRescue();
-  }
-
-  beginPrincessRescue() {
-    if (this.storySequenceActive || this.phaseOneStoryState === "complete") return;
-    this.storySequenceActive = true;
-    this.phaseOneStoryState = "rescuing";
-    this.setMessage("The battlefield is safe. The farmer is rescuing the princess!");
-    this.facing = 1;
-    this.caveman.scaleX = 1;
-    this.farmerWantsToRun = true;
-    this.setFarmerAnimation("farmer-run");
-    const rescueX = this.princessActor?.active ? this.princessActor.x : 145;
-    const rescueY = this.princessActor?.active ? this.princessActor.y : 375;
-    this.tweens.add({
-      targets: this.caveman, x: rescueX + 24, y: rescueY,
-      duration: 1050, ease: "Sine.easeInOut",
-      onComplete: () => {
-        if (this.cavemanVisual?.active && this.anims.exists("farmer-rescue")) {
-          this.cavemanVisual.play("farmer-rescue");
-        }
-        if (this.princessActor?.active) {
-          this.princessActor.setDepth(0);
-          this.caveman.add(this.princessActor);
-          this.princessActor.setPosition(22, -48).setDisplaySize(58, 84);
-          if (this.textures.exists("phase-one-princess-rescued")) {
-            this.princessActor.setTexture("phase-one-princess-rescued");
-          }
-        }
-        this.time.delayedCall(650, () => {
-          if (this.cavemanVisual?.active) {
-            const carryAnimation = this.anims.exists("farmer-carry") ? "farmer-carry" : "farmer-run";
-            this.cavemanVisual.play(carryAnimation);
-          }
-          this.facing = -1;
-          this.caveman.scaleX = -1;
-          this.tweens.add({
-            targets: this.caveman, x: 82, y: 485,
-            duration: 1650, ease: "Sine.easeInOut",
-            onComplete: () => {
-              this.phaseOneStoryState = "complete";
-              this.storySequenceActive = false;
-              this.endGame(true);
-            }
-          });
-        });
-      }
-    });
-  }
-
   readAudioPreference(key, fallback) {
     try {
       const stored = window.localStorage.getItem("farmVsMonsters.audio." + key);
@@ -2190,7 +1943,6 @@ export default class BattleScene extends Scene {
       addRow(145, "monster-01-idle", locale === "ar" ? "الوحش 01" : "Monster 01", (locale === "ar" ? "52% من صحة العادي · الضرر: 8" : "52% of brute HP · Damage: 8"));
       addRow(235, "monster-01-idle", locale === "ar" ? "الوحش 01" : "Monster 01", (locale === "ar" ? "220% من صحة العادي · الضرر: 23" : "220% of brute HP · Damage: 23"));
       addRow(325, "monster-01-idle", locale === "ar" ? "الوحش 01" : "Monster 01", (locale === "ar" ? "الصحة: 350 · ضرر النبات: 32" : "HP: 350 · Plant damage: 32"));
-      addRow(415, "dragon-boss", locale === "ar" ? "التنين الزعيم" : "Dragon Boss", locale === "ar" ? "زعيم مستقل · شريط صحة خاص" : "Separate boss · dedicated health bar");
     }
   }
 
@@ -2510,12 +2262,10 @@ export default class BattleScene extends Scene {
       if (this.stageMonsterRosterConfigured && nextEntry && nextEntry.key !== spawnedEntry?.key) {
         this.spawnTimer = Math.max(0, Number(nextEntry.firstSpawnDelayMs) || 0);
       }
-      if (this.stageNumber === 1 && this.wave === this.totalWaves && this.spawnedThisWave === this.waveSize) this.beginDragonEncounter();
     }
     this.updatePlants(deltaMs);
     this.updateMonsters(dt, deltaMs);
     if (this.gameOver) return;
-    this.updateDragonBoss(deltaMs);
     if (this.storySequenceActive || this.gameOver) {
       this.refreshHud();
       return;
@@ -5539,21 +5289,6 @@ export default class BattleScene extends Scene {
 
     const clearedWave = this.wave;
     if (isPhaseOneVictory(this.wave, this.totalWaves, this.spawnedThisWave, this.waveSize, this.monsters.length)) {
-      // Stage one owns the dragon rescue encounter; other configured stages end after their waves.
-      if (this.stageNumber !== 1) {
-        this.endGame(true);
-        return;
-      }
-      // The dragon is a separate boss and is never included in ordinary wave counts.
-      if (!this.dragonBoss) {
-        this.beginDragonEncounter();
-        return;
-      }
-      if (this.dragonBoss) {
-        this.tryFinishPhaseOne();
-        if (this.dragonBoss.alive) this.setMessage("The ordinary monsters are defeated. Finish the dragon to rescue the princess!");
-        return;
-      }
       this.endGame(true);
       return;
     }
@@ -5582,8 +5317,7 @@ export default class BattleScene extends Scene {
 
   endGame(won) {
     if (this.gameOver) return;
-    // A campaign win is valid only after the dragon is defeated and the rescue sequence completes.
-    won = Boolean(won && (this.stageNumber !== 1 || this.phaseOneStoryState === "complete"));
+    won = Boolean(won);
     this.gameOver = true;
     // Collectibles are no longer usable after a terminal result; remove their
     // expiry timers and idle tweens instead of leaving disabled pickups visible.
