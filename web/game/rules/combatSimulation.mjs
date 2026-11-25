@@ -230,15 +230,6 @@ export function selectFarmerMeleeTarget({ monsters, row, farmerX, reach } = {}) 
   return target;
 }
 
-export function selectDragonFireballTarget(plants) {
-  if (!Array.isArray(plants)) throw new TypeError("INVALID_DRAGON_TARGET_LIST");
-  let weakest = null;
-  for (const plant of plants) {
-    if (!plant?.alive || !Number.isFinite(plant.hp)) continue;
-    if (!weakest || plant.hp < weakest.hp) weakest = plant;
-  }
-  return weakest;
-}
 
 export function advanceCooldown(remainingMs, deltaMs) {
   if (!Number.isFinite(remainingMs) || !Number.isFinite(deltaMs) || deltaMs < 0) {
