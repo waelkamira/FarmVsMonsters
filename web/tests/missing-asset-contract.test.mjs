@@ -36,7 +36,7 @@ test("planned plant encyclopedia thumbnails use committed local SVG artwork", ()
     const mappingLine = catalogThumb.split("\n").find((line) => line.includes(iconPath));
     assert.ok(mappingLine && mappingLine.includes(id), "missing CatalogThumb mapping for " + id);
   }
-  assert.doesNotMatch(catalogThumb, /plant-icons\\/fire-pepper\\.svg/);
+  assert.doesNotMatch(catalogThumb, /plant-icons\/fire-pepper\.svg/);
   assert.match(catalogThumb, /"fire-pepper": \["1fad1", "Hot pepper"\]/);
 });
 
