@@ -1,48 +1,48 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-24T12:01:45.709Z",
-  "assetCount": 93,
-  "totalBytes": 27902723,
+  "generatedAt": "2026-11-25T14:51:39.807Z",
+  "assetCount": 90,
+  "totalBytes": 27198857,
   "groups": {
     "audio": {
       "assetCount": 14,
-      "totalBytes": 167352
+      "totalBytes": 0
     },
     "backgrounds": {
       "assetCount": 1,
-      "totalBytes": 56081
+      "totalBytes": 0
     },
     "characters/farmer": {
       "assetCount": 10,
-      "totalBytes": 5918254
+      "totalBytes": 0
     },
     "characters/monsters": {
       "assetCount": 11,
-      "totalBytes": 8780842
+      "totalBytes": 0
     },
     "items/currency": {
       "assetCount": 2,
-      "totalBytes": 604713
+      "totalBytes": 0
     },
     "items/ui": {
       "assetCount": 21,
-      "totalBytes": 3010548
+      "totalBytes": 0
     },
     "monster-icons": {
       "assetCount": 5,
-      "totalBytes": 3561
+      "totalBytes": 0
     },
     "plant-icons": {
       "assetCount": 9,
-      "totalBytes": 5305
+      "totalBytes": 0
     },
     "plants": {
-      "assetCount": 18,
-      "totalBytes": 9332889
+      "assetCount": 16,
+      "totalBytes": 0
     },
     "projectiles": {
       "assetCount": 2,
-      "totalBytes": 23178
+      "totalBytes": 0
     }
   },
   "exactDuplicates": [
