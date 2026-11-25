@@ -29,13 +29,15 @@ test("every plant runtime asset path exists and unimplemented concepts keep only
 });
 
 test("planned plant encyclopedia thumbnails use committed local SVG artwork", () => {
-  const plannedIds = ["pea-shooter", "thorn-wall", "sunflower", "ice-bloom", "double-radish", "explosive-berry", "fire-pepper"];
+  const plannedIds = ["pea-shooter", "thorn-wall", "sunflower", "ice-bloom", "double-radish", "explosive-berry"];
   for (const id of plannedIds) {
     const iconPath = "/assets/plant-icons/" + id + ".svg";
     assert.ok(publicAssetExists(iconPath), "missing committed catalogue icon: " + iconPath);
     const mappingLine = catalogThumb.split("\n").find((line) => line.includes(iconPath));
     assert.ok(mappingLine && mappingLine.includes(id), "missing CatalogThumb mapping for " + id);
   }
+  assert.doesNotMatch(catalogThumb, /plant-icons\\/fire-pepper\\.svg/);
+  assert.match(catalogThumb, /"fire-pepper": \["1fad1", "Hot pepper"\]/);
 });
 
 test("projectile design contracts separate available files from planned future art", () => {
