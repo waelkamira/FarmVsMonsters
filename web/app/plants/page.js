@@ -45,8 +45,8 @@ export default function PlantsPage() {
             : "All plants are currently visible in the roster. Plants with implemented gameplay can be selected for battle; concepts still in development remain clearly marked."}
         </p>
         <div className="collection-wallet">
-          <strong>{ar ? "رصيد العملات على هذا الجهاز" : "Coins saved on this device"}</strong>
-          <strong>🪙 {coins.toLocaleString()} {ar ? "عملة" : "COINS"}</strong>
+          <strong>{ar ? "العملات والمكافآت معطّلة في النسخة التجريبية المحلية" : "Coins and rewards are disabled in local playtest mode"}</strong>
+          <strong>{ar ? "لا تُمنح عملات أو تُحفظ مكافآت قبل تفعيل التحقق الآمن من الخادم" : "No coins or rewards are issued until server verification is enabled"}</strong>
         </div>
 
         <div className="collection-summary">
