@@ -1188,3 +1188,13 @@ This removes guaranteed 404/loaderror requests and stops the data contracts from
 - Reused the existing bounded footstep-dust system and added registered procedural spawn, dust and rotating dizzy-star effects.
 - Kept effects cosmetic: no combat damage, movement authority, collision, replay, or reward rules were changed.
 - Detached accessories and independent eye tracking remain gated on explicit per-part/eye metadata; current sprite-sheet assets do not expose safe detachable parts or separate pupil nodes.
+
+
+## Semantic rig anchors and detachable-part authoring — 2026-11-25
+
+- Studio rig attachments now have explicit semantic roles: generic, muzzle, hand, mouth, eye, pupil, and accessory.
+- The pure skeletal evaluator normalizes these roles and can resolve all anchors of a requested role from one evaluated pose.
+- The Phaser rig adapter exposes role-based anchors in world space, with focused tests for eye and pupil anchors.
+- Studio can mark individual bitmap parts as detachable; old rig profiles default to non-detachable and generic anchors.
+- Scope boundary: this change adds authoring metadata and runtime anchor lookup only. Detached-piece tumble/fade physics and automatic pupil tracking remain unimplemented.
+- PR #149 is awaiting validation. The existing Web validation workflow is configured for pull requests, but GitHub currently reports no workflow runs or check statuses for this head. No test, lint, build, or browser pass is claimed.
