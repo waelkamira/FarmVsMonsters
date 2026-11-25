@@ -52,3 +52,8 @@ test("Deletion removes linked catalog entries and owned files without deleting s
   assert.doesNotMatch(route, /removeGithubAssetManifestReferences/);
   assert.match(route, /manifest\.assetCount=Object\.values\(manifest\.groups\)/);
 });
+
+test("Studio disables direct deletion for published and review-pending assets", () => {
+  assert.match(page, /a\.status==="published"\|\|a\.status==="approved"/);
+  assert.match(page, /إزالة المحتوى المنشور تتطلب طلب مراجعة منفصلاً/);
+});
