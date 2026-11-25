@@ -188,9 +188,9 @@ function drawTarget(ctx, cx, cy, effect, elapsed) {
 
 /**
  * ينشئ معاينة. يعيد { start, stop, replay }.
- * options: { loop = true, loopGapMs = 700, seed = 7 }
+ * options: { loop = true, loopGapMs = 700, seed = 7, targetRenderer }
  */
-export function createEffectPreview(canvas, effect, { loop = true, loopGapMs = 700, seed = 7 } = {}) {
+export function createEffectPreview(canvas, effect, { loop = true, loopGapMs = 700, seed = 7, targetRenderer = null } = {}) {
   const ctx = canvas.getContext("2d");
   let raf = 0;
   let startedAt = 0;
@@ -216,7 +216,7 @@ export function createEffectPreview(canvas, effect, { loop = true, loopGapMs = 7
     bg.addColorStop(1, "#1d2a1c");
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    drawTarget(ctx, cx, cy, effect, elapsed);
+    if (typeof targetRenderer === "function") targetRenderer(ctx, cx, cy, effect, elapsed);\n    else drawTarget(ctx, cx, cy, effect, elapsed);
     for (const inst of instances) {
       const t = (elapsed - inst.delay) / inst.life;
       if (t >= 0 && t <= 1) inst.draw(ctx, t);
