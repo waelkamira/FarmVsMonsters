@@ -103,7 +103,7 @@ export default function CharacterStateWorkbench({ asset, onSaved }) {
   const baseClipCount = Math.max(1, Number(clip.endFrame) - Number(clip.startFrame) + 1);
   const baseClipUrl = asset.previewUrl || asset.path;
   const previewEffect = getEffect(previewEffectId);
-  const effectTarget = selectedStateData || { path: baseClipUrl, rows: asset.rows || 1, columns: asset.columns || 1, frameCount: baseFrameCount, fps: clip.fps || 8, loop: clip.loop !== false, startFrame: clip.startFrame || 0 };
+  const effectTarget = file && previewUrl ? { path: previewUrl, rows: grid.rows, columns: grid.columns, frameCount: grid.frameCount, fps, loop, startFrame: 0 } : selectedStateData ? { ...selectedStateData, path: "/api/studio/assets?preview=" + encodeURIComponent(selectedStateData.path), startFrame: 0 } : { path: baseClipUrl, rows: asset.rows || 1, columns: asset.columns || 1, frameCount: baseClipCount, fps: clip.fps || 8, loop: clip.loop !== false, startFrame: clip.startFrame || 0 };
 
   useEffect(() => () => { if (previewUrl) URL.revokeObjectURL(previewUrl); }, [previewUrl]);
   useEffect(() => {
