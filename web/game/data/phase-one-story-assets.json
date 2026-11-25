@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "note": "Authored Phase 1 story artwork is pending. These paths are design targets only and are not queued by the Phaser runtime until the files exist.",
+  "note": "The farmer rescue artwork is pending. Story artwork paths are design targets only and are not queued until authored files exist.",
   "assets": [
     {
       "key": "farmer-sling",
@@ -29,16 +29,6 @@
       "frameHeight": 430,
       "frames": 6,
       "purpose": "Farmer carries the princess while running back to the farm.",
-      "status": "awaiting-art",
-      "runtimeEnabled": false
-    },
-    {
-      "key": "dragon-boss",
-      "path": "/assets/characters/monsters/dragon/dragon-boss.png",
-      "frameWidth": 512,
-      "frameHeight": 512,
-      "frames": "1 or more",
-      "purpose": "Small Phase 1 dragon boss; animated horizontally behind the battle lanes.",
       "status": "awaiting-art",
       "runtimeEnabled": false
     },
