@@ -42,10 +42,9 @@ test("Deletion removes linked catalog entries and owned files without deleting s
   assert.match(route, /PUBLISHED_MONSTER_CATALOG_PATH,"monsters"/);
   assert.match(route, /import \{assetOwnedPaths,assetPathStillUsed,removeManifestAssetReferences,synchronizeAssetAudit\}/);
   assert.match(route, /assetOwnedPaths\(asset\)/);
-  assert.match(route, /filter\(\(value\)=>typeof value==="string"&&safeAssetPath\(value\)\)/);
   assert.ok(route.includes('import {mkdir,readFile,writeFile,unlink} from "node:fs/promises"'));
-  assert.match(route, /function assetPathStillUsed\(assets,assetPath\)/);
-  assert.match(route, /function removeManifestAssetReferences\(manifest,assetPaths\)/);
+  assert.match(route, /assetPathStillUsed\(remaining,assetPath\)/);
+  assert.match(route, /removeManifestAssetReferences\(JSON\.parse/);
   assert.match(route, /removeLocalAssetManifestReferences\(candidatePaths\)/);
   assert.match(route, /removeGithubAssetManifestReferences\(candidatePaths,token,storageBranch\)/);
 });
