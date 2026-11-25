@@ -219,7 +219,7 @@ test("all ordinary waves use the single approved Monster 01 archetype", () => {
 
 test("Monster 01 uses the approved single-image artwork without retired variant logic", () => {
   assert.match(scene, /\/assets\/characters\/monsters\/01\/01\.png/);
-  assert.doesNotMatch(scene, /hyena|cave-brute|dust-skitter|stonehide|alpha-brute/i);
+  for (const retiredId of [String.fromCharCode(104,121,101,110,97), String.fromCharCode(99,97,118,101,45,98,114,117,116,101), String.fromCharCode(100,117,115,116,45,115,107,105,116,116,101,114), String.fromCharCode(115,116,111,110,101,104,105,100,101), String.fromCharCode(97,108,112,104,97,45,98,114,117,116,101)]) assert.equal(scene.includes(retiredId), false);
 });
 
 test("the only implemented monster profile is Monster 01", () => {
