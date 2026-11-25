@@ -620,3 +620,6 @@
 .studio-delete-dialog p strong{color:#fff}
 .studio-clone-actions .studio-delete-confirm{background:#a8322b;color:#fff;border:1px solid #ef8a80;font-weight:900}
 .studio-clone-actions .studio-delete-confirm:hover:not(:disabled){background:#c43d34}
+
+.studio-clone-dialog-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:14px}
+.studio-clone-dialog-actions button:last-child{background:#d7a84f;color:#20190d;font-weight:800}
