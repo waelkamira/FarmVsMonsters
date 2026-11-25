@@ -5312,7 +5312,7 @@ export default class BattleScene extends Scene {
       ": " + this.waveSize + " monsters in 5 seconds."
     );
     this.showWaveAnnouncement(this.wave);
-    if (this.wave === this.totalWaves) this.ambientFx?.escalateFinalWave();
+    if (this.stageNumber === 1 && this.wave === this.totalWaves) this.ambientFx?.escalateFinalWave();
   }
 
   playVictoryMusic() {
