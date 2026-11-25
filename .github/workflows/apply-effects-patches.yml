@@ -1,111 +1,33 @@
-name: Integrate Game Juice and Ambient VFX
+name: Validate Game Juice and Ambient VFX
 
 on:
   push:
     branches:
       - feat/effects-game-juice-integration
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  integrate:
+  effects-regression:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          ref: feat/effects-game-juice-integration
-          fetch-depth: 0
-      - name: Apply textual Game Juice and AmbientFX changes
-        shell: bash
-        run: |
-          set -euo pipefail
-          PATCH="web/files/0002-feat-vfx-7-Game-Juice-effects-wobble-hop-jitter-spee.patch"
-          # Main has newer audio files, sound manifest, and BattleScene; merge those separately below.
-          git apply --3way --exclude='web/public/assets/audio/effects/*.ogg' --exclude='web/game/data/effect-sound-assets.json' --exclude='web/game/scenes/BattleScene.js' "$PATCH"
-      - name: Generate the seven new sound assets without replacing existing audio
-        working-directory: web
-        shell: bash
-        run: |
-          set -euo pipefail
-          BACKUP="$(mktemp -d)"
-          cp -a public/assets/audio/effects "$BACKUP/effects"
-          cp game/data/effect-sound-assets.json "$BACKUP/manifest.json"
-          python -m pip install --disable-pip-version-check numpy scipy
-          sudo apt-get update -qq
-          sudo apt-get install -y ffmpeg
-          python scripts/generate-effect-sounds.py
-          GENERATED="$(mktemp -d)"
-          cp public/assets/audio/effects/{bubble-pop-death,cannon-swell,comic-stars,heavy-landing,jolt-bounce,rage-steam,speed-dust}.ogg "$GENERATED/"
-          rm -rf public/assets/audio/effects
-          cp -a "$BACKUP/effects" public/assets/audio/effects
-          cp "$GENERATED"/*.ogg public/assets/audio/effects/
-          cp "$BACKUP/manifest.json" game/data/effect-sound-assets.json
-          node --input-type=module <<'NODE'
-          import fs from 'node:fs';
-          const p='public/assets/audio/effects/';
-          const manifest='game/data/effect-sound-assets.json';
-          const data=JSON.parse(fs.readFileSync(manifest,'utf8'));
-          const extra=[
-            ['bubble-pop-death','انفجار الفقاعات',900],['cannon-swell','انتفاخ المدفع',549],
-            ['comic-stars','انفجار النجوم',649],['heavy-landing','الهبوط الثقيل',649],
-            ['jolt-bounce','ارتداد الصدمة',449],['rage-steam','بخار الغضب',800],['speed-dust','غبار الاندفاع',349]
-          ];
-          const byKey=new Map(data.assets.map(x=>[x.key,x]));
-          for(const [id,label,durationMs] of extra){
-            const key='fx-'+id;
-            if(!byKey.has(key)){
-              const bytes=fs.statSync(p+id+'.ogg').size;
-              data.assets.push({key,path:'/assets/audio/effects/'+id+'.ogg',label,durationMs,bytes});
-            }
-          }
-          fs.writeFileSync(manifest,JSON.stringify(data,null,2)+'\n');
-          NODE
-      - name: Generate the expanded effect icon set
-        working-directory: web
-        run: node scripts/generate-effect-icons.mjs
-      - name: Wire AmbientFX into the current BattleScene
-        working-directory: web
-        shell: bash
-        run: |
-          set -euo pipefail
-          node --input-type=module <<'NODE'
-          import fs from 'node:fs';
-          const p='game/scenes/BattleScene.js';
-          let s=fs.readFileSync(p,'utf8');
-          const once=(before,after,label)=>{
-            const n=s.split(before).length-1;
-            if(n!==1) throw new Error(label+': expected one anchor, found '+n);
-            s=s.replace(before,after);
-          };
-          once('import { EffectDirector } from "../vfx/effects/EffectDirector.mjs";',
-               'import { EffectDirector } from "../vfx/effects/EffectDirector.mjs";\nimport { AmbientFX } from "../vfx/effects/AmbientFX.mjs";','AmbientFX import');
-          once('      this.effectDirector = null;\n    });\n    // Uploaded 3×3 plant/monster sheets',
-               '      this.effectDirector = null;\n    });\n    this.ambientFx = new AmbientFX(this, {\n      reducedMotion: typeof window !== "undefined" && Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches)\n    });\n    this.ambientFx.applyStageAtmosphere(this.stageNumber);\n    this.events.once("shutdown", () => { this.ambientFx?.destroy(); this.ambientFx = null; });\n    // Uploaded 3×3 plant/monster sheets','AmbientFX lifecycle');
-          once('      monster.view.setPosition(position.x, position.y);',
-               '      monster.view.setPosition(position.x, position.y);\n      this.ambientFx?.spawnFootstepDust(monster, position.x, position.y, delta);','monster footstep dust');
-          once('    this.showWaveAnnouncement(this.wave);',
-               '    this.showWaveAnnouncement(this.wave);\n    if (this.wave === this.totalWaves) this.ambientFx?.escalateFinalWave();','final wave atmosphere');
-          fs.writeFileSync(p,s);
-          NODE
-      - name: Validate effects modules and regression tests
+          node-version: 22
+      - name: Validate VFX module syntax
         working-directory: web
         run: |
-          set -euo pipefail
           node --check game/vfx/effects/EffectDirector.mjs
           node --check game/vfx/effects/effectLibrary.mjs
           node --check game/vfx/effects/effectPreview.mjs
           node --check game/vfx/effects/AmbientFX.mjs
-          node --test tests/effect-library.test.mjs tests/effect-director.test.mjs tests/effect-juice.test.mjs tests/effect-ambient.test.mjs
-      - name: Commit integrated changes
-        shell: bash
-        run: |
-          set -euo pipefail
-          if [[ -n "$(git status --porcelain)" ]]; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add -A
-            git commit -m "feat(vfx): add game juice layers and ambient stage effects"
-            git push origin HEAD:feat/effects-game-juice-integration
-          fi
+          node --check game/scenes/BattleScene.js
+      - name: Run effects regression tests
+        working-directory: web
+        run: node --test tests/effect-library.test.mjs tests/effect-director.test.mjs tests/effect-juice.test.mjs tests/effect-ambient.test.mjs
