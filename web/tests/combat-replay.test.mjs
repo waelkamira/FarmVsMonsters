@@ -84,7 +84,7 @@ test("replay applies monster bites only after lane movement reaches the radish",
  ];
  const tooEarly=makeLog([...prefix,ev(39626,"monster_bite",{monsterId:"monster-1",plantCol:2,plantRow:1,damage:16}),ev(40775,"monster_bite",{monsterId:"monster-1",plantCol:2,plantRow:1,damage:16})]);
  assert.equal(replayCombatEventLog(tooEarly).reason,"MONSTER_BITE_TOO_EARLY");
- const valid=makeLog([...prefix,ev(40001,"monster_bite",{monsterId:"monster-1",plantCol:2,plantRow:1,damage:16}),ev(40776,"monster_bite",{monsterId:"monster-1",plantCol:2,plantRow:1,damage:16})]);
+ const valid=makeLog([...prefix,ev(40001,"monster_bite",{monsterId:"monster-1",plantCol:2,plantRow:1,damage:16}),ev(41151,"monster_bite",{monsterId:"monster-1",plantCol:2,plantRow:1,damage:16})]);
  const result=replayCombatEventLog(valid); assert.equal(result.ok,true); assert.equal(result.state.plants[0].hp,128);
 });
 
@@ -96,8 +96,9 @@ test("rejects malformed monster IDs and out-of-range monster lanes at event-log 
 
 test("monster movement replay advances along the calibrated lane and clamps at a living radish", () => {
  const plantX = ((2.5 / 8) * 420.823) - (420.823 / 2);
- const stopX = plantX + 0.25;
- const distance = 238.4115 - stopX;
+ const biteReach = 0.3158125;
+ const stopX = plantX + biteReach;
+ const distance = 317;
  const log=makeLog([
   ev(0,"plant_placed",{type:"radish",col:2,row:1}),
   ev(0,"monster_spawned",{monsterId:"monster-1",wave:1,spawnIndex:0,row:1,archetype:"monster-01",hp:175,speed:8,localX:238.4115}),

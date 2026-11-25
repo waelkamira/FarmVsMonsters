@@ -223,7 +223,7 @@ test("rig part serialization treats static assets as a single frame", () => {
 });
 
 test("BattleScene advances rigged monsters through move, hit, freeze, and thaw states", () => {
-  assert.match(battleSceneSource, /monster\.hyenaSprite \|\| monster\.studioRig/);
+  assert.match(battleSceneSource, /monster\.monster01Sprite \|\| monster\.studioRig/);
   assert.match(battleSceneSource, /monster\.studioRig\?\.root\?\.active/);
   assert.match(battleSceneSource, /stopStudioSkeletalRig\(rig, true\)/);
   assert.match(battleSceneSource, /restoreClip = rig\.profile\.clips\.find/);

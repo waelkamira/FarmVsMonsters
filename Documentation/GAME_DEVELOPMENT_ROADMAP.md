@@ -7,6 +7,8 @@
 
 ## Project rules
 
+- Current ordinary enemy roster: Monster 01 only. The dragon remains a separate boss.
+
 1. A feature is not complete because code was committed. It is complete only after it runs and passes its acceptance checks.
 2. Keep the Radish as the only defensive plant in Phase 1; the Energy Mushroom is a resource producer and does not expand the defensive roster.
 3. Plants stay rooted in their cells. Monsters move through lanes. The caveman plants and tends the farm.
