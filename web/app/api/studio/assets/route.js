@@ -65,6 +65,7 @@ function assetOwnedPaths(asset){
   const all=Array.isArray(manifest.assets)?manifest.assets:Object.values(manifest.groups||{}).flatMap(items=>Array.isArray(items)?items:[]);
   manifest.assetCount=all.length;
   manifest.totalBytes=all.reduce((total,item)=>total+(Number(item?.bytes)||0),0);
+  manifest.generatedAt=new Date().toISOString();
   return manifest;
  }
  function synchronizeAssetAudit(audit,manifest){
