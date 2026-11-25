@@ -30,7 +30,6 @@ Use the existing Farm Vs Monsters character and plant assets wherever available.
 
 ### Phase B — Main menu (first implementation)
 - Rebuild the home page as a garden-adventure hub.
-- Keep the existing farm battlefield background and farmer, hyena, radish and mushroom art.
 - Link to campaign map, plant inventory, enemy bestiary, options, field guide and account.
 - Preserve guest play and account progress continuation.
 
@@ -59,3 +58,4 @@ Use the existing Farm Vs Monsters character and plant assets wherever available.
 ## Current delivery boundary
 
 The shared visual theme and first home-page redesign are committed. The plant inventory has also been connected to campaign unlock IDs so only owned plants appear in its available section. This is an initial implementation slice, not completion of all phases. No claim of successful local build or browser playtest is made until those checks are actually run.
+

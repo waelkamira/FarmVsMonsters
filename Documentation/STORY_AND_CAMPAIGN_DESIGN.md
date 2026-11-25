@@ -112,3 +112,4 @@ These details require separate approval; this document does not assume answers:
 - The dragon boss's exact battlefield entry, health model, attack phases, and counter mechanics.
 - Whether the wife has any gameplay support role during a stage, or remains a narrative character in the background.
 
+
