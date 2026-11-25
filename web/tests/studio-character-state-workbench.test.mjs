@@ -80,6 +80,9 @@ test("Studio exposes the workbench before effect assignment and persists status 
   assert.match(battle, /registerCharacterStateAnimations/);
   assert.match(battle, /applyCharacterStateFromEffects/);
   assert.match(battle, /studioStatusOverlay/);
+  assert.match(battle, /studioStatusRigRoot/);
+  assert.match(battle, /studioCharacterBounds/);
+  assert.match(battle, /rigRoot\.setVisible\(false\)/);
 });
 
 test("asset file audit checks every custom state sprite sheet path", () => {
