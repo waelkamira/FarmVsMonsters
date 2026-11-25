@@ -10,11 +10,11 @@ import { effectsForTrigger, resolveAssignedEffectIds, validateEffectSelection } 
 
 const PUBLIC = path.resolve("public");
 const manifest = JSON.parse(fs.readFileSync("game/data/effect-sound-assets.json", "utf8"));
-const LAYER_TYPES = new Set(["burst", "rise", "ring", "flash", "bolt", "tint", "shake", "squash", "orbit", "slash"]);
+const LAYER_TYPES = new Set(["burst", "rise", "ring", "flash", "bolt", "tint", "shake", "squash", "orbit", "slash", "wobble", "hop", "jitter", "speedLines"]);
 const ARABIC = /[\u0600-\u06FF]/;
 
 test("the library ships a meaningful set of effects with unique ids", () => {
-  assert.ok(EFFECT_LIBRARY.length >= 20);
+  assert.ok(EFFECT_LIBRARY.length >= 33);
   assert.equal(new Set(EFFECT_LIBRARY.map((e) => e.id)).size, EFFECT_LIBRARY.length);
   for (const id of ["electric-shock", "freeze", "burn", "explosion", "poison", "lightning-strike"]) assert.ok(isKnownEffectId(id), id);
 });
@@ -117,4 +117,48 @@ test("the Studio exposes the picker and the library without touching gameplay st
   const picker = fs.readFileSync("app/studio/EffectPicker.jsx", "utf8");
   assert.match(picker, /operation: "set-effects"/);
   assert.doesNotMatch(picker, /combat|monsterProfile/);
+});
+
+test("the seven Game Juice effects exist with the requested specs", () => {
+  const layer = (id, type) => getEffect(id).layers.find((l) => l.type === type);
+  const spec = {
+    "jolt-bounce": "hit", "comic-stars": "hit", "speed-dust": "hit", "cannon-swell": "fire",
+    "heavy-landing": "spawn", "bubble-pop-death": "death", "rage-steam": "aura"
+  };
+  for (const [id, trigger] of Object.entries(spec)) {
+    assert.ok(getEffect(id), id);
+    assert.equal(getEffect(id).trigger, trigger, id);
+  }
+  assert.deepEqual([layer("jolt-bounce", "squash").sx, layer("jolt-bounce", "squash").sy], [1.35, 0.65]);
+  assert.equal(layer("jolt-bounce", "tint").fill, true);
+  assert.ok(layer("jolt-bounce", "ring"));
+  assert.equal(layer("comic-stars", "burst").shape, "star");
+  assert.equal(layer("comic-stars", "burst").spin, true);
+  assert.ok(layer("comic-stars", "burst").gravity > 0 && layer("comic-stars", "flash"));
+  assert.equal(layer("speed-dust", "burst").shape, "puff");
+  assert.ok(layer("speed-dust", "burst").gravity < 0, "dust drifts upward");
+  assert.deepEqual([layer("cannon-swell", "squash").sx, layer("cannon-swell", "squash").sy], [1.3, 0.75]);
+  assert.ok(layer("cannon-swell", "ring") && layer("cannon-swell", "burst"));
+  assert.equal(layer("heavy-landing", "squash").from, true);
+  assert.ok(layer("heavy-landing", "ring") && layer("heavy-landing", "burst").shape === "puff" && layer("heavy-landing", "shake"));
+  assert.equal(layer("bubble-pop-death", "burst").shape, "bubble");
+  assert.equal(layer("bubble-pop-death", "burst").gravity, -90);
+  assert.ok(layer("bubble-pop-death", "ring"));
+  assert.equal(layer("rage-steam", "rise").shape, "puff");
+  assert.ok(layer("rage-steam", "tint"));
+});
+
+test("electric shock is the composite: regenerating bolts, jitter and white/blue flicker", () => {
+  const effect = getEffect("electric-shock");
+  assert.equal(effect.layers.find((l) => l.type === "bolt").regenerateMs, 50);
+  assert.ok(effect.layers.find((l) => l.type === "jitter"));
+  assert.deepEqual(effect.layers.find((l) => l.type === "tint").flickerColors, [0xffffff, 0x6fe3ff]);
+});
+
+test("effects never stop the simulation clock: no hit-stop layer exists", () => {
+  for (const effect of EFFECT_LIBRARY) for (const layer of effect.layers) assert.notEqual(layer.type, "hitstop");
+  for (const file of ["EffectDirector.mjs", "AmbientFX.mjs", "effectLibrary.mjs"]) {
+    const src = fs.readFileSync(`game/vfx/effects/${file}`, "utf8");
+    assert.doesNotMatch(src, /time\.timeScale|tweens\.timeScale|physics\.world\.timeScale|simulationRandom/, file);
+  }
 });

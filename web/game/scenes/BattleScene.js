@@ -26,6 +26,7 @@ import gridCalibration from "../data/farm-grid-calibration.json";
 import soundAssets from "../data/sound-assets.json";
 import effectSoundAssets from "../data/effect-sound-assets.json";
 import { EffectDirector } from "../vfx/effects/EffectDirector.mjs";
+import { AmbientFX } from "../vfx/effects/AmbientFX.mjs";
 import { resolveAssignedEffectIds } from "../vfx/effects/effectAssignments.mjs";
 import { getEffect } from "../vfx/effects/effectLibrary.mjs";
 import {
@@ -298,6 +299,11 @@ export default class BattleScene extends Scene {
       this.effectDirector?.destroy();
       this.effectDirector = null;
     });
+    this.ambientFx = new AmbientFX(this, {
+      reducedMotion: typeof window !== "undefined" && Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches)
+    });
+    this.ambientFx.applyStageAtmosphere(this.stageNumber);
+    this.events.once("shutdown", () => { this.ambientFx?.destroy(); this.ambientFx = null; });
     // Uploaded 3×3 plant/monster sheets are cropped using source dimensions,
     // exactly like Mango: nine named Phaser frames, with no assumed cell size.
     this.registerThreeByThreeSheet("radish-level-1");
@@ -4486,6 +4492,7 @@ export default class BattleScene extends Scene {
       const position = this.monsterLanePoint(monster.localX, monster.row);
       monster.x = position.x; monster.y = position.y;
       monster.view.setPosition(position.x, position.y);
+      this.ambientFx?.spawnFootstepDust(monster, position.x, position.y, delta);
       if (monster.monster01Sprite?.active) monster.monster01Sprite.y = 0;
       if ((monster.monster01Sprite || monster.studioRig) && monster.hitAnimUntil <= this.time.now) {
         // The corrected 15-frame run sheet belongs to the fast monster 01.
@@ -5305,6 +5312,7 @@ export default class BattleScene extends Scene {
       ": " + this.waveSize + " monsters in 5 seconds."
     );
     this.showWaveAnnouncement(this.wave);
+    if (this.wave === this.totalWaves) this.ambientFx?.escalateFinalWave();
   }
 
   playVictoryMusic() {

@@ -186,6 +186,55 @@
       "label": "التوهّج النابض",
       "durationMs": 900,
       "bytes": 4949
+    },
+    {
+      "key": "fx-bubble-pop-death",
+      "path": "/assets/audio/effects/bubble-pop-death.ogg",
+      "label": "انفجار الفقاعات",
+      "durationMs": 900,
+      "bytes": 6527
+    },
+    {
+      "key": "fx-cannon-swell",
+      "path": "/assets/audio/effects/cannon-swell.ogg",
+      "label": "انتفاخ المدفع",
+      "durationMs": 549,
+      "bytes": 5605
+    },
+    {
+      "key": "fx-comic-stars",
+      "path": "/assets/audio/effects/comic-stars.ogg",
+      "label": "انفجار النجوم",
+      "durationMs": 649,
+      "bytes": 5498
+    },
+    {
+      "key": "fx-heavy-landing",
+      "path": "/assets/audio/effects/heavy-landing.ogg",
+      "label": "الهبوط الثقيل",
+      "durationMs": 649,
+      "bytes": 6202
+    },
+    {
+      "key": "fx-jolt-bounce",
+      "path": "/assets/audio/effects/jolt-bounce.ogg",
+      "label": "ارتداد الصدمة",
+      "durationMs": 449,
+      "bytes": 4779
+    },
+    {
+      "key": "fx-rage-steam",
+      "path": "/assets/audio/effects/rage-steam.ogg",
+      "label": "بخار الغضب",
+      "durationMs": 800,
+      "bytes": 8295
+    },
+    {
+      "key": "fx-speed-dust",
+      "path": "/assets/audio/effects/speed-dust.ogg",
+      "label": "غبار الاندفاع",
+      "durationMs": 349,
+      "bytes": 5513
     }
   ]
 }

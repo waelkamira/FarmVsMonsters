@@ -1,58 +1,33 @@
-name: Integrate effects library patches
+name: Validate Game Juice and Ambient VFX
 
 on:
   push:
     branches:
-      - feat/complete-effects-library-integration
+      - feat/effects-game-juice-integration
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  apply-and-validate:
+  effects-regression:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          ref: feat/complete-effects-library-integration
-          fetch-depth: 0
-      - name: Apply patch 1 and patch 2 safely
-        shell: bash
-        run: |
-          set -euo pipefail
-          apply_or_skip() {
-            local patch="$1"
-            if git apply --check "$patch"; then
-              git apply "$patch"
-              echo "Applied $patch"
-            elif git apply --reverse --check "$patch"; then
-              echo "Already applied: $patch"
-            else
-              echo "::error::Patch does not apply cleanly: $patch"
-              git apply --reject "$patch" || true
-              git status --short
-              exit 1
-            fi
-          }
-          apply_or_skip "web/files/0001-feat-studio-effects-library-26-effects-with-Arabic-n (3).patch"
-          apply_or_skip "web/files/0002-feat-vfx-7-Game-Juice-effects-wobble-hop-jitter-spee.patch"
-      - name: Inspect and validate patch result
+          node-version: 22
+      - name: Validate VFX module syntax
         working-directory: web
         run: |
-          set -euo pipefail
-          node --version
-          node --test tests/effect-library.test.mjs tests/effect-director.test.mjs tests/effect-juice.test.mjs tests/effect-ambient.test.mjs
-      - name: Commit integrated effects
-        shell: bash
-        run: |
-          set -euo pipefail
-          if [[ -n "$(git status --porcelain)" ]]; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add -A
-            git commit -m "feat(vfx): integrate complete effects library and game juice"
-            git push origin HEAD:feat/complete-effects-library-integration
-          else
-            echo "No changes to commit."
-          fi
+          node --check game/vfx/effects/EffectDirector.mjs
+          node --check game/vfx/effects/effectLibrary.mjs
+          node --check game/vfx/effects/effectPreview.mjs
+          node --check game/vfx/effects/AmbientFX.mjs
+          node --check game/scenes/BattleScene.js
+      - name: Run effects regression tests
+        working-directory: web
+        run: node --test tests/effect-library.test.mjs tests/effect-director.test.mjs tests/effect-juice.test.mjs tests/effect-ambient.test.mjs

@@ -24,6 +24,38 @@ const rand = (min, max) => min + Math.random() * (max - min);
 const pick = (list) => list[Math.floor(Math.random() * list.length)];
 const clamp01 = (v) => Math.max(0, Math.min(1, v));
 
+/** يولّد ملمس أشكال الجسيمات (+ خط المطر) مرة واحدة. يشاركه EffectDirector وAmbientFX. */
+export function ensureEffectTextures(scene, warn = () => {}) {
+  if (!scene?.textures || !scene?.make?.graphics) return;
+  for (const [name, commands] of Object.entries(EFFECT_SHAPES)) {
+    const key = TEXTURE_PREFIX + name;
+    if (scene.textures.exists(key)) continue;
+    try {
+      const g = scene.make.graphics({ x: 0, y: 0, add: false });
+      g.fillStyle(0xffffff, 1);
+      for (const cmd of commands) {
+        if (cmd.t === "circle") g.fillCircle(cmd.x, cmd.y, cmd.r);
+        else if (cmd.t === "poly") g.fillPoints(cmd.pts.map(([x, y]) => ({ x, y })), true);
+      }
+      g.generateTexture(key, 32, 32);
+      g.destroy();
+    } catch (error) {
+      warn("texture", error);
+    }
+  }
+  if (!scene.textures.exists("fx-ambient-rain")) {
+    try {
+      const g = scene.make.graphics({ x: 0, y: 0, add: false });
+      g.fillStyle(0xffffff, 1);
+      g.fillRect(0, 0, 2, 18);
+      g.generateTexture("fx-ambient-rain", 2, 18);
+      g.destroy();
+    } catch (error) {
+      warn("texture", error);
+    }
+  }
+}
+
 export function detectEffectQuality(scene) {
   const os = scene?.sys?.game?.device?.os;
   return os && (os.android || os.iOS || os.iPhone || os.iPad) ? "medium" : "high";
@@ -49,24 +81,7 @@ export class EffectDirector {
 
   /** ينشئ ملمس كل شكل جسيم مرة واحدة (أبيض، ليُلوَّن لاحقاً بـ tint). */
   ensureTextures() {
-    const scene = this.scene;
-    if (!scene?.textures || !scene?.make?.graphics) return;
-    for (const [name, commands] of Object.entries(EFFECT_SHAPES)) {
-      const key = TEXTURE_PREFIX + name;
-      if (scene.textures.exists(key)) continue;
-      try {
-        const g = scene.make.graphics({ x: 0, y: 0, add: false });
-        g.fillStyle(0xffffff, 1);
-        for (const cmd of commands) {
-          if (cmd.t === "circle") g.fillCircle(cmd.x, cmd.y, cmd.r);
-          else if (cmd.t === "poly") g.fillPoints(cmd.pts.map(([x, y]) => ({ x, y })), true);
-        }
-        g.generateTexture(key, 32, 32);
-        g.destroy();
-      } catch (error) {
-        this.#warn("texture", error);
-      }
-    }
+    ensureEffectTextures(this.scene, (id, error) => this.#warn(id, error));
   }
 
   setQuality(quality) {
@@ -182,6 +197,10 @@ export class EffectDirector {
       case "squash": return this.#squash(layer, ctx);
       case "orbit": return this.#orbit(layer, ctx);
       case "slash": return this.#slash(layer, ctx);
+      case "wobble": return this.#wobble(layer, ctx);
+      case "hop": return this.#hop(layer, ctx);
+      case "jitter": return this.#jitter(layer, ctx);
+      case "speedLines": return this.#speedLines(layer, ctx);
       default: return undefined;
     }
   }
@@ -346,8 +365,15 @@ export class EffectDirector {
     };
     draw();
     let redrawn = false;
+    let lastStep = 0;
     this.#animate(layer.life, (t) => {
       if (!g.active) return;
+      if (layer.regenerateMs > 0) {
+        const step = Math.floor((t * layer.life) / layer.regenerateMs);
+        if (step !== lastStep) { lastStep = step; draw(); }
+        g.setAlpha(1 - t * t * 0.6);
+        return;
+      }
       if (!redrawn && t > 0.4) { redrawn = true; draw(); }
       g.setAlpha(1 - t * t);
     }, () => { g.destroy(); this.#release(1); });
@@ -366,11 +392,11 @@ export class EffectDirector {
     const targets = this.#tintables(view);
     if (!targets.length) return;
     const token = (view.__fxTintToken = (view.__fxTintToken || 0) + 1);
-    const apply = (on) => {
+    const apply = (on, color = layer.color) => {
       for (const obj of targets) {
         if (!obj.active) continue;
         if (!on) { obj.clearTint?.(); continue; }
-        if (layer.fill && obj.setTintFill) obj.setTintFill(layer.color); else obj.setTint(layer.color);
+        if (layer.fill && obj.setTintFill) obj.setTintFill(color); else obj.setTint(color);
       }
     };
     apply(true);
@@ -380,9 +406,18 @@ export class EffectDirector {
         if (obj.anims && Number.isFinite(obj.anims.timeScale)) { slowed.push([obj, obj.anims.timeScale]); obj.anims.timeScale = 0.5; }
       }
     }
-    if (layer.flicker && this.scene.time?.addEvent) {
-      let on = true;
-      const flicker = this.scene.time.addEvent({ delay: 45, loop: true, callback: () => { on = !on; if (view.__fxTintToken === token) apply(on); } });
+    if ((layer.flicker || layer.flickerColors) && this.scene.time?.addEvent) {
+      let step = 0;
+      const colors = Array.isArray(layer.flickerColors) && layer.flickerColors.length ? layer.flickerColors : null;
+      const flicker = this.scene.time.addEvent({
+        delay: 45,
+        loop: true,
+        callback: () => {
+          step += 1;
+          if (view.__fxTintToken !== token) return;
+          if (colors) apply(true, colors[step % colors.length]); else apply(step % 2 === 0);
+        }
+      });
       this.scene.time.delayedCall(layer.life, () => flicker.remove(false));
     }
     this.scene.time.delayedCall(layer.life, () => {
@@ -409,7 +444,7 @@ export class EffectDirector {
       if (view.active) { view.setScale(sx0, sy0); view.setData?.("fxSquashing", false); }
     };
     if (layer.from) {
-      view.setScale(sx0 * layer.sx, sy0 * 0.2);
+      view.setScale(sx0 * layer.sx, sy0 * (layer.fromY ?? 0.2));
       this.scene.tweens.add({ targets: view, scaleX: sx0, scaleY: sy0, duration: layer.life, ease: "Back.easeOut", onComplete: done });
     } else {
       this.scene.tweens.add({
@@ -458,6 +493,148 @@ export class EffectDirector {
       g.setAlpha(1 - t);
       g.setScale(flip * (0.8 + t * 0.4), 0.8 + t * 0.4);
     }, () => { g.destroy(); this.#release(1); });
+  }
+
+  /** تمايل جيلاتيني: تذبذب الزاوية ±amp درجة ثم عودتها لقيمتها الأصلية بالضبط. */
+  #wobble(layer, ctx) {
+    const view = ctx.view;
+    if (this.reducedMotion || !view?.active || view.getData?.("fxWobbling")) return;
+    const base = view.angle ?? 0;
+    view.setData?.("fxWobbling", true);
+    this.#animate(layer.life, (t) => {
+      if (view.active) view.angle = base + layer.amp * Math.sin(t * Math.PI * 2 * layer.cycles) * (1 - t);
+    }, () => {
+      if (!view.active) return;
+      view.angle = base;
+      view.setData?.("fxWobbling", false);
+    });
+  }
+
+  /** قفزة صغيرة في المكان. تُطبَّق كإزاحة نسبية فلا تتعارض مع تحديث موضع الكائن من اللعبة. */
+  #hop(layer, ctx) {
+    const view = ctx.view;
+    if (this.reducedMotion || !view?.active || view.getData?.("fxHopping")) return;
+    view.setData?.("fxHopping", true);
+    let applied = 0;
+    this.#animate(layer.life, (t) => {
+      if (!view.active) return;
+      const next = -layer.height * Math.sin(Math.PI * t);
+      view.y += next - applied;
+      applied = next;
+    }, () => {
+      if (!view.active) return;
+      view.y -= applied;
+      view.setData?.("fxHopping", false);
+    });
+  }
+
+  /** ارتجاف أفقي سريع (نسبي) يُلغى بالكامل عند الانتهاء. */
+  #jitter(layer, ctx) {
+    const view = ctx.view;
+    if (this.reducedMotion || !view?.active || view.getData?.("fxJittering")) return;
+    view.setData?.("fxJittering", true);
+    let applied = 0;
+    this.#animate(layer.life, (t) => {
+      if (!view.active) return;
+      const step = Math.floor((t * layer.life) / 40);
+      const next = (step % 2 === 0 ? 1 : -1) * layer.px * (1 - t * 0.5);
+      view.x += next - applied;
+      applied = next;
+    }, () => {
+      if (!view.active) return;
+      view.x -= applied;
+      view.setData?.("fxJittering", false);
+    });
+  }
+
+  /** خطوط سرعة بيضاء تتوسع للخارج من مركز الضربة (أسلوب الكوميكس). */
+  #speedLines(layer, ctx) {
+    if (this.reducedMotion || !this.#reserve(1)) return;
+    const g = this.scene.add.graphics({ x: ctx.x, y: ctx.y }).setDepth(this.#depth(ctx));
+    const offset = Math.random() * TAU;
+    const angles = Array.from({ length: layer.count }, (_, i) => offset + (i / layer.count) * TAU + (Math.random() - 0.5) * 0.18);
+    this.#animate(layer.life, (t) => {
+      if (!g.active) return;
+      g.clear();
+      g.lineStyle(layer.width, layer.color, 1 - t);
+      const near = layer.inner + (layer.outer - layer.inner) * t * 0.55;
+      const far = layer.inner + (layer.outer - layer.inner) * (0.35 + t * 0.65);
+      for (const a of angles) {
+        g.beginPath();
+        g.moveTo(Math.cos(a) * near, Math.sin(a) * near);
+        g.lineTo(Math.cos(a) * far, Math.sin(a) * far);
+        g.strokePath();
+      }
+    }, () => { g.destroy(); this.#release(1); });
+  }
+
+  /**
+   * قطعة منفصلة (خوذة، ذراع...) تطير في قوس فيزيائي مع دوران ثم تتلاشى وتُحذف.
+   * config: { x, y, texture?, frame?, shape?, color?, size?, vx?, vy?, gravity?, spin?, life?, facing?, depth? }
+   */
+  detachPart(config = {}) {
+    if (!this.enabled || this.destroyed || !Number.isFinite(config.x) || !Number.isFinite(config.y)) return false;
+    if (!this.#reserve(1)) return false;
+    try {
+      const facing = config.facing === -1 ? -1 : 1;
+      const useTexture = typeof config.texture === "string" && this.scene.textures?.exists?.(config.texture);
+      const sprite = useTexture
+        ? this.scene.add.image(config.x, config.y, config.texture, config.frame)
+        : this.scene.add.image(config.x, config.y, TEXTURE_PREFIX + (EFFECT_SHAPES[config.shape] ? config.shape : "shard"));
+      sprite.setDepth(config.depth ?? this.depth);
+      if (!useTexture) sprite.setTint(config.color ?? 0xcccccc);
+      const size = config.size ?? (useTexture ? 1 : 0.9);
+      sprite.setScale(size);
+      const vx = (config.vx ?? rand(90, 170)) * facing;
+      const vy = config.vy ?? -rand(180, 280);
+      const gravity = config.gravity ?? 620;
+      const spin = (config.spin ?? rand(5, 9)) * facing;
+      const life = config.life ?? 900;
+      const sec = life / 1000;
+      this.#animate(life, (t) => {
+        if (!sprite.active) return;
+        const s = t * sec;
+        sprite.setPosition(config.x + vx * s, config.y + vy * s + 0.5 * gravity * s * s);
+        sprite.rotation = spin * s;
+        sprite.setAlpha(t < 0.6 ? 1 : 1 - (t - 0.6) / 0.4);
+      }, () => { sprite.destroy(); this.#release(1); });
+      return true;
+    } catch (error) {
+      this.#release(1);
+      this.#warn("detachPart", error);
+      return false;
+    }
+  }
+
+  /** نص (ضرر/مورد) يقفز للأعلى ويكبر بحركة Back.easeOut ثم يتلاشى. */
+  floatingText(text, ctx = {}, options = {}) {
+    if (!this.enabled || this.destroyed || !Number.isFinite(ctx.x) || !Number.isFinite(ctx.y)) return false;
+    if (!this.scene.add?.text || !this.#reserve(1)) return false;
+    try {
+      const label = this.scene.add.text(ctx.x, ctx.y, String(text).slice(0, 12), {
+        fontFamily: options.fontFamily || "Arial Black, Arial, sans-serif",
+        fontSize: (options.size ?? 26) + "px",
+        color: options.color || "#fff3b0",
+        stroke: options.stroke || "#3a2410",
+        strokeThickness: 5
+      }).setOrigin(0.5).setDepth(ctx.depth ?? this.depth + 1).setScale(0.4);
+      const rise = options.rise ?? 46;
+      const life = options.life ?? 800;
+      const rest = () => { if (label.active) label.destroy(); this.#release(1); };
+      this.scene.tweens.add({
+        targets: label, y: ctx.y - rise, scaleX: 1.15, scaleY: 1.15,
+        duration: Math.round(life * 0.55), ease: "Back.easeOut",
+        onComplete: () => {
+          if (!label.active) return this.#release(1);
+          this.scene.tweens.add({ targets: label, alpha: 0, duration: Math.round(life * 0.45), onComplete: rest });
+        }
+      });
+      return true;
+    } catch (error) {
+      this.#release(1);
+      this.#warn("floatingText", error);
+      return false;
+    }
   }
 
   #playSound(effect) {
