@@ -2057,12 +2057,12 @@
       "path": "/assets/plants/corn_monster.png",
       "filename": "corn_monster.png",
       "rows": 1,
-      "columns": 24,
-      "frameCount": 24,
+      "columns": 1,
+      "frameCount": 1,
       "spriteSheet": true,
       "status": "testing",
       "createdAt": "2026-11-22T20:20:34.630Z",
-      "updatedAt": "2026-11-25T10:23:13.876Z",
+      "updatedAt": "2026-11-25T19:39:24.392Z",
       "animationProfile": {
         "idle": {
           "startFrame": 0,
