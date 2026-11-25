@@ -4877,7 +4877,13 @@ export default class BattleScene extends Scene {
         shot.view.setPosition(studioHeadTarget.x, studioHeadTarget.y);
         this.createProjectileImpact(studioHeadTarget.x, studioHeadTarget.y, shot.plantType, shot.projectileEffectColor);
         if (String(shot.plantType).includes("electric")) {
-          this.createElectricShockEffect(studioHeadTarget.x, studioHeadTarget.y, shot.target, "monster");
+          const source = this.lanePoint(shot.startLocalX, shot.row);
+          this.createElectricShockEffect(
+            source.x + (shot.launchOffsetX || 0),
+            source.y + (shot.launchOffsetY || 0),
+            shot.target,
+            "monster"
+          );
         }
         this.playThornImpactSound();
         this.applyMonsterDamage(
@@ -4943,7 +4949,13 @@ export default class BattleScene extends Scene {
         }
         this.createProjectileImpact(projectileX, projectileY, shot.plantType, shot.projectileEffectColor);
         if (String(shot.plantType).includes("electric")) {
-          this.createElectricShockEffect(projectileX, projectileY, hit, "monster");
+          const source = this.lanePoint(shot.startLocalX, shot.row);
+          this.createElectricShockEffect(
+            source.x + (shot.launchOffsetX || 0),
+            source.y + (shot.launchOffsetY || 0),
+            hit,
+            "monster"
+          );
         }
         this.playThornImpactSound();
         this.applyMonsterDamage(
