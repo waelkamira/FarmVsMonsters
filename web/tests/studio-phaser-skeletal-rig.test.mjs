@@ -42,7 +42,11 @@ function rigProfile() {
       { id: "root", parentId: null, x: 0, y: 0 },
       { id: "head", parentId: "root", x: 20, y: 10, pivot: { x: 50, y: 40 }, part: { assetId: "head-part", frame: 0 } }
     ],
-    attachments: [{ id: "muzzle", boneId: "head", x: 10, y: 0 }],
+    attachments: [
+      { id: "muzzle", kind: "muzzle", boneId: "head", x: 10, y: 0 },
+      { id: "eye-left", kind: "eye", boneId: "head", x: -4, y: -3 },
+      { id: "pupil-left", kind: "pupil", boneId: "head", x: -2, y: -3 }
+    ],
     hitboxes: [{ id: "bite", boneId: "head", x: 5, y: 0, width: 20, height: 10 }],
     clips: [{
       id: "attack", durationMs: 1000, loop: false,
@@ -86,4 +90,18 @@ test("requires an evaluated pose before resolving attachments and destroys safel
   rig.destroy();
   assert.equal(rig.root.destroyed, true);
   assert.throws(() => rig.play("attack", 100), /destroyed/);
+});
+
+
+test("exposes semantic eye and pupil anchors in world space", () => {
+  const rig = createPhaserSkeletalRig(createFakeScene(), rigProfile(), { "head-part": "head-image" }, { x: 100, y: 50 });
+  rig.play("attack", 500);
+  const eyes = rig.getAttachmentsByKind("eye");
+  const pupils = rig.getAttachmentsByKind("pupil");
+  assert.equal(eyes.length, 1);
+  assert.equal(eyes[0].id, "eye-left");
+  assert.equal(pupils.length, 1);
+  assert.equal(pupils[0].id, "pupil-left");
+  assert.ok(Number.isFinite(pupils[0].x));
+  assert.ok(Number.isFinite(pupils[0].y));
 });
