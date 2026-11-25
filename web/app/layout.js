@@ -7,6 +7,12 @@ export const metadata = {
   description: "A hand-drawn 2D farm defense game."
 };
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover"
+};
+
 export default function RootLayout({ children }) {
   return (
     <html lang="ar" dir="rtl">
