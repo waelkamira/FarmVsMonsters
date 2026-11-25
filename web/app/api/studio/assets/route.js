@@ -418,7 +418,7 @@ export async function PATCH(req){
     // branch settings are intentionally unavailable in this code path.
     await removeLocalAssetManifestReferences(candidatePaths);
    for(const [catalogPath,key] of [[PUBLISHED_CATALOG_PATH,"plants"],[PUBLISHED_MONSTER_CATALOG_PATH,"monsters"]]){
-     const target=path.join(process.cwd(),"public",catalogPath.replace(/^web\//,""));
+     const target=path.join(process.cwd(),catalogPath.replace(/^web\//,""));
      try{const catalog=JSON.parse(await readFile(target,"utf8"));if(Array.isArray(catalog[key])){catalog[key]=catalog[key].filter((item)=>item.id!==id);await writeFile(target,JSON.stringify(catalog,null,2)+"\n","utf8");}}catch(error){if(error.code!=="ENOENT")throw error;}
     }
     for(const assetPath of candidatePaths){
