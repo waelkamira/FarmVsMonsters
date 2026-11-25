@@ -12,7 +12,6 @@ import {
   PHASE_ONE_REWARDS,
   PHASE_ONE_PLANTS,
   PHASE_ONE_FARMER,
-  PHASE_ONE_DRAGON,
   PHASE_ONE_MONSTERS,
   getMonsterSpawnIntervalMs,
   getMonsterCombatStats,
@@ -54,7 +53,7 @@ test("active Stage 1 plant encyclopedia matches combat costs and available artwo
   }
 });
 
-test("radish, mushroom and dragon combat values preserve the current tuning", () => {
+test("radish and mushroom combat values preserve the current tuning", () => {
   assert.deepEqual(PHASE_ONE_PLANTS.radish, {
     projectileDamage: 25,
     projectileSpeed: 320,
@@ -71,17 +70,6 @@ test("radish, mushroom and dragon combat values preserve the current tuning", ()
   assert.equal(PHASE_ONE_PLANTS.energyMushroom.productionIntervalMs, 12000);
   assert.equal(PHASE_ONE_PLANTS.energyMushroom.pickupTtlMs, 12000);
 
-  assert.deepEqual(PHASE_ONE_DRAGON, {
-    maxHp: 750,
-    farmerSlingDamage: 25,
-    farmerSlingInitialDelayMs: 850,
-    farmerSlingIntervalMs: 900,
-    dragonInitialAttackDelayMs: 2800,
-    fireballDamageToPlant: 55,
-    fireballDamageToFarm: 12,
-    attackIntervalMs: 3900,
-    fireballTravelMs: 1050
-  });
 });
 
 test("Monster 01 stats are the only approved ordinary enemy values", () => {
@@ -106,7 +94,7 @@ test("wave pacing is shared and rejects invalid wave numbers", () => {
 
 test("Phaser uses the shared contract and has no duplicate monster balance table", () => {
   assert.match(scene, /getMonsterCombatStats\(archetype, this\.wave\)/);
-  assert.match(scene, /PHASE_ONE_DRAGON\.maxHp/);
+  assert.doesNotMatch(scene, /DRAGON|dragon/i);
   assert.doesNotMatch(scene, /PHASE_ONE_REWARDS\.ordinaryMonsterDefeatCoins/);
   assert.match(scene, /Currency is intentionally not granted by client-side combat outcomes/);
   assert.match(scene, /PHASE_ONE_TIMING\.waveIntermissionMs/);
