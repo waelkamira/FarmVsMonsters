@@ -21,10 +21,10 @@ const LOCAL_PLANT_ICONS = {
 const SPRITE_SHEET_PLANTS = new Set(["radish", "mango", "pineapple", "hazelnut", "snow-thrower", "electric-mushroom"]);
 
 const LOCAL_MONSTER_ICONS = {
-  "cave-brute": "/assets/monster-icons/cave-brute.svg",
-  "dust-skitter": "/assets/monster-icons/dust-skitter.svg",
-  stonehide: "/assets/monster-icons/stonehide.svg",
-  "alpha-brute": "/assets/monster-icons/alpha-brute.svg",
+  "monster-01": "/assets/monster-icons/monster-01.svg",
+  "monster-01": "/assets/monster-icons/monster-01.svg",
+  monster-01: "/assets/monster-icons/monster-01.svg",
+  "monster-01": "/assets/monster-icons/monster-01.svg",
   dragon: "/assets/monster-icons/dragon.svg"
 };
 
@@ -44,10 +44,10 @@ const ART = {
   "double-radish": ["1f331", "Seedling"],
   "explosive-berry": ["1fad0", "Blueberries"],
   "fire-pepper": ["1fad1", "Hot pepper"],
-  "cave-brute": ["1f43a", "Wolf-like hyena"],
-  "dust-skitter": ["1f4a8", "Speed dust"],
-  stonehide: ["1f6e1", "Armored shield"],
-  "alpha-brute": ["1f451", "Alpha crown"],
+  "monster-01": ["1f43a", "Wolf-like hyena"],
+  "monster-01": ["1f4a8", "Speed dust"],
+  monster-01: ["1f6e1", "Armored shield"],
+  "monster-01": ["1f451", "Alpha crown"],
   dragon: ["1f409", "Dragon"],
   princess: ["1f478", "Princess"],
   farmer: ["1f9d1-200d-1f33e", "Farmer"],
