@@ -65,6 +65,7 @@ test("Studio exposes the workbench before effect assignment and persists status 
   assert.match(workbench, /الصفوف/);
   assert.match(workbench, /الأعمدة/);
   assert.match(workbench, /targetRenderer/);
+  assert.match(workbench, /listEffects\(\{ appliesTo: asset\.type \}\)/);
   assert.match(effectPreview, /targetRenderer = null/);
   assert.match(workbench, /stateAnimationFile/);
   assert.match(route, /validateCharacterStateAnimation/);
