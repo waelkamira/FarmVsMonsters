@@ -6,43 +6,43 @@
   "groups": {
     "audio": {
       "assetCount": 14,
-      "totalBytes": 0
+      "totalBytes": 167352
     },
     "backgrounds": {
       "assetCount": 1,
-      "totalBytes": 0
+      "totalBytes": 56081
     },
     "characters/farmer": {
       "assetCount": 10,
-      "totalBytes": 0
+      "totalBytes": 5918254
     },
     "characters/monsters": {
       "assetCount": 11,
-      "totalBytes": 0
+      "totalBytes": 8780842
     },
     "items/currency": {
       "assetCount": 2,
-      "totalBytes": 0
+      "totalBytes": 604713
     },
     "items/ui": {
       "assetCount": 21,
-      "totalBytes": 0
+      "totalBytes": 3010548
     },
     "monster-icons": {
       "assetCount": 5,
-      "totalBytes": 0
+      "totalBytes": 3561
     },
     "plant-icons": {
       "assetCount": 9,
-      "totalBytes": 0
+      "totalBytes": 5305
     },
     "plants": {
-      "assetCount": 16,
-      "totalBytes": 0
+      "assetCount": 15,
+      "totalBytes": 8629023
     },
     "projectiles": {
       "assetCount": 2,
-      "totalBytes": 0
+      "totalBytes": 23178
     }
   },
   "exactDuplicates": [
