@@ -27,6 +27,9 @@ jobs:
       - name: Generate original CC0 sound effects
         working-directory: web
         run: python scripts/generate-effect-sounds.py
+      - name: Run focused effect-library tests
+        working-directory: web
+        run: node --test tests/effect-library.test.mjs tests/effect-director.test.mjs
       - name: Commit generated OGG assets
         run: |
           git config user.name "github-actions[bot]"
