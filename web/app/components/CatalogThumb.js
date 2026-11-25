@@ -7,6 +7,8 @@ const LOCAL_PLANT_ICONS = {
   mango: "/assets/plants/mango-level-1.png",
   pineapple: "/assets/plants/pineapple-level-1.png",
   hazelnut: "/assets/plants/hazelnut-level-1.png",
+  "snow-thrower": "/assets/plants/Snow-thrower-level-1.png",
+  "electric-mushroom": "/assets/plants/Electric-mushroom-level-1.png",
   "pumpkin-guard": "/assets/plants/pumpkin.png",
   "pea-shooter": "/assets/plant-icons/pea-shooter.svg",
   "thorn-wall": "/assets/plant-icons/thorn-wall.svg",
