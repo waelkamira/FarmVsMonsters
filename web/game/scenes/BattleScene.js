@@ -59,7 +59,7 @@ import {
   selectDragonFireballTarget,
   advanceCooldown,
   resolveBiteAttack,
-  resolveDustSkitterMotionStep,
+  resolveMonsterMovementEffectsStep,
   resolveWaveSpawnStep,
   resolveMonsterArchetype
 } from "../rules/combatSimulation.mjs";
@@ -4654,7 +4654,7 @@ export default class BattleScene extends Scene {
         const jumpWillStart = !monster.isJumping && monster.jumpCooldown - delta <= 0;
         const jumpWillLand = monster.isJumping && monster.jumpElapsed + delta >= monster.jumpDuration;
         const burstWillStart = monster.burstCooldown - delta <= 0 && monster.burstRemaining <= 0;
-        const motion = resolveDustSkitterMotionStep({
+        const motion = resolveMonsterMovementEffectsStep({
           isJumping: monster.isJumping,
           jumpCooldownMs: monster.jumpCooldown,
           jumpElapsedMs: monster.jumpElapsed,
