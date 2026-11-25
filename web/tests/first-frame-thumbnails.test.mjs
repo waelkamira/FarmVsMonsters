@@ -19,6 +19,7 @@ test("shared thumbnail renderer crops multi-frame sheets to frame zero and prese
   assert.match(thumbnail, /backgroundSize: `\$\{grid\.columns \* 100\}% \$\{grid\.rows \* 100\}%`/);
   assert.deepEqual(resolveSpriteThumbnailGrid(9, 3, 3), { rows: 3, columns: 3 });
   assert.deepEqual(resolveSpriteThumbnailGrid(1, 1, 1), { rows: 1, columns: 1 });
+  assert.deepEqual(resolveSpriteThumbnailGrid(81, 9, 9), { rows: 9, columns: 9 });
 });
 
 test("plant encyclopedia maps every current built-in plant sheet to its real art and first frame", () => {
