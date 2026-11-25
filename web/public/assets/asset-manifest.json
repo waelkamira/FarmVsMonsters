@@ -1,8 +1,14 @@
 {
   "schemaVersion": 1,
+<<<<<<< HEAD
   "generatedAt": "2026-11-25T21:10:34.025Z",
   "assetCount": 132,
   "totalBytes": 21862343,
+=======
+  "generatedAt": "2026-11-25T20:11:05.884Z",
+  "assetCount": 76,
+  "totalBytes": 19811406,
+>>>>>>> d4894f59b4a52a6747acb5bb6391593efa6fb006
   "groups": {
     "audio": [
       {
@@ -484,12 +490,16 @@
       {
         "key": "monster-01",
         "url": "/assets/characters/monsters/01/01.png",
+<<<<<<< HEAD
         "type": "image",
         "group": "characters/monsters",
         "bytes": 850606,
         "sha256": "c07ab241d0076edfff5f0b847f2a3aaaa1286ace5eecda0039e36c0cae47f18e",
         "width": 1080,
         "height": 806
+=======
+        "type": "image"
+>>>>>>> d4894f59b4a52a6747acb5bb6391593efa6fb006
       }
     ],
     "items/currency": [
@@ -730,6 +740,7 @@
         "height": 203
       }
     ],
+<<<<<<< HEAD
     "monsters": [
       {
         "key": "monsters-01-c07ab241d0076edfff5f0b847f2a3aaaa1286ace5eecda0039e36c0cae47f18e",
@@ -742,6 +753,8 @@
         "height": 806
       }
     ],
+=======
+>>>>>>> d4894f59b4a52a6747acb5bb6391593efa6fb006
     "plant-icons": [
       {
         "key": "plant-icons-double-radish",
@@ -838,12 +851,16 @@
       {
         "key": "plants-electric-mushroom-level-1",
         "url": "/assets/plants/Electric-mushroom-level-1.png",
+<<<<<<< HEAD
         "type": "image",
         "group": "plants",
         "bytes": 366074,
         "sha256": "22d8f60a35bac3067319880ae8d98be0ba8ac017aaabbbdff8a677ca3d6574a2",
         "width": 512,
         "height": 512
+=======
+        "type": "image"
+>>>>>>> d4894f59b4a52a6747acb5bb6391593efa6fb006
       },
       {
         "key": "plants-snow-thrower-bomb-level-1",
@@ -886,17 +903,86 @@
         "height": 1024
       },
       {
+<<<<<<< HEAD
         "key": "plants-corn_monster",
         "url": "/assets/plants/corn_monster.png",
         "type": "spritesheet",
         "group": "plants",
         "bytes": 546346,
         "sha256": "503fb2ea388dcc390f2158a6415dc9495334a9a89d61818a85d8063fc200b577",
+=======
+        "key": "plants-hazelnut-level-1-bomb",
+        "url": "/assets/plants/hazelnut-level-1-bomb.png",
+        "type": "image"
+      },
+      {
+        "key": "hazelnut-level-1",
+        "url": "/assets/plants/hazelnut-level-1.png",
+        "type": "spritesheet",
+        "frameConfig": {
+          "frameWidth": 341,
+          "frameHeight": 341,
+          "margin": 0,
+          "spacing": 0
+        }
+      },
+      {
+        "key": "plants-mango-level-1-bomb",
+        "url": "/assets/plants/mango-level-1-bomb.png",
+        "type": "image"
+      },
+      {
+        "key": "plants-mango-level-1",
+        "url": "/assets/plants/mango-level-1.png",
+        "type": "image"
+      },
+      {
+        "key": "plants-mushroom",
+        "url": "/assets/plants/mushroom.png",
+        "type": "image"
+      },
+      {
+        "key": "plants-pineapple-level-1-bomb",
+        "url": "/assets/plants/pineapple-level-1-bomb.png",
+        "type": "image"
+      },
+      {
+        "key": "pineapple-level-1",
+        "url": "/assets/plants/pineapple-level-1.png",
+        "type": "spritesheet",
+        "frameConfig": {
+          "frameWidth": 418,
+          "frameHeight": 418,
+          "margin": 0,
+          "spacing": 0
+        }
+      },
+      {
+        "key": "plants-pumpkin",
+        "url": "/assets/plants/pumpkin.png",
+        "type": "image"
+      },
+      {
+        "key": "plants-radish-level-1-bomb",
+        "url": "/assets/plants/radish-level-1-bomb.png",
+        "type": "image"
+      },
+      {
+        "key": "plants-radish-level-1",
+        "url": "/assets/plants/radish-level-1.png",
+        "type": "image"
+      },
+      {
+        "key": "corn-monster",
+        "url": "/assets/plants/corn_monster.png",
+        "type": "spritesheet",
+>>>>>>> d4894f59b4a52a6747acb5bb6391593efa6fb006
         "frameConfig": {
           "frameWidth": 150,
           "frameHeight": 150,
           "margin": 0,
           "spacing": 0
+<<<<<<< HEAD
         },
         "spriteSheet": true,
         "frameCount": 24,
@@ -1042,6 +1128,9 @@
         "sha256": "e346e54712f6b219411977f1b6804f2a422de4712aff0d033fbab32f057d310b",
         "width": 908,
         "height": 1079
+=======
+        }
+>>>>>>> d4894f59b4a52a6747acb5bb6391593efa6fb006
       }
     ],
     "projectiles": [
@@ -2065,6 +2154,7 @@
       "height": 203
     },
     {
+<<<<<<< HEAD
       "key": "monsters-01-c07ab241d0076edfff5f0b847f2a3aaaa1286ace5eecda0039e36c0cae47f18e",
       "url": "/assets/monsters/01-c07ab241d0076edfff5f0b847f2a3aaaa1286ace5eecda0039e36c0cae47f18e.png",
       "type": "image",
@@ -2075,6 +2165,8 @@
       "height": 806
     },
     {
+=======
+>>>>>>> d4894f59b4a52a6747acb5bb6391593efa6fb006
       "key": "plant-icons-double-radish",
       "url": "/assets/plant-icons/double-radish.svg",
       "type": "svg",
@@ -2393,6 +2485,7 @@
       "height": 82
     },
     {
+<<<<<<< HEAD
       "key": "projectiles-plants-electric-mushroom-level-1-projectile-2774aab52483e625bdc814d0743758c7b260638dfc1f3b88603e6c291aa58706",
       "url": "/assets/projectiles/plants/electric-mushroom-level-1-projectile-2774aab52483e625bdc814d0743758c7b260638dfc1f3b88603e6c291aa58706.png",
       "type": "image",
@@ -2671,6 +2764,58 @@
       "sha256": "232281f74676ed12256e1ae5cf4721c29bdb9b1c56eeba7c368bb2ab6f761033",
       "width": 64,
       "height": 64
+=======
+      "key": "corn-monster",
+      "url": "/assets/plants/corn_monster.png",
+      "type": "spritesheet",
+      "width": 3600,
+      "height": 150,
+      "frameConfig": {
+        "frameWidth": 150,
+        "frameHeight": 150,
+        "margin": 0,
+        "spacing": 0
+      },
+      "animationProfile": {
+        "idle": {
+          "startFrame": 0,
+          "endFrame": 7,
+          "fps": 8,
+          "loop": true
+        },
+        "move": {
+          "startFrame": 0,
+          "endFrame": 7,
+          "fps": 8,
+          "loop": true
+        },
+        "attack": {
+          "startFrame": 8,
+          "endFrame": 17,
+          "fps": 12,
+          "loop": false
+        }
+      },
+      "atlasMetadataPath": "/assets/plants/corn_monster.json",
+      "sourceFormat": "phaser-atlas",
+      "atlasClips": {
+        "idle": {
+          "startFrame": 0,
+          "endFrame": 7
+        },
+        "attack": {
+          "startFrame": 8,
+          "endFrame": 17
+        },
+        "hurt": {
+          "startFrame": 18,
+          "endFrame": 23
+        }
+      },
+      "group": "plants",
+      "bytes": 546346,
+      "frameCount": 24
+>>>>>>> d4894f59b4a52a6747acb5bb6391593efa6fb006
     }
   ]
 }

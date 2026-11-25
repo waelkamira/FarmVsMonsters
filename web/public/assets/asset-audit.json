@@ -1,8 +1,14 @@
 {
   "schemaVersion": 1,
+<<<<<<< HEAD
   "generatedAt": "2026-11-25T21:10:34.023Z",
   "assetCount": 132,
   "totalBytes": 21862343,
+=======
+  "generatedAt": "2026-11-25T20:11:05.884Z",
+  "assetCount": 76,
+  "totalBytes": 19811406,
+>>>>>>> d4894f59b4a52a6747acb5bb6391593efa6fb006
   "groups": {
     "audio": {
       "assetCount": 40,
@@ -28,17 +34,25 @@
       "assetCount": 21,
       "totalBytes": 3010548
     },
+<<<<<<< HEAD
     "monsters": {
       "assetCount": 1,
       "totalBytes": 850606
     },
+=======
+>>>>>>> d4894f59b4a52a6747acb5bb6391593efa6fb006
     "plant-icons": {
       "assetCount": 9,
       "totalBytes": 5297
     },
     "plants": {
+<<<<<<< HEAD
       "assetCount": 17,
       "totalBytes": 10131838
+=======
+      "assetCount": 16,
+      "totalBytes": 9175369
+>>>>>>> d4894f59b4a52a6747acb5bb6391593efa6fb006
     },
     "projectiles": {
       "assetCount": 4,
@@ -217,6 +231,34 @@
         "frameHeight": 418,
         "margin": 0,
         "spacing": 0
+      }
+    },
+    {
+      "key": "corn-monster",
+      "url": "/assets/plants/corn_monster.png",
+      "bytes": 546346,
+      "frameConfig": {
+        "frameWidth": 150,
+        "frameHeight": 150,
+        "margin": 0,
+        "spacing": 0
+      },
+      "sourceFormat": "phaser-atlas",
+      "atlasMetadataPath": "/assets/plants/corn_monster.json",
+      "frameCount": 24,
+      "atlasClips": {
+        "idle": {
+          "startFrame": 0,
+          "endFrame": 7
+        },
+        "attack": {
+          "startFrame": 8,
+          "endFrame": 17
+        },
+        "hurt": {
+          "startFrame": 18,
+          "endFrame": 23
+        }
       }
     }
   ]
