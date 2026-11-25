@@ -1,6 +1,9 @@
 name: Integrate effects library patches
 
 on:
+  push:
+    branches:
+      - feat/complete-effects-library-integration
   workflow_dispatch:
 
 permissions:
