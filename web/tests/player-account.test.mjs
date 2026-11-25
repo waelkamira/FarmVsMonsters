@@ -19,7 +19,7 @@ const styles = readFileSync(resolve(here, "../app/globals.css"), "utf8");
 test("player account screen permits existing-account sign-in but hides new registration", () => {
   assert.match(accountPage, /signInPlayer/);
   assert.doesNotMatch(accountPage, /signUpPlayer|Create account|إنشاء حساب/);
-  assert.match(accountPage, /restoreOrInitializeCloudProgress/);
+  assert.doesNotMatch(accountPage, /restoreOrInitializeCloudProgress/);
   assert.match(accountPage, /Game progress is not currently saved/);
   assert.match(accountPage, /type="password"/);
   assert.match(accountRoute, /PLAYER_REGISTRATION_PAUSED/);
