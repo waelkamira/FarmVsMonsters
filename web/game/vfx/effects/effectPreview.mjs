@@ -100,7 +100,7 @@ function buildLayerInstance(layer, rnd, cx, cy) {
         ctx.restore();
       } };
     case "bolt": {
-      const bolts = Array.from({ length: layer.count }, () => {
+      const makeBolts = () => Array.from({ length: layer.count }, () => {
         const sx = cx + (layer.fromTop ? (rnd() - 0.5) * 16 : (rnd() - 0.5) * 68);
         const sy = cy - layer.height * (layer.fromTop ? 1 : 0.55 + rnd() * 0.45);
         const segs = layer.fromTop ? 12 : 7;
@@ -109,9 +109,11 @@ function buildLayerInstance(layer, rnd, cx, cy) {
         path.push([cx + (rnd() - 0.5) * 12, cy + 8]);
         return path;
       });
+      const variants = layer.regenerateMs > 0 ? Array.from({ length: 8 }, makeBolts) : [makeBolts()];
       return { ...base, draw(ctx, t) {
+        const bolts = variants[layer.regenerateMs > 0 ? Math.floor((t * layer.life) / layer.regenerateMs) % variants.length : 0];
         ctx.save();
-        ctx.globalAlpha = 1 - t * t;
+        ctx.globalAlpha = layer.regenerateMs > 0 ? 1 - t * t * 0.6 : 1 - t * t;
         ctx.globalCompositeOperation = "lighter";
         ctx.lineJoin = "round";
         for (const path of bolts) {
@@ -120,6 +122,26 @@ function buildLayerInstance(layer, rnd, cx, cy) {
             path.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
             ctx.stroke();
           }
+        }
+        ctx.restore();
+      } };
+    }
+    case "speedLines": {
+      const offset = rnd() * TAU;
+      const angles = Array.from({ length: layer.count }, (_, i) => offset + (i / layer.count) * TAU + (rnd() - 0.5) * 0.18);
+      return { ...base, draw(ctx, t) {
+        ctx.save();
+        ctx.globalAlpha = 1 - t;
+        ctx.strokeStyle = hex(layer.color);
+        ctx.lineWidth = layer.width;
+        ctx.lineCap = "round";
+        const near = layer.inner + (layer.outer - layer.inner) * t * 0.55;
+        const far = layer.inner + (layer.outer - layer.inner) * (0.35 + t * 0.65);
+        for (const a of angles) {
+          ctx.beginPath();
+          ctx.moveTo(cx + Math.cos(a) * near * 0.8, cy + Math.sin(a) * near * 0.8);
+          ctx.lineTo(cx + Math.cos(a) * far * 0.8, cy + Math.sin(a) * far * 0.8);
+          ctx.stroke();
         }
         ctx.restore();
       } };
@@ -152,25 +174,38 @@ function buildLayerInstance(layer, rnd, cx, cy) {
 }
 
 function drawTarget(ctx, cx, cy, effect, elapsed) {
-  let sx = 1, sy = 1, tintColor = null, tintK = 0, jitter = 0;
+  let sx = 1, sy = 1, tintColor = null, tintK = 0, jitter = 0, angle = 0, offsetX = 0, offsetY = 0;
   for (const layer of effect.layers) {
     const t = (elapsed - (layer.delay || 0)) / (layer.life || 1);
     if (t < 0 || t > 1) { if (layer.type !== "shake") continue; }
     if (layer.type === "tint") {
-      tintColor = layer.color;
-      tintK = layer.flicker ? (Math.floor(elapsed / 45) % 2 ? 0.2 : 0.75) : 0.75 * (1 - t * 0.5);
+      if (Array.isArray(layer.flickerColors) && layer.flickerColors.length) {
+        tintColor = layer.flickerColors[Math.floor(elapsed / 45) % layer.flickerColors.length];
+        tintK = 0.75;
+      } else {
+        tintColor = layer.color;
+        tintK = layer.flicker ? (Math.floor(elapsed / 45) % 2 ? 0.2 : 0.75) : 0.75 * (1 - t * 0.5);
+      }
       if (layer.fill) tintK = 1;
     } else if (layer.type === "squash") {
       const k = layer.from ? 1 - t : Math.sin(Math.PI * t);
-      sx = 1 + ((layer.from ? layer.sx : layer.sx) - 1) * k;
-      sy = layer.from ? 0.2 + 0.8 * t : 1 + (layer.sy - 1) * k;
+      sx = 1 + (layer.sx - 1) * k;
+      const startY = layer.fromY ?? 0.2;
+      sy = layer.from ? startY + (1 - startY) * t : 1 + (layer.sy - 1) * k;
+    } else if (layer.type === "wobble") {
+      angle = layer.amp * Math.sin(t * TAU * layer.cycles) * (1 - t);
+    } else if (layer.type === "hop") {
+      offsetY = -layer.height * Math.sin(Math.PI * t);
+    } else if (layer.type === "jitter") {
+      offsetX = (Math.floor(elapsed / 40) % 2 === 0 ? 1 : -1) * layer.px * (1 - t * 0.5);
     } else if (layer.type === "shake" && elapsed < layer.ms) {
       jitter = Math.max(jitter, layer.intensity * 900 * (1 - elapsed / layer.ms));
     }
   }
   const body = tintColor != null ? mix(0x7fcf6a, tintColor, tintK) : "#7fcf6a";
   ctx.save();
-  ctx.translate(cx + (Math.random() - 0.5) * jitter, cy + (Math.random() - 0.5) * jitter);
+  ctx.translate(cx + offsetX + (Math.random() - 0.5) * jitter, cy + offsetY + (Math.random() - 0.5) * jitter);
+  ctx.rotate((angle * Math.PI) / 180);
   ctx.scale(sx, sy);
   ctx.fillStyle = "rgba(0,0,0,.22)";
   ctx.beginPath(); ctx.ellipse(0, 30, 26, 7, 0, 0, TAU); ctx.fill();

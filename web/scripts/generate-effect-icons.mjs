@@ -60,7 +60,14 @@ const GLYPHS = {
   "coin-pop": () => `<circle cx="32" cy="32" r="22" ${W()}/><circle cx="32" cy="32" r="16" fill="none" stroke="#0003" stroke-width="2.5"/><path d="M32 20v24M26 26c0-4 12-4 12 0s-12 4-12 8 12 4 12 0" fill="none" stroke="#0004" stroke-width="3" stroke-linecap="round"/>`,
   "fire-aura": () => `<circle cx="32" cy="34" r="24" fill="none" stroke="#fff8" stroke-width="3" stroke-dasharray="5 6"/>${flame(20, 16, .8)}`,
   "frost-aura": () => `<circle cx="32" cy="32" r="24" fill="none" stroke="#fff8" stroke-width="3" stroke-dasharray="5 6"/><g ${S(3)}><path d="M32 16v32M18 24l28 16M46 24L18 40"/></g>`,
-  "glow-pulse": () => `<circle cx="32" cy="32" r="26" fill="none" stroke="#fff5" stroke-width="3"/><circle cx="32" cy="32" r="18" fill="none" stroke="#fff9" stroke-width="3.5"/><circle cx="32" cy="32" r="9" fill="#fff"/>`
+  "glow-pulse": () => `<circle cx="32" cy="32" r="26" fill="none" stroke="#fff5" stroke-width="3"/><circle cx="32" cy="32" r="18" fill="none" stroke="#fff9" stroke-width="3.5"/><circle cx="32" cy="32" r="9" fill="#fff"/>`,
+  "jolt-bounce": () => `<ellipse cx="32" cy="34" rx="22" ry="13" ${W()}/><g ${S(3.5)}><path d="M5 34h8M51 34h8M10 30l-5 4 5 4M54 30l5 4-5 4"/></g><path d="M14 52q18 8 36 0" ${S(3)} opacity=".7"/>`,
+  "comic-stars": () => `<polygon ${W("#ffe066")} points="${pts(star(32, 30, 17, 7, 5))}"/><polygon ${W("#7ad8ff")} points="${pts(star(12, 14, 8, 3.5, 5))}"/><polygon ${W("#a6f27a")} points="${pts(star(52, 16, 8, 3.5, 5))}"/><polygon ${W("#ff9ee8")} points="${pts(star(50, 50, 8, 3.5, 5))}"/><polygon ${W("#fff")} points="${pts(star(13, 50, 6, 2.6, 5))}"/>`,
+  "speed-dust": () => `<g ${W()}><circle cx="40" cy="38" r="10"/><circle cx="50" cy="42" r="7"/><circle cx="46" cy="30" r="8"/></g><g ${S(3.5)}><path d="M6 24h18M10 34h22M6 44h18"/></g>`,
+  "cannon-swell": () => `<circle cx="28" cy="32" r="17" ${W()}/><path d="M45 32h14M40 22l12-8M40 42l12 8" ${S(3.5)}/><path d="M21 26q4-5 9-4" fill="none" stroke="#0003" stroke-width="3" stroke-linecap="round"/>`,
+  "heavy-landing": () => `<g ${W()}><rect x="18" y="8" width="28" height="18" rx="4"/><rect x="24" y="26" width="16" height="8"/></g><path d="M32 38v8M26 42l6 6 6-6" ${S(3.5)}/><g ${W()}><circle cx="12" cy="54" r="6"/><circle cx="22" cy="56" r="5"/><circle cx="52" cy="54" r="6"/><circle cx="42" cy="56" r="5"/></g>`,
+  "bubble-pop-death": () => `<g fill="#fff" fill-opacity=".25" stroke="#fff" stroke-width="2.5"><circle cx="24" cy="38" r="15"/><circle cx="46" cy="22" r="10"/><circle cx="48" cy="48" r="7"/><circle cx="14" cy="14" r="5"/></g><g fill="#fff" stroke="none"><circle cx="19" cy="33" r="4"/><circle cx="43" cy="18" r="3"/></g>`,
+  "rage-steam": () => `<g ${W()}><circle cx="22" cy="40" r="10"/><circle cx="34" cy="34" r="12"/><circle cx="45" cy="42" r="8"/></g><path d="M16 22c-5-5 5-8 0-14M32 18c-5-5 5-8 0-14M46 22c-5-5 5-8 0-14" ${S(3)}/><path d="M26 30l8 4M42 30l-8 4" stroke="#7a1d12" stroke-width="3" stroke-linecap="round"/>`
 };
 
 let count = 0;

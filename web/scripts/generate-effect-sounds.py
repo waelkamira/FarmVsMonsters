@@ -331,6 +331,70 @@ def glow_pulse(rng):
     return (np.sin(2 * np.pi * 220 * t) * 0.5 + np.sin(2 * np.pi * 330 * t) * 0.35 + np.sin(2 * np.pi * 440 * t) * 0.15) * sw
 
 
+def jolt_bounce(rng):
+    dur = 0.45
+    t = t_axis(dur)
+    # "بوينغ" مطاطي: نغمة هابطة صاعدة مع اهتزاز
+    f = 320 + 280 * np.exp(-6 * t) * np.cos(2 * np.pi * 7 * t) + 160 * np.exp(-3 * t)
+    phase = 2 * np.pi * np.cumsum(f) / SR
+    boing = np.sin(phase) * env_ad(len(t), 0.002, 0.3, 4)
+    click = highpass(noise(rng, 0.02), 2200) * env_ad(int(SR * 0.02), 0.0005, 0.01, 4)
+    return place(dur, [(0, boing * 0.85), (0, click * 0.4)])
+
+
+def comic_stars(rng):
+    dur = 0.65
+    notes = [2093, 1760, 1568, 1319, 1047]
+    parts = [(i * 0.065, (tone(0.35, f) + 0.4 * tone(0.35, f * 2.01)) * env_ad(int(SR * 0.35), 0.002, 0.2, 4.5) * 0.24) for i, f in enumerate(notes)]
+    parts.append((0, sweep(0.1, 320, 120) * env_ad(int(SR * 0.1), 0.001, 0.05, 3.5) * 0.6))
+    return place(dur, parts)
+
+
+def speed_dust(rng):
+    dur = 0.35
+    w = bandpass(noise(rng, dur), 500, 3800) * np.sin(np.pi * np.clip(t_axis(dur) / dur, 0, 1)) ** 0.8
+    puff = lowpass(noise(rng, 0.2), 1100) * env_ad(int(SR * 0.2), 0.004, 0.1, 4)
+    return place(dur, [(0, w * 0.7), (0.05, puff * 0.6)])
+
+
+def cannon_swell(rng):
+    dur = 0.55
+    t = t_axis(dur)
+    up = sweep(0.38, 160, 620) * env_ad(int(SR * 0.38), 0.02, 0.35, 1.2)
+    squeak = bandpass(noise(rng, 0.38), 1800, 3200) * (t[: int(SR * 0.38)] / 0.38) * 0.18
+    pop = sweep(0.1, 540, 140) * env_ad(int(SR * 0.1), 0.001, 0.05, 3.5)
+    return place(dur, [(0, up * 0.6), (0, squeak), (0.38, pop * 0.9)])
+
+
+def heavy_landing(rng):
+    dur = 0.65
+    thud = sweep(0.4, 95, 38) * env_ad(int(SR * 0.4), 0.002, 0.25, 3)
+    dirt = lowpass(noise(rng, 0.45), 800) * env_ad(int(SR * 0.45), 0.003, 0.2, 3.5)
+    rattle = [(0.12 + i * 0.06, bandpass(noise(rng, 0.02), 900, 2600) * env_ad(int(SR * 0.02), 0.0005, 0.01) * 0.45) for i in range(4)]
+    return place(dur, [(0, thud * 1.15), (0, dirt * 0.8)] + rattle)
+
+
+def bubble_pop_death(rng):
+    dur = 0.9
+    parts = []
+    for i in range(6):
+        st = i * 0.11 + float(rng.uniform(0, 0.03))
+        f0 = float(rng.uniform(500, 900))
+        blip = sweep(0.09, f0, f0 * 2.0) * env_ad(int(SR * 0.09), 0.002, 0.05, 3.5)
+        parts.append((st, blip * 0.5))
+    soft = lowpass(noise(rng, 0.3), 1500) * env_ad(int(SR * 0.3), 0.01, 0.15, 3) * 0.3
+    parts.append((0, soft))
+    return place(dur, parts)
+
+
+def rage_steam(rng):
+    dur = 0.8
+    t = t_axis(dur)
+    hiss = highpass(noise(rng, dur), 2500) * np.sin(np.pi * np.clip(t / dur, 0, 1)) ** 0.7 * 0.5
+    whistle = np.sin(2 * np.pi * (780 + 90 * np.sin(2 * np.pi * 5 * t)) * t) * np.sin(np.pi * np.clip(t / dur, 0, 1)) * 0.18
+    return hiss + whistle
+
+
 SOUNDS = {
     "electric-shock": ("الصعق الكهربائي", zap),
     "freeze": ("التجميد", freeze),
@@ -358,6 +422,13 @@ SOUNDS = {
     "fire-aura": ("الهالة النارية", fire_aura),
     "frost-aura": ("الهالة الجليدية", frost_aura),
     "glow-pulse": ("التوهّج النابض", glow_pulse),
+    "jolt-bounce": ("ارتداد الصدمة", jolt_bounce),
+    "comic-stars": ("انفجار النجوم", comic_stars),
+    "speed-dust": ("غبار الاندفاع", speed_dust),
+    "cannon-swell": ("انتفاخ المدفع", cannon_swell),
+    "heavy-landing": ("الهبوط الثقيل", heavy_landing),
+    "bubble-pop-death": ("انفجار الفقاعات", bubble_pop_death),
+    "rage-steam": ("بخار الغضب", rage_steam),
 }
 
 

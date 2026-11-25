@@ -59,6 +59,10 @@ const shake = (o) => ({ type: "shake", ms: 160, intensity: 0.008, ...o });
 const squash = (o) => ({ type: "squash", sx: 1.2, sy: 0.8, life: 220, ...o });
 const orbit = (o) => ({ type: "orbit", shape: "star", count: 3, radius: 22, height: 46, life: 900, color: 0xffe066, ...o });
 const slash = (o) => ({ type: "slash", color: 0xffffff, size: 54, life: 220, angle: -35, ...o });
+const wobble = (o) => ({ type: "wobble", amp: 12, cycles: 3, life: 420, ...o });
+const hop = (o) => ({ type: "hop", height: 18, life: 260, ...o });
+const jitter = (o) => ({ type: "jitter", px: 3, life: 300, ...o });
+const speedLines = (o) => ({ type: "speedLines", count: 10, color: 0xffffff, inner: 14, outer: 74, life: 240, width: 3, ...o });
 
 const BOTH = Object.freeze(["plant", "monster"]);
 
@@ -66,13 +70,14 @@ const DEFINITIONS = [
   // ------------------------------------------------------------- عند إصابة الهدف
   {
     id: "electric-shock", nameAr: "الصعق الكهربائي", category: "كهرباء", trigger: "hit", color: 0x6fe3ff,
-    descriptionAr: "صواعق زرقاء تلتف حول الخصم، ويومض جسمه لحظة الصعق.",
+    descriptionAr: "برق متعرج يتجدد كل لحظة وارتجاف سريع ووميض أبيض وأزرق متبادل على الخصم.",
     sound: { key: "fx-electric-shock", volume: 0.8, cooldownMs: 140 },
     layers: [
       flash({ color: 0xbff6ff, radius: 30, life: 160 }),
-      bolt({ count: 3, color: 0x9ff0ff, height: 64, life: 240 }),
+      bolt({ count: 3, color: 0x9ff0ff, height: 64, life: 360, regenerateMs: 50 }),
+      jitter({ px: 3, life: 320 }),
       burst({ shape: "spark", count: 10, colors: [0x6fe3ff, 0xffffff, 0xfff27a], speed: [80, 200], life: 340, size: [0.5, 0.9], additive: true }),
-      tint({ color: 0xa8f2ff, life: 260, flicker: true })
+      tint({ color: 0xa8f2ff, life: 340, flickerColors: [0xffffff, 0x6fe3ff] })
     ]
   },
   {
@@ -323,8 +328,76 @@ const DEFINITIONS = [
       flash({ color: 0xfff08a, radius: 40, life: 700 }),
       ring({ color: 0xfff08a, radius: 36, life: 700, width: 2 })
     ]
+  },
+
+  // ------------------------------------------------ تأثيرات حركة كوميدية (Game Juice)
+  {
+    id: "jolt-bounce", nameAr: "ارتداد الصدمة", category: "حركة", trigger: "hit", color: 0xffd23f,
+    descriptionAr: "ينضغط الخصم ثم يتمدد بمرونة مع وميض أبيض خاطف وحلقة صدمة.",
+    sound: { key: "fx-jolt-bounce", volume: 0.8, cooldownMs: 110 },
+    layers: [
+      squash({ sx: 1.35, sy: 0.65, life: 260 }),
+      tint({ color: 0xffffff, life: 90, fill: true }),
+      ring({ color: 0xfff3b0, radius: 44, life: 320, width: 5 })
+    ]
+  },
+  {
+    id: "comic-stars", nameAr: "انفجار النجوم", category: "حركة", trigger: "hit", color: 0xff7ab8,
+    descriptionAr: "نجوم كرتونية ملونة تتطاير وتدور وتسقط مع وميض ساطع عند الإصابة.",
+    sound: { key: "fx-comic-stars", volume: 0.75, cooldownMs: 120 },
+    layers: [
+      flash({ color: 0xfff3b0, radius: 28, life: 150 }),
+      burst({ shape: "star", count: 9, colors: [0xffe066, 0xff7ab8, 0x7ad8ff, 0xa6f27a], speed: [80, 190], gravity: 280, life: 760, size: [0.4, 0.85], spread: [200, 340], spin: true, additive: true })
+    ]
+  },
+  {
+    id: "speed-dust", nameAr: "غبار الاندفاع", category: "حركة", trigger: "hit", color: 0xd9c9a8,
+    descriptionAr: "سحب غبار دائرية تتناثر وترتفع قليلاً للأعلى عند الإصابة.",
+    sound: { key: "fx-speed-dust", volume: 0.65, cooldownMs: 120 },
+    layers: [
+      burst({ shape: "puff", count: 6, colors: [0xd9c9a8, 0xc2ae88, 0xe8dcc2], speed: [30, 95], gravity: -35, life: 620, size: [0.45, 0.95], spread: [190, 350] })
+    ]
+  },
+  {
+    id: "cannon-swell", nameAr: "انتفاخ المدفع", category: "حركة", trigger: "fire", color: 0xbfe3ff,
+    descriptionAr: "تنتفخ النبتة كالبالون لحظة الإطلاق مع حلقة هواء وجزيئات أمامية.",
+    sound: { key: "fx-cannon-swell", volume: 0.7, cooldownMs: 140 },
+    layers: [
+      squash({ sx: 1.3, sy: 0.75, life: 220 }),
+      ring({ color: 0xe8f4ff, radius: 34, life: 280, width: 3 }),
+      burst({ shape: "dot", count: 5, colors: [0xffffff, 0xcfeaff], speed: [70, 150], life: 280, size: [0.25, 0.45], spread: [-35, 35], additive: true })
+    ]
+  },
+  {
+    id: "heavy-landing", nameAr: "الهبوط الثقيل", category: "حركة", trigger: "spawn", color: 0xb59a74,
+    descriptionAr: "يهبط الكائن بوزن ثقيل فينضغط، مع موجة صدمة وغبار واهتزاز خفيف للشاشة.",
+    sound: { key: "fx-heavy-landing", volume: 0.85, cooldownMs: 150 },
+    layers: [
+      squash({ from: true, sx: 1.3, fromY: 0.55, life: 320 }),
+      ring({ color: 0xe6d4b0, radius: 50, life: 360, width: 5 }),
+      burst({ shape: "puff", count: 5, colors: [0xcdb48f, 0xe6d6b8], speed: [40, 100], gravity: -10, life: 540, size: [0.5, 1], spread: [175, 365] }),
+      shake({ ms: 110, intensity: 0.004 })
+    ]
+  },
+  {
+    id: "bubble-pop-death", nameAr: "انفجار الفقاعات", category: "موت", trigger: "death", color: 0x7ad8ff,
+    descriptionAr: "يتحول الكائن عند موته إلى فقاعات صابون ملونة تطير للأعلى.",
+    sound: { key: "fx-bubble-pop-death", volume: 0.8, cooldownMs: 140 },
+    layers: [
+      ring({ color: 0xbfeaff, radius: 40, life: 380, width: 3 }),
+      burst({ shape: "bubble", count: 10, colors: [0x7ad8ff, 0xff9ee8, 0xa6f27a, 0xffe066, 0xbfa3ff], speed: [20, 75], gravity: -90, life: 1000, size: [0.35, 0.9], spread: [200, 340] })
+    ]
+  },
+  {
+    id: "rage-steam", nameAr: "بخار الغضب", category: "هالات", trigger: "aura", color: 0xff7a6a, auraIntervalMs: 1100,
+    descriptionAr: "نفثات بخار ساخن تتصاعد باستمرار مع نبضة احمرار خفيفة، فيبدو الكائن غاضباً.",
+    sound: { key: "fx-rage-steam", volume: 0.3, cooldownMs: 5000 },
+    layers: [
+      tint({ color: 0xff8a7a, life: 260 }),
+      rise({ shape: "puff", count: 3, colors: [0xf4efe8, 0xffd0c4], speed: [30, 70], life: 800, size: [0.4, 0.75], spreadX: 16 })
+    ]
   }
-];
+]
 
 // الأيقونات: مولَّدة بالسكربت scripts/generate-effect-icons.mjs وتُحفظ في /assets/vfx-icons.
 const EFFECTS = DEFINITIONS.map((definition) => Object.freeze({

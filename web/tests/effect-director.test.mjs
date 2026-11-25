@@ -30,7 +30,7 @@ function makeScene({ deferTweens = false, sounds = true, failImages = false } = 
       addEvent: (cfg) => { const ev = { cfg, removed: false, remove() { ev.removed = true; } }; tracker.events.push(ev); return ev; }
     },
     textures: { exists: (k) => textures.has(k) },
-    make: { graphics: () => ({ fillStyle() {}, fillCircle() {}, fillPoints() {}, generateTexture: (k) => textures.add(k), destroy() {} }) },
+    make: { graphics: () => ({ fillStyle() {}, fillCircle() {}, fillPoints() {}, fillRect() {}, generateTexture: (k) => textures.add(k), destroy() {} }) },
     add: {
       image: () => { if (failImages) throw new Error("boom"); return makeObject(tracker); },
       circle: () => makeObject(tracker),
