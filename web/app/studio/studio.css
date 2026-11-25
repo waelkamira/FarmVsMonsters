@@ -633,3 +633,7 @@
 .studio-thumb-pending>span{font-size:clamp(38px,7vw,64px);line-height:1}
 .studio-thumb-pending>b{font-size:13px;line-height:1.5}
 .studio-detail-pending{width:min(100%,280px);min-height:240px;aspect-ratio:1;margin:auto}
+
+.studio-thumb-pending img{display:block;width:min(76%,150px);height:auto;max-height:160px;object-fit:contain;filter:drop-shadow(0 8px 12px rgba(0,0,0,.3))}
+.studio-thumb-pending span{font-size:11px;font-weight:800;letter-spacing:.04em}
+.studio-detail-pending img{width:min(72%,180px);max-height:190px}
