@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { validateCharacterStateAnimation, validateCharacterStateAnimations } from "../game/studio/characterStateAnimations.mjs";
+import { applyStudioAssetFileAudit } from "../game/studio/assetReadiness.mjs";
 import { cloneStudioAsset, createStudioAssetRevision, restoreStudioAssetRevision } from "../game/studio/assetVersions.mjs";
 
 const validState = {
@@ -64,4 +65,26 @@ test("Studio exposes the workbench before effect assignment and persists status 
   assert.match(route, /createImmutableAssetPath\(config\.folder\+"\/states"/);
   assert.match(route, /githubPutImmutable\("web\/public\/assets\/"+stateRelative/);
   assert.match(route, /stateAnimations/);
+});
+
+test("asset file audit checks every custom state sprite sheet path", () => {
+  const report = {
+    assets: [{
+      id: "brute",
+      readiness: "ready",
+      errors: [],
+      warnings: []
+    }]
+  };
+  const audited = applyStudioAssetFileAudit(report, [{
+    id: "brute",
+    path: "/assets/monsters/brute.png",
+    stateAnimations: { burn: { path: "/assets/monsters/states/brute-burn.png" } }
+  }], {
+    "/assets/monsters/brute.png": "present",
+    "/assets/monsters/states/brute-burn.png": "missing"
+  });
+  assert.equal(audited.assets[0].readiness, "blocked");
+  assert.ok(audited.assets[0].errors.some((message) => message.includes("brute-burn.png")));
+  assert.equal(audited.fileAudit.checked, 2);
 });
