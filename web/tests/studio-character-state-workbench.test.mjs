@@ -77,7 +77,7 @@ test("Studio exposes the workbench before effect assignment and persists status 
   assert.match(route, /stateAnimations:asset\.stateAnimations\|\|\{\}/);
   assert.match(route, /publish \"\+stateId\+\" state frames for \"\+id/);
   assert.match(route, /addStatePreviewUrls/);
-  assert.match(route, /Object\.values\(snapshot\?\.stateAnimations\|\|\{\}\)\.map\(state=>state\?\.path\)/);
+  assert.match(deletion, /stateAnimations/);
   assert.match(battle, /queueCharacterStateTextures/);
   assert.match(battle, /registerCharacterStateAnimations/);
   assert.match(battle, /applyCharacterStateFromEffects/);
