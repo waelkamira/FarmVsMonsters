@@ -43,14 +43,17 @@ test("Deletion removes linked catalog entries and owned files without deleting s
   assert.match(route, /function assetOwnedPaths\(asset\)/);
   assert.match(route, /filter\(\(value\)=>typeof value==="string"&&safeAssetPath\(value\)\)/);
   assert.ok(route.includes('import {mkdir,readFile,writeFile,unlink} from "node:fs/promises"'));
-  assert.match(route, /asset\?\.atlas\?\.jsonPath/);
+  assert.match(route, /snapshot\?\.atlasMetadataPath/);
+  assert.match(route, /snapshot\?\.atlas\?\.jsonPath/);
   assert.match(route, /asset\?\.audio\?\.path/);
   assert.match(route, /asset\?\.combat\?\.projectile\?\.path/);
   assert.match(route, /function assetPathStillUsed\(assets,assetPath\)/);
   assert.match(route, /function removeManifestAssetReferences\(manifest,assetPaths\)/);
   assert.match(route, /removeLocalAssetManifestReferences\(candidatePaths\)/);
   assert.match(route, /removeGithubAssetManifestReferences\(candidatePaths,token,storageBranch\)/);
-  assert.match(route, /manifest\.assetCount=Object\.values\(manifest\.groups\)/);
+  assert.match(route, /manifest\.assetCount=all\.length/);
+  assert.match(route, /manifest\.totalBytes=all\.reduce/);
+  assert.match(route, /Array\.isArray\(asset\?\.versions\)/);
 });
 
 test("Local permanent deletion never calls GitHub-only cleanup helpers", () => {
