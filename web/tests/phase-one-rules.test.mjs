@@ -54,7 +54,7 @@ test("CC0 Kenney sound assets are bundled locally and mapped to gameplay events"
     );
   }
   assert.match(scene, /for \(const asset of soundAssets\.assets\) \{\s*this\.load\.audio\(asset\.key, asset\.path\);/);
-  assert.match(scene, /this\.sound\.play\(key, \{ volume: PhaserMath\.Clamp\(volume \/ 100, 0, 1\) \}\)/);
+  assert.match(scene, /this\.sound\.play\(key, \{[\s\S]*volume: PhaserMath\.Clamp\(volume \/ 100, 0, 1\),[\s\S]*rate: PhaserMath\.FloatBetween\(0\.9, 1\.1\)/);
   assert.match(scene, /playFarmerFootsteps\(dt\)/);
   assert.match(scene, /playMonsterJumpSound\(\)/);
   assert.match(scene, /playSfx\("sfx-monster-jump"/);
