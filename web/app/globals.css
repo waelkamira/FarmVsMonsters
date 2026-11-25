@@ -2540,3 +2540,13 @@ body {
 .codex-bestiary-page .collection-card>*{position:relative;z-index:1}
 .codex-bestiary-page .collection-card h2,.codex-bestiary-page .collection-card p,.codex-bestiary-page .collection-card .collection-meta,.codex-bestiary-page .collection-card .collection-status{color:#28450D!important}
 .codex-bestiary-page .collection-card.is-locked{filter:saturate(.55)}
+
+/* Clean glass-gradient card reset: remove legacy card frame treatments. */
+.seed-select-card,.codex-bestiary-page .collection-card{background:linear-gradient(180deg,#F7F76E 0%,#68B301 100%)!important;border:1px solid rgba(255,255,255,.62)!important;border-radius:16px!important;box-shadow:0 8px 18px rgba(16,35,5,.22),inset 0 1px 0 rgba(255,255,255,.6)!important;position:relative;isolation:isolate;overflow:hidden;color:#28450D!important}
+.seed-select-card::before,.codex-bestiary-page .collection-card::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;border-radius:inherit;background:linear-gradient(180deg,rgba(255,255,255,.28),rgba(255,255,255,.10) 45%,rgba(255,255,255,.04));backdrop-filter:blur(12px) saturate(145%);-webkit-backdrop-filter:blur(12px) saturate(145%)}
+.seed-select-card::after,.codex-bestiary-page .collection-card::after{content:"";position:absolute;inset:1px 1px auto;height:38%;z-index:0;pointer-events:none;border-radius:inherit;background:linear-gradient(120deg,rgba(255,255,255,.32),rgba(255,255,255,.03) 70%,transparent)}
+.seed-select-card>* ,.codex-bestiary-page .collection-card>*{position:relative;z-index:1}
+.seed-select-card strong,.seed-select-card small,.codex-bestiary-page .collection-card h2,.codex-bestiary-page .collection-card p,.codex-bestiary-page .collection-card .collection-meta,.codex-bestiary-page .collection-card .collection-status{color:#28450D!important;text-shadow:0 1px rgba(255,255,255,.24)}
+.seed-select-card.is-selected{border-color:rgba(255,255,255,.95)!important;box-shadow:inset 0 0 0 2px rgba(255,255,255,.6),0 0 0 2px rgba(80,130,30,.45),0 8px 18px rgba(16,35,5,.22)!important}
+.seed-select-card .seed-select-cost{background:rgba(38,68,13,.72);color:#faffdf;border:1px solid rgba(255,255,255,.42);backdrop-filter:blur(6px)}
+.seed-select-card.is-locked,.codex-bestiary-page .collection-card.is-locked{filter:saturate(.55)}
