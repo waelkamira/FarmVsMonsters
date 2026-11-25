@@ -126,7 +126,11 @@ export function auditStudioAssetRegistry(input) {
         }
       }
     }
-    if (asset?.stateAnimations) {\n      const stateValidation = validateCharacterStateAnimations(asset.stateAnimations);\n      if (!stateValidation.valid) stateValidation.errors.forEach((message) => errors.push("حالات الشخصية: " + message));\n    }\n    if (type === "monster") {
+    if (asset?.stateAnimations) {
+      const stateValidation = validateCharacterStateAnimations(asset.stateAnimations);
+      if (!stateValidation.valid) stateValidation.errors.forEach((message) => errors.push("حالات الشخصية: " + message));
+    }
+    if (type === "monster") {
       try { createStudioMonsterProfile(asset.monsterProfile); }
       catch (error) { errors.push("إعدادات الوحش: " + error.message); }
     }
