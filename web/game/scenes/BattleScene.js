@@ -1944,7 +1944,7 @@ export default class BattleScene extends Scene {
     return true;
   }
 
-  playMonster 01Voice(kind = "growl", intensity = 1) {
+  playMonster01Voice(kind = "growl", intensity = 1) {
     // Original procedural cartoon animal vocals: generated with Web Audio,
     // so the game ships no third-party recordings or restrictive audio files.
     const context = this.sound && this.sound.context;
@@ -2011,7 +2011,7 @@ export default class BattleScene extends Scene {
 
   playMonsterBiteSound() {
     this.playSfx("sfx-monster-bite", this.effectsVolume * 0.54, 220);
-    this.playMonster 01Voice("bite", 0.9);
+    this.playMonster01Voice("bite", 0.9);
   }
 
   playThornSound() {
@@ -4516,7 +4516,7 @@ export default class BattleScene extends Scene {
       if (monster.monster01Sprite && !this.gameOver) {
         monster.voiceCooldown -= delta;
         if (monster.voiceCooldown <= 0) {
-          if (Math.random() < 0.42) this.playMonster 01Voice(Math.random() < 0.58 ? "laugh" : "growl", 0.38);
+          if (Math.random() < 0.42) this.playMonster01Voice(Math.random() < 0.58 ? "laugh" : "growl", 0.38);
           monster.voiceCooldown = PhaserMath.Between(6500, 12500);
         }
       }
@@ -5290,7 +5290,7 @@ export default class BattleScene extends Scene {
         if (targetKind === "monster" && originalTint !== 0xffffff) sprite.setTint?.(originalTint);
         else sprite.clearTint?.();
       }
-      if (targetKind === "monster" && target.alive) this.playMonster 01Voice("yelp", 0.72);
+      if (targetKind === "monster" && target.alive) this.playMonster01Voice("yelp", 0.72);
     });
     this.juiceCameraImpact({ heavy: false });
     return true;
@@ -5307,7 +5307,7 @@ export default class BattleScene extends Scene {
     }
     monster.hp = applyHitPointsDamage(monster.hp, amount).hp;
     this.playMonsterHitSound();
-    if (monster.monster01Sprite) this.playMonster 01Voice("yelp", 0.82);
+    if (monster.monster01Sprite) this.playMonster01Voice("yelp", 0.82);
     this.flashMonsterOnHit(monster, plantType);
     if ((false || false) && monster.hp <= monster.maxHp * 0.3) {
       this.vfxManager?.play("dizzy-stars", monster.x, monster.y - 58, {
@@ -5338,7 +5338,7 @@ export default class BattleScene extends Scene {
     }
     this.playMonsterDefeatSound();
     this.playEffects(this.effectIdsForMonster(monster), "death", this.effectPoint(monster.view), { facing: -1 });
-    if (monster.monster01Sprite) this.playMonster 01Voice("yelp", 0.88);
+    if (monster.monster01Sprite) this.playMonster01Voice("yelp", 0.88);
     // Play the authored death sequence before removing the creature.
     // Currency is intentionally not granted by client-side combat outcomes.
     if (monster.view && monster.view.active) {
