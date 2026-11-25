@@ -57,18 +57,18 @@ test("stage seed selection respects only enabled plants for a configured stage",
  assert.match(selection,/selectedPlants\.length < minimumSeeds/);
 });
 
-test("configured first spawn delay is not overwritten and dragon waits for the configured final spawn",()=>{
+test("configured first spawn delay is not overwritten and final wave has no boss trigger",()=>{
  const battle=read("game/scenes/BattleScene.js");
  assert.match(battle,/const firstStageMonster = this\.getStageMonsterEntry\(0\);\s*this\.spawnTimer = this\.stageMonsterRosterConfigured && firstStageMonster \? Math\.max\(0, Number\(firstStageMonster\.firstSpawnDelayMs\) \|\| 0\) : PHASE_ONE_TIMING\.firstMonsterSpawnDelayMs;/);
  assert.doesNotMatch(battle,/this\.combatClockMs = 0;\s*this\.spawnTimer = PHASE_ONE_TIMING\.firstMonsterSpawnDelayMs;/);
- assert.match(battle,/this\.wave === this\.totalWaves && this\.spawnedThisWave === this\.waveSize\) this\.beginDragonEncounter\(\)/);
+ assert.doesNotMatch(battle,/dragon|beginDragonEncounter/i);
  assert.doesNotMatch(battle,/this\.wave === 5 && this\.spawnedThisWave === 2/);
 });
 
 
-test("non-story configured stages can finish without requiring the Stage 1 dragon rescue",()=>{
+test("all configured stages can finish directly after their final wave",()=>{
  const battle=read("game/scenes/BattleScene.js");
- assert.match(battle,/won = Boolean\(won && \(this\.stageNumber !== 1 \|\| this\.phaseOneStoryState === "complete"\)\)/);
+ assert.match(battle,/won = Boolean\(won\)/);
  assert.doesNotMatch(battle,/if \(won && this\.stageNumber === 1\)/);
  assert.match(battle,/A local victory is a playtest result/);
 });
