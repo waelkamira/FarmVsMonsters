@@ -302,7 +302,11 @@ export async function POST(req){
  if(!hasFile&&(!replace||!existing))return NextResponse.json({error:"Choose a file for a new asset."},{status:400});
  if(hasFile&&(file.size>STUDIO_MAX_UPLOAD_BYTES||!config.accepts.includes(file.type)))return NextResponse.json({error:"Choose a supported file up to 8 MB."},{status:415});
  if(hasStateAnimation){
-  if(!replace||!existing||!(type==="plant"||type==="monster"))return NextResponse.json({error:"إطارات الحالات متاحة لتعديل نبتة أو وحش موجود فقط."},{status:400});\n  if(stateAnimationFile.size>STUDIO_MAX_UPLOAD_BYTES||!["image/png","image/webp"].includes(stateAnimationFile.type))return NextResponse.json({error:"ارفع صورة PNG أو WebP حتى 8 MB."},{status:415});\n  if(!Number.isInteger(stateFrameCount)||stateFrameCount<1||stateFrameCount>24||!Number.isInteger(stateRows)||!Number.isInteger(stateColumns)||stateRows<1||stateColumns<1||stateRows*stateColumns!==stateFrameCount)return NextResponse.json({error:"شبكة إطارات الحالة غير صحيحة."},{status:400});\n  if(!Number.isFinite(stateFps)||stateFps<1||stateFps>30)return NextResponse.json({error:"سرعة الحالة يجب أن تكون بين 1 و30 FPS."},{status:400});\n }
+  if(!replace||!existing||!(type==="plant"||type==="monster"))return NextResponse.json({error:"إطارات الحالات متاحة لتعديل نبتة أو وحش موجود فقط."},{status:400});
+  if(stateAnimationFile.size>STUDIO_MAX_UPLOAD_BYTES||!["image/png","image/webp"].includes(stateAnimationFile.type))return NextResponse.json({error:"ارفع صورة PNG أو WebP حتى 8 MB."},{status:415});
+  if(!Number.isInteger(stateFrameCount)||stateFrameCount<1||stateFrameCount>24||!Number.isInteger(stateRows)||!Number.isInteger(stateColumns)||stateRows<1||stateColumns<1||stateRows*stateColumns!==stateFrameCount)return NextResponse.json({error:"شبكة إطارات الحالة غير صحيحة."},{status:400});
+  if(!Number.isFinite(stateFps)||stateFps<1||stateFps>30)return NextResponse.json({error:"سرعة الحالة يجب أن تكون بين 1 و30 FPS."},{status:400});
+ }
  if(config.spriteSheet&&(!Number.isInteger(frameCount)||frameCount<1||frameCount>24||!Number.isInteger(rows)||!Number.isInteger(columns)||rows<1||columns<1||rows*columns!==frameCount))return NextResponse.json({error:"عدد الإطارات يجب أن يكون من 1 إلى 24، ويجب أن يطابق حاصل ضرب الصفوف والأعمدة."},{status:400});
  let animationProfile=null;
  if(config.spriteSheet&&(type==="plant"||type==="monster")){
