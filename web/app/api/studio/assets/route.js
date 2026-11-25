@@ -474,31 +474,32 @@ export async function PATCH(req){
   if(index<0)return NextResponse.json({error:"لم يتم العثور على الأصل في مكتبة Studio."},{status:404});
   let asset=registry.assets[index];
   if(operation==="delete"){
-
    const dependents=getAssetDependents(registry.assets,id);
    if(dependents.length)return NextResponse.json({error:"لا يمكن حذف الأصل لأن أصولاً أخرى تعتمد عليه: "+dependents.map(item=>item.assetName).join("، ")},{status:409});
+   if(asset.status==="published")return NextResponse.json({error:"لا يمكن حذف أصل منشور مباشرة. إزالة المحتوى المنشور يجب أن تمر بطلب إصدار ومراجعة منفصل."},{status:409});
    if(asset.releaseRequest?.number){
     const release=await githubGetPullRequest(asset.releaseRequest.number,token);
     if(release?.state==="open")return NextResponse.json({error:"يوجد طلب نشر مفتوح لهذا الأصل. أغلق طلب المراجعة أولاً ثم أعد الحذف."},{status:409});
+    if(release?.merged)return NextResponse.json({error:"هذا الأصل منشور عبر طلب مراجعة مدمج. أزل نشره بطلب إصدار مراجعة منفصل قبل الحذف."},{status:409});
    }
-   const remaining=registry.assets.filter((_,i)=>i!==index);
-   const candidatePaths=assetOwnedPaths(asset).filter((assetPath)=>!assetPathStillUsed(remaining,assetPath));
+   const publishedCatalogs=[];
    for(const [catalogPath,key] of [[PUBLISHED_CATALOG_PATH,"plants"],[PUBLISHED_MONSTER_CATALOG_PATH,"monsters"]]){
     const document=await githubGetDocument(catalogPath,token,targetBranch);
-    if(!document)continue;
-    const catalog=JSON.parse(document.content);
-    if(Array.isArray(catalog[key])&&catalog[key].some((item)=>item.id===id)){
-     catalog[key]=catalog[key].filter((item)=>item.id!==id);
-     await githubPut(catalogPath,Buffer.from(JSON.stringify(catalog,null,2)+"\n"),"studio: remove "+asset.type+" "+id,token,targetBranch,document.sha);
-    }
+    const catalog=document?JSON.parse(document.content):(key==="plants"?{plants:[]}:{monsters:[]});
+    const collection=Array.isArray(catalog[key])?catalog[key]:[];
+    if(collection.some(item=>item.id===id))return NextResponse.json({error:"ما زال هذا الأصل موجوداً في كتالوج اللعبة المنشور. أزل نشره عبر طلب مراجعة قبل الحذف."},{status:409});
+    publishedCatalogs.push(...collection);
    }
+   const remaining=registry.assets.filter((_,i)=>i!==index);
+   const isPublishedPathReferenced=assetPath=>publishedCatalogs.some(item=>item.path===assetPath||(item.rigParts||[]).some(part=>part.path===assetPath)||item.combat?.projectile?.path===assetPath);
+   const candidatePaths=assetOwnedPaths(asset).filter(assetPath=>!assetPathStillUsed(remaining,assetPath)&&!isPublishedPathReferenced(assetPath));
    for(const assetPath of candidatePaths){
     const filePath="web/public"+assetPath;
-    await githubDeleteIfExists(filePath,"studio: delete unused asset file for "+id,token,storageBranch);
-    if(targetBranch!==storageBranch)await githubDeleteIfExists(filePath,"studio: delete published asset file for "+id,token,targetBranch);
+    await githubDeleteIfExists(filePath,"studio: delete unused storage asset file for "+id,token,storageBranch);
    }
    await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify({...registry,assets:remaining},null,2)+"\n"),"studio: permanently delete "+asset.type+" "+id,token,storageBranch,registrySha);
-   return NextResponse.json({success:true,operation,deletedId:id,message:"تم حذف الأصل من سجل Studio وكتالوج اللعبة وملفات GitHub غير المشتركة."});
+   return NextResponse.json({success:true,operation,deletedId:id,message:"تم حذف الأصل من سجل Studio وملفات فرع التخزين غير المشتركة. لم يتم تعديل فرع اللعبة المنشور."});
+  }
   }
 
   if(operation==="clone"){
