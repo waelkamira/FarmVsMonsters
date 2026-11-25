@@ -100,18 +100,6 @@ export const PHASE_ONE_FARMER = Object.freeze({
   clubReachPx: 112
 });
 
-export const PHASE_ONE_DRAGON = Object.freeze({
-  maxHp: 750,
-  farmerSlingDamage: 25,
-  farmerSlingInitialDelayMs: 850,
-  farmerSlingIntervalMs: 900,
-  dragonInitialAttackDelayMs: 2800,
-  fireballDamageToPlant: 55,
-  fireballDamageToFarm: 12,
-  attackIntervalMs: 3900,
-  fireballTravelMs: 1050
-});
-
 export const PHASE_ONE_MONSTER_SCALING = Object.freeze({
   baseHp: 65,
   hpPerWave: 4,
