@@ -80,3 +80,11 @@ test("Permanent deletion reconciles both the asset manifest and asset audit in l
   assert.match(route, /githubGetDocument\(ASSET_AUDIT_PATH,token,branch\)/);
   assert.match(route, /reconcile asset audit after permanent deletion/);
 });
+
+
+test("GitHub preview reads are cached and have a per-branch fallback timeout", () => {
+  assert.match(route, /const previewCache=new Map\(\)/);
+  assert.match(route, /expiresAt>Date\.now\(\)/);
+  assert.match(route, /setTimeout\(\(\)=>controller\.abort\(\),30_000\)/);
+  assert.match(route, /GitHub preview timed out after 30 seconds/);
+});
