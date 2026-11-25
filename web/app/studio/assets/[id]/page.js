@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { buildAssetDependencyReport } from "../../../../game/studio/assetDependencies.mjs";
 import "../../studio.css";
+import SpriteThumbnail from "../../../components/SpriteThumbnail.jsx";
 
 const TYPE_LABELS = { plant: "نبات", monster: "وحش", plantProjectile: "قذيفة نبات", monsterProjectile: "قذيفة وحش", effect: "مؤثر", item: "عنصر", audio: "صوت" };
 const STATUS_LABELS = { draft: "مسودة", testing: "جاهز للاختبار", approved: "بانتظار المراجعة", published: "منشور", archived: "مؤرشف" };
@@ -70,11 +71,13 @@ export default function StudioAssetDetailsPage() {
   if (state === "error") return <main className="studio-shell" dir="rtl"><section className="studio-detail-panel"><h1>تعذر فتح صفحة الأصل</h1><p>{error}</p><Link href="/studio">العودة إلى Studio</Link>{error.toLowerCase().includes("unauthorized") && <p>سجّل الدخول إلى Studio أولاً ثم افتح صفحة التفاصيل.</p>}</section></main>;
   if (state === "missing" || !asset) return <main className="studio-shell" dir="rtl"><section className="studio-detail-panel"><h1>الأصل غير موجود</h1><p>قد يكون قد نُقل أو أُزيل من سجل Studio.</p><Link href="/studio">العودة إلى مكتبة الأصول</Link></section></main>;
   const mediaUrl = asset.previewUrl || asset.path;
+  const mediaFrameCount = Math.max(1, Number(asset.frameCount) || ((Number(asset.rows) || 1) * (Number(asset.columns) || 1)));
+  const mediaIsSpriteSheet = asset.type !== "audio" && asset.spriteSheet === true && mediaFrameCount > 1;
   const combat = asset.combat || {};
   return <main className="studio-shell" dir="rtl">
     <header className="studio-head"><div><small>STUDIO · ASSET DETAILS</small><h1>{asset.name || asset.id}</h1><p>{asset.id} · {TYPE_LABELS[asset.type] || asset.type} · v{asset.revision || 1}</p></div><Link href="/studio">العودة إلى مكتبة الأصول</Link></header>
     <section className="studio-detail-hero">
-      <div className="studio-detail-media">{asset.type === "audio" ? <><span className="studio-detail-audio-icon">🔊</span><audio controls preload="metadata" src={mediaUrl} /></> : <img src={mediaUrl} alt={asset.name || asset.id} />}</div>
+      <div className="studio-detail-media">{asset.type === "audio" ? <><span className="studio-detail-audio-icon">🔊</span><audio controls preload="metadata" src={mediaUrl} /></> : <SpriteThumbnail src={mediaUrl} rows={mediaIsSpriteSheet ? asset.rows : 1} columns={mediaIsSpriteSheet ? asset.columns : 1} frameCount={mediaIsSpriteSheet ? mediaFrameCount : 1} alt={asset.name || asset.id} className="studio-detail-art" />}</div>
       <div className="studio-detail-summary"><span className="studio-detail-status">{STATUS_LABELS[asset.status] || asset.status || "غير محدد"}</span><h2>معلومات الأصل</h2>
         <DetailRow label="المعرّف" value={asset.id} /><DetailRow label="النوع" value={TYPE_LABELS[asset.type] || asset.type} /><DetailRow label="اسم الملف" value={asset.filename} /><DetailRow label="مسار الملف" value={asset.path} /><DetailRow label="تاريخ الإنشاء" value={asset.createdAt} /><DetailRow label="آخر تعديل" value={asset.updatedAt} /><DetailRow label="تم نسخه من" value={asset.clonedFrom} />
       </div>

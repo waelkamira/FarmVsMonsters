@@ -293,6 +293,7 @@ export default class BattleScene extends Scene {
     });
     // Uploaded 3×3 plant/monster sheets are cropped using source dimensions,
     // exactly like Mango: nine named Phaser frames, with no assumed cell size.
+    this.registerThreeByThreeSheet("radish-level-1");
     this.registerThreeByThreeSheet("mango-level-1");
     this.registerThreeByThreeSheet("electric-mushroom-level-1");
     this.registerThreeByThreeSheet("snow-thrower-level-1");
