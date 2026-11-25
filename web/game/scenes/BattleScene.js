@@ -1622,7 +1622,6 @@ export default class BattleScene extends Scene {
       });
     }
     this.playMonsterDefeatSound();
-    this.playEffects(this.effectIdsForMonster(monster), "death", this.effectPoint(monster.view), { facing: -1 });
     this.setMessage("The dragon has fallen! The farmer is going to rescue the princess.");
     this.tryFinishPhaseOne();
   }
@@ -4957,7 +4956,6 @@ export default class BattleScene extends Scene {
         continue;
       }
 
-    this.playEffects(this.effectIdsForPlantType(plant.type), "death", this.effectPoint(plant.view));
       shot.trailTimer -= dt * 1000;
       if (shot.trailTimer <= 0) {
         this.createProjectileTrail(projectileX - 5, trailPositionY, shot.plantType, shot.projectileEffectColor);
@@ -5048,13 +5046,6 @@ export default class BattleScene extends Scene {
     this.projectiles = this.projectiles.filter((shot) => shot.alive);
   }
 
-    // الهراوة تستدعي هذه الدالة بلا نوع نبتة؛ لا تُفعَّل تأثيرات نبتة في تلك الحالة.
-    const attackedByPlant = arguments.length >= 3;
-    const effectPoint = this.effectPoint(monster.view);
-    if (effectPoint) {
-      if (attackedByPlant) this.playEffects(this.effectIdsForPlantType(plantType), "hit", effectPoint);
-      this.playEffects(this.effectIdsForMonster(monster), "damaged", effectPoint, { facing: -1 });
-    }
   incomingMonsterDamageMultiplier(monster) {
     const armorMultiplier = monster.incomingDamageMultiplier || 1;
     // Bracing cuts a further 45% from incoming hits, but only while the
@@ -5269,6 +5260,13 @@ export default class BattleScene extends Scene {
 
   applyMonsterDamage(monster, amount, plantType = "radish") {
     if (!monster || !monster.alive || amount <= 0) return;
+    // الهراوة تستدعي هذه الدالة بلا نوع نبتة؛ لا تُفعَّل تأثيرات نبتة في تلك الحالة.
+    const attackedByPlant = arguments.length >= 3;
+    const effectPoint = this.effectPoint(monster.view);
+    if (effectPoint) {
+      if (attackedByPlant) this.playEffects(this.effectIdsForPlantType(plantType), "hit", effectPoint);
+      this.playEffects(this.effectIdsForMonster(monster), "damaged", effectPoint, { facing: -1 });
+    }
     monster.hp = applyHitPointsDamage(monster.hp, amount).hp;
     this.playMonsterHitSound();
     if (monster.hyenaSprite) this.playHyenaVoice("yelp", 0.82);
@@ -5301,6 +5299,7 @@ export default class BattleScene extends Scene {
       this.juiceCameraImpact({ heavy: monster.kind === "alpha-brute" });
     }
     this.playMonsterDefeatSound();
+    this.playEffects(this.effectIdsForMonster(monster), "death", this.effectPoint(monster.view), { facing: -1 });
     if (monster.hyenaSprite) this.playHyenaVoice("yelp", 0.88);
     // Play the authored death sequence before removing the creature.
     // Currency is intentionally not granted by client-side combat outcomes.
@@ -5448,6 +5447,7 @@ export default class BattleScene extends Scene {
 
   destroyPlant(plant) {
     if (!plant.alive) return;
+    this.playEffects(this.effectIdsForPlantType(plant.type), "death", this.effectPoint(plant.view));
     plant.alive = false; plant.view.destroy();
     if (plant.energyCounter) plant.energyCounter.destroy();
     const defeatedMessages = {
