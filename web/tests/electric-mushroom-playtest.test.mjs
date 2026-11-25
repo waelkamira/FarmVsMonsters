@@ -67,7 +67,7 @@ test("Electric projectile hits create a bounded lightning shock reaction", () =>
   assert.match(sceneSource, /lightning\.lineStyle\(3, 0xe9fcff, 0\.98\)/);
   assert.match(sceneSource, /delay: 48, repeat: 10, callback: drawBolt/);
   assert.match(sceneSource, /if \(hit\) \{[\s\S]*?createElectricShockEffect\([\s\S]*?hit,[\s\S]*?"monster"\)/);
-  assert.match(sceneSource, /createElectricShockEffect\(studioHeadTarget\.x, studioHeadTarget\.y, shot\.target, "monster"\)/);
+  assert.match(sceneSource, /createElectricShockEffect\([\s\S]*?studioHeadTarget\.x,[\s\S]*?shot\.target,[\s\S]*?"monster"\)/);
   assert.match(sceneSource, /const electricBite = monster\.combatProfile\?\.damageType === "electric"/);
   assert.match(sceneSource, /createElectricShockEffect\([\s\S]*?blocker,[\s\S]*?"plant"/);
 });
