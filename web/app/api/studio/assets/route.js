@@ -1,5 +1,5 @@
 import {NextResponse} from "next/server";
-import {mkdir,readFile,writeFile} from "node:fs/promises";
+import {mkdir,readFile,writeFile,unlink} from "node:fs/promises";
 import path from "node:path";
 import {verifyStudioSession} from "../../../../game/studio/signedSession.mjs";
 import {STUDIO_ASSET_TYPES,STUDIO_ID_PATTERN,STUDIO_MAX_UPLOAD_BYTES,STUDIO_RESERVED_PLANT_IDS,validateStudioAssetBytes} from "../../../../game/studio/assetTypes.mjs";
