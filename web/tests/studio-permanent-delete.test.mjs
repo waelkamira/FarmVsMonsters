@@ -49,11 +49,23 @@ test("Deletion removes linked catalog entries and owned files without deleting s
   assert.match(route, /function assetPathStillUsed\(assets,assetPath\)/);
   assert.match(route, /function removeManifestAssetReferences\(manifest,assetPaths\)/);
   assert.match(route, /removeLocalAssetManifestReferences\(candidatePaths\)/);
-  assert.doesNotMatch(route, /removeGithubAssetManifestReferences/);
+  assert.match(route, /removeGithubAssetManifestReferences\(candidatePaths,token,storageBranch\)/);
   assert.match(route, /manifest\.assetCount=Object\.values\(manifest\.groups\)/);
 });
 
 test("Studio disables direct deletion for published and review-pending assets", () => {
   assert.match(page, /a\.status==="published"\|\|a\.status==="approved"/);
   assert.match(page, /إزالة المحتوى المنشور تتطلب طلب مراجعة منفصلاً/);
+});
+
+test("local deletion never calls GitHub manifest cleanup, while remote cleanup stays on storage branch", () => {
+  const patchStart = route.indexOf("export async function PATCH");
+  const firstDelete = route.indexOf('if(operation==="delete"){', patchStart);
+  const secondDelete = route.indexOf('if(operation==="delete"){', firstDelete + 1);
+  const cloneStart = route.indexOf('if(operation==="clone"){', secondDelete);
+  const localDeleteBlock = route.slice(firstDelete, secondDelete);
+  const githubDeleteBlock = route.slice(secondDelete, cloneStart);
+  assert.doesNotMatch(localDeleteBlock, /removeGithubAssetManifestReferences/);
+  assert.match(githubDeleteBlock, /removeGithubAssetManifestReferences\(candidatePaths,token,storageBranch\)/);
+  assert.doesNotMatch(githubDeleteBlock, /removeGithubAssetManifestReferences\(candidatePaths,token,targetBranch\)/);
 });
