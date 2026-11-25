@@ -398,7 +398,7 @@ export async function PATCH(req){
    if(index<0)return NextResponse.json({error:"لم يتم العثور على الأصل في مكتبة Studio."},{status:404});
    if(operation==="delete"){
     const asset=registry.assets[index];
-    if(!["plant","monster"].includes(asset.type))return NextResponse.json({error:"الحذف النهائي متاح للنباتات والوحوش فقط."},{status:409});
+
     const dependents=getAssetDependents(registry.assets,id);
     if(dependents.length)return NextResponse.json({error:"لا يمكن حذف الأصل لأن أصولاً أخرى تعتمد عليه: "+dependents.map(item=>item.assetName).join("، ")},{status:409});
     const remaining=registry.assets.filter((_,i)=>i!==index);
@@ -452,7 +452,7 @@ export async function PATCH(req){
   if(index<0)return NextResponse.json({error:"لم يتم العثور على الأصل في مكتبة Studio."},{status:404});
   let asset=registry.assets[index];
   if(operation==="delete"){
-   if(!["plant","monster"].includes(asset.type))return NextResponse.json({error:"الحذف النهائي متاح للنباتات والوحوش فقط."},{status:409});
+
    const dependents=getAssetDependents(registry.assets,id);
    if(dependents.length)return NextResponse.json({error:"لا يمكن حذف الأصل لأن أصولاً أخرى تعتمد عليه: "+dependents.map(item=>item.assetName).join("، ")},{status:409});
    if(asset.releaseRequest?.number){
