@@ -1,4 +1,4 @@
-name: Generate Studio effect audio # rerun focused tests and production validation after integration fixes # includes focused runtime tests
+name: Generate Studio effect audio and validate
 on:
   push:
     branches: [feat/studio-effects-library]
