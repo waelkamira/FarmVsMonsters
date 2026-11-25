@@ -541,6 +541,10 @@ export async function PATCH(req){
   if(asset.type==="plant"&&!asset.combat?.mode)return NextResponse.json({error:"يجب تعيين سلوك قتالي للنبتة أولاً."},{status:409});
   if(asset.type==="monster"&&!asset.monsterProfile)return NextResponse.json({error:"يجب ضبط خصائص الوحش أولاً."},{status:409});
   if(operation==="prepare-test"){
+   if(!safeAssetPath(asset.path))return NextResponse.json({error:"لا يمكن تجهيز الأصل للاختبار قبل تحديد مسار صورة صالح."},{status:409});
+   if(asset.assetAvailability==="awaiting-upload")return NextResponse.json({error:"لا يمكن اختبار هذا الأصل قبل رفع ملف الرسومات إلى مستودع اللعبة."},{status:409});
+   try{await githubGetBytes("web/public"+asset.path,token,storageBranch);}
+   catch{return NextResponse.json({error:"ملف الرسومات غير موجود في مستودع التخزين. ارفع الصورة أولاً ثم أعد المحاولة."},{status:409});}
    const updated={...asset,status:"testing",testingAt:new Date().toISOString(),releaseRequest:null};
    registry.assets[index]=updated;
    await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(registry,null,2)+"\n"),"studio: prepare "+asset.type+" test "+id,token,storageBranch,registrySha);
