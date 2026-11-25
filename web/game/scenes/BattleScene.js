@@ -340,7 +340,8 @@ export default class BattleScene extends Scene {
           spriteSheet: Boolean(entry.spriteSheet && plantFrameCount > 1),
           testOnly,
           textureKey: "studio-plant-" + variant + "-" + entry.id,
-          projectileTextureKey: "studio-projectile-" + variant + "-" + entry.id
+          projectileTextureKey: "studio-projectile-" + variant + "-" + entry.id,
+          stateAnimationTextureKeys: Object.fromEntries(Object.keys(entry.stateAnimations || {}).map((stateId) => [stateId, "studio-plant-state-" + variant + "-" + entry.id + "-" + stateId]))
         });
       }
     };
@@ -432,7 +433,8 @@ export default class BattleScene extends Scene {
             monsterProfile,
             animationProfile,
             testOnly,
-            textureKey: "studio-monster-" + variant + "-" + entry.id
+            textureKey: "studio-monster-" + variant + "-" + entry.id,
+            stateAnimationTextureKeys: Object.fromEntries(Object.keys(entry.stateAnimations || {}).map((stateId) => [stateId, "studio-monster-state-" + variant + "-" + entry.id + "-" + stateId]))
           });
         } catch (error) {
           console.warn("Skipping invalid Studio monster profile:", entry.id, error);
