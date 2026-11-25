@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { inferSpriteGrid } from "../../game/studio/spriteSheetGrid.mjs";
 import { CHARACTER_STATUS_STATES } from "../../game/studio/characterStateAnimations.mjs";
+import { getEffect } from "../../game/vfx/effects/effectLibrary.mjs";
+import { createEffectPreview } from "../../game/vfx/effects/effectPreview.mjs";
 
 function FramePreview({ src, rows = 1, columns = 1, frameCount = 1, fps = 8, loop = true, label, startFrame = 0 }) {
   const [frame, setFrame] = useState(0);
@@ -83,6 +85,9 @@ function appendExistingCombat(form, asset) {
 export default function CharacterStateWorkbench({ asset, onSaved }) {
   const [selectedClip, setSelectedClip] = useState("idle");
   const [selectedState, setSelectedState] = useState(CHARACTER_STATUS_STATES[0].id);
+  const [previewEffectId, setPreviewEffectId] = useState("burn");
+  const effectCanvasRef = useRef(null);
+  const effectPreviewRef = useRef(null);
   const [file, setFile] = useState(null);
   const [grid, setGrid] = useState({ rows: 3, columns: 3, frameCount: 9 });
   const [fps, setFps] = useState(10);
@@ -97,8 +102,66 @@ export default function CharacterStateWorkbench({ asset, onSaved }) {
   const baseFrameCount = Math.max(1, Number(asset.frameCount) || Number(asset.rows || 1) * Number(asset.columns || 1));
   const baseClipCount = Math.max(1, Number(clip.endFrame) - Number(clip.startFrame) + 1);
   const baseClipUrl = asset.previewUrl || asset.path;
+  const previewEffect = getEffect(previewEffectId);
+  const effectTarget = selectedStateData || { path: baseClipUrl, rows: asset.rows || 1, columns: asset.columns || 1, frameCount: baseFrameCount, fps: clip.fps || 8, loop: clip.loop !== false, startFrame: clip.startFrame || 0 };
 
   useEffect(() => () => { if (previewUrl) URL.revokeObjectURL(previewUrl); }, [previewUrl]);
+  useEffect(() => {
+    const canvas = effectCanvasRef.current;
+    if (!canvas || !previewEffect || !effectTarget?.path) return;
+    let active = true;
+    let preview = null;
+    const image = new Image();
+    image.onload = () => {
+      if (!active) return;
+      const rows = Math.max(1, Number(effectTarget.rows) || 1);
+      const columns = Math.max(1, Number(effectTarget.columns) || 1);
+      const frameCount = Math.max(1, Number(effectTarget.frameCount) || rows * columns);
+      const startFrame = Math.max(0, Number(effectTarget.startFrame) || 0);
+      const fpsValue = Math.max(1, Number(effectTarget.fps) || 8);
+      const targetRenderer = (context, centerX, centerY, effect, elapsed) => {
+        const frameOffset = Math.floor((elapsed * fpsValue) / 1000);
+        const frame = startFrame + (effectTarget.loop === false ? Math.min(frameCount - 1, frameOffset) : frameOffset % frameCount);
+        const sourceX = (frame % columns) * (image.naturalWidth / columns);
+        const sourceY = Math.floor(frame / columns) * (image.naturalHeight / rows);
+        const sourceWidth = image.naturalWidth / columns;
+        const sourceHeight = image.naturalHeight / rows;
+        const scale = Math.min(1, 112 / sourceWidth, 124 / sourceHeight);
+        const drawWidth = sourceWidth * scale;
+        const drawHeight = sourceHeight * scale;
+        context.save();
+        context.translate(centerX, centerY);
+        context.fillStyle = "rgba(0,0,0,.28)";
+        context.beginPath();
+        context.ellipse(0, drawHeight * .43, drawWidth * .34, 5, 0, 0, Math.PI * 2);
+        context.fill();
+        context.drawImage(image, sourceX, sourceY, sourceWidth, sourceHeight, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
+        const tint = effect.layers.find((layer) => layer.type === "tint" && elapsed >= (layer.delay || 0) && elapsed <= (layer.delay || 0) + (layer.life || 0));
+        if (tint) {
+          const progress = (elapsed - (tint.delay || 0)) / (tint.life || 1);
+          const alpha = tint.flicker ? (Math.floor(elapsed / 45) % 2 ? .18 : .62) : .58 * (1 - progress * .45);
+          context.globalCompositeOperation = "source-atop";
+          context.globalAlpha = alpha;
+          context.fillStyle = "#" + (tint.color >>> 0).toString(16).padStart(6, "0").slice(-6);
+          context.fillRect(-drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
+        }
+        context.restore();
+      };
+      preview = createEffectPreview(canvas, previewEffect, { loop: true, targetRenderer });
+      effectPreviewRef.current = preview;
+      preview.start();
+    };
+    image.onerror = () => { if (active) effectPreviewRef.current = null; };
+    image.src = effectTarget.path;
+    return () => {
+      active = false;
+      preview?.stop();
+      if (effectPreviewRef.current === preview) effectPreviewRef.current = null;
+      image.onload = null;
+      image.onerror = null;
+    };
+  }, [previewEffect, effectTarget.path, effectTarget.rows, effectTarget.columns, effectTarget.frameCount, effectTarget.fps, effectTarget.loop, effectTarget.startFrame]);
+
   useEffect(() => {
     let active = true;
     if (!file) return;
@@ -163,6 +226,16 @@ export default function CharacterStateWorkbench({ asset, onSaved }) {
       </label>
       <p className="studio-detail-muted">{selectedStateDefinition.hint} هذه الإطارات خاصة بمظهر الشخصية، ويمكن استخدامها مع مؤثرات الجسيمات والصوت من مكتبة التأثيرات.</p>
       {selectedStateData && <div className="studio-state-saved"><b>الإطارات المحفوظة حالياً</b><FramePreview src={"/api/studio/assets?preview=" + encodeURIComponent(selectedStateData.path)} rows={selectedStateData.rows} columns={selectedStateData.columns} frameCount={selectedStateData.frameCount} fps={selectedStateData.fps} loop={selectedStateData.loop !== false} label={selectedStateDefinition.label} /><small>{selectedStateData.rows} × {selectedStateData.columns} · {selectedStateData.frameCount} إطار · {selectedStateData.fps} FPS</small></div>}
+      <div className="studio-state-effect-preview">
+        <div className="studio-state-section-head"><h4>معاينة التأثير فوق الشخصية</h4><span>نفس بيانات تأثيرات المعركة</span></div>
+        <label>التأثير المراد تجربته
+          <select value={previewEffectId} onChange={(event) => setPreviewEffectId(event.target.value)}>
+            {CHARACTER_STATUS_STATES.map((state) => <option key={state.effectId} value={state.effectId}>{state.label}</option>)}
+          </select>
+        </label>
+        <canvas ref={effectCanvasRef} width="320" height="220" className="studio-character-effect-preview" aria-label={"معاينة " + (previewEffect?.nameAr || "التأثير") + " فوق الشخصية"} />
+        <small>تظهر إطارات الحالة المختارة فوقها طبقات التأثير الفعلية من مكتبة VFX. إذا لم ترفع إطارات لهذه الحالة، تُستخدم الحركة الأساسية مؤقتاً.</small>
+      </div>
       <label className="studio-state-upload">رفع Sprite Sheet للحالة
         <input type="file" accept="image/png,image/webp" onChange={(event) => { setFile(event.target.files?.[0] || null); event.target.value = ""; }} />
       </label>
