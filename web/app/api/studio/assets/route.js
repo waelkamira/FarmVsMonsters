@@ -20,6 +20,7 @@ const COOKIE="fvm_studio_session";
 const REGISTRY_PATH="web/game/data/studioAssetRegistry.json";
 const PUBLISHED_CATALOG_PATH="web/public/assets/studio-plant-catalog.json";
 const PUBLISHED_MONSTER_CATALOG_PATH="web/public/assets/studio-monster-catalog.json";
+const ASSET_AUDIT_PATH="web/public/assets/asset-audit.json";
 function authorized(req){return verifyStudioSession(process.env.STUDIO_SESSION_SECRET || "",req.cookies.get(COOKIE)?.value||"");}
 function ext(type){return {"image/png":".png","image/webp":".webp","image/gif":".gif","audio/mpeg":".mp3","audio/wav":".wav","audio/ogg":".ogg","audio/mp4":".m4a"}[type]||"";}
 function getRigPartAssets(assets,asset){const bones=Array.isArray(asset?.rigProfile?.bones)?asset.rigProfile.bones:[];const ids=[...new Set(bones.map(bone=>bone?.part?.assetId).filter(Boolean))];return ids.map(id=>assets.find(item=>item.id===id));}
@@ -53,32 +54,56 @@ function assetPathStillUsed(assets,assetPath){
  return assets.some((item)=>[item.path,item.atlas?.jsonPath,item.audio?.path,item.combat?.projectile?.path].includes(assetPath));
 }
 function removeManifestAssetReferences(manifest,assetPaths){
- const removed=new Set(assetPaths);
- if(Array.isArray(manifest.assets))manifest.assets=manifest.assets.filter((item)=>!removed.has(item?.url));
- if(manifest.groups&&typeof manifest.groups==="object"){
-  for(const [group,items] of Object.entries(manifest.groups)){
-   if(Array.isArray(items))manifest.groups[group]=items.filter((item)=>!removed.has(item?.url));
+  const removed=new Set(assetPaths);
+  if(Array.isArray(manifest.assets))manifest.assets=manifest.assets.filter((item)=>!removed.has(item?.url));
+  if(manifest.groups&&typeof manifest.groups==="object"){
+   for(const [group,items] of Object.entries(manifest.groups)){
+    if(Array.isArray(items))manifest.groups[group]=items.filter((item)=>!removed.has(item?.url));
+   }
   }
-  manifest.assetCount=Object.values(manifest.groups).reduce((total,items)=>total+(Array.isArray(items)?items.length:0),0);
- }else if(Array.isArray(manifest.assets))manifest.assetCount=manifest.assets.length;
- return manifest;
-}
-async function removeLocalAssetManifestReferences(assetPaths){
- const target=path.join(process.cwd(),"public/assets/asset-manifest.json");
- try{
-  const manifest=JSON.parse(await readFile(target,"utf8"));
-  const updated=removeManifestAssetReferences(manifest,assetPaths);
-  await writeFile(target,JSON.stringify(updated,null,2)+"\n","utf8");
- }catch(error){if(error.code!=="ENOENT")throw error;}
-}
-async function removeGithubAssetManifestReferences(assetPaths,token,branch){
- const filePath="web/public/assets/asset-manifest.json";
- const document=await githubGetDocument(filePath,token,branch);
- if(!document)return;
- const manifest=removeManifestAssetReferences(JSON.parse(document.content),assetPaths);
- await githubPut(filePath,Buffer.from(JSON.stringify(manifest,null,2)+"\n"),"studio: remove deleted asset references from manifest",token,branch,document.sha);
-}
-async function githubPut(filePath,bytes,message,token,branch,expectedSha){const api=githubUrl(filePath),headers=githubHeaders(token);const check=await fetch(api+"?ref="+encodeURIComponent(branch),{headers});let sha=null;if(check.ok)sha=(await check.json()).sha;else if(check.status!==404)throw Error("GitHub lookup failed ("+check.status+").");assertExpectedContentSha(expectedSha,sha);const saved=await fetch(api,{method:"PUT",headers:{...headers,"Content-Type":"application/json"},body:JSON.stringify({message,branch,content:Buffer.from(bytes).toString("base64"),...(sha?{sha}:{})})});if(!saved.ok){const data=await saved.json().catch(()=>({}));throw Error(data.message||"GitHub save failed ("+saved.status+").");}}
+  const all=Array.isArray(manifest.assets)?manifest.assets:Object.values(manifest.groups||{}).flatMap(items=>Array.isArray(items)?items:[]);
+  manifest.assetCount=all.length;
+  manifest.totalBytes=all.reduce((total,item)=>total+(Number(item?.bytes)||0),0);
+  return manifest;
+ }
+ function synchronizeAssetAudit(audit,manifest){
+  const all=Array.isArray(manifest.assets)?manifest.assets:Object.values(manifest.groups||{}).flatMap(items=>Array.isArray(items)?items:[]);
+  const liveUrls=new Set(all.map(item=>item.url));
+  audit.assetCount=all.length;
+  audit.totalBytes=all.reduce((total,item)=>total+(Number(item?.bytes)||0),0);
+  audit.groups=Object.fromEntries(Object.entries(manifest.groups||{}).map(([name,items])=>[name,{assetCount:items.length,totalBytes:items.reduce((total,item)=>total+(Number(item?.bytes)||0),0)}]));
+  audit.largeFiles=(audit.largeFiles||[]).filter(item=>liveUrls.has(item.url));
+  audit.spritesheets=(audit.spritesheets||[]).filter(item=>liveUrls.has(item.url));
+  audit.exactDuplicates=(audit.exactDuplicates||[]).filter(item=>liveUrls.has("/assets/"+item.file)&&liveUrls.has("/assets/"+item.identicalTo));
+  audit.generatedAt=manifest.generatedAt||new Date().toISOString();
+  return audit;
+ }
+ async function removeLocalAssetManifestReferences(assetPaths){
+  const target=path.join(process.cwd(),"public/assets/asset-manifest.json");
+  try{
+   const manifest=removeManifestAssetReferences(JSON.parse(await readFile(target,"utf8")),assetPaths);
+   await writeFile(target,JSON.stringify(manifest,null,2)+"\n","utf8");
+   const auditPath=path.join(process.cwd(),"public/assets/asset-audit.json");
+   try{
+    const audit=synchronizeAssetAudit(JSON.parse(await readFile(auditPath,"utf8")),manifest);
+    await writeFile(auditPath,JSON.stringify(audit,null,2)+"\n","utf8");
+   }catch(error){if(error.code!=="ENOENT")throw error;}
+  }catch(error){if(error.code!=="ENOENT")throw error;}
+ }
+ async function removeGithubAssetManifestReferences(assetPaths,token,branch){
+  const [document,auditDocument]=await Promise.all([
+   githubGetDocument("web/public/assets/asset-manifest.json",token,branch),
+   githubGetDocument(ASSET_AUDIT_PATH,token,branch)
+  ]);
+  if(!document)return;
+  const manifest=removeManifestAssetReferences(JSON.parse(document.content),assetPaths);
+  await githubPut("web/public/assets/asset-manifest.json",Buffer.from(JSON.stringify(manifest,null,2)+"\n"),"studio: remove deleted asset references from manifest",token,branch,document.sha);
+  if(auditDocument){
+   const audit=synchronizeAssetAudit(JSON.parse(auditDocument.content),manifest);
+   await githubPut(ASSET_AUDIT_PATH,Buffer.from(JSON.stringify(audit,null,2)+"\n"),"studio: reconcile asset audit after permanent deletion",token,branch,auditDocument.sha);
+  }
+ }
+ async function githubPut(filePath,bytes,message,token,branch,expectedSha){const api=githubUrl(filePath),headers=githubHeaders(token);const check=await fetch(api+"?ref="+encodeURIComponent(branch),{headers});let sha=null;if(check.ok)sha=(await check.json()).sha;else if(check.status!==404)throw Error("GitHub lookup failed ("+check.status+").");assertExpectedContentSha(expectedSha,sha);const saved=await fetch(api,{method:"PUT",headers:{...headers,"Content-Type":"application/json"},body:JSON.stringify({message,branch,content:Buffer.from(bytes).toString("base64"),...(sha?{sha}:{})})});if(!saved.ok){const data=await saved.json().catch(()=>({}));throw Error(data.message||"GitHub save failed ("+saved.status+").");}}
 async function localRegistry(){try{return JSON.parse(await readFile(path.join(process.cwd(),"game/data/studioAssetRegistry.json"),"utf8"));}catch(error){if(error.code==="ENOENT")return {version:1,assets:[]};throw error;}}
 async function saveLocalRegistry(registry){const target=path.join(process.cwd(),"game/data/studioAssetRegistry.json");await mkdir(path.dirname(target),{recursive:true});await writeFile(target,JSON.stringify(registry,null,2)+"\n","utf8");}
 function addPreviewUrls(registry){const github=process.env.STUDIO_STORAGE_DRIVER==="github";return {...registry,storage:process.env.STUDIO_STORAGE_DRIVER||"local",assets:(registry.assets||[]).map(asset=>({...asset,previewUrl:github?"/api/studio/assets?preview="+encodeURIComponent(asset.path):asset.path,rigParts:serializeRigParts(registry.assets||[],asset),...(asset.combat?.projectile?{combat:{...asset.combat,projectile:{...asset.combat.projectile,frameCount:asset.combat.projectile.frameCount??1,rows:asset.combat.projectile.rows??1,columns:asset.combat.projectile.columns??1,previewUrl:github?"/api/studio/assets?preview="+encodeURIComponent(asset.combat.projectile.path):asset.combat.projectile.path}}}:{})}))};}
