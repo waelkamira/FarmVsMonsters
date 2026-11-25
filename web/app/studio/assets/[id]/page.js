@@ -72,7 +72,7 @@ export default function StudioAssetDetailsPage() {
   if (state === "missing" || !asset) return <main className="studio-shell" dir="rtl"><section className="studio-detail-panel"><h1>الأصل غير موجود</h1><p>قد يكون قد نُقل أو أُزيل من سجل Studio.</p><Link href="/studio">العودة إلى مكتبة الأصول</Link></section></main>;
   const mediaUrl = asset.previewUrl || asset.path;
   const mediaFrameCount = Math.max(1, Number(asset.frameCount) || ((Number(asset.rows) || 1) * (Number(asset.columns) || 1)));
-  const mediaIsSpriteSheet = (asset.type === "plant" || asset.type === "monster") && asset.spriteSheet === true && mediaFrameCount > 1;
+  const mediaIsSpriteSheet = asset.type !== "audio" && asset.spriteSheet === true && mediaFrameCount > 1;
   const combat = asset.combat || {};
   return <main className="studio-shell" dir="rtl">
     <header className="studio-head"><div><small>STUDIO · ASSET DETAILS</small><h1>{asset.name || asset.id}</h1><p>{asset.id} · {TYPE_LABELS[asset.type] || asset.type} · v{asset.revision || 1}</p></div><Link href="/studio">العودة إلى مكتبة الأصول</Link></header>
