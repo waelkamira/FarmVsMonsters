@@ -382,16 +382,16 @@ export async function PATCH(req){
      const root=path.resolve(process.cwd(),"public")+path.sep;
      if(!target.startsWith(root))return NextResponse.json({error:"مسار ملف الأصل خارج مجلد الأصول المسموح."},{status:409});
     }
-    for(const assetPath of candidatePaths){
-     const target=path.resolve(process.cwd(),"public",assetPath.replace(/^\\/+/, ""));
-     try{await unlink(target);}catch(error){if(error.code!=="ENOENT")throw error;}
-    }
     for(const [catalogPath,key] of [[PUBLISHED_CATALOG_PATH,"plants"],[PUBLISHED_MONSTER_CATALOG_PATH,"monsters"]]){
      const target=path.join(process.cwd(),"public",catalogPath.replace(/^web\\//,""));
      try{const catalog=JSON.parse(await readFile(target,"utf8"));if(Array.isArray(catalog[key])){catalog[key]=catalog[key].filter((item)=>item.id!==id);await writeFile(target,JSON.stringify(catalog,null,2)+"\\n","utf8");}}catch(error){if(error.code!=="ENOENT")throw error;}
     }
     registry.assets=remaining;
     await saveLocalRegistry(registry);
+    for(const assetPath of candidatePaths){
+     const target=path.resolve(process.cwd(),"public",assetPath.replace(/^\\/+/, ""));
+     try{await unlink(target);}catch(error){if(error.code!=="ENOENT")throw error;}
+    }
     return NextResponse.json({success:true,operation,deletedId:id,message:"تم حذف الأصل وملفاته غير المشتركة من المكتبة المحلية."});
    }
    if(operation==="restore-version"&&registry.assets[index].releaseRequest?.number)return NextResponse.json({error:"لا يمكن استعادة إصدار مرتبط بطلب نشر قبل التحقق من حالته."},{status:409});
@@ -422,6 +422,34 @@ export async function PATCH(req){
   const index=registry.assets.findIndex(asset=>asset.id===id);
   if(index<0)return NextResponse.json({error:"لم يتم العثور على الأصل في مكتبة Studio."},{status:404});
   let asset=registry.assets[index];
+  if(operation==="delete"){
+   if(!["plant","monster"].includes(asset.type))return NextResponse.json({error:"الحذف النهائي متاح للنباتات والوحوش فقط."},{status:409});
+   const dependents=getAssetDependents(registry.assets,id);
+   if(dependents.length)return NextResponse.json({error:"لا يمكن حذف الأصل لأن أصولاً أخرى تعتمد عليه: "+dependents.map(item=>item.assetName).join("، ")},{status:409});
+   if(asset.releaseRequest?.number){
+    const release=await githubGetPullRequest(asset.releaseRequest.number,token);
+    if(release?.state==="open")return NextResponse.json({error:"يوجد طلب نشر مفتوح لهذا الأصل. أغلق طلب المراجعة أولاً ثم أعد الحذف."},{status:409});
+   }
+   const remaining=registry.assets.filter((_,i)=>i!==index);
+   const candidatePaths=assetOwnedPaths(asset).filter((assetPath)=>!assetPathStillUsed(remaining,assetPath));
+   for(const [catalogPath,key] of [[PUBLISHED_CATALOG_PATH,"plants"],[PUBLISHED_MONSTER_CATALOG_PATH,"monsters"]]){
+    const document=await githubGetDocument(catalogPath,token,targetBranch);
+    if(!document)continue;
+    const catalog=JSON.parse(document.content);
+    if(Array.isArray(catalog[key])&&catalog[key].some((item)=>item.id===id)){
+     catalog[key]=catalog[key].filter((item)=>item.id!==id);
+     await githubPut(catalogPath,Buffer.from(JSON.stringify(catalog,null,2)+"\\n"),"studio: remove "+asset.type+" "+id,token,targetBranch,document.sha);
+    }
+   }
+   await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify({...registry,assets:remaining},null,2)+"\\n"),"studio: permanently delete "+asset.type+" "+id,token,storageBranch,registrySha);
+   for(const assetPath of candidatePaths){
+    const filePath="web/public"+assetPath;
+    await githubDeleteIfExists(filePath,"studio: delete unused asset file for "+id,token,storageBranch);
+    if(targetBranch!==storageBranch)await githubDeleteIfExists(filePath,"studio: delete published asset file for "+id,token,targetBranch);
+   }
+   return NextResponse.json({success:true,operation,deletedId:id,message:"تم حذف الأصل من سجل Studio وكتالوج اللعبة وملفات GitHub غير المشتركة."});
+  }
+
   if(operation==="clone"){
    const newId=String(body.newId||"").trim().toLowerCase();
    if(!STUDIO_ID_PATTERN.test(newId)||newId.length>64)return NextResponse.json({error:"معرّف النسخة غير صالح."},{status:400});
