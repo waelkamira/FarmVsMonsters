@@ -12,6 +12,7 @@ export default function PhaserGame() {
   const [errorMessage, setErrorMessage] = useState("");
   const [isPortraitPhone, setIsPortraitPhone] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [fullscreenAvailable, setFullscreenAvailable] = useState(false);
 
   useEffect(() => {
     const updateFullscreen = () => setIsFullscreen(Boolean(document.fullscreenElement));
@@ -26,6 +27,7 @@ export default function PhaserGame() {
       );
     };
     updateOrientation();
+    setFullscreenAvailable(typeof hostRef.current?.requestFullscreen === "function");
     window.addEventListener("resize", updateOrientation);
     window.addEventListener("orientationchange", updateOrientation);
     return () => {
@@ -104,20 +106,22 @@ export default function PhaserGame() {
           <span>{locale === "ar" ? "اللعبة مصممة للعب الأفقي حتى تبقى ساحة المعركة والأزرار واضحة." : "The battlefield is designed for landscape play so the arena and controls remain clear."}</span>
         </div>
       )}
-      <button
-        type="button"
-        className="game-fullscreen-button"
-        onClick={async () => {
-          try {
-            if (document.fullscreenElement) await document.exitFullscreen();
-            else await hostRef.current?.requestFullscreen?.();
-          } catch {
-            // Fullscreen is optional; the responsive game remains playable without it.
-          }
-        }}
-      >
-        {locale === "ar" ? (isFullscreen ? "إنهاء ملء الشاشة" : "ملء الشاشة") : (isFullscreen ? "Exit full screen" : "Full screen")}
-      </button>
+      {fullscreenAvailable && (
+        <button
+          type="button"
+          className="game-fullscreen-button"
+          onClick={async () => {
+            try {
+              if (document.fullscreenElement) await document.exitFullscreen();
+              else await hostRef.current?.requestFullscreen?.();
+            } catch {
+              // Fullscreen is optional; the responsive game remains playable without it.
+            }
+          }}
+        >
+          {locale === "ar" ? (isFullscreen ? "إنهاء ملء الشاشة" : "ملء الشاشة") : (isFullscreen ? "Exit full screen" : "Full screen")}
+        </button>
+      )}
       {status === "loading" && (
         <div className="game-status" role="status" aria-live="polite">
           <span className="game-status-mark" aria-hidden="true">✦</span>
