@@ -3062,6 +3062,7 @@ export default class BattleScene extends Scene {
     if (studioPlant.rigProfile || this.textures.exists(textureKey)) {
       const sizeFactor = PhaserMath.Clamp((Number(studioPlant.combat?.sizePercent) || 100) / 100, 0.25, 2);
       const height = 88 * perspective * sizeFactor;
+      container.setData("studioCharacterBounds", { x: 0, y: -height / 2 + 2, width: Math.min(height * ((Number(studioPlant.rigProfile?.canvas?.width) || 1) / (Number(studioPlant.rigProfile?.canvas?.height) || 1)), 100 * perspective * sizeFactor), height });
       let rigRendered = false;
       if (studioPlant.rigProfile && studioPlant.rigPartTextures) {
         try {
@@ -3829,29 +3830,42 @@ export default class BattleScene extends Scene {
     const kind = plantId ? "plant" : "monster";
     const textureKey = asset.stateAnimationTextureKeys[stateId];
     const animationKey = "studio-" + kind + "-" + asset.id + "-state-" + stateId;
-    const baseSprite = view.getData("studioStatusBaseSprite") || (view.list || []).find((child) => child?.active && child.texture?.key === asset.textureKey);
-    if (!baseSprite?.active) return;
+    const rigRoot = view.getData("studioSkeletalRig")?.root || null;
+    const baseSprite = view.getData("studioStatusBaseSprite") ||
+      (view.list || []).find((child) => child?.active && child.texture?.key === asset.textureKey) || null;
+    if (!baseSprite?.active && !rigRoot?.active) return;
     const oldTimer = view.getData("studioStatusRestoreTimer");
     if (oldTimer?.remove) oldTimer.remove(false);
     const oldOverlay = view.getData("studioStatusOverlay");
     if (oldOverlay?.active) oldOverlay.destroy();
-    baseSprite.setVisible(false);
-    const overlay = this.add.sprite(baseSprite.x, baseSprite.y, textureKey, 0)
-      .setOrigin(baseSprite.originX ?? 0.5, baseSprite.originY ?? 1)
-      .setScale(baseSprite.scaleX ?? 1, baseSprite.scaleY ?? 1)
-      .setFlipX(Boolean(baseSprite.flipX))
-      .setAlpha(baseSprite.alpha ?? 1);
+    if (baseSprite?.active) baseSprite.setVisible(false);
+    if (rigRoot?.active) rigRoot.setVisible(false);
+    const bounds = view.getData("studioCharacterBounds") || {};
+    const overlay = this.add.sprite(
+      baseSprite?.x ?? bounds.x ?? 0,
+      baseSprite?.y ?? bounds.y ?? 0,
+      textureKey,
+      0
+    )
+      .setOrigin(baseSprite?.originX ?? 0.5, baseSprite?.originY ?? 1)
+      .setScale(baseSprite?.scaleX ?? 1, baseSprite?.scaleY ?? 1)
+      .setFlipX(Boolean(baseSprite?.flipX))
+      .setAlpha(baseSprite?.alpha ?? 1);
+    if (!baseSprite && bounds.width && bounds.height) overlay.setDisplaySize(bounds.width, bounds.height);
     view.add(overlay);
     if (this.anims.exists(animationKey)) overlay.play(animationKey);
     view.setData("studioStatusBaseSprite", baseSprite);
+    view.setData("studioStatusRigRoot", rigRoot);
     view.setData("studioStatusOverlay", overlay);
     const definition = getEffect(stateId);
     const duration = Math.max(350, ...(definition?.layers || []).map((layer) => (Number(layer.delay) || 0) + (Number(layer.life || layer.ms) || 0)));
     const timer = this.time.delayedCall(duration, () => {
-      if (baseSprite.active) baseSprite.setVisible(true);
+      if (baseSprite?.active) baseSprite.setVisible(true);
+      if (rigRoot?.active) rigRoot.setVisible(true);
       if (overlay.active) overlay.destroy();
       if (view.active) {
         view.setData("studioStatusBaseSprite", null);
+        view.setData("studioStatusRigRoot", null);
         view.setData("studioStatusOverlay", null);
         view.setData("studioStatusRestoreTimer", null);
       }
@@ -4226,7 +4240,10 @@ export default class BattleScene extends Scene {
     const speed = profile.speed;
     const spawn = this.monsterLanePoint(SPAWN_LOCAL_X, row);
     const view = this.add.container(spawn.x, spawn.y).setDepth(10 + spawn.y / 1000);
-    if (studioMonster?.id) view.setData("studioMonsterId", studioMonster.id);
+    if (studioMonster?.id) {
+      view.setData("studioMonsterId", studioMonster.id);
+      view.setData("studioCharacterBounds", { x: 0, y: 0, width: 360, height: 298 });
+    }
     view.setAlpha(0);
 
     // Scale each creature against the measured gap of its perspective lane.
