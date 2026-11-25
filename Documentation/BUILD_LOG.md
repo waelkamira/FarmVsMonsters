@@ -1145,3 +1145,14 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 
 - Rig Editor playback follow-up: replaying a completed non-looping clip now resets the preview time to zero before starting; pausing mid-clip still resumes from the current frame. Added a regression assertion for replay behavior.
 - The isolated test harness was rerun after this UI fix: 104 test cases passed across the same 9 test groups. Full repository `node --test`, ESLint, Next.js build, and live browser battle verification remain blocked/unverified as noted above.
+
+## 2026-11-25 — Studio login hardening (E-03)
+
+- Added a per-client-IP limit of five Studio login attempts per 15 minutes.
+- Production uses a shared Redis REST counter with an atomic increment/expiry operation; login fails closed with HTTP 503 if the shared store is missing or unavailable. Development uses an in-memory limiter only.
+- Separated `STUDIO_ADMIN_TOKEN` (login credential) from `STUDIO_SESSION_SECRET` (HMAC session signing key), requiring independent values of at least 32 characters.
+- Updated all authenticated Studio API handlers to verify cookies with `STUDIO_SESSION_SECRET`, not the admin password.
+- Added environment examples and deployment guidance for shared rate limiting, private-access protection, fine-grained GitHub permissions, and branch protection.
+- Added tests for rate-limit thresholds, IP isolation, Redis behavior, fail-closed production behavior, and signing-key separation.
+
+Production rollout requires setting the two new independent secrets and the shared Redis REST credentials. Existing Studio sessions are invalidated when the signing key changes and users must sign in again. A private access layer in front of Studio should also be configured at the deployment/network edge; repository code cannot provision that external control by itself.
