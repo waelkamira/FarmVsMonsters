@@ -80,9 +80,9 @@ test("replay applies monster bites only after lane movement reaches the radish",
  const prefix = [
   ev(0,"plant_placed",{type:"radish",col:2,row:1}),
   ev(100,"monster_spawned",{monsterId:"monster-1",wave:1,spawnIndex:0,row:1,archetype:"monster-01",hp:175,speed:8,localX:238.4115}),
-  ev(39625,"monster_moved",{monsterId:"monster-1",distance,deltaMs:39625,blockerCol:2,biteReach})
+  ev(39725,"monster_moved",{monsterId:"monster-1",distance,deltaMs:39625,blockerCol:2,biteReach})
  ];
- const tooEarly=makeLog([...prefix,ev(39626,"monster_bite",{monsterId:"monster-1",plantCol:2,plantRow:1,damage:16}),ev(40775,"monster_bite",{monsterId:"monster-1",plantCol:2,plantRow:1,damage:16})]);
+ const tooEarly=makeLog([...prefix,ev(39726,"monster_bite",{monsterId:"monster-1",plantCol:2,plantRow:1,damage:16}),ev(40875,"monster_bite",{monsterId:"monster-1",plantCol:2,plantRow:1,damage:16})]);
  assert.equal(replayCombatEventLog(tooEarly).reason,"MONSTER_BITE_TOO_EARLY");
  const valid=makeLog([...prefix,ev(40001,"monster_bite",{monsterId:"monster-1",plantCol:2,plantRow:1,damage:16}),ev(41151,"monster_bite",{monsterId:"monster-1",plantCol:2,plantRow:1,damage:16})]);
  const result=replayCombatEventLog(valid); assert.equal(result.ok,true); assert.equal(result.state.plants[0].hp,128);
