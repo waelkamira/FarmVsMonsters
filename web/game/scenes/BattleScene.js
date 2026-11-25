@@ -468,6 +468,7 @@ export default class BattleScene extends Scene {
     }
     this.studioMonstersById = Object.fromEntries(this.studioMonsters.map((monster) => [monster.id, monster]));
     for (const monster of this.studioMonsters) {
+      registerCharacterStateAnimations(monster, "monster");
       if (!monster.spriteSheet || monster.frameCount <= 1 || !this.registerStudioGridSheet(monster.textureKey, monster.rows, monster.columns)) continue;
       monster.runtimeReady = true;
       for (const [clipName, clip] of [["idle", monster.animationProfile.idle], ["move", monster.animationProfile.move], ["attack", monster.animationProfile.attack]]) {
@@ -483,7 +484,6 @@ export default class BattleScene extends Scene {
           });
         }
       }
-      registerCharacterStateAnimations(monster, "monster");
     }
     if (this.textures.exists("snow-thrower-level-1") && !this.anims.exists("snow-thrower-level-1-throw")) {
       const available = Object.keys(this.textures.get("snow-thrower-level-1").frames).filter((name) => name !== "__BASE").length;
