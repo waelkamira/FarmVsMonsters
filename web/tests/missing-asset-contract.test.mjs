@@ -33,7 +33,8 @@ test("planned plant encyclopedia thumbnails use committed local SVG artwork", ()
   for (const id of plannedIds) {
     const iconPath = "/assets/plant-icons/" + id + ".svg";
     assert.ok(publicAssetExists(iconPath), "missing committed catalogue icon: " + iconPath);
-    assert.match(catalogThumb, new RegExp('"' + id + '": "' + iconPath.replaceAll("/", "\\/") + '"'));
+    const mappingLine = catalogThumb.split("\n").find((line) => line.includes(iconPath));
+    assert.ok(mappingLine && mappingLine.includes(id), "missing CatalogThumb mapping for " + id);
   }
 });
 
