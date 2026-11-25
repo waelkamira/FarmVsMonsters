@@ -1157,3 +1157,15 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - Added tests for rate-limit thresholds, IP isolation, Redis behavior, fail-closed production behavior, and signing-key separation.
 
 Production rollout requires setting the two new independent secrets and the shared Redis REST credentials. Existing Studio sessions are invalidated when the signing key changes and users must sign in again. A private access layer in front of Studio should also be configured at the deployment/network edge; repository code cannot provision that external control by itself.
+
+## 2026-11-25 — Mobile battle usability pass (E-04)
+
+- Added a portrait-phone orientation prompt that asks players to rotate to landscape while preserving the Phaser scene instance.
+- Added optional fullscreen entry/exit where the browser supports the Fullscreen API.
+- Set Phaser renderer resolution to a maximum device-pixel ratio of 2 for sharper high-density displays.
+- Expanded the nine primary right-side battle controls to 76×76 game-space hit areas and spaced them across the 680px game height without overlap.
+- Updated the audio-menu dismissal bounds to match the relocated audio control.
+- Added mobile touch-action styles, compact landscape spacing, and a device-width viewport declaration.
+- Added regression tests for orientation detection, resolution, fullscreen support, touch hit areas, and HUD layout.
+
+The game remains authored in a fixed 1120×680 landscape coordinate space. CI can validate code, tests, lint, and build; physical touch-target feel, fullscreen behavior, and visual readability still require testing on actual Android/iOS devices.
