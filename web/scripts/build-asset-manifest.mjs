@@ -73,7 +73,6 @@ const SPRITESHEET_OVERRIDES = {
   "characters/farmer/farmer-attack.png": { key: "farmer-attack", type: "spritesheet", frameConfig: { frameWidth: 180, frameHeight: 360 } },
   "characters/farmer/farmer-hit.png": { key: "farmer-hit", type: "spritesheet", frameConfig: { frameWidth: 152, frameHeight: 430 } },
   "characters/farmer/farmer-death.png": { key: "farmer-death", type: "spritesheet", frameConfig: { frameWidth: 152, frameHeight: 430 } },
-  "characters/monsters/dragon/dragon-boss.png": { key: "dragon-boss", type: "spritesheet", frameConfig: { frameWidth: 512, frameHeight: 512 } },
   "characters/monsters/01/01.png": { key: "monster-01", type: "image" },
 };
 
