@@ -125,7 +125,8 @@ test("wave pacing is shared and rejects invalid wave numbers", () => {
 test("Phaser uses the shared contract and has no duplicate monster balance table", () => {
   assert.match(scene, /getMonsterCombatStats\(archetype, this\.wave\)/);
   assert.match(scene, /PHASE_ONE_DRAGON\.maxHp/);
-  assert.match(scene, /PHASE_ONE_REWARDS\.ordinaryMonsterDefeatCoins/);
+  assert.doesNotMatch(scene, /PHASE_ONE_REWARDS\.ordinaryMonsterDefeatCoins/);
+  assert.match(scene, /Currency is intentionally not granted by client-side combat outcomes/);
   assert.match(scene, /PHASE_ONE_TIMING\.waveIntermissionMs/);
   assert.match(scene, /resolveWaveSpawnStep\(/);
   assert.doesNotMatch(scene, /const COMBAT_BALANCE\s*=/);
