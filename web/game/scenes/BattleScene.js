@@ -917,10 +917,10 @@ export default class BattleScene extends Scene {
         const center = interpolate(tm, bm, 0.5);
         // Upper yellow-green wash and lower green wash approximate the vertical gradient
         // while following the perspective quad rather than drawing axis-aligned rectangles.
-        glass.fillStyle(0xf7f76e, 0.24); glass.fillPoints([tl, tr, center, leftMid], true);
-        glass.fillStyle(0x68b301, 0.25); glass.fillPoints([leftMid, center, br, bl], true);
-        glass.fillStyle(0xffffff, 0.09); glass.fillPoints([tl, tr, rightMid, center], true);
-        glass.lineStyle(1.25, 0xffffff, 0.24); glass.strokePoints(cell, true);
+        glass.fillStyle(0xf7f76e, 0.52); glass.fillPoints([tl, tr, center, leftMid], true);
+        glass.fillStyle(0x68b301, 0.56); glass.fillPoints([leftMid, center, br, bl], true);
+        glass.fillStyle(0xffffff, 0.16); glass.fillPoints([tl, tr, rightMid, center], true);
+        glass.lineStyle(2, 0xffffff, 0.52); glass.strokePoints(cell, true);
       }
     }
     this.events.once("shutdown", () => glass.destroy());
@@ -1161,13 +1161,12 @@ export default class BattleScene extends Scene {
       const scale = Math.min(86 / source.width, 98 / source.height);
       seedFrame = this.add.image(0, 0, cardArtworkKey).setDisplaySize(source.width * scale * 0.8, source.height * scale * 0.8);
     }
-    // Glass gradient overlay sits above the existing artwork frame and below content.
+    // Frosted gradient layer is inserted between frame art and interactive/content sprites.
     const cardGlass = this.add.graphics();
-    cardGlass.fillStyle(0xf7f76e, 0.28); cardGlass.fillRoundedRect(-35, -38, 70, 37, 8);
-    cardGlass.fillStyle(0x68b301, 0.30); cardGlass.fillRoundedRect(-35, -1, 70, 39, 8);
-    cardGlass.fillStyle(0xffffff, 0.16); cardGlass.fillRoundedRect(-35, -38, 70, 76, 8);
-    cardGlass.lineStyle(1.2, 0xffffff, 0.42); cardGlass.strokeRoundedRect(-35, -38, 70, 76, 8);
-    card.add(cardGlass);
+    cardGlass.fillStyle(0xf7f76e, 0.72); cardGlass.fillRoundedRect(-35, -38, 70, 37, 8);
+    cardGlass.fillStyle(0x68b301, 0.72); cardGlass.fillRoundedRect(-35, -1, 70, 39, 8);
+    cardGlass.fillStyle(0xffffff, 0.22); cardGlass.fillRoundedRect(-35, -38, 70, 76, 8);
+    cardGlass.lineStyle(1.4, 0xffffff, 0.72); cardGlass.strokeRoundedRect(-35, -38, 70, 76, 8);
     const plantHeight = 46;
     let icon;
     let iconScale = 1;
@@ -1197,7 +1196,7 @@ export default class BattleScene extends Scene {
     card.setData("cooldownOverlay", cooldownOverlay); card.setData("cooldownLabel", cooldownLabel);
     const panel = this.add.rectangle(0, 0, 80, 92, 0xffffff, 0).setInteractive({ useHandCursor: true });
     panel.setData("cooldownOverlay", cooldownOverlay); panel.setData("cooldownLabel", cooldownLabel);
-    card.add([...(seedFrame ? [seedFrame] : []), panel, icon, cost, cooldownOverlay, cooldownLabel]);
+    card.add([...(seedFrame ? [seedFrame] : []), cardGlass, panel, icon, cost, cooldownOverlay, cooldownLabel]);
     if (locked) card.setAlpha(0.78);
     panel.on("pointerover", () => { card.setScale(1.04); });
     panel.on("pointerout", () => { card.setScale(1); });
