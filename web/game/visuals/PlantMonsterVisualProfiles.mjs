@@ -14,10 +14,7 @@ export const PLANT_ANIMATION_PROFILES = freeze({
 });
 
 export const MONSTER_REACTION_PROFILES = freeze({
-  "dust-skitter": freeze({ recoilPx: 7, squashX: 1.015, squashY: 0.86, hitDurationMs: 165, glowRadius: 2.2, personality: "quick-and-light" }),
-  "cave-brute": freeze({ recoilPx: 5, squashX: 1.01, squashY: 0.88, hitDurationMs: 200, glowRadius: 2.4, personality: "balanced-and-readable" }),
-  stonehide: freeze({ recoilPx: 3, squashX: 1.006, squashY: 0.92, hitDurationMs: 230, glowRadius: 2.1, personality: "heavy-and-armored" }),
-  "alpha-brute": freeze({ recoilPx: 8, squashX: 1.018, squashY: 0.85, hitDurationMs: 260, glowRadius: 2.8, personality: "massive-and-powerful" })
+  "monster-01": freeze({ recoilPx: 5, squashX: 1.01, squashY: 0.88, hitDurationMs: 200, glowRadius: 2.4, personality: "balanced-and-readable" })
 });
 
 export const PLANT_EVOLUTION_PROFILES = freeze({
@@ -66,25 +63,10 @@ export const PLANT_EVOLUTION_PROFILES = freeze({
 });
 
 export const MONSTER_EVOLUTION_PROFILES = freeze({
-  "dust-skitter": freeze({ stages: freeze([
-    freeze({ level: 1, title: "Dust Skitter", visual: "light fast scout silhouette" }),
-    freeze({ level: 2, title: "Dust Streak", visual: "dust wake and sharper turning pose" }),
-    freeze({ level: 3, title: "Sand Phantom", visual: "brief evasive dash tell" })
-  ]) }),
-  "cave-brute": freeze({ stages: freeze([
-    freeze({ level: 1, title: "Cave Brute", visual: "baseline hyena raider" }),
-    freeze({ level: 2, title: "Scarred Brute", visual: "subtle scars and stronger hit response" }),
-    freeze({ level: 3, title: "War Brute", visual: "distinct roar and charge tell" })
-  ]) }),
-  stonehide: freeze({ stages: freeze([
-    freeze({ level: 1, title: "Stonehide", visual: "stone-plated heavy" }),
-    freeze({ level: 2, title: "Cracked Stonehide", visual: "damage stages visibly crack armor" }),
-    freeze({ level: 3, title: "Ironhide", visual: "reinforced plates and heavy stomp tell" })
-  ]) }),
-  "alpha-brute": freeze({ stages: freeze([
-    freeze({ level: 1, title: "Alpha Brute", visual: "giant leader silhouette" }),
-    freeze({ level: 2, title: "Enraged Alpha", visual: "stronger stance and phase transition" }),
-    freeze({ level: 3, title: "Apex Alpha", visual: "signature roar and arena-scale attack tell" })
+  "monster-01": freeze({ stages: freeze([
+    freeze({ level: 1, title: "Monster 01", visual: "approved base character artwork" }),
+    freeze({ level: 2, title: "Monster 01 · Level 2", visual: "future approved visual evolution" }),
+    freeze({ level: 3, title: "Monster 01 · Level 3", visual: "future approved signature form" })
   ]) })
 });
 
@@ -93,7 +75,7 @@ export function getPlantAnimationProfile(plantId) {
 }
 
 export function getMonsterReactionProfile(monsterId) {
-  return MONSTER_REACTION_PROFILES[monsterId] || MONSTER_REACTION_PROFILES["cave-brute"];
+  return MONSTER_REACTION_PROFILES[monsterId] || MONSTER_REACTION_PROFILES["monster-01"];
 }
 
 export function getPlantEvolutionProfile(plantId) {

@@ -366,22 +366,12 @@ export function resolveDustSkitterMotionStep({
 }
 
 export function resolveMonsterArchetype(wave, spawnIndex) {
-  if (
-    !Number.isInteger(wave) || wave < 1 || wave > PHASE_ONE_WAVE_SIZES.length ||
-    !Number.isInteger(spawnIndex) || spawnIndex < 0 ||
-    spawnIndex >= PHASE_ONE_WAVE_SIZES.reduce((sum, count) => sum + count, 0)
-  ) throw new RangeError("INVALID_MONSTER_SPAWN_INDEX");
-
-  // Stage 1 introduces faster scouts in waves 3–4, then mixes scouts,
-  // armoured Stonehides and later Alpha Brutes into the final encounter.
-  if (wave <= 2) return "cave-brute";
-  if (wave === 3 || wave === 4) {
-    return spawnIndex === 1 || spawnIndex === 4 ? "dust-skitter" : "cave-brute";
+  if (!Number.isInteger(wave) || wave < 1 || wave > PHASE_ONE_WAVE_SIZES.length ||
+      !Number.isInteger(spawnIndex) || spawnIndex < 0 ||
+      spawnIndex >= PHASE_ONE_WAVE_SIZES.reduce((sum, count) => sum + count, 0)) {
+    throw new RangeError("INVALID_MONSTER_SPAWN_INDEX");
   }
-  if ((spawnIndex + 1) % 10 === 0) return "alpha-brute";
-  if ((spawnIndex + 1) % 5 === 0) return "stonehide";
-  if (spawnIndex % 3 === 1) return "dust-skitter";
-  return "cave-brute";
+  return "monster-01";
 }
 
 export function resolveWaveSpawnStep({
