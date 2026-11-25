@@ -74,7 +74,7 @@ test("five Phase 1 waves are gently increasing and total exactly 30 ordinary mon
   assert.ok(PHASE_ONE_WAVE_SIZES.every((count, index) => index === 0 || count > PHASE_ONE_WAVE_SIZES[index - 1]));
 });
 
-test("campaign stage counts increase by one ordinary monster per stage; dragon is excluded", () => {
+test("campaign stage counts increase by one ordinary monster per stage", () => {
   assert.deepEqual(Array.from({ length: 10 }, (_, i) => ordinaryMonsterCountForStage(i + 1)), [30,31,32,33,34,35,36,37,38,39]);
   assert.equal(ordinaryMonsterCountForStage(0), 0);
   assert.equal(ordinaryMonsterCountForStage(11), 0);
