@@ -22,6 +22,7 @@ const REGISTRY_PATH="web/game/data/studioAssetRegistry.json";
 const PUBLISHED_CATALOG_PATH="web/public/assets/studio-plant-catalog.json";
 const PUBLISHED_MONSTER_CATALOG_PATH="web/public/assets/studio-monster-catalog.json";
 const ASSET_AUDIT_PATH="web/public/assets/asset-audit.json";
+const previewCache=new Map();
 function authorized(req){return verifyStudioSession(process.env.STUDIO_SESSION_SECRET || "",req.cookies.get(COOKIE)?.value||"");}
 function ext(type){return {"image/png":".png","image/webp":".webp","image/gif":".gif","audio/mpeg":".mp3","audio/wav":".wav","audio/ogg":".ogg","audio/mp4":".m4a"}[type]||"";}
 function getRigPartAssets(assets,asset){const bones=Array.isArray(asset?.rigProfile?.bones)?asset.rigProfile.bones:[];const ids=[...new Set(bones.map(bone=>bone?.part?.assetId).filter(Boolean))];return ids.map(id=>assets.find(item=>item.id===id));}
@@ -219,12 +220,18 @@ export async function GET(req){
    const allowedTypes={".png":"image/png",".webp":"image/webp",".gif":"image/gif",".mp3":"audio/mpeg",".wav":"audio/wav",".ogg":"audio/ogg",".m4a":"audio/mp4"};
    const extension=path.extname(preview).toLowerCase();
    if(!preview.startsWith("/assets/")||preview.includes("..")||!allowedTypes[extension])return NextResponse.json({error:"Invalid asset preview path."},{status:400});
-   const controller=new AbortController();
-   const timeout=setTimeout(()=>controller.abort(),12_000);
+   const cacheKey=branch+":"+preview;
+   const cached=previewCache.get(cacheKey);
+   if(cached&&cached.expiresAt>Date.now())return new NextResponse(cached.bytes,{headers:{"Content-Type":allowedTypes[extension],"Cache-Control":"private, max-age=300","X-Content-Type-Options":"nosniff"}});
+   if(cached)previewCache.delete(cacheKey);
    const fetchPreview=async(ref)=>{
-    const response=await fetch(githubUrl("web/public"+preview)+"?ref="+encodeURIComponent(ref),{headers:{...githubHeaders(token),Accept:"application/vnd.github.raw"},signal:controller.signal});
-    const bytes=response.ok?Buffer.from(await response.arrayBuffer()):null;
-    return {response,bytes};
+    const controller=new AbortController();
+    const timeout=setTimeout(()=>controller.abort(),30_000);
+    try{
+     const response=await fetch(githubUrl("web/public"+preview)+"?ref="+encodeURIComponent(ref),{headers:{...githubHeaders(token),Accept:"application/vnd.github.raw"},signal:controller.signal});
+     const bytes=response.ok?Buffer.from(await response.arrayBuffer()):null;
+     return {response,bytes};
+    }finally{clearTimeout(timeout);}
    };
    try{
     let upstream=await fetchPreview(branch);
@@ -233,11 +240,13 @@ export async function GET(req){
      if(targetBranch!==branch)upstream=await fetchPreview(targetBranch);
     }
     if(!upstream.response.ok)return NextResponse.json({error:"GitHub preview failed ("+upstream.response.status+")."},{status:upstream.response.status===404?404:502});
+    previewCache.set(cacheKey,{bytes:upstream.bytes,expiresAt:Date.now()+300_000});
+    while(previewCache.size>100)previewCache.delete(previewCache.keys().next().value);
     return new NextResponse(upstream.bytes,{headers:{"Content-Type":allowedTypes[extension],"Cache-Control":"private, max-age=300","X-Content-Type-Options":"nosniff"}});
    }catch(error){
     const timedOut=error?.name==="TimeoutError"||error?.name==="AbortError";
-    return NextResponse.json({error:timedOut?"GitHub preview timed out after 12 seconds.":(error.message||"Preview fetch failed.")},{status:timedOut?504:502});
-   }finally{clearTimeout(timeout);}
+    return NextResponse.json({error:timedOut?"GitHub preview timed out after 30 seconds.":(error.message||"Preview fetch failed.")},{status:timedOut?504:502});
+   }
   }
   try{
    const document=await githubGetDocument(REGISTRY_PATH,token,branch);
