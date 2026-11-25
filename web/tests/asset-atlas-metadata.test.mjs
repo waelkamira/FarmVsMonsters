@@ -42,4 +42,6 @@ test("non-uniform Phaser Atlas frames do not get an unsafe grid frameConfig", ()
   }, { width: 44, height: 20 });
   assert.equal(metadata.frameCount, 2);
   assert.equal(metadata.frameConfig, undefined);
+  assert.equal(metadata.type, "image");
+  assert.equal(metadata.spriteSheet, false);
 });
