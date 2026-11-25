@@ -4,6 +4,7 @@ import { validateStudioAnimationProfile } from "./animationProfiles.mjs";
 import { validateSkeletalRigProfile } from "./skeletalAnimation.mjs";
 import { createStudioMonsterProfile } from "./monsterProfiles.mjs";
 import { buildAssetDependencyReport } from "./assetDependencies.mjs";
+import { validateCharacterStateAnimations } from "./characterStateAnimations.mjs";
 
 export function safeAssetPath(value) {
   if (typeof value !== "string" || !value.startsWith("/assets/")) return false;
@@ -125,7 +126,7 @@ export function auditStudioAssetRegistry(input) {
         }
       }
     }
-    if (type === "monster") {
+    if (asset?.stateAnimations) {\n      const stateValidation = validateCharacterStateAnimations(asset.stateAnimations);\n      if (!stateValidation.valid) stateValidation.errors.forEach((message) => errors.push("حالات الشخصية: " + message));\n    }\n    if (type === "monster") {
       try { createStudioMonsterProfile(asset.monsterProfile); }
       catch (error) { errors.push("إعدادات الوحش: " + error.message); }
     }
