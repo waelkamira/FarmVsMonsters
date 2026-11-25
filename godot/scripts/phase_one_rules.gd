@@ -248,17 +248,6 @@ static func select_farmer_melee_target(monsters: Array, row: int, farmer_x: floa
 			nearest_distance = distance
 	return target
 
-static func select_dragon_fireball_target(plants: Array) -> Variant:
-	var weakest: Variant = null
-	var lowest_hp: float = INF
-	for plant in plants:
-		if not (plant is Dictionary) or not plant.get("alive", false):
-			continue
-		var hp: float = float(plant.get("hp", NAN))
-		if is_finite(hp) and hp < lowest_hp:
-			weakest = plant
-			lowest_hp = hp
-	return weakest
 
 static func advance_cooldown(remaining_ms: float, delta_ms: float) -> float:
 	if not is_finite(remaining_ms) or not is_finite(delta_ms) or delta_ms < 0.0:
