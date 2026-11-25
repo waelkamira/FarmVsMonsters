@@ -3,7 +3,7 @@
  *
  * This is a visual asset contract, not a claim that the projectile PNGs already exist.
  * Runtime integration must only be enabled after each transparent sprite is added
- * under its assetPath and checked in the battle scene.
+ * under the plannedAssetPath and registered as assetPath only after it exists.
  */
 export const PLANT_PROJECTILE_DESIGNS = Object.freeze({
   radish: {
