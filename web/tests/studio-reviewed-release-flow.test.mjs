@@ -38,6 +38,7 @@ test("incomplete staging branches are cleaned up before a pull request is attemp
   assert.match(apiSource, /async function githubDeleteBranch\(/);
   assert.match(apiSource, /releaseBranchForCleanup=releaseBranch/);
   assert.match(apiSource, /releasePullRequestAttempted=true/);
+  assert.ok(publishSource.indexOf("releaseBranchForCleanup=releaseBranch") < publishSource.indexOf("await githubCreateBranch(releaseBranch,targetBranch,token)"));
   assert.match(apiSource, /if\(releaseBranchForCleanup&&!releasePullRequestAttempted\)/);
 });
 
