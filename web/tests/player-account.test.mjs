@@ -80,7 +80,7 @@ test("menus and account controls use high-contrast text and visible focus states
 test("playing as a guest never requires authentication and is restricted to unverified playtest progress", () => {
   assert.match(home, /href="\/stages"/);
   assert.match(home, /اختياري|Optional/);
-  assert.match(accountPage, /Continue as Guest/);
+  assert.match(accountPage, /Continue Playing/);
   assert.match(accountPage, /اللعب كضيف/);
   assert.match(client, /export function readLocalPlayerProgress/);
   assert.match(battle, /Local combat is a playtest sandbox/);
