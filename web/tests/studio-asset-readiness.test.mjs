@@ -273,10 +273,10 @@ test("readiness blocks rig parts whose asset type cannot be rendered by the rig 
 
 test("readiness blocks Studio placeholders until artwork has been uploaded", () => {
   const placeholder = validMonster({
-    id: "dragon-boss",
-    name: "تنين المرحلة الأولى",
+    id: "unapproved-monster-placeholder",
+    name: "وحش غير معتمد",
     status: "draft",
-    path: "/assets/characters/monsters/dragon/dragon-boss.png",
+    path: "/assets/monsters/unapproved-placeholder.png",
     rows: 1,
     columns: 1,
     frameCount: 1,
