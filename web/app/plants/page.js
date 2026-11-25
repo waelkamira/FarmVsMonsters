@@ -10,9 +10,9 @@ import CatalogThumb from "../components/CatalogThumb";
 export default function PlantsPage() {
   const { locale } = useLocale();
   const ar = locale === "ar";
-  // The full plant encyclopedia is open during the current development/playtest period.
-  const activePlants = STAGE_ONE_PLANTS;
-  const plannedPlants = STAGE_ONE_PLANTS.filter((plant) => !plant.implemented);
+  // Only fully implemented plants belong in the player-facing collection.
+  // Planned concepts remain in internal design data until their gameplay and art are ready.
+  const activePlants = STAGE_ONE_PLANTS.filter((plant) => plant.implemented === true);
 
   return (
     <main className="info-shell">
@@ -24,8 +24,8 @@ export default function PlantsPage() {
         <h1>{ar ? "موسوعة النباتات" : "Plant Encyclopedia"}</h1>
         <p className="collection-intro">
           {ar
-            ? "جميع نباتات القائمة مفتوحة حاليًا للعرض والاختيار حيثما كانت آلياتها منفذة. النباتات التي ما زالت قيد التطوير تظهر بوضوح دون ادعاء أنها جاهزة للمعركة."
-            : "All plants are currently visible in the roster. Plants with implemented gameplay can be selected for battle; concepts still in development remain clearly marked."}
+            ? "تعرض هذه الموسوعة النباتات المكتملة والقابلة للاستخدام في المعركة فقط."
+            : "This encyclopedia shows only completed plants that are available for battle."}
         </p>
         <div className="collection-wallet">
           <strong>{ar ? "العملات والمكافآت معطّلة في النسخة التجريبية المحلية" : "Coins and rewards are disabled in local playtest mode"}</strong>
@@ -33,10 +33,8 @@ export default function PlantsPage() {
         </div>
 
         <div className="collection-summary">
-          <span>{ar ? "النباتات المفتوحة" : "UNLOCKED"}: <strong>{activePlants.length}</strong></span>
-          <span>{ar ? "قيد التجهيز" : "IN DEVELOPMENT"}: <strong>{plannedPlants.length}</strong></span>
-          <span>{ar ? "الإجمالي" : "TOTAL"}: <strong>{STAGE_ONE_PLANTS.length}</strong></span>
-          <span>{ar ? "قابل للشراء الآن" : "BUYABLE NOW"}: <strong>{STAGE_ONE_PLANTS.filter((plant) => plant.purchasable).length}</strong></span>
+          <span>{ar ? "النباتات المتاحة" : "AVAILABLE"}: <strong>{activePlants.length}</strong></span>
+          <span>{ar ? "قابل للشراء الآن" : "BUYABLE NOW"}: <strong>{activePlants.filter((plant) => plant.purchasable).length}</strong></span>
         </div>
 
         <h2 className="collection-section-title">{ar ? "النباتات المتاحة لديك" : "Available plants"}</h2>
@@ -45,7 +43,7 @@ export default function PlantsPage() {
             <article className="collection-card is-active" key={plant.id}>
               <CatalogThumb id={plant.id} label={ar ? plant.nameAr : plant.name} className="plant-thumb active-plant-thumb" />
               <h2>{ar ? plant.nameAr : plant.name}</h2>
-              <span className="collection-status">{plant.implemented ? (ar ? "✓ مفتوحة ومتاحة" : "✓ UNLOCKED") : (ar ? "◷ مفتوحة في القائمة · قيد التنفيذ" : "◷ VISIBLE · IN DEVELOPMENT")}</span>
+              <span className="collection-status">{ar ? "✓ متاحة في المعركة" : "✓ AVAILABLE IN BATTLE"}</span>
               <p>{ar ? plant.descriptionAr : plant.description}</p>
               <div className="collection-meta">
                 <span>{ar ? "تكلفة الزراعة" : "Planting cost"}: {plant.energyCost} {ar ? "طاقة" : "energy"}</span>
@@ -53,12 +51,6 @@ export default function PlantsPage() {
               </div>
             </article>
           ))}
-        </div>
-
-        <div className="collection-empty collection-note">
-          {ar
-            ? "جميع النباتات ظاهرة الآن. النباتات قيد التطوير ليست بالضرورة قابلة للاستخدام داخل المعركة حتى تكتمل برمجتها."
-            : "All plants are visible now. Plants still in development are not necessarily usable in battle until their gameplay is implemented."}
         </div>
 
         <nav className="info-nav collection-back">
