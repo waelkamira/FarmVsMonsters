@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useLocale, LanguageToggle } from "../../LocaleProvider";
-import CatalogThumb from "../../components/CatalogThumb";
 
 export default function StageOneIntroPage() {
   const { locale } = useLocale();
@@ -12,19 +11,14 @@ export default function StageOneIntroPage() {
     <main className="info-shell">
       <article className="info-card stage-intro-card">
         <div className="stages-top"><span className="eyebrow">{ar ? "مهمة إنقاذ" : "RESCUE MISSION"}</span><LanguageToggle /></div>
-        <CatalogThumb id="stage" label={ar ? "شعار المرحلة الأولى" : "Stage One emblem"} className="stage-intro-thumb" />
         <h1>{ar ? "المرحلة الأولى: أرض المزرعة" : "Stage One: The Farm Lands"}</h1>
         <p className="stage-story">
           {ar
-            ? "اختطف تنين شرير زوجة المزارع وأسرها بجانبه. يقود التنين مجموعة من الوحوش نحو المزرعة. يجب على المزارع حماية أرضه، هزيمة الوحوش، ثم مواجهة التنين وإنقاذ زوجته."
-            : "An evil dragon has kidnapped the farmer's wife and keeps her captive at his side. The dragon leads a group of ordinary monsters toward the farm. The farmer must defend his land, defeat the monsters, face the dragon, and rescue his wife."}
+            ? "تتعرض المزرعة لهجوم من موجات الوحش 01. على المزارع حماية أرضه والتصدي للمهاجمين حتى تنتهي المعركة."
+            : "The farm is under attack by waves of Monster 01. The farmer must defend the land and stop the attackers until the battle is won."}
         </p>
-        <div className="stage-cast-grid">
-          <CatalogThumb id="dragon" label={ar ? "التنين الشرير" : "Evil Dragon"} className="stage-cast-thumb" />
-          <CatalogThumb id="princess" label={ar ? "الأميرة الأسيرة" : "Captive princess"} className="stage-cast-thumb" />
-        </div>
         <div className="stage-briefing">
-          <div><strong>{ar ? "الأعداء" : "ENEMIES"}</strong><span>{ar ? "٣٠ وحشاً عادياً (Monster 01) + تنين الزعيم" : "30 Monster 01 enemies + dragon boss"}</span></div>
+          <div><strong>{ar ? "الأعداء" : "ENEMIES"}</strong><span>{ar ? "٣٠ وحشاً من Monster 01 فقط" : "30 Monster 01 enemies"}</span></div>
           <div><strong>{ar ? "الموجات" : "WAVES"}</strong><span>{ar ? "٥ موجات متصاعدة الصعوبة" : "5 increasingly difficult waves"}</span></div>
           <div><strong>{ar ? "المهمة" : "OBJECTIVE"}</strong><span>{ar ? "احمِ المزرعة وأنقذ الأميرة" : "Defend the farm and rescue the princess"}</span></div>
         </div>
