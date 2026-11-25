@@ -463,6 +463,10 @@ export async function PATCH(req){
    }
    const remaining=registry.assets.filter((_,i)=>i!==index);
    const candidatePaths=assetOwnedPaths(asset).filter((assetPath)=>!assetPathStillUsed(remaining,assetPath));
+   // GET hydrates plants from these manifests; remove references on every
+   // relevant branch so a deleted plant cannot be recreated on the next load.
+   await removeGithubAssetManifestReferences(candidatePaths,token,storageBranch);
+   if(targetBranch!==storageBranch)await removeGithubAssetManifestReferences(candidatePaths,token,targetBranch);
    for(const [catalogPath,key] of [[PUBLISHED_CATALOG_PATH,"plants"],[PUBLISHED_MONSTER_CATALOG_PATH,"monsters"]]){
     const document=await githubGetDocument(catalogPath,token,targetBranch);
     if(!document)continue;
