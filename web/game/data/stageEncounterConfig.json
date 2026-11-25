@@ -4,8 +4,8 @@
     "1": {
       "monsters": [
         {
-          "key": "cave-w1",
-          "id": "cave-brute",
+          "key": "monster-01-w1",
+          "id": "monster-01",
           "count": 2,
           "wave": 1,
           "spawnIntervalMs": 5080,
@@ -17,8 +17,8 @@
           "enabled": true
         },
         {
-          "key": "cave-w2",
-          "id": "cave-brute",
+          "key": "monster-01-w2",
+          "id": "monster-01",
           "count": 5,
           "wave": 2,
           "spawnIntervalMs": 4960,
@@ -30,74 +30,9 @@
           "enabled": true
         },
         {
-          "key": "cave-w3",
-          "id": "cave-brute",
-          "count": 4,
-          "wave": 3,
-          "spawnIntervalMs": 4840,
-          "firstSpawnDelayMs": 0,
-          "hpMultiplier": 1,
-          "speedMultiplier": 1,
-          "damageMultiplier": 1,
-          "attackIntervalMultiplier": 1,
-          "enabled": true
-        },
-        {
-          "key": "cave-w4",
-          "id": "cave-brute",
-          "count": 5,
-          "wave": 4,
-          "spawnIntervalMs": 4720,
-          "firstSpawnDelayMs": 0,
-          "hpMultiplier": 1,
-          "speedMultiplier": 1,
-          "damageMultiplier": 1,
-          "attackIntervalMultiplier": 1,
-          "enabled": true
-        },
-        {
-          "key": "skitter-w4",
-          "id": "dust-skitter",
-          "count": 2,
-          "wave": 4,
-          "spawnIntervalMs": 4720,
-          "firstSpawnDelayMs": 0,
-          "hpMultiplier": 1,
-          "speedMultiplier": 1,
-          "damageMultiplier": 1,
-          "attackIntervalMultiplier": 1,
-          "enabled": true
-        },
-        {
-          "key": "cave-w5",
-          "id": "cave-brute",
+          "key": "monster-01-w3",
+          "id": "monster-01",
           "count": 6,
-          "wave": 5,
-          "spawnIntervalMs": 4600,
-          "firstSpawnDelayMs": 0,
-          "hpMultiplier": 1,
-          "speedMultiplier": 1,
-          "damageMultiplier": 1,
-          "attackIntervalMultiplier": 1,
-          "enabled": true
-        },
-        {
-          "key": "stonehide-w5",
-          "id": "stonehide",
-          "count": 1,
-          "wave": 5,
-          "spawnIntervalMs": 4600,
-          "firstSpawnDelayMs": 0,
-          "hpMultiplier": 1,
-          "speedMultiplier": 1,
-          "damageMultiplier": 1,
-          "attackIntervalMultiplier": 1,
-          "enabled": true
-        },
-        {
-          "key": "skitter-w3",
-          "id": "dust-skitter",
-          "count": 2,
           "wave": 3,
           "spawnIntervalMs": 4840,
           "firstSpawnDelayMs": 0,
@@ -108,9 +43,22 @@
           "enabled": true
         },
         {
-          "key": "skitter-w5",
-          "id": "dust-skitter",
-          "count": 2,
+          "key": "monster-01-w4",
+          "id": "monster-01",
+          "count": 7,
+          "wave": 4,
+          "spawnIntervalMs": 4720,
+          "firstSpawnDelayMs": 0,
+          "hpMultiplier": 1,
+          "speedMultiplier": 1,
+          "damageMultiplier": 1,
+          "attackIntervalMultiplier": 1,
+          "enabled": true
+        },
+        {
+          "key": "monster-01-w5",
+          "id": "monster-01",
+          "count": 9,
           "wave": 5,
           "spawnIntervalMs": 4600,
           "firstSpawnDelayMs": 0,
