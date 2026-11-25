@@ -11,7 +11,7 @@ Reference model: the original Plants vs. Zombies Adventure Mode. This borrows it
 4. Keep the first encounter with a new enemy sparse; later encounters can combine it with familiar enemies.
 5. Reward completion with a new plant/tool or meaningful choice so the player feels progress.
 6. Avoid difficulty spikes: the next stage should be a modest step up, not a sudden multiplication of health and enemy count.
-7. The dragon boss is a separate encounter and is not included in ordinary-monster counts below.
+7. The final encounter is a separate encounter and is not included in ordinary-monster counts below.
 
 ## Lessons from original Plants vs. Zombies
 
@@ -27,7 +27,7 @@ The lesson for FarmVsMonsters: don't introduce a fast scout, an armoured brute, 
 
 Goal: teach basic planting, energy management, projectile timing, and then one new enemy behaviour at a time.
 
-Ordinary monsters: **20**, in five waves. The dragon boss remains separate.
+Ordinary monsters: **20**, in five waves. The final encounter remains separate.
 
 | Wave | Ordinary enemies | Composition | Intended lesson |
 |---|---:|---|---|
