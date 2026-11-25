@@ -10,7 +10,7 @@ const COOKIE = "fvm_studio_session";
 const REGISTRY_PATH = "web/game/data/studioAssetRegistry.json";
 
 function authorized(req) {
-  return verifyStudioSession(process.env.STUDIO_ADMIN_TOKEN || "", req.cookies.get(COOKIE)?.value || "");
+  return verifyStudioSession(process.env.STUDIO_SESSION_SECRET || "", req.cookies.get(COOKIE)?.value || "");
 }
 function githubHeaders(token) {
   return { Authorization: "Bearer " + token, Accept: "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28" };
