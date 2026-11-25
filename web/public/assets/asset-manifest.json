@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatedAt": "2026-11-25T15:04:00.613Z",
   "assetCount": 76,
-  "totalBytes": 19812148,
+  "totalBytes": 19811406,
   "groups": {
     "audio": [
       {
@@ -305,7 +305,6 @@
         "type": "image"
       }
     ],
-    "monster-icons": [],
     "plant-icons": [
       {
         "key": "plant-icons-double-radish",
