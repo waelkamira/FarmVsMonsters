@@ -1516,7 +1516,7 @@
       "spriteSheet": false,
       "status": "published",
       "createdAt": "2026-11-24T04:16:00.506Z",
-      "updatedAt": "2026-11-25T22:15:32.213Z",
+      "updatedAt": "2026-11-25T22:15:40.951Z",
       "releaseRequest": null,
       "publishedAt": "2026-11-25T21:54:58.769Z",
       "testingAt": "2026-11-25T21:54:45.971Z",
@@ -1612,7 +1612,8 @@
       ],
       "effects": [
         "explosion",
-        "leaf-burst"
+        "leaf-burst",
+        "heavy-smash"
       ]
     },
     {
