@@ -16,7 +16,10 @@ function publicAssetExists(path) {
   return existsSync(resolve(publicRoot, path.replace(/^\//, "")));
 }
 
-test("unimplemented plant concepts do not advertise missing PNG files as runtime assets", () => {
+test("every plant runtime asset path exists and unimplemented concepts keep only planned paths", () => {
+  for (const plant of STAGE_ONE_PLANTS) {
+    if (plant.assetPath) assert.ok(publicAssetExists(plant.assetPath), plant.id + " runtime art must exist");
+  }
   const planned = STAGE_ONE_PLANTS.filter((plant) => !plant.implemented && plant.plannedAssetPath);
   assert.ok(planned.length >= 7);
   for (const plant of planned) {
