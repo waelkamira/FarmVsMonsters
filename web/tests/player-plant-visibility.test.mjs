@@ -13,9 +13,9 @@ test("player-facing plant encyclopedia filters out every unimplemented concept",
   const planned = STAGE_ONE_PLANTS.filter((plant) => plant.implemented !== true);
   assert.ok(available.length > 0);
   assert.ok(planned.length > 0);
-  assert.match(page, /STAGE_ONE_PLANTS\\.filter\\(\\(plant\\) => plant\\.implemented === true\\)/);
-  assert.match(page, /activePlants\\.map\\(\\(plant\\) =>/);
-  assert.doesNotMatch(page, /STAGE_ONE_PLANTS\\.map\\(\\(plant\\) =>/);
+  assert.match(page, /STAGE_ONE_PLANTS\.filter\\(\\(plant\\) => plant\.implemented === true\\)/);
+  assert.match(page, /activePlants\.map\\(\\(plant\\) =>/);
+  assert.doesNotMatch(page, /STAGE_ONE_PLANTS\.map\\(\\(plant\\) =>/);
   for (const plant of planned) assert.equal(available.some((item) => item.id === plant.id), false, plant.id);
 });
 
