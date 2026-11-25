@@ -69,7 +69,7 @@ import {
   PHASE_ONE_FARMER,
   PHASE_ONE_TIMING,
   getMonsterCombatStats,
-  getStonehideIncomingDamageMultiplier
+  getMonsterIncomingDamageMultiplier
 } from "../rules/phaseOneCombatContract.mjs";
 
 const LANES = gridCalibration.grid.rows;
@@ -84,10 +84,10 @@ const CELL_H = GRID_HEIGHT / LANES;
 // Reversible visual rarity palette for the current monster 01 archetypes.
 // White is the baseline; stronger archetypes receive progressively richer tints.
 const MONSTER_TIER_TINTS = {
-  "dust-skitter": 0xd7e1e8, // lighter scout: below standard durability
-  "cave-brute": 0xffffff,  // standard monster 01
-  "stonehide": 0x579bff,   // reinforced monster 01
-  "alpha-brute": 0xffc247  // giant alpha
+  "retired-variant": 0xd7e1e8, // lighter scout: below standard durability
+  "retired-variant": 0xffffff,  // standard monster 01
+  "retired-variant": 0x579bff,   // reinforced monster 01
+  "retired-variant": 0xffc247  // giant alpha
 };
 const HOME_LOCAL_X = -300;
 const CAVEMAN_RETURN_SPEED = 420;
@@ -2191,10 +2191,10 @@ export default class BattleScene extends Scene {
       addLabel(0, 270, locale === "ar" ? "كل ضبع مهزوم يمنحك 8 نقود. ستُضاف آلية شراء النباتات لاحقاً." : "Each defeated monster 01 awards 8 coins. Plant purchases will be added later.", 13, "#ffffff");
     } else {
       addLabel(0, -8, locale === "ar" ? "دليل الوحوش — نقاط الصحة وقوة الهجوم" : "Monster field guide — health and attack strength", 17);
-      addRow(55, "monster-01-idle", locale === "ar" ? "الضبع العادي" : "Cave Brute", (locale === "ar" ? "الصحة: 69 + 4 لكل موجة · الضرر: 16" : "HP: 69 + 4 per wave · Damage: 16"));
-      addRow(145, "monster-01-idle", locale === "ar" ? "الضبع السريع" : "Dust Skitter", (locale === "ar" ? "52% من صحة العادي · الضرر: 8" : "52% of brute HP · Damage: 8"));
-      addRow(235, "monster-01-idle", locale === "ar" ? "الضبع المدرع" : "Stonehide", (locale === "ar" ? "220% من صحة العادي · الضرر: 23" : "220% of brute HP · Damage: 23"));
-      addRow(325, "monster-01-idle", locale === "ar" ? "الضبع العملاق" : "Alpha Brute", (locale === "ar" ? "الصحة: 350 · ضرر النبات: 32" : "HP: 350 · Plant damage: 32"));
+      addRow(55, "monster-01-idle", locale === "ar" ? "الوحش 01" : "Monster 01", (locale === "ar" ? "الصحة: 69 + 4 لكل موجة · الضرر: 16" : "HP: 69 + 4 per wave · Damage: 16"));
+      addRow(145, "monster-01-idle", locale === "ar" ? "الوحش 01" : "Monster 01", (locale === "ar" ? "52% من صحة العادي · الضرر: 8" : "52% of brute HP · Damage: 8"));
+      addRow(235, "monster-01-idle", locale === "ar" ? "الوحش 01" : "Monster 01", (locale === "ar" ? "220% من صحة العادي · الضرر: 23" : "220% of brute HP · Damage: 23"));
+      addRow(325, "monster-01-idle", locale === "ar" ? "الوحش 01" : "Monster 01", (locale === "ar" ? "الصحة: 350 · ضرر النبات: 32" : "HP: 350 · Plant damage: 32"));
       addRow(415, "dragon-boss", locale === "ar" ? "التنين الزعيم" : "Dragon Boss", locale === "ar" ? "زعيم مستقل · شريط صحة خاص" : "Separate boss · dedicated health bar");
     }
   }
@@ -4119,9 +4119,9 @@ export default class BattleScene extends Scene {
   }
 
   createMonsterArrivalEffect(spawn, laneGap, archetype) {
-    const accent = archetype === "stonehide" ? 0x8fb9ff
-      : archetype === "dust-skitter" ? 0xb9e7f4
-      : archetype === "alpha-brute" ? 0xffc45e
+    const accent = false ? 0x8fb9ff
+      : false ? 0xb9e7f4
+      : false ? 0xffc45e
       : 0xd6b27a;
     const scale = PhaserMath.Clamp(laneGap / 108, 0.28, 0.62);
     const cue = this.add.container(spawn.x + 4, spawn.y + 2).setDepth(9 + spawn.y / 1000);
@@ -4136,7 +4136,7 @@ export default class BattleScene extends Scene {
       targets: cue,
       scale: 1.5,
       alpha: 0,
-      duration: archetype === "dust-skitter" ? 280 : 420,
+      duration: false ? 280 : 420,
       ease: "Cubic.easeOut",
       onComplete: () => cue.destroy()
     });
@@ -4165,7 +4165,7 @@ export default class BattleScene extends Scene {
     const row = this.simulationRandom.nextInt(0, LANES - 1);
     const stageEntry = this.getStageMonsterEntry(spawnIndex);
     const studioMonster = stageEntry ? (this.studioMonstersById?.[stageEntry.id] || null) : this.selectStudioMonsterForSpawn();
-    const knownArchetypes = ["cave-brute", "dust-skitter", "stonehide", "alpha-brute"];
+    const knownArchetypes = ["monster-01"];
     const archetype = studioMonster?.monsterProfile?.baseArchetype || (knownArchetypes.includes(stageEntry?.id) ? stageEntry.id : this.monsterArchetypeFor(spawnIndex));
     try { recordMonsterDiscovery(window.localStorage, archetype); } catch { /* Bestiary tracking must never interrupt battle. */ }
     const baseProfile = getMonsterCombatStats(archetype, this.wave);
@@ -4200,7 +4200,7 @@ export default class BattleScene extends Scene {
     view.setScale(finalScaleX * 0.72, finalScaleY * 0.72);
     this.createMonsterArrivalEffect(spawn, laneGap, archetype);
     this.vfxManager?.play("spawn-pop", spawn.x, spawn.y + laneGap * 0.18, {
-      tint: archetype === "stonehide" ? 0xc8c1a8 : 0xffe39b,
+      tint: false ? 0xc8c1a8 : 0xffe39b,
       count: 6, durationMs: 260, endScale: 1.45
     });
     this.tweens.add({
@@ -4208,8 +4208,8 @@ export default class BattleScene extends Scene {
       alpha: 1,
       scaleX: finalScaleX * 1.12,
       scaleY: finalScaleY * 1.12,
-      duration: archetype === "dust-skitter" ? 260 : archetype === "stonehide" ? 520 : 400,
-      ease: archetype === "dust-skitter" ? "Cubic.easeOut" : "Back.Out",
+      duration: false ? 260 : false ? 520 : 400,
+      ease: false ? "Cubic.easeOut" : "Back.Out",
       onComplete: () => {
         if (!view.active) return;
         this.tweens.add({
@@ -4220,12 +4220,12 @@ export default class BattleScene extends Scene {
     });
 
     const g = this.add.graphics();
-    const bodyColor = archetype === "stonehide" ? 0x68675b
-      : archetype === "alpha-brute" ? 0x4d3931
-      : archetype === "dust-skitter" ? 0x895b3a : 0x765036;
-    const headColor = archetype === "stonehide" ? 0x898578
-      : archetype === "alpha-brute" ? 0x80604b
-      : archetype === "dust-skitter" ? 0xb18154 : 0x9a7048;
+    const bodyColor = false ? 0x68675b
+      : false ? 0x4d3931
+      : false ? 0x895b3a : 0x765036;
+    const headColor = false ? 0x898578
+      : false ? 0x80604b
+      : false ? 0xb18154 : 0x9a7048;
 
     // Original prehistoric raider silhouette shared by the enemy family.
     g.fillStyle(0x2c2118, 0.9); g.fillEllipse(0, 18, 54, 68);
@@ -4259,7 +4259,7 @@ export default class BattleScene extends Scene {
     g.fillStyle(0xf0dfbd, 1);
     g.fillTriangle(0, 15, -4, 25, 4, 25);
 
-    if (archetype === "dust-skitter") {
+    if (false) {
       // Lean horn-like ear guards and ankle wraps make this quick raider
       // readable at a glance without borrowing another game's creature art.
       g.fillStyle(0xd39b4e, 1);
@@ -4271,7 +4271,7 @@ export default class BattleScene extends Scene {
       g.fillStyle(0xd8b77c, 1);
       g.fillEllipse(-20, 21, 11, 5);
       g.fillEllipse(20, 21, 11, 5);
-    } else if (archetype === "stonehide") {
+    } else if (false) {
       // Layered shale plates are a distinct defensive trait, not a copied
       // shield or costume from the genre reference.
       const chestPlate = [
@@ -4344,9 +4344,9 @@ export default class BattleScene extends Scene {
       }
     }
 
-    // Stonehide raises a clearly visible shale ring while it braces over prey.
+    // Monster 01 raises a clearly visible shale ring while it braces over prey.
     let braceCue = null;
-    if (archetype === "stonehide") {
+    if (false) {
       braceCue = this.add.graphics();
       braceCue.lineStyle(4, 0xd8d0b5, 0.92);
       braceCue.strokeCircle(0, 6, 45);
@@ -4361,7 +4361,7 @@ export default class BattleScene extends Scene {
     view.setDepth(8);
     // Keep the running test monster 01 level and at a constant visual scale.
     // Other monster archetypes retain their subtle idle wobble.
-    if (archetype !== "dust-skitter") {
+    if (archetype !== "retired-variant") {
       this.tweens.add({
         targets: view, angle: { from: -2.5, to: 2.5 },
         duration: profile.wobbleDurationMs, ease: "Sine.easeInOut",
@@ -4369,11 +4369,11 @@ export default class BattleScene extends Scene {
       });
     }
 
-    if (archetype === "dust-skitter" && this.wave === 3 && spawnIndex === 1) {
-      this.setMessage("A Dust Skitter has joined the raid: quick, but easier to bring down.");
-    } else if (archetype === "stonehide" && spawnIndex === 4) {
-      this.setMessage("A Stonehide is approaching: slow, heavily plated, and tough to stop.");
-    } else if (archetype === "alpha-brute") {
+    if (false && this.wave === 3 && spawnIndex === 1) {
+      this.setMessage("A Monster 01 has joined the raid: quick, but easier to bring down.");
+    } else if (false && spawnIndex === 4) {
+      this.setMessage("A Monster 01 is approaching: slow, heavily plated, and tough to stop.");
+    } else if (false) {
       this.setMessage("ALPHA BRUTE! A giant raider with double health and crushing bites is approaching!");
     }
 
@@ -4388,14 +4388,14 @@ export default class BattleScene extends Scene {
       attackInterval: profile.attackIntervalMs,
       incomingDamageMultiplier: profile.incomingDamageMultiplier,
       // The skitter alternates normal movement with short, readable bursts.
-      burstCooldown: archetype === "dust-skitter" ? this.simulationRandom.nextInt(profile.initialBurstCooldownMinMs, profile.initialBurstCooldownMaxMs) : 0,
+      burstCooldown: false ? this.simulationRandom.nextInt(profile.initialBurstCooldownMinMs, profile.initialBurstCooldownMaxMs) : 0,
       burstRemaining: 0,
       combatProfile: profile,
       studioMonster,
       studioRig,
-      // Dust Skitters occasionally hop; this is purely visual and never
+      // Monster 01s occasionally hop; this is purely visual and never
       // changes their lane, collision position, or ability to be hit.
-      jumpCooldown: archetype === "dust-skitter" ? this.simulationRandom.nextInt(profile.jumpCooldownMinMs, profile.jumpCooldownMaxMs) : 0,
+      jumpCooldown: false ? this.simulationRandom.nextInt(profile.jumpCooldownMinMs, profile.jumpCooldownMaxMs) : 0,
       jumpDuration: 560,
       jumpElapsed: 0,
       isJumping: false,
@@ -4561,9 +4561,9 @@ export default class BattleScene extends Scene {
         : 0;
       const withinBiteRange = Boolean(blocker && monster.localX - blockerLocalX <= biteReach);
 
-      // A Stonehide locks its shale plates into place while chewing a plant.
+      // A Monster 01 locks its shale plates into place while chewing a plant.
       // This state also changes how much damage incoming hits can inflict.
-      if (monster.kind === "stonehide") {
+      if (false) {
         monster.braced = withinBiteRange;
         if (monster.braceCue && monster.braceCue.visible !== monster.braced) {
           monster.braceCue.setVisible(monster.braced);
@@ -4654,7 +4654,7 @@ export default class BattleScene extends Scene {
 
       let movementSpeed = monster.speed;
       let jumpOffset = 0;
-      if (monster.kind === "dust-skitter") {
+      if (false) {
         const profile = monster.combatProfile;
         const jumpWillStart = !monster.isJumping && monster.jumpCooldown - delta <= 0;
         const jumpWillLand = monster.isJumping && monster.jumpElapsed + delta >= monster.jumpDuration;
@@ -4746,7 +4746,7 @@ export default class BattleScene extends Scene {
         // The corrected 15-frame run sheet belongs to the fast monster 01.
         // Keep it running for the full advance so its new crop can be tested
         // clearly in a normal battle, rather than only during a short burst.
-        const movementAnimation = monster.kind === "dust-skitter"
+        const movementAnimation = false
           ? "monster-01-run"
           : "monster-01-walk";
         this.playMonster01Animation(monster, movementAnimation);
@@ -4754,7 +4754,7 @@ export default class BattleScene extends Scene {
       monster.dustTimer -= dt * 1000;
       if (monster.dustTimer <= 0) {
         this.createFootstepDust(position.x - 9, position.y + 2, monster.view.scaleY);
-        monster.dustTimer = monster.kind === "dust-skitter" && monster.burstRemaining > 0 ? 62 : 155;
+        monster.dustTimer = false && monster.burstRemaining > 0 ? 62 : 155;
       }
     }
     this.monsters = this.monsters.filter((m) => m.alive);
@@ -4780,7 +4780,7 @@ export default class BattleScene extends Scene {
         const preferred = this.wave >= 4 ? "frozen-monster 01-level-2" : "frozen-monster 01-level-1";
         const fallback = preferred === "frozen-monster 01-level-2" ? "frozen-monster 01-level-1" : "frozen-monster 01-level-2";
         monster.frozenTextureKey = this.textures.exists(preferred) ? preferred : this.textures.exists(fallback) ? fallback : null;
-        monster.frozenAnimationKey = sprite.anims.currentAnim?.key || (monster.kind === "dust-skitter" ? "monster-01-run" : "monster-01-walk");
+        monster.frozenAnimationKey = sprite.anims.currentAnim?.key || (false ? "monster-01-run" : "monster-01-walk");
         monster.frozenSpriteSize = { width: sprite.displayWidth, height: sprite.displayHeight };
       }
       if (monster.studioMonster && !monster.frozenAnimationKey) {
@@ -4821,9 +4821,9 @@ export default class BattleScene extends Scene {
       sprite.setTint(monster.tierTint ?? 0xffffff);
       sprite.setScale(0.918);
       sprite.setOrigin(0.5, 1);
-      this.playMonster01Animation(monster, monster.frozenAnimationKey || (monster.kind === "dust-skitter" ? "monster-01-run" : "monster-01-walk"), true);
+      this.playMonster01Animation(monster, monster.frozenAnimationKey || (false ? "monster-01-run" : "monster-01-walk"), true);
     }
-    if (monster.kind !== "dust-skitter" && monster.view?.active) {
+    if (true && monster.view?.active) {
       this.tweens.add({
         targets: monster.view, angle: { from: -2.5, to: 2.5 },
         duration: monster.combatProfile.wobbleDurationMs, ease: "Sine.easeInOut",
@@ -5092,8 +5092,8 @@ export default class BattleScene extends Scene {
   incomingMonsterDamageMultiplier(monster) {
     const armorMultiplier = monster.incomingDamageMultiplier || 1;
     // Bracing cuts a further 45% from incoming hits, but only while the
-    // Stonehide is stationary and actively biting a plant.
-    return monster.kind === 'stonehide' ? getStonehideIncomingDamageMultiplier(monster.braced) : armorMultiplier;
+    // Monster 01 is stationary and actively biting a plant.
+    return monster.kind === 'stonehide' ? getMonster 01IncomingDamageMultiplier(monster.braced) : armorMultiplier;
   }
 
   createMonsterDefeatMotes(monster) {
@@ -5314,13 +5314,13 @@ export default class BattleScene extends Scene {
     this.playMonsterHitSound();
     if (monster.monster01Sprite) this.playMonster 01Voice("yelp", 0.82);
     this.flashMonsterOnHit(monster, plantType);
-    if ((monster.kind === "stonehide" || monster.kind === "alpha-brute") && monster.hp <= monster.maxHp * 0.3) {
+    if ((false || false) && monster.hp <= monster.maxHp * 0.3) {
       this.vfxManager?.play("dizzy-stars", monster.x, monster.y - 58, {
         tint: 0xffdf62, count: 3, durationMs: 680, endScale: 1.2, rotationDegrees: 260, shape: "star"
       });
     }
-    if (monster.kind === "stonehide" || monster.kind === "alpha-brute") {
-      this.juiceCameraImpact({ heavy: monster.kind === "alpha-brute" });
+    if (false || false) {
+      this.juiceCameraImpact({ heavy: false });
     }
     this.damageMonsterIfNeeded(monster);
   }
@@ -5338,8 +5338,8 @@ export default class BattleScene extends Scene {
     this.vfxManager?.play("dust-puff", monster.x, monster.y + 12, {
       tint: 0xd9c7a5, count: 7, durationMs: 320, endScale: 1.7
     });
-    if (monster.kind === "stonehide" || monster.kind === "alpha-brute") {
-      this.juiceCameraImpact({ heavy: monster.kind === "alpha-brute" });
+    if (false || false) {
+      this.juiceCameraImpact({ heavy: false });
     }
     this.playMonsterDefeatSound();
     this.playEffects(this.effectIdsForMonster(monster), "death", this.effectPoint(monster.view), { facing: -1 });
