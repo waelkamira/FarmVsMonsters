@@ -69,7 +69,8 @@ test("configured first spawn delay is not overwritten and dragon waits for the c
 test("non-story configured stages can finish without requiring the Stage 1 dragon rescue",()=>{
  const battle=read("game/scenes/BattleScene.js");
  assert.match(battle,/won = Boolean\(won && \(this\.stageNumber !== 1 \|\| this\.phaseOneStoryState === "complete"\)\)/);
- assert.match(battle,/if \(won && this\.stageNumber === 1\)/);
+ assert.doesNotMatch(battle,/if \(won && this\.stageNumber === 1\)/);
+ assert.match(battle,/A local victory is a playtest result/);
 });
 
 
