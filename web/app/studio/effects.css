@@ -68,3 +68,11 @@
 .studio-state-save{justify-self:start;padding:10px 16px;border:1px solid #b5d77b;border-radius:10px;background:linear-gradient(135deg,#547d3d,#31552e);color:#fff;font-weight:900;cursor:pointer}
 .studio-state-save:disabled{opacity:.45;cursor:not-allowed}
 @media(max-width:560px){.studio-state-stage{padding:12px}.studio-state-preview{height:210px}.studio-workbench-heading{align-items:flex-start;flex-direction:column}}
+
+
+.studio-state-effect-preview{display:grid;gap:10px;padding:14px;border:1px solid rgba(190,214,145,.18);border-radius:14px;background:rgba(0,0,0,.18)}
+.studio-state-effect-preview h4{margin:0;color:#f1e7cb}
+.studio-state-effect-preview label{display:grid;gap:6px;color:#e8e2cc;font-weight:800}
+.studio-state-effect-preview select{max-width:100%;padding:9px;border:1px solid rgba(208,188,143,.25);border-radius:9px;background:#172219;color:#fff}
+.studio-character-effect-preview{display:block;width:min(100%,420px);height:auto;aspect-ratio:320/220;margin:0 auto;border:1px solid rgba(225,205,160,.24);border-radius:14px;background:#1d2a1c}
+.studio-state-effect-preview>small{color:#c4c9b2;line-height:1.7}
