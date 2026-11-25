@@ -12,7 +12,7 @@ test("Studio exposes permanent deletion for every asset type with an explicit co
   assert.doesNotMatch(page, /\(a\.type==="plant"\|\|a\.type==="monster"\)&&<button[^>]*studio-delete-button/);
   assert.match(page, /role="alertdialog"[^>]*aria-modal="true"/);
   assert.match(page, /تأكيد الحذف النهائي/);
-  assert.match(page, /لا يمكن التراجع عن هذه العملية/);
+  assert.match(page, /الأصول المنشورة لا يمكن حذفها بهذه العملية/);
   assert.match(page, /operation:"delete"/);
   assert.match(css, /\.studio-delete-button/);
   assert.match(css, /\.studio-delete-confirm/);
@@ -26,7 +26,7 @@ test("Permanent deletion is authenticated, dependency-guarded, and supported by 
   assert.match(route, /if\(dependents\.length\)return NextResponse\.json\(\{error:"لا يمكن حذف الأصل لأن أصولاً أخرى تعتمد عليه:/);
   assert.match(route, /assetPathStillUsed\(remaining,assetPath\)/);
   assert.match(route, /githubDeleteIfExists\(filePath/);
-  assert.match(route, /if\(targetBranch!==storageBranch\)await githubDeleteIfExists/);
+  assert.doesNotMatch(route, /if\(targetBranch!==storageBranch\)await githubDeleteIfExists/);
   assert.match(route, /githubPut\(REGISTRY_PATH,Buffer\.from\(JSON\.stringify\(\{\.\.\.registry,assets:remaining\}/);
   assert.match(route, /release\?\.state==="open"/);
   const localDelete = route.indexOf("await unlink(target)", route.indexOf("if(operation===" + '"delete"' + "){"));
@@ -51,4 +51,21 @@ test("Deletion removes linked catalog entries and owned files without deleting s
   assert.match(route, /removeLocalAssetManifestReferences\(candidatePaths\)/);
   assert.match(route, /removeGithubAssetManifestReferences\(candidatePaths,token,storageBranch\)/);
   assert.match(route, /manifest\.assetCount=Object\.values\(manifest\.groups\)/);
+});
+
+test("Studio disables direct deletion for published and review-pending assets", () => {
+  assert.match(page, /a\.status==="published"\|\|a\.status==="approved"/);
+  assert.match(page, /إزالة المحتوى المنشور تتطلب طلب مراجعة منفصلاً/);
+});
+
+test("local deletion never calls GitHub manifest cleanup, while remote cleanup stays on storage branch", () => {
+  const patchStart = route.indexOf("export async function PATCH");
+  const firstDelete = route.indexOf('if(operation==="delete"){', patchStart);
+  const secondDelete = route.indexOf('if(operation==="delete"){', firstDelete + 1);
+  const cloneStart = route.indexOf('if(operation==="clone"){', secondDelete);
+  const localDeleteBlock = route.slice(firstDelete, secondDelete);
+  const githubDeleteBlock = route.slice(secondDelete, cloneStart);
+  assert.doesNotMatch(localDeleteBlock, /removeGithubAssetManifestReferences/);
+  assert.match(githubDeleteBlock, /removeGithubAssetManifestReferences\(candidatePaths,token,storageBranch\)/);
+  assert.doesNotMatch(githubDeleteBlock, /removeGithubAssetManifestReferences\(candidatePaths,token,targetBranch\)/);
 });
