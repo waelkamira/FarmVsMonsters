@@ -166,12 +166,12 @@ export default function CharacterStateWorkbench({ asset, onSaved }) {
     let active = true;
     if (!file) return;
     createImageBitmap(file).then((image) => {
-      const inferred = inferSpriteGrid(image.width, image.height, grid.frameCount);
+      const inferred = inferSpriteGrid(image.width, image.height, 9);
       image.close();
-      if (active) setGrid({ ...inferred, frameCount: grid.frameCount });
+      if (active) setGrid({ ...inferred, frameCount: 9 });
     }).catch(() => { if (active) setMessage("تعذر قراءة أبعاد صورة الحالة."); });
     return () => { active = false; };
-  }, [file, grid.frameCount]);
+  }, [file]);
 
   async function saveStateAnimation() {
     if (!file) { setMessage("اختر Sprite Sheet لحالة الشخصية أولاً."); return; }
