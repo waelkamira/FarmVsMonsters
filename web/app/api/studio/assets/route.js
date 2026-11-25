@@ -170,7 +170,25 @@ export async function GET(req){
    const allowedTypes={".png":"image/png",".webp":"image/webp",".gif":"image/gif",".mp3":"audio/mpeg",".wav":"audio/wav",".ogg":"audio/ogg",".m4a":"audio/mp4"};
    const extension=path.extname(preview).toLowerCase();
    if(!preview.startsWith("/assets/")||preview.includes("..")||!allowedTypes[extension])return NextResponse.json({error:"Invalid asset preview path."},{status:400});
-   try{let upstream=await fetch(githubUrl("web/public"+preview)+"?ref="+encodeURIComponent(branch),{headers:{...githubHeaders(token),Accept:"application/vnd.github.raw"}});if(upstream.status===404){const targetBranch=process.env.STUDIO_PUBLISH_BRANCH||"main";if(targetBranch!==branch)upstream=await fetch(githubUrl("web/public"+preview)+"?ref="+encodeURIComponent(targetBranch),{headers:{...githubHeaders(token),Accept:"application/vnd.github.raw"}});}if(!upstream.ok)return NextResponse.json({error:"GitHub preview failed ("+upstream.status+")."},{status:upstream.status===404?404:502});return new NextResponse(await upstream.arrayBuffer(),{headers:{"Content-Type":allowedTypes[extension],"Cache-Control":"private, max-age=300","X-Content-Type-Options":"nosniff"}});}catch(error){return NextResponse.json({error:error.message||"Preview fetch failed."},{status:502});}
+   const controller=new AbortController();
+   const timeout=setTimeout(()=>controller.abort(),12_000);
+   const fetchPreview=async(ref)=>{
+    const response=await fetch(githubUrl("web/public"+preview)+"?ref="+encodeURIComponent(ref),{headers:{...githubHeaders(token),Accept:"application/vnd.github.raw"},signal:controller.signal});
+    const bytes=response.ok?Buffer.from(await response.arrayBuffer()):null;
+    return {response,bytes};
+   };
+   try{
+    let upstream=await fetchPreview(branch);
+    if(upstream.response.status===404){
+     const targetBranch=process.env.STUDIO_PUBLISH_BRANCH||"main";
+     if(targetBranch!==branch)upstream=await fetchPreview(targetBranch);
+    }
+    if(!upstream.response.ok)return NextResponse.json({error:"GitHub preview failed ("+upstream.response.status+")."},{status:upstream.response.status===404?404:502});
+    return new NextResponse(upstream.bytes,{headers:{"Content-Type":allowedTypes[extension],"Cache-Control":"private, max-age=300","X-Content-Type-Options":"nosniff"}});
+   }catch(error){
+    const timedOut=error?.name==="TimeoutError"||error?.name==="AbortError";
+    return NextResponse.json({error:timedOut?"GitHub preview timed out after 12 seconds.":(error.message||"Preview fetch failed.")},{status:timedOut?504:502});
+   }finally{clearTimeout(timeout);}
   }
   try{
    const document=await githubGetDocument(REGISTRY_PATH,token,branch);
