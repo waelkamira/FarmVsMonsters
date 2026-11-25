@@ -2344,6 +2344,23 @@
         }
       ],
       "flipX": true
+    },
+    {
+      "id": "dragon-boss",
+      "type": "monster",
+      "name": "تنين المرحلة الأولى",
+      "filename": "dragon-boss.png",
+      "path": "/assets/characters/monsters/dragon/dragon-boss.png",
+      "rows": 1,
+      "columns": 1,
+      "frameCount": 1,
+      "spriteSheet": true,
+      "status": "draft",
+      "assetAvailability": "awaiting-upload",
+      "sourceReference": "web/game/data/phase-one-story-assets.json",
+      "createdAt": "2026-11-25T00:00:00.000Z",
+      "updatedAt": "2026-11-25T00:00:00.000Z",
+      "notes": "سجل إدارة أولي. ملف الرسومات غير موجود بعد؛ لا يستخدم في اللعبة حتى رفع الأصل وضبط شبكة الإطارات والأنيميشن."
     }
   ]
 }
