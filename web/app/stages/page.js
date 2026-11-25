@@ -89,8 +89,8 @@ export default function StagesPage() {
         <span className="campaign-map-eyebrow">{ar ? "رحلة إنقاذ الأميرة" : "THE RESCUE CAMPAIGN"}</span>
         <h1>{ar ? "خريطة العوالم" : "World Map"}</h1>
         <p>{ar
-          ? "11 أرضاً تنتظر المزارع. افتح الطريق تدريجياً، اهزم التنين في كل أرض، وأنقذ الأميرة."
-          : "Eleven lands await the farmer. Open the path step by step, defeat each land's dragon, and rescue the princess."}</p>
+          ? "11 أرضاً تنتظر المزارع. افتح الطريق تدريجياً، ودافع عن كل أرض ضد موجات الوحوش."
+          : "Eleven lands await the farmer. Open the path step by step and defend each land against its unique monster forces."}</p>
         <div className="campaign-map-stats">
           <span><strong>11</strong>{ar ? " عالماً مخططاً" : " planned worlds"}</span>
           <span><strong>10</strong>{ar ? " مهمات لكل عالم" : " planned missions per world"}</span>
