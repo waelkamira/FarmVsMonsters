@@ -625,3 +625,4 @@ return NextResponse.json({success:true,operation:"publish-requested",asset:reque
   if(releaseBranchForCleanup&&!releasePullRequestAttempted){try{await githubDeleteBranch(releaseBranchForCleanup,token);}catch(cleanupError){error.message=(error.message||"Studio action failed.")+" Cleanup warning: "+cleanupError.message;}}
   return NextResponse.json({error:error.message||"Studio action failed."},{status:error.code==="STUDIO_WRITE_CONFLICT"?409:502});
 }
+}
