@@ -2372,6 +2372,20 @@
       "status": "draft",
       "createdAt": "2026-11-25T14:30:34.114Z",
       "updatedAt": "2026-11-25T14:30:34.114Z"
+    },
+    {
+      "id": "radish",
+      "type": "plant",
+      "name": "radish",
+      "path": "/assets/plants/radish.png",
+      "filename": "radish.png",
+      "rows": 1,
+      "columns": 1,
+      "frameCount": 1,
+      "spriteSheet": false,
+      "status": "draft",
+      "createdAt": "2026-11-25T14:30:51.962Z",
+      "updatedAt": "2026-11-25T14:30:51.962Z"
     }
   ]
 }
