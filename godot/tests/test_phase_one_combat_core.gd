@@ -8,7 +8,7 @@ func _initialize() -> void:
 	_test_monster_stats_and_wave_pacing()
 	_test_plant_transactions()
 	_test_lane_and_target_selection()
-	_test_cooldowns_and_dust_skitter()
+	_test_cooldowns_and_movement_effects()
 	_test_monster_freeze_contract()
 	_test_farmer_planting_route_geometry()
 	print("Godot Stage 1 combat-core smoke tests passed.")
@@ -52,7 +52,7 @@ func _test_monster_stats_and_wave_pacing() -> void:
 		"intermission_ms": 0.0, "spawn_timer_ms": 100.0, "delta_ms": 120.0
 	})
 	assert(spawn.should_spawn and spawn.spawned_this_wave == 1)
-	assert(is_equal_approx(spawn.spawn_timer_ms, 4960.0)
+	assert(is_equal_approx(spawn.spawn_timer_ms, 4960.0))
 
 func _test_plant_transactions() -> void:
 	var placed: Dictionary = Rules.resolve_plant_placement(150.0, [], "radish", 2, 3)

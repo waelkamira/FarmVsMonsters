@@ -61,13 +61,13 @@ test("replay validates the five-wave monster roster, archetypes and exact combat
 });
 test("replay rejects an unknown retired enemy archetype", () => {
  const log=makeLog([ev(0,"monster_spawned",{monsterId:"monster-1",wave:1,spawnIndex:0,row:2,archetype:"unlisted-monster",hp:36,speed:13.6,localX:238.4115})]);
- assert.throws(()=>replayCombatLog(log),/INVALID_MONSTER_SPAWN_EVENT|INVALID_COMBAT_EVENT_PAYLOAD/);
+ assert.equal(replayCombatEventLog(log).reason,"INVALID_MONSTER_ARCHETYPE");
 });
 
 test("rejects forged monster identity, wave order, archetype and health", () => {
  const wrongId=makeLog([ev(0,"monster_spawned",{monsterId:"monster-9",wave:1,spawnIndex:0,row:1,archetype:"monster-01",hp:175,speed:8,localX:238.4115})]);
  assert.equal(replayCombatEventLog(wrongId).reason,"INVALID_MONSTER_WAVE_SEQUENCE");
- const wrongType=makeLog([ev(0,"monster_spawned",{monsterId:"monster-1",wave:1,spawnIndex:0,row:1,archetype:"monster-01",hp:175,speed:8,localX:238.4115})]);
+ const wrongType=makeLog([ev(0,"monster_spawned",{monsterId:"monster-1",wave:1,spawnIndex:0,row:1,archetype:"unlisted-monster",hp:175,speed:8,localX:238.4115})]);
  assert.equal(replayCombatEventLog(wrongType).reason,"INVALID_MONSTER_ARCHETYPE");
  const wrongStats=makeLog([ev(0,"monster_spawned",{monsterId:"monster-1",wave:1,spawnIndex:0,row:1,archetype:"monster-01",hp:1,speed:8,localX:238.4115})]);
  assert.equal(replayCombatEventLog(wrongStats).reason,"MONSTER_STATS_MISMATCH");
