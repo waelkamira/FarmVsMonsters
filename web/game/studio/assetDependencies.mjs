@@ -45,11 +45,17 @@ function collectFileUses(assets) {
     uses.get(normalized).push({ assetId: asset.id, assetName: asset.name || asset.id, role });
   };
   for (const asset of assets) {
-    add(asset, "primary", asset.path);
-    const projectile = asset.combat?.projectile;
-    const managedTarget = projectile?.id ? byId.get(String(projectile.id)) : null;
-    const managed = projectile?.managed === true || (projectile?.managed !== false && managedTarget?.type === "plantProjectile");
-    if (!managed) add(asset, "projectile", projectile?.path);
+    const snapshots = [asset, ...asList(asset?.versions)];
+    for (const snapshot of snapshots) {
+      add(asset, "primary", snapshot.path);
+      add(asset, "atlas-metadata", snapshot.atlasMetadataPath);
+      add(asset, "atlas-json", snapshot.atlas?.jsonPath);
+      add(asset, "audio", snapshot.audio?.path);
+      const projectile = snapshot.combat?.projectile;
+      const managedTarget = projectile?.id ? byId.get(String(projectile.id)) : null;
+      const managed = projectile?.managed === true || (projectile?.managed !== false && managedTarget?.type === "plantProjectile");
+      if (!managed) add(asset, "projectile", projectile?.path);
+    }
   }
   return uses;
 }
@@ -58,7 +64,10 @@ export function buildAssetDependencyReport(assets, assetId) {
   const asset = list.find((item) => item?.id === assetId);
   if (!asset) return null;
   const byId = new Map(list.filter((item) => item?.id).map((item) => [String(item.id), item]));
-  const graph = new Map(list.filter((item) => item?.id).map((item) => [String(item.id), declaredDependencies(item, byId)]));
+  const graph = new Map(list.filter((item) => item?.id).map((item) => [
+    String(item.id),
+    [item, ...asList(item?.versions)].flatMap((snapshot) => declaredDependencies(snapshot, byId))
+  ]));
   const dependencies = graph.get(String(assetId)) || [];
   const dependents = [];
   for (const candidate of list) {
