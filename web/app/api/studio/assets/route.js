@@ -410,9 +410,9 @@ export async function PATCH(req){
      const root=path.resolve(process.cwd(),"public")+path.sep;
      if(!target.startsWith(root))return NextResponse.json({error:"مسار ملف الأصل خارج مجلد الأصول المسموح."},{status:409});
     }
+    // Local mode must only update the local manifest; GitHub credentials and
+    // branch settings are intentionally unavailable in this code path.
     await removeLocalAssetManifestReferences(candidatePaths);
-    await removeGithubAssetManifestReferences(candidatePaths,token,storageBranch);
-   if(targetBranch!==storageBranch)await removeGithubAssetManifestReferences(candidatePaths,token,targetBranch);
    for(const [catalogPath,key] of [[PUBLISHED_CATALOG_PATH,"plants"],[PUBLISHED_MONSTER_CATALOG_PATH,"monsters"]]){
      const target=path.join(process.cwd(),"public",catalogPath.replace(/^web\//,""));
      try{const catalog=JSON.parse(await readFile(target,"utf8"));if(Array.isArray(catalog[key])){catalog[key]=catalog[key].filter((item)=>item.id!==id);await writeFile(target,JSON.stringify(catalog,null,2)+"\n","utf8");}}catch(error){if(error.code!=="ENOENT")throw error;}
