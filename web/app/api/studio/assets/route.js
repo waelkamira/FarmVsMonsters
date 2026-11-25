@@ -402,7 +402,7 @@ export async function POST(req){
    if(hasProjectile){const pTarget=path.join(process.cwd(),"public",record.combat.projectile.path.replace(/^\//,""));await mkdir(path.dirname(pTarget),{recursive:true});await writeFile(pTarget,projectileBytes);}
    await saveLocalRegistry(next);
   }else return NextResponse.json({error:"Production uploads require STUDIO_STORAGE_DRIVER=github and a configured GitHub token."},{status:503});
- return NextResponse.json({success:true,asset:record,storage:driver,operation:existing?"replaced":"created"});
+ return NextResponse.json({success:true,asset:addPreviewUrls({assets:[record]}).assets[0],storage:driver,operation:existing?"replaced":"created"});
  }catch(error){return NextResponse.json({error:error.message||"Asset save failed."},{status:error.code==="STUDIO_WRITE_CONFLICT"?409:500});}
 }
 export async function PATCH(req){
