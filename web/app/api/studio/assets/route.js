@@ -82,6 +82,13 @@ function removeManifestAssetReferences(manifest,assetPaths){
  }else if(Array.isArray(manifest.assets))manifest.assetCount=manifest.assets.length;
  return manifest;
 }
+async function removeGithubAssetManifestReferences(assetPaths,token,branch){
+ const filePath="web/public/assets/asset-manifest.json";
+ const document=await githubGetDocument(filePath,token,branch);
+ if(!document)return;
+ const manifest=removeManifestAssetReferences(JSON.parse(document.content),assetPaths);
+ await githubPut(filePath,Buffer.from(JSON.stringify(manifest,null,2)+"\n"),"studio: remove deleted asset references from manifest",token,branch,document.sha);
+}
 async function removeLocalAssetManifestReferences(assetPaths){
  const target=path.join(process.cwd(),"public/assets/asset-manifest.json");
  try{
@@ -486,6 +493,7 @@ export async function PATCH(req){
    const remaining=registry.assets.filter((_,i)=>i!==index);
    const isPublishedPathReferenced=assetPath=>publishedCatalogs.some(item=>item.path===assetPath||(item.rigParts||[]).some(part=>part.path===assetPath)||item.combat?.projectile?.path===assetPath);
    const candidatePaths=assetOwnedPaths(asset).filter(assetPath=>!assetPathStillUsed(remaining,assetPath)&&!isPublishedPathReferenced(assetPath));
+   await removeGithubAssetManifestReferences(candidatePaths,token,storageBranch);
    for(const assetPath of candidatePaths){
     const filePath="web/public"+assetPath;
     await githubDeleteIfExists(filePath,"studio: delete unused storage asset file for "+id,token,storageBranch);
