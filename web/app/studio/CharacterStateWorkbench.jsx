@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { inferSpriteGrid } from "../../game/studio/spriteSheetGrid.mjs";
 import { CHARACTER_STATUS_STATES } from "../../game/studio/characterStateAnimations.mjs";
 
 function FramePreview({ src, rows = 1, columns = 1, frameCount = 1, fps = 8, loop = true, label, startFrame = 0 }) {
   const [frame, setFrame] = useState(0);
+  const canvasRef = useRef(null);
   const count = Math.max(1, Number(frameCount) || 1);
   useEffect(() => {
     setFrame(0);
@@ -16,16 +17,26 @@ function FramePreview({ src, rows = 1, columns = 1, frameCount = 1, fps = 8, loo
     const timer = window.setInterval(() => setFrame((current) => current + 1 >= count ? (loop ? 0 : current) : current + 1), delay);
     return () => window.clearInterval(timer);
   }, [src, count, fps, loop]);
-  const absoluteFrame = Math.max(0, Number(startFrame) || 0) + frame;
-  const row = Math.floor(absoluteFrame / Math.max(1, columns));
-  const column = absoluteFrame % Math.max(1, columns);
-  const style = {
-    backgroundImage: src ? `url("${src}")` : "none",
-    backgroundSize: `${Math.max(1, columns) * 100}% ${Math.max(1, rows) * 100}%`,
-    backgroundPosition: `${columns > 1 ? (column / (columns - 1)) * 100 : 0}% ${rows > 1 ? (row / (rows - 1)) * 100 : 0}%`
-  };
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || !src) return;
+    const image = new Image();
+    image.onload = () => {
+      const frameWidth = Math.max(1, Math.floor(image.naturalWidth / Math.max(1, columns)));
+      const frameHeight = Math.max(1, Math.floor(image.naturalHeight / Math.max(1, rows)));
+      const absoluteFrame = Math.max(0, Number(startFrame) || 0) + frame;
+      const column = absoluteFrame % Math.max(1, columns);
+      const row = Math.floor(absoluteFrame / Math.max(1, columns));
+      canvas.width = frameWidth;
+      canvas.height = frameHeight;
+      const context = canvas.getContext("2d");
+      context?.clearRect(0, 0, frameWidth, frameHeight);
+      context?.drawImage(image, column * frameWidth, row * frameHeight, frameWidth, frameHeight, 0, 0, frameWidth, frameHeight);
+    };
+    image.src = src;
+  }, [src, rows, columns, frame, startFrame]);
   return <div className="studio-state-preview-wrap">
-    <div className="studio-state-preview" style={style} role="img" aria-label={label || "معاينة إطارات الشخصية"} />
+    <canvas ref={canvasRef} className="studio-state-preview" role="img" aria-label={label || "معاينة إطارات الشخصية"} />
     <div className="studio-state-preview-meta"><span>الإطار {frame + 1} / {count}</span><span>{fps} FPS</span></div>
     <input aria-label="تحديد إطار المعاينة" type="range" min="0" max={count - 1} value={frame} onChange={(event) => setFrame(Number(event.target.value))} />
   </div>;
