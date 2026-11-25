@@ -33,12 +33,17 @@ function readClip(input, name, maxFrame, defaults) {
       return Math.round(duration);
     }));
   }
+  const effectiveDurations = frameDurationsMs || (
+    name === "attack" && frameCount >= 3
+      ? Object.freeze(Array.from({ length: frameCount }, (_, index) => index < 2 ? 180 : 70))
+      : null
+  );
   return Object.freeze({
     startFrame,
     endFrame,
     fps: readFps(clip.fps, name + ".fps", defaults.fps),
     loop: name === "idle" || name === "move" ? true : Boolean(clip.loop ?? false),
-    ...(frameDurationsMs ? { frameDurationsMs } : {})
+    ...(effectiveDurations ? { frameDurationsMs: effectiveDurations } : {})
   });
 }
 export function createStudioAnimationProfile(input, frameCount) {
