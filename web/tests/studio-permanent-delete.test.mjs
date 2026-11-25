@@ -28,6 +28,12 @@ test("Permanent deletion is authenticated, dependency-guarded, and supported by 
   assert.match(route, /if\(targetBranch!==storageBranch\)await githubDeleteIfExists/);
   assert.match(route, /githubPut\(REGISTRY_PATH,Buffer\.from\(JSON\.stringify\(\{\.\.\.registry,assets:remaining\}/);
   assert.match(route, /release\?\.state==="open"/);
+  const localDelete = route.indexOf("await unlink(target)", route.indexOf("if(operation===" + '"delete"' + "){"));
+  const localRegistrySave = route.indexOf("await saveLocalRegistry(registry)", localDelete);
+  const githubDelete = route.indexOf("await githubDeleteIfExists(filePath");
+  const githubRegistrySave = route.indexOf("await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify({...registry,assets:remaining}");
+  assert.ok(localDelete >= 0 && localRegistrySave > localDelete, "local registry remains retryable until file cleanup finishes");
+  assert.ok(githubDelete >= 0 && githubRegistrySave > githubDelete, "GitHub registry remains retryable until file cleanup finishes");
 });
 
 test("Deletion removes linked catalog entries and owned files without deleting shared paths", () => {
