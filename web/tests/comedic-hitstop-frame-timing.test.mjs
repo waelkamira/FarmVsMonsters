@@ -91,3 +91,12 @@ test("procedural VFX registry supports dust puffs and rotating dizzy stars", asy
   assert.match(renderer, /config\.shape === "star"/);
   assert.match(manager, /angle: Number\(config\.rotationDegrees\)/);
 });
+
+test("heavy hit and defeat moments use the registered spawn, dust and dizzy VFX", async () => {
+  const scene = await readFile(new URL("../game/scenes/BattleScene.js", import.meta.url), "utf8");
+  const registry = await readFile(new URL("../game/vfx/createDefaultVFXRegistry.mjs", import.meta.url), "utf8");
+  assert.match(scene, /play\("spawn-pop"/);
+  assert.match(scene, /play\("dust-puff"/);
+  assert.match(scene, /play\("dizzy-stars"/);
+  assert.match(registry, /register\("spawn-pop"/);
+});
