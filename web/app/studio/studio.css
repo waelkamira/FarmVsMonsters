@@ -613,3 +613,16 @@
 /* Asset detail pages use the same first-frame thumbnail contract as Studio libraries. */
 .studio-detail-media .studio-detail-art{display:block;max-width:100%;max-height:280px;object-fit:contain}
 .studio-detail-media .studio-detail-art.is-sprite-sheet{width:min(100%,280px);height:auto;aspect-ratio:1;background-repeat:no-repeat;background-position:left top}
+
+/* Permanent asset deletion is visually distinct from reversible archive. */
+.studio-asset-actions>.studio-delete-button{border:1px solid #b64c43;background:#4b211e;color:#ffe4df;font-weight:800}
+.studio-delete-dialog{border-color:#b64c43}
+.studio-delete-dialog p strong{color:#fff}
+.studio-clone-actions .studio-delete-confirm{background:#a8322b;color:#fff;border:1px solid #ef8a80;font-weight:900}
+.studio-clone-actions .studio-delete-confirm:hover:not(:disabled){background:#c43d34}
+
+.studio-clone-dialog-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:14px}
+.studio-clone-dialog-actions button:last-child{background:#d7a84f;color:#20190d;font-weight:800}
+
+.studio-clone-dialog-actions .studio-delete-confirm{background:#a8322b!important;color:#fff!important;border:1px solid #ef8a80;font-weight:900}
+.studio-clone-dialog-actions .studio-delete-confirm:hover:not(:disabled){background:#c43d34!important}
