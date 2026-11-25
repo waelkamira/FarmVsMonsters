@@ -77,7 +77,8 @@ test("monster arrivals and energy pickups use elastic overshoot and settle", asy
 
 test("moving monsters create bounded footstep dust and skitter jumps squash on landing", async () => {
   const source = await readFile(new URL("../game/scenes/BattleScene.js", import.meta.url), "utf8");
-  assert.match(source, /monster\.dustTimer = monster\.kind === "dust-skitter" \? 210 : 360/);
+  assert.match(source, /monster\.dustTimer -= dt \* 1000/);
+  assert.match(source, /this\.createFootstepDust\(position\.x - 9/);
   assert.match(source, /if \(jumpWillLand\)/);
   assert.match(source, /createFootstepDust\(monster\.x, monster\.y \+ 6/);
 });
