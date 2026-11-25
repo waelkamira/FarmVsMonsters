@@ -15,6 +15,7 @@ import {createStudioMonsterProfile} from "../../../../game/studio/monsterProfile
 import {safeAssetPath} from "../../../../game/studio/assetReadiness.mjs";
 import {assetOwnedPaths,assetPathStillUsed,removeManifestAssetReferences,synchronizeAssetAudit} from "../../../../game/studio/assetDeletion.mjs";
 import {validateEffectSelection} from "../../../../game/vfx/effects/effectAssignments.mjs";
+import {validateCharacterStateAnimation} from "../../../../game/studio/characterStateAnimations.mjs";
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
 const COOKIE="fvm_studio_session";
@@ -77,7 +78,7 @@ async function removeLocalAssetManifestReferences(assetPaths){
  async function githubPut(filePath,bytes,message,token,branch,expectedSha){const api=githubUrl(filePath),headers=githubHeaders(token);const check=await fetch(api+"?ref="+encodeURIComponent(branch),{headers});let sha=null;if(check.ok)sha=(await check.json()).sha;else if(check.status!==404)throw Error("GitHub lookup failed ("+check.status+").");assertExpectedContentSha(expectedSha,sha);const saved=await fetch(api,{method:"PUT",headers:{...headers,"Content-Type":"application/json"},body:JSON.stringify({message,branch,content:Buffer.from(bytes).toString("base64"),...(sha?{sha}:{})})});if(!saved.ok){const data=await saved.json().catch(()=>({}));throw Error(data.message||"GitHub save failed ("+saved.status+").");}}
 async function localRegistry(){try{return JSON.parse(await readFile(path.join(process.cwd(),"game/data/studioAssetRegistry.json"),"utf8"));}catch(error){if(error.code==="ENOENT")return {version:1,assets:[]};throw error;}}
 async function saveLocalRegistry(registry){const target=path.join(process.cwd(),"game/data/studioAssetRegistry.json");await mkdir(path.dirname(target),{recursive:true});await writeFile(target,JSON.stringify(registry,null,2)+"\n","utf8");}
-function addPreviewUrls(registry){const github=process.env.STUDIO_STORAGE_DRIVER==="github";return {...registry,storage:process.env.STUDIO_STORAGE_DRIVER||"local",assets:(registry.assets||[]).map(asset=>({...asset,previewUrl:github?"/api/studio/assets?preview="+encodeURIComponent(asset.path):asset.path,rigParts:serializeRigParts(registry.assets||[],asset),...(asset.combat?.projectile?{combat:{...asset.combat,projectile:{...asset.combat.projectile,frameCount:asset.combat.projectile.frameCount??1,rows:asset.combat.projectile.rows??1,columns:asset.combat.projectile.columns??1,previewUrl:github?"/api/studio/assets?preview="+encodeURIComponent(asset.combat.projectile.path):asset.combat.projectile.path}}}:{})}))};}
+function addPreviewUrls(registry){const github=process.env.STUDIO_STORAGE_DRIVER==="github";return {...registry,storage:process.env.STUDIO_STORAGE_DRIVER||"local",assets:(registry.assets||[]).map(asset=>({...asset,previewUrl:github?"/api/studio/assets?preview="+encodeURIComponent(asset.path):asset.path,...(asset.stateAnimations?{stateAnimations:Object.fromEntries(Object.entries(asset.stateAnimations).map(([stateId,state])=>[stateId,{...state,previewUrl:github?"/api/studio/assets?preview="+encodeURIComponent(state.path):state.path}]))}:{}),rigParts:serializeRigParts(registry.assets||[],asset),...(asset.combat?.projectile?{combat:{...asset.combat,projectile:{...asset.combat.projectile,frameCount:asset.combat.projectile.frameCount??1,rows:asset.combat.projectile.rows??1,columns:asset.combat.projectile.columns??1,previewUrl:github?"/api/studio/assets?preview="+encodeURIComponent(asset.combat.projectile.path):asset.combat.projectile.path}}}:{})}))};}
 function plantIdFromPath(assetPath){
  const filename=path.basename(assetPath||"").replace(/\.[^.]+$/,"").toLowerCase();
  return filename.replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
@@ -194,7 +195,7 @@ export async function GET(req){
      if(!asset.releaseRequest?.number)return asset;
      try{return resolveStudioReleaseAsset(asset,await githubGetPullRequest(asset.releaseRequest.number,token));}catch{return asset;}
     }));
-    const monsters=candidates.filter(asset=>asset.status==="testing").map(asset=>({...asset,path:"/api/studio/assets?preview="+encodeURIComponent(asset.path),rigParts:serializeRigParts(registry.assets||[],asset)}));
+    const monsters=candidates.filter(asset=>asset.status==="testing").map(asset=>({...addStatePreviewUrls(asset),path:"/api/studio/assets?preview="+encodeURIComponent(asset.path),rigParts:serializeRigParts(registry.assets||[],asset)}));
     return NextResponse.json({version:1,monsters},{headers:{"Cache-Control":"private, no-store"}});
    }catch(error){return NextResponse.json({error:error.message||"Could not load testing monster catalog."},{status:502});}
   }
@@ -207,7 +208,7 @@ export async function GET(req){
      try{return resolveStudioReleaseAsset(asset,await githubGetPullRequest(asset.releaseRequest.number,token));}catch{return asset;}
     }));
     const plants=candidates.filter(asset=>asset.status==="testing").map(asset=>({
-     ...asset,
+     ...addStatePreviewUrls(asset),
      path:"/api/studio/assets?preview="+encodeURIComponent(asset.path),
      rigParts:serializeRigParts(registry.assets||[],asset),
      ...(asset.combat?.projectile?{combat:{...asset.combat,projectile:{...asset.combat.projectile,frameCount:asset.combat.projectile.frameCount??1,rows:asset.combat.projectile.rows??1,columns:asset.combat.projectile.columns??1,path:"/api/studio/assets?preview="+encodeURIComponent(asset.combat.projectile.path)}}}:{})
@@ -267,11 +268,12 @@ export async function GET(req){
 export async function POST(req){
  if(!authorized(req))return NextResponse.json({error:"Unauthorized."},{status:401});
  let form;try{form=await req.formData();}catch{return NextResponse.json({error:"Invalid multipart upload."},{status:400});}
- const id=String(form.get("id")||"").trim().toLowerCase(),type=String(form.get("type")||""),config=STUDIO_ASSET_TYPES[type],file=form.get("file"),projectileFile=form.get("projectileFile"),rows=Number(form.get("rows")||1),columns=Number(form.get("columns")||1),frameCount=Number(form.get("frameCount")||9),replace=String(form.get("replace")||"false")==="true";
+ const id=String(form.get("id")||"").trim().toLowerCase(),type=String(form.get("type")||""),config=STUDIO_ASSET_TYPES[type],file=form.get("file"),projectileFile=form.get("projectileFile"),stateAnimationFile=form.get("stateAnimationFile"),stateId=String(form.get("stateId")||""),stateRows=Number(form.get("stateRows")||1),stateColumns=Number(form.get("stateColumns")||1),stateFrameCount=Number(form.get("stateFrameCount")||1),stateFps=Number(form.get("stateFps")||10),rows=Number(form.get("rows")||1),columns=Number(form.get("columns")||1),frameCount=Number(form.get("frameCount")||9),replace=String(form.get("replace")||"false")==="true";
  if(!config||!STUDIO_ID_PATTERN.test(id)||id.length>64)return NextResponse.json({error:"Invalid category or ID. Use a lowercase slug up to 64 characters."},{status:400});
 
  const hasFile=Boolean(file&&typeof file.arrayBuffer==="function"&&file.size>0);
  const hasProjectile=Boolean(projectileFile&&typeof projectileFile.arrayBuffer==="function"&&projectileFile.size>0);
+ const hasStateAnimation=Boolean(stateAnimationFile&&typeof stateAnimationFile.arrayBuffer==="function"&&stateAnimationFile.size>0);
  const removeProjectile=String(form.get("removeProjectile")||"false")==="true";
  const driver=process.env.STUDIO_STORAGE_DRIVER||"local";let old,registrySha;
  try{if(driver==="github"){const token=process.env.STUDIO_GITHUB_TOKEN,branch=process.env.STUDIO_GITHUB_BRANCH||"studio/assets";if(!token)return NextResponse.json({error:"STUDIO_GITHUB_TOKEN is required."},{status:503});const document=await githubGetDocument(REGISTRY_PATH,token,branch);old=document?JSON.parse(document.content):{version:1,assets:[]};registrySha=document?.sha??null;}else old=await localRegistry();}catch(error){return NextResponse.json({error:error.message},{status:502});}
@@ -303,6 +305,14 @@ export async function POST(req){
  if(existing&&existing.type!==type)return NextResponse.json({error:"لا يمكن تغيير فئة الأصل أثناء التعديل."},{status:409});
  if(!hasFile&&(!replace||!existing))return NextResponse.json({error:"Choose a file for a new asset."},{status:400});
  if(hasFile&&(file.size>STUDIO_MAX_UPLOAD_BYTES||!config.accepts.includes(file.type)))return NextResponse.json({error:"Choose a supported file up to 8 MB."},{status:415});
+ if(hasStateAnimation){
+  const preliminary=validateCharacterStateAnimation({stateId,path:"/assets/validation.png",rows:stateRows,columns:stateColumns,frameCount:stateFrameCount,fps:stateFps});
+  if(!preliminary.valid)return NextResponse.json({error:preliminary.errors.join(" ")},{status:400});
+  if(!replace||!existing||!(type==="plant"||type==="monster"))return NextResponse.json({error:"إطارات الحالات متاحة لتعديل نبتة أو وحش موجود فقط."},{status:400});
+  if(stateAnimationFile.size>STUDIO_MAX_UPLOAD_BYTES||!["image/png","image/webp"].includes(stateAnimationFile.type))return NextResponse.json({error:"ارفع صورة PNG أو WebP حتى 8 MB."},{status:415});
+  if(!Number.isInteger(stateFrameCount)||stateFrameCount<1||stateFrameCount>24||!Number.isInteger(stateRows)||!Number.isInteger(stateColumns)||stateRows<1||stateColumns<1||stateRows*stateColumns!==stateFrameCount)return NextResponse.json({error:"شبكة إطارات الحالة غير صحيحة."},{status:400});
+  if(!Number.isFinite(stateFps)||stateFps<1||stateFps>30)return NextResponse.json({error:"سرعة الحالة يجب أن تكون بين 1 و30 FPS."},{status:400});
+ }
  if(config.spriteSheet&&(!Number.isInteger(frameCount)||frameCount<1||frameCount>24||!Number.isInteger(rows)||!Number.isInteger(columns)||rows<1||columns<1||rows*columns!==frameCount))return NextResponse.json({error:"عدد الإطارات يجب أن يكون من 1 إلى 24، ويجب أن يطابق حاصل ضرب الصفوف والأعمدة."},{status:400});
  let animationProfile=null;
  if(config.spriteSheet&&(type==="plant"||type==="monster")){
@@ -575,6 +585,12 @@ export async function PATCH(req){
    const projectileBytes=await githubGetBytes(projectilePath,token,storageBranch);
    await githubPutImmutable(projectilePath,projectileBytes,"studio: publish plant projectile "+id,token,targetBranch);
   }
+  for(const [stateId,state] of Object.entries(asset.stateAnimations||{})){
+   if(!safeAssetPath(state?.path))return NextResponse.json({error:"إطارات الحالة "+stateId+" لها مسار غير صالح."},{status:409});
+   const statePath="web/public"+state.path;
+   const stateBytes=await githubGetBytes(statePath,token,storageBranch);
+   await githubPutImmutable(statePath,stateBytes,"studio: publish "+stateId+" state frames for "+id,token,targetBranch);
+  }
 
   const isMonster=asset.type==="monster";
   const catalogPath=isMonster?PUBLISHED_MONSTER_CATALOG_PATH:PUBLISHED_CATALOG_PATH;
@@ -582,8 +598,8 @@ export async function PATCH(req){
   const catalog=catalogDocument?JSON.parse(catalogDocument.content):(isMonster?{version:1,monsters:[]}:{version:1,plants:[]});
   const publishedAt=new Date().toISOString();
   const publishedRecord=isMonster
-   ?{id:asset.id,name:asset.name,path:asset.path,rows:asset.rows,columns:asset.columns,spriteSheet:asset.spriteSheet,animationProfile:asset.animationProfile||null,rigProfile:asset.rigProfile||null,rigParts:rigPartAssets.map(part=>({id:part.id,name:part.name,path:part.path,rows:part.spriteSheet?(part.rows||1):1,columns:part.spriteSheet?(part.columns||1):1,frameCount:getRigPartFrameCount(part),spriteSheet:Boolean(part.spriteSheet)})),monsterProfile:asset.monsterProfile,flipX:Boolean(asset.flipX),effects:Array.isArray(asset.effects)?asset.effects:[],publishedAt}
-   :{id:asset.id,name:asset.name,path:asset.path,rows:asset.rows,columns:asset.columns,spriteSheet:asset.spriteSheet,animationProfile:asset.animationProfile||null,rigProfile:asset.rigProfile||null,rigParts:rigPartAssets.map(part=>({id:part.id,name:part.name,path:part.path,rows:part.spriteSheet?(part.rows||1):1,columns:part.spriteSheet?(part.columns||1):1,frameCount:getRigPartFrameCount(part),spriteSheet:Boolean(part.spriteSheet)})),combat:asset.combat,flipX:Boolean(asset.flipX),effects:Array.isArray(asset.effects)?asset.effects:[],publishedAt};
+   ?{id:asset.id,name:asset.name,path:asset.path,rows:asset.rows,columns:asset.columns,spriteSheet:asset.spriteSheet,animationProfile:asset.animationProfile||null,rigProfile:asset.rigProfile||null,rigParts:rigPartAssets.map(part=>({id:part.id,name:part.name,path:part.path,rows:part.spriteSheet?(part.rows||1):1,columns:part.spriteSheet?(part.columns||1):1,frameCount:getRigPartFrameCount(part),spriteSheet:Boolean(part.spriteSheet)})),monsterProfile:asset.monsterProfile,flipX:Boolean(asset.flipX),effects:Array.isArray(asset.effects)?asset.effects:[],stateAnimations:asset.stateAnimations||{},publishedAt}
+   :{id:asset.id,name:asset.name,path:asset.path,rows:asset.rows,columns:asset.columns,spriteSheet:asset.spriteSheet,animationProfile:asset.animationProfile||null,rigProfile:asset.rigProfile||null,rigParts:rigPartAssets.map(part=>({id:part.id,name:part.name,path:part.path,rows:part.spriteSheet?(part.rows||1):1,columns:part.spriteSheet?(part.columns||1):1,frameCount:getRigPartFrameCount(part),spriteSheet:Boolean(part.spriteSheet)})),combat:asset.combat,flipX:Boolean(asset.flipX),effects:Array.isArray(asset.effects)?asset.effects:[],stateAnimations:asset.stateAnimations||{},publishedAt};
   const collectionKey=isMonster?"monsters":"plants";
   const collection=Array.isArray(catalog[collectionKey])?catalog[collectionKey]:[];
   const existingIndex=collection.findIndex(item=>item.id===id);
