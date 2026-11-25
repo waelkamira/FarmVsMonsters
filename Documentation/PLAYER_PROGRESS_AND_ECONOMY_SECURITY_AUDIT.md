@@ -61,7 +61,7 @@ This audit records source-level findings only. No database migration was applied
 
 ## Follow-up implementation status
 
-The Stage 1 renderer and rules now consume a shared versioned combat contract at `web/game/rules/phaseOneCombatContract.mjs`. It centralizes the existing wave roster, plant/monster/dragon/farmer values, spawn pacing, and 8-coin ordinary-monster reward. A deterministic seeded PRNG foundation is also present at `web/game/rules/seededRandom.mjs`, with unit tests. These are preparatory refactors only: the live battle still runs in the browser and still uses Phaser randomness for gameplay choices. They do not yet make rewards server-authoritative or justify re-enabling cloud sync.
+The Stage 1 renderer and rules now consume a shared versioned combat contract at `web/game/rules/phaseOneCombatContract.mjs`. It centralizes the existing wave roster, plant/monster/final enemy/farmer values, spawn pacing, and 8-coin ordinary-monster reward. A deterministic seeded PRNG foundation is also present at `web/game/rules/seededRandom.mjs`, with unit tests. These are preparatory refactors only: the live battle still runs in the browser and still uses Phaser randomness for gameplay choices. They do not yet make rewards server-authoritative or justify re-enabling cloud sync.
 
 
 
@@ -74,7 +74,7 @@ Lane movement progress: monster local-X stepping (including blocker stop clampin
 
 
 
-Target selection has been extracted to pure functions for lane blockers, projectile hits, farmer melee, and dragon fireballs. The Phaser scene supplies current coordinates and dimensions; target decisions are reusable but still execute client-side. No server trust boundary has been enabled.
+Target selection has been extracted to pure functions for lane blockers, projectile hits, farmer melee, and final enemy projectile attacks. The Phaser scene supplies current coordinates and dimensions; target decisions are reusable but still execute client-side. No server trust boundary has been enabled.
 
 
 
