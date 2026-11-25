@@ -40,7 +40,7 @@ test("pre-battle seed packet cards use first-frame thumbnails for all built-in s
 
 test("Studio asset detail uses first-frame thumbnails without changing the animated editing preview", () => {
   assert.match(detail, /<SpriteThumbnail src=\{mediaUrl\}/);
-  assert.match(detail, /mediaIsSpriteSheet/);
+  assert.match(detail, /asset\.type !== "audio" && asset\.spriteSheet === true && mediaFrameCount > 1/);
   assert.match(studio, /studio-live-preview-sprite/);
   assert.match(studio, /setAnimationPlaying/);
   assert.match(roster, /stage-roster-first-frame/);
