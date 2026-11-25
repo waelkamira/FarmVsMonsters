@@ -45,8 +45,8 @@ test("Deletion removes linked catalog entries and owned files without deleting s
   assert.ok(route.includes('import {mkdir,readFile,writeFile,unlink} from "node:fs/promises"'));
   assert.match(route, /snapshot\?\.atlasMetadataPath/);
   assert.match(route, /snapshot\?\.atlas\?\.jsonPath/);
-  assert.match(route, /asset\?\.audio\?\.path/);
-  assert.match(route, /asset\?\.combat\?\.projectile\?\.path/);
+  assert.match(route, /snapshot\?\.audio\?\.path/);
+  assert.match(route, /snapshot\?\.combat\?\.projectile\?\.path/);
   assert.match(route, /function assetPathStillUsed\(assets,assetPath\)/);
   assert.match(route, /function removeManifestAssetReferences\(manifest,assetPaths\)/);
   assert.match(route, /removeLocalAssetManifestReferences\(candidatePaths\)/);
