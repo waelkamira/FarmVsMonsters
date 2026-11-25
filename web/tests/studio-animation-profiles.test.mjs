@@ -31,3 +31,18 @@ test("supports a single-frame sprite without creating an invalid range", () => {
   assert.equal(profile.attack.startFrame, 0);
   assert.equal(profile.attack.endFrame, 0);
 });
+
+test("supports per-frame durations for expressive impact and recovery timing", () => {
+  const profile = createStudioAnimationProfile({
+    attack: { startFrame: 0, endFrame: 3, fps: 12, frameDurationsMs: [190, 190, 70, 70] }
+  }, 4);
+  assert.deepEqual(profile.attack.frameDurationsMs, [190, 190, 70, 70]);
+});
+test("rejects variable frame timing with the wrong number of entries or unsafe durations", () => {
+  assert.equal(validateStudioAnimationProfile({
+    attack: { startFrame: 0, endFrame: 2, frameDurationsMs: [180, 180] }
+  }, 3).valid, false);
+  assert.equal(validateStudioAnimationProfile({
+    attack: { startFrame: 0, endFrame: 1, frameDurationsMs: [180, 2501] }
+  }, 2).valid, false);
+});
