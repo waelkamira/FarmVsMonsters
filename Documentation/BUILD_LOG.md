@@ -1152,6 +1152,7 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - Production uses a shared Redis REST counter with an atomic increment/expiry operation; login fails closed with HTTP 503 if the shared store is missing or unavailable. Development uses an in-memory limiter only.
 - Separated `STUDIO_ADMIN_TOKEN` (login credential) from `STUDIO_SESSION_SECRET` (HMAC session signing key), requiring independent values of at least 32 characters.
 - Updated all authenticated Studio API handlers to verify cookies with `STUDIO_SESSION_SECRET`, not the admin password.
+- Added a production IP allowlist for `/studio` and `/api/studio`; production fails closed when `STUDIO_ALLOWED_IPS` is empty or the reverse-proxy IP header is absent. The public game runtime's GET stage-encounter config read remains exempt; writes still require a valid session.
 - Added environment examples and deployment guidance for shared rate limiting, private-access protection, fine-grained GitHub permissions, and branch protection.
 - Added tests for rate-limit thresholds, IP isolation, Redis behavior, fail-closed production behavior, and signing-key separation.
 
