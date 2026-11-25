@@ -390,8 +390,8 @@ export async function PATCH(req){
  if(!authorized(req))return NextResponse.json({error:"Unauthorized."},{status:401});
  let body;try{body=await req.json();}catch{return NextResponse.json({error:"Invalid Studio action."},{status:400});}
  const id=String(body.id||"").trim(),operation=String(body.operation||"");
- if(!STUDIO_ID_PATTERN.test(id)||!["prepare-test","publish","archive","restore","restore-version","clone","delete","set-effects"].includes(operation))return NextResponse.json({error:"Invalid asset or operation."},{status:400});
  if(operation==="set-effects")return setAssetEffects(id,body.effects);
+ if(!STUDIO_ID_PATTERN.test(id)||!["prepare-test","publish","archive","restore","restore-version","clone","delete"].includes(operation))return NextResponse.json({error:"Invalid asset or operation."},{status:400});
  const driver=process.env.STUDIO_STORAGE_DRIVER||"local";
  if(driver!=="github"){
   if(operation!=="archive"&&operation!=="restore"&&operation!=="restore-version"&&operation!=="clone"&&operation!=="delete")return NextResponse.json({error:"Testing preparation and publishing require GitHub storage."},{status:503});
