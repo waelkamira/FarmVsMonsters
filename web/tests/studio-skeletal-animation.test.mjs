@@ -4,6 +4,7 @@ import {
   createSkeletalRigProfile,
   evaluateSkeletalClip,
   getSkeletalAttachmentTransform,
+  getSkeletalAttachmentsByKind,
   getSkeletalHitboxTransform,
   snapSkeletalKeyframeTime,
   validateSkeletalRigProfile
@@ -151,6 +152,38 @@ test("keyframe snapping returns valid integer frame times within clip bounds", (
   assert.equal(snapSkeletalKeyframeTime(900, 12, 300), 300);
 });
 
+
+
+
+test("preserves semantic attachment roles and resolves eye and pupil anchors by kind", () => {
+  const rig = createSkeletalRigProfile(sampleRig({
+    attachments: [
+      { id: "eye-left", name: "Left eye", kind: "eye", boneId: "head", x: -4, y: -2 },
+      { id: "pupil-left", name: "Left pupil", kind: "pupil", boneId: "head", x: -3, y: -2 },
+      { id: "muzzle", kind: "muzzle", boneId: "weapon", x: 8, y: 0 }
+    ]
+  }));
+  const pose = evaluateSkeletalClip(rig, "fire", 500);
+  const eyes = getSkeletalAttachmentsByKind(rig, pose, "eye");
+  const pupils = getSkeletalAttachmentsByKind(rig, pose, "pupil");
+  assert.equal(eyes.length, 1);
+  assert.equal(eyes[0].id, "eye-left");
+  assert.equal(pupils.length, 1);
+  assert.equal(pupils[0].kind, "pupil");
+  assert.equal(getSkeletalAttachmentsByKind(rig, pose, "muzzle")[0].id, "muzzle");
+});
+
+test("normalizes detachable bitmap-part metadata without changing legacy rig defaults", () => {
+  const rig = createSkeletalRigProfile(sampleRig({
+    bones: [
+      { id: "root", parentId: null, x: 10, y: 20 },
+      { id: "hat", parentId: "root", x: 0, y: -12, part: { assetId: "hat-image", frame: 0, detachable: true } },
+      { id: "head", parentId: "root", x: 0, y: 0, part: { assetId: "head-image", frame: 0 } }
+    ]
+  }));
+  assert.equal(rig.bones.find((bone) => bone.id === "hat").part.detachable, true);
+  assert.equal(rig.bones.find((bone) => bone.id === "head").part.detachable, false);
+});
 
 test("requires at least one clip so every rig can produce an initial pose", () => {
   assert.throws(() => createSkeletalRigProfile(sampleRig({ clips: [] })), /requires at least one clip/);
