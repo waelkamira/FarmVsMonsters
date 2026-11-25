@@ -386,12 +386,12 @@ export async function PATCH(req){
      const target=path.join(process.cwd(),"public",catalogPath.replace(/^web\//,""));
      try{const catalog=JSON.parse(await readFile(target,"utf8"));if(Array.isArray(catalog[key])){catalog[key]=catalog[key].filter((item)=>item.id!==id);await writeFile(target,JSON.stringify(catalog,null,2)+"\n","utf8");}}catch(error){if(error.code!=="ENOENT")throw error;}
     }
-    registry.assets=remaining;
-    await saveLocalRegistry(registry);
     for(const assetPath of candidatePaths){
      const target=path.resolve(process.cwd(),"public",assetPath.replace(/^\/+/, ""));
      try{await unlink(target);}catch(error){if(error.code!=="ENOENT")throw error;}
     }
+    registry.assets=remaining;
+    await saveLocalRegistry(registry);
     return NextResponse.json({success:true,operation,deletedId:id,message:"تم حذف الأصل وملفاته غير المشتركة من المكتبة المحلية."});
    }
    if(operation==="restore-version"&&registry.assets[index].releaseRequest?.number)return NextResponse.json({error:"لا يمكن استعادة إصدار مرتبط بطلب نشر قبل التحقق من حالته."},{status:409});
@@ -441,12 +441,12 @@ export async function PATCH(req){
      await githubPut(catalogPath,Buffer.from(JSON.stringify(catalog,null,2)+"\n"),"studio: remove "+asset.type+" "+id,token,targetBranch,document.sha);
     }
    }
-   await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify({...registry,assets:remaining},null,2)+"\n"),"studio: permanently delete "+asset.type+" "+id,token,storageBranch,registrySha);
    for(const assetPath of candidatePaths){
     const filePath="web/public"+assetPath;
     await githubDeleteIfExists(filePath,"studio: delete unused asset file for "+id,token,storageBranch);
     if(targetBranch!==storageBranch)await githubDeleteIfExists(filePath,"studio: delete published asset file for "+id,token,targetBranch);
    }
+   await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify({...registry,assets:remaining},null,2)+"\n"),"studio: permanently delete "+asset.type+" "+id,token,storageBranch,registrySha);
    return NextResponse.json({success:true,operation,deletedId:id,message:"تم حذف الأصل من سجل Studio وكتالوج اللعبة وملفات GitHub غير المشتركة."});
   }
 
