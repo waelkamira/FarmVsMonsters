@@ -334,7 +334,7 @@ test("stage selection reflects saved unlocks without linking unfinished stages i
   assert.match(stagePage, /unlockedStage >= 2/);
   assert.match(stagePage, /UNLOCKED · INTRO/);
   assert.match(stagePage, /href="\/stage\/1"/);
-  assert.match(scene, /won = Boolean\(won && \(this\.stageNumber !== 1 \|\| this\.phaseOneStoryState === "complete"\)\)/);
+  assert.match(scene, /won = Boolean\(won\)/);
   assert.doesNotMatch(scene, /unlockNextStage\(window\.localStorage/);
 });
 
