@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { readStorageValue, writeStorageValue } from "../game/services/browserStorage.mjs";
+import { normalizeBrowserLocale, readStorageValue, writeStorageValue } from "../game/services/browserStorage.mjs";
 
 const translations = {
   "A PRIMITIVE 2D FARM DEFENSE ADVENTURE": "مغامرة بدائية للدفاع عن المزرعة",
@@ -112,9 +112,12 @@ export function LocaleProvider({ children }) {
   }, []);
   useEffect(() => { document.documentElement.lang = locale; document.documentElement.dir = locale === "ar" ? "rtl" : "ltr"; }, [locale]);
   const setLocale = (next) => {
-    setLocaleState(next);
-    writeStorageValue(window, "farmVsMonsters.language", next);
-    window.dispatchEvent(new CustomEvent("farm-language-change", { detail: next }));
+    const nextLocale = normalizeBrowserLocale(next, locale);
+    setLocaleState(nextLocale);
+    if (typeof window !== "undefined") {
+      writeStorageValue(window, "farmVsMonsters.language", nextLocale);
+      window.dispatchEvent(new CustomEvent("farm-language-change", { detail: nextLocale }));
+    }
   };
   const value = useMemo(() => ({ locale, setLocale, t: (v) => translate(v, locale) }), [locale]);
   return <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>;
