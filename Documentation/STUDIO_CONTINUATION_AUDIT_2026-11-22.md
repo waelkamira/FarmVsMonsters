@@ -43,3 +43,58 @@ F. Behavioral API tests, game integration tests, and Chrome Windows playtest/bui
 
 ## Session limitation
 GitHub source inspection and repository metadata were available. The local Windows folder `H:\FarmVsMonsters\web` and browser session were not connected, so commands, local files, and actual gameplay could not be executed.
+
+
+## Documentation reconciliation update — 2026-11-22
+
+The foundation-first documentation pass is available for review in draft PR #90:
+- `STUDIO_SYSTEM_INVENTORY.md` — actual pages, API routes, shared modules, planned systems and evidence boundaries.
+- `STUDIO_END_TO_END_DATA_FLOW.md` — source-backed flows and required transactional boundaries.
+- `STUDIO_DEPENDENCY_MAP.md` — layer/dependency order and unified Asset & Animation lifecycle.
+- `STUDIO_PHASE1_ACCEPTANCE_MATRIX.md` — explicit Phase 1 gates and end-to-end scenarios.
+- `STUDIO_IMPLEMENTATION_ROADMAP.md` — reordered phases with Studio Core and Asset & Animation foundation in Phase 1.
+- `STUDIO_MASTER_PLAN.md` — canonical reconciliation section while preserving historical implementation notes.
+
+The user-confirmed governance decision is explicit: Auto-Rig and Hybrid/Skeletal Rig are integrated capabilities within Asset & Animation Studio, not separate projects or release lifecycles. Both must use the same asset identity, revisions, dependency checks, readiness, release approval, runtime validation and rollback.
+
+PR #90 is draft and has not been merged. The branch is based on main `a642d676e186bb6ae59b5875585352a690ce40d7`, seven commits ahead and zero commits behind at comparison time. No code, runtime or asset changes were made in this documentation pass. No tests, lint, production build, Chrome/Windows or live Phaser battle were executed.
+
+
+## Release-flow history correction — 2026-11-22
+
+The direct-publish behavior is not an accidental discrepancy in the current route. PR #86 (`Studio: publish tested assets directly to the game`) is merged into main. Its explicit intent was to replace the earlier release-branch/PR flow with direct writes to `STUDIO_PUBLISH_BRANCH` (default `main`), and it removed the pull-request creation helper from the API route. Its own description acknowledges that the catalog and files are separate Contents API commits and that a registry sync failure can leave the published catalog live while Studio registry state remains stale.
+
+The older `feat/studio-release-pull-request-flow` branch still contains an earlier PR-based implementation, but comparison with current main reports it is 11 commits ahead and 313 commits behind. It is **not safe to merge or cherry-pick wholesale**; only its design/history may inform a fresh implementation that preserves current monster, rig-part and projectile behavior.
+
+This confirms that the Phase 1 P0 release blocker is a deliberate mainline behavior change that must be reversed through a new, reviewed implementation—not merely a stale documentation statement.
+
+
+## Rig branch reconciliation — 2026-11-22
+
+- PR #84 (Hybrid Animation Engine) is closed unmerged. Mainline has related Rig source, but the old branch is divergent (206 ahead / 66 behind); do not merge it wholesale.
+- PR #89 (AI Auto-Rig Builder) remains open and unmerged. Its `AutoRigBuilderPanel.jsx`, semantic-role classifier, template retargeting and worker enhancements are not present on main. Main has only the Auto-Rig builder/protocol/worker API foundation, with no Studio page invocation.
+- PR #89's dedicated Auto-Rig subsystem validation passed, while Studio and Game Validation, Web validation and Web quality gate failed on its head. The target Windows/SAM2 hardware/model smoke test remains unverified.
+- The panel and supporting capabilities are to be integrated as a sub-capability of Asset & Animation Studio, using the common asset lifecycle. Do not merge PR #89 wholesale or describe its UI as already present on main.
+
+
+## Phase 1 implementation follow-up — draft PR #91
+
+Draft PR #91 (`feat/studio-reviewed-release-transaction`) implements the first critical foundation corrections:
+- Replaces direct game-branch publishing with isolated release-branch staging and a review Pull Request containing the asset, rig parts, projectile dependency and catalog update.
+- Adds atomic local registry writes with an exclusive lock and expected-content SHA.
+- Adds accessible asset cloning and unsaved-change protection.
+- Adds focused Studio foundation tests and runs lint/build even if the legacy full suite fails.
+
+CI evidence on head `e7c7b4e46d01a310dd561759047bbd2692c81323`:
+- Focused Studio foundation tests: passed.
+- ESLint: passed.
+- Production build: passed.
+- Full unit suite: 54 failures; every failure also exists on the main baseline run (55 failures). The branch adds no new full-suite failure and fixes the existing accessible-clone-dialog failure.
+- Chrome/Windows browser testing and a live Phaser battle remain unperformed.
+
+PR #91 is draft and unmerged. Interrupted-release recovery/idempotency, complete RBAC/audit scope, broader Studio shell modularization and real browser/runtime evidence remain open.
+
+
+### Correction: Hybrid Rig mainline merge record
+
+PR #84 was closed unmerged, but the Hybrid Animation Engine was subsequently ported onto the current mainline and merged through **PR #88** at `a642d676e186bb6ae59b5875585352a690ce40d7`. Thus the current mainline RigEditor, skeletal contracts, Phaser adapter and BattleScene integration are source-integrated from PR #88. The older `feat/studio-hybrid-animation-engine` branch remains divergent and must not be merged; do not confuse it with the merged `feat/studio-hybrid-animation-engine-mainline` branch.
