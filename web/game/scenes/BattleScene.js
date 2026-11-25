@@ -1571,6 +1571,8 @@ export default class BattleScene extends Scene {
     if (!boss?.alive || amount <= 0) return;
     boss.hp = applyHitPointsDamage(boss.hp, amount).hp;
     if (boss.sprite?.active) {
+      this.applySquashStretch(boss.sprite, { preX: 0.9, preY: 1.12, impactX: 1.16, impactY: 0.78, durationMs: 190 });
+      this.juiceCameraImpact({ heavy: true, zoomPunch: boss.hp <= boss.maxHp * 0.3 });
       const sprite = boss.sprite;
       if (boss.hitStopTimer) {
         boss.hitStopTimer.remove(false);
@@ -1594,6 +1596,7 @@ export default class BattleScene extends Scene {
     this.drawDragonHealthBar();
     if (boss.hp > 0) return;
     boss.alive = false;
+    this.juiceCameraImpact({ heavy: true, zoomPunch: true });
     this.dragonHealthBar?.destroy();
     this.dragonHealthLabel?.destroy();
     if (boss.sprite?.active) {
@@ -1813,13 +1816,67 @@ export default class BattleScene extends Scene {
       : -Infinity;
     if (cooldownMs > 0 && now - lastPlayed < cooldownMs) return false;
     try {
-      this.sound.play(key, { volume: PhaserMath.Clamp(volume / 100, 0, 1) });
+      // Small per-play rate variation keeps repeated cartoon impacts from sounding mechanical.
+      this.sound.play(key, {
+        volume: PhaserMath.Clamp(volume / 100, 0, 1),
+        rate: PhaserMath.FloatBetween(0.9, 1.1)
+      });
       if (this.sfxCooldowns) this.sfxCooldowns.set(key, now);
       return true;
     } catch {
       // Sound is optional; never let a failed audio device interrupt gameplay.
       return false;
     }
+  }
+
+  applySquashStretch(target, {
+    preX = 0.9,
+    preY = 1.12,
+    impactX = 1.14,
+    impactY = 0.8,
+    durationMs = 150
+  } = {}) {
+    if (!target?.active || !this.tweens) return false;
+    const baseX = Number.isFinite(target.__juiceBaseScaleX) ? target.__juiceBaseScaleX : (target.scaleX || 1);
+    const baseY = Number.isFinite(target.__juiceBaseScaleY) ? target.__juiceBaseScaleY : (target.scaleY || 1);
+    target.__juiceBaseScaleX = baseX;
+    target.__juiceBaseScaleY = baseY;
+    this.tweens.killTweensOf(target);
+    target.setScale(baseX * preX, baseY * preY);
+    this.tweens.add({
+      targets: target,
+      scaleX: baseX * impactX,
+      scaleY: baseY * impactY,
+      duration: Math.max(70, durationMs),
+      ease: "Back.easeOut",
+      yoyo: true,
+      hold: 24,
+      onComplete: () => {
+        if (target.active) target.setScale(baseX, baseY);
+      }
+    });
+    return true;
+  }
+
+  juiceCameraImpact({ heavy = false, zoomPunch = false } = {}) {
+    const camera = this.cameras?.main;
+    if (!camera || this.gameOver) return false;
+    camera.shake(heavy ? 130 : 90, heavy ? 0.0038 : 0.0018);
+    if (zoomPunch) {
+      const baseZoom = Number.isFinite(camera.__juiceBaseZoom) ? camera.__juiceBaseZoom : (camera.zoom || 1);
+      camera.__juiceBaseZoom = baseZoom;
+      this.cameraJuiceTween?.stop?.();
+      this.cameraJuiceTween = this.tweens.add({
+        targets: camera,
+        zoom: baseZoom * (heavy ? 1.055 : 1.025),
+        duration: 90,
+        ease: "Quad.easeOut",
+        yoyo: true,
+        hold: 45,
+        onComplete: () => { if (camera) camera.setZoom?.(baseZoom); }
+      });
+    }
+    return true;
   }
 
   playHyenaVoice(kind = "growl", intensity = 1) {
@@ -3199,6 +3256,13 @@ export default class BattleScene extends Scene {
   spawnStudioEnergy(plant, amount) {
     const pickupId = "pickup-" + this.nextEnergyPickupId++;
     const token = this.add.container(plant.x, plant.y - 64).setDepth(35);
+    token.setScale(0.02);
+    this.tweens.add({
+      targets: token, scale: 1.2, duration: 230, ease: "Back.easeOut",
+      onComplete: () => {
+        if (token.active) this.tweens.add({ targets: token, scale: 1, duration: 95, ease: "Sine.easeOut" });
+      }
+    });
     token.setSize(42, 42).setInteractive();
     if (token.input) token.input.cursor = "pointer";
     token.add([
@@ -3246,6 +3310,13 @@ export default class BattleScene extends Scene {
     const pickupId = `pickup-${this.nextEnergyPickupId++}`;
     this.recordCombatEvent("energy_spawned", { sourceCol: plant.col, sourceRow: plant.row, pickupId, amount });
     const token = this.add.container(plant.x, plant.y - 66).setDepth(35);
+    token.setScale(0.02);
+    this.tweens.add({
+      targets: token, scale: 1.2, duration: 230, ease: "Back.easeOut",
+      onComplete: () => {
+        if (token.active) this.tweens.add({ targets: token, scale: 1, duration: 95, ease: "Sine.easeOut" });
+      }
+    });
     token.combatPickupId = pickupId;
     token.combatPickupConsumed = false;
     this.energyPickups.push(token);
@@ -4035,8 +4106,17 @@ export default class BattleScene extends Scene {
       alpha: 1,
       scaleX: finalScaleX,
       scaleY: finalScaleY,
+      scaleX: finalScaleX * 1.12,
+      scaleY: finalScaleY * 1.12,
       duration: archetype === "dust-skitter" ? 260 : archetype === "stonehide" ? 520 : 400,
-      ease: archetype === "dust-skitter" ? "Cubic.easeOut" : "Back.Out"
+      ease: archetype === "dust-skitter" ? "Cubic.easeOut" : "Back.Out",
+      onComplete: () => {
+        if (!view.active) return;
+        this.tweens.add({
+          targets: view, scaleX: finalScaleX, scaleY: finalScaleY,
+          duration: 110, ease: "Sine.easeOut"
+        });
+      }
     });
 
     const g = this.add.graphics();
@@ -4487,6 +4567,17 @@ export default class BattleScene extends Scene {
             : null,
           enableJump: true
         });
+        if (jumpWillStart) {
+          this.applySquashStretch(monster.hyenaSprite?.active ? monster.hyenaSprite : monster.view, {
+            preX: 0.82, preY: 1.2, impactX: 0.94, impactY: 1.08, durationMs: 180
+          });
+        }
+        if (jumpWillLand) {
+          this.applySquashStretch(monster.hyenaSprite?.active ? monster.hyenaSprite : monster.view, {
+            preX: 0.9, preY: 1.12, impactX: 1.2, impactY: 0.72, durationMs: 165
+          });
+          this.createFootstepDust(monster.x, monster.y + 6, monster.view.scaleY * 0.9);
+        }
         monster.isJumping = motion.isJumping;
         monster.jumpCooldown = motion.jumpCooldownMs;
         monster.jumpElapsed = motion.jumpElapsedMs;
@@ -4534,6 +4625,13 @@ export default class BattleScene extends Scene {
       const position = this.monsterLanePoint(monster.localX, monster.row);
       monster.x = position.x; monster.y = position.y;
       monster.view.setPosition(position.x, position.y);
+      if (!withinBiteRange) {
+        monster.dustTimer = Math.max(0, (monster.dustTimer || 0) - delta);
+        if (monster.dustTimer <= 0) {
+          this.createFootstepDust(position.x - 9, position.y + 5, monster.view.scaleY * 0.72);
+          monster.dustTimer = monster.kind === "dust-skitter" ? 210 : 360;
+        }
+      }
       if (monster.hyenaSprite?.active) monster.hyenaSprite.y = 0;
       if ((monster.hyenaSprite || monster.studioRig) && monster.hitAnimUntil <= this.time.now) {
         // The corrected 15-frame run sheet belongs to the fast hyena.
@@ -4966,24 +5064,24 @@ export default class BattleScene extends Scene {
         if (sprite.postFX?.addGlow) {
           monster.hitGlowEffect = sprite.postFX.addGlow(hitColor, reaction.glowRadius, 0, false, 0.1, 12);
         }
-        this.tweens.killTweensOf(sprite);
         const baseX = Number.isFinite(monster.hitRecoilBaseX) ? monster.hitRecoilBaseX : sprite.x;
         monster.hitRecoilBaseX = baseX;
         sprite.x = baseX;
-        sprite.setScale(0.918);
+        this.applySquashStretch(sprite, {
+          preX: 0.9,
+          preY: 1.13,
+          impactX: Math.max(1.08, reaction.squashX),
+          impactY: Math.min(0.9, reaction.squashY),
+          durationMs: Math.max(120, Math.round(reaction.hitDurationMs * 0.72))
+        });
         this.tweens.add({
           targets: sprite,
           x: baseX + reaction.recoilPx,
-          scaleX: reaction.squashX,
-          scaleY: reaction.squashY,
           duration: Math.max(45, Math.round(reaction.hitDurationMs * 0.32)),
           ease: "Quad.easeOut",
           yoyo: true,
           onComplete: () => {
-            if (sprite.active) {
-              sprite.x = baseX;
-              sprite.setScale(0.918);
-            }
+            if (sprite.active) sprite.x = baseX;
           }
         });
       }
@@ -5013,6 +5111,9 @@ export default class BattleScene extends Scene {
     this.playMonsterHitSound();
     if (monster.hyenaSprite) this.playHyenaVoice("yelp", 0.82);
     this.flashMonsterOnHit(monster, plantType);
+    if (monster.kind === "stonehide" || monster.kind === "alpha-brute") {
+      this.juiceCameraImpact({ heavy: monster.kind === "alpha-brute" });
+    }
     this.damageMonsterIfNeeded(monster);
   }
 
@@ -5025,6 +5126,10 @@ export default class BattleScene extends Scene {
     }
     this.createMonsterDefeatBurst(monster.x, monster.y, monster.view && monster.view.scaleY);
     this.createMonsterDefeatMotes(monster);
+    this.createFootstepDust(monster.x, monster.y + 18, (monster.view?.scaleY || 1) * 1.25);
+    if (monster.kind === "stonehide" || monster.kind === "alpha-brute") {
+      this.juiceCameraImpact({ heavy: monster.kind === "alpha-brute" });
+    }
     this.playMonsterDefeatSound();
     if (monster.hyenaSprite) this.playHyenaVoice("yelp", 0.88);
     // Play the authored death sequence before removing the creature.
@@ -5123,6 +5228,12 @@ export default class BattleScene extends Scene {
     // follows it so the two signals never overwrite one another.
     this.applyPlantHitStop(plant, 80);
     const artwork = (plant.view.list || []).filter((child) => child?.active);
+    const squashTarget = artwork.find((child) => typeof child.setScale === "function") || plant.view;
+    this.time.delayedCall(80, () => {
+      if (plant.alive && squashTarget?.active) {
+        this.applySquashStretch(squashTarget, { preX: 0.88, preY: 1.14, impactX: 1.18, impactY: 0.76, durationMs: 175 });
+      }
+    });
     this.time.delayedCall(80, () => {
       if (!plant.alive || !plant.view?.active) return;
       let tinted = false;
