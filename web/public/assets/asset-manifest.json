@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-25T21:51:40.588Z",
-  "assetCount": 146,
-  "totalBytes": 21911162,
+  "generatedAt": "2026-11-25T22:01:29.397Z",
+  "assetCount": 144,
+  "totalBytes": 21533023,
   "groups": {
     "audio": [
       {
@@ -892,16 +892,6 @@
     ],
     "plants": [
       {
-        "key": "plants-electric-mushroom-level-1",
-        "url": "/assets/plants/Electric-mushroom-level-1.png",
-        "type": "image",
-        "group": "plants",
-        "bytes": 366074,
-        "sha256": "22d8f60a35bac3067319880ae8d98be0ba8ac017aaabbbdff8a677ca3d6574a2",
-        "width": 512,
-        "height": 512
-      },
-      {
         "key": "plants-snow-thrower-bomb-level-1",
         "url": "/assets/plants/Snow-thrower-bomb-level-1.png",
         "type": "image",
@@ -1120,16 +1110,6 @@
         "sha256": "251662e3c0caa6c03a8264cfee2e9cc28af6bd632c485ce4cb6c0e71faf13610",
         "width": 106,
         "height": 82
-      },
-      {
-        "key": "projectiles-plants-electric-mushroom-level-1-projectile-2774aab52483e625bdc814d0743758c7b260638dfc1f3b88603e6c291aa58706",
-        "url": "/assets/projectiles/plants/electric-mushroom-level-1-projectile-2774aab52483e625bdc814d0743758c7b260638dfc1f3b88603e6c291aa58706.png",
-        "type": "image",
-        "group": "projectiles",
-        "bytes": 12065,
-        "sha256": "2774aab52483e625bdc814d0743758c7b260638dfc1f3b88603e6c291aa58706",
-        "width": 87,
-        "height": 64
       },
       {
         "key": "projectiles-plants-pepper-flamethrower-level-1-projectile-30572f40a67eec42f4ceec6b79ed9017a0313f2a524dcf916a2226301990a207",
@@ -2347,16 +2327,6 @@
       "height": 64
     },
     {
-      "key": "plants-electric-mushroom-level-1",
-      "url": "/assets/plants/Electric-mushroom-level-1.png",
-      "type": "image",
-      "group": "plants",
-      "bytes": 366074,
-      "sha256": "22d8f60a35bac3067319880ae8d98be0ba8ac017aaabbbdff8a677ca3d6574a2",
-      "width": 512,
-      "height": 512
-    },
-    {
       "key": "plants-snow-thrower-bomb-level-1",
       "url": "/assets/plants/Snow-thrower-bomb-level-1.png",
       "type": "image",
@@ -2573,16 +2543,6 @@
       "sha256": "251662e3c0caa6c03a8264cfee2e9cc28af6bd632c485ce4cb6c0e71faf13610",
       "width": 106,
       "height": 82
-    },
-    {
-      "key": "projectiles-plants-electric-mushroom-level-1-projectile-2774aab52483e625bdc814d0743758c7b260638dfc1f3b88603e6c291aa58706",
-      "url": "/assets/projectiles/plants/electric-mushroom-level-1-projectile-2774aab52483e625bdc814d0743758c7b260638dfc1f3b88603e6c291aa58706.png",
-      "type": "image",
-      "group": "projectiles",
-      "bytes": 12065,
-      "sha256": "2774aab52483e625bdc814d0743758c7b260638dfc1f3b88603e6c291aa58706",
-      "width": 87,
-      "height": 64
     },
     {
       "key": "projectiles-plants-pepper-flamethrower-level-1-projectile-30572f40a67eec42f4ceec6b79ed9017a0313f2a524dcf916a2226301990a207",
