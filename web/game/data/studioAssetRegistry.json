@@ -2372,6 +2372,20 @@
       "status": "draft",
       "createdAt": "2026-11-25T14:30:51.962Z",
       "updatedAt": "2026-11-25T14:30:51.962Z"
+    },
+    {
+      "id": "tomato",
+      "type": "plant",
+      "name": "tomato",
+      "path": "/assets/plants/tomato.png",
+      "filename": "tomato.png",
+      "rows": 1,
+      "columns": 1,
+      "frameCount": 1,
+      "spriteSheet": false,
+      "status": "draft",
+      "createdAt": "2026-11-25T14:33:39.825Z",
+      "updatedAt": "2026-11-25T14:33:39.825Z"
     }
   ]
 }
