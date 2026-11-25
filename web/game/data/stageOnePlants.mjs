@@ -38,7 +38,7 @@ export const STAGE_ONE_PLANTS = Object.freeze([
   },
   {
     id: "pea-shooter",
-    assetPath: "/assets/plants/pea-shooter.png",
+    assetPath: null, plannedAssetPath: "/assets/plants/pea-shooter.png",
     name: "Pea Shooter",
     nameAr: "قاذف البازلاء",
     role: "Rapid ranged attacker",
@@ -50,7 +50,7 @@ export const STAGE_ONE_PLANTS = Object.freeze([
   },
   {
     id: "thorn-wall",
-    assetPath: "/assets/plants/thorn-wall.png",
+    assetPath: null, plannedAssetPath: "/assets/plants/thorn-wall.png",
     name: "Thorn Wall",
     nameAr: "جدار الأشواك",
     role: "Heavy blocker",
@@ -62,7 +62,7 @@ export const STAGE_ONE_PLANTS = Object.freeze([
   },
   {
     id: "sunflower",
-    assetPath: "/assets/plants/sunflower.png",
+    assetPath: null, plannedAssetPath: "/assets/plants/sunflower.png",
     name: "Sunflower",
     nameAr: "عباد الشمس",
     role: "Energy generator",
@@ -74,7 +74,7 @@ export const STAGE_ONE_PLANTS = Object.freeze([
   },
   {
     id: "ice-bloom",
-    assetPath: "/assets/plants/ice-bloom.png",
+    assetPath: null, plannedAssetPath: "/assets/plants/ice-bloom.png",
     name: "Ice Bloom",
     nameAr: "زهرة الصقيع",
     role: "Slowing support",
@@ -86,7 +86,7 @@ export const STAGE_ONE_PLANTS = Object.freeze([
   },
   {
     id: "double-radish",
-    assetPath: "/assets/plants/double-radish.png",
+    assetPath: null, plannedAssetPath: "/assets/plants/double-radish.png",
     name: "Twin Radish",
     nameAr: "الفجل المزدوج",
     role: "Double projectile attacker",
@@ -110,7 +110,7 @@ export const STAGE_ONE_PLANTS = Object.freeze([
   },
   {
     id: "explosive-berry",
-    assetPath: "/assets/plants/explosive-berry.png",
+    assetPath: null, plannedAssetPath: "/assets/plants/explosive-berry.png",
     name: "Blast Berry",
     nameAr: "توتة متفجرة",
     role: "Area damage",
@@ -182,7 +182,7 @@ export const STAGE_ONE_PLANTS = Object.freeze([
   },
   {
     id: "fire-pepper",
-    assetPath: "/assets/plants/fire-pepper.png",
+    assetPath: null, plannedAssetPath: "/assets/plants/fire-pepper.png",
     name: "Fire Pepper",
     nameAr: "الفلفل الناري",
     role: "Area fire attacker",

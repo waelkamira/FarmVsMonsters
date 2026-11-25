@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "note": "User-authored Phase 1 story artwork. Optional until the matching files are added under web/public/assets.",
+  "note": "Authored Phase 1 story artwork is pending. These paths are design targets only and are not queued by the Phaser runtime until the files exist.",
   "assets": [
     {
       "key": "farmer-sling",
@@ -8,7 +8,9 @@
       "frameWidth": 360,
       "frameHeight": 430,
       "frames": 6,
-      "purpose": "Farmer aims and fires the sling automatically at the dragon."
+      "purpose": "Farmer aims and fires the sling automatically at the dragon.",
+      "status": "awaiting-art",
+      "runtimeEnabled": false
     },
     {
       "key": "farmer-rescue",
@@ -16,7 +18,9 @@
       "frameWidth": 360,
       "frameHeight": 430,
       "frames": 6,
-      "purpose": "Farmer reaches down and lifts the princess after the dragon is defeated."
+      "purpose": "Farmer reaches down and lifts the princess after the dragon is defeated.",
+      "status": "awaiting-art",
+      "runtimeEnabled": false
     },
     {
       "key": "farmer-carry",
@@ -24,7 +28,9 @@
       "frameWidth": 360,
       "frameHeight": 430,
       "frames": 6,
-      "purpose": "Farmer carries the princess while running back to the farm."
+      "purpose": "Farmer carries the princess while running back to the farm.",
+      "status": "awaiting-art",
+      "runtimeEnabled": false
     },
     {
       "key": "dragon-boss",
@@ -32,19 +38,25 @@
       "frameWidth": 512,
       "frameHeight": 512,
       "frames": "1 or more",
-      "purpose": "Small Phase 1 dragon boss; animated horizontally behind the battle lanes."
+      "purpose": "Small Phase 1 dragon boss; animated horizontally behind the battle lanes.",
+      "status": "awaiting-art",
+      "runtimeEnabled": false
     },
     {
       "key": "phase-one-princess-captive",
       "path": "/assets/characters/princess/princess-captive.png",
       "type": "image",
-      "purpose": "Bound/captive pose shown beside the dragon during the final wave."
+      "purpose": "Bound/captive pose shown beside the dragon during the final wave.",
+      "status": "awaiting-art",
+      "runtimeEnabled": false
     },
     {
       "key": "phase-one-princess-rescued",
       "path": "/assets/characters/princess/princess-rescued.png",
       "type": "image",
-      "purpose": "Unbound pose attached to the farmer after the rescue animation."
+      "purpose": "Unbound pose attached to the farmer after the rescue animation.",
+      "status": "awaiting-art",
+      "runtimeEnabled": false
     },
     {
       "key": "phase-one-emblem",
@@ -52,7 +64,10 @@
       "type": "image",
       "recommendedWidth": 840,
       "recommendedHeight": 500,
-      "purpose": "Phase 1 emblem shown on the victory screen."
+      "purpose": "Phase 1 emblem shown on the victory screen.",
+      "status": "awaiting-art",
+      "runtimeEnabled": false
     }
-  ]
+  ],
+  "runtimeEnabled": false
 }

@@ -155,14 +155,9 @@ export default class BattleScene extends Scene {
     this.load.spritesheet("farmer-attack", "/assets/characters/farmer/farmer-attack.png", { frameWidth: 180, frameHeight: 360 });
     this.load.spritesheet("farmer-hit", "/assets/characters/farmer/farmer-hit.png", { frameWidth: 152, frameHeight: 430 });
     this.load.spritesheet("farmer-death", "/assets/characters/farmer/farmer-death.png", { frameWidth: 152, frameHeight: 430 });
-    // Optional authored story sheets; missing files do not block the battle.
-    this.load.spritesheet("farmer-sling", "/assets/characters/farmer/farmer-sling.png", { frameWidth: 360, frameHeight: 430 });
-    this.load.spritesheet("farmer-rescue", "/assets/characters/farmer/farmer-rescue.png", { frameWidth: 360, frameHeight: 430 });
-    this.load.spritesheet("farmer-carry", "/assets/characters/farmer/farmer-carry.png", { frameWidth: 360, frameHeight: 430 });
-    this.load.spritesheet("dragon-boss", "/assets/characters/monsters/dragon/dragon-boss.png", { frameWidth: 512, frameHeight: 512 });
-    this.load.image("phase-one-princess-captive", "/assets/characters/princess/princess-captive.png");
-    this.load.image("phase-one-princess-rescued", "/assets/characters/princess/princess-rescued.png");
-    this.load.image("phase-one-emblem", "/assets/levels/phase-1-emblem.png");
+    // Phase 1 story artwork is not in the asset bundle yet. Its paths remain
+    // documented in phase-one-story-assets.json, but must not be queued until
+    // the authored files are committed (avoids guaranteed Phaser loaderror events).
 
     // These four hyena sheets now share one standardized 360x298 frame grid.
     this.load.spritesheet("hyena-idle", "/assets/characters/monsters/hyena/hyena-idle.png", { frameWidth: 360, frameHeight: 298 });
