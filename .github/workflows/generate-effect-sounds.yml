@@ -1,4 +1,4 @@
-name: Generate Studio effect audio
+name: Generate Studio effect audio # includes focused runtime tests
 on:
   push:
     branches: [feat/studio-effects-library]
