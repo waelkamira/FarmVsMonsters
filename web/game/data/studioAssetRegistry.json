@@ -1564,18 +1564,18 @@
       "id": "electric-mushroom-level-1",
       "type": "plant",
       "name": "electric-mushroom-level-1",
-      "path": "/assets/plants/Electric-mushroom-level-1.png",
-      "filename": "Electric-mushroom-level-1.png",
+      "path": "/assets/plants/electric-mushroom-level-1-c78b536e520411e00b0564e5f0792ad94fc39bf85e2329bd2cb6c0c0057c3e01.png",
+      "filename": "electric-mushroom-level-1.png",
       "rows": 1,
       "columns": 1,
       "frameCount": 1,
-      "spriteSheet": false,
-      "status": "published",
+      "spriteSheet": true,
+      "status": "draft",
       "createdAt": "2026-11-24T04:16:00.506Z",
-      "updatedAt": "2026-11-25T00:33:13.794Z",
+      "updatedAt": "2026-11-25T00:42:14.253Z",
       "releaseRequest": null,
-      "publishedAt": "2026-11-24T21:12:38.761Z",
-      "testingAt": "2026-11-24T21:12:00.338Z",
+      "publishedAt": null,
+      "testingAt": null,
       "archivedAt": null,
       "restoredFromVersion": null,
       "combat": {
@@ -1649,7 +1649,7 @@
         }
       },
       "rigProfile": null,
-      "revision": 5,
+      "revision": 6,
       "versions": [
         {
           "versionNumber": 1,
@@ -1912,8 +1912,92 @@
             }
           },
           "rigProfile": null
+        },
+        {
+          "versionNumber": 5,
+          "savedAt": "2026-11-25T00:33:13.794Z",
+          "id": "electric-mushroom-level-1",
+          "type": "plant",
+          "name": "electric-mushroom-level-1",
+          "filename": "Electric-mushroom-level-1.png",
+          "path": "/assets/plants/Electric-mushroom-level-1.png",
+          "rows": 1,
+          "columns": 1,
+          "spriteSheet": false,
+          "combat": {
+            "mode": "projectile",
+            "projectile": {
+              "id": "electric-mushroom-level-1-projectile",
+              "path": "/assets/projectiles/plants/electric-mushroom-level-1-projectile-2774aab52483e625bdc814d0743758c7b260638dfc1f3b88603e6c291aa58706.png",
+              "filename": "electric-mushroom-level-1-projectile.png",
+              "managed": false,
+              "frameCount": 9,
+              "rows": 3,
+              "columns": 3
+            },
+            "energyCost": 60,
+            "hp": 150,
+            "cooldownMs": 1800,
+            "damage": 30,
+            "range": 180,
+            "projectileSpeed": 280,
+            "projectileHeight": 0,
+            "projectileEffectColor": "#ffc247",
+            "projectileRotation": 0,
+            "projectileTrajectoryType": "custom",
+            "projectilePathPoints": [
+              {
+                "progress": 0,
+                "x": 0,
+                "y": 0
+              },
+              {
+                "progress": 0.5,
+                "x": 0,
+                "y": 110
+              },
+              {
+                "progress": 1,
+                "x": 0,
+                "y": 0
+              }
+            ],
+            "projectileCurveX": 0,
+            "projectileCurveY": 110,
+            "projectileLaunchOffsetX": 14,
+            "projectileLaunchOffsetY": -30,
+            "projectileTargetOffsetX": 0,
+            "projectileTargetOffsetY": 0,
+            "projectileCollisionRadius": 22,
+            "energyAmount": 15,
+            "energyIntervalMs": 12000,
+            "sizePercent": 100
+          },
+          "animationProfile": {
+            "speedMultiplier": 1,
+            "idle": {
+              "startFrame": 0,
+              "endFrame": 0,
+              "fps": 6,
+              "loop": true
+            },
+            "move": {
+              "startFrame": 0,
+              "endFrame": 0,
+              "fps": 10,
+              "loop": true
+            },
+            "attack": {
+              "startFrame": 0,
+              "endFrame": 0,
+              "fps": 12,
+              "loop": false
+            }
+          },
+          "rigProfile": null
         }
-      ]
+      ],
+      "flipX": false
     },
     {
       "id": "corn-monster",
