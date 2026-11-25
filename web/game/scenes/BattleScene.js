@@ -3552,6 +3552,11 @@ export default class BattleScene extends Scene {
         dropPhase: "horizontal", alive: true, trailTimer: 0,
         plantType: plant.type, studioPlantId: plant.studioPlant.id
       });
+      if (String(plant.type).includes("electric")) {
+        this.applySquashStretch(plant.view, {
+          preX: 0.9, preY: 1.13, impactX: 1.16, impactY: 0.84, durationMs: 170
+        });
+      }
       this.playThornSound();
       return;
     }
@@ -3733,6 +3738,11 @@ export default class BattleScene extends Scene {
       dropPhase: "horizontal",
       alive: true, trailTimer: 0
     });
+    if (plant.type === "electric-mushroom") {
+      this.applySquashStretch(plant.view, {
+        preX: 0.9, preY: 1.13, impactX: 1.16, impactY: 0.84, durationMs: 170
+      });
+    }
     this.playThornSound();
   }
 
