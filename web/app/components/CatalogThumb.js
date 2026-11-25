@@ -1,4 +1,4 @@
-const TWEMOJI = "https://cdn.jsdelivr.net/gh/twitter/twemoji@15.1.0/assets/72x72";
+import SpriteThumbnail from "./SpriteThumbnail.jsx";\n\nconst TWEMOJI = "https://cdn.jsdelivr.net/gh/twitter/twemoji@15.1.0/assets/72x72";
 const LOCAL_PLANT_ICONS = {
   radish: "/assets/plants/radish-level-1.png",
   "energy-mushroom": "/assets/plants/mushroom.png",
@@ -15,7 +15,7 @@ const LOCAL_PLANT_ICONS = {
   "fire-pepper": "/assets/plant-icons/fire-pepper.svg"
 };
 
-const LOCAL_MONSTER_ICONS = {
+const SPRITE_SHEET_PLANTS = new Set(["radish", "mango", "pineapple", "hazelnut", "snow-thrower", "electric-mushroom"]);\n\nconst LOCAL_MONSTER_ICONS = {
   "cave-brute": "/assets/monster-icons/cave-brute.svg",
   "dust-skitter": "/assets/monster-icons/dust-skitter.svg",
   stonehide: "/assets/monster-icons/stonehide.svg",
@@ -24,7 +24,7 @@ const LOCAL_MONSTER_ICONS = {
 };
 
 const ART = {
-  radish: ["1f96c", "Radish greens"],
+  radish: ["1f96c", "Radish greens"],\n  pineapple: ["1f34d", "Pineapple"],\n  hazelnut: ["1f330", "Chestnut"],\n  "snow-thrower": ["2744", "Snowflake"],\n  "electric-mushroom": ["26a1", "High voltage"],
   "energy-mushroom": ["1f344", "Mushroom"],
   mango: ["1f96d", "Mango"],
   "pumpkin-guard": ["1f383", "Pumpkin"],
@@ -52,21 +52,25 @@ export default function CatalogThumb({ id, label, className = "" }) {
   return (
     <div className={`catalog-thumb ${className}`} role="img" aria-label={label || fallback}>
       <span className="catalog-thumb-glow" />
-      <img
-        src={localIcon || `${TWEMOJI}/${safeCode}.png`}
-        alt=""
-        className={["radish", "mango", "pineapple", "hazelnut"].includes(id) ? "catalog-thumb-sprite-sheet" : undefined}
-        loading="lazy"
-        onError={(event) => {
-          if (localIcon && !event.currentTarget.dataset.fallback) {
-            event.currentTarget.dataset.fallback = "true";
-            event.currentTarget.className = "";
-            event.currentTarget.src = `${TWEMOJI}/${safeCode}.png`;
-            return;
-          }
-          event.currentTarget.style.display = "none";
-        }}
-      />
+      {SPRITE_SHEET_PLANTS.has(id) && localIcon ? (
+        <SpriteThumbnail src={localIcon} rows={3} columns={3} frameCount={9} alt="" className="catalog-thumb-art" decorative />
+      ) : (
+        <img
+          src={localIcon || `${TWEMOJI}/${safeCode}.png`}
+          alt=""
+          className="catalog-thumb-art"
+          loading="lazy"
+          onError={(event) => {
+            if (localIcon && !event.currentTarget.dataset.fallback) {
+              event.currentTarget.dataset.fallback = "true";
+              event.currentTarget.className = "catalog-thumb-art";
+              event.currentTarget.src = `${TWEMOJI}/${safeCode}.png`;
+              return;
+            }
+            event.currentTarget.style.display = "none";
+          }}
+        />
+      )}
     </div>
   );
 }
