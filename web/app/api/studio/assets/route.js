@@ -47,11 +47,18 @@ async function githubDeleteIfExists(filePath,message,token,branch){
  if(!response.ok){const data=await response.json().catch(()=>({}));throw Error(data.message||"GitHub delete failed ("+response.status+").");}
  return true;
 }
+function assetSnapshots(asset){return [asset,...(Array.isArray(asset?.versions)?asset.versions:[])];}
 function assetOwnedPaths(asset){
- return [...new Set([asset?.path,asset?.atlas?.jsonPath,asset?.audio?.path,asset?.combat?.projectile?.path].filter((value)=>typeof value==="string"&&safeAssetPath(value)))];
+ return [...new Set(assetSnapshots(asset).flatMap(snapshot=>[
+  snapshot?.path,snapshot?.atlasMetadataPath,snapshot?.atlas?.jsonPath,snapshot?.audio?.path,snapshot?.combat?.projectile?.path,
+  ...Object.values(snapshot?.stateAnimations||{}).map(state=>state?.path)
+ ]).filter((value)=>typeof value==="string"&&safeAssetPath(value)))];
 }
 function assetPathStillUsed(assets,assetPath){
- return assets.some((item)=>[item.path,item.atlas?.jsonPath,item.audio?.path,item.combat?.projectile?.path].includes(assetPath));
+ return (Array.isArray(assets)?assets:[]).some(asset=>assetSnapshots(asset).some(snapshot=>[
+  snapshot?.path,snapshot?.atlasMetadataPath,snapshot?.atlas?.jsonPath,snapshot?.audio?.path,snapshot?.combat?.projectile?.path,
+  ...Object.values(snapshot?.stateAnimations||{}).map(state=>state?.path)
+ ].includes(assetPath)));
 }
 function removeManifestAssetReferences(manifest,assetPaths){
  const removed=new Set(assetPaths);
