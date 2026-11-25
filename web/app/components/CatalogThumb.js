@@ -1,4 +1,6 @@
-import SpriteThumbnail from "./SpriteThumbnail.jsx";\n\nconst TWEMOJI = "https://cdn.jsdelivr.net/gh/twitter/twemoji@15.1.0/assets/72x72";
+import SpriteThumbnail from "./SpriteThumbnail.jsx";
+
+const TWEMOJI = "https://cdn.jsdelivr.net/gh/twitter/twemoji@15.1.0/assets/72x72";
 const LOCAL_PLANT_ICONS = {
   radish: "/assets/plants/radish-level-1.png",
   "energy-mushroom": "/assets/plants/mushroom.png",
@@ -15,7 +17,9 @@ const LOCAL_PLANT_ICONS = {
   "fire-pepper": "/assets/plant-icons/fire-pepper.svg"
 };
 
-const SPRITE_SHEET_PLANTS = new Set(["radish", "mango", "pineapple", "hazelnut", "snow-thrower", "electric-mushroom"]);\n\nconst LOCAL_MONSTER_ICONS = {
+const SPRITE_SHEET_PLANTS = new Set(["radish", "mango", "pineapple", "hazelnut", "snow-thrower", "electric-mushroom"]);
+
+const LOCAL_MONSTER_ICONS = {
   "cave-brute": "/assets/monster-icons/cave-brute.svg",
   "dust-skitter": "/assets/monster-icons/dust-skitter.svg",
   stonehide: "/assets/monster-icons/stonehide.svg",
@@ -24,7 +28,11 @@ const SPRITE_SHEET_PLANTS = new Set(["radish", "mango", "pineapple", "hazelnut",
 };
 
 const ART = {
-  radish: ["1f96c", "Radish greens"],\n  pineapple: ["1f34d", "Pineapple"],\n  hazelnut: ["1f330", "Chestnut"],\n  "snow-thrower": ["2744", "Snowflake"],\n  "electric-mushroom": ["26a1", "High voltage"],
+  radish: ["1f96c", "Radish greens"],
+  pineapple: ["1f34d", "Pineapple"],
+  hazelnut: ["1f330", "Chestnut"],
+  "snow-thrower": ["2744", "Snowflake"],
+  "electric-mushroom": ["26a1", "High voltage"],
   "energy-mushroom": ["1f344", "Mushroom"],
   mango: ["1f96d", "Mango"],
   "pumpkin-guard": ["1f383", "Pumpkin"],
