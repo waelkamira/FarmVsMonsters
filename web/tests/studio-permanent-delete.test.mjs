@@ -26,7 +26,7 @@ test("Permanent deletion is authenticated, dependency-guarded, and supported by 
   assert.match(route, /if\(dependents\.length\)return NextResponse\.json\(\{error:"لا يمكن حذف الأصل لأن أصولاً أخرى تعتمد عليه:/);
   assert.match(route, /assetPathStillUsed\(remaining,assetPath\)/);
   assert.match(route, /githubDeleteIfExists\(filePath/);
-  assert.match(route, /if\(targetBranch!==storageBranch\)await githubDeleteIfExists/);
+  assert.doesNotMatch(route, /if\(targetBranch!==storageBranch\)await githubDeleteIfExists/);
   assert.match(route, /githubPut\(REGISTRY_PATH,Buffer\.from\(JSON\.stringify\(\{\.\.\.registry,assets:remaining\}/);
   assert.match(route, /release\?\.state==="open"/);
   const localDelete = route.indexOf("await unlink(target)", route.indexOf("if(operation===" + '"delete"' + "){"));
@@ -49,6 +49,6 @@ test("Deletion removes linked catalog entries and owned files without deleting s
   assert.match(route, /function assetPathStillUsed\(assets,assetPath\)/);
   assert.match(route, /function removeManifestAssetReferences\(manifest,assetPaths\)/);
   assert.match(route, /removeLocalAssetManifestReferences\(candidatePaths\)/);
-  assert.match(route, /removeGithubAssetManifestReferences\(candidatePaths,token,storageBranch\)/);
+  assert.doesNotMatch(route, /removeGithubAssetManifestReferences/);
   assert.match(route, /manifest\.assetCount=Object\.values\(manifest\.groups\)/);
 });
