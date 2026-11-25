@@ -216,7 +216,8 @@ export function createEffectPreview(canvas, effect, { loop = true, loopGapMs = 7
     bg.addColorStop(1, "#1d2a1c");
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    if (typeof targetRenderer === "function") targetRenderer(ctx, cx, cy, effect, elapsed);\n    else drawTarget(ctx, cx, cy, effect, elapsed);
+    if (typeof targetRenderer === "function") targetRenderer(ctx, cx, cy, effect, elapsed);
+    else drawTarget(ctx, cx, cy, effect, elapsed);
     for (const inst of instances) {
       const t = (elapsed - inst.delay) / inst.life;
       if (t >= 0 && t <= 1) inst.draw(ctx, t);
