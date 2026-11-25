@@ -40,20 +40,14 @@ test("Permanent deletion is authenticated, dependency-guarded, and supported by 
 test("Deletion removes linked catalog entries and owned files without deleting shared paths", () => {
   assert.match(route, /PUBLISHED_CATALOG_PATH,"plants"/);
   assert.match(route, /PUBLISHED_MONSTER_CATALOG_PATH,"monsters"/);
-  assert.match(route, /function assetOwnedPaths\(asset\)/);
+  assert.match(route, /import \{assetOwnedPaths,assetPathStillUsed,removeManifestAssetReferences,synchronizeAssetAudit\}/);
+  assert.match(route, /assetOwnedPaths\(asset\)/);
   assert.match(route, /filter\(\(value\)=>typeof value==="string"&&safeAssetPath\(value\)\)/);
   assert.ok(route.includes('import {mkdir,readFile,writeFile,unlink} from "node:fs/promises"'));
-  assert.match(route, /snapshot\?\.atlasMetadataPath/);
-  assert.match(route, /snapshot\?\.atlas\?\.jsonPath/);
-  assert.match(route, /snapshot\?\.audio\?\.path/);
-  assert.match(route, /snapshot\?\.combat\?\.projectile\?\.path/);
   assert.match(route, /function assetPathStillUsed\(assets,assetPath\)/);
   assert.match(route, /function removeManifestAssetReferences\(manifest,assetPaths\)/);
   assert.match(route, /removeLocalAssetManifestReferences\(candidatePaths\)/);
   assert.match(route, /removeGithubAssetManifestReferences\(candidatePaths,token,storageBranch\)/);
-  assert.match(route, /manifest\.assetCount=all\.length/);
-  assert.match(route, /manifest\.totalBytes=all\.reduce/);
-  assert.match(route, /Array\.isArray\(asset\?\.versions\)/);
 });
 
 test("Local permanent deletion never calls GitHub-only cleanup helpers", () => {
@@ -82,7 +76,7 @@ test("GitHub permanent deletion cleans hydration manifests on storage and game b
 
 test("Permanent deletion reconciles both the asset manifest and asset audit in local and GitHub storage", () => {
   assert.match(route, /const ASSET_AUDIT_PATH="web\/public\/assets\/asset-audit\.json"/);
-  assert.match(route, /function synchronizeAssetAudit\(audit,manifest\)/);
+  assert.match(route, /synchronizeAssetAudit\(JSON\.parse\(auditDocument\.content\),manifest\)/);
   assert.match(route, /await writeFile\(auditPath,JSON\.stringify\(audit,null,2\)/);
   assert.match(route, /githubGetDocument\(ASSET_AUDIT_PATH,token,branch\)/);
   assert.match(route, /reconcile asset audit after permanent deletion/);
