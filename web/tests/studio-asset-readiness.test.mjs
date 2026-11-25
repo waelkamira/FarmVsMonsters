@@ -269,3 +269,22 @@ test("readiness blocks rig parts whose asset type cannot be rendered by the rig 
   assert.equal(report.blocked, 1);
   assert.ok(report.assets[0].errors.some((message) => message.includes("نوع أصل جزء الهيكل غير مدعوم")));
 });
+
+
+test("readiness blocks Studio placeholders until artwork has been uploaded", () => {
+  const placeholder = validMonster({
+    id: "dragon-boss",
+    name: "تنين المرحلة الأولى",
+    status: "draft",
+    path: "/assets/characters/monsters/dragon/dragon-boss.png",
+    rows: 1,
+    columns: 1,
+    frameCount: 1,
+    spriteSheet: true,
+    assetAvailability: "awaiting-upload"
+  });
+  const report = auditStudioAssetRegistry([placeholder]);
+  assert.equal(report.blocked, 1);
+  assert.equal(report.ready, 0);
+  assert.ok(report.assets[0].errors.some((message) => message.includes("لم يُرفع بعد")));
+});
