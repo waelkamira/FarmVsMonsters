@@ -5,7 +5,7 @@ import { readFile } from "node:fs/promises";
 const apiSource = await readFile(new URL("../app/api/studio/assets/route.js", import.meta.url), "utf8");
 const uiSource = await readFile(new URL("../app/studio/page.js", import.meta.url), "utf8");
 const publishStart = apiSource.indexOf('if(operation!=="publish")');
-const publishEnd = apiSource.indexOf('return NextResponse.json({success:true,operation:"publish-requested"', publishStart);
+const publishEnd = apiSource.indexOf("if(releaseBranchForCleanup&&!releasePullRequestAttempted)", publishStart);
 const publishSource = apiSource.slice(publishStart, publishEnd > publishStart ? publishEnd : undefined);
 
 test("Studio publish creates an isolated release branch and pull request", () => {
