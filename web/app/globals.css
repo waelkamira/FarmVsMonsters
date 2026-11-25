@@ -1403,6 +1403,7 @@ input[type=range] {accent-color:var(--ui-lime);}
     linear-gradient(180deg,rgba(31,135,190,.08),rgba(19,90,125,.02) 38%,rgba(13,76,46,.12) 75%,rgba(13,70,42,.3)),
     linear-gradient(90deg,rgba(10,45,62,.12),transparent 32%,transparent 72%,rgba(10,45,62,.1));
 }
+.battlefield-farmer,.battlefield-plant{
   position:absolute;
   z-index:2;
   display:block;
@@ -1427,19 +1428,14 @@ input[type=range] {accent-color:var(--ui-lime);}
   max-width:none;
   object-fit:fill;
 }
-  width:clamp(104px,12vw,166px);
-  aspect-ratio:360 / 298;
-  height:auto;
-  filter:drop-shadow(0 4px 3px rgba(17,49,38,.18));
-}
-  position:absolute;
-  top:0;
-  display:block;
-  width:400%;
-  height:100%;
-  max-width:none;
-  object-fit:fill;
-}
+
+
+
+
+
+
+
+
 .battlefield-plant{
   width:clamp(58px,7vw,98px);
   aspect-ratio:1;
@@ -1486,6 +1482,10 @@ input[type=range] {accent-color:var(--ui-lime);}
   .world-hero{top:16%;left:58%;width:64vw;padding:12px 10px;border-radius:22px}
   .world-title{font-size:clamp(32px,8vw,54px)}
   .battlefield-farmer{left:13%;bottom:10%;width:clamp(116px,27vw,166px)}
+  
+  
+  
+  
   .battlefield-plant-radish{left:4%;bottom:8%}
   .battlefield-plant-mushroom{left:49%;bottom:4%}
   .battlefield-plant-radish-small{right:1%;bottom:6%}
@@ -1494,6 +1494,7 @@ input[type=range] {accent-color:var(--ui-lime);}
   .world-hero{left:60%;top:18%;width:61vw}
   .world-story-badge{font-size:8px}
   .battlefield-farmer{left:10%;width:108px}
+  
 }
 
 
@@ -1801,6 +1802,9 @@ select option {
  .farm-menu-option small{font-size:8px}
  .farm-menu-footer{font-size:8px;padding-top:8px}
  .battlefield-farmer{left:4%;bottom:auto;top:16%;width:clamp(95px,25vw,145px)}
+ 
+ 
+ 
  .battlefield-plant-radish{left:5%;bottom:48%}
  .battlefield-plant-mushroom{left:48%;bottom:46%}
  .battlefield-plant-radish-small{right:4%;bottom:48%}
@@ -2541,4 +2545,3 @@ body {
 .seed-choice-card strong,.seed-choice-card small{color:#28450D!important;text-shadow:0 1px rgba(255,255,255,.24)}
 .seed-choice-card .seed-choice-cost{background:rgba(38,68,13,.72)!important;color:#faffdf!important;border:1px solid rgba(255,255,255,.42)!important;backdrop-filter:blur(6px)}
 .seed-choice-card.is-selected{background:linear-gradient(180deg,#F7F76E 0%,#68B301 100%)!important;border-color:rgba(255,255,255,.95)!important;box-shadow:inset 0 0 0 2px rgba(255,255,255,.6),0 0 0 2px rgba(80,130,30,.45),0 8px 18px rgba(16,35,5,.22)!important}
-
