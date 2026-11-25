@@ -42,3 +42,16 @@ test("the committed Corn Monster Atlas resolves to the exact 24-frame horizontal
     hurt: { startFrame: 18, endFrame: 23 }
   });
 });
+
+test("Monster 01 is registered as a static testing monster without invented frame metadata", () => {
+  const monster = registry.assets.find((asset) => asset.id === "01");
+  assert.ok(monster);
+  assert.equal(monster.type, "monster");
+  assert.equal(monster.status, "testing");
+  assert.equal(monster.path, "/assets/characters/monsters/01/01.png");
+  assert.equal(monster.spriteSheet, false);
+  assert.equal(monster.rows, 1);
+  assert.equal(monster.columns, 1);
+  assert.equal(monster.frameCount, 1);
+  assert.ok(encounters.stages["1"].monsters.every((entry) => entry.id !== "01"));
+});
