@@ -76,8 +76,8 @@ export default function StageTwoIntroPage() {
 
         <p className="stage-story">
           {ar
-            ? "بعد إنقاذ الأميرة من تنين المرحلة الأولى، تبدأ مغامرة جديدة. يظهر تنين شرير آخر بجيش من الوحوش، وتبدأ مهمة المزارع من جديد: حماية الأرض، هزيمة الأتباع، مواجهة التنين، وإنقاذ الأميرة."
-            : "After rescuing the princess from the first dragon, a new adventure begins. Another evil dragon commands a new monster army. The farmer's mission begins again: defend the land, defeat the followers, face the dragon, and rescue the princess."}
+            ? "بعد إنقاذ الأميرة من تنين المرحلة الأولى، تبدأ مغامرة جديدة. يظهر قوة جديدة من الوحوش، وتبدأ مهمة المزارع من جديد: حماية الأرض، هزيمة الأتباع، هزيمة الأعداء وحماية الأرض."
+            : "After rescuing the princess from the first dragon, a new adventure begins. A new force of monsters appears. The farmer's mission begins again: defend the land, defeat the followers, defeat the enemies and protect the land."}
         </p>
 
         <div className="stage-cast-grid stage-two-cast-grid">
@@ -93,18 +93,18 @@ export default function StageTwoIntroPage() {
           </div>
           <div>
             <strong>{ar ? "الزعيم" : "BOSS"}</strong>
-            <span>{ar ? "تنين جديد خاص بهذه المرحلة" : "A new dragon unique to this stage"}</span>
+            <span>{ar ? "زعيم خاص بالمرحلة قيد التصميم" : "A unique stage leader, still in design"}</span>
           </div>
           <div>
             <strong>{ar ? "المهمة" : "OBJECTIVE"}</strong>
-            <span>{ar ? "احمِ الأرض، اهزم التنين، وأنقذ الأميرة" : "Defend the land, defeat the dragon, and rescue the princess"}</span>
+            <span>{ar ? "احمِ الأرض واهزم الأعداء" : "Defend the land and defeat the enemies"}</span>
           </div>
         </div>
 
         <p className="stage-two-development-note">
           {ar
-            ? "تم فتح هذه المرحلة في تقدمك، لكن تصميم أرضها والوحوش والتنين وموجات القتال ما زال قيد التطوير. لن يبدأ القتال قبل اكتمالها."
-            : "This stage is unlocked in your campaign progress, but its land, monsters, dragon, and battle waves are still being developed. Battle will not start until the stage is complete."}
+            ? "تم فتح هذه المرحلة في تقدمك، لكن تصميم أرضها والوحوش وموجات القتال ما زال قيد التطوير. لن يبدأ القتال قبل اكتمالها."
+            : "This stage is unlocked in your campaign progress, but its land, monsters and battle waves are still being developed. Battle will not start until the stage is complete."}
         </p>
 
         <nav className="info-nav">
