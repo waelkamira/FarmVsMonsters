@@ -159,8 +159,8 @@ test("Studio asset API validates and publishes the rig profile with plant and mo
 
 test("release staging includes every referenced skeletal bitmap part", () => {
   assert.match(routeSource, /getRigPartAssets/);
-  assert.match(routeSource, /publish skeletal part/);
-  assert.match(routeSource, /rigParts:rigPartAssets\.map/);
+  assert.match(routeSource, /stage .*release dependency/);
+  assert.match(routeSource, /const rigParts=rigPartAssets\.map/);
 });
 
 test("rejects archived rig part assets during Studio save and release", () => {
