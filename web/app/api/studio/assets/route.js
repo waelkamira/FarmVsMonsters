@@ -574,12 +574,6 @@ export async function PATCH(req){
   const artworkPath="web/public"+asset.path;
   const artworkBytes=await githubGetBytes(artworkPath,token,storageBranch);
   await githubPutImmutable(artworkPath,artworkBytes,"studio: publish "+asset.type+" artwork "+id,token,targetBranch);
-  for(const [stateId,state] of Object.entries(asset.stateAnimations||{})){
-   if(!safeAssetPath(state?.path))return NextResponse.json({error:"إطارات الحالة "+stateId+" لها مسار غير صالح."},{status:409});
-   const statePath="web/public"+state.path;
-   const stateBytes=await githubGetBytes(statePath,token,storageBranch);
-   await githubPutImmutable(statePath,stateBytes,"studio: publish "+stateId+" state frames for "+id,token,targetBranch);
-  }
   const rigPartIds=[...new Set((asset.rigProfile?.bones||[]).map(bone=>bone?.part?.assetId).filter(Boolean))];
   const rigPartAssets=getRigPartAssets(registry.assets,asset);
   if(rigPartAssets.length!==rigPartIds.length||rigPartAssets.some(part=>!part||!["item","plant","monster","effect"].includes(part.type)||part.status==="archived"||!safeAssetPath(part.path)))return NextResponse.json({error:"يوجد جزء هيكلي مفقود أو غير صالح؛ أصلح تبعيات الهيكل قبل النشر."},{status:409});
@@ -594,6 +588,12 @@ export async function PATCH(req){
    const projectilePath="web/public"+asset.combat.projectile.path;
    const projectileBytes=await githubGetBytes(projectilePath,token,storageBranch);
    await githubPutImmutable(projectilePath,projectileBytes,"studio: publish plant projectile "+id,token,targetBranch);
+  }
+  for(const [stateId,state] of Object.entries(asset.stateAnimations||{})){
+   if(!safeAssetPath(state?.path))return NextResponse.json({error:"إطارات الحالة "+stateId+" لها مسار غير صالح."},{status:409});
+   const statePath="web/public"+state.path;
+   const stateBytes=await githubGetBytes(statePath,token,storageBranch);
+   await githubPutImmutable(statePath,stateBytes,"studio: publish "+stateId+" state frames for "+id,token,targetBranch);
   }
 
   const isMonster=asset.type==="monster";
