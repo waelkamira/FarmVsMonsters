@@ -6,9 +6,9 @@ const route = readFileSync(new URL("../app/api/studio/assets/route.js", import.m
 const page = readFileSync(new URL("../app/studio/page.js", import.meta.url), "utf8");
 const css = readFileSync(new URL("../app/studio/studio.css", import.meta.url), "utf8");
 
-test("Studio exposes permanent deletion only for plants and monsters with an explicit confirmation dialog", () => {
+test("Studio exposes permanent deletion for every asset type with an explicit confirmation dialog", () => {
   assert.match(page, /data-testid="studio-delete-asset"/);
-  assert.match(page, /\(a\.type==="plant"\|\|a\.type==="monster"\)&&<button[^>]*studio-delete-button/);
+  assert.match(page, /className="studio-delete-button" data-testid="studio-delete-asset"[^>]*onClick=\{\(\)=>setDeleteDialog\(a\)\}/);\n  assert.doesNotMatch(page, /\(a\.type==="plant"\|\|a\.type==="monster"\)&&<button[^>]*studio-delete-button/);
   assert.match(page, /role="alertdialog"[^>]*aria-modal="true"/);
   assert.match(page, /تأكيد الحذف النهائي/);
   assert.match(page, /لا يمكن التراجع عن هذه العملية/);
