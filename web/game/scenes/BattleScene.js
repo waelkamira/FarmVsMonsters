@@ -4307,6 +4307,9 @@ export default class BattleScene extends Scene {
 
     for (const monster of this.monsters) {
       if (!monster.alive) continue;
+      // Hold this creature's position and attack state for the brief impact
+      // pause; all other actors and the shared battle clock keep progressing.
+      if (monster.hitStopTimer) continue;
       if (!iceEaters.has(monster)) {
         monster.isEatingIce = false;
         monster.iceTargetId = null;
