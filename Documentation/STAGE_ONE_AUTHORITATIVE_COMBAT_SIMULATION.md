@@ -8,7 +8,7 @@ The browser currently decides:
 - when monsters spawn and which lane they enter;
 - player plant placement, uprooting, energy collection, and farmer club attacks;
 - projectile collisions, monster damage, deaths, and the local 8-coin reward;
-- the dragon encounter, damage, and the rescue sequence.
+- the final enemy encounter, damage, and the rescue sequence.
 
 A client can edit JavaScript or submit invented events. A session ID alone cannot prove a victory. The server must independently run the same rules against a validated input timeline and derive the outcome itself.
 
@@ -20,12 +20,12 @@ Version 1 centralizes:
 - Stage 1 wave sizes: 3, 5, 6, 7, 9 ordinary monsters;
 - starting and maximum energy;
 - radish and energy mushroom combat/economy values;
-- dragon health, farmer sling damage/cadence, fireball damage and timing;
+- final enemy health, farmer sling damage/cadence, projectile attacks damage and timing;
 - farmer club damage/reach, radish projectile speed/collision radius, monster scaling formulas;
 - 8 coins per ordinary monster defeat;
 - spawn pacing and inter-wave delay.
 
-The current tuning is intentionally preserved. This refactor does not change the reward amount or the number of enemies. The dragon remains a separate boss and does not receive an ordinary-monster reward.
+The current tuning is intentionally preserved. This refactor does not change the reward amount or the number of enemies. The final enemy remains a separate boss and does not receive an ordinary-monster reward.
 
 ## Proposed trusted session flow
 
@@ -35,7 +35,7 @@ The current tuning is intentionally preserved. This refactor does not change the
 4. The server validates each command against its current simulation state and authoritative server time. It rejects out-of-order, duplicated, too-fast, impossible, or unaffordable actions.
 5. The deterministic simulator advances the world from server time using the server seed. Monster lanes, archetypes, spawn timing, burst/jump intervals, targeting, collision, HP, attacks, boss behavior, and terminal state are derived by the simulator.
 6. The server persists a compact event log or periodic state checkpoints. A reconnect resumes from server state, not from browser-reported HP or coins.
-7. Completion is accepted only when the server simulation reaches the Stage 1 terminal predicate: all 30 ordinary monsters defeated, dragon defeated, and rescue sequence's gameplay gate satisfied. The cosmetic rescue animation itself is not trusted as proof.
+7. Completion is accepted only when the server simulation reaches the Stage 1 terminal predicate: all 30 ordinary monsters defeated, final enemy defeated, and rescue sequence's gameplay gate satisfied. The cosmetic rescue animation itself is not trusted as proof.
 8. A single database transaction locks the player's progression row, locks the session, verifies ownership/expiry/contract version/status, marks the session completed exactly once, inserts reward ledger entries, adds exactly 8 coins per ordinary monster confirmed by simulation, and updates the stage completion/unlock state. Repeated completion requests return the existing result and never grant again.
 
 ## Determinism requirements
@@ -53,7 +53,7 @@ The shared contract and seeded PRNG are foundations, not the simulator. The PRNG
 - player action validation and energy economy;
 - monster targeting and bite cadence;
 - projectile movement and collision ordering;
-- dragon targeting and fireball resolution;
+- final enemy targeting and projectile attacks resolution;
 - loss and victory terminal rules.
 
 Current row selection, burst/jump timings, and several cosmetic effects still use Phaser random values. These must be separated: authoritative random choices use the server seed; cosmetic-only random effects remain client-side.
@@ -72,7 +72,7 @@ Current row selection, burst/jump timings, and several cosmetic effects still us
 - Same contract version + same seed + same ordered commands always produces the same final state and event digest.
 - Invalid grid coordinates, unaffordable plants, duplicate sequence numbers, forged timestamps, and impossible actions are rejected.
 - A client cannot submit a kill, HP value, reward amount, completed-wave count, or victory flag.
-- Every ordinary monster is rewarded at most once; dragon reward policy remains separate and unchanged until explicitly approved.
+- Every ordinary monster is rewarded at most once; final enemy reward policy remains separate and unchanged until explicitly approved.
 - Two concurrent completion requests produce one completion and one reward grant.
 - A defeat cannot unlock the next stage.
 - A replay using an old, expired, other-user, or different-contract session cannot grant currency.
@@ -88,7 +88,7 @@ Current row selection, burst/jump timings, and several cosmetic effects still us
 - monster lane movement with plant bite-reach clamping (prevents tunnelling through a blocker);
 - projectile lane advancement using elapsed simulation seconds.
 
-`BattleScene.js` now delegates planting, uprooting, monster bite damage, projectile damage, and dragon damage to these pure functions. The existing 8×5 grid, 35/50 planting costs, full manual refund behavior, 300 energy pickup cap, damage amounts, and 8-coin ordinary-monster reward remain unchanged.
+`BattleScene.js` now delegates planting, uprooting, monster bite damage, projectile damage, and final enemy damage to these pure functions. The existing 8×5 grid, 35/50 planting costs, full manual refund behavior, 300 energy pickup cap, damage amounts, and 8-coin ordinary-monster reward remain unchanged.
 
 
 
@@ -97,12 +97,12 @@ The pure combat kernel now also owns target selection:
 - nearest living Radish blocker in the monster's row and behind its current position; Energy Mushrooms remain non-blocking;
 - first eligible monster in the projectile's lane and collision radius, preserving monster-array first-match behavior and per-monster width scaling;
 - nearest eligible monster in the farmer's current lane and melee reach, preserving stable tie order;
-- living plant with the lowest HP for dragon fireballs, preserving stable tie order.
+- living plant with the lowest HP for final enemy projectile attacks, preserving stable tie order.
 
-BattleScene supplies current world-to-lane positions and visual collision dimensions, while the pure functions decide which entity is selected. This is intentionally a boundary step: Phaser still owns coordinate projection, sprite bounds, projectile presentation/tweens, attack cooldowns, and the actual encounter loop. Dragon fireball plant damage now also uses the shared HP resolver.
+BattleScene supplies current world-to-lane positions and visual collision dimensions, while the pure functions decide which entity is selected. This is intentionally a boundary step: Phaser still owns coordinate projection, sprite bounds, projectile presentation/tweens, attack cooldowns, and the actual encounter loop. final enemy projectile attacks plant damage now also uses the shared HP resolver.
 
 
-- `advanceCooldown` now handles elapsed-time advancement for ordinary monster bites, Radish firing, and both dragon attack timers.
+- `advanceCooldown` now handles elapsed-time advancement for ordinary monster bites, Radish firing, and both final enemy attack timers.
 - `resolveBiteAttack` owns the bite-ready decision and interval reset while the scene retains the existing damage/audio/visual side effects.
 - `resolveDustSkitterMotionStep` owns jump/burst state transitions, elapsed durations, jump visual offset, and combined movement multipliers. The scene samples the existing Phaser random duration ranges only at transition boundaries and passes those samples into the pure resolver; random behavior has not yet been replaced with the server-seeded RNG.
 - Jumping remains presentation-only: it changes the sprite's vertical offset and movement multiplier, not lane coordinates or collision geometry. Bite-range interruption and the current jump/burst timing values are preserved.
@@ -114,7 +114,7 @@ The pure combat kernel now resolves the Stage 1 spawn schedule:
 - It consumes the current wave, configured roster size, spawned count, intermission, spawn timer, and elapsed milliseconds.
 - It returns whether exactly one monster should spawn this update, the next spawned count, remaining intermission, and next spawn timer.
 - Wave sizes and intervals are validated against the central phase-one contract; the five-second preparation window and the existing first/next spawn delays are preserved.
-Phaser still chooses the visual lane using its current random source, creates sprites/effects, and starts the dragon encounter after the second ordinary spawn in wave five. Lane selection is not yet deterministic or server-authoritative.
+Phaser still chooses the visual lane using its current random source, creates sprites/effects, and starts the final enemy encounter after the second ordinary spawn in wave five. Lane selection is not yet deterministic or server-authoritative.
 
 
 ## Client-seeded random sampling (implemented as a development boundary)
@@ -134,7 +134,7 @@ Phaser still chooses the visual lane using its current random source, creates sp
 - Added a pure replay reducer for the currently instrumented player actions: plant placement, manual uprooting, and energy pickup.
 - Replay starts from the phase-one initial energy, reuses the shared placement/uproot/pickup resolvers, enforces the 8×5 board, occupied-cell checks, planting costs, full manual refund, event order, duration bound, and exact rules version.
 - Energy collection is provisionally restricted to the current 15-energy mushroom pickup denomination. This still does not prove a pickup existed; world-generated pickup provenance must be simulated before energy events can be considered authoritative.
-- The reducer does not yet simulate autonomous mushroom production, monster movement/attacks, projectiles, wave spawns, dragon combat, farm damage, kill rewards, or victory. A successful replay means only that the supported player-action subset is internally consistent, never that the stage was won.
+- The reducer does not yet simulate autonomous mushroom production, monster movement/attacks, projectiles, wave spawns, final enemy combat, farm damage, kill rewards, or victory. A successful replay means only that the supported player-action subset is internally consistent, never that the stage was won.
 - No server endpoint, database writes, cloud rewards, or progression unlocks are enabled by this work.
 
 
