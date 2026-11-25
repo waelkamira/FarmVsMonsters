@@ -71,3 +71,8 @@ test("permanent deletion cannot mutate the published game branch", () => {
   assert.doesNotMatch(deleteSource, /githubPut\(catalogPath/);
   assert.doesNotMatch(deleteSource, /githubDeleteIfExists\([^\n]+targetBranch/);
 });
+
+test("Studio storage cannot target the live game branch", () => {
+  assert.match(apiSource, /if\(branch===targetBranch\)/);
+  assert.match(apiSource, /if\(storageBranch===targetBranch\)/);
+});
