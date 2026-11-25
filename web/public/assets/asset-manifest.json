@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-25T14:51:39.807Z",
-  "assetCount": 90,
-  "totalBytes": 27198857,
+  "generatedAt": "2026-11-25T15:04:00.613Z",
+  "assetCount": 91,
+  "totalBytes": 27745203,
   "groups": {
     "audio": [
       {
@@ -1556,6 +1556,58 @@
       "sha256": "251662e3c0caa6c03a8264cfee2e9cc28af6bd632c485ce4cb6c0e71faf13610",
       "width": 106,
       "height": 82
+    },
+    {
+      "key": "corn-monster",
+      "url": "/assets/plants/corn_monster.png",
+      "type": "spritesheet",
+      "width": 3600,
+      "height": 150,
+      "frameConfig": {
+        "frameWidth": 150,
+        "frameHeight": 150,
+        "margin": 0,
+        "spacing": 0
+      },
+      "animationProfile": {
+        "idle": {
+          "startFrame": 0,
+          "endFrame": 7,
+          "fps": 8,
+          "loop": true
+        },
+        "move": {
+          "startFrame": 0,
+          "endFrame": 7,
+          "fps": 8,
+          "loop": true
+        },
+        "attack": {
+          "startFrame": 8,
+          "endFrame": 17,
+          "fps": 12,
+          "loop": false
+        }
+      },
+      "atlasMetadataPath": "/assets/plants/corn_monster.json",
+      "sourceFormat": "phaser-atlas",
+      "atlasClips": {
+        "idle": {
+          "startFrame": 0,
+          "endFrame": 7
+        },
+        "attack": {
+          "startFrame": 8,
+          "endFrame": 17
+        },
+        "hurt": {
+          "startFrame": 18,
+          "endFrame": 23
+        }
+      },
+      "group": "plants",
+      "bytes": 546346,
+      "frameCount": 24
     }
   ]
 }
