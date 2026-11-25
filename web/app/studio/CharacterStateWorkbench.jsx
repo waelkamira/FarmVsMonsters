@@ -16,8 +16,9 @@ function FramePreview({ src, rows = 1, columns = 1, frameCount = 1, fps = 8, loo
     const timer = window.setInterval(() => setFrame((current) => current + 1 >= count ? (loop ? 0 : current) : current + 1), delay);
     return () => window.clearInterval(timer);
   }, [src, count, fps, loop]);
-  const row = Math.floor(frame / Math.max(1, columns));
-  const column = frame % Math.max(1, columns);
+  const absoluteFrame = Math.max(0, Number(startFrame) || 0) + frame;
+  const row = Math.floor(absoluteFrame / Math.max(1, columns));
+  const column = absoluteFrame % Math.max(1, columns);
   const style = {
     backgroundImage: src ? `url("${src}")` : "none",
     backgroundSize: `${Math.max(1, columns) * 100}% ${Math.max(1, rows) * 100}%`,
