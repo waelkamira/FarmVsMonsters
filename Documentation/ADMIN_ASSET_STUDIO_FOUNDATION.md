@@ -22,7 +22,7 @@ Never reuse the same value for both, expose either through a `NEXT_PUBLIC` varia
 
 Login attempts are limited to five per client IP in a 15-minute window. Development may use an in-memory limiter. Production requires the shared Redis REST settings `STUDIO_RATE_LIMIT_REDIS_REST_URL` and `STUDIO_RATE_LIMIT_REDIS_REST_TOKEN`; if the shared store is missing or unavailable, login fails closed with HTTP 503 rather than silently bypassing the limit.
 
-The Studio API remains session-protected. For production, additionally place `/studio` and `/api/studio` behind a private access layer such as Cloudflare Access, VPN, or deployment protection where available; do not rely on the login page being obscure.
+The Studio UI and API are also IP-gated in production by `STUDIO_ALLOWED_IPS`, a comma-separated exact-IP allowlist checked against the reverse-proxy supplied `x-real-ip` header. If the variable is empty or the header is absent, the Studio paths return 404. Configure the actual trusted office/VPN/Cloudflare egress IPs; do not use the example documentation IP. Development remains accessible without this setting. The public game runtime's `GET /api/studio/stage-encounters` read is intentionally exempt because the battle client consumes published encounter configuration; its write methods remain session-protected. For production, an additional private access layer such as Cloudflare Access, VPN, or deployment protection is still recommended.
 
 ## Local mode
 Set STUDIO_STORAGE_DRIVER=local and run Next.js in development. Files are written to web/public/assets/ and metadata to the registry. Local-disk uploads are intentionally disabled in production.
