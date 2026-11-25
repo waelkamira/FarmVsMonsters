@@ -32,7 +32,14 @@ export function writeStorageValue(host, key, value) {
   }
 }
 
+export function normalizeBrowserLocale(locale, fallback = "ar") {
+  const safeFallback = fallback === "ar" || fallback === "en" ? fallback : "ar";
+  return locale === "ar" || locale === "en" ? locale : safeFallback;
+}
+
 export function readBrowserLocale(host, fallback = "ar") {
-  const locale = readStorageValue(host, "farmVsMonsters.language", fallback);
-  return locale === "ar" || locale === "en" ? locale : fallback;
+  return normalizeBrowserLocale(
+    readStorageValue(host, "farmVsMonsters.language", fallback),
+    fallback
+  );
 }
