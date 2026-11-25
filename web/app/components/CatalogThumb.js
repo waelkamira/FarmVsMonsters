@@ -38,7 +38,6 @@ const ART = {
   "explosive-berry": ["1fad0", "Blueberries"],
   "fire-pepper": ["1fad1", "Hot pepper"],
   "monster-01": ["1f47e", "Monster 01"],
-  dragon: ["1f409", "Dragon"],
   princess: ["1f478", "Princess"],
   farmer: ["1f9d1-200d-1f33e", "Farmer"],
   stage: ["1f3f0", "Fantasy castle"]
