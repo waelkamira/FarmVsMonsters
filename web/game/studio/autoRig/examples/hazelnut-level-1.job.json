@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "jobId": "hazelnut-level-1-poc",
+  "characterId": "hazelnut-level-1",
+  "characterType": "plant",
+  "source": {
+    "image": "input/source.png",
+    "frameCount": 9,
+    "notes": "Use the supplied source image and inspect its actual dimensions before processing."
+  },
+  "rigTemplate": null,
+  "segmentation": {
+    "mode": "hybrid",
+    "reconstructHiddenParts": false
+  },
+  "outputs": {
+    "targets": [
+      "sprite-sheet"
+    ],
+    "fps": 12,
+    "animations": [
+      "idle",
+      "attack"
+    ]
+  }
+}

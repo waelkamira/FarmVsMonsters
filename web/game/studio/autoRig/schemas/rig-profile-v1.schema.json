@@ -1,0 +1,377 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://farmvsmonsters.local/schemas/rig-profile-v1.schema.json",
+  "title": "FarmVsMonsters Phaser Skeletal Rig Profile v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "canvas",
+    "bones",
+    "clips"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "canvas": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "width",
+        "height"
+      ],
+      "properties": {
+        "width": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4096
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4096
+        }
+      }
+    },
+    "bones": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "items": {
+        "$ref": "#/$defs/bone"
+      }
+    },
+    "attachments": {
+      "type": "array",
+      "maxItems": 128,
+      "items": {
+        "$ref": "#/$defs/attachment"
+      },
+      "default": []
+    },
+    "hitboxes": {
+      "type": "array",
+      "maxItems": 128,
+      "items": {
+        "$ref": "#/$defs/hitbox"
+      },
+      "default": []
+    },
+    "clips": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 16,
+      "items": {
+        "$ref": "#/$defs/clip"
+      }
+    }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,63}$"
+    },
+    "bone": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "parentId"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "parentId": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/id"
+            }
+          ]
+        },
+        "x": {
+          "type": "number",
+          "minimum": -8192,
+          "maximum": 8192
+        },
+        "y": {
+          "type": "number",
+          "minimum": -8192,
+          "maximum": 8192
+        },
+        "rotation": {
+          "type": "number",
+          "minimum": -36000,
+          "maximum": 36000
+        },
+        "scaleX": {
+          "type": "number",
+          "minimum": 0.01,
+          "maximum": 20
+        },
+        "scaleY": {
+          "type": "number",
+          "minimum": 0.01,
+          "maximum": 20
+        },
+        "pivot": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [],
+          "properties": {
+            "x": {
+              "type": "number",
+              "minimum": -4096,
+              "maximum": 4096
+            },
+            "y": {
+              "type": "number",
+              "minimum": -4096,
+              "maximum": 4096
+            }
+          }
+        },
+        "part": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "assetId",
+                "frame"
+              ],
+              "properties": {
+                "assetId": {
+                  "$ref": "#/$defs/id"
+                },
+                "frame": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 10000
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "attachment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "boneId"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "boneId": {
+          "$ref": "#/$defs/id"
+        },
+        "x": {
+          "type": "number",
+          "minimum": -8192,
+          "maximum": 8192
+        },
+        "y": {
+          "type": "number",
+          "minimum": -8192,
+          "maximum": 8192
+        },
+        "rotation": {
+          "type": "number",
+          "minimum": -36000,
+          "maximum": 36000
+        },
+        "scaleX": {
+          "type": "number",
+          "minimum": 0.01,
+          "maximum": 20
+        },
+        "scaleY": {
+          "type": "number",
+          "minimum": 0.01,
+          "maximum": 20
+        }
+      }
+    },
+    "hitbox": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "boneId",
+        "width",
+        "height"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "boneId": {
+          "$ref": "#/$defs/id"
+        },
+        "x": {
+          "type": "number",
+          "minimum": -8192,
+          "maximum": 8192
+        },
+        "y": {
+          "type": "number",
+          "minimum": -8192,
+          "maximum": 8192
+        },
+        "rotation": {
+          "type": "number",
+          "minimum": -36000,
+          "maximum": 36000
+        },
+        "scaleX": {
+          "type": "number",
+          "minimum": 0.01,
+          "maximum": 20
+        },
+        "scaleY": {
+          "type": "number",
+          "minimum": 0.01,
+          "maximum": 20
+        },
+        "width": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 4096
+        },
+        "height": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 4096
+        },
+        "kind": {
+          "enum": [
+            "attack",
+            "hurt"
+          ]
+        }
+      }
+    },
+    "keyframe": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "timeMs"
+      ],
+      "properties": {
+        "timeMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "x": {
+          "type": "number",
+          "minimum": -8192,
+          "maximum": 8192
+        },
+        "y": {
+          "type": "number",
+          "minimum": -8192,
+          "maximum": 8192
+        },
+        "rotation": {
+          "type": "number",
+          "minimum": -36000,
+          "maximum": 36000
+        },
+        "scaleX": {
+          "type": "number",
+          "minimum": 0.01,
+          "maximum": 20
+        },
+        "scaleY": {
+          "type": "number",
+          "minimum": 0.01,
+          "maximum": 20
+        }
+      }
+    },
+    "track": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "boneId",
+        "keyframes"
+      ],
+      "properties": {
+        "boneId": {
+          "$ref": "#/$defs/id"
+        },
+        "keyframes": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 256,
+          "items": {
+            "$ref": "#/$defs/keyframe"
+          }
+        }
+      }
+    },
+    "clip": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "durationMs",
+        "fps",
+        "loop",
+        "tracks"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "durationMs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 60000
+        },
+        "fps": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 60
+        },
+        "loop": {
+          "type": "boolean"
+        },
+        "tracks": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "$ref": "#/$defs/track"
+          }
+        }
+      }
+    }
+  }
+}
