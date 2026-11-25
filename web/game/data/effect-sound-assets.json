@@ -1,0 +1,191 @@
+{
+  "license": "CC0-1.0",
+  "licenseName": "Creative Commons Zero 1.0 Universal",
+  "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "creator": "Generated procedurally by web/scripts/generate-effect-sounds.py (no external samples)",
+  "note": "Synthesized placeholders: replace any file with a real recording of the same name to upgrade quality.",
+  "assets": [
+    {
+      "key": "fx-electric-shock",
+      "path": "/assets/audio/effects/electric-shock.ogg",
+      "label": "الصعق الكهربائي",
+      "durationMs": 549,
+      "bytes": 6917
+    },
+    {
+      "key": "fx-freeze",
+      "path": "/assets/audio/effects/freeze.ogg",
+      "label": "التجميد",
+      "durationMs": 699,
+      "bytes": 6325
+    },
+    {
+      "key": "fx-burn",
+      "path": "/assets/audio/effects/burn.ogg",
+      "label": "الحرق",
+      "durationMs": 849,
+      "bytes": 9496
+    },
+    {
+      "key": "fx-explosion",
+      "path": "/assets/audio/effects/explosion.ogg",
+      "label": "الانفجار الكبير",
+      "durationMs": 1000,
+      "bytes": 7464
+    },
+    {
+      "key": "fx-poison",
+      "path": "/assets/audio/effects/poison.ogg",
+      "label": "السم",
+      "durationMs": 600,
+      "bytes": 6757
+    },
+    {
+      "key": "fx-juice-splat",
+      "path": "/assets/audio/effects/juice-splat.ogg",
+      "label": "رذاذ العصارة",
+      "durationMs": 300,
+      "bytes": 5089
+    },
+    {
+      "key": "fx-leaf-burst",
+      "path": "/assets/audio/effects/leaf-burst.ogg",
+      "label": "تناثر الأوراق",
+      "durationMs": 449,
+      "bytes": 6969
+    },
+    {
+      "key": "fx-stun-stars",
+      "path": "/assets/audio/effects/stun-stars.ogg",
+      "label": "الدوخة",
+      "durationMs": 699,
+      "bytes": 5129
+    },
+    {
+      "key": "fx-slash",
+      "path": "/assets/audio/effects/slash.ogg",
+      "label": "ضربة القطع",
+      "durationMs": 280,
+      "bytes": 5355
+    },
+    {
+      "key": "fx-heavy-smash",
+      "path": "/assets/audio/effects/heavy-smash.ogg",
+      "label": "الضربة الساحقة",
+      "durationMs": 549,
+      "bytes": 5148
+    },
+    {
+      "key": "fx-lightning-strike",
+      "path": "/assets/audio/effects/lightning-strike.ogg",
+      "label": "صاعقة من السماء",
+      "durationMs": 1300,
+      "bytes": 8551
+    },
+    {
+      "key": "fx-stone-shatter",
+      "path": "/assets/audio/effects/stone-shatter.ogg",
+      "label": "تحطّم الصخور",
+      "durationMs": 500,
+      "bytes": 5952
+    },
+    {
+      "key": "fx-magic-sparkle",
+      "path": "/assets/audio/effects/magic-sparkle.ogg",
+      "label": "البريق السحري",
+      "durationMs": 900,
+      "bytes": 5504
+    },
+    {
+      "key": "fx-smoke-puff",
+      "path": "/assets/audio/effects/smoke-puff.ogg",
+      "label": "سحابة الدخان",
+      "durationMs": 549,
+      "bytes": 6253
+    },
+    {
+      "key": "fx-charge-glow",
+      "path": "/assets/audio/effects/charge-glow.ogg",
+      "label": "توهّج الشحن",
+      "durationMs": 549,
+      "bytes": 6447
+    },
+    {
+      "key": "fx-recoil-pop",
+      "path": "/assets/audio/effects/recoil-pop.ogg",
+      "label": "ارتداد الإطلاق",
+      "durationMs": 200,
+      "bytes": 4158
+    },
+    {
+      "key": "fx-muzzle-flare",
+      "path": "/assets/audio/effects/muzzle-flare.ogg",
+      "label": "وميض الفوهة",
+      "durationMs": 300,
+      "bytes": 4830
+    },
+    {
+      "key": "fx-dirt-pop",
+      "path": "/assets/audio/effects/dirt-pop.ogg",
+      "label": "الانبثاق من التراب",
+      "durationMs": 400,
+      "bytes": 5498
+    },
+    {
+      "key": "fx-magic-summon",
+      "path": "/assets/audio/effects/magic-summon.ogg",
+      "label": "الاستدعاء السحري",
+      "durationMs": 1000,
+      "bytes": 8341
+    },
+    {
+      "key": "fx-white-flash",
+      "path": "/assets/audio/effects/white-flash.ogg",
+      "label": "وميض الإصابة",
+      "durationMs": 160,
+      "bytes": 4113
+    },
+    {
+      "key": "fx-chew-crumbs",
+      "path": "/assets/audio/effects/chew-crumbs.ogg",
+      "label": "فتات الأكل",
+      "durationMs": 400,
+      "bytes": 5903
+    },
+    {
+      "key": "fx-poof-vanish",
+      "path": "/assets/audio/effects/poof-vanish.ogg",
+      "label": "الاختفاء بسحابة",
+      "durationMs": 449,
+      "bytes": 5620
+    },
+    {
+      "key": "fx-coin-pop",
+      "path": "/assets/audio/effects/coin-pop.ogg",
+      "label": "قفزة العملات",
+      "durationMs": 500,
+      "bytes": 6134
+    },
+    {
+      "key": "fx-fire-aura",
+      "path": "/assets/audio/effects/fire-aura.ogg",
+      "label": "الهالة النارية",
+      "durationMs": 699,
+      "bytes": 8932
+    },
+    {
+      "key": "fx-frost-aura",
+      "path": "/assets/audio/effects/frost-aura.ogg",
+      "label": "الهالة الجليدية",
+      "durationMs": 800,
+      "bytes": 5063
+    },
+    {
+      "key": "fx-glow-pulse",
+      "path": "/assets/audio/effects/glow-pulse.ogg",
+      "label": "التوهّج النابض",
+      "durationMs": 900,
+      "bytes": 4949
+    }
+  ]
+}
