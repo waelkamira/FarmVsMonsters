@@ -36,6 +36,11 @@ jobs:
       - name: Run focused effect-library tests
         working-directory: web
         run: node --test tests/effect-library.test.mjs tests/effect-director.test.mjs
+      - name: Build Studio web app
+        working-directory: web
+        run: |
+          npm ci
+          npm run build
       - name: Commit generated OGG assets
         run: |
           git config user.name "github-actions[bot]"
