@@ -13,6 +13,7 @@ import {createStudioAnimationProfile} from "../../../../game/studio/animationPro
 import {createSkeletalRigProfile} from "../../../../game/studio/skeletalAnimation.mjs";
 import {createStudioMonsterProfile} from "../../../../game/studio/monsterProfiles.mjs";
 import {safeAssetPath} from "../../../../game/studio/assetReadiness.mjs";
+import {readLocalRegistrySnapshot,writeLocalRegistryAtomically} from "../../../../game/studio/localRegistryStore.mjs";
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
 const COOKIE="fvm_studio_session";
@@ -78,8 +79,9 @@ async function removeGithubAssetManifestReferences(assetPaths,token,branch){
  await githubPut(filePath,Buffer.from(JSON.stringify(manifest,null,2)+"\n"),"studio: remove deleted asset references from manifest",token,branch,document.sha);
 }
 async function githubPut(filePath,bytes,message,token,branch,expectedSha){const api=githubUrl(filePath),headers=githubHeaders(token);const check=await fetch(api+"?ref="+encodeURIComponent(branch),{headers});let sha=null;if(check.ok)sha=(await check.json()).sha;else if(check.status!==404)throw Error("GitHub lookup failed ("+check.status+").");assertExpectedContentSha(expectedSha,sha);const saved=await fetch(api,{method:"PUT",headers:{...headers,"Content-Type":"application/json"},body:JSON.stringify({message,branch,content:Buffer.from(bytes).toString("base64"),...(sha?{sha}:{})})});if(!saved.ok){const data=await saved.json().catch(()=>({}));throw Error(data.message||"GitHub save failed ("+saved.status+").");}}
-async function localRegistry(){try{return JSON.parse(await readFile(path.join(process.cwd(),"game/data/studioAssetRegistry.json"),"utf8"));}catch(error){if(error.code==="ENOENT")return {version:1,assets:[]};throw error;}}
-async function saveLocalRegistry(registry){const target=path.join(process.cwd(),"game/data/studioAssetRegistry.json");await mkdir(path.dirname(target),{recursive:true});await writeFile(target,JSON.stringify(registry,null,2)+"\n","utf8");}
+async function localRegistrySnapshot(){return readLocalRegistrySnapshot(path.join(process.cwd(),"game/data/studioAssetRegistry.json"));}
+async function localRegistry(){return (await localRegistrySnapshot()).registry;}
+async function saveLocalRegistry(registry,expectedSha){return writeLocalRegistryAtomically(path.join(process.cwd(),"game/data/studioAssetRegistry.json"),registry,expectedSha);}
 function addPreviewUrls(registry){const github=process.env.STUDIO_STORAGE_DRIVER==="github";return {...registry,storage:process.env.STUDIO_STORAGE_DRIVER||"local",assets:(registry.assets||[]).map(asset=>({...asset,previewUrl:github?"/api/studio/assets?preview="+encodeURIComponent(asset.path):asset.path,rigParts:serializeRigParts(registry.assets||[],asset),...(asset.combat?.projectile?{combat:{...asset.combat,projectile:{...asset.combat.projectile,frameCount:asset.combat.projectile.frameCount??1,rows:asset.combat.projectile.rows??1,columns:asset.combat.projectile.columns??1,previewUrl:github?"/api/studio/assets?preview="+encodeURIComponent(asset.combat.projectile.path):asset.combat.projectile.path}}}:{})}))};}
 function plantIdFromPath(assetPath){
  const filename=path.basename(assetPath||"").replace(/\.[^.]+$/,"").toLowerCase();
@@ -269,7 +271,7 @@ export async function POST(req){
  const hasProjectile=Boolean(projectileFile&&typeof projectileFile.arrayBuffer==="function"&&projectileFile.size>0);
  const removeProjectile=String(form.get("removeProjectile")||"false")==="true";
  const driver=process.env.STUDIO_STORAGE_DRIVER||"local";let old,registrySha;
- try{if(driver==="github"){const token=process.env.STUDIO_GITHUB_TOKEN,branch=process.env.STUDIO_GITHUB_BRANCH||"studio/assets";if(!token)return NextResponse.json({error:"STUDIO_GITHUB_TOKEN is required."},{status:503});const document=await githubGetDocument(REGISTRY_PATH,token,branch);old=document?JSON.parse(document.content):{version:1,assets:[]};registrySha=document?.sha??null;}else old=await localRegistry();}catch(error){return NextResponse.json({error:error.message},{status:502});}
+ try{if(driver==="github"){const token=process.env.STUDIO_GITHUB_TOKEN,branch=process.env.STUDIO_GITHUB_BRANCH||"studio/assets";if(!token)return NextResponse.json({error:"STUDIO_GITHUB_TOKEN is required."},{status:503});const document=await githubGetDocument(REGISTRY_PATH,token,branch);old=document?JSON.parse(document.content):{version:1,assets:[]};registrySha=document?.sha??null;}else{const snapshot=await localRegistrySnapshot();old=snapshot.registry;registrySha=snapshot.sha;}}catch(error){return NextResponse.json({error:error.message},{status:502});}
  const index=old.assets.findIndex(a=>a.id===id);let existing=index>=0?old.assets[index]:null;
  if(existing?.releaseRequest?.number){
   if(driver!=="github")return NextResponse.json({error:"لا يمكن تعديل أصل له طلب مراجعة نشر قبل التحقق من حالة الطلب."},{status:409});
@@ -380,7 +382,7 @@ export async function POST(req){
   }else if(driver==="local"&&process.env.NODE_ENV!=="production"){
    if(hasFile){const target=path.join(process.cwd(),"public/assets",relative);await mkdir(path.dirname(target),{recursive:true});await writeFile(target,bytes);}
    if(hasProjectile){const pTarget=path.join(process.cwd(),"public",record.combat.projectile.path.replace(/^\//,""));await mkdir(path.dirname(pTarget),{recursive:true});await writeFile(pTarget,projectileBytes);}
-   await saveLocalRegistry(next);
+   await saveLocalRegistry(next,registrySha);
   }else return NextResponse.json({error:"Production uploads require STUDIO_STORAGE_DRIVER=github and a configured GitHub token."},{status:503});
  return NextResponse.json({success:true,asset:record,storage:driver,operation:existing?"replaced":"created"});
  }catch(error){return NextResponse.json({error:error.message||"Asset save failed."},{status:error.code==="STUDIO_WRITE_CONFLICT"?409:500});}
@@ -394,7 +396,7 @@ export async function PATCH(req){
  if(driver!=="github"){
   if(operation!=="archive"&&operation!=="restore"&&operation!=="restore-version"&&operation!=="clone"&&operation!=="delete")return NextResponse.json({error:"Testing preparation and publishing require GitHub storage."},{status:503});
   try{
-   const registry=await localRegistry(),index=registry.assets.findIndex(asset=>asset.id===id);
+   const snapshot=await localRegistrySnapshot(),registry=snapshot.registry,registrySha=snapshot.sha,index=registry.assets.findIndex(asset=>asset.id===id);
    if(index<0)return NextResponse.json({error:"لم يتم العثور على الأصل في مكتبة Studio."},{status:404});
    if(operation==="delete"){
     const asset=registry.assets[index];
@@ -420,7 +422,7 @@ export async function PATCH(req){
      try{await unlink(target);}catch(error){if(error.code!=="ENOENT")throw error;}
     }
     registry.assets=remaining;
-    await saveLocalRegistry(registry);
+    await saveLocalRegistry(registry,registrySha);
     return NextResponse.json({success:true,operation,deletedId:id,message:"تم حذف الأصل وملفاته غير المشتركة من المكتبة المحلية."});
    }
    if(operation==="restore-version"&&registry.assets[index].releaseRequest?.number)return NextResponse.json({error:"لا يمكن استعادة إصدار مرتبط بطلب نشر قبل التحقق من حالته."},{status:409});
@@ -434,15 +436,15 @@ export async function PATCH(req){
     if(registry.assets.some(asset=>asset.id===newId))return NextResponse.json({error:"يوجد أصل بهذا المعرّف بالفعل."},{status:409});
     if(registry.assets[index].type==="plant"&&STUDIO_RESERVED_PLANT_IDS.includes(newId))return NextResponse.json({error:"هذا المعرّف محجوز لنبتة أساسية."},{status:409});
     const clone=cloneStudioAsset(registry.assets[index],newId,body.newName);
-    registry.assets.push(clone);await saveLocalRegistry(registry);
+    registry.assets.push(clone);await saveLocalRegistry(registry,registrySha);
     return NextResponse.json({success:true,operation,asset:clone,message:"تم إنشاء نسخة جديدة كمسودة مستقلة."});
    }
    let updated;
    try{updated=operation==="restore-version"?restoreStudioAssetRevision(registry.assets[index],body.versionNumber):transitionStudioAssetStatus(registry.assets[index],operation);}
    catch(error){return NextResponse.json({error:error.message},{status:409});}
-   registry.assets[index]=updated;await saveLocalRegistry(registry);
+   registry.assets[index]=updated;await saveLocalRegistry(registry,registrySha);
    return NextResponse.json({success:true,operation,asset:updated,message:operation==="archive"?"تمت أرشفة الأصل مع الاحتفاظ بملفاته.":operation==="restore"?"تمت استعادة الأصل كمسودة.":"تمت استعادة الإصدار السابق كمسودة جديدة."});
-  }catch(error){return NextResponse.json({error:error.message||"Studio lifecycle action failed."},{status:500});}
+  }catch(error){return NextResponse.json({error:error.message||"Studio lifecycle action failed."},{status:error.code==="STUDIO_WRITE_CONFLICT"?409:500});}
  }
  const token=process.env.STUDIO_GITHUB_TOKEN,storageBranch=process.env.STUDIO_GITHUB_BRANCH||"studio/assets",targetBranch=process.env.STUDIO_PUBLISH_BRANCH||"main";
  if(!token)return NextResponse.json({error:"STUDIO_GITHUB_TOKEN is required."},{status:503});
