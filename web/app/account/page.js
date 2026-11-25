@@ -6,7 +6,6 @@ import { LanguageToggle, useLocale } from "../LocaleProvider";
 import {
   getPlayerSession,
   signInPlayer,
-  signUpPlayer,
   signOutPlayer,
   restoreOrInitializeCloudProgress
 } from "../../game/services/playerAccount.mjs";
@@ -24,7 +23,6 @@ function getLocationSearch() {
 export default function AccountPage() {
   const { locale } = useLocale();
   const ar = locale === "ar";
-  const [mode, setMode] = useState("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [user, setUser] = useState(null);
@@ -40,6 +38,7 @@ export default function AccountPage() {
     : "";
   const oauthErrorMessages = {
     cloud_unconfigured: ar ? "خدمة الحسابات السحابية غير مهيأة بعد." : "Cloud accounts are not configured yet.",
+    registration_paused: ar ? "تسجيل الحسابات الجديدة وتسجيل Google متوقفان مؤقتاً حتى يصبح حفظ التقدم السحابي آمناً." : "New registrations and Google sign-in are paused until secure cloud progress saving is available.",
     google_denied: ar ? "تم إلغاء تسجيل الدخول باستخدام Google." : "Google sign-in was cancelled.",
     oauth_invalid_state: ar ? "تعذر التحقق من طلب تسجيل الدخول. حاول مرة أخرى." : "The sign-in request could not be verified. Please try again.",
     oauth_exchange_failed: ar ? "تعذر إكمال تسجيل الدخول باستخدام Google." : "Google sign-in could not be completed."
@@ -58,7 +57,7 @@ export default function AccountPage() {
         if (current) {
           try {
             await restoreOrInitializeCloudProgress();
-            if (active && !hasOAuthFeedback) setMessage(ar ? "تم التحقق من حسابك؛ تقدم اللعب محفوظ محلياً حالياً." : "Your account is connected; gameplay progress is currently saved locally.");
+            if (active && !hasOAuthFeedback) setMessage(ar ? "تم التحقق من الحساب. تقدم اللعب غير محفوظ في الحساب أو على الجهاز حالياً." : "Your account is connected. Game progress is not currently saved to this account or device.");
           } catch (reason) {
             if (active && !hasOAuthFeedback) setError(reason.message);
           }
@@ -77,18 +76,10 @@ export default function AccountPage() {
     setError("");
     setMessage("");
     try {
-      const result = mode === "signin"
-        ? await signInPlayer(email, password)
-        : await signUpPlayer(email, password);
-      if (result.needsEmailConfirmation) {
-        setMessage(ar
-          ? "تم إنشاء الحساب. افتح رسالة التأكيد في بريدك الإلكتروني، ثم عد لتسجيل الدخول."
-          : "Account created. Confirm your email, then return here to sign in.");
-        return;
-      }
+      const result = await signInPlayer(email, password);
       setUser(result.user);
       await restoreOrInitializeCloudProgress();
-      setMessage(ar ? "تم تسجيل الدخول بنجاح. الحفظ المحلي مستمر والمزامنة السحابية متوقفة مؤقتاً." : "Signed in. Local saves remain active; cloud progression sync is temporarily paused.");
+      setMessage(ar ? "تم تسجيل الدخول. لكن تقدم اللعبة لا يُحفظ بعد؛ الحساب ليس نسخة احتياطية لتقدمك." : "Signed in. Game progress is not saved yet; this account is not a backup of your progress.");
       setPassword("");
     } catch (reason) {
       setError(reason.message || (ar ? "تعذر إكمال العملية." : "The request could not be completed."));
@@ -103,7 +94,7 @@ export default function AccountPage() {
     try {
       await signOutPlayer();
       setUser(null);
-      setMessage(ar ? "تم تسجيل الخروج. تقدم اللعب محفوظ محلياً على هذا الجهاز." : "Signed out. Your local gameplay progress remains saved on this device.");
+      setMessage(ar ? "تم تسجيل الخروج. تذكر أن تقدم اللعبة غير محفوظ حالياً." : "Signed out. Remember that game progress is not currently saved.");
     } catch (reason) {
       setError(reason.message);
     } finally {
@@ -118,14 +109,14 @@ export default function AccountPage() {
           <span className="eyebrow">{ar ? "حساب اللاعب" : "PLAYER ACCOUNT"}</span>
           <LanguageToggle />
         </div>
-        <h1>{ar ? "احفظ مغامرتك" : "Save Your Adventure"}</h1>
+        <h1>{ar ? "تسجيل دخول اللاعب" : "Player Sign In"}</h1>
         <p className="account-intro">
           {ar
-            ? "يمكنك اللعب فوراً كضيف دون تسجيل الدخول. سيُحفظ تقدمك على هذا الجهاز. الحساب اختياري، لكن المزامنة السحابية متوقفة مؤقتاً حتى نؤمّن حفظ المراحل والعملات من التلاعب."
-            : "You can play immediately as a guest without signing in. Your progress stays on this device. Accounts are optional; cloud sync is temporarily paused while stage and coin saving are secured against tampering."}
+            ? "يمكنك اللعب دون حساب. لكن حفظ التقدم المحلي والسحابي غير متاح حالياً. تسجيل الدخول متاح للحسابات الموجودة فقط، ولا يحفظ تقدم اللعبة أو العملات."
+            : "You can play without an account. Game progress is not currently saved locally or in the cloud. Sign-in is available for existing accounts only and does not save game progress or coins."}
         </p>
 
-        <div className="guest-play-panel"><strong>{ar ? "لا تحتاج إلى حساب للعب!" : "No account needed to play!"}</strong><p>{ar ? "تقدم الضيف يُحفظ محلياً تلقائياً. التسجيل مطلوب فقط للمزامنة السحابية." : "Guest progress is saved locally automatically. Sign-in is only needed for cloud sync."}</p><Link className="primary-link" href="/stages">{ar ? "متابعة اللعب كضيف" : "Continue as Guest"}</Link></div>
+        <div className="guest-play-panel"><strong>{ar ? "يمكنك اللعب كضيف" : "You can play as a guest"}</strong><p>{ar ? "اللعب متاح، لكن التقدم والعملات والمكافآت لن تُحفظ حتى تكتمل منظومة الحفظ الآمن." : "Gameplay is available, but progress, coins, and rewards will not be saved until secure saving is complete."}</p><Link className="primary-link" href="/stages">{ar ? "متابعة اللعب" : "Continue Playing"}</Link></div>
 
         {loading ? (
           <div className="account-status">{ar ? "جارٍ التحقق من الحساب..." : "Checking account..."}</div>
@@ -134,37 +125,23 @@ export default function AccountPage() {
             <div className="account-avatar" aria-hidden="true">✦</div>
             <strong>{ar ? "أنت مسجل الدخول" : "You are signed in"}</strong>
             <span className="account-email">{user.email}</span>
-            <p>{ar ? "الحساب متصل، لكن مزامنة تقدم اللعب متوقفة مؤقتاً. يستمر الحفظ المحلي دون انقطاع." : "Your account is connected, but gameplay progress sync is temporarily paused. Local saving continues."}</p>
+            <p>{ar ? "الحساب متصل، لكن تقدم اللعبة والعملات لا تُحفظ حالياً." : "Your account is connected, but game progress and coins are not currently saved."}</p>
             <button className="account-submit" type="button" onClick={logout} disabled={busy}>
               {busy ? (ar ? "لحظة..." : "Please wait...") : (ar ? "تسجيل الخروج" : "Sign out")}
             </button>
           </div>
         ) : (
           <>
-            <div className="account-tabs" role="tablist" aria-label={ar ? "نوع العملية" : "Account action"}>
-              <button type="button" className={mode === "signin" ? "active" : ""} onClick={() => { setMode("signin"); setError(""); setMessage(""); }}>
-                {ar ? "تسجيل الدخول" : "Sign in"}
-              </button>
-              <button type="button" className={mode === "signup" ? "active" : ""} onClick={() => { setMode("signup"); setError(""); setMessage(""); }}>
-                {ar ? "إنشاء حساب" : "Create account"}
-              </button>
+            <div className="account-signin-notice">
+              {ar ? "التسجيل الجديد وتسجيل Google متوقفان مؤقتاً. يمكنك تسجيل الدخول إلى حساب موجود فقط." : "New registration and Google sign-in are temporarily paused. Only existing accounts can sign in."}
             </div>
-            <a className="google-signin-button" href="/api/player/account/google">
-              <span className="google-mark" aria-hidden="true">G</span>
-              {ar ? "المتابعة باستخدام Google" : "Continue with Google"}
-            </a>
-            <div className="account-or-divider"><span>{ar ? "أو بالبريد الإلكتروني" : "OR WITH EMAIL"}</span></div>
             <form className="account-form" onSubmit={submit}>
               <label htmlFor="player-email">{ar ? "البريد الإلكتروني" : "Email address"}</label>
               <input id="player-email" type="email" autoComplete="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="player@example.com" />
               <label htmlFor="player-password">{ar ? "كلمة المرور" : "Password"}</label>
-              <input id="player-password" type="password" autoComplete={mode === "signin" ? "current-password" : "new-password"} minLength={8} required value={password} onChange={(event) => setPassword(event.target.value)} placeholder={ar ? "٨ أحرف على الأقل" : "At least 8 characters"} />
+              <input id="player-password" type="password" autoComplete="current-password" minLength={8} required value={password} onChange={(event) => setPassword(event.target.value)} placeholder={ar ? "كلمة مرور حسابك الحالي" : "Your existing account password"} />
               <button className="account-submit" type="submit" disabled={busy}>
-                {busy
-                  ? (ar ? "جارٍ التنفيذ..." : "Please wait...")
-                  : mode === "signin"
-                    ? (ar ? "دخول ومزامنة التقدم" : "Sign in & sync progress")
-                    : (ar ? "إنشاء حساب لاعب" : "Create player account")}
+                {busy ? (ar ? "جارٍ تسجيل الدخول..." : "Signing in...") : (ar ? "تسجيل الدخول" : "Sign in")}
               </button>
             </form>
           </>
@@ -174,8 +151,8 @@ export default function AccountPage() {
         {(message || oauthMessage) && <p className="account-feedback account-success" role="status">{message || oauthMessage}</p>}
         <p className="account-security">
           {ar
-            ? "كلمة المرور لا تُخزّن في اللعبة. تتم المصادقة عبر Supabase، وتُحمى بيانات كل لاعب بسياسات وصول خاصة بحسابه."
-            : "The game never stores your password. Supabase handles authentication, and database policies isolate each player's progress."}
+            ? "كلمة المرور لا تُخزّن في اللعبة. تتم المصادقة عبر Supabase، لكن حفظ تقدم اللعب غير متاح حالياً."
+            : "The game never stores your password. Supabase handles authentication, but game progress saving is not currently available."}
         </p>
         <nav className="info-nav">
           <Link className="secondary-link" href="/stages">{ar ? "اللعب كضيف" : "Play as Guest"}</Link>
