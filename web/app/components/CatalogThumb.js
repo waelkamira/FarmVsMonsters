@@ -19,8 +19,7 @@ const LOCAL_PLANT_ICONS = {
 };
 const SPRITE_SHEET_PLANTS = new Set(["radish", "mango", "pineapple", "hazelnut", "snow-thrower", "electric-mushroom"]);
 const LOCAL_MONSTER_ICONS = {
-  "monster-01": "/assets/characters/monsters/01/01.png",
-  dragon: "/assets/monster-icons/dragon.svg"
+  "monster-01": "/assets/characters/monsters/01/01.png"
 };
 const ART = {
   radish: ["1f96c", "Radish greens"],
