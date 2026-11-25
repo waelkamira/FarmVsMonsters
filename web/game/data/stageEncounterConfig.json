@@ -20,7 +20,7 @@
       "plants": [
         {
           "id": "radish",
-          "count": 1,
+          "count": 26,
           "enabled": true
         },
         {
@@ -65,7 +65,7 @@
         }
       ],
       "monstersConfigured": true,
-      "plantsConfigured": false
+      "plantsConfigured": true
     }
   }
 }
