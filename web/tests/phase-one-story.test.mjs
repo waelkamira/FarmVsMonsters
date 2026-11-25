@@ -51,21 +51,21 @@ test("the rescue sequence picks up the princess, carries her home, then opens th
   assert.match(scene, /"phase-one-emblem"/);
 });
 
-test("story artwork uses explicit user-owned asset paths and optional animation sheets", () => {
+test("story artwork remains a documented contract but missing files are not queued by Phaser", () => {
   assert.equal(assets.version, 1);
+  assert.equal(assets.runtimeEnabled, false);
   const keys = assets.assets.map((asset) => asset.key);
   for (const key of ["farmer-sling", "farmer-rescue", "farmer-carry", "dragon-boss", "phase-one-princess-captive", "phase-one-princess-rescued", "phase-one-emblem"]) {
     assert.ok(keys.includes(key), "missing story asset contract: " + key);
   }
-  assert.equal(assets.runtimeEnabled, false);
+  const preload = scene.slice(scene.indexOf("  preload() {"), scene.indexOf("  create() {"));
   for (const asset of assets.assets) {
     assert.ok(asset.path.startsWith("/assets/"));
     assert.equal(asset.runtimeEnabled, false);
     assert.equal(asset.status, "awaiting-art");
-    assert.doesNotMatch(scene, new RegExp(`this\\.load\\.(?:image|spritesheet)\\("[^"]+", "\\${asset.path.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\  for (const asset of assets.assets) assert.ok(asset.path.startsWith("/assets/"));
-  assert.match(scene, /Optional sheets are validated independently/);")}"`));
+    assert.equal(preload.includes(asset.path), false, asset.key + " must not be requested before the file exists");
   }
-  assert.match(scene, /Phase 1 story artwork is not in the asset bundle yet/);
+  assert.match(preload, /Phase 1 story artwork is not in the asset bundle yet/);
   assert.match(scene, /Optional sheets are validated independently/);
 });
 
