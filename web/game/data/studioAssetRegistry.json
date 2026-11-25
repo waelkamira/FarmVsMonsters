@@ -1527,10 +1527,103 @@
       "rows": 1,
       "columns": 1,
       "frameCount": 1,
-      "spriteSheet": false,
+      "spriteSheet": true,
       "status": "draft",
       "createdAt": "2026-11-24T04:16:00.506Z",
-      "updatedAt": "2026-11-25T02:15:04.326Z"
+      "updatedAt": "2026-11-25T02:18:35.791Z",
+      "releaseRequest": null,
+      "publishedAt": null,
+      "testingAt": null,
+      "archivedAt": null,
+      "restoredFromVersion": null,
+      "combat": {
+        "mode": "projectile",
+        "projectile": {
+          "id": "radish-level-1-projectile",
+          "path": "/assets/projectiles/plants/radish-level-1-projectile-eed33cde592cba25c165b1d53a277b765c129083e8a2984063c31876c6ce27de.png",
+          "filename": "radish-level-1-projectile.png",
+          "managed": false,
+          "frameCount": 9,
+          "rows": 3,
+          "columns": 3
+        },
+        "energyCost": 60,
+        "hp": 150,
+        "cooldownMs": 1800,
+        "damage": 30,
+        "range": 180,
+        "projectileSpeed": 280,
+        "projectileHeight": 0,
+        "projectileEffectColor": "#ffc247",
+        "projectileRotation": 0,
+        "projectileTrajectoryType": "custom",
+        "projectilePathPoints": [
+          {
+            "progress": 0,
+            "x": 0,
+            "y": 0
+          },
+          {
+            "progress": 0.5,
+            "x": 0,
+            "y": 110
+          },
+          {
+            "progress": 1,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "projectileCurveX": 0,
+        "projectileCurveY": 110,
+        "projectileLaunchOffsetX": 14,
+        "projectileLaunchOffsetY": -30,
+        "projectileTargetOffsetX": 0,
+        "projectileTargetOffsetY": 0,
+        "projectileCollisionRadius": 22,
+        "energyAmount": 15,
+        "energyIntervalMs": 12000,
+        "sizePercent": 200
+      },
+      "flipX": false,
+      "animationProfile": {
+        "speedMultiplier": 1,
+        "idle": {
+          "startFrame": 0,
+          "endFrame": 0,
+          "fps": 6,
+          "loop": true
+        },
+        "move": {
+          "startFrame": 0,
+          "endFrame": 0,
+          "fps": 10,
+          "loop": true
+        },
+        "attack": {
+          "startFrame": 0,
+          "endFrame": 0,
+          "fps": 12,
+          "loop": false
+        }
+      },
+      "rigProfile": null,
+      "revision": 2,
+      "versions": [
+        {
+          "versionNumber": 1,
+          "savedAt": "2026-11-25T02:15:04.326Z",
+          "id": "radish-level-1",
+          "type": "plant",
+          "name": "radish-level-1",
+          "filename": "radish-level-1.png",
+          "path": "/assets/plants/radish-level-1.png",
+          "rows": 1,
+          "columns": 1,
+          "spriteSheet": false,
+          "combat": null
+        }
+      ]
     },
     {
       "id": "radish",
