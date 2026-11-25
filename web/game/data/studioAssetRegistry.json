@@ -56,6 +56,31 @@
           "endFrame": 23
         }
       }
+    },
+    {
+      "id": "01",
+      "type": "monster",
+      "name": "Monster 01",
+      "filename": "01.png",
+      "path": "/assets/characters/monsters/01/01.png",
+      "rows": 1,
+      "columns": 1,
+      "frameCount": 1,
+      "spriteSheet": false,
+      "status": "testing",
+      "createdAt": "2026-11-25T00:00:00.000Z",
+      "updatedAt": "2026-11-25T00:00:00.000Z",
+      "monsterProfile": {
+        "baseArchetype": "cave-brute",
+        "hpMultiplier": 1,
+        "speedMultiplier": 1,
+        "damageMultiplier": 1,
+        "attackIntervalMultiplier": 1,
+        "widthScale": 1,
+        "heightScale": 1,
+        "spawnWeight": 0,
+        "firstWave": 1
+      }
     }
   ]
 }
