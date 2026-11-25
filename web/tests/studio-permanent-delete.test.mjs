@@ -8,7 +8,8 @@ const css = readFileSync(new URL("../app/studio/studio.css", import.meta.url), "
 
 test("Studio exposes permanent deletion for every asset type with an explicit confirmation dialog", () => {
   assert.match(page, /data-testid="studio-delete-asset"/);
-  assert.match(page, /className="studio-delete-button" data-testid="studio-delete-asset"[^>]*onClick=\{\(\)=>setDeleteDialog\(a\)\}/);\n  assert.doesNotMatch(page, /\(a\.type==="plant"\|\|a\.type==="monster"\)&&<button[^>]*studio-delete-button/);
+  assert.match(page, /className="studio-delete-button" data-testid="studio-delete-asset"[^>]*onClick=\{\(\)=>setDeleteDialog\(a\)\}/);
+  assert.doesNotMatch(page, /\(a\.type==="plant"\|\|a\.type==="monster"\)&&<button[^>]*studio-delete-button/);
   assert.match(page, /role="alertdialog"[^>]*aria-modal="true"/);
   assert.match(page, /تأكيد الحذف النهائي/);
   assert.match(page, /لا يمكن التراجع عن هذه العملية/);
