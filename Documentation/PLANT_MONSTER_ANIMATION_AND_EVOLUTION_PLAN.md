@@ -9,12 +9,9 @@ This plan is additive. Preserve approved artwork, the current Phaser 3 runtime, 
 ## Existing foundation audited
 
 - The active game is Phaser 3 in `web/`; Godot is archived/experimental.
-- `BattleScene.js` already registers several authored plant throw animations and hyena idle/walk/run/bite/hit/death animations.
 - The hybrid VFX runtime is in `web/game/vfx/`, with a registry, event bus, renderer, object pool, and plant/projectile profiles.
 - Current playtest plant set: radish, energy mushroom, electric mushroom, pumpkin, pineapple, hazelnut, mango, snow-thrower.
-- Current implemented monster set: dust-skitter, cave-brute, stonehide, alpha-brute.
 - Monster hit response already uses a restrained projectile-colored edge glow and reduced recoil. Preserve this approved treatment; do not restore large white flashes or oversized death explosions.
-- Existing hyena-run1 crop and animation is approved and must remain unchanged unless explicitly requested.
 
 ## Six delivery tracks
 
@@ -46,7 +43,6 @@ Three visual tiers for each implemented monster:
 2. Visible armor/scar/elemental progression and stronger movement language.
 3. Signature attack tell and phase behavior.
 
-Prioritize Stonehide armor damage stages, Dust Skitter speed readability, Cave Brute hit/roar personality, and Alpha Brute boss-scale phase changes.
 
 ### 5. Signature abilities
 - Add one distinct signature ability per plant after its level 1–2 presentation is approved.
@@ -74,10 +70,6 @@ Prioritize Stonehide armor damage stages, Dust Skitter speed readability, Cave B
 
 | Monster | Reaction personality | Evolution direction |
 |---|---|---|
-| Dust Skitter | quick and light | dust wake and evasive dash |
-| Cave Brute | balanced and readable | scars, roar, charge tell |
-| Stonehide | heavy and armored | visible cracking armor |
-| Alpha Brute | massive and powerful | rage and multi-phase attacks |
 
 ## Implementation status
 
@@ -93,7 +85,6 @@ Prioritize Stonehide armor damage stages, Dust Skitter speed readability, Cave B
 - [x] Register Electric Mushroom as a temporary eighth seed-bank playtest option with its 512×512 3×3 artwork. Reuse Mango's dimension-derived crop helper to register nine Phaser frames, render frame 0 while idle, and play frames 0–8 on each attack. Add it to the Stage 1 plant encyclopedia, combat rules, cyan projectile, and electric charge/trail/impact VFX profile. Visual tuning remains pending hands-on Chrome review.
 
 ### Next vertical slice
-Use Radish + Cave Brute as the first end-to-end reference pair. Verify idle → anticipation → attack → projectile → impact → monster reaction → recovery. Then validate Snow Thrower + Stonehide for elemental accumulation/freeze and armor response. Expand only after both are visually approved in Chrome.
 
 ## Acceptance criteria
 - Character identity is readable even when no attack is occurring.
@@ -104,3 +95,4 @@ Use Radish + Cave Brute as the first end-to-end reference pair. Verify idle → 
 - VFX are pooled, bounded, and cosmetic-only.
 - Existing approved sprite crops and the subtle edge-glow direction remain intact.
 - Test the actual result in Chrome before marking an animation or effect visually complete.
+

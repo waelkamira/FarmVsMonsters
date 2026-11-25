@@ -80,7 +80,7 @@ test("Studio facing toggle is previewed, persisted, published, and applied by Ph
   assert.match(assetsRoute,/flipX:Boolean\(asset\.flipX\)/);
   assert.match(battleScene,/container\.setScale\(studioPlant\.flipX \? -1 : 1, 1\)/);
   assert.match(battleScene,/studioMonster\.flipX \? -1 : 1/);
-  assert.match(battleScene,/hyenaSprite\.setFlipX\(!studioMonster\.flipX\)/);
+  assert.match(battleScene,/monster01Sprite\.setFlipX\(!studioMonster\.flipX\)/);
 });
 
 test("campaign plant unlocks are respected and the active loadout remains capped at six",()=>{
@@ -200,7 +200,7 @@ test("Studio imports plant assets from grouped manifests and preserves named Pha
 
 test("Studio preview proxy bounds the fetch and response-body read, returning 504 on timeout",()=>{
   assert.match(assetsRoute,/const controller=new AbortController\(\)/);
-  assert.match(assetsRoute,/setTimeout\(\(\)=>controller\.abort\(\),12_000\)/);
+  assert.match(assetsRoute,/setTimeout\(\(\)=>controller\.abort\(\),30_000\)/);
   assert.match(assetsRoute,/signal:controller\.signal/);
   assert.match(assetsRoute,/Buffer\.from\(await response\.arrayBuffer\(\)\)/);
   assert.match(assetsRoute,/status:timedOut\?504:502/);

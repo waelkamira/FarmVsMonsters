@@ -75,7 +75,7 @@ export function applyCombatReplayEvent(state, event) {
     const blocker = state.plants.filter((plant) => plant.alive && plant.type === "radish" && plant.row === monster.row && getPlantLaneLocalX(plant.col) < monster.localX).sort((a,b) => getPlantLaneLocalX(b.col) - getPlantLaneLocalX(a.col))[0] ?? null;
     if ((blocker?.col ?? null) !== payload.blockerCol) return fail(state, "MONSTER_MOVEMENT_BLOCKER_MISMATCH", event);
     if (!blocker && payload.biteReach !== 0) return fail(state, "INVALID_MONSTER_BITE_REACH", event);
-    const maxSpeed = monster.speed * (monster.archetype === "dust-skitter" ? 1.848 : 1);
+    const maxSpeed = monster.speed * (monster.archetype === "monster-01" ? 1.848 : 1);
     const seconds = elapsed / 1000;
     const effectiveSpeed = seconds > 0 ? payload.distance / seconds : 0;
     if (effectiveSpeed > maxSpeed + 0.05) return fail(state, "MONSTER_MOVEMENT_TOO_FAST", event);
@@ -84,7 +84,7 @@ export function applyCombatReplayEvent(state, event) {
     const expectedAtBaseSpeed = resolveMonsterLaneStep({ localX: monster.localX, speed: monster.speed, deltaSeconds: seconds, blockerLocalX, biteReach: payload.biteReach });
     const resolvedDistance = Math.max(0, monster.localX - expected.localX);
     if (Math.abs(resolvedDistance - payload.distance) > 0.05) return fail(state, "MONSTER_MOVEMENT_DISTANCE_MISMATCH", event);
-    if (monster.archetype === "dust-skitter") {
+    if (monster.archetype === "monster-01") {
       if (effectiveSpeed > 0 && effectiveSpeed < monster.speed - 0.05) return fail(state, "MONSTER_MOVEMENT_TOO_SLOW", event);
     } else if (Math.abs(expected.localX - expectedAtBaseSpeed.localX) > 0.1) {
       return fail(state, "MONSTER_MOVEMENT_SPEED_MISMATCH", event);

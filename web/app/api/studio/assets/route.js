@@ -13,13 +13,17 @@ import {createStudioAnimationProfile} from "../../../../game/studio/animationPro
 import {createSkeletalRigProfile} from "../../../../game/studio/skeletalAnimation.mjs";
 import {createStudioMonsterProfile} from "../../../../game/studio/monsterProfiles.mjs";
 import {safeAssetPath} from "../../../../game/studio/assetReadiness.mjs";
+import {assetOwnedPaths,assetPathStillUsed,removeManifestAssetReferences,synchronizeAssetAudit} from "../../../../game/studio/assetDeletion.mjs";
 import {validateEffectSelection} from "../../../../game/vfx/effects/effectAssignments.mjs";
+import {validateCharacterStateAnimation} from "../../../../game/studio/characterStateAnimations.mjs";
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
 const COOKIE="fvm_studio_session";
 const REGISTRY_PATH="web/game/data/studioAssetRegistry.json";
 const PUBLISHED_CATALOG_PATH="web/public/assets/studio-plant-catalog.json";
 const PUBLISHED_MONSTER_CATALOG_PATH="web/public/assets/studio-monster-catalog.json";
+const ASSET_AUDIT_PATH="web/public/assets/asset-audit.json";
+const previewCache=new Map();
 function authorized(req){return verifyStudioSession(process.env.STUDIO_SESSION_SECRET || "",req.cookies.get(COOKIE)?.value||"");}
 function ext(type){return {"image/png":".png","image/webp":".webp","image/gif":".gif","audio/mpeg":".mp3","audio/wav":".wav","audio/ogg":".ogg","audio/mp4":".m4a"}[type]||"";}
 function getRigPartAssets(assets,asset){const bones=Array.isArray(asset?.rigProfile?.bones)?asset.rigProfile.bones:[];const ids=[...new Set(bones.map(bone=>bone?.part?.assetId).filter(Boolean))];return ids.map(id=>assets.find(item=>item.id===id));}
@@ -46,42 +50,36 @@ async function githubDeleteIfExists(filePath,message,token,branch){
  if(!response.ok){const data=await response.json().catch(()=>({}));throw Error(data.message||"GitHub delete failed ("+response.status+").");}
  return true;
 }
-function assetOwnedPaths(asset){
- return [...new Set([asset?.path,asset?.atlas?.jsonPath,asset?.audio?.path,asset?.combat?.projectile?.path].filter((value)=>typeof value==="string"&&safeAssetPath(value)))];
-}
-function assetPathStillUsed(assets,assetPath){
- return assets.some((item)=>[item.path,item.atlas?.jsonPath,item.audio?.path,item.combat?.projectile?.path].includes(assetPath));
-}
-function removeManifestAssetReferences(manifest,assetPaths){
- const removed=new Set(assetPaths);
- if(Array.isArray(manifest.assets))manifest.assets=manifest.assets.filter((item)=>!removed.has(item?.url));
- if(manifest.groups&&typeof manifest.groups==="object"){
-  for(const [group,items] of Object.entries(manifest.groups)){
-   if(Array.isArray(items))manifest.groups[group]=items.filter((item)=>!removed.has(item?.url));
-  }
-  manifest.assetCount=Object.values(manifest.groups).reduce((total,items)=>total+(Array.isArray(items)?items.length:0),0);
- }else if(Array.isArray(manifest.assets))manifest.assetCount=manifest.assets.length;
- return manifest;
-}
 async function removeLocalAssetManifestReferences(assetPaths){
- const target=path.join(process.cwd(),"public/assets/asset-manifest.json");
- try{
-  const manifest=JSON.parse(await readFile(target,"utf8"));
-  const updated=removeManifestAssetReferences(manifest,assetPaths);
-  await writeFile(target,JSON.stringify(updated,null,2)+"\n","utf8");
- }catch(error){if(error.code!=="ENOENT")throw error;}
-}
-async function removeGithubAssetManifestReferences(assetPaths,token,branch){
- const filePath="web/public/assets/asset-manifest.json";
- const document=await githubGetDocument(filePath,token,branch);
- if(!document)return;
- const manifest=removeManifestAssetReferences(JSON.parse(document.content),assetPaths);
- await githubPut(filePath,Buffer.from(JSON.stringify(manifest,null,2)+"\n"),"studio: remove deleted asset references from manifest",token,branch,document.sha);
-}
-async function githubPut(filePath,bytes,message,token,branch,expectedSha){const api=githubUrl(filePath),headers=githubHeaders(token);const check=await fetch(api+"?ref="+encodeURIComponent(branch),{headers});let sha=null;if(check.ok)sha=(await check.json()).sha;else if(check.status!==404)throw Error("GitHub lookup failed ("+check.status+").");assertExpectedContentSha(expectedSha,sha);const saved=await fetch(api,{method:"PUT",headers:{...headers,"Content-Type":"application/json"},body:JSON.stringify({message,branch,content:Buffer.from(bytes).toString("base64"),...(sha?{sha}:{})})});if(!saved.ok){const data=await saved.json().catch(()=>({}));throw Error(data.message||"GitHub save failed ("+saved.status+").");}}
+  const target=path.join(process.cwd(),"public/assets/asset-manifest.json");
+  try{
+   const manifest=removeManifestAssetReferences(JSON.parse(await readFile(target,"utf8")),assetPaths);
+   await writeFile(target,JSON.stringify(manifest,null,2)+"\n","utf8");
+   const auditPath=path.join(process.cwd(),"public/assets/asset-audit.json");
+   try{
+    const audit=synchronizeAssetAudit(JSON.parse(await readFile(auditPath,"utf8")),manifest);
+    await writeFile(auditPath,JSON.stringify(audit,null,2)+"\n","utf8");
+   }catch(error){if(error.code!=="ENOENT")throw error;}
+  }catch(error){if(error.code!=="ENOENT")throw error;}
+ }
+ async function removeGithubAssetManifestReferences(assetPaths,token,branch){
+  const [document,auditDocument]=await Promise.all([
+   githubGetDocument("web/public/assets/asset-manifest.json",token,branch),
+   githubGetDocument(ASSET_AUDIT_PATH,token,branch)
+  ]);
+  if(!document)return;
+  const manifest=removeManifestAssetReferences(JSON.parse(document.content),assetPaths);
+  await githubPut("web/public/assets/asset-manifest.json",Buffer.from(JSON.stringify(manifest,null,2)+"\n"),"studio: remove deleted asset references from manifest",token,branch,document.sha);
+  if(auditDocument){
+   const audit=synchronizeAssetAudit(JSON.parse(auditDocument.content),manifest);
+   await githubPut(ASSET_AUDIT_PATH,Buffer.from(JSON.stringify(audit,null,2)+"\n"),"studio: reconcile asset audit after permanent deletion",token,branch,auditDocument.sha);
+  }
+ }
+ async function githubPut(filePath,bytes,message,token,branch,expectedSha){const api=githubUrl(filePath),headers=githubHeaders(token);const check=await fetch(api+"?ref="+encodeURIComponent(branch),{headers});let sha=null;if(check.ok)sha=(await check.json()).sha;else if(check.status!==404)throw Error("GitHub lookup failed ("+check.status+").");assertExpectedContentSha(expectedSha,sha);const saved=await fetch(api,{method:"PUT",headers:{...headers,"Content-Type":"application/json"},body:JSON.stringify({message,branch,content:Buffer.from(bytes).toString("base64"),...(sha?{sha}:{})})});if(!saved.ok){const data=await saved.json().catch(()=>({}));throw Error(data.message||"GitHub save failed ("+saved.status+").");}}
 async function localRegistry(){try{return JSON.parse(await readFile(path.join(process.cwd(),"game/data/studioAssetRegistry.json"),"utf8"));}catch(error){if(error.code==="ENOENT")return {version:1,assets:[]};throw error;}}
 async function saveLocalRegistry(registry){const target=path.join(process.cwd(),"game/data/studioAssetRegistry.json");await mkdir(path.dirname(target),{recursive:true});await writeFile(target,JSON.stringify(registry,null,2)+"\n","utf8");}
-function addPreviewUrls(registry){const github=process.env.STUDIO_STORAGE_DRIVER==="github";return {...registry,storage:process.env.STUDIO_STORAGE_DRIVER||"local",assets:(registry.assets||[]).map(asset=>({...asset,previewUrl:github?"/api/studio/assets?preview="+encodeURIComponent(asset.path):asset.path,rigParts:serializeRigParts(registry.assets||[],asset),...(asset.combat?.projectile?{combat:{...asset.combat,projectile:{...asset.combat.projectile,frameCount:asset.combat.projectile.frameCount??1,rows:asset.combat.projectile.rows??1,columns:asset.combat.projectile.columns??1,previewUrl:github?"/api/studio/assets?preview="+encodeURIComponent(asset.combat.projectile.path):asset.combat.projectile.path}}}:{})}))};}
+function isRetiredEnemyAsset(asset){return /hyena|dragon/i.test(JSON.stringify(asset||{}));}
+function addPreviewUrls(registry){const github=process.env.STUDIO_STORAGE_DRIVER==="github";const assets=(registry.assets||[]).filter(asset=>!isRetiredEnemyAsset(asset));return {...registry,storage:process.env.STUDIO_STORAGE_DRIVER||"local",assets:assets.map(asset=>({...asset,previewUrl:github?"/api/studio/assets?preview="+encodeURIComponent(asset.path):asset.path,...(asset.stateAnimations?{stateAnimations:Object.fromEntries(Object.entries(asset.stateAnimations).map(([stateId,state])=>[stateId,{...state,previewUrl:github?"/api/studio/assets?preview="+encodeURIComponent(state.path):state.path}]))}:{}),rigParts:serializeRigParts(assets,asset),...(asset.combat?.projectile?{combat:{...asset.combat,projectile:{...asset.combat.projectile,frameCount:asset.combat.projectile.frameCount??1,rows:asset.combat.projectile.rows??1,columns:asset.combat.projectile.columns??1,previewUrl:github?"/api/studio/assets?preview="+encodeURIComponent(asset.combat.projectile.path):asset.combat.projectile.path}}}:{})}))};}
 function plantIdFromPath(assetPath){
  const filename=path.basename(assetPath||"").replace(/\.[^.]+$/,"").toLowerCase();
  return filename.replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
@@ -198,7 +196,7 @@ export async function GET(req){
      if(!asset.releaseRequest?.number)return asset;
      try{return resolveStudioReleaseAsset(asset,await githubGetPullRequest(asset.releaseRequest.number,token));}catch{return asset;}
     }));
-    const monsters=candidates.filter(asset=>asset.status==="testing").map(asset=>({...asset,path:"/api/studio/assets?preview="+encodeURIComponent(asset.path),rigParts:serializeRigParts(registry.assets||[],asset)}));
+    const monsters=candidates.filter(asset=>asset.status==="testing").map(asset=>({...addStatePreviewUrls(asset),path:"/api/studio/assets?preview="+encodeURIComponent(asset.path),rigParts:serializeRigParts(registry.assets||[],asset)}));
     return NextResponse.json({version:1,monsters},{headers:{"Cache-Control":"private, no-store"}});
    }catch(error){return NextResponse.json({error:error.message||"Could not load testing monster catalog."},{status:502});}
   }
@@ -211,7 +209,7 @@ export async function GET(req){
      try{return resolveStudioReleaseAsset(asset,await githubGetPullRequest(asset.releaseRequest.number,token));}catch{return asset;}
     }));
     const plants=candidates.filter(asset=>asset.status==="testing").map(asset=>({
-     ...asset,
+     ...addStatePreviewUrls(asset),
      path:"/api/studio/assets?preview="+encodeURIComponent(asset.path),
      rigParts:serializeRigParts(registry.assets||[],asset),
      ...(asset.combat?.projectile?{combat:{...asset.combat,projectile:{...asset.combat.projectile,frameCount:asset.combat.projectile.frameCount??1,rows:asset.combat.projectile.rows??1,columns:asset.combat.projectile.columns??1,path:"/api/studio/assets?preview="+encodeURIComponent(asset.combat.projectile.path)}}}:{})
@@ -221,15 +219,22 @@ export async function GET(req){
   }
   const preview=req.nextUrl.searchParams.get("preview");
   if(preview!==null){
+   if(/hyena|dragon/i.test(preview))return NextResponse.json({error:"This enemy asset has been permanently retired."},{status:410,headers:{"Cache-Control":"private, no-store"}});
    const allowedTypes={".png":"image/png",".webp":"image/webp",".gif":"image/gif",".mp3":"audio/mpeg",".wav":"audio/wav",".ogg":"audio/ogg",".m4a":"audio/mp4"};
    const extension=path.extname(preview).toLowerCase();
    if(!preview.startsWith("/assets/")||preview.includes("..")||!allowedTypes[extension])return NextResponse.json({error:"Invalid asset preview path."},{status:400});
-   const controller=new AbortController();
-   const timeout=setTimeout(()=>controller.abort(),12_000);
+   const cacheKey=branch+":"+preview;
+   const cached=previewCache.get(cacheKey);
+   if(cached&&cached.expiresAt>Date.now())return new NextResponse(cached.bytes,{headers:{"Content-Type":allowedTypes[extension],"Cache-Control":"private, max-age=300","X-Content-Type-Options":"nosniff"}});
+   if(cached)previewCache.delete(cacheKey);
    const fetchPreview=async(ref)=>{
-    const response=await fetch(githubUrl("web/public"+preview)+"?ref="+encodeURIComponent(ref),{headers:{...githubHeaders(token),Accept:"application/vnd.github.raw"},signal:controller.signal});
-    const bytes=response.ok?Buffer.from(await response.arrayBuffer()):null;
-    return {response,bytes};
+    const controller=new AbortController();
+    const timeout=setTimeout(()=>controller.abort(),30_000);
+    try{
+     const response=await fetch(githubUrl("web/public"+preview)+"?ref="+encodeURIComponent(ref),{headers:{...githubHeaders(token),Accept:"application/vnd.github.raw"},signal:controller.signal});
+     const bytes=response.ok?Buffer.from(await response.arrayBuffer()):null;
+     return {response,bytes};
+    }finally{clearTimeout(timeout);}
    };
    try{
     let upstream=await fetchPreview(branch);
@@ -238,11 +243,13 @@ export async function GET(req){
      if(targetBranch!==branch)upstream=await fetchPreview(targetBranch);
     }
     if(!upstream.response.ok)return NextResponse.json({error:"GitHub preview failed ("+upstream.response.status+")."},{status:upstream.response.status===404?404:502});
+    previewCache.set(cacheKey,{bytes:upstream.bytes,expiresAt:Date.now()+300_000});
+    while(previewCache.size>100)previewCache.delete(previewCache.keys().next().value);
     return new NextResponse(upstream.bytes,{headers:{"Content-Type":allowedTypes[extension],"Cache-Control":"private, max-age=300","X-Content-Type-Options":"nosniff"}});
    }catch(error){
     const timedOut=error?.name==="TimeoutError"||error?.name==="AbortError";
-    return NextResponse.json({error:timedOut?"GitHub preview timed out after 12 seconds.":(error.message||"Preview fetch failed.")},{status:timedOut?504:502});
-   }finally{clearTimeout(timeout);}
+    return NextResponse.json({error:timedOut?"GitHub preview timed out after 30 seconds.":(error.message||"Preview fetch failed.")},{status:timedOut?504:502});
+   }
   }
   try{
    const document=await githubGetDocument(REGISTRY_PATH,token,branch);
@@ -255,7 +262,7 @@ export async function GET(req){
      return resolveStudioReleaseAsset(asset,pr);
     }catch{return {...asset,status:"approved",releaseRequest:{...asset.releaseRequest,state:"unknown"}};}
    }));
-   return NextResponse.json(addPreviewUrls({...registry,assets}));
+   return NextResponse.json(addPreviewUrls({...registry,assets}),{headers:{"Cache-Control":"private, no-store"}});
   }catch(error){return NextResponse.json({error:error.message},{status:502});}
  }
  return NextResponse.json(addPreviewUrls(await localRegistry()));
@@ -263,11 +270,12 @@ export async function GET(req){
 export async function POST(req){
  if(!authorized(req))return NextResponse.json({error:"Unauthorized."},{status:401});
  let form;try{form=await req.formData();}catch{return NextResponse.json({error:"Invalid multipart upload."},{status:400});}
- const id=String(form.get("id")||"").trim().toLowerCase(),type=String(form.get("type")||""),config=STUDIO_ASSET_TYPES[type],file=form.get("file"),projectileFile=form.get("projectileFile"),rows=Number(form.get("rows")||1),columns=Number(form.get("columns")||1),frameCount=Number(form.get("frameCount")||9),replace=String(form.get("replace")||"false")==="true";
+ const id=String(form.get("id")||"").trim().toLowerCase(),type=String(form.get("type")||""),config=STUDIO_ASSET_TYPES[type],file=form.get("file"),projectileFile=form.get("projectileFile"),stateAnimationFile=form.get("stateAnimationFile"),stateId=String(form.get("stateId")||""),stateRows=Number(form.get("stateRows")||1),stateColumns=Number(form.get("stateColumns")||1),stateFrameCount=Number(form.get("stateFrameCount")||1),stateFps=Number(form.get("stateFps")||10),rows=Number(form.get("rows")||1),columns=Number(form.get("columns")||1),frameCount=Number(form.get("frameCount")||9),replace=String(form.get("replace")||"false")==="true";
  if(!config||!STUDIO_ID_PATTERN.test(id)||id.length>64)return NextResponse.json({error:"Invalid category or ID. Use a lowercase slug up to 64 characters."},{status:400});
 
  const hasFile=Boolean(file&&typeof file.arrayBuffer==="function"&&file.size>0);
  const hasProjectile=Boolean(projectileFile&&typeof projectileFile.arrayBuffer==="function"&&projectileFile.size>0);
+ const hasStateAnimation=Boolean(stateAnimationFile&&typeof stateAnimationFile.arrayBuffer==="function"&&stateAnimationFile.size>0);
  const removeProjectile=String(form.get("removeProjectile")||"false")==="true";
  const driver=process.env.STUDIO_STORAGE_DRIVER||"local";let old,registrySha;
  try{if(driver==="github"){const token=process.env.STUDIO_GITHUB_TOKEN,branch=process.env.STUDIO_GITHUB_BRANCH||"studio/assets";if(!token)return NextResponse.json({error:"STUDIO_GITHUB_TOKEN is required."},{status:503});const document=await githubGetDocument(REGISTRY_PATH,token,branch);old=document?JSON.parse(document.content):{version:1,assets:[]};registrySha=document?.sha??null;}else old=await localRegistry();}catch(error){return NextResponse.json({error:error.message},{status:502});}
@@ -299,6 +307,14 @@ export async function POST(req){
  if(existing&&existing.type!==type)return NextResponse.json({error:"لا يمكن تغيير فئة الأصل أثناء التعديل."},{status:409});
  if(!hasFile&&(!replace||!existing))return NextResponse.json({error:"Choose a file for a new asset."},{status:400});
  if(hasFile&&(file.size>STUDIO_MAX_UPLOAD_BYTES||!config.accepts.includes(file.type)))return NextResponse.json({error:"Choose a supported file up to 8 MB."},{status:415});
+ if(hasStateAnimation){
+  const preliminary=validateCharacterStateAnimation({stateId,path:"/assets/validation.png",rows:stateRows,columns:stateColumns,frameCount:stateFrameCount,fps:stateFps});
+  if(!preliminary.valid)return NextResponse.json({error:preliminary.errors.join(" ")},{status:400});
+  if(!replace||!existing||!(type==="plant"||type==="monster"))return NextResponse.json({error:"إطارات الحالات متاحة لتعديل نبتة أو وحش موجود فقط."},{status:400});
+  if(stateAnimationFile.size>STUDIO_MAX_UPLOAD_BYTES||!["image/png","image/webp"].includes(stateAnimationFile.type))return NextResponse.json({error:"ارفع صورة PNG أو WebP حتى 8 MB."},{status:415});
+  if(!Number.isInteger(stateFrameCount)||stateFrameCount<1||stateFrameCount>24||!Number.isInteger(stateRows)||!Number.isInteger(stateColumns)||stateRows<1||stateColumns<1||stateRows*stateColumns!==stateFrameCount)return NextResponse.json({error:"شبكة إطارات الحالة غير صحيحة."},{status:400});
+  if(!Number.isFinite(stateFps)||stateFps<1||stateFps>30)return NextResponse.json({error:"سرعة الحالة يجب أن تكون بين 1 و30 FPS."},{status:400});
+ }
  if(config.spriteSheet&&(!Number.isInteger(frameCount)||frameCount<1||frameCount>24||!Number.isInteger(rows)||!Number.isInteger(columns)||rows<1||columns<1||rows*columns!==frameCount))return NextResponse.json({error:"عدد الإطارات يجب أن يكون من 1 إلى 24، ويجب أن يطابق حاصل ضرب الصفوف والأعمدة."},{status:400});
  let animationProfile=null;
  if(config.spriteSheet&&(type==="plant"||type==="monster")){
@@ -368,18 +384,29 @@ export async function POST(req){
  if(!extension)return NextResponse.json({error:"Unknown file extension."},{status:415});
  const bytes=hasFile?Buffer.from(await file.arrayBuffer()):null;
  if(hasFile){const signature=validateStudioAssetBytes(file.type,bytes);if(!signature.valid)return NextResponse.json({error:signature.reason},{status:415});}
+ const stateAnimationBytes=hasStateAnimation?Buffer.from(await stateAnimationFile.arrayBuffer()):null;
+ if(hasStateAnimation){const signature=validateStudioAssetBytes(stateAnimationFile.type,stateAnimationBytes);if(!signature.valid)return NextResponse.json({error:signature.reason},{status:415});}
  const relative=hasFile?createImmutableAssetPath(config.folder,id,extension,bytes):(existing?.path||"").replace(/^\/assets\//,"");
+ const stateExtension=hasStateAnimation?ext(stateAnimationFile.type):null;
+ const stateRelative=hasStateAnimation?createImmutableAssetPath(config.folder+"/states",id+"-"+stateId,stateExtension,stateAnimationBytes):null;
+ const statePath=stateRelative?"/assets/"+stateRelative:null;
+ const stateLoop=String(form.get("stateLoop")||"true")==="true";
+ const stateAnimations=hasStateAnimation?{...(existing?.stateAnimations||{}),[stateId]:{stateId,path:statePath,rows:stateRows,columns:stateColumns,frameCount:stateFrameCount,fps:stateFps,loop:stateLoop,spriteSheet:true,updatedAt:new Date().toISOString()}}:(existing?.stateAnimations||{});
+ if(hasStateAnimation){const validation=validateCharacterStateAnimation({stateId,path:statePath,rows:stateRows,columns:stateColumns,frameCount:stateFrameCount,fps:stateFps,loop:stateLoop});if(!validation.valid)return NextResponse.json({error:validation.errors.join(" ")},{status:400});}
  const now=new Date().toISOString();
- const record=createStudioAssetRevision(existing,{...(existing||{}),id,type,name:String(form.get("name")||id).trim().slice(0,80),filename:hasFile?id+extension:existing.filename,path:hasFile?"/assets/"+relative:existing.path,rows,columns,frameCount:config.spriteSheet?frameCount:1,spriteSheet:config.spriteSheet,status:"draft",releaseRequest:null,publishedAt:null,testingAt:null,archivedAt:null,restoredFromVersion:null,createdAt:existing?.createdAt||now,updatedAt:now,...(type==="plant"?{combat:combatProfile}:{}),...(type==="monster"?{monsterProfile}:{}),flipX:form.get("flipX")==="true",...(existing?.effects?.length?{effects:existing.effects}:{}),...(config.spriteSheet&&(type==="plant"||type==="monster")?{animationProfile,rigProfile}:{})});
+ const record=createStudioAssetRevision(existing,{...(existing||{}),id,type,name:String(form.get("name")||id).trim().slice(0,80),filename:hasFile?id+extension:existing.filename,path:hasFile?"/assets/"+relative:existing.path,rows,columns,frameCount:config.spriteSheet?frameCount:1,spriteSheet:config.spriteSheet,status:"draft",releaseRequest:null,publishedAt:null,testingAt:null,archivedAt:null,restoredFromVersion:null,createdAt:existing?.createdAt||now,updatedAt:now,...(type==="plant"?{combat:combatProfile}:{}),...(type==="monster"?{monsterProfile}:{}),flipX:form.get("flipX")==="true",...(existing?.effects?.length?{effects:existing.effects}:{}),...(Object.keys(stateAnimations).length?{stateAnimations}:{}),...(config.spriteSheet&&(type==="plant"||type==="monster")?{animationProfile,rigProfile}:{})});
+ if(hasFile)delete record.assetAvailability;
  const next={...old,version:1,assets:existing?old.assets.map((a,i)=>i===index?record:a):[...old.assets,record]};
  try{
   if(driver==="github"){
    const token=process.env.STUDIO_GITHUB_TOKEN,branch=process.env.STUDIO_GITHUB_BRANCH||"studio/assets";
    if(hasFile)await githubPutImmutable("web/public/assets/"+relative,bytes,"studio: "+(existing?"replace ":"add ")+type+" "+id,token,branch);
+   if(hasStateAnimation)await githubPutImmutable("web/public/assets/"+stateRelative,stateAnimationBytes,"studio: add "+stateId+" state animation for "+id,token,branch);
    if(hasProjectile){await githubPutImmutable("web/public/"+record.combat.projectile.path.replace(/^\//,""),projectileBytes,"studio: attach projectile to "+id,token,branch);}
    await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(next,null,2)+"\n"),"studio: "+(existing?"update ":"register ")+id,token,branch,registrySha);
   }else if(driver==="local"&&process.env.NODE_ENV!=="production"){
    if(hasFile){const target=path.join(process.cwd(),"public/assets",relative);await mkdir(path.dirname(target),{recursive:true});await writeFile(target,bytes);}
+   if(hasStateAnimation){const stateTarget=path.join(process.cwd(),"public/assets",stateRelative);await mkdir(path.dirname(stateTarget),{recursive:true});await writeFile(stateTarget,stateAnimationBytes);}
    if(hasProjectile){const pTarget=path.join(process.cwd(),"public",record.combat.projectile.path.replace(/^\//,""));await mkdir(path.dirname(pTarget),{recursive:true});await writeFile(pTarget,projectileBytes);}
    await saveLocalRegistry(next);
   }else return NextResponse.json({error:"Production uploads require STUDIO_STORAGE_DRIVER=github and a configured GitHub token."},{status:503});
@@ -410,11 +437,11 @@ export async function PATCH(req){
      const root=path.resolve(process.cwd(),"public")+path.sep;
      if(!target.startsWith(root))return NextResponse.json({error:"مسار ملف الأصل خارج مجلد الأصول المسموح."},{status:409});
     }
+    // Local mode must only update the local manifest; GitHub credentials and
+    // branch settings are intentionally unavailable in this code path.
     await removeLocalAssetManifestReferences(candidatePaths);
-    await removeGithubAssetManifestReferences(candidatePaths,token,storageBranch);
-   if(targetBranch!==storageBranch)await removeGithubAssetManifestReferences(candidatePaths,token,targetBranch);
    for(const [catalogPath,key] of [[PUBLISHED_CATALOG_PATH,"plants"],[PUBLISHED_MONSTER_CATALOG_PATH,"monsters"]]){
-     const target=path.join(process.cwd(),"public",catalogPath.replace(/^web\//,""));
+     const target=path.join(process.cwd(),catalogPath.replace(/^web\//,""));
      try{const catalog=JSON.parse(await readFile(target,"utf8"));if(Array.isArray(catalog[key])){catalog[key]=catalog[key].filter((item)=>item.id!==id);await writeFile(target,JSON.stringify(catalog,null,2)+"\n","utf8");}}catch(error){if(error.code!=="ENOENT")throw error;}
     }
     for(const assetPath of candidatePaths){
@@ -463,6 +490,10 @@ export async function PATCH(req){
    }
    const remaining=registry.assets.filter((_,i)=>i!==index);
    const candidatePaths=assetOwnedPaths(asset).filter((assetPath)=>!assetPathStillUsed(remaining,assetPath));
+   // GET hydrates plants from these manifests; remove references on every
+   // relevant branch so a deleted plant cannot be recreated on the next load.
+   await removeGithubAssetManifestReferences(candidatePaths,token,storageBranch);
+   if(targetBranch!==storageBranch)await removeGithubAssetManifestReferences(candidatePaths,token,targetBranch);
    for(const [catalogPath,key] of [[PUBLISHED_CATALOG_PATH,"plants"],[PUBLISHED_MONSTER_CATALOG_PATH,"monsters"]]){
     const document=await githubGetDocument(catalogPath,token,targetBranch);
     if(!document)continue;
@@ -533,6 +564,10 @@ export async function PATCH(req){
   if(asset.type==="plant"&&!asset.combat?.mode)return NextResponse.json({error:"يجب تعيين سلوك قتالي للنبتة أولاً."},{status:409});
   if(asset.type==="monster"&&!asset.monsterProfile)return NextResponse.json({error:"يجب ضبط خصائص الوحش أولاً."},{status:409});
   if(operation==="prepare-test"){
+   if(!safeAssetPath(asset.path))return NextResponse.json({error:"لا يمكن تجهيز الأصل للاختبار قبل تحديد مسار صورة صالح."},{status:409});
+   if(asset.assetAvailability==="awaiting-upload")return NextResponse.json({error:"لا يمكن اختبار هذا الأصل قبل رفع ملف الرسومات إلى مستودع اللعبة."},{status:409});
+   try{await githubGetBytes("web/public"+asset.path,token,storageBranch);}
+   catch{return NextResponse.json({error:"ملف الرسومات غير موجود في مستودع التخزين. ارفع الصورة أولاً ثم أعد المحاولة."},{status:409});}
    const updated={...asset,status:"testing",testingAt:new Date().toISOString(),releaseRequest:null};
    registry.assets[index]=updated;
    await githubPut(REGISTRY_PATH,Buffer.from(JSON.stringify(registry,null,2)+"\n"),"studio: prepare "+asset.type+" test "+id,token,storageBranch,registrySha);
@@ -562,6 +597,12 @@ export async function PATCH(req){
    const projectileBytes=await githubGetBytes(projectilePath,token,storageBranch);
    await githubPutImmutable(projectilePath,projectileBytes,"studio: publish plant projectile "+id,token,targetBranch);
   }
+  for(const [stateId,state] of Object.entries(asset.stateAnimations||{})){
+   if(!safeAssetPath(state?.path))return NextResponse.json({error:"إطارات الحالة "+stateId+" لها مسار غير صالح."},{status:409});
+   const statePath="web/public"+state.path;
+   const stateBytes=await githubGetBytes(statePath,token,storageBranch);
+   await githubPutImmutable(statePath,stateBytes,"studio: publish "+stateId+" state frames for "+id,token,targetBranch);
+  }
 
   const isMonster=asset.type==="monster";
   const catalogPath=isMonster?PUBLISHED_MONSTER_CATALOG_PATH:PUBLISHED_CATALOG_PATH;
@@ -569,8 +610,8 @@ export async function PATCH(req){
   const catalog=catalogDocument?JSON.parse(catalogDocument.content):(isMonster?{version:1,monsters:[]}:{version:1,plants:[]});
   const publishedAt=new Date().toISOString();
   const publishedRecord=isMonster
-   ?{id:asset.id,name:asset.name,path:asset.path,rows:asset.rows,columns:asset.columns,spriteSheet:asset.spriteSheet,animationProfile:asset.animationProfile||null,rigProfile:asset.rigProfile||null,rigParts:rigPartAssets.map(part=>({id:part.id,name:part.name,path:part.path,rows:part.spriteSheet?(part.rows||1):1,columns:part.spriteSheet?(part.columns||1):1,frameCount:getRigPartFrameCount(part),spriteSheet:Boolean(part.spriteSheet)})),monsterProfile:asset.monsterProfile,flipX:Boolean(asset.flipX),effects:Array.isArray(asset.effects)?asset.effects:[],publishedAt}
-   :{id:asset.id,name:asset.name,path:asset.path,rows:asset.rows,columns:asset.columns,spriteSheet:asset.spriteSheet,animationProfile:asset.animationProfile||null,rigProfile:asset.rigProfile||null,rigParts:rigPartAssets.map(part=>({id:part.id,name:part.name,path:part.path,rows:part.spriteSheet?(part.rows||1):1,columns:part.spriteSheet?(part.columns||1):1,frameCount:getRigPartFrameCount(part),spriteSheet:Boolean(part.spriteSheet)})),combat:asset.combat,flipX:Boolean(asset.flipX),effects:Array.isArray(asset.effects)?asset.effects:[],publishedAt};
+   ?{id:asset.id,name:asset.name,path:asset.path,rows:asset.rows,columns:asset.columns,spriteSheet:asset.spriteSheet,animationProfile:asset.animationProfile||null,rigProfile:asset.rigProfile||null,rigParts:rigPartAssets.map(part=>({id:part.id,name:part.name,path:part.path,rows:part.spriteSheet?(part.rows||1):1,columns:part.spriteSheet?(part.columns||1):1,frameCount:getRigPartFrameCount(part),spriteSheet:Boolean(part.spriteSheet)})),monsterProfile:asset.monsterProfile,flipX:Boolean(asset.flipX),effects:Array.isArray(asset.effects)?asset.effects:[],stateAnimations:asset.stateAnimations||{},publishedAt}
+   :{id:asset.id,name:asset.name,path:asset.path,rows:asset.rows,columns:asset.columns,spriteSheet:asset.spriteSheet,animationProfile:asset.animationProfile||null,rigProfile:asset.rigProfile||null,rigParts:rigPartAssets.map(part=>({id:part.id,name:part.name,path:part.path,rows:part.spriteSheet?(part.rows||1):1,columns:part.spriteSheet?(part.columns||1):1,frameCount:getRigPartFrameCount(part),spriteSheet:Boolean(part.spriteSheet)})),combat:asset.combat,flipX:Boolean(asset.flipX),effects:Array.isArray(asset.effects)?asset.effects:[],stateAnimations:asset.stateAnimations||{},publishedAt};
   const collectionKey=isMonster?"monsters":"plants";
   const collection=Array.isArray(catalog[collectionKey])?catalog[collectionKey]:[];
   const existingIndex=collection.findIndex(item=>item.id===id);

@@ -100,7 +100,6 @@ Add focused tests for the new character. Tests should cover behavior and wiring,
 
 ### Required shared checks
 - No duplicate IDs, missing asset paths, missing configuration-map entries, or unregistered event/effect identifiers.
-- Existing characters still behave correctly; preserve approved assets and animations (including the approved 7-frame hyena-run1 crop).
 - Run the relevant focused tests, then from `web/` run:
   ```powershell
   npm test
@@ -135,3 +134,4 @@ Add focused tests for the new character. Tests should cover behavior and wiring,
 - [ ] Keep the PR unmerged until all completion gates pass.
 
 **Non-negotiable lesson:** never stop at adding an asset or catalog entry. Trace every character from source image to runtime registration, canonical data, configuration lookup, gameplay lifecycle, UI, effects, and verified in-game behavior. The Electric Mushroom placement regression demonstrated why the `requestPlant()` config map and the full placement path must always be checked.
+

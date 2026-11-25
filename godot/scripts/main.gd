@@ -40,7 +40,7 @@ func _build_menu() -> void:
 	content.add_child(start_button)
 
 	var snow_test_button := Button.new()
-	snow_test_button.text = "Test Snow Thrower vs Frozen Hyena"
+	snow_test_button.text = "Test Snow Thrower vs Frozen Monster 01"
 	snow_test_button.custom_minimum_size = Vector2(0, 58)
 	snow_test_button.pressed.connect(_open_snow_test)
 	content.add_child(snow_test_button)

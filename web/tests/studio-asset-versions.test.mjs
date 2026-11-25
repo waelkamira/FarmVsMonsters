@@ -38,7 +38,7 @@ test("rejects a version number that is not in the asset history", () => {
 });
 
 test("clones any registered asset as a clean draft while preserving its immutable source path", () => {
-  const source = { id: "fire-pepper", type: "plant", name: "Fire Pepper", path: "/assets/plants/fire-pepper-v1.png", revision: 4, versions: [{ versionNumber: 3 }], status: "published", releaseRequest: { number: 12 }, combat: { mode: "projectile", projectile: { id: "fire-pepper-projectile", path: "/assets/projectiles/fire-pepper.png" } }, animationProfile: { idle: { startFrame: 0, endFrame: 2, fps: 6, loop: true }, attack: { startFrame: 3, endFrame: 8, fps: 12, loop: false } }, monsterProfile: { baseArchetype: "cave-brute", hpMultiplier: 1.5 }, dependencies: [{ id: "fire-pepper-projectile" }] };
+  const source = { id: "fire-pepper", type: "plant", name: "Fire Pepper", path: "/assets/plants/fire-pepper-v1.png", revision: 4, versions: [{ versionNumber: 3 }], status: "published", releaseRequest: { number: 12 }, combat: { mode: "projectile", projectile: { id: "fire-pepper-projectile", path: "/assets/projectiles/fire-pepper.png" } }, animationProfile: { idle: { startFrame: 0, endFrame: 2, fps: 6, loop: true }, attack: { startFrame: 3, endFrame: 8, fps: 12, loop: false } }, monsterProfile: { baseArchetype: "monster-01", hpMultiplier: 1.5 }, dependencies: [{ id: "fire-pepper-projectile" }] };
   const clone = cloneStudioAsset(source, "ice-pepper", "Ice Pepper", "2026-11-21T15:00:00.000Z");
   assert.equal(clone.id, "ice-pepper");
   assert.equal(clone.name, "Ice Pepper");
@@ -73,7 +73,7 @@ test("version snapshots and restore preserve independent animation and monster p
       move: { startFrame: 2, endFrame: 5, fps: 10, loop: true },
       attack: { startFrame: 6, endFrame: 8, fps: 14, loop: false }
     },
-    monsterProfile: { baseArchetype: "stonehide", hpMultiplier: 1.4, spawnWeight: 20, firstWave: 3 },
+    monsterProfile: { baseArchetype: "monster-01", hpMultiplier: 1.4, spawnWeight: 20, firstWave: 3 },
     dependencies: [{ id: "brute-impact", relation: "impact-effect" }]
   };
   const edited = createStudioAssetRevision(source, {

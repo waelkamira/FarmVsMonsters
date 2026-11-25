@@ -6,7 +6,7 @@ import "./stage-roster.css";
 const EMPTY={version:1,stages:{"1":{monsters:[],plants:[]}}};
 const BUILT_INS={
  plant:[["radish","الفجل"],["mushroom","فطر الطاقة"],["pumpkin","اليقطين"],["pineapple","الأناناس"],["hazelnut","البندق"],["mango","المانجو"],["snow-thrower","قاذف الثلج"],["electric-mushroom","الفطر الكهربائي"]],
- monster:[["cave-brute","الوحش المتوازن"],["dust-skitter","الوحش السريع"],["stonehide","الوحش المدرع"],["alpha-brute","الوحش العملاق"]]
+ monster:[["monster-01","الوحش 01"]]
 };
 const BUILTIN_IMAGES={
  plant:{
@@ -14,11 +14,8 @@ const BUILTIN_IMAGES={
   pineapple:"/assets/plants/pineapple-level-1.png",hazelnut:"/assets/plants/hazelnut-level-1.png",mango:"/assets/plants/mango-level-1.png",
   "snow-thrower":"/assets/plants/Snow-thrower-level-1.png","electric-mushroom":"/assets/plants/Electric-mushroom-level-1.png"
  },
- monster:{
-  "cave-brute":"/assets/monster-icons/cave-brute.svg","dust-skitter":"/assets/monster-icons/dust-skitter.svg",
-  stonehide:"/assets/monster-icons/stonehide.svg","alpha-brute":"/assets/monster-icons/alpha-brute.svg"
- }
-};
+ monster:{"monster-01":"/assets/characters/monsters/01/01.png"}
+ };
 const BUILTIN_SHEETS=new Set(["radish","pineapple","hazelnut","mango","snow-thrower","electric-mushroom"]);
 const makeKey=()=> "entry-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,7);
 function assetImage(asset,kind){return asset?.previewUrl||asset?.path||BUILTIN_IMAGES[kind]?.[asset?.id]||"";}

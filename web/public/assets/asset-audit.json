@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-24T12:01:45.709Z",
-  "assetCount": 93,
-  "totalBytes": 27902723,
+  "generatedAt": "2026-11-25T21:10:34.023Z",
+  "assetCount": 132,
+  "totalBytes": 21862343,
   "groups": {
     "audio": {
-      "assetCount": 14,
-      "totalBytes": 167352
+      "assetCount": 40,
+      "totalBytes": 328249
     },
     "backgrounds": {
       "assetCount": 1,
@@ -17,8 +17,8 @@
       "totalBytes": 5918254
     },
     "characters/monsters": {
-      "assetCount": 11,
-      "totalBytes": 8780842
+      "assetCount": 1,
+      "totalBytes": 850606
     },
     "items/currency": {
       "assetCount": 2,
@@ -28,21 +28,25 @@
       "assetCount": 21,
       "totalBytes": 3010548
     },
-    "monster-icons": {
-      "assetCount": 5,
-      "totalBytes": 3561
+    "monsters": {
+      "assetCount": 1,
+      "totalBytes": 850606
     },
     "plant-icons": {
       "assetCount": 9,
-      "totalBytes": 5305
+      "totalBytes": 5297
     },
     "plants": {
-      "assetCount": 18,
-      "totalBytes": 9332889
+      "assetCount": 17,
+      "totalBytes": 10131838
     },
     "projectiles": {
-      "assetCount": 2,
-      "totalBytes": 23178
+      "assetCount": 4,
+      "totalBytes": 85957
+    },
+    "vfx-icons": {
+      "assetCount": 26,
+      "totalBytes": 20194
     }
   },
   "exactDuplicates": [
@@ -50,15 +54,14 @@
       "file": "characters/farmer/farmer-uproot.png",
       "identicalTo": "characters/farmer/farmer-plant.png",
       "bytes": 632940
+    },
+    {
+      "file": "monsters/01-c07ab241d0076edfff5f0b847f2a3aaaa1286ace5eecda0039e36c0cae47f18e.png",
+      "identicalTo": "characters/monsters/01/01.png",
+      "bytes": 850606
     }
   ],
   "largeFiles": [
-    {
-      "key": "characters-monsters-hyena-frozen-hyena-level-2",
-      "url": "/assets/characters/monsters/hyena/frozen-hyena-level-2.png",
-      "type": "image",
-      "bytes": 1818631
-    },
     {
       "key": "pineapple-level-1",
       "url": "/assets/plants/pineapple-level-1.png",
@@ -158,66 +161,40 @@
       }
     },
     {
-      "key": "hyena-bite",
-      "url": "/assets/characters/monsters/hyena/hyena-bite.png",
-      "bytes": 647180,
-      "frameConfig": {
-        "frameWidth": 360,
-        "frameHeight": 447
-      }
-    },
-    {
-      "key": "hyena-death",
-      "url": "/assets/characters/monsters/hyena/hyena-death.png",
-      "bytes": 511996,
-      "frameConfig": {
-        "frameWidth": 360,
-        "frameHeight": 447
-      }
-    },
-    {
-      "key": "hyena-hit",
-      "url": "/assets/characters/monsters/hyena/hyena-hit.png",
-      "bytes": 263467,
-      "frameConfig": {
-        "frameWidth": 360,
-        "frameHeight": 894
-      }
-    },
-    {
-      "key": "hyena-idle",
-      "url": "/assets/characters/monsters/hyena/hyena-idle.png",
-      "bytes": 340460,
-      "frameConfig": {
-        "frameWidth": 360,
-        "frameHeight": 298
-      }
-    },
-    {
-      "key": "hyena-run",
-      "url": "/assets/characters/monsters/hyena/hyena-run1.png",
-      "bytes": 702079,
-      "frameConfig": {
-        "frameWidth": 367,
-        "frameHeight": 298
-      }
-    },
-    {
-      "key": "hyena-walk",
-      "url": "/assets/characters/monsters/hyena/hyena-walk.png",
-      "bytes": 848741,
-      "frameConfig": {
-        "frameWidth": 360,
-        "frameHeight": 298
-      }
-    },
-    {
       "key": "gold-coin",
       "url": "/assets/items/currency/gold-coin.png",
       "bytes": 345442,
       "frameConfig": {
         "frameWidth": 170,
         "frameHeight": 170
+      }
+    },
+    {
+      "key": "plants-corn_monster",
+      "url": "/assets/plants/corn_monster.png",
+      "bytes": 546346,
+      "frameConfig": {
+        "frameWidth": 150,
+        "frameHeight": 150,
+        "margin": 0,
+        "spacing": 0
+      },
+      "sourceFormat": "phaser-atlas",
+      "atlasMetadataPath": "/assets/plants/corn_monster.json",
+      "frameCount": 24,
+      "atlasClips": {
+        "idle": {
+          "startFrame": 0,
+          "endFrame": 7
+        },
+        "attack": {
+          "startFrame": 8,
+          "endFrame": 17
+        },
+        "hurt": {
+          "startFrame": 18,
+          "endFrame": 23
+        }
       }
     },
     {

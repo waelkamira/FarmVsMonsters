@@ -4,6 +4,7 @@ import { validateStudioAnimationProfile } from "./animationProfiles.mjs";
 import { validateSkeletalRigProfile } from "./skeletalAnimation.mjs";
 import { createStudioMonsterProfile } from "./monsterProfiles.mjs";
 import { buildAssetDependencyReport } from "./assetDependencies.mjs";
+import { validateCharacterStateAnimations } from "./characterStateAnimations.mjs";
 
 export function safeAssetPath(value) {
   if (typeof value !== "string" || !value.startsWith("/assets/")) return false;
@@ -22,7 +23,7 @@ export function applyStudioAssetFileAudit(report, assets, statusByPath = {}) {
   const sourceAssets = Array.isArray(assets) ? assets : [];
   const auditedAssets = report.assets.map((entry, index) => {
     const source = sourceAssets[index];
-    const paths = [...new Set([source?.path, source?.combat?.projectile?.path].filter((value) => safeAssetPath(value)))];
+    const paths = [...new Set([source?.path, source?.combat?.projectile?.path, ...Object.values(source?.stateAnimations || {}).map((state) => state?.path)].filter((value) => safeAssetPath(value)))];
     const fileChecks = paths.map((assetPath) => {
       checkedPaths.add(assetPath);
       const status = statusByPath[assetPath] === "present" || statusByPath[assetPath] === "missing" ? statusByPath[assetPath] : "unknown";
@@ -73,6 +74,7 @@ export function auditStudioAssetRegistry(input) {
     if (!STUDIO_ID_PATTERN.test(id)) errors.push("المعرّف البرمجي غير صالح.");
     if ((idCounts.get(id) || 0) > 1) errors.push("يوجد أكثر من أصل يحمل المعرّف نفسه.");
     if (!safeAssetPath(asset?.path)) errors.push("مسار ملف الأصل غير صالح أو غير آمن.");
+    if (asset?.assetAvailability === "awaiting-upload") errors.push("ملف الرسومات لم يُرفع بعد؛ لا يمكن اعتبار الأصل جاهزاً للاختبار أو النشر.");
     const frameCount = Math.max(1, Number(asset?.rows || 1) * Number(asset?.columns || 1));
     if (config?.spriteSheet && (!Number.isInteger(Number(asset.rows)) || !Number.isInteger(Number(asset.columns)) ||
         Number(asset.rows) < 1 || Number(asset.columns) < 1 || frameCount > 100)) {
@@ -124,6 +126,10 @@ export function auditStudioAssetRegistry(input) {
           }
         }
       }
+    }
+    if (asset?.stateAnimations) {
+      const stateValidation = validateCharacterStateAnimations(asset.stateAnimations);
+      if (!stateValidation.valid) stateValidation.errors.forEach((message) => errors.push("حالات الشخصية: " + message));
     }
     if (type === "monster") {
       try { createStudioMonsterProfile(asset.monsterProfile); }

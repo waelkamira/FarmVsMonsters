@@ -12,7 +12,7 @@ export const PLANT_PROJECTILE_DESIGNS = Object.freeze({
     nameAr: "فجلة صغيرة",
     assetPath: null,
     plannedAssetPath: "/assets/projectiles/plants/mini-radish.png",
-    sourcePlant: "/assets/plants/radish.png",
+    sourcePlant: "/assets/plants/radish-level-1.png",
     shape: "small rounded radish bulb with two tiny green leaves",
     palette: ["radish-red", "leaf-green", "soft-cream"],
     impact: "small leafy burst",

@@ -1,7 +1,7 @@
 import { PHASE_ONE_PLANTS, PHASE_ONE_REWARDS, PHASE_ONE_WAVE_SIZES, PHASE_ONE_ENERGY } from "./phaseOneCombatContract.mjs";
 import { resolveEnergyPickup, resolveMonsterArchetype } from "./combatSimulation.mjs";
 
-// Thirty ordinary monsters across five guided onboarding waves. The dragon boss is separate.
+// Thirty Monster 01 enemies across five guided onboarding waves.
 export { PHASE_ONE_WAVE_SIZES };
 export const PHASE_ONE_TOTAL_MONSTERS = PHASE_ONE_WAVE_SIZES.reduce((sum, count) => sum + count, 0);
 export const CAMPAIGN_STAGE_COUNT = 10;
@@ -146,7 +146,7 @@ export function unlockNextStage(_storage, _completedStage) {
 }
 
 
-export const CAMPAIGN_MONSTER_IDS = Object.freeze(["cave-brute", "dust-skitter", "stonehide", "alpha-brute"]);
+export const CAMPAIGN_MONSTER_IDS = Object.freeze(["monster-01"]);
 
 export function loadDiscoveredMonsterIds(storage) {
   const data = readCampaignProgress(storage);

@@ -13,7 +13,7 @@ import {
 } from "../game/visuals/PlantMonsterVisualProfiles.mjs";
 
 const plantIds = ["radish", "mushroom", "pumpkin", "pineapple", "hazelnut", "mango", "snow-thrower", "electric-mushroom"];
-const monsterIds = ["dust-skitter", "cave-brute", "stonehide", "alpha-brute"];
+const monsterIds = ["monster-01"];
 
 test("every playable plant has an animation profile and three visual evolution stages", () => {
   for (const id of plantIds) {
@@ -48,7 +48,7 @@ test("unknown plants fail closed and unknown monsters use the standard reaction"
   assert.equal(getPlantAnimationProfile("unknown"), null);
   assert.equal(getPlantEvolutionProfile("unknown"), null);
   assert.equal(getMonsterEvolutionProfile("unknown"), null);
-  assert.equal(getMonsterReactionProfile("unknown"), MONSTER_REACTION_PROFILES["cave-brute"]);
+  assert.equal(getMonsterReactionProfile("unknown"), MONSTER_REACTION_PROFILES["monster-01"]);
 });
 
 

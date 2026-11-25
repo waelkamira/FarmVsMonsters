@@ -52,36 +52,37 @@ test("manual uprooting preserves full refund and unknown rules versions are reje
 
 test("replay validates the five-wave monster roster, archetypes and exact combat stats", () => {
  const log=makeLog([
-  ev(0,"monster_spawned",{monsterId:"monster-1",wave:1,spawnIndex:0,row:2,archetype:"cave-brute",hp:175,speed:8,localX:238.4115}),
-  ev(1000,"monster_spawned",{monsterId:"monster-2",wave:1,spawnIndex:1,row:1,archetype:"cave-brute",hp:175,speed:8,localX:238.4115}),
-  ev(2000,"monster_spawned",{monsterId:"monster-3",wave:1,spawnIndex:2,row:4,archetype:"cave-brute",hp:175,speed:8,localX:238.4115}),
-  ev(3000,"monster_spawned",{monsterId:"monster-4",wave:2,spawnIndex:0,row:0,archetype:"cave-brute",hp:183,speed:9.35,localX:238.4115})
+  ev(0,"monster_spawned",{monsterId:"monster-1",wave:1,spawnIndex:0,row:2,archetype:"monster-01",hp:175,speed:8,localX:238.4115}),
+  ev(1000,"monster_spawned",{monsterId:"monster-2",wave:1,spawnIndex:1,row:1,archetype:"monster-01",hp:175,speed:8,localX:238.4115}),
+  ev(2000,"monster_spawned",{monsterId:"monster-3",wave:1,spawnIndex:2,row:4,archetype:"monster-01",hp:175,speed:8,localX:238.4115}),
+  ev(3000,"monster_spawned",{monsterId:"monster-4",wave:2,spawnIndex:0,row:0,archetype:"monster-01",hp:183,speed:9.35,localX:238.4115})
  ]);
  const result=replayCombatEventLog(log); assert.equal(result.ok,true); assert.equal(result.state.monsters.length,4); assert.equal(result.state.currentWave,2); assert.equal(result.state.spawnedInWave,1);
 });
-test("replay rejects the temporary first-wave hyena playtest override", () => {
- const log=makeLog([ev(0,"monster_spawned",{monsterId:"monster-1",wave:1,spawnIndex:0,row:2,archetype:"dust-skitter",hp:36,speed:13.6,localX:238.4115})]);
+test("replay rejects an unknown retired enemy archetype", () => {
+ const log=makeLog([ev(0,"monster_spawned",{monsterId:"monster-1",wave:1,spawnIndex:0,row:2,archetype:"unlisted-monster",hp:36,speed:13.6,localX:238.4115})]);
  assert.equal(replayCombatEventLog(log).reason,"INVALID_MONSTER_ARCHETYPE");
 });
 
 test("rejects forged monster identity, wave order, archetype and health", () => {
- const wrongId=makeLog([ev(0,"monster_spawned",{monsterId:"monster-9",wave:1,spawnIndex:0,row:1,archetype:"cave-brute",hp:175,speed:8,localX:238.4115})]);
+ const wrongId=makeLog([ev(0,"monster_spawned",{monsterId:"monster-9",wave:1,spawnIndex:0,row:1,archetype:"monster-01",hp:175,speed:8,localX:238.4115})]);
  assert.equal(replayCombatEventLog(wrongId).reason,"INVALID_MONSTER_WAVE_SEQUENCE");
- const wrongType=makeLog([ev(0,"monster_spawned",{monsterId:"monster-1",wave:1,spawnIndex:0,row:1,archetype:"stonehide",hp:175,speed:8,localX:238.4115})]);
+ const wrongType=makeLog([ev(0,"monster_spawned",{monsterId:"monster-1",wave:1,spawnIndex:0,row:1,archetype:"unlisted-monster",hp:175,speed:8,localX:238.4115})]);
  assert.equal(replayCombatEventLog(wrongType).reason,"INVALID_MONSTER_ARCHETYPE");
- const wrongStats=makeLog([ev(0,"monster_spawned",{monsterId:"monster-1",wave:1,spawnIndex:0,row:1,archetype:"cave-brute",hp:1,speed:8,localX:238.4115})]);
+ const wrongStats=makeLog([ev(0,"monster_spawned",{monsterId:"monster-1",wave:1,spawnIndex:0,row:1,archetype:"monster-01",hp:1,speed:8,localX:238.4115})]);
  assert.equal(replayCombatEventLog(wrongStats).reason,"MONSTER_STATS_MISMATCH");
 });
 test("replay applies monster bites only after lane movement reaches the radish", () => {
  const plantX = ((2.5 / 8) * 420.823) - (420.823 / 2);
- const stopX = plantX + 0.25;
- const distance = 238.4115 - stopX;
+ const biteReach = 0.3158125;
+ const stopX = plantX + biteReach;
+ const distance = 317;
  const prefix = [
   ev(0,"plant_placed",{type:"radish",col:2,row:1}),
-  ev(100,"monster_spawned",{monsterId:"monster-1",wave:1,spawnIndex:0,row:1,archetype:"cave-brute",hp:175,speed:8,localX:238.4115}),
-  ev(40000,"monster_moved",{monsterId:"monster-1",distance,deltaMs:39900,blockerCol:2,biteReach:0.25})
+  ev(100,"monster_spawned",{monsterId:"monster-1",wave:1,spawnIndex:0,row:1,archetype:"monster-01",hp:175,speed:8,localX:238.4115}),
+  ev(39725,"monster_moved",{monsterId:"monster-1",distance,deltaMs:39625,blockerCol:2,biteReach})
  ];
- const tooEarly=makeLog([...prefix,ev(40001,"monster_bite",{monsterId:"monster-1",plantCol:2,plantRow:1,damage:16}),ev(41100,"monster_bite",{monsterId:"monster-1",plantCol:2,plantRow:1,damage:16})]);
+ const tooEarly=makeLog([...prefix,ev(39726,"monster_bite",{monsterId:"monster-1",plantCol:2,plantRow:1,damage:16}),ev(40875,"monster_bite",{monsterId:"monster-1",plantCol:2,plantRow:1,damage:16})]);
  assert.equal(replayCombatEventLog(tooEarly).reason,"MONSTER_BITE_TOO_EARLY");
  const valid=makeLog([...prefix,ev(40001,"monster_bite",{monsterId:"monster-1",plantCol:2,plantRow:1,damage:16}),ev(41151,"monster_bite",{monsterId:"monster-1",plantCol:2,plantRow:1,damage:16})]);
  const result=replayCombatEventLog(valid); assert.equal(result.ok,true); assert.equal(result.state.plants[0].hp,128);
@@ -89,32 +90,33 @@ test("replay applies monster bites only after lane movement reaches the radish",
 
 test("rejects malformed monster IDs and out-of-range monster lanes at event-log boundary", () => {
  const base=createCombatEventLog({seed:123,rulesVersion:PHASE_ONE_RULES_VERSION});
- assert.throws(()=>appendCombatEvent(base,ev(0,"monster_spawned",{monsterId:"monster-x",wave:1,spawnIndex:0,row:0,archetype:"cave-brute",hp:175,speed:8,localX:238.4115})),/INVALID_COMBAT_EVENT_ORDER_OR_LOG|INVALID_COMBAT_EVENT_PAYLOAD|INVALID_MONSTER_SPAWN_EVENT/);
- assert.throws(()=>appendCombatEvent(base,ev(0,"monster_spawned",{monsterId:"monster-1",wave:1,spawnIndex:0,row:5,archetype:"cave-brute",hp:175,speed:8,localX:238.4115})),/INVALID_MONSTER_SPAWN_EVENT/);
+ assert.throws(()=>appendCombatEvent(base,ev(0,"monster_spawned",{monsterId:"monster-x",wave:1,spawnIndex:0,row:0,archetype:"monster-01",hp:175,speed:8,localX:238.4115})),/INVALID_COMBAT_EVENT_ORDER_OR_LOG|INVALID_COMBAT_EVENT_PAYLOAD|INVALID_MONSTER_SPAWN_EVENT/);
+ assert.throws(()=>appendCombatEvent(base,ev(0,"monster_spawned",{monsterId:"monster-1",wave:1,spawnIndex:0,row:5,archetype:"monster-01",hp:175,speed:8,localX:238.4115})),/INVALID_MONSTER_SPAWN_EVENT/);
 });
 
 test("monster movement replay advances along the calibrated lane and clamps at a living radish", () => {
  const plantX = ((2.5 / 8) * 420.823) - (420.823 / 2);
- const stopX = plantX + 0.25;
- const distance = 238.4115 - stopX;
+ const biteReach = 0.3158125;
+ const stopX = plantX + biteReach;
+ const distance = 317;
  const log=makeLog([
   ev(0,"plant_placed",{type:"radish",col:2,row:1}),
-  ev(0,"monster_spawned",{monsterId:"monster-1",wave:1,spawnIndex:0,row:1,archetype:"cave-brute",hp:175,speed:8,localX:238.4115}),
-  ev(40000,"monster_moved",{monsterId:"monster-1",distance,deltaMs:40000,blockerCol:2,biteReach:0.25})
+  ev(0,"monster_spawned",{monsterId:"monster-1",wave:1,spawnIndex:0,row:1,archetype:"monster-01",hp:175,speed:8,localX:238.4115}),
+  ev(39625,"monster_moved",{monsterId:"monster-1",distance,deltaMs:39625,blockerCol:2,biteReach})
  ]);
  const result=replayCombatEventLog(log); assert.equal(result.ok,true); assert.ok(Math.abs(result.state.monsters[0].localX-stopX)<1e-8);
 });
 test("movement replay rejects forged speed, skipped movement time and an incorrect blocker", () => {
- const base=[ev(0,"plant_placed",{type:"radish",col:2,row:1}),ev(0,"monster_spawned",{monsterId:"monster-1",wave:1,spawnIndex:0,row:1,archetype:"cave-brute",hp:175,speed:8,localX:238.4115})];
- const tooFast=makeLog([...base,ev(500,"monster_moved",{monsterId:"monster-1",distance:5,deltaMs:500,blockerCol:2,biteReach:0.25})]);
+ const base=[ev(0,"plant_placed",{type:"radish",col:2,row:1}),ev(0,"monster_spawned",{monsterId:"monster-1",wave:1,spawnIndex:0,row:1,archetype:"monster-01",hp:175,speed:8,localX:238.4115})];
+ const tooFast=makeLog([...base,ev(500,"monster_moved",{monsterId:"monster-1",distance:20,deltaMs:500,blockerCol:2,biteReach:0.25})]);
  assert.equal(replayCombatEventLog(tooFast).reason,"MONSTER_MOVEMENT_TOO_FAST");
  const wrongClock=makeLog([...base,ev(500,"monster_moved",{monsterId:"monster-1",distance:1,deltaMs:499,blockerCol:2,biteReach:0.25})]);
  assert.equal(replayCombatEventLog(wrongClock).reason,"MONSTER_MOVEMENT_CLOCK_MISMATCH");
- const wrongBlocker=makeLog([...base,ev(500,"monster_moved",{monsterId:"monster-1",distance:1,deltaMs:500,blockerCol:1,biteReach:0.25})]);
+ const wrongBlocker=makeLog([...base,ev(500,"monster_moved",{monsterId:"monster-1",distance:4,deltaMs:500,blockerCol:1,biteReach:0.25})]);
  assert.equal(replayCombatEventLog(wrongBlocker).reason,"MONSTER_MOVEMENT_BLOCKER_MISMATCH");
 });
 test("movement replay rejects a claimed distance that tunnels through a radish", () => {
- const through=makeLog([ev(0,"plant_placed",{type:"radish",col:2,row:1}),ev(0,"monster_spawned",{monsterId:"monster-1",wave:1,spawnIndex:0,row:1,archetype:"cave-brute",hp:175,speed:8,localX:238.4115}),ev(40000,"monster_moved",{monsterId:"monster-1",distance:320,deltaMs:40000,blockerCol:2,biteReach:0.25})]);
+ const through=makeLog([ev(0,"plant_placed",{type:"radish",col:2,row:1}),ev(0,"monster_spawned",{monsterId:"monster-1",wave:1,spawnIndex:0,row:1,archetype:"monster-01",hp:175,speed:8,localX:238.4115}),ev(40000,"monster_moved",{monsterId:"monster-1",distance:320,deltaMs:40000,blockerCol:2,biteReach:0.25})]);
  assert.equal(replayCombatEventLog(through).reason,"MONSTER_MOVEMENT_DISTANCE_MISMATCH");
  const invalid=createCombatEventLog({seed:123,rulesVersion:PHASE_ONE_RULES_VERSION});
  assert.throws(()=>appendCombatEvent(invalid,ev(1,"monster_moved",{monsterId:"monster-1",distance:-1,deltaMs:1,blockerCol:null,biteReach:0})),/INVALID_MONSTER_MOVEMENT_EVENT/);

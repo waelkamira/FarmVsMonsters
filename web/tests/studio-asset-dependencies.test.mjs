@@ -223,7 +223,7 @@ test("rig part serialization treats static assets as a single frame", () => {
 });
 
 test("BattleScene advances rigged monsters through move, hit, freeze, and thaw states", () => {
-  assert.match(battleSceneSource, /monster\.hyenaSprite \|\| monster\.studioRig/);
+  assert.match(battleSceneSource, /monster\.monster01Sprite \|\| monster\.studioRig/);
   assert.match(battleSceneSource, /monster\.studioRig\?\.root\?\.active/);
   assert.match(battleSceneSource, /stopStudioSkeletalRig\(rig, true\)/);
   assert.match(battleSceneSource, /restoreClip = rig\.profile\.clips\.find/);
@@ -298,4 +298,23 @@ test("does not resolve unsupported rig-part asset types", () => {
   assert.equal(report.dependencies[0].relation, "rig-part");
   assert.equal(report.dependencies[0].resolved, false);
   assert.equal(report.unresolved.length, 1);
+});
+
+
+test("historical revisions keep their files and managed dependencies alive", () => {
+  const assets = [
+    {
+      id: "owner",
+      type: "plant",
+      path: "/assets/plants/owner-current.png",
+      versions: [{
+        versionNumber: 1,
+        path: "/assets/plants/owner-old.png",
+        combat: { projectile: { id: "old-shot", path: "/assets/projectiles/old-shot.png", managed: true } }
+      }]
+    },
+    { id: "old-shot", type: "plantProjectile", path: "/assets/projectiles/old-shot.png" }
+  ];
+  const report = buildAssetDependencyReport(assets, "old-shot");
+  assert.deepEqual(report.dependents.map((item) => item.assetId), ["owner"]);
 });

@@ -12,10 +12,10 @@ import {
   PHASE_ONE_REWARDS,
   PHASE_ONE_PLANTS,
   PHASE_ONE_FARMER,
-  PHASE_ONE_DRAGON,
+  PHASE_ONE_MONSTERS,
   getMonsterSpawnIntervalMs,
   getMonsterCombatStats,
-  getStonehideIncomingDamageMultiplier
+  getMonsterIncomingDamageMultiplier
 } from "../game/rules/phaseOneCombatContract.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -53,7 +53,7 @@ test("active Stage 1 plant encyclopedia matches combat costs and available artwo
   }
 });
 
-test("radish, mushroom and dragon combat values preserve the current tuning", () => {
+test("radish and mushroom combat values preserve the current tuning", () => {
   assert.deepEqual(PHASE_ONE_PLANTS.radish, {
     projectileDamage: 25,
     projectileSpeed: 320,
@@ -70,46 +70,16 @@ test("radish, mushroom and dragon combat values preserve the current tuning", ()
   assert.equal(PHASE_ONE_PLANTS.energyMushroom.productionIntervalMs, 12000);
   assert.equal(PHASE_ONE_PLANTS.energyMushroom.pickupTtlMs, 12000);
 
-  assert.deepEqual(PHASE_ONE_DRAGON, {
-    maxHp: 750,
-    farmerSlingDamage: 25,
-    farmerSlingInitialDelayMs: 850,
-    farmerSlingIntervalMs: 900,
-    dragonInitialAttackDelayMs: 2800,
-    fireballDamageToPlant: 55,
-    fireballDamageToFarm: 12,
-    attackIntervalMs: 3900,
-    fireballTravelMs: 1050
-  });
 });
 
-test("monster stats match the existing Stage 1 combat values", () => {
-  const brute = getMonsterCombatStats("cave-brute", 1);
-  assert.equal(brute.hp, 175);
-  assert.equal(brute.speed, 8);
-  assert.equal(brute.plantDamage, 16);
-  assert.equal(brute.attackIntervalMs, 1150);
-
-  const skitter = getMonsterCombatStats("dust-skitter", 1);
-  assert.equal(skitter.hp, 36);
-  assert.equal(skitter.speed, 13.6);
-  assert.equal(skitter.burstDurationMs, 420);
-  assert.equal(skitter.initialBurstCooldownMinMs, 1500);
-  assert.equal(skitter.initialBurstCooldownMaxMs, 2300);
-  assert.equal(skitter.jumpSpeedMultiplier, 1.12);
-  assert.equal(skitter.burstSpeedMultiplier, 1.65);
-
-  const stonehide = getMonsterCombatStats("stonehide", 1);
-  assert.equal(stonehide.hp, 152);
-  assert.equal(stonehide.speed, 4.96);
-  assert.equal(stonehide.incomingDamageMultiplier, 0.7);
-  assert.equal(getStonehideIncomingDamageMultiplier(false), 0.7);
-  assert.equal(getStonehideIncomingDamageMultiplier(true), 0.385);
-
-  const alpha = getMonsterCombatStats("alpha-brute", 1);
-  assert.equal(alpha.hp, 350);
-  assert.equal(alpha.speed, 3.84);
-  assert.equal(alpha.plantDamage, 32);
+test("Monster 01 stats are the only approved ordinary enemy values", () => {
+  const monster = getMonsterCombatStats("monster-01", 1);
+  assert.equal(monster.hp, 175);
+  assert.equal(monster.speed, 8);
+  assert.equal(monster.plantDamage, 16);
+  assert.equal(monster.attackIntervalMs, 1150);
+  assert.deepEqual(Object.keys(PHASE_ONE_MONSTERS), ["monster-01"]);
+  assert.equal(getMonsterIncomingDamageMultiplier(), 1);
 });
 
 test("wave pacing is shared and rejects invalid wave numbers", () => {
@@ -124,7 +94,7 @@ test("wave pacing is shared and rejects invalid wave numbers", () => {
 
 test("Phaser uses the shared contract and has no duplicate monster balance table", () => {
   assert.match(scene, /getMonsterCombatStats\(archetype, this\.wave\)/);
-  assert.match(scene, /PHASE_ONE_DRAGON\.maxHp/);
+  assert.doesNotMatch(scene, /DRAGON|dragon/i);
   assert.doesNotMatch(scene, /PHASE_ONE_REWARDS\.ordinaryMonsterDefeatCoins/);
   assert.match(scene, /Currency is intentionally not granted by client-side combat outcomes/);
   assert.match(scene, /PHASE_ONE_TIMING\.waveIntermissionMs/);
