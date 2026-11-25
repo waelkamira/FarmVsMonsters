@@ -5293,6 +5293,10 @@ export default class BattleScene extends Scene {
 
   checkWaveProgress() {
     if (this.gameOver || !isWaveComplete(this.spawnedThisWave, this.waveSize, this.monsters.length)) return;
+    if (this.stageNumber !== 1) {
+      this.endGame(true);
+      return;
+    }
 
     const clearedWave = this.wave;
     if (isPhaseOneVictory(this.wave, this.totalWaves, this.spawnedThisWave, this.waveSize, this.monsters.length)) {
