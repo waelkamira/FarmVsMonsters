@@ -1,44 +1,44 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-20T04:29:21.217Z",
-  "assetCount": 88,
-  "totalBytes": 24072120,
+  "generatedAt": "2026-11-25T14:54:15.848Z",
+  "assetCount": 85,
+  "totalBytes": 23368254,
   "groups": {
     "audio": {
       "assetCount": 14,
-      "totalBytes": 167352
+      "totalBytes": 0
     },
     "backgrounds": {
       "assetCount": 1,
-      "totalBytes": 56081
+      "totalBytes": 0
     },
     "characters/farmer": {
       "assetCount": 10,
-      "totalBytes": 5918254
+      "totalBytes": 0
     },
     "characters/monsters": {
       "assetCount": 10,
-      "totalBytes": 7930236
+      "totalBytes": 0
     },
     "items/currency": {
       "assetCount": 2,
-      "totalBytes": 604713
+      "totalBytes": 0
     },
     "items/ui": {
       "assetCount": 21,
-      "totalBytes": 3010548
+      "totalBytes": 0
     },
     "monster-icons": {
       "assetCount": 5,
-      "totalBytes": 3561
+      "totalBytes": 0
     },
     "plant-icons": {
       "assetCount": 10,
-      "totalBytes": 5906
+      "totalBytes": 0
     },
     "plants": {
-      "assetCount": 15,
-      "totalBytes": 6375469
+      "assetCount": 12,
+      "totalBytes": 0
     }
   },
   "exactDuplicates": [
