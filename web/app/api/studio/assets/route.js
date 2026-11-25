@@ -455,13 +455,13 @@ export async function PATCH(req){
     if(registry.assets.some(asset=>asset.id===newId))return NextResponse.json({error:"يوجد أصل بهذا المعرّف بالفعل."},{status:409});
     if(registry.assets[index].type==="plant"&&STUDIO_RESERVED_PLANT_IDS.includes(newId))return NextResponse.json({error:"هذا المعرّف محجوز لنبتة أساسية."},{status:409});
     const clone=cloneStudioAsset(registry.assets[index],newId,body.newName);
-    registry.assets.push(clone);await saveLocalRegistry(registry);
+    registry.assets.push(clone);await saveLocalRegistry(registry,registrySha);
     return NextResponse.json({success:true,operation,asset:clone,message:"تم إنشاء نسخة جديدة كمسودة مستقلة."});
    }
    let updated;
    try{updated=operation==="restore-version"?restoreStudioAssetRevision(registry.assets[index],body.versionNumber):transitionStudioAssetStatus(registry.assets[index],operation);}
    catch(error){return NextResponse.json({error:error.message},{status:409});}
-   registry.assets[index]=updated;await saveLocalRegistry(registry);
+   registry.assets[index]=updated;await saveLocalRegistry(registry,registrySha);
    return NextResponse.json({success:true,operation,asset:updated,message:operation==="archive"?"تمت أرشفة الأصل مع الاحتفاظ بملفاته.":operation==="restore"?"تمت استعادة الأصل كمسودة.":"تمت استعادة الإصدار السابق كمسودة جديدة."});
   }catch(error){return NextResponse.json({error:error.message||"Studio lifecycle action failed."},{status:error.code==="STUDIO_WRITE_CONFLICT"?409:500});}
  }
