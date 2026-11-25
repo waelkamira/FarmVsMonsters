@@ -302,6 +302,8 @@ export async function POST(req){
  if(!hasFile&&(!replace||!existing))return NextResponse.json({error:"Choose a file for a new asset."},{status:400});
  if(hasFile&&(file.size>STUDIO_MAX_UPLOAD_BYTES||!config.accepts.includes(file.type)))return NextResponse.json({error:"Choose a supported file up to 8 MB."},{status:415});
  if(hasStateAnimation){
+  const preliminary=validateCharacterStateAnimation({stateId,path:"/assets/validation.png",rows:stateRows,columns:stateColumns,frameCount:stateFrameCount,fps:stateFps});
+  if(!preliminary.valid)return NextResponse.json({error:preliminary.errors.join(" ")},{status:400});
   if(!replace||!existing||!(type==="plant"||type==="monster"))return NextResponse.json({error:"إطارات الحالات متاحة لتعديل نبتة أو وحش موجود فقط."},{status:400});
   if(stateAnimationFile.size>STUDIO_MAX_UPLOAD_BYTES||!["image/png","image/webp"].includes(stateAnimationFile.type))return NextResponse.json({error:"ارفع صورة PNG أو WebP حتى 8 MB."},{status:415});
   if(!Number.isInteger(stateFrameCount)||stateFrameCount<1||stateFrameCount>24||!Number.isInteger(stateRows)||!Number.isInteger(stateColumns)||stateRows<1||stateColumns<1||stateRows*stateColumns!==stateFrameCount)return NextResponse.json({error:"شبكة إطارات الحالة غير صحيحة."},{status:400});
