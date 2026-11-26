@@ -29,6 +29,8 @@ export default function StageOneSeedSelectionPage() {
   const [selected, setSelected] = useState(STARTER_LOADOUT);
   const [plantCatalog, setPlantCatalog] = useState(PLANTS);
   const [stagePlantsConfigured, setStagePlantsConfigured] = useState(false);
+  const [stageSettingsReady, setStageSettingsReady] = useState(false);
+  const [stageSettingsError, setStageSettingsError] = useState("");
   const [studioPlaytest, setStudioPlaytest] = useState(false);
   const [notice, setNotice] = useState("");
   const selectedPlants = useMemo(() => plantCatalog.filter((plant) => unlockedIds.includes(plant.id) && selected.includes(plant.id)), [plantCatalog, selected, unlockedIds]);
@@ -46,13 +48,22 @@ export default function StageOneSeedSelectionPage() {
       } catch { return []; }
     };
     (async () => {
+      try {
       const [published, testing, stageSettings, studioSession] = await Promise.all([
         readCatalog("/assets/studio-plant-catalog.json"),
         readCatalog("/api/studio/assets?catalog=testing"),
-        fetch("/api/studio/stage-encounters", { cache: "no-store" }).then(response => response.ok ? response.json() : null).catch(() => null),
+        fetch("/api/studio/stage-encounters", { cache: "no-store" }).then(async response => {
+          if (!response.ok) {
+            const data = await response.json().catch(() => ({}));
+            throw new Error(data.error || "تعذر تحميل إعدادات المرحلة المنشورة.");
+          }
+          return response.json();
+        }),
         fetch("/api/studio/session", { cache: "no-store" }).then(response => response.ok ? response.json() : null).catch(() => null)
       ]);
       if (!active) return;
+      setStageSettingsReady(true);
+      setStageSettingsError("");
       const isStudioPlaytest = new URLSearchParams(window.location.search).get("studioPlaytest") === "1" && studioSession?.authenticated === true;
       setStageNumber(activeStage);
       setStudioPlaytest(isStudioPlaytest);
@@ -116,6 +127,9 @@ export default function StageOneSeedSelectionPage() {
       } catch {
         const availableIds = new Set(nextPlants.map((plant) => plant.id));
         setSelected([...new Set([...(publishedStage ? stageUnlockedIds : STARTER_LOADOUT).filter((id) => availableIds.has(id)), ...(isStudioPlaytest ? studioPlants.map((plant) => plant.id).filter((id) => availableIds.has(id)) : [])])].slice(0, MAX_SEEDS));
+      }
+      } catch (error) {
+        if (active) setStageSettingsError(error?.message || "تعذر تحميل إعدادات المرحلة. أعد المحاولة قبل بدء المعركة.");
       }
     })();
     return () => { active = false; };
@@ -215,10 +229,11 @@ export default function StageOneSeedSelectionPage() {
           <div>{selectedPlants.map((plant) => <span key={plant.id}>{ar ? plant.ar : plant.name}</span>)}</div>
         </div>
 
+        {stageSettingsError && <p className="seed-select-notice" role="alert">{ar ? "تعذر تحميل إعدادات المرحلة من المصدر المعتمد: " : "Could not load the authoritative stage settings: "}{stageSettingsError}</p>}
         {notice && <p className="seed-select-notice" role="alert">{notice}</p>}
         <footer className="seed-select-actions">
           <Link href="/stage/1" className="seed-select-secondary">{ar ? "رجوع" : "Back"}</Link>
-          <button type="button" className="seed-select-start" onClick={beginBattle}>{ar ? "ابدأ المعركة ←" : "Start Battle →"}</button>
+          <button type="button" className="seed-select-start" onClick={beginBattle} disabled={!stageSettingsReady || Boolean(stageSettingsError)}>{ar ? "ابدأ المعركة ←" : "Start Battle →"}</button>
         </footer>
       </section>
     </main>
