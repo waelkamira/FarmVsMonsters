@@ -167,6 +167,7 @@ export async function PATCH(req){
     // Publish only the selected stage into the player release branch, preserving
     // every other already-published stage. Never expose the working branch itself.
     const release=await readGithub(releaseBranch());
+    if(workingBranch()===releaseBranch()&&body.sha!==release.sha)return NextResponse.json({error:"تغير إعداد المرحلة منذ تحميل الصفحة. أعد تحميل الإعدادات قبل النشر."},{status:409});
     const releaseConfig=normalizeConfig(release.config);
     const releasedStage=config.stages[stageId];
     const nextRelease={...releaseConfig,stages:{...releaseConfig.stages,[stageId]:releasedStage}};
