@@ -29,38 +29,8 @@
           "enabled": true
         },
         {
-          "id": "pumpkin",
-          "count": 100,
-          "enabled": true
-        },
-        {
-          "id": "pineapple",
-          "count": 1,
-          "enabled": true
-        },
-        {
-          "id": "hazelnut",
-          "count": 1,
-          "enabled": true
-        },
-        {
-          "id": "mango",
-          "count": 100,
-          "enabled": true
-        },
-        {
-          "id": "snow-thrower",
-          "count": 1,
-          "enabled": true
-        },
-        {
-          "id": "electric-mushroom",
-          "count": 1,
-          "enabled": true
-        },
-        {
-          "id": "corn-monster",
-          "count": 1,
+          "id": "pepper-flamethrower-level-1",
+          "count": 25,
           "enabled": true
         }
       ],
