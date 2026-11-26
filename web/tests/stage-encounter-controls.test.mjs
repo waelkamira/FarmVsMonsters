@@ -194,6 +194,7 @@ test("stage config reads and writes use the durable GitHub branch when a token i
  const api=read("app/api/studio/stage-encounters/route.js");
  assert.match(api,/function getStorageDriver\(\)/);
  assert.match(api,/configured==="github"\|\|configured==="local"/);
+ assert.match(api,/if\(process\.env\.NODE_ENV==="production"\)return "github"/);
  assert.match(api,/return process\.env\.STUDIO_GITHUB_TOKEN\?"github":"local"/);
  assert.equal((api.match(/const driver=getStorageDriver\(\);/g)||[]).length,2);
 });
@@ -202,4 +203,21 @@ test("stage selection visibly marks locked plants instead of presenting every ca
  const selection=read("app/stage/1/select/page.js");
  assert.match(selection,/const unlocked = unlockedIds\.includes\(plant\.id\)/);
  assert.doesNotMatch(selection,/const unlocked = true/);
+});
+
+
+test("production stage config cannot silently fall back to the stale local campaign defaults",()=>{
+ const api=read("app/api/studio/stage-encounters/route.js");
+ assert.match(api,/if\(process\.env\.NODE_ENV==="production"\)return "github"/);
+ assert.match(api,/if\(driver==="github"\)\{[\s\S]*STUDIO_GITHUB_TOKEN is required/);
+ assert.doesNotMatch(api,/if\(process\.env\.NODE_ENV==="production"\)[\s\S]{0,100}return "local"/);
+});
+
+test("stage seed selection blocks battle start when authoritative stage settings fail to load",()=>{
+ const selection=read("app/stage/1/select/page.js");
+ assert.match(selection,/const \[stageSettingsReady, setStageSettingsReady\] = useState\(false\)/);
+ assert.match(selection,/const \[stageSettingsError, setStageSettingsError\] = useState\(" "\)/);
+ assert.match(selection,/if \(!response\.ok\) \{[\s\S]*throw new Error/);
+ assert.match(selection,/setStageSettingsError\(error\?\.message/);
+ assert.match(selection,/disabled=\{!stageSettingsReady \|\| Boolean\(stageSettingsError\)\}/);
 });
