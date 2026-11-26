@@ -70,3 +70,12 @@ export function resolvePlantSpriteMetadata(source = {}, catalogPlant = {}) {
       catalogPlant.spriteSheet || frameCount > 1)
   };
 }
+
+
+// Prefer the Studio preview proxy, but retain the original public asset path as a
+// client-side fallback when the proxy cannot serve a published or testing image.
+export function resolveThumbnailSources(asset = {}) {
+  const primarySrc = String(asset.previewUrl || asset.path || "");
+  const fallbackSrc = asset.path && asset.path !== primarySrc ? String(asset.path) : "";
+  return { primarySrc, fallbackSrc };
+}
