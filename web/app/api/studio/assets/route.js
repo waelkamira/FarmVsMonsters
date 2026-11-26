@@ -466,12 +466,21 @@ export async function PATCH(req){
     await saveLocalRegistry(registry);
     return NextResponse.json({success:true,operation,deletedId:id,message:"تم حذف الأصل وملفاته غير المشتركة من المكتبة المحلية."});
    }
+   if(operation==="archive"&&registry.assets[index].type==="monster"){
+    const conflict=stageReferenceConflict(id,await localStageEncounterConfig());
+    if(conflict)return NextResponse.json({error:conflict},{status:409});
+   }
    if(operation==="restore-version"&&registry.assets[index].releaseRequest?.number)return NextResponse.json({error:"لا يمكن استعادة إصدار مرتبط بطلب نشر قبل التحقق من حالته."},{status:409});
    if(operation==="archive"||operation==="restore-version"){
     const dependents=getAssetDependents(registry.assets,id);
     if(dependents.length)return NextResponse.json({error:"لا يمكن تنفيذ العملية قبل معالجة الأصول التي تعتمد على هذا الأصل: "+dependents.map(item=>item.assetName).join("، ")},{status:409});
    }
-   if(operation==="clone"){
+   if(operation==="archive"&&asset.type==="monster"){
+   const stageConfigText=await githubGet("web/game/data/stageEncounterConfig.json",token,storageBranch);
+   const conflict=stageReferenceConflict(id,stageConfigText?JSON.parse(stageConfigText):{stages:{}});
+   if(conflict)return NextResponse.json({error:conflict},{status:409});
+  }
+  if(operation==="clone"){
     const newId=String(body.newId||"").trim().toLowerCase();
     if(!STUDIO_ID_PATTERN.test(newId)||newId.length>64)return NextResponse.json({error:"معرّف النسخة غير صالح."},{status:400});
     if(registry.assets.some(asset=>asset.id===newId))return NextResponse.json({error:"يوجد أصل بهذا المعرّف بالفعل."},{status:409});
