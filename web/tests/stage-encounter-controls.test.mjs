@@ -21,7 +21,7 @@ test("stage roster controls default to one and keep hiding separate from asset d
  assert.match(manager,/quantity,setQuantity\]=useState\(1\)/);
  assert.match(manager,/count:quantity/);
  assert.match(manager,/enabled:!entry\.enabled/);
- assert.match(manager,/لا يحذفان الأصل من المكتبة/);
+ assert.match(manager,/الإظهار والإخفاء والفتح والإغلاق هنا يخص المرحلة المحددة فقط/);
  assert.match(manager,/spawnIntervalMs/);
  assert.match(manager,/async function testStage\(\)/);
  assert.match(manager,/await persistConfig\(\);\s*router\.push\("\/stage\/1\/select\?stage="\+stage\+"&studioPlaytest=1"\)/);
@@ -53,7 +53,7 @@ test("stage seed selection respects only enabled plants for a configured stage",
  assert.match(selection,/new URLSearchParams\(window\.location\.search\)\.get\("stage"\)/);
  assert.match(selection,/stages\?\.\[String\(activeStage\)\]/);
  assert.match(selection,/router\.push\("\/game\?stage=" \+ stageNumber \+ \(studioPlaytest \? "&studioPlaytest=1" : ""\)\)/);
- assert.match(selection,/setStagePlantsConfigured\(configuredStage\?\.plantsConfigured === true\)/);
+ assert.match(selection,/setStagePlantsConfigured\(publishedStage\)/);
  assert.match(selection,/farmVsMonsters\.selectedPlants\.stage\.\" \+ activeStage/);
  assert.match(selection,/window\.localStorage\.setItem\("farmVsMonsters\.selectedPlants", savedSelection\)/);
  assert.match(selection,/selectedPlants\.length < minimumSeeds/);
@@ -143,8 +143,11 @@ test("Studio admin playtests bypass campaign locks and stage roster restrictions
  assert.match(selection,/fetch\("\/api\/studio\/session"/);
  assert.match(read("app/game/page.js"),/fetch\("\/api\/studio\/session"/);
  assert.match(read("app/game/page.js"),/blockStudioPlaytest/);
- assert.match(selection,/configuredStage\?\.plantsConfigured && !isStudioPlaytest/);
- assert.match(selection,/const safeUnlocked = isStudioPlaytest\s*\? \[\.\.\.new Set\(\[\.\.\.STARTER_LOADOUT, \.\.\.unlocked, \.\.\.nextPlants\.map\(\(plant\) => plant\.id\), \.\.\.studioIds\]\)\]\s*: \[\.\.\.new Set\(\[\.\.\.STARTER_LOADOUT, \.\.\.unlocked\]\)\]/);
+ assert.match(selection,/const publishedStage = configuredStage\?\.published === true && configuredStage\?\.plantsConfigured === true/);
+ assert.match(selection,/const safeUnlocked = isStudioPlaytest/);
+ assert.match(selection,/publishedStage\s*\? \[\.\.\.new Set\(stageUnlockedIds\)\]/);
+ assert.match(selection,/entry\.unlocked !== false/);
+ assert.match(selection,/entry\.visible !== false && entry\.enabled !== false/);
  assert.match(selection,/plant\.required && !studioPlaytest/);
  assert.match(selection,/studioPlaytest \? "&studioPlaytest=1" : ""/);
  assert.match(battle,/get\("studioPlaytest"\) === "1"/);
@@ -154,4 +157,34 @@ test("Studio admin playtests bypass campaign locks and stage roster restrictions
  assert.match(battle,/this\.stagePlantRosterConfigured && !this\.isStudioPlaytest && !stagePlantEntry/);
  assert.match(battle,/if \(!this\.stagePlantRosterConfigured && !this\.isStudioPlaytest\)/);
  assert.match(battle,/this\.isStudioPlaytest\s*\? \[\.\.\.new Set\(\[\.\.\.campaignUnlocked, \.\.\.ALL_PLAYTEST_PLANT_IDS/);
+});
+
+test("stage publication controls player-visible plants, per-stage unlocks and battlefield background",()=>{
+ const api=read("app/api/studio/stage-encounters/route.js");
+ const manager=read("app/studio/StageRosterManager.jsx");
+ const selection=read("app/stage/1/select/page.js");
+ const battle=read("game/scenes/BattleScene.js");
+ assert.match(api,/const visible=item\.visible!==false && item\.enabled!==false/);
+ assert.match(api,/unlocked:item\.unlocked!==false/);
+ assert.match(api,/published:raw\?\.published===true/);
+ assert.match(api,/background=typeof raw\?\.background==="string"/);
+ assert.match(api,/export async function GET\(req\)/);
+ assert.match(api,/if\(authorized\(req\)\)/);
+ assert.match(api,/filter\(\(\[,stage\]\)=>stage\.published===true\)/);
+ assert.match(api,/plants:stage\.plants\.filter\(plant=>plant\.visible!==false&&plant\.enabled!==false\)/);
+ assert.match(manager,/async function publishStage\(\)/);
+ assert.match(manager,/published:true/);
+ assert.match(manager,/published:false/);
+ assert.match(manager,/حفظ كمسودة/);
+ assert.match(manager,/نشر المرحلة للاعبين/);
+ assert.match(manager,/إظهار للاعب/);
+ assert.match(manager,/إبقاء النبتة مقفولة/);
+ assert.match(manager,/خلفية المرحلة/);
+ assert.match(selection,/configuredStage\?\.published === true/);
+ assert.match(selection,/visibleStageEntries\.filter\(entry => entry\.unlocked !== false\)/);
+ assert.match(selection,/This plant is locked for this stage/);
+ assert.match(battle,/this\.stageEncounterConfig\?\.published === true \|\| this\.isStudioPlaytest/);
+ assert.match(battle,/entry\.unlocked !== false/);
+ assert.match(battle,/stage-background/);
+ assert.match(battle,/backgroundKey/);
 });

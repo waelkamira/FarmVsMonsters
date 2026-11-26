@@ -248,6 +248,14 @@ export default class BattleScene extends Scene {
     queueStudioMonsterCatalog("studio-test-monster-catalog");
     this.load.json("studio-published-monster-catalog", "/assets/studio-monster-catalog.json");
     this.load.json("studio-test-monster-catalog", "/api/studio/assets?catalog=testing-monsters");
+    this.load.once("filecomplete-json-stage-encounter-config", () => {
+      const requestedStage = Number(new URLSearchParams(window.location.search).get("stage"));
+      const stageNumber = Number.isInteger(requestedStage) ? Math.max(1, Math.min(100, requestedStage)) : 1;
+      const stageConfig = this.cache.json.get("stage-encounter-config")?.stages?.[String(stageNumber)];
+      const background = stageConfig?.background;
+      const studioDraftPreview = new URLSearchParams(window.location.search).get("studioPlaytest") === "1";
+      if ((stageConfig?.published === true || studioDraftPreview) && typeof background === "string" && background.startsWith("/assets/backgrounds/") && !background.includes("..")) this.load.image("stage-background", background);
+    });
     this.load.json("stage-encounter-config", "/api/studio/stage-encounters");
     this.load.on("loaderror", (file) => {
       if (file.key === "farm-battlefield") this.backgroundAssetFailed = true;
@@ -272,7 +280,7 @@ export default class BattleScene extends Scene {
     this.stageNumber = Number.isInteger(requestedStage) ? Math.max(1, Math.min(100, requestedStage)) : 1;
     this.isStudioPlaytest = new URLSearchParams(window.location.search).get("studioPlaytest") === "1";
     this.stageEncounterConfig = this.cache.json.get("stage-encounter-config")?.stages?.[String(this.stageNumber)] || null;
-    this.stageMonsterRosterConfigured = this.stageEncounterConfig?.monstersConfigured === true;
+    this.stageMonsterRosterConfigured = this.stageEncounterConfig?.monstersConfigured === true && (this.stageEncounterConfig?.published === true || this.isStudioPlaytest);
     this.stageMonsterEntries = (this.stageEncounterConfig?.monsters || []).filter(entry => entry.enabled !== false);
     this.stageWaveCount = this.stageMonsterRosterConfigured
       ? Math.max(1, ...this.stageMonsterEntries.map(entry => Math.max(1, Number(entry.wave) || 1)))
@@ -283,8 +291,8 @@ export default class BattleScene extends Scene {
             .reduce((sum, entry) => sum + Math.max(1, Number(entry.count) || 1), 0)
         )).reduce((sum, count) => sum + count, 0)
       : PHASE_ONE_TOTAL_MONSTERS;
-    this.stagePlantRosterConfigured = this.stageEncounterConfig?.plantsConfigured === true;
-    this.stagePlantEntries = (this.stageEncounterConfig?.plants || []).filter(entry => entry.enabled !== false);
+    this.stagePlantRosterConfigured = this.stageEncounterConfig?.plantsConfigured === true && (this.stageEncounterConfig?.published === true || this.isStudioPlaytest);
+    this.stagePlantEntries = (this.stageEncounterConfig?.plants || []).filter(entry => entry.enabled !== false && entry.visible !== false);
     // Keep every battle VFX subsystem on the same hardware-aware quality budget.
     this.graphicsQuality = detectEffectQuality(this);
     this.vfxManager = new VFXManager(this, {
@@ -662,11 +670,12 @@ export default class BattleScene extends Scene {
   }
 
   createFarmBackground() {
-    if (!this.textures.exists("farm-battlefield")) return;
+    const backgroundKey = this.textures.exists("stage-background") ? "stage-background" : "farm-battlefield";
+    if (!this.textures.exists(backgroundKey)) return;
 
     // Keep environment artwork separate from interactive gameplay objects.
     // Fit the 16:9 image inside the current viewport without stretching it.
-    this.farmBackground = this.add.image(560, 340, "farm-battlefield")
+    this.farmBackground = this.add.image(560, 340, backgroundKey)
       .setDisplaySize(1120, 597.33).setPosition(560, 340)
       .setDepth(-5);
 
@@ -1091,7 +1100,7 @@ export default class BattleScene extends Scene {
     try {
       const unlocked = new Set([...loadUnlockedPlantIds(window.localStorage), ...(this.studioPlants || []).map((plant) => plant.id)]);
       const stageAllowedTypes = this.stagePlantRosterConfigured && !this.isStudioPlaytest
-        ? new Set(this.stagePlantEntries.map((entry) => STAGE_PLANT_ALIASES[entry.id] || entry.id))
+        ? new Set(this.stagePlantEntries.filter(entry => entry.unlocked !== false).map((entry) => STAGE_PLANT_ALIASES[entry.id] || entry.id))
         : null;
       const availableTypes = new Set(plantOptions.map((plant) => plant.type).filter((type) =>
         stageAllowedTypes

@@ -32,12 +32,13 @@ function normalizeConfig(value){
    attackIntervalMultiplier:Math.max(.1,Math.min(10,Number(item.attackIntervalMultiplier)||1)),
    enabled:item.enabled!==false
   })).filter(item=>/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(item.id));
-  const plants=(Array.isArray(raw?.plants)?raw.plants:[]).map(item=>({
-   id:String(item.id||"").trim().toLowerCase(),
-   count:Math.max(1,Math.min(500,Math.floor(Number(item.count)||1))),
-   enabled:item.enabled!==false
-  })).filter(item=>/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(item.id));
-  stages[stage]={monsters,plants,monstersConfigured:raw?.monstersConfigured===true,plantsConfigured:raw?.plantsConfigured===true};
+  const plants=(Array.isArray(raw?.plants)?raw.plants:[]).map(item=>{
+   const visible=item.visible!==false && item.enabled!==false;
+   return {id:String(item.id||"").trim().toLowerCase(),count:Math.max(1,Math.min(500,Math.floor(Number(item.count)||1))),visible,enabled:visible,unlocked:item.unlocked!==false};
+  }).filter(item=>/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(item.id));
+  const background=typeof raw?.background==="string" && /^\/assets\/backgrounds\/[a-z0-9._-]+\.(?:png|jpe?g|webp|svg)$/i.test(raw.background)
+   ? raw.background : "/assets/backgrounds/farm-battlefield-clean.svg";
+  stages[stage]={monsters,plants,background,published:raw?.published===true,monstersConfigured:raw?.monstersConfigured===true,plantsConfigured:raw?.plantsConfigured===true};
  }
  if(!stages["1"])stages["1"]={monsters:[],plants:[]};
  return {version:1,stages};
@@ -93,11 +94,21 @@ async function writeGithub(config,expectedSha){
  const savedData=await saved.json().catch(()=>({}));
  return {conflict:false,sha:savedData.content?.sha||null};
 }
-export async function GET(){
+export async function GET(req){
  try{
   const driver=process.env.STUDIO_STORAGE_DRIVER||"local";
   const result=driver==="github"?await readGithub():{config:await readLocal(),sha:null};
-  return NextResponse.json({...result.config,sha:result.sha,storage:driver},{headers:{"Cache-Control":"no-store"}});
+  if(authorized(req)){
+   return NextResponse.json({...result.config,sha:result.sha,storage:driver},{headers:{"Cache-Control":"no-store"}});
+  }
+  // Public clients receive only published stages and visible roster entries.
+  // Hidden plants and unpublished drafts are not exposed through the public API.
+  const publicConfig={...result.config,stages:Object.fromEntries(Object.entries(result.config.stages).filter(([,stage])=>stage.published===true).map(([id,stage])=>[id,{
+   ...stage,
+   plants:stage.plants.filter(plant=>plant.visible!==false&&plant.enabled!==false),
+   monsters:stage.monsters.filter(monster=>monster.enabled!==false)
+  }]))};
+  return NextResponse.json({...publicConfig,storage:driver},{headers:{"Cache-Control":"no-store"}});
  }catch(error){return NextResponse.json({error:error.message||"Could not load stage settings."},{status:502});}
 }
 export async function PATCH(req){
