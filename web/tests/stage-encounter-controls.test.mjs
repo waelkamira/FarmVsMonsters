@@ -216,7 +216,7 @@ test("production stage config cannot silently fall back to the stale local campa
 test("stage seed selection blocks battle start when authoritative stage settings fail to load",()=>{
  const selection=read("app/stage/1/select/page.js");
  assert.match(selection,/const \[stageSettingsReady, setStageSettingsReady\] = useState\(false\)/);
- assert.match(selection,/const \[stageSettingsError, setStageSettingsError\] = useState\(" "\)/);
+ assert.match(selection,/const \[stageSettingsError, setStageSettingsError\] = useState\("".*\)/);
  assert.match(selection,/if \(!response\.ok\) \{[\s\S]*throw new Error/);
  assert.match(selection,/setStageSettingsError\(error\?\.message/);
  assert.match(selection,/disabled=\{!stageSettingsReady \|\| Boolean\(stageSettingsError\)\}/);
