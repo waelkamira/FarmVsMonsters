@@ -1256,6 +1256,7 @@ export default class BattleScene extends Scene {
   createCaveman() {
     this.farmerWantsToRun = false;
     this.caveman = this.add.container(220, this.laneYs[2]).setDepth(10 + this.laneYs[2] / 1000);
+    this.addGroundContactShadow(this.caveman, 48, 15, 0.2);
 
     if (this.textures.exists("farmer-idle") && this.createFarmerAnimations()) {
       // The sheets have different cell sizes and transparent padding.
@@ -2673,6 +2674,19 @@ export default class BattleScene extends Scene {
     this.setMessage(plantedMessages[type] || "Plant planted.");
   }
 
+  addGroundContactShadow(view, width = 64, height = 18, alpha = 0.2) {
+    if (!view?.active) return null;
+    try {
+      // One lightweight, flattened contact ellipse per actor. It is inserted
+      // before the artwork so it follows lane sorting without covering the sprite.
+      const shadow = this.add.ellipse(0, -1, width, height, 0x20180f, alpha);
+      view.add(shadow);
+      return shadow;
+    } catch {
+      return null;
+    }
+  }
+
   drawEnergyMushroom(x, y, row = 2) {
     const plant = this.add.container(x, y).setDepth(10 + y / 1000);
 
@@ -2684,6 +2698,7 @@ export default class BattleScene extends Scene {
         : this.laneYs[rowIndex] - this.laneYs[rowIndex - 1];
       // Match the artwork scale to the perspective of the selected soil row.
       const perspectiveScale = PhaserMath.Clamp(laneGap / 54, 0.62, 1.08);
+      this.addGroundContactShadow(plant, 44 * perspectiveScale, 13 * perspectiveScale, 0.2);
       const displayHeight = 78 * perspectiveScale;
       const displayWidth = displayHeight * (frame.realWidth / frame.realHeight);
       const character = this.add.image(
@@ -2855,8 +2870,9 @@ export default class BattleScene extends Scene {
       ? this.laneYs[rowIndex + 1] - this.laneYs[rowIndex]
       : this.laneYs[rowIndex] - this.laneYs[rowIndex - 1];
     const perspective = PhaserMath.Clamp(laneGap / 54, 0.62, 1.08);
+    const sizeFactor = PhaserMath.Clamp((Number(studioPlant.combat?.sizePercent) || 100) / 100, 0.25, 2);
+    this.addGroundContactShadow(container, Math.min(92 * perspective * sizeFactor, 132), 22 * perspective, 0.2);
     if (studioPlant.rigProfile || this.textures.exists(textureKey)) {
-      const sizeFactor = PhaserMath.Clamp((Number(studioPlant.combat?.sizePercent) || 100) / 100, 0.25, 2);
       const height = 88 * perspective * sizeFactor;
       container.setData("studioCharacterBounds", { x: 0, y: -height / 2 + 2, width: Math.min(height * ((Number(studioPlant.rigProfile?.canvas?.width) || 1) / (Number(studioPlant.rigProfile?.canvas?.height) || 1)), 100 * perspective * sizeFactor), height });
       let rigRendered = false;
@@ -2903,6 +2919,7 @@ export default class BattleScene extends Scene {
     const studioPlant = this.studioPlantsByType?.[type];
     if (studioPlant) return this.drawStudioCatalogPlant(studioPlant, x, y, row);
     const plant = this.add.container(x, y).setDepth(11);
+    const shadowWidths = { pumpkin: 72, pineapple: 82, hazelnut: 68, mango: 68, "snow-thrower": 60, "electric-mushroom": 66 };
     const texture = type === "pumpkin" ? "pumpkin-character" : type === "pineapple" ? "pineapple-level-1" : type === "hazelnut" ? "hazelnut-level-1" : type === "mango" ? "mango-level-1" : type === "snow-thrower" ? "snow-thrower-level-1" : type === "electric-mushroom" ? "electric-mushroom-level-1" : "radish-level-1";
     const rowIndex = PhaserMath.Clamp(row, 0, LANES - 1);
     const laneGap = rowIndex < LANES - 1
@@ -2914,6 +2931,7 @@ export default class BattleScene extends Scene {
     const pineapplePerspectiveScale = type === "pineapple" || type === "hazelnut" || type === "mango" || type === "snow-thrower" || type === "electric-mushroom"
       ? PhaserMath.Clamp(0.8 + (rowIndex / Math.max(1, LANES - 1)) * 0.4, 0.8, 1.2)
       : 1;
+    this.addGroundContactShadow(plant, (shadowWidths[type] || 48) * 0.9 * pineapplePerspectiveScale, 18 * pineapplePerspectiveScale, 0.2);
     plant.setData("pineapplePerspectiveScale", pineapplePerspectiveScale);
     if (this.textures.exists(texture)) {
       // Pineapple Level 1 keeps its tuned base size; only its row perspective changes.
@@ -2942,6 +2960,7 @@ export default class BattleScene extends Scene {
 
   drawRadish(x, y) {
     const plant = this.add.container(x, y).setDepth(11);
+    this.addGroundContactShadow(plant, 48, 15, 0.19);
 
     if (this.textures.exists("radish-level-1")) {
       const frame = this.textures.getFrame("radish-level-1", 0);
@@ -3962,6 +3981,7 @@ export default class BattleScene extends Scene {
     const speed = profile.speed;
     const spawn = this.monsterLanePoint(SPAWN_LOCAL_X, row);
     const view = this.add.container(spawn.x, spawn.y).setDepth(10 + spawn.y / 1000);
+    this.addGroundContactShadow(view, 82 * profile.widthScale, 24 * profile.heightScale, 0.24);
     if (studioMonster?.id) {
       view.setData("studioMonsterId", studioMonster.id);
       view.setData("studioCharacterBounds", { x: 0, y: 0, width: 360, height: 298 });
