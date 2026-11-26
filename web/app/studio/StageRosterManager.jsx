@@ -1,6 +1,7 @@
 "use client";
 import {useCallback,useEffect,useMemo,useState} from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import "./stage-roster.css";
 import { resolveSpriteThumbnailGrid, resolveThumbnailSources } from "../../game/studio/spriteSheetGrid.mjs";
 
@@ -46,6 +47,7 @@ function AssetImage({asset,kind,large=false}) {
  </div>;
 }
 export default function StageRosterManager({kind}){
+ const router=useRouter();
  const isMonster=kind==="monster";
  const [stage,setStage]=useState(1),[assets,setAssets]=useState([]),[config,setConfig]=useState(EMPTY),[sha,setSha]=useState(null);
  const [selectedId,setSelectedId]=useState(BUILT_INS[kind][0][0]),[quantity,setQuantity]=useState(1),[wave,setWave]=useState(1);
@@ -80,16 +82,30 @@ export default function StageRosterManager({kind}){
  }
  function patch(index,changes){updateEntries(entries.map((entry,i)=>i===index?{...entry,...changes}:entry));}
  function remove(index){updateEntries(entries.filter((_,i)=>i!==index));}
+ async function persistConfig(){
+  const response=await fetch("/api/studio/stage-encounters",{method:"PATCH",headers:{"Content-Type":"application/json"},credentials:"same-origin",body:JSON.stringify({config,sha})});
+  const data=await response.json();if(!response.ok)throw Error(data.error||"تعذر الحفظ");
+  setConfig(data.config);setSha(data.sha||null);
+  return true;
+ }
  async function save(){
   setBusy(true);setMessage("");
   try{
-   const response=await fetch("/api/studio/stage-encounters",{method:"PATCH",headers:{"Content-Type":"application/json"},credentials:"same-origin",body:JSON.stringify({config,sha})});
-   const data=await response.json();if(!response.ok)throw Error(data.error||"تعذر الحفظ");
-   setConfig(data.config);setSha(data.sha||null);setMessage("تم حفظ إعدادات المرحلة "+stage+" بنجاح.");
+   await persistConfig();
+   setMessage("تم حفظ إعدادات المرحلة "+stage+" بنجاح.");
   }catch(error){setMessage(error.message);}finally{setBusy(false);}
  }
+ async function testStage(){
+  setBusy(true);setMessage("");
+  try{
+   await persistConfig();
+   router.push("/stage/1/select?stage="+stage);
+  }catch(error){
+   setMessage("تعذر حفظ إعدادات المرحلة؛ لم نبدأ الاختبار. "+error.message);
+  }finally{setBusy(false);}
+ }
  return <main className="stage-roster-shell" dir="rtl">
-  <header className="stage-roster-head"><div><small>FARM VS MONSTERS · STUDIO</small><h1>{isMonster?"إدارة وحوش المراحل":"إدارة نباتات المراحل"}</h1><p>{isMonster?"كوّن موجات الوحوش، شاهد صورها، واضبط العدد والقوة وتوقيت الظهور لكل مرحلة.":"اختر النباتات التي ستتاح للاعب في كل مرحلة، مع معاينة صورها وإدارة عددها."}</p></div><div className="stage-roster-head-actions"><Link href={"/stage/1/select?stage="+stage}>اختبار هذه المرحلة في المعركة</Link><Link href="/studio">العودة إلى الاستديو</Link></div></header>
+  <header className="stage-roster-head"><div><small>FARM VS MONSTERS · STUDIO</small><h1>{isMonster?"إدارة وحوش المراحل":"إدارة نباتات المراحل"}</h1><p>{isMonster?"كوّن موجات الوحوش، شاهد صورها، واضبط العدد والقوة وتوقيت الظهور لكل مرحلة.":"اختر النباتات التي ستتاح للاعب في كل مرحلة، مع معاينة صورها وإدارة عددها."}</p></div><div className="stage-roster-head-actions"><button type="button" onClick={testStage} disabled={busy||loading}>{busy?"جارٍ تجهيز الاختبار…":"اختبار هذه المرحلة في المعركة"}</button><Link href="/studio">العودة إلى الاستديو</Link></div></header>
   <section className="stage-roster-toolbar">
    <label>رقم المرحلة<input type="number" min="1" max="100" value={stage} onChange={e=>setStage(Math.max(1,Math.min(100,Number(e.target.value)||1)))}/></label>
    <label>اختر {isMonster?"الوحش":"النبتة"}<select value={selectedId} onChange={e=>setSelectedId(e.target.value)}><option value="">اختر من المكتبة</option>{selectable.map(a=><option key={a.id} value={a.id}>{a.name||a.id} · {a.id}</option>)}</select></label>
