@@ -52,7 +52,7 @@ test("stage seed selection respects only enabled plants for a configured stage",
  assert.match(selection,/entry\.enabled !== false/);
  assert.match(selection,/new URLSearchParams\(window\.location\.search\)\.get\("stage"\)/);
  assert.match(selection,/stages\?\.\[String\(activeStage\)\]/);
- assert.match(selection,/router\.push\("\/game\?stage=" \+ stageNumber\)/);
+ assert.match(selection,/router\.push\("\/game\?stage=" \+ stageNumber \+ \(studioPlaytest \? "&studioPlaytest=1" : ""\)\)/);
  assert.match(selection,/setStagePlantsConfigured\(configuredStage\?\.plantsConfigured === true\)/);
  assert.match(selection,/farmVsMonsters\.selectedPlants\.stage\.\" \+ activeStage/);
  assert.match(selection,/window\.localStorage\.setItem\("farmVsMonsters\.selectedPlants", savedSelection\)/);
@@ -119,7 +119,7 @@ test("Studio stage playtests bypass the campaign-only second seed picker",()=>{
  assert.match(gamePage,/const stageParam = new URLSearchParams\(locationSearch\)\.get\("stage"\)/);
  assert.match(gamePage,/const isStagePlaytest = stageParam !== null && Number\.isInteger\(Number\(stageParam\)\) && Number\(stageParam\) >= 1/);
  assert.match(gamePage,/useSyncExternalStore\(subscribeToLocation, getLocationSearchSnapshot/);
- assert.match(gamePage,/const showBattle = battleStarted \|\| isStagePlaytest/);
+ assert.match(gamePage,/const showBattle = battleStarted \|\| \(isStagePlaytest && \(!studioPlaytestRequested \|\| authorizedStudioPlaytest\)\)/);
  assert.doesNotMatch(gamePage,/would overwrite Studio-selected plants/);
 });
 
@@ -128,7 +128,7 @@ test("battle seed bank uses the configured stage roster instead of campaign unlo
  assert.match(battle,/const stageAllowedTypes = this\.stagePlantRosterConfigured/);
  assert.match(battle,/stageAllowedTypes\.has\(type\)/);
  assert.match(battle, /"hazelnut-level-1": "hazelnut"/);
- assert.match(battle, /new Set\(this\.stagePlantEntries\.map\(\(entry\) => stagePlantAliases\[entry\.id\] \|\| entry\.id\)\)/);
+ assert.match(battle,/const stageAllowedTypes = this\.stagePlantRosterConfigured && !this\.isStudioPlaytest/);
  assert.match(battle,/requestedLoadout\.filter\(\(type\) => availableTypes\.has\(type\)\)/);
  assert.match(battle,/if \(!this\.stagePlantRosterConfigured && !this\.isStudioPlaytest\) \{/);
 });
