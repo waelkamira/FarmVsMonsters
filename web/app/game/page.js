@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useSyncExternalStore, useState } from "react";
 import PhaserGame from "../../game/PhaserGame";
 import { loadUnlockedPlantIds } from "../../game/rules/phaseOneRules.mjs";
@@ -10,7 +9,7 @@ import {
   MAX_SEED_PACKETS,
   SEED_LOADOUT_STORAGE_KEY
 } from "../../game/rules/seedLoadout.mjs";
-import { useLocale, LanguageToggle } from "../LocaleProvider";
+import { useLocale } from "../LocaleProvider";
 import SpriteThumbnail from "../components/SpriteThumbnail.jsx";
 import { readStorageSnapshot, subscribeToBrowserStorage } from "../../game/hooks/browserStorage.mjs";
 
@@ -24,7 +23,6 @@ const PLANT_PACKETS = [
   { id: "snow-thrower", image: "/assets/plants/Snow-thrower-level-1.png", rows: 3, columns: 3, frameCount: 9, en: "Snow Thrower", ar: "قاذف الثلج", cost: 90, roleEn: "Freezes monsters", roleAr: "يجمد الوحوش" },
   { id: "electric-mushroom", image: "/assets/plants/Electric-mushroom-level-1.png", rows: 3, columns: 3, frameCount: 9, en: "Electric Mushroom", ar: "الفطر الكهربائي", cost: 80, roleEn: "Electric lane attacker", roleAr: "مهاجم كهربائي للمسار" }
 ];
-
 
 const LOADOUT_SERVER_SNAPSHOT = JSON.stringify({ ready: false, unlocked: ["radish", "mushroom"], selected: ["radish", "mushroom"] });
 
@@ -76,15 +74,7 @@ export default function GamePage() {
     setBattleStarted(true);
   }
 
-  return <main className="game-shell" dir={arabic ? "rtl" : "ltr"}>
-    <header className="game-header">
-      <Link href="/" className="wordmark farm-game-logo-link" aria-label="Farm Vs Monsters home"><img className="farm-game-logo farm-game-logo-header" src="/assets/items/ui/logo.png" alt="Farm Vs Monsters" /></Link>
-      <div className="control-hint">{battleStarted
-        ? t("Choose a plant card · Click an empty soil plot to plant · Collect Mushroom energy")
-        : t("Prepare your seed packets before entering the battlefield")}</div>
-      <LanguageToggle />
-    </header>
-
+  return <main className="game-shell game-shell-seed-entry" dir={arabic ? "rtl" : "ltr"}>
     {!battleStarted ? <section className="seed-selection-shell" aria-labelledby="seed-selection-title">
       <div className="seed-selection-heading">
         <span className="seed-selection-eyebrow">{t("BEFORE THE BATTLE")}</span>
@@ -125,9 +115,8 @@ export default function GamePage() {
       <div className="seed-selection-footer">
         <div className="seed-selection-tip"><span>🌱</span>{t("Tip: bring an attacker, an energy producer, and a mix of support plants.")}</div>
         <div className="seed-selection-actions">
-          <Link href="/" className="secondary-link">{t("Main Menu")}</Link>
-          <button type="button" className="seed-start-button" onClick={enterBattle} disabled={!ready || activeSelected.length < 2}>
-            <span>⚔️</span>{t("Enter the battlefield")}
+          <button type="button" className="seed-start-button seed-start-button-clay" onClick={enterBattle} disabled={!ready || activeSelected.length < 2}>
+            <span aria-hidden="true">⚔️</span>{t("Enter the battlefield")}
           </button>
         </div>
         {saveError && <p className="seed-save-error" role="alert">{t("Could not save your loadout. Check browser storage and try again.")}</p>}
@@ -136,5 +125,44 @@ export default function GamePage() {
       <section className="game-panel" aria-label={t("Stone age battle arena")}><PhaserGame /></section>
       <p className="prototype-note">{t("A prehistoric farm-defense battle. Gather mushroom energy, raise living defenders, and keep the tribe's home safe.")}</p>
     </>}
+    <style jsx global>{`
+      .game-shell-seed-entry { min-height: 100dvh; padding: clamp(10px, 2vw, 24px); }
+      .game-shell-seed-entry .seed-start-button-clay {
+        position: relative; isolation: isolate; overflow: hidden;
+        min-height: 62px; min-width: min(300px, 100%); padding: 13px 30px;
+        gap: 12px; border: 3px solid #4a2b13; border-radius: 15px;
+        outline: 1px solid #f8e8bd; outline-offset: -7px;
+        background: linear-gradient(180deg, #f7dfaa 0%, #d5a45d 48%, #a96e36 100%);
+        color: #38200e; font: inherit; font-size: 17px; font-weight: 1000;
+        text-shadow: 0 1px 0 #fff0ca;
+        box-shadow: inset 0 3px 0 #fff3d3, inset 0 -4px 0 #865022,
+          0 6px 0 #39200f, 0 11px 20px #160c0788;
+        cursor: pointer; transition: transform .16s ease, filter .16s ease, box-shadow .16s ease;
+      }
+      .game-shell-seed-entry .seed-start-button-clay::before {
+        content: ""; position: absolute; inset: 5px; z-index: -1; pointer-events: none;
+        border: 1px solid #fff0c477; border-radius: 9px;
+        background: linear-gradient(110deg, #fff5d533, transparent 45%, #6e3d1718);
+      }
+      .game-shell-seed-entry .seed-start-button-clay:hover:not(:disabled) {
+        transform: translateY(-3px); filter: brightness(1.08);
+        box-shadow: inset 0 3px 0 #fff7df, inset 0 -4px 0 #865022,
+          0 9px 0 #39200f, 0 15px 24px #160c07aa;
+      }
+      .game-shell-seed-entry .seed-start-button-clay:active:not(:disabled) {
+        transform: translateY(3px);
+        box-shadow: inset 0 2px 0 #fff3d3, 0 2px 0 #39200f;
+      }
+      .game-shell-seed-entry .seed-start-button-clay:focus-visible {
+        outline: 3px solid #fff0a8; outline-offset: 4px;
+      }
+      .game-shell-seed-entry .seed-start-button-clay:disabled {
+        filter: grayscale(.55); opacity: .62; cursor: not-allowed;
+      }
+      @media (max-width: 760px) {
+        .game-shell-seed-entry .seed-selection-actions { align-items: stretch; }
+        .game-shell-seed-entry .seed-start-button-clay { width: 100%; }
+      }
+    `}</style>
   </main>;
 }
