@@ -13,6 +13,9 @@ test("battlefield placement preview follows the calibrated perspective cell poly
 
 test("battlefield renders no persistent empty-cell tiles or square grid", () => {
   assert.doesNotMatch(scene, /drawBattleCellGlassOverlay|drawBattlefieldGlassCells/);
+  assert.match(scene, /battlefield-grass-overlay/);
+  assert.match(scene, /this\\.battlefieldGrassOverlay = this\\.add\\.image\\(560, 340, "battlefield-grass-overlay"\\)/);
+  assert.match(scene, /\\.setDepth\\(-4\\.9\\)/);
   const drawField = scene.match(/  drawField\(\) \{([\s\S]*?)\n  \}/)?.[1] || "";
   assert.doesNotMatch(drawField, /fillPoints|strokePoints|for \(let row = 0; row < LANES/);
   assert.match(scene, /No persistent cell tiles or grid lines/);
