@@ -107,11 +107,12 @@ export default function StageOneSeedSelectionPage() {
         const validSaved = Array.isArray(saved)
           ? saved.filter((id) => safeUnlocked.includes(id) && nextPlants.some((plant) => plant.id === id))
           : [];
-        const availableIds = new Set(nextPlants.filter(plant => safeUnlocked.includes(plant.id)).map((plant) => plant.id));
-        const stageDefaults = publishedStage ? stageUnlockedIds : STARTER_LOADOUT;
+        const availableIds = new Set(nextPlants.map((plant) => plant.id));
         const defaultStudioPlants = studioPlants.map((plant) => plant.id);
-        const authoredDefaults = publishedStage ? stageDefaults : [...stageDefaults, ...defaultStudioPlants];
-        setSelected([...new Set([...authoredDefaults.filter((id) => availableIds.has(id)), ...validSaved])].slice(0, MAX_SEEDS));
+        const authoredDefaults = publishedStage
+          ? stageUnlockedIds.filter((id) => availableIds.has(id))
+          : [...STARTER_LOADOUT.filter((id) => availableIds.has(id)), ...defaultStudioPlants.filter((id) => availableIds.has(id))];
+        setSelected([...new Set([...authoredDefaults, ...validSaved])].slice(0, MAX_SEEDS));
       } catch {
         const availableIds = new Set(nextPlants.map((plant) => plant.id));
         setSelected([...new Set([...(publishedStage ? stageUnlockedIds : STARTER_LOADOUT).filter((id) => availableIds.has(id)), ...(isStudioPlaytest ? studioPlants.map((plant) => plant.id).filter((id) => availableIds.has(id)) : [])])].slice(0, MAX_SEEDS));
