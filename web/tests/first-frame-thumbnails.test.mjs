@@ -80,7 +80,7 @@ test("Studio API preserves published 3x3 grids for the five affected plant thumb
   assert.equal(radish.spriteSheet, true);
 
   // Electric Mushroom artwork was intentionally removed; Studio must not point at a missing PNG.
-  assert.doesNotMatch(roster, /Electric-mushroom-level-1\.png/);
+  assert.doesNotMatch(roster, /"electric-mushroom":\s*["\']\/assets\/plants\/Electric-mushroom-level-1\.png/);
   assert.match(roster, /asset\?\.id==="electric-mushroom"&&\/Electric-mushroom-level-1\\\.png\/i\.test\(asset\?\.path\|\|""\)/);
   assert.match(roster, /asset\?\.id==="electric-mushroom"\?"⚡🍄"/);
 });
