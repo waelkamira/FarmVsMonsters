@@ -10,7 +10,7 @@ test("plant encyclopedia uses the new compact glass-card composition", () => {
   assert.match(page, /className="plant-v2-grid"/);
   assert.match(page, /className="plant-v2-card"/);
   assert.match(page, /className="plant-v2-art"/);
-  assert.match(styles, /\.plant-v2-grid\{grid-template-columns:repeat\(5/);
+  assert.match(styles, /\.plant-v2-grid\{[^}]*grid-template-columns:repeat\(5/);
   assert.match(styles, /\.plant-v2-card\{/);
   assert.match(styles, /backdrop-filter:blur\(17px\)/);
 });
