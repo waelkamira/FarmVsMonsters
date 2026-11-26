@@ -113,3 +113,18 @@ test("stage roster saves remain connected to the same runtime encounter API",()=
  assert.match(battle,/this\.load\.json\("stage-encounter-config", "\/api\/studio\/stage-encounters"\)/);
  assert.match(selection,/fetch\("\/api\/studio\/stage-encounters"/);
 });
+
+test("Studio stage playtests bypass the campaign-only second seed picker",()=>{
+ const gamePage=read("app/game/page.js");
+ assert.match(gamePage,/params\.has\("stage"\)/);
+ assert.match(gamePage,/setBattleStarted\(true\)/);
+ assert.match(gamePage,/would overwrite Studio-selected plants/);
+});
+
+test("battle seed bank uses the configured stage roster instead of campaign unlocks",()=>{
+ const battle=read("game/scenes/BattleScene.js");
+ assert.match(battle,/const stageAllowedTypes = this\.stagePlantRosterConfigured/);
+ assert.match(battle,/stageAllowedTypes\.has\(type\)/);
+ assert.match(battle,/requestedLoadout\.filter\(\(type\) => availableTypes\.has\(type\)\)/);
+ assert.match(battle,/if \(!this\.stagePlantRosterConfigured\) \{/);
+});
