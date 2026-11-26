@@ -69,13 +69,23 @@ export function buildAssetDependencyReport(assets, assetId) {
     [item, ...asList(item?.versions)].flatMap((snapshot) => declaredDependencies(snapshot, byId))
   ]));
   const dependencies = graph.get(String(assetId)) || [];
-  const dependents = [];
+  const dependentRelations = new Map();
   for (const candidate of list) {
     if (candidate.id === assetId) continue;
     for (const dependency of graph.get(String(candidate.id)) || []) {
-      if (dependency.kind === "asset" && dependency.targetId === assetId) dependents.push({ assetId: candidate.id, assetName: candidate.name || candidate.id, assetType: candidate.type, relation: dependency.relation });
+      if (dependency.kind !== "asset" || dependency.targetId !== assetId) continue;
+      const key = String(candidate.id) + "\\u0000" + dependency.relation;
+      if (!dependentRelations.has(key)) {
+        dependentRelations.set(key, {
+          assetId: candidate.id,
+          assetName: candidate.name || candidate.id,
+          assetType: candidate.type,
+          relation: dependency.relation
+        });
+      }
     }
   }
+  const dependents = [...dependentRelations.values()];
   const fileUses = collectFileUses(list), sharedFiles = [];
   for (const [path, references] of fileUses) {
     const otherReferences = references.filter((reference) => reference.assetId !== assetId);
