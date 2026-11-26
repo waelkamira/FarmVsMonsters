@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { LanguageToggle, useLocale } from "../LocaleProvider";
+import { getAccountTabForKey } from "./accountTabs.mjs";
 import {
   getPlayerSession,
   signInPlayer,
@@ -22,6 +23,9 @@ export default function AccountPage() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const signInTabRef = useRef(null);
+  const signUpTabRef = useRef(null);
+  const keyboardTabFocus = useRef(false);
 
   useEffect(() => {
     let active = true;
@@ -64,6 +68,25 @@ export default function AccountPage() {
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, [ar]);
+
+  useEffect(() => {
+    if (!keyboardTabFocus.current) return;
+    const activeTab = mode === "signin" ? signInTabRef.current : signUpTabRef.current;
+    activeTab?.focus();
+    keyboardTabFocus.current = false;
+  }, [mode]);
+
+  function handleTabKeyDown(event) {
+    const nextMode = getAccountTabForKey(mode, event.key, locale);
+    if (!nextMode) return;
+    event.preventDefault();
+    setError("");
+    setMessage("");
+    if (nextMode !== mode) {
+      keyboardTabFocus.current = true;
+      setMode(nextMode);
+    }
+  }
 
   async function submit(event) {
     event.preventDefault();
@@ -135,20 +158,41 @@ export default function AccountPage() {
           </div>
         ) : (
           <>
-            <div className="account-tabs" role="tablist" aria-label={ar ? "نوع العملية" : "Account action"}>
-              <button type="button" className={mode === "signin" ? "active" : ""} onClick={() => { setMode("signin"); setError(""); setMessage(""); }}>
+            <div className="account-tabs" role="tablist" aria-label={ar ? "نوع العملية" : "Account action"} onKeyDown={handleTabKeyDown}>
+              <button
+                ref={signInTabRef}
+                id="account-signin-tab"
+                type="button"
+                role="tab"
+                aria-selected={mode === "signin"}
+                aria-controls="account-auth-panel"
+                tabIndex={mode === "signin" ? 0 : -1}
+                className={mode === "signin" ? "active" : ""}
+                onClick={() => { setMode("signin"); setError(""); setMessage(""); }}
+              >
                 {ar ? "تسجيل الدخول" : "Sign in"}
               </button>
-              <button type="button" className={mode === "signup" ? "active" : ""} onClick={() => { setMode("signup"); setError(""); setMessage(""); }}>
+              <button
+                ref={signUpTabRef}
+                id="account-signup-tab"
+                type="button"
+                role="tab"
+                aria-selected={mode === "signup"}
+                aria-controls="account-auth-panel"
+                tabIndex={mode === "signup" ? 0 : -1}
+                className={mode === "signup" ? "active" : ""}
+                onClick={() => { setMode("signup"); setError(""); setMessage(""); }}
+              >
                 {ar ? "إنشاء حساب" : "Create account"}
               </button>
             </div>
-            <a className="google-signin-button" href="/api/player/account/google">
-              <span className="google-mark" aria-hidden="true">G</span>
-              {ar ? "المتابعة باستخدام Google" : "Continue with Google"}
-            </a>
-            <div className="account-or-divider"><span>{ar ? "أو بالبريد الإلكتروني" : "OR WITH EMAIL"}</span></div>
-            <form className="account-form" onSubmit={submit}>
+            <div id="account-auth-panel" role="tabpanel" aria-labelledby={mode === "signin" ? "account-signin-tab" : "account-signup-tab"} tabIndex={0}>
+              <a className="google-signin-button" href="/api/player/account/google">
+                <span className="google-mark" aria-hidden="true">G</span>
+                {ar ? "المتابعة باستخدام Google" : "Continue with Google"}
+              </a>
+              <div className="account-or-divider"><span>{ar ? "أو بالبريد الإلكتروني" : "OR WITH EMAIL"}</span></div>
+              <form className="account-form" onSubmit={submit}>
               <label htmlFor="player-email">{ar ? "البريد الإلكتروني" : "Email address"}</label>
               <input id="player-email" type="email" autoComplete="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="player@example.com" />
               <label htmlFor="player-password">{ar ? "كلمة المرور" : "Password"}</label>
@@ -160,7 +204,8 @@ export default function AccountPage() {
                     ? (ar ? "دخول ومزامنة التقدم" : "Sign in & sync progress")
                     : (ar ? "إنشاء حساب لاعب" : "Create player account")}
               </button>
-            </form>
+              </form>
+            </div>
           </>
         )}
 
