@@ -66,16 +66,12 @@ function createAudioControls() {
     this.audioMenu = this.add.container(990, 183).setDepth(70).setVisible(false);
     // Make the menu surface consume clicks so its empty areas never behave
     // like clicks on the battlefield underneath it.
-    const panelGlow = this.add.rectangle(0, 0, 258, 228, 0x8b65e8, 0.16)
-      .setStrokeStyle(1, 0xffffff, 0.42);
-    const panel = this.add.rectangle(0, 0, 250, 220, 0x315b91, 0.64)
-      .setStrokeStyle(1, 0xffffff, 0.76)
-      .setInteractive();
-    const inset = this.add.rectangle(0, 0, 236, 206, 0x35bceb, 0.12)
-      .setStrokeStyle(1, 0xa7e84f, 0.42);
+    const panelGlow = this.add.rectangle(0, 0, 258, 228, 0x6fbd78, 0.22).setStrokeStyle(1, 0xf2fff0, 0.34);
+    const panel = this.add.rectangle(0, 0, 250, 220, 0x286b43, 0.58).setStrokeStyle(1.5, 0xf4fff0, 0.78).setInteractive();
+    const inset = this.add.rectangle(0, 0, 236, 206, 0x9fe0a2, 0.12).setStrokeStyle(1, 0xdffff0, 0.36);
     const heading = this.add.text(0, -91, this.translate("TRIBE SOUND", window.localStorage.getItem("farmVsMonsters.language") || "ar"), {
-      fontFamily: "Arial", fontSize: "15px", color: "#ffffff", fontStyle: "bold",
-      stroke: "#17213d", strokeThickness: 3
+      fontFamily: "Arial", fontSize: "15px", color: "#f2fff1", fontStyle: "bold",
+      stroke: "#17442d", strokeThickness: 2
     }).setOrigin(0.5).setData("localeKey", "TRIBE SOUND");
     this.audioMenu.add([panelGlow, panel, inset, heading]);
 
@@ -108,21 +104,22 @@ function createAudioControls() {
     this.input.on("pointerup", () => { this.activeAudioSlider = null; });
 
     this.audioButton = this.add.container(1100, 27).setDepth(52);
-    const buttonHalo = this.add.circle(0, 1, 18, 0x1b1008, 0.32);
-    const buttonBackground = this.add.circle(0, 0, 16, 0x9b6b39, 1).setStrokeStyle(2.5, 0xe6c58c, 1);
+    const buttonHalo = this.add.circle(0, 2, 20, 0x123b25, 0.2);
+    const buttonBackground = this.add.circle(0, 0, 17, 0x65b77b, 0.78).setStrokeStyle(1.5, 0xf0fff0, 0.92);
+    const buttonHighlight = this.add.arc(0, -1, 13, 205, 335, false, 0xffffff, 0.28).setStrokeStyle(3, 0xffffff, 0.34);
     const speaker = this.add.graphics();
-    speaker.fillStyle(0x4b2e16, 1);
+    speaker.fillStyle(0x174b30, 1);
     speaker.fillRoundedRect(-11, -6, 7, 12, 2);
     speaker.fillTriangle(-5, -7, 5, -14, 5, 14);
     speaker.fillTriangle(-5, 7, 5, 14, 5, -14);
-    speaker.lineStyle(2, 0x4b2e16, 1);
+    speaker.lineStyle(2, 0x174b30, 1);
     speaker.beginPath();
     speaker.arc(3, 0, 10, -0.85, 0.85, false);
     speaker.strokePath();
-    this.audioButton.add([buttonHalo, buttonBackground, speaker]);
+    this.audioButton.add([buttonHalo, buttonBackground, buttonHighlight, speaker]);
     setTouchTarget(buttonBackground);
-    buttonBackground.on("pointerover", () => buttonBackground.setFillStyle(0xffdf8a, 1));
-    buttonBackground.on("pointerout", () => buttonBackground.setFillStyle(0xe6c58c, 1));
+    buttonBackground.on("pointerover", () => buttonBackground.setFillStyle(0x9bdda7, 0.92));
+    buttonBackground.on("pointerout", () => buttonBackground.setFillStyle(0x65b77b, 0.78));
     buttonBackground.on("pointerdown", () => {
       if (this.audioMenuOpen) this.closeAudioMenu();
       else this.openAudioMenu();
@@ -152,13 +149,12 @@ function createAudioControls() {
 function createAudioVolumeSlider(y, title, initialValue, onChange) {
     const container = this.add.container(0, y);
     const label = this.add.text(-101, -10, this.translate(title, window.localStorage.getItem("farmVsMonsters.language") || "ar"), {
-      fontFamily: "Arial", fontSize: "11px", color: "#ffffff", fontStyle: "bold", stroke: "#17213d", strokeThickness: 2
+      fontFamily: "Arial", fontSize: "11px", color: "#efffef", fontStyle: "bold", stroke: "#17442d", strokeThickness: 1
     }).setOrigin(0, 0.5).setData("localeKey", title);
-    const track = this.add.rectangle(5, 12, 132, 8, 0xffffff, 0.24).setStrokeStyle(1, 0xffffff, 0.46);
+    const track = this.add.rectangle(5, 12, 132, 8, 0xdfffe1, 0.28).setStrokeStyle(1, 0xf2fff0, 0.58);
     setTouchTarget(track, 160, 44);
-    const fill = this.add.rectangle(-61, 12, 0, 5, 0xa7e84f, 1).setOrigin(0, 0.5);
-    const knob = this.add.circle(-61, 12, 8, 0xffca45, 0.9)
-      .setStrokeStyle(1, 0xffffff, 0.9);
+    const fill = this.add.rectangle(-61, 12, 0, 5, 0xa8e6a3, 0.96).setOrigin(0, 0.5);
+    const knob = this.add.circle(-61, 12, 8, 0xdffff0, 0.96).setStrokeStyle(1.5, 0xffffff, 0.96);
     setTouchTarget(knob, 44, 44);
     const valueText = this.add.text(96, -10, Math.round(initialValue) + "%", {
       fontFamily: "Arial", fontSize: "11px", color: "#ffffff", fontStyle: "bold", stroke: "#17213d", strokeThickness: 2
@@ -186,7 +182,7 @@ function createAudioVolumeSlider(y, title, initialValue, onChange) {
       this.activeAudioSlider = setFromPointer;
       setFromPointer(pointer);
     });
-    track.on("pointerover", () => track.setFillStyle(0x35bceb, 1));
+    track.on("pointerover", () => track.setFillStyle(0x9fe0a2, 0.5));
     setValue(initialValue, false);
     return { container };
   }
@@ -207,16 +203,15 @@ function closeAudioMenu() {
 
 function createQuickCollectionButtons() {
     // Three independent floating shortcuts; deliberately no enclosing card or dock.
-    const makeButton = (x, kind, tint, tab) => {
+    const makeButton = (x, kind, _tint, tab) => {
       const button = this.add.container(x, 625).setDepth(51);
-      const shadow = this.add.circle(0, 2, 23, 0x17100a, 0.38);
-      const rim = this.add.circle(0, 0, 21, 0x80552f, 1)
-        .setStrokeStyle(2.4, 0xf1d08b, 1);
-      const face = this.add.circle(0, 0, 16.5, tint, 1)
-        .setStrokeStyle(1, 0xfff0c8, 0.92);
+      const shadow = this.add.circle(0, 3, 24, 0x123b25, 0.22);
+      const rim = this.add.circle(0, 0, 22, 0x2d7046, 0.62).setStrokeStyle(1.5, 0xf2fff0, 0.92);
+      const face = this.add.circle(0, 0, 17.5, 0x72c58a, 0.78).setStrokeStyle(1, 0xffffff, 0.82);
+      const highlight = this.add.arc(0, -1, 13.5, 205, 335, false, 0xffffff, 0.24).setStrokeStyle(2.5, 0xffffff, 0.34);
       setTouchTarget(face);
       const icon = this.add.graphics();
-      icon.lineStyle(2.3, 0xfff8e8, 1);
+      icon.lineStyle(2.3, 0xf4fff2, 1);
       if (kind === "plants") {
         icon.lineBetween(0, 11, 0, -2);
         icon.lineBetween(0, 2, -8, -6);
@@ -242,32 +237,30 @@ function createQuickCollectionButtons() {
         icon.fillCircle(4, 0, 2);
         icon.fillTriangle(-3, 5, 3, 5, 0, 8);
       }
-      button.add([shadow, rim, face, icon]);
+      button.add([shadow, rim, face, highlight, icon]);
       face.on("pointerover", () => {
-        face.setFillStyle(0xffdf8a);
+        face.setFillStyle(0xb4e9b5, 0.96);
         button.setScale(1.08);
       });
       face.on("pointerout", () => {
-        face.setFillStyle(tint);
+        face.setFillStyle(0x72c58a, 0.78);
         button.setScale(1);
       });
       face.on("pointerdown", () => this.openCollectionMenuTab(tab));
       return button;
     };
 
-    this.quickPlantsButton = makeButton(958, "plants", 0x328b55, "plants");
-    this.quickAdventuresButton = makeButton(1028, "adventures", 0x397fb0, "phases");
-    this.quickMonstersButton = makeButton(1098, "monsters", 0x7952a8, "monsters");
+    this.quickPlantsButton = makeButton(958, "plants", 0x72c58a, "plants");
+    this.quickAdventuresButton = makeButton(1028, "adventures", 0x72c58a, "phases");
+    this.quickMonstersButton = makeButton(1098, "monsters", 0x72c58a, "monsters");
   }
 
 function createCollectionMenuControl() {
     // Compact journal emblem matching the floating battle shortcuts.
     const button = this.add.container(956, 27).setDepth(52);
-    const shadow = this.add.circle(0, 2, 18, 0x17100a, 0.34);
-    const rim = this.add.circle(0, 0, 16, 0x80552f, 1)
-      .setStrokeStyle(2.2, 0xf1d08b, 1);
-    const face = this.add.circle(0, 0, 12.5, 0x477a55, 1)
-      .setStrokeStyle(1, 0xfff0c8, 0.9);
+    const shadow = this.add.circle(0, 2, 19, 0x123b25, 0.2);
+    const rim = this.add.circle(0, 0, 17, 0x2d7046, 0.64).setStrokeStyle(1.4, 0xf2fff0, 0.9);
+    const face = this.add.circle(0, 0, 13, 0x72c58a, 0.82).setStrokeStyle(1, 0xffffff, 0.86);
     setTouchTarget(face);
     const book = this.add.graphics();
     book.lineStyle(1.8, 0xfff8e8, 1);
@@ -278,11 +271,11 @@ function createCollectionMenuControl() {
     book.lineBetween(3, -3, 6, -3);
     button.add([shadow, rim, face, book]);
     face.on("pointerover", () => {
-      face.setFillStyle(0x6ba66d);
+      face.setFillStyle(0xa6e2ae, 0.96);
       button.setScale(1.07);
     });
     face.on("pointerout", () => {
-      face.setFillStyle(0x477a55);
+      face.setFillStyle(0x72c58a, 0.82);
       button.setScale(1);
     });
     face.on("pointerdown", () => this.toggleCollectionMenu());
@@ -292,18 +285,18 @@ function createCollectionMenuControl() {
 
 function createInventoryControl() {
     const button = this.add.container(920, 27).setDepth(52);
-    const plate = this.add.circle(0, 0, 16, 0x9b6b39, 1);
+    const plate = this.add.circle(0, 0, 17, 0x72c58a, 0.82).setStrokeStyle(1.5, 0xf2fff0, 0.92);
     setTouchTarget(plate);
     const icon = this.add.graphics();
-    icon.lineStyle(2.4, 0x4b2e16, 1);
+    icon.lineStyle(2.4, 0x174b30, 1);
     icon.strokeRoundedRect(-9, -7, 18, 18, 4);
     icon.lineBetween(-5, -7, -3, -13);
     icon.lineBetween(-3, -13, 3, -13);
     icon.lineBetween(3, -13, 5, -7);
     icon.lineBetween(-4, 0, 4, 0);
     button.add([plate, icon]);
-    plate.on("pointerover", () => plate.setFillStyle(0xffdf8a, 1).setScale(1.05));
-    plate.on("pointerout", () => plate.setFillStyle(0xe6c58c, 1).setScale(1));
+    plate.on("pointerover", () => plate.setFillStyle(0xb4e9b5, 0.96).setScale(1.05));
+    plate.on("pointerout", () => plate.setFillStyle(0x72c58a, 0.82).setScale(1));
     plate.on("pointerdown", () => this.openInventory());
     this.inventoryControl = button;
     this.inventoryOpen = false;
@@ -311,11 +304,12 @@ function createInventoryControl() {
 
 function createPauseControl() {
     const button = this.add.container(1028, 27).setDepth(52);
+    const glass = this.add.circle(0, 0, 20, 0x72c58a, 0.82).setStrokeStyle(1.5, 0xf2fff0, 0.92);
     const artwork = this.textures.exists("hud-pause-button")
-      ? this.add.image(0, 0, "hud-pause-button").setDisplaySize(34, 34)
-      : this.add.circle(0, 0, 16, 0x9b6b39, 1).setStrokeStyle(2.5, 0xe6c58c, 1);
-    setTouchTarget(artwork);
-    button.add(artwork);
+      ? this.add.image(0, 0, "hud-pause-button").setDisplaySize(27, 27).setTint(0xf4fff2)
+      : this.add.text(0, 0, "Ⅱ", { fontFamily: "Arial", fontSize: "20px", color: "#f4fff2", fontStyle: "bold" }).setOrigin(0.5);
+    setTouchTarget(glass);
+    button.add([glass, artwork]);
     artwork.on("pointerover", () => button.setScale(1.07));
     artwork.on("pointerout", () => button.setScale(1));
     artwork.on("pointerdown", () => this.pauseGame());
@@ -324,11 +318,12 @@ function createPauseControl() {
 
 function createSettingsControl() {
     const button = this.add.container(1064, 27).setDepth(52);
+    const glass = this.add.circle(0, 0, 20, 0x72c58a, 0.82).setStrokeStyle(1.5, 0xf2fff0, 0.92);
     const artwork = this.textures.exists("hud-settings-button")
-      ? this.add.image(0, 0, "hud-settings-button").setDisplaySize(34, 34)
-      : this.add.circle(0, 0, 16, 0x9b6b39, 1).setStrokeStyle(2.5, 0xe6c58c, 1);
-    setTouchTarget(artwork);
-    button.add(artwork);
+      ? this.add.image(0, 0, "hud-settings-button").setDisplaySize(27, 27).setTint(0xf4fff2)
+      : this.add.text(0, 0, "⚙", { fontFamily: "Arial", fontSize: "20px", color: "#f4fff2", fontStyle: "bold" }).setOrigin(0.5);
+    setTouchTarget(glass);
+    button.add([glass, artwork]);
     artwork.on("pointerover", () => button.setScale(1.07));
     artwork.on("pointerout", () => button.setScale(1));
     artwork.on("pointerdown", () => this.openSettingsMenu());
@@ -338,15 +333,16 @@ function createSettingsControl() {
 function createSpeedControl() {
     this.gameSpeed = 1;
     const button = this.add.container(992, 27).setDepth(52);
+    const glass = this.add.circle(0, 0, 20, 0x72c58a, 0.82).setStrokeStyle(1.5, 0xf2fff0, 0.92);
     const artwork = this.textures.exists("hud-speed-button")
-      ? this.add.image(0, 0, "hud-speed-button").setDisplaySize(34, 34)
-      : this.add.circle(0, 0, 16, 0x9b6b39, 1).setStrokeStyle(2.5, 0xe6c58c, 1);
+      ? this.add.image(0, 0, "hud-speed-button").setDisplaySize(27, 27).setTint(0xf4fff2)
+      : this.add.text(0, 0, "1×", { fontFamily: "Arial", fontSize: "13px", color: "#f4fff2", fontStyle: "bold" }).setOrigin(0.5);
     const speedLabel = this.add.text(0, 21, "1×", {
       fontFamily: "Arial", fontSize: "9px", color: "#fff4c8", fontStyle: "bold",
       stroke: "#392719", strokeThickness: 2
     }).setOrigin(0.5).setDepth(49);
     setTouchTarget(artwork);
-    button.add([artwork, speedLabel]);
+    button.add([glass, artwork, speedLabel]);
     artwork.on("pointerover", () => button.setScale(1.07));
     artwork.on("pointerout", () => button.setScale(1));
     artwork.on("pointerdown", () => {
