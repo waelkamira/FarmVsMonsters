@@ -5,7 +5,7 @@ export function getStageMonsterReferences(config, monsterId) {
   if (!targetId) return [];
   const stages = config?.stages && typeof config.stages === "object" ? config.stages : {};
   const references = [];
-  for const [stageId, stage] of Object.entries(stages) {
+  for (const [stageId, stage] of Object.entries(stages)) {
     const monsters = Array.isArray(stage?.monsters) ? stage.monsters : [];
     for (const entry of monsters) {
       if (String(entry?.id || "").trim().toLowerCase() !== targetId) continue;
