@@ -97,6 +97,7 @@ test("detects shared immutable files between cloned assets without blocking safe
 });
 
 test("deduplicates reverse dependency rows repeated across current and historical revisions", () => {
+  assert.match(detailsSource, /key=\{dependent\.assetId \+ \":\" \+ dependent\.relation\}/);
   const assets = [
     {
       id: "pepper-flamethrower-level-1",
