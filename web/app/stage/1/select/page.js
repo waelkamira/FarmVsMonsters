@@ -81,17 +81,25 @@ export default function StageOneSeedSelectionPage() {
       const configuredStage = stageSettings?.stages?.[String(activeStage)];
       setStagePlantsConfigured(configuredStage?.plantsConfigured === true);
       const plantAliases = {radish:["radish","radish-level-1"],mushroom:["mushroom","energy-mushroom"],pumpkin:["pumpkin","pumpkin-level-1"],pineapple:["pineapple","pineapple-level-1"],hazelnut:["hazelnut","hazelnut-level-1"],mango:["mango","mango-level-1"],"snow-thrower":["snow-thrower","snow-thrower-level-1"],"electric-mushroom":["electric-mushroom","electric-mushroom-level-1"]};
-      const nextPlants = configuredStage?.plantsConfigured && !isStudioPlaytest
-        ? [...plantMap.values()].filter(plant => configuredStage.plants.some(entry => entry.enabled !== false && (entry.id === plant.id || (plantAliases[plant.id] || []).includes(entry.id))))
+      const publishedStage = configuredStage?.published === true && configuredStage?.plantsConfigured === true;
+      const visibleStageEntries = (configuredStage?.plants || []).filter(entry => entry.visible !== false && entry.enabled !== false);
+      const nextPlants = publishedStage && !isStudioPlaytest
+        ? [...plantMap.values()].filter(plant => visibleStageEntries.some(entry => entry.id === plant.id || (plantAliases[plant.id] || []).includes(entry.id)))
         : [...plantMap.values()];
       setPlantCatalog(nextPlants);
       let unlocked = STARTER_LOADOUT;
       try { unlocked = loadUnlockedPlantIds(window.localStorage); } catch { /* Starter seeds remain available. */ }
       const studioIds = studioPlants.map((plant) => plant.id);
-      // Only an authenticated Studio playtest may unlock the full catalog; normal stage entry follows campaign progression.
+      const stageUnlockedIds = publishedStage
+        ? visibleStageEntries.filter(entry => entry.unlocked !== false).map(entry => plantAliases[entry.id]?.[0] || entry.id)
+        : [];
+      // A published stage's authored unlock flags override campaign progress for that stage only.
+      // An authenticated Studio playtest can still inspect and use the entire catalog.
       const safeUnlocked = isStudioPlaytest
         ? [...new Set([...STARTER_LOADOUT, ...unlocked, ...nextPlants.map((plant) => plant.id), ...studioIds])]
-        : [...new Set([...STARTER_LOADOUT, ...unlocked])];
+        : publishedStage
+          ? [...new Set(stageUnlockedIds)]
+          : [...new Set([...STARTER_LOADOUT, ...unlocked])];
       setUnlockedIds(safeUnlocked);
       try {
         const stageSelectionKey = "farmVsMonsters.selectedPlants.stage." + activeStage;
@@ -99,11 +107,10 @@ export default function StageOneSeedSelectionPage() {
         const validSaved = Array.isArray(saved)
           ? saved.filter((id) => safeUnlocked.includes(id) && nextPlants.some((plant) => plant.id === id))
           : [];
-        const defaultStudioPlants = studioPlants.map((plant) => plant.id);
-        // Newly published Studio plants are unlocked and equipped by default;
-        // the seven-slot limit applies only to the active loadout, not the catalog.
-        const availableIds = new Set(nextPlants.map((plant) => plant.id));
-        setSelected([...new Set([...STARTER_LOADOUT.filter((id) => availableIds.has(id)), ...defaultStudioPlants.filter((id) => availableIds.has(id)), ...validSaved])].slice(0, MAX_SEEDS));
+        const availableIds = new Set(nextPlants.filter(plant => safeUnlocked.includes(plant.id)).map((plant) => plant.id));
+        const stageDefaults = publishedStage ? stageUnlockedIds : STARTER_LOADOUT;
+        const defaultStudioPlants = isStudioPlaytest ? studioPlants.map((plant) => plant.id) : [];
+        setSelected([...new Set([...stageDefaults.filter((id) => availableIds.has(id)), ...defaultStudioPlants.filter((id) => availableIds.has(id)), ...validSaved])].slice(0, MAX_SEEDS));
       } catch {
         const availableIds = new Set(nextPlants.map((plant) => plant.id));
         setSelected([...new Set([...STARTER_LOADOUT.filter((id) => availableIds.has(id)), ...studioPlants.map((plant) => plant.id).filter((id) => availableIds.has(id))])].slice(0, MAX_SEEDS));
