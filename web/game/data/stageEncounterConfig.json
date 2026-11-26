@@ -21,29 +21,48 @@
         {
           "id": "radish",
           "count": 100,
-          "enabled": true
+          "visible": true,
+          "enabled": true,
+          "unlocked": true
         },
         {
           "id": "mushroom",
           "count": 100,
-          "enabled": true
+          "visible": true,
+          "enabled": true,
+          "unlocked": true
         },
         {
           "id": "pepper-flamethrower-level-1",
           "count": 25,
-          "enabled": true
+          "visible": true,
+          "enabled": true,
+          "unlocked": true
         },
         {
           "id": "hazelnut",
-          "count": 1,
-          "enabled": true
+          "count": 2,
+          "visible": true,
+          "enabled": true,
+          "unlocked": true
         },
         {
           "id": "snow-thrower",
           "count": 1,
-          "enabled": true
+          "visible": true,
+          "enabled": true,
+          "unlocked": true
+        },
+        {
+          "id": "pumpkin",
+          "count": 1,
+          "visible": true,
+          "enabled": true,
+          "unlocked": false
         }
       ],
+      "background": "/assets/backgrounds/farm-battlefield-clean.svg",
+      "published": false,
       "monstersConfigured": true,
       "plantsConfigured": true
     }
