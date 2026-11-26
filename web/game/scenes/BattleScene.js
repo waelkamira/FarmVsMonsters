@@ -1083,8 +1083,18 @@ export default class BattleScene extends Scene {
     let selectedTypes = ["radish", "mushroom"];
     try {
       const unlocked = new Set([...loadUnlockedPlantIds(window.localStorage), ...(this.studioPlants || []).map((plant) => plant.id)]);
+      const stagePlantAliases = {
+        "radish-level-1": "radish",
+        "energy-mushroom": "mushroom",
+        "pumpkin-level-1": "pumpkin",
+        "pineapple-level-1": "pineapple",
+        "hazelnut-level-1": "hazelnut",
+        "mango-level-1": "mango",
+        "snow-thrower-level-1": "snow-thrower",
+        "electric-mushroom-level-1": "electric-mushroom"
+      };
       const stageAllowedTypes = this.stagePlantRosterConfigured
-        ? new Set(this.stagePlantEntries.map((entry) => entry.id))
+        ? new Set(this.stagePlantEntries.map((entry) => stagePlantAliases[entry.id] || entry.id))
         : null;
       const availableTypes = new Set(plantOptions.map((plant) => plant.type).filter((type) =>
         stageAllowedTypes
