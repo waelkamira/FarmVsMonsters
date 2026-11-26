@@ -78,7 +78,7 @@ async function removeLocalAssetManifestReferences(assetPaths){
  async function githubPut(filePath,bytes,message,token,branch,expectedSha){const api=githubUrl(filePath),headers=githubHeaders(token);const check=await fetch(api+"?ref="+encodeURIComponent(branch),{headers});let sha=null;if(check.ok)sha=(await check.json()).sha;else if(check.status!==404)throw Error("GitHub lookup failed ("+check.status+").");assertExpectedContentSha(expectedSha,sha);const saved=await fetch(api,{method:"PUT",headers:{...headers,"Content-Type":"application/json"},body:JSON.stringify({message,branch,content:Buffer.from(bytes).toString("base64"),...(sha?{sha}:{})})});if(!saved.ok){const data=await saved.json().catch(()=>({}));throw Error(data.message||"GitHub save failed ("+saved.status+").");}}
 async function localRegistry(){try{return JSON.parse(await readFile(path.join(process.cwd(),"game/data/studioAssetRegistry.json"),"utf8"));}catch(error){if(error.code==="ENOENT")return {version:1,assets:[]};throw error;}}
 async function saveLocalRegistry(registry){const target=path.join(process.cwd(),"game/data/studioAssetRegistry.json");await mkdir(path.dirname(target),{recursive:true});await writeFile(target,JSON.stringify(registry,null,2)+"\n","utf8");}
-function isRetiredEnemyAsset(asset){return /hyena|dragon/i.test(JSON.stringify(asset||{}));}
+function isRetiredEnemyAsset(asset){return /hyena/i.test(JSON.stringify(asset||{}));}
 function addPreviewUrls(registry){const github=process.env.STUDIO_STORAGE_DRIVER==="github";const assets=(registry.assets||[]).filter(asset=>!isRetiredEnemyAsset(asset));return {...registry,storage:process.env.STUDIO_STORAGE_DRIVER||"local",assets:assets.map(asset=>({...asset,previewUrl:github?"/api/studio/assets?preview="+encodeURIComponent(asset.path):asset.path,...(asset.stateAnimations?{stateAnimations:Object.fromEntries(Object.entries(asset.stateAnimations).map(([stateId,state])=>[stateId,{...state,previewUrl:github?"/api/studio/assets?preview="+encodeURIComponent(state.path):state.path}]))}:{}),rigParts:serializeRigParts(assets,asset),...(asset.combat?.projectile?{combat:{...asset.combat,projectile:{...asset.combat.projectile,frameCount:asset.combat.projectile.frameCount??1,rows:asset.combat.projectile.rows??1,columns:asset.combat.projectile.columns??1,previewUrl:github?"/api/studio/assets?preview="+encodeURIComponent(asset.combat.projectile.path):asset.combat.projectile.path}}}:{})}))};}
 function plantIdFromPath(assetPath){
  const filename=path.basename(assetPath||"").replace(/\.[^.]+$/,"").toLowerCase();
@@ -219,7 +219,7 @@ export async function GET(req){
   }
   const preview=req.nextUrl.searchParams.get("preview");
   if(preview!==null){
-   if(/hyena|dragon/i.test(preview))return NextResponse.json({error:"This enemy asset has been permanently retired."},{status:410,headers:{"Cache-Control":"private, no-store"}});
+   if(/hyena/i.test(preview))return NextResponse.json({error:"This enemy asset has been permanently retired."},{status:410,headers:{"Cache-Control":"private, no-store"}});
    const allowedTypes={".png":"image/png",".webp":"image/webp",".gif":"image/gif",".mp3":"audio/mpeg",".wav":"audio/wav",".ogg":"audio/ogg",".m4a":"audio/mp4"};
    const extension=path.extname(preview).toLowerCase();
    if(!preview.startsWith("/assets/")||preview.includes("..")||!allowedTypes[extension])return NextResponse.json({error:"Invalid asset preview path."},{status:400});
