@@ -49,15 +49,15 @@
         {
           "id": "snow-thrower",
           "count": 1,
-          "visible": false,
-          "enabled": false,
+          "visible": true,
+          "enabled": true,
           "unlocked": true
         },
         {
           "id": "pumpkin",
           "count": 1,
-          "visible": true,
-          "enabled": true,
+          "visible": false,
+          "enabled": false,
           "unlocked": false
         }
       ],
