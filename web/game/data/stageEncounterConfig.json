@@ -49,8 +49,8 @@
         {
           "id": "snow-thrower",
           "count": 1,
-          "visible": true,
-          "enabled": true,
+          "visible": false,
+          "enabled": false,
           "unlocked": true
         },
         {
