@@ -1,5 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname, resolve } from "node:path";
 import { detectVFXQuality, createVFXConfig } from "../game/vfx/core/VFXConfig.mjs";
 import { detectEffectQuality } from "../game/vfx/effects/EffectDirector.mjs";
 
@@ -31,4 +34,13 @@ test("the shared quality is reflected in the existing VFX particle profile", () 
   assert.equal(createVFXConfig({ quality: "low" }).qualityProfile.maxParticlesPerEffect, 5);
   assert.equal(createVFXConfig({ quality: "medium" }).qualityProfile.maxParticlesPerEffect, 9);
   assert.equal(createVFXConfig({ quality: "high" }).qualityProfile.maxParticlesPerEffect, 16);
+});
+
+test("BattleScene passes one selected quality to all three VFX systems", () => {
+  const here = dirname(fileURLToPath(import.meta.url));
+  const battle = readFileSync(resolve(here, "../game/scenes/BattleScene.js"), "utf8");
+  assert.match(battle, /this\.graphicsQuality = detectEffectQuality\(this\)/);
+  assert.match(battle, /config: \{ quality: this\.graphicsQuality \}/);
+  assert.match(battle, /new EffectDirector\(this, \{\s*quality: this\.graphicsQuality/);
+  assert.match(battle, /new AmbientFX\(this, \{\s*quality: this\.graphicsQuality/);
 });
