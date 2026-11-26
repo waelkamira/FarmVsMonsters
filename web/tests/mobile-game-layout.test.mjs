@@ -21,7 +21,8 @@ test("Phaser rendering uses a capped device-pixel ratio and retains the fixed la
   assert.match(gameComponent, /width: 1120/);
   assert.match(gameComponent, /height: 680/);
   assert.match(gameComponent, /mode: Scale\.FIT/);
-  assert.match(gameComponent, /resolution: Math\.min\(window\.devicePixelRatio \|\| 1, 2\)/);
+  assert.match(gameComponent, /resolution: getGameRenderResolution\(/);
+  assert.match(gameComponent, /detectBrowserVFXQuality\(\)/);
 });
 
 test("mobile users can request and exit fullscreen from a direct button gesture", () => {
