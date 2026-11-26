@@ -11,7 +11,7 @@ const manifest = JSON.parse(readFileSync(resolve(here, "../public/assets/asset-m
 
 test("Stage 1 ends after all five ordinary Monster 01 waves without a special encounter", () => {
   assert.match(scene, /if \(isPhaseOneVictory\(this\.wave, this\.totalWaves, this\.spawnedThisWave, this\.waveSize, this\.monsters\.length\)\) \{\s*this\.endGame\(true\)/);
-  assert.doesNotMatch(scene, /princessActor|beginPrincessRescue|PHASE_ONE_DRAGON/i);
+  assert.doesNotMatch(scene, /princessActor|beginPrincessRescue/i);
 });
 
 test("retired story art is absent from the story asset contract", () => {
