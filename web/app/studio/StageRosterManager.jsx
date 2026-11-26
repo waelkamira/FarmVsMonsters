@@ -13,13 +13,13 @@ const BUILTIN_IMAGES={
  plant:{
   radish:"/assets/plants/radish-level-1.png",mushroom:"/assets/plants/mushroom.png",pumpkin:"/assets/plants/pumpkin.png",
   pineapple:"/assets/plants/pineapple-level-1.png",hazelnut:"/assets/plants/hazelnut-level-1.png",mango:"/assets/plants/mango-level-1.png",
-  "snow-thrower":"/assets/plants/Snow-thrower-level-1.png","electric-mushroom":"/assets/plants/Electric-mushroom-level-1.png"
+  "snow-thrower":"/assets/plants/Snow-thrower-level-1.png"
  },
  monster:{"monster-01":"/assets/characters/monsters/01/01.png"}
  };
-const BUILTIN_SHEETS=new Set(["radish","pineapple","hazelnut","mango","snow-thrower","electric-mushroom"]);
+const BUILTIN_SHEETS=new Set(["radish","pineapple","hazelnut","mango","snow-thrower"]);
 const makeKey=()=> "entry-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,7);
-function assetImage(asset,kind){return asset?.previewUrl||asset?.path||BUILTIN_IMAGES[kind]?.[asset?.id]||"";}
+function assetImage(asset,kind){if(asset?.id==="electric-mushroom"&&/Electric-mushroom-level-1\.png/i.test(asset?.path||""))return asset?.previewUrl||"";return asset?.previewUrl||asset?.path||BUILTIN_IMAGES[kind]?.[asset?.id]||"";}
 function AssetImage({asset,kind,large=false}) {
  const src=assetImage(asset,kind);
  const frameCount=Math.max(1,Number(asset?.frameCount)||((Number(asset?.rows)||1)*(Number(asset?.columns)||1)));
@@ -33,7 +33,7 @@ function AssetImage({asset,kind,large=false}) {
   Number(asset?.columns)||fallbackGrid.columns
  );
  return <div className={"stage-roster-image"+(large?" is-large":"")}>
-  {src?(spriteSheet?<div role="img" aria-label={asset?.name||asset?.id||"صورة الأصل"} className="stage-roster-first-frame" style={{backgroundImage:"url("+JSON.stringify(src)+")",backgroundSize:(columns*100)+"% "+(rows*100)+"%",backgroundPosition:"left top"}}/>:<img src={src} alt={asset?.name||asset?.id||"صورة الأصل"} loading="lazy" onError={event=>{event.currentTarget.style.display="none";}}/>):<span aria-hidden="true">{kind==="monster"?"👾":"🌱"}</span>}
+  {src?(spriteSheet?<div role="img" aria-label={asset?.name||asset?.id||"صورة الأصل"} className="stage-roster-first-frame" style={{backgroundImage:"url("+JSON.stringify(src)+")",backgroundSize:(columns*100)+"% "+(rows*100)+"%",backgroundPosition:"left top"}}/>:<img src={src} alt={asset?.name||asset?.id||"صورة الأصل"} loading="lazy" onError={event=>{event.currentTarget.style.display="none";}}/>):<span aria-hidden="true">{asset?.id==="electric-mushroom"?"⚡🍄":kind==="monster"?"👾":"🌱"}</span>}
  </div>;
 }
 export default function StageRosterManager({kind}){

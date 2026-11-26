@@ -296,7 +296,7 @@ test("home menu restores authenticated cloud progress and keeps guest entry", ()
 
 test("player guidance and roadmap match the current Phase 1 balance", () => {
   assert.match(guide, /15-energy collectible every 12 seconds/);
-  assert.match(gamePage, /Collect Mushroom energy/);
+  assert.match(gamePage, /Gather mushroom energy/);
   assert.match(scene, /this\.toggleCollectionMenu\(\)/);
   assert.match(scene, /this\.collectionMenuTab = "phases"/);
   assert.match(scene, /"treasure-cave-menu"/);

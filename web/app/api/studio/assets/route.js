@@ -17,6 +17,7 @@ import {safeAssetPath} from "../../../../game/studio/assetReadiness.mjs";
 import {assetOwnedPaths,assetPathStillUsed,removeManifestAssetReferences,synchronizeAssetAudit} from "../../../../game/studio/assetDeletion.mjs";
 import {validateEffectSelection} from "../../../../game/vfx/effects/effectAssignments.mjs";
 import {validateCharacterStateAnimation} from "../../../../game/studio/characterStateAnimations.mjs";
+import {resolvePlantSpriteMetadata} from "../../../../game/studio/spriteSheetGrid.mjs";
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
 const COOKIE="fvm_studio_session";
@@ -119,20 +120,12 @@ async function hydratePlantLibrary(registry,token,branch,expectedRegistrySha){
   if(!id)continue;
   const existing=known.get(id);
   const catalogPlant=published.get(id);
-  const frame=source.frameConfig;
-  const frameCount=Number(source.frameCount)||(
-   frame&&source.width&&source.height
-    ?Math.max(1,Math.floor(source.width/frame.frameWidth)*Math.floor(source.height/frame.frameHeight))
-    :1
-  );
+  const spriteMetadata=resolvePlantSpriteMetadata(source,catalogPlant);
   const record={
    ...(existing||{}),
    id,type:"plant",name:catalogPlant?.name||existing?.name||id,path:source.url,
    filename:path.basename(source.url),
-   rows:Number(source.rows)||(frame&&source.height?Math.max(1,Math.floor(source.height/frame.frameHeight)):1),
-   columns:Number(source.columns)||(frame&&source.width?Math.max(1,Math.floor(source.width/frame.frameWidth)):frameCount),
-   frameCount,
-   spriteSheet:Boolean(source.spriteSheet||source.type==="spritesheet"),
+   ...spriteMetadata,
    status:existing?.type==="monster"?"draft":(existing?.status||(catalogPlant?"published":"draft")),
    createdAt:existing?.createdAt||catalogPlant?.publishedAt||new Date().toISOString(),
    updatedAt:existing?.updatedAt||new Date().toISOString(),

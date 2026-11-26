@@ -47,3 +47,26 @@ export function resolveSpriteThumbnailGrid(frameCount, rows, columns) {
   const fallbackColumns = Math.ceil(Math.sqrt(count));
   return { rows: Math.ceil(count / fallbackColumns), columns: fallbackColumns };
 }
+
+
+// Prefer the published plant catalog's animation grid when the static asset manifest
+// only contains image dimensions and therefore cannot describe individual frames.
+export function resolvePlantSpriteMetadata(source = {}, catalogPlant = {}) {
+  const frame = source.frameConfig || {};
+  const frameRows = frame.frameHeight && source.height
+    ? Math.max(1, Math.floor(source.height / frame.frameHeight)) : 0;
+  const frameColumns = frame.frameWidth && source.width
+    ? Math.max(1, Math.floor(source.width / frame.frameWidth)) : 0;
+  const rows = Number(source.rows) || frameRows || Number(catalogPlant.rows) || 1;
+  const columns = Number(source.columns) || frameColumns || Number(catalogPlant.columns) || 1;
+  const measuredFrameCount = frameRows && frameColumns ? frameRows * frameColumns : 0;
+  const frameCount = Number(source.frameCount) || measuredFrameCount ||
+    Number(catalogPlant.frameCount) || rows * columns;
+  return {
+    rows,
+    columns,
+    frameCount: Math.max(1, frameCount),
+    spriteSheet: Boolean(source.spriteSheet || source.type === "spritesheet" ||
+      catalogPlant.spriteSheet || frameCount > 1)
+  };
+}
