@@ -120,7 +120,7 @@ export default function StageOneSeedSelectionPage() {
   }, []);
 
   function togglePlant(plant) {
-    if (plant.required && !studioPlaytest) return;
+    if (plant.required && !studioPlaytest && !stagePlantsConfigured) return;
     if (!unlockedIds.includes(plant.id)) {
       setNotice(ar ? "هذه النبتة مقفولة في هذه المرحلة." : "This plant is locked for this stage.");
       return;
@@ -140,7 +140,7 @@ export default function StageOneSeedSelectionPage() {
   function beginBattle() {
     const hasMushroom = selectedPlants.some((plant) => plant.id === "mushroom");
     const minimumSeeds = studioPlaytest || stagePlantsConfigured ? 1 : 2;
-    const mustKeepMushroom = !studioPlaytest && (!stagePlantsConfigured || plantCatalog.some((plant) => plant.id === "mushroom"));
+    const mustKeepMushroom = !studioPlaytest && !stagePlantsConfigured;
     if (selectedPlants.length < minimumSeeds || (mustKeepMushroom && !hasMushroom)) {
       setNotice(ar ? "اختر نباتاً متاحاً واحداً على الأقل، واحتفظ بفطر الطاقة إذا كان ضمن نباتات هذه المرحلة." : "Choose at least one available plant, and keep the Energy Mushroom if it is part of this stage.");
       return;
@@ -201,7 +201,7 @@ export default function StageOneSeedSelectionPage() {
                 <strong>{ar ? plant.ar : plant.name}</strong>
                 <small>{ar ? plant.roleAr : plant.role}</small>
                 <span className="seed-select-cost">🍄 {plant.cost}</span>
-                {plant.required && !studioPlaytest && <em>{ar ? "أساسي" : "REQUIRED"}</em>}{plant.testing && <em className="seed-select-testing">{ar ? "اختبار محلي" : "LOCAL TEST"}</em>}
+                {plant.required && !studioPlaytest && !stagePlantsConfigured && <em>{ar ? "أساسي" : "REQUIRED"}</em>}{plant.testing && <em className="seed-select-testing">{ar ? "اختبار محلي" : "LOCAL TEST"}</em>}
                 {!unlocked && <em className="seed-select-locked-label">{ar ? "مقفلة" : "LOCKED"}</em>}
               </button>
             );
