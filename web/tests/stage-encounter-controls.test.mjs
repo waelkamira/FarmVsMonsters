@@ -168,6 +168,10 @@ test("stage publication controls player-visible plants, per-stage unlocks and ba
  assert.match(api,/unlocked:item\.unlocked!==false/);
  assert.match(api,/published:raw\?\.published===true/);
  assert.match(api,/background=typeof raw\?\.background==="string"/);
+ assert.match(api,/export async function GET\(req\)/);
+ assert.match(api,/if\(authorized\(req\)\)/);
+ assert.match(api,/filter\(\(\[,stage\]\)=>stage\.published===true\)/);
+ assert.match(api,/plants:stage\.plants\.filter\(plant=>plant\.visible!==false&&plant\.enabled!==false\)/);
  assert.match(manager,/async function publishStage\(\)/);
  assert.match(manager,/published:true/);
  assert.match(manager,/published:false/);
@@ -179,7 +183,7 @@ test("stage publication controls player-visible plants, per-stage unlocks and ba
  assert.match(selection,/configuredStage\?\.published === true/);
  assert.match(selection,/visibleStageEntries\.filter\(entry => entry\.unlocked !== false\)/);
  assert.match(selection,/This plant is locked for this stage/);
- assert.match(battle,/this\.stageEncounterConfig\?\.published === true/);
+ assert.match(battle,/this\.stageEncounterConfig\?\.published === true \|\| this\.isStudioPlaytest/);
  assert.match(battle,/entry\.unlocked !== false/);
  assert.match(battle,/stage-background/);
  assert.match(battle,/backgroundKey/);
