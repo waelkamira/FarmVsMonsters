@@ -251,6 +251,7 @@ test("stage playtest is restricted to the configured visible roster instead of e
  assert.match(selection,/isStudioPlaytest \? authoredStageIds : stageUnlockedIds/);
  assert.match(battle,/const stageAllowedTypes = this\.stagePlantRosterConfigured/);
  assert.match(battle,/this\.isStudioPlaytest \|\| entry\.unlocked !== false/);
+ assert.match(battle,/selectedTypes = this\.stagePlantRosterConfigured[\s\S]*?this\.stagePlantEntries\.map/);
 });
 
 test("publishing refuses visible plants that are absent from the player release catalog",()=>{
