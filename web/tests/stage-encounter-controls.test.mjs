@@ -53,7 +53,7 @@ test("stage seed selection respects only enabled plants for a configured stage",
  assert.match(selection,/new URLSearchParams\(window\.location\.search\)\.get\("stage"\)/);
  assert.match(selection,/stages\?\.\[String\(activeStage\)\]/);
  assert.match(selection,/router\.push\("\/game\?stage=" \+ stageNumber \+ \(studioPlaytest \? "&studioPlaytest=1" : ""\)\)/);
- assert.match(selection,/setStagePlantsConfigured\(publishedStage\)/);
+ assert.match(selection,/setStagePlantsConfigured\(useStageRoster\)/);
  assert.match(selection,/farmVsMonsters\.selectedPlants\.stage\.\" \+ activeStage/);
  assert.match(selection,/window\.localStorage\.setItem\("farmVsMonsters\.selectedPlants", savedSelection\)/);
  assert.match(selection,/selectedPlants\.length < minimumSeeds/);
