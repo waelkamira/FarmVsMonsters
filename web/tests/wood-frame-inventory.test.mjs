@@ -68,3 +68,11 @@ test("the battle seed bar renders only equipped plant cards without empty placeh
   assert.doesNotMatch(scene, /Empty slots remain visible/);
   assert.match(scene, /plantOptions\.filter\(\(plant\) => selectedTypes\.includes\(plant\.type\)\)/);
 });
+
+
+test("battlefield fallback does not paint a full-screen green background wash", () => {
+  const drawField = scene.match(/drawField\(\)\s*\{([\s\S]*?)\n  \}\n\n  createFarmBackground/);
+  assert.ok(drawField, "drawField implementation exists");
+  assert.doesNotMatch(drawField[1], /fillGradientStyle\(0xb9d98a|fillRect\(0, 0, 1120, 680\)/);
+  assert.match(drawField[1], /fillRoundedRect\(185, 115, 690, 500/);
+});
