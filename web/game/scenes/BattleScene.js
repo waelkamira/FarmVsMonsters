@@ -1083,27 +1083,43 @@ export default class BattleScene extends Scene {
     let selectedTypes = ["radish", "mushroom"];
     try {
       const unlocked = new Set([...loadUnlockedPlantIds(window.localStorage), ...(this.studioPlants || []).map((plant) => plant.id)]);
+      const stageAllowedTypes = this.stagePlantRosterConfigured
+        ? new Set(this.stagePlantEntries.map((entry) => entry.id))
+        : null;
       const availableTypes = new Set(plantOptions.map((plant) => plant.type).filter((type) =>
-        PLAYTEST_ALL_PLANTS || unlocked.has(type)
+        stageAllowedTypes
+          ? stageAllowedTypes.has(type)
+          : PLAYTEST_ALL_PLANTS || unlocked.has(type)
       ));
       const saved = JSON.parse(window.localStorage.getItem("farmVsMonsters.selectedPlants") || "null");
-      // Apply the same six-packet limit and starter ordering as pre-battle selection.
-      const testingTypes = (this.studioPlants || [])
-        .filter((plant) => plant.testOnly)
-        .map((plant) => plant.id)
-        .filter((type) => availableTypes.has(type));
-      const preferredLoadout = PLAYTEST_ALL_PLANTS
-        ? [...ALL_PLAYTEST_PLANT_IDS, ...testingTypes, ...(Array.isArray(saved) ? saved : [])]
-        : Array.isArray(saved)
-          ? ["mushroom", "radish", ...testingTypes, ...saved.filter((type) => availableTypes.has(type))]
-          : [...availableTypes];
-      selectedTypes = normalizeSeedLoadout(preferredLoadout, [...availableTypes], [...availableTypes]);
+      if (this.stagePlantRosterConfigured) {
+        // A Studio stage roster is the source of truth for playtest availability,
+        // not campaign unlock progress or the built-in starter loadout.
+        const requestedLoadout = Array.isArray(saved) ? saved : [...availableTypes];
+        selectedTypes = [...new Set(requestedLoadout.filter((type) => availableTypes.has(type)))].slice(0, MAX_SEED_PACKETS);
+      } else {
+        // Apply the campaign six-packet limit and starter ordering as usual.
+        const testingTypes = (this.studioPlants || [])
+          .filter((plant) => plant.testOnly)
+          .map((plant) => plant.id)
+          .filter((type) => availableTypes.has(type));
+        const preferredLoadout = PLAYTEST_ALL_PLANTS
+          ? [...ALL_PLAYTEST_PLANT_IDS, ...testingTypes, ...(Array.isArray(saved) ? saved : [])]
+          : Array.isArray(saved)
+            ? ["mushroom", "radish", ...testingTypes, ...saved.filter((type) => availableTypes.has(type))]
+            : [...availableTypes];
+        selectedTypes = normalizeSeedLoadout(preferredLoadout, [...availableTypes], [...availableTypes]);
+      }
     } catch {
-      // Storage failures keep the starter loadout playable.
-      selectedTypes = ["radish", "mushroom"];
+      // Storage failures keep the configured stage roster playable when possible.
+      selectedTypes = this.stagePlantRosterConfigured
+        ? this.stagePlantEntries.map((entry) => entry.id).slice(0, MAX_SEED_PACKETS)
+        : ["radish", "mushroom"];
     }
-    if (!selectedTypes.includes("mushroom")) selectedTypes.unshift("mushroom");
-    if (!selectedTypes.includes("radish")) selectedTypes.push("radish");
+    if (!this.stagePlantRosterConfigured) {
+      if (!selectedTypes.includes("mushroom")) selectedTypes.unshift("mushroom");
+      if (!selectedTypes.includes("radish")) selectedTypes.push("radish");
+    }
     this.plantCardsByType = {};
     const packetStartX = 164;
     const packetGap = selectedTypes.length > 5 ? 78 : 90;
