@@ -1179,3 +1179,10 @@ The game remains authored in a fixed 1120×680 landscape coordinate space. CI ca
 - Removed the stage-wide color filter and lighting wash from the battlefield while preserving ambient particles, breeze, rain, and lightning effects.
 - Added regression coverage to ensure seed cards stay functional without frame artwork and collection locked-card artwork remains intact.
 - GitHub Actions validation is required; no local browser gameplay verification is claimed.
+
+
+## 2026-11-26 — Remove battle seed-card frames and green fallback wash
+- Removed only the outer frame artwork from battle plant cards; kept the glass surface, plant icon, cost, cooldown state, hit target, and selection interactions.
+- Removed the full-screen green fallback wash behind the battlefield fallback artwork; retained the existing battlefield image and all stage lighting, weather, particles, and combat effects.
+- Added regression coverage for the frame-free plant cards and the absence of the green fallback wash.
+- GitHub Actions validation is required; no local browser gameplay verification is claimed.
