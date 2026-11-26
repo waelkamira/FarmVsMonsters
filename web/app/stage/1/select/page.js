@@ -88,8 +88,10 @@ export default function StageOneSeedSelectionPage() {
       let unlocked = STARTER_LOADOUT;
       try { unlocked = loadUnlockedPlantIds(window.localStorage); } catch { /* Starter seeds remain available. */ }
       const studioIds = studioPlants.map((plant) => plant.id);
-      // Temporary open-roster mode: all current built-in and Studio catalog plants are unlocked.
-      const safeUnlocked = [...new Set([...STARTER_LOADOUT, ...unlocked, ...nextPlants.map((plant) => plant.id), ...studioIds])];
+      // Only an authenticated Studio playtest may unlock the full catalog; normal stage entry follows campaign progression.
+      const safeUnlocked = isStudioPlaytest
+        ? [...new Set([...STARTER_LOADOUT, ...unlocked, ...nextPlants.map((plant) => plant.id), ...studioIds])]
+        : [...new Set([...STARTER_LOADOUT, ...unlocked])];
       setUnlockedIds(safeUnlocked);
       try {
         const stageSelectionKey = "farmVsMonsters.selectedPlants.stage." + activeStage;
