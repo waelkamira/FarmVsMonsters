@@ -144,6 +144,7 @@ test("Studio admin playtests bypass campaign locks and stage roster restrictions
  assert.match(read("app/game/page.js"),/fetch\("\/api\/studio\/session"/);
  assert.match(read("app/game/page.js"),/blockStudioPlaytest/);
  assert.match(selection,/configuredStage\?\.plantsConfigured && !isStudioPlaytest/);
+ assert.match(selection,/const safeUnlocked = isStudioPlaytest\s*\? \[\.\.\.new Set\(\[\.\.\.STARTER_LOADOUT, \.\.\.unlocked, \.\.\.nextPlants\.map\(\(plant\) => plant\.id\), \.\.\.studioIds\]\)\]\s*: \[\.\.\.new Set\(\[\.\.\.STARTER_LOADOUT, \.\.\.unlocked\]\)\]/);
  assert.match(selection,/plant\.required && !studioPlaytest/);
  assert.match(selection,/studioPlaytest \? "&studioPlaytest=1" : ""/);
  assert.match(battle,/get\("studioPlaytest"\) === "1"/);
