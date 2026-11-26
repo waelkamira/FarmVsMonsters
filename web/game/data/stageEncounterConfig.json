@@ -19,35 +19,28 @@
       ],
       "plants": [
         {
-          "id": "radish",
-          "count": 100,
-          "visible": true,
-          "enabled": true,
-          "unlocked": true
-        },
-        {
-          "id": "mushroom",
-          "count": 100,
-          "visible": true,
-          "enabled": true,
-          "unlocked": true
-        },
-        {
-          "id": "pepper-flamethrower-level-1",
-          "count": 25,
+          "id": "corn-monster",
+          "count": 1,
           "visible": true,
           "enabled": true,
           "unlocked": true
         },
         {
           "id": "hazelnut",
-          "count": 2,
+          "count": 1,
           "visible": true,
           "enabled": true,
           "unlocked": true
         },
         {
-          "id": "snow-thrower",
+          "id": "pepper-flamethrower-level-1",
+          "count": 1,
+          "visible": true,
+          "enabled": true,
+          "unlocked": true
+        },
+        {
+          "id": "coconut-level-1",
           "count": 1,
           "visible": true,
           "enabled": true,
@@ -56,13 +49,13 @@
         {
           "id": "pumpkin",
           "count": 1,
-          "visible": false,
-          "enabled": false,
+          "visible": true,
+          "enabled": true,
           "unlocked": false
         }
       ],
       "background": "/assets/backgrounds/farm-battlefield-clean.svg",
-      "published": true,
+      "published": false,
       "monstersConfigured": true,
       "plantsConfigured": true
     }
