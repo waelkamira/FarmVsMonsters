@@ -253,7 +253,8 @@ export default class BattleScene extends Scene {
       const stageNumber = Number.isInteger(requestedStage) ? Math.max(1, Math.min(100, requestedStage)) : 1;
       const stageConfig = this.cache.json.get("stage-encounter-config")?.stages?.[String(stageNumber)];
       const background = stageConfig?.background;
-      if (typeof background === "string" && background.startsWith("/assets/backgrounds/") && !background.includes("..")) this.load.image("stage-background", background);
+      const studioDraftPreview = new URLSearchParams(window.location.search).get("studioPlaytest") === "1";
+      if ((stageConfig?.published === true || studioDraftPreview) && typeof background === "string" && background.startsWith("/assets/backgrounds/") && !background.includes("..")) this.load.image("stage-background", background);
     });
     this.load.json("stage-encounter-config", "/api/studio/stage-encounters");
     this.load.on("loaderror", (file) => {
