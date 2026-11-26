@@ -123,7 +123,7 @@ export async function PATCH(req){
  let body;try{body=await req.json();}catch{return NextResponse.json({error:"Invalid stage settings."},{status:400});}
  const config=normalizeConfig(body.config);
  try{
-  const driver=process.env.STUDIO_STORAGE_DRIVER||"local";
+  const driver=getStorageDriver();
   const invalidReferences=validateStageMonsterReferences(config,await readMonsterAssets(driver));
   if(invalidReferences.length){
    const details=invalidReferences.map(item=>"المرحلة "+item.stageId+"، الموجة "+item.wave+": "+item.id).join("؛ ");
