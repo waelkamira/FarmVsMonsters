@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-25T22:01:29.397Z",
-  "assetCount": 144,
-  "totalBytes": 21533023,
+  "generatedAt": "2026-11-26T17:18:46.178Z",
+  "assetCount": 145,
+  "totalBytes": 21538357,
   "groups": {
     "audio": [
       {
@@ -1120,6 +1120,16 @@
         "sha256": "30572f40a67eec42f4ceec6b79ed9017a0313f2a524dcf916a2226301990a207",
         "width": 213,
         "height": 114
+      },
+      {
+        "key": "projectiles-plants-radish-level-1-projectile-eed33cde592cba25c165b1d53a277b765c129083e8a2984063c31876c6ce27de",
+        "url": "/assets/projectiles/plants/radish-level-1-projectile-eed33cde592cba25c165b1d53a277b765c129083e8a2984063c31876c6ce27de.png",
+        "type": "image",
+        "group": "projectiles",
+        "bytes": 5292,
+        "sha256": "eed33cde592cba25c165b1d53a277b765c129083e8a2984063c31876c6ce27de",
+        "width": 70,
+        "height": 63
       }
     ],
     "vfx-icons": [
@@ -1128,8 +1138,8 @@
         "url": "/assets/vfx-icons/bubble-pop-death.svg",
         "type": "svg",
         "group": "vfx-icons",
-        "bytes": 759,
-        "sha256": "d317b87af168a43f54af4f43b723fd071fbf2d4d753be2003bc9becedbb1b400",
+        "bytes": 765,
+        "sha256": "75380c54569ed21c07f5f048922f47b86407a1b3c0a69b70c24ef8bacf34947a",
         "width": 64,
         "height": 64
       },
@@ -1148,8 +1158,8 @@
         "url": "/assets/vfx-icons/cannon-swell.svg",
         "type": "svg",
         "group": "vfx-icons",
-        "bytes": 793,
-        "sha256": "c1992382c5d5a137c7df452446efa922ac0285086c6f9a30eb205ae0bb653b36",
+        "bytes": 799,
+        "sha256": "6e63f5f4ed4061f3a93a70c0cbde356ccb51f18fa913bb22b72ae52b65087ac2",
         "width": 64,
         "height": 64
       },
@@ -1188,8 +1198,8 @@
         "url": "/assets/vfx-icons/comic-stars.svg",
         "type": "svg",
         "group": "vfx-icons",
-        "bytes": 1376,
-        "sha256": "c99ce0df3649e110c327b098ee942376849d9af4c35bfb31f97afa16586ba427",
+        "bytes": 1382,
+        "sha256": "7ccbfb2dd7ed2c3c81d40e872c585a32983703839998121b40049c4a7690c938",
         "width": 64,
         "height": 64
       },
@@ -1268,8 +1278,8 @@
         "url": "/assets/vfx-icons/heavy-landing.svg",
         "type": "svg",
         "group": "vfx-icons",
-        "bytes": 960,
-        "sha256": "a7b16add7558a81cfba0c68b8f78887b010ab06fca297b94524bf11840226de9",
+        "bytes": 966,
+        "sha256": "7d1dee60f5219378d633caf6dcfe11f74ffd2107e05ed2e54b847c9274082d4f",
         "width": 64,
         "height": 64
       },
@@ -1288,8 +1298,8 @@
         "url": "/assets/vfx-icons/jolt-bounce.svg",
         "type": "svg",
         "group": "vfx-icons",
-        "bytes": 861,
-        "sha256": "5064381794a3bf16043f341eda89f41b501de0dc535881218154cdb41983650f",
+        "bytes": 867,
+        "sha256": "0f9a8628afadc4ed1cedfff440b9a08330c3bbb9543f120448a11cde802b984c",
         "width": 64,
         "height": 64
       },
@@ -1378,8 +1388,8 @@
         "url": "/assets/vfx-icons/rage-steam.svg",
         "type": "svg",
         "group": "vfx-icons",
-        "bytes": 881,
-        "sha256": "1819e7429f07ed7f931d6c2f2ea5ce3b59d99f3a7662149db9c680c05fa789e5",
+        "bytes": 887,
+        "sha256": "0a0dc1f9db03e3204f7a95dee0e67dd5d820ebfbd63d147ff63d6324696afdc5",
         "width": 64,
         "height": 64
       },
@@ -1418,8 +1428,8 @@
         "url": "/assets/vfx-icons/speed-dust.svg",
         "type": "svg",
         "group": "vfx-icons",
-        "bytes": 770,
-        "sha256": "a7b434c55becdbf09748553b2e000b3f1452d8e4543c50e49ddffa70cdbae365",
+        "bytes": 776,
+        "sha256": "c67c01f60410f7c16178436de57aa4c3247bb4a1e22913046951b20dc50bfe42",
         "width": 64,
         "height": 64
       },
@@ -2555,12 +2565,22 @@
       "height": 114
     },
     {
+      "key": "projectiles-plants-radish-level-1-projectile-eed33cde592cba25c165b1d53a277b765c129083e8a2984063c31876c6ce27de",
+      "url": "/assets/projectiles/plants/radish-level-1-projectile-eed33cde592cba25c165b1d53a277b765c129083e8a2984063c31876c6ce27de.png",
+      "type": "image",
+      "group": "projectiles",
+      "bytes": 5292,
+      "sha256": "eed33cde592cba25c165b1d53a277b765c129083e8a2984063c31876c6ce27de",
+      "width": 70,
+      "height": 63
+    },
+    {
       "key": "vfx-icons-bubble-pop-death",
       "url": "/assets/vfx-icons/bubble-pop-death.svg",
       "type": "svg",
       "group": "vfx-icons",
-      "bytes": 759,
-      "sha256": "d317b87af168a43f54af4f43b723fd071fbf2d4d753be2003bc9becedbb1b400",
+      "bytes": 765,
+      "sha256": "75380c54569ed21c07f5f048922f47b86407a1b3c0a69b70c24ef8bacf34947a",
       "width": 64,
       "height": 64
     },
@@ -2579,8 +2599,8 @@
       "url": "/assets/vfx-icons/cannon-swell.svg",
       "type": "svg",
       "group": "vfx-icons",
-      "bytes": 793,
-      "sha256": "c1992382c5d5a137c7df452446efa922ac0285086c6f9a30eb205ae0bb653b36",
+      "bytes": 799,
+      "sha256": "6e63f5f4ed4061f3a93a70c0cbde356ccb51f18fa913bb22b72ae52b65087ac2",
       "width": 64,
       "height": 64
     },
@@ -2619,8 +2639,8 @@
       "url": "/assets/vfx-icons/comic-stars.svg",
       "type": "svg",
       "group": "vfx-icons",
-      "bytes": 1376,
-      "sha256": "c99ce0df3649e110c327b098ee942376849d9af4c35bfb31f97afa16586ba427",
+      "bytes": 1382,
+      "sha256": "7ccbfb2dd7ed2c3c81d40e872c585a32983703839998121b40049c4a7690c938",
       "width": 64,
       "height": 64
     },
@@ -2699,8 +2719,8 @@
       "url": "/assets/vfx-icons/heavy-landing.svg",
       "type": "svg",
       "group": "vfx-icons",
-      "bytes": 960,
-      "sha256": "a7b16add7558a81cfba0c68b8f78887b010ab06fca297b94524bf11840226de9",
+      "bytes": 966,
+      "sha256": "7d1dee60f5219378d633caf6dcfe11f74ffd2107e05ed2e54b847c9274082d4f",
       "width": 64,
       "height": 64
     },
@@ -2719,8 +2739,8 @@
       "url": "/assets/vfx-icons/jolt-bounce.svg",
       "type": "svg",
       "group": "vfx-icons",
-      "bytes": 861,
-      "sha256": "5064381794a3bf16043f341eda89f41b501de0dc535881218154cdb41983650f",
+      "bytes": 867,
+      "sha256": "0f9a8628afadc4ed1cedfff440b9a08330c3bbb9543f120448a11cde802b984c",
       "width": 64,
       "height": 64
     },
@@ -2809,8 +2829,8 @@
       "url": "/assets/vfx-icons/rage-steam.svg",
       "type": "svg",
       "group": "vfx-icons",
-      "bytes": 881,
-      "sha256": "1819e7429f07ed7f931d6c2f2ea5ce3b59d99f3a7662149db9c680c05fa789e5",
+      "bytes": 887,
+      "sha256": "0a0dc1f9db03e3204f7a95dee0e67dd5d820ebfbd63d147ff63d6324696afdc5",
       "width": 64,
       "height": 64
     },
@@ -2849,8 +2869,8 @@
       "url": "/assets/vfx-icons/speed-dust.svg",
       "type": "svg",
       "group": "vfx-icons",
-      "bytes": 770,
-      "sha256": "a7b434c55becdbf09748553b2e000b3f1452d8e4543c50e49ddffa70cdbae365",
+      "bytes": 776,
+      "sha256": "c67c01f60410f7c16178436de57aa4c3247bb4a1e22913046951b20dc50bfe42",
       "width": 64,
       "height": 64
     },
