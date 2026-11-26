@@ -79,7 +79,7 @@ test("Studio API preserves published 3x3 grids for the five affected plant thumb
   assert.equal(radish.columns, 3);
   assert.equal(radish.spriteSheet, true);
 
-  // Electric Mushroom is a built-in rather than a published Studio catalog entry.
-  assert.match(roster, /"electric-mushroom":\"\/assets\/plants\/Electric-mushroom-level-1\.png\"/);
-  assert.match(roster, /BUILTIN_SHEETS=new Set\(\[[^\]]*"electric-mushroom"[^\]]*\]\)/);
+  // Electric Mushroom artwork was intentionally removed; Studio must not point at a missing PNG.
+  assert.doesNotMatch(roster, /Electric-mushroom-level-1\\.png/);
+  assert.match(roster, /asset\\?\\.id==="electric-mushroom"\\?"⚡🍄"/);
 });
