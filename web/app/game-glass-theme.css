@@ -366,3 +366,20 @@ button:focus-visible,a:focus-visible,input:focus-visible {
   .account-security,.account-feedback,.account-status,.game-panel,
   .seed-select-panel { background:rgba(229,248,218,.94) !important;backdrop-filter:none !important;-webkit-backdrop-filter:none !important; }
 }
+
+
+/* Home-screen utility navigation uses the same frosted controls as the rest of the UI. */
+.codex-home-utility-links a,
+.codex-home-settings-link {
+  border:1px solid rgba(255,255,255,.68) !important;
+  border-radius:14px !important;
+  background:rgba(242,255,228,.28) !important;
+  color:#f7ffe9 !important;
+  -webkit-backdrop-filter:blur(9px) saturate(140%);
+  backdrop-filter:blur(9px) saturate(140%);
+  box-shadow:0 8px 22px rgba(9,40,20,.2),inset 0 1px 0 rgba(255,255,255,.56) !important;
+}
+.codex-home-utility-links a:hover,.codex-home-settings-link:hover {
+  background:rgba(248,255,235,.42) !important;
+  transform:translateY(-2px);
+}
