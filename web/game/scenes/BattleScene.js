@@ -949,6 +949,8 @@ export default class BattleScene extends Scene {
 
     const { col, row } = this.worldToGrid(pointer.x, pointer.y);
     if (col < 0 || row < 0 || col >= COLUMNS || row >= LANES) return;
+    // Empty planting targets stay completely invisible until a seed is selected.
+    if (!this.selectedPlant) return;
 
     const polygon = this.cellPolygon(col, row);
     const occupied = this.plants.some((plant) => plant.alive && plant.col === col && plant.row === row);
