@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useLocale } from "../app/LocaleProvider";
+import { detectBrowserVFXQuality, getGameRenderResolution } from "./vfx/core/VFXConfig.mjs";
 
 export default function PhaserGame() {
   const { t, locale } = useLocale();
@@ -65,7 +66,10 @@ export default function PhaserGame() {
           parent: hostRef.current,
           width: 1120,
           height: 680,
-          resolution: Math.min(window.devicePixelRatio || 1, 2),
+          resolution: getGameRenderResolution(
+            window.devicePixelRatio || 1,
+            detectBrowserVFXQuality()
+          ),
           backgroundColor: "#a8c978",
           scale: {
             mode: Scale.FIT,
