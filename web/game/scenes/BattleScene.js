@@ -10,6 +10,7 @@ import { getMonsterReactionProfile, getPlantAnimationProfile, getPlantIdleMotion
 import { createStudioAnimationProfile } from "../studio/animationProfiles.mjs";
 import { getSpriteFrameRectangles } from "../studio/spriteSheetGrid.mjs";
 import { createPhaserSkeletalRig } from "../studio/phaserSkeletalRig.mjs";
+import { getFarmerSheetReferenceHeight, resolveFarmerSheetScale } from "../visuals/farmerFrameQuality.mjs";
 import { createSkeletalAnimationController, resolveSkeletalIdleClip } from "../studio/animationStateMachine.mjs";
 import { circleIntersectsConvexPolygon, convexPolygonsOverlap } from "../studio/skeletalCollision.mjs";
 import { transformRigHitboxToWorld, transformRigPointToWorld } from "../studio/skeletalWorldTransform.mjs";
@@ -1323,84 +1324,111 @@ export default class BattleScene extends Scene {
 
   }
 
+  measureFarmerFrameBounds(texture, frame) {
+    const cacheKey = texture.key + ":" + frame.name;
+    const cached = this.farmerFrameMetrics?.get(cacheKey);
+    if (cached) return cached;
+
+    try {
+      const sourceImage = texture.getSourceImage();
+      const canvas = this.farmerMetricsCanvas ||= document.createElement("canvas");
+      canvas.width = frame.width;
+      canvas.height = frame.height;
+      const context = canvas.getContext("2d", { willReadFrequently: true });
+      if (!context || !sourceImage) return null;
+
+      const sourceX = Number.isFinite(frame.cutX) ? frame.cutX : frame.x;
+      const sourceY = Number.isFinite(frame.cutY) ? frame.cutY : frame.y;
+      context.clearRect(0, 0, canvas.width, canvas.height);
+      context.drawImage(
+        sourceImage,
+        sourceX, sourceY, frame.width, frame.height,
+        0, 0, frame.width, frame.height
+      );
+      const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
+      let minX = canvas.width;
+      let minY = canvas.height;
+      let maxX = -1;
+      let maxY = -1;
+
+      for (let y = 0; y < canvas.height; y += 1) {
+        for (let x = 0; x < canvas.width; x += 1) {
+          if (pixels[(y * canvas.width + x) * 4 + 3] <= 16) continue;
+          if (x < minX) minX = x;
+          if (x > maxX) maxX = x;
+          if (y < minY) minY = y;
+          if (y > maxY) maxY = y;
+        }
+      }
+
+      if (maxX < minX || maxY < minY) return null;
+      const bounds = {
+        minX, minY, maxX, maxY,
+        width: maxX - minX + 1,
+        height: maxY - minY + 1
+      };
+      this.farmerFrameMetrics.set(cacheKey, bounds);
+      return bounds;
+    } catch {
+      // Keep the game playable if canvas pixel reads are unavailable.
+      return null;
+    }
+  }
+
   normalizeFarmerFrame() {
     const sprite = this.cavemanVisual;
     if (!sprite || !sprite.active || !sprite.frame) return;
 
+    const texture = sprite.texture;
+    const textureKey = texture.key;
     const frame = sprite.frame;
-    const textureKey = sprite.texture.key;
-    const cacheKey = textureKey + ":" + frame.name;
-    let bounds = this.farmerFrameMetrics?.get(cacheKey);
+    const currentKey = textureKey + ":" + frame.name;
+    let bounds = this.farmerFrameMetrics?.get(currentKey);
 
     if (!bounds) {
-      try {
-        const sourceImage = sprite.texture.getSourceImage();
-        const canvas = document.createElement("canvas");
-        canvas.width = frame.width;
-        canvas.height = frame.height;
-        const context = canvas.getContext("2d", { willReadFrequently: true });
-        if (!context || !sourceImage) throw new Error("Canvas alpha sampling is unavailable.");
+      bounds = this.measureFarmerFrameBounds(texture, frame);
+    }
+    if (!bounds) {
+      sprite.setOrigin(0.5, 1).setScale(0.63);
+      return;
+    }
 
-        context.clearRect(0, 0, canvas.width, canvas.height);
-        const sourceX = Number.isFinite(frame.cutX) ? frame.cutX : frame.x;
-        const sourceY = Number.isFinite(frame.cutY) ? frame.cutY : frame.y;
-        context.drawImage(
-          sourceImage,
-          sourceX, sourceY, frame.width, frame.height,
-          0, 0, frame.width, frame.height
-        );
-        const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
-        let minX = canvas.width;
-        let minY = canvas.height;
-        let maxX = -1;
-        let maxY = -1;
-
-        for (let y = 0; y < canvas.height; y += 1) {
-          for (let x = 0; x < canvas.width; x += 1) {
-            if (pixels[(y * canvas.width + x) * 4 + 3] <= 16) continue;
-            if (x < minX) minX = x;
-            if (x > maxX) maxX = x;
-            if (y < minY) minY = y;
-            if (y > maxY) maxY = y;
-          }
-        }
-
-        if (maxX < minX || maxY < minY) throw new Error("The current farmer frame is empty.");
-        bounds = {
-          minX, minY, maxX, maxY,
-          width: maxX - minX + 1,
-          height: maxY - minY + 1
-        };
-        this.farmerFrameMetrics.set(cacheKey, bounds);
-
-        // The first standing frame defines the target visible size for every action.
-        if (textureKey === "farmer-idle" && this.farmerTargetDisplayHeight === null) {
-          this.farmerTargetDisplayHeight = bounds.height * 0.63;
-        }
-      } catch (error) {
-        // Keep the game playable on browsers that block canvas pixel reads.
+    // Measure every pose once and scale each action sheet from its tallest
+    // visible pose, not whichever frame happened to play first.
+    this.farmerTextureReferenceHeights ||= new Map();
+    let referenceHeight = this.farmerTextureReferenceHeights.get(textureKey);
+    if (!Number.isFinite(referenceHeight)) {
+      const frameEntries = Object.entries(texture.frames || {})
+        .filter(([name]) => name !== "__BASE")
+        .map(([, candidate]) => candidate);
+      const frameHeights = frameEntries
+        .map((candidate) => this.measureFarmerFrameBounds(texture, candidate)?.height)
+        .filter((height) => Number.isFinite(height) && height > 0);
+      referenceHeight = getFarmerSheetReferenceHeight(frameHeights);
+      if (!referenceHeight) {
         sprite.setOrigin(0.5, 1).setScale(0.63);
         return;
       }
+      this.farmerTextureReferenceHeights.set(textureKey, referenceHeight);
     }
 
+    // The idle sheet establishes one world-space body height for all actions.
+    if (textureKey === "farmer-idle" && this.farmerTargetDisplayHeight === null) {
+      this.farmerTargetDisplayHeight = referenceHeight * 0.63;
+    }
     if (this.farmerTargetDisplayHeight === null) {
-      this.farmerTargetDisplayHeight = bounds.height * 0.63;
+      this.farmerTargetDisplayHeight = referenceHeight * 0.63;
     }
 
-    // Phaser's origin is the stable world anchor: center of the visible feet,
-    // not the bottom edge of a sheet cell full of transparent pixels.
     sprite.setOrigin(
       (bounds.minX + bounds.maxX + 1) / (2 * frame.width),
       (bounds.maxY + 1) / frame.height
     );
-    // Keep one scale for the entire spritesheet. Recalculating it from each
-    // planting frame makes crouched poses (with a shorter alpha silhouette)
-    // enlarge dramatically, especially the head and torso.
     this.farmerTextureScales ||= new Map();
     let textureScale = this.farmerTextureScales.get(textureKey);
     if (!Number.isFinite(textureScale)) {
-      textureScale = this.farmerTargetDisplayHeight / bounds.height;
+      textureScale = resolveFarmerSheetScale(this.farmerTargetDisplayHeight, [referenceHeight]);
+      if (!Number.isFinite(textureScale)) textureScale = 0.63;
       this.farmerTextureScales.set(textureKey, textureScale);
     }
     sprite.setScale(textureScale);
