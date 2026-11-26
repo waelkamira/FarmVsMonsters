@@ -139,7 +139,10 @@ test("Studio admin playtests bypass campaign locks and stage roster restrictions
  const selection=read("app/stage/1/select/page.js");
  const manager=read("app/studio/StageRosterManager.jsx");
  assert.match(manager,/studioPlaytest=1/);
- assert.match(selection,/get\("studioPlaytest"\) === "1"/);
+ assert.match(selection,/get\("studioPlaytest"\) === "1" && studioSession\?\.authenticated === true/);
+ assert.match(selection,/fetch\("\/api\/studio\/session"/);
+ assert.match(read("app/game/page.js"),/fetch\("\/api\/studio\/session"/);
+ assert.match(read("app/game/page.js"),/blockStudioPlaytest/);
  assert.match(selection,/configuredStage\?\.plantsConfigured && !isStudioPlaytest/);
  assert.match(selection,/plant\.required && !studioPlaytest/);
  assert.match(selection,/studioPlaytest \? "&studioPlaytest=1" : ""/);
@@ -148,5 +151,6 @@ test("Studio admin playtests bypass campaign locks and stage roster restrictions
  assert.match(battle,/this\.isStudioPlaytest \|\| PLAYTEST_ALL_PLANTS \|\| unlocked\.has\(type\)/);
  assert.match(battle,/!this\.isStudioPlaytest && !PLAYTEST_ALL_PLANTS && !studioPlant/);
  assert.match(battle,/this\.stagePlantRosterConfigured && !this\.isStudioPlaytest && !stagePlantEntry/);
+ assert.match(battle,/if \(!this\.stagePlantRosterConfigured && !this\.isStudioPlaytest\)/);
  assert.match(battle,/this\.isStudioPlaytest\s*\? \[\.\.\.new Set\(\[\.\.\.campaignUnlocked, \.\.\.ALL_PLAYTEST_PLANT_IDS/);
 });
