@@ -130,7 +130,7 @@ test("battle seed bank uses the configured stage roster instead of campaign unlo
  assert.match(battle, /"hazelnut-level-1": "hazelnut"/);
  assert.match(battle, /new Set\(this\.stagePlantEntries\.map\(\(entry\) => stagePlantAliases\[entry\.id\] \|\| entry\.id\)\)/);
  assert.match(battle,/requestedLoadout\.filter\(\(type\) => availableTypes\.has\(type\)\)/);
- assert.match(battle,/if \(!this\.stagePlantRosterConfigured\) \{/);
+ assert.match(battle,/if \(!this\.stagePlantRosterConfigured && !this\.isStudioPlaytest\) \{/);
 });
 
 
