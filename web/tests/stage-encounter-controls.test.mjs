@@ -116,10 +116,11 @@ test("stage roster saves remain connected to the same runtime encounter API",()=
 
 test("Studio stage playtests bypass the campaign-only second seed picker",()=>{
  const gamePage=read("app/game/page.js");
- assert.match(gamePage,/params\.has\("stage"\)/);
+ assert.match(gamePage,/const stageParam = new URLSearchParams\(locationSearch\)\.get\("stage"\)/);
+ assert.match(gamePage,/const isStagePlaytest = stageParam !== null && Number\.isInteger\(Number\(stageParam\)\) && Number\(stageParam\) >= 1/);
  assert.match(gamePage,/useSyncExternalStore\(subscribeToLocation, getLocationSearchSnapshot/);
  assert.match(gamePage,/const showBattle = battleStarted \|\| isStagePlaytest/);
- assert.match(gamePage,/would overwrite Studio-selected plants/);
+ assert.doesNotMatch(gamePage,/would overwrite Studio-selected plants/);
 });
 
 test("battle seed bank uses the configured stage roster instead of campaign unlocks",()=>{
