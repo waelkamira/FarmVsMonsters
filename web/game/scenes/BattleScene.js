@@ -1128,10 +1128,10 @@ export default class BattleScene extends Scene {
       }
     } catch {
       // Storage failures keep the configured stage roster playable when possible.
-      selectedTypes = this.isStudioPlaytest
-        ? plantOptions.map((plant) => plant.type).slice(0, MAX_SEED_PACKETS)
-        : this.stagePlantRosterConfigured
-          ? this.stagePlantEntries.map((entry) => STAGE_PLANT_ALIASES[entry.id] || entry.id).slice(0, MAX_SEED_PACKETS)
+      selectedTypes = this.stagePlantRosterConfigured
+        ? this.stagePlantEntries.map((entry) => STAGE_PLANT_ALIASES[entry.id] || entry.id).slice(0, MAX_SEED_PACKETS)
+        : this.isStudioPlaytest
+          ? plantOptions.map((plant) => plant.type).slice(0, MAX_SEED_PACKETS)
           : ["radish", "mushroom"];
     }
     if (!this.stagePlantRosterConfigured && !this.isStudioPlaytest) {
