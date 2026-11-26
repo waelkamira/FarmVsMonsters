@@ -96,6 +96,33 @@ test("detects shared immutable files between cloned assets without blocking safe
   assert.match(report.warnings[0], /ينشئ مساراً جديداً/);
 });
 
+test("deduplicates reverse dependency rows repeated across current and historical revisions", () => {
+  const assets = [
+    {
+      id: "pepper-flamethrower-level-1",
+      type: "plant",
+      name: "Pepper Flamethrower",
+      dependencies: [{ id: "shared-effect", relation: "visual-effect" }],
+      versions: [
+        { versionNumber: 1, dependencies: [{ id: "shared-effect", relation: "visual-effect" }] },
+        { versionNumber: 2, dependencies: [{ id: "shared-effect", relation: "visual-effect" }] },
+        { versionNumber: 3, dependencies: [{ id: "shared-effect", relation: "audio-effect" }] }
+      ]
+    },
+    { id: "shared-effect", type: "effect", path: "/assets/effects/shared.png" }
+  ];
+  const report = buildAssetDependencyReport(assets, "shared-effect");
+  assert.deepEqual(
+    report.dependents.map(({ assetId, relation }) => [assetId, relation]),
+    [
+      ["pepper-flamethrower-level-1", "visual-effect"],
+      ["pepper-flamethrower-level-1", "audio-effect"]
+    ]
+  );
+  assert.equal(new Set(report.dependents.map((item) => item.assetId + ":" + item.relation)).size, report.dependents.length);
+  assert.equal(report.canArchive, false);
+});
+
 test("does not advertise archive for assets with an open release request", () => {
   const assets = [{ id: "released", type: "plant", path: "/assets/plants/released.png", status: "testing", releaseRequest: { number: 42 } }];
   const report = buildAssetDependencyReport(assets, "released");
