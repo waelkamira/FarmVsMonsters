@@ -250,3 +250,143 @@
   -webkit-backdrop-filter:blur(9px);backdrop-filter:blur(9px);
   box-shadow:var(--game-glass-shadow) !important;
 }
+
+
+/* Full-screen surfaces and remaining player-facing sections: complete the glass pass. */
+.info-shell,
+.seed-select-shell,
+.game-shell {
+  background:
+    radial-gradient(ellipse at 14% 6%,rgba(226,255,139,.64),transparent 32%),
+    radial-gradient(ellipse at 88% 86%,rgba(70,173,91,.46),transparent 38%),
+    linear-gradient(145deg,#b7e85e 0%,#69b94b 38%,#347b49 72%,#20563a 100%) !important;
+  color:var(--game-glass-ink) !important;
+}
+.info-shell { padding:clamp(14px,3vw,32px) !important; }
+.info-card {
+  border:1px solid var(--game-glass-border) !important;
+  border-radius:24px !important;
+  background:var(--game-glass-fill) !important;
+  -webkit-backdrop-filter:blur(11px) saturate(145%) !important;
+  backdrop-filter:blur(11px) saturate(145%) !important;
+  box-shadow:0 20px 48px rgba(9,40,20,.25),inset 0 1px 0 rgba(255,255,255,.68) !important;
+  color:#21452b !important;
+}
+.info-card h1,.info-card h2,.info-card h3,
+.info-card p,.info-card li,.info-card strong,
+.collection-section-title,.collection-intro,
+.collection-empty,.collection-wallet,
+.collection-summary span,.collection-meta span {
+  color:#21452b !important;
+  text-shadow:0 1px rgba(255,255,255,.34);
+}
+.info-card .eyebrow,.collection-intro { color:#356c35 !important; }
+.collection-wallet,.collection-summary span,.collection-meta span,
+.collection-empty,.collection-section-title {
+  border-color:rgba(255,255,255,.55) !important;
+}
+.collection-wallet,.collection-summary span,.collection-meta span,
+.collection-empty {
+  background:rgba(244,255,232,.24) !important;
+  border:1px solid rgba(255,255,255,.55) !important;
+  border-radius:14px !important;
+  -webkit-backdrop-filter:blur(8px) saturate(135%);
+  backdrop-filter:blur(8px) saturate(135%);
+}
+.collection-section-title { padding-bottom:8px; border-bottom:1px solid rgba(255,255,255,.4); }
+.collection-card h2,.collection-card p,.collection-meta span,
+.collection-status,.collection-card .collection-status { color:#21452b !important; }
+.collection-art,.plant-art-placeholder,.monster-thumb {
+  border-color:rgba(255,255,255,.58) !important;
+  background:rgba(239,255,225,.2) !important;
+}
+.account-form label,.account-security,.account-feedback,
+.account-status,.account-signin-notice,.guest-play-panel,
+.account-signed-in,.account-error,.account-success {
+  color:#21452b !important;
+}
+.guest-play-panel,.account-signin-notice,.account-security,
+.account-feedback,.account-status {
+  border:1px solid rgba(255,255,255,.58) !important;
+  border-radius:16px !important;
+  background:rgba(244,255,232,.24) !important;
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+}
+.info-nav a,.codex-settings-links a,.codex-settings-navigation a,
+.collection-back,.account-tabs button,.account-submit,
+.primary-link,.secondary-link,.campaign-map-back,.campaign-map-secondary,
+.seed-select-back,.seed-select-secondary,.seed-select-start {
+  transition:transform .18s ease,filter .18s ease,box-shadow .18s ease !important;
+}
+.info-nav a:hover,.codex-settings-links a:hover,
+.collection-back:hover,.account-tabs button:hover,
+.account-submit:hover,.primary-link:hover,.secondary-link:hover,
+.campaign-map-back:hover,.campaign-map-secondary:hover,
+.seed-select-back:hover,.seed-select-secondary:hover,.seed-select-start:hover {
+  transform:translateY(-2px);
+  filter:brightness(1.06);
+}
+button:focus-visible,a:focus-visible,input:focus-visible {
+  outline:3px solid rgba(250,255,213,.96) !important;
+  outline-offset:3px !important;
+}
+.game-shell { padding:clamp(8px,2vw,20px) !important; }
+.game-header { border-radius:20px !important; }
+.game-panel {
+  border:1px solid rgba(255,255,255,.52) !important;
+  border-radius:22px !important;
+  background:rgba(237,255,220,.18) !important;
+  -webkit-backdrop-filter:blur(8px) saturate(135%);
+  backdrop-filter:blur(8px) saturate(135%);
+  box-shadow:0 18px 42px rgba(8,35,17,.28),inset 0 1px 0 rgba(255,255,255,.42) !important;
+}
+.phaser-host canvas { border:0 !important; }
+.seed-select-panel {
+  border:1px solid rgba(255,255,255,.62) !important;
+  border-radius:24px !important;
+  background:var(--game-glass-fill) !important;
+  -webkit-backdrop-filter:blur(11px) saturate(145%);
+  backdrop-filter:blur(11px) saturate(145%);
+  box-shadow:var(--game-glass-shadow) !important;
+}
+.seed-select-status,.seed-select-loadout,.seed-select-notice,
+.seed-select-testing {
+  border:1px solid rgba(255,255,255,.48) !important;
+  border-radius:14px !important;
+  background:rgba(244,255,232,.2) !important;
+  color:#21452b !important;
+}
+@media (max-width:640px) {
+  .info-card { border-radius:19px !important; }
+  .collection-grid { grid-template-columns:repeat(auto-fit,minmax(min(100%,155px),1fr)); gap:12px; }
+}
+@media (prefers-reduced-transparency:reduce) {
+  .info-card,.collection-wallet,.collection-summary span,
+  .collection-meta span,.guest-play-panel,.account-signin-notice,
+  .account-security,.account-feedback,.account-status,.game-panel,
+  .seed-select-panel { background:rgba(229,248,218,.94) !important;backdrop-filter:none !important;-webkit-backdrop-filter:none !important; }
+}
+
+
+/* Home-screen utility navigation uses the same frosted controls as the rest of the UI. */
+.codex-home-utility-links a,
+.codex-home-settings-link {
+  border:1px solid rgba(255,255,255,.68) !important;
+  border-radius:14px !important;
+  background:rgba(242,255,228,.28) !important;
+  color:#f7ffe9 !important;
+  -webkit-backdrop-filter:blur(9px) saturate(140%);
+  backdrop-filter:blur(9px) saturate(140%);
+  box-shadow:0 8px 22px rgba(9,40,20,.2),inset 0 1px 0 rgba(255,255,255,.56) !important;
+}
+.codex-home-utility-links a:hover,.codex-home-settings-link:hover {
+  background:rgba(248,255,235,.42) !important;
+  transform:translateY(-2px);
+}
+
+
+/* Keyboard focus is visible on every native form control used by player menus. */
+select:focus-visible,textarea:focus-visible,[role="slider"]:focus-visible {
+  outline:3px solid rgba(250,255,213,.96) !important;
+  outline-offset:3px !important;
+}
