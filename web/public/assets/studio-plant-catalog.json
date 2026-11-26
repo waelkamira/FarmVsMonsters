@@ -185,9 +185,9 @@
       "id": "radish-level-1",
       "name": "radish-level-1",
       "path": "/assets/plants/radish-level-1.png",
-      "rows": 1,
-      "columns": 1,
-      "spriteSheet": false,
+      "rows": 3,
+      "columns": 3,
+      "spriteSheet": true,
       "animationProfile": {
         "speedMultiplier": 1,
         "idle": {
