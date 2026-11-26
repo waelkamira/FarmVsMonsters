@@ -24,7 +24,7 @@ test("stage roster controls default to one and keep hiding separate from asset d
  assert.match(manager,/لا يحذفان الأصل من المكتبة/);
  assert.match(manager,/spawnIntervalMs/);
  assert.match(manager,/async function testStage\(\)/);
- assert.match(manager,/await persistConfig\(\);\s*router\.push\("\/stage\/1\/select\?stage="\+stage\)/);
+ assert.match(manager,/await persistConfig\(\);\s*router\.push\("\/stage\/1\/select\?stage="\+stage\+"&studioPlaytest=1"\)/);
  assert.match(manager,/disabled=\{busy\|\|loading\}/);
  assert.match(manager,/hpMultiplier/);
 });
@@ -52,7 +52,7 @@ test("stage seed selection respects only enabled plants for a configured stage",
  assert.match(selection,/entry\.enabled !== false/);
  assert.match(selection,/new URLSearchParams\(window\.location\.search\)\.get\("stage"\)/);
  assert.match(selection,/stages\?\.\[String\(activeStage\)\]/);
- assert.match(selection,/router\.push\("\/game\?stage=" \+ stageNumber\)/);
+ assert.match(selection,/router\.push\("\/game\?stage=" \+ stageNumber \+ \(studioPlaytest \? "&studioPlaytest=1" : ""\)\)/);
  assert.match(selection,/setStagePlantsConfigured\(configuredStage\?\.plantsConfigured === true\)/);
  assert.match(selection,/farmVsMonsters\.selectedPlants\.stage\.\" \+ activeStage/);
  assert.match(selection,/window\.localStorage\.setItem\("farmVsMonsters\.selectedPlants", savedSelection\)/);
@@ -119,16 +119,39 @@ test("Studio stage playtests bypass the campaign-only second seed picker",()=>{
  assert.match(gamePage,/const stageParam = new URLSearchParams\(locationSearch\)\.get\("stage"\)/);
  assert.match(gamePage,/const isStagePlaytest = stageParam !== null && Number\.isInteger\(Number\(stageParam\)\) && Number\(stageParam\) >= 1/);
  assert.match(gamePage,/useSyncExternalStore\(subscribeToLocation, getLocationSearchSnapshot/);
- assert.match(gamePage,/const showBattle = battleStarted \|\| isStagePlaytest/);
+ assert.match(gamePage,/const showBattle = battleStarted \|\| \(isStagePlaytest && \(!studioPlaytestRequested \|\| authorizedStudioPlaytest\)\)/);
  assert.doesNotMatch(gamePage,/would overwrite Studio-selected plants/);
 });
 
 test("battle seed bank uses the configured stage roster instead of campaign unlocks",()=>{
  const battle=read("game/scenes/BattleScene.js");
- assert.match(battle,/const stageAllowedTypes = this\.stagePlantRosterConfigured/);
+ assert.match(battle,/const stageAllowedTypes = this\.stagePlantRosterConfigured && !this\.isStudioPlaytest/);
  assert.match(battle,/stageAllowedTypes\.has\(type\)/);
  assert.match(battle, /"hazelnut-level-1": "hazelnut"/);
- assert.match(battle, /new Set\(this\.stagePlantEntries\.map\(\(entry\) => stagePlantAliases\[entry\.id\] \|\| entry\.id\)\)/);
+ assert.match(battle,/const stageAllowedTypes = this\.stagePlantRosterConfigured && !this\.isStudioPlaytest/);
  assert.match(battle,/requestedLoadout\.filter\(\(type\) => availableTypes\.has\(type\)\)/);
- assert.match(battle,/if \(!this\.stagePlantRosterConfigured\) \{/);
+ assert.match(battle,/if \(!this\.stagePlantRosterConfigured && !this\.isStudioPlaytest\) \{/);
+});
+
+
+test("Studio admin playtests bypass campaign locks and stage roster restrictions without changing normal play",()=>{
+ const battle=read("game/scenes/BattleScene.js");
+ const selection=read("app/stage/1/select/page.js");
+ const manager=read("app/studio/StageRosterManager.jsx");
+ assert.match(manager,/studioPlaytest=1/);
+ assert.match(selection,/get\("studioPlaytest"\) === "1" && studioSession\?\.authenticated === true/);
+ assert.match(selection,/fetch\("\/api\/studio\/session"/);
+ assert.match(read("app/game/page.js"),/fetch\("\/api\/studio\/session"/);
+ assert.match(read("app/game/page.js"),/blockStudioPlaytest/);
+ assert.match(selection,/configuredStage\?\.plantsConfigured && !isStudioPlaytest/);
+ assert.match(selection,/const safeUnlocked = isStudioPlaytest\s*\? \[\.\.\.new Set\(\[\.\.\.STARTER_LOADOUT, \.\.\.unlocked, \.\.\.nextPlants\.map\(\(plant\) => plant\.id\), \.\.\.studioIds\]\)\]\s*: \[\.\.\.new Set\(\[\.\.\.STARTER_LOADOUT, \.\.\.unlocked\]\)\]/);
+ assert.match(selection,/plant\.required && !studioPlaytest/);
+ assert.match(selection,/studioPlaytest \? "&studioPlaytest=1" : ""/);
+ assert.match(battle,/get\("studioPlaytest"\) === "1"/);
+ assert.match(battle,/this\.stagePlantRosterConfigured && !this\.isStudioPlaytest/);
+ assert.match(battle,/this\.isStudioPlaytest \|\| PLAYTEST_ALL_PLANTS \|\| unlocked\.has\(type\)/);
+ assert.match(battle,/!this\.isStudioPlaytest && !PLAYTEST_ALL_PLANTS && !studioPlant/);
+ assert.match(battle,/this\.stagePlantRosterConfigured && !this\.isStudioPlaytest && !stagePlantEntry/);
+ assert.match(battle,/if \(!this\.stagePlantRosterConfigured && !this\.isStudioPlaytest\)/);
+ assert.match(battle,/this\.isStudioPlaytest\s*\? \[\.\.\.new Set\(\[\.\.\.campaignUnlocked, \.\.\.ALL_PLAYTEST_PLANT_IDS/);
 });

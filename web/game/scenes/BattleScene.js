@@ -17,8 +17,14 @@ import { transformRigHitboxToWorld, transformRigPointToWorld } from "../studio/s
 import { getProjectileTrajectoryOffset, getProjectileHeadCorrection, getProjectileLaunchPoint } from "../studio/projectileTrajectory.mjs";
 import { createStudioMonsterProfile, resolveStudioMonsterRuntimeProfile, selectWeightedStudioMonster } from "../studio/monsterProfiles.mjs";
 
-// Campaign progression controls built-in plant availability; Studio test assets remain separately gated.
+// Campaign progression remains authoritative in normal play. Studio playtests explicitly bypass unlock gates.
 const PLAYTEST_ALL_PLANTS = false;
+const STAGE_PLANT_ALIASES = Object.freeze({
+  "radish-level-1": "radish", "energy-mushroom": "mushroom",
+  "pumpkin-level-1": "pumpkin", "pineapple-level-1": "pineapple",
+  "hazelnut-level-1": "hazelnut", "mango-level-1": "mango",
+  "snow-thrower-level-1": "snow-thrower", "electric-mushroom-level-1": "electric-mushroom"
+});
 const ALL_PLAYTEST_PLANT_IDS = Object.freeze(["radish", "mushroom", "pumpkin", "pineapple", "hazelnut", "mango", "snow-thrower", "electric-mushroom"]);
 import { createSeededRandom } from "../rules/seededRandom.mjs";
 import { normalizeSeedLoadout, MAX_SEED_PACKETS } from "../rules/seedLoadout.mjs";
@@ -264,6 +270,7 @@ export default class BattleScene extends Scene {
     this.isPaused = false;
     const requestedStage = Number(new URLSearchParams(window.location.search).get("stage"));
     this.stageNumber = Number.isInteger(requestedStage) ? Math.max(1, Math.min(100, requestedStage)) : 1;
+    this.isStudioPlaytest = new URLSearchParams(window.location.search).get("studioPlaytest") === "1";
     this.stageEncounterConfig = this.cache.json.get("stage-encounter-config")?.stages?.[String(this.stageNumber)] || null;
     this.stageMonsterRosterConfigured = this.stageEncounterConfig?.monstersConfigured === true;
     this.stageMonsterEntries = (this.stageEncounterConfig?.monsters || []).filter(entry => entry.enabled !== false);
@@ -1083,23 +1090,13 @@ export default class BattleScene extends Scene {
     let selectedTypes = ["radish", "mushroom"];
     try {
       const unlocked = new Set([...loadUnlockedPlantIds(window.localStorage), ...(this.studioPlants || []).map((plant) => plant.id)]);
-      const stagePlantAliases = {
-        "radish-level-1": "radish",
-        "energy-mushroom": "mushroom",
-        "pumpkin-level-1": "pumpkin",
-        "pineapple-level-1": "pineapple",
-        "hazelnut-level-1": "hazelnut",
-        "mango-level-1": "mango",
-        "snow-thrower-level-1": "snow-thrower",
-        "electric-mushroom-level-1": "electric-mushroom"
-      };
-      const stageAllowedTypes = this.stagePlantRosterConfigured
-        ? new Set(this.stagePlantEntries.map((entry) => stagePlantAliases[entry.id] || entry.id))
+      const stageAllowedTypes = this.stagePlantRosterConfigured && !this.isStudioPlaytest
+        ? new Set(this.stagePlantEntries.map((entry) => STAGE_PLANT_ALIASES[entry.id] || entry.id))
         : null;
       const availableTypes = new Set(plantOptions.map((plant) => plant.type).filter((type) =>
         stageAllowedTypes
           ? stageAllowedTypes.has(type)
-          : PLAYTEST_ALL_PLANTS || unlocked.has(type)
+          : this.isStudioPlaytest || PLAYTEST_ALL_PLANTS || unlocked.has(type)
       ));
       const saved = JSON.parse(window.localStorage.getItem("farmVsMonsters.selectedPlants") || "null");
       if (this.stagePlantRosterConfigured) {
@@ -1122,11 +1119,13 @@ export default class BattleScene extends Scene {
       }
     } catch {
       // Storage failures keep the configured stage roster playable when possible.
-      selectedTypes = this.stagePlantRosterConfigured
-        ? this.stagePlantEntries.map((entry) => entry.id).slice(0, MAX_SEED_PACKETS)
-        : ["radish", "mushroom"];
+      selectedTypes = this.isStudioPlaytest
+        ? plantOptions.map((plant) => plant.type).slice(0, MAX_SEED_PACKETS)
+        : this.stagePlantRosterConfigured
+          ? this.stagePlantEntries.map((entry) => STAGE_PLANT_ALIASES[entry.id] || entry.id).slice(0, MAX_SEED_PACKETS)
+          : ["radish", "mushroom"];
     }
-    if (!this.stagePlantRosterConfigured) {
+    if (!this.stagePlantRosterConfigured && !this.isStudioPlaytest) {
       if (!selectedTypes.includes("mushroom")) selectedTypes.unshift("mushroom");
       if (!selectedTypes.includes("radish")) selectedTypes.push("radish");
     }
@@ -2062,9 +2061,12 @@ export default class BattleScene extends Scene {
       let unlockedIds = ["radish", "mushroom"];
       let selectedTypes = ["radish", "mushroom"];
       try {
-        unlockedIds = PLAYTEST_ALL_PLANTS
-          ? [...new Set([...loadUnlockedPlantIds(window.localStorage), ...ALL_PLAYTEST_PLANT_IDS])]
-          : loadUnlockedPlantIds(window.localStorage);
+        const campaignUnlocked = loadUnlockedPlantIds(window.localStorage);
+        unlockedIds = this.isStudioPlaytest
+          ? [...new Set([...campaignUnlocked, ...ALL_PLAYTEST_PLANT_IDS, ...(this.studioPlants || []).map((plant) => plant.id)])]
+          : PLAYTEST_ALL_PLANTS
+            ? [...new Set([...campaignUnlocked, ...ALL_PLAYTEST_PLANT_IDS])]
+            : campaignUnlocked;
         const saved = JSON.parse(window.localStorage.getItem("farmVsMonsters.selectedPlants") || "null");
         if (Array.isArray(saved)) selectedTypes = normalizeSeedLoadout(saved, unlockedIds, unlockedIds);
         else selectedTypes = normalizeSeedLoadout(unlockedIds, unlockedIds, unlockedIds);
@@ -2527,8 +2529,8 @@ export default class BattleScene extends Scene {
     if (this.gameOver) return;
     const studioPlant = this.studioPlantsByType?.[type] || null;
     if (!["radish", "mushroom", "pumpkin", "pineapple", "hazelnut", "mango", "snow-thrower", "electric-mushroom"].includes(type) && !studioPlant) return;
-    const stagePlantEntry = this.stagePlantEntries.find(entry => entry.id === type);
-    if (this.stagePlantRosterConfigured && !stagePlantEntry) {
+    const stagePlantEntry = this.stagePlantEntries.find(entry => (STAGE_PLANT_ALIASES[entry.id] || entry.id) === type);
+    if (this.stagePlantRosterConfigured && !this.isStudioPlaytest && !stagePlantEntry) {
       this.setMessage("هذه النبتة مخفية من المرحلة الحالية. يمكنك تفعيلها من استديو إدارة نباتات المراحل.");
       return;
     }
@@ -2536,7 +2538,7 @@ export default class BattleScene extends Scene {
       this.setMessage("وصلت إلى الحد الأقصى لهذه النبتة في المرحلة: " + stagePlantEntry.count + ".");
       return;
     }
-    if (!PLAYTEST_ALL_PLANTS && !studioPlant && !loadUnlockedPlantIds(window.localStorage).includes(type)) {
+    if (!this.isStudioPlaytest && !PLAYTEST_ALL_PLANTS && !studioPlant && !loadUnlockedPlantIds(window.localStorage).includes(type)) {
       this.setMessage("This plant is locked. Complete its campaign stage to unlock it.");
       return;
     }

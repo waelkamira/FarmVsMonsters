@@ -1,6 +1,6 @@
 "use client";
 
-import { useSyncExternalStore, useState } from "react";
+import { useSyncExternalStore, useState, useEffect } from "react";
 import PhaserGame from "../../game/PhaserGame";
 import { loadUnlockedPlantIds } from "../../game/rules/phaseOneRules.mjs";
 import {
@@ -57,11 +57,24 @@ export default function GamePage() {
   const locationSearch = useSyncExternalStore(subscribeToLocation, getLocationSearchSnapshot, () => "");
   const stageParam = new URLSearchParams(locationSearch).get("stage");
   const isStagePlaytest = stageParam !== null && Number.isInteger(Number(stageParam)) && Number(stageParam) >= 1;
+  const studioPlaytestRequested = new URLSearchParams(locationSearch).get("studioPlaytest") === "1";
+  const [studioSession, setStudioSession] = useState({ checked: false, authenticated: false });
+  useEffect(() => {
+    let active = true;
+    if (!studioPlaytestRequested) return () => { active = false; };
+    fetch("/api/studio/session", { cache: "no-store" })
+      .then((response) => response.ok ? response.json() : null)
+      .then((session) => { if (active) setStudioSession({ checked: true, authenticated: session?.authenticated === true }); })
+      .catch(() => { if (active) setStudioSession({ checked: true, authenticated: false }); });
+    return () => { active = false; };
+  }, [studioPlaytestRequested]);
+  const authorizedStudioPlaytest = studioPlaytestRequested && studioSession.checked && studioSession.authenticated;
+  const blockStudioPlaytest = studioPlaytestRequested && (!studioSession.checked || !studioSession.authenticated);
   const { unlocked, selected, ready } = JSON.parse(loadoutSnapshot);
   const [selectedOverride, setSelectedOverride] = useState(null);
   const activeSelected = selectedOverride ?? selected;
   const [battleStarted, setBattleStarted] = useState(false);
-  const showBattle = battleStarted || isStagePlaytest;
+  const showBattle = battleStarted || (isStagePlaytest && (!studioPlaytestRequested || authorizedStudioPlaytest));
   const [saveError, setSaveError] = useState(false);
 
 
@@ -89,7 +102,7 @@ export default function GamePage() {
   }
 
   return <main className="game-shell game-shell-seed-entry" dir={arabic ? "rtl" : "ltr"}>
-    {!showBattle ? <section className="seed-selection-shell" aria-labelledby="seed-selection-title">
+    {blockStudioPlaytest ? <section className="seed-selection-shell" aria-live="polite"><h1>{studioSession.checked ? (arabic ? "غير مصرح بالوصول" : "Administrator access required") : (arabic ? "جارٍ التحقق من صلاحية الاستديو…" : "Verifying Studio access…")}</h1><p>{studioSession.checked ? (arabic ? "سجّل الدخول إلى الاستديو ثم أعد بدء اختبار المرحلة." : "Sign in to Studio, then restart this stage playtest.") : (arabic ? "لحظة من فضلك." : "Please wait.")}</p></section> : !showBattle ? <section className="seed-selection-shell" aria-labelledby="seed-selection-title">
       <div className="seed-selection-heading">
         <span className="seed-selection-eyebrow">{t("BEFORE THE BATTLE")}</span>
         <h1 id="seed-selection-title">{t("Choose your seed packets")}</h1>
