@@ -102,7 +102,6 @@ export default function StageOneSeedSelectionPage() {
       setPlantCatalog(nextPlants);
       let unlocked = STARTER_LOADOUT;
       try { unlocked = loadUnlockedPlantIds(window.localStorage); } catch { /* Starter seeds remain available. */ }
-      const studioIds = studioPlants.map((plant) => plant.id);
       const stageUnlockedIds = publishedStage
         ? visibleStageEntries.filter(entry => entry.unlocked !== false).map(entry => Object.entries(plantAliases).find(([, aliases]) => aliases.includes(entry.id))?.[0] || entry.id)
         : [];
