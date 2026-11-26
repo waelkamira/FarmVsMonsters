@@ -27,6 +27,8 @@ export class VFXManager {
       limits: { ...DEFAULT_LIMITS, ...(config.limits || {}), ...limits }
     });
     this.limits = this.config.limits;
+    this.quality = this.config.quality;
+    this.qualityProfile = this.config.qualityProfile;
     this.eventBus = eventBus || new VFXEventBus();
     this.ownsEventBus = !eventBus;
     this.active = new Set();
@@ -69,7 +71,7 @@ export class VFXManager {
       );
       if (visual && !this.activePoolKeys.has(visual)) this.activePoolKeys.set(visual, poolKey);
     } else if (this.scene.add?.container && this.scene.add?.circle) {
-      const qualityCount = this.config.qualityProfile.maxParticlesPerEffect;
+      const qualityCount = this.qualityProfile.maxParticlesPerEffect;
       const count = Math.max(1, Math.min(qualityCount, config.count ?? 7));
       const kind = config.kind === "trail" ? "trail" : "burst";
       poolKey = `container:${kind}:${count}`;
@@ -122,6 +124,13 @@ export class VFXManager {
   dispatch(request) {
     if (!request || typeof request !== "object") return 0;
     return this.eventBus.emit("vfx:play", request);
+  }
+
+  setQuality(quality) {
+    if (!["low", "medium", "high"].includes(quality) || quality === this.quality) return false;
+    this.quality = quality;
+    this.qualityProfile = createVFXConfig({ quality }).qualityProfile;
+    return true;
   }
 
   stopAll() {
