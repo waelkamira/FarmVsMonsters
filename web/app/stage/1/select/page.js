@@ -109,8 +109,9 @@ export default function StageOneSeedSelectionPage() {
           : [];
         const availableIds = new Set(nextPlants.filter(plant => safeUnlocked.includes(plant.id)).map((plant) => plant.id));
         const stageDefaults = publishedStage ? stageUnlockedIds : STARTER_LOADOUT;
-        const defaultStudioPlants = isStudioPlaytest ? studioPlants.map((plant) => plant.id) : [];
-        setSelected([...new Set([...stageDefaults.filter((id) => availableIds.has(id)), ...defaultStudioPlants.filter((id) => availableIds.has(id)), ...validSaved])].slice(0, MAX_SEEDS));
+        const defaultStudioPlants = studioPlants.map((plant) => plant.id);
+        const authoredDefaults = publishedStage ? stageDefaults : [...stageDefaults, ...defaultStudioPlants];
+        setSelected([...new Set([...authoredDefaults.filter((id) => availableIds.has(id)), ...validSaved])].slice(0, MAX_SEEDS));
       } catch {
         const availableIds = new Set(nextPlants.map((plant) => plant.id));
         setSelected([...new Set([...(publishedStage ? stageUnlockedIds : STARTER_LOADOUT).filter((id) => availableIds.has(id)), ...(isStudioPlaytest ? studioPlants.map((plant) => plant.id).filter((id) => availableIds.has(id)) : [])])].slice(0, MAX_SEEDS));
