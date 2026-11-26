@@ -27,7 +27,7 @@ test("all battle action buttons are positioned by the centralized right-column l
 });
 
 test("inventory shows saved plant unlocks, seed-bar membership, field counts, and live resources", () => {
-  assert.match(scene, /unlockedIds = PLAYTEST_ALL_PLANTS[\s\S]*?loadUnlockedPlantIds\(window\.localStorage\)/);
+  assert.match(scene, /unlockedIds = this\.isStudioPlaytest[\s\S]*?loadUnlockedPlantIds\(window\.localStorage\)/);
   assert.match(scene, /farmVsMonsters\.selectedPlants/);
   assert.match(scene, /this\.plants\.filter\(\(item\) => item\.alive && item\.type === plant\.id\)/);
   assert.match(scene, /this\.coins\.toLocaleString\(\)/);
