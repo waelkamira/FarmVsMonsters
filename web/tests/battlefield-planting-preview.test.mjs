@@ -7,6 +7,7 @@ const scene = readFileSync(new URL("../game/scenes/BattleScene.js", import.meta.
 test("battlefield placement preview follows the calibrated perspective cell polygon", () => {
   assert.match(scene, /this\.input\.on\("pointermove", \(pointer\) => this\.updatePlantingPreview\(pointer\)\)/);
   assert.match(scene, /const polygon = this\.cellPolygon\(col, row\)/);
+  assert.match(scene, /if \(!this\.selectedPlant\) return;[\s\S]*?const polygon = this\.cellPolygon\(col, row\)/);
   assert.match(scene, /this\.plantingPreview\.fillPoints\(polygon, true\)/);
   assert.match(scene, /this\.add\.graphics\(\)\.setDepth\(9\.7\)/);
 });
