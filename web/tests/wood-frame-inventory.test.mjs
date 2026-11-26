@@ -49,18 +49,16 @@ test("inventory is a read-only collection view and does not invent item purchase
   assert.doesNotMatch(inventoryCode, /purchasePlant\(|saveCoins\(|this\.coins\s*[-+]=|unlockPlantReward\(/);
 });
 
-test("the uploaded seed-card frame is loaded and rendered on every battle seed packet", () => {
-  assert.match(scene, /seed-card-frame", "\/assets\/items\/ui\/ui-seed-card-fram\.png"/);
-  assert.match(scene, /this\.textures\.exists\("seed-card-frame"\)/);
-  assert.match(scene, /Math\.min\(86 \/ source\.width, 98 \/ source\.height\)/);
-  assert.match(scene, /card\.add\(\[\.\.\.\(seedFrame \? \[seedFrame\] : \[\]\), cardGlass, panel, icon, cost/);
+test("battle plant cards render without outer frame artwork while retaining glass, icon, cost, and interaction", () => {
+  assert.doesNotMatch(scene, /seed-card-frame|cardArtworkKey|seedFrame/);
+  assert.match(scene, /card\.add\(\[cardGlass, panel, icon, cost, cooldownOverlay, cooldownLabel\]\)/);
+  assert.match(scene, /cardGlass\.fillRoundedRect/);
+  assert.match(scene, /panel\.setData\("cooldownOverlay"/);
+  assert.match(scene, /panel\.on\("pointerdown"/);
 });
 
-
-test("the uploaded locked seed-card artwork is used for locked plant cards and collection entries", () => {
+test("locked seed-card artwork remains available to collection entries", () => {
   assert.match(scene, /seed-card-locked", "\/assets\/items\/ui\/ui-seed-card-locked\.png"/);
-  assert.match(scene, /locked && this\.textures\.exists\("seed-card-locked"\)/);
-  assert.match(scene, /cardArtworkKey/);
   assert.match(scene, /!unlocked && this\.textures\.exists\("seed-card-locked"\)/);
 });
 
@@ -69,4 +67,12 @@ test("the battle seed bar renders only equipped plant cards without empty placeh
   assert.doesNotMatch(scene, /packetSlotCount/);
   assert.doesNotMatch(scene, /Empty slots remain visible/);
   assert.match(scene, /plantOptions\.filter\(\(plant\) => selectedTypes\.includes\(plant\.type\)\)/);
+});
+
+
+test("battlefield fallback does not paint a full-screen green background wash", () => {
+  const drawField = scene.match(/drawField\(\)\s*\{([\s\S]*?)\n  \}\n\n  createFarmBackground/);
+  assert.ok(drawField, "drawField implementation exists");
+  assert.doesNotMatch(drawField[1], /fillGradientStyle\(0xb9d98a|fillRect\(0, 0, 1120, 680\)/);
+  assert.match(drawField[1], /fillRoundedRect\(185, 115, 690, 500/);
 });

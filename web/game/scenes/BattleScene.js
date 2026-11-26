@@ -103,7 +103,6 @@ export default class BattleScene extends Scene {
     this.load.image("farm-battlefield", "/assets/backgrounds/farm-battlefield-clean.svg");
     this.load.image("seed-card", "/assets/items/ui/ui-seed-card.png");
     this.load.image("mushroom-card", "/assets/items/ui/ui-mushroom-card.png");
-    this.load.image("seed-card-frame", "/assets/items/ui/ui-seed-card-fram.png");
     this.load.image("seed-card-locked", "/assets/items/ui/ui-seed-card-locked.png");
     this.load.image("inventory-wood-frame", "/assets/items/ui/ui-inventory-wood-fram.png");
     // FarmVsMonsters top HUD artwork. The dedicated mushroom currency icon
@@ -638,8 +637,7 @@ export default class BattleScene extends Scene {
   drawField() {
     // Fallback art only. When the uploaded background loads it is rendered above this layer.
     const g = this.add.graphics().setDepth(-10);
-    g.fillGradientStyle(0xb9d98a, 0xb9d98a, 0x8dbb69, 0x8dbb69, 1);
-    g.fillRect(0, 0, 1120, 680);
+    // No full-screen green wash behind the battlefield fallback artwork.
     g.fillStyle(0x8a603b, 1); g.fillRoundedRect(185, 115, 690, 500, 24);
     g.fillStyle(0x9c7047, 1); g.fillRoundedRect(195, 125, 670, 480, 18);
 
@@ -1131,13 +1129,7 @@ export default class BattleScene extends Scene {
 
   createPlantCard(x, title, costLabel, type, drawIcon, imageKey = null, y = 619, locked = false) {
     const card = this.add.container(x, y).setDepth(45);
-    const cardArtworkKey = locked && this.textures.exists("seed-card-locked") ? "seed-card-locked" : this.textures.exists("seed-card-frame") ? "seed-card-frame" : "seed-card";
-    let seedFrame = null;
-    if (this.textures.exists(cardArtworkKey)) {
-      const source = this.textures.get(cardArtworkKey).getSourceImage();
-      const scale = Math.min(86 / source.width, 98 / source.height);
-      seedFrame = this.add.image(0, 0, cardArtworkKey).setDisplaySize(source.width * scale * 0.8, source.height * scale * 0.8);
-    }
+    // Plant cards keep their existing glass surface and contents; only the outer frame artwork is removed.
     // Frosted gradient layer is inserted between frame art and interactive/content sprites.
     const cardGlass = this.add.graphics();
     cardGlass.fillStyle(0x9fe0a2, 0.28); cardGlass.fillRoundedRect(-34, -37, 68, 74, 9);
@@ -1174,7 +1166,7 @@ export default class BattleScene extends Scene {
     card.setData("cooldownOverlay", cooldownOverlay); card.setData("cooldownLabel", cooldownLabel);
     const panel = this.add.rectangle(0, 0, 80, 92, 0xffffff, 0).setInteractive({ useHandCursor: true });
     panel.setData("cooldownOverlay", cooldownOverlay); panel.setData("cooldownLabel", cooldownLabel);
-    card.add([...(seedFrame ? [seedFrame] : []), cardGlass, panel, icon, cost, cooldownOverlay, cooldownLabel]);
+    card.add([cardGlass, panel, icon, cost, cooldownOverlay, cooldownLabel]);
     if (locked) card.setAlpha(0.78);
     panel.on("pointerover", () => { card.setScale(1.04); });
     panel.on("pointerout", () => { card.setScale(1); });

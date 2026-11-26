@@ -1172,3 +1172,10 @@ The game remains authored in a fixed 1120×680 landscape coordinate space. CI ca
 - The battle seed bar now renders only plants included in the active loadout; existing plant selection, card spacing, and gameplay logic remain unchanged.
 - Added a regression test asserting that empty placeholder cards are not rendered.
 - GitHub Actions validation is required; no local browser gameplay verification is claimed.
+
+
+## 2026-11-26 — Remove battle seed-card frames and green fallback wash
+- Removed only the outer frame artwork from battle plant cards; kept the glass surface, plant icon, cost, cooldown state, hit target, and selection interactions.
+- Removed the full-screen green fallback wash behind the battlefield fallback artwork; retained the existing battlefield image and all stage lighting, weather, particles, and combat effects.
+- Added regression coverage for the frame-free plant cards and the absence of the green fallback wash.
+- GitHub Actions validation is required; no local browser gameplay verification is claimed.
