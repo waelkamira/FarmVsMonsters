@@ -475,11 +475,6 @@ export async function PATCH(req){
     const dependents=getAssetDependents(registry.assets,id);
     if(dependents.length)return NextResponse.json({error:"لا يمكن تنفيذ العملية قبل معالجة الأصول التي تعتمد على هذا الأصل: "+dependents.map(item=>item.assetName).join("، ")},{status:409});
    }
-   if(operation==="archive"&&asset.type==="monster"){
-   const stageConfigText=await githubGet("web/game/data/stageEncounterConfig.json",token,storageBranch);
-   const conflict=stageReferenceConflict(id,stageConfigText?JSON.parse(stageConfigText):{stages:{}});
-   if(conflict)return NextResponse.json({error:conflict},{status:409});
-  }
   if(operation==="clone"){
     const newId=String(body.newId||"").trim().toLowerCase();
     if(!STUDIO_ID_PATTERN.test(newId)||newId.length>64)return NextResponse.json({error:"معرّف النسخة غير صالح."},{status:400});
