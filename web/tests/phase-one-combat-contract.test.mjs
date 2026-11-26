@@ -49,7 +49,12 @@ test("active Stage 1 plant encyclopedia matches combat costs and available artwo
   for (const plant of activePlants) {
     const contractPlant = PHASE_ONE_PLANTS[contractKeyByPlantId[plant.id]];
     assert.equal(plant.energyCost, contractPlant.plantingEnergyCost, plant.id + " encyclopedia cost must match the combat contract");
-    assert.ok(existsSync(resolve(here, "../public", plant.assetPath.slice(1))), plant.id + " art file must exist");
+    if (plant.artworkStatus === "intentionally-removed") {
+      assert.equal(plant.assetPath, null, plant.id + " must not reference deleted artwork");
+    } else {
+      assert.ok(plant.assetPath, plant.id + " must declare its runtime artwork");
+      assert.ok(existsSync(resolve(here, "../public", plant.assetPath.slice(1))), plant.id + " art file must exist");
+    }
   }
 });
 

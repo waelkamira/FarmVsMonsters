@@ -123,7 +123,7 @@ export default class BattleScene extends Scene {
     this.load.image("radish-level-1", "/assets/plants/radish-level-1.png");
     this.load.image("radish-level-1-bomb", "/assets/plants/radish-level-1-bomb.png");
     this.load.image("mushroom-character", "/assets/plants/mushroom.png");
-    this.load.image("electric-mushroom-level-1", "/assets/plants/Electric-mushroom-level-1.png");
+    // Electric Mushroom artwork was intentionally removed; drawCatalogPlant uses its procedural fallback.
     this.load.image("pumpkin-character", "/assets/plants/pumpkin.png");
     this.load.image("mango-level-1", "/assets/plants/mango-level-1.png");
     this.load.image("mango-level-1-bomb", "/assets/plants/mango-level-1-bomb.png");
