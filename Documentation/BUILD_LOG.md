@@ -1165,3 +1165,10 @@ The game remains authored in a fixed 1120×680 landscape coordinate space. CI ca
 - Added regression coverage for both electric projectile paths, effect cleanup timing, and the configured electric-monster counter path.
 - No existing monster archetype currently declares an electric bite profile; the monster-side visual path is ready for a future Studio-authored/configured electric monster and does not invent a new enemy ability.
 
+
+
+## 2026-11-26 — Remove empty placeholder cards from the battle seed bar
+- Removed the empty-slot artwork loader and the loop that drew placeholder cards in unused seed-bar positions.
+- The battle seed bar now renders only plants included in the active loadout; existing plant selection, card spacing, and gameplay logic remain unchanged.
+- Added a regression test asserting that empty placeholder cards are not rendered.
+- GitHub Actions validation is required; no local browser gameplay verification is claimed.

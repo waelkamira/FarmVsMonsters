@@ -64,10 +64,9 @@ test("the uploaded locked seed-card artwork is used for locked plant cards and c
   assert.match(scene, /!unlocked && this\.textures\.exists\("seed-card-locked"\)/);
 });
 
-test("the uploaded empty seed-slot artwork fills unused loadout positions", () => {
-  assert.match(scene, /seed-slot-empty", "\/assets\/items\/ui\/ui-seed-slot-empty\.png"/);
-  assert.match(scene, /const packetSlotCount = MAX_SEED_PACKETS/);
-  assert.match(scene, /for \(let slotIndex = selectedTypes\.length; slotIndex < packetSlotCount; slotIndex \+= 1\)/);
-  assert.match(scene, /"seed-slot-empty"\)/);
-  assert.match(scene, /\.setDepth\(44\)/);
+test("the battle seed bar renders only equipped plant cards without empty placeholder cards", () => {
+  assert.doesNotMatch(scene, /seed-slot-empty/);
+  assert.doesNotMatch(scene, /packetSlotCount/);
+  assert.doesNotMatch(scene, /Empty slots remain visible/);
+  assert.match(scene, /plantOptions\.filter\(\(plant\) => selectedTypes\.includes\(plant\.type\)\)/);
 });

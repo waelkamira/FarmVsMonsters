@@ -105,7 +105,6 @@ export default class BattleScene extends Scene {
     this.load.image("mushroom-card", "/assets/items/ui/ui-mushroom-card.png");
     this.load.image("seed-card-frame", "/assets/items/ui/ui-seed-card-fram.png");
     this.load.image("seed-card-locked", "/assets/items/ui/ui-seed-card-locked.png");
-    this.load.image("seed-slot-empty", "/assets/items/ui/ui-seed-slot-empty.png");
     this.load.image("inventory-wood-frame", "/assets/items/ui/ui-inventory-wood-fram.png");
     // FarmVsMonsters top HUD artwork. The dedicated mushroom currency icon
     // was not included in the uploaded files, so the existing mushroom plant
@@ -1110,18 +1109,6 @@ export default class BattleScene extends Scene {
     this.plantCardsByType = {};
     const packetStartX = 164;
     const packetGap = selectedTypes.length > 5 ? 78 : 90;
-    const packetSlotCount = MAX_SEED_PACKETS;
-    // Fill unused seed slots with previews of implemented plants that are
-    // not in the current loadout. Their artwork is intentionally dimmed and
-    // non-interactive so the player can see upcoming choices without selecting them.
-    // Empty slots remain visible and non-interactive until the player equips
-    // an unlocked plant in the pre-battle loadout.
-    for (let slotIndex = selectedTypes.length; slotIndex < packetSlotCount; slotIndex += 1) {
-      const x = packetStartX + slotIndex * packetGap;
-      if (this.textures.exists("seed-slot-empty")) {
-        this.add.image(x, 72, "seed-slot-empty").setDisplaySize(70, 90).setDepth(44);
-      }
-    }
     plantOptions.filter((plant) => selectedTypes.includes(plant.type)).forEach((plant, index) => {
       this.plantCardsByType[plant.type] = this.createPlantCard(
         packetStartX + index * packetGap,
