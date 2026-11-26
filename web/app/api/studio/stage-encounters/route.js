@@ -94,11 +94,21 @@ async function writeGithub(config,expectedSha){
  const savedData=await saved.json().catch(()=>({}));
  return {conflict:false,sha:savedData.content?.sha||null};
 }
-export async function GET(){
+export async function GET(req){
  try{
   const driver=process.env.STUDIO_STORAGE_DRIVER||"local";
   const result=driver==="github"?await readGithub():{config:await readLocal(),sha:null};
-  return NextResponse.json({...result.config,sha:result.sha,storage:driver},{headers:{"Cache-Control":"no-store"}});
+  if(authorized(req)){
+   return NextResponse.json({...result.config,sha:result.sha,storage:driver},{headers:{"Cache-Control":"no-store"}});
+  }
+  // Public clients receive only published stages and visible roster entries.
+  // Hidden plants and unpublished drafts are not exposed through the public API.
+  const publicConfig={...result.config,stages:Object.fromEntries(Object.entries(result.config.stages).filter(([,stage])=>stage.published===true).map(([id,stage])=>[id,{
+   ...stage,
+   plants:stage.plants.filter(plant=>plant.visible!==false&&plant.enabled!==false),
+   monsters:stage.monsters.filter(monster=>monster.enabled!==false)
+  }]))};
+  return NextResponse.json({...publicConfig,storage:driver},{headers:{"Cache-Control":"no-store"}});
  }catch(error){return NextResponse.json({error:error.message||"Could not load stage settings."},{status:502});}
 }
 export async function PATCH(req){
