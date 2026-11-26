@@ -52,12 +52,16 @@ test("day: warm light, sun motes and green leaves, no rain, under the combat VFX
   const fx = new AmbientFX(scene, { quality: "high" });
   assert.equal(fx.applyStageAtmosphere(1), "day");
   assert.ok(kinds(scene, "fx-shape-dot").length > 0, "motes");
+  const glow = kinds(scene, "fx-ambient-soft-glow")[0];
+  assert.ok(glow, "cached soft light pool");
+  assert.equal(glow.tint, 0xffe2a8);
+  assert.equal(glow.depth, 33.9, "lighting remains below combat VFX and HUD");
   assert.equal(kinds(scene, "fx-ambient-rain").length, 0);
   assert.ok(scene.tracker.timers.some((t) => t.cfg.loop && !t.removed), "breeze timer");
   const filter = kinds(scene, "rect")[0];
   assert.equal(filter.blend, 0);
   assert.ok(filter.alpha > 0 && filter.alpha < 0.2);
-  for (const s of live(scene).filter((x) => x.kind !== "rect")) assert.equal(s.depth, 34);
+  for (const s of live(scene).filter((x) => x.kind !== "rect" && x.kind !== "fx-ambient-soft-glow")) assert.equal(s.depth, 34);
   assert.ok(34 < 36, "below combat effects");
   assert.ok(live(scene).every((s) => s.depth <= 34));
 });
@@ -80,6 +84,7 @@ test("night: blue MULTIPLY filter, slanted rain and distant lightning that flash
   fx.applyStageAtmosphere(5);
   assert.equal(kinds(scene, "rect")[0].blend, 2);
   assert.equal(kinds(scene, "rect")[0].color, 0x5a6fa8);
+  assert.equal(kinds(scene, "fx-ambient-soft-glow")[0].tint, 0x9bbcff);
   const rain = kinds(scene, "fx-ambient-rain");
   assert.equal(rain.length, 36);
   assert.ok(rain.every((d) => d.rotation > 0), "slanted");
@@ -194,6 +199,7 @@ test("re-applying atmosphere never leaks, and destroy removes the listener and e
   assert.equal(scene.events.count("update"), 0);
   assert.equal(live(scene).length, 0);
   assert.equal(fx.activeCount, 0);
+  assert.equal(kinds(scene, "fx-ambient-soft-glow").length, 0, "light pool destroyed");
   assert.doesNotThrow(() => fx.destroy());
   assert.equal(fx.spawnFootstepDust({}, 1, 1, 9999), false);
 });
