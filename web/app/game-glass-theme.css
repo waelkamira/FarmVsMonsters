@@ -50,7 +50,7 @@ body{
  -webkit-backdrop-filter:blur(12px) saturate(140%)!important;backdrop-filter:blur(12px) saturate(140%)!important;
  box-shadow:0 9px 25px rgba(11,45,25,.19),inset 0 1px rgba(255,255,255,.52)!important;
 }
-:is(.codex-home-story,.codex-board,.info-card,.campaign-map-heading,.campaign-world-card,.campaign-map-legend,.stage-tile,.collection-card,.collection-summary,.collection-meta,.collection-status,.collection-intro,.info-card p,.info-card li,.info-card h1,.info-card h2,.codex-home-story h1,.codex-home-story p,.codex-page-heading,.seed-selection-heading,.account-form label,.campaign-map-heading p,.campaign-map-stats,.campaign-map-eyebrow,.campaign-world-copy,.stage-briefing,.stage-story,.stage-intro-card,.stage-two-intro-card) *){
+:is(.codex-home-story,.codex-board,.info-card,.campaign-map-heading,.campaign-world-card,.campaign-map-legend,.stage-tile,.collection-card,.collection-summary,.collection-meta,.collection-status,.collection-intro,.info-card p,.info-card li,.info-card h1,.info-card h2,.codex-home-story h1,.codex-home-story p,.codex-page-heading,.seed-selection-heading,.account-form label,.campaign-map-heading p,.campaign-map-stats,.campaign-map-eyebrow,.campaign-world-copy,.stage-briefing,.stage-story,.stage-intro-card,.stage-two-intro-card){
  color:inherit!important;text-shadow:none!important;
 }
 .codex-home-story h1,.info-card h1,.campaign-map-heading h1{color:#f6fff2!important;text-shadow:0 2px 12px rgba(11,45,25,.24)!important}
