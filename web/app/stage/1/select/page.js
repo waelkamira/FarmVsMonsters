@@ -37,7 +37,6 @@ export default function StageOneSeedSelectionPage() {
     let active = true;
     const requestedStage = Number(new URLSearchParams(window.location.search).get("stage"));
     const activeStage = Number.isInteger(requestedStage) ? Math.max(1, Math.min(100, requestedStage)) : 1;
-    const isStudioPlaytest = new URLSearchParams(window.location.search).get("studioPlaytest") === "1";
     const readCatalog = async (url) => {
       try {
         const response = await fetch(url, { cache: "no-store" });
@@ -50,9 +49,11 @@ export default function StageOneSeedSelectionPage() {
       const [published, testing, stageSettings] = await Promise.all([
         readCatalog("/assets/studio-plant-catalog.json"),
         readCatalog("/api/studio/assets?catalog=testing"),
-        fetch("/api/studio/stage-encounters", { cache: "no-store" }).then(response => response.ok ? response.json() : null).catch(() => null)
+        fetch("/api/studio/stage-encounters", { cache: "no-store" }).then(response => response.ok ? response.json() : null).catch(() => null),
+        fetch("/api/studio/session", { cache: "no-store" }).then(response => response.ok ? response.json() : null).catch(() => null)
       ]);
       if (!active) return;
+      const isStudioPlaytest = new URLSearchParams(window.location.search).get("studioPlaytest") === "1" && studioSession?.authenticated === true;
       setStageNumber(activeStage);
       setStudioPlaytest(isStudioPlaytest);
       const studioPlants = [...published, ...testing].map((plant) => ({
