@@ -9,6 +9,8 @@ export const dynamic="force-dynamic";
 const COOKIE="fvm_studio_session";
 const CONFIG_PATH="web/game/data/stageEncounterConfig.json";
 const REGISTRY_PATH="web/game/data/studioAssetRegistry.json";
+const PUBLISHED_PLANT_CATALOG_PATH="web/public/assets/studio-plant-catalog.json";
+const BUILTIN_PLANT_IDS=new Set(["radish","radish-level-1","mushroom","energy-mushroom","pumpkin","pumpkin-level-1","pineapple","pineapple-level-1","hazelnut","hazelnut-level-1","mango","mango-level-1","snow-thrower","snow-thrower-level-1","electric-mushroom","electric-mushroom-level-1"]);
 const DEFAULT_CONFIG={"version":1,"stages":{"1":{"monsters":[{"key":"monster-01-w1","id":"monster-01","count":3,"wave":1,"spawnIntervalMs":5080,"firstSpawnDelayMs":0,"hpMultiplier":1,"speedMultiplier":1,"damageMultiplier":1,"attackIntervalMultiplier":1,"enabled":true},{"key":"monster-01-w2","id":"monster-01","count":5,"wave":2,"spawnIntervalMs":4960,"firstSpawnDelayMs":0,"hpMultiplier":1,"speedMultiplier":1,"damageMultiplier":1,"attackIntervalMultiplier":1,"enabled":true},{"key":"monster-01-w3","id":"monster-01","count":6,"wave":3,"spawnIntervalMs":4840,"firstSpawnDelayMs":0,"hpMultiplier":1,"speedMultiplier":1,"damageMultiplier":1,"attackIntervalMultiplier":1,"enabled":true},{"key":"monster-01-w4","id":"monster-01","count":7,"wave":4,"spawnIntervalMs":4720,"firstSpawnDelayMs":0,"hpMultiplier":1,"speedMultiplier":1,"damageMultiplier":1,"attackIntervalMultiplier":1,"enabled":true},{"key":"monster-01-w5","id":"monster-01","count":9,"wave":5,"spawnIntervalMs":4600,"firstSpawnDelayMs":0,"hpMultiplier":1,"speedMultiplier":1,"damageMultiplier":1,"attackIntervalMultiplier":1,"enabled":true}],"plants":[{"id":"radish","count":1,"enabled":true},{"id":"mushroom","count":1,"enabled":true},{"id":"pumpkin","count":1,"enabled":true},{"id":"pineapple","count":1,"enabled":true},{"id":"hazelnut","count":1,"enabled":true},{"id":"mango","count":1,"enabled":true},{"id":"snow-thrower","count":1,"enabled":true},{"id":"electric-mushroom","count":1,"enabled":true}],"monstersConfigured":false,"plantsConfigured":false}}};
 const authorized=req=>verifyStudioSession(process.env.STUDIO_SESSION_SECRET || "",req.cookies.get(COOKIE)?.value||"");
 const githubHeaders=token=>({Authorization:"Bearer "+token,Accept:"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28"});
@@ -62,6 +64,17 @@ async function writeLocal(value){
  const target=path.join(process.cwd(),"game/data/stageEncounterConfig.json");
  await mkdir(path.dirname(target),{recursive:true});
  await writeFile(target,JSON.stringify(value,null,2)+"\n","utf8");
+}
+async function readPublishedPlantIds(){
+ const token=process.env.STUDIO_GITHUB_TOKEN;
+ if(!token)throw new Error("STUDIO_GITHUB_TOKEN is required.");
+ const url="https://api.github.com/repos/"+(process.env.STUDIO_GITHUB_REPOSITORY||"waelkamira/FarmVsMonsters")+"/contents/"+PUBLISHED_PLANT_CATALOG_PATH+"?ref="+encodeURIComponent(releaseBranch());
+ const response=await fetch(url,{headers:githubHeaders(token),cache:"no-store"});
+ if(response.status===404)return new Set(BUILTIN_PLANT_IDS);
+ if(!response.ok)throw new Error("Player plant catalog read failed ("+response.status+").");
+ const data=await response.json();
+ const catalog=JSON.parse(Buffer.from(data.content||"","base64").toString("utf8"));
+ return new Set([...BUILTIN_PLANT_IDS,...(Array.isArray(catalog.plants)?catalog.plants:[]).map(item=>String(item.id||"").trim().toLowerCase()).filter(Boolean)]);
 }
 async function readMonsterAssets(driver){
  if(driver==="github"){
@@ -142,6 +155,11 @@ export async function PATCH(req){
   if(publishAction){
    if(!config.stages?.[stageId])return NextResponse.json({error:"المرحلة المطلوبة غير موجودة في إعدادات الاستديو."},{status:400});
    config={...config,stages:{...config.stages,[stageId]:{...config.stages[stageId],published:true}}};
+   if(driver==="github"){
+    const availablePlants=await readPublishedPlantIds();
+    const unavailablePlants=config.stages[stageId].plants.filter(plant=>plant.visible!==false&&plant.enabled!==false&&!availablePlants.has(plant.id)).map(plant=>plant.id);
+    if(unavailablePlants.length)return NextResponse.json({error:"لا يمكن نشر المرحلة لأن بعض النباتات ليست منشورة في كتالوج اللاعبين بعد. انشر هذه الأصول أولاً ثم أعد نشر المرحلة: "+[...new Set(unavailablePlants)].join("، "),unavailablePlants:[...new Set(unavailablePlants)]},{status:409});
+   }
   }
   let savedSha=null,releaseSha=null;
   if(driver==="github"){
