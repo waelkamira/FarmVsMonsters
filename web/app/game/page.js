@@ -61,10 +61,7 @@ export default function GamePage() {
   const [studioSession, setStudioSession] = useState({ checked: false, authenticated: false });
   useEffect(() => {
     let active = true;
-    if (!studioPlaytestRequested) {
-      setStudioSession({ checked: true, authenticated: false });
-      return () => { active = false; };
-    }
+    if (!studioPlaytestRequested) return () => { active = false; };
     fetch("/api/studio/session", { cache: "no-store" })
       .then((response) => response.ok ? response.json() : null)
       .then((session) => { if (active) setStudioSession({ checked: true, authenticated: session?.authenticated === true }); })
