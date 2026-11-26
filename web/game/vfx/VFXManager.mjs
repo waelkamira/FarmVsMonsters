@@ -26,9 +26,10 @@ export class VFXManager {
       ...config,
       limits: { ...DEFAULT_LIMITS, ...(config.limits || {}), ...limits }
     });
-    this.limits = this.config.limits;
+    this.baseLimits = this.config.limits;
     this.quality = this.config.quality;
     this.qualityProfile = this.config.qualityProfile;
+    this.#applyQualityBudget();
     this.eventBus = eventBus || new VFXEventBus();
     this.ownsEventBus = !eventBus;
     this.active = new Set();
@@ -130,7 +131,19 @@ export class VFXManager {
     if (!["low", "medium", "high"].includes(quality) || quality === this.quality) return false;
     this.quality = quality;
     this.qualityProfile = createVFXConfig({ quality }).qualityProfile;
+    this.config = Object.freeze({ ...this.config, quality, qualityProfile: this.qualityProfile });
+    this.#applyQualityBudget();
     return true;
+  }
+
+  #applyQualityBudget() {
+    const profileBurstCap = this.qualityProfile.maxActiveBursts;
+    this.limits = {
+      ...this.baseLimits,
+      maxActiveBursts: Number.isFinite(profileBurstCap)
+        ? Math.min(this.baseLimits.maxActiveBursts, profileBurstCap)
+        : this.baseLimits.maxActiveBursts
+    };
   }
 
   stopAll() {

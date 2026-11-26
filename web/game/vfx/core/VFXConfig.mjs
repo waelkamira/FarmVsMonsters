@@ -6,9 +6,9 @@ export const DEFAULT_VFX_CONFIG = Object.freeze({
     burstLifetimeMs: 360
   }),
   qualityProfiles: Object.freeze({
-    low: Object.freeze({ particleScale: 0.5, maxParticlesPerEffect: 5 }),
-    medium: Object.freeze({ particleScale: 0.75, maxParticlesPerEffect: 9 }),
-    high: Object.freeze({ particleScale: 1, maxParticlesPerEffect: 16 })
+    low: Object.freeze({ particleScale: 0.5, maxParticlesPerEffect: 5, maxActiveBursts: 8 }),
+    medium: Object.freeze({ particleScale: 0.75, maxParticlesPerEffect: 9, maxActiveBursts: 16 }),
+    high: Object.freeze({ particleScale: 1, maxParticlesPerEffect: 16, maxActiveBursts: 24 })
   })
 });
 
