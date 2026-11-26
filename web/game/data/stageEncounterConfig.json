@@ -32,6 +32,16 @@
           "id": "pepper-flamethrower-level-1",
           "count": 25,
           "enabled": true
+        },
+        {
+          "id": "hazelnut",
+          "count": 1,
+          "enabled": true
+        },
+        {
+          "id": "snow-thrower",
+          "count": 1,
+          "enabled": true
         }
       ],
       "monstersConfigured": true,
