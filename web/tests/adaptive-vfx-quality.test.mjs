@@ -36,7 +36,7 @@ test("sustained slow frames step quality down one tier at a time", () => {
   const scene = createScene();
   const changes = [];
   const adaptive = new AdaptiveVFXQuality(scene, { quality: "high", onChange: (quality) => changes.push(quality) });
-  for (let i = 0; i < 260; i += 1) adaptive.update(32);
+  for (let i = 0; i < 65; i += 1) adaptive.update(32);
   assert.equal(adaptive.quality, "medium");
   assert.deepEqual(changes, ["medium"]);
   for (let i = 0; i < 260; i += 1) adaptive.update(32);
@@ -46,7 +46,7 @@ test("sustained slow frames step quality down one tier at a time", () => {
 
 test("stable frame times recover quality gradually without oscillation", () => {
   const adaptive = new AdaptiveVFXQuality(createScene(), { quality: "low" });
-  for (let i = 0; i < 1100; i += 1) adaptive.update(16.67);
+  for (let i = 0; i < 520; i += 1) adaptive.update(16.67);
   assert.equal(adaptive.quality, "medium");
   for (let i = 0; i < 1100; i += 1) adaptive.update(16.67);
   assert.equal(adaptive.quality, "high");
