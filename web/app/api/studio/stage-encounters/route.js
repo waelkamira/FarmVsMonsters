@@ -13,9 +13,11 @@ const DEFAULT_CONFIG={"version":1,"stages":{"1":{"monsters":[{"key":"monster-01-
 const authorized=req=>verifyStudioSession(process.env.STUDIO_SESSION_SECRET || "",req.cookies.get(COOKIE)?.value||"");
 const githubHeaders=token=>({Authorization:"Bearer "+token,Accept:"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28"});
 const githubUrl=()=> "https://api.github.com/repos/"+(process.env.STUDIO_GITHUB_REPOSITORY||"waelkamira/FarmVsMonsters")+"/contents/"+CONFIG_PATH;
-// Keep Studio writes and public gameplay reads on the same durable source.
-// An explicit setting always wins; otherwise use GitHub when its token is configured.
+// Production must never silently fall back to the build's stale local stage config.
+// Local storage is a development-only mode; production always reads and writes the
+// durable Studio branch so published rosters cannot be shadowed by campaign defaults.
 function getStorageDriver(){
+ if(process.env.NODE_ENV==="production")return "github";
  const configured=String(process.env.STUDIO_STORAGE_DRIVER||"").trim().toLowerCase();
  if(configured==="github"||configured==="local")return configured;
  return process.env.STUDIO_GITHUB_TOKEN?"github":"local";
