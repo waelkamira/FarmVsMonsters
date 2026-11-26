@@ -164,7 +164,7 @@ test("stage publication controls player-visible plants, per-stage unlocks and ba
  const manager=read("app/studio/StageRosterManager.jsx");
  const selection=read("app/stage/1/select/page.js");
  const battle=read("game/scenes/BattleScene.js");
- assert.match(api,/visible:item\.visible!==false && item\.enabled!==false/);
+ assert.match(api,/const visible=item\.visible!==false && item\.enabled!==false/);
  assert.match(api,/unlocked:item\.unlocked!==false/);
  assert.match(api,/published:raw\?\.published===true/);
  assert.match(api,/background=typeof raw\?\.background==="string"/);
