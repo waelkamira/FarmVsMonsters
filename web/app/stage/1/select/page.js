@@ -121,6 +121,10 @@ export default function StageOneSeedSelectionPage() {
 
   function togglePlant(plant) {
     if (plant.required && !studioPlaytest) return;
+    if (!unlockedIds.includes(plant.id)) {
+      setNotice(ar ? "هذه النبتة مقفولة في هذه المرحلة." : "This plant is locked for this stage.");
+      return;
+    }
     setNotice("");
     if (selected.includes(plant.id)) {
       setSelected(selected.filter((id) => id !== plant.id));
