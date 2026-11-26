@@ -99,7 +99,7 @@ export default function StageRosterManager({kind}){
   setBusy(true);setMessage("");
   try{
    await persistConfig();
-   router.push("/stage/1/select?stage="+stage);
+   router.push("/stage/1/select?stage="+stage+"&studioPlaytest=1");
   }catch(error){
    setMessage("تعذر حفظ إعدادات المرحلة؛ لم نبدأ الاختبار. "+error.message);
   }finally{setBusy(false);}
