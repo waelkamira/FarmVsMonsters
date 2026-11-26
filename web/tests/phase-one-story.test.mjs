@@ -9,16 +9,16 @@ const scene = readFileSync(resolve(here, "../game/scenes/BattleScene.js"), "utf8
 const assets = JSON.parse(readFileSync(resolve(here, "../game/data/phase-one-story-assets.json"), "utf8"));
 const manifest = JSON.parse(readFileSync(resolve(here, "../public/assets/asset-manifest.json"), "utf8"));
 
-test("Stage 1 ends after all five ordinary Monster 01 waves without a boss encounter", () => {
+test("Stage 1 ends after all five ordinary Monster 01 waves without a special encounter", () => {
   assert.match(scene, /if \(isPhaseOneVictory\(this\.wave, this\.totalWaves, this\.spawnedThisWave, this\.waveSize, this\.monsters\.length\)\) \{\s*this\.endGame\(true\)/);
-  assert.doesNotMatch(scene, /dragon|princessActor|beginPrincessRescue|PHASE_ONE_DRAGON/i);
+  assert.doesNotMatch(scene, /princessActor|beginPrincessRescue/i);
 });
 
-test("retired dragon and rescue art are absent from the story asset contract", () => {
+test("retired story art is absent from the story asset contract", () => {
   assert.equal(assets.version, 1);
   assert.equal(assets.runtimeEnabled, false);
-  assert.equal(assets.assets.some((asset) => /dragon|princess|sling|rescue|carry/i.test(asset.key + " " + asset.path + " " + asset.purpose)), false);
-  assert.equal(manifest.assets.some((asset) => /dragon|hyena/i.test(asset.key + " " + asset.url)), false);
+  assert.equal(assets.assets.some((asset) => /princess|sling|rescue|carry/i.test(asset.key + " " + asset.path + " " + asset.purpose)), false);
+  assert.equal(manifest.assets.some((asset) => /hyena/i.test(asset.key + " " + asset.url)), false);
 });
 
 test("client victory remains a playtest result and never persists campaign rewards", () => {

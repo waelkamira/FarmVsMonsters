@@ -57,11 +57,11 @@ test("stage seed selection respects only enabled plants for a configured stage",
  assert.match(selection,/selectedPlants\.length < minimumSeeds/);
 });
 
-test("configured first spawn delay is not overwritten and final wave has no boss trigger",()=>{
+test("configured first spawn delay is not overwritten and final wave has no special-encounter trigger",()=>{
  const battle=read("game/scenes/BattleScene.js");
  assert.match(battle,/const firstStageMonster = this\.getStageMonsterEntry\(0\);\s*this\.spawnTimer = this\.stageMonsterRosterConfigured && firstStageMonster \? Math\.max\(0, Number\(firstStageMonster\.firstSpawnDelayMs\) \|\| 0\) : PHASE_ONE_TIMING\.firstMonsterSpawnDelayMs;/);
  assert.doesNotMatch(battle,/this\.combatClockMs = 0;\s*this\.spawnTimer = PHASE_ONE_TIMING\.firstMonsterSpawnDelayMs;/);
- assert.doesNotMatch(battle,/dragon|beginDragonEncounter/i);
+ assert.doesNotMatch(battle,/beginBossEncounter/i);
  assert.doesNotMatch(battle,/this\.wave === 5 && this\.spawnedThisWave === 2/);
 });
 

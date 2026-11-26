@@ -117,7 +117,7 @@ export const CAMPAIGN_WORLDS = Object.freeze([
     subtitle: "The final stand in the riftbound citadel",
     subtitleAr: "المواجهة الأخيرة في قلعة الصدوع",
     theme: "rift",
-    icon: "🐉",
+    icon: "⚔️",
     description: "A final stronghold where the campaign's learned threats converge.",
     descriptionAr: "حصن أخير تجتمع فيه التهديدات والقدرات التي تعلمها اللاعب."
   }
