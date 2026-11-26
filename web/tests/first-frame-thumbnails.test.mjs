@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { resolvePlantSpriteMetadata, resolveSpriteThumbnailGrid } from "../game/studio/spriteSheetGrid.mjs";
+import { resolvePlantSpriteMetadata, resolveSpriteThumbnailGrid, resolveThumbnailSources } from "../game/studio/spriteSheetGrid.mjs";
 
 const read = (path) => readFileSync(new URL(path, import.meta.url), "utf8");
 const thumbnail = read("../app/components/SpriteThumbnail.jsx");
@@ -83,4 +83,31 @@ test("Studio API preserves published 3x3 grids for the five affected plant thumb
   assert.doesNotMatch(roster, /"electric-mushroom":\s*["\']\/assets\/plants\/Electric-mushroom-level-1\.png/);
   assert.match(roster, /asset\?\.id==="electric-mushroom"&&\/Electric-mushroom-level-1\\\.png\/i\.test\(asset\?\.path\|\|""\)/);
   assert.match(roster, /asset\?\.id==="electric-mushroom"\?"⚡🍄"/);
+});
+
+
+test("Studio roster thumbnails fall back from the preview proxy to the original asset path", () => {
+  for (const id of [
+    "bamboo-level-1",
+    "pepper-flamethrower-level-1",
+    "coconut-level-1",
+    "bamboo-throwing-level-1"
+  ]) {
+    const path = `/assets/plants/${id}-source.png`;
+    assert.deepEqual(resolveThumbnailSources({
+      id,
+      path,
+      previewUrl: `/api/studio/assets?preview=${encodeURIComponent(path)}`
+    }), {
+      primarySrc: `/api/studio/assets?preview=${encodeURIComponent(path)}`,
+      fallbackSrc: path
+    });
+  }
+  assert.deepEqual(resolveThumbnailSources({path:"/assets/plants/static.png"}), {
+    primarySrc:"/assets/plants/static.png",
+    fallbackSrc:""
+  });
+  assert.deepEqual(resolvePlantSpriteMetadata({}, {
+    rows:3, columns:4, frameCount:12, spriteSheet:true
+  }), {rows:3, columns:4, frameCount:12, spriteSheet:true});
 });
