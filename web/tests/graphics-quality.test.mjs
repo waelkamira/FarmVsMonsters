@@ -44,3 +44,21 @@ test("BattleScene passes one selected quality to all three VFX systems", () => {
   assert.match(battle, /new EffectDirector\(this, \{\s*quality: this\.graphicsQuality/);
   assert.match(battle, /new AmbientFX\(this, \{\s*quality: this\.graphicsQuality/);
 });
+
+import { detectBrowserVFXQuality, getGameRenderResolution } from "../game/vfx/core/VFXConfig.mjs";
+
+test("browser and battle scene quality detection share hardware tiers", () => {
+  assert.equal(detectBrowserVFXQuality({ userAgent: "Mozilla/5.0 (Windows NT 10.0)" }), "high");
+  assert.equal(detectBrowserVFXQuality({ userAgent: "Mozilla/5.0 (Linux; Android 13; Mobile)" }), "medium");
+  assert.equal(detectBrowserVFXQuality({ userAgentData: { mobile: true }, deviceMemory: 8, hardwareConcurrency: 8 }), "high");
+  assert.equal(detectBrowserVFXQuality({ userAgentData: { mobile: true }, deviceMemory: 2, hardwareConcurrency: 8 }), "low");
+});
+
+test("render resolution uses a bounded device-aware pixel ratio", () => {
+  assert.equal(getGameRenderResolution(3, "high"), 2.5);
+  assert.equal(getGameRenderResolution(3, "medium"), 1.75);
+  assert.equal(getGameRenderResolution(3, "low"), 1.25);
+  assert.equal(getGameRenderResolution(1.5, "high"), 1.5);
+  assert.equal(getGameRenderResolution(undefined, "high"), 1);
+  assert.equal(getGameRenderResolution(0.5, "medium"), 1);
+});
