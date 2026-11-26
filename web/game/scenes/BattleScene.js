@@ -1125,7 +1125,7 @@ export default class BattleScene extends Scene {
           ? this.stagePlantEntries.map((entry) => STAGE_PLANT_ALIASES[entry.id] || entry.id).slice(0, MAX_SEED_PACKETS)
           : ["radish", "mushroom"];
     }
-    if (!this.stagePlantRosterConfigured) {
+    if (!this.stagePlantRosterConfigured && !this.isStudioPlaytest) {
       if (!selectedTypes.includes("mushroom")) selectedTypes.unshift("mushroom");
       if (!selectedTypes.includes("radish")) selectedTypes.push("radish");
     }
