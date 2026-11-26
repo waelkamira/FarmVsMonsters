@@ -57,8 +57,8 @@ export function ensureEffectTextures(scene, warn = () => {}) {
   }
 }
 
-export function detectEffectQuality(scene) {
-  return detectVFXQuality(scene);
+export function detectEffectQuality(scene, navigatorInfo = globalThis.navigator) {
+  return detectVFXQuality(scene, navigatorInfo);
 }
 
 export class EffectDirector {
