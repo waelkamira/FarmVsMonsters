@@ -19,7 +19,7 @@ const BUILTIN_IMAGES={
  };
 const BUILTIN_SHEETS=new Set(["radish","pineapple","hazelnut","mango","snow-thrower"]);
 const makeKey=()=> "entry-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,7);
-function assetImage(asset,kind){return asset?.previewUrl||asset?.path||BUILTIN_IMAGES[kind]?.[asset?.id]||"";}
+function assetImage(asset,kind){if(asset?.id==="electric-mushroom"&&/Electric-mushroom-level-1\.png/i.test(asset?.path||""))return asset?.previewUrl||"";return asset?.previewUrl||asset?.path||BUILTIN_IMAGES[kind]?.[asset?.id]||"";}
 function AssetImage({asset,kind,large=false}) {
  const src=assetImage(asset,kind);
  const frameCount=Math.max(1,Number(asset?.frameCount)||((Number(asset?.rows)||1)*(Number(asset?.columns)||1)));
