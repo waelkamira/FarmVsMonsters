@@ -101,6 +101,8 @@ export default class BattleScene extends Scene {
       this.assetManager = null;
     });
     this.load.image("farm-battlefield", "/assets/backgrounds/farm-battlefield.jpeg");
+    // Covers the square grid baked into the background artwork with seamless grass.
+    this.load.image("battlefield-grass-overlay", "/assets/backgrounds/battlefield-grass-overlay.svg");
     this.load.image("seed-card", "/assets/items/ui/ui-seed-card.png");
     this.load.image("mushroom-card", "/assets/items/ui/ui-mushroom-card.png");
     this.load.image("seed-card-frame", "/assets/items/ui/ui-seed-card-fram.png");
@@ -665,6 +667,18 @@ export default class BattleScene extends Scene {
     this.farmBackground = this.add.image(560, 340, "farm-battlefield")
       .setDisplaySize(1120, 597.33).setPosition(560, 340)
       .setDepth(-5);
+
+    // The original artwork has a square tile grid painted into the grass itself.
+    // Mask only that playable ground area; plants, monsters and projectiles render above it.
+    if (this.textures.exists("battlefield-grass-overlay")) {
+      this.battlefieldGrassOverlay = this.add.image(560, 340, "battlefield-grass-overlay")
+        .setDisplaySize(1120, 597.33).setPosition(560, 340)
+        .setDepth(-4.9);
+      this.events.once("shutdown", () => {
+        this.battlefieldGrassOverlay?.destroy();
+        this.battlefieldGrassOverlay = null;
+      });
+    }
 
     // The uploaded artwork already contains the farmhouse and garden props.
     // Remove temporary vector labels so they do not float over the real art.
