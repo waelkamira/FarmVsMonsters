@@ -1463,7 +1463,7 @@ export default class BattleScene extends Scene {
     const currentKey = this.cavemanVisual.anims.currentAnim?.key;
     const actionAnimations = [
       "farmer-plant", "farmer-uproot", "farmer-attack",
-      "farmer-hit", "farmer-death", "farmer-collect", "farmer-sling", "farmer-rescue"
+      "farmer-hit", "farmer-death", "farmer-collect", "farmer-rescue"
     ];
     if (actionAnimations.includes(currentKey) && this.cavemanVisual.anims.isPlaying && key !== currentKey) return;
     if (currentKey === key && this.cavemanVisual.anims.isPlaying) return;
@@ -1490,7 +1490,6 @@ export default class BattleScene extends Scene {
     // Optional sheets are validated independently so unfinished story art
     // never disables the existing farmer animations.
     const definitions = [
-      ["farmer-sling", 6, 9, 0],
       ["farmer-rescue", 6, 8, 0],
       ["farmer-carry", 6, 8, -1]
     ];
