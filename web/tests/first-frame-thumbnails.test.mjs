@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { resolveSpriteThumbnailGrid } from "../game/studio/spriteSheetGrid.mjs";
+import { resolvePlantSpriteMetadata, resolveSpriteThumbnailGrid } from "../game/studio/spriteSheetGrid.mjs";
 
 const read = (path) => readFileSync(new URL(path, import.meta.url), "utf8");
 const thumbnail = read("../app/components/SpriteThumbnail.jsx");
@@ -12,6 +12,8 @@ const studio = read("../app/studio/page.js");
 const roster = read("../app/studio/StageRosterManager.jsx");
 const battle = read("../game/scenes/BattleScene.js");
 const styles = read("../app/globals.css");
+const plantCatalog = JSON.parse(read("../public/assets/studio-plant-catalog.json"));
+const assetManifest = JSON.parse(read("../public/assets/asset-manifest.json"));
 
 test("shared thumbnail renderer crops multi-frame sheets to frame zero and preserves one-frame images", () => {
   assert.match(thumbnail, /if \(!isSpriteSheet\) \{\s*return <img/);
@@ -53,4 +55,31 @@ test("battlefield Radish cells register the actual sheet grid before selecting f
   assert.match(battle, /add\.sprite\(0, -displayHeight \/ 2 \+ 2, "radish-level-1", 0\)/);
   assert.match(battle, /drawCatalogPlant\(type, x, y, row = 2\)/);
   assert.match(battle, /this\.textures\.getFrame\(texture, \["pineapple", "hazelnut", "mango", "snow-thrower", "electric-mushroom"\]\.includes\(type\) \? "0" : undefined\)/);
+});
+
+
+test("Studio API preserves published 3x3 grids for the five affected plant thumbnails", () => {
+  const affected = [
+    "radish-level-1",
+    "bamboo-level-1",
+    "pepper-flamethrower-level-1",
+    "bamboo-throwing-level-1"
+  ];
+  for (const id of affected) {
+    const plant = plantCatalog.plants.find((item) => item.id === id);
+    const source = assetManifest.assets.find((item) => item.key === "plants-" + id);
+    assert.ok(plant, `missing published catalog entry for ${id}`);
+    assert.ok(source, `missing image manifest entry for ${id}`);
+    assert.deepEqual(resolvePlantSpriteMetadata(source, plant), {
+      rows: 3, columns: 3, frameCount: 9, spriteSheet: true
+    }, `Studio hydration must retain the 3x3 frame grid for ${id}`);
+  }
+  const radish = plantCatalog.plants.find((item) => item.id === "radish-level-1");
+  assert.equal(radish.rows, 3);
+  assert.equal(radish.columns, 3);
+  assert.equal(radish.spriteSheet, true);
+
+  // Electric Mushroom is a built-in rather than a published Studio catalog entry.
+  assert.match(roster, /"electric-mushroom":\"\/assets\/plants\/Electric-mushroom-level-1\.png\"/);
+  assert.match(roster, /BUILTIN_SHEETS=new Set\(\[[^\]]*"electric-mushroom"[^\]]*\]\)/);
 });
