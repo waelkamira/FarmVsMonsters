@@ -21,7 +21,7 @@ const BUILTIN_SHEETS=new Set(["radish","pineapple","hazelnut","mango","snow-thro
 const makeKey=()=> "entry-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,7);
 function assetImage(asset,kind){if(asset?.id==="electric-mushroom"&&/Electric-mushroom-level-1\.png/i.test(asset?.path||""))return asset?.previewUrl||"";return asset?.previewUrl||asset?.path||BUILTIN_IMAGES[kind]?.[asset?.id]||"";}
 function AssetImage({asset,kind,large=false}) {
- const {primarySrc,fallbackSrc}=resolveThumbnailSources(asset);
+ const {primarySrc,fallbackSrc}=resolveThumbnailSources({...asset,path:assetImage(asset,kind)});
  const [imageState,setImageState]=useState({source:primarySrc,src:primarySrc,failed:false});
  const currentState=imageState.source===primarySrc?imageState:{source:primarySrc,src:primarySrc,failed:false};
  const src=currentState.src;
