@@ -103,7 +103,6 @@ export default class BattleScene extends Scene {
     this.load.image("farm-battlefield", "/assets/backgrounds/farm-battlefield-clean.svg");
     this.load.image("seed-card", "/assets/items/ui/ui-seed-card.png");
     this.load.image("mushroom-card", "/assets/items/ui/ui-mushroom-card.png");
-    this.load.image("seed-card-frame", "/assets/items/ui/ui-seed-card-fram.png");
     this.load.image("seed-card-locked", "/assets/items/ui/ui-seed-card-locked.png");
     this.load.image("inventory-wood-frame", "/assets/items/ui/ui-inventory-wood-fram.png");
     // FarmVsMonsters top HUD artwork. The dedicated mushroom currency icon
