@@ -1,6 +1,6 @@
 "use client";
 
-import { useSyncExternalStore, useState, useEffect } from "react";
+import { useSyncExternalStore, useState } from "react";
 import PhaserGame from "../../game/PhaserGame";
 import { loadUnlockedPlantIds } from "../../game/rules/phaseOneRules.mjs";
 import {
@@ -26,6 +26,15 @@ const PLANT_PACKETS = [
 
 const LOADOUT_SERVER_SNAPSHOT = JSON.stringify({ ready: false, unlocked: ["radish", "mushroom"], selected: ["radish", "mushroom"] });
 
+function subscribeToLocation(callback) {
+  window.addEventListener("popstate", callback);
+  return () => window.removeEventListener("popstate", callback);
+}
+
+function getLocationSearchSnapshot() {
+  return window.location.search;
+}
+
 function getLoadoutSnapshot() {
   let unlocked = ["radish", "mushroom"];
   try {
@@ -45,22 +54,16 @@ export default function GamePage() {
   const { t, locale } = useLocale();
   const arabic = locale === "ar";
   const loadoutSnapshot = useSyncExternalStore(subscribeToBrowserStorage, getLoadoutSnapshot, () => LOADOUT_SERVER_SNAPSHOT);
+  const locationSearch = useSyncExternalStore(subscribeToLocation, getLocationSearchSnapshot, () => "");
+  const stageParam = new URLSearchParams(locationSearch).get("stage");
+  const isStagePlaytest = stageParam !== null && Number.isInteger(Number(stageParam)) && Number(stageParam) >= 1;
   const { unlocked, selected, ready } = JSON.parse(loadoutSnapshot);
   const [selectedOverride, setSelectedOverride] = useState(null);
   const activeSelected = selectedOverride ?? selected;
   const [battleStarted, setBattleStarted] = useState(false);
+  const showBattle = battleStarted || isStagePlaytest;
   const [saveError, setSaveError] = useState(false);
 
-  // Stage playtests already have an authored loadout on the previous screen.
-  // Do not show the campaign loadout screen again: it only knows built-in plants
-  // and would overwrite Studio-selected plants before Phaser can read them.
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const requestedStage = Number(params.get("stage"));
-    if (params.has("stage") && Number.isInteger(requestedStage) && requestedStage >= 1) {
-      setBattleStarted(true);
-    }
-  }, []);
 
   function togglePacket(id) {
     if (!unlocked.includes(id) || id === "radish" || id === "mushroom") return;
@@ -86,7 +89,7 @@ export default function GamePage() {
   }
 
   return <main className="game-shell game-shell-seed-entry" dir={arabic ? "rtl" : "ltr"}>
-    {!battleStarted ? <section className="seed-selection-shell" aria-labelledby="seed-selection-title">
+    {!showBattle ? <section className="seed-selection-shell" aria-labelledby="seed-selection-title">
       <div className="seed-selection-heading">
         <span className="seed-selection-eyebrow">{t("BEFORE THE BATTLE")}</span>
         <h1 id="seed-selection-title">{t("Choose your seed packets")}</h1>
