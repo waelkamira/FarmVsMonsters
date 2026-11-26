@@ -44,7 +44,9 @@ test("Studio asset library uses larger thumbnails and a horizontal responsive ac
 test("stage roster plant and monster thumbnails crop sprite sheets to frame zero", () => {
   assert.match(rosterPage, /BUILTIN_SHEETS/);
   assert.match(rosterPage, /backgroundPosition:"left top"/);
-  assert.match(rosterPage, /frameCount>1/);
+  assert.match(rosterPage, /const spriteSheet=frameCount>1/);
+  assert.match(rosterPage, /resolveSpriteThumbnailGrid\(/);
+  assert.match(rosterPage, /backgroundPosition:"left top"/);
   assert.match(rosterStyles, /\.stage-roster-first-frame/);
 });
 

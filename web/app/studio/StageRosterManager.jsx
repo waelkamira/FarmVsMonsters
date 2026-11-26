@@ -2,6 +2,7 @@
 import {useCallback,useEffect,useMemo,useState} from "react";
 import Link from "next/link";
 import "./stage-roster.css";
+import { resolveSpriteThumbnailGrid } from "../../game/studio/spriteSheetGrid.mjs";
 
 const EMPTY={version:1,stages:{"1":{monsters:[],plants:[]}}};
 const BUILT_INS={
@@ -22,9 +23,15 @@ function assetImage(asset,kind){return asset?.previewUrl||asset?.path||BUILTIN_I
 function AssetImage({asset,kind,large=false}) {
  const src=assetImage(asset,kind);
  const frameCount=Math.max(1,Number(asset?.frameCount)||((Number(asset?.rows)||1)*(Number(asset?.columns)||1)));
- const spriteSheet=frameCount>1&&(asset?.spriteSheet===true||BUILTIN_SHEETS.has(asset?.id));
- const rows=Math.max(1,Number(asset?.rows)||(BUILTIN_SHEETS.has(asset?.id)?3:1));
- const columns=Math.max(1,Number(asset?.columns)||(BUILTIN_SHEETS.has(asset?.id)?3:1));
+ // Any multi-frame plant/monster artwork is a sprite sheet for thumbnail purposes,
+ // even when older registry entries are missing the explicit spriteSheet flag.
+ const spriteSheet=frameCount>1;
+ const fallbackGrid=BUILTIN_SHEETS.has(asset?.id)?{rows:3,columns:3}:{rows:1,columns:1};
+ const {rows,columns}=resolveSpriteThumbnailGrid(
+  frameCount,
+  Number(asset?.rows)||fallbackGrid.rows,
+  Number(asset?.columns)||fallbackGrid.columns
+ );
  return <div className={"stage-roster-image"+(large?" is-large":"")}>
   {src?(spriteSheet?<div role="img" aria-label={asset?.name||asset?.id||"صورة الأصل"} className="stage-roster-first-frame" style={{backgroundImage:"url("+JSON.stringify(src)+")",backgroundSize:(columns*100)+"% "+(rows*100)+"%",backgroundPosition:"left top"}}/>:<img src={src} alt={asset?.name||asset?.id||"صورة الأصل"} loading="lazy" onError={event=>{event.currentTarget.style.display="none";}}/>):<span aria-hidden="true">{kind==="monster"?"👾":"🌱"}</span>}
  </div>;
