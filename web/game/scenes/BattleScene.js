@@ -611,6 +611,7 @@ export default class BattleScene extends Scene {
 
     this.drawField();
     this.createFarmBackground();
+    this.drawBattleCellGlassOverlay();
     this.drawBattlefieldGlassCells();
     this.drawPlantingGrid();
     this.createHud();
@@ -659,6 +660,23 @@ export default class BattleScene extends Scene {
     this.add.text(145, 386, translate("PRINCESS", window.localStorage.getItem("farmVsMonsters.language") || "ar"), { fontFamily: "Arial", fontSize: "10px", color: "#fff4d4", fontStyle: "bold" }).setOrigin(0.5).setData("localeKey", "PRINCESS");
     this.add.text(94, 555, translate("FARMHOUSE", window.localStorage.getItem("farmVsMonsters.language") || "ar"), { fontFamily: "Arial", fontSize: "13px", color: "#fff3d4", fontStyle: "bold" }).setOrigin(0.5).setData("localeKey", "FARMHOUSE");
     this.add.text(1000, 95, translate("MONSTER GATE", window.localStorage.getItem("farmVsMonsters.language") || "ar"), { fontFamily: "Arial", fontSize: "13px", color: "#563c2c", fontStyle: "bold" }).setOrigin(0.5).setData("localeKey", "MONSTER GATE");
+  }
+
+  drawBattleCellGlassOverlay() {
+    // Light, consistent green-glass cell boundaries sit above the field art
+    // but below plants, projectiles and characters.
+    const grid = this.add.graphics().setDepth(-4);
+    for (let row = 0; row < LANES; row += 1) {
+      for (let col = 0; col < COLUMNS; col += 1) {
+        const cell = this.cellPolygon(col, row);
+        grid.fillStyle(0xb9ef9a, 0.075);
+        grid.fillPoints(cell, true);
+        grid.lineStyle(1.35, 0xeaffdc, 0.34);
+        grid.strokePoints(cell, true);
+        grid.lineStyle(1, 0x285d35, 0.12);
+        grid.strokePoints(cell, true);
+      }
+    }
   }
 
   createFarmBackground() {
@@ -1177,10 +1195,11 @@ export default class BattleScene extends Scene {
     }
     // Frosted gradient layer is inserted between frame art and interactive/content sprites.
     const cardGlass = this.add.graphics();
-    cardGlass.fillStyle(0xf7f76e, 0.72); cardGlass.fillRoundedRect(-35, -38, 70, 37, 8);
-    cardGlass.fillStyle(0x68b301, 0.72); cardGlass.fillRoundedRect(-35, -1, 70, 39, 8);
-    cardGlass.fillStyle(0xffffff, 0.22); cardGlass.fillRoundedRect(-35, -38, 70, 76, 8);
-    cardGlass.lineStyle(1.4, 0xffffff, 0.72); cardGlass.strokeRoundedRect(-35, -38, 70, 76, 8);
+    cardGlass.fillStyle(0xe7f6dc, 0.94); cardGlass.fillRoundedRect(-34, -37, 68, 74, 9);
+    cardGlass.fillStyle(0xffffff, 0.28); cardGlass.fillRoundedRect(-32, -35, 64, 32, 7);
+    cardGlass.fillStyle(0x9fce83, 0.22); cardGlass.fillRoundedRect(-32, -1, 64, 35, 7);
+    cardGlass.lineStyle(1.25, 0xffffff, 0.9); cardGlass.strokeRoundedRect(-34, -37, 68, 74, 9);
+    cardGlass.lineStyle(1, 0x4e8050, 0.22); cardGlass.strokeRoundedRect(-31, -34, 62, 68, 7);
     const plantHeight = 46;
     let icon;
     let iconScale = 1;
@@ -1202,8 +1221,8 @@ export default class BattleScene extends Scene {
     // would enlarge 341–418px source frames to nearly their original size.
     icon.setScale(iconScale * 0.95 * 0.95);
     const cost = this.add.text(0, 26.4, locked ? "🔒" : "🍄" + costLabel, {
-      fontFamily: "Arial", fontSize: "13px", color: "#fff0bd", fontStyle: "bold",
-      stroke: "#3d2817", strokeThickness: 2, resolution: 2, align: "center"
+      fontFamily: "Arial", fontSize: "13px", color: "#315b32", fontStyle: "bold",
+      stroke: "#f5fff0", strokeThickness: 1, resolution: 2, align: "center"
     }).setOrigin(0.5).setScale(0.855);
     const cooldownOverlay = this.add.rectangle(0, -1, 64, 72, 0x1a160f, 0.72).setVisible(false);
     const cooldownLabel = this.add.text(0, -1, "", { fontFamily: "Arial", fontSize: "20px", color: "#fff4d6", fontStyle: "bold", stroke: "#382312", strokeThickness: 4, resolution: 2 }).setOrigin(0.5).setVisible(false);
