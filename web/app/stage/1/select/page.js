@@ -46,7 +46,7 @@ export default function StageOneSeedSelectionPage() {
       } catch { return []; }
     };
     (async () => {
-      const [published, testing, stageSettings] = await Promise.all([
+      const [published, testing, stageSettings, studioSession] = await Promise.all([
         readCatalog("/assets/studio-plant-catalog.json"),
         readCatalog("/api/studio/assets?catalog=testing"),
         fetch("/api/studio/stage-encounters", { cache: "no-store" }).then(response => response.ok ? response.json() : null).catch(() => null),
