@@ -637,8 +637,7 @@ export default class BattleScene extends Scene {
   drawField() {
     // Fallback art only. When the uploaded background loads it is rendered above this layer.
     const g = this.add.graphics().setDepth(-10);
-    g.fillGradientStyle(0xb9d98a, 0xb9d98a, 0x8dbb69, 0x8dbb69, 1);
-    g.fillRect(0, 0, 1120, 680);
+    // No full-screen green wash behind the battlefield fallback artwork.
     g.fillStyle(0x8a603b, 1); g.fillRoundedRect(185, 115, 690, 500, 24);
     g.fillStyle(0x9c7047, 1); g.fillRoundedRect(195, 125, 670, 480, 18);
 
