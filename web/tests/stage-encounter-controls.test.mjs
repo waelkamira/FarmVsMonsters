@@ -188,3 +188,18 @@ test("stage publication controls player-visible plants, per-stage unlocks and ba
  assert.match(battle,/stage-background/);
  assert.match(battle,/backgroundKey/);
 });
+
+
+test("stage config reads and writes use the durable GitHub branch when a token is configured",()=>{
+ const api=read("app/api/studio/stage-encounters/route.js");
+ assert.match(api,/function getStorageDriver\(\)/);
+ assert.match(api,/configured==="github"\|\|configured==="local"/);
+ assert.match(api,/return process\.env\.STUDIO_GITHUB_TOKEN\?"github":"local"/);
+ assert.equal((api.match(/const driver=getStorageDriver\(\);/g)||[]).length,2);
+});
+
+test("stage selection visibly marks locked plants instead of presenting every card as unlocked",()=>{
+ const selection=read("app/stage/1/select/page.js");
+ assert.match(selection,/const unlocked = unlockedIds\.includes\(plant\.id\)/);
+ assert.doesNotMatch(selection,/const unlocked = true/);
+});

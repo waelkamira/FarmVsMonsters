@@ -13,6 +13,13 @@ const DEFAULT_CONFIG={"version":1,"stages":{"1":{"monsters":[{"key":"monster-01-
 const authorized=req=>verifyStudioSession(process.env.STUDIO_SESSION_SECRET || "",req.cookies.get(COOKIE)?.value||"");
 const githubHeaders=token=>({Authorization:"Bearer "+token,Accept:"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28"});
 const githubUrl=()=> "https://api.github.com/repos/"+(process.env.STUDIO_GITHUB_REPOSITORY||"waelkamira/FarmVsMonsters")+"/contents/"+CONFIG_PATH;
+// Keep Studio writes and public gameplay reads on the same durable source.
+// An explicit setting always wins; otherwise use GitHub when its token is configured.
+function getStorageDriver(){
+ const configured=String(process.env.STUDIO_STORAGE_DRIVER||"").trim().toLowerCase();
+ if(configured==="github"||configured==="local")return configured;
+ return process.env.STUDIO_GITHUB_TOKEN?"github":"local";
+}
 
 function normalizeConfig(value){
  const source=value&&typeof value==="object"?value:DEFAULT_CONFIG;
@@ -96,7 +103,7 @@ async function writeGithub(config,expectedSha){
 }
 export async function GET(req){
  try{
-  const driver=process.env.STUDIO_STORAGE_DRIVER||"local";
+  const driver=getStorageDriver();
   const result=driver==="github"?await readGithub():{config:await readLocal(),sha:null};
   if(authorized(req)){
    return NextResponse.json({...result.config,sha:result.sha,storage:driver},{headers:{"Cache-Control":"no-store"}});
@@ -116,7 +123,7 @@ export async function PATCH(req){
  let body;try{body=await req.json();}catch{return NextResponse.json({error:"Invalid stage settings."},{status:400});}
  const config=normalizeConfig(body.config);
  try{
-  const driver=process.env.STUDIO_STORAGE_DRIVER||"local";
+  const driver=getStorageDriver();
   const invalidReferences=validateStageMonsterReferences(config,await readMonsterAssets(driver));
   if(invalidReferences.length){
    const details=invalidReferences.map(item=>"المرحلة "+item.stageId+"، الموجة "+item.wave+": "+item.id).join("؛ ");
