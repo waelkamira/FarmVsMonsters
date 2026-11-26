@@ -125,7 +125,7 @@ test("Studio stage playtests bypass the campaign-only second seed picker",()=>{
 
 test("battle seed bank uses the configured stage roster instead of campaign unlocks",()=>{
  const battle=read("game/scenes/BattleScene.js");
- assert.match(battle,/const stageAllowedTypes = this\.stagePlantRosterConfigured/);
+ assert.match(battle,/const stageAllowedTypes = this\.stagePlantRosterConfigured && !this\.isStudioPlaytest/);
  assert.match(battle,/stageAllowedTypes\.has\(type\)/);
  assert.match(battle, /"hazelnut-level-1": "hazelnut"/);
  assert.match(battle,/const stageAllowedTypes = this\.stagePlantRosterConfigured && !this\.isStudioPlaytest/);
