@@ -194,7 +194,7 @@ test("re-applying atmosphere never leaks, and destroy removes the listener and e
   assert.equal(live(scene).length, first, "no leak on re-apply");
   fx.applyStageAtmosphere(5);
   assert.equal(kinds(scene, "fx-shape-leaf").length, 0, "old leaves cleared");
-  assert.equal(scene.events.count("update"), 1);
+  assert.equal(scene.events.count("update"), 2, "ambient and adaptive-quality listeners are active");
   fx.destroy();
   assert.equal(scene.events.count("update"), 0);
   assert.equal(live(scene).length, 0);
