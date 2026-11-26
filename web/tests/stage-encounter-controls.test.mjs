@@ -132,3 +132,21 @@ test("battle seed bank uses the configured stage roster instead of campaign unlo
  assert.match(battle,/requestedLoadout\.filter\(\(type\) => availableTypes\.has\(type\)\)/);
  assert.match(battle,/if \(!this\.stagePlantRosterConfigured\) \{/);
 });
+
+
+test("Studio admin playtests bypass campaign locks and stage roster restrictions without changing normal play",()=>{
+ const battle=read("game/scenes/BattleScene.js");
+ const selection=read("app/stage/1/select/page.js");
+ const manager=read("app/studio/StageRosterManager.jsx");
+ assert.match(manager,/studioPlaytest=1/);
+ assert.match(selection,/get\("studioPlaytest"\) === "1"/);
+ assert.match(selection,/configuredStage\?\.plantsConfigured && !isStudioPlaytest/);
+ assert.match(selection,/plant\.required && !studioPlaytest/);
+ assert.match(selection,/studioPlaytest \? "&studioPlaytest=1" : ""/);
+ assert.match(battle,/get\("studioPlaytest"\) === "1"/);
+ assert.match(battle,/this\.stagePlantRosterConfigured && !this\.isStudioPlaytest/);
+ assert.match(battle,/this\.isStudioPlaytest \|\| PLAYTEST_ALL_PLANTS \|\| unlocked\.has\(type\)/);
+ assert.match(battle,/!this\.isStudioPlaytest && !PLAYTEST_ALL_PLANTS && !studioPlant/);
+ assert.match(battle,/this\.stagePlantRosterConfigured && !this\.isStudioPlaytest && !stagePlantEntry/);
+ assert.match(battle,/this\.isStudioPlaytest\s*\? \[\.\.\.new Set\(\[\.\.\.campaignUnlocked, \.\.\.ALL_PLAYTEST_PLANT_IDS/);
+});
