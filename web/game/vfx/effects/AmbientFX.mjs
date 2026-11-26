@@ -49,16 +49,22 @@ const pick = (list) => list[Math.floor(Math.random() * list.length)];
 function ensureAmbientGlowTexture(scene) {
   if (!scene?.textures || !scene?.make?.graphics) return false;
   if (scene.textures.exists(AMBIENT_GLOW_TEXTURE)) return true;
-  const graphics = scene.make.graphics({ x: 0, y: 0, add: false });
-  // Layer translucent circles from the outside inward to approximate a smooth
-  // radial falloff. A single cached texture keeps per-frame and draw-call costs low.
-  for (let radius = 128; radius >= 4; radius -= 4) {
-    graphics.fillStyle(0xffffff, 0.008);
-    graphics.fillCircle(128, 128, radius);
+  let graphics = null;
+  try {
+    graphics = scene.make.graphics({ x: 0, y: 0, add: false });
+    // Layer translucent circles from the outside inward to approximate a smooth
+    // radial falloff. A single cached texture keeps per-frame and draw-call costs low.
+    for (let radius = 128; radius >= 4; radius -= 4) {
+      graphics.fillStyle(0xffffff, 0.008);
+      graphics.fillCircle(128, 128, radius);
+    }
+    graphics.generateTexture(AMBIENT_GLOW_TEXTURE, 256, 256);
+    graphics.destroy();
+    return scene.textures.exists(AMBIENT_GLOW_TEXTURE);
+  } catch {
+    graphics?.destroy?.();
+    return false;
   }
-  graphics.generateTexture(AMBIENT_GLOW_TEXTURE, 256, 256);
-  graphics.destroy();
-  return scene.textures.exists(AMBIENT_GLOW_TEXTURE);
 }
 
 /** 1-2 نهار، 3-4 غروب، 5+ ليل عاصف. */
