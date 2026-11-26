@@ -154,7 +154,7 @@ test("Studio admin playtests bypass campaign locks and stage roster restrictions
  assert.match(battle,/this\.stagePlantRosterConfigured && !this\.isStudioPlaytest/);
  assert.match(battle,/this\.isStudioPlaytest \|\| PLAYTEST_ALL_PLANTS \|\| unlocked\.has\(type\)/);
  assert.match(battle,/!this\.isStudioPlaytest && !PLAYTEST_ALL_PLANTS && !studioPlant/);
- assert.match(battle,/this\.stagePlantRosterConfigured && !stagePlantEntry/);
+ assert.match(battle,/this\.stagePlantRosterConfigured && !this\.isStudioPlaytest && !stagePlantEntry/);
  assert.match(battle,/if \(!this\.stagePlantRosterConfigured && !this\.isStudioPlaytest\)/);
  assert.match(battle,/this\.isStudioPlaytest\s*\? \[\.\.\.new Set\(\[\.\.\.campaignUnlocked, \.\.\.ALL_PLAYTEST_PLANT_IDS/);
 });
