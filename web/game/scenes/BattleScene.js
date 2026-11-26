@@ -1195,11 +1195,11 @@ export default class BattleScene extends Scene {
     }
     // Frosted gradient layer is inserted between frame art and interactive/content sprites.
     const cardGlass = this.add.graphics();
-    cardGlass.fillStyle(0xe7f6dc, 0.94); cardGlass.fillRoundedRect(-34, -37, 68, 74, 9);
-    cardGlass.fillStyle(0xffffff, 0.28); cardGlass.fillRoundedRect(-32, -35, 64, 32, 7);
-    cardGlass.fillStyle(0x9fce83, 0.22); cardGlass.fillRoundedRect(-32, -1, 64, 35, 7);
+    cardGlass.fillStyle(0x9fe0a2, 0.28); cardGlass.fillRoundedRect(-34, -37, 68, 74, 9);
+    cardGlass.fillStyle(0xffffff, 0.24); cardGlass.fillRoundedRect(-32, -35, 64, 30, 7);
+    cardGlass.fillStyle(0x286b43, 0.12); cardGlass.fillRoundedRect(-32, -2, 64, 36, 7);
     cardGlass.lineStyle(1.25, 0xffffff, 0.9); cardGlass.strokeRoundedRect(-34, -37, 68, 74, 9);
-    cardGlass.lineStyle(1, 0x4e8050, 0.22); cardGlass.strokeRoundedRect(-31, -34, 62, 68, 7);
+    cardGlass.lineStyle(1, 0x286b43, 0.3); cardGlass.strokeRoundedRect(-31, -34, 62, 68, 7);
     const plantHeight = 46;
     let icon;
     let iconScale = 1;
@@ -1851,18 +1851,18 @@ export default class BattleScene extends Scene {
     this.collectionMenuOpen = true;
     this.collectionMenuTab = "phases";
     this.collectionMenuLayer = this.add.container(560, 340).setDepth(90);
-    this.collectionMenuLayer.add(this.add.rectangle(0, 0, 1120, 680, 0x142b50, 0.42).setInteractive());
-    const panelGlow = this.add.rectangle(0, 0, 774, 584, 0x8b65e8, 0.18).setStrokeStyle(1, 0xffffff, 0.48);
-    const panel = this.add.rectangle(0, 0, 760, 570, 0x315b91, 0.68).setStrokeStyle(1, 0xffffff, 0.76);
-    const panelInset = this.add.rectangle(0, 0, 742, 552, 0x35bceb, 0.08).setStrokeStyle(1, 0xa7e84f, 0.28);
+    this.collectionMenuLayer.add(this.add.rectangle(0, 0, 1120, 680, 0x102b1c, 0.48).setInteractive());
+    const panelGlow = this.add.rectangle(0, 0, 774, 584, 0x9fe0a2, 0.14).setStrokeStyle(1, 0xffffff, 0.34);
+    const panel = this.add.rectangle(0, 0, 760, 570, 0x286b43, 0.62).setStrokeStyle(1.5, 0xf2fff1, 0.82);
+    const panelInset = this.add.rectangle(0, 0, 742, 552, 0xb6edbc, 0.1).setStrokeStyle(1, 0xeaffeb, 0.34);
     this.collectionMenuLayer.add([panelGlow, panel, panelInset]);
-    this.collectionMenuLayer.add(this.add.rectangle(0, -274, 738, 40, 0x35bceb, 0.34).setStrokeStyle(1, 0xffffff, 0.72));
+    this.collectionMenuLayer.add(this.add.rectangle(0, -274, 738, 40, 0x83ce91, 0.26).setStrokeStyle(1, 0xf2fff1, 0.68));
     this.collectionMenuLayer.add(this.add.text(0, -274, "دفتر المزرعة والمغامرة  ·  FARM JOURNAL", {
-      fontFamily: "Arial", fontSize: "19px", color: "#ffffff", fontStyle: "bold", stroke: "#17213d", strokeThickness: 3
+      fontFamily: "Arial", fontSize: "19px", color: "#f2fff1", fontStyle: "bold", stroke: "#17442d", strokeThickness: 2
     }).setOrigin(0.5));
     const close = this.add.text(350, -274, "✕", {
-      fontFamily: "Arial", fontSize: "23px", color: "#ffffff", backgroundColor: "rgba(255,113,133,0.72)",
-      padding: { x: 8, y: 2 }, stroke: "#ffffff", strokeThickness: 1
+      fontFamily: "Arial", fontSize: "23px", color: "#f2fff1", backgroundColor: "rgba(113,190,132,0.55)",
+      padding: { x: 8, y: 2 }, stroke: "#eaffeb", strokeThickness: 1
     }).setOrigin(0.5).setAlpha(0.88).setInteractive({ useHandCursor: true });
     close.on("pointerover", () => close.setScale(1.08).setAlpha(1));
     close.on("pointerout", () => close.setScale(1).setAlpha(0.88));
@@ -1895,19 +1895,19 @@ export default class BattleScene extends Scene {
     tabs.forEach(([id, label], index) => {
       const x = -270 + index * 180;
       const active = this.collectionMenuTab === id;
-      const tabColors = [0x42c96b, 0x35bceb, 0xffca45, 0x8b65e8];
-      const bg = this.add.rectangle(x, 0, 164, 42, active ? tabColors[index] : 0xdaf3ff, active ? 0.58 : 0.16)
-        .setStrokeStyle(1, 0xffffff, active ? 0.88 : 0.42).setInteractive({ useHandCursor: true });
+      const tabColors = [0x83ce91, 0x69b981, 0x4f9d68, 0x347d50];
+      const bg = this.add.rectangle(x, 0, 164, 42, active ? tabColors[index] : 0xcdf2d1, active ? 0.58 : 0.18)
+        .setStrokeStyle(1, 0xf2fff1, active ? 0.92 : 0.54).setInteractive({ useHandCursor: true });
       const txt = this.add.text(x, 0, label, {
-        fontFamily: "Arial", fontSize: "15px", color: "#ffffff", fontStyle: "bold", stroke: "#17213d", strokeThickness: 2
+        fontFamily: "Arial", fontSize: "15px", color: "#f2fff1", fontStyle: "bold", stroke: "#17442d", strokeThickness: 1
       }).setOrigin(0.5);
       bg.on("pointerover", () => {
-        if (!active) bg.setFillStyle(tabColors[index], 0.42).setStrokeStyle(1, 0xffffff, 0.72);
+        if (!active) bg.setFillStyle(tabColors[index], 0.56).setStrokeStyle(1, 0xf2fff1, 0.82);
         bg.setScale(1.025);
       });
       bg.on("pointerout", () => {
-        bg.setFillStyle(active ? tabColors[index] : 0xdaf3ff, active ? 0.58 : 0.16)
-          .setStrokeStyle(1, 0xffffff, active ? 0.88 : 0.42)
+        bg.setFillStyle(active ? tabColors[index] : 0xcdf2d1, active ? 0.58 : 0.18)
+          .setStrokeStyle(1, 0xf2fff1, active ? 0.92 : 0.54)
           .setScale(1);
       });
       bg.on("pointerdown", () => { this.collectionMenuTab = id; this.renderCollectionMenu(); });
@@ -1917,7 +1917,7 @@ export default class BattleScene extends Scene {
     const addLabel = (x, y, value, size = 19, color = "#ffffff") =>
       content.add(this.add.text(x, y, value, { fontFamily: "Georgia", fontSize: size + "px", color, fontStyle: "bold", align: "center", wordWrap: { width: 650 } }).setOrigin(0.5));
     const addRow = (y, imageKey, title, detail, locked = false) => {
-      content.add(this.add.rectangle(0, y, 660, 72, 0x8edcff, 0.18).setStrokeStyle(1, 0xffffff, 0.42));
+      content.add(this.add.rectangle(0, y, 660, 72, 0x9fe0a2, 0.16).setStrokeStyle(1, 0xf2fff1, 0.58));
       if (imageKey && this.textures.exists(imageKey)) {
         const icon = imageKey === "radish-level-1"
           ? this.add.sprite(-285, y, imageKey, 0).setDisplaySize(45.4, 54)
@@ -1936,15 +1936,15 @@ export default class BattleScene extends Scene {
         const row = Math.floor((stage - 1) / 2);
         const col = (stage - 1) % 2;
         const x = col === 0 ? -170 : 170;
-        content.add(this.add.rectangle(x, 35 + row * 82, 300, 82, stage === 1 ? 0x42c96b : 0x8b65e8, stage === 1 ? 0.42 : 0.24).setStrokeStyle(1, 0xffffff, 0.46));
+        content.add(this.add.rectangle(x, 35 + row * 82, 300, 82, stage === 1 ? 0x83ce91 : 0x3c8054, stage === 1 ? 0.3 : 0.2).setStrokeStyle(1, 0xf2fff1, 0.56));
         const unlocked = stage === 1;
         if (stage === 1 && this.textures.exists("phase-one-emblem")) {
           content.add(this.add.image(x - 105, 65 + row * 100, "phase-one-emblem").setDisplaySize(90, 58));
         } else {
           content.add(this.add.text(x - 105, 65 + row * 100, unlocked ? "I" : "🔒", { fontSize: "30px", color: "#ffffff", stroke: "#17213d", strokeThickness: 3 }).setOrigin(0.5));
         }
-        content.add(this.add.text(x + 35, 18 + row * 82, locale === "ar" ? "المرحلة " + stage : "STAGE " + stage, { fontSize: "17px", color: "#ffffff", fontStyle: "bold", stroke: "#17213d", strokeThickness: 2 }).setOrigin(0.5));
-        content.add(this.add.text(x + 35, 48 + row * 82, unlocked ? (locale === "ar" ? "متاحة للعب" : "AVAILABLE") : (locale === "ar" ? "مغلقة — تحتاج مفتاحاً" : "LOCKED · KEY REQUIRED"), { fontSize: "12px", color: "#ffffff", fontStyle: "bold", stroke: "#17213d", strokeThickness: 2 }).setOrigin(0.5));
+        content.add(this.add.text(x + 35, 18 + row * 82, locale === "ar" ? "المرحلة " + stage : "STAGE " + stage, { fontSize: "17px", color: "#f2fff1", fontStyle: "bold", stroke: "#17442d", strokeThickness: 1 }).setOrigin(0.5));
+        content.add(this.add.text(x + 35, 48 + row * 82, unlocked ? (locale === "ar" ? "متاحة للعب" : "AVAILABLE") : (locale === "ar" ? "مغلقة — تحتاج مفتاحاً" : "LOCKED · KEY REQUIRED"), { fontSize: "12px", color: "#eaffeb", fontStyle: "bold", stroke: "#17442d", strokeThickness: 1 }).setOrigin(0.5));
       }
       addLabel(0, 435, locale === "ar" ? "ستُفتح المراحل التالية بعد إكمال المغامرات السابقة." : "Complete earlier adventures to unlock later stages.", 13, "#ffffff");
     } else if (this.collectionMenuTab === "plants") {
@@ -1985,8 +1985,8 @@ export default class BattleScene extends Scene {
     // The uploaded wood frame is kept at its original aspect ratio. A parchment
     // panel sits behind it, while all inventory content stays inside its border.
     this.inventoryLayer.add(
-      this.add.rectangle(0, 0, 500, 548, 0xe9d7ad, 1)
-        .setStrokeStyle(4, 0x754a25, 1)
+      this.add.rectangle(0, 0, 500, 548, 0x286b43, 0.58)
+        .setStrokeStyle(1.5, 0xf2fff1, 0.76)
     );
     if (this.textures.exists("inventory-wood-frame")) {
       this.inventoryLayer.add(
@@ -2004,9 +2004,9 @@ export default class BattleScene extends Scene {
       stroke: "#4a2b16", strokeThickness: 5, align: "center"
     }).setOrigin(0.5));
     const close = this.add.text(230, -266, "✕", {
-      fontFamily: "Arial", fontSize: "22px", color: "#fff4d8",
-      backgroundColor: "#a94736", padding: { x: 8, y: 3 },
-      stroke: "#4a2b16", strokeThickness: 2
+      fontFamily: "Arial", fontSize: "22px", color: "#f2fff1",
+      backgroundColor: "rgba(78,151,98,0.68)", padding: { x: 8, y: 3 },
+      stroke: "#17442d", strokeThickness: 1
     }).setOrigin(0.5).setInteractive({ useHandCursor: true });
     close.on("pointerover", () => close.setScale(1.08));
     close.on("pointerout", () => close.setScale(1));
@@ -2042,12 +2042,12 @@ export default class BattleScene extends Scene {
     tabSpecs.forEach(([id, label, x]) => {
       const active = this.inventoryTab === id;
       const plate = this.add.rectangle(x, 0, 184, 40,
-        active ? 0x6c9d45 : 0x9b7449, active ? 1 : 0.82)
-        .setStrokeStyle(3, active ? 0x365324 : 0x70431f, 1)
+        active ? 0x75c58a : 0x9fe0a2, active ? 0.62 : 0.2)
+        .setStrokeStyle(1, active ? 0xf2fff1 : 0xdffff0, active ? 0.9 : 0.58)
         .setInteractive({ useHandCursor: true });
       const text = this.add.text(x, 0, label, {
-        fontFamily: "Arial", fontSize: "16px", color: "#fff3d5",
-        fontStyle: "bold", stroke: "#4a2b16", strokeThickness: 3
+        fontFamily: "Arial", fontSize: "16px", color: "#f2fff1",
+        fontStyle: "bold", stroke: "#17442d", strokeThickness: 1
       }).setOrigin(0.5);
       plate.on("pointerover", () => plate.setScale(1.035));
       plate.on("pointerout", () => plate.setScale(1));
@@ -2104,9 +2104,9 @@ export default class BattleScene extends Scene {
         const active = selectedTypes.includes(plant.id);
         const plantedCount = this.plants.filter((item) => item.alive && item.type === plant.id).length;
         const card = this.add.rectangle(x, y, 136, 102,
-          plant.id === selected.id ? 0xf6e5bd : 0xd9c49b, 1)
-          .setStrokeStyle(plant.id === selected.id ? 4 : 2,
-            plant.id === selected.id ? 0x4c8b39 : 0x8a6339, 1)
+          plant.id === selected.id ? 0x9fe0a2 : 0x78b987, plant.id === selected.id ? 0.38 : 0.2)
+          .setStrokeStyle(plant.id === selected.id ? 2 : 1,
+            plant.id === selected.id ? 0xf2fff1 : 0xdffff0, plant.id === selected.id ? 0.96 : 0.62)
           .setInteractive({ useHandCursor: true });
         content.add(card);
         if (unlocked && this.textures.exists(plant.image)) {
@@ -2141,8 +2141,8 @@ export default class BattleScene extends Scene {
 
       const selectedUnlocked = unlockedIds.includes(selected.id);
       const selectedCount = this.plants.filter((item) => item.alive && item.type === selected.id).length;
-      content.add(this.add.rectangle(0, 318, 426, 68, 0xb88a50, 0.92)
-        .setStrokeStyle(2, 0x70431f, 1));
+      content.add(this.add.rectangle(0, 318, 426, 68, 0x4f9d68, 0.48)
+        .setStrokeStyle(1, 0xf2fff1, 0.72));
       addText(-135, 301, selected.title, 15, "#fff4d9");
       addText(-135, 326, selectedUnlocked
         ? (isArabic ? "تكلفة الزراعة: " : "Plant cost: ") + selected.config.cost + (isArabic ? " طاقة" : " energy")
@@ -2160,8 +2160,8 @@ export default class BattleScene extends Scene {
       stats.forEach((stat, index) => {
         const x = index % 2 === 0 ? -112 : 112;
         const y = Math.floor(index / 2) * 142 + 5;
-        content.add(this.add.rectangle(x, y, 205, 112, 0xe1c99d, 1)
-          .setStrokeStyle(3, 0x93673c, 1));
+        content.add(this.add.rectangle(x, y, 205, 112, 0x9fe0a2, 0.22)
+          .setStrokeStyle(1, 0xf2fff1, 0.62));
         addText(x, y - 29, stat.icon + "  " + stat.label, 12);
         addText(x, y + 18, stat.value, 25, "#6b421f");
       });
