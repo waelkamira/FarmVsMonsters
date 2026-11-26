@@ -24,7 +24,7 @@ test("stage roster controls default to one and keep hiding separate from asset d
  assert.match(manager,/لا يحذفان الأصل من المكتبة/);
  assert.match(manager,/spawnIntervalMs/);
  assert.match(manager,/async function testStage\(\)/);
- assert.match(manager,/await persistConfig\(\);\s*router\.push\("\/stage\/1\/select\?stage="\+stage\)/);
+ assert.match(manager,/await persistConfig\(\);\s*router\.push\("\/stage\/1\/select\?stage="\+stage\+"&studioPlaytest=1"\)/);
  assert.match(manager,/disabled=\{busy\|\|loading\}/);
  assert.match(manager,/hpMultiplier/);
 });
