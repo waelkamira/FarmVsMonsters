@@ -32,12 +32,13 @@ function normalizeConfig(value){
    attackIntervalMultiplier:Math.max(.1,Math.min(10,Number(item.attackIntervalMultiplier)||1)),
    enabled:item.enabled!==false
   })).filter(item=>/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(item.id));
-  const plants=(Array.isArray(raw?.plants)?raw.plants:[]).map(item=>({
-   id:String(item.id||"").trim().toLowerCase(),
-   count:Math.max(1,Math.min(500,Math.floor(Number(item.count)||1))),
-   enabled:item.enabled!==false
-  })).filter(item=>/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(item.id));
-  stages[stage]={monsters,plants,monstersConfigured:raw?.monstersConfigured===true,plantsConfigured:raw?.plantsConfigured===true};
+  const plants=(Array.isArray(raw?.plants)?raw.plants:[]).map(item=>{
+   const visible=item.visible!==false && item.enabled!==false;
+   return {id:String(item.id||"").trim().toLowerCase(),count:Math.max(1,Math.min(500,Math.floor(Number(item.count)||1))),visible,enabled:visible,unlocked:item.unlocked!==false};
+  }).filter(item=>/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(item.id));
+  const background=typeof raw?.background==="string" && /^\/assets\/backgrounds\/[a-z0-9._-]+\.(?:png|jpe?g|webp|svg)$/i.test(raw.background)
+   ? raw.background : "/assets/backgrounds/farm-battlefield-clean.svg";
+  stages[stage]={monsters,plants,background,published:raw?.published===true,monstersConfigured:raw?.monstersConfigured===true,plantsConfigured:raw?.plantsConfigured===true};
  }
  if(!stages["1"])stages["1"]={monsters:[],plants:[]};
  return {version:1,stages};
