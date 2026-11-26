@@ -73,7 +73,7 @@ export default function StageRosterManager({kind}){
  },[]);
  useEffect(()=>{let active=true;Promise.resolve().then(()=>{if(active)load();});return()=>{active=false;};},[load]);
  function updateEntries(next){
-  setConfig(current=>({...current,stages:{...current.stages,[String(stage)]:{...(current.stages?.[String(stage)]||{monsters:[],plants:[]}),[isMonster?"monsters":"plants"]:next,[isMonster?"monstersConfigured":"plantsConfigured"]:true}}}));
+  setConfig(current=>({...current,stages:{...current.stages,[String(stage)]:{...(current.stages?.[String(stage)]||{monsters:[],plants:[]}),[isMonster?"monsters":"plants"]:next,[isMonster?"monstersConfigured":"plantsConfigured"]:true,published:false}}}));
  }
  function add(){
   if(!selectedId)return;
@@ -83,7 +83,7 @@ export default function StageRosterManager({kind}){
   updateEntries(next);setMessage("أضفنا "+quantity+" إلى إعدادات المرحلة "+stage+". احفظ التغييرات لتطبيقها.");
  }
  function patch(index,changes){updateEntries(entries.map((entry,i)=>i===index?{...entry,...changes}:entry));}
- function updateStageSettings(changes){setConfig(current=>({...current,stages:{...current.stages,[String(stage)]:{...(current.stages?.[String(stage)]||{monsters:[],plants:[]}),...changes}}}));}
+ function updateStageSettings(changes){setConfig(current=>({...current,stages:{...current.stages,[String(stage)]:{...(current.stages?.[String(stage)]||{monsters:[],plants:[]}),...changes,published:false}}}));}
  function remove(index){updateEntries(entries.filter((_,i)=>i!==index));}
  async function persistConfig(){
   const response=await fetch("/api/studio/stage-encounters",{method:"PATCH",headers:{"Content-Type":"application/json"},credentials:"same-origin",body:JSON.stringify({config,sha})});
