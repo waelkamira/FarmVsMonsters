@@ -25,7 +25,7 @@ import { createCombatEventLog, appendCombatEvent } from "../rules/combatEventLog
 import gridCalibration from "../data/farm-grid-calibration.json";
 import soundAssets from "../data/sound-assets.json";
 import effectSoundAssets from "../data/effect-sound-assets.json";
-import { EffectDirector } from "../vfx/effects/EffectDirector.mjs";
+import { EffectDirector, detectEffectQuality } from "../vfx/effects/EffectDirector.mjs";
 import { AmbientFX } from "../vfx/effects/AmbientFX.mjs";
 import { resolveAssignedEffectIds } from "../vfx/effects/effectAssignments.mjs";
 import { getEffect } from "../vfx/effects/effectLibrary.mjs";
@@ -279,13 +279,20 @@ export default class BattleScene extends Scene {
       : PHASE_ONE_TOTAL_MONSTERS;
     this.stagePlantRosterConfigured = this.stageEncounterConfig?.plantsConfigured === true;
     this.stagePlantEntries = (this.stageEncounterConfig?.plants || []).filter(entry => entry.enabled !== false);
-    this.vfxManager = new VFXManager(this, { registry: createDefaultVFXRegistry(), limits: { maxActiveBursts: 24 } });
+    // Keep every battle VFX subsystem on the same hardware-aware quality budget.
+    this.graphicsQuality = detectEffectQuality(this);
+    this.vfxManager = new VFXManager(this, {
+      registry: createDefaultVFXRegistry(),
+      config: { quality: this.graphicsQuality },
+      limits: { maxActiveBursts: 24 }
+    });
     this.events.once("shutdown", () => {
       this.vfxManager?.destroy();
       this.vfxManager = null;
     });
     // مكتبة التأثيرات (صورة + صوت) المعيّنة من الاستوديو. تجميلية فقط.
     this.effectDirector = new EffectDirector(this, {
+      quality: this.graphicsQuality,
       // Respect Phaser's master mute/volume. Do not read an unset scene.effectsVolume:
       // an undefined value is interpreted as zero and would silently disable all FX audio.
       getVolume: () => {
@@ -300,6 +307,7 @@ export default class BattleScene extends Scene {
       this.effectDirector = null;
     });
     this.ambientFx = new AmbientFX(this, {
+      quality: this.graphicsQuality,
       reducedMotion: typeof window !== "undefined" && Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches)
     });
     this.ambientFx.applyStageAtmosphere(this.stageNumber);

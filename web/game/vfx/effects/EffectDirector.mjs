@@ -1,4 +1,5 @@
 import { EFFECT_SHAPES, getEffect, normalizeEffectIds } from "./effectLibrary.mjs";
+import { detectVFXQuality } from "../core/VFXConfig.mjs";
 
 /**
  * يشغّل تأثيرات المكتبة داخل مشهد Phaser: صورة + صوت.
@@ -56,9 +57,8 @@ export function ensureEffectTextures(scene, warn = () => {}) {
   }
 }
 
-export function detectEffectQuality(scene) {
-  const os = scene?.sys?.game?.device?.os;
-  return os && (os.android || os.iOS || os.iPhone || os.iPad) ? "medium" : "high";
+export function detectEffectQuality(scene, navigatorInfo = globalThis.navigator) {
+  return detectVFXQuality(scene, navigatorInfo);
 }
 
 export class EffectDirector {
