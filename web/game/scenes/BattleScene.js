@@ -280,7 +280,7 @@ export default class BattleScene extends Scene {
     this.stageNumber = Number.isInteger(requestedStage) ? Math.max(1, Math.min(100, requestedStage)) : 1;
     this.isStudioPlaytest = new URLSearchParams(window.location.search).get("studioPlaytest") === "1";
     this.stageEncounterConfig = this.cache.json.get("stage-encounter-config")?.stages?.[String(this.stageNumber)] || null;
-    this.stageMonsterRosterConfigured = this.stageEncounterConfig?.published === true && this.stageEncounterConfig?.monstersConfigured === true;
+    this.stageMonsterRosterConfigured = this.stageEncounterConfig?.monstersConfigured === true && (this.stageEncounterConfig?.published === true || this.isStudioPlaytest);
     this.stageMonsterEntries = (this.stageEncounterConfig?.monsters || []).filter(entry => entry.enabled !== false);
     this.stageWaveCount = this.stageMonsterRosterConfigured
       ? Math.max(1, ...this.stageMonsterEntries.map(entry => Math.max(1, Number(entry.wave) || 1)))
