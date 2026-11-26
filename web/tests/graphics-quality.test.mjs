@@ -22,8 +22,9 @@ test("desktop hardware hints select medium when capabilities are limited", () =>
 });
 
 test("the legacy effect director detector delegates to the shared quality policy", () => {
-  assert.equal(detectEffectQuality(android), "medium");
-  assert.equal(detectEffectQuality(desktop), "high");
+  assert.equal(detectEffectQuality(android, {}), "medium");
+  assert.equal(detectEffectQuality(desktop, {}), "high");
+  assert.equal(detectEffectQuality(desktop, { hardwareConcurrency: 2 }), "low");
 });
 
 test("the shared quality is reflected in the existing VFX particle profile", () => {
