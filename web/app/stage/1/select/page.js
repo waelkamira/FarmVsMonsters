@@ -79,9 +79,9 @@ export default function StageOneSeedSelectionPage() {
       }));
       const plantMap = new Map([...PLANTS, ...studioPlants].map((plant) => [plant.id, plant]));
       const configuredStage = stageSettings?.stages?.[String(activeStage)];
-      setStagePlantsConfigured(configuredStage?.plantsConfigured === true);
       const plantAliases = {radish:["radish","radish-level-1"],mushroom:["mushroom","energy-mushroom"],pumpkin:["pumpkin","pumpkin-level-1"],pineapple:["pineapple","pineapple-level-1"],hazelnut:["hazelnut","hazelnut-level-1"],mango:["mango","mango-level-1"],"snow-thrower":["snow-thrower","snow-thrower-level-1"],"electric-mushroom":["electric-mushroom","electric-mushroom-level-1"]};
       const publishedStage = configuredStage?.published === true && configuredStage?.plantsConfigured === true;
+      setStagePlantsConfigured(publishedStage);
       const visibleStageEntries = (configuredStage?.plants || []).filter(entry => entry.visible !== false && entry.enabled !== false);
       const nextPlants = publishedStage && !isStudioPlaytest
         ? [...plantMap.values()].filter(plant => visibleStageEntries.some(entry => entry.id === plant.id || (plantAliases[plant.id] || []).includes(entry.id)))
@@ -91,7 +91,7 @@ export default function StageOneSeedSelectionPage() {
       try { unlocked = loadUnlockedPlantIds(window.localStorage); } catch { /* Starter seeds remain available. */ }
       const studioIds = studioPlants.map((plant) => plant.id);
       const stageUnlockedIds = publishedStage
-        ? visibleStageEntries.filter(entry => entry.unlocked !== false).map(entry => plantAliases[entry.id]?.[0] || entry.id)
+        ? visibleStageEntries.filter(entry => entry.unlocked !== false).map(entry => Object.entries(plantAliases).find(([, aliases]) => aliases.includes(entry.id))?.[0] || entry.id)
         : [];
       // A published stage's authored unlock flags override campaign progress for that stage only.
       // An authenticated Studio playtest can still inspect and use the entire catalog.
@@ -113,7 +113,7 @@ export default function StageOneSeedSelectionPage() {
         setSelected([...new Set([...stageDefaults.filter((id) => availableIds.has(id)), ...defaultStudioPlants.filter((id) => availableIds.has(id)), ...validSaved])].slice(0, MAX_SEEDS));
       } catch {
         const availableIds = new Set(nextPlants.map((plant) => plant.id));
-        setSelected([...new Set([...STARTER_LOADOUT.filter((id) => availableIds.has(id)), ...studioPlants.map((plant) => plant.id).filter((id) => availableIds.has(id))])].slice(0, MAX_SEEDS));
+        setSelected([...new Set([...(publishedStage ? stageUnlockedIds : STARTER_LOADOUT).filter((id) => availableIds.has(id)), ...(isStudioPlaytest ? studioPlants.map((plant) => plant.id).filter((id) => availableIds.has(id)) : [])])].slice(0, MAX_SEEDS));
       }
     })();
     return () => { active = false; };
