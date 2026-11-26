@@ -14,7 +14,7 @@
     <stop offset="1" stop-color="#547d35" stop-opacity=".18"/>
   </radialGradient>
   <clipPath id="battleGrass">
-    <path d="M 350 304 C 470 295 675 295 824 304 C 868 352 927 435 976 491 C 880 510 773 516 651 514 C 505 513 371 505 278 490 C 300 425 325 354 350 304 Z"/>
+    <path d="M 286 300 C 430 286 815 286 970 300 C 984 354 997 444 1004 500 C 840 528 430 530 252 500 C 260 426 270 350 286 300 Z"/>
   </clipPath>
 </defs>
 <g clip-path="url(#battleGrass)">
