@@ -37,3 +37,27 @@ export function createVFXConfig(overrides = {}) {
 }
 
 export default DEFAULT_VFX_CONFIG;
+
+
+/**
+ * Choose one shared visual-effects budget for every battle VFX subsystem.
+ * Hardware hints are advisory: unknown desktop capabilities keep the high
+ * profile, while unknown mobile capabilities use medium as a safe fallback.
+ */
+export function detectVFXQuality(scene, navigatorInfo = globalThis.navigator) {
+  const os = scene?.sys?.game?.device?.os || {};
+  const isMobile = Boolean(os.android || os.iOS || os.iPhone || os.iPad);
+  const memory = Number(navigatorInfo?.deviceMemory) || 0;
+  const cores = Number(navigatorInfo?.hardwareConcurrency) || 0;
+  const weakMemory = memory > 0 && memory <= 3;
+  const weakCpu = cores > 0 && cores <= 4;
+
+  if (weakMemory || weakCpu) return "low";
+
+  if (isMobile) {
+    return memory >= 6 && cores >= 8 ? "high" : "medium";
+  }
+
+  if ((memory > 0 && memory < 8) || (cores > 0 && cores < 8)) return "medium";
+  return "high";
+}
