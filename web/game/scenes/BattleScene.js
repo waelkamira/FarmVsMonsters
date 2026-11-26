@@ -1256,7 +1256,7 @@ export default class BattleScene extends Scene {
   createCaveman() {
     this.farmerWantsToRun = false;
     this.caveman = this.add.container(220, this.laneYs[2]).setDepth(10 + this.laneYs[2] / 1000);
-    this.addGroundContactShadow(this.caveman, 48, 15, 0.2);
+    this.addGroundContactShadow(this.caveman, 92, 20, 0.18);
 
     if (this.textures.exists("farmer-idle") && this.createFarmerAnimations()) {
       // The sheets have different cell sizes and transparent padding.
