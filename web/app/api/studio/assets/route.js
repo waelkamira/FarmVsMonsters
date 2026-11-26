@@ -9,6 +9,7 @@ import {createImmutableAssetPath} from "../../../../game/studio/immutableAssetPa
 import {resolveStudioReleaseAsset,transitionStudioAssetStatus} from "../../../../game/studio/releaseLifecycle.mjs";
 import {cloneStudioAsset,createStudioAssetRevision,restoreStudioAssetRevision} from "../../../../game/studio/assetVersions.mjs";
 import {getAssetDependents} from "../../../../game/studio/assetDependencies.mjs";
+import {getStageMonsterReferences} from "../../../../game/studio/stageMonsterReferences.mjs";
 import {createStudioAnimationProfile} from "../../../../game/studio/animationProfiles.mjs";
 import {createSkeletalRigProfile} from "../../../../game/studio/skeletalAnimation.mjs";
 import {createStudioMonsterProfile} from "../../../../game/studio/monsterProfiles.mjs";
@@ -76,6 +77,16 @@ async function removeLocalAssetManifestReferences(assetPaths){
   }
  }
  async function githubPut(filePath,bytes,message,token,branch,expectedSha){const api=githubUrl(filePath),headers=githubHeaders(token);const check=await fetch(api+"?ref="+encodeURIComponent(branch),{headers});let sha=null;if(check.ok)sha=(await check.json()).sha;else if(check.status!==404)throw Error("GitHub lookup failed ("+check.status+").");assertExpectedContentSha(expectedSha,sha);const saved=await fetch(api,{method:"PUT",headers:{...headers,"Content-Type":"application/json"},body:JSON.stringify({message,branch,content:Buffer.from(bytes).toString("base64"),...(sha?{sha}:{})})});if(!saved.ok){const data=await saved.json().catch(()=>({}));throw Error(data.message||"GitHub save failed ("+saved.status+").");}}
+async function localStageEncounterConfig(){
+ try{return JSON.parse(await readFile(path.join(process.cwd(),"game/data/stageEncounterConfig.json"),"utf8"));}
+ catch(error){if(error.code==="ENOENT")return {stages:{}};throw error;}
+}
+function stageReferenceConflict(id,config){
+ const references=getStageMonsterReferences(config,id);
+ if(!references.length)return null;
+ const locations=references.map(item=>"المرحلة "+item.stageId+"، الموجة "+item.wave).join("؛ ");
+ return "لا يمكن حذف الوحش لأنه مستخدم في إعدادات المراحل: "+locations+". أزل مرجعه من جميع المراحل أولاً.";
+}
 async function localRegistry(){try{return JSON.parse(await readFile(path.join(process.cwd(),"game/data/studioAssetRegistry.json"),"utf8"));}catch(error){if(error.code==="ENOENT")return {version:1,assets:[]};throw error;}}
 async function saveLocalRegistry(registry){const target=path.join(process.cwd(),"game/data/studioAssetRegistry.json");await mkdir(path.dirname(target),{recursive:true});await writeFile(target,JSON.stringify(registry,null,2)+"\n","utf8");}
 function isRetiredEnemyAsset(asset){return /hyena|dragon/i.test(JSON.stringify(asset||{}));}
@@ -427,7 +438,10 @@ export async function PATCH(req){
    if(index<0)return NextResponse.json({error:"لم يتم العثور على الأصل في مكتبة Studio."},{status:404});
    if(operation==="delete"){
     const asset=registry.assets[index];
-
+    if(asset.type==="monster"){
+     const conflict=stageReferenceConflict(id,await localStageEncounterConfig());
+     if(conflict)return NextResponse.json({error:conflict},{status:409});
+    }
     const dependents=getAssetDependents(registry.assets,id);
     if(dependents.length)return NextResponse.json({error:"لا يمكن حذف الأصل لأن أصولاً أخرى تعتمد عليه: "+dependents.map(item=>item.assetName).join("، ")},{status:409});
     const remaining=registry.assets.filter((_,i)=>i!==index);
@@ -452,12 +466,16 @@ export async function PATCH(req){
     await saveLocalRegistry(registry);
     return NextResponse.json({success:true,operation,deletedId:id,message:"تم حذف الأصل وملفاته غير المشتركة من المكتبة المحلية."});
    }
+   if(operation==="archive"&&registry.assets[index].type==="monster"){
+    const conflict=stageReferenceConflict(id,await localStageEncounterConfig());
+    if(conflict)return NextResponse.json({error:conflict},{status:409});
+   }
    if(operation==="restore-version"&&registry.assets[index].releaseRequest?.number)return NextResponse.json({error:"لا يمكن استعادة إصدار مرتبط بطلب نشر قبل التحقق من حالته."},{status:409});
    if(operation==="archive"||operation==="restore-version"){
     const dependents=getAssetDependents(registry.assets,id);
     if(dependents.length)return NextResponse.json({error:"لا يمكن تنفيذ العملية قبل معالجة الأصول التي تعتمد على هذا الأصل: "+dependents.map(item=>item.assetName).join("، ")},{status:409});
    }
-   if(operation==="clone"){
+  if(operation==="clone"){
     const newId=String(body.newId||"").trim().toLowerCase();
     if(!STUDIO_ID_PATTERN.test(newId)||newId.length>64)return NextResponse.json({error:"معرّف النسخة غير صالح."},{status:400});
     if(registry.assets.some(asset=>asset.id===newId))return NextResponse.json({error:"يوجد أصل بهذا المعرّف بالفعل."},{status:409});
@@ -481,7 +499,11 @@ export async function PATCH(req){
   if(index<0)return NextResponse.json({error:"لم يتم العثور على الأصل في مكتبة Studio."},{status:404});
   let asset=registry.assets[index];
   if(operation==="delete"){
-
+   if(asset.type==="monster"){
+    const stageConfigText=await githubGet("web/game/data/stageEncounterConfig.json",token,storageBranch);
+    const conflict=stageReferenceConflict(id,stageConfigText?JSON.parse(stageConfigText):{stages:{}});
+    if(conflict)return NextResponse.json({error:conflict},{status:409});
+   }
    const dependents=getAssetDependents(registry.assets,id);
    if(dependents.length)return NextResponse.json({error:"لا يمكن حذف الأصل لأن أصولاً أخرى تعتمد عليه: "+dependents.map(item=>item.assetName).join("، ")},{status:409});
    if(asset.releaseRequest?.number){
