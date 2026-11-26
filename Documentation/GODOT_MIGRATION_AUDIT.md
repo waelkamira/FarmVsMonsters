@@ -6,9 +6,9 @@
 
 | Source/reference | What it contains | Intended Godot destination | Verification |
 |---|---|---|---|
-| `web/game/scenes/BattleScene.js` | Current Phaser battle runtime: asset loading, grid, entities, combat presentation and stage flow. Large monolithic scene. | Split into `scenes/battle/Battle.tscn`, `BattleController.gd`, board, HUD, plant, monster, projectile and boss scenes/scripts. | Scene-level tests plus complete Stage 1 playthrough. |
+| `web/game/scenes/BattleScene.js` | Current Phaser battle runtime: asset loading, grid, entities, combat presentation and stage flow. Large monolithic scene. | Split into `scenes/battle/Battle.tscn`, `BattleController.gd`, board, HUD, plant, monster and projectile scenes/scripts. | Scene-level tests plus complete Stage 1 playthrough. |
 | `web/game/scenes/PauseScene.js` | Pause overlay, resume/restart/settings/menu actions and audio controls. | `scenes/ui/PauseMenu.tscn`, `PauseMenu.gd`, settings service. | Verify all simulation timers/entities freeze and resume correctly. |
-| `web/game/rules/phaseOneCombatContract.mjs` | Versioned canonical Stage 1 values: board, energy, waves, plants, monsters, farmer, dragon and timing. | `data/rules/phase_one_rules.tres` and typed rule resources/scripts. | Table-driven tests compare every migrated value and boundary. |
+| `web/game/rules/phaseOneCombatContract.mjs` | Versioned canonical Stage 1 values: board, energy, waves, plants, monsters, farmer and timing. | `data/rules/phase_one_rules.tres` and typed rule resources/scripts. | Table-driven tests compare every migrated value and boundary. |
 | `web/game/rules/combatSimulation.mjs` | Pure placement, uproot, energy, damage, targeting, movement and spawn rules. | `scripts/rules/combat_rules.gd` and focused rule modules. | Deterministic unit tests for valid/invalid inputs and edge cases. |
 | `web/game/rules/phaseOneRules.mjs` | Wave completion, victory, progression, wallet and purchase helpers. | `scripts/rules/progression_rules.gd`, save/progression services. | Unit tests for victory, unlocks, wallet and invalid saves. |
 | `web/game/rules/combatEventLog.mjs` | Validated, bounded combat event log. | `scripts/combat/combat_event_log.gd` if replay/debug tooling remains in scope. | Validate event ordering, payload bounds and malformed logs. |
