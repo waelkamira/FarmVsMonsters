@@ -106,7 +106,7 @@ export default function StageOneSeedSelectionPage() {
         ? visibleStageEntries.filter(entry => entry.unlocked !== false).map(entry => Object.entries(plantAliases).find(([, aliases]) => aliases.includes(entry.id))?.[0] || entry.id)
         : [];
       // A published stage's authored unlock flags override campaign progress for that stage only.
-      // An authenticated Studio playtest can still inspect and use the entire catalog.
+      // An authenticated Studio playtest can inspect every visible plant assigned to this stage, including locked entries.
       const safeUnlocked = isStudioPlaytest
         ? [...new Set([...STARTER_LOADOUT, ...unlocked, ...nextPlants.map((plant) => plant.id)])]
         : publishedStage
