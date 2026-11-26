@@ -383,3 +383,10 @@ button:focus-visible,a:focus-visible,input:focus-visible {
   background:rgba(248,255,235,.42) !important;
   transform:translateY(-2px);
 }
+
+
+/* Keyboard focus is visible on every native form control used by player menus. */
+select:focus-visible,textarea:focus-visible,[role="slider"]:focus-visible {
+  outline:3px solid rgba(250,255,213,.96) !important;
+  outline-offset:3px !important;
+}
