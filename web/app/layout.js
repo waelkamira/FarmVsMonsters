@@ -1,5 +1,6 @@
 import "./globals.css";
 import "./codex-theme.css";
+import "./game-glass-theme.css";
 import { LocaleProvider } from "./LocaleProvider";
 
 export const metadata = {

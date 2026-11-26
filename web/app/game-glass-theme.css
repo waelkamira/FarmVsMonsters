@@ -1,0 +1,252 @@
+/* FarmVsMonsters — shared green glass skin for player-facing game screens.
+   Studio is intentionally excluded: all selectors below are tied to public game-page roots. */
+:root{
+  --game-glass-green-1:#d9f76d;
+  --game-glass-green-2:#73bd35;
+  --game-glass-green-3:#286b38;
+  --game-glass-ink:#21452b;
+  --game-glass-border:rgba(255,255,255,.58);
+  --game-glass-fill:linear-gradient(145deg,rgba(255,255,255,.38),rgba(232,255,225,.15) 52%,rgba(255,255,255,.10));
+  --game-glass-shadow:0 14px 34px rgba(9,40,20,.24),inset 0 1px 0 rgba(255,255,255,.62);
+}
+
+/* One recognizable garden-green atmosphere across every player-facing page. */
+.codex-home-minimal,
+.info-shell,
+.campaign-map-shell,
+.game-shell{
+  background:
+    radial-gradient(ellipse at 18% 8%,rgba(225,255,132,.72),transparent 34%),
+    radial-gradient(ellipse at 86% 82%,rgba(74,173,91,.5),transparent 38%),
+    linear-gradient(145deg,#b7e85e 0%,#69b94b 38%,#347b49 72%,#20563a 100%) !important;
+  color:var(--game-glass-ink);
+}
+.codex-home-minimal .world-battlefield-showcase{filter:saturate(.82)}
+.codex-home-minimal .world-battlefield-atmosphere{
+  background:linear-gradient(135deg,rgba(189,241,92,.38),rgba(44,132,68,.42)) !important;
+}
+
+/* Shared frosted-glass surface: background remains visible through the panel. */
+.codex-home-story,
+.codex-board,
+.info-card,
+.codex-settings-board,
+.campaign-map-topbar,
+.campaign-map-heading,
+.campaign-world-card,
+.campaign-map-footer,
+.campaign-world-main,
+.campaign-map-legend,
+.stage-tile,
+.stage-intro-card,
+.stage-two-intro-card,
+.stage-story,
+.stage-briefing,
+.stage-two-briefing,
+.stage-cast-thumb,
+.stage-intro-thumb,
+.stage-cast-placeholder,
+.stage-briefing div,
+.seed-selection-shell,
+.seed-selection-status,
+.account-signed-in,
+.account-feedback,
+.account-security,
+.account-status,
+.account-signin-notice,
+.guest-play-panel,
+.collection-wallet,
+.collection-summary,
+.collection-card,
+.catalog-thumb,
+.codex-volume-row,
+.campaign-world-emblem{
+  border:1px solid var(--game-glass-border) !important;
+  border-radius:20px !important;
+  background:var(--game-glass-fill) !important;
+  -webkit-backdrop-filter:blur(9px) saturate(140%);
+  backdrop-filter:blur(9px) saturate(140%);
+  box-shadow:var(--game-glass-shadow) !important;
+}
+
+/* Keep the logo tile as the visual reference: soft glass, not an opaque slab. */
+.codex-home-minimal .farm-game-logo-center{
+  background:linear-gradient(135deg,rgba(255,255,255,.34),rgba(219,255,218,.16) 52%,rgba(255,255,255,.12)) !important;
+  border:1px solid rgba(255,255,255,.7) !important;
+  border-radius:clamp(20px,3vw,34px) !important;
+  -webkit-backdrop-filter:blur(9px) saturate(150%);
+  backdrop-filter:blur(9px) saturate(150%);
+  box-shadow:0 18px 42px rgba(10,48,25,.28),inset 0 1px 0 rgba(255,255,255,.72) !important;
+}
+
+/* Cards and tiles share the same translucent treatment throughout the game. */
+.collection-card,
+.stage-tile,
+.campaign-world-main,
+.campaign-mission-node,
+.codex-destination-card,
+.codex-utility-card,
+.codex-settings-links a,
+.info-nav a,
+.secondary-link,
+.primary-link,
+.account-submit,
+.account-tabs button,
+.game-retry-button,
+.seed-choice-card,
+.seed-select-card{
+  border:1px solid rgba(255,255,255,.62) !important;
+  border-radius:16px !important;
+  background:linear-gradient(145deg,rgba(250,255,236,.48),rgba(204,244,190,.19) 58%,rgba(255,255,255,.12)) !important;
+  color:#20452a !important;
+  -webkit-backdrop-filter:blur(8px) saturate(140%);
+  backdrop-filter:blur(8px) saturate(140%);
+  box-shadow:0 8px 20px rgba(15,54,25,.18),inset 0 1px 0 rgba(255,255,255,.72) !important;
+  text-shadow:none !important;
+}
+.collection-card h2,.collection-card p,.collection-meta,.collection-status,
+.stage-tile h2,.stage-tile p,.campaign-world-copy h2,
+.campaign-world-subtitle,.campaign-world-description,
+.info-card h1,.info-card h2,.info-card p,.info-card li,
+.codex-settings-board>h2,.codex-volume-copy strong,.codex-volume-copy small,
+.codex-page-heading h1,.codex-settings-intro,.codex-settings-footnote,
+.seed-selection-heading h1,.seed-selection-heading p,
+.seed-selection-tip,.seed-selection-status,
+.account-form label,.account-signed-in strong,.account-email,
+.account-security,.account-feedback,.account-status,
+.codex-destination-copy strong,.codex-destination-copy small{
+  color:#21452b !important;
+  text-shadow:0 1px rgba(255,255,255,.38);
+}
+.codex-home-story h1,.codex-home-story>p{color:#21452b !important;text-shadow:0 1px rgba(255,255,255,.35)}
+.codex-home-story .eyebrow,.info-card .eyebrow,.seed-selection-eyebrow,
+.campaign-map-eyebrow,.codex-page-heading .eyebrow{color:#356c35 !important;text-shadow:none}
+
+/* Controls retain clear states and strong touch affordances. */
+.codex-adventure-button,
+.codex-play-only,
+.seed-start-button,
+.primary-link,
+.secondary-link,
+.info-nav a,
+.account-submit,
+.game-retry-button,
+.campaign-map-back,
+.campaign-map-secondary,
+.language-toggle{
+  border:1px solid rgba(255,255,255,.72) !important;
+  border-radius:14px !important;
+  background:linear-gradient(180deg,rgba(244,255,204,.82),rgba(111,190,72,.72)) !important;
+  color:#183c24 !important;
+  box-shadow:0 5px 14px rgba(13,53,25,.2),inset 0 1px 0 rgba(255,255,255,.82) !important;
+  text-shadow:none !important;
+}
+.codex-home-minimal .codex-start-image-button{
+  border:0 !important;background:transparent !important;box-shadow:none !important;
+  -webkit-backdrop-filter:none;backdrop-filter:none;
+}
+.codex-home-minimal .codex-start-image-button img{filter:drop-shadow(0 8px 9px rgba(18,55,28,.34))}
+.account-form input{
+  border:1px solid rgba(255,255,255,.72) !important;
+  border-radius:12px !important;
+  background:rgba(245,255,239,.62) !important;
+  color:#173b25 !important;
+  -webkit-backdrop-filter:blur(7px);backdrop-filter:blur(7px);
+}
+.account-form input::placeholder{color:#527253 !important}
+.codex-volume-row input,.settings-row input{accent-color:#4e9b3c}
+
+/* The battle arena remains crisp and untouched; only its surrounding UI is glass. */
+.game-header{
+  border:1px solid rgba(255,255,255,.56) !important;
+  border-radius:16px !important;
+  background:linear-gradient(120deg,rgba(245,255,223,.36),rgba(47,116,58,.28)) !important;
+  -webkit-backdrop-filter:blur(9px) saturate(135%);backdrop-filter:blur(9px) saturate(135%);
+  box-shadow:var(--game-glass-shadow) !important;
+}
+.game-header .wordmark,.game-header .control-hint{color:#f8ffed !important;text-shadow:0 1px 4px rgba(13,46,22,.65)}
+.game-panel{border:1px solid rgba(255,255,255,.42) !important;border-radius:18px !important;background:rgba(237,255,220,.18) !important;box-shadow:0 14px 34px rgba(8,35,17,.3) !important}
+.phaser-host canvas{border-radius:10px}
+
+/* Preserve legibility for locked/selected states without returning to heavy frames. */
+.collection-card.is-locked,.stage-tile.stage-locked,.seed-choice-card.is-locked,.seed-select-card.is-locked{filter:saturate(.62);opacity:.82}
+.collection-card.is-selected,.stage-tile.is-current,.seed-choice-card.is-selected,.seed-select-card.is-selected{
+  border-color:rgba(255,255,255,.96) !important;
+  box-shadow:0 0 0 2px rgba(246,255,219,.62),0 10px 22px rgba(12,54,24,.22) !important;
+}
+.catalog-thumb,.stage-art-placeholder,.stage-intro-emblem{
+  border:1px solid rgba(255,255,255,.6) !important;
+  background:linear-gradient(145deg,rgba(246,255,222,.34),rgba(81,151,72,.18)) !important;
+  -webkit-backdrop-filter:blur(7px);backdrop-filter:blur(7px);
+}
+.campaign-mission-track{border:1px solid rgba(255,255,255,.6)!important;border-radius:18px!important;background:rgba(27,86,45,.28)!important;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.campaign-mission-node{color:#21452b!important}
+.campaign-mission-node.is-playable{background:linear-gradient(145deg,rgba(249,255,202,.86),rgba(132,201,79,.72))!important}
+.campaign-mission-node.is-locked{background:rgba(225,241,216,.32)!important}
+.campaign-map-stats,.campaign-map-legend{color:#21452b!important;background:rgba(243,255,232,.4)!important}
+.campaign-map-topbar a{color:#21452b!important}
+.coin-wallet{border:1px solid rgba(255,255,255,.6)!important;background:rgba(237,255,221,.26)!important;color:#faffef!important;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+@media(max-width:640px){
+  .info-card,.seed-selection-shell,.campaign-map-heading,.campaign-world-card,.campaign-map-footer{border-radius:17px!important}
+  .codex-home-minimal .farm-game-logo-center{backdrop-filter:blur(8px) saturate(145%);-webkit-backdrop-filter:blur(8px) saturate(145%)}
+}
+@media(prefers-reduced-transparency:reduce){
+  .codex-home-story,.codex-board,.info-card,.codex-settings-board,.campaign-map-topbar,
+  .campaign-map-heading,.campaign-world-card,.campaign-map-footer,.stage-tile,
+  .seed-selection-shell,.collection-card,.codex-volume-row{background:rgba(229,248,218,.9)!important;backdrop-filter:none;-webkit-backdrop-filter:none}
+}
+
+
+/* Additional verified player-page containers (including Stage 1's dedicated loadout flow). */
+.seed-select-shell{
+  min-height:100svh;
+  background:
+    radial-gradient(ellipse at 16% 8%,rgba(225,255,132,.7),transparent 34%),
+    radial-gradient(ellipse at 86% 82%,rgba(74,173,91,.46),transparent 38%),
+    linear-gradient(145deg,#b7e85e 0%,#69b94b 38%,#347b49 72%,#20563a 100%) !important;
+  color:#21452b !important;
+}
+.seed-select-topbar,.seed-select-panel{
+  border:1px solid rgba(255,255,255,.62) !important;
+  border-radius:20px !important;
+  background:var(--game-glass-fill) !important;
+  -webkit-backdrop-filter:blur(9px) saturate(140%);
+  backdrop-filter:blur(9px) saturate(140%);
+  box-shadow:var(--game-glass-shadow) !important;
+}
+.seed-select-topbar{color:#21452b !important}
+.seed-select-panel{color:#21452b !important}
+.seed-select-kicker,.seed-select-intro,.seed-select-status,.seed-select-loadout,
+.seed-select-card strong,.seed-select-card span{color:#21452b}
+.seed-select-back,.seed-select-secondary,.seed-select-start{
+  border:1px solid rgba(255,255,255,.68) !important;
+  border-radius:13px !important;
+  background:linear-gradient(180deg,rgba(244,255,204,.82),rgba(111,190,72,.72)) !important;
+  color:#183c24 !important;
+  box-shadow:0 5px 14px rgba(13,53,25,.2),inset 0 1px 0 rgba(255,255,255,.82) !important;
+}
+.stage-story,.stage-briefing,.stage-two-briefing,.stage-two-development-note,
+.stage-cast-thumb,.stage-intro-thumb,.stage-cast-placeholder{
+  border:1px solid rgba(255,255,255,.56) !important;
+  border-radius:16px !important;
+  background:rgba(244,255,232,.2) !important;
+  -webkit-backdrop-filter:blur(7px);backdrop-filter:blur(7px);
+  color:#21452b !important;
+}
+.codex-settings-board,.codex-volume-row,.codex-settings-links a{
+  border:1px solid rgba(255,255,255,.58) !important;
+  border-radius:16px !important;
+  background:var(--game-glass-fill) !important;
+  -webkit-backdrop-filter:blur(8px) saturate(135%);
+  backdrop-filter:blur(8px) saturate(135%);
+  box-shadow:var(--game-glass-shadow) !important;
+}
+.codex-volume-copy strong,.codex-volume-copy small,.codex-volume-row output{color:#21452b !important}
+.codex-home-minimal .codex-home-settings-link{
+  border:1px solid rgba(255,255,255,.72) !important;
+  border-radius:15px !important;
+  background:var(--game-glass-fill) !important;
+  color:#21452b !important;
+  -webkit-backdrop-filter:blur(9px);backdrop-filter:blur(9px);
+  box-shadow:var(--game-glass-shadow) !important;
+}
