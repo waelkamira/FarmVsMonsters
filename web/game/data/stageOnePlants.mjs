@@ -170,7 +170,7 @@ export const STAGE_ONE_PLANTS = Object.freeze([
 
   {
     id: "electric-mushroom",
-    assetPath: "/assets/plants/Electric-mushroom-level-1.png",
+    assetPath: null, artworkStatus: "intentionally-removed",
     name: "Electric Mushroom Level 1",
     nameAr: "الفطر الكهربائي المستوى الأول",
     role: "Electric lane attacker",
