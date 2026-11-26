@@ -2,11 +2,13 @@ import {NextResponse} from "next/server";
 import {mkdir,readFile,writeFile} from "node:fs/promises";
 import path from "node:path";
 import {verifyStudioSession} from "../../../../game/studio/signedSession.mjs";
+import {validateStageMonsterReferences} from "../../../../game/studio/stageMonsterReferences.mjs";
 
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
 const COOKIE="fvm_studio_session";
 const CONFIG_PATH="web/game/data/stageEncounterConfig.json";
+const REGISTRY_PATH="web/game/data/studioAssetRegistry.json";
 const DEFAULT_CONFIG={"version":1,"stages":{"1":{"monsters":[{"key":"monster-01-w1","id":"monster-01","count":3,"wave":1,"spawnIntervalMs":5080,"firstSpawnDelayMs":0,"hpMultiplier":1,"speedMultiplier":1,"damageMultiplier":1,"attackIntervalMultiplier":1,"enabled":true},{"key":"monster-01-w2","id":"monster-01","count":5,"wave":2,"spawnIntervalMs":4960,"firstSpawnDelayMs":0,"hpMultiplier":1,"speedMultiplier":1,"damageMultiplier":1,"attackIntervalMultiplier":1,"enabled":true},{"key":"monster-01-w3","id":"monster-01","count":6,"wave":3,"spawnIntervalMs":4840,"firstSpawnDelayMs":0,"hpMultiplier":1,"speedMultiplier":1,"damageMultiplier":1,"attackIntervalMultiplier":1,"enabled":true},{"key":"monster-01-w4","id":"monster-01","count":7,"wave":4,"spawnIntervalMs":4720,"firstSpawnDelayMs":0,"hpMultiplier":1,"speedMultiplier":1,"damageMultiplier":1,"attackIntervalMultiplier":1,"enabled":true},{"key":"monster-01-w5","id":"monster-01","count":9,"wave":5,"spawnIntervalMs":4600,"firstSpawnDelayMs":0,"hpMultiplier":1,"speedMultiplier":1,"damageMultiplier":1,"attackIntervalMultiplier":1,"enabled":true}],"plants":[{"id":"radish","count":1,"enabled":true},{"id":"mushroom","count":1,"enabled":true},{"id":"pumpkin","count":1,"enabled":true},{"id":"pineapple","count":1,"enabled":true},{"id":"hazelnut","count":1,"enabled":true},{"id":"mango","count":1,"enabled":true},{"id":"snow-thrower","count":1,"enabled":true},{"id":"electric-mushroom","count":1,"enabled":true}],"monstersConfigured":false,"plantsConfigured":false}}};
 const authorized=req=>verifyStudioSession(process.env.STUDIO_SESSION_SECRET || "",req.cookies.get(COOKIE)?.value||"");
 const githubHeaders=token=>({Authorization:"Bearer "+token,Accept:"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28"});
@@ -49,6 +51,24 @@ async function writeLocal(value){
  await mkdir(path.dirname(target),{recursive:true});
  await writeFile(target,JSON.stringify(value,null,2)+"\n","utf8");
 }
+async function readMonsterAssets(driver){
+ if(driver==="github"){
+  const token=process.env.STUDIO_GITHUB_TOKEN;
+  if(!token)throw new Error("STUDIO_GITHUB_TOKEN is required.");
+  const branch=process.env.STUDIO_GITHUB_BRANCH||"studio/assets";
+  const url="https://api.github.com/repos/"+(process.env.STUDIO_GITHUB_REPOSITORY||"waelkamira/FarmVsMonsters")+"/contents/"+REGISTRY_PATH+"?ref="+encodeURIComponent(branch);
+  const response=await fetch(url,{headers:githubHeaders(token),cache:"no-store"});
+  if(response.status===404)return [];
+  if(!response.ok)throw new Error("Studio asset registry read failed ("+response.status+").");
+  const data=await response.json();
+  const registry=JSON.parse(Buffer.from(data.content||"","base64").toString("utf8"));
+  return Array.isArray(registry.assets)?registry.assets:[];
+ }
+ try{
+  const registry=JSON.parse(await readFile(path.join(process.cwd(),"game/data/studioAssetRegistry.json"),"utf8"));
+  return Array.isArray(registry.assets)?registry.assets:[];
+ }catch(error){if(error.code==="ENOENT")return [];throw error;}
+}
 async function readGithub(){
  const token=process.env.STUDIO_GITHUB_TOKEN;
  if(!token)throw new Error("STUDIO_GITHUB_TOKEN is required.");
@@ -86,6 +106,11 @@ export async function PATCH(req){
  const config=normalizeConfig(body.config);
  try{
   const driver=process.env.STUDIO_STORAGE_DRIVER||"local";
+  const invalidReferences=validateStageMonsterReferences(config,await readMonsterAssets(driver));
+  if(invalidReferences.length){
+   const details=invalidReferences.map(item=>"المرحلة "+item.stageId+"، الموجة "+item.wave+": "+item.id).join("؛ ");
+   return NextResponse.json({error:"لا يمكن حفظ إعدادات المراحل لأنها تشير إلى وحوش غير موجودة أو مؤرشفة: "+details,invalidReferences},{status:409});
+  }
   let savedSha=null;
   if(driver==="github"){
    const result=await writeGithub(config,body.sha);
