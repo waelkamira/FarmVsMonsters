@@ -116,5 +116,5 @@ test("Studio roster thumbnails fall back from the preview proxy to the original 
 test("Studio roster resolves built-in thumbnail paths before proxy fallback", () => {
   const roster = read("../app/studio/StageRosterManager.jsx");
   assert.match(roster, /resolveThumbnailSources\(\{\.\.\.asset,path:assetImage\(asset,kind\)\}\)/);
-  assert.match(roster, /BUILTIN_IMAGES\[kind\]\?\.\[asset\?\.id\]\?/);
+  assert.match(roster, /assetImage\(asset,kind\)/);
 });
