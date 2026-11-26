@@ -141,7 +141,8 @@ export class AmbientFX {
       const preset = PRESETS[atmosphereForStage(stageNumber)];
       this.#clearAtmosphere();
       this.preset = preset;
-      // Keep ambient particles and weather, but do not tint or wash the battlefield artwork.
+      this.#setFilter(preset.filter);
+      this.#setLighting(preset.lighting);
       this.startSunMotes(preset.motes);
       if (preset.leaves.length) this.startBreeze(preset.leaves);
       if (preset.rain && !this.reducedMotion) this.#fillRain(Math.round(this.limits.rain * 0.6));
