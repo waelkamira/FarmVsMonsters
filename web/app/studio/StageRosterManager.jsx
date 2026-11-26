@@ -78,7 +78,7 @@ export default function StageRosterManager({kind}){
  function add(){
   if(!selectedId)return;
   const existing=entries.find(x=>x.id===selectedId&&(isMonster?x.wave===wave:true));
-  const next=existing?entries.map(x=>x===existing?{...x,count:Math.min(500,x.count+quantity),enabled:true}:x):
+  const next=existing?entries.map(x=>x===existing?{...x,count:Math.min(500,x.count+quantity),enabled:true,visible:true,unlocked:true}:x):
    [...entries,{...(isMonster?{key:makeKey(),wave,spawnIntervalMs:interval,firstSpawnDelayMs:delay,hpMultiplier:hp,speedMultiplier:speed,damageMultiplier:damage,attackIntervalMultiplier:attack}:{}),id:selectedId,count:quantity,enabled:true,visible:true,unlocked:true}];
   updateEntries(next);setMessage("أضفنا "+quantity+" إلى إعدادات المرحلة "+stage+". احفظ التغييرات لتطبيقها.");
  }
