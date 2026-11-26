@@ -47,44 +47,36 @@ test("stages map to day, sunset and stormy night", () => {
   }
 });
 
-test("day: warm light, sun motes and green leaves, no rain, under the combat VFX layer", () => {
+test("day: ambient motes and leaves remain without a battlefield color or lighting overlay", () => {
   const scene = makeScene();
   const fx = new AmbientFX(scene, { quality: "high" });
   assert.equal(fx.applyStageAtmosphere(1), "day");
   assert.ok(kinds(scene, "fx-shape-dot").length > 0, "motes");
-  const glow = kinds(scene, "fx-ambient-soft-glow")[0];
-  assert.ok(glow, "cached soft light pool");
-  assert.equal(glow.tint, 0xffe2a8);
-  assert.equal(glow.depth, 33.9, "lighting remains below combat VFX and HUD");
+  assert.equal(kinds(scene, "fx-ambient-soft-glow").length, 0, "no global lighting wash");
   assert.equal(kinds(scene, "fx-ambient-rain").length, 0);
   assert.ok(scene.tracker.timers.some((t) => t.cfg.loop && !t.removed), "breeze timer");
-  const filter = kinds(scene, "rect")[0];
-  assert.equal(filter.blend, 0);
-  assert.ok(filter.alpha > 0 && filter.alpha < 0.2);
+  assert.equal(kinds(scene, "rect").length, 0, "no battlefield color filter");
   for (const s of live(scene).filter((x) => x.kind !== "rect" && x.kind !== "fx-ambient-soft-glow")) assert.equal(s.depth, 34);
   assert.ok(34 < 36, "below combat effects");
   assert.ok(live(scene).every((s) => s.depth <= 34));
 });
 
-test("sunset: MULTIPLY orange filter with autumn leaves", () => {
+test("sunset: autumn leaves remain without an orange battlefield filter", () => {
   const scene = makeScene();
   const fx = new AmbientFX(scene, { quality: "high" });
   fx.applyStageAtmosphere(3);
-  const filter = kinds(scene, "rect")[0];
-  assert.equal(filter.blend, 2);
-  assert.equal(filter.color, 0xffb27a);
+  assert.equal(kinds(scene, "rect").length, 0, "no orange color overlay");
   scene.tracker.timers[0].cfg.callback();
   const tints = kinds(scene, "fx-shape-leaf").map((l) => l.tint);
   assert.ok(tints.length > 0 && tints.every((c) => [0xff8a3d, 0xd9482b, 0xe8b04a].includes(c)));
 });
 
-test("night: blue MULTIPLY filter, slanted rain and distant lightning that flashes the camera", () => {
+test("night: slanted rain and distant lightning remain without a blue battlefield overlay", () => {
   const scene = makeScene();
   const fx = new AmbientFX(scene, { quality: "high" });
   fx.applyStageAtmosphere(5);
-  assert.equal(kinds(scene, "rect")[0].blend, 2);
-  assert.equal(kinds(scene, "rect")[0].color, 0x5a6fa8);
-  assert.equal(kinds(scene, "fx-ambient-soft-glow")[0].tint, 0x9bbcff);
+  assert.equal(kinds(scene, "rect").length, 0, "no blue color overlay");
+  assert.equal(kinds(scene, "fx-ambient-soft-glow").length, 0, "no global lighting wash");
   const rain = kinds(scene, "fx-ambient-rain");
   assert.equal(rain.length, 36);
   assert.ok(rain.every((d) => d.rotation > 0), "slanted");
@@ -95,7 +87,7 @@ test("night: blue MULTIPLY filter, slanted rain and distant lightning that flash
   assert.equal(scene.tracker.flashes, 1);
 });
 
-test("final wave escalation thickens rain, speeds up lightning and darkens the sky (any stage, only once)", () => {
+test("final wave escalation thickens rain and speeds up lightning without tinting the battlefield (any stage, only once)", () => {
   const night = makeScene();
   const nightFx = new AmbientFX(night, { quality: "high" });
   nightFx.applyStageAtmosphere(6);
@@ -105,7 +97,7 @@ test("final wave escalation thickens rain, speeds up lightning and darkens the s
   const strike = night.tracker.delayed.filter((d) => !d.removed).at(-1);
   assert.ok(strike.ms <= 5500, "faster lightning");
   assert.equal(nightFx.escalateFinalWave(), false, "idempotent");
-  assert.ok(night.tracker.pendingTweens.some((t) => t.alpha === 0.14), "storm shade fades in");
+  assert.equal(kinds(night, "rect").length, 0, "final wave adds no battlefield shade");
 
   const day = makeScene();
   const dayFx = new AmbientFX(day, { quality: "high" });
