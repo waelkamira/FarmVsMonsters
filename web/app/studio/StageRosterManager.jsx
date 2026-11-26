@@ -22,9 +22,10 @@ const makeKey=()=> "entry-"+Date.now().toString(36)+"-"+Math.random().toString(3
 function assetImage(asset,kind){if(asset?.id==="electric-mushroom"&&/Electric-mushroom-level-1\.png/i.test(asset?.path||""))return asset?.previewUrl||"";return asset?.previewUrl||asset?.path||BUILTIN_IMAGES[kind]?.[asset?.id]||"";}
 function AssetImage({asset,kind,large=false}) {
  const {primarySrc,fallbackSrc}=resolveThumbnailSources(asset);
- const [src,setSrc]=useState(primarySrc);
- const [failed,setFailed]=useState(false);
- useEffect(()=>{setSrc(primarySrc);setFailed(false);},[primarySrc]);
+ const [imageState,setImageState]=useState({source:primarySrc,src:primarySrc,failed:false});
+ const currentState=imageState.source===primarySrc?imageState:{source:primarySrc,src:primarySrc,failed:false};
+ const src=currentState.src;
+ const failed=currentState.failed;
  const frameCount=Math.max(1,Number(asset?.frameCount)||((Number(asset?.rows)||1)*(Number(asset?.columns)||1)));
  // Any multi-frame plant/monster artwork is a sprite sheet for thumbnail purposes,
  // even when older registry entries are missing the explicit spriteSheet flag.
@@ -36,8 +37,8 @@ function AssetImage({asset,kind,large=false}) {
   Number(asset?.columns)||fallbackGrid.columns
  );
  function handleImageError(){
-  if(fallbackSrc && src!==fallbackSrc){setSrc(fallbackSrc);return;}
-  setFailed(true);
+  if(fallbackSrc && src!==fallbackSrc){setImageState({source:primarySrc,src:fallbackSrc,failed:false});return;}
+  setImageState({source:primarySrc,src,failed:true});
  }
  const showImage=Boolean(src&&!failed);
  return <div className={"stage-roster-image"+(large?" is-large":"")}>
