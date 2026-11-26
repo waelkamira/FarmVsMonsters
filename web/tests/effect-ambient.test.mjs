@@ -242,9 +242,10 @@ test("BattleScene adds lightweight contact shadows beneath built-in and Studio p
   const src = fs.readFileSync("game/scenes/BattleScene.js", "utf8");
   assert.match(src, /addGroundContactShadow\(view, 82 \* profile\.widthScale, 24 \* profile\.heightScale, 0\.24\)/);
   assert.match(src, /addGroundContactShadow\(container, Math\.min\(92 \* perspective \* sizeFactor, 132\)/);
-  assert.match(src, /addGroundContactShadow\(plant, \(shadowWidths\[type\] \|\| 48\) \* 0\.9/);
+  assert.match(src, /addGroundContactShadow\(plant, \(shadowWidths\[type\] \|\| 48\) \* 0\.9 \* pineapplePerspectiveScale, 18 \* pineapplePerspectiveScale, 0\.2\)/);
   assert.match(src, /addGroundContactShadow\(plant, 48, 15, 0\.19\)/);
-  assert.match(src, /addGroundContactShadow\(plant, 44, 13, 0\.2\)/);
+  assert.match(src, /addGroundContactShadow\(plant, 44 \* perspectiveScale, 13 \* perspectiveScale, 0\.2\)/);
+  assert.match(src, /addGroundContactShadow\(this\.caveman, 48, 15, 0\.2\)/);
   assert.match(src, /const shadow = this\.add\.ellipse\(0, -1, width, height, 0x20180f, alpha\)/);
   assert.match(src, /view\.add\(shadow\)/);
   assert.match(src, /catch \{\s+return null;\s+\}\s+\}/);
