@@ -221,3 +221,23 @@ test("stage seed selection blocks battle start when authoritative stage settings
  assert.match(selection,/setStageSettingsError\(error\?\.message/);
  assert.match(selection,/disabled=\{!stageSettingsReady \|\| Boolean\(stageSettingsError\)\}/);
 });
+
+
+test("Studio reads drafts from the working branch while players read the release branch",()=>{
+ const api=read("app/api/studio/stage-encounters/route.js");
+ assert.match(api,/const workingBranch=\(\)=>process\.env\.STUDIO_GITHUB_BRANCH\|\|"studio\/assets"/);
+ assert.match(api,/const releaseBranch=\(\)=>process\.env\.STUDIO_PUBLISH_BRANCH\|\|"main"/);
+ assert.match(api,/readGithub\(isStudio\?workingBranch\(\):releaseBranch\(\)\)/);
+ assert.match(api,/plants:stage\.plants\.filter\(plant=>plant\.visible!==false&&plant\.enabled!==false\)/);
+});
+
+test("publishing copies the selected stage into the player release branch and verifies the written roster",()=>{
+ const api=read("app/api/studio/stage-encounters/route.js");
+ const manager=read("app/studio/StageRosterManager.jsx");
+ assert.match(manager,/body:JSON\.stringify\(\{action:"publish",stage,config:next,sha\}\)/);
+ assert.match(api,/const publishAction=body\.action==="publish"/);
+ assert.match(api,/readGithub\(releaseBranch\(\)\)/);
+ assert.match(api,/writeGithub\(nextRelease,release\.sha,releaseBranch\(\)\)/);
+ assert.match(api,/const verified=await readGithub\(releaseBranch\(\)\)/);
+ assert.match(api,/JSON\.stringify\(verified\.config\.stages\?\.\[stageId\]\)!==JSON\.stringify\(releasedStage\)/);
+});
