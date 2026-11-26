@@ -2,7 +2,7 @@
 import {useCallback,useEffect,useMemo,useState} from "react";
 import Link from "next/link";
 import "./stage-roster.css";
-import { resolveSpriteThumbnailGrid } from "../../game/studio/spriteSheetGrid.mjs";
+import { resolveSpriteThumbnailGrid, resolveThumbnailSources } from "../../game/studio/spriteSheetGrid.mjs";
 
 const EMPTY={version:1,stages:{"1":{monsters:[],plants:[]}}};
 const BUILT_INS={
@@ -21,7 +21,10 @@ const BUILTIN_SHEETS=new Set(["radish","pineapple","hazelnut","mango","snow-thro
 const makeKey=()=> "entry-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,7);
 function assetImage(asset,kind){if(asset?.id==="electric-mushroom"&&/Electric-mushroom-level-1\.png/i.test(asset?.path||""))return asset?.previewUrl||"";return asset?.previewUrl||asset?.path||BUILTIN_IMAGES[kind]?.[asset?.id]||"";}
 function AssetImage({asset,kind,large=false}) {
- const src=assetImage(asset,kind);
+ const {primarySrc,fallbackSrc}=resolveThumbnailSources(asset);
+ const [src,setSrc]=useState(primarySrc);
+ const [failed,setFailed]=useState(false);
+ useEffect(()=>{setSrc(primarySrc);setFailed(false);},[primarySrc]);
  const frameCount=Math.max(1,Number(asset?.frameCount)||((Number(asset?.rows)||1)*(Number(asset?.columns)||1)));
  // Any multi-frame plant/monster artwork is a sprite sheet for thumbnail purposes,
  // even when older registry entries are missing the explicit spriteSheet flag.
@@ -32,8 +35,13 @@ function AssetImage({asset,kind,large=false}) {
   Number(asset?.rows)||fallbackGrid.rows,
   Number(asset?.columns)||fallbackGrid.columns
  );
+ function handleImageError(){
+  if(fallbackSrc && src!==fallbackSrc){setSrc(fallbackSrc);return;}
+  setFailed(true);
+ }
+ const showImage=Boolean(src&&!failed);
  return <div className={"stage-roster-image"+(large?" is-large":"")}>
-  {src?(spriteSheet?<div role="img" aria-label={asset?.name||asset?.id||"صورة الأصل"} className="stage-roster-first-frame" style={{backgroundImage:"url("+JSON.stringify(src)+")",backgroundSize:(columns*100)+"% "+(rows*100)+"%",backgroundPosition:"left top"}}/>:<img src={src} alt={asset?.name||asset?.id||"صورة الأصل"} loading="lazy" onError={event=>{event.currentTarget.style.display="none";}}/>):<span aria-hidden="true">{asset?.id==="electric-mushroom"?"⚡🍄":kind==="monster"?"👾":"🌱"}</span>}
+  {showImage?(spriteSheet?<><img className="stage-roster-image-probe" src={src} alt="" aria-hidden="true" onError={handleImageError}/><div role="img" aria-label={asset?.name||asset?.id||"صورة الأصل"} className="stage-roster-first-frame" style={{backgroundImage:"url("+JSON.stringify(src)+")",backgroundSize:(columns*100)+"% "+(rows*100)+"%",backgroundPosition:"left top"}}/></>:<img src={src} alt={asset?.name||asset?.id||"صورة الأصل"} loading="lazy" onError={handleImageError}/>):<span aria-hidden="true">{asset?.id==="electric-mushroom"?"⚡🍄":kind==="monster"?"👾":"🌱"}</span>}
  </div>;
 }
 export default function StageRosterManager({kind}){
