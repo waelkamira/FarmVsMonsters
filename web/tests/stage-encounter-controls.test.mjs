@@ -125,10 +125,10 @@ test("Studio stage playtests bypass the campaign-only second seed picker",()=>{
 
 test("battle seed bank uses the configured stage roster instead of campaign unlocks",()=>{
  const battle=read("game/scenes/BattleScene.js");
- assert.match(battle,/const stageAllowedTypes = this\.stagePlantRosterConfigured && !this\.isStudioPlaytest/);
+ assert.match(battle,/const stageAllowedTypes = this\.stagePlantRosterConfigured/);
  assert.match(battle,/stageAllowedTypes\.has\(type\)/);
  assert.match(battle, /"hazelnut-level-1": "hazelnut"/);
- assert.match(battle,/const stageAllowedTypes = this\.stagePlantRosterConfigured && !this\.isStudioPlaytest/);
+ assert.match(battle,/const stageAllowedTypes = this\.stagePlantRosterConfigured/);
  assert.match(battle,/requestedLoadout\.filter\(\(type\) => availableTypes\.has\(type\)\)/);
  assert.match(battle,/if \(!this\.stagePlantRosterConfigured && !this\.isStudioPlaytest\) \{/);
 });
@@ -154,7 +154,7 @@ test("Studio admin playtests bypass campaign locks and stage roster restrictions
  assert.match(battle,/this\.stagePlantRosterConfigured && !this\.isStudioPlaytest/);
  assert.match(battle,/this\.isStudioPlaytest \|\| PLAYTEST_ALL_PLANTS \|\| unlocked\.has\(type\)/);
  assert.match(battle,/!this\.isStudioPlaytest && !PLAYTEST_ALL_PLANTS && !studioPlant/);
- assert.match(battle,/this\.stagePlantRosterConfigured && !this\.isStudioPlaytest && !stagePlantEntry/);
+ assert.match(battle,/this\.stagePlantRosterConfigured && !stagePlantEntry/);
  assert.match(battle,/if \(!this\.stagePlantRosterConfigured && !this\.isStudioPlaytest\)/);
  assert.match(battle,/this\.isStudioPlaytest\s*\? \[\.\.\.new Set\(\[\.\.\.campaignUnlocked, \.\.\.ALL_PLAYTEST_PLANT_IDS/);
 });
@@ -169,7 +169,7 @@ test("stage publication controls player-visible plants, per-stage unlocks and ba
  assert.match(api,/published:raw\?\.published===true/);
  assert.match(api,/background=typeof raw\?\.background==="string"/);
  assert.match(api,/export async function GET\(req\)/);
- assert.match(api,/if\(authorized\(req\)\)/);
+ assert.match(api,/if\(isStudio\)/);
  assert.match(api,/filter\(\(\[,stage\]\)=>stage\.published===true\)/);
  assert.match(api,/plants:stage\.plants\.filter\(plant=>plant\.visible!==false&&plant\.enabled!==false\)/);
  assert.match(manager,/async function publishStage\(\)/);
@@ -240,4 +240,24 @@ test("publishing copies the selected stage into the player release branch and ve
  assert.match(api,/writeGithub\(nextRelease,release\.sha,releaseBranch\(\)\)/);
  assert.match(api,/const verified=await readGithub\(releaseBranch\(\)\)/);
  assert.match(api,/JSON\.stringify\(verified\.config\.stages\?\.\[stageId\]\)!==JSON\.stringify\(releasedStage\)/);
+});
+
+
+test("stage playtest is restricted to the configured visible roster instead of every catalog plant",()=>{
+ const selection=read("app/stage/1/select/page.js");
+ const battle=read("game/scenes/BattleScene.js");
+ assert.match(selection,/const useStageRoster = stageRosterConfigured && \(publishedStage \|\| isStudioPlaytest\)/);
+ assert.match(selection,/const nextPlants = useStageRoster/);
+ assert.match(selection,/isStudioPlaytest \? authoredStageIds : stageUnlockedIds/);
+ assert.match(battle,/const stageAllowedTypes = this\.stagePlantRosterConfigured/);
+ assert.match(battle,/this\.isStudioPlaytest \|\| entry\.unlocked !== false/);
+});
+
+test("publishing refuses visible plants that are absent from the player release catalog",()=>{
+ const api=read("app/api/studio/stage-encounters/route.js");
+ assert.match(api,/PUBLISHED_PLANT_CATALOG_PATH="web\/public\/assets\/studio-plant-catalog\.json"/);
+ assert.match(api,/async function readPublishedPlantIds\(\)/);
+ assert.match(api,/const availablePlants=await readPublishedPlantIds\(\)/);
+ assert.match(api,/لا يمكن نشر المرحلة لأن بعض النباتات ليست منشورة في كتالوج اللاعبين بعد/);
+ assert.match(api,/unavailablePlants/);
 });
