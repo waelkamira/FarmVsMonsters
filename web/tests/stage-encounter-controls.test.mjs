@@ -33,7 +33,7 @@ test("battle consumes configured monster counts, timings, strength and plant lim
  assert.match(battle,/new URLSearchParams\(window\.location\.search\)\.get\("stage"\)/);
  assert.match(battle,/stages\?\.\[String\(this\.stageNumber\)\]/);
  assert.match(battle,/this\.totalWaves = this\.stageWaveCount/);
- assert.match(battle,/if \(this\.stageNumber !== 1\) \{\s*this\.endGame\(true\)/);
+ assert.match(battle,/won = Boolean\(won && \(this\.stageNumber !== 1 \|\| this\.phaseOneStoryState === "complete"\)\)/);
  assert.match(battle,/getStageWaveSize/);
  assert.match(battle,/totalConfiguredMonsters/);
  assert.match(battle,/spawnIntervalMs:\s*this\.getStageMonsterEntry/);
