@@ -310,9 +310,9 @@ function createPauseControl() {
       : this.add.text(0, 0, "Ⅱ", { fontFamily: "Arial", fontSize: "20px", color: "#f4fff2", fontStyle: "bold" }).setOrigin(0.5);
     setTouchTarget(glass);
     button.add([glass, artwork]);
-    artwork.on("pointerover", () => button.setScale(1.07));
-    artwork.on("pointerout", () => button.setScale(1));
-    artwork.on("pointerdown", () => this.pauseGame());
+    glass.on("pointerover", () => button.setScale(1.07));
+    glass.on("pointerout", () => button.setScale(1));
+    glass.on("pointerdown", () => this.pauseGame());
     this.pauseControl = button;
   }
 
@@ -324,9 +324,9 @@ function createSettingsControl() {
       : this.add.text(0, 0, "⚙", { fontFamily: "Arial", fontSize: "20px", color: "#f4fff2", fontStyle: "bold" }).setOrigin(0.5);
     setTouchTarget(glass);
     button.add([glass, artwork]);
-    artwork.on("pointerover", () => button.setScale(1.07));
-    artwork.on("pointerout", () => button.setScale(1));
-    artwork.on("pointerdown", () => this.openSettingsMenu());
+    glass.on("pointerover", () => button.setScale(1.07));
+    glass.on("pointerout", () => button.setScale(1));
+    glass.on("pointerdown", () => this.openSettingsMenu());
     this.settingsControl = button;
   }
 
