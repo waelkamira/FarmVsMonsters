@@ -179,7 +179,7 @@ export default function StageOneSeedSelectionPage() {
 
         <div className="seed-select-grid seed-select-catalog-scroll">
           {plantCatalog.map((plant) => {
-            const unlocked = true;
+            const unlocked = unlockedIds.includes(plant.id);
             const active = selected.includes(plant.id);
             return (
               <button
