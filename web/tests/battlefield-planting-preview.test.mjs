@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
 const scene = readFileSync(new URL("../game/scenes/BattleScene.js", import.meta.url), "utf8");
+const background = readFileSync(new URL("../public/assets/backgrounds/farm-battlefield-clean.svg", import.meta.url), "utf8");
 
 test("battlefield placement preview follows the calibrated perspective cell polygon", () => {
   assert.match(scene, /this\.input\.on\("pointermove", \(pointer\) => this\.updatePlantingPreview\(pointer\)\)/);
@@ -15,6 +16,7 @@ test("battlefield placement preview follows the calibrated perspective cell poly
 test("battlefield hides persistent empty cells and the baked square grid", () => {
   assert.doesNotMatch(scene, /drawBattleCellGlassOverlay|drawBattlefieldGlassCells/);
   assert.match(scene, /this\.load\.image\("farm-battlefield", "\/assets\/backgrounds\/farm-battlefield-clean\.svg"\)/);
+  assert.doesNotMatch(background, /grassBase|sunWash|battleGrass/);
   assert.doesNotMatch(scene, /battlefield-grass-overlay|battlefieldGrassOverlay/);
   assert.doesNotMatch(scene, /setDepth\(-4\.9\)/);
   const drawField = scene.match(/  drawField\(\) \{([\s\S]*?)\n  \}/)?.[1] || "";
