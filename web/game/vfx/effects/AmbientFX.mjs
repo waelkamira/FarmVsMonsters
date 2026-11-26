@@ -15,6 +15,7 @@ const MULTIPLY_BLEND = 2; // Phaser.BlendModes.MULTIPLY
 const ADD_BLEND = 1;
 const TAU = Math.PI * 2;
 const FOOTSTEP_INTERVAL_MS = 650;
+const AMBIENT_GLOW_TEXTURE = "fx-ambient-soft-glow";
 
 // السقف الكلي لكل جودة = مجموع الأجزاء (يبقى تحت سقف التأثيرات 120 / 64 / 28)
 const LIMITS = Object.freeze({
@@ -26,20 +27,39 @@ const LIMITS = Object.freeze({
 const PRESETS = Object.freeze({
   day: Object.freeze({
     id: "day", filter: { color: 0xffe2a8, alpha: 0.07, blend: 0 },
+    lighting: { color: 0xffe2a8, alpha: 0.2, x: 0.3, y: 0.43, scaleX: 2.25, scaleY: 1.8 },
     motes: 0xffe08a, leaves: [0x7bd35a, 0x55b84a, 0xa6e57a], rain: false, lightning: false
   }),
   sunset: Object.freeze({
     id: "sunset", filter: { color: 0xffb27a, alpha: 1, blend: MULTIPLY_BLEND },
+    lighting: { color: 0xffa15c, alpha: 0.22, x: 0.72, y: 0.38, scaleX: 2.35, scaleY: 1.85 },
     motes: 0xffb347, leaves: [0xff8a3d, 0xd9482b, 0xe8b04a], rain: false, lightning: false
   }),
   night: Object.freeze({
     id: "night", filter: { color: 0x5a6fa8, alpha: 1, blend: MULTIPLY_BLEND },
+    lighting: { color: 0x9bbcff, alpha: 0.16, x: 0.76, y: 0.28, scaleX: 2.1, scaleY: 1.7 },
     motes: 0x9fb8ff, leaves: [], rain: true, lightning: true
   })
 });
 
 const rand = (min, max) => min + Math.random() * (max - min);
 const pick = (list) => list[Math.floor(Math.random() * list.length)];
+
+/** Generate one reusable, softly feathered radial light texture without shaders. */
+function ensureAmbientGlowTexture(scene) {
+  if (!scene?.textures || !scene?.make?.graphics) return false;
+  if (scene.textures.exists(AMBIENT_GLOW_TEXTURE)) return true;
+  const graphics = scene.make.graphics({ x: 0, y: 0, add: false });
+  // Layer translucent circles from the outside inward to approximate a smooth
+  // radial falloff. A single cached texture keeps per-frame and draw-call costs low.
+  for (let radius = 128; radius >= 4; radius -= 4) {
+    graphics.fillStyle(0xffffff, 0.008);
+    graphics.fillCircle(128, 128, radius);
+  }
+  graphics.generateTexture(AMBIENT_GLOW_TEXTURE, 256, 256);
+  graphics.destroy();
+  return scene.textures.exists(AMBIENT_GLOW_TEXTURE);
+}
 
 /** 1-2 نهار، 3-4 غروب، 5+ ليل عاصف. */
 export function atmosphereForStage(stageNumber) {
@@ -66,6 +86,7 @@ export class AmbientFX {
     this.dust = new Set();
     this.dustTimers = new WeakMap();
     this.filter = null;
+    this.lights = [];
     this.stormShade = null;
     this.timers = [];
     this.breezeTimer = null;
@@ -85,6 +106,7 @@ export class AmbientFX {
       this.#clearAtmosphere();
       this.preset = preset;
       this.#setFilter(preset.filter);
+      this.#setLighting(preset.lighting);
       this.startSunMotes(preset.motes);
       if (preset.leaves.length) this.startBreeze(preset.leaves);
       if (preset.rain && !this.reducedMotion) this.#fillRain(Math.round(this.limits.rain * 0.6));
@@ -168,7 +190,7 @@ export class AmbientFX {
   }
 
   get activeCount() {
-    return this.motes.length + this.leaves.length + this.drops.length + this.dust.size;
+    return this.motes.length + this.leaves.length + this.drops.length + this.dust.size + this.lights.length;
   }
 
   destroy() {
@@ -187,6 +209,16 @@ export class AmbientFX {
     this.filter = this.scene.add.rectangle(this.width / 2, this.height / 2, this.width, this.height, color, alpha)
       .setDepth(this.depth - 0.2);
     if (blend) this.filter.setBlendMode(blend);
+  }
+
+  #setLighting(light) {
+    if (!light || !ensureAmbientGlowTexture(this.scene)) return;
+    const sprite = this.scene.add.image(this.width * light.x, this.height * light.y, AMBIENT_GLOW_TEXTURE)
+      .setDepth(this.depth - 0.1)
+      .setTint(light.color)
+      .setAlpha(light.alpha)
+      .setScale(light.scaleX, light.scaleY);
+    this.lights.push(sprite);
   }
 
   #spawnLeaf() {
@@ -235,6 +267,8 @@ export class AmbientFX {
       list.length = 0;
     }
     if (this.filter?.active) this.filter.destroy();
+    for (const light of this.lights) if (light?.active) light.destroy();
+    this.lights.length = 0;
     if (this.stormShade?.active) this.stormShade.destroy();
     this.filter = null;
     this.stormShade = null;
