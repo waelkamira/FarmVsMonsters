@@ -1,4 +1,5 @@
 import { detectEffectQuality, ensureEffectTextures } from "./EffectDirector.mjs";
+import { AdaptiveVFXQuality } from "../core/AdaptiveVFXQuality.mjs";
 
 /**
  * بيئة وطقس ديناميكيان: ذرات ضوء، أوراق متطايرة، غبار أقدام، وأجواء حسب المرحلة
@@ -102,9 +103,38 @@ export class AmbientFX {
     this.onUpdate = (_time, delta) => this.#update(Number(delta) || 16);
     scene?.events?.on?.("update", this.onUpdate);
     ensureEffectTextures(scene, (id, error) => this.#warn(id, error));
+    this.adaptiveQuality = new AdaptiveVFXQuality(scene, {
+      quality: this.quality,
+      onChange: (quality) => {
+        scene?.vfxManager?.setQuality?.(quality);
+        scene?.effectDirector?.setQuality?.(quality);
+        this.setQuality(quality);
+      }
+    });
   }
 
   // ------------------------------------------------------------ واجهة عامة
+  setQuality(quality) {
+    if (!LIMITS[quality] || quality === this.quality) return false;
+    this.quality = quality;
+    this.limits = LIMITS[quality];
+    const trim = (items, limit) => {
+      while (items.length > limit) {
+        const item = items.pop();
+        if (item?.sprite?.active) item.sprite.destroy();
+      }
+    };
+    trim(this.motes, this.reducedMotion ? Math.min(3, this.limits.motes) : this.limits.motes);
+    trim(this.leaves, this.limits.leaves);
+    trim(this.drops, this.limits.rain);
+    while (this.dust.size > this.limits.dust) {
+      const puff = this.dust.values().next().value;
+      this.dust.delete(puff);
+      if (puff?.active) puff.destroy();
+    }
+    return true;
+  }
+
   /** يطبّق أجواء المرحلة (يستبدل أي أجواء سابقة). */
   applyStageAtmosphere(stageNumber) {
     return this.#guard("applyStageAtmosphere", () => {
@@ -202,6 +232,8 @@ export class AmbientFX {
   destroy() {
     if (this.destroyed) return;
     this.destroyed = true;
+    this.adaptiveQuality?.destroy();
+    this.adaptiveQuality = null;
     try { this.scene?.events?.off?.("update", this.onUpdate); } catch { /* cosmetic */ }
     this.#clearAtmosphere();
     for (const puff of this.dust) if (puff.active) puff.destroy();
