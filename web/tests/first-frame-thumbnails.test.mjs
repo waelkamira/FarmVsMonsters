@@ -111,3 +111,10 @@ test("Studio roster thumbnails fall back from the preview proxy to the original 
     rows:3, columns:4, frameCount:12, spriteSheet:true
   }), {rows:3, columns:4, frameCount:12, spriteSheet:true});
 });
+
+
+test("Studio roster resolves built-in thumbnail paths before proxy fallback", () => {
+  const roster = read("../app/studio/StageRosterManager.jsx");
+  assert.match(roster, /resolveThumbnailSources\(\{\.\.\.asset,path:assetImage\(asset,kind\)\}\)/);
+  assert.match(roster, /BUILTIN_IMAGES\[kind\]\?\.\[asset\?\.id\]\?/);
+});
