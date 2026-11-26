@@ -101,6 +101,8 @@ export default class BattleScene extends Scene {
       this.assetManager = null;
     });
     this.load.image("farm-battlefield", "/assets/backgrounds/farm-battlefield.jpeg");
+    // Covers the square grid baked into the background artwork with seamless grass.
+    this.load.image("battlefield-grass-overlay", "/assets/backgrounds/battlefield-grass-overlay.svg");
     this.load.image("seed-card", "/assets/items/ui/ui-seed-card.png");
     this.load.image("mushroom-card", "/assets/items/ui/ui-mushroom-card.png");
     this.load.image("seed-card-frame", "/assets/items/ui/ui-seed-card-fram.png");
@@ -620,8 +622,6 @@ export default class BattleScene extends Scene {
 
     this.drawField();
     this.createFarmBackground();
-    this.drawBattleCellGlassOverlay();
-    this.drawBattlefieldGlassCells();
     this.drawPlantingGrid();
     this.createHud();
     createBattleHudButtons(this, translate);
@@ -646,19 +646,7 @@ export default class BattleScene extends Scene {
     g.fillStyle(0x8a603b, 1); g.fillRoundedRect(185, 115, 690, 500, 24);
     g.fillStyle(0x9c7047, 1); g.fillRoundedRect(195, 125, 670, 480, 18);
 
-    // Draw the fallback board with the same perspective corners as the real artwork.
-    const point = (u, v) => this.boardPoint(u, v);
-    for (let row = 0; row < LANES; row += 1) {
-      for (let col = 0; col < COLUMNS; col += 1) {
-        const u0 = col / COLUMNS, u1 = (col + 1) / COLUMNS;
-        const v0 = row / LANES, v1 = (row + 1) / LANES;
-        const cell = [point(u0, v0), point(u1, v0), point(u1, v1), point(u0, v1)];
-        g.fillStyle(row % 2 === 0 ? 0xb88b5b : 0xad8050, 0.9);
-        g.fillPoints(cell, true);
-        g.lineStyle(2, 0xe4c18b, 0.65);
-        g.strokePoints(cell, true);
-      }
-    }
+    // Keep the fallback soil as one continuous field; gameplay cells are logical only.
     g.fillStyle(0xe8d5a8, 1); g.fillRoundedRect(28, 385, 132, 150, 12);
     g.fillStyle(0x9b573c, 1); g.fillTriangle(18, 390, 94, 320, 170, 390);
     g.fillStyle(0x65452f, 1); g.fillRect(78, 465, 34, 70);
@@ -671,23 +659,6 @@ export default class BattleScene extends Scene {
     this.add.text(1000, 95, translate("MONSTER GATE", window.localStorage.getItem("farmVsMonsters.language") || "ar"), { fontFamily: "Arial", fontSize: "13px", color: "#563c2c", fontStyle: "bold" }).setOrigin(0.5).setData("localeKey", "MONSTER GATE");
   }
 
-  drawBattleCellGlassOverlay() {
-    // Light, consistent green-glass cell boundaries sit above the field art
-    // but below plants, projectiles and characters.
-    const grid = this.add.graphics().setDepth(-4);
-    for (let row = 0; row < LANES; row += 1) {
-      for (let col = 0; col < COLUMNS; col += 1) {
-        const cell = this.cellPolygon(col, row);
-        grid.fillStyle(0xb9ef9a, 0.075);
-        grid.fillPoints(cell, true);
-        grid.lineStyle(1.35, 0xeaffdc, 0.34);
-        grid.strokePoints(cell, true);
-        grid.lineStyle(1, 0x285d35, 0.12);
-        grid.strokePoints(cell, true);
-      }
-    }
-  }
-
   createFarmBackground() {
     if (!this.textures.exists("farm-battlefield")) return;
 
@@ -696,6 +667,18 @@ export default class BattleScene extends Scene {
     this.farmBackground = this.add.image(560, 340, "farm-battlefield")
       .setDisplaySize(1120, 597.33).setPosition(560, 340)
       .setDepth(-5);
+
+    // The original artwork has a square tile grid painted into the grass itself.
+    // Mask only that playable ground area; plants, monsters and projectiles render above it.
+    if (this.textures.exists("battlefield-grass-overlay")) {
+      this.battlefieldGrassOverlay = this.add.image(560, 340, "battlefield-grass-overlay")
+        .setDisplaySize(1120, 597.33).setPosition(560, 340)
+        .setDepth(-4.9);
+      this.events.once("shutdown", () => {
+        this.battlefieldGrassOverlay?.destroy();
+        this.battlefieldGrassOverlay = null;
+      });
+    }
 
     // The uploaded artwork already contains the farmhouse and garden props.
     // Remove temporary vector labels so they do not float over the real art.
@@ -944,34 +927,8 @@ export default class BattleScene extends Scene {
   }
 
 
-  // Translucent gradient/glass overlay for each battlefield soil cell.
-  // This stays behind plants, monsters and UI and uses the existing calibrated mesh.
-  drawBattlefieldGlassCells() {
-    const glass = this.add.graphics().setDepth(-4.2);
-    const interpolate = (a, b, t) => ({ x: PhaserMath.Linear(a.x, b.x, t), y: PhaserMath.Linear(a.y, b.y, t) });
-    for (let row = 0; row < LANES; row += 1) {
-      for (let col = 0; col < COLUMNS; col += 1) {
-        const cell = this.cellPolygon(col, row);
-        const [tl, tr, br, bl] = cell;
-        const tm = interpolate(tl, tr, 0.5), bm = interpolate(bl, br, 0.5);
-        const leftMid = interpolate(tl, bl, 0.5), rightMid = interpolate(tr, br, 0.5);
-        const center = interpolate(tm, bm, 0.5);
-        // Upper yellow-green wash and lower green wash approximate the vertical gradient
-        // while following the perspective quad rather than drawing axis-aligned rectangles.
-        glass.fillStyle(0xf7f76e, 0.52); glass.fillPoints([tl, tr, center, leftMid], true);
-        glass.fillStyle(0x68b301, 0.56); glass.fillPoints([leftMid, center, br, bl], true);
-        glass.fillStyle(0xffffff, 0.16); glass.fillPoints([tl, tr, rightMid, center], true);
-        glass.lineStyle(2, 0xffffff, 0.52); glass.strokePoints(cell, true);
-      }
-    }
-    this.events.once("shutdown", () => glass.destroy());
-  }
-
   drawPlantingGrid() {
-    // The background artwork owns the visible soil grid. This lightweight
-    // overlay only previews the one cell currently under the pointer.
-    // It follows the calibrated perspective polygon and never draws a second
-    // grid over the authored battlefield.
+    // No persistent cell tiles or grid lines: only the active placement preview is drawn.
     this.plantingGrid = null;
     this.plantingPreview = this.add.graphics().setDepth(9.7);
     this.plantingPreviewCell = null;
@@ -992,6 +949,8 @@ export default class BattleScene extends Scene {
 
     const { col, row } = this.worldToGrid(pointer.x, pointer.y);
     if (col < 0 || row < 0 || col >= COLUMNS || row >= LANES) return;
+    // Empty planting targets stay completely invisible until a seed is selected.
+    if (!this.selectedPlant) return;
 
     const polygon = this.cellPolygon(col, row);
     const occupied = this.plants.some((plant) => plant.alive && plant.col === col && plant.row === row);
@@ -1020,8 +979,12 @@ export default class BattleScene extends Scene {
 
     this.plantingPreview.fillStyle(fill, occupied ? 0.2 : 0.15);
     this.plantingPreview.fillPoints(polygon, true);
-    this.plantingPreview.lineStyle(3, stroke, 0.92);
-    this.plantingPreview.strokePoints(polygon, true);
+    // Occupied plants never receive a cell frame; empty cells get a temporary
+    // placement outline only while the pointer is over the target cell.
+    if (!occupied) {
+      this.plantingPreview.lineStyle(3, stroke, 0.92);
+      this.plantingPreview.strokePoints(polygon, true);
+    }
     this.plantingPreviewCell = { col, row, occupied, canPlant };
   }
 
