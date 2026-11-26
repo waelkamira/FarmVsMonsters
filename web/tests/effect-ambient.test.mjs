@@ -204,6 +204,16 @@ test("re-applying atmosphere never leaks, and destroy removes the listener and e
   assert.equal(fx.spawnFootstepDust({}, 1, 1, 9999), false);
 });
 
+test("unavailable canvas texture generation skips the glow but keeps stage ambience running", () => {
+  const scene = makeScene();
+  scene.make.graphics = () => { throw new Error("canvas unavailable"); };
+  const fx = new AmbientFX(scene, { quality: "high" });
+  assert.equal(fx.applyStageAtmosphere(1), "day");
+  assert.equal(kinds(scene, "fx-ambient-soft-glow").length, 0);
+  assert.ok(kinds(scene, "fx-shape-dot").length > 0, "ordinary ambient motes still render");
+  fx.destroy();
+});
+
 test("a failing renderer never throws into gameplay", () => {
   const scene = makeScene();
   scene.add.image = () => { throw new Error("boom"); };
