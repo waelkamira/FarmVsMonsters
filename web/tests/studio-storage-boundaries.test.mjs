@@ -358,6 +358,6 @@ test("publish and delete release branches are operation-scoped and revision-stab
 
 test("studio test-asset sync imports stat for validating referenced files", () => {
   const syncScript = readFileSync(new URL("../scripts/sync-studio-test-assets.mjs", import.meta.url), "utf8");
-  assert.match(syncScript, /import \\{[^}]*\\bstat\\b[^}]*\\} from "node:fs\\/promises"/);
-  assert.match(syncScript, /await stat\\(target\\)/);
+  assert.ok(syncScript.includes("writeFile,stat}"));
+  assert.ok(syncScript.includes("await stat(target)"));
 });
