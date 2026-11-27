@@ -47,7 +47,7 @@ async function githubGetPullRequest(number,token){
  if(response.status===404)return null;
  if(!response.ok)throw Error("GitHub pull request lookup failed ("+response.status+").");
  const pr=await response.json();
- return {number:pr.number,url:pr.html_url,state:pr.state,merged:Boolean(pr.merged||pr.merged_at),mergedAt:pr.merged_at||null};
+ return {number:pr.number,url:pr.html_url,state:pr.state,merged:Boolean(pr.merged||pr.merged_at),mergedAt:pr.merged_at||null,nodeId:pr.node_id,branch:pr.head?.ref,draft:Boolean(pr.draft)};
 }
 async function githubDeleteIfExists(filePath,message,token,branch){
  const document=await githubGetDocument(filePath,token,branch);
@@ -91,33 +91,75 @@ async function githubFindReleasePullRequest(token,baseBranch,marker){
 async function githubFindLatestReleasePullRequest(token,baseBranch,marker){
  const requests=await githubListReleasePullRequests(token,baseBranch);
  const item=requests.filter((candidate)=>String(candidate.body||"").includes(marker)).sort((a,b)=>String(b.updated_at||"").localeCompare(String(a.updated_at||"")))[0];
- return item?{number:item.number,url:item.html_url,branch:item.head?.ref,state:item.state,merged:Boolean(item.merged||item.merged_at),mergedAt:item.merged_at||null,createdAt:item.created_at||null}:null;
+ return item?{number:item.number,url:item.html_url,branch:item.head?.ref,state:item.state,merged:Boolean(item.merged||item.merged_at),mergedAt:item.merged_at||null,createdAt:item.created_at||null,nodeId:item.node_id,draft:Boolean(item.draft)}:null;
+}
+function releaseAssetFingerprint(asset){
+ const identity={
+  id:asset?.id,type:asset?.type,revision:asset?.revision||1,path:asset?.path,
+  filename:asset?.filename,rows:asset?.rows,columns:asset?.columns,frameCount:asset?.frameCount,
+  spriteSheet:asset?.spriteSheet,animationProfile:asset?.animationProfile,rigProfile:asset?.rigProfile,
+  combat:asset?.combat,monsterProfile:asset?.monsterProfile,flipX:asset?.flipX,
+  effects:asset?.effects,stateAnimations:asset?.stateAnimations
+ };
+ return createHash("sha256").update(JSON.stringify(identity)).digest("hex").slice(0,16);
+}
+async function githubConvertPullRequestToDraft(token,nodeId){
+ const response=await fetch("https://api.github.com/graphql",{method:"POST",headers:githubHeaders(token),body:JSON.stringify({query:"mutation($id:ID!){convertPullRequestToDraft(input:{pullRequestId:$id}){pullRequest{id isDraft}}}",variables:{id:nodeId}})});
+ const data=await response.json().catch(()=>({}));
+ if(!response.ok||data.errors?.length||!data.data?.convertPullRequestToDraft?.pullRequest?.isDraft)throw Error(data.errors?.[0]?.message||"Could not move the release PR to draft before updating its registry.");
+}
+async function githubMarkPullRequestReady(token,nodeId){
+ const response=await fetch("https://api.github.com/graphql",{method:"POST",headers:githubHeaders(token),body:JSON.stringify({query:"mutation($id:ID!){markPullRequestReadyForReview(input:{pullRequestId:$id}){pullRequest{id isDraft}}}",variables:{id:nodeId}})});
+ const data=await response.json().catch(()=>({}));
+ if(!response.ok||data.errors?.length||data.data?.markPullRequestReadyForReview?.pullRequest?.isDraft!==false)throw Error(data.errors?.[0]?.message||"Could not mark the staged release PR ready for review.");
 }
 async function githubCreateReleasePullRequest(token,{branch,base,title,body,marker}){
  const existing=await githubFindReleasePullRequest(token,base,marker);
- if(existing)return {number:existing.number,url:existing.html_url,state:existing.state,merged:false,createdAt:existing.created_at||null};
- const response=await fetch(githubApiUrl("/pulls"),{method:"POST",headers:{...githubHeaders(token),"Content-Type":"application/json"},body:JSON.stringify({head:branch,base,title,body})});
+ if(existing)return {number:existing.number,url:existing.html_url,state:existing.state,merged:Boolean(existing.merged||existing.merged_at),createdAt:existing.created_at||null,branch:existing.head?.ref,nodeId:existing.node_id,draft:Boolean(existing.draft)};
+ const response=await fetch(githubApiUrl("/pulls"),{method:"POST",headers:{...githubHeaders(token),"Content-Type":"application/json"},body:JSON.stringify({head:branch,base,title,body,draft:true})});
  if(!response.ok){const data=await response.json().catch(()=>({}));throw Error(data.message||"GitHub release pull request creation failed ("+response.status+").");}
  const pr=await response.json();
- return {number:pr.number,url:pr.html_url,state:pr.state,merged:Boolean(pr.merged),createdAt:pr.created_at||null};
+ return {number:pr.number,url:pr.html_url,state:pr.state,merged:Boolean(pr.merged||pr.merged_at),createdAt:pr.created_at||null,branch:pr.head?.ref,nodeId:pr.node_id,draft:Boolean(pr.draft)};
 }
-async function beginProductionRelease(token,id,operation,baseBranch){
- const marker="<!-- studio-release:"+operation+":"+id+" -->";
+async function beginProductionRelease(token,id,operation,baseBranch,asset){
+ const fingerprint=releaseAssetFingerprint(asset);
+ const marker="<!-- studio-release:"+operation+":"+id+":"+fingerprint+" -->";
  const requests=await githubListReleasePullRequests(token,baseBranch);
  const matches=requests.filter((item)=>String(item.body||"").includes(marker)).sort((a,b)=>String(b.updated_at||"").localeCompare(String(a.updated_at||"")));
  const completed=matches.find((item)=>item.merged||item.merged_at);
- if(completed)return {branch:completed.head.ref,marker,completed:{number:completed.number,url:completed.html_url,state:completed.state,merged:true,mergedAt:completed.merged_at||null,createdAt:completed.created_at||null}};
+ if(completed)return {branch:completed.head.ref,marker,fingerprint,completed:{number:completed.number,url:completed.html_url,state:completed.state,merged:true,mergedAt:completed.merged_at||null,createdAt:completed.created_at||null,branch:completed.head?.ref}};
  const existing=matches.find((item)=>item.state==="open");
- if(existing)return {branch:existing.head.ref,marker,pr:{number:existing.number,url:existing.html_url,state:existing.state,merged:false,createdAt:existing.created_at||null}};
- const suffix=createHash("sha256").update(id+":"+operation+":"+Date.now()).digest("hex").slice(0,8);
- const branch=createStudioReleaseBranchName(id,suffix);
- await githubCreateReleaseBranch(token,baseBranch,branch);
- return {branch,marker,pr:null};
+ if(existing)return {branch:existing.head.ref,marker,fingerprint,pr:{number:existing.number,url:existing.html_url,state:existing.state,merged:false,createdAt:existing.created_at||null,branch:existing.head?.ref,nodeId:existing.node_id,draft:Boolean(existing.draft)}};
+ const releaseBranch=createStudioReleaseBranchName(id,fingerprint.slice(0,8));
+ await githubCreateReleaseBranch(token,baseBranch,releaseBranch);
+ return {branch:releaseBranch,marker,fingerprint,pr:null};
 }
 async function finishProductionRelease(token,release,{baseBranch,title,body,asset,operation}){
- const pr=release.pr||await githubCreateReleasePullRequest(token,{branch:release.branch,base:baseBranch,title,body:body+"\n\n"+release.marker,marker:release.marker});
- const releaseRequest={number:pr.number,url:pr.url,branch:release.branch,state:pr.state,operation,requestedAt:pr.createdAt||null};
- await writeProductionRegistryRelease(token,release.branch,asset,releaseRequest,operation);
+ const pr=release.pr||await githubCreateReleasePullRequest(token,{branch:release.branch,base:baseBranch,title,body:body+"\\n\\n"+release.marker,marker:release.marker});
+ if(!pr.branch||pr.branch!==release.branch)throw Object.assign(new Error("Release PR head does not match the prepared release branch; no registry state was recorded."),{code:"STUDIO_RELEASE_BRANCH_MISMATCH"});
+ if(pr.merged){
+  const productionDocument=await githubGetDocument(REGISTRY_PATH,token,baseBranch);
+  const productionRegistry=productionDocument?JSON.parse(productionDocument.content):{assets:[],deletedAssetIds:[]};
+  const verified=operation==="delete"
+   ?findAssetDeletionTombstone(productionRegistry,asset.id)?.releaseRequest?.number===pr.number
+   :Boolean(productionRegistry.assets?.some((item)=>item.id===asset.id&&releaseAssetFingerprint(item)===release.fingerprint));
+  if(!verified)throw Error("A previous release PR was merged without its matching registry state. Automatic finalization was blocked; manual repair is required.");
+  return {number:pr.number,url:pr.url,branch:pr.branch,state:"merged",operation,fingerprint:release.fingerprint,requestedAt:pr.createdAt||null};
+ }
+ if(pr.state!=="open")throw Error("The release PR is not open; registry state was not finalized.");
+ let nodeId=pr.nodeId,draft=pr.draft;
+ if(!nodeId){const detail=await githubGetPullRequest(pr.number,token);nodeId=detail?.nodeId;draft=detail?.draft;}
+ if(!nodeId)throw Error("GitHub did not return the release PR node ID.");
+ if(!draft)await githubConvertPullRequestToDraft(token,nodeId);
+ const releaseRequest={number:pr.number,url:pr.url,branch:pr.branch,state:"open",operation,fingerprint:release.fingerprint,requestedAt:pr.createdAt||null};
+ await writeProductionRegistryRelease(token,pr.branch,asset,releaseRequest,operation);
+ const stagedDocument=await githubGetDocument(REGISTRY_PATH,token,pr.branch);
+ const stagedRegistry=stagedDocument?JSON.parse(stagedDocument.content):{assets:[],deletedAssetIds:[]};
+ const staged=operation==="delete"
+  ?findAssetDeletionTombstone(stagedRegistry,asset.id)?.releaseRequest?.number===pr.number
+  :stagedRegistry.assets?.some((item)=>item.id===asset.id&&item.releaseRequest?.number===pr.number&&releaseAssetFingerprint(item)===release.fingerprint);
+ if(!staged)throw Error("The release registry change could not be verified on the PR head; the PR remains draft and cannot be merged.");
+ if(draft)await githubMarkPullRequestReady(token,nodeId);
  return releaseRequest;
 }
 async function writeProductionRegistryRelease(token,branch,asset,releaseRequest,operation){
@@ -286,10 +328,10 @@ export async function GET(req){
     if(request?.number){
      try{pr=await githubGetPullRequest(request.number,token);}catch{}
     }else{
-     const matched=releasePullRequests.filter((candidate)=>String(candidate.body||"").includes("<!-- studio-release:publish:"+asset.id+" -->")||String(candidate.body||"").includes("<!-- studio-release:delete:"+asset.id+" -->"))
+     const matched=releasePullRequests.filter((candidate)=>String(candidate.body||"").includes("<!-- studio-release:publish:"+asset.id+":")||String(candidate.body||"").includes("<!-- studio-release:delete:"+asset.id+":"))
       .sort((a,b)=>String(b.updated_at||"").localeCompare(String(a.updated_at||"")))[0];
      if(matched){
-      const operation=String(matched.body||"").includes("<!-- studio-release:delete:"+asset.id+" -->")?"delete":"publish";
+      const operation=String(matched.body||"").includes("<!-- studio-release:delete:"+asset.id+":")?"delete":"publish";
       request={number:matched.number,url:matched.html_url,branch:matched.head?.ref,state:matched.state,operation};
       pr={number:matched.number,url:matched.html_url,state:matched.state,merged:Boolean(matched.merged),mergedAt:matched.merged_at||null};
      }
@@ -512,7 +554,7 @@ export async function PATCH(req){
     let publishRequest=asset.releaseRequest?.operation==="publish"?asset.releaseRequest:null;
     let publishPullRequest=null;
     if(publishRequest?.number)publishPullRequest=await githubGetPullRequest(publishRequest.number,token);
-    else publishPullRequest=await githubFindLatestReleasePullRequest(token,targetBranch,"<!-- studio-release:publish:"+id+" -->");
+    else publishPullRequest=await githubFindLatestReleasePullRequest(token,targetBranch,"<!-- studio-release:publish:"+id+":"+releaseAssetFingerprint(asset)+" -->");
     if(!publishPullRequest?.merged)return NextResponse.json({error:"لا يمكن طلب إزالة أصل لم يدمج طلب نشره بعد."},{status:409});
     publishRequest={number:publishPullRequest.number,url:publishPullRequest.url,branch:publishPullRequest.branch,state:"merged",operation:"publish"};
     asset=resolveStudioReleaseAsset({...asset,releaseRequest:publishRequest},publishPullRequest);
@@ -525,7 +567,7 @@ export async function PATCH(req){
    const result=await requestProductionAssetDeletion({
     plan,
     baseBranch:targetBranch,
-    beginRelease:(assetId,baseBranch)=>beginProductionRelease(token,assetId,"delete",baseBranch),
+    beginRelease:(assetId,baseBranch,releaseAsset)=>beginProductionRelease(token,assetId,"delete",baseBranch,releaseAsset),
     removeReleaseFiles:async(releaseBranch,deletionPlan)=>{
      await removeGithubAssetManifestReferences(deletionPlan.removablePaths,token,releaseBranch);
      for(const [catalogPath,key] of [[PUBLISHED_CATALOG_PATH,"plants"],[PUBLISHED_MONSTER_CATALOG_PATH,"monsters"]]){
@@ -554,7 +596,7 @@ export async function PATCH(req){
   if(asset.type!=="plant"&&asset.type!=="monster")return NextResponse.json({error:"هذه العملية متاحة للنباتات والوحوش فقط."},{status:409});
   if(asset.status!=="testing")return NextResponse.json({error:"يجب تجهيز الأصل للاختبار والتحقق منه داخل اللعبة أولاً."},{status:409});
   if(!safeAssetPath(asset.path))return NextResponse.json({error:"Invalid asset path."},{status:400});
-  if(asset.releaseRequest?.number){
+  if(asset.releaseRequest?.number&&asset.releaseRequest?.fingerprint===releaseAssetFingerprint(asset)){
    let previous;
    try{previous=await githubGetPullRequest(asset.releaseRequest.number,token);}catch(error){return NextResponse.json({error:error.message||"تعذر التحقق من طلب النشر الحالي."},{status:502});}
    const resolved=resolveStudioReleaseAsset(asset,previous);
@@ -572,11 +614,11 @@ export async function PATCH(req){
   if(asset.combat?.projectile?.path&&!safeAssetPath(asset.combat.projectile.path))return NextResponse.json({error:"The linked projectile asset is missing."},{status:409});
   for(const [stateId,state] of Object.entries(asset.stateAnimations||{}))if(!safeAssetPath(state?.path))return NextResponse.json({error:"إطارات الحالة "+stateId+" لها مسار غير صالح."},{status:409});
    if(findAssetDeletionTombstone(productionRegistry,id))return NextResponse.json({error:"هذا المعرّف مسجل كأصل محذوف في الإنتاج ولا يمكن إحياؤه تلقائياً."},{status:409});
-  if(await githubFindReleasePullRequest(token,targetBranch,"<!-- studio-release:delete:"+id+" -->"))return NextResponse.json({error:"يوجد طلب إزالة مفتوح لهذا الأصل؛ أغلقه قبل طلب نشر جديد."},{status:409});
+  if(await githubFindReleasePullRequest(token,targetBranch,"<!-- studio-release:delete:"+id+":"))return NextResponse.json({error:"يوجد طلب إزالة مفتوح لهذا الأصل؛ أغلقه قبل طلب نشر جديد."},{status:409});
 
   // Branch from production only after all references have passed validation.
-  const release=await beginProductionRelease(token,id,"publish",targetBranch);
-  if(release.completed)return NextResponse.json({success:true,operation:"published",asset:resolveStudioReleaseAsset(asset,release.completed),releaseRequest:release.completed,published:true,idempotent:true});
+  const release=await beginProductionRelease(token,id,"publish",targetBranch,asset);
+  if(release.completed){const published=productionRegistry.assets?.find(item=>item.id===id);if(!published||releaseAssetFingerprint(published)!==release.fingerprint)return NextResponse.json({error:"تم دمج طلب قديم لكن سجل الإنتاج لا يطابق النسخة المختبرة؛ أوقفنا اعتبارها منشورة تلقائياً."},{status:409});return NextResponse.json({success:true,operation:"published",asset:resolveStudioReleaseAsset(asset,release.completed),releaseRequest:release.completed,published:true,idempotent:true});}
   if(release.pr){
    const request=await finishProductionRelease(token,release,{baseBranch:targetBranch,title:"Publish Studio asset "+id,body:"Publish the tested Studio asset with all referenced files and catalog data.",asset,operation:"publish"});
    const pending=resolveStudioReleaseAsset(asset,{state:"open",merged:false});
