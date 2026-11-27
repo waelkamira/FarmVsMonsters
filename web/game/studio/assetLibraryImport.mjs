@@ -4,6 +4,7 @@ import { resolvePlantSpriteMetadata } from "./spriteSheetGrid.mjs";
 function manifestEntries(source) {
   return [
     ...(Array.isArray(source?.assets) ? source.assets : []),
+    ...(Array.isArray(source?.plants) ? source.plants.map((asset) => ({ ...asset, group: "plants" })) : []),
     ...Object.entries(source?.groups || {}).flatMap(([group, items]) =>
       (Array.isArray(items) ? items : []).map((asset) => ({ ...asset, group }))
     )
