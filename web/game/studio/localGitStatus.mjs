@@ -72,13 +72,7 @@ export async function getLocalGitStatus({ cwd = process.cwd(), env = process.env
     let productionChangedFiles = [];
     let localToStudioAssets = null;
     let localToStudioChangedFiles = [];
-    if (studioAssetsSha && mainSha) {
-      productionCounts = parseCounts(await optionalGit(root, [
-        "rev-list", "--left-right", "--count", "refs/remotes/origin/main...refs/remotes/origin/studio/assets"
-      ]));
-      productionChangedFiles = parseNameStatus(await optionalGit(root, [
-        "diff", "--name-status", "refs/remotes/origin/main...refs/remotes/origin/studio/assets"
-      ]));
+    if (studioAssetsSha) {
       localToStudioAssets = parseCounts(await optionalGit(root, [
         "rev-list", "--left-right", "--count", "HEAD...refs/remotes/origin/studio/assets"
       ]));
@@ -86,14 +80,23 @@ export async function getLocalGitStatus({ cwd = process.cwd(), env = process.env
         "diff", "--name-status", "HEAD...refs/remotes/origin/studio/assets"
       ]));
     }
+    if (studioAssetsSha && mainSha) {
+      productionCounts = parseCounts(await optionalGit(root, [
+        "rev-list", "--left-right", "--count", "refs/remotes/origin/main...refs/remotes/origin/studio/assets"
+      ]));
+      productionChangedFiles = parseNameStatus(await optionalGit(root, [
+        "diff", "--name-status", "refs/remotes/origin/main...refs/remotes/origin/studio/assets"
+      ]));
+    }
+    const productionComparisonUnavailable = !productionCounts;
     const productionDiffers = Boolean(productionCounts && (productionCounts.ahead > 0 || productionCounts.behind > 0));
-    const diverged = Boolean(trackingCounts?.ahead > 0 && trackingCounts?.behind > 0);
     const conflict = unmerged;
     const notSynced = !upstream || !trackingCounts || trackingCounts.ahead > 0 || trackingCounts.behind > 0;
     const syncStates = [];
     if (dirty) syncStates.push("Local changes", "Not committed");
     if (notSynced) syncStates.push("Not synced");
     if (productionDiffers) syncStates.push("Production differs");
+    if (productionComparisonUnavailable) syncStates.push("Production comparison unavailable");
     if (diverged) syncStates.push("Diverged");
     if (conflict) syncStates.push("Conflict");
     if (!syncStates.length) syncStates.push("Synced");
@@ -112,6 +115,7 @@ export async function getLocalGitStatus({ cwd = process.cwd(), env = process.env
       ahead: trackingCounts?.ahead ?? null,
       behind: trackingCounts?.behind ?? null,
       productionDiffers,
+      productionComparisonUnavailable,
       productionAhead: productionCounts?.ahead ?? null,
       productionBehind: productionCounts?.behind ?? null,
       productionChangedFiles,
