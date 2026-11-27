@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-26T17:18:46.178Z",
-  "assetCount": 145,
-  "totalBytes": 21538357,
+  "generatedAt": "2026-11-27T03:14:18.041Z",
+  "assetCount": 146,
+  "totalBytes": 21613385,
   "groups": {
     "audio": [
       {
@@ -383,6 +383,16 @@
       }
     ],
     "backgrounds": [
+      {
+        "key": "backgrounds-farm-battlefield-clean",
+        "url": "/assets/backgrounds/farm-battlefield-clean.svg",
+        "type": "svg",
+        "group": "backgrounds",
+        "bytes": 75028,
+        "sha256": "c08a2f8462c76246bae48856e017d7072cb9067e840a31f916cdfa2004ed0c84",
+        "width": 1080,
+        "height": 607
+      },
       {
         "key": "backgrounds-farm-battlefield",
         "url": "/assets/backgrounds/farm-battlefield.jpeg",
@@ -1841,6 +1851,16 @@
       "group": "audio",
       "bytes": 14169,
       "sha256": "33b17a9a9a2397c62b285c52c33a907fdffb476909c99e42dde603f6a7a8b12c"
+    },
+    {
+      "key": "backgrounds-farm-battlefield-clean",
+      "url": "/assets/backgrounds/farm-battlefield-clean.svg",
+      "type": "svg",
+      "group": "backgrounds",
+      "bytes": 75028,
+      "sha256": "c08a2f8462c76246bae48856e017d7072cb9067e840a31f916cdfa2004ed0c84",
+      "width": 1080,
+      "height": 607
     },
     {
       "key": "backgrounds-farm-battlefield",

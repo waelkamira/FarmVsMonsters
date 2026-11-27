@@ -1,16 +1,16 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-26T17:18:46.176Z",
-  "assetCount": 145,
-  "totalBytes": 21538357,
+  "generatedAt": "2026-11-27T03:14:18.039Z",
+  "assetCount": 146,
+  "totalBytes": 21613385,
   "groups": {
     "audio": {
       "assetCount": 47,
       "totalBytes": 370668
     },
     "backgrounds": {
-      "assetCount": 1,
-      "totalBytes": 56081
+      "assetCount": 2,
+      "totalBytes": 131109
     },
     "characters/farmer": {
       "assetCount": 10,
