@@ -186,7 +186,7 @@ test("local Git status reports real uncommitted changes without mutating the rep
     run(["init", "-b", "main"]);
     run(["config", "user.email", "studio-test@example.invalid"]);
     run(["config", "user.name", "Studio Test"]);
-    writeFileSync(path.join(root, "fixture.txt"), "initial\\n");
+    writeFileSync(path.join(root, "fixture.txt"), "initial" + String.fromCharCode(10));
     run(["add", "fixture.txt"]);
     run(["commit", "-m", "initial"]);
     const clean = await getLocalGitStatus({ cwd: root, env: { NODE_ENV: "development" } });
@@ -194,7 +194,7 @@ test("local Git status reports real uncommitted changes without mutating the rep
     assert.equal(clean.branch, "main");
     assert.equal(clean.dirty, false);
     assert.ok(clean.syncStates.includes("Not synced"));
-    writeFileSync(path.join(root, "fixture.txt"), "changed\\n");
+    writeFileSync(path.join(root, "fixture.txt"), "changed" + String.fromCharCode(10));
     const dirty = await getLocalGitStatus({ cwd: root, env: { NODE_ENV: "development" } });
     assert.equal(dirty.available, true);
     assert.equal(dirty.dirty, true);
