@@ -1,14 +1,14 @@
 export const CAMPAIGN_WORLDS = Object.freeze([
   {
-    id: "dragonfall-farm-valley",
-    name: "Dragonfall Farm Valley",
-    ar: "وادي مزرعة سقوط التنين",
-    subtitle: "The first rescue begins at home",
-    subtitleAr: "بداية رحلة الإنقاذ من أرض المزرعة",
+    id: "farm-valley",
+    name: "Farm Valley",
+    ar: "وادي المزرعة",
+    subtitle: "The first defense begins at home",
+    subtitleAr: "بداية الدفاع عن أرض المزرعة",
     theme: "farm",
     icon: "🌻",
-    description: "Rolling fields, familiar farm paths, and the first dragon's siege.",
-    descriptionAr: "حقول خضراء وطرق المزرعة المألوفة وحصار التنين الأول.",
+    description: "Rolling fields and familiar farm paths around the farm.",
+    descriptionAr: "حقول خضراء وطرق مألوفة حول المزرعة.",
     currentStage: 1
   },
   {
@@ -114,8 +114,8 @@ export const CAMPAIGN_WORLDS = Object.freeze([
     id: "riftbound-citadel",
     name: "The Riftbound Citadel",
     ar: "قلعة الصدوع",
-    subtitle: "The final stand against the dragon ruler",
-    subtitleAr: "المواجهة الأخيرة ضد سيد التنانين",
+    subtitle: "The final stand in the riftbound citadel",
+    subtitleAr: "المواجهة الأخيرة في قلعة الصدوع",
     theme: "rift",
     icon: "🐉",
     description: "A final stronghold where the campaign's learned threats converge.",

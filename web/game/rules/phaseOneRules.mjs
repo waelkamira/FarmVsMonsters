@@ -1,11 +1,11 @@
 import { PHASE_ONE_PLANTS, PHASE_ONE_REWARDS, PHASE_ONE_WAVE_SIZES, PHASE_ONE_ENERGY } from "./phaseOneCombatContract.mjs";
 import { resolveEnergyPickup, resolveMonsterArchetype } from "./combatSimulation.mjs";
 
-// Twenty ordinary monsters across five guided onboarding waves. The dragon boss is separate.
+// Thirty Monster 01 enemies across five guided onboarding waves.
 export { PHASE_ONE_WAVE_SIZES };
 export const PHASE_ONE_TOTAL_MONSTERS = PHASE_ONE_WAVE_SIZES.reduce((sum, count) => sum + count, 0);
 export const CAMPAIGN_STAGE_COUNT = 10;
-const CAMPAIGN_STAGE_MONSTER_COUNTS = Object.freeze([20, 25, 30, 36, 42, 48, 55, 62, 70, 80]);
+const CAMPAIGN_STAGE_MONSTER_COUNTS = Object.freeze([30, 31, 32, 33, 34, 35, 36, 37, 38, 39]);
 export const ordinaryMonsterCountForStage = (stage) =>
   Number.isInteger(stage) && stage >= 1 && stage <= CAMPAIGN_STAGE_COUNT
     ? CAMPAIGN_STAGE_MONSTER_COUNTS[stage - 1]
@@ -36,6 +36,11 @@ export const PINEAPPLE_CONFIG = Object.freeze({ label: "Pineapple", ...PHASE_ONE
 export const HAZELNUT_CONFIG = Object.freeze({ label: "Hazelnut", ...PHASE_ONE_PLANTS.hazelnut, cost: PHASE_ONE_PLANTS.hazelnut.plantingEnergyCost });
 export const MANGO_CONFIG = Object.freeze({ label: "Mango", ...PHASE_ONE_PLANTS.mango, cost: PHASE_ONE_PLANTS.mango.plantingEnergyCost });
 export const SNOW_THROWER_CONFIG = Object.freeze({ label: "Snow Thrower", ...PHASE_ONE_PLANTS.snowThrower, cost: PHASE_ONE_PLANTS.snowThrower.plantingEnergyCost });
+export const ELECTRIC_MUSHROOM_CONFIG = Object.freeze({
+  label: "Electric Mushroom",
+  ...PHASE_ONE_PLANTS["electric-mushroom"],
+  cost: PHASE_ONE_PLANTS["electric-mushroom"].plantingEnergyCost
+});
 
 export const collectEnergy = resolveEnergyPickup;
 export function isWaveComplete(spawnedCount, waveSize, livingMonsterCount) {
@@ -58,31 +63,15 @@ export function normalizeCoins(value) {
   return numeric;
 }
 
-export function loadSavedCoins(storage) {
-  if (!storage || typeof storage.getItem !== "function") return 0;
-  try {
-    const raw = storage.getItem(PROGRESSION_STORAGE_KEY);
-    if (!raw) return 0;
-    const data = JSON.parse(raw);
-    if (!data || data.version !== PROGRESSION_DATA_VERSION) return 0;
-    return normalizeCoins(data.coins);
-  } catch {
-    return 0;
-  }
+// Device storage is player-controlled and must never be treated as currency.
+// Until server-verified rewards are available, local play has no coin balance.
+export function loadSavedCoins(_storage) {
+  return 0;
 }
 
-export function saveCoins(storage, value) {
-  const coins = normalizeCoins(value);
-  if (!storage || typeof storage.setItem !== "function") return false;
-  try {
-    storage.setItem(PROGRESSION_STORAGE_KEY, JSON.stringify({
-      version: PROGRESSION_DATA_VERSION,
-      coins
-    }));
-    return true;
-  } catch {
-    return false;
-  }
+// Deliberately fail closed: there is no trusted client-side currency write path.
+export function saveCoins(_storage, _value) {
+  return false;
 }
 
 // Pure purchase transaction: prices come from the approved plant catalog/UI,
@@ -115,17 +104,10 @@ export function purchasePlant({ coins, plantId, price, unlockedPlantIds = [] } =
 
 export const CAMPAIGN_PROGRESS_KEY = "farmVsMonsters.campaignProgress.v1";
 
-export function loadUnlockedStage(storage) {
-  if (!storage || typeof storage.getItem !== "function") return 1;
-  try {
-    const raw = storage.getItem(CAMPAIGN_PROGRESS_KEY);
-    if (!raw) return 1;
-    const data = JSON.parse(raw);
-    if (!data || data.version !== 1 || !Number.isInteger(data.unlockedStage)) return 1;
-    return Math.min(CAMPAIGN_STAGE_COUNT, Math.max(1, data.unlockedStage));
-  } catch {
-    return 1;
-  }
+// Stage access is not granted from editable browser storage. A future trusted
+// cloud progression response must authorize each stage before it is entered.
+export function loadUnlockedStage(_storage) {
+  return 1;
 }
 
 export const STARTING_PLANT_IDS = Object.freeze(["radish", "mushroom"]);
@@ -147,63 +129,24 @@ function readCampaignProgress(storage) {
   }
 }
 
-export function loadUnlockedPlantIds(storage) {
-  const data = readCampaignProgress(storage);
-  const unlocked = new Set(STARTING_PLANT_IDS);
-  if (Array.isArray(data.unlockedPlantIds)) {
-    data.unlockedPlantIds.forEach((id) => {
-      if (typeof id === "string" && id.trim()) unlocked.add(id);
-    });
-  } else if (Number.isInteger(data.unlockedStage) && data.unlockedStage >= 2) {
-    // Backward compatibility: old saves that opened Stage 2 completed Stage 1.
-    unlocked.add("pumpkin");
-  }
-  return [...unlocked];
+// Only starter plants are available until unlocks are granted by a trusted
+// server-side completion flow. Browser storage is never proof of ownership.
+export function loadUnlockedPlantIds(_storage) {
+  return [...STARTING_PLANT_IDS];
 }
 
-export function unlockPlantReward(storage, completedStage) {
-  const plantId = CAMPAIGN_PLANT_REWARDS[completedStage];
-  if (!plantId || !storage || typeof storage.getItem !== "function" || typeof storage.setItem !== "function") return false;
-  const current = readCampaignProgress(storage);
-  const unlockedPlantIds = [...new Set([...loadUnlockedPlantIds(storage), plantId])];
-  try {
-    storage.setItem(CAMPAIGN_PROGRESS_KEY, JSON.stringify({
-      ...current,
-      version: 1,
-      unlockedStage: loadUnlockedStage(storage),
-      completedStages: Array.isArray(current.completedStages) ? current.completedStages : [],
-      unlockedPlantIds
-    }));
-    return true;
-  } catch {
-    return false;
-  }
+// Client-side victory claims are not authoritative and cannot unlock rewards.
+export function unlockPlantReward(_storage, _completedStage) {
+  return false;
 }
 
-export function unlockNextStage(storage, completedStage) {
-  if (!storage || typeof storage.getItem !== "function" || typeof storage.setItem !== "function") return false;
-  if (!Number.isInteger(completedStage) || completedStage < 1 || completedStage > CAMPAIGN_STAGE_COUNT) return false;
-  const current = readCampaignProgress(storage);
-  const unlockedStage = Math.min(CAMPAIGN_STAGE_COUNT, Math.max(loadUnlockedStage(storage), completedStage + 1));
-  try {
-    storage.setItem(CAMPAIGN_PROGRESS_KEY, JSON.stringify({
-      ...current,
-      version: 1,
-      unlockedStage,
-      completedStages: [...new Set([
-        ...(Array.isArray(current.completedStages) ? current.completedStages : []),
-        ...Array.from({ length: unlockedStage - 1 }, (_, index) => index + 1)
-      ])].sort((a, b) => a - b),
-      unlockedPlantIds: loadUnlockedPlantIds(storage)
-    }));
-    return true;
-  } catch {
-    return false;
-  }
+// A browser-reported victory cannot authorize campaign progression.
+export function unlockNextStage(_storage, _completedStage) {
+  return false;
 }
 
 
-export const CAMPAIGN_MONSTER_IDS = Object.freeze(["cave-brute", "dust-skitter", "stonehide", "alpha-brute"]);
+export const CAMPAIGN_MONSTER_IDS = Object.freeze(["monster-01"]);
 
 export function loadDiscoveredMonsterIds(storage) {
   const data = readCampaignProgress(storage);

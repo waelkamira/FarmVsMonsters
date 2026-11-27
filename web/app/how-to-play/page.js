@@ -17,8 +17,8 @@ export default function HowToPlayPage() {
         <h1>{t("How to Play")}</h1>
         <p>
           {arabic
-            ? `دافع عن المزرعة والأميرة خلال خمس موجات. تضم المرحلة الأولى ${ordinaryMonsterCount} وحشاً عادياً موزعين على الموجات: ${PHASE_ONE_WAVE_SIZES.join("، ")}. يظهر التنين في الموجة الخامسة ويُحسب كزعيم مستقل عن الوحوش العادية.`
-            : `Defend the farmhouse and princess through five waves. Stage 1 has ${ordinaryMonsterCount} ordinary monsters across the waves: ${PHASE_ONE_WAVE_SIZES.join(", ")}. The dragon appears in Wave 5 and is counted separately as the boss.`}
+            ? `دافع عن المزرعة خلال خمس موجات. تضم المرحلة الأولى ${ordinaryMonsterCount} وحشاً عادياً موزعين على الموجات: ${PHASE_ONE_WAVE_SIZES.join("، ")}.`
+            : `Defend the farmhouse through five waves. Stage 1 has ${ordinaryMonsterCount} ordinary monsters across the waves: ${PHASE_ONE_WAVE_SIZES.join(", ")}.`}
         </p>
 
         <h2>{t("1. Choose your plant")}</h2>
@@ -32,13 +32,6 @@ export default function HowToPlayPage() {
 
         <h2>{t("4. Emergency club combat")}</h2>
         <p>{t("If every defensive plant is destroyed, the caveman can use his club. Planting a new defender successfully ends emergency combat immediately.")}</p>
-
-        <h2>{t("The dragon and rescue")}</h2>
-        <p>
-          {arabic
-            ? "في الموجة الخامسة يدخل التنين خلف أتباعه ويهاجم المزرعة بكرات نارية واضحة التحضير. يستخدم المزارع المقلاع تلقائياً عندما يصبح التنين ضمن المدى. بعد هزيمة الأتباع، يبقى التنين حتى تهزمه؛ عندها فقط تُحرَّر الأميرة ويحدث مشهد اللقاء."
-            : "In Wave 5, the dragon enters behind its followers and attacks with telegraphed fireballs. The farmer automatically uses his slingshot when the dragon is in range. After the followers fall, the dragon remains until defeated; only then is the princess released and the reunion begins."}
-        </p>
 
         <h2>{t("Controls")}</h2>
         <ul>

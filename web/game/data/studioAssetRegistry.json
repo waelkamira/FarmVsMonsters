@@ -1629,9 +1629,9 @@
       "columns": 24,
       "frameCount": 24,
       "spriteSheet": true,
-      "status": "testing",
+      "status": "draft",
       "createdAt": "2026-11-22T20:20:34.630Z",
-      "updatedAt": "2026-11-25T21:52:59.965Z",
+      "updatedAt": "2026-11-24T16:30:00.000Z",
       "animationProfile": {
         "idle": {
           "startFrame": 0,

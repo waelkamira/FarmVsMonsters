@@ -38,7 +38,7 @@ export const STAGE_ONE_PLANTS = Object.freeze([
   },
   {
     id: "pea-shooter",
-    assetPath: "/assets/plants/pea-shooter.png",
+    assetPath: null, plannedAssetPath: "/assets/plants/pea-shooter.png",
     name: "Pea Shooter",
     nameAr: "قاذف البازلاء",
     role: "Rapid ranged attacker",
@@ -50,7 +50,7 @@ export const STAGE_ONE_PLANTS = Object.freeze([
   },
   {
     id: "thorn-wall",
-    assetPath: "/assets/plants/thorn-wall.png",
+    assetPath: null, plannedAssetPath: "/assets/plants/thorn-wall.png",
     name: "Thorn Wall",
     nameAr: "جدار الأشواك",
     role: "Heavy blocker",
@@ -62,7 +62,7 @@ export const STAGE_ONE_PLANTS = Object.freeze([
   },
   {
     id: "sunflower",
-    assetPath: "/assets/plants/sunflower.png",
+    assetPath: null, plannedAssetPath: "/assets/plants/sunflower.png",
     name: "Sunflower",
     nameAr: "عباد الشمس",
     role: "Energy generator",
@@ -74,7 +74,7 @@ export const STAGE_ONE_PLANTS = Object.freeze([
   },
   {
     id: "ice-bloom",
-    assetPath: "/assets/plants/ice-bloom.png",
+    assetPath: null, plannedAssetPath: "/assets/plants/ice-bloom.png",
     name: "Ice Bloom",
     nameAr: "زهرة الصقيع",
     role: "Slowing support",
@@ -86,7 +86,7 @@ export const STAGE_ONE_PLANTS = Object.freeze([
   },
   {
     id: "double-radish",
-    assetPath: "/assets/plants/double-radish.png",
+    assetPath: null, plannedAssetPath: "/assets/plants/double-radish.png",
     name: "Twin Radish",
     nameAr: "الفجل المزدوج",
     role: "Double projectile attacker",
@@ -110,7 +110,7 @@ export const STAGE_ONE_PLANTS = Object.freeze([
   },
   {
     id: "explosive-berry",
-    assetPath: "/assets/plants/explosive-berry.png",
+    assetPath: null, plannedAssetPath: "/assets/plants/explosive-berry.png",
     name: "Blast Berry",
     nameAr: "توتة متفجرة",
     role: "Area damage",
@@ -120,19 +120,6 @@ export const STAGE_ONE_PLANTS = Object.freeze([
     energyCost: 110, coinPrice: 300, status: "planned", implemented: false, purchasable: false, image: null,
     stats: ["Area burst", "Single use"], statsAr: ["انفجار جماعي", "استخدام واحد"]
   },
-  {
-    id: "fire-pepper",
-    assetPath: "/assets/plants/fire-pepper.png",
-    name: "Fire Pepper",
-    nameAr: "فلفل النار",
-    role: "Lane-clearing special",
-    roleAr: "سلاح خاص لتنظيف المسار",
-    description: "Creates a line of fire that damages every monster crossing its lane.",
-    descriptionAr: "يشعل خطاً نارياً يلحق الضرر بكل وحش يعبر مساره.",
-    energyCost: 130, coinPrice: 360, status: "planned", implemented: false, purchasable: false, image: null,
-    stats: ["Lane-wide damage", "Rare plant"], statsAr: ["ضرر على كامل المسار", "نبتة نادرة"]
-  },
-
   {
     id: "snow-thrower", assetPath: "/assets/plants/Snow-thrower-level-1.png",
     name: "Snow Thrower Level 1", nameAr: "قاذف الثلج المستوى الأول",
@@ -179,6 +166,31 @@ export const STAGE_ONE_PLANTS = Object.freeze([
     descriptionAr: "يطلق قذيفة مانجو صغيرة بمسار منحنٍ وتهوي فوق الوحش الموجود في مساره.",
     energyCost: 70, coinPrice: 0, status: "active", implemented: true, purchasable: false, image: null,
     stats: ["130 HP", "40 damage", "2100 ms cooldown"], statsAr: ["١٣٠ صحة", "ضرر ٤٠", "فاصل هجوم ٢١٠٠ مللي ثانية"]
+  },
+
+  {
+    id: "electric-mushroom",
+    assetPath: null, artworkStatus: "intentionally-removed",
+    name: "Electric Mushroom Level 1",
+    nameAr: "الفطر الكهربائي المستوى الأول",
+    role: "Electric lane attacker",
+    roleAr: "مهاجم كهربائي للمسار",
+    description: "Uses a nine-frame electric charge animation before firing a cyan lightning bolt at monsters in its lane.",
+    descriptionAr: "ينفذ حركة شحن كهربائية من تسعة إطارات قبل إطلاق صاعقة سماوية على الوحوش في مساره.",
+    energyCost: 80, coinPrice: 0, status: "active", implemented: true, purchasable: false, image: null,
+    stats: ["115 HP", "22 damage", "1850 ms cooldown"], statsAr: ["١١٥ صحة", "ضرر ٢٢", "فاصل هجوم ١٨٥٠ مللي ثانية"]
+  },
+  {
+    id: "fire-pepper",
+    assetPath: null, plannedAssetPath: "/assets/plants/fire-pepper.png",
+    name: "Fire Pepper",
+    nameAr: "الفلفل الناري",
+    role: "Area fire attacker",
+    roleAr: "مهاجم ناري جماعي",
+    description: "A planned fire plant reserved for a later campaign unlock.",
+    descriptionAr: "نبتة نارية مخطط لها وتُفتح في مرحلة لاحقة من الحملة.",
+    energyCost: 100, coinPrice: 360, status: "planned", implemented: false, purchasable: false, image: null,
+    stats: ["Area damage", "Future unlock"], statsAr: ["ضرر جماعي", "فتح مستقبلي"]
   }
 ]);
 

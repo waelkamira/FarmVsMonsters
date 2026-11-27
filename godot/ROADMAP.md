@@ -13,10 +13,7 @@
 
 ## Immediate gameplay review target
 
-- Provide a dedicated main-menu test entry for Snow Thrower vs Hyena.
-- Guarantee one Hyena and one Snow Thrower in the same lane.
 - Verify projectile launch, collision, freeze duration (2.6 seconds), stopped movement/attacks, and return to normal movement after thawing.
-- The frozen Hyena PNG assets are imported, but their sprite-sheet layout must be visually confirmed before using them as animated combat replacements. Until then, the in-game freeze uses a temporary blue tint.
 
 ## Release sequence
 
@@ -25,3 +22,4 @@
 3. Local browser builds and iterative review on the user's computer (no hosting or public deployment).
 4. Android device testing and optimization.
 5. Signed APK release.
+

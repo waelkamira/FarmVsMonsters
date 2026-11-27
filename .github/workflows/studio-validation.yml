@@ -1,0 +1,57 @@
+name: Studio and Game Validation
+
+on:
+  push:
+    branches:
+      - feat/studio-sprite-frame-count
+      - feat/studio-hybrid-animation-engine
+      - feat/studio-hybrid-animation-engine-mainline
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "web/app/studio/**"
+      - "web/app/api/studio/**"
+      - "web/game/studio/**"
+      - "web/game/scenes/BattleScene.js"
+      - "web/tests/**"
+      - "web/package.json"
+      - "web/package-lock.json"
+      - "web/scripts/**"
+      - "web/public/assets/**"
+      - "web/game/data/studioAssetRegistry.json"
+      - "web/game/data/stageEncounterConfig.json"
+      - ".github/workflows/studio-validation.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: studio-validation-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Tests, lint, and production build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Rebuild asset manifest from the reconciled working tree
+        run: node scripts/build-asset-manifest.mjs
+      - name: Run unit tests
+        run: npm test
+      - name: Run ESLint
+        run: npm run lint
+      - name: Build production application
+        run: npm run build

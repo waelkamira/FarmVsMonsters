@@ -59,14 +59,11 @@ export class VFXRenderer {
         particleSize = 2 + (index % 2);
       }
 
-      const dot = this.scene.add.circle(
-        particleX,
-        particleY,
-        particleSize,
-        color,
-        kind === "trail" ? 0.72 : 0.96
-      );
-      burst.add(dot);
+      const alpha = kind === "trail" ? 0.72 : 0.96;
+      const particle = config.shape === "star" && this.scene.add.star
+        ? this.scene.add.star(particleX, particleY, 5, particleSize, particleSize * 2, color, alpha)
+        : this.scene.add.circle(particleX, particleY, particleSize, color, alpha);
+      burst.add(particle);
     }
 
     this.resetProceduralVisual(burst, x, y, config);

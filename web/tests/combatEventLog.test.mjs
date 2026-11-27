@@ -28,7 +28,7 @@ test("plant events reject unknown plant IDs and invalid board cells", () => {
     () => appendCombatEvent(base, {
       tick: 0,
       type: "plant_placed",
-      payload: { type: "unknown-plant", col: 0, row: 0 }
+      payload: { type: "Unknown Plant!", col: 0, row: 0 }
     }),
     { message: "INVALID_PLANT_EVENT" }
   );
@@ -40,4 +40,20 @@ test("plant events reject unknown plant IDs and invalid board cells", () => {
     }),
     { message: "INVALID_PLANT_EVENT" }
   );
+});
+
+test("Studio plant slugs support placement and uproot events without changing built-in IDs", () => {
+  const base = createCombatEventLog({ seed: 7, rulesVersion: "studio-test" });
+  const placed = appendCombatEvent(base, {
+    tick: 0,
+    type: "plant_placed",
+    payload: { type: "bamboo-level-1", col: 3, row: 2 }
+  });
+  const uprooted = appendCombatEvent(placed, {
+    tick: 1,
+    type: "plant_uprooted",
+    payload: { type: "bamboo-level-1", col: 3, row: 2 }
+  });
+  assert.equal(validateCombatEventLog(uprooted), true);
+  assert.equal(uprooted.events[0].payload.type, "bamboo-level-1");
 });

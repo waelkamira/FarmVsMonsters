@@ -1,0 +1,47 @@
+name: Repair and validate asset manifests
+
+on:
+  push:
+    branches:
+      - fix/effects-postmerge-quality-gate
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/effects-postmerge-quality-gate
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Rebuild deterministic asset manifests
+        working-directory: web
+        run: node scripts/build-asset-manifest.mjs
+      - name: Verify manifests and run full unit suite
+        working-directory: web
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          for (const p of ['public/assets/asset-manifest.json','public/assets/asset-audit.json']) {
+            const raw=fs.readFileSync(p,'utf8');
+            if(raw.includes('<<<<<<<')||raw.includes('=======')||raw.includes('>>>>>>>')) throw new Error('Conflict markers remain in '+p);
+            JSON.parse(raw);
+          }
+          NODE
+          node --test tests/*.test.mjs
+      - name: Commit repaired manifests
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -n "$(git status --porcelain)" ]]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add web/public/assets/asset-manifest.json web/public/assets/asset-audit.json
+            git commit -m "fix(assets): regenerate conflicted asset manifests"
+            git push origin HEAD:fix/effects-postmerge-quality-gate
+          fi

@@ -8,14 +8,14 @@ const AUDIO_CHANNELS = [
 ];
 
 const GLASS = {
-  panel: 0xe8d2a6,
-  panelGlow: 0xb88950,
-  green: 0x6f9b43,
-  blue: 0xc99a56,
-  violet: 0x8b704b,
-  coral: 0xa95c42,
-  gold: 0xe6bd68,
-  white: 0xfff1d1
+  panel: 0x286b43,
+  panelGlow: 0x9fe0a2,
+  green: 0x79c98c,
+  blue: 0x4f9d68,
+  violet: 0x3e8758,
+  coral: 0x2d754b,
+  gold: 0xa9e5b0,
+  white: 0xf2fff1
 };
 
 export default class PauseScene extends Scene {
@@ -56,20 +56,20 @@ export default class PauseScene extends Scene {
   }
 
   drawPanel(title, height = 420) {
-    // Parchment notice board mounted on a carved timber frame.
-    this.add.rectangle(560, 340, 1120, 680, 0x172313, 0.66).setDepth(-1);
-    this.add.rectangle(560, 340, 548, height + 30, 0x382315, 0.98)
-      .setStrokeStyle(5, 0x241509, 1);
-    this.add.rectangle(560, 340, 528, height + 10, 0xb88950, 1)
-      .setStrokeStyle(3, 0xe3c18a, 1);
-    this.add.rectangle(560, 340, 506, height - 12, 0xf0dfbb, 1)
-      .setStrokeStyle(3, 0x8d6538, 1);
-    this.add.rectangle(560, 340, 488, height - 30, 0xe5d0a6, 1)
-      .setStrokeStyle(1, 0xc3a16b, 1);
-    this.add.rectangle(560, 340 - height / 2 + 12, 474, 6, 0x9a7042, 1);
+    // Layered translucent green surfaces create a frosted-glass menu.
+    this.add.rectangle(560, 340, 1120, 680, 0x102b1c, 0.58).setDepth(-1);
+    this.add.rectangle(560, 340, 548, height + 30, 0x123d29, 0.28)
+      .setStrokeStyle(1, 0xeaffeb, 0.28);
+    this.add.rectangle(560, 340, 528, height + 10, 0x286b43, 0.78)
+      .setStrokeStyle(1.5, 0xf2fff1, 0.78);
+    this.add.rectangle(560, 340, 506, height - 12, 0x8dcc96, 0.2)
+      .setStrokeStyle(1, 0xffffff, 0.32);
+    this.add.rectangle(560, 340, 488, height - 30, 0xb6edbc, 0.12)
+      .setStrokeStyle(1, 0xeaffeb, 0.22);
+    this.add.rectangle(560, 340 - height / 2 + 12, 474, 6, 0xd7f8d9, 0.38);
     this.add.text(560, 340 - height / 2 + 58, this.tr(title), {
-      fontFamily: "Arial", fontSize: "32px", color: "#59391e",
-      fontStyle: "bold", stroke: "#fff0ce", strokeThickness: 2, resolution: 2
+      fontFamily: "Arial", fontSize: "32px", color: "#f2fff1",
+      fontStyle: "bold", stroke: "#17442d", strokeThickness: 2, resolution: 2
     }).setOrigin(0.5);
   }
 
@@ -97,16 +97,16 @@ export default class PauseScene extends Scene {
     AUDIO_CHANNELS.forEach((channel, index) => {
       const y = 270 + index * 92;
       const value = this.readVolume(channel.key, channel.initial);
-      this.add.rectangle(560, y + 10, 390, 66, 0xfff4dc, 0.98)
-        .setStrokeStyle(2, 0x9a7042, 0.95);
+      this.add.rectangle(560, y + 10, 390, 66, 0x8dcc96, 0.2)
+        .setStrokeStyle(1, 0xf2fff1, 0.52);
       this.add.text(560, y - 23, this.tr(channel.label), {
-        fontFamily: "Arial", fontSize: "19px", color: "#51351d",
-        fontStyle: "bold", stroke: "#fff0ce", strokeThickness: 1, resolution: 2
+        fontFamily: "Arial", fontSize: "19px", color: "#f2fff1",
+        fontStyle: "bold", stroke: "#17442d", strokeThickness: 1, resolution: 2
       }).setOrigin(0.5);
       this.addVolumeButton(420, y + 14, "−", () => this.changeVolume(channel, -5), GLASS.blue);
       this.add.text(560, y + 14, value + "%", {
-        fontFamily: "Arial", fontSize: "22px", color: "#51351d",
-        fontStyle: "bold", stroke: "#fff0ce", strokeThickness: 1, resolution: 2
+        fontFamily: "Arial", fontSize: "22px", color: "#f2fff1",
+        fontStyle: "bold", stroke: "#17442d", strokeThickness: 1, resolution: 2
       }).setOrigin(0.5);
       this.addVolumeButton(700, y + 14, "+", () => this.changeVolume(channel, 5), GLASS.green);
     });
@@ -123,13 +123,14 @@ export default class PauseScene extends Scene {
   }
 
   addVolumeButton(x, y, label, action, color) {
-    const bg = this.add.rectangle(x, y, 54, 42, 0x4b2e18, 1)
-      .setStrokeStyle(2, 0x241509, 1).setInteractive({ useHandCursor: true });
-    this.add.rectangle(x, y, 46, 34, color, 1)
-      .setStrokeStyle(1, 0xffe9bd, 1);
+    const bg = this.add.rectangle(x, y, 54, 42, 0x17442d, 0.22)
+      .setStrokeStyle(1, 0xf2fff1, 0.66).setInteractive({ useHandCursor: true });
+    this.add.rectangle(x, y, 48, 36, color, 0.76)
+      .setStrokeStyle(1, 0xffffff, 0.82);
+    this.add.rectangle(x, y - 8, 40, 10, 0xffffff, 0.12);
     this.add.text(x, y - 1, label, {
-      fontFamily: "Arial", fontSize: "28px", color: "#51351d",
-      fontStyle: "bold", stroke: "#fff0ce", strokeThickness: 1, resolution: 2
+      fontFamily: "Arial", fontSize: "28px", color: "#f2fff1",
+      fontStyle: "bold", stroke: "#17442d", strokeThickness: 1, resolution: 2
     }).setOrigin(0.5);
     bg.on("pointerover", () => bg.setScale(1.06));
     bg.on("pointerout", () => bg.setScale(1));
@@ -137,13 +138,14 @@ export default class PauseScene extends Scene {
   }
 
   addMenuButton(y, label, color, action) {
-    const bg = this.add.rectangle(560, y, 250, 52, 0x4b2e18, 1)
-      .setStrokeStyle(2, 0x241509, 1).setInteractive({ useHandCursor: true });
-    this.add.rectangle(560, y, 240, 44, color, 1)
-      .setStrokeStyle(2, 0xffe9bd, 1);
+    const bg = this.add.rectangle(560, y, 250, 52, 0x17442d, 0.22)
+      .setStrokeStyle(1, 0xf2fff1, 0.72).setInteractive({ useHandCursor: true });
+    this.add.rectangle(560, y, 242, 44, color, 0.78)
+      .setStrokeStyle(1, 0xffffff, 0.86);
+    this.add.rectangle(560, y - 13, 226, 10, 0xffffff, 0.12);
     this.add.text(560, y, this.tr(label), {
-      fontFamily: "Arial", fontSize: "18px", color: "#51351d",
-      fontStyle: "bold", stroke: "#fff0ce", strokeThickness: 1, resolution: 2
+      fontFamily: "Arial", fontSize: "18px", color: "#f2fff1",
+      fontStyle: "bold", stroke: "#17442d", strokeThickness: 1, resolution: 2
     }).setOrigin(0.5);
     bg.on("pointerover", () => bg.setScale(1.04));
     bg.on("pointerout", () => bg.setScale(1));

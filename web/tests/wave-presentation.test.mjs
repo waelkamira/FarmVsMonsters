@@ -35,9 +35,7 @@ test("wave announcement uses one reusable Phaser container with a bounded tween"
 
 test("monster arrivals use lightweight tier-colored Phaser effects", () => {
   assert.match(scene, /createMonsterArrivalEffect\(spawn, laneGap, archetype\)/);
-  assert.match(scene, /archetype === "stonehide" \? 0x8fb9ff/);
-  assert.match(scene, /archetype === "dust-skitter" \? 0xb9e7f4/);
-  assert.match(scene, /archetype === "alpha-brute" \? 0xffc45e/);
+  assert.match(scene, /const accent = false/);
   assert.match(scene, /A few inexpensive dust puffs/);
   assert.match(scene, /onComplete: \(\) => cue\.destroy\(\)/);
 });
@@ -50,11 +48,3 @@ test("arrival animation does not alter monster logical spawn coordinates", () =>
   assert.match(scene, /row, x: spawn\.x, y: spawn\.y, localX: SPAWN_LOCAL_X/);
 });
 
-test("dragon fireballs telegraph their impact point before launching", () => {
-  assert.match(scene, /Telegraph the chosen impact point before the projectile is launched/);
-  assert.match(scene, /const warning = this\.add\.circle\(targetX, targetY, 24/);
-  assert.match(scene, /const warningCore = this\.add\.circle\(targetX, targetY, 8/);
-  assert.match(scene, /duration: 520/);
-  assert.match(scene, /if \(this\.gameOver \|\| this\.storySequenceActive \|\| this\.collectionMenuOpen \|\| !boss\.alive\) return/);
-  assert.match(scene, /duration: PHASE_ONE_DRAGON\.fireballTravelMs/);
-});

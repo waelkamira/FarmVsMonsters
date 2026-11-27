@@ -2,6 +2,8 @@ import { createHash } from "node:crypto";
 import { readdir, readFile, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { buildAtlasMetadata } from "./asset-atlas-metadata.mjs";
+import { svgImageDimensions } from "./asset-image-dimensions.mjs";
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const webRoot = path.resolve(scriptDir, "..");
@@ -71,6 +73,7 @@ const SPRITESHEET_OVERRIDES = {
   "characters/farmer/farmer-attack.png": { key: "farmer-attack", type: "spritesheet", frameConfig: { frameWidth: 180, frameHeight: 360 } },
   "characters/farmer/farmer-hit.png": { key: "farmer-hit", type: "spritesheet", frameConfig: { frameWidth: 152, frameHeight: 430 } },
   "characters/farmer/farmer-death.png": { key: "farmer-death", type: "spritesheet", frameConfig: { frameWidth: 152, frameHeight: 430 } },
+  "characters/monsters/01/01.png": { key: "monster-01", type: "image" },
 };
 
 function groupFor(relativePath) {
@@ -98,13 +101,24 @@ for (const absolutePath of paths) {
   const digest = createHash("sha256").update(buffer).digest("hex");
   const info = await stat(absolutePath);
   const override = SPRITESHEET_OVERRIDES[relativePath] || {};
-  const type = override.type || (AUDIO_EXTENSIONS.has(extension) ? "audio" : extension === ".svg" ? "svg" : "image");
+  const dimensions = AUDIO_EXTENSIONS.has(extension) ? null : imageDimensions(buffer, extension);
+  let atlasMetadata = null;
+  if (IMAGE_EXTENSIONS.has(extension)) {
+    const atlasPath = absolutePath.replace(/\.[^.]+$/, ".json");
+    try {
+      const atlas = JSON.parse(await readFile(atlasPath, "utf8"));
+      atlasMetadata = buildAtlasMetadata(relativePath, atlas, dimensions);
+    } catch (error) {
+      if (error.code !== "ENOENT") throw error;
+    }
+  }
+  const metadata = { ...override, ...(atlasMetadata || {}) };
+  const type = metadata.type || (AUDIO_EXTENSIONS.has(extension) ? "audio" : extension === ".svg" ? "svg" : "image");
   const fileName = path.basename(relativePath, extension);
   const defaultKey = type === "audio" && relativePath.startsWith("audio/sfx/") ? `sfx-${fileName}` : assetKey(relativePath);
-  const key = override.key || defaultKey;
+  const key = metadata.key || defaultKey;
   if (keys.has(key)) throw new Error(`Asset key collision: "${key}" is used by both "${keys.get(key)}" and "${relativePath}"`);
   keys.set(key, relativePath);
-  const dimensions = type === "audio" ? null : imageDimensions(buffer, extension);
   const entry = {
     key,
     url: `/assets/${relativePath}`,
@@ -112,7 +126,8 @@ for (const absolutePath of paths) {
     group: groupFor(relativePath),
     bytes: info.size,
     sha256: digest,
-    ...(override.frameConfig ? { frameConfig: override.frameConfig } : {}),
+    ...(metadata.frameConfig ? { frameConfig: metadata.frameConfig } : {}),
+    ...(atlasMetadata ? Object.fromEntries(Object.entries(atlasMetadata).filter(([name]) => name !== "type" && name !== "frameConfig")) : {}),
     ...(dimensions ? dimensions : {})
   };
   assets.push(entry);
@@ -122,12 +137,7 @@ for (const absolutePath of paths) {
 }
 
 const groups = {};
-for (const asset of assets) (groups[asset.group] ||= []).push({
-  key: asset.key,
-  url: asset.url,
-  type: asset.type,
-  ...(asset.frameConfig ? { frameConfig: asset.frameConfig } : {})
-});
+for (const asset of assets) (groups[asset.group] ||= []).push({ ...asset });
 
 
 const largeFiles = assets.filter((asset) => {
@@ -140,7 +150,12 @@ const groupSummary = Object.fromEntries(Object.entries(groups).map(([name, entri
   totalBytes: assets.filter((asset) => asset.group === name).reduce((sum, asset) => sum + asset.bytes, 0)
 }]));
 const spritesheets = assets.filter((asset) => asset.type === "spritesheet").map((asset) => ({
-  key: asset.key, url: asset.url, bytes: asset.bytes, frameConfig: asset.frameConfig
+  key: asset.key, url: asset.url, bytes: asset.bytes,
+  ...(asset.frameConfig ? { frameConfig: asset.frameConfig } : {}),
+  ...(asset.sourceFormat ? { sourceFormat: asset.sourceFormat } : {}),
+  ...(asset.atlasMetadataPath ? { atlasMetadataPath: asset.atlasMetadataPath } : {}),
+  ...(asset.frameCount ? { frameCount: asset.frameCount } : {}),
+  ...(asset.atlasClips ? { atlasClips: asset.atlasClips } : {})
 }));
 const audit = {
   schemaVersion: 1,

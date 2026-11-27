@@ -1,11 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { useLocale, LanguageToggle } from "../LocaleProvider";
 import { loadUnlockedStage } from "../../game/rules/phaseOneRules.mjs";
 import { getPlayerSession, restoreOrInitializeCloudProgress } from "../../game/services/playerAccount.mjs";
 import { CAMPAIGN_WORLDS, MISSIONS_PER_WORLD } from "../../game/data/campaignWorlds.mjs";
+import { subscribeToBrowserStorage } from "../../game/hooks/browserStorage.mjs";
+
+function getLocalUnlockedStageSnapshot() {
+  try {
+    return String(loadUnlockedStage(window.localStorage));
+  } catch {
+    return "1";
+  }
+}
 
 function MissionNode({ world, mission, ar, unlockedStage }) {
   const isFirstMission = mission === 1;
@@ -41,16 +50,13 @@ function MissionNode({ world, mission, ar, unlockedStage }) {
 export default function StagesPage() {
   const { locale } = useLocale();
   const ar = locale === "ar";
-  const [unlockedStage, setUnlockedStage] = useState(1);
+  const localStageSnapshot = useSyncExternalStore(subscribeToBrowserStorage, getLocalUnlockedStageSnapshot, () => "1");
+  const localUnlockedStage = Number(localStageSnapshot);
+  const [cloudUnlockedStage, setCloudUnlockedStage] = useState(null);
+  const unlockedStage = cloudUnlockedStage ?? localUnlockedStage;
 
   useEffect(() => {
     let active = true;
-
-    try {
-      setUnlockedStage(loadUnlockedStage(window.localStorage));
-    } catch {
-      setUnlockedStage(1);
-    }
 
     async function restoreAccountProgress() {
       try {
@@ -59,7 +65,7 @@ export default function StagesPage() {
         const result = await restoreOrInitializeCloudProgress();
         const cloudUnlocked = Number(result?.progress?.unlockedStage);
         if (active && Number.isInteger(cloudUnlocked)) {
-          setUnlockedStage(Math.min(10, Math.max(1, cloudUnlocked)));
+          setCloudUnlockedStage(Math.min(10, Math.max(1, cloudUnlocked)));
         }
       } catch {
         // The local save remains usable when the account service is offline.
@@ -75,7 +81,7 @@ export default function StagesPage() {
   return (
     <main className="campaign-map-shell" dir={ar ? "rtl" : "ltr"}>
       <div className="campaign-map-topbar">
-        <Link className="campaign-map-back" href="/">{ar ? "← القائمة الرئيسية" : "← Main Menu"}</Link>
+        <Link className="campaign-map-back" href="/">{ar ? "← القائمة الرئيسية" : "← Main Menu"}</Link>\n        <Link className="campaign-map-secondary" href="/account">{ar ? "حساب اللاعب" : "Player Account"}</Link>
         <LanguageToggle />
       </div>
 
@@ -83,8 +89,8 @@ export default function StagesPage() {
         <span className="campaign-map-eyebrow">{ar ? "رحلة إنقاذ الأميرة" : "THE RESCUE CAMPAIGN"}</span>
         <h1>{ar ? "خريطة العوالم" : "World Map"}</h1>
         <p>{ar
-          ? "11 أرضاً تنتظر المزارع. افتح الطريق تدريجياً، اهزم التنين في كل أرض، وأنقذ الأميرة."
-          : "Eleven lands await the farmer. Open the path step by step, defeat each land's dragon, and rescue the princess."}</p>
+          ? "11 أرضاً تنتظر المزارع. افتح الطريق تدريجياً، ودافع عن كل أرض ضد موجات الوحوش."
+          : "Eleven lands await the farmer. Open the path step by step and defend each land against its unique monster forces."}</p>
         <div className="campaign-map-stats">
           <span><strong>11</strong>{ar ? " عالماً مخططاً" : " planned worlds"}</span>
           <span><strong>10</strong>{ar ? " مهمات لكل عالم" : " planned missions per world"}</span>

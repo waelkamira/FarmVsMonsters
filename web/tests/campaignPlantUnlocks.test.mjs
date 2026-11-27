@@ -20,36 +20,27 @@ test("new campaign starts with only Radish and Energy Mushroom", () => {
   assert.deepEqual(loadUnlockedPlantIds(storage), ["radish", "mushroom"]);
 });
 
-test("winning Stage 1 unlocks Stage 2 and Pumpkin exactly once", () => {
+test("browser-side victories cannot unlock stages or plant rewards", () => {
   const storage = createStorage();
-  assert.equal(unlockNextStage(storage, 1), true);
-  assert.equal(unlockPlantReward(storage, 1), true);
-  assert.equal(unlockPlantReward(storage, 1), true);
-
-  const progress = JSON.parse(storage.getItem(CAMPAIGN_PROGRESS_KEY));
-  assert.equal(progress.unlockedStage, 2);
-  assert.deepEqual(progress.unlockedPlantIds, ["radish", "mushroom", "pumpkin"]);
-  assert.deepEqual(progress.completedStages, [1]);
+  assert.equal(unlockNextStage(storage, 1), false);
+  assert.equal(unlockPlantReward(storage, 1), false);
+  assert.deepEqual(loadUnlockedPlantIds(storage), ["radish", "mushroom"]);
+  assert.equal(storage.getItem(CAMPAIGN_PROGRESS_KEY), null);
 });
 
-test("replaying an earlier stage does not remove later plant rewards", () => {
-  const storage = createStorage();
-  unlockNextStage(storage, 1);
-  unlockPlantReward(storage, 1);
-  unlockNextStage(storage, 1);
-
-  assert.deepEqual(loadUnlockedPlantIds(storage), ["radish", "mushroom", "pumpkin"]);
-});
-
-test("legacy saves that already unlocked Stage 2 receive Pumpkin", () => {
+test("forged and legacy browser saves cannot unlock future plant rewards", () => {
   const storage = createStorage({
     [CAMPAIGN_PROGRESS_KEY]: JSON.stringify({
       version: 1,
-      unlockedStage: 2,
-      completedStages: [1]
+      unlockedStage: 10,
+      completedStages: [1,2,3,4,5,6,7,8,9],
+      unlockedPlantIds: ["pumpkin", "pineapple", "hazelnut", "mango"]
     })
   });
-  assert.deepEqual(loadUnlockedPlantIds(storage), ["radish", "mushroom", "pumpkin"]);
+  assert.deepEqual(loadUnlockedPlantIds(storage), ["radish", "mushroom"]);
+  assert.equal(unlockNextStage(storage, 10), false);
+  assert.equal(unlockPlantReward(storage, 1), false);
+  assert.deepEqual(loadUnlockedPlantIds(storage), ["radish", "mushroom"]);
 });
 
 test("locked future rewards are not granted by an invalid stage number", () => {

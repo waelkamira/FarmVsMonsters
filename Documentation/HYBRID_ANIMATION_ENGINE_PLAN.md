@@ -1,0 +1,153 @@
+# FarmVsMonsters Hybrid Animation Engine
+
+## Decision
+
+Extend the existing Phaser 3 animation pipeline with an optional 2D cutout/skeletal animation mode. Keep Sprite Sheet animation as a first-class mode and allow a single character to mix both techniques. This is an additive capability: existing assets without a rig continue to use their current Sprite Sheet profiles unchanged.
+
+The engine is implemented in the active browser project under \`web/\`. Godot remains paused and is not a target for this work.
+
+## Goals
+
+- Build expressive plant and monster motion from independently authored bitmap parts.
+- Keep the editor approachable: upload/assign parts, place pivots, create parent-child bones, preview clips, and save a draft without writing code.
+- Use one evaluated pose for rendered parts, weapon/projectile attachment points, and animation-bound hitboxes.
+- Keep animation deterministic and presentation-only where appropriate; combat rules remain authoritative in the existing combat systems.
+- Reuse rigs, clips, and presets across compatible characters without copying source image files.
+- Preserve all existing Sprite Sheet assets and animation profile behavior.
+
+## Visual and performance principles
+
+The Plants-vs.-Zombies reference is a direction for readability and resource efficiency, not a request to copy its art or internal engine. FarmVsMonsters will use these principles:
+
+- Prefer a clear silhouette, expressive face, strong pose, and immediately readable combat role over unnecessary geometry or tiny decorative detail.
+- Design important facial features and action cues for phone screens; allow head/face proportions to be slightly exaggerated when that improves recognition.
+- Use a bitmap cutout rig for reusable body parts and secondary motion (head sway, breathing, recoil, limbs), instead of storing a full duplicate image for every animation frame.
+- Keep authored Sprite Sheets where frame-by-frame deformation is more expressive or simpler; support mixed techniques per character rather than forcing every asset into one animation format.
+- Reuse source parts, rig profiles, and clips across compatible assets without copying source files.
+- Let Phaser's existing WebGL renderer batch and transform the 2D containers; do not add a custom OpenGL dependency or a heavyweight 3D runtime for this feature.
+- Keep texture dimensions, frame counts, draw calls, and active effects bounded; test readability and frame pacing on representative low-end mobile hardware.
+- Animation is presentation-only: combat damage, timing, target selection, and state transitions remain controlled by the authoritative battle systems.
+
+## Architecture
+
+### 1. Versioned rig profile
+
+A rig profile is stored alongside an asset's existing animation profile:
+
+- \`version\`: schema version (currently 1).
+- \`canvas\`: source-space width and height used by the rig editor.
+- \`bones\`: stable ID, optional parent ID, local transform, pivot, and optional bitmap part reference (asset ID plus frame index).
+- \`attachments\`: named local transforms parented to bones (muzzle, hand, mouth, projectile origin, held item).
+- \`hitboxes\`: named local rectangles parented to bones, classified as attack or hurt.
+- \`clips\`: named duration/loop settings and per-bone keyframe tracks.
+
+All references must resolve. IDs are stable and unique. Parent graphs must be acyclic with exactly one root. Coordinates are local source-space pixels. The editor must display the rig over the real character artwork and use the same coordinate conversion as the Phaser runtime.
+
+### 2. Runtime evaluator
+
+The pure evaluator validates profiles, samples keyframes, interpolates transforms (including shortest-path rotation), composes parent-child world transforms, and resolves attachments/hitboxes from the same pose. The Phaser adapter translates those evaluated transforms to Phaser Containers/Sprites; no React component or persisted content record may execute arbitrary JavaScript.
+
+### 3. Animation state machine
+
+The runtime state machine owns named states such as idle, move, attack, hit, frozen, death, and special. Transitions are explicit and prioritized. Non-looping attack/hit clips return to idle when the character remains alive and unfrozen. Death cannot be interrupted; frozen state survives stacked freeze hits; idle/movement updates cannot overwrite active attack/hit clips.
+
+### 4. Blending
+
+Support bounded cross-fades between compatible clips by interpolating local transforms over a configurable transition duration. Do not blend incompatible rig versions or missing bone IDs. Default blend durations should remain short and deterministic.
+
+### 5. Projectile and weapon anchors
+
+Projectile spawn positions are derived from the evaluated attachment transform (for example \`muzzle\`) and then passed through the existing shared world-coordinate and trajectory helpers. The editor preview and live Phaser runtime must call the same conversion functions. A missing attachment is a validation blocker for a rigged projectile attacker; do not silently fall back to a screen-space constant.
+
+### 6. Hitboxes
+
+Attack/hurt rectangles are resolved from the same evaluated pose as the visible parts. Their four corners are transformed through the full parent translation, non-uniform scale, and rotation, then tested as convex polygons with SAT; projectile circles are tested against the transformed polygon edges. Hitbox geometry must not independently change damage, target selection, or combat timing.
+
+### 7. Studio editor
+
+The editor is an optional skeletal workspace inside Asset & Animation Studio. Existing Sprite Sheet controls remain available and can be used without creating a rig; removing a rig profile safely returns the asset to Sprite Sheet mode.
+
+- Animation mode: existing Sprite Sheet, optional Skeletal cutout rig, or Hybrid (Sprite Sheet base plus rigged moving parts).
+- Rig canvas: actual character artwork, part layers, zoom/pan, bone hierarchy, pivot handles.
+- Bone tools: create, rename, re-parent with cycle prevention, delete with child handling, and set local transform.
+- Part assignment: immutable Studio asset ID and optional frame.
+- Attachments: muzzle/hand/mouth/projectile origin with draggable local handles.
+- Hitboxes: attack/hurt type, editable size/offset/rotation, visible overlays.
+- Timeline: named clips, per-bone keyframes, play/pause/stop, scrub, FPS, loop, and blend preview.
+- Presets: idle sway, breathing, recoil, walk cycle, bite, attack, hurt, and death; presets remain editable.
+- Save as Draft first. Existing approval/release flow remains the only route to published runtime content.
+
+### 8. Compatibility and fallback
+
+- Assets without \`rigProfile\` continue to use their current \`animationProfile\` or static image behavior.
+- A rig profile is opt-in and versioned.
+- Unsupported profile versions, missing part assets, invalid parent graphs, or invalid clip references block testing/publishing and produce actionable messages.
+- Existing Sprite Sheet frame-count inference, projectile trajectories, launch-origin fixes, and current plant/monster runtime contracts remain intact.
+
+## Delivery phases and acceptance gates
+
+### Phase A — Data contract and pure evaluator
+- [x] Versioned profile validation.
+- [x] Parent hierarchy and reference validation.
+- [x] Deterministic clip sampling and parent transform composition.
+- [x] Attachment and hitbox transform resolution.
+- [x] Studio API validation and persistence of rig profiles in asset records and published catalogs.
+- [x] Rig profiles preserved by clone, revision snapshot, and version restore.
+- [x] Rig-part dependencies reported and protected from destructive lifecycle operations.
+- [x] Testing Lab readiness audit validates rig profiles, blocks missing/archived part assets, and checks referenced Sprite Sheet frame bounds.
+- [x] Release staging includes referenced rig-part files and publishes their asset descriptors.
+- [x] Focused Node test coverage added for profile evaluation, validation, version history, dependencies, readiness, Phaser adapter, and state-machine blending.
+- [ ] Execute the focused Node tests in a working CI runner.
+
+### Phase B — Phaser runtime adapter
+- [x] Add a Phaser Container renderer adapter that builds the bone hierarchy, assigns bitmap frames/pivots, applies evaluated local transforms, and exposes world-space attachments/hitboxes.
+- [x] Add focused fake-scene tests for container hierarchy, pivots, attachments, hitboxes, missing textures, and cleanup.
+- [x] Integrate the adapter into the live plant and monster battle runtime, with legacy Sprite Sheet fallback.
+- [x] Load referenced bitmap part textures from published and Studio testing catalogs.
+- [x] Integrate named idle/move/attack/hit/death states with the battle animation calls and bounded cross-fades.
+- [x] Use the muzzle attachment for rigged projectile launch positions.
+- [x] Use rig attack/hurt hitboxes for custom melee, bite, and projectile collision checks when both rigs provide the relevant shapes.
+- [x] Keep legacy Sprite Sheet runtime unchanged when no rig profile exists.
+- [ ] Verify runtime behavior in an actual browser battle and check cleanup on scene shutdown.
+
+### Phase C — Studio rig editor
+- [x] Add a visual rig editor inside the existing plant/monster asset workflow.
+- [x] Render assigned bitmap parts on a canvas and expose bone hierarchy, transforms, pivots, part assignment, clips, keyframes, attachments, and hitboxes.
+- [x] Support direct bone dragging and numeric transform editing; edit keyframes at the selected timeline time.
+- [x] Save/load the rig profile through the existing authenticated Studio draft APIs.
+- [x] Reuse existing validation and asset dependency/revision protections.
+- [x] Add draggable attachment/hitbox handles and editable breathing, walk, and recoil presets.
+- [x] Add canvas zoom/pan and per-clip FPS controls with frame-stepped Studio preview.
+- [ ] Verify editor interaction and save/restore in Chrome on Windows.
+
+### Phase D — Animation state machine and blending
+- [x] Add a pure named-state controller with bounded cross-fades and shortest-path rotation blending.
+- [x] Prevent plant idle updates and repeated monster movement updates from restarting active clips.
+- [x] Return completed non-looping actions to idle where configured by the battle integration.
+- [x] Add explicit priority guards: death cannot be interrupted, frozen state survives stacked freeze hits and ordinary reactions, and attack/hit cannot be reset by idle/movement updates.
+- [x] Add integer frame snapping so timeline edits and drag operations always save validator-compatible keyframe timestamps.
+- [x] Extract polygon SAT and projectile-circle collision into a pure module with tests for overlap, separation, rotation, tangency, skewed polygons, and invalid geometry.
+- [x] Resolve projectile muzzle points and all four hitbox corners through a shared tested world-transform helper (position, non-uniform scale, and rotation), preserving exact parallelogram geometry under non-uniform scaling.
+- [ ] Verify all state transitions and hitbox behavior in a live browser battle.
+
+### Phase E — Full battle integration and verification
+- [x] Use rig attachment points for real projectile origins.
+- [x] Use all authored pose-bound attack/hurt hitboxes for supported melee, bite, and projectile collisions.
+- [x] Resolve transformed hitbox overlap with convex-polygon SAT and test projectile circles against each transformed hurtbox polygon.
+- [x] Preserve a frozen skeletal pose or play an optional frozen clip, then restore the previous movement/idle clip on thaw.
+- [x] Require the `muzzle` attachment for rigged projectile plants during save and Testing Lab readiness checks.
+- [ ] Verify a rigged plant and a rigged monster in a live Phaser battle.
+- [ ] Run tests, lint, production build, and Chrome verification on Windows.
+- [x] Update the Studio master plan and this plan with implementation evidence and remaining gates.
+
+**CI environment note (2026-11-22):** Earlier GitHub Actions attempts ended before any job step started (`runner_id: 0`, empty steps, and no job logs). The workflow has now been enabled for pushes to `feat/studio-hybrid-animation-engine` and manual dispatch so the updated branch can be validated again. No test, lint, or build result is claimed until a runner executes the steps.
+
+## Safety and quality rules
+
+- Never rewrite or delete existing Sprite Sheet assets as part of rig conversion.
+- Do not change combat balance or authoritative combat rules in the animation evaluator.
+- Do not load arbitrary scripts from asset metadata.
+- Cap bones, clips, keyframes, attachments, hitboxes, and coordinate ranges.
+- Validate all IDs and references before saving, testing, or publishing.
+- Keep rig profiles versioned and include them in clone/version/restore snapshots.
+- Do not mark a phase complete until its acceptance checks are actually run.

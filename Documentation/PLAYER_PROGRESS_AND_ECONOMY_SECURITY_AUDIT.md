@@ -43,7 +43,7 @@ Once that trust boundary exists, one database transaction should:
 - Blocked plant purchases unless both the progression and coin balance are verified. Existing balances are retained, not silently erased.
 - Removed browser-side victory upload and removed local-to-cloud balance promotion.
 - Cloud restore ignores all legacy stage and coin values unless the database explicitly marks progression as verified; it copies the coin balance only when the database separately marks coins verified.
-- Kept guest play, local stage progression, and local coin saving active; account UI and setup documentation disclose the temporary cloud-sync pause.
+- Guest play remains available, but browser-local coins and campaign unlocks are no longer accepted or persisted. Local battle results are explicitly playtest-only until a trusted server completion pipeline exists.
 
 ## Remaining before cloud progression and currency can be re-enabled
 
@@ -61,7 +61,6 @@ This audit records source-level findings only. No database migration was applied
 
 ## Follow-up implementation status
 
-The Stage 1 renderer and rules now consume a shared versioned combat contract at `web/game/rules/phaseOneCombatContract.mjs`. It centralizes the existing wave roster, plant/monster/dragon/farmer values, spawn pacing, and 8-coin ordinary-monster reward. A deterministic seeded PRNG foundation is also present at `web/game/rules/seededRandom.mjs`, with unit tests. These are preparatory refactors only: the live battle still runs in the browser and still uses Phaser randomness for gameplay choices. They do not yet make rewards server-authoritative or justify re-enabling cloud sync.
 
 
 
@@ -74,7 +73,6 @@ Lane movement progress: monster local-X stepping (including blocker stop clampin
 
 
 
-Target selection has been extracted to pure functions for lane blockers, projectile hits, farmer melee, and dragon fireballs. The Phaser scene supplies current coordinates and dimensions; target decisions are reusable but still execute client-side. No server trust boundary has been enabled.
 
 
 
@@ -83,3 +81,25 @@ Combat extraction now includes shared cooldown advancement and pure Dust Skitter
 
 
 Wave timing and monster archetype selection are now pure shared rules. However, Phaser still chooses spawn lanes through its local random source, and all spawn decisions still execute client-side. This does not establish a trusted replay validator or server-side reward authority.
+
+
+## 2026-11-25 — Fail-closed local economy containment (E-01)
+
+- Disabled browser-local coin reads and writes. Existing values in local storage are ignored rather than imported into the displayed wallet.
+- Removed per-monster coin awards from the Phaser client. Defeat counters and combat presentation continue to work, but a client-side kill cannot mint currency.
+- Disabled local stage and plant reward unlock writes, and local stage/plant unlock readers now return only the starter state. Editing browser storage can no longer unlock campaign content through these helpers.
+- Updated the victory banner to identify the result as a local playtest and state that progression and rewards are not saved.
+- Added regression coverage for forged local balances, forged local stage unlocks, and client-side reward removal.
+
+This is a fail-closed containment, not the final authoritative economy. The browser still runs the combat simulation, so no online currency or campaign reward is issued. The remaining implementation is the server-owned game-session/replay validator and an idempotent database completion transaction. Do not mark E-01 fully resolved or re-enable rewards until that pipeline exists, is tested against replay/concurrency/forgery, and the required Supabase migration is applied to the live project.
+
+
+## 2026-11-25 — Pause new account registration until cloud progress is safe (E-02)
+
+- Removed the create-account option from the player account screen. The screen now states plainly that neither local nor cloud game progress is currently saved.
+- Kept email/password sign-in for existing accounts, but changed all success and sign-out messages so they do not claim that progress is saved or synchronized.
+- The account API now rejects `action: "signup"` with HTTP 410 and code `PLAYER_REGISTRATION_PAUSED`, so hiding the button is not the only protection.
+- Disabled both Google OAuth entry and callback routes while registration is paused; the provider flow could otherwise create new Supabase users even with the email signup UI hidden.
+- Removed the client-side `signUpPlayer` helper and added regression tests for the UI, API guard, and disabled Google routes.
+
+New player registration will remain disabled until a server-authoritative progression save path is implemented, tested, and deployed. Existing accounts can still authenticate, but sign-in is not a promise that gameplay progress is backed up.
