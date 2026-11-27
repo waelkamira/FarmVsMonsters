@@ -290,3 +290,11 @@ test("Studio source sync is local-only, authenticated, and uses Git pull/push", 
   assert.match(page, /syncSourceAssets/);
   assert.match(page, /مزامنة الأصول المختبرة إلى studio\/assets/);
 });
+
+test("local test preparation rejects missing required references instead of filtering them out", () => {
+  const start = assetsRoute.indexOf('if(operation==="prepare-test")');
+  const end = assetsRoute.indexOf('if(operation==="delete")', start);
+  const prepare = assetsRoute.slice(start, end);
+  assert.match(prepare, /required\.some\(assetPath=>!safeAssetPath\(assetPath\)\)/);
+  assert.doesNotMatch(prepare, /\.filter\(safeAssetPath\)/);
+});
