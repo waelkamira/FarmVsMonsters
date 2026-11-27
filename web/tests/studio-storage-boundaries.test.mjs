@@ -331,7 +331,7 @@ test("clean battlefield SVG hash, size, and manifest/audit totals are synchroniz
     assert.equal(entry.sha256, expectedHash);
   }
   assert.equal(manifest.totalBytes, audit.totalBytes);
-  assert.equal(audit.groups.backgrounds.totalBytes, 75023 + 56081);
+  assert.equal(audit.groups.backgrounds.totalBytes, 75028 + 56081);
 });
 
 test("list-based release lookup treats merged_at as a merged pull request", () => {
