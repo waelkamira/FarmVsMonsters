@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { buildAssetDependencyReport, getAssetDependents } from "../game/studio/assetDependencies.mjs";
+import { getAssetReleasePaths } from "../game/studio/assetDeletion.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const routeSource = readFileSync(path.join(here, "../app/api/studio/assets/route.js"), "utf8");
@@ -138,12 +139,13 @@ test("reports unresolved explicit dependencies and missing assets", () => {
 
 test("Studio API guards replacement, archive and version restore when direct dependents exist", () => {
   assert.match(routeSource, /getAssetDependents\(old\.assets,id\)/);
-  assert.match(routeSource, /getAssetDependents\(registry\.assets,id\)/);
-  assert.match(routeSource, /dependents\.length\)return NextResponse\.json/);
-  const githubRestoreStart = routeSource.indexOf('if(operation==="restore-version"){', routeSource.indexOf("const token=process.env.STUDIO_GITHUB_TOKEN"));
-  const githubRestoreGuard = routeSource.indexOf("getAssetDependents(registry.assets,id)", githubRestoreStart);
-  const githubRestoreAction = routeSource.indexOf("restoreStudioAssetRevision(", githubRestoreStart);
-  assert.ok(githubRestoreStart >= 0 && githubRestoreGuard > githubRestoreStart && githubRestoreGuard < githubRestoreAction, "GitHub restore must check reverse dependencies before restoring");
+  assert.match(routeSource, /getAssetDependencyConflict\(registry\.assets,id\)/);
+  assert.match(routeSource, /if\(operation==="archive"\|\|operation==="restore-version"\)\{const dependencyConflict=/);
+  assert.match(routeSource, /if\(dependencyConflict\)return NextResponse\.json\(\{error:dependencyConflict\.message\},\{status:dependencyConflict\.status\}\)/);
+  const localStart = routeSource.indexOf('if(driver!=="github"){', routeSource.indexOf("export async function PATCH"));
+  const productionStart = routeSource.indexOf('const token=process.env.STUDIO_GITHUB_TOKEN,targetBranch=', localStart);
+  assert.ok(localStart >= 0 && productionStart > localStart);
+  assert.doesNotMatch(routeSource.slice(productionStart), /operation==="restore-version"/, "production must not mutate GitHub for local version restore");
 });
 
 test("asset detail route imports the shared Studio stylesheet from the correct directory", () => {
@@ -186,9 +188,14 @@ test("Studio asset API validates and publishes the rig profile with plant and mo
 });
 
 test("release staging includes every referenced skeletal bitmap part", () => {
-  assert.match(routeSource, /getRigPartAssets/);
-  assert.match(routeSource, /publish skeletal part/);
-  assert.match(routeSource, /rigParts:rigPartAssets\.map/);
+  const assets = [
+    { id: "hero", path: "/assets/hero.png", rigProfile: { bones: [{ part: { assetId: "head" } }] } },
+    { id: "head", path: "/assets/parts/head.png", atlasMetadataPath: "/assets/parts/head.json" }
+  ];
+  const releasePaths = getAssetReleasePaths(assets, assets[0]);
+  assert.ok(releasePaths.includes("/assets/hero.png"));
+  assert.ok(releasePaths.includes("/assets/parts/head.png"));
+  assert.ok(releasePaths.includes("/assets/parts/head.json"));
 });
 
 test("rejects archived rig part assets during Studio save and release", () => {

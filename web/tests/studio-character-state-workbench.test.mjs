@@ -72,10 +72,10 @@ test("Studio exposes the workbench before effect assignment and persists status 
   assert.match(workbench, /stateAnimationFile/);
   assert.match(route, /validateCharacterStateAnimation/);
   assert.match(route, /createImmutableAssetPath\(config\.folder\+"\/states"/);
-  assert.ok(route.includes('githubPutImmutable("web/public/assets/"+stateRelative'));
+  assert.ok(route.includes('const stateTarget=path.join(process.cwd(),"public/assets",stateRelative);await mkdir(path.dirname(stateTarget),{recursive:true});await writeFile(stateTarget,stateAnimationBytes)'));
   assert.match(route, /stateAnimations/);
   assert.match(route, /stateAnimations:asset\.stateAnimations\|\|\{\}/);
-  assert.match(route, /publish \"\+stateId\+\" state frames for \"\+id/);
+  assert.match(route, /state frames/);
   assert.match(route, /addStatePreviewUrls/);
   assert.match(deletion, /stateAnimations/);
   assert.match(battle, /queueCharacterStateTextures/);

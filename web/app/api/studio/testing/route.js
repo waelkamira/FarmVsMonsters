@@ -3,6 +3,7 @@ import { access, readFile } from "node:fs/promises";
 import path from "node:path";
 import { verifyStudioSession } from "../../../../game/studio/signedSession.mjs";
 import { auditStudioAssetRegistry, applyStudioAssetFileAudit, safeAssetPath } from "../../../../game/studio/assetReadiness.mjs";
+import { getStudioStorageDriver } from "../../../../game/studio/storageDriver.mjs";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -16,7 +17,7 @@ function githubHeaders(token) {
   return { Authorization: "Bearer " + token, Accept: "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28" };
 }
 async function loadRegistry() {
-  const driver = process.env.STUDIO_STORAGE_DRIVER || "local";
+  const driver = getStudioStorageDriver();
   if (driver === "github") {
     const token = process.env.STUDIO_GITHUB_TOKEN;
     if (!token) throw Object.assign(new Error("STUDIO_GITHUB_TOKEN is required."), { status: 503 });

@@ -10,6 +10,11 @@ export function createStudioReleaseBranchName(plantId, suffix) {
 
 export function resolveStudioReleaseAsset(asset, pullRequest) {
   if (!asset?.releaseRequest?.number) return asset;
+  if (asset.releaseRequest.operation === "delete") {
+    if (pullRequest?.merged) return { ...asset, status: "archived", archivedAt: pullRequest.mergedAt || asset.archivedAt || new Date().toISOString(), releaseRequest: { ...asset.releaseRequest, state: "merged", mergedAt: pullRequest.mergedAt || null } };
+    if (pullRequest?.state === "open") return { ...asset, status: "approved", releaseRequest: { ...asset.releaseRequest, state: "open" } };
+    return { ...asset, status: "published", releaseRequest: null };
+  }
   if (!pullRequest) return { ...asset, status: "testing", releaseRequest: null };
   if (pullRequest.merged) {
     return { ...asset, status: "published", publishedAt: pullRequest.mergedAt || asset.publishedAt, releaseRequest: { ...asset.releaseRequest, state: "merged" } };
@@ -18,6 +23,28 @@ export function resolveStudioReleaseAsset(asset, pullRequest) {
     return { ...asset, status: "approved", releaseRequest: { ...asset.releaseRequest, state: "open" } };
   }
   return { ...asset, status: "testing", releaseRequest: null };
+}
+
+export function applyProductionDeletionTombstones(assets, tombstones) {
+  const deleted = new Map((Array.isArray(tombstones) ? tombstones : [])
+    .map((entry) => typeof entry === "string" ? [entry, { id: entry }] : [entry?.id, entry])
+    .filter(([id]) => Boolean(id)));
+  return (Array.isArray(assets) ? assets : []).map((asset) => {
+    const tombstone = deleted.get(asset?.id);
+    if (!tombstone) return asset;
+    return {
+      ...asset,
+      status: "archived",
+      archivedAt: tombstone.deletedAt || asset.archivedAt || null,
+      releaseRequest: tombstone.releaseRequest || asset.releaseRequest || null
+    };
+  });
+}
+
+export function findAssetDeletionTombstone(registry, assetId) {
+  const entry = (Array.isArray(registry?.deletedAssetIds) ? registry.deletedAssetIds : [])
+    .find((item) => typeof item === "string" ? item === assetId : item?.id === assetId);
+  return typeof entry === "string" ? { id: entry } : entry || null;
 }
 
 export function transitionStudioAssetStatus(asset, operation, timestamp = new Date().toISOString()) {

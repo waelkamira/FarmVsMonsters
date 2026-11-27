@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { importManifestPlants } from "../game/studio/assetLibraryImport.mjs";
 
 const here = new URL(".", import.meta.url);
 const read = (relative) => readFileSync(new URL(relative, here), "utf8");
@@ -108,15 +109,19 @@ test("Studio enforces draft-to-testing-to-published and publishes the catalog on
   assert.match(releaseLifecycle, /status: "testing"/);
   assert.match(releaseLifecycle, /status: "published"/);
   assert.match(assetsRoute, /PUBLISHED_CATALOG_PATH/);
-  assert.match(assetsRoute, /const artworkPath="web\/public"\+asset\.path/);
+  assert.match(assetsRoute, /beginProductionRelease\(token,id,"publish",targetBranch\)/);
+  assert.match(assetsRoute, /githubCreateReleasePullRequest/);
+  assert.match(assetsRoute, /status:"approved"/);
+  assert.match(assetsRoute, /published:false/);
 });
 
 test("local sync downloads only testing plants and writes the exact local runtime catalog path", () => {
   assert.match(syncScript, /asset\.status==="testing"/);
-  assert.match(syncScript, /STUDIO_GITHUB_BRANCH/);
+  assert.match(syncScript, /game\/data\/studioAssetRegistry\.json/);
+  assert.match(syncScript, /await access\(/);
+  assert.doesNotMatch(syncScript, /fetch\(|STUDIO_GITHUB_TOKEN|STUDIO_GITHUB_BRANCH/);
   assert.match(syncScript, /public\/assets\/studio-test\/plant-catalog\.json/);
   assert.match(syncScript, /manifest:"public\/assets\/studio-test\/plant-catalog\.json"/);
-  assert.match(syncScript, /web\/game\/data\/studioAssetRegistry\.json/);
 });
 
 test("seed selection and Phaser runtime load the live authenticated Studio testing catalog", () => {
@@ -149,7 +154,8 @@ test("every registered asset can be opened for editing and metadata-only edits k
   assert.match(assetsRoute, /const hasFile=Boolean\(file&&typeof file\.arrayBuffer/);
   assert.match(assetsRoute, /if\(!hasFile&&\(!replace\|\|!existing\)\)/);
   assert.match(assetsRoute, /path:hasFile\?"\/assets\/"\+relative:existing\.path/);
-  assert.match(assetsRoute, /if\(hasFile\)await githubPutImmutable/);
+  assert.match(assetsRoute, /if\(hasFile\)\{const target=path\.join\(process\.cwd\(\),"public\/assets",relative\);await mkdir\(path\.dirname\(target\),\{recursive:true\}\);await writeFile\(target,bytes\);\}/);
+  assert.doesNotMatch(assetsRoute.slice(assetsRoute.indexOf("export async function POST"), assetsRoute.indexOf("export async function PATCH")), /githubPutImmutable|STUDIO_GITHUB_TOKEN/);
 });
 
 test("Studio exposes editable projectile controls with per-field Arabic explanations",()=>{
@@ -192,10 +198,10 @@ test("Studio persists validated idle and attack animation profiles into Phaser r
 });
 
 test("Studio imports plant assets from grouped manifests and preserves named Phaser Atlas animation metadata",()=>{
-  assert.match(assetsRoute,/Object\.entries\(source\.groups\|\|\{\}\)/);
-  assert.match(assetsRoute,/source\.animationProfile/);
-  assert.match(assetsRoute,/source\.atlasMetadataPath/);
-  assert.match(assetsRoute,/source\.atlasClips/);
+  assert.match(assetsRoute,/importManifestPlants\(/);
+  const source = { url:"/assets/plants/fern.png", group:"plants", frameCount:12, atlasMetadataPath:"/assets/plants/fern.json", atlasClips:{idle:{startFrame:0,endFrame:3}}, animationProfile:{idle:{startFrame:0,endFrame:3,fps:8,loop:true}} };
+  const imported = importManifestPlants({assets:[]},{groups:{plants:[source]}},{plants:[]}).registry.assets[0];
+  for (const key of ["frameCount","atlasMetadataPath","atlasClips","animationProfile"]) assert.deepEqual(imported[key],source[key]);
 });
 
 test("Studio preview proxy bounds the fetch and response-body read, returning 504 on timeout",()=>{
@@ -206,9 +212,12 @@ test("Studio preview proxy bounds the fetch and response-body read, returning 50
   assert.match(assetsRoute,/status:timedOut\?504:502/);
 });
 
-test("Studio plant hydration repairs a misclassified registry entry without writing unchanged records",()=>{
-  assert.match(assetsRoute,/const existing=known\.get\(id\)/);
-  assert.match(assetsRoute,/existing\?\.type==="monster"\?"draft"/);
-  assert.match(assetsRoute,/if\(existing\?\.type==="monster"\)delete record\.monsterProfile/);
-  assert.match(assetsRoute,/JSON\.stringify\(comparable\(existing\)\)===JSON\.stringify\(comparable\(record\)\)/);
+test("Studio GET never hydrates the registry, and explicit import preserves existing asset state",()=>{
+  const start=assetsRoute.indexOf("export async function GET(req)");
+  const end=assetsRoute.indexOf("export async function POST(req)",start);
+  assert.doesNotMatch(assetsRoute.slice(start,end),/hydratePlantLibrary|saveLocalRegistry|writeFile\(|githubPut/);
+  const original={id:"fern",type:"monster",status:"testing",monsterProfile:{health:77}};
+  const result=importManifestPlants({assets:[original]},{groups:{plants:[{url:"/assets/plants/fern.png",group:"plants"}]}},{plants:[]});
+  assert.deepEqual(result.registry.assets[0],original);
+  assert.equal(result.imported,0);
 });

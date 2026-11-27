@@ -1,0 +1,174 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { getStudioStorageDriver, canWriteStudioStorage } from "../game/studio/storageDriver.mjs";
+import { importManifestPlants } from "../game/studio/assetLibraryImport.mjs";
+import { getStageAssetReferences } from "../game/studio/stageMonsterReferences.mjs";
+
+const assetsRoute = readFileSync(new URL("../app/api/studio/assets/route.js", import.meta.url), "utf8");
+const stageRoute = readFileSync(new URL("../app/api/studio/stage-encounters/route.js", import.meta.url), "utf8");
+const testingRoute = readFileSync(new URL("../app/api/studio/testing/route.js", import.meta.url), "utf8");
+
+test("development always uses local Studio storage even with a stale GitHub setting and token", () => {
+  const env = { NODE_ENV: "development", STUDIO_STORAGE_DRIVER: "github", STUDIO_GITHUB_TOKEN: "configured" };
+  assert.equal(getStudioStorageDriver(env), "local");
+  assert.equal(canWriteStudioStorage(env), true);
+});
+
+test("production GitHub mode is readable but not directly writable", () => {
+  const env = { NODE_ENV: "production", STUDIO_STORAGE_DRIVER: "local", STUDIO_GITHUB_TOKEN: "configured" };
+  assert.equal(getStudioStorageDriver(env), "github");
+  assert.equal(canWriteStudioStorage(env), false);
+});
+
+test("opening the asset library GET cannot write, hydrate, or sync files", () => {
+  const start = assetsRoute.indexOf("export async function GET(req)");
+  const end = assetsRoute.indexOf("export async function POST(req)", start);
+  const get = assetsRoute.slice(start, end);
+  assert.doesNotMatch(get, /hydratePlantLibrary|saveLocalRegistry|writeFile\(|githubPut\(|githubDelete/);
+  assert.match(get, /const driver=getStudioStorageDriver\(\)/);
+});
+
+test("Studio GET reconciles finalized removals from the production tombstone registry", () => {
+  const start = assetsRoute.indexOf("export async function GET(req)");
+  const end = assetsRoute.indexOf("export async function POST(req)", start);
+  const get = assetsRoute.slice(start, end);
+  assert.match(get, /githubGetDocument\(REGISTRY_PATH,token,process\.env\.STUDIO_PUBLISH_BRANCH\|\|"main"\)/);
+  assert.match(get, /if\(!productionDocument\)throw new Error\("Production Studio registry is unavailable/);
+  assert.match(get, /applyProductionDeletionTombstones\(assets,productionRegistry\.deletedAssetIds\)/);
+  assert.doesNotMatch(get, /githubPut\(|githubDeleteIfExists|saveLocalRegistry/);
+});
+
+test("manifest import is an explicit authenticated local-only operation", () => {
+  const start = assetsRoute.indexOf('if(operation==="import-manifest")');
+  const end = assetsRoute.indexOf('if(operation==="set-effects")', start);
+  const action = assetsRoute.slice(start, end);
+  assert.ok(start >= 0 && end > start);
+  assert.match(action, /if\(!canWriteStudioStorage\(\)\)/);
+  assert.match(action, /asset-manifest\.json/);
+  assert.match(action, /importManifestPlants\(/);
+  assert.match(action, /saveLocalRegistry\(result\.registry\)/);
+  assert.doesNotMatch(action, /fetch\(|githubPut|STUDIO_GITHUB_TOKEN/);
+});
+
+test("manifest import adds only absent assets and preserves tombstoned and existing records", () => {
+  const original = { id: "existing-plant", type: "plant", status: "testing", hp: 321, updatedAt: "kept" };
+  const registry = { version: 1, assets: [original], deletedAssetIds: [{ id: "deleted-plant" }] };
+  const manifest = { assets: [
+    { url: "/assets/plants/existing-plant.png", group: "plants" },
+    { url: "/assets/plants/deleted-plant.png", group: "plants" },
+    { url: "/assets/plants/new-plant.png", group: "plants", frameCount: 4 }
+  ] };
+  const result = importManifestPlants(registry, manifest, { plants: [] }, "2026-11-27T00:00:00.000Z");
+  assert.equal(result.imported, 1);
+  assert.deepEqual(result.registry.assets[0], original);
+  assert.equal(result.registry.assets.some((asset) => asset.id === "deleted-plant"), false);
+  assert.equal(result.registry.assets.find((asset) => asset.id === "new-plant").status, "draft");
+  const repeated = importManifestPlants(result.registry, manifest, { plants: [] }, "2026-11-28T00:00:00.000Z");
+  assert.equal(repeated.imported, 0);
+  assert.equal(repeated.registry.assets.length, result.registry.assets.length);
+});
+
+test("local asset uploads cannot reuse a tombstoned ID", () => {
+  const start = assetsRoute.indexOf("export async function POST(req)");
+  const end = assetsRoute.indexOf("export async function PATCH(req)", start);
+  const post = assetsRoute.slice(start, end);
+  assert.match(post, /findAssetDeletionTombstone\(old,id\)/);
+  assert.match(post, /status:409/);
+});
+
+test("explicit import preserves real grouped Manifest Atlas and animation metadata", () => {
+  const atlasAsset = {
+    url: "/assets/plants/oak.png",
+    group: "plants",
+    type: "spritesheet",
+    width: 3600,
+    height: 150,
+    bytes: 42000,
+    sha256: "abc123",
+    rows: 1,
+    columns: 24,
+    frameCount: 24,
+    frameConfig: { frameWidth: 150, frameHeight: 150, margin: 0, spacing: 0 },
+    atlasMetadataPath: "/assets/plants/oak.json",
+    atlasClips: { idle: { startFrame: 0, endFrame: 7 }, attack: { startFrame: 8, endFrame: 17 }, hurt: { startFrame: 18, endFrame: 23 } },
+    animationProfile: { idle: { startFrame: 0, endFrame: 7, fps: 8, loop: true }, attack: { startFrame: 8, endFrame: 17, fps: 12, loop: false } },
+    customManifestMetadata: { license: "CC0", source: "fixture" }
+  };
+  const manifest = { version: 1, groups: { plants: [atlasAsset] }, assetCount: 1, totalBytes: 42000 };
+  const result = importManifestPlants({ version: 1, assets: [] }, manifest, { plants: [] }, "2026-11-27T00:00:00.000Z");
+  assert.equal(result.imported, 1);
+  const imported = result.registry.assets[0];
+  for (const key of ["width", "height", "bytes", "sha256", "frameConfig", "atlasMetadataPath", "atlasClips", "animationProfile", "customManifestMetadata"]) {
+    assert.deepEqual(imported[key], atlasAsset[key], `${key} was preserved`);
+  }
+  assert.equal(imported.rows, 1);
+  assert.equal(imported.columns, 24);
+  assert.equal(imported.frameCount, 24);
+  assert.equal(imported.spriteSheet, true);
+  assert.equal(imported.status, "draft");
+});
+
+test("local effects and test preparation do not use GitHub operations", () => {
+  const effectsStart = assetsRoute.indexOf("async function setAssetEffects");
+  const effectsEnd = assetsRoute.indexOf("\n}", effectsStart);
+  const effects = assetsRoute.slice(effectsStart, effectsEnd);
+  const localBranchStart = assetsRoute.indexOf('if(driver!=="github"){', assetsRoute.indexOf("export async function PATCH(req)"));
+  const localBranchEnd = assetsRoute.indexOf('const token=process.env.STUDIO_GITHUB_TOKEN,targetBranch=', localBranchStart);
+  const localBranch = assetsRoute.slice(localBranchStart, localBranchEnd);
+  assert.match(effects, /await saveLocalRegistry\(registry\)/);
+  assert.match(localBranch, /operation==="prepare-test"/);
+  assert.match(localBranch, /await access\(/);
+  assert.doesNotMatch(localBranch, /fetch\(|githubPut|githubGetBytes/);
+  assert.match(testingRoute, /const driver = getStudioStorageDriver\(\)/);
+});
+
+test("stage edits in production are rejected before any GitHub write path", () => {
+  const start = stageRoute.indexOf("export async function PATCH(req)");
+  const end = stageRoute.indexOf("\n}", start);
+  const patch = stageRoute.slice(start, end);
+  assert.match(patch, /if\(!canWriteStudioStorage\(\)\)return NextResponse\.json/);
+  assert.match(patch, /await writeLocal\(config\)/);
+  assert.doesNotMatch(patch, /writeGithub\(|https:\/\/api\.github\.com/);
+});
+
+test("stage reference checks cover both plant and monster rosters", () => {
+  const references = getStageAssetReferences({ stages: {
+    "1": { plants: [{ id: "oak", enabled: true }], monsters: [{ id: "cave-brute", wave: 2 }] }
+  } }, "oak");
+  assert.deepEqual(references.map((item) => [item.stageId, item.kind]), [["1", "plant"]]);
+  assert.equal(getStageAssetReferences({ stages: { "1": { monsters: [{ id: "cave-brute", wave: 2 }] } } }, "cave-brute")[0].wave, 2);
+});
+
+test("production publish and delete use a release branch and PR before recording request state", () => {
+  assert.match(assetsRoute, /githubCreateReleaseBranch/);
+  assert.match(assetsRoute, /githubCreateReleasePullRequest/);
+  assert.match(assetsRoute, /beginProductionRelease\(token,id,"publish",targetBranch\)/);
+  assert.match(assetsRoute, /for\(const assetPath of releasePaths\)[\s\S]*?githubPutImmutable\(filePath,bytes,[\s\S]*?releaseBranch\)/);
+  assert.match(assetsRoute, /operation:"publish-requested"/);
+  assert.match(assetsRoute, /published:false/);
+  assert.match(assetsRoute, /writeProductionRegistryRelease\(token,release\.branch/);
+  assert.match(assetsRoute, /findAssetDeletionTombstone\(productionRegistry,id\)/);
+  assert.match(assetsRoute, /if\(operation==="delete"&&deletionTombstone\)return NextResponse\.json/);
+  assert.doesNotMatch(assetsRoute, /githubPutImmutable\(artworkPath,artworkBytes,[\s\S]{0,100}token,targetBranch\)/);
+});
+
+test("GitHub failures cannot mark a release successful and retries reuse the matching open PR", () => {
+  const begin = assetsRoute.slice(assetsRoute.indexOf("async function beginProductionRelease"), assetsRoute.indexOf("async function writeProductionRegistryRelease"));
+  const finish = assetsRoute.slice(assetsRoute.indexOf("async function finishProductionRelease"), assetsRoute.indexOf("async function writeProductionRegistryRelease"));
+  assert.match(begin, /githubListReleasePullRequests/);
+  assert.match(begin, /matches\.find\(\(item\)=>item\.state==="open"\)/);
+  assert.match(assetsRoute, /for\(let page=1;page<=100;page\+\+\)/);
+  assert.match(assetsRoute, /&per_page=100&page="\+page/);
+  assert.match(assetsRoute, /GitHub release request lookup exceeded its safe pagination limit/);
+  assert.ok(finish.indexOf("await githubCreateReleasePullRequest") < finish.indexOf("await writeProductionRegistryRelease"));
+  assert.match(assetsRoute, /catch\(error\)\{return NextResponse\.json\(\{error:error\.message\|\|"Studio action failed\."\}/);
+});
+
+test("sync states distinguish local work, production drift, published assets, and conflicts", () => {
+  assert.match(assetsRoute, /syncStates:\["Local changes","Not committed","Not synced"\]/);
+  assert.match(assetsRoute, /\["Production differs"\]/);
+  assert.match(assetsRoute, /\["Synced"\]/);
+  const page = readFileSync(new URL("../app/studio/page.js", import.meta.url), "utf8");
+  for (const state of ["Local changes", "Not committed", "Not synced", "Production differs", "Published", "Conflict"]) assert.ok(page.includes(state) || assetsRoute.includes(state), `missing ${state}`);
+});

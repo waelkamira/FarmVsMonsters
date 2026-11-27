@@ -31,5 +31,8 @@ test("Studio upload API validates primary and projectile bytes before writing", 
   assert.ok(route.includes("validateStudioAssetBytes(projectileFile.type,projectileBytes)"));
   assert.ok(route.includes("validateStudioAssetBytes(file.type,bytes)"));
   assert.ok(route.includes("status:415"));
-  assert.ok(route.indexOf("validateStudioAssetBytes(file.type,bytes)") < route.indexOf('githubPutImmutable("web/public/assets/"+relative'));
+  assert.ok(route.indexOf("validateStudioAssetBytes(file.type,bytes)") < route.indexOf("await writeFile(target,bytes)"));
+  const post = route.slice(route.indexOf("export async function POST"), route.indexOf("export async function PATCH"));
+  assert.match(post, /await writeFile\(target,bytes\)/);
+  assert.doesNotMatch(post, /githubPutImmutable|STUDIO_GITHUB_TOKEN/);
 });
