@@ -88,7 +88,7 @@ export function createProductionAssetDeletionPlan({ registry, assetId, stageConf
 }
 
 export async function requestProductionAssetDeletion({ plan, baseBranch, beginRelease, removeReleaseFiles, finishRelease }) {
-  const release = await beginRelease(plan.asset.id, baseBranch);
+  const release = await beginRelease(plan.asset.id, baseBranch, plan.asset);
   if (release.completed) return { operation: "deleted", finalized: true, alreadyDeleted: true, releaseRequest: release.completed };
   await removeReleaseFiles(release.branch, plan);
   const releaseRequest = await finishRelease(release, plan, baseBranch);
