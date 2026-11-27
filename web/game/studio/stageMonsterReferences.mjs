@@ -20,6 +20,22 @@ export function getStageMonsterReferences(config, monsterId) {
   return references;
 }
 
+export function getStageAssetReferences(config, assetId) {
+  const targetId = typeof assetId === "string" ? assetId.trim().toLowerCase() : "";
+  if (!targetId) return [];
+  const references = [];
+  const stages = config?.stages && typeof config.stages === "object" ? config.stages : {};
+  for (const [stageId, stage] of Object.entries(stages)) {
+    for (const field of ["monsters", "plants"]) {
+      for (const entry of Array.isArray(stage?.[field]) ? stage[field] : []) {
+        if (String(entry?.id || "").trim().toLowerCase() !== targetId) continue;
+        references.push({ stageId: String(stageId), kind: field === "plants" ? "plant" : "monster", wave: Number(entry.wave) || 1, enabled: entry.enabled !== false });
+      }
+    }
+  }
+  return references;
+}
+
 export function validateStageMonsterReferences(config, assets = []) {
   const available = new Set(BUILTIN_MONSTER_IDS);
   for (const asset of Array.isArray(assets) ? assets : []) {

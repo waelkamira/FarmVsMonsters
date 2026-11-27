@@ -11,7 +11,8 @@
     "assets:manifest": "node scripts/build-asset-manifest.mjs",
     "predev": "node scripts/build-asset-manifest.mjs",
     "prebuild": "node scripts/build-asset-manifest.mjs",
-    "studio:sync": "node scripts/sync-studio-test-assets.mjs"
+    "studio:sync": "node scripts/sync-studio-test-assets.mjs",
+    "studio:sync-source": "node scripts/sync-studio-source-assets.mjs"
   },
   "dependencies": {
     "next": "^16.0.0",

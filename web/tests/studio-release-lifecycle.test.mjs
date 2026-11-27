@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createStudioReleaseBranchName, resolveStudioReleaseAsset, transitionStudioAssetStatus } from "../game/studio/releaseLifecycle.mjs";
+import { createStudioReleaseBranchName, resolveStudioReleaseAsset, applyProductionDeletionTombstones, findAssetDeletionTombstone, transitionStudioAssetStatus } from "../game/studio/releaseLifecycle.mjs";
 
 const asset = { id: "test-plant", status: "testing", releaseRequest: { number: 123, url: "https://github.com/example/repo/pull/123", branch: "studio/release/test-plant-abcdef12" } };
 
@@ -24,10 +24,43 @@ test("shows a merged release pull request as published", () => {
   assert.equal(result.releaseRequest.state, "merged");
 });
 
+test("production tombstones reliably finalize Studio state after a deletion PR is merged", () => {
+  const source = [{ id: "oak", status: "approved", releaseRequest: { number: 321, operation: "delete" } }];
+  const finalized = applyProductionDeletionTombstones(source, [{ id: "oak", deletedAt: "2026-11-27T10:00:00.000Z", releaseRequest: { number: 321, state: "open", operation: "delete" } }]);
+  assert.equal(finalized[0].status, "archived");
+  assert.equal(finalized[0].archivedAt, "2026-11-27T10:00:00.000Z");
+  assert.equal(finalized[0].releaseRequest.state, "merged");
+  assert.equal(applyProductionDeletionTombstones(source, [])[0], source[0]);
+  assert.equal(findAssetDeletionTombstone({ deletedAssetIds: [{ id: "oak", releaseRequest: { number: 321 } }] }, "oak").releaseRequest.number, 321);
+  assert.equal(findAssetDeletionTombstone({ deletedAssetIds: ["oak"] }, "oak").id, "oak");
+  assert.equal(findAssetDeletionTombstone({ deletedAssetIds: [] }, "oak"), null);
+});
+
 test("returns a closed unmerged release request to testing", () => {
   const result = resolveStudioReleaseAsset(asset, { state: "closed", merged: false });
   assert.equal(result.status, "testing");
   assert.equal(result.releaseRequest, null);
+});
+
+test("a published asset stays published while its removal PR is open", () => {
+  const pending = { id: "live-plant", status: "published", releaseRequest: { number: 124, operation: "delete" } };
+  const result = resolveStudioReleaseAsset(pending, { state: "open", merged: false });
+  assert.equal(result.status, "approved");
+  assert.equal(result.releaseRequest.state, "open");
+});
+
+test("an unmerged removal request leaves the production asset published", () => {
+  const pending = { id: "live-plant", status: "published", releaseRequest: { number: 124, operation: "delete" } };
+  const result = resolveStudioReleaseAsset(pending, { state: "closed", merged: false });
+  assert.equal(result.status, "published");
+  assert.equal(result.releaseRequest, null);
+});
+
+test("a merged removal request archives the asset instead of showing it as published", () => {
+  const pending = { id: "live-plant", status: "published", releaseRequest: { number: 124, operation: "delete" } };
+  const result = resolveStudioReleaseAsset(pending, { state: "closed", merged: true, mergedAt: "2026-11-27T10:00:00.000Z" });
+  assert.equal(result.status, "archived");
+  assert.equal(result.archivedAt, "2026-11-27T10:00:00.000Z");
 });
 
 test("does not alter assets without a release request", () => {

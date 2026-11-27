@@ -41,9 +41,9 @@ test("monster deletion dependency lookup finds every stage and wave even when a 
 test("Studio stage save validates references and asset deletion checks stage dependencies in both storage modes",()=>{
   const stageRoute=readFileSync(new URL("../app/api/studio/stage-encounters/route.js",import.meta.url),"utf8");
   const assetRoute=readFileSync(new URL("../app/api/studio/assets/route.js",import.meta.url),"utf8");
-  assert.match(stageRoute,/validateStageMonsterReferences\(config,await readMonsterAssets\(driver\)\)/);
+  assert.match(stageRoute,/validateStageMonsterReferences\(config,await readMonsterAssets\(\)\)/);
   assert.match(stageRoute,/status:409/);
-  assert.equal((assetRoute.match(/stageReferenceConflict\(id,/g)||[]).length,4);
-  assert.match(assetRoute,/getStageMonsterReferences\(config,id\)/);
+  assert.match(assetRoute,/stageReferenceConflict\(id,await localStageEncounterConfig\(\)\)/);
+  assert.match(assetRoute,/getStageAssetReferences\(config,id\)/);
   assert.match(assetRoute,/asset\.type==="monster"/);
 });

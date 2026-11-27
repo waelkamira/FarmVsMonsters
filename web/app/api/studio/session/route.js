@@ -6,6 +6,7 @@ import {
   STUDIO_SESSION_TTL_MS
 } from "../../../../game/studio/signedSession.mjs";
 import { consumeStudioLoginAttempt } from "../../../../game/studio/loginRateLimit.mjs";
+import { getStudioStorageDriver } from "../../../../game/studio/storageDriver.mjs";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -42,7 +43,7 @@ export async function GET(request) {
   }
   return NextResponse.json({
     authenticated: true,
-    storage: process.env.STUDIO_STORAGE_DRIVER || "local"
+    storage: getStudioStorageDriver()
   }, { headers: { "Cache-Control": "no-store" } });
 }
 
@@ -92,7 +93,7 @@ export async function POST(request) {
   const session = createStudioSession(signingSecret);
   const response = NextResponse.json({
     authenticated: true,
-    storage: process.env.STUDIO_STORAGE_DRIVER || "local"
+    storage: getStudioStorageDriver()
   }, { headers: { "Cache-Control": "no-store" } });
   response.cookies.set(COOKIE, session, {
     httpOnly: true,
