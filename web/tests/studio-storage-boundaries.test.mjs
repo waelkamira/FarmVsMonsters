@@ -206,6 +206,35 @@ test("local Git status reports real uncommitted changes without mutating the rep
   }
 });
 
+test("Git status reports the actual studio/assets versus main diff", async () => {
+  const root = mkdtempSync(path.join(tmpdir(), "fvm-studio-branches-"));
+  const run = (args) => execFileSync("git", args, { cwd: root, stdio: "ignore" });
+  const output = (args) => execFileSync("git", args, { cwd: root, encoding: "utf8" }).trim();
+  try {
+    run(["init", "-b", "main"]);
+    run(["config", "user.email", "studio-test@example.invalid"]);
+    run(["config", "user.name", "Studio Test"]);
+    writeFileSync(path.join(root, "fixture.txt"), "base");
+    run(["add", "fixture.txt"]);
+    run(["commit", "-m", "base"]);
+    const mainSha = output(["rev-parse", "HEAD"]);
+    run(["update-ref", "refs/remotes/origin/main", mainSha]);
+    writeFileSync(path.join(root, "fixture.txt"), "studio branch content");
+    run(["add", "fixture.txt"]);
+    run(["commit", "-m", "studio change"]);
+    const studioSha = output(["rev-parse", "HEAD"]);
+    run(["update-ref", "refs/remotes/origin/studio/assets", studioSha]);
+    const status = await getLocalGitStatus({ cwd: root, env: { NODE_ENV: "development" } });
+    assert.equal(status.productionDiffers, true);
+    assert.equal(status.productionAhead, 0);
+    assert.equal(status.productionBehind, 1);
+    assert.deepEqual(status.productionChangedFiles.map((item) => item.path), ["fixture.txt"]);
+    assert.ok(status.syncStates.includes("Production differs"));
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
 test("production never invokes local Git inspection", async () => {
   const result = await getLocalGitStatus({ cwd: "/path/that/must/not/be/read", env: { NODE_ENV: "production" } });
   assert.equal(result.enabled, false);
