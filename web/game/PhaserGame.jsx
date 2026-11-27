@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useLocale } from "../app/LocaleProvider";
-import { detectBrowserVFXQuality, getGameRenderResolution } from "./vfx/core/VFXConfig.mjs";
+import { detectBrowserVFXQuality, getGameMipmapFilter, getGameRenderResolution } from "./vfx/core/VFXConfig.mjs";
 
 export default function PhaserGame() {
   const { t, locale } = useLocale();
@@ -61,6 +61,8 @@ export default function PhaserGame() {
 
       try {
         const { Game, AUTO, Scale } = phaserModule;
+        const graphicsQuality = detectBrowserVFXQuality();
+        const mipmapFilter = getGameMipmapFilter(graphicsQuality);
         game = new Game({
           type: AUTO,
           parent: hostRef.current,
@@ -68,7 +70,7 @@ export default function PhaserGame() {
           height: 680,
           resolution: getGameRenderResolution(
             window.devicePixelRatio || 1,
-            detectBrowserVFXQuality()
+            graphicsQuality
           ),
           backgroundColor: "#a8c978",
           scale: {
@@ -77,7 +79,8 @@ export default function PhaserGame() {
           },
           render: {
             antialias: true,
-            pixelArt: false
+            pixelArt: false,
+            ...(mipmapFilter ? { mipmapFilter } : {})
           },
           scene: [sceneModule.default, pauseModule.default]
         });

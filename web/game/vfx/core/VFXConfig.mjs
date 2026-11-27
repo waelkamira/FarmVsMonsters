@@ -78,3 +78,13 @@ export function getGameRenderResolution(devicePixelRatio, quality = "high") {
   const cap = RENDER_RESOLUTION_CAPS[quality] || RENDER_RESOLUTION_CAPS.high;
   return Math.min(Math.max(1, nativeRatio), cap);
 }
+
+
+/**
+ * Enable high-quality mipmap sampling only on capable devices. Phaser creates
+ * mipmaps only for power-of-two textures; keeping them off on lower tiers
+ * avoids the additional GPU texture memory cost on constrained devices.
+ */
+export function getGameMipmapFilter(quality = "low") {
+  return quality === "high" ? "LINEAR_MIPMAP_LINEAR" : undefined;
+}
