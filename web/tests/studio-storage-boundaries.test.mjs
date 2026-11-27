@@ -1,6 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { tmpdir } from "node:os";
+import path from "node:path";
+import { getLocalGitStatus } from "../game/studio/localGitStatus.mjs";
 import { getStudioStorageDriver, canWriteStudioStorage } from "../game/studio/storageDriver.mjs";
 import { importManifestPlants } from "../game/studio/assetLibraryImport.mjs";
 import { getStageAssetReferences } from "../game/studio/stageMonsterReferences.mjs";
@@ -165,10 +169,46 @@ test("GitHub failures cannot mark a release successful and retries reuse the mat
   assert.match(assetsRoute, /catch\(error\)\{return NextResponse\.json\(\{error:error\.message\|\|"Studio action failed\."\}/);
 });
 
-test("sync states distinguish local work, production drift, published assets, and conflicts", () => {
-  assert.match(assetsRoute, /syncStates:\["Local changes","Not committed","Not synced"\]/);
-  assert.match(assetsRoute, /\["Production differs"\]/);
-  assert.match(assetsRoute, /\["Synced"\]/);
+test("Studio local sync state is derived from read-only Git inspection, not fixed labels", () => {
+  assert.match(assetsRoute, /getLocalGitStatus\(\)/);
+  assert.match(assetsRoute, /syncStates:gitStatus\.syncStates/);
+  assert.doesNotMatch(assetsRoute, /syncStates:\["Local changes","Not committed","Not synced"\]/);
   const page = readFileSync(new URL("../app/studio/page.js", import.meta.url), "utf8");
-  for (const state of ["Local changes", "Not committed", "Not synced", "Production differs", "Published", "Conflict"]) assert.ok(page.includes(state) || assetsRoute.includes(state), `missing ${state}`);
+  for (const state of ["Local changes", "Not committed", "Not synced", "Production differs", "Published", "Conflict"]) {
+    assert.ok(page.includes(state), `missing UI state ${state}`);
+  }
+});
+
+test("local Git status reports real uncommitted changes without mutating the repository", async () => {
+  const root = mkdtempSync(path.join(tmpdir(), "fvm-studio-git-"));
+  const run = (args) => execFileSync("git", args, { cwd: root, stdio: "ignore" });
+  try {
+    run(["init", "-b", "main"]);
+    run(["config", "user.email", "studio-test@example.invalid"]);
+    run(["config", "user.name", "Studio Test"]);
+    writeFileSync(path.join(root, "fixture.txt"), "initial\\n");
+    run(["add", "fixture.txt"]);
+    run(["commit", "-m", "initial"]);
+    const clean = await getLocalGitStatus({ cwd: root, env: { NODE_ENV: "development" } });
+    assert.equal(clean.available, true);
+    assert.equal(clean.branch, "main");
+    assert.equal(clean.dirty, false);
+    assert.ok(clean.syncStates.includes("Not synced"));
+    writeFileSync(path.join(root, "fixture.txt"), "changed\\n");
+    const dirty = await getLocalGitStatus({ cwd: root, env: { NODE_ENV: "development" } });
+    assert.equal(dirty.available, true);
+    assert.equal(dirty.dirty, true);
+    assert.ok(dirty.syncStates.includes("Local changes"));
+    assert.ok(dirty.syncStates.includes("Not committed"));
+    assert.deepEqual(dirty.changedFiles.map((item) => item.path), ["fixture.txt"]);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("production never invokes local Git inspection", async () => {
+  const result = await getLocalGitStatus({ cwd: "/path/that/must/not/be/read", env: { NODE_ENV: "production" } });
+  assert.equal(result.enabled, false);
+  assert.equal(result.available, false);
+  assert.deepEqual(result.syncStates, ["Production differs"]);
 });
