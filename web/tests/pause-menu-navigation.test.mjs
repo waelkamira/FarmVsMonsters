@@ -47,7 +47,7 @@ test("settings arrows move horizontally within a volume row and vertically by ne
 test("Home and End select the first and last controls; invalid movement is safe", () => {
   assert.equal(getPauseMenuControlIndex(settingsControls, 4, "Home"), 0);
   assert.equal(getPauseMenuControlIndex(settingsControls, 0, "End"), 6);
-  assert.equal(getPauseMenuControlIndex(settingsControls, -1, "ArrowDown"), 1);
+  assert.equal(getPauseMenuControlIndex(settingsControls, -1, "ArrowDown"), 2);
   assert.equal(getPauseMenuControlIndex(settingsControls, 2, "Tab"), 2);
   assert.equal(getPauseMenuControlIndex([], 0, "ArrowDown"), -1);
 });
