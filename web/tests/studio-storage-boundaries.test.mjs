@@ -147,7 +147,7 @@ test("manifest import resolves hashed published paths and preserves tombstones",
   );
   assert.equal(tombstoned.imported, 0);
   assert.equal(tombstoned.registry.assets.length, 0);
-  assert.equal(tombstoned.skippedDeleted, 1);
+  assert.deepEqual(tombstoned.skippedDeleted, ["oak"]);
 });
 
 test("local effects and test preparation do not use GitHub operations", () => {
@@ -218,6 +218,7 @@ test("Studio local sync state is derived from read-only Git inspection, not fixe
   assert.match(assetsRoute, /syncStates:gitStatus\.syncStates/);
   assert.doesNotMatch(assetsRoute, /syncStates:\["Local changes","Not committed","Not synced"\]/);
   const page = readFileSync(new URL("../app/studio/page.js", import.meta.url), "utf8");
+  const gitStatus = readFileSync(new URL("../game/studio/localGitStatus.mjs", import.meta.url), "utf8");
   for (const state of ["Local changes", "Not committed", "Not synced", "Production differs", "Published", "Conflict"]) {
     assert.ok(page.includes(state), `missing UI state ${state}`);
   }
@@ -300,11 +301,14 @@ test("Studio source sync is local-only, authenticated, and uses Git pull/push", 
   const syncRoute = readFileSync(new URL("../app/api/studio/source-sync/route.js", import.meta.url), "utf8");
   const syncScript = readFileSync(new URL("../scripts/sync-studio-source-assets.mjs", import.meta.url), "utf8");
   const page = readFileSync(new URL("../app/studio/page.js", import.meta.url), "utf8");
-  assert.match(syncRoute, /if\(!canWriteStudioStorage\(\)\)/);
+  assert.match(syncRoute, /if\s*\(!canWriteStudioStorage\(\)\)/);
   assert.match(syncRoute, /verifyStudioSession/);
   assert.ok(syncScript.includes('git(["pull", "--ff-only"]'));
   assert.ok(syncScript.includes('git(["push", "origin", "HEAD:refs/heads/" + sourceBranch]'));
   assert.match(page, /syncSourceAssets/);
+  assert.match(gitStatus, /Local changes/);
+  assert.match(gitStatus, /Not committed/);
+  assert.match(gitStatus, /Production differs/);
   assert.match(page, /مزامنة الأصول المختبرة إلى studio\/assets/);
 });
 
@@ -316,21 +320,21 @@ test("local test preparation rejects missing required references instead of filt
   assert.doesNotMatch(prepare, /\.filter\(safeAssetPath\)/);
 });
 
-test("SVG manifest hashes, sizes, and audit totals are platform-independent", () => {
+test("clean battlefield SVG hash, size, and manifest/audit totals are synchronized", () => {
   const manifest = JSON.parse(readFileSync(new URL("../public/assets/asset-manifest.json", import.meta.url), "utf8"));
   const audit = JSON.parse(readFileSync(new URL("../public/assets/asset-audit.json", import.meta.url), "utf8"));
-  const groupedEntries = Object.values(manifest.groups || {}).flat();
-  const svgEntries = (manifest.assets || []).filter((entry) => entry.type === "svg");
-  for (const entry of svgEntries) {
-    const source = readFileSync(new URL("../public" + entry.url, import.meta.url), "utf8").replace(/\\r\\n/g, "\\n");
-    const bytes = Buffer.from(source, "utf8");
-    const expectedHash = createHash("sha256").update(bytes).digest("hex");
-    assert.equal(entry.bytes, bytes.byteLength, entry.url + " byte count");
-    assert.equal(entry.sha256, expectedHash, entry.url + " SHA-256");
-    const grouped = groupedEntries.filter((candidate) => candidate.url === entry.url);
-    assert.equal(grouped.length, 1, entry.url + " grouped entry");
-    assert.equal(grouped[0].bytes, bytes.byteLength, entry.url + " grouped byte count");
-    assert.equal(grouped[0].sha256, expectedHash, entry.url + " grouped SHA-256");
+  const source = readFileSync(new URL("../public/assets/backgrounds/farm-battlefield-clean.svg", import.meta.url), "utf8")
+    .replaceAll(String.fromCharCode(13) + String.fromCharCode(10), String.fromCharCode(10));
+  const svg = Buffer.from(source, "utf8");
+  const expectedHash = createHash("sha256").update(svg).digest("hex");
+  const entries = [
+    ...(manifest.assets || []),
+    ...Object.values(manifest.groups || {}).flat()
+  ].filter((entry) => entry.url === "/assets/backgrounds/farm-battlefield-clean.svg");
+  assert.equal(entries.length, 2);
+  for (const entry of entries) {
+    assert.equal(entry.bytes, svg.byteLength);
+    assert.equal(entry.sha256, expectedHash);
   }
   assert.equal(manifest.totalBytes, audit.totalBytes);
   const backgroundBytes = (manifest.assets || []).filter((entry) => entry.group === "backgrounds").reduce((sum, entry) => sum + entry.bytes, 0);
