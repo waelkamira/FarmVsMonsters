@@ -37,12 +37,26 @@ export function assetPathStillUsed(assets, assetPath) {
 
 function linkedAssets(assets, asset) {
   const byId = new Map((assets || []).map((item) => [String(item?.id || ""), item]));
-  const ids = [
-    ...(asset?.rigProfile?.bones || []).map((bone) => bone?.part?.assetId),
-    ...(asset?.dependencies || []).map((dependency) => typeof dependency === "string" ? dependency : dependency?.id),
-    ...(asset?.combat?.projectile?.managed ? [asset.combat.projectile.id] : [])
-  ].filter(Boolean);
-  return [...new Set(ids)].map((id) => byId.get(String(id))).filter(Boolean);
+  const visited = new Set([String(asset?.id || "")]);
+  const queue = [asset];
+  const linked = [];
+  while (queue.length) {
+    const current = queue.shift();
+    const ids = [
+      ...(current?.rigProfile?.bones || []).map((bone) => bone?.part?.assetId),
+      ...(current?.dependencies || []).map((dependency) => typeof dependency === "string" ? dependency : dependency?.id),
+      ...(current?.combat?.projectile?.managed ? [current.combat.projectile.id] : [])
+    ].filter(Boolean);
+    for (const id of new Set(ids.map(String))) {
+      if (visited.has(id)) continue;
+      const dependency = byId.get(id);
+      if (!dependency) throw Object.assign(new Error("Missing required Studio dependency: " + id), { status: 409 });
+      visited.add(id);
+      linked.push(dependency);
+      queue.push(dependency);
+    }
+  }
+  return linked;
 }
 
 export function getAssetReleasePaths(assets, asset) {
