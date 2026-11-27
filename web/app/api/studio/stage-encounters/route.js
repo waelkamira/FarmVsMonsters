@@ -68,6 +68,14 @@ async function readPublishedPlantIds(){
  try{catalog=JSON.parse(await readFile(path.join(process.cwd(),PUBLISHED_PLANT_CATALOG_PATH.replace(/^web\//,"")),"utf8"));}catch(error){if(error.code!=="ENOENT")throw error;}
  return new Set([...BUILTIN_PLANT_IDS,...(Array.isArray(catalog.plants)?catalog.plants:[]).map(item=>String(item.id||"").trim().toLowerCase()).filter(Boolean)]);
 }
+async function readAvailablePlantIds(driver){
+ const available=await readPublishedPlantIds();
+ if(driver==="local"){
+  const assets=await readMonsterAssets();
+  for(const asset of assets)if(asset.type==="plant"&&asset.status==="testing")available.add(asset.id);
+ }
+ return available;
+}
 async function readMonsterAssets(){
  try{
   const registry=JSON.parse(await readFile(path.join(process.cwd(),"game/data/studioAssetRegistry.json"),"utf8"));
@@ -123,7 +131,7 @@ export async function PATCH(req){
   if(publishAction){
    if(!config.stages?.[stageId])return NextResponse.json({error:"المرحلة المطلوبة غير موجودة في إعدادات الاستديو."},{status:400});
    config={...config,stages:{...config.stages,[stageId]:{...config.stages[stageId],published:true}}};
-   const availablePlants=await readPublishedPlantIds();
+   const availablePlants=await readAvailablePlantIds(driver);
    const unavailablePlants=config.stages[stageId].plants.filter(plant=>plant.visible!==false&&plant.enabled!==false&&!availablePlants.has(plant.id)).map(plant=>plant.id);
    if(unavailablePlants.length)return NextResponse.json({error:"لا يمكن نشر المرحلة لأن بعض النباتات ليست في الكتالوج المحلي بعد. انشر هذه الأصول أولاً ثم أعد نشر المرحلة: "+[...new Set(unavailablePlants)].join("، "),unavailablePlants:[...new Set(unavailablePlants)]},{status:409});
   }
