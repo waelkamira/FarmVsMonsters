@@ -277,3 +277,9 @@ test("stage preview and player battle use the same stage-specific seed loadout a
  assert.match(battle,/stagePlantEntries\.filter\(entry => entry\.unlocked !== false\)/);
  assert.doesNotMatch(battle,/stagePlantEntries\.filter\(entry => this\.isStudioPlaytest \|\| entry\.unlocked !== false\)/);
 });
+
+test("local stage activation accepts plants prepared for local testing",()=>{
+ const route=read("app/api/studio/stage-encounters/route.js");
+ assert.match(route,/readAvailablePlantIds\(driver\)/);
+ assert.match(route,/asset\.type==="plant"&&asset\.status==="testing"/);
+});
