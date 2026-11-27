@@ -120,7 +120,6 @@ export default function StageOneSeedSelectionPage() {
           ? saved.filter((id) => safeUnlocked.includes(id) && nextPlants.some((plant) => plant.id === id))
           : [];
         const availableIds = new Set(nextPlants.map((plant) => plant.id));
-        const authoredStageIds = visibleStageEntries.map(entry => Object.entries(plantAliases).find(([, aliases]) => aliases.includes(entry.id))?.[0] || entry.id);
         const defaultStudioPlants = studioPlants.map((plant) => plant.id);
         const authoredDefaults = useStageRoster
           ? stageUnlockedIds.filter((id) => availableIds.has(id))
