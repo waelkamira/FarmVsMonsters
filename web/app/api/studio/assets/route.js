@@ -335,7 +335,7 @@ export async function GET(req){
      if(matched){
       const operation=String(matched.body||"").includes("<!-- studio-release:delete:"+asset.id+":")?"delete":"publish";
       request={number:matched.number,url:matched.html_url,branch:matched.head?.ref,state:matched.state,operation};
-      pr={number:matched.number,url:matched.html_url,state:matched.state,merged:Boolean(matched.merged),mergedAt:matched.merged_at||null};
+      pr={number:matched.number,url:matched.html_url,state:matched.state,merged:Boolean(matched.merged||matched.merged_at),mergedAt:matched.merged_at||null};
      }
     }
     if(!request?.number)return asset;
