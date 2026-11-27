@@ -12,7 +12,7 @@ function manifestEntries(source) {
 
 function idFromUrl(url) {
   return path.basename(url || "").replace(/\.[^.]+$/, "").toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    .replace(/-[a-f0-9]{64}$/i, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 
 function deletedIdSet(registry) {
@@ -26,21 +26,27 @@ export function importManifestPlants(registry, manifest, catalog, now = new Date
   const next = { ...(registry || {}), version: registry?.version || 1, assets: [...(registry?.assets || [])] };
   const known = new Set(next.assets.map((asset) => asset.id));
   const deleted = deletedIdSet(next);
-  const catalogPlants = new Map((Array.isArray(catalog?.plants) ? catalog.plants : []).map((plant) => [plant.id, plant]));
+  const catalogItems = Array.isArray(catalog?.plants) ? catalog.plants : [];
+  const catalogPlants = new Map(catalogItems.map((plant) => [plant.id, plant]));
+  const catalogByPath = new Map(catalogItems.filter((plant) => plant?.path).map((plant) => [plant.path, plant]));
+  const tombstones = Array.isArray(next.deletedAssetIds) ? next.deletedAssetIds : [];
+  const tombstonesByPath = new Map(tombstones.filter((entry) => typeof entry === "object" && entry?.path).map((entry) => [entry.path, entry]));
   const candidates = new Map();
 
   for (const source of [...manifestEntries(manifest), ...manifestEntries(catalog)]) {
     if (source?.group !== "plants" && !source?.path?.startsWith("/assets/plants/")) continue;
     const url = source.url || source.path;
     if (typeof url !== "string" || !url.startsWith("/assets/plants/") || /-bomb(?:-|\.)/i.test(url)) continue;
-    const id = idFromUrl(url);
-    if (id && !candidates.has(id)) candidates.set(id, { ...source, url });
+    const publishedRecord = catalogByPath.get(url);
+    const tombstone = tombstonesByPath.get(url);
+    const id = publishedRecord?.id || tombstone?.id || idFromUrl(url);
+    if (id && !candidates.has(id)) candidates.set(id, { ...source, url, publishedRecord, tombstoned: Boolean(tombstone) });
   }
 
   let imported = 0;
   for (const [id, source] of candidates) {
-    if (known.has(id) || deleted.has(id)) continue;
-    const published = catalogPlants.get(id);
+    if (known.has(id) || deleted.has(id) || source.tombstoned) continue;
+    const published = source.publishedRecord || catalogPlants.get(id);
     const metadata = resolvePlantSpriteMetadata(source, published);
     next.assets.push({
       ...(published || {}),
