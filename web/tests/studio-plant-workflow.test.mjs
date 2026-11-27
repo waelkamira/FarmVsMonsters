@@ -109,7 +109,7 @@ test("Studio enforces draft-to-testing-to-published and publishes the catalog on
   assert.match(releaseLifecycle, /status: "testing"/);
   assert.match(releaseLifecycle, /status: "published"/);
   assert.match(assetsRoute, /PUBLISHED_CATALOG_PATH/);
-  assert.match(assetsRoute, /beginProductionRelease\(token,id,"publish",targetBranch\)/);
+  assert.match(assetsRoute, /beginProductionRelease\(token,id,"publish",targetBranch,asset\)/);
   assert.match(assetsRoute, /githubCreateReleasePullRequest/);
   assert.match(assetsRoute, /status:"approved"/);
   assert.match(assetsRoute, /published:false/);
