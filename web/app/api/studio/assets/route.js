@@ -135,7 +135,7 @@ async function beginProductionRelease(token,id,operation,baseBranch,asset){
  return {branch:releaseBranch,marker,fingerprint,pr:null};
 }
 async function finishProductionRelease(token,release,{baseBranch,title,body,asset,operation}){
- const pr=release.pr||await githubCreateReleasePullRequest(token,{branch:release.branch,base:baseBranch,title,body:body+"\\n\\n"+release.marker,marker:release.marker});
+ const pr=release.pr||await githubCreateReleasePullRequest(token,{branch:release.branch,base:baseBranch,title,body:body+String.fromCharCode(10)+String.fromCharCode(10)+release.marker,marker:release.marker});
  if(!pr.branch||pr.branch!==release.branch)throw Object.assign(new Error("Release PR head does not match the prepared release branch; no registry state was recorded."),{code:"STUDIO_RELEASE_BRANCH_MISMATCH"});
  if(pr.merged){
   const productionDocument=await githubGetDocument(REGISTRY_PATH,token,baseBranch);
