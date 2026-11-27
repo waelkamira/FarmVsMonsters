@@ -10,6 +10,7 @@ import {
 
 const here = dirname(fileURLToPath(import.meta.url));
 const pauseScene = readFileSync(resolve(here, "../game/scenes/PauseScene.js"), "utf8");
+const localeProvider = readFileSync(resolve(here, "../app/LocaleProvider.jsx"), "utf8");
 
 const pauseControls = [
   { id: "resume", row: 0, column: 0 },
@@ -68,4 +69,5 @@ test("PauseScene registers all menu actions, shows a focus ring, and removes key
   assert.match(pauseScene, /control\.action\(\)/);
   assert.match(pauseScene, /this\.drawCurrentMenu\(focusId\)/);
   assert.doesNotMatch(pauseScene, /bg\.on\("pointerdown", action\)/);
+  assert.match(localeProvider, /"BACK": "عودة"/);
 });
