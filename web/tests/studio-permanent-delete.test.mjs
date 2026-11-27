@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import {
   createProductionAssetDeletionPlan,
   getAssetDependencyConflict,
+  getAssetReleasePaths,
   requestProductionAssetDeletion,
   removeAssetManifestReferencesFromBranch
 } from "../game/studio/assetDeletion.mjs";
@@ -202,4 +203,16 @@ test("local and production paths remain separate, and Studio sync state stays vi
   assert.match(page, /studio-sync-state/);
   assert.match(page, /syncStates/);
   assert.match(css, /\.studio-sync-state/);
+});
+
+test("release path collection walks nested dependencies and fails closed on missing links", () => {
+  const root = { id: "oak", type: "plant", status: "published", path: "/assets/plants/oak.png", dependencies: ["branch"] };
+  const branch = { id: "branch", type: "rigPart", status: "published", path: "/assets/parts/branch.png", dependencies: ["leaf"] };
+  const leaf = { id: "leaf", type: "rigPart", status: "published", path: "/assets/parts/leaf.png" };
+  assert.deepEqual(getAssetReleasePaths([root, branch, leaf], root).sort(), [
+    "/assets/parts/branch.png",
+    "/assets/parts/leaf.png",
+    "/assets/plants/oak.png"
+  ]);
+  assert.throws(() => getAssetReleasePaths([root, branch], root), /Missing required Studio dependency: leaf/);
 });
