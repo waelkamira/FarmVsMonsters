@@ -80,7 +80,7 @@ async function readAvailablePlantIds(driver){
 async function readMonsterAssets(){
  let catalog={monsters:[]};
  let registry={assets:[]};
- try{catalog=JSON.parse(await readFile(path.join(process.cwd(),PUBLISHED_MONSTER_CATALOG_PATH.replace(/^web\\//,"")),"utf8"));}catch(error){if(error.code!=="ENOENT")throw error;}
+ try{catalog=JSON.parse(await readFile(path.join(process.cwd(),PUBLISHED_MONSTER_CATALOG_PATH.replace(/^web\//,"")),"utf8"));}catch(error){if(error.code!=="ENOENT")throw error;}
  try{registry=JSON.parse(await readFile(path.join(process.cwd(),"game/data/studioAssetRegistry.json"),"utf8"));}catch(error){if(error.code!=="ENOENT")throw error;}
  // Published catalog entries are valid stage monsters even when an older local
  // registry snapshot does not contain them. Registry state wins on duplicate IDs
