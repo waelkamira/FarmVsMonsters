@@ -1,4 +1,5 @@
 import {resolveWaveSpawnStep} from "../game/rules/combatSimulation.mjs";
+import {validateStageMonsterReferences} from "../game/studio/stageMonsterReferences.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
@@ -274,4 +275,25 @@ test("stage preview and player battle use the same stage-specific seed loadout a
  assert.match(battle,/farmVsMonsters\.selectedPlants\.stage\." \+ this\.stageNumber/);
  assert.match(battle,/stagePlantEntries\.filter\(entry => entry\.unlocked !== false\)/);
  assert.doesNotMatch(battle,/stagePlantEntries\.filter\(entry => this\.isStudioPlaytest \|\| entry\.unlocked !== false\)/);
+});
+
+
+test("the committed stage configuration references registered monsters and is saveable",()=>{
+ const config=JSON.parse(read("game/data/stageEncounterConfig.json"));
+ const registry=JSON.parse(read("game/data/studioAssetRegistry.json"));
+ assert.deepEqual(validateStageMonsterReferences(config,registry.assets),[]);
+ assert.equal(config.stages["1"].monsters[0].id,"monster-01");
+});
+
+test("stage draft saves are read back from the same remote working branch before success",()=>{
+ const api=read("app/api/studio/stage-encounters/route.js");
+ const manager=read("app/studio/StageRosterManager.jsx");
+ assert.match(api,/readGithub\(isStudio\?workingBranch\(\):releaseBranch\(\)\)/);
+ assert.match(api,/writeGithub\(config,body\.sha,workingBranch\(\)\)/);
+ assert.match(api,/const verified=await readGithub\(workingBranch\(\)\)/);
+ assert.match(api,/JSON\.stringify\(verified\.config\)!==JSON\.stringify\(config\)/);
+ assert.match(api,/const verified=await readLocal\(\)/);
+ assert.match(api,/JSON\.stringify\(verified\)!==JSON\.stringify\(config\)/);
+ assert.match(manager,/body:JSON\.stringify\(\{config,sha\}\)/);
+ assert.match(manager,/setConfig\(data\.config\);setSha\(data\.sha\|\|null\)/);
 });
