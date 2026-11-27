@@ -170,17 +170,21 @@ test("Mushroom production always creates a full collectible; the energy cap is a
   assert.match(production, /collectEnergy\(this\.energy, amount\)/);
 });
 
-test("resource Mushrooms never stop monsters; only living Radishes are defensive blockers", () => {
+test("only plants marked as defensive blockers stop monsters in their lane", () => {
   const updateMonsters = scene.slice(scene.indexOf("  updateMonsters(dt, delta) {"), scene.indexOf("  updateProjectiles(dt) {"));
   assert.match(updateMonsters, /selectLaneBlocker\(/);
-  assert.equal(selectLaneBlocker({
-    plants: [{ plant: { type: "mushroom", row: 1, alive: true }, localX: -1 }],
-    row: 1, monsterLocalX: 0
-  }), null);
-  assert.equal(selectLaneBlocker({
-    plants: [{ plant: { type: "radish", row: 1, alive: true }, localX: -1 }],
-    row: 1, monsterLocalX: 0
-  }).type, "radish");
+  for (const type of ["radish", "pumpkin"]) {
+    assert.equal(selectLaneBlocker({
+      plants: [{ plant: { type, row: 1, alive: true }, localX: -1 }],
+      row: 1, monsterLocalX: 0
+    }).type, type);
+  }
+  for (const type of ["mushroom", "hazelnut", "pineapple"]) {
+    assert.equal(selectLaneBlocker({
+      plants: [{ plant: { type, row: 1, alive: true }, localX: -1 }],
+      row: 1, monsterLocalX: 0
+    }), null);
+  }
 });
 
 test("the first monster crossing the final line ends the game immediately", () => {
