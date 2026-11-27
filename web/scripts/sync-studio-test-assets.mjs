@@ -19,7 +19,9 @@ for(const plant of plants){
   }
   for(const assetPath of paths){
     if(!safeAssetPath(assetPath))throw new Error("Unsafe Studio asset path for "+plant.id+".");
-    await access(path.join(root,"public",decodeURIComponent(assetPath.slice(1))));
+    const target=path.join(root,"public",decodeURIComponent(assetPath.slice(1)));
+    await access(target);
+    if(!(await stat(target)).isFile())throw new Error("Studio asset path is not a file: "+assetPath);
     checkedFiles+=1;
   }
   output.push({...plant,projectile});
