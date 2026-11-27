@@ -106,12 +106,12 @@ function releaseAssetFingerprint(asset){
  return createHash("sha256").update(JSON.stringify(identity)).digest("hex").slice(0,16);
 }
 async function githubConvertPullRequestToDraft(token,nodeId){
- const response=await fetch("https://api.github.com/graphql",{method:"POST",headers:githubHeaders(token),body:JSON.stringify({query:"mutation($id:ID!){convertPullRequestToDraft(input:{pullRequestId:$id}){pullRequest{id isDraft}}}",variables:{id:nodeId}})});
+ const response=await fetch("https://api.github.com/graphql",{method:"POST",headers:{...githubHeaders(token),"Content-Type":"application/json"},body:JSON.stringify({query:"mutation($id:ID!){convertPullRequestToDraft(input:{pullRequestId:$id}){pullRequest{id isDraft}}}",variables:{id:nodeId}})});
  const data=await response.json().catch(()=>({}));
  if(!response.ok||data.errors?.length||!data.data?.convertPullRequestToDraft?.pullRequest?.isDraft)throw Error(data.errors?.[0]?.message||"Could not move the release PR to draft before updating its registry.");
 }
 async function githubMarkPullRequestReady(token,nodeId){
- const response=await fetch("https://api.github.com/graphql",{method:"POST",headers:githubHeaders(token),body:JSON.stringify({query:"mutation($id:ID!){markPullRequestReadyForReview(input:{pullRequestId:$id}){pullRequest{id isDraft}}}",variables:{id:nodeId}})});
+ const response=await fetch("https://api.github.com/graphql",{method:"POST",headers:{...githubHeaders(token),"Content-Type":"application/json"},body:JSON.stringify({query:"mutation($id:ID!){markPullRequestReadyForReview(input:{pullRequestId:$id}){pullRequest{id isDraft}}}",variables:{id:nodeId}})});
  const data=await response.json().catch(()=>({}));
  if(!response.ok||data.errors?.length||data.data?.markPullRequestReadyForReview?.pullRequest?.isDraft!==false)throw Error(data.errors?.[0]?.message||"Could not mark the staged release PR ready for review.");
 }
