@@ -113,6 +113,30 @@ test("explicit import preserves real grouped Manifest Atlas and animation metada
   assert.equal(imported.status, "draft");
 });
 
+test("manifest import resolves hashed published paths and preserves tombstones", () => {
+  const digest = "a".repeat(64);
+  const publishedPath = "/assets/plants/oak-" + digest + ".png";
+  const published = importManifestPlants(
+    { version: 1, assets: [] },
+    { assets: [{ url: publishedPath, group: "plants" }] },
+    { plants: [{ id: "oak", name: "Oak", path: publishedPath, publishedAt: "2026-11-20T00:00:00.000Z" }] },
+    "2026-11-27T00:00:00.000Z"
+  );
+  assert.equal(published.imported, 1);
+  assert.equal(published.registry.assets[0].id, "oak");
+  assert.equal(published.registry.assets[0].status, "published");
+
+  const tombstoned = importManifestPlants(
+    { version: 1, assets: [], deletedAssetIds: [{ id: "oak", path: publishedPath }] },
+    { assets: [{ url: publishedPath, group: "plants" }] },
+    { plants: [] },
+    "2026-11-27T00:00:00.000Z"
+  );
+  assert.equal(tombstoned.imported, 0);
+  assert.equal(tombstoned.registry.assets.length, 0);
+  assert.equal(tombstoned.skippedDeleted, 1);
+});
+
 test("local effects and test preparation do not use GitHub operations", () => {
   const effectsStart = assetsRoute.indexOf("async function setAssetEffects");
   const effectsEnd = assetsRoute.indexOf("\n}", effectsStart);
