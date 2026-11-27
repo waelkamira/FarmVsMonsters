@@ -18,6 +18,7 @@ import {assetOwnedPaths,assetPathStillUsed,getAssetReleasePaths,createProduction
 import {validateEffectSelection} from "../../../../game/vfx/effects/effectAssignments.mjs";
 import {validateCharacterStateAnimation} from "../../../../game/studio/characterStateAnimations.mjs";
 import {getStudioStorageDriver,canWriteStudioStorage} from "../../../../game/studio/storageDriver.mjs";
+import {getLocalGitStatus} from "../../../../game/studio/localGitStatus.mjs";
 import {importManifestPlants} from "../../../../game/studio/assetLibraryImport.mjs";
 import {createStudioReleaseBranchName} from "../../../../game/studio/releaseLifecycle.mjs";
 import {createHash} from "node:crypto";
@@ -306,7 +307,8 @@ export async function GET(req){
     return NextResponse.json({...addPreviewUrls({...registry,assets:finalizedAssets}),syncStates,sourceBranch:branch},{headers:{"Cache-Control":"private, no-store"}});
   }catch(error){return NextResponse.json({error:error.message},{status:502});}
  }
- return NextResponse.json({...addPreviewUrls(await localRegistry()),syncStates:["Local changes","Not committed","Not synced"],sourceBranch:"local"},{headers:{"Cache-Control":"private, no-store"}});
+ const gitStatus=await getLocalGitStatus();
+ return NextResponse.json({...addPreviewUrls(await localRegistry()),syncStates:gitStatus.syncStates,gitStatus,sourceBranch:"local"},{headers:{"Cache-Control":"private, no-store"}});
 }
 export async function POST(req){
  if(!authorized(req))return NextResponse.json({error:"Unauthorized."},{status:401});
