@@ -178,7 +178,7 @@ test("production publish and delete use a release branch and PR before recording
   assert.match(assetsRoute, /for\(const assetPath of releasePaths\)[\s\S]*?githubPutImmutable\(filePath,bytes,[\s\S]*?releaseBranch\)/);
   assert.match(assetsRoute, /operation:"publish-requested"/);
   assert.match(assetsRoute, /published:false/);
-  assert.match(assetsRoute, /writeProductionRegistryRelease\(token,release\.branch/);
+  assert.match(assetsRoute, /writeProductionRegistryRelease\(token,pr\.branch/);
   assert.match(assetsRoute, /findAssetDeletionTombstone\(productionRegistry,id\)/);
   assert.match(assetsRoute, /if\(operation==="delete"&&deletionTombstone\)return NextResponse\.json/);
   assert.doesNotMatch(assetsRoute, /githubPutImmutable\(artworkPath,artworkBytes,[\s\S]{0,100}token,targetBranch\)/);
@@ -192,7 +192,11 @@ test("GitHub failures cannot mark a release successful and retries reuse the mat
   assert.match(assetsRoute, /for\(let page=1;page<=100;page\+\+\)/);
   assert.match(assetsRoute, /&per_page=100&page="\+page/);
   assert.match(assetsRoute, /GitHub release request lookup exceeded its safe pagination limit/);
-  assert.ok(finish.indexOf("await githubCreateReleasePullRequest") < finish.indexOf("await writeProductionRegistryRelease"));
+  const createOffset = finish.indexOf("await githubCreateReleasePullRequest");
+  const writeOffset = finish.indexOf("await writeProductionRegistryRelease");
+  assert.ok(createOffset >= 0, "release PR creation must exist");
+  assert.ok(writeOffset >= 0, "registry release write must exist");
+  assert.ok(createOffset < writeOffset, "PR is created before registry state is staged on its head");
   assert.match(assetsRoute, /catch\(error\)\{return NextResponse\.json\(\{error:error\.message\|\|"Studio action failed\."\}/);
 });
 
