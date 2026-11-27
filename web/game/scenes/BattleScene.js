@@ -17,7 +17,7 @@ import { transformRigHitboxToWorld, transformRigPointToWorld } from "../studio/s
 import { getProjectileTrajectoryOffset, getProjectileHeadCorrection, getProjectileLaunchPoint } from "../studio/projectileTrajectory.mjs";
 import { createStudioMonsterProfile, resolveStudioMonsterRuntimeProfile, selectWeightedStudioMonster } from "../studio/monsterProfiles.mjs";
 
-// Campaign progression remains authoritative in normal play. Studio playtests explicitly bypass unlock gates.
+// Campaign progression applies only when the current stage has no authoritative plant roster.
 const PLAYTEST_ALL_PLANTS = false;
 const STAGE_PLANT_ALIASES = Object.freeze({
   "radish-level-1": "radish", "energy-mushroom": "mushroom",
