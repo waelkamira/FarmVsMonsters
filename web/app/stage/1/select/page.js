@@ -107,11 +107,11 @@ export default function StageOneSeedSelectionPage() {
         : [];
       // A published stage's authored unlock flags override campaign progress for that stage only.
       // An authenticated Studio playtest can inspect every visible plant assigned to this stage, including locked entries.
-      const safeUnlocked = isStudioPlaytest
-        ? [...new Set([...STARTER_LOADOUT, ...unlocked, ...nextPlants.map((plant) => plant.id)])]
-        : publishedStage
-          ? [...new Set(stageUnlockedIds)]
-          : [...new Set([...STARTER_LOADOUT, ...unlocked])];
+      // Studio preview must use the same per-stage unlocked flags as the player release.
+      // Preview grants no campaign-wide unlocks and does not silently unlock stage entries.
+      const safeUnlocked = useStageRoster
+        ? [...new Set(stageUnlockedIds)]
+        : [...new Set([...STARTER_LOADOUT, ...unlocked])];
       setUnlockedIds(safeUnlocked);
       try {
         const stageSelectionKey = "farmVsMonsters.selectedPlants.stage." + activeStage;
@@ -123,7 +123,7 @@ export default function StageOneSeedSelectionPage() {
         const authoredStageIds = visibleStageEntries.map(entry => Object.entries(plantAliases).find(([, aliases]) => aliases.includes(entry.id))?.[0] || entry.id);
         const defaultStudioPlants = studioPlants.map((plant) => plant.id);
         const authoredDefaults = useStageRoster
-          ? (isStudioPlaytest ? authoredStageIds : stageUnlockedIds).filter((id) => availableIds.has(id))
+          ? stageUnlockedIds.filter((id) => availableIds.has(id))
           : [...STARTER_LOADOUT.filter((id) => availableIds.has(id)), ...defaultStudioPlants.filter((id) => availableIds.has(id))];
         setSelected([...new Set([...authoredDefaults, ...validSaved])].slice(0, MAX_SEEDS));
       } catch {
@@ -166,8 +166,7 @@ export default function StageOneSeedSelectionPage() {
     try {
       const savedSelection = JSON.stringify(selectedPlants.map((plant) => plant.id));
       window.localStorage.setItem("farmVsMonsters.selectedPlants.stage." + stageNumber, savedSelection);
-      // The battle runtime consumes the active loadout key; keep it in sync while preserving each stage saved selection.
-      window.localStorage.setItem("farmVsMonsters.selectedPlants", savedSelection);
+      // Keep campaign loadout untouched; the battle runtime reads this stage-scoped key.
       router.push("/game?stage=" + stageNumber + (studioPlaytest ? "&studioPlaytest=1" : ""));
     } catch {
       setNotice(ar ? "تعذر حفظ التشكيلة. تحقق من إعدادات التخزين في المتصفح." : "Could not save your loadout. Check browser storage settings.");
