@@ -128,7 +128,7 @@ async function writeProductionRegistryRelease(token,branch,asset,releaseRequest,
  const index=registry.assets.findIndex((item)=>item.id===asset.id);
  if(operation==="delete"){
   registry.assets=registry.assets.filter((item)=>item.id!==asset.id);
-  const tombstone={id:asset.id,type:asset.type,deletedAt:asset.deletedAt||releaseRequest.requestedAt||new Date().toISOString(),releaseRequest:{...releaseRequest,operation:"delete"}};
+  const tombstone={id:asset.id,type:asset.type,path:asset.path,filename:asset.filename,deletedAt:asset.deletedAt||releaseRequest.requestedAt||new Date().toISOString(),releaseRequest:{...releaseRequest,operation:"delete"}};
   const oldIndex=registry.deletedAssetIds.findIndex((entry)=>typeof entry==="string"?entry===asset.id:entry?.id===asset.id);
   if(oldIndex>=0)registry.deletedAssetIds[oldIndex]=tombstone;else registry.deletedAssetIds.push(tombstone);
  }else{
@@ -482,7 +482,7 @@ export async function PATCH(req){
     await removeLocalAssetManifestReferences(candidatePaths);
     for(const [catalogPath,key] of [[PUBLISHED_CATALOG_PATH,"plants"],[PUBLISHED_MONSTER_CATALOG_PATH,"monsters"]]){const target=path.join(process.cwd(),catalogPath.replace(/^web\//,""));try{const catalog=JSON.parse(await readFile(target,"utf8"));if(Array.isArray(catalog[key])){catalog[key]=catalog[key].filter(item=>item.id!==id);await writeFile(target,JSON.stringify(catalog,null,2)+"\n","utf8");}}catch(error){if(error.code!=="ENOENT")throw error;}}
     for(const assetPath of candidatePaths){try{await unlink(path.resolve(process.cwd(),"public",assetPath.replace(/^\/+/,"")));}catch(error){if(error.code!=="ENOENT")throw error;}}
-    registry.assets=remaining;registry.deletedAssetIds=Array.isArray(registry.deletedAssetIds)?registry.deletedAssetIds:[];if(!registry.deletedAssetIds.some(entry=>typeof entry==="string"?entry===id:entry?.id===id))registry.deletedAssetIds.push({id,type:asset.type,deletedAt:new Date().toISOString()});await saveLocalRegistry(registry);return NextResponse.json({success:true,operation,deletedId:id,storage:"local"});
+    registry.assets=remaining;registry.deletedAssetIds=Array.isArray(registry.deletedAssetIds)?registry.deletedAssetIds:[];if(!registry.deletedAssetIds.some(entry=>typeof entry==="string"?entry===id:entry?.id===id))registry.deletedAssetIds.push({id,type:asset.type,path:asset.path,filename:asset.filename,deletedAt:new Date().toISOString()});await saveLocalRegistry(registry);return NextResponse.json({success:true,operation,deletedId:id,storage:"local"});
    }
    if(operation==="clone"){const newId=String(body.newId||"").trim().toLowerCase();if(!STUDIO_ID_PATTERN.test(newId)||newId.length>64)return NextResponse.json({error:"Invalid clone ID."},{status:400});if(registry.assets.some(item=>item.id===newId)||(registry.deletedAssetIds||[]).some(entry=>typeof entry==="string"?entry===newId:entry?.id===newId))return NextResponse.json({error:"Asset ID already exists or is tombstoned."},{status:409});const clone=cloneStudioAsset(asset,newId,body.newName);registry.assets.push(clone);await saveLocalRegistry(registry);return NextResponse.json({success:true,operation,asset:clone,storage:"local"});}
    if(operation==="archive"&&asset.type==="monster"){const conflict=stageReferenceConflict(id,await localStageEncounterConfig());if(conflict)return NextResponse.json({error:conflict},{status:409});}
@@ -520,7 +520,7 @@ export async function PATCH(req){
    }
    const stageConfigText=await githubGet("web/game/data/stageEncounterConfig.json",token,targetBranch);
    let plan;
-   try{plan=createProductionAssetDeletionPlan({registry,assetId:id,stageConfig:stageConfigText?JSON.parse(stageConfigText):{stages:{}}});}
+   try{plan=createProductionAssetDeletionPlan({registry:productionRegistry,assetId:id,stageConfig:stageConfigText?JSON.parse(stageConfigText):{stages:{}}});}
    catch(error){return NextResponse.json({error:error.message||productionDeletionMessages.requestAccepted},{status:error.status||409});}
    const result=await requestProductionAssetDeletion({
     plan,
@@ -551,6 +551,7 @@ export async function PATCH(req){
    return NextResponse.json({success:true,operation:result.operation,deletedId:id,finalized:result.finalized,alreadyDeleted:result.alreadyDeleted,status:result.finalized?"archived":"published",releaseRequest:result.releaseRequest,message:result.finalized?productionDeletionMessages.finalized:productionDeletionMessages.requestAccepted},{status:result.finalized?200:202});
   }
   if(operation!=="publish")return NextResponse.json({error:"عملية Studio غير معروفة."},{status:400});
+  if(asset.type!=="plant"&&asset.type!=="monster")return NextResponse.json({error:"هذه العملية متاحة للنباتات والوحوش فقط."},{status:409});
   if(asset.status!=="testing")return NextResponse.json({error:"يجب تجهيز الأصل للاختبار والتحقق منه داخل اللعبة أولاً."},{status:409});
   if(!safeAssetPath(asset.path))return NextResponse.json({error:"Invalid asset path."},{status:400});
   if(asset.releaseRequest?.number){
