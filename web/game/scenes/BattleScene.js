@@ -2541,15 +2541,19 @@ export default class BattleScene extends Scene {
     const studioPlant = this.studioPlantsByType?.[type] || null;
     if (!["radish", "mushroom", "pumpkin", "pineapple", "hazelnut", "mango", "snow-thrower", "electric-mushroom"].includes(type) && !studioPlant) return;
     const stagePlantEntry = this.stagePlantEntries.find(entry => (STAGE_PLANT_ALIASES[entry.id] || entry.id) === type);
-    if (this.stagePlantRosterConfigured && !this.isStudioPlaytest && !stagePlantEntry) {
-      this.setMessage("هذه النبتة مخفية من المرحلة الحالية. يمكنك تفعيلها من استديو إدارة نباتات المراحل.");
+    if (this.stagePlantRosterConfigured && (!stagePlantEntry || stagePlantEntry.unlocked === false)) {
+      this.setMessage(stagePlantEntry
+        ? "هذه النبتة مقفولة في إعدادات المرحلة. افتحها من استديو إدارة نباتات المراحل."
+        : "هذه النبتة غير موجودة في تشكيلة المرحلة. أضفها من استديو إدارة نباتات المراحل.");
       return;
     }
     if (stagePlantEntry && this.plants.filter(plant => plant.type === type).length >= stagePlantEntry.count) {
       this.setMessage("وصلت إلى الحد الأقصى لهذه النبتة في المرحلة: " + stagePlantEntry.count + ".");
       return;
     }
-    if (!this.isStudioPlaytest && !PLAYTEST_ALL_PLANTS && !studioPlant && !loadUnlockedPlantIds(window.localStorage).includes(type)) {
+    // A configured stage roster is authoritative: its per-stage unlocked flag
+    // replaces campaign progression for this stage, in both preview and release.
+    if (!this.stagePlantRosterConfigured && !this.isStudioPlaytest && !PLAYTEST_ALL_PLANTS && !studioPlant && !loadUnlockedPlantIds(window.localStorage).includes(type)) {
       this.setMessage("This plant is locked. Complete its campaign stage to unlock it.");
       return;
     }
