@@ -37,6 +37,8 @@ export const PHASE_ONE_REWARDS = Object.freeze({
 
 export const PHASE_ONE_PLANTS = Object.freeze({
   radish: Object.freeze({
+    // Radish is both an attacker and a defensive lane blocker.
+    blocksMonsters: true,
     projectileDamage: 25,
     projectileSpeed: 320,
     projectileCollisionRadius: 24,
@@ -57,6 +59,8 @@ export const PHASE_ONE_PLANTS = Object.freeze({
   // Temporary playtest values; tune after hands-on balancing.
 
   pumpkin: Object.freeze({
+    // Pumpkin Guard absorbs bites and physically holds its lane.
+    blocksMonsters: true,
     plantingEnergyCost: 75, seedPacketRechargeMs: 20000, hp: 520
   }),
 
