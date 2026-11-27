@@ -1,0 +1,82 @@
+name: Studio Assets Main Reconciliation Dry Run
+
+on:
+  pull_request:
+    branches:
+      - studio/assets
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  merge-dry-run:
+    name: Detect real Git merge conflicts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout reconciliation branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+
+      - name: Configure Git and fetch main
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+
+      - name: Simulate merging main into studio/assets
+        id: merge
+        shell: bash
+        run: |
+          set +e
+          git merge --no-commit --no-ff origin/main
+          merge_status=$?
+          set -e
+
+          mkdir -p reconciliation-report
+          if [ "$merge_status" -eq 0 ]; then
+            {
+              echo "# Merge dry-run: clean"
+              echo
+              echo "Git merged origin/main into the reconciliation branch without conflicts."
+              echo "No commit was created and no branch was changed by this check."
+              echo
+              echo "Changed paths staged by the simulated merge:"
+              git diff --cached --name-status
+            } > reconciliation-report/result.md
+            echo "outcome=clean" >> "$GITHUB_OUTPUT"
+          else
+            {
+              echo "# Merge dry-run: conflicts detected"
+              echo
+              echo "The merge was aborted after recording the exact unmerged paths."
+              echo "No merge commit was created."
+              echo
+              echo "## Unmerged paths"
+              git diff --name-only --diff-filter=U
+              echo
+              echo "## Conflict status"
+              git status --short
+            } > reconciliation-report/result.md
+            echo "outcome=conflicts" >> "$GITHUB_OUTPUT"
+          fi
+
+          git merge --abort 2>/dev/null || true
+          cat reconciliation-report/result.md
+
+      - name: Upload merge report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: studio-assets-main-merge-dry-run
+          path: reconciliation-report/result.md
+          if-no-files-found: error
+
+      - name: Fail when manual conflict resolution is required
+        if: steps.merge.outputs.outcome == 'conflicts'
+        run: |
+          echo "Manual reconciliation is required. See the uploaded merge report."
+          exit 1
