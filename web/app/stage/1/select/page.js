@@ -102,7 +102,7 @@ export default function StageOneSeedSelectionPage() {
       setPlantCatalog(nextPlants);
       let unlocked = STARTER_LOADOUT;
       try { unlocked = loadUnlockedPlantIds(window.localStorage); } catch { /* Starter seeds remain available. */ }
-      const stageUnlockedIds = publishedStage
+      const stageUnlockedIds = useStageRoster
         ? visibleStageEntries.filter(entry => entry.unlocked !== false).map(entry => Object.entries(plantAliases).find(([, aliases]) => aliases.includes(entry.id))?.[0] || entry.id)
         : [];
       // A published stage's authored unlock flags override campaign progress for that stage only.
