@@ -160,23 +160,31 @@ test("Phaser delegates monster and projectile lane movement to the simulation ke
   assert.match(scene, /resolveBiteAttack\(/);
 });
 
-test("lane blocker selection chooses the nearest living radish behind the monster", () => {
-  const nearest = { type: "radish", row: 2, alive: true, id: "near" };
-  const farther = { type: "radish", row: 2, alive: true, id: "far" };
+test("lane blocker selection honors explicit defensive capability and chooses the nearest blocker", () => {
+  const radish = { type: "radish", row: 2, alive: true, id: "radish" };
+  const pumpkin = { type: "pumpkin", row: 2, alive: true, id: "pumpkin" };
   const result = selectLaneBlocker({
     plants: [
-      { plant: farther, localX: -2 },
+      { plant: { type: "radish", row: 2, alive: true, id: "far-radish" }, localX: -2 },
       { plant: { type: "mushroom", row: 2, alive: true }, localX: -0.5 },
+      { plant: { type: "hazelnut", row: 2, alive: true }, localX: -0.4 },
+      { plant: { type: "pineapple", row: 2, alive: true }, localX: -0.3 },
       { plant: { type: "radish", row: 1, alive: true }, localX: -0.25 },
-      { plant: { type: "radish", row: 2, alive: false }, localX: -0.1 },
-      { plant: nearest, localX: -0.25 },
-      { plant: { type: "radish", row: 2, alive: true }, localX: 0.2 }
+      { plant: { type: "pumpkin", row: 2, alive: false }, localX: -0.2 },
+      { plant: radish, localX: -0.25 },
+      { plant: pumpkin, localX: -0.1 },
+      { plant: { type: "pumpkin", row: 2, alive: true }, localX: 0.2 }
     ],
     row: 2,
     monsterLocalX: 0
   });
-  assert.equal(result, nearest);
-  const justPassed = { type: "radish", row: 2, alive: true, id: "overlapped" };
+  assert.equal(result, pumpkin);
+  assert.equal(selectLaneBlocker({
+    plants: [{ plant: radish, localX: -0.25 }],
+    row: 2, monsterLocalX: 0
+  }), radish);
+
+  const justPassed = { type: "pumpkin", row: 2, alive: true, id: "overlapped" };
   assert.equal(selectLaneBlocker({
     plants: [{ plant: justPassed, localX: 3 }],
     row: 2, monsterLocalX: 0, maxOvershoot: 4
