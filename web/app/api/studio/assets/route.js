@@ -511,8 +511,12 @@ export async function PATCH(req){
    if(operation==="prepare-test"){
     if(asset.status==="testing")return NextResponse.json({success:true,operation,asset,alreadyPrepared:true,storage:"local"});
     if(asset.status!=="draft")return NextResponse.json({error:"Only draft assets can be prepared for local testing."},{status:409});
-    const related=[...getRigPartAssets(registry.assets,asset),...(asset.combat?.projectile?.managed?registry.assets.filter(item=>item.id===asset.combat.projectile.id):[])];
-    const required=[asset.path,asset.combat?.projectile?.path,...Object.values(asset.stateAnimations||{}).map(state=>state?.path),...related.map(item=>item?.path)].filter(safeAssetPath);
+    const rigPartIds=[...new Set((asset.rigProfile?.bones||[]).map(bone=>bone?.part?.assetId).filter(Boolean))];
+    const rigPartAssets=getRigPartAssets(registry.assets,asset);
+    const related=[...rigPartAssets,...(asset.combat?.projectile?.managed?registry.assets.filter(item=>item.id===asset.combat.projectile.id):[])];
+    if(rigPartAssets.length!==rigPartIds.length||related.some(item=>!item||item.status==="archived"||!safeAssetPath(item.path)))return NextResponse.json({error:"A required rig or projectile dependency is missing or invalid."},{status:409});
+    const required=[asset.path,...(asset.combat?.projectile?.path?[asset.combat.projectile.path]:[]),...Object.values(asset.stateAnimations||{}).map(state=>state?.path),...related.map(item=>item.path)];
+    if(required.some(assetPath=>!safeAssetPath(assetPath)))return NextResponse.json({error:"A required artwork, state, or projectile reference has an invalid path."},{status:409});
     for(const assetPath of required){try{await access(path.join(process.cwd(),"public",decodeURIComponent(assetPath.slice(1))));}catch{return NextResponse.json({error:"Required local test asset is missing: "+assetPath},{status:409});}}
     const updated={...asset,status:"testing",testingAt:new Date().toISOString(),releaseRequest:null};registry.assets[index]=updated;await saveLocalRegistry(registry);return NextResponse.json({success:true,operation,asset:updated,storage:"local"});
    }
@@ -544,14 +548,14 @@ export async function PATCH(req){
    const index=registry.assets.findIndex(asset=>asset.id===id);if(index<0)return NextResponse.json({error:operation==="publish"?"الأصل غير موجود في فرع studio/assets. استخدم مزامنة الأصول المختبرة من Studio ثم أعد المحاولة.":"Studio asset not found."},{status:404});
   let asset=registry.assets[index];
   if(operation==="delete"){
-  if(asset.releaseRequest?.operation==="publish"&&asset.releaseRequest?.number){
+  if(asset.releaseRequest?.operation==="publish"&&asset.releaseRequest?.number&&asset.releaseRequest?.fingerprint===releaseAssetFingerprint(asset)){
    let publishPullRequest;
    try{publishPullRequest=await githubGetPullRequest(asset.releaseRequest.number,token);}catch(error){return NextResponse.json({error:error.message||"تعذر التحقق من دمج طلب النشر."},{status:502});}
    if(!publishPullRequest?.merged)return NextResponse.json({error:"لا يمكن طلب الإزالة قبل دمج طلب النشر."},{status:409});
    asset=resolveStudioReleaseAsset(asset,publishPullRequest);
    registry.assets[index]=asset;
   }else if(asset.status!=="published"){
-    let publishRequest=asset.releaseRequest?.operation==="publish"?asset.releaseRequest:null;
+    let publishRequest=asset.releaseRequest?.operation==="publish"&&asset.releaseRequest?.fingerprint===releaseAssetFingerprint(asset)?asset.releaseRequest:null;
     let publishPullRequest=null;
     if(publishRequest?.number)publishPullRequest=await githubGetPullRequest(publishRequest.number,token);
     else publishPullRequest=await githubFindLatestReleasePullRequest(token,targetBranch,"<!-- studio-release:publish:"+id+":"+releaseAssetFingerprint(asset)+" -->");
