@@ -354,3 +354,10 @@ test("publish and delete release branches are operation-scoped and revision-stab
   assert.match(assetsRoute, /createStudioReleaseBranchName\(id,suffix\)/);
   assert.doesNotMatch(assetsRoute, /update\(id\+":"\+operation\+":"\+Date\.now\(\)\)/);
 });
+
+
+test("studio test-asset sync imports stat for validating referenced files", () => {
+  const syncScript = readFileSync(new URL("../scripts/sync-studio-test-assets.mjs", import.meta.url), "utf8");
+  assert.match(syncScript, /import \\{[^}]*\\bstat\\b[^}]*\\} from "node:fs\\/promises"/);
+  assert.match(syncScript, /await stat\\(target\\)/);
+});
