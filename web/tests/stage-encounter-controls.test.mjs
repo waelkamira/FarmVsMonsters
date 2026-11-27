@@ -259,10 +259,11 @@ test("stage playtest is restricted to the configured visible roster instead of e
 test("local stage activation refuses visible plants absent from the local catalog",()=>{
  const api=read("app/api/studio/stage-encounters/route.js");
  assert.match(api,/PUBLISHED_PLANT_CATALOG_PATH="web\/public\/assets\/studio-plant-catalog\.json"/);
- assert.match(api,/async function readPublishedPlantIds\(\)/);
- assert.match(api,/const availablePlants=await readPublishedPlantIds\(\)/);
- assert.match(api,/لا يمكن نشر المرحلة لأن بعض النباتات ليست في الكتالوج المحلي بعد/);
+ assert.match(api,/async function readAvailablePlantIds\(driver\)/);
+ assert.match(api,/const availablePlants=await readAvailablePlantIds\(driver\)/);
+ assert.match(api,/لا يمكن نشر المرحلة لأن بعض النباتات ليست في المكتبة المحلية أو لم تُجهّز للاختبار/);
  assert.match(api,/unavailablePlants/);
+ assert.match(api,/asset\.type==="plant"&&asset\.status==="testing"/);
 });
 
 
