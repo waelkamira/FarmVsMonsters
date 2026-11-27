@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { readdir, readFile, stat, writeFile } from "node:fs/promises";
+import { readdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildAtlasMetadata } from "./asset-atlas-metadata.mjs";
@@ -96,10 +96,15 @@ let totalBytes = 0;
 for (const absolutePath of paths) {
   const extension = path.extname(absolutePath).toLowerCase();
   if (!IMAGE_EXTENSIONS.has(extension) && !AUDIO_EXTENSIONS.has(extension)) continue;
-  const buffer = await readFile(absolutePath);
+  const rawBuffer = await readFile(absolutePath);
+  // Git normalizes text assets to LF, while Windows checkouts may use CRLF.
+  // Normalize SVG bytes so manifests are identical across development hosts.
+  const buffer = extension === ".svg"
+    ? Buffer.from(rawBuffer.toString("utf8").replace(/\r\n/g, "\n"), "utf8")
+    : rawBuffer;
+  const bytes = buffer.length;
   const relativePath = path.relative(assetsRoot, absolutePath).split(path.sep).join("/");
   const digest = createHash("sha256").update(buffer).digest("hex");
-  const info = await stat(absolutePath);
   const override = SPRITESHEET_OVERRIDES[relativePath] || {};
   const dimensions = AUDIO_EXTENSIONS.has(extension) ? null : imageDimensions(buffer, extension);
   let atlasMetadata = null;
@@ -124,15 +129,15 @@ for (const absolutePath of paths) {
     url: `/assets/${relativePath}`,
     type,
     group: groupFor(relativePath),
-    bytes: info.size,
+    bytes,
     sha256: digest,
     ...(metadata.frameConfig ? { frameConfig: metadata.frameConfig } : {}),
     ...(atlasMetadata ? Object.fromEntries(Object.entries(atlasMetadata).filter(([name]) => name !== "type" && name !== "frameConfig")) : {}),
     ...(dimensions ? dimensions : {})
   };
   assets.push(entry);
-  totalBytes += info.size;
-  if (hashes.has(digest)) duplicates.push({ file: relativePath, identicalTo: hashes.get(digest), bytes: info.size });
+  totalBytes += bytes;
+  if (hashes.has(digest)) duplicates.push({ file: relativePath, identicalTo: hashes.get(digest), bytes });
   else hashes.set(digest, relativePath);
 }
 
