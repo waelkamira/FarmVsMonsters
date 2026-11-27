@@ -171,7 +171,10 @@ test("stage reference checks cover both plant and monster rosters", () => {
 test("production publish and delete use a release branch and PR before recording request state", () => {
   assert.match(assetsRoute, /githubCreateReleaseBranch/);
   assert.match(assetsRoute, /githubCreateReleasePullRequest/);
-  assert.match(assetsRoute, /beginProductionRelease\(token,id,"publish",targetBranch\)/);
+  assert.match(assetsRoute, /draft:true/);
+  assert.match(assetsRoute, /githubMarkPullRequestReady/);
+  assert.match(assetsRoute, /releaseAssetFingerprint/);
+  assert.match(assetsRoute, /beginProductionRelease\(token,id,"publish",targetBranch,asset\)/);
   assert.match(assetsRoute, /for\(const assetPath of releasePaths\)[\s\S]*?githubPutImmutable\(filePath,bytes,[\s\S]*?releaseBranch\)/);
   assert.match(assetsRoute, /operation:"publish-requested"/);
   assert.match(assetsRoute, /published:false/);
