@@ -20,7 +20,7 @@
       "plants": [
         {
           "id": "hazelnut",
-          "count": 1,
+          "count": 2,
           "visible": true,
           "enabled": true,
           "unlocked": true
@@ -52,10 +52,24 @@
           "visible": true,
           "enabled": true,
           "unlocked": true
+        },
+        {
+          "id": "snow-thrower",
+          "count": 1,
+          "visible": true,
+          "enabled": true,
+          "unlocked": true
+        },
+        {
+          "id": "pineapple",
+          "count": 1,
+          "visible": true,
+          "enabled": true,
+          "unlocked": true
         }
       ],
       "background": "/assets/backgrounds/farm-battlefield-clean.svg",
-      "published": true,
+      "published": false,
       "monstersConfigured": true,
       "plantsConfigured": true
     }
