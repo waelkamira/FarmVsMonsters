@@ -216,9 +216,13 @@ export default class PauseScene extends Scene {
       fontFamily: "Arial", fontSize: "18px", color: "#ffffff",
       fontStyle: "bold", stroke: "#24365d", strokeThickness: 3, resolution: 2
     }).setOrigin(0.5);
-    bg.on("pointerover", () => bg.setFillStyle(GLASS.blue, 0.72).setScale(1.04));
-    bg.on("pointerout", () => bg.setFillStyle(GLASS.blue, 0.28).setScale(1));
-    bg.on("pointerdown", action);
+    this.registerKeyboardControl({
+      ...position,
+      background: bg,
+      action,
+      ringWidth: 264,
+      ringHeight: 66
+    });
   }
 
   resumeBattle() {
