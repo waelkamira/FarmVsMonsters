@@ -95,10 +95,10 @@ export default function StageRosterManager({kind}){
   setBusy(true);setMessage("");
   try{
    const next={...config,stages:{...config.stages,[String(stage)]:{...(config.stages?.[String(stage)]||{monsters:[],plants:[]}),published:true}}};
-   const response=await fetch("/api/studio/stage-encounters",{method:"PATCH",headers:{"Content-Type":"application/json"},credentials:"same-origin",body:JSON.stringify({config:next,sha})});
+   const response=await fetch("/api/studio/stage-encounters",{method:"PATCH",headers:{"Content-Type":"application/json"},credentials:"same-origin",body:JSON.stringify({action:"publish",stage,config:next,sha})});
    const data=await response.json();if(!response.ok)throw Error(data.error||"تعذر نشر المرحلة");
    setConfig(data.config);setSha(data.sha||null);
-   setMessage("تم نشر المرحلة "+stage+". أصبحت إعداداتها معتمدة للاعبين.");
+   setMessage(data.warning||("تم نشر المرحلة "+stage+" والتحقق من نسخة اللاعبين على الفرع "+(data.releaseBranch||"main")+"."));
   }catch(error){setMessage(error.message);}finally{setBusy(false);}
  }
  async function save(){

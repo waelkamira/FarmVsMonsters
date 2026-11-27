@@ -92,22 +92,23 @@ export default function StageOneSeedSelectionPage() {
       const configuredStage = stageSettings?.stages?.[String(activeStage)];
       const plantAliases = {radish:["radish","radish-level-1"],mushroom:["mushroom","energy-mushroom"],pumpkin:["pumpkin","pumpkin-level-1"],pineapple:["pineapple","pineapple-level-1"],hazelnut:["hazelnut","hazelnut-level-1"],mango:["mango","mango-level-1"],"snow-thrower":["snow-thrower","snow-thrower-level-1"],"electric-mushroom":["electric-mushroom","electric-mushroom-level-1"]};
       const publishedStage = configuredStage?.published === true && configuredStage?.plantsConfigured === true;
-      setStagePlantsConfigured(publishedStage);
+      const stageRosterConfigured = configuredStage?.plantsConfigured === true;
+      const useStageRoster = stageRosterConfigured && (publishedStage || isStudioPlaytest);
+      setStagePlantsConfigured(useStageRoster);
       const visibleStageEntries = (configuredStage?.plants || []).filter(entry => entry.visible !== false && entry.enabled !== false);
-      const nextPlants = publishedStage && !isStudioPlaytest
+      const nextPlants = useStageRoster
         ? [...plantMap.values()].filter(plant => visibleStageEntries.some(entry => entry.id === plant.id || (plantAliases[plant.id] || []).includes(entry.id)))
         : [...plantMap.values()];
       setPlantCatalog(nextPlants);
       let unlocked = STARTER_LOADOUT;
       try { unlocked = loadUnlockedPlantIds(window.localStorage); } catch { /* Starter seeds remain available. */ }
-      const studioIds = studioPlants.map((plant) => plant.id);
       const stageUnlockedIds = publishedStage
         ? visibleStageEntries.filter(entry => entry.unlocked !== false).map(entry => Object.entries(plantAliases).find(([, aliases]) => aliases.includes(entry.id))?.[0] || entry.id)
         : [];
       // A published stage's authored unlock flags override campaign progress for that stage only.
-      // An authenticated Studio playtest can still inspect and use the entire catalog.
+      // An authenticated Studio playtest can inspect every visible plant assigned to this stage, including locked entries.
       const safeUnlocked = isStudioPlaytest
-        ? [...new Set([...STARTER_LOADOUT, ...unlocked, ...nextPlants.map((plant) => plant.id), ...studioIds])]
+        ? [...new Set([...STARTER_LOADOUT, ...unlocked, ...nextPlants.map((plant) => plant.id)])]
         : publishedStage
           ? [...new Set(stageUnlockedIds)]
           : [...new Set([...STARTER_LOADOUT, ...unlocked])];
@@ -119,9 +120,10 @@ export default function StageOneSeedSelectionPage() {
           ? saved.filter((id) => safeUnlocked.includes(id) && nextPlants.some((plant) => plant.id === id))
           : [];
         const availableIds = new Set(nextPlants.map((plant) => plant.id));
+        const authoredStageIds = visibleStageEntries.map(entry => Object.entries(plantAliases).find(([, aliases]) => aliases.includes(entry.id))?.[0] || entry.id);
         const defaultStudioPlants = studioPlants.map((plant) => plant.id);
-        const authoredDefaults = publishedStage
-          ? stageUnlockedIds.filter((id) => availableIds.has(id))
+        const authoredDefaults = useStageRoster
+          ? (isStudioPlaytest ? authoredStageIds : stageUnlockedIds).filter((id) => availableIds.has(id))
           : [...STARTER_LOADOUT.filter((id) => availableIds.has(id)), ...defaultStudioPlants.filter((id) => availableIds.has(id))];
         setSelected([...new Set([...authoredDefaults, ...validSaved])].slice(0, MAX_SEEDS));
       } catch {

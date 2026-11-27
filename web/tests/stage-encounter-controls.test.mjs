@@ -53,7 +53,7 @@ test("stage seed selection respects only enabled plants for a configured stage",
  assert.match(selection,/new URLSearchParams\(window\.location\.search\)\.get\("stage"\)/);
  assert.match(selection,/stages\?\.\[String\(activeStage\)\]/);
  assert.match(selection,/router\.push\("\/game\?stage=" \+ stageNumber \+ \(studioPlaytest \? "&studioPlaytest=1" : ""\)\)/);
- assert.match(selection,/setStagePlantsConfigured\(publishedStage\)/);
+ assert.match(selection,/setStagePlantsConfigured\(useStageRoster\)/);
  assert.match(selection,/farmVsMonsters\.selectedPlants\.stage\.\" \+ activeStage/);
  assert.match(selection,/window\.localStorage\.setItem\("farmVsMonsters\.selectedPlants", savedSelection\)/);
  assert.match(selection,/selectedPlants\.length < minimumSeeds/);
@@ -125,10 +125,10 @@ test("Studio stage playtests bypass the campaign-only second seed picker",()=>{
 
 test("battle seed bank uses the configured stage roster instead of campaign unlocks",()=>{
  const battle=read("game/scenes/BattleScene.js");
- assert.match(battle,/const stageAllowedTypes = this\.stagePlantRosterConfigured && !this\.isStudioPlaytest/);
+ assert.match(battle,/const stageAllowedTypes = this\.stagePlantRosterConfigured/);
  assert.match(battle,/stageAllowedTypes\.has\(type\)/);
  assert.match(battle, /"hazelnut-level-1": "hazelnut"/);
- assert.match(battle,/const stageAllowedTypes = this\.stagePlantRosterConfigured && !this\.isStudioPlaytest/);
+ assert.match(battle,/const stageAllowedTypes = this\.stagePlantRosterConfigured/);
  assert.match(battle,/requestedLoadout\.filter\(\(type\) => availableTypes\.has\(type\)\)/);
  assert.match(battle,/if \(!this\.stagePlantRosterConfigured && !this\.isStudioPlaytest\) \{/);
 });
@@ -169,7 +169,7 @@ test("stage publication controls player-visible plants, per-stage unlocks and ba
  assert.match(api,/published:raw\?\.published===true/);
  assert.match(api,/background=typeof raw\?\.background==="string"/);
  assert.match(api,/export async function GET\(req\)/);
- assert.match(api,/if\(authorized\(req\)\)/);
+ assert.match(api,/if\(isStudio\)/);
  assert.match(api,/filter\(\(\[,stage\]\)=>stage\.published===true\)/);
  assert.match(api,/plants:stage\.plants\.filter\(plant=>plant\.visible!==false&&plant\.enabled!==false\)/);
  assert.match(manager,/async function publishStage\(\)/);
@@ -220,4 +220,45 @@ test("stage seed selection blocks battle start when authoritative stage settings
  assert.match(selection,/if \(!response\.ok\) \{[\s\S]*throw new Error/);
  assert.match(selection,/setStageSettingsError\(error\?\.message/);
  assert.match(selection,/disabled=\{!stageSettingsReady \|\| Boolean\(stageSettingsError\)\}/);
+});
+
+
+test("Studio reads drafts from the working branch while players read the release branch",()=>{
+ const api=read("app/api/studio/stage-encounters/route.js");
+ assert.match(api,/const workingBranch=\(\)=>process\.env\.STUDIO_GITHUB_BRANCH\|\|"studio\/assets"/);
+ assert.match(api,/const releaseBranch=\(\)=>process\.env\.STUDIO_PUBLISH_BRANCH\|\|"main"/);
+ assert.match(api,/readGithub\(isStudio\?workingBranch\(\):releaseBranch\(\)\)/);
+ assert.match(api,/plants:stage\.plants\.filter\(plant=>plant\.visible!==false&&plant\.enabled!==false\)/);
+});
+
+test("publishing copies the selected stage into the player release branch and verifies the written roster",()=>{
+ const api=read("app/api/studio/stage-encounters/route.js");
+ const manager=read("app/studio/StageRosterManager.jsx");
+ assert.match(manager,/body:JSON\.stringify\(\{action:"publish",stage,config:next,sha\}\)/);
+ assert.match(api,/const publishAction=body\.action==="publish"/);
+ assert.match(api,/readGithub\(releaseBranch\(\)\)/);
+ assert.match(api,/writeGithub\(nextRelease,release\.sha,releaseBranch\(\)\)/);
+ assert.match(api,/const verified=await readGithub\(releaseBranch\(\)\)/);
+ assert.match(api,/JSON\.stringify\(verified\.config\.stages\?\.\[stageId\]\)!==JSON\.stringify\(releasedStage\)/);
+});
+
+
+test("stage playtest is restricted to the configured visible roster instead of every catalog plant",()=>{
+ const selection=read("app/stage/1/select/page.js");
+ const battle=read("game/scenes/BattleScene.js");
+ assert.match(selection,/const useStageRoster = stageRosterConfigured && \(publishedStage \|\| isStudioPlaytest\)/);
+ assert.match(selection,/const nextPlants = useStageRoster/);
+ assert.match(selection,/isStudioPlaytest \? authoredStageIds : stageUnlockedIds/);
+ assert.match(battle,/const stageAllowedTypes = this\.stagePlantRosterConfigured/);
+ assert.match(battle,/this\.isStudioPlaytest \|\| entry\.unlocked !== false/);
+ assert.match(battle,/selectedTypes = this\.stagePlantRosterConfigured[\s\S]*?this\.stagePlantEntries\.map/);
+});
+
+test("publishing refuses visible plants that are absent from the player release catalog",()=>{
+ const api=read("app/api/studio/stage-encounters/route.js");
+ assert.match(api,/PUBLISHED_PLANT_CATALOG_PATH="web\/public\/assets\/studio-plant-catalog\.json"/);
+ assert.match(api,/async function readPublishedPlantIds\(\)/);
+ assert.match(api,/const availablePlants=await readPublishedPlantIds\(\)/);
+ assert.match(api,/لا يمكن نشر المرحلة لأن بعض النباتات ليست منشورة في كتالوج اللاعبين بعد/);
+ assert.match(api,/unavailablePlants/);
 });

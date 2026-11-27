@@ -1099,8 +1099,8 @@ export default class BattleScene extends Scene {
     let selectedTypes = ["radish", "mushroom"];
     try {
       const unlocked = new Set([...loadUnlockedPlantIds(window.localStorage), ...(this.studioPlants || []).map((plant) => plant.id)]);
-      const stageAllowedTypes = this.stagePlantRosterConfigured && !this.isStudioPlaytest
-        ? new Set(this.stagePlantEntries.filter(entry => entry.unlocked !== false).map((entry) => STAGE_PLANT_ALIASES[entry.id] || entry.id))
+      const stageAllowedTypes = this.stagePlantRosterConfigured
+        ? new Set(this.stagePlantEntries.filter(entry => this.isStudioPlaytest || entry.unlocked !== false).map((entry) => STAGE_PLANT_ALIASES[entry.id] || entry.id))
         : null;
       const availableTypes = new Set(plantOptions.map((plant) => plant.type).filter((type) =>
         stageAllowedTypes
@@ -1128,10 +1128,10 @@ export default class BattleScene extends Scene {
       }
     } catch {
       // Storage failures keep the configured stage roster playable when possible.
-      selectedTypes = this.isStudioPlaytest
-        ? plantOptions.map((plant) => plant.type).slice(0, MAX_SEED_PACKETS)
-        : this.stagePlantRosterConfigured
-          ? this.stagePlantEntries.map((entry) => STAGE_PLANT_ALIASES[entry.id] || entry.id).slice(0, MAX_SEED_PACKETS)
+      selectedTypes = this.stagePlantRosterConfigured
+        ? this.stagePlantEntries.map((entry) => STAGE_PLANT_ALIASES[entry.id] || entry.id).slice(0, MAX_SEED_PACKETS)
+        : this.isStudioPlaytest
+          ? plantOptions.map((plant) => plant.type).slice(0, MAX_SEED_PACKETS)
           : ["radish", "mushroom"];
     }
     if (!this.stagePlantRosterConfigured && !this.isStudioPlaytest) {
