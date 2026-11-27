@@ -97,3 +97,41 @@ test("asset audit is rebuilt from the canonical manifest rather than stale group
   assert.equal(audit.spritesheets.length, 0);
   assert.equal(audit.exactDuplicates.length, 0);
 });
+
+test("manifest cleanup removes stale atlas metadata links without removing the live sprite image", () => {
+  const manifest = {
+    assets: [{
+      key: "atlas-plant",
+      url: "/assets/plants/atlas.png",
+      atlasMetadataPath: "/assets/plants/atlas.json",
+      atlas: { jsonPath: "/assets/plants/atlas-extra.json", frameCount: 24 },
+      group: "plants",
+      bytes: 1200
+    }],
+    groups: {
+      plants: [{
+        key: "atlas-plant",
+        url: "/assets/plants/atlas.png",
+        atlasMetadataPath: "/assets/plants/atlas.json",
+        atlas: { jsonPath: "/assets/plants/atlas-extra.json", frameCount: 24 },
+        group: "plants",
+        bytes: 1200
+      }]
+    }
+  };
+
+  const result = removeManifestAssetReferences(manifest, [
+    "/assets/plants/atlas.json",
+    "/assets/plants/atlas-extra.json"
+  ]);
+
+  assert.equal(result.assets.length, 1);
+  assert.equal(result.assets[0].url, "/assets/plants/atlas.png");
+  assert.equal("atlasMetadataPath" in result.assets[0], false);
+  assert.equal("jsonPath" in result.assets[0].atlas, false);
+  assert.equal(result.groups.plants[0].url, "/assets/plants/atlas.png");
+  assert.equal("atlasMetadataPath" in result.groups.plants[0], false);
+  assert.equal("jsonPath" in result.groups.plants[0].atlas, false);
+  assert.equal(result.assetCount, 1);
+  assert.equal(result.totalBytes, 1200);
+});
