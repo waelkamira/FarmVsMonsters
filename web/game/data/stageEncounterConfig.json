@@ -24,10 +24,24 @@
           "visible": true,
           "enabled": true,
           "unlocked": true
+        },
+        {
+          "id": "mushroom",
+          "count": 1,
+          "visible": true,
+          "enabled": true,
+          "unlocked": true
+        },
+        {
+          "id": "radish",
+          "count": 1,
+          "visible": true,
+          "enabled": true,
+          "unlocked": true
         }
       ],
       "background": "/assets/backgrounds/farm-battlefield-clean.svg",
-      "published": true,
+      "published": false,
       "monstersConfigured": true,
       "plantsConfigured": true
     }
