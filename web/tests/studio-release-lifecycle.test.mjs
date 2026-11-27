@@ -26,7 +26,7 @@ test("shows a merged release pull request as published", () => {
 
 test("production tombstones reliably finalize Studio state after a deletion PR is merged", () => {
   const source = [{ id: "oak", status: "approved", releaseRequest: { number: 321, operation: "delete" } }];
-  const finalized = applyProductionDeletionTombstones(source, [{ id: "oak", deletedAt: "2026-11-27T10:00:00.000Z", releaseRequest: { number: 321, state: "merged", operation: "delete" } }]);
+  const finalized = applyProductionDeletionTombstones(source, [{ id: "oak", deletedAt: "2026-11-27T10:00:00.000Z", releaseRequest: { number: 321, state: "open", operation: "delete" } }]);
   assert.equal(finalized[0].status, "archived");
   assert.equal(finalized[0].archivedAt, "2026-11-27T10:00:00.000Z");
   assert.equal(finalized[0].releaseRequest.state, "merged");
