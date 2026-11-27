@@ -317,7 +317,7 @@ test("local test preparation rejects missing required references instead of filt
 });
 
 test("clean battlefield SVG hash, size, and manifest/audit totals are synchronized", () => {
-  const svg = readFileSync(new URL("../public/assets/backgrounds/farm-battlefield-clean.svg", import.meta.url));
+  const svg = Buffer.from(readFileSync(new URL("../public/assets/backgrounds/farm-battlefield-clean.svg", import.meta.url), "utf8").replace(/\r\n/g, "\n"), "utf8");
   const manifest = JSON.parse(readFileSync(new URL("../public/assets/asset-manifest.json", import.meta.url), "utf8"));
   const audit = JSON.parse(readFileSync(new URL("../public/assets/asset-audit.json", import.meta.url), "utf8"));
   const expectedHash = createHash("sha256").update(svg).digest("hex");
