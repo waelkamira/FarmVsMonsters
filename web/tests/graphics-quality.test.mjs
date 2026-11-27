@@ -45,7 +45,7 @@ test("BattleScene passes one selected quality to all three VFX systems", () => {
   assert.match(battle, /new AmbientFX\(this, \{\s*quality: this\.graphicsQuality/);
 });
 
-import { detectBrowserVFXQuality, getGameRenderResolution } from "../game/vfx/core/VFXConfig.mjs";
+import { detectBrowserVFXQuality, getGameMipmapFilter, getGameRenderResolution } from "../game/vfx/core/VFXConfig.mjs";
 
 test("browser and battle scene quality detection share hardware tiers", () => {
   assert.equal(detectBrowserVFXQuality({ userAgent: "Mozilla/5.0 (Windows NT 10.0)" }), "high");
@@ -61,4 +61,22 @@ test("render resolution uses a bounded device-aware pixel ratio", () => {
   assert.equal(getGameRenderResolution(1.5, "high"), 1.5);
   assert.equal(getGameRenderResolution(undefined, "high"), 1);
   assert.equal(getGameRenderResolution(0.5, "medium"), 1);
+});
+
+
+test("mipmap sampling is enabled only for the high graphics tier", () => {
+  assert.equal(getGameMipmapFilter("high"), "LINEAR_MIPMAP_LINEAR");
+  assert.equal(getGameMipmapFilter("medium"), undefined);
+  assert.equal(getGameMipmapFilter("low"), undefined);
+  assert.equal(getGameMipmapFilter("unknown"), undefined);
+});
+
+test("Phaser boot applies the device-selected mipmap policy without changing smooth sprite filtering", () => {
+  const here = dirname(fileURLToPath(import.meta.url));
+  const source = readFileSync(resolve(here, "../game/PhaserGame.jsx"), "utf8");
+  assert.match(source, /const graphicsQuality = detectBrowserVFXQuality\(\)/);
+  assert.match(source, /const mipmapFilter = getGameMipmapFilter\(graphicsQuality\)/);
+  assert.match(source, /antialias: true/);
+  assert.match(source, /pixelArt: false/);
+  assert.match(source, /\.\.\.\(mipmapFilter \? \{ mipmapFilter \} : \{\}\)/);
 });
