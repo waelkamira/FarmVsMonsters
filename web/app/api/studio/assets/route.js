@@ -132,7 +132,8 @@ async function beginProductionRelease(token,id,operation,baseBranch,asset){
  if(completed)return {branch:completed.head.ref,marker,fingerprint,completed:{number:completed.number,url:completed.html_url,state:completed.state,merged:true,mergedAt:completed.merged_at||null,createdAt:completed.created_at||null,branch:completed.head?.ref}};
  const existing=matches.find((item)=>item.state==="open");
  if(existing)return {branch:existing.head.ref,marker,fingerprint,pr:{number:existing.number,url:existing.html_url,state:existing.state,merged:false,createdAt:existing.created_at||null,branch:existing.head?.ref,nodeId:existing.node_id,draft:Boolean(existing.draft)}};
- const releaseBranch=createStudioReleaseBranchName(id,fingerprint.slice(0,8));
+ const suffix=createHash("sha256").update(operation+":"+fingerprint).digest("hex").slice(0,8);
+ const releaseBranch=createStudioReleaseBranchName(id,suffix);
  await githubCreateReleaseBranch(token,baseBranch,releaseBranch);
  return {branch:releaseBranch,marker,fingerprint,pr:null};
 }
