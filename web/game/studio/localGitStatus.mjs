@@ -23,6 +23,13 @@ async function optionalGit(cwd, args) {
   }
 }
 
+function parseNameStatus(value) {
+  return value ? value.split("\n").filter(Boolean).slice(0, MAX_CHANGED_FILES).map((line) => {
+    const [status, ...parts] = line.split("\t");
+    return { status, path: parts.join("\t") };
+  }) : [];
+}
+
 function parseCounts(value) {
   if (!value) return null;
   const match = value.trim().match(/^(\d+)\s+(\d+)$/);
@@ -62,9 +69,21 @@ export async function getLocalGitStatus({ cwd = process.cwd(), env = process.env
       optionalGit(root, ["rev-parse", "--verify", "refs/remotes/origin/main"])
     ]);
     let productionCounts = null;
+    let productionChangedFiles = [];
+    let localToStudioAssets = null;
+    let localToStudioChangedFiles = [];
     if (studioAssetsSha && mainSha) {
       productionCounts = parseCounts(await optionalGit(root, [
         "rev-list", "--left-right", "--count", "refs/remotes/origin/main...refs/remotes/origin/studio/assets"
+      ]));
+      productionChangedFiles = parseNameStatus(await optionalGit(root, [
+        "diff", "--name-status", "refs/remotes/origin/main...refs/remotes/origin/studio/assets"
+      ]));
+      localToStudioAssets = parseCounts(await optionalGit(root, [
+        "rev-list", "--left-right", "--count", "HEAD...refs/remotes/origin/studio/assets"
+      ]));
+      localToStudioChangedFiles = parseNameStatus(await optionalGit(root, [
+        "diff", "--name-status", "HEAD...refs/remotes/origin/studio/assets"
       ]));
     }
     const productionDiffers = Boolean(productionCounts && (productionCounts.ahead > 0 || productionCounts.behind > 0));
@@ -91,8 +110,12 @@ export async function getLocalGitStatus({ cwd = process.cwd(), env = process.env
       ahead: trackingCounts?.ahead ?? null,
       behind: trackingCounts?.behind ?? null,
       productionDiffers,
-      productionAhead: productionCounts?.behind ?? null,
-      productionBehind: productionCounts?.ahead ?? null,
+      productionAhead: productionCounts?.ahead ?? null,
+      productionBehind: productionCounts?.behind ?? null,
+      productionChangedFiles,
+      localToStudioAhead: localToStudioAssets?.ahead ?? null,
+      localToStudioBehind: localToStudioAssets?.behind ?? null,
+      localToStudioChangedFiles,
       remoteTrackingRefs: "cached",
       syncStates,
       changedFiles,
