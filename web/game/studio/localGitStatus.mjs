@@ -90,6 +90,7 @@ export async function getLocalGitStatus({ cwd = process.cwd(), env = process.env
     }
     const productionComparisonUnavailable = !productionCounts;
     const productionDiffers = Boolean(productionCounts && (productionCounts.ahead > 0 || productionCounts.behind > 0));
+    const diverged = Boolean(trackingCounts && trackingCounts.ahead > 0 && trackingCounts.behind > 0);
     const conflict = unmerged;
     const notSynced = !upstream || !trackingCounts || trackingCounts.ahead > 0 || trackingCounts.behind > 0;
     const syncStates = [];
