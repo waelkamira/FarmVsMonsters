@@ -4,63 +4,11 @@
     "1": {
       "monsters": [
         {
-          "key": "monster-01-w1",
-          "id": "monster-01",
+          "key": "monster-01-w1-first",
+          "id": "01",
           "count": 3,
           "wave": 1,
           "spawnIntervalMs": 5080,
-          "firstSpawnDelayMs": 0,
-          "hpMultiplier": 1,
-          "speedMultiplier": 1,
-          "damageMultiplier": 1,
-          "attackIntervalMultiplier": 1,
-          "enabled": true
-        },
-        {
-          "key": "monster-01-w2",
-          "id": "monster-01",
-          "count": 5,
-          "wave": 2,
-          "spawnIntervalMs": 4960,
-          "firstSpawnDelayMs": 0,
-          "hpMultiplier": 1,
-          "speedMultiplier": 1,
-          "damageMultiplier": 1,
-          "attackIntervalMultiplier": 1,
-          "enabled": true
-        },
-        {
-          "key": "monster-01-w3",
-          "id": "monster-01",
-          "count": 6,
-          "wave": 3,
-          "spawnIntervalMs": 4840,
-          "firstSpawnDelayMs": 0,
-          "hpMultiplier": 1,
-          "speedMultiplier": 1,
-          "damageMultiplier": 1,
-          "attackIntervalMultiplier": 1,
-          "enabled": true
-        },
-        {
-          "key": "monster-01-w4",
-          "id": "monster-01",
-          "count": 7,
-          "wave": 4,
-          "spawnIntervalMs": 4720,
-          "firstSpawnDelayMs": 0,
-          "hpMultiplier": 1,
-          "speedMultiplier": 1,
-          "damageMultiplier": 1,
-          "attackIntervalMultiplier": 1,
-          "enabled": true
-        },
-        {
-          "key": "monster-01-w5",
-          "id": "monster-01",
-          "count": 9,
-          "wave": 5,
-          "spawnIntervalMs": 4600,
           "firstSpawnDelayMs": 0,
           "hpMultiplier": 1,
           "speedMultiplier": 1,
@@ -71,53 +19,45 @@
       ],
       "plants": [
         {
-          "id": "radish",
+          "id": "hazelnut",
           "count": 1,
-          "enabled": true
+          "visible": true,
+          "enabled": true,
+          "unlocked": true
         },
         {
-          "id": "mushroom",
+          "id": "pepper-flamethrower-level-1",
           "count": 1,
-          "enabled": true
+          "visible": false,
+          "enabled": false,
+          "unlocked": true
+        },
+        {
+          "id": "coconut-level-1",
+          "count": 1,
+          "visible": false,
+          "enabled": false,
+          "unlocked": true
         },
         {
           "id": "pumpkin",
           "count": 1,
-          "enabled": true
+          "visible": true,
+          "enabled": true,
+          "unlocked": true
         },
         {
-          "id": "pineapple",
+          "id": "bamboo-throwing-level-1",
           "count": 1,
-          "enabled": true
-        },
-        {
-          "id": "hazelnut",
-          "count": 1,
-          "enabled": true
-        },
-        {
-          "id": "mango",
-          "count": 1,
-          "enabled": true
-        },
-        {
-          "id": "snow-thrower",
-          "count": 1,
-          "enabled": true
-        },
-        {
-          "id": "electric-mushroom",
-          "count": 1,
-          "enabled": true
-        },
-        {
-          "id": "corn-monster",
-          "count": 1,
-          "enabled": true
+          "visible": true,
+          "enabled": true,
+          "unlocked": true
         }
       ],
+      "background": "/assets/backgrounds/farm-battlefield-clean.svg",
+      "published": true,
       "monstersConfigured": true,
-      "plantsConfigured": false
+      "plantsConfigured": true
     }
   }
 }
