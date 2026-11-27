@@ -60,6 +60,7 @@ test("active Stage 1 plant encyclopedia matches combat costs and available artwo
 
 test("radish and mushroom combat values preserve the current tuning", () => {
   assert.deepEqual(PHASE_ONE_PLANTS.radish, {
+    blocksMonsters: true,
     projectileDamage: 25,
     projectileSpeed: 320,
     projectileCollisionRadius: 24,
