@@ -21,7 +21,7 @@ test("stage roster controls default to one and keep hiding separate from asset d
  assert.match(manager,/quantity,setQuantity\]=useState\(1\)/);
  assert.match(manager,/count:quantity/);
  assert.match(manager,/enabled:!entry\.enabled/);
- assert.match(manager,/الإظهار والإخفاء والفتح والإغلاق هنا يخص المرحلة المحددة فقط/);
+ assert.match(manager,/التحكم هنا خاص بالمرحلة المحددة/);
  assert.match(manager,/spawnIntervalMs/);
  assert.match(manager,/async function testStage\(\)/);
  assert.match(manager,/await persistConfig\(\);\s*router\.push\("\/stage\/1\/select\?stage="\+stage\+"&studioPlaytest=1"\)/);
@@ -134,7 +134,7 @@ test("battle seed bank uses the configured stage roster instead of campaign unlo
 });
 
 
-test("Studio admin playtests bypass campaign locks and stage roster restrictions without changing normal play",()=>{
+test("configured stage rosters override campaign locks and control plant presence and unlock state",()=>{
  const battle=read("game/scenes/BattleScene.js");
  const selection=read("app/stage/1/select/page.js");
  const manager=read("app/studio/StageRosterManager.jsx");
@@ -151,10 +151,9 @@ test("Studio admin playtests bypass campaign locks and stage roster restrictions
  assert.match(selection,/plant\.required && !studioPlaytest/);
  assert.match(selection,/studioPlaytest \? "&studioPlaytest=1" : ""/);
  assert.match(battle,/get\("studioPlaytest"\) === "1"/);
- assert.match(battle,/this\.stagePlantRosterConfigured && !this\.isStudioPlaytest/);
  assert.match(battle,/this\.isStudioPlaytest \|\| PLAYTEST_ALL_PLANTS \|\| unlocked\.has\(type\)/);
- assert.match(battle,/!this\.isStudioPlaytest && !PLAYTEST_ALL_PLANTS && !studioPlant/);
- assert.match(battle,/this\.stagePlantRosterConfigured && !this\.isStudioPlaytest && !stagePlantEntry/);
+ assert.match(battle,/!this\.stagePlantRosterConfigured && !this\.isStudioPlaytest && !PLAYTEST_ALL_PLANTS && !studioPlant/);
+ assert.match(battle,/this\.stagePlantRosterConfigured && \(!stagePlantEntry \|\| stagePlantEntry\.unlocked === false\)/);
  assert.match(battle,/if \(!this\.stagePlantRosterConfigured && !this\.isStudioPlaytest\)/);
  assert.match(battle,/this\.isStudioPlaytest\s*\? \[\.\.\.new Set\(\[\.\.\.campaignUnlocked, \.\.\.ALL_PLAYTEST_PLANT_IDS/);
 });
@@ -283,4 +282,12 @@ test("local stage activation accepts plants prepared for local testing",()=>{
  const route=read("app/api/studio/stage-encounters/route.js");
  assert.match(route,/readAvailablePlantIds\(driver\)/);
  assert.match(route,/asset\.type==="plant"&&asset\.status==="testing"/);
+});
+
+
+test("a configured stage unlock flag bypasses campaign progression only for plants assigned and unlocked in that stage",()=>{
+ const battle=read("game/scenes/BattleScene.js");
+ assert.match(battle,/if \(this\.stagePlantRosterConfigured && \(!stagePlantEntry \|\| stagePlantEntry\.unlocked === false\)\)/);
+ assert.match(battle,/if \(!this\.stagePlantRosterConfigured && !this\.isStudioPlaytest && !PLAYTEST_ALL_PLANTS/);
+ assert.match(battle,/stagePlantEntries\.filter\(entry => entry\.unlocked !== false\)/);
 });
