@@ -301,6 +301,7 @@ test("Studio source sync is local-only, authenticated, and uses Git pull/push", 
   const syncRoute = readFileSync(new URL("../app/api/studio/source-sync/route.js", import.meta.url), "utf8");
   const syncScript = readFileSync(new URL("../scripts/sync-studio-source-assets.mjs", import.meta.url), "utf8");
   const page = readFileSync(new URL("../app/studio/page.js", import.meta.url), "utf8");
+  const gitStatus = readFileSync(new URL("../game/studio/localGitStatus.mjs", import.meta.url), "utf8");
   assert.match(syncRoute, /if\s*\(!canWriteStudioStorage\(\)\)/);
   assert.match(syncRoute, /verifyStudioSession/);
   assert.ok(syncScript.includes('git(["pull", "--ff-only"]'));
