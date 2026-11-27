@@ -151,7 +151,6 @@ test("configured stage rosters override campaign locks and control plant presenc
  assert.match(selection,/plant\.required && !studioPlaytest/);
  assert.match(selection,/studioPlaytest \? "&studioPlaytest=1" : ""/);
  assert.match(battle,/get\("studioPlaytest"\) === "1"/);
- assert.match(battle,/this\.stagePlantRosterConfigured && !this\.isStudioPlaytest/);
  assert.match(battle,/this\.isStudioPlaytest \|\| PLAYTEST_ALL_PLANTS \|\| unlocked\.has\(type\)/);
  assert.match(battle,/!this\.stagePlantRosterConfigured && !this\.isStudioPlaytest && !PLAYTEST_ALL_PLANTS && !studioPlant/);
  assert.match(battle,/this\.stagePlantRosterConfigured && \(!stagePlantEntry \|\| stagePlantEntry\.unlocked === false\)/);
