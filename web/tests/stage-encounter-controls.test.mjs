@@ -262,3 +262,16 @@ test("publishing refuses visible plants that are absent from the player release 
  assert.match(api,/لا يمكن نشر المرحلة لأن بعض النباتات ليست منشورة في كتالوج اللاعبين بعد/);
  assert.match(api,/unavailablePlants/);
 });
+
+
+test("stage preview and player battle use the same stage-specific seed loadout and unlock flags",()=>{
+ const selection=read("app/stage/1/select/page.js");
+ const battle=read("game/scenes/BattleScene.js");
+ assert.match(selection,/const safeUnlocked = useStageRoster[\s\S]*stageUnlockedIds/);
+ assert.doesNotMatch(selection,/isStudioPlaytest \? authoredStageIds : stageUnlockedIds/);
+ assert.match(selection,/selectedPlants\.stage\." \+ stageNumber/);
+ assert.doesNotMatch(selection,/setItem\("farmVsMonsters\.selectedPlants", savedSelection\)/);
+ assert.match(battle,/farmVsMonsters\.selectedPlants\.stage\." \+ this\.stageNumber/);
+ assert.match(battle,/stagePlantEntries\.filter\(entry => entry\.unlocked !== false\)/);
+ assert.doesNotMatch(battle,/stagePlantEntries\.filter\(entry => this\.isStudioPlaytest \|\| entry\.unlocked !== false\)/);
+});
