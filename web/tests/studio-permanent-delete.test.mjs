@@ -89,7 +89,7 @@ test("production deletion cleans and records a PR request on its release branch 
   assert.equal(result.finalized, false);
   assert.equal(result.releaseRequest.number, 765);
   assert.equal(plan.asset.status, "published");
-  assert.match(route, /beginProductionRelease\(token,assetId,"delete",baseBranch\)/);
+  assert.match(route, /beginProductionRelease\(token,assetId,"delete",baseBranch,releaseAsset\)/);
   assert.match(route, /removeGithubAssetManifestReferences\(deletionPlan\.removablePaths,token,releaseBranch\)/);
   assert.match(route, /githubDeleteIfExists\("web\/public"\+assetPath,[\s\S]*?releaseBranch\)/);
   assert.doesNotMatch(route, /githubDeleteIfExists\([^\n]*targetBranch/);
