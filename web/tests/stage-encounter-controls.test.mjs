@@ -261,7 +261,7 @@ test("local stage activation refuses visible plants absent from the local catalo
  assert.match(api,/PUBLISHED_PLANT_CATALOG_PATH="web\/public\/assets\/studio-plant-catalog\.json"/);
  assert.match(api,/async function readAvailablePlantIds\(driver\)/);
  assert.match(api,/const availablePlants=await readAvailablePlantIds\(driver\)/);
- assert.match(api,/لا يمكن نشر المرحلة لأن بعض النباتات ليست في المكتبة المحلية أو لم تُجهّز للاختبار/);
+ assert.match(api,/لا يمكن نشر المرحلة لأن بعض النباتات ليست في الكتالوج المحلي بعد/);
  assert.match(api,/unavailablePlants/);
  assert.match(api,/asset\.type==="plant"&&asset\.status==="testing"/);
 });
