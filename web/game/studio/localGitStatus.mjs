@@ -77,7 +77,7 @@ export async function getLocalGitStatus({ cwd = process.cwd(), env = process.env
         "rev-list", "--left-right", "--count", "HEAD...refs/remotes/origin/studio/assets"
       ]));
       localToStudioChangedFiles = parseNameStatus(await optionalGit(root, [
-        "diff", "--name-status", "HEAD...refs/remotes/origin/studio/assets"
+        "diff", "--name-status", "HEAD", "refs/remotes/origin/studio/assets"
       ]));
     }
     if (studioAssetsSha && mainSha) {
@@ -85,7 +85,7 @@ export async function getLocalGitStatus({ cwd = process.cwd(), env = process.env
         "rev-list", "--left-right", "--count", "refs/remotes/origin/main...refs/remotes/origin/studio/assets"
       ]));
       productionChangedFiles = parseNameStatus(await optionalGit(root, [
-        "diff", "--name-status", "refs/remotes/origin/main...refs/remotes/origin/studio/assets"
+        "diff", "--name-status", "refs/remotes/origin/main", "refs/remotes/origin/studio/assets"
       ]));
     }
     const productionComparisonUnavailable = !productionCounts;
