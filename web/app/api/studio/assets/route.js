@@ -541,7 +541,7 @@ export async function PATCH(req){
    const productionRegistry=JSON.parse(productionRegistryDocument.content);
    const deletionTombstone=findAssetDeletionTombstone(productionRegistry,id);
    if(operation==="delete"&&deletionTombstone)return NextResponse.json({success:true,operation:"deleted",deletedId:id,finalized:true,alreadyDeleted:true,status:"archived",releaseRequest:deletionTombstone.releaseRequest||null,message:productionDeletionMessages.finalized});
-   const index=registry.assets.findIndex(asset=>asset.id===id);if(index<0)return NextResponse.json({error:"Studio asset not found."},{status:404});
+   const index=registry.assets.findIndex(asset=>asset.id===id);if(index<0)return NextResponse.json({error:operation==="publish"?"الأصل غير موجود في فرع studio/assets. استخدم مزامنة الأصول المختبرة من Studio ثم أعد المحاولة.":"Studio asset not found."},{status:404});
   let asset=registry.assets[index];
   if(operation==="delete"){
   if(asset.releaseRequest?.operation==="publish"&&asset.releaseRequest?.number){
