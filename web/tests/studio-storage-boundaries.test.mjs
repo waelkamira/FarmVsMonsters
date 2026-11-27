@@ -337,3 +337,9 @@ test("clean battlefield SVG hash, size, and manifest/audit totals are synchroniz
 test("list-based release lookup treats merged_at as a merged pull request", () => {
   assert.match(assetsRoute, /merged:Boolean\(matched\.merged\|\|matched\.merged_at\),mergedAt:matched\.merged_at/);
 });
+
+test("publish and delete release branches are operation-scoped and revision-stable", () => {
+  assert.match(assetsRoute, /update\(operation\+":"\+fingerprint\)/);
+  assert.match(assetsRoute, /createStudioReleaseBranchName\(id,suffix\)/);
+  assert.doesNotMatch(assetsRoute, /update\(id\+":"\+operation\+":"\+Date\.now\(\)\)/);
+});
