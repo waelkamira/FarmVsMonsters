@@ -1,5 +1,5 @@
 import {NextResponse} from "next/server";
-import {access,mkdir,readFile,writeFile,unlink} from "node:fs/promises";
+import {access,mkdir,readFile,writeFile,unlink,rename} from "node:fs/promises";
 import path from "node:path";
 import {verifyStudioSession} from "../../../../game/studio/signedSession.mjs";
 import {STUDIO_ASSET_TYPES,STUDIO_ID_PATTERN,STUDIO_MAX_UPLOAD_BYTES,STUDIO_RESERVED_PLANT_IDS,validateStudioAssetBytes} from "../../../../game/studio/assetTypes.mjs";
@@ -30,6 +30,8 @@ const PUBLISHED_CATALOG_PATH="web/public/assets/studio-plant-catalog.json";
 const PUBLISHED_MONSTER_CATALOG_PATH="web/public/assets/studio-monster-catalog.json";
 const ASSET_AUDIT_PATH="web/public/assets/asset-audit.json";
 const previewCache=new Map();
+let localRegistryMutationTail=Promise.resolve();
+function withLocalRegistryLock(operation){const result=localRegistryMutationTail.then(operation,operation);localRegistryMutationTail=result.catch(()=>{});return result;}
 function authorized(req){return verifyStudioSession(process.env.STUDIO_SESSION_SECRET || "",req.cookies.get(COOKIE)?.value||"");}
 function ext(type){return {"image/png":".png","image/webp":".webp","image/gif":".gif","audio/mpeg":".mp3","audio/wav":".wav","audio/ogg":".ogg","audio/mp4":".m4a"}[type]||"";}
 function getRigPartAssets(assets,asset){const bones=Array.isArray(asset?.rigProfile?.bones)?asset.rigProfile.bones:[];const ids=[...new Set(bones.map(bone=>bone?.part?.assetId).filter(Boolean))];return ids.map(id=>assets.find(item=>item.id===id));}
@@ -213,7 +215,7 @@ function stageReferenceConflict(id,config){
  return `\u0644\u0627 \u064a\u0645\u0643\u0646 \u062d\u0630\u0641 \u0627\u0644\u0623\u0635\u0644 \u0644\u0623\u0646\u0647 \u0645\u0633\u062a\u062e\u062f\u0645 \u0641\u064a \u0625\u0639\u062f\u0627\u062f\u0627\u062a \u0627\u0644\u0645\u0631\u0627\u062d\u0644: ${locations}. \u0623\u0632\u0644 \u0645\u0631\u0627\u062c\u0639 \u0627\u0644\u0645\u0631\u062d\u0644\u0629 \u0623\u0648\u0644\u0627\u064b.`;
 }
 async function localRegistry(){try{return JSON.parse(await readFile(path.join(process.cwd(),"game/data/studioAssetRegistry.json"),"utf8"));}catch(error){if(error.code==="ENOENT")return {version:1,assets:[]};throw error;}}
-async function saveLocalRegistry(registry){const target=path.join(process.cwd(),"game/data/studioAssetRegistry.json");await mkdir(path.dirname(target),{recursive:true});await writeFile(target,JSON.stringify(registry,null,2)+"\n","utf8");}
+async function saveLocalRegistry(registry){const target=path.join(process.cwd(),"game/data/studioAssetRegistry.json");await mkdir(path.dirname(target),{recursive:true});const temporary=target+".tmp-"+process.pid+"-"+Date.now();try{await writeFile(temporary,JSON.stringify(registry,null,2)+String.fromCharCode(10),{encoding:"utf8",flag:"wx"});await rename(temporary,target);}catch(error){try{await unlink(temporary);}catch{}throw error;}}
 function isRetiredEnemyAsset(asset){return /hyena|dragon/i.test(JSON.stringify(asset||{}));}
 function addPreviewUrls(registry){const driver=getStudioStorageDriver(),github=driver==="github";const assets=(registry.assets||[]).filter(asset=>!isRetiredEnemyAsset(asset));return {...registry,storage:driver,assets:assets.map(asset=>({...asset,previewUrl:github?"/api/studio/assets?preview="+encodeURIComponent(asset.path):asset.path,...(asset.stateAnimations?{stateAnimations:Object.fromEntries(Object.entries(asset.stateAnimations).map(([stateId,state])=>[stateId,{...state,previewUrl:github?"/api/studio/assets?preview="+encodeURIComponent(state.path):state.path}]))}:{}),rigParts:serializeRigParts(assets,asset),...(asset.combat?.projectile?{combat:{...asset.combat,projectile:{...asset.combat.projectile,frameCount:asset.combat.projectile.frameCount??1,rows:asset.combat.projectile.rows??1,columns:asset.combat.projectile.columns??1,previewUrl:github?"/api/studio/assets?preview="+encodeURIComponent(asset.combat.projectile.path):asset.combat.projectile.path}}}:{})}))};}
 function readCombatForm(form,projectile,existing){
@@ -355,6 +357,7 @@ export async function GET(req){
 export async function POST(req){
  if(!authorized(req))return NextResponse.json({error:"Unauthorized."},{status:401});
  if(!canWriteStudioStorage())return NextResponse.json({error:"لا يمكن إنشاء أو تعديل مسودة من واجهة الإنتاج. استخدم بيئة التطوير المحلية ثم راجع طلب النشر."},{status:403});
+ return withLocalRegistryLock(async()=>{
  let form;try{form=await req.formData();}catch{return NextResponse.json({error:"Invalid multipart upload."},{status:400});}
  const id=String(form.get("id")||"").trim().toLowerCase(),type=String(form.get("type")||""),config=STUDIO_ASSET_TYPES[type],file=form.get("file"),projectileFile=form.get("projectileFile"),stateAnimationFile=form.get("stateAnimationFile"),stateId=String(form.get("stateId")||""),stateRows=Number(form.get("stateRows")||1),stateColumns=Number(form.get("stateColumns")||1),stateFrameCount=Number(form.get("stateFrameCount")||1),stateFps=Number(form.get("stateFps")||10),rows=Number(form.get("rows")||1),columns=Number(form.get("columns")||1),frameCount=Number(form.get("frameCount")||9),replace=String(form.get("replace")||"false")==="true";
  if(!config||!STUDIO_ID_PATTERN.test(id)||id.length>64)return NextResponse.json({error:"Invalid category or ID. Use a lowercase slug up to 64 characters."},{status:400});
@@ -482,6 +485,7 @@ export async function POST(req){
   await saveLocalRegistry(next);
  return NextResponse.json({success:true,asset:record,storage:driver,operation:existing?"replaced":"created"});
  }catch(error){return NextResponse.json({error:error.message||"Asset save failed."},{status:error.code==="STUDIO_WRITE_CONFLICT"?409:500});}
+ });
 }
 export async function PATCH(req){
  if(!authorized(req))return NextResponse.json({error:"Unauthorized."},{status:401});
@@ -489,6 +493,7 @@ export async function PATCH(req){
  const id=String(body.id||"").trim(),operation=String(body.operation||"");
  if(operation==="import-manifest"){
   if(!canWriteStudioStorage())return NextResponse.json({error:"استيراد الأصول متاح من بيئة التطوير المحلية فقط."},{status:403});
+  return withLocalRegistryLock(async()=>{
   try{
    const registry=await localRegistry();
    const manifest=JSON.parse(await readFile(path.join(process.cwd(),"public/assets/asset-manifest.json"),"utf8"));
@@ -498,12 +503,14 @@ export async function PATCH(req){
    if(result.imported)await saveLocalRegistry(result.registry);
    return NextResponse.json({success:true,operation,imported:result.imported,skippedDeleted:result.skippedDeleted,storage:"local"});
   }catch(error){return NextResponse.json({error:error.message||"تعذر استيراد الأصول."},{status:500});}
+  });
  }
- if(operation==="set-effects")return setAssetEffects(id,body.effects);
+ if(operation==="set-effects")return withLocalRegistryLock(()=>setAssetEffects(id,body.effects));
  if(!STUDIO_ID_PATTERN.test(id)||!["prepare-test","publish","archive","restore","restore-version","clone","delete"].includes(operation))return NextResponse.json({error:"Invalid asset or operation."},{status:400});
  const driver=getStudioStorageDriver();
  if(driver!=="github"){
   if(operation==="publish")return NextResponse.json({error:"Publishing requires a production release request."},{status:503});
+  return withLocalRegistryLock(async()=>{
   try{
    const registry=await localRegistry(),index=registry.assets.findIndex(asset=>asset.id===id);
    if(index<0){const deleted=(registry.deletedAssetIds||[]).some(entry=>typeof entry==="string"?entry===id:entry?.id===id);if(operation==="delete"&&deleted)return NextResponse.json({success:true,operation,deletedId:id,alreadyDeleted:true,storage:"local"});return NextResponse.json({error:"Asset not found."},{status:404});}
@@ -534,7 +541,7 @@ export async function PATCH(req){
    if(operation==="archive"&&asset.type==="monster"){const conflict=stageReferenceConflict(id,await localStageEncounterConfig());if(conflict)return NextResponse.json({error:conflict},{status:409});}
    if(operation==="archive"||operation==="restore-version"){const dependencyConflict=getAssetDependencyConflict(registry.assets,id);if(dependencyConflict)return NextResponse.json({error:dependencyConflict.message},{status:dependencyConflict.status});}
    let updated;try{updated=operation==="restore-version"?restoreStudioAssetRevision(asset,body.versionNumber):transitionStudioAssetStatus(asset,operation);}catch(error){return NextResponse.json({error:error.message},{status:409});}registry.assets[index]=updated;await saveLocalRegistry(registry);return NextResponse.json({success:true,operation,asset:updated,storage:"local"});
-  }catch(error){return NextResponse.json({error:error.message||"Studio local action failed."},{status:500});}
+  }catch(error){return NextResponse.json({error:error.message||"Studio local action failed."},{status:500});}  });
  }
  const token=process.env.STUDIO_GITHUB_TOKEN,targetBranch=process.env.STUDIO_PUBLISH_BRANCH||"main",storageBranch=process.env.STUDIO_GITHUB_BRANCH||"studio/assets";
  if(!token)return NextResponse.json({error:"STUDIO_GITHUB_TOKEN is required."},{status:503});
