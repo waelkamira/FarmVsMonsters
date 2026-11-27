@@ -150,7 +150,7 @@ async function finishProductionRelease(token,release,{baseBranch,title,body,asse
  let nodeId=pr.nodeId,draft=pr.draft;
  if(!nodeId){const detail=await githubGetPullRequest(pr.number,token);nodeId=detail?.nodeId;draft=detail?.draft;}
  if(!nodeId)throw Error("GitHub did not return the release PR node ID.");
- if(!draft)await githubConvertPullRequestToDraft(token,nodeId);
+ if(!draft){await githubConvertPullRequestToDraft(token,nodeId);draft=true;}
  const releaseRequest={number:pr.number,url:pr.url,branch:pr.branch,state:"open",operation,fingerprint:release.fingerprint,requestedAt:pr.createdAt||null};
  await writeProductionRegistryRelease(token,pr.branch,asset,releaseRequest,operation);
  const stagedDocument=await githubGetDocument(REGISTRY_PATH,token,pr.branch);
@@ -562,12 +562,14 @@ export async function PATCH(req){
    }
    const stageConfigText=await githubGet("web/game/data/stageEncounterConfig.json",token,targetBranch);
    let plan;
-   try{plan=createProductionAssetDeletionPlan({registry:productionRegistry,assetId:id,stageConfig:stageConfigText?JSON.parse(stageConfigText):{stages:{}}});}
+   const deletionRegistry={...productionRegistry,assets:(productionRegistry.assets||[]).map(item=>item.id===id?asset:item)};
+   if(!deletionRegistry.assets.some(item=>item.id===id))deletionRegistry.assets.push(asset);
+   try{plan=createProductionAssetDeletionPlan({registry:deletionRegistry,assetId:id,stageConfig:stageConfigText?JSON.parse(stageConfigText):{stages:{}}});}
    catch(error){return NextResponse.json({error:error.message||productionDeletionMessages.requestAccepted},{status:error.status||409});}
    const result=await requestProductionAssetDeletion({
     plan,
     baseBranch:targetBranch,
-    beginRelease:(assetId,baseBranch,releaseAsset)=>beginProductionRelease(token,assetId,"delete",baseBranch,releaseAsset),
+    beginRelease:async(assetId,baseBranch,releaseAsset)=>{const release=await beginProductionRelease(token,assetId,"delete",baseBranch,releaseAsset);if(release.completed&&!findAssetDeletionTombstone(productionRegistry,assetId))throw Error("A previous deletion PR was merged without its production tombstone. Automatic finalization was blocked; manual repair is required.");return release;},
     removeReleaseFiles:async(releaseBranch,deletionPlan)=>{
      await removeGithubAssetManifestReferences(deletionPlan.removablePaths,token,releaseBranch);
      for(const [catalogPath,key] of [[PUBLISHED_CATALOG_PATH,"plants"],[PUBLISHED_MONSTER_CATALOG_PATH,"monsters"]]){
