@@ -19,13 +19,6 @@
       ],
       "plants": [
         {
-          "id": "corn-monster",
-          "count": 1,
-          "visible": true,
-          "enabled": true,
-          "unlocked": true
-        },
-        {
           "id": "hazelnut",
           "count": 1,
           "visible": true,
@@ -48,6 +41,13 @@
         },
         {
           "id": "pumpkin",
+          "count": 1,
+          "visible": true,
+          "enabled": true,
+          "unlocked": true
+        },
+        {
+          "id": "bamboo-throwing-level-1",
           "count": 1,
           "visible": true,
           "enabled": true,
