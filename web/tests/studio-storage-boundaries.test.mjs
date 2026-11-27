@@ -113,6 +113,18 @@ test("explicit import preserves real grouped Manifest Atlas and animation metada
   assert.equal(imported.status, "draft");
 });
 
+test("manifest import includes plants that exist only in the published catalog", () => {
+  const result = importManifestPlants(
+    { version: 1, assets: [] },
+    { assets: [] },
+    { plants: [{ id: "catalog-only-plant", name: "Catalog Only", path: "/assets/plants/catalog-only-plant.png" }] },
+    "2026-11-27T00:00:00.000Z"
+  );
+  assert.equal(result.imported, 1);
+  assert.equal(result.registry.assets[0].id, "catalog-only-plant");
+  assert.equal(result.registry.assets[0].status, "published");
+});
+
 test("manifest import resolves hashed published paths and preserves tombstones", () => {
   const digest = "a".repeat(64);
   const publishedPath = "/assets/plants/oak-" + digest + ".png";
