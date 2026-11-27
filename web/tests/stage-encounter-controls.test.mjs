@@ -55,7 +55,7 @@ test("stage seed selection respects only enabled plants for a configured stage",
  assert.match(selection,/router\.push\("\/game\?stage=" \+ stageNumber \+ \(studioPlaytest \? "&studioPlaytest=1" : ""\)\)/);
  assert.match(selection,/setStagePlantsConfigured\(useStageRoster\)/);
  assert.match(selection,/farmVsMonsters\.selectedPlants\.stage\.\" \+ activeStage/);
- assert.match(selection,/window\.localStorage\.setItem\("farmVsMonsters\.selectedPlants", savedSelection\)/);
+ assert.match(selection,/window\.localStorage\.setItem\("farmVsMonsters\.selectedPlants\.stage\." \+ stageNumber, savedSelection\)/);
  assert.match(selection,/selectedPlants\.length < minimumSeeds/);
 });
 
@@ -144,8 +144,8 @@ test("Studio admin playtests bypass campaign locks and stage roster restrictions
  assert.match(read("app/game/page.js"),/fetch\("\/api\/studio\/session"/);
  assert.match(read("app/game/page.js"),/blockStudioPlaytest/);
  assert.match(selection,/const publishedStage = configuredStage\?\.published === true && configuredStage\?\.plantsConfigured === true/);
- assert.match(selection,/const safeUnlocked = isStudioPlaytest/);
- assert.match(selection,/publishedStage\s*\? \[\.\.\.new Set\(stageUnlockedIds\)\]/);
+ assert.match(selection,/const safeUnlocked = useStageRoster/);
+ assert.match(selection,/\? \[\.\.\.new Set\(stageUnlockedIds\)\]/);
  assert.match(selection,/entry\.unlocked !== false/);
  assert.match(selection,/entry\.visible !== false && entry\.enabled !== false/);
  assert.match(selection,/plant\.required && !studioPlaytest/);
@@ -248,10 +248,10 @@ test("stage playtest is restricted to the configured visible roster instead of e
  const battle=read("game/scenes/BattleScene.js");
  assert.match(selection,/const useStageRoster = stageRosterConfigured && \(publishedStage \|\| isStudioPlaytest\)/);
  assert.match(selection,/const nextPlants = useStageRoster/);
- assert.match(selection,/isStudioPlaytest \? authoredStageIds : stageUnlockedIds/);
+ assert.match(selection,/visibleStageEntries\.filter\(entry => entry\.unlocked !== false\)/);
  assert.match(battle,/const stageAllowedTypes = this\.stagePlantRosterConfigured/);
- assert.match(battle,/this\.isStudioPlaytest \|\| entry\.unlocked !== false/);
- assert.match(battle,/selectedTypes = this\.stagePlantRosterConfigured[\s\S]*?this\.stagePlantEntries\.map/);
+ assert.match(battle,/entry\.unlocked !== false/);
+ assert.match(battle,/const stageAllowedTypes = this\.stagePlantRosterConfigured[\s\S]*?this\.stagePlantEntries\.filter\(entry => entry\.unlocked !== false\)\.map/);
 });
 
 test("publishing refuses visible plants that are absent from the player release catalog",()=>{
@@ -261,4 +261,17 @@ test("publishing refuses visible plants that are absent from the player release 
  assert.match(api,/const availablePlants=await readPublishedPlantIds\(\)/);
  assert.match(api,/لا يمكن نشر المرحلة لأن بعض النباتات ليست منشورة في كتالوج اللاعبين بعد/);
  assert.match(api,/unavailablePlants/);
+});
+
+
+test("stage preview and player battle use the same stage-specific seed loadout and unlock flags",()=>{
+ const selection=read("app/stage/1/select/page.js");
+ const battle=read("game/scenes/BattleScene.js");
+ assert.match(selection,/const safeUnlocked = useStageRoster[\s\S]*stageUnlockedIds/);
+ assert.doesNotMatch(selection,/isStudioPlaytest \? authoredStageIds : stageUnlockedIds/);
+ assert.match(selection,/selectedPlants\.stage\." \+ stageNumber/);
+ assert.doesNotMatch(selection,/setItem\("farmVsMonsters\.selectedPlants", savedSelection\)/);
+ assert.match(battle,/farmVsMonsters\.selectedPlants\.stage\." \+ this\.stageNumber/);
+ assert.match(battle,/stagePlantEntries\.filter\(entry => entry\.unlocked !== false\)/);
+ assert.doesNotMatch(battle,/stagePlantEntries\.filter\(entry => this\.isStudioPlaytest \|\| entry\.unlocked !== false\)/);
 });

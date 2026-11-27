@@ -1100,14 +1100,16 @@ export default class BattleScene extends Scene {
     try {
       const unlocked = new Set([...loadUnlockedPlantIds(window.localStorage), ...(this.studioPlants || []).map((plant) => plant.id)]);
       const stageAllowedTypes = this.stagePlantRosterConfigured
-        ? new Set(this.stagePlantEntries.filter(entry => this.isStudioPlaytest || entry.unlocked !== false).map((entry) => STAGE_PLANT_ALIASES[entry.id] || entry.id))
+        ? new Set(this.stagePlantEntries.filter(entry => entry.unlocked !== false).map((entry) => STAGE_PLANT_ALIASES[entry.id] || entry.id))
         : null;
       const availableTypes = new Set(plantOptions.map((plant) => plant.type).filter((type) =>
         stageAllowedTypes
           ? stageAllowedTypes.has(type)
           : this.isStudioPlaytest || PLAYTEST_ALL_PLANTS || unlocked.has(type)
       ));
-      const saved = JSON.parse(window.localStorage.getItem("farmVsMonsters.selectedPlants") || "null");
+      const stageLoadoutKey = "farmVsMonsters.selectedPlants.stage." + this.stageNumber;
+      const savedStageLoadout = window.localStorage.getItem(stageLoadoutKey);
+      const saved = JSON.parse(savedStageLoadout || (this.stagePlantRosterConfigured ? "null" : window.localStorage.getItem("farmVsMonsters.selectedPlants") || "null"));
       if (this.stagePlantRosterConfigured) {
         // A Studio stage roster is the source of truth for playtest availability,
         // not campaign unlock progress or the built-in starter loadout.
@@ -1129,7 +1131,7 @@ export default class BattleScene extends Scene {
     } catch {
       // Storage failures keep the configured stage roster playable when possible.
       selectedTypes = this.stagePlantRosterConfigured
-        ? this.stagePlantEntries.map((entry) => STAGE_PLANT_ALIASES[entry.id] || entry.id).slice(0, MAX_SEED_PACKETS)
+        ? this.stagePlantEntries.filter(entry => entry.unlocked !== false).map((entry) => STAGE_PLANT_ALIASES[entry.id] || entry.id).slice(0, MAX_SEED_PACKETS)
         : this.isStudioPlaytest
           ? plantOptions.map((plant) => plant.type).slice(0, MAX_SEED_PACKETS)
           : ["radish", "mushroom"];
