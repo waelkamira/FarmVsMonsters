@@ -241,3 +241,13 @@ test("production never invokes local Git inspection", async () => {
   assert.equal(result.available, false);
   assert.deepEqual(result.syncStates, ["Production differs"]);
 });
+
+test("production deletion planning includes production-only shared assets", () => {
+  assert.match(assetsRoute, /createProductionAssetDeletionPlan\(\{registry:productionRegistry,assetId:id/);
+});
+
+test("publish rejects assets outside plant and monster catalogs", () => {
+  const publishIndex = assetsRoute.indexOf('if(operation!=="publish")');
+  const publishBranch = assetsRoute.slice(publishIndex, publishIndex + 500);
+  assert.match(publishBranch, /asset\.type!=="plant"&&asset\.type!=="monster"/);
+});
