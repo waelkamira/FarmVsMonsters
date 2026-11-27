@@ -316,22 +316,25 @@ test("local test preparation rejects missing required references instead of filt
   assert.doesNotMatch(prepare, /\.filter\(safeAssetPath\)/);
 });
 
-test("clean battlefield SVG hash, size, and manifest/audit totals are synchronized", () => {
-  const svg = Buffer.from(readFileSync(new URL("../public/assets/backgrounds/farm-battlefield-clean.svg", import.meta.url), "utf8").replace(/\r\n/g, "\n"), "utf8");
+test("SVG manifest hashes, sizes, and audit totals are platform-independent", () => {
   const manifest = JSON.parse(readFileSync(new URL("../public/assets/asset-manifest.json", import.meta.url), "utf8"));
   const audit = JSON.parse(readFileSync(new URL("../public/assets/asset-audit.json", import.meta.url), "utf8"));
-  const expectedHash = createHash("sha256").update(svg).digest("hex");
-  const entries = [
-    ...(manifest.assets || []),
-    ...Object.values(manifest.groups || {}).flat()
-  ].filter((entry) => entry.url === "/assets/backgrounds/farm-battlefield-clean.svg");
-  assert.equal(entries.length, 2);
-  for (const entry of entries) {
-    assert.equal(entry.bytes, svg.byteLength);
-    assert.equal(entry.sha256, expectedHash);
+  const groupedEntries = Object.values(manifest.groups || {}).flat();
+  const svgEntries = (manifest.assets || []).filter((entry) => entry.type === "svg");
+  for (const entry of svgEntries) {
+    const source = readFileSync(new URL("../public" + entry.url, import.meta.url), "utf8").replace(/\\r\\n/g, "\\n");
+    const bytes = Buffer.from(source, "utf8");
+    const expectedHash = createHash("sha256").update(bytes).digest("hex");
+    assert.equal(entry.bytes, bytes.byteLength, entry.url + " byte count");
+    assert.equal(entry.sha256, expectedHash, entry.url + " SHA-256");
+    const grouped = groupedEntries.filter((candidate) => candidate.url === entry.url);
+    assert.equal(grouped.length, 1, entry.url + " grouped entry");
+    assert.equal(grouped[0].bytes, bytes.byteLength, entry.url + " grouped byte count");
+    assert.equal(grouped[0].sha256, expectedHash, entry.url + " grouped SHA-256");
   }
   assert.equal(manifest.totalBytes, audit.totalBytes);
-  assert.equal(audit.groups.backgrounds.totalBytes, 75028 + 56081);
+  const backgroundBytes = (manifest.assets || []).filter((entry) => entry.group === "backgrounds").reduce((sum, entry) => sum + entry.bytes, 0);
+  assert.equal(audit.groups.backgrounds.totalBytes, backgroundBytes);
 });
 
 test("list-based release lookup treats merged_at as a merged pull request", () => {
