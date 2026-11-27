@@ -1,6 +1,7 @@
 import { Scene } from "phaser";
 import { translate } from "../../app/LocaleProvider";
 import { readBrowserLocale, readStorageValue, writeStorageValue } from "../services/browserStorage.mjs";
+import { getPauseMenuControlIndex, isPauseMenuActivationKey } from "../services/pauseMenuNavigation.mjs";
 
 const AUDIO_CHANNELS = [
   { key: "musicVolume", label: "Background music", initial: 70 },
@@ -31,9 +32,13 @@ export default class PauseScene extends Scene {
 
     this.input.keyboard.on("keydown-ESC", this.resumeBattle, this);
     this.input.keyboard.on("keydown-P", this.resumeBattle, this);
+    this.input.keyboard.on("keydown", this.handleMenuKey, this);
     this.events.once("shutdown", () => {
       this.input.keyboard.off("keydown-ESC", this.resumeBattle, this);
       this.input.keyboard.off("keydown-P", this.resumeBattle, this);
+      this.input.keyboard.off("keydown", this.handleMenuKey, this);
+      this.keyboardControls = [];
+      this.activeKeyboardControlIndex = -1;
     });
 
     this.menuMode = "pause";
@@ -48,10 +53,68 @@ export default class PauseScene extends Scene {
     return translate(value, this.locale());
   }
 
-  drawCurrentMenu() {
+  drawCurrentMenu(preferredFocusId = null) {
+    const previousFocusId = this.keyboardControls?.[this.activeKeyboardControlIndex]?.id;
+    const focusId = preferredFocusId ?? previousFocusId;
     this.children.removeAll(true);
+    this.keyboardControls = [];
+    this.activeKeyboardControlIndex = -1;
     if (this.menuMode === "settings") this.drawSettingsMenu();
     else this.drawPauseMenu();
+
+    const nextIndex = this.keyboardControls.findIndex((control) => control.id === focusId);
+    this.focusKeyboardControl(nextIndex >= 0 ? nextIndex : 0);
+  }
+
+  registerKeyboardControl({ id, row, column, background, action, ringWidth, ringHeight }) {
+    const focusRing = this.add.rectangle(background.x, background.y, ringWidth, ringHeight, 0x000000, 0)
+      .setStrokeStyle(3, GLASS.gold, 1)
+      .setVisible(false);
+    const index = this.keyboardControls.length;
+    this.keyboardControls.push({ id, row, column, background, focusRing, action });
+
+    background.on("pointerover", () => {
+      this.focusKeyboardControl(index);
+      background.setFillStyle(GLASS.blue, 0.72);
+    });
+    background.on("pointerout", () => background.setFillStyle(GLASS.blue, 0.28));
+    background.on("pointerdown", () => {
+      this.focusKeyboardControl(index);
+      action();
+    });
+  }
+
+  focusKeyboardControl(index) {
+    if (!this.keyboardControls?.length) {
+      this.activeKeyboardControlIndex = -1;
+      return;
+    }
+    const safeIndex = Number.isInteger(index) && index >= 0 && index < this.keyboardControls.length ? index : 0;
+    this.activeKeyboardControlIndex = safeIndex;
+    this.keyboardControls.forEach((control, controlIndex) => {
+      control.focusRing.setVisible(controlIndex === safeIndex);
+      control.background.setScale(controlIndex === safeIndex ? 1.04 : 1);
+    });
+  }
+
+  handleMenuKey(event) {
+    const key = event?.key;
+    if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Home", "End"].includes(key)) {
+      event.preventDefault?.();
+      const nextIndex = getPauseMenuControlIndex(
+        this.keyboardControls,
+        this.activeKeyboardControlIndex,
+        key
+      );
+      this.focusKeyboardControl(nextIndex);
+      return;
+    }
+
+    if (!isPauseMenuActivationKey(key, event?.code)) return;
+    const control = this.keyboardControls?.[this.activeKeyboardControlIndex];
+    if (!control) return;
+    event.preventDefault?.();
+    control.action();
   }
 
   drawPanel(title, height = 420) {
@@ -71,15 +134,19 @@ export default class PauseScene extends Scene {
 
   drawPauseMenu() {
     this.drawPanel("BATTLE PAUSED", 420);
-    this.addMenuButton(270, "RESUME", GLASS.green, () => this.resumeBattle());
-    this.addMenuButton(345, "RESTART", GLASS.blue, () => this.restartBattle());
+    this.addMenuButton(270, "RESUME", GLASS.green, () => this.resumeBattle(), {
+      id: "resume", row: 0, column: 0
+    });
+    this.addMenuButton(345, "RESTART", GLASS.blue, () => this.restartBattle(), {
+      id: "restart", row: 1, column: 0
+    });
     this.addMenuButton(420, "SETTINGS", GLASS.violet, () => {
       this.menuMode = "settings";
-      this.drawCurrentMenu();
-    });
+      this.drawCurrentMenu("musicVolume-decrease");
+    }, { id: "settings", row: 2, column: 0 });
     this.addMenuButton(495, "MAIN MENU", GLASS.coral, () => {
       if (typeof window !== "undefined") window.location.assign("/");
-    });
+    }, { id: "main-menu", row: 3, column: 0 });
   }
 
   readVolume(key, initial) {
@@ -99,26 +166,30 @@ export default class PauseScene extends Scene {
         fontFamily: "Arial", fontSize: "19px", color: "#ffffff",
         fontStyle: "bold", stroke: "#24365d", strokeThickness: 3, resolution: 2
       }).setOrigin(0.5);
-      this.addVolumeButton(420, y + 14, "−", () => this.changeVolume(channel, -5), GLASS.blue);
+      this.addVolumeButton(420, y + 14, "−", () => this.changeVolume(channel, -5, channel.key + "-decrease"), GLASS.blue, {
+        id: channel.key + "-decrease", row: index, column: 0
+      });
       this.add.text(560, y + 14, value + "%", {
         fontFamily: "Arial", fontSize: "22px", color: "#ffffff",
         fontStyle: "bold", stroke: "#24365d", strokeThickness: 3, resolution: 2
       }).setOrigin(0.5);
-      this.addVolumeButton(700, y + 14, "+", () => this.changeVolume(channel, 5), GLASS.green);
+      this.addVolumeButton(700, y + 14, "+", () => this.changeVolume(channel, 5, channel.key + "-increase"), GLASS.green, {
+        id: channel.key + "-increase", row: index, column: 1
+      });
     });
     this.addMenuButton(520, "BACK", GLASS.gold, () => {
       this.menuMode = "pause";
-      this.drawCurrentMenu();
-    });
+      this.drawCurrentMenu("settings");
+    }, { id: "back", row: AUDIO_CHANNELS.length, column: 0 });
   }
 
-  changeVolume(channel, amount) {
+  changeVolume(channel, amount, focusId) {
     const next = Math.max(0, Math.min(100, this.readVolume(channel.key, channel.initial) + amount));
     writeStorageValue(window, "farmVsMonsters.audio." + channel.key, next);
-    this.drawCurrentMenu();
+    this.drawCurrentMenu(focusId);
   }
 
-  addVolumeButton(x, y, label, action, color) {
+  addVolumeButton(x, y, label, action, color, position) {
     const bg = this.add.rectangle(x, y, 54, 42, GLASS.blue, 0.3)
       .setStrokeStyle(1, GLASS.white, 0.78).setInteractive({ useHandCursor: true });
     this.add.rectangle(x, y, 46, 34, color, 0.62)
@@ -127,12 +198,16 @@ export default class PauseScene extends Scene {
       fontFamily: "Arial", fontSize: "28px", color: "#ffffff",
       fontStyle: "bold", stroke: "#24365d", strokeThickness: 3, resolution: 2
     }).setOrigin(0.5);
-    bg.on("pointerover", () => bg.setScale(1.06));
-    bg.on("pointerout", () => bg.setScale(1));
-    bg.on("pointerdown", action);
+    this.registerKeyboardControl({
+      ...position,
+      background: bg,
+      action,
+      ringWidth: 68,
+      ringHeight: 56
+    });
   }
 
-  addMenuButton(y, label, color, action) {
+  addMenuButton(y, label, color, action, position) {
     const bg = this.add.rectangle(560, y, 250, 52, GLASS.blue, 0.28)
       .setStrokeStyle(1, GLASS.white, 0.82).setInteractive({ useHandCursor: true });
     this.add.rectangle(560, y, 240, 44, color, 0.72)
