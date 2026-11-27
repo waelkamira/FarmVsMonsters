@@ -188,10 +188,20 @@ export async function PATCH(req){
    }else{
     const result=await writeGithub(config,body.sha,workingBranch());
     if(result.conflict)return NextResponse.json({error:"تغير إعداد المرحلة منذ تحميل الصفحة. أعد تحميل الإعدادات قبل الحفظ."},{status:409});
-    savedSha=result.sha;
+    const verified=await readGithub(workingBranch());
+    if(JSON.stringify(verified.config)!==JSON.stringify(config)){
+     return NextResponse.json({error:"وصل طلب الحفظ إلى GitHub لكن النسخة المقروءة من فرع الاستديو لا تطابق الإعدادات المرسلة. لم نعلن نجاح الحفظ."},{status:502});
+    }
+    config=verified.config;
+    savedSha=verified.sha||result.sha;
    }
   }else{
    await writeLocal(config);
+   const verified=await readLocal();
+   if(JSON.stringify(verified)!==JSON.stringify(config)){
+    return NextResponse.json({error:"تمت محاولة الحفظ المحلي لكن إعادة القراءة لم تطابق الإعدادات المرسلة."},{status:502});
+   }
+   config=verified;
   }
   return NextResponse.json({success:true,published:publishAction,config,storage:driver,sha:savedSha,releaseSha,releaseBranch:publishAction?releaseBranch():undefined});
  }catch(error){return NextResponse.json({error:error.message||"Could not save stage settings."},{status:502});}
