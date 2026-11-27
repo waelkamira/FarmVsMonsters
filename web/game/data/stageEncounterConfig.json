@@ -26,6 +26,13 @@
           "unlocked": true
         },
         {
+          "id": "corn-monster",
+          "count": 1,
+          "visible": true,
+          "enabled": true,
+          "unlocked": true
+        },
+        {
           "id": "pepper-flamethrower-level-1",
           "count": 1,
           "visible": false,
