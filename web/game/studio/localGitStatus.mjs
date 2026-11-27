@@ -87,12 +87,14 @@ export async function getLocalGitStatus({ cwd = process.cwd(), env = process.env
       ]));
     }
     const productionDiffers = Boolean(productionCounts && (productionCounts.ahead > 0 || productionCounts.behind > 0));
-    const conflict = unmerged || Boolean(trackingCounts?.ahead > 0 && trackingCounts?.behind > 0);
+    const diverged = Boolean(trackingCounts?.ahead > 0 && trackingCounts?.behind > 0);
+    const conflict = unmerged;
     const notSynced = !upstream || !trackingCounts || trackingCounts.ahead > 0 || trackingCounts.behind > 0;
     const syncStates = [];
     if (dirty) syncStates.push("Local changes", "Not committed");
     if (notSynced) syncStates.push("Not synced");
     if (productionDiffers) syncStates.push("Production differs");
+    if (diverged) syncStates.push("Diverged");
     if (conflict) syncStates.push("Conflict");
     if (!syncStates.length) syncStates.push("Synced");
 
