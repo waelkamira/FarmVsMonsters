@@ -219,8 +219,10 @@ test("Studio local sync state is derived from read-only Git inspection, not fixe
   assert.doesNotMatch(assetsRoute, /syncStates:\["Local changes","Not committed","Not synced"\]/);
   const page = readFileSync(new URL("../app/studio/page.js", import.meta.url), "utf8");
   const gitStatus = readFileSync(new URL("../game/studio/localGitStatus.mjs", import.meta.url), "utf8");
-  const gitStatus = readFileSync(new URL("../game/studio/localGitStatus.mjs", import.meta.url), "utf8");
-  for (const state of ["Local changes", "Not committed", "Not synced", "Production differs", "Published", "Conflict"]) {
+  for (const state of ["Local changes", "Not committed", "Not synced", "Production differs"]) {
+    assert.ok(gitStatus.includes(state), `missing Git-derived state ${state}`);
+  }
+  for (const state of ["Published", "Conflict"]) {
     assert.ok(page.includes(state), `missing UI state ${state}`);
   }
 });
