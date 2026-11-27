@@ -278,3 +278,15 @@ test("publish rejects assets outside plant and monster catalogs", () => {
   const publishBranch = assetsRoute.slice(publishIndex, publishIndex + 500);
   assert.match(publishBranch, /asset\.type!=="plant"&&asset\.type!=="monster"/);
 });
+
+test("Studio source sync is local-only, authenticated, and uses Git pull/push", () => {
+  const syncRoute = readFileSync(new URL("../app/api/studio/source-sync/route.js", import.meta.url), "utf8");
+  const syncScript = readFileSync(new URL("../scripts/sync-studio-source-assets.mjs", import.meta.url), "utf8");
+  const page = readFileSync(new URL("../app/studio/page.js", import.meta.url), "utf8");
+  assert.match(syncRoute, /if\(!canWriteStudioStorage\(\)\)/);
+  assert.match(syncRoute, /verifyStudioSession/);
+  assert.match(syncScript, /git\(\["pull","--ff-only"\]/);
+  assert.match(syncScript, /git\(\["push","origin","HEAD:refs\/heads\/"\+sourceBranch\]/);
+  assert.match(page, /syncSourceAssets/);
+  assert.match(page, /مزامنة الأصول المختبرة إلى studio\/assets/);
+});
