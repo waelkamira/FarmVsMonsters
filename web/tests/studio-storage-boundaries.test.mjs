@@ -48,7 +48,7 @@ test("manifest import is an explicit authenticated local-only operation", () => 
   const end = assetsRoute.indexOf('if(operation==="set-effects")', start);
   const action = assetsRoute.slice(start, end);
   assert.ok(start >= 0 && end > start);
-  assert.match(action, /if\(!canWriteStudioStorage\(\)\)/);
+  assert.match(action, /if\s*\(!canWriteStudioStorage\(\)\)/);
   assert.match(action, /asset-manifest\.json/);
   assert.match(action, /importManifestPlants\(/);
   assert.match(action, /saveLocalRegistry\(result\.registry\)/);
@@ -274,7 +274,7 @@ test("production never invokes local Git inspection", async () => {
 });
 
 test("production deletion planning includes production-only shared assets", () => {
-  assert.match(assetsRoute, /createProductionAssetDeletionPlan\(\{registry:productionRegistry,assetId:id/);
+  assert.match(assetsRoute, /createProductionAssetDeletionPlan\(\{registry:deletionRegistry,assetId:id/);
 });
 
 test("publish rejects assets outside plant and monster catalogs", () => {
