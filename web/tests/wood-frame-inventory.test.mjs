@@ -37,7 +37,7 @@ test("inventory shows saved plant unlocks, seed-bar membership, field counts, an
 test("opening inventory pauses the battle and prevents clicks from reaching battlefield planting", () => {
   assert.match(scene, /this\.gameOver \|\| this\.isPaused \|\| this\.collectionMenuOpen \|\| this\.inventoryOpen/);
   assert.match(scene, /this\.gameOver \|\| this\.storySequenceActive \|\| this\.inventoryOpen/);
-  assert.match(scene, /this\.collectionMenuOpen \|\|\n\s*this\.inventoryOpen \|\|/);
+  assert.match(scene, /this\.collectionMenuOpen \|\|\r?\n\s*this\.inventoryOpen \|\|/);
   assert.match(scene, /closeInventory\(\)/);
 });
 
@@ -71,7 +71,7 @@ test("the battle seed bar renders only equipped plant cards without empty placeh
 
 
 test("battlefield fallback does not paint a full-screen green background wash", () => {
-  const drawField = scene.match(/drawField\(\)\s*\{([\s\S]*?)\n  \}\n\n  createFarmBackground/);
+  const drawField = scene.match(/drawField\(\)\s*\{([\s\S]*?)\r?\n  \}\r?\n\r?\n  createFarmBackground/);
   assert.ok(drawField, "drawField implementation exists");
   assert.doesNotMatch(drawField[1], /fillGradientStyle\(0xb9d98a|fillRect\(0, 0, 1120, 680\)/);
   assert.match(drawField[1], /fillRoundedRect\(185, 115, 690, 500/);

@@ -23,9 +23,12 @@ test("Corn Monster is registered as a Studio-testable plant with its 24-frame Ph
   assert.deepEqual(Object.keys(plant.atlasClips).sort(), ["attack", "hurt", "idle"]);
 });
 
-test("Corn Monster belongs to the plant roster and never appears in a monster wave", () => {
+test("draft Corn Monster is excluded from the enabled stage-one roster and monster waves", () => {
   const stage = encounters.stages["1"];
-  assert.ok(stage.plants.some((entry) => entry.id === "corn-monster" && entry.enabled));
+  const cornMonster = registry.assets.find((asset) => asset.id === "corn-monster");
+  const enabledPlantIds = stage.plants.filter((entry) => entry.enabled !== false).map((entry) => entry.id);
+  assert.equal(cornMonster.status, "draft");
+  assert.equal(enabledPlantIds.includes(cornMonster.id), false);
   assert.ok(stage.monsters.every((entry) => entry.id !== "corn-monster"));
 });
 
