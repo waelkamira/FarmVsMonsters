@@ -12,7 +12,7 @@ async function git(cwd, args) {
     maxBuffer: 256 * 1024,
     windowsHide: true
   });
-  return String(result.stdout || "").trim();
+  return String(result.stdout || "").replace(/\r\n/g, "\n").replace(/\n+$/, "");
 }
 
 async function optionalGit(cwd, args) {
