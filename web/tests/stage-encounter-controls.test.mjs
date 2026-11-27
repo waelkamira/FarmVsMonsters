@@ -21,7 +21,7 @@ test("stage roster controls default to one and keep hiding separate from asset d
  assert.match(manager,/quantity,setQuantity\]=useState\(1\)/);
  assert.match(manager,/count:quantity/);
  assert.match(manager,/enabled:!entry\.enabled/);
- assert.match(manager,/الإظهار والإخفاء والفتح والإغلاق هنا يخص المرحلة المحددة فقط/);
+ assert.match(manager,/التحكم هنا خاص بالمرحلة المحددة/);
  assert.match(manager,/spawnIntervalMs/);
  assert.match(manager,/async function testStage\(\)/);
  assert.match(manager,/await persistConfig\(\);\s*router\.push\("\/stage\/1\/select\?stage="\+stage\+"&studioPlaytest=1"\)/);
