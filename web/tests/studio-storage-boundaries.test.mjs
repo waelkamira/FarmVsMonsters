@@ -333,3 +333,7 @@ test("clean battlefield SVG hash, size, and manifest/audit totals are synchroniz
   assert.equal(manifest.totalBytes, audit.totalBytes);
   assert.equal(audit.groups.backgrounds.totalBytes, 75023 + 56081);
 });
+
+test("list-based release lookup treats merged_at as a merged pull request", () => {
+  assert.match(assetsRoute, /merged:Boolean\(matched\.merged\|\|matched\.merged_at\),mergedAt:matched\.merged_at/);
+});
