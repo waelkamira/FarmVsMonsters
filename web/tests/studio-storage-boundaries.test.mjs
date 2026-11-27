@@ -4,6 +4,7 @@ import { readFileSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { createHash } from "node:crypto";
 import { getLocalGitStatus } from "../game/studio/localGitStatus.mjs";
 import { getStudioStorageDriver, canWriteStudioStorage } from "../game/studio/storageDriver.mjs";
 import { importManifestPlants } from "../game/studio/assetLibraryImport.mjs";
@@ -313,4 +314,22 @@ test("local test preparation rejects missing required references instead of filt
   const prepare = assetsRoute.slice(start, end);
   assert.match(prepare, /required\.some\(assetPath=>!safeAssetPath\(assetPath\)\)/);
   assert.doesNotMatch(prepare, /\.filter\(safeAssetPath\)/);
+});
+
+test("clean battlefield SVG hash, size, and manifest/audit totals are synchronized", () => {
+  const svg = readFileSync(new URL("../public/assets/backgrounds/farm-battlefield-clean.svg", import.meta.url));
+  const manifest = JSON.parse(readFileSync(new URL("../public/assets/asset-manifest.json", import.meta.url), "utf8"));
+  const audit = JSON.parse(readFileSync(new URL("../public/assets/asset-audit.json", import.meta.url), "utf8"));
+  const expectedHash = createHash("sha256").update(svg).digest("hex");
+  const entries = [
+    ...(manifest.assets || []),
+    ...Object.values(manifest.groups || {}).flat()
+  ].filter((entry) => entry.url === "/assets/backgrounds/farm-battlefield-clean.svg");
+  assert.equal(entries.length, 2);
+  for (const entry of entries) {
+    assert.equal(entry.bytes, svg.byteLength);
+    assert.equal(entry.sha256, expectedHash);
+  }
+  assert.equal(manifest.totalBytes, audit.totalBytes);
+  assert.equal(audit.groups.backgrounds.totalBytes, 75023 + 56081);
 });
