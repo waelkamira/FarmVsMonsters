@@ -285,8 +285,8 @@ test("Studio source sync is local-only, authenticated, and uses Git pull/push", 
   const page = readFileSync(new URL("../app/studio/page.js", import.meta.url), "utf8");
   assert.match(syncRoute, /if\(!canWriteStudioStorage\(\)\)/);
   assert.match(syncRoute, /verifyStudioSession/);
-  assert.match(syncScript, /git\(\["pull","--ff-only"\]/);
-  assert.match(syncScript, /git\(\["push","origin","HEAD:refs\/heads\/"\+sourceBranch\]/);
+  assert.ok(syncScript.includes('git(["pull", "--ff-only"]'));
+  assert.ok(syncScript.includes('git(["push", "origin", "HEAD:refs/heads/" + sourceBranch]'));
   assert.match(page, /syncSourceAssets/);
   assert.match(page, /مزامنة الأصول المختبرة إلى studio\/assets/);
 });
