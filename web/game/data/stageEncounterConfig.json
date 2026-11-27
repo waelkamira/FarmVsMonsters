@@ -19,48 +19,6 @@
       ],
       "plants": [
         {
-          "id": "hazelnut",
-          "count": 2,
-          "visible": true,
-          "enabled": true,
-          "unlocked": true
-        },
-        {
-          "id": "pepper-flamethrower-level-1",
-          "count": 1,
-          "visible": false,
-          "enabled": false,
-          "unlocked": true
-        },
-        {
-          "id": "coconut-level-1",
-          "count": 1,
-          "visible": false,
-          "enabled": false,
-          "unlocked": true
-        },
-        {
-          "id": "pumpkin",
-          "count": 1,
-          "visible": true,
-          "enabled": true,
-          "unlocked": true
-        },
-        {
-          "id": "bamboo-throwing-level-1",
-          "count": 1,
-          "visible": true,
-          "enabled": true,
-          "unlocked": true
-        },
-        {
-          "id": "snow-thrower",
-          "count": 1,
-          "visible": true,
-          "enabled": true,
-          "unlocked": true
-        },
-        {
           "id": "pineapple",
           "count": 1,
           "visible": true,
@@ -69,7 +27,7 @@
         }
       ],
       "background": "/assets/backgrounds/farm-battlefield-clean.svg",
-      "published": true,
+      "published": false,
       "monstersConfigured": true,
       "plantsConfigured": true
     }
