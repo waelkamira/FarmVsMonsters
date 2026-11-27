@@ -36,7 +36,7 @@ export function applyProductionDeletionTombstones(assets, tombstones) {
       ...asset,
       status: "archived",
       archivedAt: tombstone.deletedAt || asset.archivedAt || null,
-      releaseRequest: tombstone.releaseRequest || asset.releaseRequest || null
+      releaseRequest: (tombstone.releaseRequest || asset.releaseRequest) ? { ...(tombstone.releaseRequest || asset.releaseRequest), operation: "delete", state: "merged" } : null
     };
   });
 }
