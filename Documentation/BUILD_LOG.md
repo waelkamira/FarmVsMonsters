@@ -1,3 +1,5 @@
+> **Current implementation — 2026-11-25:** Stage 1 contains five waves of Monster 01 only and ends when the waves are cleared. No separate boss encounter is active.
+
 # Build Log — Farm Vs Monsters
 
 ## 2026-11-13 — Repository foundation
@@ -719,56 +721,38 @@
 
 
 ## 2026-11-15 — Approved Stage 1 story and fair-difficulty decisions
-- Recorded the user's decision that the small ordinary dragon begins appearing at the start of the final wave (Wave 5 in the current structure), while a few hyenas/ordinary followers may still remain. The dragon moves left/right behind the battlefield and attacks with telegraphed fireballs.
-- Recorded automatic slingshot behavior: the farmer throws stones at the dragon automatically when it is present and within range; no player clicking is required. The user will provide the dragon character sheet later. Stage 1 uses a normal dragon, not a cart-mounted dragon.
 - Replaced the 100-monster fixed design target with a clear balance requirement: retain five waves for now, but reduce/rebalance the current excessive enemy volume through playtesting. Early waves must be forgiving, slow, and teachable; difficulty increases gradually with recovery intervals and introduced counterplay.
 - Recorded the production order: finalize the battlefield environment, stage presentation, controls/buttons, HUD, menus, and visual language before adding further plant types. Keep the current starter plant/resource setup in the meantime; introduce new plants gradually later.
-- Added a distinct illustrated emblem/logo requirement for each stage; Stage 1's emblem composition is farmer versus dragon, captive wife centered behind, small evil hyenas below, and defensive plants.
-- Updated the Phase 1 acceptance target so the first complete playable stage includes the dragon, automatic slingshot, rescue, reunion, and celebration.
 - Documentation only: these decisions are recorded in the plan/roadmap/story documents. Gameplay code has not yet been changed or browser-verified as part of this documentation update.
 
 
 ## 2026-11-15 — Campaign monster-count progression approved
 - User approved 30 ordinary monsters total in Stage 1, 31 in Stage 2, 32 in Stage 3, then +1 ordinary monster for each subsequent stage (Stage N = 29 + N).
-- Counts are totals per campaign stage across its waves, not per-wave counts. Dragon bosses are tracked separately from ordinary monster/follower totals.
 - Stage 1 retains five waves; exact distribution of its 30 ordinary monsters across those waves will be tuned to keep the opening easy, readable, and fair.
 - The previous 100-monster first-stage schedule is obsolete and must be replaced in gameplay code and corresponding tests. No runtime code changed in this documentation update.
 
-## 2026-11-15 — Phase 1 dragon boss and princess rescue flow
-- Added a separate dragon boss encounter shortly after wave 5 begins, once two ordinary hyenas have entered; the boss is not included in ordinary monster wave counts.
-- Added automatic farmer sling attacks, a dedicated dragon health bar, dragon movement with the captive princess beside it, and fireball attacks against living plants or the farmhouse.
-- Phase 1 victory now waits for every ordinary monster and the dragon to be defeated.
 - Added the rescue sequence: the farmer reaches the princess, picks her up, carries her back to the farmhouse, and only then opens the victory screen.
 - Added optional user-authored asset slots and web/game/data/phase-one-story-assets.json; missing story artwork does not replace or modify existing character art.
 - Added focused story-flow tests in web/tests/phase-one-story.test.mjs.
-- Asset contract: farmer story sheets use 360×430 frames (6 frames each); dragon sheet uses 512×512 frames; captive and rescued princess poses are separate standalone PNGs; emblem is a standalone PNG.
 - Validation status: source and tests were updated, but browser gameplay, visual placement, and the web build still require execution in a local checkout after the user supplies the story artwork.
 
 
 
 ## 2026-11-15 — Phase 1 balance and in-game collection menu
-- Changed Stage 1 ordinary monster total from 100 to 30 across five waves: 3 / 5 / 6 / 7 / 9. Dragon boss is separate.
 - Added campaign stage count helper for Stages 1–10: 30–39 ordinary monsters, increasing by one per stage.
 - Added a pause-on-open in-game journal menu with tabs for stages, plants, cave/coins, and monsters.
 - Stage list shows ten stages; Stage 1 is available and later stages display lock/key status.
 - Plant list uses the existing Radish and Mushroom thumbnails and displays their energy planting costs. Future coin purchases are explicitly not enabled yet.
 - Coin tab displays the saved balance and awaits the user-designed cave background asset.
-- Monster guide uses current hyena sprite art and explains health scaling and plant damage; dragon is separate.
 - Updated the home page counter and focused regression assertions.
 - Not yet run: npm test, npm run build, or in-browser visual validation. Cave background art is not yet present.
 
 
-## 2026-11-15 — Hyena feeding animation
-- Hyenas now stop at the plant without pausing their sprite animation.
-- The authored hyena-bite sheet loops continuously during feeding, keeping the monster's world position fixed while its bite/body animation plays.
 - The monster returns to its walking/running animation after the plant is destroyed.
 - No sprite scaling, foot-position offsets, or ground shadows were added.
 - Automated test execution and in-browser visual confirmation remain pending.
 
 
-## 2026-11-15 — Fix hyena sinking during plant eating
-- Corrected the hyena bite animation to use authored frames 6–8 from the final row of `hyena-bite.png`, rather than incorrectly playing frames 0–5.
-- Kept the hyena's world position fixed while eating and preserved the looping bite animation; no character images or sprite dimensions were changed.
 - Added a regression assertion for the bite frame range. Automated test/build execution and in-browser visual verification are still pending.
 
 
@@ -814,12 +798,9 @@
 
 
 ## 2026-11-15 — Shared Stage 1 combat contract and replay RNG foundation
-- Added `web/game/rules/phaseOneCombatContract.mjs`, a versioned, renderer-independent source for Stage 1 waves, energy, plant combat values, all four monster profiles, Dust Skitter timing/movement, dragon combat, spawn pacing, and the existing 8-coin ordinary-monster reward.
-- Refactored `phaseOneRules.mjs` and `BattleScene.js` to consume the shared contract instead of duplicating monster HP, movement, damage, dragon, reward, and wave pacing constants. Existing balance values and wave counts were preserved.
 - Added `web/game/rules/seededRandom.mjs` with deterministic xorshift32 and unbiased integer sampling for future server/client replay. It is not yet wired into BattleScene; existing Phaser random calls remain client-side until session seed flow and simulation replay are implemented.
 - Added tests in `phase-one-combat-contract.test.mjs` and `seeded-random.test.mjs` covering exact current values, deterministic sequences, input validation, and shared-contract usage.
 - Added `Documentation/STAGE_ONE_AUTHORITATIVE_COMBAT_SIMULATION.md` describing the server-authoritative replay design, trust boundaries, deterministic requirements, rollout, and acceptance tests.
-- No economy values were changed: each ordinary monster still awards 8 local coins; dragon reward remains separate/unconfigured. Cloud progress and currency writes remain disabled pending a trusted server simulator.
 - Validation: GitHub source read/write only. No local npm test, lint, production build, browser test, or live Supabase migration was run.
 
 
@@ -840,7 +821,6 @@
 
 ## 2026-11-15 — First pure combat simulation kernel extracted
 - Added `web/game/rules/combatSimulation.mjs` with pure resolvers for plant placement, uprooting/refunds, energy pickups, and HP damage.
-- Wired BattleScene to use those resolvers for planting, manual uprooting, monster bites, projectile hits, and dragon damage. Moved energy pickup calculation behind the same pure module while retaining the existing phaseOneRules export.
 - Uproot refunds are now checked against the plant catalog rather than trusting a mutable per-plant refund value. The existing exact refund behavior is preserved; refunds can still exceed the normal 300 pickup cap, matching the current game.
 - Added `web/tests/combat-simulation.test.mjs` with 9 test cases covering valid/invalid placements, occupied cells, energy costs, destroyed plants, refund integrity, pickup caps, HP damage, and Phaser integration.
 - No balance changes: plant costs remain 35/50, HP remains unchanged, energy pickup cap remains 300, and ordinary monster rewards remain 8 coins.
@@ -852,24 +832,17 @@
 - Added pure `resolveMonsterLaneStep` and `resolveProjectileLaneStep` functions to `combatSimulation.mjs`.
 - BattleScene now delegates monster movement/clamping at plant bite reach and projectile local-coordinate advancement to these functions. This preserves the current delta-time movement formula and prevents fast monsters from stepping through a blocking plant.
 - Expanded `combat-simulation.test.mjs` with lane-step, projectile-step, invalid-input, and Phaser integration coverage.
-- Movement modifiers, collision detection, bite reach geometry, and Dust Skitter jump/burst scheduling are still resolved in BattleScene and remain future extraction work.
 
 
 
 ## 2026-11-15 — Extract combat target selection
-- Added pure selectors in `web/game/rules/combatSimulation.mjs` for nearest Radish lane blocker, projectile collision target, farmer melee target, and dragon fireball plant target.
-- Updated BattleScene to delegate all four target choices to the shared kernel. Existing selection semantics are preserved: nearest Radish behind each monster (mushrooms do not block), first eligible monster in projectile array order, nearest monster in the farmer's lane with stable tie order, and lowest-HP living plant for dragon fireballs.
-- Dragon fireball plant damage now also uses the shared HP damage resolver.
 - Expanded `web/tests/combat-simulation.test.mjs` to 16 test cases, including target selection, lane restrictions, collision radius/width scaling, tie handling, and Phaser integration assertions.
 - The Phaser scene still owns world-to-lane projection, rendered collision dimensions, attack cooldowns, tweens, and encounter orchestration. This extraction does not make the client authoritative.
 - Validation remains source inspection only; no local test/build/browser run was possible in this execution, and GitHub Actions runner allocation remains unresolved.
 
 
 
-## 2026-11-15 — Extract attack cooldowns and Dust Skitter motion
 - Added `advanceCooldown`, `resolveBiteAttack`, and `resolveDustSkitterMotionStep` to the pure combat kernel.
-- Wired shared cooldown advancement into regular monster attack timers, Radish firing, and both dragon attack timers. Bite-ready checks and interval resets now use the shared bite resolver.
-- Moved Dust Skitter jump/burst timing state transitions and movement multipliers out of Phaser. Existing Phaser random ranges are sampled only when a jump/burst transition requires a duration, then passed to the pure resolver.
 - Preserved visual-only jump behavior: jump offset does not alter logical lane position or collision. Preserved burst duration, cooldown ranges, jump duration/reset ranges, and simultaneous jump/burst speed multipliers.
 - Expanded combat simulation tests to 20 cases, including cooldown boundaries, jump start/landing, burst first-frame timing, and combined movement multipliers.
 - Source verification confirms old inline Skitter timing block and direct cooldown decrements were replaced. No local test/build/browser run was performed; GitHub Actions runner allocation is still failing before job steps.
@@ -880,13 +853,11 @@
 - Added `resolveWaveSpawnStep` to the pure combat kernel. It owns intermission countdown, spawn timer advancement, one-spawn-per-update decisions, and spawned-count progression.
 - The scheduler validates wave number and roster size against the phase-one contract, preserving [3, 5, 6, 7, 9] ordinary monsters, first-spawn/next-wave delays, the five-second intermission, and the per-wave spawn interval formula.
 - Moved monster archetype selection into `resolveMonsterArchetype`; kept `phaseOneRules.mjs` compatibility export backed by the shared resolver.
-- BattleScene now consumes the scheduler output and retains only Phaser-specific lane randomness, sprite construction, effects, and the existing dragon trigger after the second ordinary monster in wave five.
 - Added three kernel test cases for intermission and spawn cadence, roster boundaries, and archetype composition. Updated scene integration assertions to the extracted scheduler and existing Skitter resolver.
 - No wave sizes, enemy stats, reward values, or boss conditions were intentionally changed. No local tests/build/browser run was performed; CI runner allocation remains unresolved.
 
 
 ## 2026-11-16 — Deterministic client simulation sampling
-- Added a scene-scoped seeded random stream for monster lane selection and Dust Skitter jump/burst gameplay timing samples.
 - Kept cosmetic voice randomness outside the simulation stream.
 - The client seed is explicitly provisional and cannot establish authoritative wins or rewards; server-issued session seeds and replay validation remain future work.
 - Existing wave sizes, spawn cadence, archetype composition, movement multipliers, and random sampling ranges are unchanged.
@@ -933,13 +904,11 @@ Validation follow-up: corrected monster ID regex validation and added malformed-
 ## 2026-11-16 — Monster lane movement replay
 - Added periodic movement checkpoints with lane distance, elapsed combat time, and nearest Radish blocker.
 - Replay derives the blocker from the lane state and clamps movement through the shared lane-step resolver; it rejects movement exceeding archetype speed bounds, clock mismatches, and incorrect blockers.
-- Added focused movement replay tests. This is a checkpoint-based validation slice, not yet a complete deterministic frame simulation; Dust Skitter random state, projectile hits, deaths, farm breach and boss resolution remain open. Tests/build not executed locally.
 
 
 Coordinate correction: movement replay now uses calibrated lane width/spawn position, and a checkpoint is forced when entering bite range so the replay cannot accept a bite from an outdated distant position. Focused bite fixtures now include the actual lane traversal. Tests/build still not executed in this environment.
 
 
-Movement replay hardening: added configured-speed checks for standard monsters, bounded lower/upper speed checks for Dust Skitters, and clock checkpoints during stationary bite cycles. The anti-tunneling fixture now traverses the full calibrated lane distance; negative movement distance is rejected at the event-log boundary. No test/build run succeeded in this environment.
 
 
 Final anti-tunneling check: replay now compares the claimed travelled distance with the distance actually produced by the shared clamped lane-step resolver. A log that claims the monster crossed the blocking Radish is rejected instead of silently clamping the replay position.
@@ -989,24 +958,19 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 
 ## 2026-11-19 — PvZ wave announcements and live defeat progress
 - Added a reusable animated wave announcement banner to the battle HUD. It appears at the start of Stage 1 and whenever the next wave is unlocked, without creating new Phaser display objects on every transition.
-- Added distinct warning styling and copy for wave 4 (the fast Dust Skitter scout) and wave 5 (the armoured Stonehide). Arabic and English announcement text are included.
 - Corrected the wave progress bar semantics: it now tracks monsters actually defeated in the current wave, rather than monsters merely spawned. This makes the bar reflect real combat progress.
-- Preserved the existing five-wave roster, spawn intervals, five-second intermission, archetype schedule, and dragon trigger.
 - Added focused source-integration tests for announcement coverage, late-wave warnings, reusable banner lifecycle, and defeated-monster progress.
 - Verification status: GitHub source read-back only. Node tests, Next.js build, and browser gameplay still need to be run locally; no runtime success is claimed.
 
 
 ## 2026-11-19 — Monster arrival presentation
 - Added a small Phaser-only arrival cue for each ordinary monster: a tier-colored ground ring expands and fades while a few lightweight dust puffs disperse.
-- Arrival colors distinguish the Dust Skitter scout, Stonehide armoured monster, Alpha Brute, and standard cave brute without changing their combat stats or artwork.
 - Monsters now reveal with a short scale/opacity entrance animation. The logical spawn coordinates and lane movement remain unchanged; the entrance tween deliberately avoids controlling position because the movement system owns each monster's position every simulation update.
 - Effects self-destroy after their short animation to avoid accumulating display objects.
 - Added focused source-integration assertions for tier colors, cleanup, and preservation of logical spawn coordinates.
 - Verification: GitHub source read-back only. Node tests, Next.js build, and in-browser Phaser gameplay remain unexecuted in this environment.
 
 
-## 2026-11-19 — Dragon boss attack telegraph
-- Added a visible impact warning at the dragon's selected target before each fireball launches: an expanding outer ring and bright center marker remain visible for 520ms.
 - The warning is placed on the currently selected plant, or at the farmhouse impact point when no valid plant target exists, giving the player a readable reaction window.
 - Fireball travel duration, damage, target selection, boss attack interval, and defeat/rescue conditions are unchanged. The telegraph is presentation-only and uses the existing Phaser scene clock/tween lifecycle.
 - The delayed launch is cancelled if the boss dies or the battle enters a terminal/story/menu state before the warning completes.
@@ -1067,6 +1031,151 @@ Final anti-tunneling check: replay now compares the claimed travelled distance w
 - Added `VFXManager`, named effect presets, and a rolling frame-time quality monitor with Ultra/High/Performance budgets and fixed-quality override support.
 - Connected the manager to BattleScene and routed existing plant projectile and ice impacts through the new VFX presets; combat damage/status rules remain untouched.
 - Added a named VFX registry and focused Node tests for adaptive quality, fixed quality, invalid inputs, and concurrency caps.
-- Added the first dragon fireball impact cue; it remains presentation-only and does not alter target selection or damage.
 - Current implementation uses Phaser procedural geometry and the built-in white particle texture when available. Sprite-sheet playback is supported by explicit keys but still needs authored effect sheets and registry metadata; renderer-specific shader pipelines remain an optional follow-up after compatibility testing.
 - Verification: GitHub source edits only. Tests, lint, production build, and Chrome/Windows visual/performance profiling have not been executed; do not treat runtime integration as verified.
+
+## 2026-11-22 — Hybrid Skeletal Animation Studio and Battle Integration
+- Added the versioned rig evaluator, Phaser Container renderer, and animation state controller with bounded cross-fades and shortest-path rotation.
+- Added the visual Rig Editor to the authenticated Studio plant/monster asset form: bitmap part assignment, bone hierarchy, canvas drag, zoom/pan, pivots, clips, FPS, clickable keyframe tracks, presets, attachments, and attack/hurt hitbox editing.
+- Rig profiles now persist through asset save, clone, version snapshots, restore, Testing Lab validation, release dependency checks, and published catalog metadata.
+- Studio testing catalogs now return the referenced bitmap part descriptors; BattleScene preloads those images and registers their frame grids.
+- BattleScene can render optional skeletal rigs for Studio plants and monsters while preserving the existing Sprite Sheet path for every asset without a rig.
+- Rigged projectile plants launch from the muzzle attachment. Rigged plant/monster attack and hurt hitboxes participate in supported melee, bite, and projectile collision checks. Monster freeze/thaw preserves or plays a frozen skeletal pose.
+- Added focused Node test coverage for evaluator, adapter, state machine, readiness, versioning, dependencies, Studio wiring, and BattleScene integration.
+- Verification status: source changes and tests are committed to feat/studio-hybrid-animation-engine. GitHub Actions creates jobs but reports runner_id: 0, zero steps, and no logs; no test, lint, build, or browser result is claimed. The connected browser context is unavailable in this session, so live Chrome/Windows verification remains open.
+- Remaining acceptance gates: run Node tests, ESLint, and production build on a working runner; visually verify a rigged plant and monster in BattleScene; verify launch origin and hitbox behavior; add explicit state-priority rules and final cleanup/performance checks.
+
+### Hybrid Rig Editor and runtime hardening — 2026-11-22
+- Extended the canvas editor with zoom/pan, draggable attachment and hitbox handles, clickable per-bone keyframe tracks, FPS-stepped preview, editable breathing/walk/recoil presets, and a safe switch back to Sprite Sheet mode.
+- Normalized rig-part frame counts so static images always expose exactly one frame even if an older registry entry contains stale frameCount metadata; published and testing catalog descriptors now use the normalized grid.
+- Restricted rig parts to supported image asset categories and blocked empty rigs, invalid part references, archived parts, out-of-range frames, and projectile rigs without a muzzle attachment.
+- BattleScene now uses every configured attack/hurt hitbox for supported overlap checks, advances rigged monster move/hit/death clips, preserves frozen poses, and registers one destroy listener per rig to stop animation timers.
+- Added additional regression coverage for static frame bounds, missing bitmap parts, malformed rig profiles, muzzle requirements, editor interactions, and monster state/freeze wiring.
+- Validation remains blocked before job execution: GitHub Actions runner_id is 0 and the job has no steps or logs. No automated or browser pass is claimed.
+
+
+## 2026-11-22 — Hybrid skeletal animation Studio
+- Added a visual cutout-rig editor with bone hierarchy, part assignment, pivots, animation clips, keyframes, attachment points, and attack/hurt hitboxes.
+- Added canvas zoom/pan, direct manipulation of bones and rig markers, editable breathing/walk/recoil presets, per-clip FPS, frame-stepped preview, and safe fallback to Sprite Sheet mode.
+- Added integer frame-time snapping for keyframes, protecting Studio saves from fractional millisecond timestamps.
+- Integrated optional rig rendering for Studio plants and monsters while preserving Sprite Sheet fallback.
+- Integrated muzzle-based projectile origins and multiple oriented hitboxes for melee, monster bites, and projectile collision.
+- Added animation state guards for attack, hit, frozen, and death states, including correct preservation across stacked freeze events.
+- Validation remains pending: the GitHub Actions jobs for the current feature branch terminate before any steps or logs are available; no tests/lint/build/browser pass is claimed.
+- Working branch: `feat/studio-hybrid-animation-engine`; review PR: #84.
+
+### Final rig-editor and collision refinements — 2026-11-22
+- Keyframe timestamps now snap to integer clip-frame times in the editor, including numeric edits, canvas dragging, presets, keyframe insertion/removal, and preview sampling.
+- Added per-clip FPS validation and defaulting in the rig data contract.
+- BattleScene uses convex-polygon SAT across all authored attack/hurt hitbox pairs and circle-vs-polygon checks for projectiles, including non-uniform parent scaling.
+- Monster state guards protect death and frozen states, preserve the pre-freeze animation across stacked freeze hits, and prevent idle/movement from resetting active attack/hit clips.
+- Validation still has not executed: the latest GitHub Actions jobs finish with runner_id=0 and no steps/logs. Live Chrome/Windows battle verification remains open.
+
+- Extracted oriented skeletal hitbox collision and projectile-circle intersection into `skeletalCollision.mjs`; added geometry unit tests (overlap, separation, rotation, tangency, invalid values).
+- Corrected muzzle attachment conversion to full plant-view world space, including parent position, scale, and rotation, before projectile launch coordinates are calculated.
+
+- Added `skeletalWorldTransform.mjs` and unit tests for parent translation, non-uniform scaling, rotation, defaults, and invalid transform values; BattleScene now shares this helper for muzzle and hitbox world coordinates.
+
+- Improved collision geometry for non-uniformly scaled characters: rig hitboxes are now transformed corner-by-corner into convex polygons and tested with SAT; projectile circles use polygon edge-distance tests instead of approximating a skewed shape as an oriented rectangle.
+
+
+### Rig editor visual-reference and interaction hardening — 2026-11-22
+- The Rig Editor now displays the current uploaded or existing character artwork as a faint first-frame alignment reference beneath the cutout parts, including the newly selected local upload before it is saved.
+- Reparenting choices now exclude descendants of the selected bone, preventing users from creating a cyclic hierarchy through the parent selector.
+- Canvas drag and pan listeners now clean up on pointer-up, pointer-cancel, and window blur.
+- Corrected Phaser frame registration for static monster rig parts: static images are registered as a 1×1 grid so the rig renderer can resolve frame 0 consistently, matching the plant rig-part path.
+- Validation status: source review and GitHub commits only. Latest Actions jobs still terminate with runner_id=0 and no executed steps/logs; automated tests, lint, production build, and live browser verification remain unconfirmed.
+
+
+## 2026-11-22 — Mainline hybrid-rig integration
+- Rebased the skeletal editor, evaluator, Phaser renderer, collision helpers, asset dependency checks, version snapshots, and BattleScene wiring onto the current `main` line.
+- Preserved the current direct-publish API and binary upload-signature validation while adding rig-profile persistence, referenced-part catalog descriptors, and immutable publication of rig bitmap dependencies.
+- Connected the projectile muzzle attachment to the current shared launch-point helper so authored muzzle coordinates become the exact initial trajectory offsets.
+- Deduplicated shared rig-part texture loads across plant and monster catalogs.
+- Restricted rig bitmap dependencies to renderable image asset categories and added readiness/dependency regression tests for unsupported part types.
+- Required at least one animation clip so a rig always has an initial evaluated pose before attachments and hitboxes are queried.
+- Added a Studio/BattleScene source-integration test to guard profile persistence, muzzle launch, hitbox collision wiring, and Sprite Sheet fallback.
+- Verification status: GitHub Actions jobs still terminate before runner assignment (`runner_id: 0`, zero steps and no logs). Tests, ESLint, production build, and live Chrome/Windows battle behavior remain unverified; do not merge until those gates pass.
+- Review branch: `feat/studio-hybrid-animation-engine-mainline`; PR #88.
+
+- Follow-up runtime correction: centralized looping-idle clip resolution. Plants and monsters now prefer a looping `idle` clip, otherwise a looping fallback; one-shot attack clips are no longer restarted every update as an idle animation. Freeze recovery still falls back to the first clip if no looping clip exists.
+
+- Manual isolated runtime checks executed against the current branch source: skeletal interpolation and crossfade completion; idle-clip resolution; Phaser rig construction and world-space muzzle/hitbox transforms; convex collision; parent transforms; projectile launch/trajectory origin; and asset-readiness rejection of unsupported rig-part types. These checks passed after the crossfade fix.
+- Syntax compilation via JavaScript Function parsing passed for `BattleScene.js` and the Studio assets API route after removing module import/export declarations. This is a syntax check only, not a Next.js/ESLint production build.
+- GitHub Actions was retried again on commit `8345c0f6df22c620d4588ab49fa79c993deefa53`; both workflow jobs still fail before runner assignment (`runner_id: 0`, zero steps). Full `npm test`, ESLint, Next.js production build, and live in-game browser verification remain outstanding.
+
+- Expanded isolated JavaScript verification to execute 103 individual test cases from the branch's actual test sources: skeletal animation (13), animation state machine (5), Phaser skeletal rig (4), collision geometry (6), world transforms (4), asset versions (8), asset dependencies and Studio integration assertions (39), asset readiness (20), and hybrid-engine integration (4). All 103 passed after correcting stale source assertions and incomplete readiness fixtures. This harness executes the test callbacks against the fetched branch modules; it is not a substitute for the repository's full `node --test` run.
+
+- Rig Editor playback follow-up: replaying a completed non-looping clip now resets the preview time to zero before starting; pausing mid-clip still resumes from the current frame. Added a regression assertion for replay behavior.
+- The isolated test harness was rerun after this UI fix: 104 test cases passed across the same 9 test groups. Full repository `node --test`, ESLint, Next.js build, and live browser battle verification remain blocked/unverified as noted above.
+
+## 2026-11-25 — Studio login hardening (E-03)
+
+- Added a per-client-IP limit of five Studio login attempts per 15 minutes.
+- Production uses a shared Redis REST counter with an atomic increment/expiry operation; login fails closed with HTTP 503 if the shared store is missing or unavailable. Development uses an in-memory limiter only.
+- Separated `STUDIO_ADMIN_TOKEN` (login credential) from `STUDIO_SESSION_SECRET` (HMAC session signing key), requiring independent values of at least 32 characters.
+- Updated all authenticated Studio API handlers to verify cookies with `STUDIO_SESSION_SECRET`, not the admin password.
+- Added a production IP allowlist for `/studio` and `/api/studio`; production fails closed when `STUDIO_ALLOWED_IPS` is empty or the reverse-proxy IP header is absent. The public game runtime's GET stage-encounter config read remains exempt; writes still require a valid session.
+- Added environment examples and deployment guidance for shared rate limiting, private-access protection, fine-grained GitHub permissions, and branch protection.
+- Added tests for rate-limit thresholds, IP isolation, Redis behavior, fail-closed production behavior, and signing-key separation.
+
+Production rollout requires setting the two new independent secrets and the shared Redis REST credentials. Existing Studio sessions are invalidated when the signing key changes and users must sign in again. A private access layer in front of Studio should also be configured at the deployment/network edge; repository code cannot provision that external control by itself.
+
+## 2026-11-25 — Mobile battle usability pass (E-04)
+
+- Added a portrait-phone orientation prompt that asks players to rotate to landscape while preserving the Phaser scene instance.
+- Added optional fullscreen entry/exit where the browser supports the Fullscreen API.
+- Set Phaser renderer resolution to a maximum device-pixel ratio of 2 for sharper high-density displays.
+- Expanded the nine primary right-side battle controls to 76×76 game-space hit areas and spaced them across the 680px game height without overlap.
+- Updated the audio-menu dismissal bounds to match the relocated audio control.
+- Added mobile touch-action styles, compact landscape spacing, and a device-width viewport declaration.
+- Added regression tests for orientation detection, resolution, fullscreen support, touch hit areas, and HUD layout.
+
+The game remains authored in a fixed 1120×680 landscape coordinate space. CI can validate code, tests, lint, and build; physical touch-target feel, fullscreen behavior, and visual readability still require testing on actual Android/iOS devices.
+
+## 2026-11-25 — Missing asset reference containment (E-05)
+
+- Removed the seven absent Phase 1 story artwork requests from the Phaser preload queue. The design contract remains in `phase-one-story-assets.json` with `runtimeEnabled: false` and `awaiting-art` status until the authored files are committed.
+- Changed seven planned plant PNG references to `assetPath: null` plus `plannedAssetPath`; their encyclopedia cards use committed local SVG catalogue icons where available, and Fire Pepper uses its Twemoji fallback because its local SVG is also absent. Existing Pumpkin artwork remains mapped to the committed `pumpkin.png`.
+- Changed missing projectile artwork references to `assetPath: null` plus `plannedAssetPath`, and corrected the Pumpkin Guard source-art mapping to the existing Pumpkin file. Existing Pineapple projectile art remains active.
+- Added regression tests verifying every non-null plant/projectile runtime path exists, pending art is not requested by Phaser, and the planned plant icons exist.
+
+
+
+## 2026-11-25 — Comedic Game Juice pass
+- Added elastic 120% arrival/pickup pops that settle to exact scale, plus soft body follow-through on monster defeat.
+- Added bounded 0.9–1.1 sound playback-rate variation for repeated SFX.
+- Added small camera shake and thresholded boss zoom punches for heavy moments.
+- Reused the existing bounded footstep-dust system and added registered procedural spawn, dust and rotating dizzy-star effects.
+- Kept effects cosmetic: no combat damage, movement authority, collision, replay, or reward rules were changed.
+- Detached accessories and independent eye tracking remain gated on explicit per-part/eye metadata; current sprite-sheet assets do not expose safe detachable parts or separate pupil nodes.
+
+
+## 2026-11-25 — Restore permanent delete across the Studio asset library
+- Restored the visible “حذف نهائي” action on every asset row, not only plant and monster rows.
+- Removed the matching plant/monster-only restriction from both local and GitHub storage API paths; all asset types now use the same authenticated confirmation, dependency checks, shared-file protection, and cleanup flow.
+- Preserved dependency protection so a projectile or other referenced asset cannot be deleted while another asset still depends on it.
+- Updated regression tests to require the delete action for every library asset type and verify both storage drivers no longer impose the old type restriction.
+- CI and runtime deletion behavior remain pending the pull-request checks; no live asset was deleted during this change.
+
+## 2026-11-25 — Electric combat shock reactions
+- Added a reusable, short-lived lightning arc for electric projectile impacts, with cyan/white flicker, local recoil, squash-and-stretch, and a restrained camera impact.
+- Wired the effect into built-in Electric Mushroom hits and Studio-authored electric projectile hits without changing damage, collision, projectile timing, or lane rules.
+- Added a shared electric-hit hook for configured electric monster bites against plants; it activates only when the monster combat profile explicitly declares an electric damage/attack type.
+- Added regression coverage for both electric projectile paths, effect cleanup timing, and the configured electric-monster counter path.
+- No existing monster archetype currently declares an electric bite profile; the monster-side visual path is ready for a future Studio-authored/configured electric monster and does not invent a new enemy ability.
+
+
+
+## 2026-11-26 — Remove empty placeholder cards from the battle seed bar
+- Removed the empty-slot artwork loader and the loop that drew placeholder cards in unused seed-bar positions.
+- The battle seed bar now renders only plants included in the active loadout; existing plant selection, card spacing, and gameplay logic remain unchanged.
+- Added a regression test asserting that empty placeholder cards are not rendered.
+- GitHub Actions validation is required; no local browser gameplay verification is claimed.
+
+
+## 2026-11-26 — Remove battle seed-card frames and green fallback wash
+- Removed only the outer frame artwork from battle plant cards; kept the glass surface, plant icon, cost, cooldown state, hit target, and selection interactions.
+- Removed the full-screen green fallback wash behind the battlefield fallback artwork; retained the existing battlefield image and all stage lighting, weather, particles, and combat effects.
+- Added regression coverage for the frame-free plant cards and the absence of the green fallback wash.
+- GitHub Actions validation is required; no local browser gameplay verification is claimed.

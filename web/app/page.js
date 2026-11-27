@@ -42,7 +42,7 @@ export default function HomePage() {
           {starting && <span className="codex-start-loading">{arabic ? "جارٍ التحضير..." : "GETTING READY..."}</span>}
         </button>
       </section>
-      <a className="codex-home-settings-link" href="/settings" aria-label={arabic ? "الإعدادات" : "Settings"}>⚙️</a>
+      <nav className="codex-home-utility-links" aria-label={arabic ? "روابط اللعبة" : "Game links"}>\n        <a href="/stages">{arabic ? "الحملة" : "Campaign"}</a>\n        <a href="/account">{arabic ? "الحساب (اختياري)" : "Account (Optional)"}</a>\n      </nav>\n      <a className="codex-home-settings-link" href="/settings" aria-label={arabic ? "الإعدادات" : "Settings"}>⚙️</a>
     </main>
   );
 }

@@ -31,7 +31,6 @@
 3. The repository root has no `project.godot` file at the expected root path; the dedicated Godot project should be created under `godot/`.
 4. The current Stage 1 contract defines 5 waves of 3, 5, 6, 7, and 9 ordinary monsters (30 total), an 8-column × 5-row board, and starting/capped energy of 150/300.
 5. Stage 1 plant rule data currently includes Radish, Energy Mushroom, Pumpkin, Pineapple, Hazelnut and Mango. The separate roster file distinguishes active/implemented entries from planned entries; do not assume every configured plant is approved for the first playable slice.
-6. The monster roster describes Cave Brute, Dust Skitter, Stonehide and Alpha Brute; the Stage 1 dragon is a separate boss contract.
 7. Combat rules and replay/event-log modules are already separated from the large Phaser battle scene. Prioritize those pure rules for direct, testable translation before reproducing presentation code.
 8. Several docs still describe Phaser and Windows-first delivery. The README and the new Godot migration plan now record the latest approved decision; the older documents remain useful for gameplay requirements but no longer define engine/platform priority.
 9. The complete art inventory, Unity project tree, actual Android minimum-version target, exact pinned Godot patch version, and physical-device test matrix remain open audit items.
@@ -50,3 +49,4 @@
 ## Combat contract parity correction
 
 During the GDScript port, the tracked JavaScript combat contract declared Radish planting cost as 25 energy while existing regression tests expected 35. The canonical value is corrected to **35** on this branch, matching the established regression expectations. Run the full JavaScript suite when a Node environment is available.
+

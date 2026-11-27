@@ -7,53 +7,141 @@ import { useLocale, LanguageToggle } from "../../../LocaleProvider";
 import { loadUnlockedPlantIds } from "../../../../game/rules/phaseOneRules.mjs";
 
 const PLANTS = [
-  { id: "radish", name: "Radish Level 1", ar: "الفجل المستوى الأول", role: "Lane attacker", roleAr: "مهاجم للمسار", cost: 35, image: "/assets/plants/radish-level-1.png" },
+  { id: "radish", name: "Radish Level 1", ar: "الفجل المستوى الأول", role: "Lane attacker", roleAr: "مهاجم للمسار", cost: 35, image: "/assets/plants/radish-level-1.png", spriteSheet: true, rows: 3, columns: 3, frameCount: 9 },
   { id: "mushroom", name: "Energy Mushroom", ar: "فطر الطاقة", role: "Energy producer · Required", roleAr: "منتج الطاقة · أساسي", cost: 50, image: "/assets/plants/mushroom.png", required: true },
   { id: "pumpkin", name: "Pumpkin", ar: "اليقطين", role: "Heavy blocker", roleAr: "حاجز دفاعي", cost: 75, image: "/assets/plants/pumpkin.png" },
-  { id: "pineapple", name: "Pineapple L1", ar: "الأناناس L1", role: "Arcing bomb attacker", roleAr: "قاذف قنابل مقوسة", cost: 70, image: "/assets/plants/pineapple-level-1.png" },
-  { id: "hazelnut", name: "Hazelnut L1", ar: "البندق L1", role: "Arcing bomb attacker", roleAr: "قاذف قنابل مقوسة", cost: 65, image: "/assets/plants/hazelnut-level-1.png" },
-  { id: "mango", name: "Mango L1", ar: "المانجو L1", role: "Arcing bomb attacker", roleAr: "قاذف قنابل مقوسة", cost: 70, image: "/assets/plants/mango-level-1.png" },
-  { id: "snow-thrower", name: "Snow Thrower L1", ar: "قاذف الثلج L1", role: "Freeze support", roleAr: "دعم بالتجميد", cost: 90, image: "/assets/plants/Snow-thrower-level-1.png" }
+  { id: "pineapple", name: "Pineapple L1", ar: "الأناناس L1", role: "Arcing bomb attacker", roleAr: "قاذف قنابل مقوسة", cost: 70, image: "/assets/plants/pineapple-level-1.png", spriteSheet: true, rows: 3, columns: 3, frameCount: 9 },
+  { id: "hazelnut", name: "Hazelnut L1", ar: "البندق L1", role: "Arcing bomb attacker", roleAr: "قاذف قنابل مقوسة", cost: 65, image: "/assets/plants/hazelnut-level-1.png", spriteSheet: true, rows: 3, columns: 3, frameCount: 9 },
+  { id: "mango", name: "Mango L1", ar: "المانجو L1", role: "Arcing bomb attacker", roleAr: "قاذف قنابل مقوسة", cost: 70, image: "/assets/plants/mango-level-1.png", spriteSheet: true, rows: 3, columns: 3, frameCount: 9 },
+  { id: "snow-thrower", name: "Snow Thrower L1", ar: "قاذف الثلج L1", role: "Freeze support", roleAr: "دعم بالتجميد", cost: 90, image: "/assets/plants/Snow-thrower-level-1.png", spriteSheet: true, rows: 3, columns: 3, frameCount: 9 },
+  { id: "electric-mushroom", name: "Electric Mushroom L1", ar: "الفطر الكهربائي L1", role: "Electric lane attacker", roleAr: "مهاجم كهربائي للمسار", cost: 85, image: "/assets/plants/Electric-mushroom-level-1.png", spriteSheet: true, rows: 3, columns: 3, frameCount: 9 },
 ];
 
 const STARTER_LOADOUT = ["radish", "mushroom"];
-const MAX_SEEDS = 7;
+const MAX_SEEDS = 6;
 
 export default function StageOneSeedSelectionPage() {
   const { locale } = useLocale();
   const ar = locale === "ar";
   const router = useRouter();
+  const [stageNumber, setStageNumber] = useState(1);
   const [unlockedIds, setUnlockedIds] = useState(STARTER_LOADOUT);
   const [selected, setSelected] = useState(STARTER_LOADOUT);
+  const [plantCatalog, setPlantCatalog] = useState(PLANTS);
+  const [stagePlantsConfigured, setStagePlantsConfigured] = useState(false);
+  const [stageSettingsReady, setStageSettingsReady] = useState(false);
+  const [stageSettingsError, setStageSettingsError] = useState("");
+  const [studioPlaytest, setStudioPlaytest] = useState(false);
   const [notice, setNotice] = useState("");
-  const selectedPlants = useMemo(() => PLANTS.filter((plant) => unlockedIds.includes(plant.id) && selected.includes(plant.id)), [selected, unlockedIds]);
+  const selectedPlants = useMemo(() => plantCatalog.filter((plant) => unlockedIds.includes(plant.id) && selected.includes(plant.id)), [plantCatalog, selected, unlockedIds]);
 
   useEffect(() => {
-    let unlocked = STARTER_LOADOUT;
-    try {
-      unlocked = loadUnlockedPlantIds(window.localStorage);
-    } catch {
-      // Keep the starter loadout if browser storage is unavailable.
-    }
-    const safeUnlocked = [...new Set([...STARTER_LOADOUT, ...unlocked])];
-    setUnlockedIds(safeUnlocked);
-    try {
-      const saved = JSON.parse(window.localStorage.getItem("farmVsMonsters.selectedPlants") || "null");
-      const validSaved = Array.isArray(saved)
-        ? saved.filter((id) => safeUnlocked.includes(id) && PLANTS.some((plant) => plant.id === id))
+    let active = true;
+    const requestedStage = Number(new URLSearchParams(window.location.search).get("stage"));
+    const activeStage = Number.isInteger(requestedStage) ? Math.max(1, Math.min(100, requestedStage)) : 1;
+    const readCatalog = async (url) => {
+      try {
+        const response = await fetch(url, { cache: "no-store" });
+        if (!response.ok) return [];
+        const data = await response.json();
+        return Array.isArray(data.plants) ? data.plants : [];
+      } catch { return []; }
+    };
+    (async () => {
+      try {
+      const [published, testing, stageSettings, studioSession] = await Promise.all([
+        readCatalog("/assets/studio-plant-catalog.json"),
+        readCatalog("/api/studio/assets?catalog=testing"),
+        fetch("/api/studio/stage-encounters", { cache: "no-store" }).then(async response => {
+          if (!response.ok) {
+            const data = await response.json().catch(() => ({}));
+            throw new Error(data.error || "تعذر تحميل إعدادات المرحلة المنشورة.");
+          }
+          return response.json();
+        }),
+        fetch("/api/studio/session", { cache: "no-store" }).then(response => response.ok ? response.json() : null).catch(() => null)
+      ]);
+      if (!active) return;
+      setStageSettingsReady(true);
+      setStageSettingsError("");
+      const isStudioPlaytest = new URLSearchParams(window.location.search).get("studioPlaytest") === "1" && studioSession?.authenticated === true;
+      setStageNumber(activeStage);
+      setStudioPlaytest(isStudioPlaytest);
+      const studioPlants = [...published, ...testing].map((plant) => ({
+        id: plant.id,
+        name: plant.name || plant.id,
+        ar: plant.nameAr || plant.name || plant.id,
+        role: plant.combat?.mode === "projectile" ? "Projectile attacker"
+          : plant.combat?.mode === "blocker" ? "Defensive blocker"
+          : plant.combat?.mode === "energy" ? "Energy producer"
+          : plant.combat?.mode === "contact" ? "Contact defender" : "Close-range attacker",
+        roleAr: plant.combat?.mode === "projectile" ? "مهاجم بالمقذوفات"
+          : plant.combat?.mode === "blocker" ? "حاجز دفاعي"
+          : plant.combat?.mode === "energy" ? "منتج للطاقة"
+          : plant.combat?.mode === "contact" ? "مدافع بضرر تلامسي" : "مهاجم قريب",
+        cost: plant.combat?.energyCost ?? 60,
+        image: plant.path,
+        spriteSheet: Boolean(plant.spriteSheet),
+        rows: Number(plant.rows)||1,
+        columns: Number(plant.columns)||1,
+        frameCount: Number(plant.frameCount)||((Number(plant.rows)||1)*(Number(plant.columns)||1)),
+        studio: true,
+        testing: testing.some((candidate) => candidate.id === plant.id)
+      }));
+      const plantMap = new Map([...PLANTS, ...studioPlants].map((plant) => [plant.id, plant]));
+      const configuredStage = stageSettings?.stages?.[String(activeStage)];
+      const plantAliases = {radish:["radish","radish-level-1"],mushroom:["mushroom","energy-mushroom"],pumpkin:["pumpkin","pumpkin-level-1"],pineapple:["pineapple","pineapple-level-1"],hazelnut:["hazelnut","hazelnut-level-1"],mango:["mango","mango-level-1"],"snow-thrower":["snow-thrower","snow-thrower-level-1"],"electric-mushroom":["electric-mushroom","electric-mushroom-level-1"]};
+      const publishedStage = configuredStage?.published === true && configuredStage?.plantsConfigured === true;
+      const stageRosterConfigured = configuredStage?.plantsConfigured === true;
+      const useStageRoster = stageRosterConfigured && (publishedStage || isStudioPlaytest);
+      setStagePlantsConfigured(useStageRoster);
+      const visibleStageEntries = (configuredStage?.plants || []).filter(entry => entry.visible !== false && entry.enabled !== false);
+      const nextPlants = useStageRoster
+        ? [...plantMap.values()].filter(plant => visibleStageEntries.some(entry => entry.id === plant.id || (plantAliases[plant.id] || []).includes(entry.id)))
+        : [...plantMap.values()];
+      setPlantCatalog(nextPlants);
+      let unlocked = STARTER_LOADOUT;
+      try { unlocked = loadUnlockedPlantIds(window.localStorage); } catch { /* Starter seeds remain available. */ }
+      const stageUnlockedIds = useStageRoster
+        ? visibleStageEntries.filter(entry => entry.unlocked !== false).map(entry => Object.entries(plantAliases).find(([, aliases]) => aliases.includes(entry.id))?.[0] || entry.id)
         : [];
-      setSelected([...new Set([...STARTER_LOADOUT, ...validSaved])].slice(0, MAX_SEEDS));
-    } catch {
-      setSelected(STARTER_LOADOUT);
-    }
+      // A published stage's authored unlock flags override campaign progress for that stage only.
+      // An authenticated Studio playtest can inspect every visible plant assigned to this stage, including locked entries.
+      // Studio preview must use the same per-stage unlocked flags as the player release.
+      // Preview grants no campaign-wide unlocks and does not silently unlock stage entries.
+      const safeUnlocked = useStageRoster
+        ? [...new Set(stageUnlockedIds)]
+        : [...new Set([...STARTER_LOADOUT, ...unlocked])];
+      setUnlockedIds(safeUnlocked);
+      try {
+        const stageSelectionKey = "farmVsMonsters.selectedPlants.stage." + activeStage;
+        const saved = JSON.parse(window.localStorage.getItem(stageSelectionKey) || (activeStage === 1 ? window.localStorage.getItem("farmVsMonsters.selectedPlants") : "null"));
+        const validSaved = Array.isArray(saved)
+          ? saved.filter((id) => safeUnlocked.includes(id) && nextPlants.some((plant) => plant.id === id))
+          : [];
+        const availableIds = new Set(nextPlants.map((plant) => plant.id));
+        const defaultStudioPlants = studioPlants.map((plant) => plant.id);
+        const authoredDefaults = useStageRoster
+          ? stageUnlockedIds.filter((id) => availableIds.has(id))
+          : [...STARTER_LOADOUT.filter((id) => availableIds.has(id)), ...defaultStudioPlants.filter((id) => availableIds.has(id))];
+        setSelected([...new Set([...authoredDefaults, ...validSaved])].slice(0, MAX_SEEDS));
+      } catch {
+        const availableIds = new Set(nextPlants.map((plant) => plant.id));
+        setSelected([...new Set([...(publishedStage ? stageUnlockedIds : STARTER_LOADOUT).filter((id) => availableIds.has(id)), ...(isStudioPlaytest ? studioPlants.map((plant) => plant.id).filter((id) => availableIds.has(id)) : [])])].slice(0, MAX_SEEDS));
+      }
+      } catch (error) {
+        if (active) setStageSettingsError(error?.message || "تعذر تحميل إعدادات المرحلة. أعد المحاولة قبل بدء المعركة.");
+      }
+    })();
+    return () => { active = false; };
   }, []);
 
   function togglePlant(plant) {
+    if (plant.required && !studioPlaytest && !stagePlantsConfigured) return;
     if (!unlockedIds.includes(plant.id)) {
-      setNotice(ar ? "هذه النبتة لم تُفتح بعد. أكمل المراحل للحصول عليها." : "This seed is locked. Complete campaign stages to unlock it.");
+      setNotice(ar ? "هذه النبتة مقفولة في هذه المرحلة." : "This plant is locked for this stage.");
       return;
     }
-    if (plant.required) return;
     setNotice("");
     if (selected.includes(plant.id)) {
       setSelected(selected.filter((id) => id !== plant.id));
@@ -67,13 +155,18 @@ export default function StageOneSeedSelectionPage() {
   }
 
   function beginBattle() {
-    if (!selected.includes("mushroom") || selected.length < 2) {
-      setNotice(ar ? "احتفظ بفطر الطاقة واختر نبتة أخرى على الأقل." : "Keep the Energy Mushroom and choose at least one other plant.");
+    const hasMushroom = selectedPlants.some((plant) => plant.id === "mushroom");
+    const minimumSeeds = studioPlaytest || stagePlantsConfigured ? 1 : 2;
+    const mustKeepMushroom = !studioPlaytest && !stagePlantsConfigured;
+    if (selectedPlants.length < minimumSeeds || (mustKeepMushroom && !hasMushroom)) {
+      setNotice(ar ? "اختر نباتاً متاحاً واحداً على الأقل، واحتفظ بفطر الطاقة إذا كان ضمن نباتات هذه المرحلة." : "Choose at least one available plant, and keep the Energy Mushroom if it is part of this stage.");
       return;
     }
     try {
-      window.localStorage.setItem("farmVsMonsters.selectedPlants", JSON.stringify(selectedPlants.map((plant) => plant.id)));
-      router.push("/game");
+      const savedSelection = JSON.stringify(selectedPlants.map((plant) => plant.id));
+      window.localStorage.setItem("farmVsMonsters.selectedPlants.stage." + stageNumber, savedSelection);
+      // Keep campaign loadout untouched; the battle runtime reads this stage-scoped key.
+      router.push("/game?stage=" + stageNumber + (studioPlaytest ? "&studioPlaytest=1" : ""));
     } catch {
       setNotice(ar ? "تعذر حفظ التشكيلة. تحقق من إعدادات التخزين في المتصفح." : "Could not save your loadout. Check browser storage settings.");
     }
@@ -98,15 +191,15 @@ export default function StageOneSeedSelectionPage() {
           <div className="seed-select-meter"><i style={{ width: (selected.length / MAX_SEEDS * 100) + "%" }} /></div>
         </div>
 
-        <div className="seed-select-grid">
-          {PLANTS.map((plant) => {
+        <div className="seed-select-grid seed-select-catalog-scroll">
+          {plantCatalog.map((plant) => {
             const unlocked = unlockedIds.includes(plant.id);
-            const active = selected.includes(plant.id) && unlocked;
+            const active = selected.includes(plant.id);
             return (
               <button
                 type="button"
                 key={plant.id}
-                className={"seed-select-card" + (active ? " is-selected" : "") + (plant.required ? " is-required" : "") + (!unlocked ? " is-locked" : "")}
+                className={"seed-select-card" + (active ? " is-selected" : "") + (plant.required && !studioPlaytest ? " is-required" : "") + (!unlocked ? " is-locked" : "")}
                 onClick={() => togglePlant(plant)}
                 aria-pressed={active}
                 aria-disabled={!unlocked}
@@ -114,17 +207,17 @@ export default function StageOneSeedSelectionPage() {
               >
                 <span className="seed-select-check">{!unlocked ? "🔒" : active ? "✓" : "+"}</span>
                 <span
-                  className={"seed-select-art" + (["radish", "pineapple", "hazelnut", "mango", "snow-thrower"].includes(plant.id) ? " is-sprite-sheet" : "")}
-                  style={["radish", "pineapple", "hazelnut", "mango", "snow-thrower"].includes(plant.id)
+                  className={"seed-select-art" + ((["radish", "pineapple", "hazelnut", "mango", "snow-thrower"].includes(plant.id) || plant.spriteSheet) ? " is-sprite-sheet" : "")}
+                  style={(["radish", "pineapple", "hazelnut", "mango", "snow-thrower"].includes(plant.id) || plant.spriteSheet)
                     ? { aspectRatio: plant.id === "radish" ? "302 / 359" : "1 / 1" }
                     : undefined}
                 >
-                  <img src={plant.image} alt="" />
+                  {(plant.spriteSheet && Number(plant.frameCount)>1) ? <span aria-hidden="true" className="seed-select-first-frame" style={{backgroundImage:"url("+JSON.stringify(plant.image)+")",backgroundSize:(Math.max(1,Number(plant.columns)||1)*100)+"% "+(Math.max(1,Number(plant.rows)||1)*100)+"%",backgroundPosition:"left top"}}/> : <img src={plant.image} alt="" />}
                 </span>
                 <strong>{ar ? plant.ar : plant.name}</strong>
                 <small>{ar ? plant.roleAr : plant.role}</small>
                 <span className="seed-select-cost">🍄 {plant.cost}</span>
-                {plant.required && <em>{ar ? "أساسي" : "REQUIRED"}</em>}
+                {plant.required && !studioPlaytest && !stagePlantsConfigured && <em>{ar ? "أساسي" : "REQUIRED"}</em>}{plant.testing && <em className="seed-select-testing">{ar ? "اختبار محلي" : "LOCAL TEST"}</em>}
                 {!unlocked && <em className="seed-select-locked-label">{ar ? "مقفلة" : "LOCKED"}</em>}
               </button>
             );
@@ -136,10 +229,11 @@ export default function StageOneSeedSelectionPage() {
           <div>{selectedPlants.map((plant) => <span key={plant.id}>{ar ? plant.ar : plant.name}</span>)}</div>
         </div>
 
+        {stageSettingsError && <p className="seed-select-notice" role="alert">{ar ? "تعذر تحميل إعدادات المرحلة من المصدر المعتمد: " : "Could not load the authoritative stage settings: "}{stageSettingsError}</p>}
         {notice && <p className="seed-select-notice" role="alert">{notice}</p>}
         <footer className="seed-select-actions">
           <Link href="/stage/1" className="seed-select-secondary">{ar ? "رجوع" : "Back"}</Link>
-          <button type="button" className="seed-select-start" onClick={beginBattle}>{ar ? "ابدأ المعركة ←" : "Start Battle →"}</button>
+          <button type="button" className="seed-select-start" onClick={beginBattle} disabled={!stageSettingsReady || Boolean(stageSettingsError)}>{ar ? "ابدأ المعركة ←" : "Start Battle →"}</button>
         </footer>
       </section>
     </main>

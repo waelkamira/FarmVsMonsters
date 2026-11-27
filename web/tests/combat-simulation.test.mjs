@@ -14,10 +14,9 @@ import {
   selectLaneBlocker,
   selectProjectileTarget,
   selectFarmerMeleeTarget,
-  selectDragonFireballTarget,
   advanceCooldown,
   resolveBiteAttack,
-  resolveDustSkitterMotionStep,
+  resolveMonsterMovementEffectsStep,
   resolveWaveSpawnStep,
   resolveMonsterArchetype
 } from "../game/rules/combatSimulation.mjs";
@@ -50,7 +49,7 @@ test("mushroom placement uses the shared plant cost and health", () => {
 test("placement rejects unknown plants, occupied cells, invalid coordinates and insufficient energy", () => {
   const occupied = [{ type: "radish", col: 1, row: 1, alive: true }];
   const cases = [
-    [{ energy: 150, plants: [], type: "dragon", col: 0, row: 0, columns: 8, rows: 5 }, "UNKNOWN_PLANT_TYPE"],
+    [{ energy: 150, plants: [], type: "unknown-enemy", col: 0, row: 0, columns: 8, rows: 5 }, "UNKNOWN_PLANT_TYPE"],
     [{ energy: 150, plants: occupied, type: "mushroom", col: 1, row: 1, columns: 8, rows: 5 }, "CELL_OCCUPIED"],
     [{ energy: 150, plants: [], type: "radish", col: 8, row: 0, columns: 8, rows: 5 }, "CELL_OUT_OF_BOUNDS"],
     [{ energy: 150, plants: [], type: "radish", col: 0, row: -1, columns: 8, rows: 5 }, "CELL_OUT_OF_BOUNDS"],
@@ -150,13 +149,10 @@ test("Phaser delegates monster and projectile lane movement to the simulation ke
   assert.match(scene, /selectLaneBlocker\(/);
   assert.match(scene, /selectProjectileTarget\(/);
   assert.match(scene, /selectFarmerMeleeTarget\(/);
-  assert.match(scene, /selectDragonFireballTarget\(/);
-  assert.match(scene, /targetPlant\.hp = applyHitPointsDamage\(/);
-  assert.match(scene, /monster\.attackCooldown = advanceCooldown\(/);
-  assert.match(scene, /boss\.shotCooldown = advanceCooldown\(/);
-  assert.match(scene, /boss\.attackCooldown = advanceCooldown\(/);
+  assert.match(scene, /applyHitPointsDamage\(/);
+  assert.match(scene, /monster\.attackCooldown = bite\.cooldownMs/);
   assert.match(scene, /plant\.cooldown = advanceCooldown\(/);
-  assert.match(scene, /resolveDustSkitterMotionStep\(/);
+  assert.match(scene, /resolveMonsterMovementEffectsStep\(/);
   assert.match(scene, /resolveBiteAttack\(/);
 });
 
@@ -225,18 +221,6 @@ test("farmer melee selects the nearest monster in the active lane and preserves 
   assert.equal(selectFarmerMeleeTarget({ monsters: [], row: 2, farmerX: 100, reach: 10 }), null);
 });
 
-test("dragon fireball chooses the living plant with the lowest HP and preserves tie order", () => {
-  const weakest = { hp: 12, alive: true, id: "weakest" };
-  const tied = { hp: 12, alive: true, id: "tied" };
-  assert.equal(selectDragonFireballTarget([
-    { hp: 1, alive: false },
-    { hp: 30, alive: true },
-    weakest,
-    tied
-  ]), weakest);
-  assert.equal(selectDragonFireballTarget([{ hp: 1, alive: false }]), null);
-});
-
 test("cooldown advances by elapsed milliseconds and bite attacks reset to the configured interval", () => {
   assert.equal(advanceCooldown(500, 120), 380);
   assert.deepEqual(resolveBiteAttack({ cooldownMs: 40, deltaMs: 50, intervalMs: 900 }), {
@@ -250,8 +234,8 @@ test("cooldown advances by elapsed milliseconds and bite attacks reset to the co
   assert.throws(() => advanceCooldown(100, -1), /INVALID_COOLDOWN_STEP/);
 });
 
-test("Dust Skitter jump starts, advances visually, and lands without changing lane position", () => {
-  const started = resolveDustSkitterMotionStep({
+test("Monster 01 jump starts, advances visually, and lands without changing lane position", () => {
+  const started = resolveMonsterMovementEffectsStep({
     isJumping: false,
     jumpCooldownMs: 20,
     jumpElapsedMs: 0,
@@ -274,7 +258,7 @@ test("Dust Skitter jump starts, advances visually, and lands without changing la
   assert.ok(started.jumpOffset < 0);
   assert.equal(started.movementMultiplier, 1.12);
 
-  const landed = resolveDustSkitterMotionStep({
+  const landed = resolveMonsterMovementEffectsStep({
     isJumping: true,
     jumpCooldownMs: 800,
     jumpElapsedMs: 480,
@@ -298,8 +282,8 @@ test("Dust Skitter jump starts, advances visually, and lands without changing la
   assert.equal(landed.jumpCooldownMs, 2400);
 });
 
-test("Dust Skitter burst begins and consumes its first frame exactly as the live scene did", () => {
-  const step = resolveDustSkitterMotionStep({
+test("Monster 01 burst begins and consumes its first frame exactly as the live scene did", () => {
+  const step = resolveMonsterMovementEffectsStep({
     isJumping: false,
     jumpCooldownMs: 1000,
     jumpElapsedMs: 0,
@@ -322,8 +306,8 @@ test("Dust Skitter burst begins and consumes its first frame exactly as the live
   assert.equal(step.movementMultiplier, 1.65);
 });
 
-test("Dust Skitter combines jump and burst movement multipliers", () => {
-  const step = resolveDustSkitterMotionStep({
+test("Monster 01 combines jump and burst movement multipliers", () => {
+  const step = resolveMonsterMovementEffectsStep({
     isJumping: true,
     jumpCooldownMs: 900,
     jumpElapsedMs: 100,
@@ -370,6 +354,23 @@ test("phase-one wave scheduler preserves intermission, first spawn delay and int
   assert.equal(waiting.spawnTimerMs, 400);
 });
 
+test("stage wave scheduler accepts configured counts, empty waves and custom spawn cadence", () => {
+  const custom = resolveWaveSpawnStep({
+    wave: 2, waveSize: 10, spawnedThisWave: 0,
+    intermissionMs: 0, spawnTimerMs: 0, spawnIntervalMs: 2750, deltaMs: 16
+  });
+  assert.equal(custom.shouldSpawn, true);
+  assert.equal(custom.spawnedThisWave, 1);
+  assert.equal(custom.spawnTimerMs, 2750);
+
+  const empty = resolveWaveSpawnStep({
+    wave: 3, waveSize: 0, spawnedThisWave: 0,
+    intermissionMs: 0, spawnTimerMs: 0, deltaMs: 16
+  });
+  assert.equal(empty.shouldSpawn, false);
+  assert.equal(empty.spawnedThisWave, 0);
+});
+
 test("phase-one wave scheduler spawns at most one monster per update and stops at roster size", () => {
   const lastSpawn = resolveWaveSpawnStep({
     wave: 5, waveSize: 9, spawnedThisWave: 8,
@@ -386,17 +387,22 @@ test("phase-one wave scheduler spawns at most one monster per update and stops a
   assert.equal(complete.spawnedThisWave, 9);
   assert.equal(complete.spawnTimerMs, 0);
 
-  assert.throws(() => resolveWaveSpawnStep({
+  const shorterConfiguredWave = resolveWaveSpawnStep({
     wave: 5, waveSize: 8, spawnedThisWave: 0,
+    intermissionMs: 0, spawnTimerMs: 0, deltaMs: 16
+  });
+  assert.equal(shorterConfiguredWave.shouldSpawn, true);
+  assert.throws(() => resolveWaveSpawnStep({
+    wave: 5, waveSize: 501, spawnedThisWave: 0,
     intermissionMs: 0, spawnTimerMs: 0, deltaMs: 16
   }), /INVALID_WAVE_SPAWN_STATE/);
 });
 
 test("spawn composition stays fixed and validates only campaign-wide spawn indices", () => {
-  assert.equal(resolveMonsterArchetype(1, 0), "cave-brute");
-  assert.equal(resolveMonsterArchetype(3, 1), "dust-skitter");
-  assert.equal(resolveMonsterArchetype(5, 4), "stonehide");
-  assert.equal(resolveMonsterArchetype(5, 1), "dust-skitter");
+  assert.equal(resolveMonsterArchetype(1, 0), "monster-01");
+  assert.equal(resolveMonsterArchetype(3, 1), "monster-01");
+  assert.equal(resolveMonsterArchetype(5, 4), "monster-01");
+  assert.equal(resolveMonsterArchetype(5, 1), "monster-01");
   assert.throws(() => resolveMonsterArchetype(1, 30), /INVALID_MONSTER_SPAWN_INDEX/);
 });
 
@@ -420,7 +426,33 @@ test("monster freeze timer immobilizes for 2600ms and then thaws", () => {
 test("Phaser registers Snow Thrower assets and freezes monsters without HP damage", () => {
   assert.match(scene, /snow-thrower-level-1/);
   assert.match(scene, /Snow-thrower-bomb-level-1\.png/);
-  assert.match(scene, /frozen-hyena-level-1/);
-  assert.match(scene, /freezeMonster\(hit, shot\.freezeDurationMs\)/);
+  assert.match(scene, /characters\/monsters\/01\/01\.png/);
+  assert.match(scene, /this\.freezeMonster\(hit\)/);
+  assert.match(scene, /monster\.freezeStage = Math\.min\(5, \(monster\.freezeStage \|\| 0\) \+ 1\)/);
   assert.match(scene, /restoreMonsterAfterFreeze/);
+});
+
+test("Studio plant profiles allow a new plant to use configured placement and its recorded refund", () => {
+  const config = { plantingEnergyCost: 62, hp: 230 };
+  const placed = resolvePlantPlacement({
+    energy: 150, plants: [], type: "bamboo-level-1", col: 3, row: 2,
+    columns: 8, rows: 5, customConfig: config
+  });
+  assert.equal(placed.ok, true);
+  assert.equal(placed.energy, 88);
+  assert.deepEqual(placed.plant, {
+    type: "bamboo-level-1", col: 3, row: 2, hp: 230,
+    alive: true, energyCost: 62
+  });
+  const uprooted = resolvePlantUproot({ energy: 88, plant: placed.plant });
+  assert.deepEqual(uprooted, {
+    ok: true, reason: "PLANT_UPROOTED", energy: 150, refund: 62
+  });
+});
+
+test("Studio placement rejects a missing or malformed custom combat profile", () => {
+  const base = { energy: 100, plants: [], type: "new-studio-plant", col: 0, row: 0, columns: 8, rows: 5 };
+  assert.equal(resolvePlantPlacement(base).reason, "UNKNOWN_PLANT_TYPE");
+  assert.equal(resolvePlantPlacement({ ...base, customConfig: { plantingEnergyCost: -1, hp: 20 } }).reason, "UNKNOWN_PLANT_TYPE");
+  assert.equal(resolvePlantPlacement({ ...base, customConfig: { plantingEnergyCost: 10, hp: 0 } }).reason, "UNKNOWN_PLANT_TYPE");
 });

@@ -1,7 +1,6 @@
 "use client";
 
-import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useSyncExternalStore, useState, useEffect } from "react";
 import PhaserGame from "../../game/PhaserGame";
 import { loadUnlockedPlantIds } from "../../game/rules/phaseOneRules.mjs";
 import {
@@ -10,46 +9,79 @@ import {
   MAX_SEED_PACKETS,
   SEED_LOADOUT_STORAGE_KEY
 } from "../../game/rules/seedLoadout.mjs";
-import { useLocale, LanguageToggle } from "../LocaleProvider";
+import { useLocale } from "../LocaleProvider";
+import SpriteThumbnail from "../components/SpriteThumbnail.jsx";
+import { readStorageSnapshot, subscribeToBrowserStorage } from "../../game/hooks/browserStorage.mjs";
 
 const PLANT_PACKETS = [
-  { id: "radish", image: "/assets/plants/radish-level-1.png", en: "Radish", ar: "الفجل", cost: 35, roleEn: "Lane attacker", roleAr: "مهاجم المسار" },
+  { id: "radish", image: "/assets/plants/radish-level-1.png", rows: 3, columns: 3, frameCount: 9, en: "Radish", ar: "الفجل", cost: 35, roleEn: "Lane attacker", roleAr: "مهاجم المسار" },
   { id: "mushroom", image: "/assets/plants/mushroom.png", en: "Energy Mushroom", ar: "فطر الطاقة", cost: 50, roleEn: "Produces energy", roleAr: "ينتج الطاقة" },
   { id: "pumpkin", image: "/assets/plants/pumpkin.png", en: "Pumpkin", ar: "اليقطين", cost: 75, roleEn: "Defensive wall", roleAr: "جدار دفاعي" },
-  { id: "pineapple", image: "/assets/plants/pineapple-level-1.png", en: "Pineapple", ar: "الأناناس", cost: 70, roleEn: "Heavy projectile", roleAr: "قذيفة قوية" },
-  { id: "hazelnut", image: "/assets/plants/hazelnut-level-1.png", en: "Hazelnut", ar: "البندق", cost: 65, roleEn: "Lane shooter", roleAr: "قاذف في المسار" },
-  { id: "mango", image: "/assets/plants/mango-level-1.png", en: "Mango", ar: "المانجو", cost: 70, roleEn: "Curved projectile", roleAr: "قذيفة منحنية" },
-  { id: "snow-thrower", image: "/assets/plants/Snow-thrower-level-1.png", en: "Snow Thrower", ar: "قاذف الثلج", cost: 90, roleEn: "Freezes monsters", roleAr: "يجمد الوحوش" }
+  { id: "pineapple", image: "/assets/plants/pineapple-level-1.png", rows: 3, columns: 3, frameCount: 9, en: "Pineapple", ar: "الأناناس", cost: 70, roleEn: "Heavy projectile", roleAr: "قذيفة قوية" },
+  { id: "hazelnut", image: "/assets/plants/hazelnut-level-1.png", rows: 3, columns: 3, frameCount: 9, en: "Hazelnut", ar: "البندق", cost: 65, roleEn: "Lane shooter", roleAr: "قاذف في المسار" },
+  { id: "mango", image: "/assets/plants/mango-level-1.png", rows: 3, columns: 3, frameCount: 9, en: "Mango", ar: "المانجو", cost: 70, roleEn: "Curved projectile", roleAr: "قذيفة منحنية" },
+  { id: "snow-thrower", image: "/assets/plants/Snow-thrower-level-1.png", rows: 3, columns: 3, frameCount: 9, en: "Snow Thrower", ar: "قاذف الثلج", cost: 90, roleEn: "Freezes monsters", roleAr: "يجمد الوحوش" },
+  { id: "electric-mushroom", image: "/assets/plants/Electric-mushroom-level-1.png", rows: 3, columns: 3, frameCount: 9, en: "Electric Mushroom", ar: "الفطر الكهربائي", cost: 80, roleEn: "Electric lane attacker", roleAr: "مهاجم كهربائي للمسار" }
 ];
+
+const LOADOUT_SERVER_SNAPSHOT = JSON.stringify({ ready: false, unlocked: ["radish", "mushroom"], selected: ["radish", "mushroom"] });
+
+function subscribeToLocation(callback) {
+  window.addEventListener("popstate", callback);
+  return () => window.removeEventListener("popstate", callback);
+}
+
+function getLocationSearchSnapshot() {
+  return window.location.search;
+}
+
+function getLoadoutSnapshot() {
+  let unlocked = ["radish", "mushroom"];
+  try {
+    unlocked = loadUnlockedPlantIds(window.localStorage);
+    const raw = readStorageSnapshot(SEED_LOADOUT_STORAGE_KEY, null);
+    const saved = raw ? JSON.parse(raw) : null;
+    const selected = Array.isArray(saved)
+      ? normalizeSeedLoadout(saved, unlocked)
+      : createDefaultSeedLoadout(unlocked);
+    return JSON.stringify({ ready: true, unlocked, selected });
+  } catch {
+    return JSON.stringify({ ready: true, unlocked, selected: ["radish", "mushroom"] });
+  }
+}
 
 export default function GamePage() {
   const { t, locale } = useLocale();
   const arabic = locale === "ar";
-  const [unlocked, setUnlocked] = useState([]);
-  const [selected, setSelected] = useState([]);
-  const [ready, setReady] = useState(false);
+  const loadoutSnapshot = useSyncExternalStore(subscribeToBrowserStorage, getLoadoutSnapshot, () => LOADOUT_SERVER_SNAPSHOT);
+  const locationSearch = useSyncExternalStore(subscribeToLocation, getLocationSearchSnapshot, () => "");
+  const stageParam = new URLSearchParams(locationSearch).get("stage");
+  const isStagePlaytest = stageParam !== null && Number.isInteger(Number(stageParam)) && Number(stageParam) >= 1;
+  const studioPlaytestRequested = new URLSearchParams(locationSearch).get("studioPlaytest") === "1";
+  const [studioSession, setStudioSession] = useState({ checked: false, authenticated: false });
+  useEffect(() => {
+    let active = true;
+    if (!studioPlaytestRequested) return () => { active = false; };
+    fetch("/api/studio/session", { cache: "no-store" })
+      .then((response) => response.ok ? response.json() : null)
+      .then((session) => { if (active) setStudioSession({ checked: true, authenticated: session?.authenticated === true }); })
+      .catch(() => { if (active) setStudioSession({ checked: true, authenticated: false }); });
+    return () => { active = false; };
+  }, [studioPlaytestRequested]);
+  const authorizedStudioPlaytest = studioPlaytestRequested && studioSession.checked && studioSession.authenticated;
+  const blockStudioPlaytest = studioPlaytestRequested && (!studioSession.checked || !studioSession.authenticated);
+  const { unlocked, selected, ready } = JSON.parse(loadoutSnapshot);
+  const [selectedOverride, setSelectedOverride] = useState(null);
+  const activeSelected = selectedOverride ?? selected;
   const [battleStarted, setBattleStarted] = useState(false);
+  const showBattle = battleStarted || (isStagePlaytest && (!studioPlaytestRequested || authorizedStudioPlaytest));
   const [saveError, setSaveError] = useState(false);
 
-  useEffect(() => {
-    let unlockedIds = ["radish", "mushroom"];
-    try {
-      unlockedIds = loadUnlockedPlantIds(window.localStorage);
-      const raw = window.localStorage.getItem(SEED_LOADOUT_STORAGE_KEY);
-      const saved = raw ? JSON.parse(raw) : null;
-      setSelected(Array.isArray(saved)
-        ? normalizeSeedLoadout(saved, unlockedIds)
-        : createDefaultSeedLoadout(unlockedIds));
-    } catch {
-      setSelected(["radish", "mushroom"]);
-    }
-    setUnlocked(unlockedIds);
-    setReady(true);
-  }, []);
 
   function togglePacket(id) {
     if (!unlocked.includes(id) || id === "radish" || id === "mushroom") return;
-    setSelected((current) => {
+    setSelectedOverride((currentValue) => {
+      const current = currentValue ?? selected;
       if (current.includes(id)) return current.filter((item) => item !== id);
       if (current.length >= MAX_SEED_PACKETS) return current;
       return normalizeSeedLoadout([...current, id], unlocked);
@@ -57,7 +89,7 @@ export default function GamePage() {
   }
 
   function enterBattle() {
-    const safeLoadout = normalizeSeedLoadout(selected, unlocked);
+    const safeLoadout = normalizeSeedLoadout(activeSelected, unlocked);
     try {
       window.localStorage.setItem(SEED_LOADOUT_STORAGE_KEY, JSON.stringify(safeLoadout));
       setSaveError(false);
@@ -65,20 +97,12 @@ export default function GamePage() {
       setSaveError(true);
       return;
     }
-    setSelected(safeLoadout);
+    setSelectedOverride(safeLoadout);
     setBattleStarted(true);
   }
 
-  return <main className="game-shell" dir={arabic ? "rtl" : "ltr"}>
-    <header className="game-header">
-      <Link href="/" className="wordmark farm-game-logo-link" aria-label="Farm Vs Monsters home"><img className="farm-game-logo farm-game-logo-header" src="/assets/items/ui/logo.png" alt="Farm Vs Monsters" /></Link>
-      <div className="control-hint">{battleStarted
-        ? t("Choose a plant card · Click an empty soil plot to plant · Collect Mushroom energy")
-        : t("Prepare your seed packets before entering the battlefield")}</div>
-      <LanguageToggle />
-    </header>
-
-    {!battleStarted ? <section className="seed-selection-shell" aria-labelledby="seed-selection-title">
+  return <main className="game-shell game-shell-seed-entry" dir={arabic ? "rtl" : "ltr"}>
+    {blockStudioPlaytest ? <section className="seed-selection-shell" aria-live="polite"><h1>{studioSession.checked ? (arabic ? "غير مصرح بالوصول" : "Administrator access required") : (arabic ? "جارٍ التحقق من صلاحية الاستديو…" : "Verifying Studio access…")}</h1><p>{studioSession.checked ? (arabic ? "سجّل الدخول إلى الاستديو ثم أعد بدء اختبار المرحلة." : "Sign in to Studio, then restart this stage playtest.") : (arabic ? "لحظة من فضلك." : "Please wait.")}</p></section> : !showBattle ? <section className="seed-selection-shell" aria-labelledby="seed-selection-title">
       <div className="seed-selection-heading">
         <span className="seed-selection-eyebrow">{t("BEFORE THE BATTLE")}</span>
         <h1 id="seed-selection-title">{t("Choose your seed packets")}</h1>
@@ -87,13 +111,13 @@ export default function GamePage() {
 
       <div className="seed-selection-status">
         <span>{t("YOUR SEED BANK")}</span>
-        <strong>{selected.length} / {MAX_SEED_PACKETS}</strong>
+        <strong>{activeSelected.length} / {MAX_SEED_PACKETS}</strong>
       </div>
 
       <div className="seed-packet-grid">
         {PLANT_PACKETS.map((plant) => {
           const isUnlocked = unlocked.includes(plant.id);
-          const isSelected = selected.includes(plant.id);
+          const isSelected = activeSelected.includes(plant.id);
           const isRequired = plant.id === "radish" || plant.id === "mushroom";
           return <button
             type="button"
@@ -105,7 +129,7 @@ export default function GamePage() {
             aria-label={`${arabic ? plant.ar : plant.en}: ${isSelected ? t("Selected") : t("Not selected")}`}
           >
             <span className="seed-choice-check">{!isUnlocked ? "🔒" : isSelected ? "✓" : "+"}</span>
-            <span className="seed-choice-art"><img src={plant.image} alt="" loading="lazy" /></span>
+            <span className="seed-choice-art"><SpriteThumbnail src={plant.image} rows={plant.rows || 1} columns={plant.columns || 1} frameCount={plant.frameCount || 1} alt="" className="seed-choice-art-media" decorative /></span>
             <strong>{arabic ? plant.ar : plant.en}</strong>
             <small>{arabic ? plant.roleAr : plant.roleEn}</small>
             <span className="seed-choice-cost">🍄 {plant.cost}</span>
@@ -118,9 +142,8 @@ export default function GamePage() {
       <div className="seed-selection-footer">
         <div className="seed-selection-tip"><span>🌱</span>{t("Tip: bring an attacker, an energy producer, and a mix of support plants.")}</div>
         <div className="seed-selection-actions">
-          <Link href="/" className="secondary-link">{t("Main Menu")}</Link>
-          <button type="button" className="seed-start-button" onClick={enterBattle} disabled={!ready || selected.length < 2}>
-            <span>⚔️</span>{t("Enter the battlefield")}
+          <button type="button" className="seed-start-button seed-start-button-clay" onClick={enterBattle} disabled={!ready || activeSelected.length < 2}>
+            <span aria-hidden="true">⚔️</span>{t("Enter the battlefield")}
           </button>
         </div>
         {saveError && <p className="seed-save-error" role="alert">{t("Could not save your loadout. Check browser storage and try again.")}</p>}
@@ -129,5 +152,44 @@ export default function GamePage() {
       <section className="game-panel" aria-label={t("Stone age battle arena")}><PhaserGame /></section>
       <p className="prototype-note">{t("A prehistoric farm-defense battle. Gather mushroom energy, raise living defenders, and keep the tribe's home safe.")}</p>
     </>}
+    <style jsx global>{`
+      .game-shell-seed-entry { min-height: 100dvh; padding: clamp(10px, 2vw, 24px); }
+      .game-shell-seed-entry .seed-start-button-clay {
+        position: relative; isolation: isolate; overflow: hidden;
+        min-height: 62px; min-width: min(300px, 100%); padding: 13px 30px;
+        gap: 12px; border: 3px solid #4a2b13; border-radius: 15px;
+        outline: 1px solid #f8e8bd; outline-offset: -7px;
+        background: linear-gradient(180deg, #f7dfaa 0%, #d5a45d 48%, #a96e36 100%);
+        color: #38200e; font: inherit; font-size: 17px; font-weight: 1000;
+        text-shadow: 0 1px 0 #fff0ca;
+        box-shadow: inset 0 3px 0 #fff3d3, inset 0 -4px 0 #865022,
+          0 6px 0 #39200f, 0 11px 20px #160c0788;
+        cursor: pointer; transition: transform .16s ease, filter .16s ease, box-shadow .16s ease;
+      }
+      .game-shell-seed-entry .seed-start-button-clay::before {
+        content: ""; position: absolute; inset: 5px; z-index: -1; pointer-events: none;
+        border: 1px solid #fff0c477; border-radius: 9px;
+        background: linear-gradient(110deg, #fff5d533, transparent 45%, #6e3d1718);
+      }
+      .game-shell-seed-entry .seed-start-button-clay:hover:not(:disabled) {
+        transform: translateY(-3px); filter: brightness(1.08);
+        box-shadow: inset 0 3px 0 #fff7df, inset 0 -4px 0 #865022,
+          0 9px 0 #39200f, 0 15px 24px #160c07aa;
+      }
+      .game-shell-seed-entry .seed-start-button-clay:active:not(:disabled) {
+        transform: translateY(3px);
+        box-shadow: inset 0 2px 0 #fff3d3, 0 2px 0 #39200f;
+      }
+      .game-shell-seed-entry .seed-start-button-clay:focus-visible {
+        outline: 3px solid #fff0a8; outline-offset: 4px;
+      }
+      .game-shell-seed-entry .seed-start-button-clay:disabled {
+        filter: grayscale(.55); opacity: .62; cursor: not-allowed;
+      }
+      @media (max-width: 760px) {
+        .game-shell-seed-entry .seed-selection-actions { align-items: stretch; }
+        .game-shell-seed-entry .seed-start-button-clay { width: 100%; }
+      }
+    `}</style>
   </main>;
 }

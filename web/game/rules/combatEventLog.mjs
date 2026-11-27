@@ -7,11 +7,15 @@ const MAX_EVENTS = 10000;
 function validCell(payload) {
   return Number.isInteger(payload?.col) && payload.col >= 0 && payload.col < 8 && Number.isInteger(payload?.row) && payload.row >= 0 && payload.row < 5;
 }
+function validPlantType(value) {
+  return PLANT_EVENT_TYPES.has(value) ||
+    (typeof value === "string" && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value));
+}
 function validPickupId(value) { return typeof value === "string" && /^pickup-\d+$/.test(value); }
 function normalizePayload(type, payload) {
   if (!payload || typeof payload !== "object" || Array.isArray(payload)) throw new TypeError("INVALID_COMBAT_EVENT_PAYLOAD");
   if (type === "plant_placed" || type === "plant_uprooted") {
-    if (!PLANT_EVENT_TYPES.has(payload.type) || !validCell(payload)) throw new RangeError("INVALID_PLANT_EVENT");
+    if (!validPlantType(payload.type) || !validCell(payload)) throw new RangeError("INVALID_PLANT_EVENT");
     return Object.freeze({ type: payload.type, col: payload.col, row: payload.row });
   }
   if (type === "energy_spawned") {

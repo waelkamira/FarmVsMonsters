@@ -3,8 +3,8 @@
 // client consume the same rules instead of maintaining separate balance tables.
 export const PHASE_ONE_COMBAT_CONTRACT_VERSION = 1;
 
-// Stage 1 is a guided onboarding campaign: 20 ordinary monsters in five readable waves.
-export const PHASE_ONE_WAVE_SIZES = Object.freeze([2, 3, 4, 5, 6]);
+// Stage 1 is a guided onboarding campaign: 30 ordinary monsters in five readable waves.
+export const PHASE_ONE_WAVE_SIZES = Object.freeze([3, 5, 6, 7, 9]);
 export const PHASE_ONE_BOARD = Object.freeze({ columns: 8, rows: 5, laneWidth: 420.823, spawnLocalX: 238.4115, homeLocalX: -300 });
 export function getPlantLaneLocalX(col) {
   if (!Number.isInteger(col) || col < 0 || col >= PHASE_ONE_BOARD.columns) throw new RangeError("INVALID_PLANT_COLUMN");
@@ -79,7 +79,13 @@ export const PHASE_ONE_PLANTS = Object.freeze({
     freezeProjectile: true, projectileSpeed: 300, projectileCollisionRadius: 28,
     freezeDurationMs: 2600, plantingEnergyCost: 90, seedPacketRechargeMs: 18000, hp: 150,
     cooldownMs: 3600, range: 360
-  })
+  }),
+  // Electric Mushroom is a visual/combat playtest prototype; tune after hands-on VFX review.
+  "electric-mushroom": Object.freeze({
+    projectileDamage: 22, projectileSpeed: 350, projectileCollisionRadius: 26,
+    plantingEnergyCost: 80, seedPacketRechargeMs: 11000, hp: 115,
+    cooldownMs: 1850, range: 360
+  }),
 });
 
 // Event-log plant IDs are derived from the canonical plant rules so adding a
@@ -94,18 +100,6 @@ export const PHASE_ONE_FARMER = Object.freeze({
   clubReachPx: 112
 });
 
-export const PHASE_ONE_DRAGON = Object.freeze({
-  maxHp: 750,
-  farmerSlingDamage: 25,
-  farmerSlingInitialDelayMs: 850,
-  farmerSlingIntervalMs: 900,
-  dragonInitialAttackDelayMs: 2800,
-  fireballDamageToPlant: 55,
-  fireballDamageToFarm: 12,
-  attackIntervalMs: 3900,
-  fireballTravelMs: 1050
-});
-
 export const PHASE_ONE_MONSTER_SCALING = Object.freeze({
   baseHp: 65,
   hpPerWave: 4,
@@ -115,63 +109,10 @@ export const PHASE_ONE_MONSTER_SCALING = Object.freeze({
 });
 
 export const PHASE_ONE_MONSTERS = Object.freeze({
-  "cave-brute": Object.freeze({
-    hitsToDefeat: 5,
-    speedMultiplier: 1,
-    maxSpeed: 30,
-    plantDamage: 16,
-    attackIntervalMs: 1150,
-    incomingDamageMultiplier: 1,
-    widthScale: 1,
-    heightScale: 1,
-    wobbleDurationMs: 520
-  }),
-  "dust-skitter": Object.freeze({
-    hpMultiplier: 0.52,
-    speedMultiplier: 1.7,
-    maxSpeed: 36,
-    plantDamage: 8,
-    attackIntervalMs: 850,
-    incomingDamageMultiplier: 1,
-    widthScale: 0.62,
-    heightScale: 0.68,
-    wobbleDurationMs: 350,
-    burstDurationMs: 420,
-    initialBurstCooldownMinMs: 1500,
-    initialBurstCooldownMaxMs: 2300,
-    burstSpeedMultiplier: 1.65,
-    jumpSpeedMultiplier: 1.12,
-    burstCooldownMinMs: 3000,
-    burstCooldownMaxMs: 3900,
-    jumpDurationMinMs: 480,
-    jumpDurationMaxMs: 620,
-    jumpCooldownMinMs: 1100,
-    jumpCooldownMaxMs: 2600,
-    jumpResetCooldownMinMs: 2100,
-    jumpResetCooldownMaxMs: 3400
-  }),
-  "stonehide": Object.freeze({
-    hpMultiplier: 2.2,
-    speedMultiplier: 0.62,
-    maxSpeed: 19,
-    plantDamage: 23,
-    attackIntervalMs: 1450,
-    incomingDamageMultiplier: 0.7,
-    bracedIncomingDamageMultiplier: 0.55,
-    widthScale: 1.35,
-    heightScale: 1.3,
-    wobbleDurationMs: 760
-  }),
-  "alpha-brute": Object.freeze({
-    hitsToDefeat: 14,
-    speedMultiplier: 0.48,
-    maxSpeed: 15,
-    plantDamage: 32,
-    attackIntervalMs: 1350,
-    incomingDamageMultiplier: 0.85,
-    widthScale: 2,
-    heightScale: 2,
-    wobbleDurationMs: 900
+  "monster-01": Object.freeze({
+    hitsToDefeat: 7, speedMultiplier: 1, maxSpeed: 30, plantDamage: 16,
+    attackIntervalMs: 1150, incomingDamageMultiplier: 1, widthScale: 1,
+    heightScale: 1, wobbleDurationMs: 520
   })
 });
 
@@ -194,9 +135,6 @@ export function getMonsterCombatStats(archetype, wave) {
   });
 }
 
-export function getStonehideIncomingDamageMultiplier(isBraced) {
-  const profile = PHASE_ONE_MONSTERS["stonehide"];
-  return isBraced
-    ? profile.incomingDamageMultiplier * profile.bracedIncomingDamageMultiplier
-    : profile.incomingDamageMultiplier;
+export function getMonsterIncomingDamageMultiplier() {
+  return PHASE_ONE_MONSTERS["monster-01"].incomingDamageMultiplier;
 }

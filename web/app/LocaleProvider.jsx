@@ -1,6 +1,7 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useSyncExternalStore } from "react";
+import { readStorageSnapshot, subscribeToBrowserStorage } from "../game/hooks/browserStorage.mjs";
 
 const translations = {
   "A PRIMITIVE 2D FARM DEFENSE ADVENTURE": "مغامرة بدائية للدفاع عن المزرعة",
@@ -49,9 +50,8 @@ const translations = {
   "The caveman is back at his starting position.": "عاد رجل الكهف إلى نقطة انطلاقه.",
   "Planting cancelled: this cell is no longer available.": "أُلغيت الزراعة: هذه الخلية لم تعد متاحة.",
   "Energy is full. Defeat monsters or spend energy before collecting more.": "الطاقة ممتلئة. اهزم الوحوش أو أنفق بعض الطاقة قبل جمع المزيد.",
-  "A Dust Skitter has joined the raid: quick, but easier to bring down.": "انضم ضبع الغبار السريع إلى الهجوم: سريع لكنه أسهل في الهزيمة.",
-  "A Stonehide is approaching: slow, heavily plated, and tough to stop.": "ضبع الجلد الحجري يقترب: بطيء ومدرع بشدة ويصعب إيقافه.",
-  "ALPHA BRUTE! A giant raider with double health and crushing bites is approaching!": "الضبع العملاق! وحش ضخم بضعف الطاقة وعضّات ساحقة يقترب!",
+  "A Monster 01 has joined the raid: quick, but easier to bring down.": "انضم الوحش 01 إلى الهجوم: سريع لكنه أسهل في الهزيمة.",
+  "A Monster 01 is approaching: slow, heavily plated, and tough to stop.": "الوحش 01 يقترب: بطيء ومدرع بشدة ويصعب إيقافه.",
   "EMERGENCY! The last radish has fallen. Move close and press SPACE to swing the club.": "طوارئ! سقطت آخر نبتة فجل. اقترب واضغط المسافة لضرب الوحش بالهراوة.",
   "RADISH": "الفجل", "MUSHROOM": "الفطر", "Music": "الموسيقى", "Effects": "المؤثرات", "Projectiles": "المقذوفات",
   "Choose Radish to defend or Mushroom to produce energy, then click an empty soil cell.": "اختر الفجل للدفاع أو الفطر لإنتاج الطاقة، ثم انقر على خلية ترابية فارغة.",
@@ -108,14 +108,13 @@ export function translate(value, locale = "ar") {
 const LocaleContext = createContext({ locale: "ar", setLocale: () => {}, t: (v) => translate(v, "ar") });
 
 export function LocaleProvider({ children }) {
-  const [locale, setLocaleState] = useState("ar");
-  useEffect(() => {
-    const saved = window.localStorage.getItem("farmVsMonsters.language");
-    if (saved === "en" || saved === "ar") setLocaleState(saved);
-  }, []);
+  const locale = useSyncExternalStore(
+    subscribeToBrowserStorage,
+    () => readStorageSnapshot("farmVsMonsters.language", "ar") === "en" ? "en" : "ar",
+    () => "ar"
+  );
   useEffect(() => { document.documentElement.lang = locale; document.documentElement.dir = locale === "ar" ? "rtl" : "ltr"; }, [locale]);
   const setLocale = (next) => {
-    setLocaleState(next);
     window.localStorage.setItem("farmVsMonsters.language", next);
     window.dispatchEvent(new CustomEvent("farm-language-change", { detail: next }));
   };

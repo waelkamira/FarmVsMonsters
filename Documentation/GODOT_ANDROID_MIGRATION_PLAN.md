@@ -61,7 +61,6 @@ The current Phaser rules provide useful reference values, including a 5-lane × 
 ### Phase 3 — Phase 1 gameplay parity
 - Port all five waves and the three ordinary monster archetypes; verify wave counts and progression.
 - Port plant-specific rules, pickups, coins, damage, farmer emergency club mode, and all relevant combat transitions.
-- Implement the Stage 1 dragon encounter, telegraphed attacks, automatic farmer slingshot behaviour, and farmhouse health.
 - Enforce the rule that the farmer does not attack while any defensive plant lives; emergency club combat begins only when the final defender dies and ends immediately when a new defender is planted.
 - **Gate:** deterministic rule tests match the approved source contract; a complete Stage 1 can be played from start to victory/defeat with no missing state transitions.
 
@@ -101,7 +100,6 @@ The current Phaser rules provide useful reference values, including a 5-lane × 
 
 ## 6. Definition of done for the first Android milestone
 
-The first milestone is not a menu mock-up. It is an installable Android debug build that runs without internet and lets a player complete the full first stage: launch, understand the objective, plant and defend, survive the waves, fight the dragon, rescue the wife, view results, save progress, close the app, and resume with valid local progress. Victory and defeat paths must both work.
 
 ## 7. Immediate next actions
 

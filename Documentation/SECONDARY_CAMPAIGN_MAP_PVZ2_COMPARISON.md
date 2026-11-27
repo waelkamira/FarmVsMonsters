@@ -1,10 +1,11 @@
+> **Current implementation — 2026-11-25:** Stage 1 contains five waves of Monster 01 only and ends when the waves are cleared. No separate boss encounter is active.
+
 # Farm Vs Monsters — Secondary Campaign Map Plan
 ## Comparative study of Plants vs. Zombies 2 Adventure Mode
 
 **Document role:** Secondary / alternative campaign plan for comparison and design learning.  
 **Primary authority:** `GLOBAL_GAME_SUCCESS_MASTER_PLAN.md` remains the approved primary plan. This document does not replace it or authorize implementation changes by itself.  
 **Purpose:** Study the structure, progression, world variety, level pacing, and environmental mechanics of Plants vs. Zombies 2 (PvZ2), then translate useful high-level lessons into an original Farm Vs Monsters campaign.  
-**Art/IP rule:** Borrow structural lessons only. Do not copy PvZ2 names, characters, artwork, animations, audio, level layouts, UI, exact mechanics presentation, or proprietary assets. Farm Vs Monsters keeps its own farmer, wife/princess, dragons, monsters, plants, story, and visual identity.
 
 ---
 
@@ -127,7 +128,6 @@ PvZ2 uses a variety of level types during this progression, including ordinary d
 
 ## 4. Farm Vs Monsters — proposed alternative campaign map
 
-This is a **secondary proposal** to compare with the primary rescue-stage plan. It preserves the approved story: a dragon and its army occupy each territory, the farmer fights through the army, defeats the dragon, rescues his wife, and gets a meaningful reunion before moving to the next territory.
 
 ### 4.1 Proposed campaign scale
 
@@ -136,7 +136,6 @@ For a first complete campaign map, use:
 - **11 original territories** as a long-term structure.
 - **10 main missions per territory** as a planning target, not an already implemented count.
 - **110 main missions total** when all territories are built.
-- **One territory dragon boss per territory**, separate from ordinary monster totals.
 - **One wife-rescue story ending per territory**, followed by the approved reward / treasure-cave ceremony and a calm transition.
 - Optional challenge missions, treasure routes, and endless survival can be added after the main route is stable.
 
@@ -146,17 +145,6 @@ This is deliberately smaller than the 317-level PvZ2 reference. It creates a sub
 
 | Farm Vs Monsters territory (working title) | PvZ2 structural reference | Original environmental rule proposal | Enemy / boss direction |
 |---|---|---|---|
-| 1. Dragonfall Farm Valley | Tutorial + Ancient Egypt's introductory teaching | Gentle wind gusts and a few broken-fence obstacles; teach planting, energy, lanes, and the first dragon warning | Existing first-stage hyena family; first small dragon boss |
-| 2. The Broken Coast | Pirate Seas | Shoreline/bridge entry points and occasional amphibious routes; make threat entry locations matter | Raiders, divers, and a coast dragon that attacks from offshore |
-| 3. Rustrail Frontier | Wild West | A limited moving supply cart or movable farm device; do not make rooted plants walk | Fast raiders, armored wagon beasts, and a rail-yard dragon |
-| 4. The Frozen Highlands | Frostbite Caves | Cold gusts temporarily slow or freeze selected cells; clear visual warning and a warm-up counter | Ice-resistant monsters and a frost dragon; fire/warmth counters |
-| 5. The Overgrown Sunken City | Lost City | Ancient fertile tiles periodically produce a small resource bonus; digger enemies can temporarily block a lane | Excavator monsters, relic guardians, and a buried-city dragon |
-| 6. The Clockwork Wastes | Far Future | Connected energy pylons amplify a nearby plant effect for a short, clearly bounded period | Mechanical monsters, shield drones, and a machine dragon |
-| 7. The Moonlit Necropolis | Dark Ages | Night reduces passive resource generation; marked graves warn before spawning enemies | Grave callers, armored knights, and a shadow dragon |
-| 8. The Festival of Echoes | Neon Mixtape Tour | A visible rhythm meter changes enemy speed/defense in predictable musical phases | Sound-driven monsters and a rhythm dragon; audio cues must have visual equivalents |
-| 9. The Primeval Wilds | Jurassic Marsh | Neutral giant creatures cross selected lanes and can push enemies or disrupt formations | Ancient beasts, pack hunters, and a primal dragon |
-| 10. The Flooded Green Coast | Big Wave Beach | A visible tide schedule changes which cells are safe or usable; never remove a planted unit without warning | Amphibious raiders, plant-displacing enemies, and a sea dragon |
-| 11. The Riftbound Citadel | Modern Day | Portals bring back known enemy families and selected earlier hazards in controlled combinations | Elite mixed factions and the final dragon ruler |
 
 These are original working concepts. Names, art, exact mechanics, bosses, and unlock rewards remain subject to approval and production feasibility. Do not implement a territory hazard until its UI warning, counterplay, animation, sound, and test cases are defined.
 
@@ -172,8 +160,6 @@ These are original working concepts. Names, art, exact mechanics, bosses, and un
 | 6 | Combine | Mix the territory rule with two previously learned enemy roles |
 | 7 | Tactical test | Restrict or shape the loadout/available resources in a fair, explained way |
 | 8 | Escalation | Introduce an elite enemy or a more complex hazard combination |
-| 9 | Boss preparation | Preview the dragon, teach its signature attack, and let the player prepare |
-| 10 | Dragon battle and rescue | Defeat the dragon and required followers, rescue the wife, celebrate, award rewards, then transition calmly |
 
 The template is a planning guide. Some territories may need fewer or more missions after playtesting; the player must never be forced through filler levels just to satisfy the count.
 
@@ -186,7 +172,6 @@ The alternative map should borrow the clarity of a world-route map, while keepin
 ### Map overview
 - A large illustrated world map with 11 distinct territories connected by a winding road, river, caravan route, or magical path.
 - The current territory is highlighted; completed territories remain visible; future territories are dimmed but recognizable.
-- Each territory has its own dragon crest, color identity, environment preview, and completion marker.
 - The wife-rescue status is shown as a story milestone for each completed territory.
 - Selecting a territory opens its mission path, enemy preview, region hazard explanation, available rewards, and boss silhouette/art when approved.
 
@@ -195,8 +180,6 @@ The alternative map should borrow the clarity of a world-route map, while keepin
 - Clear states: locked, available, in progress, completed, and replayable.
 - Completed nodes show a medal/result; optional mastery goals can award extra cosmetics or resources, never mandatory power.
 - The next mission unlocks only after the required prior mission is completed.
-- A defeated dragon and rescued wife mark the territory as complete.
-- The final node is visually larger and clearly identified as the dragon encounter.
 
 ### Mission preview
 Before starting, show:
@@ -220,11 +203,6 @@ Before starting, show:
 
 | Topic | Primary plan | Secondary PvZ2-informed proposal |
 |---|---|---|
-| Core story | Every stage is a complete dragon defeat and wife-rescue adventure | Preserved, but organized into 11 themed territories |
-| Current first battle | Stage 1 is the first complete battle, currently structured around five waves and a separate dragon boss | Becomes the first mission/battle of Territory 1; do not rewrite it yet |
-| Campaign unit | A stage is a rescue adventure | A territory contains a route of multiple missions and ends with a dragon rescue |
-| Progression | Stage N ordinary enemy target is 29 + N; dragon is counted separately | Keep the same rule as a starting balance guideline, then tune mission-by-mission; do not multiply the count blindly across ten missions |
-| World variety | New territory, monster faction, dragon, and signature boss attack per stage | Adds a specific teachable environmental rule to each territory |
 | Rewards | Stage rewards and treasure-cave ceremony | Adds intermediate mission rewards and optional mastery rewards while preserving exact-once accounting |
 | Map | A campaign map and unlock sequence are required | Detailed world-route + 10-node territory path proposal |
 | Content scale | Expand stages in sequence | Long-term 11 territories × 10 missions = 110 proposed main missions |
@@ -235,8 +213,6 @@ Before starting, show:
 
 Do not replace the primary plan now. The strongest option is to **combine the primary story and battle rules with the secondary map's world structure and level pacing**:
 
-- Keep the farmer, wife, dragons, hyena/monster factions, treasure-cave reward ritual, and existing battle rules.
-- Keep the first battle and its approved 30 ordinary monsters + separate dragon boss.
 - Adopt the idea of multiple missions inside each future territory, rather than making every new territory only one isolated battle.
 - Give each territory one signature environment rule, but introduce it gradually and make it counterable.
 - Use the 11-territory map as a long-term campaign target, not an immediate implementation scope.
@@ -261,8 +237,6 @@ A territory is not considered complete until:
 - Its mission route and unlock logic work.
 - Its signature mechanic is understandable and fair.
 - Its ordinary enemy roster is complete and balanced.
-- Its dragon boss has distinct attacks and readable phases.
-- The dragon and required followers must be defeated before rescue.
 - The wife rescue, reunion, rewards, and treasure-cave sequence complete exactly once.
 - Progress survives reload and replay does not duplicate rewards.
 
@@ -286,3 +260,4 @@ A territory is not considered complete until:
 - Modern Day and portal mechanics: https://plantsvszombies.wiki.gg/wiki/Modern_Day
 
 Community-maintained references can change and occasionally lag behind game updates. The official EA page is used for the broad product structure; detailed level counts and mechanics are cross-checked against world-specific references. This document is a design study, not a claim of affiliation with or endorsement by EA/PopCap.
+

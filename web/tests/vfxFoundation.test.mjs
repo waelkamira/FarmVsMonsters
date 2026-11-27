@@ -351,3 +351,36 @@ test("VFXRenderer creates and resets texture and procedural visuals", () => {
   renderer.destroy();
   assert.equal(renderer.createTextureVisual(0, 0, "radish"), null);
 });
+
+
+test("VFXManager applies quality-aware burst concurrency at startup and during adaptive changes", () => {
+  const high = new VFXManager(createMockScene(), { registry: createDefaultVFXRegistry() });
+  assert.equal(high.limits.maxActiveBursts, 24);
+  assert.equal(high.play("radish-impact", 10, 10) !== null, true);
+  assert.equal(high.setQuality("low"), true);
+  assert.equal(high.quality, "low");
+  assert.equal(high.config.quality, "low");
+  assert.equal(high.qualityProfile.maxParticlesPerEffect, 5);
+  assert.equal(high.limits.maxActiveBursts, 8);
+  high.destroy();
+
+  const low = new VFXManager(createMockScene(), {
+    registry: createDefaultVFXRegistry(),
+    config: { quality: "low" }
+  });
+  assert.equal(low.limits.maxActiveBursts, 8);
+  low.destroy();
+});
+
+test("custom VFX burst caps remain upper bounds across quality profiles", () => {
+  const manager = new VFXManager(createMockScene(), {
+    registry: createDefaultVFXRegistry(),
+    limits: { maxActiveBursts: 3 }
+  });
+  assert.equal(manager.limits.maxActiveBursts, 3);
+  manager.setQuality("low");
+  assert.equal(manager.limits.maxActiveBursts, 3);
+  manager.setQuality("high");
+  assert.equal(manager.limits.maxActiveBursts, 3);
+  manager.destroy();
+});

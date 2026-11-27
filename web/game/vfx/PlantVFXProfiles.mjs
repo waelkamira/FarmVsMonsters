@@ -7,7 +7,8 @@ export const PLANT_VFX_PROFILES = Object.freeze({
   pineapple: Object.freeze({ charge: "pineapple-charge", projectile: "pineapple-projectile", trail: "pineapple-trail", impact: "pineapple-impact" }),
   hazelnut: Object.freeze({ charge: "hazelnut-charge", projectile: "hazelnut-projectile", trail: "hazelnut-trail", impact: "hazelnut-impact" }),
   mango: Object.freeze({ charge: "mango-charge", projectile: "mango-projectile", trail: "mango-trail", impact: "mango-impact" }),
-  "snow-thrower": Object.freeze({ charge: "snow-charge", projectile: "snow-projectile", trail: "snow-trail", impact: "snow-freeze-impact" })
+  "snow-thrower": Object.freeze({ charge: "snow-charge", projectile: "snow-projectile", trail: "snow-trail", impact: "snow-freeze-impact" }),
+  "electric-mushroom": Object.freeze({ charge: "electric-charge", projectile: "electric-projectile", trail: "electric-trail", impact: "electric-impact" })
 });
 
 export function getPlantVFXProfile(plantType) {

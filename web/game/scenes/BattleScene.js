@@ -1,25 +1,46 @@
 import { Scene, Input, Math as PhaserMath } from "phaser";
+import { createBattleHudButtons } from "./BattleHudButtons.js";
 import { translate } from "../../app/LocaleProvider";
 import { PhaserAssetManager } from "../services/assetManager.mjs";
 import { VFXManager } from "../vfx/VFXManager.mjs";
 import { createDefaultVFXRegistry } from "../vfx/createDefaultVFXRegistry.mjs";
 import { getPlantVFXProfile } from "../vfx/PlantVFXProfiles.mjs";
 import { getProjectileVFXProfile } from "../vfx/ProjectileVFXProfiles.mjs";
+import { getMonsterReactionProfile, getPlantAnimationProfile, getPlantIdleMotionTransform } from "../visuals/PlantMonsterVisualProfiles.mjs";
+import { createStudioAnimationProfile } from "../studio/animationProfiles.mjs";
+import { getSpriteFrameRectangles } from "../studio/spriteSheetGrid.mjs";
+import { createPhaserSkeletalRig } from "../studio/phaserSkeletalRig.mjs";
+import { getFarmerSheetReferenceHeight, resolveFarmerSheetScale } from "../visuals/farmerFrameQuality.mjs";
+import { createSkeletalAnimationController, resolveSkeletalIdleClip } from "../studio/animationStateMachine.mjs";
+import { circleIntersectsConvexPolygon, convexPolygonsOverlap } from "../studio/skeletalCollision.mjs";
+import { transformRigHitboxToWorld, transformRigPointToWorld } from "../studio/skeletalWorldTransform.mjs";
+import { getProjectileTrajectoryOffset, getProjectileHeadCorrection, getProjectileLaunchPoint } from "../studio/projectileTrajectory.mjs";
+import { createStudioMonsterProfile, resolveStudioMonsterRuntimeProfile, selectWeightedStudioMonster } from "../studio/monsterProfiles.mjs";
 
-// TEMPORARY: expose every implemented plant for VFX playtesting. Set false to restore campaign unlocks.
-const PLAYTEST_ALL_PLANTS = true;
-const ALL_PLAYTEST_PLANT_IDS = Object.freeze(["radish", "mushroom", "pumpkin", "pineapple", "hazelnut", "mango", "snow-thrower"]);
+// Campaign progression remains authoritative in normal play. Studio playtests explicitly bypass unlock gates.
+const PLAYTEST_ALL_PLANTS = false;
+const STAGE_PLANT_ALIASES = Object.freeze({
+  "radish-level-1": "radish", "energy-mushroom": "mushroom",
+  "pumpkin-level-1": "pumpkin", "pineapple-level-1": "pineapple",
+  "hazelnut-level-1": "hazelnut", "mango-level-1": "mango",
+  "snow-thrower-level-1": "snow-thrower", "electric-mushroom-level-1": "electric-mushroom"
+});
+const ALL_PLAYTEST_PLANT_IDS = Object.freeze(["radish", "mushroom", "pumpkin", "pineapple", "hazelnut", "mango", "snow-thrower", "electric-mushroom"]);
 import { createSeededRandom } from "../rules/seededRandom.mjs";
+import { normalizeSeedLoadout, MAX_SEED_PACKETS } from "../rules/seedLoadout.mjs";
 import { createCombatEventLog, appendCombatEvent } from "../rules/combatEventLog.mjs";
 import gridCalibration from "../data/farm-grid-calibration.json";
 import soundAssets from "../data/sound-assets.json";
+import effectSoundAssets from "../data/effect-sound-assets.json";
+import { EffectDirector, detectEffectQuality } from "../vfx/effects/EffectDirector.mjs";
+import { AmbientFX } from "../vfx/effects/AmbientFX.mjs";
+import { resolveAssignedEffectIds } from "../vfx/effects/effectAssignments.mjs";
+import { getEffect } from "../vfx/effects/effectLibrary.mjs";
 import {
   PHASE_ONE_WAVE_SIZES,
   PHASE_ONE_TOTAL_MONSTERS,
   INITIAL_ENERGY,
   MUSHROOM_PICKUP_TTL_MS,
-  loadSavedCoins,
-  saveCoins,
   RADISH_CONFIG,
   MUSHROOM_CONFIG,
   PUMPKIN_CONFIG,
@@ -27,12 +48,11 @@ import {
   HAZELNUT_CONFIG,
   MANGO_CONFIG,
   SNOW_THROWER_CONFIG,
+  ELECTRIC_MUSHROOM_CONFIG,
   collectEnergy,
   isWaveComplete,
   isPhaseOneVictory,
-  unlockNextStage,
   loadUnlockedPlantIds,
-  unlockPlantReward,
   recordMonsterDiscovery
 } from "../rules/phaseOneRules.mjs";
 import {
@@ -44,21 +64,18 @@ import {
   selectLaneBlocker,
   selectProjectileTarget,
   selectFarmerMeleeTarget,
-  selectDragonFireballTarget,
   advanceCooldown,
   resolveBiteAttack,
-  resolveDustSkitterMotionStep,
+  resolveMonsterMovementEffectsStep,
   resolveWaveSpawnStep,
   resolveMonsterArchetype
 } from "../rules/combatSimulation.mjs";
 import {
-  PHASE_ONE_DRAGON,
   PHASE_ONE_PLANTS,
   PHASE_ONE_FARMER,
   PHASE_ONE_TIMING,
-  PHASE_ONE_REWARDS,
   getMonsterCombatStats,
-  getStonehideIncomingDamageMultiplier
+  getMonsterIncomingDamageMultiplier
 } from "../rules/phaseOneCombatContract.mjs";
 
 const LANES = gridCalibration.grid.rows;
@@ -70,14 +87,9 @@ const GRID_CENTER_X = (GRID_NODES[0][0].x + GRID_NODES[LANES][COLUMNS].x) / 2;
 const GRID_CENTER_Y = (GRID_NODES[0][0].y + GRID_NODES[LANES][0].y) / 2;
 const CELL_W = GRID_WIDTH / COLUMNS;
 const CELL_H = GRID_HEIGHT / LANES;
-// Reversible visual rarity palette for the current hyena archetypes.
+// Reversible visual rarity palette for the current monster 01 archetypes.
 // White is the baseline; stronger archetypes receive progressively richer tints.
-const MONSTER_TIER_TINTS = {
-  "dust-skitter": 0xd7e1e8, // lighter scout: below standard durability
-  "cave-brute": 0xffffff,  // standard hyena
-  "stonehide": 0x579bff,   // reinforced hyena
-  "alpha-brute": 0xffc247  // giant alpha
-};
+const MONSTER_TIER_TINTS = { "monster-01": 0xffffff };
 const HOME_LOCAL_X = -300;
 const CAVEMAN_RETURN_SPEED = 420;
 const SPAWN_LOCAL_X = GRID_WIDTH / 2 + 28;
@@ -94,12 +106,10 @@ export default class BattleScene extends Scene {
       this.assetManager?.destroy();
       this.assetManager = null;
     });
-    this.load.image("farm-battlefield", "/assets/backgrounds/farm-battlefield.jpeg");
+    this.load.image("farm-battlefield", "/assets/backgrounds/farm-battlefield-clean.svg");
     this.load.image("seed-card", "/assets/items/ui/ui-seed-card.png");
     this.load.image("mushroom-card", "/assets/items/ui/ui-mushroom-card.png");
-    this.load.image("seed-card-frame", "/assets/items/ui/ui-seed-card-fram.png");
     this.load.image("seed-card-locked", "/assets/items/ui/ui-seed-card-locked.png");
-    this.load.image("seed-slot-empty", "/assets/items/ui/ui-seed-slot-empty.png");
     this.load.image("inventory-wood-frame", "/assets/items/ui/ui-inventory-wood-fram.png");
     // FarmVsMonsters top HUD artwork. The dedicated mushroom currency icon
     // was not included in the uploaded files, so the existing mushroom plant
@@ -118,13 +128,12 @@ export default class BattleScene extends Scene {
     this.load.image("radish-level-1", "/assets/plants/radish-level-1.png");
     this.load.image("radish-level-1-bomb", "/assets/plants/radish-level-1-bomb.png");
     this.load.image("mushroom-character", "/assets/plants/mushroom.png");
+    // Electric Mushroom artwork was intentionally removed; drawCatalogPlant uses its procedural fallback.
     this.load.image("pumpkin-character", "/assets/plants/pumpkin.png");
     this.load.image("mango-level-1", "/assets/plants/mango-level-1.png");
     this.load.image("mango-level-1-bomb", "/assets/plants/mango-level-1-bomb.png");
     this.load.image("snow-thrower-level-1", "/assets/plants/Snow-thrower-level-1.png");
     this.load.image("snow-thrower-bomb-level-1", "/assets/plants/Snow-thrower-bomb-level-1.png");
-    this.load.image("frozen-hyena-level-1", "/assets/characters/monsters/hyena/frozen-hyena-level-1.png");
-    this.load.image("frozen-hyena-level-2", "/assets/characters/monsters/hyena/frozen-hyena-level-2.png");
     // 1254×1254 artwork is a 3×3 sheet: nine 418×418 animation frames.
     this.load.spritesheet("pineapple-level-1", "/assets/plants/pineapple-level-1.png", { frameWidth: 418, frameHeight: 418, margin: 0, spacing: 0 });
     // 1024×1024 artwork, 3×3 grid: use 341px integer cells; Phaser exposes 9 frames.
@@ -147,29 +156,107 @@ export default class BattleScene extends Scene {
     this.load.spritesheet("farmer-attack", "/assets/characters/farmer/farmer-attack.png", { frameWidth: 180, frameHeight: 360 });
     this.load.spritesheet("farmer-hit", "/assets/characters/farmer/farmer-hit.png", { frameWidth: 152, frameHeight: 430 });
     this.load.spritesheet("farmer-death", "/assets/characters/farmer/farmer-death.png", { frameWidth: 152, frameHeight: 430 });
-    // Optional authored story sheets; missing files do not block the battle.
-    this.load.spritesheet("farmer-sling", "/assets/characters/farmer/farmer-sling.png", { frameWidth: 360, frameHeight: 430 });
-    this.load.spritesheet("farmer-rescue", "/assets/characters/farmer/farmer-rescue.png", { frameWidth: 360, frameHeight: 430 });
-    this.load.spritesheet("farmer-carry", "/assets/characters/farmer/farmer-carry.png", { frameWidth: 360, frameHeight: 430 });
-    this.load.spritesheet("dragon-boss", "/assets/characters/monsters/dragon/dragon-boss.png", { frameWidth: 512, frameHeight: 512 });
-    this.load.image("phase-one-princess-captive", "/assets/characters/princess/princess-captive.png");
-    this.load.image("phase-one-princess-rescued", "/assets/characters/princess/princess-rescued.png");
-    this.load.image("phase-one-emblem", "/assets/levels/phase-1-emblem.png");
+    // Phase 1 story artwork is not in the asset bundle yet. Its paths remain
+    // documented in phase-one-story-assets.json, but must not be queued until
+    // the authored files are committed (avoids guaranteed Phaser loaderror events).
 
-    // These four hyena sheets now share one standardized 360x298 frame grid.
-    this.load.spritesheet("hyena-idle", "/assets/characters/monsters/hyena/hyena-idle.png", { frameWidth: 360, frameHeight: 298 });
-    this.load.spritesheet("hyena-walk", "/assets/characters/monsters/hyena/hyena-walk.png", { frameWidth: 360, frameHeight: 298 });
-    this.load.spritesheet("hyena-run", "/assets/characters/monsters/hyena/hyena-run1.png", { frameWidth: 367, frameHeight: 298 });
-    // hyena-bite.png is a 1080x894 sheet arranged as 3 columns x 2 rows: six 360x447 frames.
-    this.load.spritesheet("hyena-bite", "/assets/characters/monsters/hyena/hyena-bite.png", { frameWidth: 360, frameHeight: 447 });
-    this.load.spritesheet("hyena-hit", "/assets/characters/monsters/hyena/hyena-hit.png", { frameWidth: 360, frameHeight: 894 });
-    this.load.spritesheet("hyena-death", "/assets/characters/monsters/hyena/hyena-death.png", { frameWidth: 360, frameHeight: 447 });
-    // The jump sheet has two different row layouts, so register it as an image
-    // and add its eight frames with explicit source rectangles below.
-    this.load.image("hyena-jump", "/assets/characters/monsters/hyena/hyena-jump.png");
+    // The approved ordinary enemy is the single authored Monster 01 image.
+    this.load.image("monster-01", "/assets/characters/monsters/01/01.png");
     for (const asset of soundAssets.assets) {
       this.load.audio(asset.key, asset.path);
     }
+    for (const asset of effectSoundAssets.assets) {
+      this.load.audio(asset.key, asset.path);
+    }
+    const queuedRigPartTextures = new Set();
+    // Studio keeps stable texture keys per asset ID. A scene restart can therefore
+    // otherwise retain the previous image from Phaser's global texture/animation caches.
+    const clearStudioTexture = (key) => {
+      if (this.textures.exists(key)) this.textures.remove(key);
+    };
+    const clearStudioAnimation = (key) => {
+      if (this.anims.exists(key)) this.anims.remove(key);
+    };
+    const queueRigPartTextures = (entry, variant) => {
+      for (const part of entry.rigParts || []) {
+        if (!part || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(part.id || "") || typeof part.path !== "string" ||
+            !(part.path.startsWith("/assets/") || part.path.startsWith("/api/studio/assets?preview="))) continue;
+        const key = "studio-rig-part-" + variant + "-" + part.id;
+        if (queuedRigPartTextures.has(key)) continue;
+        queuedRigPartTextures.add(key);
+        clearStudioTexture(key);
+        this.load.image(key, part.path);
+      }
+    };
+    const queueCharacterStateTextures = (entry, variant, kind) => {
+      for (const [stateId, state] of Object.entries(entry.stateAnimations || {})) {
+        const statePath = state?.previewUrl || state?.path;
+        if (!state || !/^[a-z0-9-]+$/.test(stateId) || typeof statePath !== "string" ||
+            !(statePath.startsWith("/assets/") || statePath.startsWith("/api/studio/assets?preview="))) continue;
+        const key = "studio-" + kind + "-state-" + variant + "-" + entry.id + "-" + stateId;
+        clearStudioTexture(key);
+        clearStudioAnimation("studio-" + kind + "-" + entry.id + "-state-" + stateId);
+        this.load.image(key, statePath);
+      }
+    };
+    const queueStudioCatalog = (catalogKey) => {
+      this.load.once("filecomplete-json-" + catalogKey, () => {
+        const entries = this.cache.json.get(catalogKey)?.plants || [];
+        const variant = catalogKey === "studio-test-catalog" ? "testing" : "published";
+        for (const entry of entries) {
+          if (!entry || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(entry.id || "") ||
+              typeof entry.path !== "string" || !(entry.path.startsWith("/assets/") || entry.path.startsWith("/api/studio/assets?preview="))) continue;
+          const plantTextureKey = "studio-plant-" + variant + "-" + entry.id;
+          clearStudioTexture(plantTextureKey);
+          clearStudioAnimation("studio-" + entry.id + "-idle");
+          clearStudioAnimation("studio-" + entry.id + "-attack");
+          this.load.image(plantTextureKey, entry.path);
+          queueRigPartTextures(entry, variant);
+          queueCharacterStateTextures(entry, variant, "plant");
+          if (entry.combat?.mode === "projectile" && entry.combat.projectile?.path && (entry.combat.projectile.path.startsWith("/assets/") || entry.combat.projectile.path.startsWith("/api/studio/assets?preview="))) {
+            const projectileTextureKey = "studio-projectile-" + variant + "-" + entry.id;
+            clearStudioTexture(projectileTextureKey);
+            clearStudioAnimation("studio-projectile-" + entry.id);
+            this.load.image(projectileTextureKey, entry.combat.projectile.path);
+          }
+        }
+      });
+    };
+    const queueStudioMonsterCatalog = (catalogKey) => {
+      this.load.once("filecomplete-json-" + catalogKey, () => {
+        const entries = this.cache.json.get(catalogKey)?.monsters || [];
+        const variant = catalogKey === "studio-test-monster-catalog" ? "testing" : "published";
+        for (const entry of entries) {
+          if (!entry || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(entry.id || "") ||
+              typeof entry.path !== "string" || !(entry.path.startsWith("/assets/") || entry.path.startsWith("/api/studio/assets?preview="))) continue;
+          const monsterTextureKey = "studio-monster-" + variant + "-" + entry.id;
+          clearStudioTexture(monsterTextureKey);
+          clearStudioAnimation("studio-monster-" + entry.id + "-idle");
+          clearStudioAnimation("studio-monster-" + entry.id + "-move");
+          clearStudioAnimation("studio-monster-" + entry.id + "-attack");
+          this.load.image(monsterTextureKey, entry.path);
+          queueRigPartTextures(entry, variant);
+          queueCharacterStateTextures(entry, variant, "monster");
+        }
+      });
+    };
+    queueStudioCatalog("studio-published-catalog");
+    queueStudioCatalog("studio-test-catalog");
+    this.load.json("studio-published-catalog", "/assets/studio-plant-catalog.json");
+    this.load.json("studio-test-catalog", "/api/studio/assets?catalog=testing");
+    queueStudioMonsterCatalog("studio-published-monster-catalog");
+    queueStudioMonsterCatalog("studio-test-monster-catalog");
+    this.load.json("studio-published-monster-catalog", "/assets/studio-monster-catalog.json");
+    this.load.json("studio-test-monster-catalog", "/api/studio/assets?catalog=testing-monsters");
+    this.load.once("filecomplete-json-stage-encounter-config", () => {
+      const requestedStage = Number(new URLSearchParams(window.location.search).get("stage"));
+      const stageNumber = Number.isInteger(requestedStage) ? Math.max(1, Math.min(100, requestedStage)) : 1;
+      const stageConfig = this.cache.json.get("stage-encounter-config")?.stages?.[String(stageNumber)];
+      const background = stageConfig?.background;
+      const studioDraftPreview = new URLSearchParams(window.location.search).get("studioPlaytest") === "1";
+      if ((stageConfig?.published === true || studioDraftPreview) && typeof background === "string" && background.startsWith("/assets/backgrounds/") && !background.includes("..")) this.load.image("stage-background", background);
+    });
+    this.load.json("stage-encounter-config", "/api/studio/stage-encounters");
     this.load.on("loaderror", (file) => {
       if (file.key === "farm-battlefield") this.backgroundAssetFailed = true;
       if (file.key === "radish-level-1") this.radishAssetFailed = true;
@@ -179,7 +266,7 @@ export default class BattleScene extends Scene {
         this.optionalPlantAssetFailures.push(file.key);
       }
       if (file.key.startsWith("farmer-")) this.farmerAssetFailed = true;
-      if (["hyena-idle", "hyena-walk", "hyena-run", "hyena-bite"].includes(file.key)) this.hyenaAssetFailed = true;
+      
       if (file.key.startsWith("sfx-")) {
         this.failedSoundAssets = this.failedSoundAssets || [];
         this.failedSoundAssets.push(file.key);
@@ -189,19 +276,223 @@ export default class BattleScene extends Scene {
 
   create() {
     this.isPaused = false;
-    this.vfxManager = new VFXManager(this, { registry: createDefaultVFXRegistry(), limits: { maxActiveBursts: 24 } });
+    const requestedStage = Number(new URLSearchParams(window.location.search).get("stage"));
+    this.stageNumber = Number.isInteger(requestedStage) ? Math.max(1, Math.min(100, requestedStage)) : 1;
+    this.isStudioPlaytest = new URLSearchParams(window.location.search).get("studioPlaytest") === "1";
+    this.stageEncounterConfig = this.cache.json.get("stage-encounter-config")?.stages?.[String(this.stageNumber)] || null;
+    this.stageMonsterRosterConfigured = this.stageEncounterConfig?.monstersConfigured === true && (this.stageEncounterConfig?.published === true || this.isStudioPlaytest);
+    this.stageMonsterEntries = (this.stageEncounterConfig?.monsters || []).filter(entry => entry.enabled !== false);
+    this.stageWaveCount = this.stageMonsterRosterConfigured
+      ? Math.max(1, ...this.stageMonsterEntries.map(entry => Math.max(1, Number(entry.wave) || 1)))
+      : PHASE_ONE_WAVE_SIZES.length;
+    this.totalConfiguredMonsters = this.stageMonsterRosterConfigured
+      ? Array.from({ length: this.stageWaveCount }, (_, index) => Math.min(500,
+          this.stageMonsterEntries.filter(entry => Number(entry.wave) === index + 1)
+            .reduce((sum, entry) => sum + Math.max(1, Number(entry.count) || 1), 0)
+        )).reduce((sum, count) => sum + count, 0)
+      : PHASE_ONE_TOTAL_MONSTERS;
+    this.stagePlantRosterConfigured = this.stageEncounterConfig?.plantsConfigured === true && (this.stageEncounterConfig?.published === true || this.isStudioPlaytest);
+    this.stagePlantEntries = (this.stageEncounterConfig?.plants || []).filter(entry => entry.enabled !== false && entry.visible !== false);
+    // Keep every battle VFX subsystem on the same hardware-aware quality budget.
+    this.graphicsQuality = detectEffectQuality(this);
+    this.vfxManager = new VFXManager(this, {
+      registry: createDefaultVFXRegistry(),
+      config: { quality: this.graphicsQuality },
+      limits: { maxActiveBursts: 24 }
+    });
     this.events.once("shutdown", () => {
       this.vfxManager?.destroy();
       this.vfxManager = null;
     });
-    // Both uploaded artworks are 3x3 sheets. Register one Phaser frame per cell
-    // so the battle renders a single pose instead of the complete nine-pose sheet.
-    // Use the same dimension-derived 3×3 crop path for Mango, Snow Thrower,
-    // and the frozen Hyena so every sheet gets identical frame boundaries.
+    // مكتبة التأثيرات (صورة + صوت) المعيّنة من الاستوديو. تجميلية فقط.
+    this.effectDirector = new EffectDirector(this, {
+      quality: this.graphicsQuality,
+      // Respect Phaser's master mute/volume. Do not read an unset scene.effectsVolume:
+      // an undefined value is interpreted as zero and would silently disable all FX audio.
+      getVolume: () => {
+        if (this.sound?.mute) return 0;
+        const masterVolume = Number(this.sound?.volume);
+        return Math.round((Number.isFinite(masterVolume) ? masterVolume : 1) * 100);
+      },
+      reducedMotion: typeof window !== "undefined" && Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches)
+    });
+    this.events.once("shutdown", () => {
+      this.effectDirector?.destroy();
+      this.effectDirector = null;
+    });
+    this.ambientFx = new AmbientFX(this, {
+      quality: this.graphicsQuality,
+      reducedMotion: typeof window !== "undefined" && Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches)
+    });
+    this.ambientFx.applyStageAtmosphere(this.stageNumber);
+    this.events.once("shutdown", () => { this.ambientFx?.destroy(); this.ambientFx = null; });
+    // Uploaded 3×3 plant/monster sheets are cropped using source dimensions,
+    // exactly like Mango: nine named Phaser frames, with no assumed cell size.
+    this.registerThreeByThreeSheet("radish-level-1");
     this.registerThreeByThreeSheet("mango-level-1");
+    this.registerThreeByThreeSheet("electric-mushroom-level-1");
     this.registerThreeByThreeSheet("snow-thrower-level-1");
-    this.registerThreeByThreeSheet("frozen-hyena-level-1");
-    this.registerThreeByThreeSheet("frozen-hyena-level-2");
+    const publishedStudioPlants = this.cache.json.get("studio-published-catalog")?.plants || [];
+    const testStudioPlants = this.cache.json.get("studio-test-catalog")?.plants || [];
+    const studioPlantMap = new Map();
+    const addStudioPlants = (entries, testOnly) => {
+      for (const entry of entries) {
+        if (!entry || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(entry.id || "") ||
+            typeof entry.path !== "string" || !(entry.path.startsWith("/assets/") || entry.path.startsWith("/api/studio/assets?preview=")) ||
+            !entry.combat?.mode) continue;
+        const variant = testOnly ? "testing" : "published";
+        const plantFrameCount = Math.max(1, Number(entry.frameCount) || ((Number(entry.rows) || 1) * (Number(entry.columns) || 1)));
+        studioPlantMap.set(entry.id, {
+          ...entry,
+          frameCount: plantFrameCount,
+          spriteSheet: Boolean(entry.spriteSheet && plantFrameCount > 1),
+          testOnly,
+          textureKey: "studio-plant-" + variant + "-" + entry.id,
+          projectileTextureKey: "studio-projectile-" + variant + "-" + entry.id,
+          stateAnimationTextureKeys: Object.fromEntries(Object.keys(entry.stateAnimations || {}).map((stateId) => [stateId, "studio-plant-state-" + variant + "-" + entry.id + "-" + stateId]))
+        });
+      }
+    };
+    addStudioPlants(publishedStudioPlants, false);
+    addStudioPlants(testStudioPlants, true);
+    this.studioPlants = [...studioPlantMap.values()];
+    for (const plant of this.studioPlants) {
+      const variant = plant.testOnly ? "testing" : "published";
+      plant.rigPartTextures = Object.fromEntries((plant.rigParts || []).map((part) => {
+        const textureKey = "studio-rig-part-" + variant + "-" + part.id;
+        if (this.textures.exists(textureKey)) this.registerStudioGridSheet(textureKey, part.rows || 1, part.columns || 1);
+        return [part.id, textureKey];
+      }));
+    }
+    const registerCharacterStateAnimations = (asset, kind) => {
+      for (const [stateId, state] of Object.entries(asset.stateAnimations || {})) {
+        const textureKey = asset.stateAnimationTextureKeys?.[stateId];
+        const frameCount = Math.max(1, Number(state.frameCount) || Number(state.rows || 1) * Number(state.columns || 1));
+        const rows = Math.max(1, Number(state.rows) || 1);
+        const columns = Math.max(1, Number(state.columns) || 1);
+        if (!textureKey || !this.textures.exists(textureKey) || rows * columns !== frameCount || !this.registerStudioGridSheet(textureKey, rows, columns)) continue;
+        const animationKey = "studio-" + kind + "-" + asset.id + "-state-" + stateId;
+        if (!this.anims.exists(animationKey) && frameCount > 1) {
+          this.anims.create({ key: animationKey, frames: this.anims.generateFrameNumbers(textureKey, { start: 0, end: frameCount - 1 }), frameRate: Math.max(1, Math.min(30, Number(state.fps) || 10)), repeat: state.loop === false ? 0 : -1 });
+        }
+      }
+    };
+    this.studioPlantsByType = Object.fromEntries(this.studioPlants.map((plant) => [plant.id, plant]));
+    for (const plant of this.studioPlants) {
+      const textureKey = plant.textureKey;
+      const frameCount = Math.max(1, Number(plant.frameCount) || ((Number(plant.rows) || 1) * (Number(plant.columns) || 1)));
+      plant.spriteSheet = Boolean(plant.spriteSheet && frameCount > 1);
+      try {
+        plant.animationProfile = createStudioAnimationProfile(plant.animationProfile, frameCount);
+      } catch {
+        // Older or malformed catalog entries retain a safe first-frame idle and full-sheet attack.
+        plant.animationProfile = createStudioAnimationProfile(null, Math.min(100, frameCount));
+      }
+      if (plant.spriteSheet && frameCount > 0 && this.registerStudioGridSheet(textureKey, plant.rows, plant.columns)) {
+        const clips = [
+          ["idle", plant.animationProfile.idle],
+          ["attack", plant.animationProfile.attack]
+        ];
+        for (const [clipName, clip] of clips) {
+          if (clip.endFrame <= clip.startFrame) continue;
+          const animationKey = "studio-" + plant.id + "-" + clipName;
+          if (!this.anims.exists(animationKey)) {
+            this.anims.create({
+              key: animationKey,
+              frames: this.anims.generateFrameNumbers(textureKey, { start: clip.startFrame, end: clip.endFrame })
+                .map((frame, index) => ({ ...frame, ...(clip.frameDurationsMs ? { duration: clip.frameDurationsMs[index] } : {}) })),
+              frameRate: clip.fps,
+              repeat: clip.loop ? -1 : 0
+            });
+          }
+        }
+      }
+      registerCharacterStateAnimations(plant, "plant");
+    }
+    // Register each attached projectile Sprite Sheet only after Phaser has loaded
+    // its image, using the independent grid saved with that projectile.
+    for (const plant of this.studioPlants) {
+      const projectile = plant.combat?.projectile;
+      const textureKey = plant.projectileTextureKey;
+      if (!projectile?.path || !this.textures.exists(textureKey)) continue;
+      const frameCount = Math.max(1, Math.min(24, Number(projectile.frameCount) || 1));
+      const rows = Math.max(1, Number(projectile.rows) || 1);
+      const columns = Math.max(1, Number(projectile.columns) || 1);
+      if (rows * columns !== frameCount) {
+        projectile.frameCount = 1;
+        projectile.rows = 1;
+        projectile.columns = 1;
+        continue;
+      }
+      if (frameCount > 1 && this.registerStudioGridSheet(textureKey, rows, columns)) {
+        const animationKey = "studio-projectile-" + plant.id;
+        if (!this.anims.exists(animationKey)) {
+          this.anims.create({
+            key: animationKey,
+            frames: this.anims.generateFrameNumbers(textureKey, { start: 0, end: frameCount - 1 }),
+            frameRate: 12,
+            repeat: -1
+          });
+        }
+      }
+    }
+    const publishedStudioMonsters = this.cache.json.get("studio-published-monster-catalog")?.monsters || [];
+    const testStudioMonsters = this.cache.json.get("studio-test-monster-catalog")?.monsters || [];
+    const studioMonsterMap = new Map();
+    const addStudioMonsters = (entries, testOnly) => {
+      for (const entry of entries) {
+        if (!entry || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(entry.id || "") ||
+            typeof entry.path !== "string" || !(entry.path.startsWith("/assets/") || entry.path.startsWith("/api/studio/assets?preview="))) continue;
+        try {
+          const monsterProfile = createStudioMonsterProfile(entry.monsterProfile);
+          const frameCount = Math.max(1, Number(entry.frameCount) || ((Number(entry.rows) || 1) * (Number(entry.columns) || 1)));
+          const animationProfile = createStudioAnimationProfile(entry.animationProfile, frameCount);
+          const variant = testOnly ? "testing" : "published";
+          studioMonsterMap.set(entry.id, {
+            ...entry,
+            frameCount,
+            spriteSheet: Boolean(entry.spriteSheet && frameCount > 1),
+            monsterProfile,
+            animationProfile,
+            testOnly,
+            textureKey: "studio-monster-" + variant + "-" + entry.id,
+            stateAnimationTextureKeys: Object.fromEntries(Object.keys(entry.stateAnimations || {}).map((stateId) => [stateId, "studio-monster-state-" + variant + "-" + entry.id + "-" + stateId]))
+          });
+        } catch (error) {
+          console.warn("Skipping invalid Studio monster profile:", entry.id, error);
+        }
+      }
+    };
+    addStudioMonsters(publishedStudioMonsters, false);
+    addStudioMonsters(testStudioMonsters, true);
+    this.studioMonsters = [...studioMonsterMap.values()];
+    for (const monster of this.studioMonsters) {
+      const variant = monster.testOnly ? "testing" : "published";
+      monster.rigPartTextures = Object.fromEntries((monster.rigParts || []).map((part) => {
+        const textureKey = "studio-rig-part-" + variant + "-" + part.id;
+        if (this.textures.exists(textureKey)) this.registerStudioGridSheet(textureKey, part.rows || 1, part.columns || 1);
+        return [part.id, textureKey];
+      }));
+    }
+    this.studioMonstersById = Object.fromEntries(this.studioMonsters.map((monster) => [monster.id, monster]));
+    for (const monster of this.studioMonsters) {
+      if (!monster.spriteSheet || monster.frameCount <= 1 || !this.registerStudioGridSheet(monster.textureKey, monster.rows, monster.columns)) continue;
+      monster.runtimeReady = true;
+      for (const [clipName, clip] of [["idle", monster.animationProfile.idle], ["move", monster.animationProfile.move], ["attack", monster.animationProfile.attack]]) {
+        if (clip.endFrame <= clip.startFrame) continue;
+        const animationKey = "studio-monster-" + monster.id + "-" + clipName;
+        if (!this.anims.exists(animationKey)) {
+          this.anims.create({
+            key: animationKey,
+            frames: this.anims.generateFrameNumbers(monster.textureKey, { start: clip.startFrame, end: clip.endFrame })
+              .map((frame, index) => ({ ...frame, ...(clip.frameDurationsMs ? { duration: clip.frameDurationsMs[index] } : {}) })),
+            frameRate: clip.fps,
+            repeat: clip.loop ? -1 : 0
+          });
+        }
+      }
+      registerCharacterStateAnimations(monster, "monster");
+    }
     if (this.textures.exists("snow-thrower-level-1") && !this.anims.exists("snow-thrower-level-1-throw")) {
       const available = Object.keys(this.textures.get("snow-thrower-level-1").frames).filter((name) => name !== "__BASE").length;
       if (available >= 9) {
@@ -235,27 +526,23 @@ export default class BattleScene extends Scene {
     window.addEventListener("farm-language-change", this.languageChangeHandler);
     this.events.once("shutdown", () => window.removeEventListener("farm-language-change", this.languageChangeHandler));
     this.energy = INITIAL_ENERGY;
-    let savedCoins = 0;
-    try {
-      savedCoins = loadSavedCoins(window.localStorage);
-    } catch {
-      // The battle remains playable when browser storage is unavailable.
-    }
-    this.coins = savedCoins;
-    this.registry.set("coins", this.coins);
+    // Local combat is a playtest sandbox; unverified browser currency is disabled.
+    this.coins = 0;
+    this.registry.set("coins", 0);
     this.houseHealth = 100;
     this.wave = 1;
-    this.totalWaves = PHASE_ONE_WAVE_SIZES.length;
+    this.totalWaves = this.stageWaveCount;
     this.spawnedThisWave = 0;
     this.waveDefeatedMonsters = 0;
-    this.waveSize = PHASE_ONE_WAVE_SIZES[0];
+    this.waveSize = this.getStageWaveSize(1);
+    const firstStageMonster = this.getStageMonsterEntry(0);
+    this.spawnTimer = this.stageMonsterRosterConfigured && firstStageMonster ? Math.max(0, Number(firstStageMonster.firstSpawnDelayMs) || 0) : PHASE_ONE_TIMING.firstMonsterSpawnDelayMs;
     this.totalSpawnedMonsters = 0;
     this.totalDefeatedMonsters = 0;
     this.totalPlantsPlanted = 0;
     this.energyCollected = 0;
     this.elapsedBattleMs = 0;
     this.combatClockMs = 0;
-    this.spawnTimer = PHASE_ONE_TIMING.firstMonsterSpawnDelayMs;
     this.waveIntermissionMs = 0;
     this.selectedPlant = null;
     this.plants = [];
@@ -275,12 +562,9 @@ export default class BattleScene extends Scene {
     this.plantingTarget = null;
     this.returnTarget = null;
     this.farmerPlanting = false;
-    this.phaseOneStoryState = "battle";
     this.storySequenceActive = false;
-    this.dragonBoss = null;
-    this.princessActor = null;
     this.gameOver = false;
-    this.hyenaAnimationsReady = this.createHyenaAnimations();
+    this.monster01AnimationsReady = this.createMonster01Animations();
     if (this.textures.exists("radish-level-1")) {
       const radishTexture = this.textures.get("radish-level-1");
       const radishSource = radishTexture.getSourceImage();
@@ -300,6 +584,18 @@ export default class BattleScene extends Scene {
     }
     if (this.textures.exists("mango-level-1") && !this.anims.exists("mango-level-1-throw")) {
       this.anims.create({ key: "mango-level-1-throw", frames: this.anims.generateFrameNumbers("mango-level-1", { start: 0, end: 8 }), frameRate: 12, repeat: 0 });
+    }
+    if (this.textures.exists("electric-mushroom-level-1") && !this.anims.exists("electric-mushroom-level-1-throw")) {
+      const available = Object.keys(this.textures.get("electric-mushroom-level-1").frames)
+        .filter((name) => name !== "__BASE").length;
+      if (available >= 9) {
+        this.anims.create({
+          key: "electric-mushroom-level-1-throw",
+          frames: this.anims.generateFrameNumbers("electric-mushroom-level-1", { start: 0, end: 8 }),
+          frameRate: 18.75,
+          repeat: 0
+        });
+      }
     }
     if (this.textures.exists("radish-level-1") && !this.anims.exists("radish-level-1-throw")) {
       this.anims.create({ key: "radish-level-1-throw", frames: this.anims.generateFrameNumbers("radish-level-1", { start: 0, end: 8 }), frameRate: 12, repeat: 0 });
@@ -339,13 +635,7 @@ export default class BattleScene extends Scene {
     this.createFarmBackground();
     this.drawPlantingGrid();
     this.createHud();
-    this.createAudioControls();
-    this.createPauseControl();
-    this.createSettingsControl();
-    this.createSpeedControl();
-    this.createCollectionMenuControl();
-    this.createInventoryControl();
-    this.createQuickCollectionButtons();
+    createBattleHudButtons(this, translate);
     this.createCaveman();
     this.bindInput();
     this.events.once("shutdown", () => {
@@ -362,24 +652,11 @@ export default class BattleScene extends Scene {
   drawField() {
     // Fallback art only. When the uploaded background loads it is rendered above this layer.
     const g = this.add.graphics().setDepth(-10);
-    g.fillGradientStyle(0xb9d98a, 0xb9d98a, 0x8dbb69, 0x8dbb69, 1);
-    g.fillRect(0, 0, 1120, 680);
+    // No full-screen green wash behind the battlefield fallback artwork.
     g.fillStyle(0x8a603b, 1); g.fillRoundedRect(185, 115, 690, 500, 24);
     g.fillStyle(0x9c7047, 1); g.fillRoundedRect(195, 125, 670, 480, 18);
 
-    // Draw the fallback board with the same perspective corners as the real artwork.
-    const point = (u, v) => this.boardPoint(u, v);
-    for (let row = 0; row < LANES; row += 1) {
-      for (let col = 0; col < COLUMNS; col += 1) {
-        const u0 = col / COLUMNS, u1 = (col + 1) / COLUMNS;
-        const v0 = row / LANES, v1 = (row + 1) / LANES;
-        const cell = [point(u0, v0), point(u1, v0), point(u1, v1), point(u0, v1)];
-        g.fillStyle(row % 2 === 0 ? 0xb88b5b : 0xad8050, 0.9);
-        g.fillPoints(cell, true);
-        g.lineStyle(2, 0xe4c18b, 0.65);
-        g.strokePoints(cell, true);
-      }
-    }
+    // Keep the fallback soil as one continuous field; gameplay cells are logical only.
     g.fillStyle(0xe8d5a8, 1); g.fillRoundedRect(28, 385, 132, 150, 12);
     g.fillStyle(0x9b573c, 1); g.fillTriangle(18, 390, 94, 320, 170, 390);
     g.fillStyle(0x65452f, 1); g.fillRect(78, 465, 34, 70);
@@ -393,11 +670,12 @@ export default class BattleScene extends Scene {
   }
 
   createFarmBackground() {
-    if (!this.textures.exists("farm-battlefield")) return;
+    const backgroundKey = this.textures.exists("stage-background") ? "stage-background" : "farm-battlefield";
+    if (!this.textures.exists(backgroundKey)) return;
 
     // Keep environment artwork separate from interactive gameplay objects.
     // Fit the 16:9 image inside the current viewport without stretching it.
-    this.farmBackground = this.add.image(560, 340, "farm-battlefield")
+    this.farmBackground = this.add.image(560, 340, backgroundKey)
       .setDisplaySize(1120, 597.33).setPosition(560, 340)
       .setDepth(-5);
 
@@ -647,11 +925,9 @@ export default class BattleScene extends Scene {
     };
   }
 
+
   drawPlantingGrid() {
-    // The background artwork owns the visible soil grid. This lightweight
-    // overlay only previews the one cell currently under the pointer.
-    // It follows the calibrated perspective polygon and never draws a second
-    // grid over the authored battlefield.
+    // No persistent cell tiles or grid lines: only the active placement preview is drawn.
     this.plantingGrid = null;
     this.plantingPreview = this.add.graphics().setDepth(9.7);
     this.plantingPreviewCell = null;
@@ -672,6 +948,8 @@ export default class BattleScene extends Scene {
 
     const { col, row } = this.worldToGrid(pointer.x, pointer.y);
     if (col < 0 || row < 0 || col >= COLUMNS || row >= LANES) return;
+    // Empty planting targets stay completely invisible until a seed is selected.
+    if (!this.selectedPlant) return;
 
     const polygon = this.cellPolygon(col, row);
     const occupied = this.plants.some((plant) => plant.alive && plant.col === col && plant.row === row);
@@ -700,8 +978,12 @@ export default class BattleScene extends Scene {
 
     this.plantingPreview.fillStyle(fill, occupied ? 0.2 : 0.15);
     this.plantingPreview.fillPoints(polygon, true);
-    this.plantingPreview.lineStyle(3, stroke, 0.92);
-    this.plantingPreview.strokePoints(polygon, true);
+    // Occupied plants never receive a cell frame; empty cells get a temporary
+    // placement outline only while the pointer is over the target cell.
+    if (!occupied) {
+      this.plantingPreview.lineStyle(3, stroke, 0.92);
+      this.plantingPreview.strokePoints(polygon, true);
+    }
     this.plantingPreviewCell = { col, row, occupied, canPlant };
   }
 
@@ -751,36 +1033,31 @@ export default class BattleScene extends Scene {
       }).setOrigin(0, 0.5).setDepth(44);
     });
 
-    // Wave identity: monster-wave artwork, wooden number badge and live count.
-    this.waveIcon = this.add.image(568, 25, "hud-wave-icon")
-      .setDisplaySize(34, 34).setDepth(44);
-    this.waveBadge = this.add.image(610, 25, "hud-wave-badge")
-      .setDisplaySize(48, 44).setDepth(43);
-    this.waveText = this.add.text(610, 25, "1/5", {
+    // Attack level and live progress are grouped together in the upper-right HUD.
+    // The progress bar sits immediately left of the current attack counter.
+    this.waveProgressFrame = this.add.image(810, 68, "hud-wave-frame")
+      .setDisplaySize(200, 38).setDepth(42);
+    this.waveProgressTrack = this.add.rectangle(810, 68, 158, 10, 0x392719, 0.72)
+      .setStrokeStyle(1, 0x8e6338, 0.8).setDepth(43);
+    this.waveProgressFill = this.add.image(731, 68, "hud-wave-fill")
+      .setOrigin(0, 0.5).setDisplaySize(2, 9).setDepth(44);
+    this.waveProgressMarker = this.add.image(731, 68, "hud-wave-marker")
+      .setDisplaySize(18, 18).setDepth(45);
+    this.waveProgressLabel = this.add.text(810, 94, "DEFEATED 0/2", {
+      fontFamily: "Arial", fontSize: "9px", color: "#ffe8b5", fontStyle: "bold",
+      stroke: "#392719", strokeThickness: 2, resolution: 2
+    }).setOrigin(0.5).setDepth(44);
+
+    // The attack counter is directly beside the progress bar, toward the right edge.
+    this.waveIcon = this.add.image(954, 68, "hud-wave-icon")
+      .setDisplaySize(30, 30).setDepth(44);
+    this.waveBadge = this.add.image(1007, 68, "hud-wave-badge")
+      .setDisplaySize(46, 40).setDepth(43);
+    this.waveText = this.add.text(1007, 68, "1/5", {
       fontFamily: "Arial", fontSize: "13px", color: "#fff4c8", fontStyle: "bold",
       stroke: "#392719", strokeThickness: 3, resolution: 2,
       align: "center"
     }).setOrigin(0.5).setDepth(45);
-
-    // Layer the live progress fill and marker inside the uploaded wooden frame.
-    this.waveProgressFrame = this.add.image(772, 25, "hud-wave-frame")
-      .setDisplaySize(218, 43).setDepth(42);
-    this.waveProgressTrack = this.add.rectangle(772, 25, 174, 11, 0x392719, 0.72)
-      .setStrokeStyle(1, 0x8e6338, 0.8).setDepth(43);
-    this.waveProgressFill = this.add.image(685, 25, "hud-wave-fill")
-      .setOrigin(0, 0.5).setDisplaySize(2, 10).setDepth(44);
-    this.waveProgressMarker = this.add.image(685, 25, "hud-wave-marker")
-      .setDisplaySize(20, 20).setDepth(45);
-    this.waveProgressLabel = this.add.text(772, 52, "DEFEATED 0/2", {
-      fontFamily: "Arial", fontSize: "10px", color: "#ffe8b5", fontStyle: "bold",
-      stroke: "#392719", strokeThickness: 2, resolution: 2
-    }).setOrigin(0.5).setDepth(44);
-
-    // The grouped ornament is intentionally small and kept outside the playfield.
-    if (this.textures.exists("hud-decorations")) {
-      this.add.image(886, 68, "hud-decorations")
-        .setDisplaySize(72, 38).setDepth(41).setAlpha(0.9);
-    }
 
         // Short PvZ-style announcement banner. It is reused between waves instead
     // of allocating new display objects every time a wave begins.
@@ -807,73 +1084,65 @@ export default class BattleScene extends Scene {
       { type: "pineapple", title: "PINEAPPLE L1", cost: PINEAPPLE_CONFIG.cost, image: "pineapple-level-1" },
       { type: "hazelnut", title: "HAZELNUT L1", cost: HAZELNUT_CONFIG.cost, image: "hazelnut-level-1" },
       { type: "mango", title: "MANGO L1", cost: MANGO_CONFIG.cost, image: "mango-level-1" },
-      { type: "snow-thrower", title: "SNOW L1", cost: SNOW_THROWER_CONFIG.cost, image: "snow-thrower-level-1" }
+      { type: "snow-thrower", title: "SNOW L1", cost: SNOW_THROWER_CONFIG.cost, image: "snow-thrower-level-1" },
+      { type: "electric-mushroom", title: "ELECTRIC MUSHROOM", cost: ELECTRIC_MUSHROOM_CONFIG.cost, image: "electric-mushroom-level-1" },
     ];
+    for (const studioPlant of this.studioPlants || []) {
+      plantOptions.push({
+        type: studioPlant.id,
+        title: String(studioPlant.name || studioPlant.id).toUpperCase().slice(0, 18),
+        cost: studioPlant.combat.energyCost,
+        image: studioPlant.textureKey,
+        studioPlant
+      });
+    }
     let selectedTypes = ["radish", "mushroom"];
     try {
-      const unlocked = new Set(loadUnlockedPlantIds(window.localStorage));
+      const unlocked = new Set([...loadUnlockedPlantIds(window.localStorage), ...(this.studioPlants || []).map((plant) => plant.id)]);
+      const stageAllowedTypes = this.stagePlantRosterConfigured
+        ? new Set(this.stagePlantEntries.filter(entry => entry.unlocked !== false).map((entry) => STAGE_PLANT_ALIASES[entry.id] || entry.id))
+        : null;
       const availableTypes = new Set(plantOptions.map((plant) => plant.type).filter((type) =>
-        PLAYTEST_ALL_PLANTS || unlocked.has(type)
+        stageAllowedTypes
+          ? stageAllowedTypes.has(type)
+          : this.isStudioPlaytest || PLAYTEST_ALL_PLANTS || unlocked.has(type)
       ));
-      const saved = JSON.parse(window.localStorage.getItem("farmVsMonsters.selectedPlants") || "null");
-      if (PLAYTEST_ALL_PLANTS) {
-        selectedTypes = [...availableTypes];
-      } else if (Array.isArray(saved)) {
-        selectedTypes = [...new Set(saved.filter((type) => availableTypes.has(type)))];
+      const stageLoadoutKey = "farmVsMonsters.selectedPlants.stage." + this.stageNumber;
+      const savedStageLoadout = window.localStorage.getItem(stageLoadoutKey);
+      const saved = JSON.parse(savedStageLoadout || (this.stagePlantRosterConfigured ? "null" : window.localStorage.getItem("farmVsMonsters.selectedPlants") || "null"));
+      if (this.stagePlantRosterConfigured) {
+        // A Studio stage roster is the source of truth for playtest availability,
+        // not campaign unlock progress or the built-in starter loadout.
+        const requestedLoadout = Array.isArray(saved) ? saved : [...availableTypes];
+        selectedTypes = [...new Set(requestedLoadout.filter((type) => availableTypes.has(type)))].slice(0, MAX_SEED_PACKETS);
       } else {
-        selectedTypes = [...availableTypes];
+        // Apply the campaign six-packet limit and starter ordering as usual.
+        const testingTypes = (this.studioPlants || [])
+          .filter((plant) => plant.testOnly)
+          .map((plant) => plant.id)
+          .filter((type) => availableTypes.has(type));
+        const preferredLoadout = PLAYTEST_ALL_PLANTS
+          ? [...ALL_PLAYTEST_PLANT_IDS, ...testingTypes, ...(Array.isArray(saved) ? saved : [])]
+          : Array.isArray(saved)
+            ? ["mushroom", "radish", ...testingTypes, ...saved.filter((type) => availableTypes.has(type))]
+            : [...availableTypes];
+        selectedTypes = normalizeSeedLoadout(preferredLoadout, [...availableTypes], [...availableTypes]);
       }
     } catch {
-      // Storage failures keep the starter loadout playable.
-      selectedTypes = ["radish", "mushroom"];
+      // Storage failures keep the configured stage roster playable when possible.
+      selectedTypes = this.stagePlantRosterConfigured
+        ? this.stagePlantEntries.filter(entry => entry.unlocked !== false).map((entry) => STAGE_PLANT_ALIASES[entry.id] || entry.id).slice(0, MAX_SEED_PACKETS)
+        : this.isStudioPlaytest
+          ? plantOptions.map((plant) => plant.type).slice(0, MAX_SEED_PACKETS)
+          : ["radish", "mushroom"];
     }
-    if (!selectedTypes.includes("mushroom")) selectedTypes.unshift("mushroom");
-    if (!selectedTypes.includes("radish")) selectedTypes.push("radish");
+    if (!this.stagePlantRosterConfigured && !this.isStudioPlaytest) {
+      if (!selectedTypes.includes("mushroom")) selectedTypes.unshift("mushroom");
+      if (!selectedTypes.includes("radish")) selectedTypes.push("radish");
+    }
     this.plantCardsByType = {};
     const packetStartX = 164;
-    const packetGap = 90;
-    const packetSlotCount = 7;
-    // Fill unused seed slots with previews of implemented plants that are
-    // not in the current loadout. Their artwork is intentionally dimmed and
-    // non-interactive so the player can see upcoming choices without selecting them.
-    const inactivePlants = plantOptions.filter((plant) =>
-      !selectedTypes.includes(plant.type) && plant.type !== "mushroom"
-    );
-    const inactiveSlots = Math.max(0, packetSlotCount - selectedTypes.length);
-    const cardSource = this.textures.exists("seed-card")
-      ? this.textures.get("seed-card").getSourceImage()
-      : null;
-    const cardScale = cardSource ? Math.min(88 / cardSource.width, 101.2 / cardSource.height) : 1;
-    inactivePlants.slice(0, inactiveSlots).forEach((plant, index) => {
-      const x = packetStartX + (selectedTypes.length + index) * packetGap;
-      const preview = this.add.container(x, 72).setDepth(45);
-      if (cardSource) {
-        preview.add(this.add.image(0, 0, "seed-card")
-          .setDisplaySize(cardSource.width * cardScale * 0.8, cardSource.height * cardScale * 0.8));
-      }
-      if (this.textures.exists(plant.image)) {
-        const texture = this.textures.get(plant.image);
-        const isSheet = ["pineapple-level-1", "hazelnut-level-1", "mango-level-1", "snow-thrower-level-1", "radish-level-1"].includes(plant.image);
-        const frame = isSheet ? texture.get("0") : texture.get();
-        // Use the actual frame rectangle and a single bounded scale so a
-        // source sheet's full-image dimensions can never enlarge the preview.
-        const frameWidth = Math.max(1, frame.cutWidth || frame.width || 1);
-        const frameHeight = Math.max(1, frame.cutHeight || frame.height || 1);
-        const thumbnailScale = Math.min(54 / frameWidth, 46 / frameHeight);
-        const thumbnail = isSheet
-          ? this.add.sprite(0, -8, plant.image, "0").setScale(thumbnailScale)
-          : this.add.image(0, -8, plant.image).setScale(thumbnailScale);
-        preview.add(thumbnail);
-        // Keep inactive plant previews recognizable with a lighter dark overlay.
-        preview.add(this.add.rectangle(0, -8, 56, 48, 0x000000, 0.32));
-        // Show the plant's energy cost even while it is not in the active loadout.
-        preview.add(this.add.text(0, 26.4, "🍄" + plant.cost, {
-          fontFamily: "Arial", fontSize: "13px", color: "#fff0bd", fontStyle: "bold",
-          stroke: "#3d2817", strokeThickness: 2, resolution: 2, align: "center"
-        }).setOrigin(0.5).setScale(0.855));
-      }
-      preview.setData("inactivePlantType", plant.type);
-    });
+    const packetGap = selectedTypes.length > 5 ? 78 : 90;
     plantOptions.filter((plant) => selectedTypes.includes(plant.type)).forEach((plant, index) => {
       this.plantCardsByType[plant.type] = this.createPlantCard(
         packetStartX + index * packetGap,
@@ -896,18 +1165,19 @@ export default class BattleScene extends Scene {
 
   createPlantCard(x, title, costLabel, type, drawIcon, imageKey = null, y = 619, locked = false) {
     const card = this.add.container(x, y).setDepth(45);
-    const cardArtworkKey = locked && this.textures.exists("seed-card-locked") ? "seed-card-locked" : "seed-card";
-    let seedFrame = null;
-    if (this.textures.exists(cardArtworkKey)) {
-      const source = this.textures.get(cardArtworkKey).getSourceImage();
-      const scale = Math.min(88 / source.width, 101.2 / source.height);
-      seedFrame = this.add.image(0, 0, cardArtworkKey).setDisplaySize(source.width * scale * 0.8, source.height * scale * 0.8);
-    }
+    // Plant cards keep their existing glass surface and contents; only the outer frame artwork is removed.
+    // Frosted gradient layer is inserted between frame art and interactive/content sprites.
+    const cardGlass = this.add.graphics();
+    cardGlass.fillStyle(0x9fe0a2, 0.28); cardGlass.fillRoundedRect(-34, -37, 68, 74, 9);
+    cardGlass.fillStyle(0xffffff, 0.24); cardGlass.fillRoundedRect(-32, -35, 64, 30, 7);
+    cardGlass.fillStyle(0x286b43, 0.12); cardGlass.fillRoundedRect(-32, -2, 64, 36, 7);
+    cardGlass.lineStyle(1.25, 0xffffff, 0.9); cardGlass.strokeRoundedRect(-34, -37, 68, 74, 9);
+    cardGlass.lineStyle(1, 0x286b43, 0.3); cardGlass.strokeRoundedRect(-31, -34, 62, 68, 7);
     const plantHeight = 46;
     let icon;
     let iconScale = 1;
     if (imageKey && this.textures.exists(imageKey)) {
-      const gridSheet = imageKey === "mango-level-1" || imageKey === "radish-level-1" || imageKey === "snow-thrower-level-1";
+      const gridSheet = ["mango-level-1", "radish-level-1", "pineapple-level-1", "hazelnut-level-1", "snow-thrower-level-1", "electric-mushroom-level-1"].includes(imageKey) || Boolean(this.studioPlantsByType?.[type]?.spriteSheet && this.studioPlantsByType[type].frameCount > 1);
       const frame = this.textures.getFrame(imageKey, gridSheet ? "0" : undefined);
       // Bound every seed icon by both dimensions using its frame rectangle.
       const frameWidth = Math.max(1, frame.cutWidth || frame.width || 1);
@@ -924,15 +1194,15 @@ export default class BattleScene extends Scene {
     // would enlarge 341–418px source frames to nearly their original size.
     icon.setScale(iconScale * 0.95 * 0.95);
     const cost = this.add.text(0, 26.4, locked ? "🔒" : "🍄" + costLabel, {
-      fontFamily: "Arial", fontSize: "13px", color: "#fff0bd", fontStyle: "bold",
-      stroke: "#3d2817", strokeThickness: 2, resolution: 2, align: "center"
+      fontFamily: "Arial", fontSize: "13px", color: "#315b32", fontStyle: "bold",
+      stroke: "#f5fff0", strokeThickness: 1, resolution: 2, align: "center"
     }).setOrigin(0.5).setScale(0.855);
     const cooldownOverlay = this.add.rectangle(0, -1, 64, 72, 0x1a160f, 0.72).setVisible(false);
     const cooldownLabel = this.add.text(0, -1, "", { fontFamily: "Arial", fontSize: "20px", color: "#fff4d6", fontStyle: "bold", stroke: "#382312", strokeThickness: 4, resolution: 2 }).setOrigin(0.5).setVisible(false);
     card.setData("cooldownOverlay", cooldownOverlay); card.setData("cooldownLabel", cooldownLabel);
     const panel = this.add.rectangle(0, 0, 80, 92, 0xffffff, 0).setInteractive({ useHandCursor: true });
     panel.setData("cooldownOverlay", cooldownOverlay); panel.setData("cooldownLabel", cooldownLabel);
-    card.add([...(seedFrame ? [seedFrame] : []), panel, icon, cost, cooldownOverlay, cooldownLabel]);
+    card.add([cardGlass, panel, icon, cost, cooldownOverlay, cooldownLabel]);
     if (locked) card.setAlpha(0.78);
     panel.on("pointerover", () => { card.setScale(1.04); });
     panel.on("pointerout", () => { card.setScale(1); });
@@ -942,7 +1212,7 @@ export default class BattleScene extends Scene {
       if (this.getSeedPacketCooldownRemaining(type) > 0) { this.setMessage("This seed packet is recharging. Wait for it to recover."); return; }
       this.selectedPlant = type;
       Object.entries(this.plantCardsByType || {}).forEach(([plantType, plantCard]) => plantCard.setAlpha(plantType === type ? 1 : 0.9));
-      const hints = { radish: "Radish Level 1 chosen. Launches miniature radish bombs down its lane.", mushroom: "Mushroom chosen. Collect its energy when it appears.", pumpkin: "Pumpkin chosen. A durable lane blocker.", hazelnut: "Hazelnut chosen. Fires hazelnut bombs in its lane.", mango: "Mango chosen. Launches a curved mango bomb onto monsters in its lane.", "snow-thrower": "Snow Thrower chosen. Freezes the first monster hit for 2.6 seconds." };
+      const hints = { radish: "Radish Level 1 chosen. Launches miniature radish bombs down its lane.", mushroom: "Mushroom chosen. Collect its energy when it appears.", pumpkin: "Pumpkin chosen. A durable lane blocker.", hazelnut: "Hazelnut chosen. Fires hazelnut bombs in its lane.", mango: "Mango chosen. Launches a curved mango bomb onto monsters in its lane.", "snow-thrower": "Snow Thrower chosen. Freezes the first monster hit for 2.6 seconds.", "electric-mushroom": "Electric Mushroom chosen. Fires cyan electric bolts down its lane." };
       this.setMessage(hints[type] || "Plant chosen."); this.refreshHud();
     });
     return card;
@@ -951,6 +1221,7 @@ export default class BattleScene extends Scene {
   createCaveman() {
     this.farmerWantsToRun = false;
     this.caveman = this.add.container(220, this.laneYs[2]).setDepth(10 + this.laneYs[2] / 1000);
+    this.addGroundContactShadow(this.caveman, 92, 20, 0.18);
 
     if (this.textures.exists("farmer-idle") && this.createFarmerAnimations()) {
       // The sheets have different cell sizes and transparent padding.
@@ -1017,84 +1288,111 @@ export default class BattleScene extends Scene {
 
   }
 
+  measureFarmerFrameBounds(texture, frame) {
+    const cacheKey = texture.key + ":" + frame.name;
+    const cached = this.farmerFrameMetrics?.get(cacheKey);
+    if (cached) return cached;
+
+    try {
+      const sourceImage = texture.getSourceImage();
+      const canvas = this.farmerMetricsCanvas ||= document.createElement("canvas");
+      canvas.width = frame.width;
+      canvas.height = frame.height;
+      const context = canvas.getContext("2d", { willReadFrequently: true });
+      if (!context || !sourceImage) return null;
+
+      const sourceX = Number.isFinite(frame.cutX) ? frame.cutX : frame.x;
+      const sourceY = Number.isFinite(frame.cutY) ? frame.cutY : frame.y;
+      context.clearRect(0, 0, canvas.width, canvas.height);
+      context.drawImage(
+        sourceImage,
+        sourceX, sourceY, frame.width, frame.height,
+        0, 0, frame.width, frame.height
+      );
+      const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
+      let minX = canvas.width;
+      let minY = canvas.height;
+      let maxX = -1;
+      let maxY = -1;
+
+      for (let y = 0; y < canvas.height; y += 1) {
+        for (let x = 0; x < canvas.width; x += 1) {
+          if (pixels[(y * canvas.width + x) * 4 + 3] <= 16) continue;
+          if (x < minX) minX = x;
+          if (x > maxX) maxX = x;
+          if (y < minY) minY = y;
+          if (y > maxY) maxY = y;
+        }
+      }
+
+      if (maxX < minX || maxY < minY) return null;
+      const bounds = {
+        minX, minY, maxX, maxY,
+        width: maxX - minX + 1,
+        height: maxY - minY + 1
+      };
+      this.farmerFrameMetrics.set(cacheKey, bounds);
+      return bounds;
+    } catch {
+      // Keep the game playable if canvas pixel reads are unavailable.
+      return null;
+    }
+  }
+
   normalizeFarmerFrame() {
     const sprite = this.cavemanVisual;
     if (!sprite || !sprite.active || !sprite.frame) return;
 
+    const texture = sprite.texture;
+    const textureKey = texture.key;
     const frame = sprite.frame;
-    const textureKey = sprite.texture.key;
-    const cacheKey = textureKey + ":" + frame.name;
-    let bounds = this.farmerFrameMetrics?.get(cacheKey);
+    const currentKey = textureKey + ":" + frame.name;
+    let bounds = this.farmerFrameMetrics?.get(currentKey);
 
     if (!bounds) {
-      try {
-        const sourceImage = sprite.texture.getSourceImage();
-        const canvas = document.createElement("canvas");
-        canvas.width = frame.width;
-        canvas.height = frame.height;
-        const context = canvas.getContext("2d", { willReadFrequently: true });
-        if (!context || !sourceImage) throw new Error("Canvas alpha sampling is unavailable.");
+      bounds = this.measureFarmerFrameBounds(texture, frame);
+    }
+    if (!bounds) {
+      sprite.setOrigin(0.5, 1).setScale(0.63);
+      return;
+    }
 
-        context.clearRect(0, 0, canvas.width, canvas.height);
-        const sourceX = Number.isFinite(frame.cutX) ? frame.cutX : frame.x;
-        const sourceY = Number.isFinite(frame.cutY) ? frame.cutY : frame.y;
-        context.drawImage(
-          sourceImage,
-          sourceX, sourceY, frame.width, frame.height,
-          0, 0, frame.width, frame.height
-        );
-        const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
-        let minX = canvas.width;
-        let minY = canvas.height;
-        let maxX = -1;
-        let maxY = -1;
-
-        for (let y = 0; y < canvas.height; y += 1) {
-          for (let x = 0; x < canvas.width; x += 1) {
-            if (pixels[(y * canvas.width + x) * 4 + 3] <= 16) continue;
-            if (x < minX) minX = x;
-            if (x > maxX) maxX = x;
-            if (y < minY) minY = y;
-            if (y > maxY) maxY = y;
-          }
-        }
-
-        if (maxX < minX || maxY < minY) throw new Error("The current farmer frame is empty.");
-        bounds = {
-          minX, minY, maxX, maxY,
-          width: maxX - minX + 1,
-          height: maxY - minY + 1
-        };
-        this.farmerFrameMetrics.set(cacheKey, bounds);
-
-        // The first standing frame defines the target visible size for every action.
-        if (textureKey === "farmer-idle" && this.farmerTargetDisplayHeight === null) {
-          this.farmerTargetDisplayHeight = bounds.height * 0.63;
-        }
-      } catch (error) {
-        // Keep the game playable on browsers that block canvas pixel reads.
+    // Measure every pose once and scale each action sheet from its tallest
+    // visible pose, not whichever frame happened to play first.
+    this.farmerTextureReferenceHeights ||= new Map();
+    let referenceHeight = this.farmerTextureReferenceHeights.get(textureKey);
+    if (!Number.isFinite(referenceHeight)) {
+      const frameEntries = Object.entries(texture.frames || {})
+        .filter(([name]) => name !== "__BASE")
+        .map(([, candidate]) => candidate);
+      const frameHeights = frameEntries
+        .map((candidate) => this.measureFarmerFrameBounds(texture, candidate)?.height)
+        .filter((height) => Number.isFinite(height) && height > 0);
+      referenceHeight = getFarmerSheetReferenceHeight(frameHeights);
+      if (!referenceHeight) {
         sprite.setOrigin(0.5, 1).setScale(0.63);
         return;
       }
+      this.farmerTextureReferenceHeights.set(textureKey, referenceHeight);
     }
 
+    // The idle sheet establishes one world-space body height for all actions.
+    if (textureKey === "farmer-idle" && this.farmerTargetDisplayHeight === null) {
+      this.farmerTargetDisplayHeight = referenceHeight * 0.63;
+    }
     if (this.farmerTargetDisplayHeight === null) {
-      this.farmerTargetDisplayHeight = bounds.height * 0.63;
+      this.farmerTargetDisplayHeight = referenceHeight * 0.63;
     }
 
-    // Phaser's origin is the stable world anchor: center of the visible feet,
-    // not the bottom edge of a sheet cell full of transparent pixels.
     sprite.setOrigin(
       (bounds.minX + bounds.maxX + 1) / (2 * frame.width),
       (bounds.maxY + 1) / frame.height
     );
-    // Keep one scale for the entire spritesheet. Recalculating it from each
-    // planting frame makes crouched poses (with a shorter alpha silhouette)
-    // enlarge dramatically, especially the head and torso.
     this.farmerTextureScales ||= new Map();
     let textureScale = this.farmerTextureScales.get(textureKey);
     if (!Number.isFinite(textureScale)) {
-      textureScale = this.farmerTargetDisplayHeight / bounds.height;
+      textureScale = resolveFarmerSheetScale(this.farmerTargetDisplayHeight, [referenceHeight]);
+      if (!Number.isFinite(textureScale)) textureScale = 0.63;
       this.farmerTextureScales.set(textureKey, textureScale);
     }
     sprite.setScale(textureScale);
@@ -1215,228 +1513,6 @@ export default class BattleScene extends Scene {
     }
   }
 
-  createPrincessActor() {
-    // The princess is only rendered from the user's authored asset.
-    if (!this.textures.exists("phase-one-princess-captive")) return;
-    this.princessActor = this.add.image(995, 270, "phase-one-princess-captive")
-      .setOrigin(0.5, 1)
-      .setDisplaySize(66, 96)
-      .setDepth(8.6);
-  }
-
-  beginDragonEncounter() {
-    if (this.dragonBoss || this.phaseOneStoryState !== "battle") return;
-    this.phaseOneStoryState = "dragon";
-    this.facing = 1;
-    this.caveman.scaleX = 1;
-    this.createPrincessActor();
-    this.dragonBoss = {
-      hp: PHASE_ONE_DRAGON.maxHp, maxHp: PHASE_ONE_DRAGON.maxHp, alive: true,
-      attackCooldown: PHASE_ONE_DRAGON.dragonInitialAttackDelayMs, shotCooldown: PHASE_ONE_DRAGON.farmerSlingInitialDelayMs, sprite: null
-    };
-    if (this.textures.exists("dragon-boss")) {
-      const texture = this.textures.get("dragon-boss");
-      const frames = Object.keys(texture.frames).filter((name) => name !== "__BASE").length;
-      this.dragonBoss.sprite = this.add.sprite(930, 145, "dragon-boss", 0)
-        .setOrigin(0.5, 1).setDisplaySize(220, 220).setDepth(8.2);
-      if (frames > 1) {
-        if (!this.anims.exists("dragon-boss-idle")) {
-          this.anims.create({
-            key: "dragon-boss-idle",
-            frames: this.anims.generateFrameNumbers("dragon-boss", { start: 0, end: frames - 1 }),
-            frameRate: 7, repeat: -1
-          });
-        }
-        this.dragonBoss.sprite.play("dragon-boss-idle");
-      }
-      this.tweens.add({
-        targets: this.dragonBoss.sprite,
-        x: { from: 835, to: 1010 }, y: { from: 140, to: 165 },
-        duration: 2600, ease: "Sine.easeInOut", yoyo: true, repeat: -1
-      });
-    }
-    this.dragonHealthBar = this.add.graphics().setDepth(56);
-    this.dragonHealthLabel = this.add.text(910, 55, "DRAGON", {
-      fontFamily: "Arial", fontSize: "17px", color: "#ffffff",
-      fontStyle: "bold", stroke: "#090503", strokeThickness: 5, resolution: 2
-    }).setOrigin(0.5).setDepth(57);
-    this.drawDragonHealthBar();
-    this.setMessage("The dragon has arrived! The farmer is loading his sling.");
-  }
-
-  drawDragonHealthBar() {
-    if (!this.dragonBoss || !this.dragonHealthBar?.active) return;
-    const ratio = PhaserMath.Clamp(this.dragonBoss.hp / this.dragonBoss.maxHp, 0, 1);
-    this.dragonHealthBar.clear();
-    this.dragonHealthBar.fillStyle(0x24150f, 0.9);
-    this.dragonHealthBar.fillRoundedRect(756, 66, 308, 23, 8);
-    this.dragonHealthBar.fillStyle(0x5b1710, 1);
-    this.dragonHealthBar.fillRoundedRect(760, 70, 300, 15, 6);
-    this.dragonHealthBar.fillStyle(0xff4b3e, 1);
-    this.dragonHealthBar.fillRoundedRect(760, 70, 300 * ratio, 15, 6);
-    this.dragonHealthBar.lineStyle(3, 0xffe0a2, 1);
-    this.dragonHealthBar.strokeRoundedRect(756, 66, 308, 23, 8);
-  }
-
-  updateDragonBoss(delta) {
-    const boss = this.dragonBoss;
-    if (!boss?.alive || this.phaseOneStoryState !== "dragon") return;
-    if (boss.sprite?.active && this.princessActor?.active) {
-      this.princessActor.setPosition(boss.sprite.x + 78, boss.sprite.y + 96);
-    }
-    boss.shotCooldown = advanceCooldown(boss.shotCooldown, delta);
-    if (boss.shotCooldown <= 0) {
-      boss.shotCooldown = PHASE_ONE_DRAGON.farmerSlingIntervalMs;
-      if (this.anims.exists("farmer-sling") && this.cavemanVisual?.active) {
-        this.playFarmerAction("farmer-sling");
-      }
-      const startX = this.caveman.x + this.facing * 28;
-      const startY = this.caveman.y - 52;
-      const targetX = boss.sprite?.x ?? 930;
-      const targetY = (boss.sprite?.y ?? 145) + 22;
-      const stone = this.add.circle(startX, startY, 7, 0xb9a58b, 1)
-        .setStrokeStyle(2, 0x66513c, 1).setDepth(52);
-      this.tweens.add({
-        targets: stone, x: targetX - 18, y: targetY,
-        duration: PhaserMath.Clamp(Math.abs(targetX - startX) / 0.62, 380, 1050),
-        ease: "Quad.easeIn",
-        onComplete: () => {
-          if (stone.active) stone.destroy();
-          if (boss.alive && !this.gameOver) this.damageDragonBoss(PHASE_ONE_DRAGON.farmerSlingDamage);
-        }
-      });
-    }
-
-    boss.attackCooldown = advanceCooldown(boss.attackCooldown, delta);
-    if (boss.attackCooldown <= 0) {
-      boss.attackCooldown = PHASE_ONE_DRAGON.attackIntervalMs;
-      const targetPlant = selectDragonFireballTarget(this.plants);
-      const targetX = targetPlant ? targetPlant.x : 92;
-      const targetY = targetPlant ? targetPlant.y - 18 : 490;
-
-      // Telegraph the chosen impact point before the projectile is launched.
-      // The marker is visual only; damage and target resolution remain unchanged.
-      const warning = this.add.circle(targetX, targetY, 24, 0xff5b32, 0.18)
-        .setStrokeStyle(4, 0xffc15c, 0.98).setDepth(54);
-      const warningCore = this.add.circle(targetX, targetY, 8, 0xffe39a, 0.75)
-        .setDepth(54);
-      this.tweens.add({
-        targets: [warning, warningCore],
-        scale: 1.45,
-        alpha: 0,
-        duration: 520,
-        ease: "Cubic.easeOut",
-        onComplete: () => {
-          if (warning.active) warning.destroy();
-          if (warningCore.active) warningCore.destroy();
-          if (this.gameOver || this.storySequenceActive || this.collectionMenuOpen || !boss.alive) return;
-          const fireball = this.add.circle(boss.sprite?.x ?? 930, (boss.sprite?.y ?? 145) - 38, 15, 0xff762e, 1)
-            .setStrokeStyle(3, 0xffd16c, 1).setDepth(53);
-          this.tweens.add({
-            targets: fireball, x: targetX, y: targetY, scale: 1.45,
-            duration: PHASE_ONE_DRAGON.fireballTravelMs, ease: "Quad.easeIn",
-            onComplete: () => {
-              if (fireball.active) fireball.destroy();
-              if (this.gameOver || this.storySequenceActive || this.collectionMenuOpen) return;
-              if (targetPlant?.alive) {
-                targetPlant.hp = applyHitPointsDamage(targetPlant.hp, PHASE_ONE_DRAGON.fireballDamageToPlant).hp;
-                this.flashEatenPlant(targetPlant);
-                if (targetPlant.hp <= 0) this.destroyPlant(targetPlant);
-              } else {
-                this.houseHealth = Math.max(0, this.houseHealth - PHASE_ONE_DRAGON.fireballDamageToFarm);
-                if (this.houseHealth <= 0) this.endGame(false);
-                this.refreshHud();
-              }
-            }
-          });
-        }
-      });
-    }
-  }
-
-  damageDragonBoss(amount) {
-    const boss = this.dragonBoss;
-    if (!boss?.alive || amount <= 0) return;
-    boss.hp = applyHitPointsDamage(boss.hp, amount).hp;
-    if (boss.sprite?.active) {
-      boss.sprite.setTint(0xffc078);
-      this.time.delayedCall(110, () => { if (boss.sprite?.active) boss.sprite.clearTint(); });
-    }
-    this.drawDragonHealthBar();
-    if (boss.hp > 0) return;
-    boss.alive = false;
-    this.dragonHealthBar?.destroy();
-    this.dragonHealthLabel?.destroy();
-    if (boss.sprite?.active) {
-      this.tweens.killTweensOf(boss.sprite);
-      this.tweens.add({
-        targets: boss.sprite, alpha: 0, y: boss.sprite.y - 22, duration: 650,
-        onComplete: () => boss.sprite?.destroy()
-      });
-    }
-    this.playMonsterDefeatSound();
-    this.setMessage("The dragon has fallen! The farmer is going to rescue the princess.");
-    this.tryFinishPhaseOne();
-  }
-
-  tryFinishPhaseOne() {
-    if (
-      this.phaseOneStoryState !== "dragon" ||
-      this.wave !== this.totalWaves ||
-      this.spawnedThisWave < this.waveSize ||
-      this.monsters.some((monster) => monster.alive) ||
-      this.dragonBoss?.alive
-    ) return;
-    this.beginPrincessRescue();
-  }
-
-  beginPrincessRescue() {
-    if (this.storySequenceActive || this.phaseOneStoryState === "complete") return;
-    this.storySequenceActive = true;
-    this.phaseOneStoryState = "rescuing";
-    this.setMessage("The battlefield is safe. The farmer is rescuing the princess!");
-    this.facing = 1;
-    this.caveman.scaleX = 1;
-    this.farmerWantsToRun = true;
-    this.setFarmerAnimation("farmer-run");
-    const rescueX = this.princessActor?.active ? this.princessActor.x : 145;
-    const rescueY = this.princessActor?.active ? this.princessActor.y : 375;
-    this.tweens.add({
-      targets: this.caveman, x: rescueX + 24, y: rescueY,
-      duration: 1050, ease: "Sine.easeInOut",
-      onComplete: () => {
-        if (this.cavemanVisual?.active && this.anims.exists("farmer-rescue")) {
-          this.cavemanVisual.play("farmer-rescue");
-        }
-        if (this.princessActor?.active) {
-          this.princessActor.setDepth(0);
-          this.caveman.add(this.princessActor);
-          this.princessActor.setPosition(22, -48).setDisplaySize(58, 84);
-          if (this.textures.exists("phase-one-princess-rescued")) {
-            this.princessActor.setTexture("phase-one-princess-rescued");
-          }
-        }
-        this.time.delayedCall(650, () => {
-          if (this.cavemanVisual?.active) {
-            const carryAnimation = this.anims.exists("farmer-carry") ? "farmer-carry" : "farmer-run";
-            this.cavemanVisual.play(carryAnimation);
-          }
-          this.facing = -1;
-          this.caveman.scaleX = -1;
-          this.tweens.add({
-            targets: this.caveman, x: 82, y: 485,
-            duration: 1650, ease: "Sine.easeInOut",
-            onComplete: () => {
-              this.phaseOneStoryState = "complete";
-              this.storySequenceActive = false;
-              this.endGame(true);
-            }
-          });
-        });
-      }
-    });
-  }
-
   readAudioPreference(key, fallback) {
     try {
       const stored = window.localStorage.getItem("farmVsMonsters.audio." + key);
@@ -1480,150 +1556,9 @@ export default class BattleScene extends Scene {
     this.registry.set("musicEnabled", this.musicEnabled);
   }
 
-  createAudioControls() {
-    // A single speaker button keeps the battle HUD clean. All audio options
-    // live in one compact popover anchored to this button.
-    this.audioMenuBounds = { left: 860, right: 1120, top: 66, bottom: 300 };
-    this.audioMenuOpen = false;
-    this.audioMenuDismissedOnPointerDown = false;
 
-    this.audioMenu = this.add.container(990, 183).setDepth(70).setVisible(false);
-    // Make the menu surface consume clicks so its empty areas never behave
-    // like clicks on the battlefield underneath it.
-    const panelGlow = this.add.rectangle(0, 0, 258, 228, 0x8b65e8, 0.16)
-      .setStrokeStyle(1, 0xffffff, 0.42);
-    const panel = this.add.rectangle(0, 0, 250, 220, 0x315b91, 0.64)
-      .setStrokeStyle(1, 0xffffff, 0.76)
-      .setInteractive();
-    const inset = this.add.rectangle(0, 0, 236, 206, 0x35bceb, 0.12)
-      .setStrokeStyle(1, 0xa7e84f, 0.42);
-    const heading = this.add.text(0, -91, translate("TRIBE SOUND", window.localStorage.getItem("farmVsMonsters.language") || "ar"), {
-      fontFamily: "Arial", fontSize: "15px", color: "#ffffff", fontStyle: "bold",
-      stroke: "#17213d", strokeThickness: 3
-    }).setOrigin(0.5).setData("localeKey", "TRIBE SOUND");
-    this.audioMenu.add([panelGlow, panel, inset, heading]);
 
-    this.musicAudioOption = this.createAudioVolumeSlider(-49, "Music", this.musicVolume, (value) => {
-      this.musicVolume = value;
-      this.musicEnabled = value > 0;
-      if (this.musicEnabled) {
-        this.startBackgroundMusic();
-        this.resumeGameAudio();
-      } else {
-        this.stopBackgroundMusic();
-      }
-    });
-    this.effectsAudioOption = this.createAudioVolumeSlider(17, "Effects", this.effectsVolume, (value) => {
-      this.effectsVolume = value;
-      this.effectsSoundEnabled = value > 0;
-    });
-    this.projectileAudioOption = this.createAudioVolumeSlider(83, "Projectiles", this.projectileVolume, (value) => {
-      this.projectileVolume = value;
-      this.projectileSoundEnabled = value > 0;
-    });
-    this.audioMenu.add([
-      this.musicAudioOption.container,
-      this.effectsAudioOption.container,
-      this.projectileAudioOption.container
-    ]);
-    this.input.on("pointermove", (pointer) => {
-      if (pointer.isDown && this.activeAudioSlider) this.activeAudioSlider(pointer);
-    });
-    this.input.on("pointerup", () => { this.activeAudioSlider = null; });
 
-    this.audioButton = this.add.container(1090, 27).setDepth(72);
-    const buttonHalo = this.add.rectangle(0, 1, 42, 36, 0x1b1008, 0.32);
-    const buttonBackground = this.add.rectangle(0, 0, 36, 32, 0xe6c58c, 1).setStrokeStyle(3, 0x4a2d18, 1);
-    const speaker = this.add.graphics();
-    speaker.fillStyle(0x4b2e16, 1);
-    speaker.fillRoundedRect(-11, -6, 7, 12, 2);
-    speaker.fillTriangle(-5, -7, 5, -14, 5, 14);
-    speaker.fillTriangle(-5, 7, 5, 14, 5, -14);
-    speaker.lineStyle(2, 0x4b2e16, 1);
-    speaker.beginPath();
-    speaker.arc(3, 0, 10, -0.85, 0.85, false);
-    speaker.strokePath();
-    this.audioButton.add([buttonHalo, buttonBackground, speaker]);
-    buttonBackground.setInteractive({ useHandCursor: true });
-    buttonBackground.on("pointerover", () => buttonBackground.setFillStyle(0xffdf8a, 1));
-    buttonBackground.on("pointerout", () => buttonBackground.setFillStyle(0xe6c58c, 1));
-    buttonBackground.on("pointerdown", () => {
-      if (this.audioMenuOpen) this.closeAudioMenu();
-      else this.openAudioMenu();
-    });
-
-    this.input.on("pointerdown", (pointer) => {
-      if (!this.audioMenuOpen) return;
-      const inMenu = pointer.x >= this.audioMenuBounds.left &&
-        pointer.x <= this.audioMenuBounds.right &&
-        pointer.y >= this.audioMenuBounds.top &&
-        pointer.y <= this.audioMenuBounds.bottom;
-      const inButton = pointer.x >= 1065 && pointer.x <= 1115 &&
-        pointer.y >= 9 && pointer.y <= 59;
-      if (!inMenu && !inButton) {
-        // The same outside click must only dismiss the menu; it must not
-        // also trigger planting or another battlefield action.
-        this.audioMenuDismissedOnPointerDown = true;
-        this.closeAudioMenu();
-      }
-    });
-
-    if (this.musicEnabled) this.startBackgroundMusic();
-  }
-
-  createAudioVolumeSlider(y, title, initialValue, onChange) {
-    const container = this.add.container(0, y);
-    const label = this.add.text(-101, -10, translate(title, window.localStorage.getItem("farmVsMonsters.language") || "ar"), {
-      fontFamily: "Arial", fontSize: "11px", color: "#ffffff", fontStyle: "bold", stroke: "#17213d", strokeThickness: 2
-    }).setOrigin(0, 0.5).setData("localeKey", title);
-    const track = this.add.rectangle(5, 12, 132, 8, 0xffffff, 0.24).setStrokeStyle(1, 0xffffff, 0.46).setInteractive({ useHandCursor: true });
-    const fill = this.add.rectangle(-61, 12, 0, 5, 0xa7e84f, 1).setOrigin(0, 0.5);
-    const knob = this.add.circle(-61, 12, 8, 0xffca45, 0.9)
-      .setStrokeStyle(1, 0xffffff, 0.9).setInteractive({ useHandCursor: true });
-    const valueText = this.add.text(96, -10, Math.round(initialValue) + "%", {
-      fontFamily: "Arial", fontSize: "11px", color: "#ffffff", fontStyle: "bold", stroke: "#17213d", strokeThickness: 2
-    }).setOrigin(1, 0.5);
-    container.add([label, track, fill, knob, valueText]);
-
-    const setValue = (rawValue, persist = true) => {
-      const value = Math.round(PhaserMath.Clamp(rawValue, 0, 100));
-      const knobX = -61 + value * 1.32;
-      knob.setX(knobX);
-      fill.width = value * 1.32;
-      valueText.setText(value + "%");
-      onChange(value);
-      if (persist) {
-        this.saveAudioPreferences();
-        this.resumeGameAudio();
-      }
-    };
-    const setFromPointer = (pointer) => setValue((pointer.x - (990 - 61)) / 1.32);
-    track.on("pointerdown", (pointer) => {
-      this.activeAudioSlider = setFromPointer;
-      setFromPointer(pointer);
-    });
-    knob.on("pointerdown", (pointer) => {
-      this.activeAudioSlider = setFromPointer;
-      setFromPointer(pointer);
-    });
-    track.on("pointerover", () => track.setFillStyle(0x35bceb, 1));
-    setValue(initialValue, false);
-    return { container };
-  }
-
-  openAudioMenu() {
-    this.audioMenuOpen = true;
-    this.audioMenu.setVisible(true);
-    this.audioMenu.setScale(0.96);
-    this.tweens.add({ targets: this.audioMenu, scale: 1, duration: 100, ease: "Back.Out" });
-  }
-
-  closeAudioMenu() {
-    if (!this.audioMenuOpen) return;
-    this.saveAudioPreferences();
-    this.audioMenuOpen = false;
-    this.audioMenu.setVisible(false);
-  }
 
   resumeGameAudio() {
     const audioContext = this.sound && this.sound.context;
@@ -1725,7 +1660,11 @@ export default class BattleScene extends Scene {
       : -Infinity;
     if (cooldownMs > 0 && now - lastPlayed < cooldownMs) return false;
     try {
-      this.sound.play(key, { volume: PhaserMath.Clamp(volume / 100, 0, 1) });
+      // Small per-play rate variation keeps repeated cartoon impacts from sounding mechanical.
+      this.sound.play(key, {
+        volume: PhaserMath.Clamp(volume / 100, 0, 1),
+        rate: PhaserMath.FloatBetween(0.9, 1.1)
+      });
       if (this.sfxCooldowns) this.sfxCooldowns.set(key, now);
       return true;
     } catch {
@@ -1734,7 +1673,57 @@ export default class BattleScene extends Scene {
     }
   }
 
-  playHyenaVoice(kind = "growl", intensity = 1) {
+  applySquashStretch(target, {
+    preX = 0.9,
+    preY = 1.12,
+    impactX = 1.14,
+    impactY = 0.8,
+    durationMs = 150
+  } = {}) {
+    if (!target?.active || !this.tweens) return false;
+    const baseX = Number.isFinite(target.__juiceBaseScaleX) ? target.__juiceBaseScaleX : (target.scaleX || 1);
+    const baseY = Number.isFinite(target.__juiceBaseScaleY) ? target.__juiceBaseScaleY : (target.scaleY || 1);
+    target.__juiceBaseScaleX = baseX;
+    target.__juiceBaseScaleY = baseY;
+    this.tweens.killTweensOf(target);
+    target.setScale(baseX * preX, baseY * preY);
+    this.tweens.add({
+      targets: target,
+      scaleX: baseX * impactX,
+      scaleY: baseY * impactY,
+      duration: Math.max(70, durationMs),
+      ease: "Back.easeOut",
+      yoyo: true,
+      hold: 24,
+      onComplete: () => {
+        if (target.active) target.setScale(baseX, baseY);
+      }
+    });
+    return true;
+  }
+
+  juiceCameraImpact({ heavy = false, zoomPunch = false } = {}) {
+    const camera = this.cameras?.main;
+    if (!camera || this.gameOver) return false;
+    camera.shake(heavy ? 130 : 90, heavy ? 0.0038 : 0.0018);
+    if (zoomPunch) {
+      const baseZoom = Number.isFinite(camera.__juiceBaseZoom) ? camera.__juiceBaseZoom : (camera.zoom || 1);
+      camera.__juiceBaseZoom = baseZoom;
+      this.cameraJuiceTween?.stop?.();
+      this.cameraJuiceTween = this.tweens.add({
+        targets: camera,
+        zoom: baseZoom * (heavy ? 1.055 : 1.025),
+        duration: 90,
+        ease: "Quad.easeOut",
+        yoyo: true,
+        hold: 45,
+        onComplete: () => { if (camera) camera.setZoom?.(baseZoom); }
+      });
+    }
+    return true;
+  }
+
+  playMonster01Voice(kind = "growl", intensity = 1) {
     // Original procedural cartoon animal vocals: generated with Web Audio,
     // so the game ships no third-party recordings or restrictive audio files.
     const context = this.sound && this.sound.context;
@@ -1801,7 +1790,7 @@ export default class BattleScene extends Scene {
 
   playMonsterBiteSound() {
     this.playSfx("sfx-monster-bite", this.effectsVolume * 0.54, 220);
-    this.playHyenaVoice("bite", 0.9);
+    this.playMonster01Voice("bite", 0.9);
   }
 
   playThornSound() {
@@ -1844,53 +1833,6 @@ export default class BattleScene extends Scene {
     this.farmerFootstepCooldownMs = 285;
   }
 
-  createQuickCollectionButtons() {
-    // A shared translucent glass dock ties the two collection shortcuts together.
-    this.quickCollectionDock = this.add.container(1010, 70).setDepth(47);
-    const dockGlow = this.add.rectangle(0, 1, 112, 96, 0x17100a, 0.28);
-    const dock = this.add.rectangle(0, 0, 106, 88, 0x6b4929, 1)
-      .setStrokeStyle(3, 0xd5a66a, 1);
-    this.quickCollectionDock.add([dockGlow, dock]);
-
-    const makeButton = (x, tab, tint) => {
-      const button = this.add.container(x, 0);
-      const halo = this.add.circle(0, 0, 21, 0xffffff, 0.10);
-      const plate = this.add.circle(0, 0, 18, tint, 0.38)
-        .setStrokeStyle(1, 0xffffff, 0.72).setInteractive({ useHandCursor: true });
-      const icon = this.add.graphics();
-      icon.lineStyle(2.6, 0xffffff, 1);
-      if (tab === "plants") {
-        icon.lineBetween(0, 11, 0, -2);
-        icon.lineBetween(0, 2, -8, -6);
-        icon.lineBetween(0, -1, 8, -9);
-        icon.strokeEllipse(-7, -7, 10, 7);
-        icon.strokeEllipse(7, -10, 10, 7);
-        icon.lineBetween(-10, 12, 10, 12);
-      } else {
-        icon.fillStyle(0xffffff, 1);
-        icon.fillEllipse(0, 6, 14, 10);
-        icon.fillCircle(-8, -6, 3.2);
-        icon.fillCircle(-2, -11, 3.2);
-        icon.fillCircle(5, -11, 3.2);
-        icon.fillCircle(10, -5, 3.2);
-      }
-      button.add([halo, plate, icon]);
-      plate.on("pointerover", () => {
-        plate.setFillStyle(tint, 0.72);
-        button.setScale(1.06);
-      });
-      plate.on("pointerout", () => {
-        plate.setFillStyle(tint, 0.38);
-        button.setScale(1);
-      });
-      plate.on("pointerdown", () => this.openCollectionMenuTab(tab));
-      this.quickCollectionDock.add(button);
-      return button;
-    };
-
-    this.quickPlantsButton = makeButton(-34, "plants", 0x42c96b);
-    this.quickMonstersButton = makeButton(34, "monsters", 0x8b65e8);
-  }
 
   openCollectionMenuTab(tab) {
     if (!this.collectionMenuOpen) this.toggleCollectionMenu();
@@ -1898,39 +1840,7 @@ export default class BattleScene extends Scene {
     this.renderCollectionMenu();
   }
 
-  createCollectionMenuControl() {
-    const button = this.add.container(978, 27).setDepth(47);
-    const plate = this.add.rectangle(0, 0, 42, 36, 0xe6c58c, 1)
-      .setStrokeStyle(3, 0x4a2d18, 1).setInteractive({ useHandCursor: true });
-    const label = this.add.text(0, 0, "▤", {
-      fontFamily: "Arial", fontSize: "20px", color: "#4b2e16", fontStyle: "bold"
-    }).setOrigin(0.5);
-    button.add([plate, label]);
-    plate.on("pointerover", () => plate.setFillStyle(0xffdf8a, 1).setScale(1.04));
-    plate.on("pointerout", () => plate.setFillStyle(0xe6c58c, 1).setScale(1));
-    plate.on("pointerdown", () => this.toggleCollectionMenu());
-    this.collectionMenuControl = button;
-    this.collectionMenuOpen = false;
-  }
 
-  createInventoryControl() {
-    const button = this.add.container(930, 27).setDepth(49);
-    const plate = this.add.rectangle(0, 0, 38, 36, 0xe6c58c, 1)
-      .setStrokeStyle(3, 0x4a2d18, 1).setInteractive({ useHandCursor: true });
-    const icon = this.add.graphics();
-    icon.lineStyle(2.4, 0x4b2e16, 1);
-    icon.strokeRoundedRect(-9, -7, 18, 18, 4);
-    icon.lineBetween(-5, -7, -3, -13);
-    icon.lineBetween(-3, -13, 3, -13);
-    icon.lineBetween(3, -13, 5, -7);
-    icon.lineBetween(-4, 0, 4, 0);
-    button.add([plate, icon]);
-    plate.on("pointerover", () => plate.setFillStyle(0xffdf8a, 1).setScale(1.05));
-    plate.on("pointerout", () => plate.setFillStyle(0xe6c58c, 1).setScale(1));
-    plate.on("pointerdown", () => this.openInventory());
-    this.inventoryControl = button;
-    this.inventoryOpen = false;
-  }
 
   toggleCollectionMenu() {
     if (this.gameOver) return;
@@ -1942,18 +1852,18 @@ export default class BattleScene extends Scene {
     this.collectionMenuOpen = true;
     this.collectionMenuTab = "phases";
     this.collectionMenuLayer = this.add.container(560, 340).setDepth(90);
-    this.collectionMenuLayer.add(this.add.rectangle(0, 0, 1120, 680, 0x142b50, 0.42).setInteractive());
-    const panelGlow = this.add.rectangle(0, 0, 774, 584, 0x8b65e8, 0.18).setStrokeStyle(1, 0xffffff, 0.48);
-    const panel = this.add.rectangle(0, 0, 760, 570, 0x315b91, 0.68).setStrokeStyle(1, 0xffffff, 0.76);
-    const panelInset = this.add.rectangle(0, 0, 742, 552, 0x35bceb, 0.08).setStrokeStyle(1, 0xa7e84f, 0.28);
+    this.collectionMenuLayer.add(this.add.rectangle(0, 0, 1120, 680, 0x102b1c, 0.48).setInteractive());
+    const panelGlow = this.add.rectangle(0, 0, 774, 584, 0x9fe0a2, 0.14).setStrokeStyle(1, 0xffffff, 0.34);
+    const panel = this.add.rectangle(0, 0, 760, 570, 0x286b43, 0.62).setStrokeStyle(1.5, 0xf2fff1, 0.82);
+    const panelInset = this.add.rectangle(0, 0, 742, 552, 0xb6edbc, 0.1).setStrokeStyle(1, 0xeaffeb, 0.34);
     this.collectionMenuLayer.add([panelGlow, panel, panelInset]);
-    this.collectionMenuLayer.add(this.add.rectangle(0, -274, 738, 40, 0x35bceb, 0.34).setStrokeStyle(1, 0xffffff, 0.72));
+    this.collectionMenuLayer.add(this.add.rectangle(0, -274, 738, 40, 0x83ce91, 0.26).setStrokeStyle(1, 0xf2fff1, 0.68));
     this.collectionMenuLayer.add(this.add.text(0, -274, "دفتر المزرعة والمغامرة  ·  FARM JOURNAL", {
-      fontFamily: "Arial", fontSize: "19px", color: "#ffffff", fontStyle: "bold", stroke: "#17213d", strokeThickness: 3
+      fontFamily: "Arial", fontSize: "19px", color: "#f2fff1", fontStyle: "bold", stroke: "#17442d", strokeThickness: 2
     }).setOrigin(0.5));
     const close = this.add.text(350, -274, "✕", {
-      fontFamily: "Arial", fontSize: "23px", color: "#ffffff", backgroundColor: "rgba(255,113,133,0.72)",
-      padding: { x: 8, y: 2 }, stroke: "#ffffff", strokeThickness: 1
+      fontFamily: "Arial", fontSize: "23px", color: "#f2fff1", backgroundColor: "rgba(113,190,132,0.55)",
+      padding: { x: 8, y: 2 }, stroke: "#eaffeb", strokeThickness: 1
     }).setOrigin(0.5).setAlpha(0.88).setInteractive({ useHandCursor: true });
     close.on("pointerover", () => close.setScale(1.08).setAlpha(1));
     close.on("pointerout", () => close.setScale(1).setAlpha(0.88));
@@ -1986,19 +1896,19 @@ export default class BattleScene extends Scene {
     tabs.forEach(([id, label], index) => {
       const x = -270 + index * 180;
       const active = this.collectionMenuTab === id;
-      const tabColors = [0x42c96b, 0x35bceb, 0xffca45, 0x8b65e8];
-      const bg = this.add.rectangle(x, 0, 164, 42, active ? tabColors[index] : 0xdaf3ff, active ? 0.58 : 0.16)
-        .setStrokeStyle(1, 0xffffff, active ? 0.88 : 0.42).setInteractive({ useHandCursor: true });
+      const tabColors = [0x83ce91, 0x69b981, 0x4f9d68, 0x347d50];
+      const bg = this.add.rectangle(x, 0, 164, 42, active ? tabColors[index] : 0xcdf2d1, active ? 0.58 : 0.18)
+        .setStrokeStyle(1, 0xf2fff1, active ? 0.92 : 0.54).setInteractive({ useHandCursor: true });
       const txt = this.add.text(x, 0, label, {
-        fontFamily: "Arial", fontSize: "15px", color: "#ffffff", fontStyle: "bold", stroke: "#17213d", strokeThickness: 2
+        fontFamily: "Arial", fontSize: "15px", color: "#f2fff1", fontStyle: "bold", stroke: "#17442d", strokeThickness: 1
       }).setOrigin(0.5);
       bg.on("pointerover", () => {
-        if (!active) bg.setFillStyle(tabColors[index], 0.42).setStrokeStyle(1, 0xffffff, 0.72);
+        if (!active) bg.setFillStyle(tabColors[index], 0.56).setStrokeStyle(1, 0xf2fff1, 0.82);
         bg.setScale(1.025);
       });
       bg.on("pointerout", () => {
-        bg.setFillStyle(active ? tabColors[index] : 0xdaf3ff, active ? 0.58 : 0.16)
-          .setStrokeStyle(1, 0xffffff, active ? 0.88 : 0.42)
+        bg.setFillStyle(active ? tabColors[index] : 0xcdf2d1, active ? 0.58 : 0.18)
+          .setStrokeStyle(1, 0xf2fff1, active ? 0.92 : 0.54)
           .setScale(1);
       });
       bg.on("pointerdown", () => { this.collectionMenuTab = id; this.renderCollectionMenu(); });
@@ -2008,7 +1918,7 @@ export default class BattleScene extends Scene {
     const addLabel = (x, y, value, size = 19, color = "#ffffff") =>
       content.add(this.add.text(x, y, value, { fontFamily: "Georgia", fontSize: size + "px", color, fontStyle: "bold", align: "center", wordWrap: { width: 650 } }).setOrigin(0.5));
     const addRow = (y, imageKey, title, detail, locked = false) => {
-      content.add(this.add.rectangle(0, y, 660, 72, 0x8edcff, 0.18).setStrokeStyle(1, 0xffffff, 0.42));
+      content.add(this.add.rectangle(0, y, 660, 72, 0x9fe0a2, 0.16).setStrokeStyle(1, 0xf2fff1, 0.58));
       if (imageKey && this.textures.exists(imageKey)) {
         const icon = imageKey === "radish-level-1"
           ? this.add.sprite(-285, y, imageKey, 0).setDisplaySize(45.4, 54)
@@ -2027,15 +1937,15 @@ export default class BattleScene extends Scene {
         const row = Math.floor((stage - 1) / 2);
         const col = (stage - 1) % 2;
         const x = col === 0 ? -170 : 170;
-        content.add(this.add.rectangle(x, 35 + row * 82, 300, 82, stage === 1 ? 0x42c96b : 0x8b65e8, stage === 1 ? 0.42 : 0.24).setStrokeStyle(1, 0xffffff, 0.46));
+        content.add(this.add.rectangle(x, 35 + row * 82, 300, 82, stage === 1 ? 0x83ce91 : 0x3c8054, stage === 1 ? 0.3 : 0.2).setStrokeStyle(1, 0xf2fff1, 0.56));
         const unlocked = stage === 1;
         if (stage === 1 && this.textures.exists("phase-one-emblem")) {
           content.add(this.add.image(x - 105, 65 + row * 100, "phase-one-emblem").setDisplaySize(90, 58));
         } else {
           content.add(this.add.text(x - 105, 65 + row * 100, unlocked ? "I" : "🔒", { fontSize: "30px", color: "#ffffff", stroke: "#17213d", strokeThickness: 3 }).setOrigin(0.5));
         }
-        content.add(this.add.text(x + 35, 18 + row * 82, locale === "ar" ? "المرحلة " + stage : "STAGE " + stage, { fontSize: "17px", color: "#ffffff", fontStyle: "bold", stroke: "#17213d", strokeThickness: 2 }).setOrigin(0.5));
-        content.add(this.add.text(x + 35, 48 + row * 82, unlocked ? (locale === "ar" ? "متاحة للعب" : "AVAILABLE") : (locale === "ar" ? "مغلقة — تحتاج مفتاحاً" : "LOCKED · KEY REQUIRED"), { fontSize: "12px", color: "#ffffff", fontStyle: "bold", stroke: "#17213d", strokeThickness: 2 }).setOrigin(0.5));
+        content.add(this.add.text(x + 35, 18 + row * 82, locale === "ar" ? "المرحلة " + stage : "STAGE " + stage, { fontSize: "17px", color: "#f2fff1", fontStyle: "bold", stroke: "#17442d", strokeThickness: 1 }).setOrigin(0.5));
+        content.add(this.add.text(x + 35, 48 + row * 82, unlocked ? (locale === "ar" ? "متاحة للعب" : "AVAILABLE") : (locale === "ar" ? "مغلقة — تحتاج مفتاحاً" : "LOCKED · KEY REQUIRED"), { fontSize: "12px", color: "#eaffeb", fontStyle: "bold", stroke: "#17442d", strokeThickness: 1 }).setOrigin(0.5));
       }
       addLabel(0, 435, locale === "ar" ? "ستُفتح المراحل التالية بعد إكمال المغامرات السابقة." : "Complete earlier adventures to unlock later stages.", 13, "#ffffff");
     } else if (this.collectionMenuTab === "plants") {
@@ -2052,14 +1962,13 @@ export default class BattleScene extends Scene {
         addLabel(0, 60, locale === "ar" ? "مغارة الكنز — بانتظار رسم المغارة" : "TREASURE CAVE — ARTWORK PENDING", 18);
       }
       addLabel(0, 185, (locale === "ar" ? "رصيدك الحالي: " : "CURRENT BALANCE: ") + this.coins.toLocaleString() + "  🪙", 25, "#ffffff");
-      addLabel(0, 270, locale === "ar" ? "كل ضبع مهزوم يمنحك 8 نقود. ستُضاف آلية شراء النباتات لاحقاً." : "Each defeated hyena awards 8 coins. Plant purchases will be added later.", 13, "#ffffff");
+      addLabel(0, 270, locale === "ar" ? "كل وحش 01 مهزوم يمنحك 8 نقود. ستُضاف آلية شراء النباتات لاحقاً." : "Each defeated Monster 01 awards 8 coins. Plant purchases will be added later.", 13, "#ffffff");
     } else {
       addLabel(0, -8, locale === "ar" ? "دليل الوحوش — نقاط الصحة وقوة الهجوم" : "Monster field guide — health and attack strength", 17);
-      addRow(55, "hyena-idle", locale === "ar" ? "الضبع العادي" : "Cave Brute", (locale === "ar" ? "الصحة: 69 + 4 لكل موجة · الضرر: 16" : "HP: 69 + 4 per wave · Damage: 16"));
-      addRow(145, "hyena-idle", locale === "ar" ? "الضبع السريع" : "Dust Skitter", (locale === "ar" ? "52% من صحة العادي · الضرر: 8" : "52% of brute HP · Damage: 8"));
-      addRow(235, "hyena-idle", locale === "ar" ? "الضبع المدرع" : "Stonehide", (locale === "ar" ? "220% من صحة العادي · الضرر: 23" : "220% of brute HP · Damage: 23"));
-      addRow(325, "hyena-idle", locale === "ar" ? "الضبع العملاق" : "Alpha Brute", (locale === "ar" ? "الصحة: 350 · ضرر النبات: 32" : "HP: 350 · Plant damage: 32"));
-      addRow(415, "dragon-boss", locale === "ar" ? "التنين الزعيم" : "Dragon Boss", locale === "ar" ? "زعيم مستقل · شريط صحة خاص" : "Separate boss · dedicated health bar");
+      addRow(55, "monster-01-idle", locale === "ar" ? "الوحش 01" : "Monster 01", (locale === "ar" ? "الصحة: 69 + 4 لكل موجة · الضرر: 16" : "HP: 69 + 4 per wave · Damage: 16"));
+      addRow(145, "monster-01-idle", locale === "ar" ? "الوحش 01" : "Monster 01", (locale === "ar" ? "52% من صحة العادي · الضرر: 8" : "52% of brute HP · Damage: 8"));
+      addRow(235, "monster-01-idle", locale === "ar" ? "الوحش 01" : "Monster 01", (locale === "ar" ? "220% من صحة العادي · الضرر: 23" : "220% of brute HP · Damage: 23"));
+      addRow(325, "monster-01-idle", locale === "ar" ? "الوحش 01" : "Monster 01", (locale === "ar" ? "الصحة: 350 · ضرر النبات: 32" : "HP: 350 · Plant damage: 32"));
     }
   }
 
@@ -2077,8 +1986,8 @@ export default class BattleScene extends Scene {
     // The uploaded wood frame is kept at its original aspect ratio. A parchment
     // panel sits behind it, while all inventory content stays inside its border.
     this.inventoryLayer.add(
-      this.add.rectangle(0, 0, 500, 548, 0xe9d7ad, 1)
-        .setStrokeStyle(4, 0x754a25, 1)
+      this.add.rectangle(0, 0, 500, 548, 0x286b43, 0.58)
+        .setStrokeStyle(1.5, 0xf2fff1, 0.76)
     );
     if (this.textures.exists("inventory-wood-frame")) {
       this.inventoryLayer.add(
@@ -2096,9 +2005,9 @@ export default class BattleScene extends Scene {
       stroke: "#4a2b16", strokeThickness: 5, align: "center"
     }).setOrigin(0.5));
     const close = this.add.text(230, -266, "✕", {
-      fontFamily: "Arial", fontSize: "22px", color: "#fff4d8",
-      backgroundColor: "#a94736", padding: { x: 8, y: 3 },
-      stroke: "#4a2b16", strokeThickness: 2
+      fontFamily: "Arial", fontSize: "22px", color: "#f2fff1",
+      backgroundColor: "rgba(78,151,98,0.68)", padding: { x: 8, y: 3 },
+      stroke: "#17442d", strokeThickness: 1
     }).setOrigin(0.5).setInteractive({ useHandCursor: true });
     close.on("pointerover", () => close.setScale(1.08));
     close.on("pointerout", () => close.setScale(1));
@@ -2134,12 +2043,12 @@ export default class BattleScene extends Scene {
     tabSpecs.forEach(([id, label, x]) => {
       const active = this.inventoryTab === id;
       const plate = this.add.rectangle(x, 0, 184, 40,
-        active ? 0x6c9d45 : 0x9b7449, active ? 1 : 0.82)
-        .setStrokeStyle(3, active ? 0x365324 : 0x70431f, 1)
+        active ? 0x75c58a : 0x9fe0a2, active ? 0.62 : 0.2)
+        .setStrokeStyle(1, active ? 0xf2fff1 : 0xdffff0, active ? 0.9 : 0.58)
         .setInteractive({ useHandCursor: true });
       const text = this.add.text(x, 0, label, {
-        fontFamily: "Arial", fontSize: "16px", color: "#fff3d5",
-        fontStyle: "bold", stroke: "#4a2b16", strokeThickness: 3
+        fontFamily: "Arial", fontSize: "16px", color: "#f2fff1",
+        fontStyle: "bold", stroke: "#17442d", strokeThickness: 1
       }).setOrigin(0.5);
       plate.on("pointerover", () => plate.setScale(1.035));
       plate.on("pointerout", () => plate.setScale(1));
@@ -2163,12 +2072,15 @@ export default class BattleScene extends Scene {
       let unlockedIds = ["radish", "mushroom"];
       let selectedTypes = ["radish", "mushroom"];
       try {
-        unlockedIds = PLAYTEST_ALL_PLANTS
-          ? [...new Set([...loadUnlockedPlantIds(window.localStorage), ...ALL_PLAYTEST_PLANT_IDS])]
-          : loadUnlockedPlantIds(window.localStorage);
+        const campaignUnlocked = loadUnlockedPlantIds(window.localStorage);
+        unlockedIds = this.isStudioPlaytest
+          ? [...new Set([...campaignUnlocked, ...ALL_PLAYTEST_PLANT_IDS, ...(this.studioPlants || []).map((plant) => plant.id)])]
+          : PLAYTEST_ALL_PLANTS
+            ? [...new Set([...campaignUnlocked, ...ALL_PLAYTEST_PLANT_IDS])]
+            : campaignUnlocked;
         const saved = JSON.parse(window.localStorage.getItem("farmVsMonsters.selectedPlants") || "null");
-        if (Array.isArray(saved)) selectedTypes = saved;
-        else selectedTypes = unlockedIds;
+        if (Array.isArray(saved)) selectedTypes = normalizeSeedLoadout(saved, unlockedIds, unlockedIds);
+        else selectedTypes = normalizeSeedLoadout(unlockedIds, unlockedIds, unlockedIds);
       } catch {
         // Starter plants remain visible if browser storage is unavailable.
       }
@@ -2179,7 +2091,8 @@ export default class BattleScene extends Scene {
         { id: "pineapple", title: isArabic ? "الأناناس" : "Pineapple", image: "pineapple-level-1", config: PINEAPPLE_CONFIG },
         { id: "hazelnut", title: isArabic ? "البندق" : "Hazelnut", image: "hazelnut-level-1", config: HAZELNUT_CONFIG },
         { id: "mango", title: isArabic ? "المانجو" : "Mango", image: "mango-level-1", config: MANGO_CONFIG },
-        { id: "snow-thrower", title: isArabic ? "قاذف الثلج" : "Snow Thrower", image: "snow-thrower-level-1", config: SNOW_THROWER_CONFIG }
+        { id: "snow-thrower", title: isArabic ? "قاذف الثلج" : "Snow Thrower", image: "snow-thrower-level-1", config: SNOW_THROWER_CONFIG },
+        { id: "electric-mushroom", title: isArabic ? "الفطر الكهربائي" : "Electric Mushroom", image: "electric-mushroom-level-1", config: ELECTRIC_MUSHROOM_CONFIG },
       ];
       const selected = catalog.find((plant) => plant.id === this.inventorySelectedPlant) || catalog[0];
       addText(0, -112, isArabic
@@ -2195,13 +2108,13 @@ export default class BattleScene extends Scene {
         const active = selectedTypes.includes(plant.id);
         const plantedCount = this.plants.filter((item) => item.alive && item.type === plant.id).length;
         const card = this.add.rectangle(x, y, 136, 102,
-          plant.id === selected.id ? 0xf6e5bd : 0xd9c49b, 1)
-          .setStrokeStyle(plant.id === selected.id ? 4 : 2,
-            plant.id === selected.id ? 0x4c8b39 : 0x8a6339, 1)
+          plant.id === selected.id ? 0x9fe0a2 : 0x78b987, plant.id === selected.id ? 0.38 : 0.2)
+          .setStrokeStyle(plant.id === selected.id ? 2 : 1,
+            plant.id === selected.id ? 0xf2fff1 : 0xdffff0, plant.id === selected.id ? 0.96 : 0.62)
           .setInteractive({ useHandCursor: true });
         content.add(card);
         if (unlocked && this.textures.exists(plant.image)) {
-          const sheet = ["radish-level-1", "pineapple-level-1", "hazelnut-level-1", "mango-level-1", "snow-thrower-level-1"].includes(plant.image);
+          const sheet = ["radish-level-1", "pineapple-level-1", "hazelnut-level-1", "mango-level-1", "snow-thrower-level-1", "electric-mushroom-level-1"].includes(plant.image);
           const icon = sheet
             ? this.add.sprite(x, y - 12, plant.image, 0).setDisplaySize(48, 48)
             : this.add.image(x, y - 12, plant.image).setDisplaySize(48, 48);
@@ -2232,8 +2145,8 @@ export default class BattleScene extends Scene {
 
       const selectedUnlocked = unlockedIds.includes(selected.id);
       const selectedCount = this.plants.filter((item) => item.alive && item.type === selected.id).length;
-      content.add(this.add.rectangle(0, 318, 426, 68, 0xb88a50, 0.92)
-        .setStrokeStyle(2, 0x70431f, 1));
+      content.add(this.add.rectangle(0, 318, 426, 68, 0x4f9d68, 0.48)
+        .setStrokeStyle(1, 0xf2fff1, 0.72));
       addText(-135, 301, selected.title, 15, "#fff4d9");
       addText(-135, 326, selectedUnlocked
         ? (isArabic ? "تكلفة الزراعة: " : "Plant cost: ") + selected.config.cost + (isArabic ? " طاقة" : " energy")
@@ -2251,8 +2164,8 @@ export default class BattleScene extends Scene {
       stats.forEach((stat, index) => {
         const x = index % 2 === 0 ? -112 : 112;
         const y = Math.floor(index / 2) * 142 + 5;
-        content.add(this.add.rectangle(x, y, 205, 112, 0xe1c99d, 1)
-          .setStrokeStyle(3, 0x93673c, 1));
+        content.add(this.add.rectangle(x, y, 205, 112, 0x9fe0a2, 0.22)
+          .setStrokeStyle(1, 0xf2fff1, 0.62));
         addText(x, y - 29, stat.icon + "  " + stat.label, 12);
         addText(x, y + 18, stat.value, 25, "#6b421f");
       });
@@ -2262,56 +2175,8 @@ export default class BattleScene extends Scene {
     }
   }
 
-  createPauseControl() {
-    const button = this.add.container(968, 27).setDepth(46);
-    const artwork = this.textures.exists("hud-pause-button")
-      ? this.add.image(0, 0, "hud-pause-button").setDisplaySize(42, 42)
-      : this.add.circle(0, 0, 19, 0xe6c58c, 1).setStrokeStyle(3, 0x4a2d18, 1);
-    artwork.setInteractive({ useHandCursor: true });
-    button.add(artwork);
-    artwork.on("pointerover", () => button.setScale(1.07));
-    artwork.on("pointerout", () => button.setScale(1));
-    artwork.on("pointerdown", () => this.pauseGame());
-    this.pauseControl = button;
-  }
 
-  createSettingsControl() {
-    const button = this.add.container(1018, 27).setDepth(48);
-    const artwork = this.textures.exists("hud-settings-button")
-      ? this.add.image(0, 0, "hud-settings-button").setDisplaySize(42, 42)
-      : this.add.circle(0, 0, 19, 0xe6c58c, 1).setStrokeStyle(3, 0x4a2d18, 1);
-    artwork.setInteractive({ useHandCursor: true });
-    button.add(artwork);
-    artwork.on("pointerover", () => button.setScale(1.07));
-    artwork.on("pointerout", () => button.setScale(1));
-    artwork.on("pointerdown", () => this.openSettingsMenu());
-    this.settingsControl = button;
-  }
 
-  createSpeedControl() {
-    this.gameSpeed = 1;
-    const button = this.add.container(918, 27).setDepth(47);
-    const artwork = this.textures.exists("hud-speed-button")
-      ? this.add.image(0, 0, "hud-speed-button").setDisplaySize(42, 42)
-      : this.add.circle(0, 0, 19, 0xe6c58c, 1).setStrokeStyle(3, 0x4a2d18, 1);
-    const speedLabel = this.add.text(0, 25, "1×", {
-      fontFamily: "Arial", fontSize: "10px", color: "#fff4c8", fontStyle: "bold",
-      stroke: "#392719", strokeThickness: 2
-    }).setOrigin(0.5).setDepth(49);
-    artwork.setInteractive({ useHandCursor: true });
-    button.add([artwork, speedLabel]);
-    artwork.on("pointerover", () => button.setScale(1.07));
-    artwork.on("pointerout", () => button.setScale(1));
-    artwork.on("pointerdown", () => {
-      this.gameSpeed = this.gameSpeed === 1 ? 1.5 : 1;
-      if (this.game?.loop) this.game.loop.timeScale = this.gameSpeed;
-      speedLabel.setText(this.gameSpeed === 1 ? "1×" : "1.5×");
-    });
-    this.speedControl = button;
-    this.events.once("shutdown", () => {
-      if (this.game?.loop) this.game.loop.timeScale = 1;
-    });
-  }
 
   openSettingsMenu() {
     if (this.gameOver || this.isPaused || !this.scene.isActive()) return;
@@ -2403,6 +2268,7 @@ export default class BattleScene extends Scene {
       spawnedThisWave: this.spawnedThisWave,
       intermissionMs: this.waveIntermissionMs,
       spawnTimerMs: this.spawnTimer,
+      spawnIntervalMs: this.getStageMonsterEntry(this.spawnedThisWave)?.spawnIntervalMs,
       deltaMs
     });
     this.waveIntermissionMs = spawnStep.intermissionMs;
@@ -2420,12 +2286,15 @@ export default class BattleScene extends Scene {
       this.spawnMonster(spawnIndex);
       this.spawnedThisWave = spawnStep.spawnedThisWave;
       this.totalSpawnedMonsters += 1;
-      if (this.wave === 5 && this.spawnedThisWave === 2) this.beginDragonEncounter();
+      const spawnedEntry = this.getStageMonsterEntry(spawnIndex);
+      const nextEntry = this.getStageMonsterEntry(this.spawnedThisWave);
+      if (this.stageMonsterRosterConfigured && nextEntry && nextEntry.key !== spawnedEntry?.key) {
+        this.spawnTimer = Math.max(0, Number(nextEntry.firstSpawnDelayMs) || 0);
+      }
     }
     this.updatePlants(deltaMs);
     this.updateMonsters(dt, deltaMs);
     if (this.gameOver) return;
-    this.updateDragonBoss(deltaMs);
     if (this.storySequenceActive || this.gameOver) {
       this.refreshHud();
       return;
@@ -2563,8 +2432,9 @@ export default class BattleScene extends Scene {
       return;
     }
     if (!this.selectedPlant) { this.setMessage("Choose a plant card first."); return; }
-    const plantConfigs = { radish: RADISH_CONFIG, mushroom: MUSHROOM_CONFIG, pumpkin: PUMPKIN_CONFIG, pineapple: PINEAPPLE_CONFIG, hazelnut: HAZELNUT_CONFIG, mango: MANGO_CONFIG, "snow-thrower": SNOW_THROWER_CONFIG };
-    const plantConfig = plantConfigs[this.selectedPlant];
+    const plantConfigs = { radish: RADISH_CONFIG, mushroom: MUSHROOM_CONFIG, pumpkin: PUMPKIN_CONFIG, pineapple: PINEAPPLE_CONFIG, hazelnut: HAZELNUT_CONFIG, mango: MANGO_CONFIG, "snow-thrower": SNOW_THROWER_CONFIG, "electric-mushroom": ELECTRIC_MUSHROOM_CONFIG };
+    const studioPlant = this.studioPlantsByType?.[this.selectedPlant] || null;
+    const plantConfig = plantConfigs[this.selectedPlant] || (studioPlant ? { cost: studioPlant.combat.energyCost, seedPacketRechargeMs: studioPlant.combat.cooldownMs } : null);
     if (this.getSeedPacketCooldownRemaining(this.selectedPlant) > 0) {
       this.setMessage("This seed packet is recharging. Wait for it to recover.");
       return;
@@ -2668,8 +2538,18 @@ export default class BattleScene extends Scene {
 
   plantSelected(col, row, type, returnPosition = null) {
     if (this.gameOver) return;
-    if (!["radish", "mushroom", "pumpkin", "pineapple", "hazelnut", "mango", "snow-thrower"].includes(type)) return;
-    if (!PLAYTEST_ALL_PLANTS && !loadUnlockedPlantIds(window.localStorage).includes(type)) {
+    const studioPlant = this.studioPlantsByType?.[type] || null;
+    if (!["radish", "mushroom", "pumpkin", "pineapple", "hazelnut", "mango", "snow-thrower", "electric-mushroom"].includes(type) && !studioPlant) return;
+    const stagePlantEntry = this.stagePlantEntries.find(entry => (STAGE_PLANT_ALIASES[entry.id] || entry.id) === type);
+    if (this.stagePlantRosterConfigured && !this.isStudioPlaytest && !stagePlantEntry) {
+      this.setMessage("هذه النبتة مخفية من المرحلة الحالية. يمكنك تفعيلها من استديو إدارة نباتات المراحل.");
+      return;
+    }
+    if (stagePlantEntry && this.plants.filter(plant => plant.type === type).length >= stagePlantEntry.count) {
+      this.setMessage("وصلت إلى الحد الأقصى لهذه النبتة في المرحلة: " + stagePlantEntry.count + ".");
+      return;
+    }
+    if (!this.isStudioPlaytest && !PLAYTEST_ALL_PLANTS && !studioPlant && !loadUnlockedPlantIds(window.localStorage).includes(type)) {
       this.setMessage("This plant is locked. Complete its campaign stage to unlock it.");
       return;
     }
@@ -2680,15 +2560,28 @@ export default class BattleScene extends Scene {
       col,
       row,
       columns: COLUMNS,
-      rows: LANES
+      rows: LANES,
+      customConfig: studioPlant ? { plantingEnergyCost: studioPlant.combat.energyCost, hp: studioPlant.combat.hp } : null
     });
     if (!placement.ok) {
       this.setMessage("Planting cancelled: this cell is no longer available.");
       return;
     }
     this.recordCombatEvent("plant_placed", { type, col, row });
-    const configs = { radish: RADISH_CONFIG, mushroom: MUSHROOM_CONFIG, pumpkin: PUMPKIN_CONFIG, pineapple: PINEAPPLE_CONFIG, hazelnut: HAZELNUT_CONFIG, mango: MANGO_CONFIG, "snow-thrower": SNOW_THROWER_CONFIG };
-    const config = configs[type];
+    const configs = { radish: RADISH_CONFIG, mushroom: MUSHROOM_CONFIG, pumpkin: PUMPKIN_CONFIG, pineapple: PINEAPPLE_CONFIG, hazelnut: HAZELNUT_CONFIG, mango: MANGO_CONFIG, "snow-thrower": SNOW_THROWER_CONFIG, "electric-mushroom": ELECTRIC_MUSHROOM_CONFIG };
+    const studioProfile = studioPlant?.combat;
+    const config = configs[type] || (studioProfile ? {
+      cost: studioProfile.energyCost,
+      plantingEnergyCost: studioProfile.energyCost,
+      seedPacketRechargeMs: studioProfile.cooldownMs,
+      hp: studioProfile.hp,
+      cooldownMs: studioProfile.cooldownMs,
+      projectileDamage: studioProfile.damage,
+      projectileSpeed: studioProfile.projectileSpeed,
+      projectileCollisionRadius: studioProfile.projectileCollisionRadius,
+      productionInterval: studioProfile.energyIntervalMs,
+      energy: studioProfile.energyAmount
+    } : null);
     this.energy = placement.energy;
     this.seedPacketCooldowns.set(type, config.seedPacketRechargeMs);
     this.farmerPlanting = true;
@@ -2714,13 +2607,21 @@ export default class BattleScene extends Scene {
       ...placement.plant,
       x, y,
       cooldown: 0,
-      productionTimer: type === "mushroom" ? config.productionInterval : undefined,
+      productionTimer: type === "mushroom" || studioProfile?.mode === "energy" ? config.productionInterval : undefined,
       productionCount: 0,
+      ...(studioPlant ? { studioPlant } : {}),
       view: type === "mushroom" ? this.drawEnergyMushroom(x, y, row)
         : type === "radish" ? this.drawRadish(x, y)
         : this.drawCatalogPlant(type, x, y, row)
     };
+    const idleProfile = getPlantAnimationProfile(type)?.idle;
+    if (plant.view?.active && idleProfile?.loop) {
+      plant.idleBaseScaleX = plant.view.scaleX || 1;
+      plant.idleBaseScaleY = plant.view.scaleY || 1;
+      plant.idlePhaseMs = ((col * 137) + (row * 223)) % Math.max(1, idleProfile.durationMs);
+    }
     this.plants.push(plant);
+    this.startEntityEffects(plant, this.effectIdsForPlantType(type), plant.view, 1);
     this.totalPlantsPlanted += 1;
     if (type === "radish") this.hasPlantedDefender = true;
     this.playPlantSound();
@@ -2762,9 +2663,23 @@ export default class BattleScene extends Scene {
       pumpkin: "Pumpkin planted! It blocks and absorbs bites.",
       pineapple: "Pineapple Level 1 planted! It launches pineapple bombs down this lane.",
       hazelnut: "Hazelnut Level 1 planted! It fires hazelnut bombs down this lane.",
-      mango: "Mango Level 1 planted! It launches curved mango bombs onto monsters in this lane."
+      mango: "Mango Level 1 planted! It launches curved mango bombs onto monsters in this lane.",
+      "electric-mushroom": "Electric Mushroom planted! It fires bright electric bolts down this lane.",
     };
     this.setMessage(plantedMessages[type] || "Plant planted.");
+  }
+
+  addGroundContactShadow(view, width = 64, height = 18, alpha = 0.2) {
+    if (!view?.active) return null;
+    try {
+      // One lightweight, flattened contact ellipse per actor. It is inserted
+      // before the artwork so it follows lane sorting without covering the sprite.
+      const shadow = this.add.ellipse(0, -1, width, height, 0x20180f, alpha);
+      view.add(shadow);
+      return shadow;
+    } catch {
+      return null;
+    }
   }
 
   drawEnergyMushroom(x, y, row = 2) {
@@ -2778,6 +2693,7 @@ export default class BattleScene extends Scene {
         : this.laneYs[rowIndex] - this.laneYs[rowIndex - 1];
       // Match the artwork scale to the perspective of the selected soil row.
       const perspectiveScale = PhaserMath.Clamp(laneGap / 54, 0.62, 1.08);
+      this.addGroundContactShadow(plant, 44 * perspectiveScale, 13 * perspectiveScale, 0.2);
       const displayHeight = 78 * perspectiveScale;
       const displayWidth = displayHeight * (frame.realWidth / frame.realHeight);
       const character = this.add.image(
@@ -2805,11 +2721,23 @@ export default class BattleScene extends Scene {
       plant.add(g);
     }
 
-    this.tweens.add({
-      targets: plant, scaleY: 1.04, duration: 1250,
-      ease: "Sine.easeInOut", yoyo: true, repeat: -1
-    });
     return plant;
+  }
+
+  registerStudioGridSheet(textureKey, rows = 3, columns = 3) {
+    if (!this.textures.exists(textureKey)) return false;
+    const texture = this.textures.get(textureKey);
+    const source = texture.getSourceImage();
+    const rowCount = Number(rows), columnCount = Number(columns);
+    if (!source?.width || !source?.height || !Number.isInteger(rowCount) || !Number.isInteger(columnCount) ||
+        rowCount < 1 || columnCount < 1 || rowCount * columnCount > 100) return false;
+    const frames = getSpriteFrameRectangles(source.width, source.height, rowCount, columnCount);
+    for (const frame of frames) {
+      if (!texture.has(String(frame.index))) {
+        texture.add(String(frame.index), 0, frame.x, frame.y, frame.width, frame.height);
+      }
+    }
+    return true;
   }
 
   registerThreeByThreeSheet(textureKey) {
@@ -2835,9 +2763,159 @@ export default class BattleScene extends Scene {
     return true;
   }
 
+  playStudioSkeletalRig(rig, clipId, onComplete = null) {
+    const clip = rig?.profile?.clips?.find((entry) => entry.id === clipId);
+    if (!clip || !rig.root?.active) return false;
+    rig._animationEvent?.remove?.();
+    if (!rig._animationController) {
+      rig._animationController = createSkeletalAnimationController(rig.profile, clipId);
+    } else if (rig._animationController.state === clipId) {
+      rig._animationController.restart();
+    } else {
+      rig._animationController.setState(clipId, 140);
+    }
+    rig._activeClipId = clipId;
+    rig.applyPose(rig._animationController.getPose());
+    let previousAt = this.time.now;
+    const event = this.time.addEvent({
+      delay: 16,
+      loop: true,
+      callback: () => {
+        if (!rig.root?.active) { event.remove(); return; }
+        const now = this.time.now;
+        const delta = Math.max(0, Math.min(80, now - previousAt));
+        previousAt = now;
+        rig.applyPose(rig._animationController.update(delta));
+        if (onComplete && rig._animationController.elapsedMs >= clip.durationMs) {
+          event.remove();
+          rig._animationEvent = null;
+          rig._activeClipId = null;
+          onComplete();
+        } else if (!clip.loop && rig._animationController.elapsedMs >= clip.durationMs) {
+          event.remove();
+          rig._animationEvent = null;
+          rig._activeClipId = null;
+        }
+      }
+    });
+    rig._animationEvent = event;
+    if (!rig._destroyListenerRegistered) {
+      rig._destroyListenerRegistered = true;
+      rig.root.once("destroy", () => {
+        rig._animationEvent?.remove?.();
+        rig._animationEvent = null;
+        rig._activeClipId = null;
+      });
+    }
+    return true;
+  }
+
+  stopStudioSkeletalRig(rig, frozen = false) {
+    if (!rig) return;
+    rig._animationEvent?.remove?.();
+    rig._animationEvent = null;
+    rig._activeClipId = frozen ? "frozen" : null;
+  }
+
+  getStudioRigAttachmentWorld(rig, parentView, attachmentId) {
+    if (!rig || !parentView?.active) return null;
+    const point = rig.getAttachment(attachmentId);
+    if (!point) return null;
+    return transformRigPointToWorld(point, parentView);
+  }
+
+  getStudioRigHitboxesWorld(rig, parentView, kind) {
+    if (!rig || !parentView?.active) return [];
+    return rig.profile.hitboxes.filter((item) => item.kind === kind).map((profile) =>
+      transformRigHitboxToWorld(rig.getHitbox(profile.id), parentView)
+    );
+  }
+
+  getStudioRigHitboxWorld(rig, parentView, kind) {
+    return this.getStudioRigHitboxesWorld(rig, parentView, kind)[0] || null;
+  }
+
+  studioOrientedHitboxesOverlap(a, b) {
+    return convexPolygonsOverlap(a, b);
+  }
+
+  studioProjectileHitsMonster(shot, monster, projectileX, projectileY) {
+    if (!monster?.studioRig) return true;
+    const hurtboxes = this.getStudioRigHitboxesWorld(monster.studioRig, monster.view, "hurt");
+    if (!hurtboxes.length) return true;
+    const radius = Math.max(2, Number(shot.collisionRadius) || 8);
+    return hurtboxes.some((hurt) => circleIntersectsConvexPolygon(
+      { x: projectileX, y: projectileY, radius },
+      hurt.points
+    ));
+  }
+
+  studioRigHitboxesOverlap(attackerRig, attackerView, targetRig, targetView) {
+    const attacks = this.getStudioRigHitboxesWorld(attackerRig, attackerView, "attack");
+    const hurts = this.getStudioRigHitboxesWorld(targetRig, targetView, "hurt");
+    if (!attacks.length || !hurts.length) return true;
+    return attacks.some((attack) => hurts.some((hurt) => this.studioOrientedHitboxesOverlap(attack, hurt)));
+  }
+
+  drawStudioCatalogPlant(studioPlant, x, y, row = 2) {
+    const textureKey = studioPlant.textureKey || "studio-plant-published-" + studioPlant.id;
+    const container = this.add.container(x, y).setDepth(11);
+    const rowIndex = PhaserMath.Clamp(row, 0, LANES - 1);
+    const laneGap = rowIndex < LANES - 1
+      ? this.laneYs[rowIndex + 1] - this.laneYs[rowIndex]
+      : this.laneYs[rowIndex] - this.laneYs[rowIndex - 1];
+    const perspective = PhaserMath.Clamp(laneGap / 54, 0.62, 1.08);
+    const sizeFactor = PhaserMath.Clamp((Number(studioPlant.combat?.sizePercent) || 100) / 100, 0.25, 2);
+    this.addGroundContactShadow(container, Math.min(92 * perspective * sizeFactor, 132), 22 * perspective, 0.2);
+    if (studioPlant.rigProfile || this.textures.exists(textureKey)) {
+      const height = 88 * perspective * sizeFactor;
+      container.setData("studioCharacterBounds", { x: 0, y: -height / 2 + 2, width: Math.min(height * ((Number(studioPlant.rigProfile?.canvas?.width) || 1) / (Number(studioPlant.rigProfile?.canvas?.height) || 1)), 100 * perspective * sizeFactor), height });
+      let rigRendered = false;
+      if (studioPlant.rigProfile && studioPlant.rigPartTextures) {
+        try {
+          const rig = createPhaserSkeletalRig(this, studioPlant.rigProfile, studioPlant.rigPartTextures);
+          const canvas = rig.profile.canvas;
+          const width = Math.min(height * (canvas.width / canvas.height), 100 * perspective * sizeFactor);
+          rig.root.setPosition(-canvas.width / 2, -canvas.height / 2 - height / 2 + 2);
+          rig.root.setScale(width / canvas.width, height / canvas.height);
+          container.add(rig.root);
+          container.setData("studioSkeletalRig", rig);
+          const idleClip = resolveSkeletalIdleClip(rig.profile) || rig.profile.clips[0];
+          if (idleClip) this.playStudioSkeletalRig(rig, idleClip.id);
+          rigRendered = true;
+        } catch (error) {
+          console.warn("Studio plant skeletal rig unavailable; preserving Sprite Sheet fallback:", studioPlant.id, error);
+        }
+      }
+      if (!rigRendered && this.textures.exists(textureKey)) {
+        const sheet = Boolean(studioPlant.spriteSheet);
+        const frame = this.textures.getFrame(textureKey, sheet ? "0" : undefined);
+        const width = Math.min(height * (frame.realWidth / frame.realHeight), 100 * perspective * sizeFactor);
+        const idleFrame = String(studioPlant.animationProfile?.idle?.startFrame ?? 0);
+        const artwork = sheet
+          ? this.add.sprite(0, -height / 2 + 2, textureKey, idleFrame).setDisplaySize(width, height)
+          : this.add.image(0, -height / 2 + 2, textureKey).setDisplaySize(width, height);
+        artwork.setData("studioPlantSprite", sheet);
+        if (sheet) {
+          const idleAnimationKey = "studio-" + studioPlant.id + "-idle";
+          if (this.anims.exists(idleAnimationKey)) artwork.play(idleAnimationKey);
+        }
+        container.add(artwork);
+      }
+    }
+    container.setScale(studioPlant.flipX ? -1 : 1, 1);
+    container.setData("studioPlantId", studioPlant.id);
+    container.setData("studioBehavior", studioPlant.combat.mode);
+    this.tweens.add({ targets: container, scaleY: 1.025, duration: 1450, ease: "Sine.easeInOut", yoyo: true, repeat: -1 });
+    return container;
+  }
+
   drawCatalogPlant(type, x, y, row = 2) {
+    const studioPlant = this.studioPlantsByType?.[type];
+    if (studioPlant) return this.drawStudioCatalogPlant(studioPlant, x, y, row);
     const plant = this.add.container(x, y).setDepth(11);
-    const texture = type === "pumpkin" ? "pumpkin-character" : type === "pineapple" ? "pineapple-level-1" : type === "hazelnut" ? "hazelnut-level-1" : type === "mango" ? "mango-level-1" : type === "snow-thrower" ? "snow-thrower-level-1" : "radish-level-1";
+    const shadowWidths = { pumpkin: 72, pineapple: 82, hazelnut: 68, mango: 68, "snow-thrower": 60, "electric-mushroom": 66 };
+    const texture = type === "pumpkin" ? "pumpkin-character" : type === "pineapple" ? "pineapple-level-1" : type === "hazelnut" ? "hazelnut-level-1" : type === "mango" ? "mango-level-1" : type === "snow-thrower" ? "snow-thrower-level-1" : type === "electric-mushroom" ? "electric-mushroom-level-1" : "radish-level-1";
     const rowIndex = PhaserMath.Clamp(row, 0, LANES - 1);
     const laneGap = rowIndex < LANES - 1
       ? this.laneYs[rowIndex + 1] - this.laneYs[rowIndex]
@@ -2845,22 +2923,24 @@ export default class BattleScene extends Scene {
     // The farthest row is smallest; each nearer row grows progressively.
     // Apply the same perspective to Pineapple, Hazelnut and Mango so their projectiles
     // can use the exact displayed plant scale when calculating launch offsets.
-    const pineapplePerspectiveScale = type === "pineapple" || type === "hazelnut" || type === "mango" || type === "snow-thrower"
+    const pineapplePerspectiveScale = type === "pineapple" || type === "hazelnut" || type === "mango" || type === "snow-thrower" || type === "electric-mushroom"
       ? PhaserMath.Clamp(0.8 + (rowIndex / Math.max(1, LANES - 1)) * 0.4, 0.8, 1.2)
       : 1;
+    this.addGroundContactShadow(plant, (shadowWidths[type] || 48) * 0.9 * pineapplePerspectiveScale, 18 * pineapplePerspectiveScale, 0.2);
     plant.setData("pineapplePerspectiveScale", pineapplePerspectiveScale);
     if (this.textures.exists(texture)) {
       // Pineapple Level 1 keeps its tuned base size; only its row perspective changes.
-      const baseHeight = type === "pumpkin" ? 70 : type === "pineapple" ? 132 : type === "hazelnut" ? 112 : type === "mango" ? 112 : type === "snow-thrower" ? 84 : 64;
+      const baseHeight = type === "pumpkin" ? 70 : type === "pineapple" ? 132 : type === "hazelnut" ? 112 : type === "mango" ? 112 : type === "snow-thrower" ? 84 : type === "electric-mushroom" ? 96 : 64;
       const height = baseHeight * pineapplePerspectiveScale;
-      const plantFrame = this.textures.getFrame(texture, ["pineapple", "hazelnut", "mango", "snow-thrower"].includes(type) ? "0" : undefined);
+      const plantFrame = this.textures.getFrame(texture, ["pineapple", "hazelnut", "mango", "snow-thrower", "electric-mushroom"].includes(type) ? "0" : undefined);
       const width = height * (plantFrame.realWidth / plantFrame.realHeight);
-      const maxWidth = (type === "pineapple" ? 152 : type === "hazelnut" ? 116 : type === "mango" ? 116 : type === "snow-thrower" ? 84 : 76) * pineapplePerspectiveScale;
-      if (["pineapple", "hazelnut", "mango", "snow-thrower"].includes(type)) {
+      const maxWidth = (type === "pineapple" ? 152 : type === "hazelnut" ? 116 : type === "mango" ? 116 : type === "snow-thrower" ? 84 : type === "electric-mushroom" ? 104 : 76) * pineapplePerspectiveScale;
+      if (["pineapple", "hazelnut", "mango", "snow-thrower", "electric-mushroom"].includes(type)) {
         const animatedPlant = this.add.sprite(0, -height / 2 + 2, texture, "0").setDisplaySize(Math.min(width, maxWidth), height);
         const animationDataKey = type === "pineapple" ? "pineappleThrowSprite"
           : type === "hazelnut" ? "hazelnutThrowSprite"
-          : type === "mango" ? "mangoThrowSprite" : "snow-throwerThrowSprite";
+          : type === "mango" ? "mangoThrowSprite"
+          : type === "electric-mushroom" ? "electric-mushroomThrowSprite" : "snow-throwerThrowSprite";
         animatedPlant.setData(animationDataKey, true);
         plant.add(animatedPlant);
       } else {
@@ -2870,12 +2950,12 @@ export default class BattleScene extends Scene {
       const fallback = this.add.ellipse(0, -24, 42, 48, type === "pumpkin" ? 0xf39b32 : 0xe8e5d7, 1);
       plant.add(fallback);
     }
-    this.tweens.add({ targets: plant, scaleY: 1.025, duration: 1350, ease: "Sine.easeInOut", yoyo: true, repeat: -1 });
     return plant;
   }
 
   drawRadish(x, y) {
     const plant = this.add.container(x, y).setDepth(11);
+    this.addGroundContactShadow(plant, 48, 15, 0.19);
 
     if (this.textures.exists("radish-level-1")) {
       const frame = this.textures.getFrame("radish-level-1", 0);
@@ -2902,21 +2982,57 @@ export default class BattleScene extends Scene {
       plant.add(g);
     }
 
-    this.tweens.add({
-      targets: plant,
-      scaleY: 1.025,
-      duration: 1450,
-      ease: "Sine.easeInOut",
-      yoyo: true,
-      repeat: -1
-    });
     return plant;
+  }
+
+  updatePlantIdleMotion(plant, deltaMs = 0) {
+    if (!plant?.alive || !plant.view?.active) return;
+
+    // Studio-authored plants keep their saved clip and return to idle after attacks.
+    const studioPlant = plant.studioPlant;
+    if (studioPlant) {
+      if (plant.studioAttacking || plant.studioThrowing || plant.isAttacking) return;
+      const skeletalRig = plant.view.getData?.("studioSkeletalRig");
+      if (skeletalRig) {
+        const idleClip = resolveSkeletalIdleClip(skeletalRig.profile);
+        if (idleClip && skeletalRig._activeClipId !== idleClip.id) this.playStudioSkeletalRig(skeletalRig, idleClip.id);
+        return;
+      }
+      const sprite = plant.view.list?.find((child) =>
+        child?.active && child.getData?.("studioPlantSprite")
+      );
+      if (!sprite) return;
+      const idleKey = "studio-" + studioPlant.id + "-idle";
+      if (this.anims.exists(idleKey)) {
+        if (!sprite.anims?.isPlaying || sprite.anims.currentAnim?.key !== idleKey) {
+          sprite.play(idleKey);
+        }
+        return;
+      }
+      const idleFrame = String(studioPlant.animationProfile?.idle?.startFrame ?? 0);
+      if (sprite.frame?.name !== idleFrame) sprite.setFrame(idleFrame);
+      return;
+    }
+
+    // Built-in plants use deterministic profile-driven breathing motion.
+    const elapsed = (plant.idleElapsedMs || 0) + Math.max(0, Number(deltaMs) || 0);
+    const transform = getPlantIdleMotionTransform(
+      plant.type,
+      elapsed,
+      plant.idlePhaseMs || 0,
+      plant.idleBaseScaleX || 1,
+      plant.idleBaseScaleY || 1
+    );
+    if (!transform) return;
+    plant.idleElapsedMs = elapsed;
+    plant.view.setScale(transform.scaleX, transform.scaleY);
   }
 
   updatePlants(delta) {
     const deltaMs = Number.isFinite(delta) ? Math.max(0, delta) : 0;
     for (const plant of this.plants) {
       if (!plant.alive) continue;
+      this.updatePlantIdleMotion(plant, deltaMs);
       if (plant.type === "mushroom") {
         plant.productionTimer -= delta;
         if (plant.productionTimer <= 0) {
@@ -2926,8 +3042,23 @@ export default class BattleScene extends Scene {
         continue;
       }
       if (plant.type === "pumpkin") continue;
-      const configs = { radish: RADISH_CONFIG, pineapple: PINEAPPLE_CONFIG, hazelnut: HAZELNUT_CONFIG, mango: MANGO_CONFIG, "snow-thrower": SNOW_THROWER_CONFIG };
-      const config = configs[plant.type];
+      const studioProfile = plant.studioPlant?.combat || null;
+      if (studioProfile?.mode === "blocker") continue;
+      if (studioProfile?.mode === "energy") {
+        plant.productionTimer = Math.max(0, (plant.productionTimer ?? studioProfile.energyIntervalMs) - deltaMs);
+        if (plant.productionTimer <= 0) {
+          plant.productionTimer += studioProfile.energyIntervalMs;
+          this.spawnStudioEnergy(plant, studioProfile.energyAmount);
+        }
+        continue;
+      }
+      const configs = { radish: RADISH_CONFIG, pineapple: PINEAPPLE_CONFIG, hazelnut: HAZELNUT_CONFIG, mango: MANGO_CONFIG, "snow-thrower": SNOW_THROWER_CONFIG, "electric-mushroom": ELECTRIC_MUSHROOM_CONFIG };
+      const config = configs[plant.type] || (studioProfile ? {
+        cooldownMs: studioProfile.cooldownMs,
+        cooldown: studioProfile.cooldownMs,
+        range: studioProfile.range,
+        projectileDamage: studioProfile.damage
+      } : null);
       if (!config) continue;
       // Recover safely if a plant was created by an older or partial runtime
       // state that did not initialize its firing timer.
@@ -2939,16 +3070,101 @@ export default class BattleScene extends Scene {
       const target = this.monsters
         .filter((monster) => monster.alive && monster.row === plant.row &&
           Number.isFinite(monster.localX) &&
+          monster.localX - plantLaneX <= (studioProfile?.range ?? GRID_WIDTH) &&
           !(plant.type === "snow-thrower" && monster.freezeStage >= 5) &&
           // Start firing the instant the monster crosses the lawn's far/right edge.
           // Keep targeting only monsters ahead of this plant in the same lane.
           monster.localX <= GRID_WIDTH / 2 && monster.localX > plantLaneX)
         .sort((a, b) => a.localX - b.localX)[0];
       if (!target) continue;
-      this.fireThorn(plant, target);
+      if (studioProfile?.mode === "melee" || studioProfile?.mode === "contact") {
+        if (studioProfile.mode === "contact" && !target.isEating) continue;
+        const attackSprite = plant.view?.list?.find((child) => child?.getData?.("studioPlantSprite"));
+        const skeletalRig = plant.view?.getData?.("studioSkeletalRig");
+        const animationKey = "studio-" + plant.studioPlant.id + "-attack";
+        const applyStudioHit = () => {
+          if (!plant.alive || !target.alive || (studioProfile.mode === "contact" && !target.isEating) || this.gameOver) return;
+          if (skeletalRig && target.studioRig && !this.studioRigHitboxesOverlap(skeletalRig, plant.view, target.studioRig, target.view)) return;
+          this.playEffects(this.effectIdsForPlantType(plant.type), "fire", this.effectPoint(plant.view));
+          this.applyMonsterDamage(target, studioProfile.damage, plant.type);
+          this.createProjectileImpact(target.view?.x ?? plant.x, target.view?.y ?? plant.y - 22, plant.type);
+          this.damageMonsterIfNeeded(target);
+        };
+        if (skeletalRig?.profile.clips.some((clip) => clip.id === "attack")) {
+          if (plant.studioAttacking) continue;
+          plant.studioAttacking = true;
+          this.playStudioSkeletalRig(skeletalRig, "attack", () => {
+            const idle = resolveSkeletalIdleClip(skeletalRig.profile);
+            if (idle) this.playStudioSkeletalRig(skeletalRig, idle.id);
+            plant.studioAttacking = false;
+            applyStudioHit();
+          });
+        } else if (attackSprite?.active && this.anims.exists(animationKey)) {
+          if (plant.studioAttacking) continue;
+          plant.studioAttacking = true;
+          attackSprite.play(animationKey);
+          attackSprite.once("animationcomplete", () => {
+            if (attackSprite.active) { const idleKey = "studio-" + plant.studioPlant.id + "-idle"; if (this.anims.exists(idleKey)) attackSprite.play(idleKey); else attackSprite.setFrame(String(plant.studioPlant.animationProfile?.idle?.startFrame ?? 0)); }
+            plant.studioAttacking = false;
+            applyStudioHit();
+          });
+        } else {
+          applyStudioHit();
+        }
+      } else {
+        this.fireThorn(plant, target);
+      }
       plant.cooldown = Number.isFinite(config.cooldownMs) ? config.cooldownMs : config.cooldown;
     }
   }
+
+  spawnStudioEnergy(plant, amount) {
+    const pickupId = "pickup-" + this.nextEnergyPickupId++;
+    const token = this.add.container(plant.x, plant.y - 64).setDepth(35);
+    token.setScale(0.02);
+    this.tweens.add({
+      targets: token, scale: 1.2, duration: 230, ease: "Back.easeOut",
+      onComplete: () => {
+        if (token.active) this.tweens.add({ targets: token, scale: 1, duration: 95, ease: "Sine.easeOut" });
+      }
+    });
+    token.setSize(42, 42).setInteractive();
+    if (token.input) token.input.cursor = "pointer";
+    token.add([
+      this.add.circle(0, 0, 17, 0x8fce70, 0.96).setStrokeStyle(3, 0xffefb0, 1),
+      this.add.text(0, 0, "+" + amount, { fontFamily: "Arial", fontSize: "13px", color: "#fff8d7", fontStyle: "bold", stroke: "#38502b", strokeThickness: 3 }).setOrigin(0.5)
+    ]);
+    token.studioPickupId = pickupId;
+    this.energyPickups.push(token);
+    token.on("pointerdown", () => {
+      if (!token.active || token.studioConsumed) return;
+      token.studioConsumed = true;
+      const collection = collectEnergy(this.energy, amount);
+      this.energy = collection.energy;
+      if (collection.collected > 0) {
+        this.recordCombatEvent("energy_collected", { pickupId, amount: collection.collected });
+        this.playEnergyCollectSound();
+        this.setMessage("Collected " + collection.collected + " energy from " + (plant.studioPlant.name || plant.type) + ".");
+      } else {
+        this.recordCombatEvent("energy_discarded", { pickupId });
+        this.setMessage("Energy is full. Spend energy before collecting more.");
+      }
+      this.energyPickups = this.energyPickups.filter((pickup) => pickup !== token);
+      if (token.expiryTimer) token.expiryTimer.remove(false);
+      token.destroy();
+      this.refreshHud();
+    });
+    this.tweens.add({ targets: token, y: token.y - 9, duration: 700, ease: "Sine.easeInOut", yoyo: true, repeat: -1 });
+    token.expiryTimer = this.time.delayedCall(MUSHROOM_PICKUP_TTL_MS, () => {
+      if (token.active) {
+        this.energyPickups = this.energyPickups.filter((pickup) => pickup !== token);
+        this.recordCombatEvent("energy_discarded", { pickupId });
+        token.destroy();
+      }
+    });
+    this.recordCombatEvent("energy_spawned", { sourceCol: plant.col, sourceRow: plant.row, pickupId, amount });
+  }
+
 
   spawnMushroomEnergy(plant) {
     // Production creates a full collectible regardless of the current bank.
@@ -2959,6 +3175,13 @@ export default class BattleScene extends Scene {
     const pickupId = `pickup-${this.nextEnergyPickupId++}`;
     this.recordCombatEvent("energy_spawned", { sourceCol: plant.col, sourceRow: plant.row, pickupId, amount });
     const token = this.add.container(plant.x, plant.y - 66).setDepth(35);
+    token.setScale(0.02);
+    this.tweens.add({
+      targets: token, scale: 1.2, duration: 230, ease: "Back.easeOut",
+      onComplete: () => {
+        if (token.active) this.tweens.add({ targets: token, scale: 1, duration: 95, ease: "Sine.easeOut" });
+      }
+    });
     token.combatPickupId = pickupId;
     token.combatPickupConsumed = false;
     this.energyPickups.push(token);
@@ -3050,10 +3273,54 @@ export default class BattleScene extends Scene {
     });
   }
 
-  fireThorn(plant, target) {
+  fireThorn(plant, target, electricCharged = false) {
+    if (plant.studioPlant) {
+      const animationKey = "studio-" + plant.studioPlant.id + "-attack";
+      const sprite = plant.view?.list?.find((child) => child?.getData?.("studioPlantSprite"));
+      const skeletalRig = plant.view?.getData?.("studioSkeletalRig");
+      if (skeletalRig?.profile.clips.some((clip) => clip.id === "attack")) {
+        if (plant.studioThrowing) return;
+        plant.studioThrowing = true;
+        this.playStudioSkeletalRig(skeletalRig, "attack", () => {
+          const idle = resolveSkeletalIdleClip(skeletalRig.profile);
+          if (idle) this.playStudioSkeletalRig(skeletalRig, idle.id);
+          plant.studioThrowing = false;
+          if (plant.alive && target?.alive && !this.gameOver) this.fireThornProjectile(plant, target);
+        });
+      } else if (sprite?.active && this.anims.exists(animationKey)) {
+        if (plant.studioThrowing) return;
+        plant.studioThrowing = true;
+        sprite.play(animationKey);
+        sprite.once("animationcomplete", () => {
+          if (sprite.active) { const idleKey = "studio-" + plant.studioPlant.id + "-idle"; if (this.anims.exists(idleKey)) sprite.play(idleKey); else sprite.setFrame(String(plant.studioPlant.animationProfile?.idle?.startFrame ?? 0)); }
+          plant.studioThrowing = false;
+          if (plant.alive && target?.alive && !this.gameOver) this.fireThornProjectile(plant, target);
+        });
+      } else this.fireThornProjectile(plant, target);
+      return;
+    }
+    // Electric Mushroom compresses and releases its cap before the bolt is created.
+    // The short vertical anticipation is kept separate from idle scale breathing.
+    if (plant.type === "electric-mushroom" && !electricCharged && plant.view?.active) {
+      const baseY = plant.view.y;
+      plant.preAttackTween?.stop?.();
+      plant.preAttackTween = this.tweens.add({
+        targets: plant.view,
+        y: baseY - 3,
+        duration: 95,
+        ease: "Sine.easeOut",
+        yoyo: true,
+        onComplete: () => {
+          if (plant.view?.active) plant.view.y = baseY;
+          plant.preAttackTween = null;
+          if (plant.alive && target?.alive && !this.gameOver) this.fireThorn(plant, target, true);
+        }
+      });
+      return;
+    }
     // Pineapple projectiles must not exist until the throw animation reaches
     // its final frame. This keeps the visual action and the actual launch in sync.
-    if (["radish", "pineapple", "hazelnut", "mango", "snow-thrower"].includes(plant.type) && plant.view?.active) {
+    if (["radish", "pineapple", "hazelnut", "mango", "snow-thrower", "electric-mushroom"].includes(plant.type) && plant.view?.active) {
       const animationType = plant.type;
       const throwingKey = `${animationType}Throwing`;
       if (plant[throwingKey]) return;
@@ -3062,6 +3329,23 @@ export default class BattleScene extends Scene {
       const textureKey = `${animationType}-level-1`;
       if (throwSprite && this.anims.exists(animationKey)) {
         plant[throwingKey] = true;
+        const motion = getPlantAnimationProfile(plant.type);
+        if (motion && Number.isFinite(plant.view.y)) {
+          const baseY = plant.view.y;
+          plant.preAttackTween?.stop?.();
+          plant.preAttackTween = this.tweens.add({
+            targets: plant.view,
+            y: baseY - motion.anticipationPx,
+            duration: Math.max(50, Math.round(motion.anticipationMs * 0.45)),
+            ease: "Sine.easeOut",
+            yoyo: true,
+            hold: Math.max(0, Math.round(motion.anticipationMs * 0.1)),
+            onComplete: () => {
+              if (plant.view?.active) plant.view.y = baseY;
+              plant.preAttackTween = null;
+            }
+          });
+        }
         throwSprite.stop();
         throwSprite.setTexture(textureKey, 0);
         throwSprite.play(animationKey);
@@ -3080,7 +3364,68 @@ export default class BattleScene extends Scene {
     this.fireThornProjectile(plant, target);
   }
 
+
+
+
   fireThornProjectile(plant, target) {
+    if (plant.studioPlant?.combat?.mode === "projectile") {
+      const lane = this.worldToLane(plant);
+      const localX = lane.localX;
+      const row = plant.row;
+      const profile = plant.studioPlant.combat;
+      const laneOrigin = this.lanePoint(localX, row);
+      const skeletalRig = plant.view?.getData?.("studioSkeletalRig");
+      const muzzle = skeletalRig?.profile.attachments.some((item) => item.id === "muzzle")
+        ? this.getStudioRigAttachmentWorld(skeletalRig, plant.view, "muzzle") : null;
+      if (skeletalRig && !muzzle) {
+        console.error("Rigged projectile plant has no valid muzzle attachment:", plant.studioPlant.id);
+        return;
+      }
+      const launchPoint = muzzle
+        ? { x: muzzle.x, y: muzzle.y }
+        : getProjectileLaunchPoint({ laneX: laneOrigin.x, laneY: laneOrigin.y, offsetX: profile.projectileLaunchOffsetX, offsetY: profile.projectileLaunchOffsetY });
+      const launchOffsetX = launchPoint.x - laneOrigin.x;
+      const launchOffsetY = launchPoint.y - laneOrigin.y;
+      const view = this.add.container(launchPoint.x, launchPoint.y).setDepth(16);
+      const textureKey = plant.studioPlant.projectileTextureKey || "studio-projectile-published-" + plant.studioPlant.id;
+      if (this.textures.exists(textureKey)) {
+        const projectile = plant.studioPlant.combat.projectile || {};
+        const hasFrames = Number(projectile.frameCount) > 1 && this.anims.exists("studio-projectile-" + plant.studioPlant.id);
+        const sprite = this.add.sprite(0, 0, textureKey, hasFrames ? "0" : undefined);
+        const frame = this.textures.getFrame(textureKey, hasFrames ? "0" : undefined);
+        const width = Math.min(38, 28 * (frame.realWidth / frame.realHeight));
+        sprite.setDisplaySize(width, 28);
+        if (hasFrames) sprite.play("studio-projectile-" + plant.studioPlant.id);
+        view.add(sprite);
+      } else {
+        view.add(this.add.circle(0, 0, 11, 0xffc247, 1).setStrokeStyle(2, 0xffefc2, 1));
+      }
+      const effectColor = /^#[0-9a-f]{6}$/i.test(profile.projectileEffectColor || "")
+        ? Number.parseInt(profile.projectileEffectColor.slice(1), 16)
+        : 0xffc247;
+      view.setRotation((Number(profile.projectileRotation) || 0) * Math.PI / 180);
+      this.playEffects(this.effectIdsForPlantType(plant.type), "fire", { x: launchPoint.x, y: launchPoint.y, view: plant.view });
+      this.projectiles.push({
+        view, localX, row, target, startLocalX: localX, targetLocalX: Math.max(localX + 1, target.localX),
+        launchOffsetX, launchOffsetY, speed: profile.projectileSpeed,
+        projectileTrajectoryType: profile.projectileTrajectoryType || "arc",
+        projectileCurveX: Number(profile.projectileCurveX) || 0, projectileCurveY: Number(profile.projectileCurveY) || 110,
+        projectileTargetOffsetX: Number(profile.projectileTargetOffsetX) || 0, projectileTargetOffsetY: Number(profile.projectileTargetOffsetY) || 0,
+        projectilePathPoints: Array.isArray(profile.projectilePathPoints) ? profile.projectilePathPoints : null,
+        damage: profile.damage, freeze: false, freezeDurationMs: 0,
+        collisionRadius: profile.projectileCollisionRadius, dropSpeed: profile.projectileSpeed * 1.5,
+        projectileHeight: profile.projectileHeight || 0, projectileEffectColor: effectColor,
+        dropPhase: "horizontal", alive: true, trailTimer: 0,
+        plantType: plant.type, studioPlantId: plant.studioPlant.id
+      });
+      if (String(plant.type).includes("electric")) {
+        this.applySquashStretch(plant.view, {
+          preX: 0.9, preY: 1.13, impactX: 1.16, impactY: 0.84, durationMs: 170
+        });
+      }
+      this.playThornSound();
+      return;
+    }
     // Radish Level 1 launches its dedicated miniature radish bomb from the
     // forward hand pose. Keep the canonical lane, speed, damage and collision rules.
     const lane = this.worldToLane(plant);
@@ -3133,6 +3478,18 @@ export default class BattleScene extends Scene {
       const midpointY = plant.y - displayHeight / 2 + 2;
       launchOffsetX = displayWidth / 2;
       launchOffsetY = midpointY - laneOrigin.y;
+    } else if (plant.type === "electric-mushroom") {
+      const frame = this.textures.exists("electric-mushroom-level-1")
+        ? this.textures.getFrame("electric-mushroom-level-1", "0")
+        : null;
+      const perspectiveScale = plant.view?.getData?.("pineapplePerspectiveScale") || 1;
+      const displayHeight = 96 * perspectiveScale;
+      const displayWidth = frame
+        ? Math.min(displayHeight * (frame.realWidth / frame.realHeight), 104 * perspectiveScale)
+        : 96 * perspectiveScale;
+      // Launch the electric bolt from the cap's forward upper edge.
+      launchOffsetX = displayWidth * 0.28;
+      launchOffsetY = -(displayHeight * 0.68);
     }
     const launchX = laneOrigin.x + launchOffsetX;
     const launchY = laneOrigin.y + launchOffsetY;
@@ -3148,12 +3505,12 @@ export default class BattleScene extends Scene {
     const innerGlow = this.add.circle(0, 0, 9, projectileTint, 0.28);
     view.add([halo, outerGlow, innerGlow]);
 
-    const projectileTexture = projectileVFX?.texture || (plant.type === "radish" ? "radish-level-1-bomb"
+    const projectileTexture = plant.type === "electric-mushroom" ? null : projectileVFX?.texture || (plant.type === "radish" ? "radish-level-1-bomb"
       : plant.type === "pineapple" ? "pineapple-level-1-bomb"
       : plant.type === "hazelnut" ? "hazelnut-level-1-bomb"
       : plant.type === "snow-thrower" ? "snow-thrower-bomb-level-1"
       : "mango-level-1-bomb");
-    if (this.textures.exists(projectileTexture)) {
+    if (projectileTexture && this.textures.exists(projectileTexture)) {
       const plantProjectile = this.add.image(0, 0, projectileTexture);
       if (plant.type === "pineapple" || plant.type === "hazelnut" || plant.type === "mango") {
         const bombSize = plant.type === "hazelnut" ? 31 : plant.type === "mango" ? 30 : 34;
@@ -3164,6 +3521,19 @@ export default class BattleScene extends Scene {
         plantProjectile.setDisplaySize(30, 30);
       }
       view.add(plantProjectile);
+    } else if (plant.type === "electric-mushroom") {
+      // A compact lightning glyph keeps the projectile readable without borrowing another plant's art.
+      const electricGlow = this.add.circle(0, 0, 12, 0x65d9ff, 0.24);
+      const bolt = this.add.graphics();
+      bolt.lineStyle(8, 0x35bfff, 0.72);
+      bolt.beginPath();
+      bolt.moveTo(-5, 11); bolt.lineTo(2, 2); bolt.lineTo(-2, -1); bolt.lineTo(7, -12);
+      bolt.strokePath();
+      bolt.lineStyle(3, 0xf1fdff, 1);
+      bolt.beginPath();
+      bolt.moveTo(-5, 11); bolt.lineTo(2, 2); bolt.lineTo(-2, -1); bolt.lineTo(7, -12);
+      bolt.strokePath();
+      view.add([electricGlow, bolt]);
     } else if (plant.type === "snow-thrower") {
       // Keep a snow-colored fallback if the uploaded projectile texture fails.
       const snowball = this.add.circle(0, 0, 12, 0xb9efff, 1)
@@ -3219,7 +3589,9 @@ export default class BattleScene extends Scene {
       : plant.type === "hazelnut" ? HAZELNUT_CONFIG
       : plant.type === "mango" ? MANGO_CONFIG
       : plant.type === "snow-thrower" ? SNOW_THROWER_CONFIG
+      : plant.type === "electric-mushroom" ? ELECTRIC_MUSHROOM_CONFIG
       : RADISH_CONFIG;
+    this.playEffects(this.effectIdsForPlantType(plant.type), "fire", { x: launchX, y: launchY, view: plant.view });
     this.projectiles.push({
       view, localX, row, startRow: row, targetRow, target, plantType: plant.type,
       startLocalX: localX, targetLocalX,
@@ -3233,7 +3605,95 @@ export default class BattleScene extends Scene {
       dropPhase: "horizontal",
       alive: true, trailTimer: 0
     });
+    if (plant.type === "electric-mushroom") {
+      this.applySquashStretch(plant.view, {
+        preX: 0.9, preY: 1.13, impactX: 1.16, impactY: 0.84, durationMs: 170
+      });
+    }
     this.playThornSound();
+  }
+
+  // ---- مكتبة التأثيرات: تحديد التأثيرات المعيّنة وتشغيلها ----
+  effectIdsForPlantType(type) {
+    const studioPlant = this.studioPlantsByType?.[type] || null;
+    return resolveAssignedEffectIds({ studioEntry: studioPlant, builtinPlantType: studioPlant ? null : type });
+  }
+
+  effectIdsForMonster(monster) {
+    return resolveAssignedEffectIds({ studioEntry: monster?.studioMonster || null });
+  }
+
+  effectPoint(view, yOffset = -34) {
+    return view?.active ? { x: view.x, y: view.y + yOffset, view } : null;
+  }
+
+  applyCharacterStateFromEffects(effectIds, trigger, point) {
+    if (trigger !== "hit" && trigger !== "damaged") return;
+    const view = point?.view;
+    if (!view?.active) return;
+    const plantId = view.getData?.("studioPlantId");
+    const monsterId = view.getData?.("studioMonsterId");
+    const asset = plantId ? this.studioPlantsByType?.[plantId] : monsterId ? this.studioMonstersById?.[monsterId] : null;
+    if (!asset?.stateAnimations || !asset.stateAnimationTextureKeys) return;
+    const stateId = (effectIds || []).find((id) => asset.stateAnimations[id] && asset.stateAnimationTextureKeys[id] && this.textures.exists(asset.stateAnimationTextureKeys[id]));
+    if (!stateId) return;
+    const kind = plantId ? "plant" : "monster";
+    const textureKey = asset.stateAnimationTextureKeys[stateId];
+    const animationKey = "studio-" + kind + "-" + asset.id + "-state-" + stateId;
+    const rigRoot = view.getData("studioSkeletalRig")?.root || null;
+    const baseSprite = view.getData("studioStatusBaseSprite") ||
+      (view.list || []).find((child) => child?.active && child.texture?.key === asset.textureKey) || null;
+    if (!baseSprite?.active && !rigRoot?.active) return;
+    const oldTimer = view.getData("studioStatusRestoreTimer");
+    if (oldTimer?.remove) oldTimer.remove(false);
+    const oldOverlay = view.getData("studioStatusOverlay");
+    if (oldOverlay?.active) oldOverlay.destroy();
+    if (baseSprite?.active) baseSprite.setVisible(false);
+    if (rigRoot?.active) rigRoot.setVisible(false);
+    const bounds = view.getData("studioCharacterBounds") || {};
+    const overlay = this.add.sprite(
+      baseSprite?.x ?? bounds.x ?? 0,
+      baseSprite?.y ?? bounds.y ?? 0,
+      textureKey,
+      0
+    )
+      .setOrigin(baseSprite?.originX ?? 0.5, baseSprite?.originY ?? 1)
+      .setScale(baseSprite?.scaleX ?? 1, baseSprite?.scaleY ?? 1)
+      .setFlipX(Boolean(baseSprite?.flipX))
+      .setAlpha(baseSprite?.alpha ?? 1);
+    if (!baseSprite && bounds.width && bounds.height) overlay.setDisplaySize(bounds.width, bounds.height);
+    view.add(overlay);
+    if (this.anims.exists(animationKey)) overlay.play(animationKey);
+    view.setData("studioStatusBaseSprite", baseSprite);
+    view.setData("studioStatusRigRoot", rigRoot);
+    view.setData("studioStatusOverlay", overlay);
+    const definition = getEffect(stateId);
+    const duration = Math.max(350, ...(definition?.layers || []).map((layer) => (Number(layer.delay) || 0) + (Number(layer.life || layer.ms) || 0)));
+    const timer = this.time.delayedCall(duration, () => {
+      if (baseSprite?.active) baseSprite.setVisible(true);
+      if (rigRoot?.active) rigRoot.setVisible(true);
+      if (overlay.active) overlay.destroy();
+      if (view.active) {
+        view.setData("studioStatusBaseSprite", null);
+        view.setData("studioStatusRigRoot", null);
+        view.setData("studioStatusOverlay", null);
+        view.setData("studioStatusRestoreTimer", null);
+      }
+    });
+    view.setData("studioStatusRestoreTimer", timer);
+  }
+
+  playEffects(effectIds, trigger, point, extra = {}) {
+    if (!this.effectDirector || !effectIds?.length || !point) return;
+    this.applyCharacterStateFromEffects(effectIds, trigger, point);
+    this.effectDirector.playAssigned(effectIds, trigger, { ...point, ...extra });
+  }
+
+  startEntityEffects(entity, effectIds, view, facing = 1) {
+    if (!this.effectDirector || !effectIds?.length) return;
+    this.playEffects(effectIds, "spawn", this.effectPoint(view), { facing });
+    this.effectDirector.startAuras(effectIds, () =>
+      (entity.alive && view?.active ? { x: view.x, y: view.y - 34, view, facing } : null));
   }
 
   createFreezeImpact(x, y, plantType = "snow-thrower") {
@@ -3251,13 +3711,15 @@ export default class BattleScene extends Scene {
     this.tweens.add({ targets: burst, scale: 1.8, alpha: 0, duration: 320, ease: "Cubic.easeOut", onComplete: () => burst.destroy() });
   }
 
-  createProjectileImpact(x, y, plantType = "radish") {
+  createProjectileImpact(x, y, plantType = "radish", customTint = null) {
     const effectId = getPlantVFXProfile(plantType)?.impact;
-    if (effectId && this.vfxManager?.play(effectId, x, y, { count: 8, durationMs: 220, endScale: 2.1 })) return;
-    const burst = this.add.container(x, y).setDepth(24);
-    const flash = this.add.circle(0, 0, 10, 0xfff4f7, 0.96);
+    const tint = Number.isInteger(customTint) ? customTint : null;
+    if (effectId && this.vfxManager?.play(effectId, x, y, { ...(tint === null ? {} : { tint }), count: 8, durationMs: 220, endScale: 2.1 })) return;
+    if (plantType === "electric-mushroom") {
+      const burst = this.add.container(x, y).setDepth(24);
+    const flash = this.add.circle(0, 0, 10, tint ?? 0xfff4f7, 0.96);
     const sparks = [];
-    const colors = [0xff7185, 0x8bd66f, 0xffc7d0, 0x65bd62, 0xffffff, 0xffa4b2];
+    const colors = tint === null ? [0xff7185, 0x8bd66f, 0xffc7d0, 0x65bd62, 0xffffff, 0xffa4b2] : [tint, tint, 0xffffff, tint, 0xffffff, tint];
     for (let i = 0; i < 6; i += 1) {
       const angle = (Math.PI * 2 * i) / 6;
       const spark = this.add.circle(Math.cos(angle) * 5, Math.sin(angle) * 5, 3, colors[i], 1);
@@ -3272,12 +3734,15 @@ export default class BattleScene extends Scene {
       ease: "Cubic.easeOut",
       onComplete: () => burst.destroy()
     });
+    }
   }
 
-  createProjectileTrail(x, y, plantType = "radish") {
+  createProjectileTrail(x, y, plantType = "radish", customTint = null) {
     const effectId = getPlantVFXProfile(plantType)?.trail;
-    if (effectId && this.vfxManager?.playProjectileTrail(effectId, x, y, { count: 3, durationMs: 180, endScale: 1.6 })) return;
-    const spark = this.add.circle(x, y, PhaserMath.Between(2, 4), 0xffc247, 0.72).setDepth(14);
+    const tint = Number.isInteger(customTint) ? customTint : null;
+    if (effectId && this.vfxManager?.playProjectileTrail(effectId, x, y, { ...(tint === null ? {} : { tint }), count: 3, durationMs: 180, endScale: 1.6 })) return;
+    const fallbackTint = tint ?? getProjectileVFXProfile(plantType)?.tint ?? 0xffc247;
+    const spark = this.add.circle(x, y, PhaserMath.Between(2, 4), fallbackTint, 0.72).setDepth(14);
     this.tweens.add({
       targets: spark,
       x: x - PhaserMath.Between(5, 12),
@@ -3289,6 +3754,7 @@ export default class BattleScene extends Scene {
       onComplete: () => spark.destroy()
     });
   }
+
 
   createFootstepDust(x, y, scale = 1) {
     const puff = this.add.container(x, y).setDepth(12);
@@ -3350,107 +3816,104 @@ export default class BattleScene extends Scene {
     });
   }
 
+  getStageWaveEntries(wave) {
+    return this.stageMonsterEntries.filter(entry => Number(entry.wave) === wave);
+  }
+
+  getStageWaveSize(wave) {
+    if (!this.stageMonsterRosterConfigured) return PHASE_ONE_WAVE_SIZES[wave - 1] || 0;
+    return Math.min(500, this.getStageWaveEntries(wave).reduce((sum, entry) => sum + Math.max(1, Number(entry.count) || 1), 0));
+  }
+
+  getStageMonsterEntry(spawnIndex = 0) {
+    if (!this.stageMonsterRosterConfigured) return null;
+    let offset = Math.max(0, spawnIndex);
+    for (const entry of this.getStageWaveEntries(this.wave)) {
+      const count = Math.max(1, Number(entry.count) || 1);
+      if (offset < count) return entry;
+      offset -= count;
+    }
+    return null;
+  }
+
   monsterArchetypeFor(spawnIndex) {
     return resolveMonsterArchetype(this.wave, spawnIndex);
   }
 
-  createHyenaAnimations() {
-    // These four authored sheets are the required monster artwork. Hit and
-    // death are optional single-pose sheets and must never disable the hyenas.
-    const requiredDefinitions = [
-      ["hyena-idle", 4, 5, -1],
-      ["hyena-walk", 9, 9, -1],
-      ["hyena-run", 7, 14, -1],
-      ["hyena-bite", 5, 9, -1]
-    ];
-    const optionalDefinitions = [
-      ["hyena-hit", 3, 12, 0],
-      ["hyena-death", 6, 8, 0]
-    ];
-
-    try {
-      if (this.hyenaAssetFailed) throw new Error("A required hyena sprite sheet failed to load.");
-
-      for (const [key, expectedFrames, frameRate, repeat] of requiredDefinitions) {
-        if (!this.textures.exists(key)) throw new Error(`Missing required hyena sheet: ${key}.`);
-        const texture = this.textures.get(key);
-        const available = Object.keys(texture.frames).filter((name) => name !== "__BASE").length;
-        // The revised bite artwork is a single horizontal strip of eight
-        // 180x180 poses. All eight frames belong to the authored bite cycle.
-        const startFrame = 0;
-        if (available <= startFrame) {
-          throw new Error(`Invalid ${key} sheet: expected frames starting at ${startFrame}, found ${available}.`);
-        }
-        // Respect the authored frame range while tolerating shorter approved
-        // sheets (for example, hyena-idle may contain only 3 frames).
-        const frameCount = Math.min(expectedFrames, available - startFrame);
-        const endFrame = startFrame + frameCount - 1;
-        if (this.anims.exists(key)) this.anims.remove(key);
-        this.anims.create({
-          key,
-          frames: this.anims.generateFrameNumbers(key, { start: startFrame, end: endFrame }),
-          frameRate,
-          repeat
-        });
-      }
-
-      for (const [key, expectedFrames, frameRate, repeat] of optionalDefinitions) {
-        if (!this.textures.exists(key)) continue;
-        const texture = this.textures.get(key);
-        const available = Object.keys(texture.frames).filter((name) => name !== "__BASE").length;
-        if (available < 1) continue;
-        const frameCount = Math.min(expectedFrames, available);
-        if (this.anims.exists(key)) this.anims.remove(key);
-        this.anims.create({
-          key,
-          frames: this.anims.generateFrameNumbers(key, { start: 0, end: frameCount - 1 }),
-          frameRate,
-          repeat
-        });
-      }
-
-      // Jump is an optional authored animation with five 216x447 frames on
-      // row one and three 360x447 frames on row two. Keep its irregular grid
-      // intact rather than forcing Phaser to slice it into equal cells.
-      if (this.textures.exists("hyena-jump")) {
-        const jumpTexture = this.textures.get("hyena-jump");
-        const jumpFrames = [
-          ...Array.from({ length: 5 }, (_, i) => ({ x: i * 216, y: 0, width: 216, height: 447 })),
-          ...Array.from({ length: 3 }, (_, i) => ({ x: i * 360, y: 447, width: 360, height: 447 }))
-        ];
-        jumpFrames.forEach((frame, index) => {
-          jumpTexture.add(String(index), 0, frame.x, frame.y, frame.width, frame.height);
-        });
-        if (this.anims.exists("hyena-jump")) this.anims.remove("hyena-jump");
-        this.anims.create({
-          key: "hyena-jump",
-          frames: jumpFrames.map((_, index) => ({ key: "hyena-jump", frame: String(index) })),
-          frameRate: 10,
-          repeat: 0
-        });
-      }
-
-      return true;
-    } catch (error) {
-      console.error("Required hyena artwork is unavailable; refusing to replace it with vector monsters.", error);
-      this.hyenaAssetFailed = true;
-      return false;
-    }
+  selectStudioMonsterForSpawn() {
+    return selectWeightedStudioMonster(
+      (this.studioMonsters || []).filter((monster) => monster.runtimeReady && this.textures.exists(monster.textureKey)),
+      this.wave,
+      (min, max) => this.simulationRandom.nextInt(min, max)
+    );
   }
 
-  playHyenaAnimation(monster, key, force = false) {
-    const sprite = monster && monster.hyenaSprite;
-    if (!sprite || !sprite.active || !this.hyenaAnimationsReady || !this.anims.exists(key)) return;
-    if (!force && monster.hitAnimUntil > this.time.now && key !== "hyena-hit") return;
+  createMonster01Animations() {
+    if (!this.textures.exists("monster-01")) return false;
+    for (const action of ["idle", "walk", "run", "bite", "hit", "death"]) {
+      const key = "monster-01-" + action;
+      if (this.anims.exists(key)) this.anims.remove(key);
+      this.anims.create({ key, frames: [{ key: "monster-01" }], frameRate: 1, repeat: -1 });
+    }
+    return true;
+  }
+
+  playMonster01Animation(monster, key, force = false) {
+    if (monster?.studioMonster?.rigProfile && monster.studioRig) {
+      const action = key === "monster-01-death" ? "death"
+        : key === "monster-01-hit" ? "hit"
+        : key === "monster-01-bite" ? "attack"
+        : ["monster-01-walk", "monster-01-run"].includes(key) ? "move" : "idle";
+      if (action === "attack" && !force && monster.hitAnimUntil > this.time.now) return;
+      const rig = monster.studioRig;
+      const activeId = rig._activeClipId;
+      const protectedAction = (activeId === "death" && action !== "death")
+        || (activeId === "frozen" && !["frozen", "death"].includes(action))
+        || ((monster.freezeStage || 0) > 0 && !["frozen", "death"].includes(action))
+        || (["attack", "hit"].includes(activeId) && ["idle", "move"].includes(action));
+      if (protectedAction && (activeId === "death" || activeId === "frozen" || (monster.freezeStage || 0) > 0 || !force)) return;
+      const clip = rig.profile.clips.find((entry) => entry.id === action)
+        || (action === "hit" ? rig.profile.clips.find((entry) => entry.id === "attack") : null)
+        || resolveSkeletalIdleClip(rig.profile);
+      if (clip && !force && activeId === clip.id) return;
+      if (clip) {
+        const returnsToIdle = ["attack", "hit"].includes(action);
+        const onComplete = returnsToIdle ? () => {
+          if (!monster.alive || (monster.freezeStage || 0) > 0 || rig._activeClipId !== null) return;
+          const idle = resolveSkeletalIdleClip(rig.profile);
+          if (idle) this.playStudioSkeletalRig(rig, idle.id);
+        } : null;
+        this.playStudioSkeletalRig(rig, clip.id, onComplete);
+      }
+      return;
+    }
+    const sprite = monster && monster.monster01Sprite;
+    if (!sprite || !sprite.active) return;
+    if (monster.studioMonster) {
+      const action = ["monster-01-bite", "monster-01-hit", "monster-01-death"].includes(key) ? "attack" : ["monster-01-walk", "monster-01-run"].includes(key) ? "move" : "idle";
+      const animationKey = "studio-monster-" + monster.studioMonster.id + "-" + action;
+      if (action === "attack" && !force && monster.hitAnimUntil > this.time.now) return;
+      if (this.anims.exists(animationKey)) {
+        const currentKey = sprite.anims.currentAnim?.key;
+        if (force || currentKey !== animationKey || !sprite.anims.isPlaying) sprite.play(animationKey);
+      } else if (action === "move" && this.anims.exists("studio-monster-" + monster.studioMonster.id + "-idle")) {
+        sprite.play("studio-monster-" + monster.studioMonster.id + "-idle");
+      } else if (action === "idle" && monster.studioMonster.spriteSheet && monster.studioMonster.frameCount > 1) {
+        sprite.setFrame(String(monster.studioMonster.animationProfile?.idle?.startFrame ?? 0));
+      }
+      return;
+    }
+    if (!this.monster01AnimationsReady || !this.anims.exists(key)) return;
+    if (!force && monster.hitAnimUntil > this.time.now && key !== "monster-01-hit") return;
     const currentKey = sprite.anims.currentAnim?.key;
     if (!force && currentKey === key && sprite.anims.isPlaying) return;
     sprite.play(key);
   }
 
   createMonsterArrivalEffect(spawn, laneGap, archetype) {
-    const accent = archetype === "stonehide" ? 0x8fb9ff
-      : archetype === "dust-skitter" ? 0xb9e7f4
-      : archetype === "alpha-brute" ? 0xffc45e
+    const accent = false ? 0x8fb9ff
+      : false ? 0xb9e7f4
+      : false ? 0xffc45e
       : 0xd6b27a;
     const scale = PhaserMath.Clamp(laneGap / 108, 0.28, 0.62);
     const cue = this.add.container(spawn.x + 4, spawn.y + 2).setDepth(9 + spawn.y / 1000);
@@ -3465,7 +3928,7 @@ export default class BattleScene extends Scene {
       targets: cue,
       scale: 1.5,
       alpha: 0,
-      duration: archetype === "dust-skitter" ? 280 : 420,
+      duration: false ? 280 : 420,
       ease: "Cubic.easeOut",
       onComplete: () => cue.destroy()
     });
@@ -3492,13 +3955,32 @@ export default class BattleScene extends Scene {
 
   spawnMonster(spawnIndex = this.spawnedThisWave) {
     const row = this.simulationRandom.nextInt(0, LANES - 1);
-    const archetype = this.monsterArchetypeFor(spawnIndex);
+    const stageEntry = this.getStageMonsterEntry(spawnIndex);
+    const studioMonster = stageEntry ? (this.studioMonstersById?.[stageEntry.id] || null) : this.selectStudioMonsterForSpawn();
+    const knownArchetypes = ["monster-01"];
+    const archetype = studioMonster?.monsterProfile?.baseArchetype || (knownArchetypes.includes(stageEntry?.id) ? stageEntry.id : this.monsterArchetypeFor(spawnIndex));
     try { recordMonsterDiscovery(window.localStorage, archetype); } catch { /* Bestiary tracking must never interrupt battle. */ }
-    const profile = getMonsterCombatStats(archetype, this.wave);
+    const baseProfile = getMonsterCombatStats(archetype, this.wave);
+    const resolvedProfile = studioMonster
+      ? resolveStudioMonsterRuntimeProfile(baseProfile, studioMonster.monsterProfile)
+      : baseProfile;
+    const profile = stageEntry ? {
+      ...resolvedProfile,
+      hp: Math.max(1, Math.round(resolvedProfile.hp * (Number(stageEntry.hpMultiplier) || 1))),
+      maxHp: Math.max(1, Math.round(resolvedProfile.maxHp * (Number(stageEntry.hpMultiplier) || 1))),
+      speed: resolvedProfile.speed * (Number(stageEntry.speedMultiplier) || 1),
+      plantDamage: Math.max(1, Math.round(resolvedProfile.plantDamage * (Number(stageEntry.damageMultiplier) || 1))),
+      attackIntervalMs: Math.max(100, Math.round(resolvedProfile.attackIntervalMs * (Number(stageEntry.attackIntervalMultiplier) || 1)))
+    } : resolvedProfile;
     const hp = profile.hp;
     const speed = profile.speed;
     const spawn = this.monsterLanePoint(SPAWN_LOCAL_X, row);
     const view = this.add.container(spawn.x, spawn.y).setDepth(10 + spawn.y / 1000);
+    this.addGroundContactShadow(view, 82 * profile.widthScale, 24 * profile.heightScale, 0.24);
+    if (studioMonster?.id) {
+      view.setData("studioMonsterId", studioMonster.id);
+      view.setData("studioCharacterBounds", { x: 0, y: 0, width: 360, height: 298 });
+    }
     view.setAlpha(0);
 
     // Scale each creature against the measured gap of its perspective lane.
@@ -3510,22 +3992,33 @@ export default class BattleScene extends Scene {
     const finalScaleY = monsterScale * profile.heightScale;
     view.setScale(finalScaleX * 0.72, finalScaleY * 0.72);
     this.createMonsterArrivalEffect(spawn, laneGap, archetype);
+    this.vfxManager?.play("spawn-pop", spawn.x, spawn.y + laneGap * 0.18, {
+      tint: false ? 0xc8c1a8 : 0xffe39b,
+      count: 6, durationMs: 260, endScale: 1.45
+    });
     this.tweens.add({
       targets: view,
       alpha: 1,
-      scaleX: finalScaleX,
-      scaleY: finalScaleY,
-      duration: archetype === "dust-skitter" ? 260 : archetype === "stonehide" ? 520 : 400,
-      ease: archetype === "dust-skitter" ? "Cubic.easeOut" : "Back.Out"
+      scaleX: finalScaleX * 1.12,
+      scaleY: finalScaleY * 1.12,
+      duration: false ? 260 : false ? 520 : 400,
+      ease: false ? "Cubic.easeOut" : "Back.Out",
+      onComplete: () => {
+        if (!view.active) return;
+        this.tweens.add({
+          targets: view, scaleX: finalScaleX, scaleY: finalScaleY,
+          duration: 110, ease: "Sine.easeOut"
+        });
+      }
     });
 
     const g = this.add.graphics();
-    const bodyColor = archetype === "stonehide" ? 0x68675b
-      : archetype === "alpha-brute" ? 0x4d3931
-      : archetype === "dust-skitter" ? 0x895b3a : 0x765036;
-    const headColor = archetype === "stonehide" ? 0x898578
-      : archetype === "alpha-brute" ? 0x80604b
-      : archetype === "dust-skitter" ? 0xb18154 : 0x9a7048;
+    const bodyColor = false ? 0x68675b
+      : false ? 0x4d3931
+      : false ? 0x895b3a : 0x765036;
+    const headColor = false ? 0x898578
+      : false ? 0x80604b
+      : false ? 0xb18154 : 0x9a7048;
 
     // Original prehistoric raider silhouette shared by the enemy family.
     g.fillStyle(0x2c2118, 0.9); g.fillEllipse(0, 18, 54, 68);
@@ -3559,7 +4052,7 @@ export default class BattleScene extends Scene {
     g.fillStyle(0xf0dfbd, 1);
     g.fillTriangle(0, 15, -4, 25, 4, 25);
 
-    if (archetype === "dust-skitter") {
+    if (false) {
       // Lean horn-like ear guards and ankle wraps make this quick raider
       // readable at a glance without borrowing another game's creature art.
       g.fillStyle(0xd39b4e, 1);
@@ -3571,7 +4064,7 @@ export default class BattleScene extends Scene {
       g.fillStyle(0xd8b77c, 1);
       g.fillEllipse(-20, 21, 11, 5);
       g.fillEllipse(20, 21, 11, 5);
-    } else if (archetype === "stonehide") {
+    } else if (false) {
       // Layered shale plates are a distinct defensive trait, not a copied
       // shield or costume from the genre reference.
       const chestPlate = [
@@ -3594,29 +4087,59 @@ export default class BattleScene extends Scene {
     }
 
     let monsterRecord = null;
-    const hyenaSprite = this.hyenaAnimationsReady
-      ? this.add.sprite(0, 0, "hyena-idle", 0).setOrigin(0.5, 1).setFlipX(true).setScale(0.918)
-      : null;
+    let studioRig = null;
+    if (studioMonster?.rigProfile && studioMonster.rigPartTextures) {
+      try {
+        studioRig = createPhaserSkeletalRig(this, studioMonster.rigProfile, studioMonster.rigPartTextures);
+        const canvas = studioRig.profile.canvas;
+        studioRig.root.setPosition(-canvas.width / 2, -canvas.height);
+        studioRig.root.setScale((studioMonster.flipX ? -1 : 1) * 0.918 * 360 / canvas.width, 0.918 * 298 / canvas.height);
+        view.add(studioRig.root);
+        view.setData("studioSkeletalRig", studioRig);
+        const idleClip = resolveSkeletalIdleClip(studioRig.profile) || studioRig.profile.clips[0];
+        if (idleClip) this.playStudioSkeletalRig(studioRig, idleClip.id);
+      } catch (error) {
+        console.warn("Studio monster skeletal rig unavailable; preserving Sprite Sheet fallback:", studioMonster.id, error);
+        studioRig = null;
+      }
+    }
+    const customMonsterTexture = studioMonster?.textureKey;
+    const customMonsterIdleFrame = String(studioMonster?.animationProfile?.idle?.startFrame ?? 0);
+    const monster01Sprite = studioRig ? null : customMonsterTexture && this.textures.exists(customMonsterTexture)
+      ? (studioMonster.spriteSheet && studioMonster.frameCount > 1
+        ? this.add.sprite(0, 0, customMonsterTexture, customMonsterIdleFrame)
+        : this.add.image(0, 0, customMonsterTexture)).setOrigin(0.5, 1).setFlipX(true).setScale(0.918)
+      : this.monster01AnimationsReady
+        ? this.add.sprite(0, 0, "monster-01", 0).setOrigin(0.5, 1).setFlipX(true).setScale(0.918)
+        : null;
     const tierTint = MONSTER_TIER_TINTS[archetype] ?? 0xffffff;
-    // Monster visuals must always use the authored hyena artwork. Never show
+    // Monster visuals must always use the authored monster 01 artwork. Never show
     // the old programmatically drawn creature as a fallback.
     g.setVisible(false);
     view.add(g);
-    if (hyenaSprite) {
-      view.add(hyenaSprite);
-      hyenaSprite.setTint(tierTint);
-      hyenaSprite.play("hyena-idle");
-      hyenaSprite.on("animationcomplete", (animation) => {
-        if (!monsterRecord || !monsterRecord.alive) return;
-        if (animation.key === "hyena-bite" || animation.key === "hyena-hit") {
-          this.playHyenaAnimation(monsterRecord, "hyena-idle", true);
-        }
-      });
+    if (monster01Sprite) {
+      view.add(monster01Sprite);
+      monster01Sprite.setTint(tierTint);
+      if (studioMonster) {
+        monster01Sprite.setFlipX(!studioMonster.flipX);
+        const idleKey = "studio-monster-" + studioMonster.id + "-idle";
+        if (this.anims.exists(idleKey)) monster01Sprite.play(idleKey);
+        monster01Sprite.on("animationcomplete", (animation) => {
+          if (!monsterRecord || !monsterRecord.alive) return;
+          if (animation.key === "studio-monster-" + studioMonster.id + "-attack") this.playMonster01Animation(monsterRecord, "monster-01-idle", true);
+        });
+      } else {
+        monster01Sprite.play("monster-01-idle");
+        monster01Sprite.on("animationcomplete", (animation) => {
+          if (!monsterRecord || !monsterRecord.alive) return;
+          if (animation.key === "monster-01-bite" || animation.key === "monster-01-hit") this.playMonster01Animation(monsterRecord, "monster-01-idle", true);
+        });
+      }
     }
 
-    // Stonehide raises a clearly visible shale ring while it braces over prey.
+    // Monster 01 raises a clearly visible shale ring while it braces over prey.
     let braceCue = null;
-    if (archetype === "stonehide") {
+    if (false) {
       braceCue = this.add.graphics();
       braceCue.lineStyle(4, 0xd8d0b5, 0.92);
       braceCue.strokeCircle(0, 6, 45);
@@ -3629,9 +4152,9 @@ export default class BattleScene extends Scene {
     }
 
     view.setDepth(8);
-    // Keep the running test hyena level and at a constant visual scale.
+    // Keep the running test monster 01 level and at a constant visual scale.
     // Other monster archetypes retain their subtle idle wobble.
-    if (archetype !== "dust-skitter") {
+    if (archetype !== "retired-variant") {
       this.tweens.add({
         targets: view, angle: { from: -2.5, to: 2.5 },
         duration: profile.wobbleDurationMs, ease: "Sine.easeInOut",
@@ -3639,12 +4162,12 @@ export default class BattleScene extends Scene {
       });
     }
 
-    if (archetype === "dust-skitter" && this.wave === 3 && spawnIndex === 1) {
-      this.setMessage("A Dust Skitter has joined the raid: quick, but easier to bring down.");
-    } else if (archetype === "stonehide" && spawnIndex === 4) {
-      this.setMessage("A Stonehide is approaching: slow, heavily plated, and tough to stop.");
-    } else if (archetype === "alpha-brute") {
-      this.setMessage("ALPHA BRUTE! A giant raider with double health and crushing bites is approaching!");
+    if (false && this.wave === 3 && spawnIndex === 1) {
+      this.setMessage("A Monster 01 has joined the raid: quick, but easier to bring down.");
+    } else if (false && spawnIndex === 4) {
+      this.setMessage("A Monster 01 is approaching: slow, heavily plated, and tough to stop.");
+    } else if (false) {
+      this.setMessage("Monster 01 is approaching.");
     }
 
     monsterRecord = {
@@ -3658,12 +4181,14 @@ export default class BattleScene extends Scene {
       attackInterval: profile.attackIntervalMs,
       incomingDamageMultiplier: profile.incomingDamageMultiplier,
       // The skitter alternates normal movement with short, readable bursts.
-      burstCooldown: archetype === "dust-skitter" ? this.simulationRandom.nextInt(profile.initialBurstCooldownMinMs, profile.initialBurstCooldownMaxMs) : 0,
+      burstCooldown: false ? this.simulationRandom.nextInt(profile.initialBurstCooldownMinMs, profile.initialBurstCooldownMaxMs) : 0,
       burstRemaining: 0,
       combatProfile: profile,
-      // Dust Skitters occasionally hop; this is purely visual and never
+      studioMonster,
+      studioRig,
+      // Monster 01s occasionally hop; this is purely visual and never
       // changes their lane, collision position, or ability to be hit.
-      jumpCooldown: archetype === "dust-skitter" ? this.simulationRandom.nextInt(profile.jumpCooldownMinMs, profile.jumpCooldownMaxMs) : 0,
+      jumpCooldown: false ? this.simulationRandom.nextInt(profile.jumpCooldownMinMs, profile.jumpCooldownMaxMs) : 0,
       jumpDuration: 560,
       jumpElapsed: 0,
       isJumping: false,
@@ -3671,7 +4196,7 @@ export default class BattleScene extends Scene {
       braceCue,
       maxHp: hp,
       tierTint,
-      hitFlashGraphic: g, hitFlashTimer: null, hyenaSprite, hitAnimUntil: 0,
+      hitFlashGraphic: g, hitFlashTimer: null, hitStopTimer: null, hitStopRestore: null, monster01Sprite, hitAnimUntil: 0,
       attackCooldown: 0, freezeRemainingMs: 0, freezeStage: 0, freezeFrameIndex: 0,
       freezeFullHoldMs: 0, freezeRecoveryMs: 0, iceBiteCooldownMs: 3600, frozenTextureKey: null,
       frozenAnimationKey: null, frozenSpriteSize: null, alive: true, view, dustTimer: 0,
@@ -3680,6 +4205,7 @@ export default class BattleScene extends Scene {
       voiceCooldown: PhaserMath.Between(4200, 8500)
     };
     this.monsters.push(monsterRecord);
+    this.startEntityEffects(monsterRecord, this.effectIdsForMonster(monsterRecord), monsterRecord.view, -1);
     this.recordCombatEvent("monster_spawned", {
       monsterId: monsterRecord.combatId, wave: this.wave, spawnIndex, row, archetype,
       hp, speed, localX: SPAWN_LOCAL_X
@@ -3715,7 +4241,7 @@ export default class BattleScene extends Scene {
   }
 
   updateMonsters(dt, delta) {
-    // A living hyena directly behind a fully frozen friend stops to chew the
+    // A living monster 01 directly behind a fully frozen friend stops to chew the
     // ice. Each bite removes one freeze layer at the Snow Thrower's 3.6s rate.
     const iceEaters = new Map();
     for (const frozen of this.monsters) {
@@ -3733,13 +4259,13 @@ export default class BattleScene extends Scene {
       eater.isEatingIce = true;
       eater.iceTargetId = frozen.combatId;
       eater.attackCooldown = 0;
-      if (eater.hyenaSprite?.active) this.playHyenaAnimation(eater, "hyena-bite");
+      if (eater.monster01Sprite?.active || eater.studioRig) this.playMonster01Animation(eater, "monster-01-bite");
       frozen.iceBiteCooldownMs = (frozen.iceBiteCooldownMs ?? 0) - delta;
       if (frozen.iceBiteCooldownMs <= 0) {
         frozen.freezeStage = Math.max(0, frozen.freezeStage - 1);
         frozen.freezeFrameIndex = frozen.freezeStage > 0 ? (frozen.freezeStage - 1) * 2 : 0;
-        if (frozen.hyenaSprite?.active && frozen.frozenTextureKey) {
-          frozen.hyenaSprite.setFrame(String(frozen.freezeFrameIndex));
+        if (frozen.monster01Sprite?.active && frozen.frozenTextureKey) {
+          frozen.monster01Sprite.setFrame(String(frozen.freezeFrameIndex));
         }
         frozen.iceBiteCooldownMs = 3600;
         if (frozen.freezeStage === 0) {
@@ -3755,6 +4281,9 @@ export default class BattleScene extends Scene {
 
     for (const monster of this.monsters) {
       if (!monster.alive) continue;
+      // Hold this creature's position and attack state for the brief impact
+      // pause; all other actors and the shared battle clock keep progressing.
+      if (monster.hitStopTimer) continue;
       if (!iceEaters.has(monster)) {
         monster.isEatingIce = false;
         monster.iceTargetId = null;
@@ -3770,7 +4299,7 @@ export default class BattleScene extends Scene {
             if (monster.freezeRecoveryMs <= 0) {
               // Thaw one atlas frame at a time, walking backwards from frame 9.
               monster.freezeFrameIndex = Math.max(0, (monster.freezeFrameIndex ?? 8) - 1);
-              if (monster.hyenaSprite?.active) monster.hyenaSprite.setFrame(String(monster.freezeFrameIndex));
+              if (monster.monster01Sprite?.active) monster.monster01Sprite.setFrame(String(monster.freezeFrameIndex));
               if (monster.freezeFrameIndex > 0) monster.freezeRecoveryMs = 10000;
               else {
                 monster.freezeStage = 0;
@@ -3782,17 +4311,17 @@ export default class BattleScene extends Scene {
         if (monster.freezeStage > 0) continue;
       }
       monster.attackCooldown = advanceCooldown(monster.attackCooldown, delta);
-      if (monster.hyenaSprite && !this.gameOver) {
+      if (monster.monster01Sprite && !this.gameOver) {
         monster.voiceCooldown -= delta;
         if (monster.voiceCooldown <= 0) {
-          if (Math.random() < 0.42) this.playHyenaVoice(Math.random() < 0.58 ? "laugh" : "growl", 0.38);
+          if (Math.random() < 0.42) this.playMonster01Voice(Math.random() < 0.58 ? "laugh" : "growl", 0.38);
           monster.voiceCooldown = PhaserMath.Between(6500, 12500);
         }
       }
       // Every living plant blocks monsters in its own lane. A monster must
       // finish eating that plant before it can continue toward the farmhouse.
-      const monsterHalfWidth = monster.hyenaSprite
-        ? monster.hyenaSprite.width * monster.hyenaSprite.scaleX * monster.view.scaleX * 0.5
+      const monsterHalfWidth = monster.monster01Sprite
+        ? monster.monster01Sprite.width * monster.monster01Sprite.scaleX * monster.view.scaleX * 0.5
         : monster.view.getBounds().width * 0.5;
       const widestBlockingPlantHalfWidth = this.plants.reduce((widest, plant) => {
         if (!plant.alive || plant.row !== monster.row || !plant.view?.active) return widest;
@@ -3825,9 +4354,9 @@ export default class BattleScene extends Scene {
         : 0;
       const withinBiteRange = Boolean(blocker && monster.localX - blockerLocalX <= biteReach);
 
-      // A Stonehide locks its shale plates into place while chewing a plant.
+      // A Monster 01 locks its shale plates into place while chewing a plant.
       // This state also changes how much damage incoming hits can inflict.
-      if (monster.kind === "stonehide") {
+      if (false) {
         monster.braced = withinBiteRange;
         if (monster.braceCue && monster.braceCue.visible !== monster.braced) {
           monster.braceCue.setVisible(monster.braced);
@@ -3843,7 +4372,7 @@ export default class BattleScene extends Scene {
         monster.x = bitePosition.x;
         monster.y = bitePosition.y;
         monster.view.setPosition(bitePosition.x, bitePosition.y);
-        if (monster.hyenaSprite?.active) monster.hyenaSprite.y = 0;
+        if (monster.monster01Sprite?.active) monster.monster01Sprite.y = jumpOffset;
         monster.replayMoveElapsedMs += delta;
         const movementTick = Math.floor(this.combatClockMs);
         if (enteringBiteRange || monster.replayLastBlockerCol !== blocker.col || monster.replayMoveElapsedMs >= 500) {
@@ -3862,14 +4391,14 @@ export default class BattleScene extends Scene {
         if (monster.isJumping) {
           monster.isJumping = false;
           monster.jumpElapsed = 0;
-          if (monster.hyenaSprite?.active) monster.hyenaSprite.y = 0;
+          if (monster.monster01Sprite?.active) monster.monster01Sprite.y = 0;
         }
-        // Keep the hyena fixed at the plant while its authored bite cycle loops.
+        // Keep the monster 01 fixed at the plant while its authored bite cycle loops.
         // The bite sheet animates the mouth/body (including the legs); movement
         // coordinates are deliberately not advanced anywhere in this branch.
         if (!monster.isEating) monster.isEating = true;
-        if (monster.hyenaSprite && monster.hitAnimUntil <= this.time.now) {
-          this.playHyenaAnimation(monster, "hyena-bite");
+        if ((monster.monster01Sprite || monster.studioRig) && monster.hitAnimUntil <= this.time.now) {
+          this.playMonster01Animation(monster, "monster-01-bite");
         }
         const bite = resolveBiteAttack({
           cooldownMs: monster.attackCooldown,
@@ -3882,9 +4411,26 @@ export default class BattleScene extends Scene {
             monsterId: monster.combatId, plantCol: blocker.col, plantRow: blocker.row,
             damage: monster.plantDamage
           });
+          const plantRig = blocker.view?.getData?.("studioSkeletalRig");
+          if (monster.studioRig && plantRig && !this.studioRigHitboxesOverlap(monster.studioRig, monster.view, plantRig, blocker.view)) continue;
           blocker.hp = applyHitPointsDamage(blocker.hp, monster.plantDamage).hp;
           this.playMonsterBiteSound();
           this.flashEatenPlant(blocker);
+          this.playEffects(this.effectIdsForMonster(monster), "fire", this.effectPoint(monster.view), { facing: -1 });
+          this.playEffects(this.effectIdsForMonster(monster), "hit", this.effectPoint(blocker.view), { facing: -1 });
+          this.playEffects(this.effectIdsForPlantType(blocker.type), "damaged", this.effectPoint(blocker.view));
+          const electricBite = monster.combatProfile?.damageType === "electric" ||
+            monster.combatProfile?.attackType === "electric" ||
+            monster.studioMonster?.combat?.damageType === "electric";
+          if (electricBite) {
+            const monsterBounds = monster.view?.getBounds?.();
+            this.createElectricShockEffect(
+              monsterBounds?.centerX ?? monster.x,
+              monsterBounds?.top ?? monster.y - 24,
+              blocker,
+              "plant"
+            );
+          }
           if (blocker.hp <= 0) this.destroyPlant(blocker);
         }
         continue;
@@ -3901,22 +4447,26 @@ export default class BattleScene extends Scene {
 
       let movementSpeed = monster.speed;
       let jumpOffset = 0;
-      if (monster.kind === "dust-skitter") {
+      if (false) {
         const profile = monster.combatProfile;
-        const jumpWillStart = false;
-        const jumpWillLand = false;
+        const jumpWillStart = !monster.isJumping && monster.jumpCooldown - delta <= 0;
+        const jumpWillLand = monster.isJumping && monster.jumpElapsed + delta >= monster.jumpDuration;
         const burstWillStart = monster.burstCooldown - delta <= 0 && monster.burstRemaining <= 0;
-        const motion = resolveDustSkitterMotionStep({
-          isJumping: false,
+        const motion = resolveMonsterMovementEffectsStep({
+          isJumping: monster.isJumping,
           jumpCooldownMs: monster.jumpCooldown,
           jumpElapsedMs: monster.jumpElapsed,
           jumpDurationMs: monster.jumpDuration,
           deltaMs: delta,
-          jumpSpeedMultiplier: 1,
-          jumpVisualHeight: 0,
-          visualScale: 1,
-          nextJumpDurationMs: null,
-          nextJumpResetCooldownMs: null,
+          jumpSpeedMultiplier: profile.jumpSpeedMultiplier,
+          jumpVisualHeight: 34,
+          visualScale: monster.view.scaleY,
+          nextJumpDurationMs: jumpWillStart
+            ? this.simulationRandom.nextInt(profile.jumpDurationMinMs, profile.jumpDurationMaxMs)
+            : null,
+          nextJumpResetCooldownMs: jumpWillLand
+            ? this.simulationRandom.nextInt(profile.jumpResetCooldownMinMs, profile.jumpResetCooldownMaxMs)
+            : null,
           burstCooldownMs: monster.burstCooldown,
           burstRemainingMs: monster.burstRemaining,
           burstDurationMs: profile.burstDurationMs,
@@ -3924,8 +4474,19 @@ export default class BattleScene extends Scene {
           nextBurstCooldownMs: burstWillStart
             ? this.simulationRandom.nextInt(profile.burstCooldownMinMs, profile.burstCooldownMaxMs)
             : null,
-          enableJump: false
+          enableJump: true
         });
+        if (jumpWillStart) {
+          this.applySquashStretch(monster.monster01Sprite?.active ? monster.monster01Sprite : monster.view, {
+            preX: 0.82, preY: 1.2, impactX: 0.94, impactY: 1.08, durationMs: 180
+          });
+        }
+        if (jumpWillLand) {
+          this.applySquashStretch(monster.monster01Sprite?.active ? monster.monster01Sprite : monster.view, {
+            preX: 0.9, preY: 1.12, impactX: 1.2, impactY: 0.72, durationMs: 165
+          });
+          this.createFootstepDust(monster.x, monster.y + 6, monster.view.scaleY * 0.9);
+        }
         monster.isJumping = motion.isJumping;
         monster.jumpCooldown = motion.jumpCooldownMs;
         monster.jumpElapsed = motion.jumpElapsedMs;
@@ -3973,20 +4534,21 @@ export default class BattleScene extends Scene {
       const position = this.monsterLanePoint(monster.localX, monster.row);
       monster.x = position.x; monster.y = position.y;
       monster.view.setPosition(position.x, position.y);
-      if (monster.hyenaSprite?.active) monster.hyenaSprite.y = 0;
-      if (monster.hyenaSprite && monster.hitAnimUntil <= this.time.now) {
-        // The corrected 15-frame run sheet belongs to the fast hyena.
+      this.ambientFx?.spawnFootstepDust(monster, position.x, position.y, delta);
+      if (monster.monster01Sprite?.active) monster.monster01Sprite.y = 0;
+      if ((monster.monster01Sprite || monster.studioRig) && monster.hitAnimUntil <= this.time.now) {
+        // The corrected 15-frame run sheet belongs to the fast monster 01.
         // Keep it running for the full advance so its new crop can be tested
         // clearly in a normal battle, rather than only during a short burst.
-        const movementAnimation = monster.kind === "dust-skitter"
-          ? "hyena-run"
-          : "hyena-walk";
-        this.playHyenaAnimation(monster, movementAnimation);
+        const movementAnimation = false
+          ? "monster-01-run"
+          : "monster-01-walk";
+        this.playMonster01Animation(monster, movementAnimation);
       }
       monster.dustTimer -= dt * 1000;
       if (monster.dustTimer <= 0) {
         this.createFootstepDust(position.x - 9, position.y + 2, monster.view.scaleY);
-        monster.dustTimer = monster.kind === "dust-skitter" && monster.burstRemaining > 0 ? 62 : 155;
+        monster.dustTimer = false && monster.burstRemaining > 0 ? 62 : 155;
       }
     }
     this.monsters = this.monsters.filter((m) => m.alive);
@@ -3994,47 +4556,68 @@ export default class BattleScene extends Scene {
 
   freezeMonster(monster) {
     if (!monster?.alive || monster.freezeStage >= 5) return false;
+    const wasAlreadyFrozen = (monster.freezeStage || 0) > 0;
     monster.freezeStage = Math.min(5, (monster.freezeStage || 0) + 1);
     monster.braced = false;
     monster.isEating = false;
     if (monster.view?.active) this.tweens.killTweensOf(monster.view);
     if (monster.braceCue?.active) monster.braceCue.setVisible(false);
-    const sprite = monster.hyenaSprite;
+    const sprite = monster.monster01Sprite;
+    if (monster.studioRig && !wasAlreadyFrozen) {
+      const rig = monster.studioRig;
+      monster.frozenAnimationKey = rig._activeClipId || "move";
+      if (rig.profile.clips.some((clip) => clip.id === "frozen")) this.playStudioSkeletalRig(rig, "frozen");
+      else this.stopStudioSkeletalRig(rig, true);
+    }
     if (sprite?.active) {
-      if (!monster.frozenTextureKey) {
-        const preferred = this.wave >= 4 ? "frozen-hyena-level-2" : "frozen-hyena-level-1";
-        const fallback = preferred === "frozen-hyena-level-2" ? "frozen-hyena-level-1" : "frozen-hyena-level-2";
+      if (!monster.frozenTextureKey && !monster.studioMonster) {
+        const preferred = this.wave >= 4 ? "frozen-monster 01-level-2" : "frozen-monster 01-level-1";
+        const fallback = preferred === "frozen-monster 01-level-2" ? "frozen-monster 01-level-1" : "frozen-monster 01-level-2";
         monster.frozenTextureKey = this.textures.exists(preferred) ? preferred : this.textures.exists(fallback) ? fallback : null;
-        monster.frozenAnimationKey = sprite.anims.currentAnim?.key || (monster.kind === "dust-skitter" ? "hyena-run" : "hyena-walk");
+        monster.frozenAnimationKey = sprite.anims.currentAnim?.key || (false ? "monster-01-run" : "monster-01-walk");
         monster.frozenSpriteSize = { width: sprite.displayWidth, height: sprite.displayHeight };
       }
-      sprite.stop();
-      if (monster.frozenTextureKey) {
+      if (monster.studioMonster && !monster.frozenAnimationKey) {
+        monster.frozenAnimationKey = "monster-01-idle";
+        monster.frozenSpriteSize = { width: sprite.displayWidth, height: sprite.displayHeight };
+      }
+      if (typeof sprite.stop === "function") sprite.stop();
+      if (monster.frozenTextureKey && typeof sprite.setFrame === "function") {
         sprite.setTexture(monster.frozenTextureKey);
         monster.freezeFrameIndex = (monster.freezeStage - 1) * 2;
         sprite.setFrame(String(monster.freezeFrameIndex));
         sprite.setOrigin(0.5, 1);
         if (monster.frozenSpriteSize?.width > 0 && monster.frozenSpriteSize?.height > 0) sprite.setDisplaySize(monster.frozenSpriteSize.width, monster.frozenSpriteSize.height);
         sprite.clearTint();
+      } else if (monster.studioMonster) {
+        sprite.setTint(0x9feaff);
       }
     }
     if (monster.freezeStage === 5) {
       monster.freezeFullHoldMs = 30000;
       monster.freezeRecoveryMs = 0;
-      this.setMessage("The hyena is completely frozen. It will begin thawing in 30 seconds.");
+      this.setMessage("The monster 01 is completely frozen. It will begin thawing in 30 seconds.");
     } else this.setMessage("SNOW HIT! Freeze stage " + monster.freezeStage + " of 5.");
     return true;
   }
 
   restoreMonsterAfterFreeze(monster) {
-    const sprite = monster?.hyenaSprite;
+    const sprite = monster?.monster01Sprite;
+    if (monster?.studioRig) {
+      const rig = monster.studioRig;
+      const restoreClip = rig.profile.clips.find((clip) => clip.id === monster.frozenAnimationKey)?.id
+        || rig.profile.clips.find((clip) => clip.id === "move")?.id
+        || resolveSkeletalIdleClip(rig.profile)?.id
+        || rig.profile.clips[0]?.id;
+      if (restoreClip) this.playStudioSkeletalRig(rig, restoreClip);
+    }
     if (sprite?.active) {
       sprite.setTint(monster.tierTint ?? 0xffffff);
       sprite.setScale(0.918);
       sprite.setOrigin(0.5, 1);
-      this.playHyenaAnimation(monster, monster.frozenAnimationKey || (monster.kind === "dust-skitter" ? "hyena-run" : "hyena-walk"), true);
+      this.playMonster01Animation(monster, monster.frozenAnimationKey || (false ? "monster-01-run" : "monster-01-walk"), true);
     }
-    if (monster.kind !== "dust-skitter" && monster.view?.active) {
+    if (true && monster.view?.active) {
       this.tweens.add({
         targets: monster.view, angle: { from: -2.5, to: 2.5 },
         duration: monster.combatProfile.wobbleDurationMs, ease: "Sine.easeInOut",
@@ -4109,8 +4692,56 @@ export default class BattleScene extends Scene {
       const position = ["pineapple", "hazelnut", "mango", "snow-thrower"].includes(shot.plantType)
         ? this.pineappleLanePoint(shot.localX, shot.row)
         : this.lanePoint(shot.localX, shot.row);
-      const projectileX = position.x + (shot.launchOffsetX || 0);
-      const projectileY = position.y + (shot.launchOffsetY || 0);
+      const studioProgress = shot.studioPlantId
+        ? PhaserMath.Clamp((shot.localX - shot.startLocalX) / Math.max(1, shot.targetLocalX - shot.startLocalX), 0, 1)
+        : 0;
+      const studioOffset = shot.studioPlantId
+        ? getProjectileTrajectoryOffset({type:shot.projectileTrajectoryType,progress:studioProgress,height:shot.projectileHeight,curveX:shot.projectileCurveX,curveY:shot.projectileCurveY,targetX:shot.projectileTargetOffsetX,targetY:shot.projectileTargetOffsetY,points:shot.projectilePathPoints})
+        : {x:0,y:0};
+      const launchPoint = getProjectileLaunchPoint({ laneX: position.x, laneY: position.y, offsetX: shot.launchOffsetX, offsetY: shot.launchOffsetY });
+      let projectileX = launchPoint.x + studioOffset.x;
+      let projectileY = launchPoint.y - studioOffset.y;
+
+      // Studio-authored trajectories terminate at the live monster's head.
+      // Preserve the authored curve, then progressively correct its endpoint
+      // so the final frame lands exactly on the head instead of the lane center.
+      let studioHeadTarget = null;
+      if (shot.studioPlantId) {
+        if (!shot.target?.alive || !shot.target.view?.active) {
+          shot.alive = false;
+          shot.view.destroy();
+          continue;
+        }
+        const targetBounds = shot.target.view.getBounds();
+        const headX = targetBounds.centerX;
+        const headY = targetBounds.top + Math.min(24, targetBounds.height * 0.2);
+        const targetLanePosition = ["pineapple", "hazelnut", "mango", "snow-thrower"].includes(shot.plantType)
+          ? this.pineappleLanePoint(shot.targetLocalX, shot.row)
+          : this.lanePoint(shot.targetLocalX, shot.row);
+        const endOffset = getProjectileTrajectoryOffset({
+          type: shot.projectileTrajectoryType,
+          progress: 1,
+          height: shot.projectileHeight,
+          curveX: shot.projectileCurveX,
+          curveY: shot.projectileCurveY,
+          targetX: shot.projectileTargetOffsetX,
+          targetY: shot.projectileTargetOffsetY,
+          points: shot.projectilePathPoints
+        });
+        const targetLaunchPoint = getProjectileLaunchPoint({ laneX: targetLanePosition.x, laneY: targetLanePosition.y, offsetX: shot.launchOffsetX, offsetY: shot.launchOffsetY });
+        const authoredEndX = targetLaunchPoint.x + endOffset.x;
+        const authoredEndY = targetLaunchPoint.y - endOffset.y;
+        const headCorrection = getProjectileHeadCorrection({
+          progress: studioProgress,
+          targetX: headX,
+          targetY: headY,
+          trajectoryEndX: authoredEndX,
+          trajectoryEndY: authoredEndY
+        });
+        projectileX += headCorrection.x;
+        projectileY += headCorrection.y;
+        studioHeadTarget = { x: headX, y: headY, progress: studioProgress };
+      }
       let trailPositionY = projectileY;
 
       // Give the outgoing pineapple bomb a smooth launch arc. Progress is
@@ -4138,50 +4769,91 @@ export default class BattleScene extends Scene {
         shot.view.setPosition(projectileX, projectileY);
       }
 
+      if (studioHeadTarget && studioHeadTarget.progress >= 1) {
+        shot.view.setPosition(studioHeadTarget.x, studioHeadTarget.y);
+        this.createProjectileImpact(studioHeadTarget.x, studioHeadTarget.y, shot.plantType, shot.projectileEffectColor);
+        if (String(shot.plantType).includes("electric")) {
+          const source = this.lanePoint(shot.startLocalX, shot.row);
+          this.createElectricShockEffect(
+            source.x + (shot.launchOffsetX || 0),
+            source.y + (shot.launchOffsetY || 0),
+            shot.target,
+            "monster"
+          );
+        }
+        this.playThornImpactSound();
+        this.applyMonsterDamage(
+          shot.target,
+          shot.damage * this.incomingMonsterDamageMultiplier(shot.target),
+          shot.plantType
+        );
+        this.damageMonsterIfNeeded(shot.target);
+        shot.alive = false;
+        shot.view.destroy();
+        continue;
+      }
+
       shot.trailTimer -= dt * 1000;
       if (shot.trailTimer <= 0) {
-        this.createProjectileTrail(projectileX - 5, trailPositionY, shot.plantType);
+        this.createProjectileTrail(projectileX - 5, trailPositionY, shot.plantType, shot.projectileEffectColor);
         shot.trailTimer = 48;
       }
 
+      // Studio-authored shots are resolved only at their authored head endpoint;
+      // do not let the legacy lane-radius collision detonate them against the torso.
+      if (shot.studioPlantId) continue;
+
       // A Radish projectile can damage monsters in its own lane only.
       let hit = null;
-      let nearestHitDistance = Infinity;
       let firstSnowHitLocalX = Infinity;
-      for (const monster of this.monsters) {
-        if (!monster?.alive || monster.row !== shot.row ||
-            !Number.isFinite(monster.localX)) continue;
-        if (shot.freeze && monster.freezeStage >= 5) continue;
-        const horizontalDistance = Math.abs(monster.localX - shot.localX);
-        const hitRadius = (shot.collisionRadius || PHASE_ONE_PLANTS.radish.projectileCollisionRadius) * (monster.widthScale || 1);
-        if (shot.freeze) {
-          // Snow shots travel toward increasing lane X. Test the whole swept
-          // segment so a fast frame cannot skip a hyena between two positions.
-          // If it crosses more than one, freeze the first one along the path.
+      const projectileCandidates = this.monsters.filter((monster) =>
+        monster?.alive &&
+        monster.row === shot.row &&
+        Number.isFinite(monster.localX) &&
+        this.studioProjectileHitsMonster(shot, monster, projectileX, projectileY)
+      );
+      if (shot.freeze) {
+        // Snow shots travel toward increasing lane X. Test the whole swept
+        // segment so a fast frame cannot skip a monster 01 between two positions.
+        // If it crosses more than one, freeze the first one along the path.
+        for (const monster of projectileCandidates) {
+          if (monster.freezeStage >= 5) continue;
+          const hitRadius = (shot.collisionRadius || PHASE_ONE_PLANTS.radish.projectileCollisionRadius) * (monster.widthScale || 1);
           const sweptStart = previousShotLocalX - hitRadius;
           const sweptEnd = shot.localX + hitRadius;
           if (monster.localX < sweptStart || monster.localX > sweptEnd ||
               monster.localX >= firstSnowHitLocalX) continue;
           hit = monster;
           firstSnowHitLocalX = monster.localX;
-          continue;
         }
-        // Preserve the existing nearest-hit behavior for Radish and other
-        // damage projectiles.
-        if (horizontalDistance > hitRadius || horizontalDistance >= nearestHitDistance) continue;
-        hit = monster;
-        nearestHitDistance = horizontalDistance;
+      } else {
+        hit = selectProjectileTarget({
+          monsters: projectileCandidates,
+          row: shot.row,
+          localX: shot.localX,
+          collisionRadius: shot.collisionRadius || PHASE_ONE_PLANTS.radish.projectileCollisionRadius
+        });
       }
 
       if (hit) {
         if (shot.freeze) {
           this.createFreezeImpact(projectileX, projectileY, shot.plantType);
+          this.playEffects(this.effectIdsForPlantType(shot.plantType), "hit", this.effectPoint(hit.view));
           this.freezeMonster(hit);
           shot.alive = false;
           shot.view.destroy();
           continue;
         }
-        this.createProjectileImpact(projectileX, projectileY, shot.plantType);
+        this.createProjectileImpact(projectileX, projectileY, shot.plantType, shot.projectileEffectColor);
+        if (String(shot.plantType).includes("electric")) {
+          const source = this.lanePoint(shot.startLocalX, shot.row);
+          this.createElectricShockEffect(
+            source.x + (shot.launchOffsetX || 0),
+            source.y + (shot.launchOffsetY || 0),
+            hit,
+            "monster"
+          );
+        }
         this.playThornImpactSound();
         this.applyMonsterDamage(
           hit, shot.damage * this.incomingMonsterDamageMultiplier(hit), shot.plantType
@@ -4202,7 +4874,7 @@ export default class BattleScene extends Scene {
         continue;
       }
 
-      if (shot.localX > shot.targetLocalX + PHASE_ONE_PLANTS.radish.projectileCollisionRadius ||
+      if (shot.localX > shot.targetLocalX + (shot.collisionRadius || PHASE_ONE_PLANTS.radish.projectileCollisionRadius) ||
           shot.localX > SPAWN_LOCAL_X + 80) {
         shot.alive = false;
         shot.view.destroy();
@@ -4214,8 +4886,8 @@ export default class BattleScene extends Scene {
   incomingMonsterDamageMultiplier(monster) {
     const armorMultiplier = monster.incomingDamageMultiplier || 1;
     // Bracing cuts a further 45% from incoming hits, but only while the
-    // Stonehide is stationary and actively biting a plant.
-    return monster.kind === 'stonehide' ? getStonehideIncomingDamageMultiplier(monster.braced) : armorMultiplier;
+    // Monster 01 is stationary and actively biting a plant.
+    return armorMultiplier * getMonsterIncomingDamageMultiplier();
   }
 
   createMonsterDefeatMotes(monster) {
@@ -4253,45 +4925,88 @@ export default class BattleScene extends Scene {
     }
   }
 
+  applyMonsterHitStop(monster, durationMs = 80) {
+    if (!monster || monster.freezeStage > 0) return;
+    // Pause only the struck character: combat simulation, other characters and
+    // projectiles continue normally. A white fill makes the first impact frame pop.
+    if (monster.hitStopTimer) {
+      monster.hitStopTimer.remove(false);
+      monster.hitStopTimer = null;
+    } else {
+      const candidates = [
+        monster.monster01Sprite,
+        ...(monster.view?.list || []),
+        ...(monster.studioRig?.root?.list || [])
+      ];
+      const targets = [...new Set(candidates)].filter((target) =>
+        target?.active && (target.anims || typeof target.setTintFill === "function")
+      );
+      monster.hitStopRestore = targets.map((target) => {
+        const wasPlaying = Boolean(target.anims?.isPlaying);
+        if (wasPlaying) target.anims.pause();
+        if (typeof target.setTintFill === "function") target.setTintFill(0xffffff);
+        return { target, wasPlaying };
+      });
+    }
+    monster.hitStopTimer = this.time.delayedCall(Math.max(16, durationMs), () => {
+      for (const { target, wasPlaying } of monster.hitStopRestore || []) {
+        if (!target?.active) continue;
+        if (target === monster.monster01Sprite && Number.isFinite(monster.tierTint) && monster.tierTint !== 0xffffff) {
+          target.setTint?.(monster.tierTint);
+        } else {
+          target.clearTint?.();
+        }
+        if (wasPlaying && monster.alive && target.anims?.isPaused) target.anims.resume();
+      }
+      monster.hitStopRestore = null;
+      monster.hitStopTimer = null;
+    });
+  }
+
   flashMonsterOnHit(monster, plantType = "radish") {
     if (!monster || !monster.alive || monster.freezeStage > 0) return;
 
     // Keep the monster artwork unchanged. A restrained projectile-colored
     // glow traces only its silhouette; recoil and squash are reduced by half.
-    const sprite = monster.hyenaSprite;
+    const sprite = monster.monster01Sprite;
     const hitColor = getProjectileVFXProfile(plantType)?.tint ?? 0x9bdc72;
-    if (sprite?.active) {
-      monster.hitAnimUntil = this.time.now + 200;
-      this.playHyenaAnimation(monster, "hyena-idle", true);
+    const reaction = getMonsterReactionProfile(monster.kind);
+    if (sprite?.active || monster.studioRig?.root?.active) {
+      monster.hitAnimUntil = this.time.now + reaction.hitDurationMs;
+      this.playMonster01Animation(monster, monster.studioRig ? "monster-01-hit" : "monster-01-idle", true);
+      // Pause after switching to the impact clip so the new first-hit pose,
+      // not the previous idle frame, is what gets held for 80ms.
+      this.applyMonsterHitStop(monster, 80);
 
-      if (monster.hitGlowEffect && sprite.postFX?.remove) {
-        sprite.postFX.remove(monster.hitGlowEffect);
-        monster.hitGlowEffect = null;
-      }
-      if (sprite.postFX?.addGlow) {
-        monster.hitGlowEffect = sprite.postFX.addGlow(hitColor, 2.4, 0, false, 0.1, 12);
-      }
-
-      this.tweens.killTweensOf(sprite);
-      const baseX = Number.isFinite(monster.hitRecoilBaseX) ? monster.hitRecoilBaseX : sprite.x;
-      monster.hitRecoilBaseX = baseX;
-      sprite.x = baseX;
-      sprite.setScale(0.918);
-      this.tweens.add({
-        targets: sprite,
-        x: baseX + 5,
-        scaleX: 1.01,
-        scaleY: 0.88,
-        duration: 55,
-        ease: "Quad.easeOut",
-        yoyo: true,
-        onComplete: () => {
-          if (sprite.active) {
-            sprite.x = baseX;
-            sprite.setScale(0.918);
-          }
+      if (sprite?.active) {
+        if (monster.hitGlowEffect && sprite.postFX?.remove) {
+          sprite.postFX.remove(monster.hitGlowEffect);
+          monster.hitGlowEffect = null;
         }
-      });
+        if (sprite.postFX?.addGlow) {
+          monster.hitGlowEffect = sprite.postFX.addGlow(hitColor, reaction.glowRadius, 0, false, 0.1, 12);
+        }
+        const baseX = Number.isFinite(monster.hitRecoilBaseX) ? monster.hitRecoilBaseX : sprite.x;
+        monster.hitRecoilBaseX = baseX;
+        sprite.x = baseX;
+        this.applySquashStretch(sprite, {
+          preX: 0.9,
+          preY: 1.13,
+          impactX: Math.max(1.08, reaction.squashX),
+          impactY: Math.min(0.9, reaction.squashY),
+          durationMs: Math.max(120, Math.round(reaction.hitDurationMs * 0.72))
+        });
+        this.tweens.add({
+          targets: sprite,
+          x: baseX + reaction.recoilPx,
+          duration: Math.max(45, Math.round(reaction.hitDurationMs * 0.32)),
+          ease: "Quad.easeOut",
+          yoyo: true,
+          onComplete: () => {
+            if (sprite.active) sprite.x = baseX;
+          }
+        });
+      }
     }
 
     const graphic = monster.hitFlashGraphic;
@@ -4312,12 +5027,95 @@ export default class BattleScene extends Scene {
     });
   }
 
+  createElectricShockEffect(sourceX, sourceY, target, targetKind = "monster") {
+    const view = target?.view;
+    if (!target?.alive || !view?.active || !Number.isFinite(sourceX) || !Number.isFinite(sourceY)) return false;
+
+    const sprite = targetKind === "monster"
+      ? (target.monster01Sprite?.active ? target.monster01Sprite : target.studioRig?.root?.list?.find((node) => node?.active && typeof node.setTintFill === "function"))
+      : (view.list || []).find((node) => node?.active && typeof node.setTintFill === "function");
+    const bounds = view.getBounds?.();
+    const endX = bounds?.centerX ?? view.x;
+    const endY = bounds ? bounds.top + Math.min(22, bounds.height * 0.18) : view.y - 24;
+    const baseSpriteX = sprite?.x;
+    const originalTint = targetKind === "monster" ? (target.tierTint ?? 0xffffff) : null;
+    const lightning = this.add.graphics().setDepth(Math.max(24, (view.depth ?? 0) + 8));
+    let pulse = 0;
+
+    const drawBolt = () => {
+      if (!lightning.active || !target.alive || !view.active) return;
+      lightning.clear();
+      const points = [{ x: sourceX, y: sourceY }];
+      const segments = 5;
+      for (let index = 1; index < segments; index += 1) {
+        const t = index / segments;
+        points.push({
+          x: PhaserMath.Linear(sourceX, endX, t) + PhaserMath.Between(-13, 13),
+          y: PhaserMath.Linear(sourceY, endY, t) + PhaserMath.Between(-11, 11)
+        });
+      }
+      points.push({ x: endX, y: endY });
+      lightning.lineStyle(8, 0x35cfff, 0.24);
+      lightning.beginPath();
+      lightning.moveTo(points[0].x, points[0].y);
+      for (const point of points.slice(1)) lightning.lineTo(point.x, point.y);
+      lightning.strokePath();
+      lightning.lineStyle(3, 0xe9fcff, 0.98);
+      lightning.beginPath();
+      lightning.moveTo(points[0].x, points[0].y);
+      for (const point of points.slice(1)) lightning.lineTo(point.x, point.y);
+      lightning.strokePath();
+
+      if (sprite?.active) {
+        sprite.x = baseSpriteX + PhaserMath.Between(-4, 4);
+        if (typeof sprite.setTintFill === "function") {
+          if (pulse % 2 === 0) sprite.setTintFill(0xffffff);
+          else sprite.setTint(0x35aaff);
+        }
+      }
+      pulse += 1;
+    };
+
+    drawBolt();
+    const shockTimer = this.time.addEvent({ delay: 48, repeat: 10, callback: drawBolt });
+    this.applySquashStretch(sprite?.active ? sprite : view, {
+      preX: 0.86, preY: 1.16, impactX: 1.24, impactY: 0.72, durationMs: 185
+    });
+    this.time.delayedCall(560, () => {
+      shockTimer.remove(false);
+      if (lightning.active) lightning.destroy();
+      if (sprite?.active) {
+        if (Number.isFinite(baseSpriteX)) sprite.x = baseSpriteX;
+        if (targetKind === "monster" && originalTint !== 0xffffff) sprite.setTint?.(originalTint);
+        else sprite.clearTint?.();
+      }
+      if (targetKind === "monster" && target.alive) this.playMonster01Voice("yelp", 0.72);
+    });
+    this.juiceCameraImpact({ heavy: false });
+    return true;
+  }
+
   applyMonsterDamage(monster, amount, plantType = "radish") {
     if (!monster || !monster.alive || amount <= 0) return;
+    // الهراوة تستدعي هذه الدالة بلا نوع نبتة؛ لا تُفعَّل تأثيرات نبتة في تلك الحالة.
+    const attackedByPlant = arguments.length >= 3;
+    const effectPoint = this.effectPoint(monster.view);
+    if (effectPoint) {
+      if (attackedByPlant) this.playEffects(this.effectIdsForPlantType(plantType), "hit", effectPoint);
+      this.playEffects(this.effectIdsForMonster(monster), "damaged", effectPoint, { facing: -1 });
+    }
     monster.hp = applyHitPointsDamage(monster.hp, amount).hp;
     this.playMonsterHitSound();
-    if (monster.hyenaSprite) this.playHyenaVoice("yelp", 0.82);
+    if (monster.monster01Sprite) this.playMonster01Voice("yelp", 0.82);
     this.flashMonsterOnHit(monster, plantType);
+    if ((false || false) && monster.hp <= monster.maxHp * 0.3) {
+      this.vfxManager?.play("dizzy-stars", monster.x, monster.y - 58, {
+        tint: 0xffdf62, count: 3, durationMs: 680, endScale: 1.2, rotationDegrees: 260, shape: "star"
+      });
+    }
+    if (false || false) {
+      this.juiceCameraImpact({ heavy: false });
+    }
     this.damageMonsterIfNeeded(monster);
   }
 
@@ -4330,18 +5128,27 @@ export default class BattleScene extends Scene {
     }
     this.createMonsterDefeatBurst(monster.x, monster.y, monster.view && monster.view.scaleY);
     this.createMonsterDefeatMotes(monster);
+    this.createFootstepDust(monster.x, monster.y + 18, (monster.view?.scaleY || 1) * 1.25);
+    this.vfxManager?.play("dust-puff", monster.x, monster.y + 12, {
+      tint: 0xd9c7a5, count: 7, durationMs: 320, endScale: 1.7
+    });
+    if (false || false) {
+      this.juiceCameraImpact({ heavy: false });
+    }
     this.playMonsterDefeatSound();
-    if (monster.hyenaSprite) this.playHyenaVoice("yelp", 0.88);
-    this.playCoinRewardSound();
-    // Play the authored death sequence before removing the creature. The
-    // reward and wave counters are still granted immediately and exactly once.
+    this.playEffects(this.effectIdsForMonster(monster), "death", this.effectPoint(monster.view), { facing: -1 });
+    if (monster.monster01Sprite) this.playMonster01Voice("yelp", 0.88);
+    // Play the authored death sequence before removing the creature.
+    // Currency is intentionally not granted by client-side combat outcomes.
     if (monster.view && monster.view.active) {
       this.tweens.killTweensOf(monster.view);
-      if (monster.hyenaSprite && monster.hyenaSprite.active) {
-        this.playHyenaAnimation(monster, "hyena-death", true);
+      if ((monster.monster01Sprite && monster.monster01Sprite.active) || monster.studioRig?.root?.active) {
+        this.playMonster01Animation(monster, "monster-01-death", true);
         this.tweens.add({
           targets: monster.view,
           alpha: 0,
+          angle: monster.view.angle + (monster.row % 2 === 0 ? 18 : -18),
+          y: monster.view.y + 18,
           scale: (monster.view.scaleX || 1) * 0.82,
           duration: 760,
           delay: 120,
@@ -4354,6 +5161,8 @@ export default class BattleScene extends Scene {
         this.tweens.add({
           targets: monster.view,
           alpha: 0,
+          angle: monster.view.angle + (monster.row % 2 === 0 ? 18 : -18),
+          y: monster.view.y + 18,
           scale: (monster.view.scaleX || 1) * 0.82,
           duration: 430,
           ease: "Cubic.easeIn",
@@ -4362,13 +5171,6 @@ export default class BattleScene extends Scene {
           }
         });
       }
-    }
-    this.coins += PHASE_ONE_REWARDS.ordinaryMonsterDefeatCoins;
-    this.registry.set("coins", this.coins);
-    try {
-      saveCoins(window.localStorage, this.coins);
-    } catch {
-      // A blocked storage API must never interrupt combat or reward handling.
     }
     this.totalDefeatedMonsters += 1;
     this.waveDefeatedMonsters += 1;
@@ -4391,28 +5193,81 @@ export default class BattleScene extends Scene {
     this.refreshHud();
   }
 
+  applyPlantHitStop(plant, durationMs = 80) {
+    if (!plant?.alive || !plant.view?.active) return;
+    if (plant.hitStopTimer) {
+      plant.hitStopTimer.remove(false);
+      plant.hitStopTimer = null;
+    } else {
+      // Walk nested containers too: Studio rigs may put animated sprites
+      // one level below the plant's root container.
+      const targets = [];
+      const visit = (node) => {
+        if (!node?.active) return;
+        if (node.anims || typeof node.setTintFill === "function") targets.push(node);
+        for (const child of node.list || []) visit(child);
+      };
+      visit(plant.view);
+      plant.hitStopRestore = [...new Set(targets)].map((target) => {
+        const wasPlaying = Boolean(target.anims?.isPlaying);
+        if (wasPlaying) target.anims.pause();
+        target.setTintFill?.(0xffffff);
+        return { target, wasPlaying };
+      });
+      if (!targets.some((target) => typeof target.setTintFill === "function")) {
+        plant.view.setAlpha(0.72);
+        plant.hitStopRootFlash = true;
+      }
+    }
+    plant.hitStopTimer = this.time.delayedCall(Math.max(16, durationMs), () => {
+      for (const { target, wasPlaying } of plant.hitStopRestore || []) {
+        if (!target?.active) continue;
+        target.clearTint?.();
+        if (wasPlaying && plant.alive && target.anims?.isPaused) target.anims.resume();
+      }
+      if (plant.hitStopRootFlash && plant.view?.active) plant.view.setAlpha(1);
+      plant.hitStopRootFlash = false;
+      plant.hitStopRestore = null;
+      plant.hitStopTimer = null;
+    });
+  }
+
   flashEatenPlant(plant) {
     if (!plant?.alive || !plant.view?.active) return;
-    // Brief warm-red pulse on the plant artwork each time the hyena bites.
-    // Only image children support tint; fallback vector art still gets a pulse.
+    // White impact flash + 80ms local hitstop first; the warm-red bite pulse
+    // follows it so the two signals never overwrite one another.
+    this.applyPlantHitStop(plant, 80);
     const artwork = (plant.view.list || []).filter((child) => child?.active);
-    for (const child of artwork) {
-      if (typeof child.setTint === "function") {
-        child.setTint(0xff7777);
-        this.tweens.killTweensOf(child);
-        this.tweens.add({
-          targets: child,
-          alpha: 0.58,
-          duration: 90,
-          yoyo: true,
-          onComplete: () => {
-            if (child.active) {
-              child.clearTint?.();
-              child.setAlpha(1);
+    const squashTarget = artwork.find((child) => typeof child.setScale === "function") || plant.view;
+    this.time.delayedCall(100, () => {
+      if (plant.alive && squashTarget?.active) {
+        this.applySquashStretch(squashTarget, { preX: 0.88, preY: 1.14, impactX: 1.18, impactY: 0.76, durationMs: 175 });
+      }
+    });
+    this.time.delayedCall(80, () => {
+      if (!plant.alive || !plant.view?.active) return;
+      let tinted = false;
+      for (const child of artwork) {
+        if (!child?.active) continue;
+        if (typeof child.setTint === "function") {
+          tinted = true;
+          child.setTint(0xff7777);
+          this.tweens.killTweensOf(child);
+          this.tweens.add({
+            targets: child,
+            alpha: 0.58,
+            duration: 90,
+            yoyo: true,
+            onComplete: () => {
+              if (child.active) {
+                child.clearTint?.();
+                child.setAlpha(1);
+              }
             }
-          }
-        });
-      } else {
+          });
+        }
+      }
+      if (!tinted) {
         this.tweens.killTweensOf(plant.view);
         this.tweens.add({
           targets: plant.view,
@@ -4424,11 +5279,12 @@ export default class BattleScene extends Scene {
           }
         });
       }
-    }
+    });
   }
 
   destroyPlant(plant) {
     if (!plant.alive) return;
+    this.playEffects(this.effectIdsForPlantType(plant.type), "death", this.effectPoint(plant.view));
     plant.alive = false; plant.view.destroy();
     if (plant.energyCounter) plant.energyCounter.destroy();
     const defeatedMessages = {
@@ -4479,15 +5335,13 @@ export default class BattleScene extends Scene {
 
   checkWaveProgress() {
     if (this.gameOver || !isWaveComplete(this.spawnedThisWave, this.waveSize, this.monsters.length)) return;
+    if (this.stageNumber !== 1) {
+      this.endGame(true);
+      return;
+    }
 
     const clearedWave = this.wave;
     if (isPhaseOneVictory(this.wave, this.totalWaves, this.spawnedThisWave, this.waveSize, this.monsters.length)) {
-      // The dragon is a separate boss and is never included in ordinary wave counts.
-      if (this.dragonBoss) {
-        this.tryFinishPhaseOne();
-        if (this.dragonBoss.alive) this.setMessage("The ordinary monsters are defeated. Finish the dragon to rescue the princess!");
-        return;
-      }
       this.endGame(true);
       return;
     }
@@ -4495,14 +5349,16 @@ export default class BattleScene extends Scene {
     this.wave += 1;
     this.spawnedThisWave = 0;
     this.waveDefeatedMonsters = 0;
-    this.waveSize = PHASE_ONE_WAVE_SIZES[this.wave - 1];
+    this.waveSize = this.getStageWaveSize(this.wave);
+    const nextStageMonster = this.getStageMonsterEntry(0);
     this.waveIntermissionMs = PHASE_ONE_TIMING.waveIntermissionMs;
-    this.spawnTimer = PHASE_ONE_TIMING.nextWaveSpawnDelayMs;
+    this.spawnTimer = this.stageMonsterRosterConfigured && nextStageMonster ? Math.max(0, Number(nextStageMonster.firstSpawnDelayMs) || 0) : PHASE_ONE_TIMING.nextWaveSpawnDelayMs;
     this.setMessage(
       "Wave " + clearedWave + " cleared. Prepare for wave " + this.wave +
       ": " + this.waveSize + " monsters in 5 seconds."
     );
     this.showWaveAnnouncement(this.wave);
+    if (this.stageNumber === 1 && this.wave === this.totalWaves) this.ambientFx?.escalateFinalWave();
   }
 
   playVictoryMusic() {
@@ -4515,8 +5371,7 @@ export default class BattleScene extends Scene {
 
   endGame(won) {
     if (this.gameOver) return;
-    // A campaign win is valid only after the dragon is defeated and the rescue sequence completes.
-    won = Boolean(won && this.phaseOneStoryState === "complete");
+    won = Boolean(won);
     this.gameOver = true;
     // Collectibles are no longer usable after a terminal result; remove their
     // expiry timers and idle tweens instead of leaving disabled pickups visible.
@@ -4531,14 +5386,7 @@ export default class BattleScene extends Scene {
     this.farmerPlanting = false;
     const locale = typeof window !== "undefined" ? window.localStorage.getItem("farmVsMonsters.language") || "ar" : "ar";
     this.setMessage(won ? "VICTORY! The farm is safe." : "GAME OVER — The monsters reached the final line.");
-    if (won) {
-      try {
-        unlockNextStage(window.localStorage, 1);
-        unlockPlantReward(window.localStorage, 1);
-      } catch {
-        // The victory remains valid even if local progression storage is unavailable.
-      }
-    }
+    // A local victory is a playtest result, not proof for currency or campaign unlocks.
     this.add.rectangle(560, 340, 1120, 680, 0x10170f, 0.72).setDepth(60);
     if (won) {
       this.stopBackgroundMusic();
@@ -4587,7 +5435,7 @@ export default class BattleScene extends Scene {
       const seconds = String(elapsedSeconds % 60).padStart(2, "0");
       this.add.rectangle(560, 355, 360, 34, 0x42c96b, 0.62)
         .setStrokeStyle(1, 0xffffff, 0.76).setDepth(63);
-      this.add.text(560, 355, locale === "ar" ? "تم فتح المرحلة الثانية ونبتة Pumpkin!" : "STAGE 2 + PUMPKIN UNLOCKED!", {
+      this.add.text(560, 355, locale === "ar" ? "إنجاز تجريبي · التقدم والمكافآت غير محفوظة" : "LOCAL PLAYTEST · PROGRESS AND REWARDS NOT SAVED", {
         fontFamily: "Arial", fontSize: locale === "ar" ? "16px" : "15px",
         color: "#ffffff", fontStyle: "bold", stroke: "#14523d", strokeThickness: 3
       }).setOrigin(0.5).setDepth(64);
@@ -4604,7 +5452,7 @@ export default class BattleScene extends Scene {
           ]
         : [
             ["WAVES CLEARED", this.totalWaves + " / 5"],
-            ["HYENAS DEFEATED", this.totalDefeatedMonsters + " / " + this.totalSpawnedMonsters],
+            ["MONSTER 01S DEFEATED", this.totalDefeatedMonsters + " / " + this.totalSpawnedMonsters],
             ["PLANTS GROWN", String(this.totalPlantsPlanted)],
             ["TIME", minutes + ":" + seconds],
             ["ENERGY COLLECTED", String(this.energyCollected)],
@@ -4704,7 +5552,7 @@ export default class BattleScene extends Scene {
       "🪙 " + this.coins,
       this.houseHealth + "%",
       "🌱 " + this.livingPlantCount(),
-      "👾 " + this.totalDefeatedMonsters + "/" + PHASE_ONE_TOTAL_MONSTERS,
+      "👾 " + this.totalDefeatedMonsters + "/" + this.totalConfiguredMonsters,
     ];
     if (this.energyValueText) this.energyValueText.setText(String(this.energy));
     if (this.hudValueTexts) {
@@ -4717,10 +5565,10 @@ export default class BattleScene extends Scene {
       // Progress reflects defeated enemies, not merely how many have spawned.
       const defeated = Math.min(this.waveDefeatedMonsters || 0, this.waveSize);
       const progress = this.waveSize > 0 ? PhaserMath.Clamp(defeated / this.waveSize, 0, 1) : 0;
-      const trackWidth = 174;
+      const trackWidth = 158;
       const fillWidth = Math.max(2, trackWidth * progress);
       this.waveProgressFill.setDisplaySize(fillWidth, 10);
-      this.waveProgressMarker?.setX(685 + trackWidth * progress);
+      this.waveProgressMarker?.setX(731 + trackWidth * progress);
       this.waveProgressLabel?.setText("DEFEATED " + defeated + "/" + this.waveSize);
     }
     for (const [type, panel] of Object.entries(this.plantCardsByType || {})) {

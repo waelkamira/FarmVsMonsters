@@ -1,0 +1,2824 @@
+From 2a42911661b03a8d0e6b66e9e8152b0cdb139de3 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Wed, 25 Nov 2026 20:35:27 +0000
+Subject: [PATCH 2/2] feat(vfx): 7 Game Juice effects,
+ wobble/hop/jitter/speedLines layers, detachPart & floatingText, composite
+ electric shock, AmbientFX weather system wired into BattleScene
+
+---
+ Documentation/EFFECTS_LIBRARY.md              |  30 +-
+ web/game/data/effect-sound-assets.json        |  49 +++
+ web/game/scenes/BattleScene.js                |  12 +
+ web/game/vfx/effects/AmbientFX.mjs            | 290 ++++++++++++++++++
+ web/game/vfx/effects/EffectDirector.mjs       | 225 ++++++++++++--
+ web/game/vfx/effects/effectLibrary.mjs        |  81 ++++-
+ web/game/vfx/effects/effectPreview.mjs        |  51 ++-
+ .../assets/audio/effects/bubble-pop-death.ogg | Bin 0 -> 6528 bytes
+ web/public/assets/audio/effects/burn.ogg      | Bin 9497 -> 9497 bytes
+ .../assets/audio/effects/cannon-swell.ogg     | Bin 0 -> 5606 bytes
+ .../assets/audio/effects/charge-glow.ogg      | Bin 6451 -> 6451 bytes
+ .../assets/audio/effects/chew-crumbs.ogg      | Bin 5904 -> 5904 bytes
+ web/public/assets/audio/effects/coin-pop.ogg  | Bin 6135 -> 6135 bytes
+ .../assets/audio/effects/comic-stars.ogg      | Bin 0 -> 5499 bytes
+ web/public/assets/audio/effects/dirt-pop.ogg  | Bin 5499 -> 5499 bytes
+ .../assets/audio/effects/electric-shock.ogg   | Bin 6918 -> 6918 bytes
+ web/public/assets/audio/effects/explosion.ogg | Bin 7458 -> 7458 bytes
+ web/public/assets/audio/effects/fire-aura.ogg | Bin 8933 -> 8933 bytes
+ web/public/assets/audio/effects/freeze.ogg    | Bin 6326 -> 6326 bytes
+ .../assets/audio/effects/frost-aura.ogg       | Bin 5064 -> 5064 bytes
+ .../assets/audio/effects/glow-pulse.ogg       | Bin 4950 -> 4950 bytes
+ .../assets/audio/effects/heavy-landing.ogg    | Bin 0 -> 6204 bytes
+ .../assets/audio/effects/heavy-smash.ogg      | Bin 5149 -> 5149 bytes
+ .../assets/audio/effects/jolt-bounce.ogg      | Bin 0 -> 4780 bytes
+ .../assets/audio/effects/juice-splat.ogg      | Bin 5090 -> 5090 bytes
+ .../assets/audio/effects/leaf-burst.ogg       | Bin 6970 -> 6970 bytes
+ .../assets/audio/effects/lightning-strike.ogg | Bin 8552 -> 8552 bytes
+ .../assets/audio/effects/magic-sparkle.ogg    | Bin 5506 -> 5506 bytes
+ .../assets/audio/effects/magic-summon.ogg     | Bin 8342 -> 8342 bytes
+ .../assets/audio/effects/muzzle-flare.ogg     | Bin 4831 -> 4831 bytes
+ web/public/assets/audio/effects/poison.ogg    | Bin 6756 -> 6756 bytes
+ .../assets/audio/effects/poof-vanish.ogg      | Bin 5621 -> 5621 bytes
+ .../assets/audio/effects/rage-steam.ogg       | Bin 0 -> 8296 bytes
+ .../assets/audio/effects/recoil-pop.ogg       | Bin 4159 -> 4159 bytes
+ web/public/assets/audio/effects/slash.ogg     | Bin 5356 -> 5356 bytes
+ .../assets/audio/effects/smoke-puff.ogg       | Bin 6254 -> 6254 bytes
+ .../assets/audio/effects/speed-dust.ogg       | Bin 0 -> 5514 bytes
+ .../assets/audio/effects/stone-shatter.ogg    | Bin 5953 -> 5953 bytes
+ .../assets/audio/effects/stun-stars.ogg       | Bin 5130 -> 5130 bytes
+ .../assets/audio/effects/white-flash.ogg      | Bin 4114 -> 4114 bytes
+ .../assets/vfx-icons/bubble-pop-death.svg     |   6 +
+ web/public/assets/vfx-icons/cannon-swell.svg  |   6 +
+ web/public/assets/vfx-icons/comic-stars.svg   |   6 +
+ web/public/assets/vfx-icons/heavy-landing.svg |   6 +
+ web/public/assets/vfx-icons/jolt-bounce.svg   |   6 +
+ web/public/assets/vfx-icons/rage-steam.svg    |   6 +
+ web/public/assets/vfx-icons/speed-dust.svg    |   6 +
+ web/scripts/generate-effect-icons.mjs         |   9 +-
+ web/scripts/generate-effect-sounds.py         |  71 +++++
+ web/tests/effect-ambient.test.mjs             | 222 ++++++++++++++
+ web/tests/effect-director.test.mjs            |   2 +-
+ web/tests/effect-juice.test.mjs               | 201 ++++++++++++
+ web/tests/effect-library.test.mjs             |  48 ++-
+ 53 files changed, 1290 insertions(+), 43 deletions(-)
+ create mode 100644 web/game/vfx/effects/AmbientFX.mjs
+ create mode 100644 web/public/assets/audio/effects/bubble-pop-death.ogg
+ create mode 100644 web/public/assets/audio/effects/cannon-swell.ogg
+ create mode 100644 web/public/assets/audio/effects/comic-stars.ogg
+ create mode 100644 web/public/assets/audio/effects/heavy-landing.ogg
+ create mode 100644 web/public/assets/audio/effects/jolt-bounce.ogg
+ create mode 100644 web/public/assets/audio/effects/rage-steam.ogg
+ create mode 100644 web/public/assets/audio/effects/speed-dust.ogg
+ create mode 100644 web/public/assets/vfx-icons/bubble-pop-death.svg
+ create mode 100644 web/public/assets/vfx-icons/cannon-swell.svg
+ create mode 100644 web/public/assets/vfx-icons/comic-stars.svg
+ create mode 100644 web/public/assets/vfx-icons/heavy-landing.svg
+ create mode 100644 web/public/assets/vfx-icons/jolt-bounce.svg
+ create mode 100644 web/public/assets/vfx-icons/rage-steam.svg
+ create mode 100644 web/public/assets/vfx-icons/speed-dust.svg
+ create mode 100644 web/tests/effect-ambient.test.mjs
+ create mode 100644 web/tests/effect-juice.test.mjs
+
+diff --git a/Documentation/EFFECTS_LIBRARY.md b/Documentation/EFFECTS_LIBRARY.md
+index d58b19c3..f6f84145 100644
+--- a/Documentation/EFFECTS_LIBRARY.md
++++ b/Documentation/EFFECTS_LIBRARY.md
+@@ -21,21 +21,43 @@
+ | عند الموت | سقوط الكائن | على الكائن |
+ | بشكل مستمر | يتكرر كل ثانية أو أكثر طالما الكائن حيّ | حول الكائن |
+ 
+-## قائمة التأثيرات (26)
++## قائمة التأثيرات (33)
+ - **إصابة:** الصعق الكهربائي، التجميد، الحرق، الانفجار الكبير، السم، رذاذ العصارة، تناثر الأوراق، الدوخة، ضربة القطع، الضربة الساحقة، صاعقة من السماء، تحطّم الصخور، البريق السحري، سحابة الدخان.
+ - **إطلاق:** توهّج الشحن، ارتداد الإطلاق، وميض الفوهة.
+ - **ظهور:** الانبثاق من التراب، الاستدعاء السحري.
+ - **تلقّي الضرر:** وميض الإصابة، فتات الأكل.
+ - **موت:** الاختفاء بسحابة، قفزة العملات.
+-- **مستمر:** الهالة النارية، الهالة الجليدية، التوهّج النابض.
++- **مستمر:** الهالة النارية، الهالة الجليدية، التوهّج النابض، بخار الغضب.
++- **حركة كوميدية (Game Juice):** ارتداد الصدمة، انفجار النجوم، غبار الاندفاع (عند الإصابة)، انتفاخ المدفع (عند الإطلاق)، الهبوط الثقيل (عند الظهور)، انفجار الفقاعات (عند الموت).
++- **الصعق الكهربائي** صار مركّباً: برق يتجدد كل 50ms + ارتجاف أفقي سريع + وميض أبيض/أزرق متبادل.
+ 
+ النباتات الأساسية المدمجة (غير المرفوعة من الاستوديو) لها تأثيرات افتراضية تُعدَّل من `DEFAULT_PLANT_EFFECTS` في `effectLibrary.mjs`: الفطر الكهربائي ← الصعق، قاذف الثلج ← التجميد، الفجل ← تناثر الأوراق، المانجو ← رذاذ العصارة، البندق ← تحطّم الصخور، الأناناس ← الضربة الساحقة.
+ 
++## طبقات التحريك المتاحة للتأثيرات
++`burst, rise, ring, flash, bolt, tint, shake, squash, orbit, slash` + الجديدة: **`wobble`** (تمايل جيلاتيني ±12° ثم عودة للزاوية الأصلية)، **`hop`** (قفزة 18px في المكان)، **`jitter`** (ارتجاف أفقي سريع)، **`speedLines`** (خطوط سرعة إشعاعية). كلها تعيد الكائن لحالته الأصلية تماماً (مقياس، زاوية، موضع، لون) وتُعطَّل مع «تقليل الحركة».
++
++## دوال إضافية في EffectDirector (للاستدعاء البرمجي)
++- `detachPart({ x, y, texture?, shape?, vx, vy, gravity, spin, life, facing })`: قطعة منفصلة (خوذة، ذراع) تطير في قوس فيزيائي وتدور ثم تتلاشى وتُحذف.
++- `floatingText("+10", { x, y }, { color, size, life })`: رقم ضرر أو مورد يقفز ويكبر بـ `Back.easeOut` ثم يتلاشى.
++> هاتان الدالتان جاهزتان ومُختبرتان، لكنهما **غير مربوطتين بعد** بأحداث اللعب (سقوط خوذة، جمع مورد). الربط يحتاج معرفة أي كائن وأي قطعة، وهو قرار تصميم.
++
++## البيئة والطقس (AmbientFX)
++ملف `AmbientFX.mjs` على طبقة العرض 34 (فوق الكائنات، تحت تأثيرات القتال 36 والواجهة):
++| المرحلة | الأجواء |
++|---|---|
++| 1–2 | نهار مشمس: إضاءة دافئة + ذرات ضوء ذهبية + أوراق خضراء |
++| 3–4 | غروب: فلتر برتقالي (MULTIPLY) + أوراق خريفية برتقالية وحمراء |
++| 5+ | ليل عاصف: فلتر أزرق + مطر مائل مستمر + برق بعيد يومض كل 5–10 ثوانٍ |
++- **غبار أقدام الوحوش:** كل 650ms أثناء المشي فقط (لا أثناء الأكل)، والمؤقت داخلي ولا يُكتب على سجل الوحش (آمن للإعادة).
++- **الموجة الأخيرة:** يشتد المطر، ويتسارع البرق (كل 2.5–5.5 ثانية)، ويعتم الجو قليلاً؛ وفي النهار والغروب يبدأ مطر خفيف وبرق.
++- **ميزانية الكائنات:** مجموع عناصر الأجواء ≤ 120 (حاسوب) / 64 (هاتف) / 28 (ضعيف)، و«تقليل الحركة» يلغي المطر والبرق والأوراق والغبار ويُبقي 3 ذرات ضوء ثابتة.
++
+ ## البنية التقنية
+ | الملف | الدور |
+ |---|---|
+ | `web/game/vfx/effects/effectLibrary.mjs` | **مصدر الحقيقة**: بيانات التأثيرات (الاسم، الشرح، الوقت، الطبقات، الصوت) |
+ | `web/game/vfx/effects/EffectDirector.mjs` | تشغيل التأثير داخل Phaser (جسيمات، صواعق، حلقات، اهتزاز، تلوين...) مع ميزانية أداء |
++| `web/game/vfx/effects/AmbientFX.mjs` | البيئة والطقس والأجواء حسب المرحلة |
+ | `web/game/vfx/effects/effectPreview.mjs` | المعاينة المتحركة في الاستوديو (Canvas) من نفس البيانات |
+ | `web/game/vfx/effects/effectAssignments.mjs` | تحديد تأثيرات كل كائن والتحقق من الاختيار |
+ | `web/app/studio/{EffectCard,EffectPicker,EffectBadges}.jsx`، `studio/effects/page.js` | واجهة الاستوديو |
+@@ -55,6 +77,8 @@
+ ## حدود معروفة (بصراحة)
+ - الأصوات **مولَّدة برمجياً** (نظيفة وبلا حقوق، لكنها أبسط من تسجيلات حقيقية). استبدل أي ملف بتسجيل CC0 بنفس الاسم لرفع الجودة.
+ - لم تُختبر التأثيرات داخل متصفح حقيقي أثناء التطوير؛ المعاينة تحققت بصرياً بالرسم على Canvas، ومحرّك Phaser اختُبر بمشهد وهمي (Mock). **جرّب كل تأثير في معركة حقيقية على هاتف وحاسوب** قبل النشر.
+-- لا يوجد «إيقاف إطار» (Hit-stop) لأن المحاكاة حتمية ومرتبطة بالإعادة؛ تغيير زمنها يكسرها.
++- لا يوجد «إيقاف إطار» (Hit-stop) عمداً: لا شيء يلمس `timeScale` للمحاكاة. التجميد الموضعي يتم بوميض + ضغط على الكائن المصاب فقط (اختبار يتحقق من غياب `timeScale` في الملفات).
++- **`hop` و`jitter` على الوحوش أثناء مشيها:** اللعبة تعيّن موضع الوحش المطلق كل إطار، فقد يضعف الأثر عليها. يعمل بشكل ممتاز على النباتات الثابتة (مثل نباتات الطاقة). `wobble` و`squash` لا يتأثران.
++- فلتر الغروب/الليل يغطي ساحة المعركة كلها (الكائنات والخلفية) تحت الواجهة؛ جرّب وضوح الخلايا ليلاً على شاشة هاتف حقيقية.
+ - تأثيرات النباتات الأساسية المدمجة تُضاف فوق مؤثراتها القديمة (قد تبدو مكثفة؛ عدّل `DEFAULT_PLANT_EFFECTS` عند الحاجة).
+ - مسار اختبار الوحوش (`catalog=testing-monsters`) يخدمه وضع GitHub فقط في الكود الحالي؛ في وضع التخزين المحلي لا تصل الوحوش قيد الاختبار للعبة (سلوك سابق لهذا العمل).
+diff --git a/web/game/data/effect-sound-assets.json b/web/game/data/effect-sound-assets.json
+index f2da2f06..78927ab3 100644
+--- a/web/game/data/effect-sound-assets.json
++++ b/web/game/data/effect-sound-assets.json
+@@ -186,6 +186,55 @@
+       "label": "التوهّج النابض",
+       "durationMs": 900,
+       "bytes": 4950
++    },
++    {
++      "key": "fx-jolt-bounce",
++      "path": "/assets/audio/effects/jolt-bounce.ogg",
++      "label": "ارتداد الصدمة",
++      "durationMs": 449,
++      "bytes": 4780
++    },
++    {
++      "key": "fx-comic-stars",
++      "path": "/assets/audio/effects/comic-stars.ogg",
++      "label": "انفجار النجوم",
++      "durationMs": 649,
++      "bytes": 5499
++    },
++    {
++      "key": "fx-speed-dust",
++      "path": "/assets/audio/effects/speed-dust.ogg",
++      "label": "غبار الاندفاع",
++      "durationMs": 349,
++      "bytes": 5514
++    },
++    {
++      "key": "fx-cannon-swell",
++      "path": "/assets/audio/effects/cannon-swell.ogg",
++      "label": "انتفاخ المدفع",
++      "durationMs": 549,
++      "bytes": 5606
++    },
++    {
++      "key": "fx-heavy-landing",
++      "path": "/assets/audio/effects/heavy-landing.ogg",
++      "label": "الهبوط الثقيل",
++      "durationMs": 649,
++      "bytes": 6204
++    },
++    {
++      "key": "fx-bubble-pop-death",
++      "path": "/assets/audio/effects/bubble-pop-death.ogg",
++      "label": "انفجار الفقاعات",
++      "durationMs": 900,
++      "bytes": 6528
++    },
++    {
++      "key": "fx-rage-steam",
++      "path": "/assets/audio/effects/rage-steam.ogg",
++      "label": "بخار الغضب",
++      "durationMs": 800,
++      "bytes": 8296
+     }
+   ]
+ }
+diff --git a/web/game/scenes/BattleScene.js b/web/game/scenes/BattleScene.js
+index 69a4c936..b1e7bfca 100644
+--- a/web/game/scenes/BattleScene.js
++++ b/web/game/scenes/BattleScene.js
+@@ -26,6 +26,7 @@ import gridCalibration from "../data/farm-grid-calibration.json";
+ import soundAssets from "../data/sound-assets.json";
+ import effectSoundAssets from "../data/effect-sound-assets.json";
+ import { EffectDirector } from "../vfx/effects/EffectDirector.mjs";
++import { AmbientFX } from "../vfx/effects/AmbientFX.mjs";
+ import { resolveAssignedEffectIds } from "../vfx/effects/effectAssignments.mjs";
+ import {
+   PHASE_ONE_WAVE_SIZES,
+@@ -306,6 +307,15 @@ export default class BattleScene extends Scene {
+       this.effectDirector?.destroy();
+       this.effectDirector = null;
+     });
++    // الأجواء والطقس (طبقة 34، تجميلية فقط): نهار ← غروب ← ليل عاصف حسب المرحلة.
++    this.ambientFx = new AmbientFX(this, {
++      reducedMotion: typeof window !== "undefined" && Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches)
++    });
++    this.ambientFx.applyStageAtmosphere(this.stageNumber);
++    this.events.once("shutdown", () => {
++      this.ambientFx?.destroy();
++      this.ambientFx = null;
++    });
+     // Uploaded 3×3 plant/monster sheets are cropped using source dimensions,
+     // exactly like Mango: nine named Phaser frames, with no assumed cell size.
+     this.registerThreeByThreeSheet("mango-level-1");
+@@ -4615,6 +4625,7 @@ export default class BattleScene extends Scene {
+       const position = this.monsterLanePoint(monster.localX, monster.row);
+       monster.x = position.x; monster.y = position.y;
+       monster.view.setPosition(position.x, position.y);
++      this.ambientFx?.spawnFootstepDust(monster, position.x, position.y, delta);
+       if (monster.hyenaSprite?.active) monster.hyenaSprite.y = 0;
+       if ((monster.hyenaSprite || monster.studioRig) && monster.hitAnimUntil <= this.time.now) {
+         // The corrected 15-frame run sheet belongs to the fast hyena.
+@@ -5258,6 +5269,7 @@ export default class BattleScene extends Scene {
+       ": " + this.waveSize + " monsters in 5 seconds."
+     );
+     this.showWaveAnnouncement(this.wave);
++    if (this.wave === this.totalWaves) this.ambientFx?.escalateFinalWave();
+   }
+ 
+   playVictoryMusic() {
+diff --git a/web/game/vfx/effects/AmbientFX.mjs b/web/game/vfx/effects/AmbientFX.mjs
+new file mode 100644
+index 00000000..16a7b927
+--- /dev/null
++++ b/web/game/vfx/effects/AmbientFX.mjs
+@@ -0,0 +1,290 @@
++import { detectEffectQuality, ensureEffectTextures } from "./EffectDirector.mjs";
++
++/**
++ * بيئة وطقس ديناميكيان: ذرات ضوء، أوراق متطايرة، غبار أقدام، وأجواء حسب المرحلة
++ * (نهار ← غروب ← ليل عاصف مع مطر وبرق) وتصعيد في الموجة الأخيرة.
++ *
++ * - تجميلي 100%: لا يلمس المحاكاة ولا يستخدم عشوائيتها (Math.random فقط).
++ * - طبقة العرض 34: فوق الكائنات وتحت تأثيرات القتال (36) والواجهة (42+).
++ * - ميزانية كائنات مستقلة حسب جودة الجهاز، وتقليل الحركة يعطّل المطر والبرق والأوراق والغبار.
++ * - أي خطأ يُبتلع ولا يوقف اللعب.
++ */
++
++const AMBIENT_DEPTH = 34;
++const MULTIPLY_BLEND = 2; // Phaser.BlendModes.MULTIPLY
++const ADD_BLEND = 1;
++const TAU = Math.PI * 2;
++const FOOTSTEP_INTERVAL_MS = 650;
++
++// السقف الكلي لكل جودة = مجموع الأجزاء (يبقى تحت سقف التأثيرات 120 / 64 / 28)
++const LIMITS = Object.freeze({
++  high: Object.freeze({ motes: 18, leaves: 8, rain: 60, dust: 16 }),
++  medium: Object.freeze({ motes: 10, leaves: 5, rain: 34, dust: 10 }),
++  low: Object.freeze({ motes: 4, leaves: 2, rain: 16, dust: 4 })
++});
++
++const PRESETS = Object.freeze({
++  day: Object.freeze({
++    id: "day", filter: { color: 0xffe2a8, alpha: 0.07, blend: 0 },
++    motes: 0xffe08a, leaves: [0x7bd35a, 0x55b84a, 0xa6e57a], rain: false, lightning: false
++  }),
++  sunset: Object.freeze({
++    id: "sunset", filter: { color: 0xffb27a, alpha: 1, blend: MULTIPLY_BLEND },
++    motes: 0xffb347, leaves: [0xff8a3d, 0xd9482b, 0xe8b04a], rain: false, lightning: false
++  }),
++  night: Object.freeze({
++    id: "night", filter: { color: 0x5a6fa8, alpha: 1, blend: MULTIPLY_BLEND },
++    motes: 0x9fb8ff, leaves: [], rain: true, lightning: true
++  })
++});
++
++const rand = (min, max) => min + Math.random() * (max - min);
++const pick = (list) => list[Math.floor(Math.random() * list.length)];
++
++/** 1-2 نهار، 3-4 غروب، 5+ ليل عاصف. */
++export function atmosphereForStage(stageNumber) {
++  const n = Number(stageNumber) || 1;
++  if (n <= 2) return "day";
++  if (n <= 4) return "sunset";
++  return "night";
++}
++
++export class AmbientFX {
++  constructor(scene, { quality = null, reducedMotion = false, depth = AMBIENT_DEPTH, width = null, height = null } = {}) {
++    this.scene = scene;
++    this.quality = LIMITS[quality] ? quality : detectEffectQuality(scene);
++    this.limits = LIMITS[this.quality];
++    this.reducedMotion = Boolean(reducedMotion);
++    this.depth = depth;
++    this.width = width ?? scene?.scale?.width ?? 1120;
++    this.height = height ?? scene?.scale?.height ?? 680;
++    this.preset = null;
++    this.escalated = false;
++    this.motes = [];
++    this.leaves = [];
++    this.drops = [];
++    this.dust = new Set();
++    this.dustTimers = new WeakMap();
++    this.filter = null;
++    this.stormShade = null;
++    this.timers = [];
++    this.breezeTimer = null;
++    this.lightningTimer = null;
++    this.warned = false;
++    this.destroyed = false;
++    this.onUpdate = (_time, delta) => this.#update(Number(delta) || 16);
++    scene?.events?.on?.("update", this.onUpdate);
++    ensureEffectTextures(scene, (id, error) => this.#warn(id, error));
++  }
++
++  // ------------------------------------------------------------ واجهة عامة
++  /** يطبّق أجواء المرحلة (يستبدل أي أجواء سابقة). */
++  applyStageAtmosphere(stageNumber) {
++    return this.#guard("applyStageAtmosphere", () => {
++      const preset = PRESETS[atmosphereForStage(stageNumber)];
++      this.#clearAtmosphere();
++      this.preset = preset;
++      this.#setFilter(preset.filter);
++      this.startSunMotes(preset.motes);
++      if (preset.leaves.length) this.startBreeze(preset.leaves);
++      if (preset.rain && !this.reducedMotion) this.#fillRain(Math.round(this.limits.rain * 0.6));
++      if (preset.lightning) this.#scheduleLightning();
++      return preset.id;
++    });
++  }
++
++  /** نقاط ضوء سابحة بنعومة لإعطاء عمق بصري. */
++  startSunMotes(color = 0xffe08a) {
++    return this.#guard("startSunMotes", () => {
++      for (const m of this.motes) m.sprite.destroy();
++      this.motes = [];
++      const count = this.reducedMotion ? Math.min(3, this.limits.motes) : this.limits.motes;
++      for (let i = 0; i < count; i += 1) {
++        const sprite = this.scene.add.image(rand(0, this.width), rand(40, this.height - 60), "fx-shape-dot")
++          .setDepth(this.depth).setTint(color).setBlendMode(ADD_BLEND)
++          .setScale(rand(0.12, 0.3)).setAlpha(rand(0.15, 0.45));
++        this.motes.push({ sprite, baseX: sprite.x, baseY: sprite.y, phase: rand(0, TAU), speed: rand(0.25, 0.6), drift: rand(8, 22), pulse: rand(0.6, 1.4) });
++      }
++      return count;
++    });
++  }
++
++  /** أوراق تعبر الشاشة من اليمين لليسار بحركة موجية ودوران. */
++  startBreeze(palette = [0x7bd35a]) {
++    return this.#guard("startBreeze", () => {
++      this.#stopBreeze();
++      if (this.reducedMotion || !palette.length) return false;
++      this.breezePalette = palette;
++      this.breezeTimer = this.scene.time.addEvent({
++        delay: 1700,
++        loop: true,
++        callback: () => this.#spawnLeaf()
++      });
++      this.#spawnLeaf();
++      return true;
++    });
++  }
++
++  /** نفثة غبار خلف وحش يمشي، كل 650ms كحد أدنى. تُستدعى كل إطار؛ المؤقت داخلي. */
++  spawnFootstepDust(monster, x, y, deltaMs = 16) {
++    if (this.destroyed || this.reducedMotion || !monster || !Number.isFinite(x) || !Number.isFinite(y)) return false;
++    const elapsed = (this.dustTimers.get(monster) ?? FOOTSTEP_INTERVAL_MS * Math.random()) + deltaMs;
++    if (elapsed < FOOTSTEP_INTERVAL_MS) {
++      this.dustTimers.set(monster, elapsed);
++      return false;
++    }
++    this.dustTimers.set(monster, 0);
++    if (this.dust.size >= this.limits.dust) return false;
++    return this.#guard("spawnFootstepDust", () => {
++      const puff = this.scene.add.image(x + rand(10, 22), y - rand(0, 4), "fx-shape-puff")
++        .setDepth(this.depth).setTint(0xcdb89a).setScale(rand(0.14, 0.2)).setAlpha(0.55);
++      this.dust.add(puff);
++      const finish = () => { this.dust.delete(puff); if (puff.active) puff.destroy(); };
++      this.scene.tweens.add({
++        targets: puff, x: puff.x + rand(10, 26), y: puff.y - rand(10, 20),
++        scaleX: puff.scaleX * 2.2, scaleY: puff.scaleY * 2.2, alpha: 0,
++        duration: rand(420, 560), ease: "Quad.easeOut", onComplete: finish
++      });
++      return true;
++    });
++  }
++
++  /** تصعيد الموجة الأخيرة: مطر أكثف وبرق أسرع وظلام خفيف (في أي مرحلة). */
++  escalateFinalWave() {
++    return this.#guard("escalateFinalWave", () => {
++      if (this.escalated || !this.preset) return false;
++      this.escalated = true;
++      if (!this.reducedMotion) {
++        this.#fillRain(this.preset.rain ? this.limits.rain : Math.round(this.limits.rain * 0.6));
++        this.#scheduleLightning();
++      }
++      if (!this.stormShade) {
++        this.stormShade = this.scene.add.rectangle(this.width / 2, this.height / 2, this.width, this.height, 0x0b1020, 0)
++          .setDepth(this.depth + 0.1);
++        this.scene.tweens.add({ targets: this.stormShade, alpha: 0.14, duration: 1800 });
++      }
++      return true;
++    });
++  }
++
++  get activeCount() {
++    return this.motes.length + this.leaves.length + this.drops.length + this.dust.size;
++  }
++
++  destroy() {
++    if (this.destroyed) return;
++    this.destroyed = true;
++    try { this.scene?.events?.off?.("update", this.onUpdate); } catch { /* cosmetic */ }
++    this.#clearAtmosphere();
++    for (const puff of this.dust) if (puff.active) puff.destroy();
++    this.dust.clear();
++    this.scene = null;
++  }
++
++  // -------------------------------------------------------------- داخلي
++  #setFilter({ color, alpha, blend }) {
++    if (this.filter?.active) this.filter.destroy();
++    this.filter = this.scene.add.rectangle(this.width / 2, this.height / 2, this.width, this.height, color, alpha)
++      .setDepth(this.depth - 0.2);
++    if (blend) this.filter.setBlendMode(blend);
++  }
++
++  #spawnLeaf() {
++    if (this.destroyed || this.leaves.length >= this.limits.leaves || !this.breezePalette) return;
++    this.#guard("leaf", () => {
++      const sprite = this.scene.add.image(this.width + 24, rand(40, this.height - 140), "fx-shape-leaf")
++        .setDepth(this.depth).setTint(pick(this.breezePalette)).setScale(rand(0.35, 0.6)).setAlpha(0.9);
++      this.leaves.push({ sprite, speed: rand(60, 120), baseY: sprite.y, phase: rand(0, TAU), amp: rand(14, 30), spin: rand(-2.2, 2.2) });
++    });
++  }
++
++  #fillRain(target) {
++    const want = Math.min(target, this.limits.rain);
++    while (this.drops.length < want) {
++      const sprite = this.scene.add.image(rand(0, this.width + 160), rand(-40, this.height), "fx-ambient-rain")
++        .setDepth(this.depth).setTint(0xbfd4ff).setAlpha(rand(0.28, 0.55)).setRotation(0.22);
++      this.drops.push({ sprite, vx: -rand(120, 170), vy: rand(560, 720) });
++    }
++  }
++
++  #scheduleLightning() {
++    if (this.reducedMotion || !this.scene?.time) return;
++    this.lightningTimer?.remove?.(false);
++    const [min, max] = this.escalated ? [2500, 5500] : [5000, 10000];
++    this.lightningTimer = this.scene.time.delayedCall(rand(min, max), () => {
++      if (this.destroyed) return;
++      this.#guard("lightning", () => {
++        this.scene.cameras?.main?.flash?.(140, 205, 220, 255);
++        if (Math.random() < 0.4) this.scene.time.delayedCall(180, () => this.scene?.cameras?.main?.flash?.(90, 205, 220, 255));
++      });
++      if (this.preset?.lightning || this.escalated) this.#scheduleLightning();
++    });
++  }
++
++  #stopBreeze() {
++    this.breezeTimer?.remove?.(false);
++    this.breezeTimer = null;
++  }
++
++  #clearAtmosphere() {
++    this.#stopBreeze();
++    this.lightningTimer?.remove?.(false);
++    this.lightningTimer = null;
++    for (const list of [this.motes, this.leaves, this.drops]) {
++      for (const item of list) if (item.sprite?.active) item.sprite.destroy();
++      list.length = 0;
++    }
++    if (this.filter?.active) this.filter.destroy();
++    if (this.stormShade?.active) this.stormShade.destroy();
++    this.filter = null;
++    this.stormShade = null;
++    this.escalated = false;
++  }
++
++  #update(delta) {
++    if (this.destroyed) return;
++    const dt = Math.min(delta, 50) / 1000;
++    const time = (this.scene?.time?.now ?? Date.now()) / 1000;
++    for (const m of this.motes) {
++      if (!m.sprite.active) continue;
++      m.sprite.setPosition(
++        m.baseX + Math.sin(time * m.speed + m.phase) * m.drift,
++        m.baseY + Math.cos(time * m.speed * 0.8 + m.phase) * m.drift * 0.6
++      );
++      m.sprite.setAlpha(0.2 + 0.25 * (0.5 + 0.5 * Math.sin(time * m.pulse + m.phase)));
++    }
++    for (let i = this.leaves.length - 1; i >= 0; i -= 1) {
++      const leaf = this.leaves[i];
++      if (!leaf.sprite.active) { this.leaves.splice(i, 1); continue; }
++      leaf.phase += dt * 2.2;
++      leaf.sprite.x -= leaf.speed * dt;
++      leaf.sprite.y = leaf.baseY + Math.sin(leaf.phase) * leaf.amp;
++      leaf.sprite.rotation += leaf.spin * dt;
++      if (leaf.sprite.x < -30) { leaf.sprite.destroy(); this.leaves.splice(i, 1); }
++    }
++    for (const d of this.drops) {
++      if (!d.sprite.active) continue;
++      d.sprite.x += d.vx * dt;
++      d.sprite.y += d.vy * dt;
++      if (d.sprite.y > this.height + 20 || d.sprite.x < -20) d.sprite.setPosition(rand(0, this.width + 160), rand(-60, -10));
++    }
++  }
++
++  #guard(id, fn) {
++    if (this.destroyed || !this.scene) return false;
++    try {
++      return fn();
++    } catch (error) {
++      this.#warn(id, error);
++      return false;
++    }
++  }
++
++  #warn(id, error) {
++    if (this.warned) return;
++    this.warned = true;
++    console.warn(`[AmbientFX] cosmetic effect failed (${id}); gameplay is unaffected.`, error);
++  }
++}
++
++export default AmbientFX;
+diff --git a/web/game/vfx/effects/EffectDirector.mjs b/web/game/vfx/effects/EffectDirector.mjs
+index 83f7fca7..e5bd9fdc 100644
+--- a/web/game/vfx/effects/EffectDirector.mjs
++++ b/web/game/vfx/effects/EffectDirector.mjs
+@@ -24,6 +24,38 @@ const rand = (min, max) => min + Math.random() * (max - min);
+ const pick = (list) => list[Math.floor(Math.random() * list.length)];
+ const clamp01 = (v) => Math.max(0, Math.min(1, v));
+ 
++/** يولّد ملمس أشكال الجسيمات (+ خط المطر) مرة واحدة. يشاركه EffectDirector وAmbientFX. */
++export function ensureEffectTextures(scene, warn = () => {}) {
++  if (!scene?.textures || !scene?.make?.graphics) return;
++  for (const [name, commands] of Object.entries(EFFECT_SHAPES)) {
++    const key = TEXTURE_PREFIX + name;
++    if (scene.textures.exists(key)) continue;
++    try {
++      const g = scene.make.graphics({ x: 0, y: 0, add: false });
++      g.fillStyle(0xffffff, 1);
++      for (const cmd of commands) {
++        if (cmd.t === "circle") g.fillCircle(cmd.x, cmd.y, cmd.r);
++        else if (cmd.t === "poly") g.fillPoints(cmd.pts.map(([x, y]) => ({ x, y })), true);
++      }
++      g.generateTexture(key, 32, 32);
++      g.destroy();
++    } catch (error) {
++      warn("texture", error);
++    }
++  }
++  if (!scene.textures.exists("fx-ambient-rain")) {
++    try {
++      const g = scene.make.graphics({ x: 0, y: 0, add: false });
++      g.fillStyle(0xffffff, 1);
++      g.fillRect(0, 0, 2, 18);
++      g.generateTexture("fx-ambient-rain", 2, 18);
++      g.destroy();
++    } catch (error) {
++      warn("texture", error);
++    }
++  }
++}
++
+ export function detectEffectQuality(scene) {
+   const os = scene?.sys?.game?.device?.os;
+   return os && (os.android || os.iOS || os.iPhone || os.iPad) ? "medium" : "high";
+@@ -49,24 +81,7 @@ export class EffectDirector {
+ 
+   /** ينشئ ملمس كل شكل جسيم مرة واحدة (أبيض، ليُلوَّن لاحقاً بـ tint). */
+   ensureTextures() {
+-    const scene = this.scene;
+-    if (!scene?.textures || !scene?.make?.graphics) return;
+-    for (const [name, commands] of Object.entries(EFFECT_SHAPES)) {
+-      const key = TEXTURE_PREFIX + name;
+-      if (scene.textures.exists(key)) continue;
+-      try {
+-        const g = scene.make.graphics({ x: 0, y: 0, add: false });
+-        g.fillStyle(0xffffff, 1);
+-        for (const cmd of commands) {
+-          if (cmd.t === "circle") g.fillCircle(cmd.x, cmd.y, cmd.r);
+-          else if (cmd.t === "poly") g.fillPoints(cmd.pts.map(([x, y]) => ({ x, y })), true);
+-        }
+-        g.generateTexture(key, 32, 32);
+-        g.destroy();
+-      } catch (error) {
+-        this.#warn("texture", error);
+-      }
+-    }
++    ensureEffectTextures(this.scene, (id, error) => this.#warn(id, error));
+   }
+ 
+   setQuality(quality) {
+@@ -182,6 +197,10 @@ export class EffectDirector {
+       case "squash": return this.#squash(layer, ctx);
+       case "orbit": return this.#orbit(layer, ctx);
+       case "slash": return this.#slash(layer, ctx);
++      case "wobble": return this.#wobble(layer, ctx);
++      case "hop": return this.#hop(layer, ctx);
++      case "jitter": return this.#jitter(layer, ctx);
++      case "speedLines": return this.#speedLines(layer, ctx);
+       default: return undefined;
+     }
+   }
+@@ -346,8 +365,15 @@ export class EffectDirector {
+     };
+     draw();
+     let redrawn = false;
++    let lastStep = 0;
+     this.#animate(layer.life, (t) => {
+       if (!g.active) return;
++      if (layer.regenerateMs > 0) {
++        const step = Math.floor((t * layer.life) / layer.regenerateMs);
++        if (step !== lastStep) { lastStep = step; draw(); }
++        g.setAlpha(1 - t * t * 0.6);
++        return;
++      }
+       if (!redrawn && t > 0.4) { redrawn = true; draw(); }
+       g.setAlpha(1 - t * t);
+     }, () => { g.destroy(); this.#release(1); });
+@@ -366,11 +392,11 @@ export class EffectDirector {
+     const targets = this.#tintables(view);
+     if (!targets.length) return;
+     const token = (view.__fxTintToken = (view.__fxTintToken || 0) + 1);
+-    const apply = (on) => {
++    const apply = (on, color = layer.color) => {
+       for (const obj of targets) {
+         if (!obj.active) continue;
+         if (!on) { obj.clearTint?.(); continue; }
+-        if (layer.fill && obj.setTintFill) obj.setTintFill(layer.color); else obj.setTint(layer.color);
++        if (layer.fill && obj.setTintFill) obj.setTintFill(color); else obj.setTint(color);
+       }
+     };
+     apply(true);
+@@ -380,9 +406,18 @@ export class EffectDirector {
+         if (obj.anims && Number.isFinite(obj.anims.timeScale)) { slowed.push([obj, obj.anims.timeScale]); obj.anims.timeScale = 0.5; }
+       }
+     }
+-    if (layer.flicker && this.scene.time?.addEvent) {
+-      let on = true;
+-      const flicker = this.scene.time.addEvent({ delay: 45, loop: true, callback: () => { on = !on; if (view.__fxTintToken === token) apply(on); } });
++    if ((layer.flicker || layer.flickerColors) && this.scene.time?.addEvent) {
++      let step = 0;
++      const colors = Array.isArray(layer.flickerColors) && layer.flickerColors.length ? layer.flickerColors : null;
++      const flicker = this.scene.time.addEvent({
++        delay: 45,
++        loop: true,
++        callback: () => {
++          step += 1;
++          if (view.__fxTintToken !== token) return;
++          if (colors) apply(true, colors[step % colors.length]); else apply(step % 2 === 0);
++        }
++      });
+       this.scene.time.delayedCall(layer.life, () => flicker.remove(false));
+     }
+     this.scene.time.delayedCall(layer.life, () => {
+@@ -409,7 +444,7 @@ export class EffectDirector {
+       if (view.active) { view.setScale(sx0, sy0); view.setData?.("fxSquashing", false); }
+     };
+     if (layer.from) {
+-      view.setScale(sx0 * layer.sx, sy0 * 0.2);
++      view.setScale(sx0 * layer.sx, sy0 * (layer.fromY ?? 0.2));
+       this.scene.tweens.add({ targets: view, scaleX: sx0, scaleY: sy0, duration: layer.life, ease: "Back.easeOut", onComplete: done });
+     } else {
+       this.scene.tweens.add({
+@@ -460,6 +495,148 @@ export class EffectDirector {
+     }, () => { g.destroy(); this.#release(1); });
+   }
+ 
++  /** تمايل جيلاتيني: تذبذب الزاوية ±amp درجة ثم عودتها لقيمتها الأصلية بالضبط. */
++  #wobble(layer, ctx) {
++    const view = ctx.view;
++    if (this.reducedMotion || !view?.active || view.getData?.("fxWobbling")) return;
++    const base = view.angle ?? 0;
++    view.setData?.("fxWobbling", true);
++    this.#animate(layer.life, (t) => {
++      if (view.active) view.angle = base + layer.amp * Math.sin(t * Math.PI * 2 * layer.cycles) * (1 - t);
++    }, () => {
++      if (!view.active) return;
++      view.angle = base;
++      view.setData?.("fxWobbling", false);
++    });
++  }
++
++  /** قفزة صغيرة في المكان. تُطبَّق كإزاحة نسبية فلا تتعارض مع تحديث موضع الكائن من اللعبة. */
++  #hop(layer, ctx) {
++    const view = ctx.view;
++    if (this.reducedMotion || !view?.active || view.getData?.("fxHopping")) return;
++    view.setData?.("fxHopping", true);
++    let applied = 0;
++    this.#animate(layer.life, (t) => {
++      if (!view.active) return;
++      const next = -layer.height * Math.sin(Math.PI * t);
++      view.y += next - applied;
++      applied = next;
++    }, () => {
++      if (!view.active) return;
++      view.y -= applied;
++      view.setData?.("fxHopping", false);
++    });
++  }
++
++  /** ارتجاف أفقي سريع (نسبي) يُلغى بالكامل عند الانتهاء. */
++  #jitter(layer, ctx) {
++    const view = ctx.view;
++    if (this.reducedMotion || !view?.active || view.getData?.("fxJittering")) return;
++    view.setData?.("fxJittering", true);
++    let applied = 0;
++    this.#animate(layer.life, (t) => {
++      if (!view.active) return;
++      const step = Math.floor((t * layer.life) / 40);
++      const next = (step % 2 === 0 ? 1 : -1) * layer.px * (1 - t * 0.5);
++      view.x += next - applied;
++      applied = next;
++    }, () => {
++      if (!view.active) return;
++      view.x -= applied;
++      view.setData?.("fxJittering", false);
++    });
++  }
++
++  /** خطوط سرعة بيضاء تتوسع للخارج من مركز الضربة (أسلوب الكوميكس). */
++  #speedLines(layer, ctx) {
++    if (this.reducedMotion || !this.#reserve(1)) return;
++    const g = this.scene.add.graphics({ x: ctx.x, y: ctx.y }).setDepth(this.#depth(ctx));
++    const offset = Math.random() * TAU;
++    const angles = Array.from({ length: layer.count }, (_, i) => offset + (i / layer.count) * TAU + (Math.random() - 0.5) * 0.18);
++    this.#animate(layer.life, (t) => {
++      if (!g.active) return;
++      g.clear();
++      g.lineStyle(layer.width, layer.color, 1 - t);
++      const near = layer.inner + (layer.outer - layer.inner) * t * 0.55;
++      const far = layer.inner + (layer.outer - layer.inner) * (0.35 + t * 0.65);
++      for (const a of angles) {
++        g.beginPath();
++        g.moveTo(Math.cos(a) * near, Math.sin(a) * near);
++        g.lineTo(Math.cos(a) * far, Math.sin(a) * far);
++        g.strokePath();
++      }
++    }, () => { g.destroy(); this.#release(1); });
++  }
++
++  /**
++   * قطعة منفصلة (خوذة، ذراع...) تطير في قوس فيزيائي مع دوران ثم تتلاشى وتُحذف.
++   * config: { x, y, texture?, frame?, shape?, color?, size?, vx?, vy?, gravity?, spin?, life?, facing?, depth? }
++   */
++  detachPart(config = {}) {
++    if (!this.enabled || this.destroyed || !Number.isFinite(config.x) || !Number.isFinite(config.y)) return false;
++    if (!this.#reserve(1)) return false;
++    try {
++      const facing = config.facing === -1 ? -1 : 1;
++      const useTexture = typeof config.texture === "string" && this.scene.textures?.exists?.(config.texture);
++      const sprite = useTexture
++        ? this.scene.add.image(config.x, config.y, config.texture, config.frame)
++        : this.scene.add.image(config.x, config.y, TEXTURE_PREFIX + (EFFECT_SHAPES[config.shape] ? config.shape : "shard"));
++      sprite.setDepth(config.depth ?? this.depth);
++      if (!useTexture) sprite.setTint(config.color ?? 0xcccccc);
++      const size = config.size ?? (useTexture ? 1 : 0.9);
++      sprite.setScale(size);
++      const vx = (config.vx ?? rand(90, 170)) * facing;
++      const vy = config.vy ?? -rand(180, 280);
++      const gravity = config.gravity ?? 620;
++      const spin = (config.spin ?? rand(5, 9)) * facing;
++      const life = config.life ?? 900;
++      const sec = life / 1000;
++      this.#animate(life, (t) => {
++        if (!sprite.active) return;
++        const s = t * sec;
++        sprite.setPosition(config.x + vx * s, config.y + vy * s + 0.5 * gravity * s * s);
++        sprite.rotation = spin * s;
++        sprite.setAlpha(t < 0.6 ? 1 : 1 - (t - 0.6) / 0.4);
++      }, () => { sprite.destroy(); this.#release(1); });
++      return true;
++    } catch (error) {
++      this.#release(1);
++      this.#warn("detachPart", error);
++      return false;
++    }
++  }
++
++  /** نص (ضرر/مورد) يقفز للأعلى ويكبر بحركة Back.easeOut ثم يتلاشى. */
++  floatingText(text, ctx = {}, options = {}) {
++    if (!this.enabled || this.destroyed || !Number.isFinite(ctx.x) || !Number.isFinite(ctx.y)) return false;
++    if (!this.scene.add?.text || !this.#reserve(1)) return false;
++    try {
++      const label = this.scene.add.text(ctx.x, ctx.y, String(text).slice(0, 12), {
++        fontFamily: options.fontFamily || "Arial Black, Arial, sans-serif",
++        fontSize: (options.size ?? 26) + "px",
++        color: options.color || "#fff3b0",
++        stroke: options.stroke || "#3a2410",
++        strokeThickness: 5
++      }).setOrigin(0.5).setDepth(ctx.depth ?? this.depth + 1).setScale(0.4);
++      const rise = options.rise ?? 46;
++      const life = options.life ?? 800;
++      const rest = () => { if (label.active) label.destroy(); this.#release(1); };
++      this.scene.tweens.add({
++        targets: label, y: ctx.y - rise, scaleX: 1.15, scaleY: 1.15,
++        duration: Math.round(life * 0.55), ease: "Back.easeOut",
++        onComplete: () => {
++          if (!label.active) return this.#release(1);
++          this.scene.tweens.add({ targets: label, alpha: 0, duration: Math.round(life * 0.45), onComplete: rest });
++        }
++      });
++      return true;
++    } catch (error) {
++      this.#release(1);
++      this.#warn("floatingText", error);
++      return false;
++    }
++  }
++
+   #playSound(effect) {
+     const sound = effect.sound;
+     const scene = this.scene;
+diff --git a/web/game/vfx/effects/effectLibrary.mjs b/web/game/vfx/effects/effectLibrary.mjs
+index d76b0670..b7ef9fc9 100644
+--- a/web/game/vfx/effects/effectLibrary.mjs
++++ b/web/game/vfx/effects/effectLibrary.mjs
+@@ -59,6 +59,10 @@ const shake = (o) => ({ type: "shake", ms: 160, intensity: 0.008, ...o });
+ const squash = (o) => ({ type: "squash", sx: 1.2, sy: 0.8, life: 220, ...o });
+ const orbit = (o) => ({ type: "orbit", shape: "star", count: 3, radius: 22, height: 46, life: 900, color: 0xffe066, ...o });
+ const slash = (o) => ({ type: "slash", color: 0xffffff, size: 54, life: 220, angle: -35, ...o });
++const wobble = (o) => ({ type: "wobble", amp: 12, cycles: 3, life: 420, ...o });
++const hop = (o) => ({ type: "hop", height: 18, life: 260, ...o });
++const jitter = (o) => ({ type: "jitter", px: 3, life: 300, ...o });
++const speedLines = (o) => ({ type: "speedLines", count: 10, color: 0xffffff, inner: 14, outer: 74, life: 240, width: 3, ...o });
+ 
+ const BOTH = Object.freeze(["plant", "monster"]);
+ 
+@@ -66,13 +70,14 @@ const DEFINITIONS = [
+   // ------------------------------------------------------------- عند إصابة الهدف
+   {
+     id: "electric-shock", nameAr: "الصعق الكهربائي", category: "كهرباء", trigger: "hit", color: 0x6fe3ff,
+-    descriptionAr: "صواعق زرقاء تلتف حول الخصم، ويومض جسمه لحظة الصعق.",
++    descriptionAr: "برق متعرج يتجدد كل لحظة وارتجاف سريع ووميض أبيض وأزرق متبادل على الخصم.",
+     sound: { key: "fx-electric-shock", volume: 0.8, cooldownMs: 140 },
+     layers: [
+       flash({ color: 0xbff6ff, radius: 30, life: 160 }),
+-      bolt({ count: 3, color: 0x9ff0ff, height: 64, life: 240 }),
++      bolt({ count: 3, color: 0x9ff0ff, height: 64, life: 360, regenerateMs: 50 }),
++      jitter({ px: 3, life: 320 }),
+       burst({ shape: "spark", count: 10, colors: [0x6fe3ff, 0xffffff, 0xfff27a], speed: [80, 200], life: 340, size: [0.5, 0.9], additive: true }),
+-      tint({ color: 0xa8f2ff, life: 260, flicker: true })
++      tint({ color: 0xa8f2ff, life: 340, flickerColors: [0xffffff, 0x6fe3ff] })
+     ]
+   },
+   {
+@@ -323,8 +328,76 @@ const DEFINITIONS = [
+       flash({ color: 0xfff08a, radius: 40, life: 700 }),
+       ring({ color: 0xfff08a, radius: 36, life: 700, width: 2 })
+     ]
++  },
++
++  // ------------------------------------------------ تأثيرات حركة كوميدية (Game Juice)
++  {
++    id: "jolt-bounce", nameAr: "ارتداد الصدمة", category: "حركة", trigger: "hit", color: 0xffd23f,
++    descriptionAr: "ينضغط الخصم ثم يتمدد بمرونة مع وميض أبيض خاطف وحلقة صدمة.",
++    sound: { key: "fx-jolt-bounce", volume: 0.8, cooldownMs: 110 },
++    layers: [
++      squash({ sx: 1.35, sy: 0.65, life: 260 }),
++      tint({ color: 0xffffff, life: 90, fill: true }),
++      ring({ color: 0xfff3b0, radius: 44, life: 320, width: 5 })
++    ]
++  },
++  {
++    id: "comic-stars", nameAr: "انفجار النجوم", category: "حركة", trigger: "hit", color: 0xff7ab8,
++    descriptionAr: "نجوم كرتونية ملونة تتطاير وتدور وتسقط مع وميض ساطع عند الإصابة.",
++    sound: { key: "fx-comic-stars", volume: 0.75, cooldownMs: 120 },
++    layers: [
++      flash({ color: 0xfff3b0, radius: 28, life: 150 }),
++      burst({ shape: "star", count: 9, colors: [0xffe066, 0xff7ab8, 0x7ad8ff, 0xa6f27a], speed: [80, 190], gravity: 280, life: 760, size: [0.4, 0.85], spread: [200, 340], spin: true, additive: true })
++    ]
++  },
++  {
++    id: "speed-dust", nameAr: "غبار الاندفاع", category: "حركة", trigger: "hit", color: 0xd9c9a8,
++    descriptionAr: "سحب غبار دائرية تتناثر وترتفع قليلاً للأعلى عند الإصابة.",
++    sound: { key: "fx-speed-dust", volume: 0.65, cooldownMs: 120 },
++    layers: [
++      burst({ shape: "puff", count: 6, colors: [0xd9c9a8, 0xc2ae88, 0xe8dcc2], speed: [30, 95], gravity: -35, life: 620, size: [0.45, 0.95], spread: [190, 350] })
++    ]
++  },
++  {
++    id: "cannon-swell", nameAr: "انتفاخ المدفع", category: "حركة", trigger: "fire", color: 0xbfe3ff,
++    descriptionAr: "تنتفخ النبتة كالبالون لحظة الإطلاق مع حلقة هواء وجزيئات أمامية.",
++    sound: { key: "fx-cannon-swell", volume: 0.7, cooldownMs: 140 },
++    layers: [
++      squash({ sx: 1.3, sy: 0.75, life: 220 }),
++      ring({ color: 0xe8f4ff, radius: 34, life: 280, width: 3 }),
++      burst({ shape: "dot", count: 5, colors: [0xffffff, 0xcfeaff], speed: [70, 150], life: 280, size: [0.25, 0.45], spread: [-35, 35], additive: true })
++    ]
++  },
++  {
++    id: "heavy-landing", nameAr: "الهبوط الثقيل", category: "حركة", trigger: "spawn", color: 0xb59a74,
++    descriptionAr: "يهبط الكائن بوزن ثقيل فينضغط، مع موجة صدمة وغبار واهتزاز خفيف للشاشة.",
++    sound: { key: "fx-heavy-landing", volume: 0.85, cooldownMs: 150 },
++    layers: [
++      squash({ from: true, sx: 1.3, fromY: 0.55, life: 320 }),
++      ring({ color: 0xe6d4b0, radius: 50, life: 360, width: 5 }),
++      burst({ shape: "puff", count: 5, colors: [0xcdb48f, 0xe6d6b8], speed: [40, 100], gravity: -10, life: 540, size: [0.5, 1], spread: [175, 365] }),
++      shake({ ms: 110, intensity: 0.004 })
++    ]
++  },
++  {
++    id: "bubble-pop-death", nameAr: "انفجار الفقاعات", category: "موت", trigger: "death", color: 0x7ad8ff,
++    descriptionAr: "يتحول الكائن عند موته إلى فقاعات صابون ملونة تطير للأعلى.",
++    sound: { key: "fx-bubble-pop-death", volume: 0.8, cooldownMs: 140 },
++    layers: [
++      ring({ color: 0xbfeaff, radius: 40, life: 380, width: 3 }),
++      burst({ shape: "bubble", count: 10, colors: [0x7ad8ff, 0xff9ee8, 0xa6f27a, 0xffe066, 0xbfa3ff], speed: [20, 75], gravity: -90, life: 1000, size: [0.35, 0.9], spread: [200, 340] })
++    ]
++  },
++  {
++    id: "rage-steam", nameAr: "بخار الغضب", category: "هالات", trigger: "aura", color: 0xff7a6a, auraIntervalMs: 1100,
++    descriptionAr: "نفثات بخار ساخن تتصاعد باستمرار مع نبضة احمرار خفيفة، فيبدو الكائن غاضباً.",
++    sound: { key: "fx-rage-steam", volume: 0.3, cooldownMs: 5000 },
++    layers: [
++      tint({ color: 0xff8a7a, life: 260 }),
++      rise({ shape: "puff", count: 3, colors: [0xf4efe8, 0xffd0c4], speed: [30, 70], life: 800, size: [0.4, 0.75], spreadX: 16 })
++    ]
+   }
+-];
++]
+ 
+ // الأيقونات: مولَّدة بالسكربت scripts/generate-effect-icons.mjs وتُحفظ في /assets/vfx-icons.
+ const EFFECTS = DEFINITIONS.map((definition) => Object.freeze({
+diff --git a/web/game/vfx/effects/effectPreview.mjs b/web/game/vfx/effects/effectPreview.mjs
+index 1e97030d..fb836d9a 100644
+--- a/web/game/vfx/effects/effectPreview.mjs
++++ b/web/game/vfx/effects/effectPreview.mjs
+@@ -100,7 +100,7 @@ function buildLayerInstance(layer, rnd, cx, cy) {
+         ctx.restore();
+       } };
+     case "bolt": {
+-      const bolts = Array.from({ length: layer.count }, () => {
++      const makeBolts = () => Array.from({ length: layer.count }, () => {
+         const sx = cx + (layer.fromTop ? (rnd() - 0.5) * 16 : (rnd() - 0.5) * 68);
+         const sy = cy - layer.height * (layer.fromTop ? 1 : 0.55 + rnd() * 0.45);
+         const segs = layer.fromTop ? 12 : 7;
+@@ -109,9 +109,11 @@ function buildLayerInstance(layer, rnd, cx, cy) {
+         path.push([cx + (rnd() - 0.5) * 12, cy + 8]);
+         return path;
+       });
++      const variants = layer.regenerateMs > 0 ? Array.from({ length: 8 }, makeBolts) : [makeBolts()];
+       return { ...base, draw(ctx, t) {
++        const bolts = variants[layer.regenerateMs > 0 ? Math.floor((t * layer.life) / layer.regenerateMs) % variants.length : 0];
+         ctx.save();
+-        ctx.globalAlpha = 1 - t * t;
++        ctx.globalAlpha = layer.regenerateMs > 0 ? 1 - t * t * 0.6 : 1 - t * t;
+         ctx.globalCompositeOperation = "lighter";
+         ctx.lineJoin = "round";
+         for (const path of bolts) {
+@@ -124,6 +126,26 @@ function buildLayerInstance(layer, rnd, cx, cy) {
+         ctx.restore();
+       } };
+     }
++    case "speedLines": {
++      const offset = rnd() * TAU;
++      const angles = Array.from({ length: layer.count }, (_, i) => offset + (i / layer.count) * TAU + (rnd() - 0.5) * 0.18);
++      return { ...base, draw(ctx, t) {
++        ctx.save();
++        ctx.globalAlpha = 1 - t;
++        ctx.strokeStyle = hex(layer.color);
++        ctx.lineWidth = layer.width;
++        ctx.lineCap = "round";
++        const near = layer.inner + (layer.outer - layer.inner) * t * 0.55;
++        const far = layer.inner + (layer.outer - layer.inner) * (0.35 + t * 0.65);
++        for (const a of angles) {
++          ctx.beginPath();
++          ctx.moveTo(cx + Math.cos(a) * near * 0.8, cy + Math.sin(a) * near * 0.8);
++          ctx.lineTo(cx + Math.cos(a) * far * 0.8, cy + Math.sin(a) * far * 0.8);
++          ctx.stroke();
++        }
++        ctx.restore();
++      } };
++    }
+     case "orbit":
+       return { ...base, draw(ctx, t) {
+         const fade = t > 0.75 ? (1 - t) / 0.25 : 1;
+@@ -152,25 +174,38 @@ function buildLayerInstance(layer, rnd, cx, cy) {
+ }
+ 
+ function drawTarget(ctx, cx, cy, effect, elapsed) {
+-  let sx = 1, sy = 1, tintColor = null, tintK = 0, jitter = 0;
++  let sx = 1, sy = 1, tintColor = null, tintK = 0, jitter = 0, angle = 0, offsetX = 0, offsetY = 0;
+   for (const layer of effect.layers) {
+     const t = (elapsed - (layer.delay || 0)) / (layer.life || 1);
+     if (t < 0 || t > 1) { if (layer.type !== "shake") continue; }
+     if (layer.type === "tint") {
+-      tintColor = layer.color;
+-      tintK = layer.flicker ? (Math.floor(elapsed / 45) % 2 ? 0.2 : 0.75) : 0.75 * (1 - t * 0.5);
++      if (Array.isArray(layer.flickerColors) && layer.flickerColors.length) {
++        tintColor = layer.flickerColors[Math.floor(elapsed / 45) % layer.flickerColors.length];
++        tintK = 0.75;
++      } else {
++        tintColor = layer.color;
++        tintK = layer.flicker ? (Math.floor(elapsed / 45) % 2 ? 0.2 : 0.75) : 0.75 * (1 - t * 0.5);
++      }
+       if (layer.fill) tintK = 1;
+     } else if (layer.type === "squash") {
+       const k = layer.from ? 1 - t : Math.sin(Math.PI * t);
+-      sx = 1 + ((layer.from ? layer.sx : layer.sx) - 1) * k;
+-      sy = layer.from ? 0.2 + 0.8 * t : 1 + (layer.sy - 1) * k;
++      sx = 1 + (layer.sx - 1) * k;
++      const startY = layer.fromY ?? 0.2;
++      sy = layer.from ? startY + (1 - startY) * t : 1 + (layer.sy - 1) * k;
++    } else if (layer.type === "wobble") {
++      angle = layer.amp * Math.sin(t * TAU * layer.cycles) * (1 - t);
++    } else if (layer.type === "hop") {
++      offsetY = -layer.height * Math.sin(Math.PI * t);
++    } else if (layer.type === "jitter") {
++      offsetX = (Math.floor(elapsed / 40) % 2 === 0 ? 1 : -1) * layer.px * (1 - t * 0.5);
+     } else if (layer.type === "shake" && elapsed < layer.ms) {
+       jitter = Math.max(jitter, layer.intensity * 900 * (1 - elapsed / layer.ms));
+     }
+   }
+   const body = tintColor != null ? mix(0x7fcf6a, tintColor, tintK) : "#7fcf6a";
+   ctx.save();
+-  ctx.translate(cx + (Math.random() - 0.5) * jitter, cy + (Math.random() - 0.5) * jitter);
++  ctx.translate(cx + offsetX + (Math.random() - 0.5) * jitter, cy + offsetY + (Math.random() - 0.5) * jitter);
++  ctx.rotate((angle * Math.PI) / 180);
+   ctx.scale(sx, sy);
+   ctx.fillStyle = "rgba(0,0,0,.22)";
+   ctx.beginPath(); ctx.ellipse(0, 30, 26, 7, 0, 0, TAU); ctx.fill();
+diff --git a/web/public/assets/audio/effects/bubble-pop-death.ogg b/web/public/assets/audio/effects/bubble-pop-death.ogg
+new file mode 100644
+index 0000000000000000000000000000000000000000..847ca771d07d23517a7747068c9a2d02bbe5dc56
+GIT binary patch
+literal 6528
+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
+
+literal 0
+HcmV?d00001
+
+diff --git a/web/public/assets/audio/effects/burn.ogg b/web/public/assets/audio/effects/burn.ogg
+index 8b95dcf842ead7f4280e16c56e2257a987d482f9..be274d1dab30cc9e544cf6b8034ec93d62ee45c1 100644
+GIT binary patch
+delta 69
+zcmbQ~HPcJVKRrE|fr$YM>dQ9X0Wr7rY~4FiN{<J`X9V({&aRoYF+_|PEC5p7`Qk+2
+J<}%*J;sC_p7I**v
+
+delta 69
+zcmbQ~HPcJVKRrE|fr$YMq`qFi17dpLFt3>?rN;x}GXnW@9!02a3=!i63xHIg<9o7i
+Ja~bbqaR9KI74-lB
+
+diff --git a/web/public/assets/audio/effects/cannon-swell.ogg b/web/public/assets/audio/effects/cannon-swell.ogg
+new file mode 100644
+index 0000000000000000000000000000000000000000..d1fb026bb1121c231dabd3a2aa521633d93e8224
+GIT binary patch
+literal 5606
+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
+Ceohwv
+
+literal 0
+HcmV?d00001
+
+diff --git a/web/public/assets/audio/effects/charge-glow.ogg b/web/public/assets/audio/effects/charge-glow.ogg
+index c2334b7bab9f69580a26ab6bcc9571b7870f49f6..521133f32b541a6402031b10307d1b7b5cce7e24 100644
+GIT binary patch
+delta 69
+zcmdmNwAo0?KRrE|fr$YMj_@uz24ZF(U6VdhN{<J`X9V(3<OtPn3=!i63xHIMZY$ls
+Jxr}!&Hvosa6d3>j
+
+delta 69
+zcmdmNwAo0?KRrE|fr$YM-ml!)3u5lu@#XkLDLoz#pApD!n)veW#t<=HumDK4?Gw+*
+Ko6C6jasvPb3m5tT
+
+diff --git a/web/public/assets/audio/effects/chew-crumbs.ogg b/web/public/assets/audio/effects/chew-crumbs.ogg
+index a2d415209a9a8a727fb8062a3815416cf02e74c9..9eab08a475b2e5787a3971a8ab81d979f4b041f8 100644
+GIT binary patch
+delta 69
+zcmbQBH$hLzKRrE|fr$YMCa&le1u;7=z7?4$rN;x}GXnWttL|Lc7$U|C767T9C(UiJ
+Jxr}!fCje_N62Slf
+
+delta 69
+zcmbQBH$hLzKRrE|fr$YM1k)KefS6BSK9ip)rN;x}GXnV<QaMXEhKTWk1wg9j8GQ`d
+JT*f<#695=55VHUP
+
+diff --git a/web/public/assets/audio/effects/coin-pop.ogg b/web/public/assets/audio/effects/coin-pop.ogg
+index bb23f57717310fa5ad58644dd73bde06cad3ecb6..2097fbce9832a2e67056115d6b22b7f6cc6b3cf5 100644
+GIT binary patch
+delta 69
+zcmeya|6O0oKRrE|fr$YMyfoY<ftZYDkNqb~>G6R0j6lBETUN7;A!58>0g&qXw{|CQ
+JF5_+F0stxW5e5JN
+
+delta 69
+zcmeya|6O0oKRrE|fr$YMsx&9|gP1~ZZLdz0(&GW~8G(GI_dO*WL&SK&0wC4P%w~Vw
+JT*lkT1pt1D6Nvx-
+
+diff --git a/web/public/assets/audio/effects/comic-stars.ogg b/web/public/assets/audio/effects/comic-stars.ogg
+new file mode 100644
+index 0000000000000000000000000000000000000000..32ef7c9bc00cc6a2a0dbb883d6cf1974d0a5d0b7
+GIT binary patch
+literal 5499
+zcmcgQYgkjqwv+G*h!8Mf)Sy8V$wp9uXbD0M0eNf%abpz&C?z09paMZe@eu{I0wN6o
+z(FO!fgb1mCq>7amPYw7$#0N;#QmhY9t3qp)TE(+Ap7!2zzx$o<{<`x`X0N^1nl<Y+
+zYt3Y7LP9vAqJOoYR=rOoL7rWTfijhnu^}y1DkDEormr9$2z^xl;i;u8C1?KK$e9#)
+z^RC`BY$bgE-<rYb1Do-HUGizh+WBs?`SWM<-P}m>Y4D5xOtK*^KFtS^5<t%71Ja$H
+zB#r$rk7DxSIbGzpf`WtyF-3G|6P={c>w=wQ!K5RVqDxr2gQ&~#D97(}ueN#ZOi5sK
+zT%PFS&aR?Q5II53S{arW>^h*59c8ZUNF8JY^pKs<k!sEbs8BGVNGs%jz*?nYB;8I%
+zU|wo96CgDUpc)cN=ATlebqWA_#NI=seKn87G83%Q#*tjwNPbUA&IR*M-TXi|Mm#nY
+zknG2x&-erOvad)k@XGq|jqMR<hl&uYtm5VU%(J3TZnQub5TXlH8G&Cg7B{diU*n9Y
+zjbCK~en2#!3)-y?%F{#?u9a5I+;W6>=!kP|qx4dv%jL$WXJ(I04?-wx8N-mmFdLf}
+zhY&4>mv_{&@Iiz^v#P=@XLlVH$q_OJI?KQYM#wPd>aX5cfBT>P!?J9I&@Nsa)95c3
+z&>SaE@+&87qb%%2EE_)uQKz3)liiQyawXTp>wIaBTVMFR?#p`d!3A`LK4o}*zO$V}
+zbIgflIQgd@V*~V%6LD$tAcyv2HeGaDm36rpW{jBvbZlkk&_zH41Ey9ILD;df*gUMA
+zCF|g~v$HMT2P=z1y)LR1p<b6bM+=EWOwR~k((uq;qSN=NWG8$vNddo&`Cr3~F*AU|
+zbkj+3MIc}fV~lAU@MC>Y3y|bKU@amzfoYsT1?Qr|CAir8@=3CX-1HBz`=tAm<Xf+j
+z*St#psXP9sSMhhc<D*OCf7B;O_e4kE+W7B%Om(?2k{3Pzt3wYeR0mm%Ij4w%=tzFl
+zGw*&7_@j`!N-<Mfny|UFdh?;0y;H|Xz%gJoX!0XtZsV*fJtnQFCY^o!c-}GX@#E_c
+z9h3g&POWmRMaUc>hxSxfU@EIUmDFm?!fYeNM#yg&Yf+j@yTW5J=y=2b>dUBQ^EZaC
+zO#aIWKti^5nK$%{U<v?=y@PLfg!~^nX;><P;G-88;h_yH1F$wu(`simqxfc4O<C*`
+zuV-43DQ4EZ2Y1v|-sp4J6cLtL)n%d!%qLaZMf}|QTeoFbTV78E=h+~C$QNzwHoD{j
+ze<nBEmfy~aBc>0il%e=cje3Q+L!DEG=YJs!#htjtgm|1bUV$fakAX|6Ecm(PfGoyn
+z8A6})gD^FN!1>i>emK^ylmuZ9RcWDu_Of)k^8hp53Rf%B3I)|FnXS87iOfngvmD%j
+z%-}b!s;kJ3B2>Y9kt~l-vysq6=2&hRaa>h=-8Wd9tssK61_e=2A|t%av5mHbGiHb&
+z@?6!+B~sU0*NJ_uZK}wEmfgx&S8cagT-$7jkmb*NeL;YiD|@^!ou+4fh_3r~u+&xE
+z6DxIX>xsRBwW;P}y4=#(Sz1GH?B#j-G8wR9NUmaS6^V7t?W$}yUAIbnSzsv3>S!1!
+zlUXZdN?^5-5HHqs9}?HjE50t4>e`CL`Q+mH`~*VmqBTT_^Z14`S-$J7F7a2eMtHuU
+zU7W3Gc(qzwOR~z-0V}up?G+2~=F*-mvvt3(mdzIR+|6I-I&gEnwR2mAtn*y&-E6w<
+zp=$jvK8D_`=K|&(*^sWMKk~|=3##m{=8<DrZUNo5vpe*(gEG3;;PmvNi<!#xvvm)n
+z#7}*CCU3nWpj{I`$J+YB^IL9Jd|BUO<|w`ltg`d?BZp*eUIVeqb>~3ABE5Z8)*O6*
+ztvs$bJD3>eehXL`1}pRDAQaO|LG0EX_po&r@(?=|$$c*fG|U_vqgCZ7MLg`2g5V2f
+z*$TdsMoEZiTs?U0poDO5SLfJ@ow-f6xKyjWF6L?UrQ!liZ|{d`a|!V*O;f4(IA6a)
+za=uL2A;4e;j_FDWaV@J@!RKkSi*O7x5JW!s*?q7kosK(e&o3vWI`wq|(?9?uVTR?A
+z`TE_Ysn4$<*7No7%D?qFADaX-1|Xvm<Qf7eO?Dyvs8X#U5;bbZ+(&ANzDw+*1cZ#n
+zHXNh^RvLAWxIlmGrr4FM2UZPATauOi;t&WK+?fw+B=R2}66f;)fnjY5JV|Fb6qzLW
+z*W&p4hVD{HV#A}G#6C<9h~_qB_<sE>6-0)9If;mf+yF^)0R$On&NY;Y^BW*6dEBqZ
+z7H7hYuk9t)RZS7VN^L8F)tHfmTD=$$$8N^z^siWvpZRF)6Z0D$L4?n{)h7uN*dgTB
+z5BokwG>PXC$3=9gUCi&968dC~3btsrQq~!KQ3Z(~htLoOVX{yW?i%0e8>H2T;keFV
+zj|Xe@_T%6rk^-fx-ZwlpRX&zX#x^j{H?86aU;}KAHlBfWcAKg=41;hEbBAyV!yl<+
+zbllugN#M9+4gsuS!&1o&JjH`+Zw3M_`XG=*HMi5zqFmESaI{BzmL>8ulNT41x2?!}
+z+I(YjR&w)4N_?NTr!etyb9bLK#OD+X1X=(BEvTnkj9+Dr9zY@o3Cd)hlX974Ew>~J
+z$kLt%<sNh+5m0IX0l}z%a-T!T2TA!bO*$Z|l!Vs+8|1^vL0n9ugo<oI=Bgyd52_eW
+zO;=F~5>AB>w-j{-OLd=i2xzX|y>4wRr7|`jb_J2&9MIt#gtb*J;9+`Z(olJhQk*X^
+zD<<;i4fJJ$DGz0L`gE@#Q>ZGo4!+4?!)!W7LBF&Hd~wA*VAtPD&`9HTPSP-C9fE-Z
+zqJR$;%;UGgA;s6glynNr93_BY=M<3$x@b@ZX_4lbP9k#XUIUe&EDe+(EB61UgeO#y
+zv0DEBKY*y<mwz9e(1la~ptQa}*EVT|qSGQUdmQP^93zA*e0iE!@C6qR7Fc;Pc<PI6
+z0)Gtq6*q?jg44zZ2PGi_cY)*n8od63E(tJAF^TZ+493U+#5AOX|DyW~`ulM69}Gf8
+zr>C$G+crt{Dfe+*ipS}(cz}alB|}z-(=cTbQB!uLP=sM>0=KY{bOt|RK`DalbV)$d
+zsFfmT$Bmu7X58E&!rZZ>&})#V3?rPm%IgB2CWnFJSV@s6NSm%Cc-#__xP-uixFvMl
+zqFlWkx6rDW6SVU5B9RkUt$^2JCCt?*ah#h@h@3GE>|Cvqjt60yP^fuohKT2w3+i$;
+z3fOZc%SGlO0l}*RE}*l5z!2&m%hWWli#3h3DIuqa5My$qErOGXP?_E%tqz_}<1aes
+zG#+bX>(wsb)58^ehZ&Lr0WZMMivK{#oQTt^vSYnxmiS!?Th@H)rohBtFWLH{VImw0
+zXjEjJV~m(=UKs_Mn$c#MQ5`78R>?@dlXlSD(xU2|?@Z(^^bayYd(HE%=gy`%?n<|b
+z8*a^=@KMF-dpTCg9}Zh|G(<r~VaUejTE{05Q897rl2Xz$x5|Mx*=T4hLY(PBe}4~|
+zo&7}Sq{&lQ4pXPG9m$)_SQ83`V^21WLgCmA$@uL@W1kRtLn05Dd0U?C=LEY6=6L#g
+z%p*M9oaTBu@iAYwxvs8r{TBK82Y&2J1PKG}Cni<R@Y?rcom0!21z^2F2Bm9iiqj#u
+z0qo5j%sT5<^X5(0i>w%F%rf03JN@X(F)8G0F=1p1BwM&@y`wJmo~OwQK{>jfEB>;n
+zU7@SP@61PNO-M2d+YX5ar9}A*I!v0p%NV8I-e7{fEy;;;BlpNRf1YLaOv86Z*zC1>
+z`)<vv^ojKz)cP~zZ4K)?>$9USHQwT=4>%RE&!(4}BD4<D6qDj|xTpN^p~Y(grzF15
+zCvA4SA57D~_TBuZrY1PidQdZ00x=R^+qe(4T64-L`1I88%}6_LgdQ}_|8XhOWPniH
+zzCBg&^Rl?{``Ir>qjmdtblgg?LFu<=!Nie~pXyl1V^06!jH1eYn#b^|-)L)-9PXA&
+zn*MlD(O7f)$U;BG-MB%I=?K+rZqT^;)raMQ+1)m7oo{{bnNAk9a4Pl8A6rHbtbFtR
+z@Rd6^POf-n(ra`Y{c2qavd+=L{R)LG{4)Z{-<B%jOWy$`d=Hvt2+sUDaQJcd`|z6M
+znX7es>?!gn1m|mn>USggek%Z8Ccr|in<fKT{UmT+Cl#?Ax4smARNb<ao{2oaKC;e0
+zrSJOY?AxUtFK?(9<p<2!vHbZ=)5o6osVKr_&53PWRu1-jM-AKY18G@#_4g&)99*{v
+zzw_?h9<A-Z_o!nu$;7*M=I+3Nrh5o29XSW)U$n#sarBX&-T_gc->F`D_|ck6lvQ4@
+z+QSXe3xh4u#CU|ROU2XPG;fH}q+AV-Z<y6PPCou?`|(J={oYSUQZ=xY+nV<|c9lA6
+z-$|oUc;#qjKAABw*PV(oMbm7NaP~xq{hvyAnwtw7zs#<Za_m}{fu^jZYrAD`epzVE
+z;g@JAr??36=TxsL&jr8q%?-phrQZ>+HvR#k;PtR=or8Jncfi?2yXEb@@^wzA-i(8O
+z`zB+L8A5TJDxN>Q6}_+S_0;depWmO@Xi7`j^zk=uUf1$&KK;}It|<ul&wA43{;Sb5
+zN~8&DTE7@{MaJ^}(BaJi)~K~2aA%GiYX))wMe(d1EgO6$`k$f-VuG5esNK>6XwmtT
+zc97jy{&{k3F?0Mz8}#yN`>w;B6vUbF<mjf~u1T$XZPCcy(f}ZpqoMT;kD05H{P$k5
+z@NjNr5~?&pjH;}uO)lGGW=-*`Y;iRz%JO;tp15o_W5y2s!cb=OM8(A`zY1gtE=67k
+zOnbxSCa4XyPJ>)DvVEhasr~48QjhAasB=etzc$`&O|)=^9isiXaN0CONAm2Cd6D}U
+z6!QY_ZBIiZ=a!H7bWuD|%#_JuvGm=I1=5h(^WUm%Y&l{d6a+RG7JO5SqF5Qbz$kZ1
+zs6#=jm<g}!NAK?pH$oMHL+S7C-#_AAwe8pB9M+l$(=IZOPRvCs9@m4RN3lvvbNl|S
+z7Aj*aG&*uH<K5#_-@d9HjTs`V5S~klDeV5%5fQ2=iC&IS=5x<gYUJk3w#h`>dsj_*
+z6L@(+a0qXk_Dnz!V}9#6C`3csPoNWgCmupk3AVy`Y{Clp0pz9fuC!>Sj#eK$_AYt*
+zoP*|?4GSI^X#04K$_ciPsDF66iD&TySgKEH9A-YVwN!3af5uYdGG#%XbCoRLxP40N
+zxwVpeF8i&3h2^`Fj5$*Cz+0Ox<l9h9<e{E>sc5q^N`7+<jNv`eR@jY%htV8#D(P#H
+zb#6`TGj82yksXmYQj>OWT(avc31zfe8~Uy>^IC%F$?fCrR2THIxxyITeQVw7y5R?i
+zBXgV@V~mEP>c0_LAN)*uZ{LruRI`>{F}C$Ttou1aenZX$7Q+X&oy_cZ&5Z6jy|3%@
+zf1t@xwn%PRV=+`tre?XnBZbpS8Fa5VtJ|bEk$$0g-M>inoT1peEmb&w!}iRSMg%-w
+zZ+m|4c+0`Hch1u&_Yv;^2gR(Pg=TDl+*MCCPkA!bZ~AtaT{GIVO07Gd7CUwG^wpQ|
+z%zhvHpt5TnqcUtuP$qb-`rhl7t0}o_WABv3DL7n|GHMp^^9ei3P=e5G(D2!b>YKXa
+z_HF4W_FPO`U&~p1SNb$2-e|S=#aN1q9DL$<s^x0hPEk@D&HPsrb|Z&^&ID4v?O}sE
+zMl8(H)%Jxo)=P#b>`C5q<rMqy?2AY6EAA66#qEg{A_vc9usr`j^oxhn8L^Ry02*@~
+zd)5JCw8Y8i=Dy8`EfGrkl7muWRz*usM$P<EIX5z6_d$H2kEh)ib7pN@`}q3!&4TL7
+zYiIG6M&frfym#!;M|h*rQ`pt=*BPn)4w1KMF)ngj1rK$-hf)OYg}*LXy?56KetT5+
+zZH6X6%-G8fbyU|ovL3dK^x(wH-(#Qc-0n}?>#%5#$>^y``>$jzu)S8Lm@nG3WQi>W
+zo#&g#jn6`cZq54W%~?mE<nLCTu0hh}4e3ud-+i0bRU4dgZIzWUEE1hB205BLH}004
+zd+HY8&7`O}Hp&Al-zsD5?D|Kin=y<lIg~{^%fF6aa<$~_kTS8b*2+r%qF`O{@R1Es
+zA^pjHA&JO|G9)w`ZU1AjE%K+^AvUF#E+031$GF}aecS#A*9NiZO1epFvnR6dKqIEe
+G1pO1WKVOXi
+
+literal 0
+HcmV?d00001
+
+diff --git a/web/public/assets/audio/effects/dirt-pop.ogg b/web/public/assets/audio/effects/dirt-pop.ogg
+index 76b7edfe0e53625eafe09192302420f845680fe8..5632c089eca34a520780ba89fd4497bb249fb6af 100644
+GIT binary patch
+delta 69
+zcmeyZ^;=8IKRrE|fr$YMmgR67fSBR7j1Ci}^mssgMj-#>F^#s3A!58>0g&q3*O?nP
+Jm+`W4001Y}5MKZQ
+
+delta 69
+zcmeyZ^;=8IKRrE|fr$YM!r2yo1~FN)^H)xk(&GW~8G(Gssa3l+hKTWk1wg7N+6e#O
+JT*k}F0RU~65?BBL
+
+diff --git a/web/public/assets/audio/effects/electric-shock.ogg b/web/public/assets/audio/effects/electric-shock.ogg
+index f78e804587b9e06ed987385c9eb904ac75b43234..5019dc6d4746ec881e8ca8f42d7341baddb1e907 100644
+GIT binary patch
+delta 69
+zcmZoOYcrGbPfrhKU}AuR#)s-LAm)h=M^{di(&GW~8G(GoTX`2ZhKTWk1wg8kKJ4<{
+JT*f<r7XXHd6kGrR
+
+delta 69
+zcmZoOYcrGbPfrhKU}AuRpf`%GAg1TPjfNAY^mssgMj(F{!<!cyL&SK&0wC224y=bZ
+Jm+?;E1prr&5?%lR
+
+diff --git a/web/public/assets/audio/effects/explosion.ogg b/web/public/assets/audio/effects/explosion.ogg
+index baa9550efae65008166779e18f8eeae08e5ec1f5..a058029f9135f95ec7f59c082651f7a75e2a8523 100644
+GIT binary patch
+delta 69
+zcmZ2vwa7}!KRrE|fr$YM>^5AA1u+jc8=RadrN;x}GXnWMviYtXL&SK&0wC2qkpcRf
+J%XruD0{~d<5vKqE
+
+delta 69
+zcmZ2vwa7}!KRrE|fr$YM+&>irfSBdmX55}ArN;x}GXnWCJ?-rqL&SK&0wC454|tVt
+JF5_Lp4*+~)6Yl^3
+
+diff --git a/web/public/assets/audio/effects/fire-aura.ogg b/web/public/assets/audio/effects/fire-aura.ogg
+index d7a654343fe61c9f12d85cedd0bf970b319aeb28..071f6d21342a1f9c862d8796136b74c341a6e7ec 100644
+GIT binary patch
+delta 69
+zcmaFr`qWj*KRrE|fr$YMoW0btK+OMBL!%~2>G6R0j6nV;?^78YL&SK&0wC4rR&br!
+JT*jL(3IJ9b5)1$U
+
+delta 69
+zcmaFr`qWj*KRrE|fr$YM!U7h9SzB&BoH<cSj|aqO1d7;QzHn({h!`(e0Hj*k@cFaN
+IWxV;K0ElW6ZU6uP
+
+diff --git a/web/public/assets/audio/effects/freeze.ogg b/web/public/assets/audio/effects/freeze.ogg
+index d139097d527839703a43e984edfef545def6f935..657cf5f80f3fffb9e836b142f75f45e7b5608d4c 100644
+GIT binary patch
+delta 69
+zcmdmHxXn<?KRrE|fr$YM?r{DO12LEXo@6soN{<J`X9V&mxtN{V7$U|C767S!Stne%
+Jxs2C=8vvAz6X5^=
+
+delta 69
+zcmdmHxXn<?KRrE|fr$YMmMu9|1Y-WavWRt}lpYU=&j{o{s##;ZF+_|PEC5oiH#5L*
+Ja~ZD#HvqX`6s!OM
+
+diff --git a/web/public/assets/audio/effects/frost-aura.ogg b/web/public/assets/audio/effects/frost-aura.ogg
+index a095c1cd1ff6538ca781fc20c01dd512a60a2a8d..68fce674824c443b085b912f64958945bf1fe418 100644
+GIT binary patch
+delta 69
+zcmX@1enMT!KRrE|fr$YM(xYYzftbt;`~FUp(&GW~8G-x>e<tZ|3=!i63xHJH{o3xg
+Jxr{f64FEd=5vBkD
+
+delta 69
+zcmX@1enMT!KRrE|fr$YMq~>cp2Qi;|_U)Z0rN;x}GXnW%bT4ad3=!i63xHHJU9mm8
+Jxr{f64FGIp61)Ha
+
+diff --git a/web/public/assets/audio/effects/glow-pulse.ogg b/web/public/assets/audio/effects/glow-pulse.ogg
+index 15885f815d80346b337d3e99f559cc56c0a3c9e6..749df1a63ca4244fbdf2f478797c4d6e71d6c7bf 100644
+GIT binary patch
+delta 69
+zcmcbnc1=ynKRrE|fr$YMc;q~cKuo1$Pdq0|>G6R0j6nYGRd1eb3=!i63xHG?Re8?e
+JT*mu=6#y0q5XJxi
+
+delta 69
+zcmcbnc1=ynKRrE|fr$YMe9sr=f|z$--P}7-N{<J`X9V)wI1WtS7$U|C767T%pPZht
+Jxs3M#D*&mR6nOvu
+
+diff --git a/web/public/assets/audio/effects/heavy-landing.ogg b/web/public/assets/audio/effects/heavy-landing.ogg
+new file mode 100644
+index 0000000000000000000000000000000000000000..f2c3446ae98c78fce94095ac471df93493a77f30
+GIT binary patch
+literal 6204
+zcmc&Ydpwj|*PF;tX=rH3WyoY6moh~miph1#rEwo!WH_#q7&;ZF)J!)tiQynbW-u|m
+zs3ApB8JFC1O{q>oH<yZ(I=(%6&-uRh`+dLn_x<&K`?sI{tmj#Kt-aP>Yp=DQ$0aDp
+z4M>82HmSRFRbo*1OWhj@4T-}MQT`ze@e2uUPw@?aEoDFNd<hpZ<=;(ADFL5uu=IuU
+zRtx{7H7xnbW(CCVI&k=x%|`2qo7WSKjKtG5;T3q077-8_WeJfqh}=Yk$c?!05dWWa
+z64F2K+N2$x62J-oED5bAEugW@o0PPYRIcWcT98I{Qm0md&W>~DB9lfe&AvJyfz*7m
+zGuZ=(3Ak!ru2GJLW7&)XtXFH~I1WOuaY3z-vUmuw&Bjuq*u<Y$`6xs@?<B@PA+iVy
+zA+8#Pip3C}Sd|jhZU&)I+*wN0brUfb8zdjKOw2_j=J!s_Imx7|=jXh|$%{jhnEfJj
+zkT|ByxGv@bAJu-o!x;xCfn)&k@(Brl5aiLS6>^{n0JK#k#{Lp!XSv#=E}a#q6+Y6?
+z4gdw`Ih^4-B=Ef1zl7wjJ9d?jbycsVBBZ6l;8Df9+v^v}9RP6MjcGW9ky)e*008Aj
+zNGLF6k9eo>d~#)2XG$eOJOEN~-g5hLjMKDE$485fPyfCDTowlaI7JA+F8Rv@C@oc$
+z9XS-mJ#xw<HH97Or1l+r9`glq8c*wXE44;x#Z6j%8IGO&X#z9=2Qa4RPB!YGv{?Qa
+zU7N^49E4u$c()uK*FimFqDi;1V;@yRip8yfI@aM>XcC+Q2ZYO^I3R@?{s~B<8l#oi
+zh+{6_IG&g4Y~IXGaW-$!DPU8=5Fy5GSNUsYnn2i>&G?5kLQ5iwu>U!%UEBt!FnXy<
+zKr$4Ng;``81^KD{R0|@-=RnPtqGKPWW1phaoMPaZYVqiXxI6XOI4ODbdeHl4>HBBt
+z&wB%(&jt?l2JTG{d?uvt?c2MzKjvTiqU!NdAf7z}cO7;IHrGLJ(KyKx01e^`OcP!?
+zKzp$9J}K)$(u0ns7ah$iKCiJj1sVqK8f@`b7tN;QlU^8-TO>C2wQC85{A<@jvkF80
+zeV5GFDgi(i0QJU5HTy`l#z?VNi#v>40&oEA*sW$8Wzd*nyc6p9*rwz2p52>c+`Q<2
+z839faw?>8q?9Fg1AdqU|_}JL#f7!(wD+!?Up;ME|&gEWqh)Cz=K0PibwI{YX!+)3g
+z2R>;jB2#^qti{WFJiL*YOj#aVltF63zRhPQ6Hk}*KVfv#e$jx&QvfzFUWjlaG_8ra
+z4$o91HtGaWw8yeJ&g6AGt|zsX%gP`pUSc?tb@8bb>N0*{3ONj42u&)f1}_5^ltl{c
+z2H+gg0pVgOWMWaq4l>fnp*bM0v!k5N8Z)BNdSlpVc`}z1#WpL-W+-lyNn^;9*5yDm
+z02z2K%kNB9lCa8#&&iAgB1(aVCdneFT`AYHQ@gDl`OFlGBflYql9a}vn9CwDiWEJh
+z!JCp`$aSZM81{ElE*OfkeUoa>aQqGVy;N#Rb%Qq}(d0{$899g3XO0MXeW6Z*-Y1SB
+zhTJ~?5JOR)e;Xpo-h>EFr~B*k8wUIznFuo&kQIj3frxU$N~;^QnMQ)%Z0aMkhK$(O
+z^05rY$`l3%vWlTlcM5v5s3j(;-P90)D4CilUObT)M4=k+8@#Cr#D)w;qG5k0^*UU`
+zEzzuz%1kMr-A64Evq}&^Rz{l}bGMSK)BBFC7tHKqtS9w7O$;_1>j_<{C(32C*AF~p
+zq6M$BL*H9A48%^DVTTw~g1#5NZMIF>%+Bh$!dN4_-Y3jfAu5xBHXqlHo@zeA30*IE
+zy@&eFvQIUx%?#B=oj^pxZi%)1xtGgoWwfY|AS-49aW0EtWIpEaE~tkJCJUAGV>gh;
+zaGYyGnanWPjs1{S!+2ie1_1o(Bml0Cwb3=WDFNV|LA-U784t@MBdB~9heSX;k{p{d
+zm?=bE9*06j;f2s@nKa7AMlMT{s)xU+NDkq1x~T-7FrAu&2$gpr{L>VwKJR8a^%_y=
+zNqd;VX*EM21sM^fQK%(qsVPJPpP5WXkOm4R5!!j<cyTnEtjB-oP6-ikyD10{IzTwm
+z;O?6!JR{!fhn|#Bq7Xh3`_B;(6-Y4#BN|1#hM6vp$tI8HaZ@N^JT7L_C>MHP3$B0y
+zU52OV2Bm_mc-%f}lCZFcYKRv?R^=Q;F)QVrPS9n@dPKNJ7;!X<nn;8Q1QDf>!vzgl
+zzTsy7T$~(Q-kVMfD<AElTtI{nQ7z)QT@=n{L(dSpixJ+w5in?Og-!-F$2Vk96U(7n
+z67ZFai(?^0r7~@0{!MSlimOP2t6_cFd?6Jg3VZwo!dW%ngO)tyu*C9F=;0>)!!#!|
+zB>;?Gz;o|MQXv=z-~k%uF6;v=4Xw({hDVgiVYE9oXT!ixhOR+!Kp4&>vSDDmwF6)1
+zN+t^$l*x{Kq4F{S2!~+mDzkR;kBnaoCW{A{OkA2zv_r;l#v($4*w~`%R96JLv+G9a
+zF0SO!YzCSvtHq&^$yzK5WCahbr1$`@F~%#)K!I$33Pj7^)UG9$!)vGL@C*8OhY@(H
+zJCkxmp0V$$AFIaFtG95-7x;bbut(Ls!y!(VRccV6tx%w?WoWq-KC)m0268At2BTf&
+zG*+C;ms66&sXYOvd#IZj0aFb`Kxa&W>7IoqkBj9)c+n7%&!L!);h=m-4ip#RabQN4
+z6UVA>%wV>kPH|^)8nDuUF20=9?ieCC&}xP<>>V%?sc|^|iSSfV607Z6tsM|i-c|x4
+z#D-7husGC2GnrIMqRH4W6K-V|v)!`SQyfCG{Y&9H20Spo)=Pl*b#|B9WbID<tprNE
+zdF?7ZETh$IEQyjtggcl(6u~0Jx&cdTH<Qt#K?IJKEJmP7<JmAQqO_vL2o~CWEDtJ+
+zf=Y-p_Wz`WDa;~^x%~frfTBXX{Oh0#nyT(g)GgGDR6JAK<?NZu#KvST0YJ{0!1IT;
+zz{A1<$w`Hly2PZA-@x-qmW2U?j9MJjITR8!7c|^ogZW=jiy6X86(elg9TBkuB0RBy
+z|C;v~^mlRdZ#F~{+*+dsaEjsC2k>u74;kND^aohj<zX0XG78}&Q;IXLvPlTSrI6(m
+zXzh+~)nF=u(W%7@#p7~FdRj5<)-w3h$rM?wG`9ITf#XWi!*jaL2s{>sOh(d@Ne=vI
+z4uybE6HiW~kR9-8XtG=m*PSfK=eko+Inl`^T|74hKBjUYEssMc<D)4gJ%k5OE}w%Y
+zJ0Lt~nDe+85<%-UR2R=nfoCqwog@n-pb+vQ7pQXz1p(m2Vx&fyHy2l+);Qgo0vOc_
+zMF1-iD^7G@NRgv9ifEguy8;p6gj|CMXt$K}(->Nk8NqIcJaL4BT}?*iGyN^rrR`{O
+z-CbSPV<z38OpBW=Uk%Fwlq8U1NdYX5kRbt<%AnTDNUBRn$<smnNmQona=H9^>vh1w
+z%Emz&oR>}LKD{2Lbt+mRV7l(~sx7&<Ub5urKZ`9in34d=u0TPdtJTAMk6%D=_@U?{
+zaq*D1xS>EC06N-MHa5l#CFRvv71cFr>Kd9jE%BGkVzaWcTD;@nXl1qdg(UTT%i=2_
+z{z4KLn6eKqtLnHr`0w$gg$9wl{X=(o?my%nwExK7AYb=$-j1t&HdU29yy3+D3Eh*z
+z6(e)E#;%ISR$t%df-CNO@dx8W|H5;X&~)D)xhy+oPFGL4WfCQK(4gbWiD~!vaP{qb
+zl-L8Ul?#1=q{9WY_CBw1&39HmVo<J%EMebq=I2nG<?(jXcNgrfpUf3)eUi?o9nU;s
+zx%@=VHr~+Gm*k689n>AM%D9A2qg&ss+N*6bbO<jPdvh0c&@j_kHlBEJB{-(PX)Oq^
+z6AbmN0+o+XRoV_oV0Ya%4_`ZI;KeC9A@uQCxId7*Oz_*gV-M7l<hQ4|-n|<&^w{|9
+zzEBnaw)ZWGR#!E(tU@z?%WWyr!OD-V8?bZC-+KKYn@1+H`jn+UD}!OV2W!AU{9gFk
+z=t`x_SglwRf6;eU%=X85QzxDI?Qic9&V+nAKe&p?4dI=rx89iWvf>)4I6&voowS2w
+zKaJS}R>K+Pw(k?&25jROCsQ8c%(p~3&}}8MuF8VDPqf1z@1gVStO3x|@CDaKA92sz
+zyXf-q&cTty*|W9!{=?n%MAy}V=DWN0B>vG-wktf?rBneWJcbw^_r;FKyxyb#y2vfo
+z-c_~m+Is_~y?1(V=%ioUxHkC3()Xb-+br=5l=R!R1cYtRDT&=1DqK0?;#K&j&0@U&
+z%gOMW^65ywt#4~XF3lx*3KaBf);uqB8oO7Od-f?mbL;cHBVA|dp-&B0UMO!4{CcXP
+zOsP?`%6Pitvox^bYY1zf)8&A&)2sWk5#^eqZLcQ2P0rif23ZttI}yj8dAYjc=(Z~~
+z&(B}gKE=(v9SGOB$iBe7xUlU6+xloWt#UepeeqGoSozG?r{)?fKE@qXzsR(>vVHf5
+zcC+iDGYbzacYjReS2-+kFWNj6{PiA8c%8=I=%$}po2sUQB4&QnD(x#c^J}KdzM9w-
+zw|geH<ht$HFPN=g-*aF3c|lI4%ayxxpKZA{rG2x-WydOVr`JcWAG7GHpj!GoIG*t0
+z<u(0|ccoi3_h{b>e)TaiV(Ffu51KXGfsVUUv}W+O81lXCCa3AKVaW@D7kqBnEDKXd
+zDr>L01b$B_>^!3BZTRqz)Bc`Wa$4G_<wHZO>Rt>Pf+%X1y{w<>%h{aG00dt~OPBpR
+z|K@j<Pd4Rk<sFBk497<a`L_-;W{%WXn5K=GCbevJdEU~Hbp9YsGK+h>;LgsyRXvlX
+zrc)o*wXOAR7JeKE=N+l2xv|2yKxL})<7UXz>9y`m$oBVM@8XIxvEeJ#&}}`#e{Qe&
+zvtffBbNbe{_Gg+`Hr%<~mS^|unZ<tf+G8dT19NYCOC&ns`;M`>xw$yjDEV2|U{S#A
+z{Er{DCycNTsC)N_U|0TQl;`{c6aLgtegVMS3B$Nro36s$aRY{|-s>io)Ds_e)jSB0
+zWskYwL#I9-r|xr6v@^M6u}~E~^|?l&eZpyIV*H@?mie$G1?|UpEiOI&bgw3lxAR1T
+zV*L7&&K!x>j*gBScSo#^^Ivw|ZBw!;s{krf`T0W|Lf_Uq$Emx2u~a^=-GrP}`$%RX
+zHu#QEv#@(?@?*)BH(!6;_x%3t`2rbODC~aw8(r4tcOlxNNpea7bblROzBzuWL4=d!
+zvSn67tO9WAGs^Ylhrz<+PgU;?C=r9$qtijtmNy6I4u$%j{4PHnq<o7cx%*As6UPdg
+zZhO(|LX1(zQc=722bHXAftU9Ef(g=Jsg{ETOfD2&gJIK6_@qW&-ADg>?#-K>numVx
+z?r6&?Pu+R>x35R%8`3vD_EXZYA3s-AGPB=wv)Z)9^@-f;eL>S&O|LBWKHKojYEZ+(
+zx#D*9s{Dt$t{X{@?%#JAe;DZGu)cJCytf8?kTwWb&hv@1D_wv7?)pE?)Eo9iB-Qxd
+z#gN~IMhwxT?#~sEM(e+1zpC%|$S3-9{~Vid_an#He10|QYa7-1Wj;*)(^2IS=S{0)
+z4PpnhC%V3KU1Bbl<Q-7T{t`@`IiG&$PFdQmCB~PR4OafR0*hXGfU}R4n?HV=+Gsn2
+zSvZ=tElK`m(3xYOMy}>LMqJ#GG(=q})ndz^JuotLPq1OtCWR>Uwz%1Q8?-Tq^Fv!)
+zO_;vKy1e2#X+Yr*u27XWHc$VO8@>d@_mO=Sr(aB5@l4paZ)VMfj?VSHPbUwC4Rv0)
+zW&B-UF}<H`S~!J!OfP6YP4%5OvP{cZv;5Pk4Zj=}9#)nLG?-3BwU@<#gAI&?oP!#5
+z6kb<!yqkeM8c1axXysNRir!Y9F@8rT<Gnf0hMJ4+emgbRRX5Syue(ZjA@;Y<!{LMZ
+zT=r2$^XmtbCe5#1PH5Vf#?H|3*}CSV!AE8$3ry?7@p=|HU7q3U?~&gJe7f$qRklsu
+zF_X%-nf0pQ?y<~jC1{c~u=)|2s`DiA-b%0eAO7`gSe_fUMKVG@+NQ3YKYd^?OR@jM
+zJyFumf<}!8*;Oke<f|?mpH0VSr;o&R(I;KCDQbtDHAOCew!Ule&KbE{Hfl=U+V&tg
+z?Ic#P`PFYB-#!cMTmJYm;1#ofwUmm+m#(=J5t4Kit_*n8#*TxR?=&M`FU$}`Mv+<U
+zJKv^GSx-y`8|EZvF1#C1_c#-YJ^S+M+P%lqk4nBe8qbpsy8k(#x9HS$Z_PBLjOb2Q
+zOmAjf@=ATcJi6jo@u10?)sB9{SL^_aP9M{$6`3F5nfVYq!|&UFowx2M7W5-MnK8#I
+zZVUDc3@6_D{VH10K|8RdF6h&S4PGuQG~ykXQeM5<l%fBrr}SXC4XGpMOs@<fwKw(r
+zb%~ABrU6=xxnRY%TRyYHrklWgl>#WsG<5t`7{9!{v-EPJ$68wRn*m#F1v_|m<Jd7r
+zkNqAhJA^@2&)Y7T%N@BP^<9}Vbic{Qi!HZhd(F&*r^UW4Z*S(Ba4Zt#l~)>c#!CW?
+zTZ4jU`+(<x1y7L2NwujpNgD?HpEW!a5auo)_af$0*_ek>yY)WP6f;~uy*%RG@U}*l
+zYF9ijeTu}t8mpTXWrXzI&iA=0Ww;tsQe$&cIvC{Ys#-aM_#dfCfbgV}K2%xs%&TO&
+zF{`}crGG^Kr;A9@+H-tE%ze4A!=o_~vA$lbF0_Y*4jmqNR{6pHBKwtT3L)WYS79aH
+z_t&Ay5077&vezcS|6l!;^ml`m^!=Lfuhwpi?QS=>p~?r4eZQDw_=k8#PvwUx6r`~)
+zYK*K|GF)ZWcK*KgDSZhZN%2x==gp`MleZT_vmP9pN!;}<s!rMH&Wzm5a^{ULZh)f)
+zas0M(6i3~;^iRPNui7sor|h=ha8>c4r+HQSeo;*!MFggm;*AxhWWjJ%^}CI#R;(N;
+zPE^V{Dd|mZpKFpeM7CB7|Jd~?_j-q%KJ$EyDJr#5UUzL=PO6DVmy4v^z<8fkRT;N#
+z=1JcYj6|7SG>`^=7JZeO(+Aq6>tK1P150J_|M9Bo>oSE!8JfVjj=12hTbMt?uA2mR
+dtG=E=0eQm7<#ONmfJ2Jo^Br_k>G&|E{{X7dc8LH0
+
+literal 0
+HcmV?d00001
+
+diff --git a/web/public/assets/audio/effects/heavy-smash.ogg b/web/public/assets/audio/effects/heavy-smash.ogg
+index 940c0b51a28a5570db31c4c837a2f472063738e3..c36be2e5d7b0e7538ae00dd395dd5fed44a1265c 100644
+GIT binary patch
+delta 69
+zcmbQMF;_#%KRrE|fr$YM+T8xwf|%09GkqpX>G6R0j6go$lv~p`hKTWk1wg9zCKc}5
+JT*kYc4FF6e67>K8
+
+delta 69
+zcmbQMF;_#%KRrE|fr$YMYy@Q7K+Lt?3lt|x>G6R0j6nY7+a+}yL&SK&0wC1|v8&E)
+JF5_L!1_0!?5552Z
+
+diff --git a/web/public/assets/audio/effects/jolt-bounce.ogg b/web/public/assets/audio/effects/jolt-bounce.ogg
+new file mode 100644
+index 0000000000000000000000000000000000000000..2b6be9f46e05649d0d32cf6c19d072bc98f9695d
+GIT binary patch
+literal 4780
+zcmcgQYgkjqwiBM=Aw&!qFkoU6%%*|_(UOQ30!r8l;zkhzC=#e54+{aSq8>Cskx+~w
+za1aB6Bx2Mkpb^k&@zez5CGxaYkop3vR{Bz@t)AK8*n7|Y?svZX>&`csJ+s%EHS4`*
+zXVvD-k-!A}tMR_ut;MI)&Q}i*+z8vZWhNwx@E3$RQTPLZPwJ+g8p0}k=U)xqNr0=k
+zFOI#o3wZzEn%;DZ%rppHxoP`ni@d$qi@ez0-Z=Vf_)AI`Zc9wcTmpeY2wcF1Kp$Fa
+za>CR;g89^Q4lgK*00ID@@JJr!T452l&5>T{e4>iij<mY+dgwKbpnR@jVJk%#(wtbp
+zyScANwie(URMd45nW3IzN>L4EU1!EP4bC3ZHg{%NG2yI;GbYb0VoyQsG7%haA33BT
+zqm}|^Dk_|v!e?phMtNp82hN_*4q}<-7UEFKX1h!qoQeUb_Y9|8xUjK*3eSja913yr
+z##uUh%t>?(rvjJMsdqHrL`NV4psJcx@PK7Ua%r#zZ2*u0GRPrE$Sdlp9k&_Nh||`a
+zLpuN>#N!`O@e9<^MV}>Cy6-x{DnH?IrXjh#VO~eWv&&w_?R)?tR+IIglP!(=5&<B_
+zvkGebiXKJF)$1!QB?r!$fLs8~Af9bVJvr<r#;u?IZ~gK=`_!>C0Kk4$BE|HB35awT
+z=b#GAA=cW7N1Yzz%Igl&sKuj59#hyGc{Y$p-~DpQ>yez7Qzjq*u!-!Kzps@+q)QUW
+zbAvNZ(%|edBf5R(ID<GWCh?k-IUUV#hfx(!#ul1{#Dh3+KvW8hkDM$^C_q}NqE2=z
+zO>FBkUR4~<y{VFibK4m;MOX@=BS)^Rf9xdG>IRjf^MQ!4kZqv+*YJ^14Nzc`g>#||
+zGAJP%iDp82)G4tb5RU`uGK>+D$q11%Zp!C{7W;Qxz<XGKaG2xTfwgHvuhKTYO1nRh
+zbpKV--GQXI(xhQsTHIh<+)(zvccbXJW+1od5!5>D{2~?K+GrdZ0gym$jbFh-KD0*>
+zbG_U>xpec+(%PNnrw+LpQJ`U<)?mv$VKf_Ked)>M%39pmr%xB0)SN!OwftoAf9@vL
+z^fLfh0pQx2K@G{Ewr1c`88u8Z1vCJHR#TT{&TEzXu7EQ31>gELcJ-p{$aQHSi~v#a
+z)++Lc{U%feoD}<q_W6eWA3LsC69Ao$R4hZo>(?zu42+8#JXGZ3{+v@~2`jlTG&~E$
+zviTrNS6B6o_^4%=ZBA_&uZ{9UwOGc^s~h@GbnEJCH)y=+AQ<Kg1I<7Zwz1urVh46B
+zBN3Z3rc{KZ?rK$(pi?C&L#0PV;pkjuF($ClB+1bf=1FK$6Ds`8lR#d~z-j>U*?dGr
+z#!z-`SrCe}DujIGu`)B9(^{5A@))CJ*`X>$W)Y`WDRS_!ED_o9+$*3NfF=CdRQJdn
+z2?0vDmWc}3#OXp3&kD(lz)mZRdjmr?VmTJ7(aW*I5)sC=Lb4q&4@4i06?m%F2$MaB
+zda*A(4a%6ps|OSbo|*xH;7qeVS|nZgx{ZTYC<eKRRz0{iOgr#hXtJkjFd^B~FqqJV
+z7?cYTZC+`@#~S^egpP%}G7%(27T!V(l__VNTa{vO?SN9y!O@rHbk>iRiR|Sf1tgV?
+z307za$^~Z@7WWF0wFa3$iXSdzZ^i`kH2P>k0b5@tl6nsH2+qMXBBh*GfmmMuYJ=bm
+zPO3l)NqH}7tz3*Ymk#do(*CwV<i#7jC*9&X*1y%>!%!*ezJBMPn52EI-1>Zp{!Y%1
+z9LinMgm!Q=rfXT7Qry%0=46id@`3NfojT%C5s5oKCu`#74#ie4?c-R%vn7KrySq5V
+z+kzhv!$_p`>QLpex~rCSK?fuyE?~bY7kP8X64q$1Ljh$vr|O*f=on3LT4#AQCBkP2
+zlG2Y?N#_F)-$DSi7Ku;9mbL;w3kSJ@Z5%a4f+ECfiGs&M))t1gm5Jr-xoQO_ATo8(
+zYDa~bPpeAeAn;&bbU>3eie3Rrtt%B2B08raM3aXJK2~2W6`W@4qJ%ff6rCId?m!W3
+z2_`s0Eta!c8nFyT5Iu%Tp`CrkPi2u%56z7=Sh7~tiy><00I7(6O^j4`09W;mC~PZR
+z2bb)jd^X|?cZ|V|hT&&$=BmX-=#wgy97|EF$P1pRp!c=YYB1<BYKKV36(prr4GIc%
+zC;J7SOdTXuuW-OgIjsnTE`xfo;Tb9HC*=Yu8v+o-AV*WR`tq1m&c6;vx7H7o3RCKz
+z^kZKlItXYsC?XH*UMZnx=+@wX=$LIVX)cCN1|?_e%LLMT=$0(zCF9`~xZ{$O(7yU&
+zG$f^R5W>?aF-01k00K_-CunuAs4?kF)J`eV`X|uC7Y>aG!#Iurc#p!kkLNkFd=r^~
+z1Zx-N8;X$RqE^BX6)QyDp*NK<@uSc+czi?@&O<$ux&!$dT?C41^-gH0M(1P$0PAyD
+zy6OTW6Ebp*$;24IDBGf%y&M^%`5IVy+}H+XaRdV0Il>3JO9c8vDI%d(bOnZ@bO{DY
+z!GJZv19+A%)5#Jtv}}qYp>jbt-MT{EjWIMegR4_mYL^v-6^5vsXU%;sIcd$GD9|r8
+zgGDJF%>yIJVM`jRkfFtpp~ZD1>uKw)z$2K*AqQomZs$A-UdwH<LcFvWz;X{|!vV0=
+zKmc?`IV|@Q5;~6ahp4k4pjv@($7qm0qyn;ws1>jxTjRMZmHe$To^h&2RssUtpo`n`
+zx<iw-n>sl}&w)GM2C71lAcawZNt>5<2J#U@)nXQ+qoht$NE8Ao$FdlcE*u*XLsgcG
+zyO#_^;VD#^a2CE3!GQVVIsrUyS$?F;YWe=ZgdpO|>vmRCM4g<mLadMtHCVtlz)MP?
+zo+9k#Ski?MK$FOD0EsuQglUmT&%yx`5_hZ$3QL4S;1&CS6T%Nx5o0a?{~sW$&@TTz
+z%mr<Y{~)xyzix1jl6PB&h;49VN=yN;4rHklpe>m2Vu4f?LrWbIW9U;Duc#GFASlr|
+zxGFFnG#517hk^TH*3LoH#W*0iI~2hk5K-d>{($#k_Sfa+KPbcmG|i#{nnS8`6Z7fW
+z&wZPW{s1p_Rb){SN<<Vg>{Qu_A|8UMFw}awusiezDlA1XJGFC&YL$ZLLC@|Ev}ESV
+zFe`dV5qF%Wh`>CUie3&&Eg_>QQX=E=HCYOb#Vo;*OE8qrEFq!R6{<C;wMMlDBUWU|
+zcypO5Ib0Si;9j)?MVVO`&jV4z$kixFC?8RW!<wfe^H}seC@xbihcQ>OhGzviz*yCg
+z3Y1xnApndTGc}QW^Hc+IR#?*nAiFd;0C*D#P-G1z*M`m^vX>p5I}I_=bgFsZkRs)W
+zej*DCIjrSDcI-zA%1o44El%)vF9~XoSl!&%&oS3K33tD&p9!x8L=#{pF#{ADtBe3F
+zEQudknz$0o?9xE)KH^a;TkGoUf$qRRAee6s4p|lS=6Mn6`?IDe{?w8;<CDs!?<IC=
+zQ<p6gm>>XI1eiYkcIVpY*!aXPsh?-<*qsY$<BbS*1HhOQ5FG3)a&($Wadw$Sb#<Ff
+zqvKyP#ug9|V0_Zx7!Y9mLNfb@yYUskzmV_?reEpDz$sP0V9lDvpw994;j9eduj2=W
+zuj0?6cFDSHzL{T@Jtw#CcPkK9+{e48IAmiPZdvNEd*W7H-<81^ijMd~_q~_q--x=b
+zziIQrch6GO9vYZD{A+EtkJIMf_-mK-5#0NaD$bkFuC<u`z^~5pQsehQ`YwyQKr7de
+zHYtAEovj?RzYSJ)a9*W1jN5gtHutsZ$vqbSN9)M2AMlU8sL&rgk{mu0q;GuxA}b?K
+zyZg$i{Ywkpz772*?(={k+0u7d5k>c4S@`j@mB?>9bD8%}@S>Ovr}?gh^L}m}Xm<{-
+zKUDSfqx+*Vk#{4R1Ym8}F=-z;8(u}XG;Xu-jy@>*>4quyjLT*&aB+MVM-XVg9)J1n
+z?HX+jyk`MWd$?QkvAgFEufIhfaRf{M`2EK=RycU>@Mgu{ukCRJWohgmJ5D%)Ygc}M
+zk^3{D#cSVP#qnWV98@e74ovo*AZ!q9oxeu#$+glhFT(II8+Ume-v!jL2Bdwl?gzIm
+zan;tjz+uBq-i2QVj*f(Gth>hq#dBfw0}#D2r_Sez<p_Vy{NurIWzU(%<4o=x7Vizn
+zg_cw01)g7e*VLqr;Scs&U;avU_RT(r?N(d%jOB!z6f*$u`18{H^obx#@XfQ(dHD-s
+z_ADaB4T}%Ics$<vT(-X?dW&s@+};<ASY5s^eP`*t>F>Gke>7zrf*JnB(M!M203{af
+zK{RaRlRX29k(~D$t@vR*L%jmn*}r=_c_;s!=|sYIt2a-{xn(oV0sr>JQnP>y3#_~v
+z8}lyxajtgfX}LxI&!wLxNuPGnsqMaXJF0>C-sW#N&c6m+knL9E?|S>sncrX>GKqg?
+zx43e^1swF5I3`%UVfOu!m0zuR7khzr;L4_Kbas024d+92HRWx@o7Hq`qklIyVuusg
+z5A1Dn?q2z)ZGPXyMOUn09g#D@moorkiOtBH{^>1O4WAt<5pbgKW(=1r6}mjfJY^xP
+z^tFe)$J0jhRl2IKG<>uURM806n!bJR)y|**#r|N+(NFiZILKMBqE<}v1uX=<$KO2t
+z0qL?d@Znzj8nZArn}@M+hkTUVD$KeMK1{7ukJ^q-ax4EHQ)+&#iL>q8A`@SpY#dw*
+zccm#`FbKJvjh->4;Jih~kNw%N&vDOgKVOlQ_ptb$ZvE}XW6~=m+v!U~zTZGUu<lhv
+z!;8$K3&WeQHYQZ;fApxrWY_EXd~-KY*)-YcZ3&i{Trp`nXd)|SScA3Szb1l-kprf0
+zR-HXE{OwWV+;1I@U3dNAi-pg3wY$f86!>+OjA%aH71LD|5gsY=932IG;MO!5`<X?q
+z*%gyFUjd#xm=G_xvkQRZL4vFYFB6}}=X~k-behATDK7=9_Gs>{Yp@|QBeTor-SHsi
+z#(R$5c5rhwl2C^LmphIDZ)eabA_sGjGT)gGM&D1m1gF0)@sb|1UodR{#3bo!T~O-F
+zb=XVfP2YY&?AN?3^R&m4f|bAbetLpj+DGc)`&ql<3^7-NUt7)r<*a>@)KD^bzSR}}
+z3$U5QrEKi93pXEqnz_L?Gj*t@!r}aIqqQWRx3d18S6|2Lhqo!`)^0m<^>*^T-zx7B
+z7!d*!w|BLZ!hFzPQfEo3*e7FHfgQ1X#~eZQmh)!bGyE&|th!l0iL%EVhBtQ2VpY0o
+ze@)Uph|ic6b^Fxf(Tf_@MEPQugONSgZAKa=%|8YC0Vhl^uG$Xb6)+gm|9sGVHRbS7
+X-tnUOxzB>n&YafbSNp?*9>PBXkpYBk
+
+literal 0
+HcmV?d00001
+
+diff --git a/web/public/assets/audio/effects/juice-splat.ogg b/web/public/assets/audio/effects/juice-splat.ogg
+index 4a62916a1babf89b7f4a125a21fd4fb3326c9f83..268101a5bceb8f92bb648660e78ea59e047289d2 100644
+GIT binary patch
+delta 69
+zcmaE){zzTQKRrE|fr$YM&RHiqf|&h3e;u4CrN;x}GXnXYf?<*yL&SK&0wC44xg~X*
+I%Xo9x0DJ5bOaK4?
+
+delta 69
+zcmaE){zzTQKRrE|fr$YMPA<9V0%BTJz3-kVrN;x}GXnWp1t-NfhKTWk1wg7bi&?ri
+Jm+|JX0RXM96Z!xE
+
+diff --git a/web/public/assets/audio/effects/leaf-burst.ogg b/web/public/assets/audio/effects/leaf-burst.ogg
+index e18496057a9d3e6d7721088fd7357fa0dfc7218b..979a1be5ebb2e9f324173e6e606b6213e4957a72 100644
+GIT binary patch
+delta 69
+zcmdmGw#!V)KRrE|fr$YMUfVuA0%BJ0d3JN6lpYU=&j{pSPY5&G7$U|C767T{4vKoZ
+Jxs3M+F96<s7Dxa9
+
+delta 69
+zcmdmGw#!V)KRrE|fr$YM-iLfn12K<mo%L~|lpYU=&j{peE6#qmF+_|PEC5pN%(t#<
+Ja~bauUI5T16~+Jn
+
+diff --git a/web/public/assets/audio/effects/lightning-strike.ogg b/web/public/assets/audio/effects/lightning-strike.ogg
+index 02bf180525fe1c3b683fa06276a3cd8596300f8a..fcb7ae2b918e03a8affb344889479a93dbb4254a 100644
+GIT binary patch
+delta 86
+zcmaFi^ukHXKRrE|fr$YMu4IIWfta}p0f#3_>2ZVjj6i-yWa-9Wab6w}AEbCmd-R0O
+WWxR6)z#_~*5$5>7C7b2syqE#7-4+A@
+
+delta 86
+zcmaFi^ukHXKRrE|fr$YM{50mYgP0S~Z<LxSrN<58GXnVy44*azi}Uh;_#nkxy+zua
+X%XsGqfJK;rA~SsCGd9b~c`*Y3wz(C_
+
+diff --git a/web/public/assets/audio/effects/magic-sparkle.ogg b/web/public/assets/audio/effects/magic-sparkle.ogg
+index 318eeaee45ecde421019d95fd364cd3eb7fa950f..3cde713d6bf9de34c101d16f92518cd0869affdd 100644
+GIT binary patch
+delta 69
+zcmZqDZqk<WPfrhKU}AuR!o-OSKuisR;MWtS^mssgMj&6_ceUWg5HVh`07&&izF?uv
+IWxPBb03YEHNB{r;
+
+delta 69
+zcmZqDZqk<WPfrhKU}AuRByF=fAf}dm!q$mWdORRLBaq)?t#fK)h!`(e0Hk^a=N{$F
+IWxPBb0P@lgH2?qr
+
+diff --git a/web/public/assets/audio/effects/magic-summon.ogg b/web/public/assets/audio/effects/magic-summon.ogg
+index 2f1471340b2c539aeb17d9d6e5789fdbf0c91925..8461b444ecbcecb9b6ef70dd6bb242316ca86efa 100644
+GIT binary patch
+delta 69
+zcmbQ{IL%SYKRrE|fr$YMJkJR%0Wp>KSGi4;(&GW~8G-yH!_1bAA!58>0g&qF=k`w6
+JT*j*)3;;d?5<~z1
+
+delta 69
+zcmbQ{IL%SYKRrE|fr$YM4m?et4`Sv`-fS~bN{<J`X9V(n%%%5k3=!i63xHIw?Db!`
+Jxr|pq7yy=K6fyt+
+
+diff --git a/web/public/assets/audio/effects/muzzle-flare.ogg b/web/public/assets/audio/effects/muzzle-flare.ogg
+index da4edb813d63ca27c6d94a2dd1b15dc67e6222ad..f8292acb383cd0c45bb23b02d55a1a54de9035c4 100644
+GIT binary patch
+delta 69
+zcmcbwdS6w_KRrE|fr$YMo_YOO1~F5)twbkE>G6R0j6nVt4Y4U3L&SK&0wC4t%wKso
+Jm+@w@0svjm5&QrE
+
+delta 69
+zcmcbwdS6w_KRrE|fr$YMA{qVdK}@f%s=|p<dORRLBapu`W?}Be5HVh`07&)oNAI;a
+Jm+@w@0ss_g5W)Ze
+
+diff --git a/web/public/assets/audio/effects/poison.ogg b/web/public/assets/audio/effects/poison.ogg
+index 1033fc4817f1e64f7d2d7697de10a7541e518b1e..eb13ce36a13ebf5daae252e16aca53fc72865962 100644
+GIT binary patch
+delta 69
+zcmaE2^29{SKRrE|fr$YMcv5=`KuqVkVhbip>G6R0j6nX<DamphL&SK&0wC406S!(N
+Jm+`*i0RS_w5Yqqv
+
+delta 69
+zcmaE2^29{SKRrE|fr$YMZp6N`12K<SN4HLt(&GW~8G(GRXU{%w3=!i63xHH#DpRW4
+JT*mv32LQd56}$id
+
+diff --git a/web/public/assets/audio/effects/poof-vanish.ogg b/web/public/assets/audio/effects/poof-vanish.ogg
+index 5941c9f11b0584d838a826de4b691578d5f42e8f..548a16771fa741242ac28166ed755c0302bdcfe3 100644
+GIT binary patch
+delta 69
+zcmeyW{Z(7aKRrE|fr$YMJT#=eK}?CX@Yab^dORRLBanac#;ffcL&SK&0wC2jMt+@}
+I%XsTK03E3iNdN!<
+
+delta 69
+zcmeyW{Z(7aKRrE|fr$YM6l%A!fSCNhUVWJ;rN;x}GXnXSe+V^i3=!i63xHIgXqYo;
+Ja~W?v2LOK56J-DZ
+
+diff --git a/web/public/assets/audio/effects/rage-steam.ogg b/web/public/assets/audio/effects/rage-steam.ogg
+new file mode 100644
+index 0000000000000000000000000000000000000000..d521972d330c86bbbf082bb5982978701dfae507
+GIT binary patch
+literal 8296
+zcmch6cUV(PwC@HBp@;#IqErthp-E^$5P{HxAch{qLlvnC0Ywn$HGmL8H6SIS2thhh
+zRgjMKjt5k_R7C+B+#S5<zIWgEzWcqu-h8uX&)#ch&06cXX06%DHD_lNfFAhIa(FpP
+zjMf#&9C=8`Pj~N*x4jFF_JZz$Iqe1jm&*U#i|MY>X8u>9&7=dL!n_pbSk({zx6*#>
+z51UgU^{U;yTZ%H$2t{dxj0|nK0C+ihI^1z|@>T_j4j@qu0TN{e-CgYe%%eN;=Y9dD
+zX-)^I0{}M)Dt?0MkbvwuD-_3*mxJnock-bIh4O_pqmdm7o!kz(^^UQq?vTMmGk`XM
+z%xhuntuM7q!sT;Y^m(lag1tpS=RPk+5wMq_yiD*;K>VSydc$esLO66|y$ZR(9+?;H
+z714Sgh&qCIzcScc5{$xlmnqPw+|I1t%rq_?G=6I|&T$HLqkqO74L)k(XzY)Ao`_{m
+zTp5iE_{jU`ouItqSs)Pra&lp@A7QM}bCpa$7XU!jy*PA}I1DOydxwNiK~7nn0C4~y
+z;5fZVvR*93GU1j>wy1v|EHh8Mq|&9QQnI&ltwH)|x*h-+U*~AQ%fWCo&k+D1wy@ZI
+zrGy1b0>vtuAw05_9tZ}2<KQ?J-3kuF&%y&=E)VSdpY_kOf&c)7!W_Ae{R;s^=p2t`
+z7KZ%>6DNw7O_LARuUSk9dk>EgaTqo!)qn^++)~|}4cPhv0Tcl2IFzD8I)x!Z;r1M2
+zT3!W$U~f^_vgg5yFyx;wDCz|%ptl~JabyZm$5(>kP!u=@Y~W-fMh{+)ZXXNp<i+(N
+zIt9a6WLI*MjgZ}Bf)TPuI6nd72Cv~TxmvNv=|HU+C*huJz#ZZc9o+w``Rm9Gpu*6T
+zJdTN=fZ-fROua#VynoaJiL`ydtBn!X^%mA82zL`C^^-66R?({AsFvYbvoSM|iCvGs
+zcRl9DoaT0&X2zUsQl0*(@vs@Uv6=Aw@AXLa;Nw7W!UAY@u<9j{^_Y&pNu&dyKybcN
+z?7SX`M}mkILDVJH`9W&ogUq5B{-YrvFrd}I5}bDgo3K@CflGEF4eV#nVhf6&J#)=0
+zaQUAreXdXm05AdoU#AzZt`~2o7fq`p3kx0t1OY(vI<L03WG6x10Mv0rYvAjR>x#Z6
+z79RhC01ly*PTXa%c7vt>JIR;zN8}CvA1lqU^Z@95(Bwq4QH6yLyhFJ9rZ|}+c{HFX
+z-To?aqZoA(&QKqP7NX>g%*s*{F)RUv>8LL5Pq|@<h=}ruY1}~b9zO^k8=wWoiw?mK
+zs6!V*R3wZY(JAbRxv)$k8lgogWOHmEIXoSWPr@0Y#YB=ZSmt6U0@_Wa0ECpD7rZ3H
+zL0OIi*8w0Jp$8{(V9<!dbWJq8ljxuaUnF@ODR-v(K*g82eOS?CqIZIFAqmGW%aDR&
+zMTusCFaQkT#hg2sc$Q9`1U@I?Vi6EF2PldW9$}1mMoJ#m&@T=nVDyXI37EJP90th<
+z_hrY3!`m$}u~KAH2N$V{VNASK2gy3FIg)5ERXm2pmejXf;_wQ4UCQVz;y4mcrHs28
+zQpcwCU8Kn4_AXK#<Mwai9V9t8H6qnsqPTt1zE`0p9S5@Fa2SAhWV@Btcap+nsAD8-
+zuX1~OKwrgjI_@+9M+8~<Vz36(u}o}<Lh>-yh1!vb#nTqYBb+f<$>MfPY%HQZ9fy~i
+z7{r!=Ynb4bJF#Jeirt&o5*n*mD#%Jku`^o*U7tGcFHQY+6DN%te}}&<wLI#2TD&70
+z*Z+F*T^N+QNOE0QZJ!L-ROX(+ZBxhJTff!rB83gs?-vBf=!{K=_0>Q!a8TsR1)uG1
+zKccHNb@2vvO?CX-!?((iA?zl+W7Y)UJdypRyqQ4=+Y7P^i$&~b;$)D^_NLU=pn{1t
+zoVfuP(aVCwXEh8NZpN|`AglJ39Q;K9uzf`b2)+uJHNM>y3kVtk!5Ur46z*^|9FiMO
+zM8V)@ar#~9VFZL2g^0mIL~20PG8{0no#b$Kthh)uJKCj~IE;l+YErRr@ET4{cyR;<
+zD?zDF#XdvSm^-{lC-y1B!5L^cH3fq$;Y}tWV8vmHXgItbgTaG1%dQmpK+)pGZ%i>R
+zRPrzeP5~Xj9o}wgjjxHMnfi@6#uZTmJ|ZTf5pW)G#xfYuFtjz4#VBD3=%pMo0pms?
+zbI2``LGSAk%*TK(Lt!@or2<(|$m7_!nu1ZRlt>N8s)EQ)W5sD;2)Ybf909K3hFHqP
+z;t?PL4(}kK-Kp)F*6zyxxj5RjVl36ctzu~u6A!Ne3H2RBlgBl?B+xTzOlbs5>pNi3
+zQ~{j~)Lf)J9gD93-4Z5Jd$c$=IHQ)+;dE}bCCG}*?f|aFZJkhDg9Ql%qxRIAU0!QX
+zRSKsYzG4aVaD|Ck2Seqv03h=o-1oL99+<qN2ml3h7k3-C1N0n)1a8qVBCcP*n*;`a
+zH0T;AJvhz?g_d&a*U&4jF-D`Q?VM=+;u=n70D#>EQ&+i$iM?0wQ7}2$z-YwDT!apM
+zSx~+M)=mSvgOqFx2i@6N7IYV5^b!dNMKcN!F=(_<I0j?|ZdiKS20kw@!pQ&%r2R)A
+z2a;UB5K|VVA0u3xKYrZ}Mmc8?m(^h&uvR~EF2JMy5)mC=Jf7gzTR%4IVyIfj3kswH
+z3ZzmFWjbZW2rPhs9F!m(*UuBdP0Qshm^fN$j|I~`s2hy{rW%j{IwJv0_u)|V3QayZ
+z#Rnwh5;4eSK~O$;7AP*9LIg816D?M`b4-zJg^LCgQvh{-(8XC${rWCcyFO)z)Yzm<
+z2QQImj|X=J24An!r=bV$$Wej8Yq;IFv%-m3yfQ;F2CuL@8wQ#(Gpt{A%$ycNN%p1S
+zI~=%S?!Tr3)?eu)y=Bx1{VydTG~@O2P`Gh@%FA(>I0R_HSVRYSNYQBLcIa1T5OM$s
+zg5ilY0u;4E0>dIi$cIJ<ha#7AKxHAI610r{e^WvU%pym*{QrLgiVEWL-y1QYtFD#q
+z)#2+79&<uJlWrI@4b1Rk0KlXHqu7I3h=2zRcvdoqR8klQy$bGEG$R;5(2%2skBC8m
+zaDl-6+aUk#^(ezB$uxpizdoGifN%;8;D5*c+xxG>&HrE!df>%*UO<rDon$AnT6$Oh
+z#gRXN2fG{&Tml*bCnjQw((@8fa5x!*W@2;b*Z;%|rXnyp^(aFqWFksj$hTjEK_ns(
+z!zh%JfLwtQjWOaP#9?I^C7c6|hNmQ=^oo6m7??;3ZEy+(ttXNKMKfiQP0>unWK#?z
+z%O?>fCPF5FkI6)EE`^9ji}+wr;&2MMbBl>kv>u#d1m-+42MQ(>0jeuPA%J@>#T3N|
+zN`Qgof?PnI2^cs4yg!Q65M*~zCFH!}i*118TqQdIo<!7%KI1Nh`WGMw?F_L~@D9Nm
+zvSb_7gb?$Y!y!%?rlZM<SRit9p&_|p_LoIdG<%G%*Vm0IpJ?ZFc(_%;1s)3^^uY1(
+z;{dlHES(NG$pHC_fu4`<II9N`90JK;WMRsEtsx3rR@c%y0mLxI4o65sghGAT96!H`
+zICClc#fNZKk3WYkD6mZjBpL&3Y(sr!mN#r2Z@b_1@p~8y@}?CC@DKomFQ{v2$>Yv)
+za&hyVJI~9<FCZvH`;s{->gwu8cR{dKS3mkfI=-TH^a`MTA<+()n**Zqq8{$y{t+P|
+zk)c7cA(7F6@!q)5M~{NT!oxzs10#b%0v<gK4)u2W+S0&^W4oxnCHPw5nC+mvf;N3=
+zkPi#zbz;~>>Gq_gq%4G$q?>UsRVU2WxwU)e;zbvD!`XpWwl&LrZu+jBAd9v6o#lZ%
+zr@yRLf4BxezSzE?92~k_Lbv+RZ2!gRD;7om^MHEsz%uvF81S{{%wHY(r{7P|1)tC!
+zA^Hp38ZAeJB}C_i)P<&8=jo12D7ZZ+(48;Rdr?ZPJ4ofD^LZ<hb=gAA_dB9ZI#<%R
+z1tkuIXJ)1fP76MI7EVlkI{%p?i6K?>I&>k~cg2zwVw0x8@g@`?Zyyf)a30fkQ)S&p
+z1Dx2`Jw?;}jqARC4t&61wAyI*ac;F(UoWMdza<5%>W0(@sJN+bO2aZaqF;3$aUJlb
+znef6KkxX`c4I?}b)dC&^yi3o=cowdUo=(R$Y2Li!+|u{{69k)EN3xHOszP#Cejj$4
+z5{odLLf76~d*jw2r`p{#Ua1Tm6xNsx;g1nCE!{sW8cR*b#8znrNeAg+FGj0~YnU(r
+zsBEg8C*mhtl{A8~savVbmsKeG;5OlBR@tzt!b(KeWhVc0=92u3(Az&69p`mTT{U@Y
+z(OK+`>hqc-YW=?pA{46LX)w{fy}xu%;z=q}F!TYHXjSWVrfs(Fn`$E`*I>wb;Omz+
+z($;_nJ|)&e>J#{Bx3~SRU^nQEpPe@N*-8mh@p@8$d>5nV`<cia!}D9i(bQ>@pp*5|
+zSfXsWC`W>$6rx!3g~R1}y<etmi<t3dVGvK|dd6pl@2eipOihu}E73&AS|0c3ZkbE}
+ztP7pz)z|9oR7q+uXeR*&ohc@vFM`>3f%UnkUw-~BtJN;?n5jJpbP<?UqV5lb;zYdD
+z$<IrN?qr-~m%aYZpPsYFFL!CE)4CbSFO|ob?{6S<zRAhC&1I_OrY`bv>aEhbdnvz}
+zjHDWLMG)xWE5af{V=1+dU;jSkn~}=dDQQ~GZ`Q-=BK^^R?*>`i3^-U$kx<X@I<<c8
+zRraT?A&ueEh8s0mCjr}KJD-`=XsuFsO{&9H`ZoEmp7mt`uv@2BKViHFqciB2Q!G;x
+zZQbw@<c>A_hv*l3*400`tEA+wPWXM%p6eV%*HyX;uR1?@5lKemjN_oAVeWiMpIGI)
+zT8mCb3-kTr6Y{iv-t6WwyG(V<=d_@~FoXPFKxYgWbyu+)V*{YsrO4lhc`d(uZ)|h|
+z!rS5sNfiQ9UP02^i^^AeZdMu<cKGL<xWSSP`E1ek&y(?WiNfV%oo0K!M^^iry`Gal
+zh68<WF~98z6wc7R^I&3ND-tDpPfD%602_Pt`IP8{YU*u+;jZ1alV#aObo?u-<Pv}2
+ztVL_(2)}w|rpL@w-S53Qu3o;F+$!^tqI}A$O+mA_y)&o**T2KceM&HCpP9aP!RDFv
+z8q?Sp&8cScFN$A5aR~wx!&{4e3?e?1-se9UUA=>ST}uTQdqzLz(BsSxMkV<(F5E;6
+zbrek3)%>!KUp`*)aAGcNx745R3S`sF=9Ic=>oH&q>+yCfJA8~@5F2uBvS9P_IInBh
+z3!|-@JIjao%{+}CtfD`kc)w_!tql3Pi_nC^I!|odF?C9L?^pWC)WoP}S&qnB8ZEB`
+zr)U&iLi~6%D*7(wv!^UJC)PY%&h^om3G=ktR~b8ZA*I7_p;IBlO3I1ABS^tWf#HQW
+z!t3;=^uXwu;2&fUF^^+FxA(U~)rjQ6ER(_~qK3%Ycoho@7c_~Ti$SboWzwp5a>qEx
+zS7840ipYX-SCND7;)=HU^Hp_+ISC%Au12RjK8&Jkfp#`3E+k*OOM(#cV%@<7@32FR
+znZe7p$g*O*7&dPz^aIN`9Tt@4?|da_l+_jPD}#o|q06_h1Vgu^nQTn3OA&Hw|GV{%
+zwu|(9f1mB2h}zzFY#$N1==zUh%;&0B-LSXNfCjUn<%%Dc&gU)YUAV%vB>s-b|IjvU
+zv-VWA^<(Tt2UFs{?Sj<LeJYFlC@U$||G`z?HlDgs5me!?_%D_WdNG&vG2iiu0G;qO
+zS2j;A+lV*tzIE3;+!Zl1ReR#u)Wh9FgTvb2L2hr~gw@?uvmtfS1v6JUR@vW>pV`RH
+z@@jO^p~m^uw~gt&9_q1<(=GZ-_mO);&v$DjA%Q)z#EVAQo3_$W?}jGf!pqg<di>S-
+zW*M1}jXzl4eIyZm0}063>CF{%Gd6Xu<v4wrQxr3hEq?P(_qYvEK2pAB&M<}^uJs7;
+z+8)?YyH;8#@nnGNVp0C>($nW1+azu8rS+*NgO8FP3-lO8s;FL~-w@sl<}bN(Q)(z~
+z_F_qPfUlq2`C-jHM(%I(gv{2j^9|qJX8&F+DSMwBI%*7E6_UMnJ%U@++=}4ZD_U*a
+z-1*TiUf<P=mq~GJ{@ejvy6)Hg`@x2jTMC?j@n_-E+I6$16byZ^*2dZIsLOJ#7i^Ae
+zSqq#_``&d$jxpY1pjXncN91brTGIIP*J!O_d6ucwPwfqF->F}@o5<WB6e!e_+wQy)
+zu$8}7W3r)Y!^9!?7$t2qK9jVJ8DIKQA()MYLa=;K&)i2I+dVfcP$0Vkkx_H6g8~v}
+zGqoNwd(tzL0{bJsKTv{RHsP+KUrSg!`PIZPD%@W6Q%l`Zn%zxbD6qA!+qW%K77DmR
+zU+5+(HCslX?<C3h{tiDq_)81Nc1&Q#*(dI!`f;2h9^z)YDk=A^?IbGlwih>Re?7l3
+zT!|Vh{$)DptZ=4o)rX><HOHOz1_vDfN4eMi;rp~RTPF0uCmITd5>;Z6Dwl#<vPEU1
+zlojXxqGm0;ysAIpnfmBGW~$Qt;oPl^rm@%{tnR}Snc3QA$IHwE(tP5Gw5-jM>Okf<
+z`j@L@N0M#)P72FqQ6A@i{1TR+*fH=18I>XXsfFod69>4Wf93l-6}I<HS@|Sw>CWM0
+z@JrVB1GDe`{D(n@On9E}(j0KO`)zqiD}Q~*>pnqj`czb|i^}+w&Ui$+;(YJh>3abS
+zNa6}ai9PKK@8PoAy4hed^bxymgj=)6hbsAT5aa=K=M<*z5*k^pZ5~RW9wT7|Gn9vP
+zd19CSfN4$-=cs=~jS2I__xQ2NQQ3JhQ-A&1`*&uZe_zX+*|s<IZn05#8i#d*XM|QI
+z^L)@!Rg1qR$3}F!nUX1oA}tX36EFCSubHXGJRxpf{WO|VCz@9OPVu}5k*~WPldj42
+zG3Jz~U;6><Qy<gM5~NL6&95dP8=^DAr_7rZnlc_@dum1+>nt9X^kHR%`o4@FJmLkG
+z{N5<slGW*W>wPBZD(qR_$Kf5uytoL=<6TErYrh7g8&RUj0dCpGm%al5jq3wK@xx~(
+ze>2>D_e)9n^ObG(TcakOPR=(;0o=aNPX9%(Gmldrn$<l;YPj=E;*EvL71;PlK@goi
+zue5rtd5!GM1Ib_=$D#*WPYtFHOnJ-M<pL4|@9ui-es+8C@^rG`ZP9rl-V~*ZD?`uN
+zZds;GhdJvx$H?8EX;b^K|GW8o{p`c(&1#RuspNC?>s&2o`!Zu9ukk(bH3~f$j%!VL
+zk-}B9aaeT~HlKTz%s3KrlApV!NP`~WQg@nE+?nKT!m4!4rG0F#n`^n&-|}_Hkj4Jv
+z?GMR01}9EhdUtURiYgCsp#wKM2ftLWF$<~49abmbe?GJmX_&RJr%I=0lrnd3Yxld<
+zBh9?Bo!VB2v++*hqen6t>~nv8*gLogJDWyeUDVTN%T@9!V?D$Ca^={8IKL=x5t!6q
+zt_^k_GpV+*&$IbCKV!DH@N};E%--harGrj)=&$0uGru-7hs&-w5`#G3^Oj#P-5HWn
+zWzprncQ*Q}_^FZHbhmz1b7{xgsUN0Xx5#>*Jkk&xgwU3)46g?k!|*by1|y++=<u8a
+z{%v!uo0?>QQFU31sLDlsXEvaPhtot*8kjs*{!jP*XbC62JFk<~&=Z+ewdYZ&Ty|>n
+zA}Nnz7tl2y?!QiztvIo2tX5~+yks`$6B9(eKinLsK^~@)H$7%&>8*9b2$3bT@!YdA
+z;&)4fkEummJ@qx)MnvjpA2FJ<npL?zvikV93)r^vrdDW)lu`ZHQzxymYRu_wGO-2*
+zGXm$=_iS$EW2>iYQ&N8PXV0iL;#T|9sH=O+b-GnvKYq_&kji&tgW4ck6?Li_TX}?^
+z8#t3gPiSC;{Y`lzMFU0O5X#FsM;9ux9g`W|GoMGnUl{p~IG;jAT<^oBOtvLyKeW~F
+z@Km>sQsc`gyOj8-X?^?>tnFI8i`uc9=Qz*aE(2b07)v2bY^J+*HpydwB^SkhAui5}
+z;Rl|o*=HX^a_gT9iHTNItu$V9+U((VpPOX*kRl$(8SzPcCx7+)=#O@`G3Dl`h}9b`
+z0@A5FDdlycSJ!`VriHm=Gkf0qE|mJS&}|O?J(*1s{7oInb8jiLnZ9Zi=2}zojp2Z+
+z1yBT(UI6P@N@h8gQ+?;|(7lr1PZO-4Zq;#0mzYIgxb|iE;Y!xa38!!QS1><D;!FR!
+zXmvdN!x}8ISX1g!F@8Y2c5Bd7*LQpgoziH~cH7!hDIRAi5~1Ilb5G~ydGGm^;z08q
+zyRxkXJp*)0YEw4mlU|n0+=|?VRGTVK7t-kiu8tBZ)$jCYZva#tadYPx&JY4Gzkc~a
+zEkoe%dpFq1Ea;`~8ntp*J9%n9UhmP@H`&dMta&FOA!fm%u{7k28Zxq5IbHBFuX@o!
+zi_t6P<VxsjW5aj-r}v`ra=C^l4-Uc*L-^83^V3FWJobtHO8HNehI@Ft>o<r6z?J<7
+zDst>Z9=mx{DKRBa!2ke?zbp2t@&&S0eN8F9x8ocl{{H9h$(;pyJqJ&}?Q?khP5fZR
+zz7=5FSZUWb9UnjOm@ec)vzO4PPu2@T%->3%F+I4nf3qCZ+FB{(<@n=-GQTmt!TGDj
+zK*{$_CspA^*QVlMWEbCPMn<W{J{yS39(9xMfT0YJWDxXkJz@OzUTduf9w2IcdtK)N
+zi<-Fe`P*&&Wu061*FQN+j*UuJ%IQyZhArHta*mh`d{0{rEEdx-H1N0Y9x-qExZhBA
+zv3&jK^>h9MNxi2&1b!X4F=s`NzTt2|;-n$OeEp^S%yV-IIk$=@X?&|WNOPlbdj)Df
+zaC0@DO$oR=#By1C#$jgjgq&Z~$fE(TnOhr^-l4vWkF*S4Jk?WWX=|@{;j}S``Z6*4
+zbfG=zw16+eB5VEWuZm*u<<1bUZ=O?LLRWJ-QY7WuNbPpNP<_!O-!8{Lx!o}GU}|he
+zyqBz<Hqp7!B-Eg~t#%{NI#rRvSUTx%z2Pp!KlP1=MGlY-c6FJleLL(T(6KSF_xC%#
+z>8(e7wVEwW0~3VD2If5{ZSz7_O6E@6*{oS!zn=0y_xSFKVVT$Y(~b23_YWcRX6XVi
+zp0Dpj4w>{ZD|=4)|1GI*D&!>A2F2gSM;b@@4rjO*R^P}hRN!x#d=%E@9yxgY!a<#s
+zzmx_2n|FlW@+VTCP0gkipRl^Q)T!-%^Ir%P7)t{GK3ZC@+Sg4tj_;b=EZ^5*AgQNs
+zc)bzZ|1E4Kb<GE5%dz)!*tJFgn^<U3;@a(V$MJ$zlg;MzyK0vmef`2z$Cp+;B;v56
+zyk<OOe~(<U<AKps<@cn7$X7eZu5@i^8w0`2Ias)CNmXI|R@~de7LJz5FAvkJ8+H^s
+z!y5gNW@qX2#*UvXnHxlV=&8QFo~jgZtyh4zCb^H*_eVx{js}MN8Aa;@T^jrNn328V
+zwV2aSw2B<J$%m`EXOC5dZ&a8*?Gl;TxX77Ru+OA68^28c@uu}=<ms05#j^m+w$h>G
+zSa+qRuOf5p;i0qlX6H-Mt2fT^??#C&>Z{eoX73&ErdHg{oN;k&7k3}kl(|`#rSO+)
+zVPn)<T6g=ZR6y#0`{#bvQ_nff8TP(@IpYYI8<i{heBYL|Zi{k|Xy`>HL<x{^Fr@9;
+z?s>Gsv&p65XGIoVIw85c&c4>Zfk56#=2z(UDQP>4vAbX8Pfw>ERL1;X+0^F~^c=_v
+z^pbRYJX?r&@g*6Dj(fwJPliwCr4_}$hOM~qX<HySq)nYgk)Gn~>}b~6ja?zG4>b;P
+zW{qYAvL(-9*_3d(2QRF>+=A|iSjjQpGx1)mx6986(12}rb-u`{p#R!;M!(7PF7V!x
+zQBobpe|_m-VSDqf`6t7Xj)Rb~Vb1$4n~aBZ?lae-JouhDjBK>|4ML<03=-B749Gj9
+zd=D=*MahoiAHTejYH9glvy-DoX}6(HY8f#+UaLkI@px`7G-i)Y0Hxf{wdcw%pYi7Q
+ziLXr!jVzsS=^g1Z|9R8acv?D(|FYlxnccLXx*xY|8(V?vfj&O+EC5g*#BN^t*lp%e
+z`ii!m@75k<aQT|(=2L0Oh2K6%Hp0X9?YlqsOpd?W;jnutGn<c@Q`0un?#1fXh6BKV
+E0J+o0#{d8T
+
+literal 0
+HcmV?d00001
+
+diff --git a/web/public/assets/audio/effects/recoil-pop.ogg b/web/public/assets/audio/effects/recoil-pop.ogg
+index 5428f98ca6477580c75f4b9e3742898f91a1b73a..b9657f4eab885073cbb97f803a17873979f2c611 100644
+GIT binary patch
+delta 69
+zcmdn5uwOySKRrE|fr$YM{Fl2Wf|w-+Z%Zah>G6R0j6lBE-NVZ^hKTWk1wg9Hi%xFb
+JT*iBn2>@2s6E^?=
+
+delta 69
+zcmdn5uwOySKRrE|fr$YM1b(N^12LQ3<*!YY(&GW~8G-!ATe90XhKTWk1wg7VzG&;%
+JT*iBn2>^Kl6rlhB
+
+diff --git a/web/public/assets/audio/effects/slash.ogg b/web/public/assets/audio/effects/slash.ogg
+index 8a6f098619354f12e686266862aaff1e8a5dd275..b6185da8458604b9e1fb0b4d2cf56e1faabd9c96 100644
+GIT binary patch
+delta 69
+zcmaE(`9@R9KRrE|fr$YMlHSg$2QgRm)W4Z1rN;x}GXnX+e^ZJ!hKTWk1wg8^N@q)M
+JF5@j@2LQ<l6&L^j
+
+delta 69
+zcmaE(`9@R9KRrE|fr$YMHhFs<0x>7_&o-GTrN;x}GXnW`OGJKc3=!i63xHHV3R{z~
+Jxs11r9RP@L6Tkof
+
+diff --git a/web/public/assets/audio/effects/smoke-puff.ogg b/web/public/assets/audio/effects/smoke-puff.ogg
+index 3e7950bc5d5062695e8cf53a3089539c387a2616..3a1c5446af4da72274927038f74f1f5691e88ec6 100644
+GIT binary patch
+delta 69
+zcmaE7@XkQWKRrE|fr$YMlvi(v0Wn)I**>2rrN;x}GXnW`pH6+>7$U|C767UKdA>Y*
+Ja~basE&#1(6~O=i
+
+delta 69
+zcmaE7@XkQWKRrE|fr$YMRJKNRgP5r$fBh#)>G6R0j6nYG84E=>hKTWk1wg6~*vH@7
+JT*mu@3jlku6T1Ka
+
+diff --git a/web/public/assets/audio/effects/speed-dust.ogg b/web/public/assets/audio/effects/speed-dust.ogg
+new file mode 100644
+index 0000000000000000000000000000000000000000..38b86fa1eac93463e965bc50892e32c620a4c8f4
+GIT binary patch
+literal 5514
+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
+
+literal 0
+HcmV?d00001
+
+diff --git a/web/public/assets/audio/effects/stone-shatter.ogg b/web/public/assets/audio/effects/stone-shatter.ogg
+index c568e7359f87d4fc3076ce60b76f00e45f97b2f7..6f8872286d54eb9338f697e52bbaeef6a4a89d8d 100644
+GIT binary patch
+delta 69
+zcmX@8cTi8tKRrE|fr$YMf^HZ#fS41vb)K9krN;x}GXnXWkIPNi7$U|C767TfxouL_
+J<}%*XoB)UO6n+2z
+
+delta 69
+zcmX@8cTi8tKRrE|fr$YMrWVV60x_A{zba3Z(&GW~8G(F{De>(aL&SK&0wC3=<@4un
+JF5^AT2>?<F614yT
+
+diff --git a/web/public/assets/audio/effects/stun-stars.ogg b/web/public/assets/audio/effects/stun-stars.ogg
+index 395dcd3325fc03915e61e5779e9cf214d5631afd..fbe04041de2d4dce1693da83b9dcccc7aab9e88c 100644
+GIT binary patch
+delta 67
+zcmeCu=+cn#PfrhKU}AuR4Th&SfS3xe1DhsF>2m|Qj6m*r{R8eBL&SMOe304~T+`S$
+Jm+?+v0{}JI5&!@I
+
+delta 67
+zcmeCu=+cn#PfrhKU}AuR4Jz!nLCjZS4TTe>^tpjtMj-dzwNsHBL&SMOe306yObeAa
+Jm+?+v0{|GJ5dr`J
+
+diff --git a/web/public/assets/audio/effects/white-flash.ogg b/web/public/assets/audio/effects/white-flash.ogg
+index 1afd242359ff0f30ccf86c3a795d1ec76d441a49..22d5d15e3d357046cbced4e3a006a92d64e88831 100644
+GIT binary patch
+delta 69
+zcmbQFFiAnmKRrE|fr$YM7{gzOftXF1=k+E^>G6R0j6nV*QO)ZcL&SK&0wC3wC6?K5
+JF5{iU1OOcp5eonS
+
+delta 69
+zcmbQFFiAnmKRrE|fr$YMN^kK!12Ok^Zpxb|rN;x}GXnX+a#JsF3=!i63xHH}a|_yS
+JF5{iU1ORKv5>NmD
+
+diff --git a/web/public/assets/vfx-icons/bubble-pop-death.svg b/web/public/assets/vfx-icons/bubble-pop-death.svg
+new file mode 100644
+index 00000000..07ec5c31
+--- /dev/null
++++ b/web/public/assets/vfx-icons/bubble-pop-death.svg
+@@ -0,0 +1,6 @@
++<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="انفجار الفقاعات">
++<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#66c4eb"/><stop offset="1" stop-color="#00567d"/></linearGradient></defs>
++<rect x="2" y="2" width="60" height="60" rx="16" fill="url(#g)"/>
++<rect x="2" y="2" width="60" height="60" rx="16" fill="none" stroke="#fff4" stroke-width="2"/>
++<g fill="#fff" fill-opacity=".25" stroke="#fff" stroke-width="2.5"><circle cx="24" cy="38" r="15"/><circle cx="46" cy="22" r="10"/><circle cx="48" cy="48" r="7"/><circle cx="14" cy="14" r="5"/></g><g fill="#fff" stroke="none"><circle cx="19" cy="33" r="4"/><circle cx="43" cy="18" r="3"/></g>
++</svg>
+diff --git a/web/public/assets/vfx-icons/cannon-swell.svg b/web/public/assets/vfx-icons/cannon-swell.svg
+new file mode 100644
+index 00000000..c3d0b2e6
+--- /dev/null
++++ b/web/public/assets/vfx-icons/cannon-swell.svg
+@@ -0,0 +1,6 @@
++<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="انتفاخ المدفع">
++<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6f93af"/><stop offset="1" stop-color="#012541"/></linearGradient></defs>
++<rect x="2" y="2" width="60" height="60" rx="16" fill="url(#g)"/>
++<rect x="2" y="2" width="60" height="60" rx="16" fill="none" stroke="#fff4" stroke-width="2"/>
++<circle cx="28" cy="32" r="17" fill="#fff" stroke="#0003" stroke-width="1.2" stroke-linejoin="round"/><path d="M45 32h14M40 22l12-8M40 42l12 8" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 26q4-5 9-4" fill="none" stroke="#0003" stroke-width="3" stroke-linecap="round"/>
++</svg>
+diff --git a/web/public/assets/vfx-icons/comic-stars.svg b/web/public/assets/vfx-icons/comic-stars.svg
+new file mode 100644
+index 00000000..d6e7494d
+--- /dev/null
++++ b/web/public/assets/vfx-icons/comic-stars.svg
+@@ -0,0 +1,6 @@
++<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="انفجار النجوم">
++<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffa2e0"/><stop offset="1" stop-color="#b93472"/></linearGradient></defs>
++<rect x="2" y="2" width="60" height="60" rx="16" fill="url(#g)"/>
++<rect x="2" y="2" width="60" height="60" rx="16" fill="none" stroke="#fff4" stroke-width="2"/>
++<polygon fill="#ffe066" stroke="#0003" stroke-width="1.2" stroke-linejoin="round" points="32,13 36.1,24.3 48.2,24.7 38.7,32.2 42,43.8 32,37 22,43.8 25.3,32.2 15.8,24.7 27.9,24.3"/><polygon fill="#7ad8ff" stroke="#0003" stroke-width="1.2" stroke-linejoin="round" points="12,6 14.1,11.2 19.6,11.5 15.3,15.1 16.7,20.5 12,17.5 7.3,20.5 8.7,15.1 4.4,11.5 9.9,11.2"/><polygon fill="#a6f27a" stroke="#0003" stroke-width="1.2" stroke-linejoin="round" points="52,8 54.1,13.2 59.6,13.5 55.3,17.1 56.7,22.5 52,19.5 47.3,22.5 48.7,17.1 44.4,13.5 49.9,13.2"/><polygon fill="#ff9ee8" stroke="#0003" stroke-width="1.2" stroke-linejoin="round" points="50,42 52.1,47.2 57.6,47.5 53.3,51.1 54.7,56.5 50,53.5 45.3,56.5 46.7,51.1 42.4,47.5 47.9,47.2"/><polygon fill="#fff" stroke="#0003" stroke-width="1.2" stroke-linejoin="round" points="13,44 14.5,47.9 18.7,48.1 15.5,50.8 16.5,54.9 13,52.6 9.5,54.9 10.5,50.8 7.3,48.1 11.5,47.9"/>
++</svg>
+diff --git a/web/public/assets/vfx-icons/heavy-landing.svg b/web/public/assets/vfx-icons/heavy-landing.svg
+new file mode 100644
+index 00000000..f1d6c4c0
+--- /dev/null
++++ b/web/public/assets/vfx-icons/heavy-landing.svg
+@@ -0,0 +1,6 @@
++<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="الهبوط الثقيل">
++<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ddc29c"/><stop offset="1" stop-color="#6f542e"/></linearGradient></defs>
++<rect x="2" y="2" width="60" height="60" rx="16" fill="url(#g)"/>
++<rect x="2" y="2" width="60" height="60" rx="16" fill="none" stroke="#fff4" stroke-width="2"/>
++<g fill="#fff" stroke="#0003" stroke-width="1.2" stroke-linejoin="round"><rect x="18" y="8" width="28" height="18" rx="4"/><rect x="24" y="26" width="16" height="8"/></g><path d="M32 38v8M26 42l6 6 6-6" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/><g fill="#fff" stroke="#0003" stroke-width="1.2" stroke-linejoin="round"><circle cx="12" cy="54" r="6"/><circle cx="22" cy="56" r="5"/><circle cx="52" cy="54" r="6"/><circle cx="42" cy="56" r="5"/></g>
++</svg>
+diff --git a/web/public/assets/vfx-icons/jolt-bounce.svg b/web/public/assets/vfx-icons/jolt-bounce.svg
+new file mode 100644
+index 00000000..c6c394aa
+--- /dev/null
++++ b/web/public/assets/vfx-icons/jolt-bounce.svg
+@@ -0,0 +1,6 @@
++<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="ارتداد الصدمة">
++<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ebbe2b"/><stop offset="1" stop-color="#7d5000"/></linearGradient></defs>
++<rect x="2" y="2" width="60" height="60" rx="16" fill="url(#g)"/>
++<rect x="2" y="2" width="60" height="60" rx="16" fill="none" stroke="#fff4" stroke-width="2"/>
++<ellipse cx="32" cy="34" rx="22" ry="13" fill="#fff" stroke="#0003" stroke-width="1.2" stroke-linejoin="round"/><g fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 34h8M51 34h8M10 30l-5 4 5 4M54 30l5 4-5 4"/></g><path d="M14 52q18 8 36 0" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity=".7"/>
++</svg>
+diff --git a/web/public/assets/vfx-icons/rage-steam.svg b/web/public/assets/vfx-icons/rage-steam.svg
+new file mode 100644
+index 00000000..76880561
+--- /dev/null
++++ b/web/public/assets/vfx-icons/rage-steam.svg
+@@ -0,0 +1,6 @@
++<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="بخار الغضب">
++<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffa292"/><stop offset="1" stop-color="#b93424"/></linearGradient></defs>
++<rect x="2" y="2" width="60" height="60" rx="16" fill="url(#g)"/>
++<rect x="2" y="2" width="60" height="60" rx="16" fill="none" stroke="#fff4" stroke-width="2"/>
++<g fill="#fff" stroke="#0003" stroke-width="1.2" stroke-linejoin="round"><circle cx="22" cy="40" r="10"/><circle cx="34" cy="34" r="12"/><circle cx="45" cy="42" r="8"/></g><path d="M16 22c-5-5 5-8 0-14M32 18c-5-5 5-8 0-14M46 22c-5-5 5-8 0-14" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M26 30l8 4M42 30l-8 4" stroke="#7a1d12" stroke-width="3" stroke-linecap="round"/>
++</svg>
+diff --git a/web/public/assets/vfx-icons/speed-dust.svg b/web/public/assets/vfx-icons/speed-dust.svg
+new file mode 100644
+index 00000000..04d2fab9
+--- /dev/null
++++ b/web/public/assets/vfx-icons/speed-dust.svg
+@@ -0,0 +1,6 @@
++<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="غبار الاندفاع">
++<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c5b594"/><stop offset="1" stop-color="#574726"/></linearGradient></defs>
++<rect x="2" y="2" width="60" height="60" rx="16" fill="url(#g)"/>
++<rect x="2" y="2" width="60" height="60" rx="16" fill="none" stroke="#fff4" stroke-width="2"/>
++<g fill="#fff" stroke="#0003" stroke-width="1.2" stroke-linejoin="round"><circle cx="40" cy="38" r="10"/><circle cx="50" cy="42" r="7"/><circle cx="46" cy="30" r="8"/></g><g fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 24h18M10 34h22M6 44h18"/></g>
++</svg>
+diff --git a/web/scripts/generate-effect-icons.mjs b/web/scripts/generate-effect-icons.mjs
+index d42a848a..dfb6612c 100644
+--- a/web/scripts/generate-effect-icons.mjs
++++ b/web/scripts/generate-effect-icons.mjs
+@@ -60,7 +60,14 @@ const GLYPHS = {
+   "coin-pop": () => `<circle cx="32" cy="32" r="22" ${W()}/><circle cx="32" cy="32" r="16" fill="none" stroke="#0003" stroke-width="2.5"/><path d="M32 20v24M26 26c0-4 12-4 12 0s-12 4-12 8 12 4 12 0" fill="none" stroke="#0004" stroke-width="3" stroke-linecap="round"/>`,
+   "fire-aura": () => `<circle cx="32" cy="34" r="24" fill="none" stroke="#fff8" stroke-width="3" stroke-dasharray="5 6"/>${flame(20, 16, .8)}`,
+   "frost-aura": () => `<circle cx="32" cy="32" r="24" fill="none" stroke="#fff8" stroke-width="3" stroke-dasharray="5 6"/><g ${S(3)}><path d="M32 16v32M18 24l28 16M46 24L18 40"/></g>`,
+-  "glow-pulse": () => `<circle cx="32" cy="32" r="26" fill="none" stroke="#fff5" stroke-width="3"/><circle cx="32" cy="32" r="18" fill="none" stroke="#fff9" stroke-width="3.5"/><circle cx="32" cy="32" r="9" fill="#fff"/>`
++  "glow-pulse": () => `<circle cx="32" cy="32" r="26" fill="none" stroke="#fff5" stroke-width="3"/><circle cx="32" cy="32" r="18" fill="none" stroke="#fff9" stroke-width="3.5"/><circle cx="32" cy="32" r="9" fill="#fff"/>`,
++  "jolt-bounce": () => `<ellipse cx="32" cy="34" rx="22" ry="13" ${W()}/><g ${S(3.5)}><path d="M5 34h8M51 34h8M10 30l-5 4 5 4M54 30l5 4-5 4"/></g><path d="M14 52q18 8 36 0" ${S(3)} opacity=".7"/>`,
++  "comic-stars": () => `<polygon ${W("#ffe066")} points="${pts(star(32, 30, 17, 7, 5))}"/><polygon ${W("#7ad8ff")} points="${pts(star(12, 14, 8, 3.5, 5))}"/><polygon ${W("#a6f27a")} points="${pts(star(52, 16, 8, 3.5, 5))}"/><polygon ${W("#ff9ee8")} points="${pts(star(50, 50, 8, 3.5, 5))}"/><polygon ${W("#fff")} points="${pts(star(13, 50, 6, 2.6, 5))}"/>`,
++  "speed-dust": () => `<g ${W()}><circle cx="40" cy="38" r="10"/><circle cx="50" cy="42" r="7"/><circle cx="46" cy="30" r="8"/></g><g ${S(3.5)}><path d="M6 24h18M10 34h22M6 44h18"/></g>`,
++  "cannon-swell": () => `<circle cx="28" cy="32" r="17" ${W()}/><path d="M45 32h14M40 22l12-8M40 42l12 8" ${S(3.5)}/><path d="M21 26q4-5 9-4" fill="none" stroke="#0003" stroke-width="3" stroke-linecap="round"/>`,
++  "heavy-landing": () => `<g ${W()}><rect x="18" y="8" width="28" height="18" rx="4"/><rect x="24" y="26" width="16" height="8"/></g><path d="M32 38v8M26 42l6 6 6-6" ${S(3.5)}/><g ${W()}><circle cx="12" cy="54" r="6"/><circle cx="22" cy="56" r="5"/><circle cx="52" cy="54" r="6"/><circle cx="42" cy="56" r="5"/></g>`,
++  "bubble-pop-death": () => `<g fill="#fff" fill-opacity=".25" stroke="#fff" stroke-width="2.5"><circle cx="24" cy="38" r="15"/><circle cx="46" cy="22" r="10"/><circle cx="48" cy="48" r="7"/><circle cx="14" cy="14" r="5"/></g><g fill="#fff" stroke="none"><circle cx="19" cy="33" r="4"/><circle cx="43" cy="18" r="3"/></g>`,
++  "rage-steam": () => `<g ${W()}><circle cx="22" cy="40" r="10"/><circle cx="34" cy="34" r="12"/><circle cx="45" cy="42" r="8"/></g><path d="M16 22c-5-5 5-8 0-14M32 18c-5-5 5-8 0-14M46 22c-5-5 5-8 0-14" ${S(3)}/><path d="M26 30l8 4M42 30l-8 4" stroke="#7a1d12" stroke-width="3" stroke-linecap="round"/>`
+ };
+ 
+ let count = 0;
+diff --git a/web/scripts/generate-effect-sounds.py b/web/scripts/generate-effect-sounds.py
+index af8dc1f1..a2674a2a 100644
+--- a/web/scripts/generate-effect-sounds.py
++++ b/web/scripts/generate-effect-sounds.py
+@@ -331,6 +331,70 @@ def glow_pulse(rng):
+     return (np.sin(2 * np.pi * 220 * t) * 0.5 + np.sin(2 * np.pi * 330 * t) * 0.35 + np.sin(2 * np.pi * 440 * t) * 0.15) * sw
+ 
+ 
++def jolt_bounce(rng):
++    dur = 0.45
++    t = t_axis(dur)
++    # "بوينغ" مطاطي: نغمة هابطة صاعدة مع اهتزاز
++    f = 320 + 280 * np.exp(-6 * t) * np.cos(2 * np.pi * 7 * t) + 160 * np.exp(-3 * t)
++    phase = 2 * np.pi * np.cumsum(f) / SR
++    boing = np.sin(phase) * env_ad(len(t), 0.002, 0.3, 4)
++    click = highpass(noise(rng, 0.02), 2200) * env_ad(int(SR * 0.02), 0.0005, 0.01, 4)
++    return place(dur, [(0, boing * 0.85), (0, click * 0.4)])
++
++
++def comic_stars(rng):
++    dur = 0.65
++    notes = [2093, 1760, 1568, 1319, 1047]
++    parts = [(i * 0.065, (tone(0.35, f) + 0.4 * tone(0.35, f * 2.01)) * env_ad(int(SR * 0.35), 0.002, 0.2, 4.5) * 0.24) for i, f in enumerate(notes)]
++    parts.append((0, sweep(0.1, 320, 120) * env_ad(int(SR * 0.1), 0.001, 0.05, 3.5) * 0.6))
++    return place(dur, parts)
++
++
++def speed_dust(rng):
++    dur = 0.35
++    w = bandpass(noise(rng, dur), 500, 3800) * np.sin(np.pi * np.clip(t_axis(dur) / dur, 0, 1)) ** 0.8
++    puff = lowpass(noise(rng, 0.2), 1100) * env_ad(int(SR * 0.2), 0.004, 0.1, 4)
++    return place(dur, [(0, w * 0.7), (0.05, puff * 0.6)])
++
++
++def cannon_swell(rng):
++    dur = 0.55
++    t = t_axis(dur)
++    up = sweep(0.38, 160, 620) * env_ad(int(SR * 0.38), 0.02, 0.35, 1.2)
++    squeak = bandpass(noise(rng, 0.38), 1800, 3200) * (t[: int(SR * 0.38)] / 0.38) * 0.18
++    pop = sweep(0.1, 540, 140) * env_ad(int(SR * 0.1), 0.001, 0.05, 3.5)
++    return place(dur, [(0, up * 0.6), (0, squeak), (0.38, pop * 0.9)])
++
++
++def heavy_landing(rng):
++    dur = 0.65
++    thud = sweep(0.4, 95, 38) * env_ad(int(SR * 0.4), 0.002, 0.25, 3)
++    dirt = lowpass(noise(rng, 0.45), 800) * env_ad(int(SR * 0.45), 0.003, 0.2, 3.5)
++    rattle = [(0.12 + i * 0.06, bandpass(noise(rng, 0.02), 900, 2600) * env_ad(int(SR * 0.02), 0.0005, 0.01) * 0.45) for i in range(4)]
++    return place(dur, [(0, thud * 1.15), (0, dirt * 0.8)] + rattle)
++
++
++def bubble_pop_death(rng):
++    dur = 0.9
++    parts = []
++    for i in range(6):
++        st = i * 0.11 + float(rng.uniform(0, 0.03))
++        f0 = float(rng.uniform(500, 900))
++        blip = sweep(0.09, f0, f0 * 2.0) * env_ad(int(SR * 0.09), 0.002, 0.05, 3.5)
++        parts.append((st, blip * 0.5))
++    soft = lowpass(noise(rng, 0.3), 1500) * env_ad(int(SR * 0.3), 0.01, 0.15, 3) * 0.3
++    parts.append((0, soft))
++    return place(dur, parts)
++
++
++def rage_steam(rng):
++    dur = 0.8
++    t = t_axis(dur)
++    hiss = highpass(noise(rng, dur), 2500) * np.sin(np.pi * np.clip(t / dur, 0, 1)) ** 0.7 * 0.5
++    whistle = np.sin(2 * np.pi * (780 + 90 * np.sin(2 * np.pi * 5 * t)) * t) * np.sin(np.pi * np.clip(t / dur, 0, 1)) * 0.18
++    return hiss + whistle
++
++
+ SOUNDS = {
+     "electric-shock": ("الصعق الكهربائي", zap),
+     "freeze": ("التجميد", freeze),
+@@ -358,6 +422,13 @@ SOUNDS = {
+     "fire-aura": ("الهالة النارية", fire_aura),
+     "frost-aura": ("الهالة الجليدية", frost_aura),
+     "glow-pulse": ("التوهّج النابض", glow_pulse),
++    "jolt-bounce": ("ارتداد الصدمة", jolt_bounce),
++    "comic-stars": ("انفجار النجوم", comic_stars),
++    "speed-dust": ("غبار الاندفاع", speed_dust),
++    "cannon-swell": ("انتفاخ المدفع", cannon_swell),
++    "heavy-landing": ("الهبوط الثقيل", heavy_landing),
++    "bubble-pop-death": ("انفجار الفقاعات", bubble_pop_death),
++    "rage-steam": ("بخار الغضب", rage_steam),
+ }
+ 
+ 
+diff --git a/web/tests/effect-ambient.test.mjs b/web/tests/effect-ambient.test.mjs
+new file mode 100644
+index 00000000..6c894fa7
+--- /dev/null
++++ b/web/tests/effect-ambient.test.mjs
+@@ -0,0 +1,222 @@
++import test from "node:test";
++import assert from "node:assert/strict";
++import fs from "node:fs";
++import { AmbientFX, atmosphereForStage } from "../game/vfx/effects/AmbientFX.mjs";
++
++function makeSprite(tracker, kind) {
++  const s = {
++    kind, active: true, x: 0, y: 0, rotation: 0, scaleX: 1, scaleY: 1, alpha: 1, depth: 0, blend: 0,
++    setDepth(d) { s.depth = d; return s; }, setTint(c) { s.tint = c; return s; }, setBlendMode(b) { s.blend = b; return s; },
++    setScale(x, y) { s.scaleX = x; s.scaleY = y ?? x; return s; }, setAlpha(a) { s.alpha = a; return s; },
++    setRotation(r) { s.rotation = r; return s; }, setPosition(x, y) { s.x = x; s.y = y; return s; },
++    destroy() { s.active = false; tracker.destroyed += 1; }
++  };
++  tracker.sprites.push(s);
++  return s;
++}
++
++function makeScene() {
++  const tracker = { sprites: [], destroyed: 0, flashes: 0, timers: [], delayed: [], pendingTweens: [] };
++  const handlers = new Map();
++  const textures = new Set();
++  return {
++    tracker, scale: { width: 1120, height: 680 },
++    events: { on: (n, f) => handlers.set(n, [...(handlers.get(n) || []), f]), off: (n, f) => handlers.set(n, (handlers.get(n) || []).filter((x) => x !== f)), emit: (n, ...a) => (handlers.get(n) || []).forEach((f) => f(...a)), count: (n) => (handlers.get(n) || []).length },
++    textures: { exists: (k) => textures.has(k) },
++    make: { graphics: () => ({ fillStyle() {}, fillCircle() {}, fillPoints() {}, fillRect() {}, generateTexture: (k) => textures.add(k), destroy() {} }) },
++    add: {
++      image: (x, y, key) => { const s = makeSprite(tracker, key); s.x = x; s.y = y; return s; },
++      rectangle: (x, y, w, h, color, alpha) => { const s = makeSprite(tracker, "rect"); s.x = x; s.y = y; s.color = color; s.alpha = alpha; return s; }
++    },
++    time: {
++      now: 0,
++      addEvent: (cfg) => { const ev = { cfg, removed: false, remove() { ev.removed = true; } }; tracker.timers.push(ev); return ev; },
++      delayedCall: (ms, fn) => { const d = { ms, fn, removed: false, remove() { d.removed = true; } }; tracker.delayed.push(d); return d; }
++    },
++    tweens: { add: (cfg) => { tracker.pendingTweens.push(cfg); return {}; } },
++    cameras: { main: { flash: () => { tracker.flashes += 1; } } }
++  };
++}
++const live = (scene) => scene.tracker.sprites.filter((s) => s.active);
++const kinds = (scene, kind) => live(scene).filter((s) => s.kind === kind);
++const CAPS = { high: 120, medium: 64, low: 28 };
++
++test("stages map to day, sunset and stormy night", () => {
++  for (const [stage, expected] of [[1, "day"], [2, "day"], [3, "sunset"], [4, "sunset"], [5, "night"], [12, "night"], [undefined, "day"]]) {
++    assert.equal(atmosphereForStage(stage), expected, String(stage));
++  }
++});
++
++test("day: warm light, sun motes and green leaves, no rain, under the combat VFX layer", () => {
++  const scene = makeScene();
++  const fx = new AmbientFX(scene, { quality: "high" });
++  assert.equal(fx.applyStageAtmosphere(1), "day");
++  assert.ok(kinds(scene, "fx-shape-dot").length > 0, "motes");
++  assert.equal(kinds(scene, "fx-ambient-rain").length, 0);
++  assert.ok(scene.tracker.timers.some((t) => t.cfg.loop && !t.removed), "breeze timer");
++  const filter = kinds(scene, "rect")[0];
++  assert.equal(filter.blend, 0);
++  assert.ok(filter.alpha > 0 && filter.alpha < 0.2);
++  for (const s of live(scene).filter((x) => x.kind !== "rect")) assert.equal(s.depth, 34);
++  assert.ok(34 < 36, "below combat effects");
++  assert.ok(live(scene).every((s) => s.depth <= 34));
++});
++
++test("sunset: MULTIPLY orange filter with autumn leaves", () => {
++  const scene = makeScene();
++  const fx = new AmbientFX(scene, { quality: "high" });
++  fx.applyStageAtmosphere(3);
++  const filter = kinds(scene, "rect")[0];
++  assert.equal(filter.blend, 2);
++  assert.equal(filter.color, 0xffb27a);
++  scene.tracker.timers[0].cfg.callback();
++  const tints = kinds(scene, "fx-shape-leaf").map((l) => l.tint);
++  assert.ok(tints.length > 0 && tints.every((c) => [0xff8a3d, 0xd9482b, 0xe8b04a].includes(c)));
++});
++
++test("night: blue MULTIPLY filter, slanted rain and distant lightning that flashes the camera", () => {
++  const scene = makeScene();
++  const fx = new AmbientFX(scene, { quality: "high" });
++  fx.applyStageAtmosphere(5);
++  assert.equal(kinds(scene, "rect")[0].blend, 2);
++  assert.equal(kinds(scene, "rect")[0].color, 0x5a6fa8);
++  const rain = kinds(scene, "fx-ambient-rain");
++  assert.equal(rain.length, 36);
++  assert.ok(rain.every((d) => d.rotation > 0), "slanted");
++  assert.equal(scene.tracker.timers.length, 0, "no leaf breeze at night");
++  const strike = scene.tracker.delayed.find((d) => !d.removed);
++  assert.ok(strike && strike.ms >= 5000 && strike.ms <= 10000);
++  strike.fn();
++  assert.equal(scene.tracker.flashes, 1);
++});
++
++test("final wave escalation thickens rain, speeds up lightning and darkens the sky (any stage, only once)", () => {
++  const night = makeScene();
++  const nightFx = new AmbientFX(night, { quality: "high" });
++  nightFx.applyStageAtmosphere(6);
++  const before = kinds(night, "fx-ambient-rain").length;
++  assert.equal(nightFx.escalateFinalWave(), true);
++  assert.ok(kinds(night, "fx-ambient-rain").length > before);
++  const strike = night.tracker.delayed.filter((d) => !d.removed).at(-1);
++  assert.ok(strike.ms <= 5500, "faster lightning");
++  assert.equal(nightFx.escalateFinalWave(), false, "idempotent");
++  assert.ok(night.tracker.pendingTweens.some((t) => t.alpha === 0.14), "storm shade fades in");
++
++  const day = makeScene();
++  const dayFx = new AmbientFX(day, { quality: "high" });
++  dayFx.applyStageAtmosphere(1);
++  assert.equal(kinds(day, "fx-ambient-rain").length, 0);
++  dayFx.escalateFinalWave();
++  assert.ok(kinds(day, "fx-ambient-rain").length > 0, "day storm");
++  assert.ok(day.tracker.delayed.some((d) => !d.removed), "lightning scheduled");
++});
++
++test("ambient objects never exceed the per-quality budget, even escalated and spammed", () => {
++  for (const [quality, cap] of Object.entries(CAPS)) {
++    const scene = makeScene();
++    const fx = new AmbientFX(scene, { quality });
++    fx.applyStageAtmosphere(5);
++    fx.escalateFinalWave();
++    for (let i = 0; i < 40; i += 1) scene.tracker.timers.forEach((t) => t.cfg.callback());
++    const monster = {};
++    for (let i = 0; i < 200; i += 1) fx.spawnFootstepDust({ id: i }, 400, 300, 700);
++    assert.ok(fx.activeCount <= cap, `${quality}: ${fx.activeCount} > ${cap}`);
++  }
++});
++
++test("footstep dust appears every 650ms while walking, never touches the monster, and is removed after fading", () => {
++  const scene = makeScene();
++  const fx = new AmbientFX(scene, { quality: "high" });
++  const monster = { id: "m1", localX: 5 };
++  const keysBefore = JSON.stringify(monster);
++  let spawned = 0;
++  for (let ms = 0; ms < 3000; ms += 16) if (fx.spawnFootstepDust(monster, 600, 300, 16)) spawned += 1;
++  assert.ok(spawned >= 3 && spawned <= 5, `spawned ${spawned} in 3s`);
++  assert.equal(JSON.stringify(monster), keysBefore, "monster record is untouched (replay-safe)");
++  assert.ok(scene.tracker.pendingTweens.length >= 1);
++  scene.tracker.pendingTweens.forEach((t) => t.onComplete());
++  assert.equal(fx.dust.size, 0);
++  assert.equal(kinds(scene, "fx-shape-puff").length, 0);
++});
++
++test("reduced motion removes rain, leaves, lightning and dust and keeps only a few static motes", () => {
++  const scene = makeScene();
++  const fx = new AmbientFX(scene, { quality: "high", reducedMotion: true });
++  fx.applyStageAtmosphere(5);
++  fx.escalateFinalWave();
++  assert.equal(kinds(scene, "fx-ambient-rain").length, 0);
++  assert.equal(scene.tracker.delayed.filter((d) => !d.removed).length, 0);
++  assert.ok(kinds(scene, "fx-shape-dot").length <= 3);
++  assert.equal(fx.spawnFootstepDust({}, 1, 1, 5000), false);
++  const day = makeScene();
++  const dayFx = new AmbientFX(day, { reducedMotion: true, quality: "high" });
++  dayFx.applyStageAtmosphere(1);
++  assert.equal(day.tracker.timers.length, 0, "no leaf breeze");
++  assert.equal(day.tracker.flashes, 0);
++});
++
++test("the update loop drifts motes, moves leaves right-to-left, removes off-screen leaves and wraps rain", () => {
++  const scene = makeScene();
++  const fx = new AmbientFX(scene, { quality: "high" });
++  fx.applyStageAtmosphere(1);
++  scene.tracker.timers[0].cfg.callback();
++  const leaf = kinds(scene, "fx-shape-leaf")[0];
++  const startX = leaf.x;
++  const mote = kinds(scene, "fx-shape-dot")[0];
++  const moteStart = { x: mote.x, y: mote.y };
++  scene.time.now = 2500;
++  scene.events.emit("update", 2500, 16);
++  assert.ok(leaf.x < startX, "leaf moved left");
++  assert.ok(mote.x !== moteStart.x || mote.y !== moteStart.y, "mote drifted");
++  for (let i = 0; i < 400 && leaf.active; i += 1) scene.events.emit("update", 0, 50);
++  assert.equal(leaf.active, false, "off-screen leaf destroyed");
++
++  const night = makeScene();
++  const nightFx = new AmbientFX(night, { quality: "high" });
++  nightFx.applyStageAtmosphere(5);
++  const drop = kinds(night, "fx-ambient-rain")[0];
++  drop.y = 9999;
++  night.events.emit("update", 0, 16);
++  assert.ok(drop.y < 0, "drop wrapped to the top");
++});
++
++test("re-applying atmosphere never leaks, and destroy removes the listener and every object", () => {
++  const scene = makeScene();
++  const fx = new AmbientFX(scene, { quality: "high" });
++  fx.applyStageAtmosphere(1);
++  const first = live(scene).length;
++  fx.applyStageAtmosphere(1);
++  assert.equal(live(scene).length, first, "no leak on re-apply");
++  fx.applyStageAtmosphere(5);
++  assert.equal(kinds(scene, "fx-shape-leaf").length, 0, "old leaves cleared");
++  assert.equal(scene.events.count("update"), 1);
++  fx.destroy();
++  assert.equal(scene.events.count("update"), 0);
++  assert.equal(live(scene).length, 0);
++  assert.equal(fx.activeCount, 0);
++  assert.doesNotThrow(() => fx.destroy());
++  assert.equal(fx.spawnFootstepDust({}, 1, 1, 9999), false);
++});
++
++test("a failing renderer never throws into gameplay", () => {
++  const scene = makeScene();
++  scene.add.image = () => { throw new Error("boom"); };
++  const fx = new AmbientFX(scene, { quality: "high" });
++  const warn = console.warn;
++  console.warn = () => {};
++  try {
++    assert.doesNotThrow(() => fx.applyStageAtmosphere(5));
++    assert.doesNotThrow(() => fx.escalateFinalWave());
++  } finally {
++    console.warn = warn;
++  }
++});
++
++test("BattleScene wires AmbientFX to stage atmosphere, walking dust and the final wave", () => {
++  const src = fs.readFileSync("game/scenes/BattleScene.js", "utf8");
++  assert.match(src, /new AmbientFX\(this/);
++  assert.match(src, /applyStageAtmosphere\(this\.stageNumber\)/);
++  assert.match(src, /spawnFootstepDust\(monster/);
++  assert.match(src, /this\.wave === this\.totalWaves\) this\.ambientFx\?\.escalateFinalWave\(\)/);
++  assert.match(src, /ambientFx\?\.destroy\(\)/);
++});
+diff --git a/web/tests/effect-director.test.mjs b/web/tests/effect-director.test.mjs
+index 37f6dbe2..f79c5177 100644
+--- a/web/tests/effect-director.test.mjs
++++ b/web/tests/effect-director.test.mjs
+@@ -30,7 +30,7 @@ function makeScene({ deferTweens = false, sounds = true, failImages = false } =
+       addEvent: (cfg) => { const ev = { cfg, removed: false, remove() { ev.removed = true; } }; tracker.events.push(ev); return ev; }
+     },
+     textures: { exists: (k) => textures.has(k) },
+-    make: { graphics: () => ({ fillStyle() {}, fillCircle() {}, fillPoints() {}, generateTexture: (k) => textures.add(k), destroy() {} }) },
++    make: { graphics: () => ({ fillStyle() {}, fillCircle() {}, fillPoints() {}, fillRect() {}, generateTexture: (k) => textures.add(k), destroy() {} }) },
+     add: {
+       image: () => { if (failImages) throw new Error("boom"); return makeObject(tracker); },
+       circle: () => makeObject(tracker),
+diff --git a/web/tests/effect-juice.test.mjs b/web/tests/effect-juice.test.mjs
+new file mode 100644
+index 00000000..db967f28
+--- /dev/null
++++ b/web/tests/effect-juice.test.mjs
+@@ -0,0 +1,201 @@
++import test from "node:test";
++import assert from "node:assert/strict";
++import { EffectDirector } from "../game/vfx/effects/EffectDirector.mjs";
++import { EFFECT_LIBRARY, getEffect } from "../game/vfx/effects/effectLibrary.mjs";
++
++function makeObject(tracker, extra = {}) {
++  const obj = {
++    active: true, x: 100, y: 100, angle: 0, scaleX: 1, scaleY: 1, rotation: 0, alpha: 1, list: [], depth: 0,
++    setScale(x, y) { obj.scaleX = x; obj.scaleY = y ?? x; return obj; },
++    setTint(c) { obj.tint = c; obj.tintHistory = [...(obj.tintHistory || []), c]; obj.tinted = true; return obj; },
++    setTintFill(c) { obj.setTint(c); return obj; }, clearTint() { obj.tinted = false; return obj; },
++    setDepth(d) { obj.depth = d; return obj; }, setBlendMode() { return obj; }, setAlpha(a) { obj.alpha = a; return obj; },
++    setPosition(x, y) { obj.x = x; obj.y = y; return obj; }, setRotation(r) { obj.rotation = r; return obj; },
++    setOrigin() { return obj; }, setStrokeStyle() { return obj; },
++    setData(k, v) { obj.data = { ...(obj.data || {}), [k]: v }; return obj; }, getData(k) { return obj.data?.[k]; },
++    destroy() { obj.active = false; tracker.destroyed += 1; },
++    clear() { tracker.clears += 1; }, lineStyle() {}, beginPath() {}, moveTo() {}, lineTo() {}, strokePath() {}, arc() {},
++    ...extra
++  };
++  tracker.created += 1;
++  tracker.objects.push(obj);
++  return obj;
++}
++
++/** مشهد وهمي: التحريكات تُنفَّذ فوراً، أو تُؤجَّل ليتحكم الاختبار بالتقدم (step) والإنهاء (finish). */
++function makeScene({ defer = false, textApi = true } = {}) {
++  const tracker = { created: 0, destroyed: 0, clears: 0, objects: [], steppers: [], events: [], shakes: 0, texts: [] };
++  const textures = new Set();
++  const scene = {
++    tracker,
++    time: { now: 0, delayedCall: (ms, fn) => { fn(); return { remove() {} }; }, addEvent: (cfg) => { const ev = { cfg, removed: false, remove() { ev.removed = true; } }; tracker.events.push(ev); return ev; } },
++    textures: { exists: (k) => textures.has(k) },
++    make: { graphics: () => ({ fillStyle() {}, fillCircle() {}, fillPoints() {}, fillRect() {}, generateTexture: (k) => textures.add(k), destroy() {} }) },
++    add: {
++      image: () => makeObject(tracker), circle: () => makeObject(tracker), graphics: () => makeObject(tracker),
++      ...(textApi ? { text: (x, y, label) => { const o = makeObject(tracker, { x, y, label }); tracker.texts.push(o); return o; } } : {})
++    },
++    tweens: {
++      add: (cfg) => {
++        const holder = Array.isArray(cfg.targets) ? cfg.targets[0] : cfg.targets;
++        const isCounter = holder && typeof cfg.t === "number";
++        const apply = () => { if (!isCounter) for (const key of ["x", "y", "scaleX", "scaleY", "alpha"]) if (typeof cfg[key] === "number") holder[key] = cfg[key]; };
++        const step = (v) => { if (isCounter) holder.t = v; cfg.onUpdate?.(); };
++        const finish = () => { if (isCounter) holder.t = 1; cfg.onUpdate?.(); apply(); cfg.onComplete?.(); };
++        if (defer) tracker.steppers.push({ step, finish }); else finish();
++        return {};
++      }
++    },
++    cameras: { main: { shake: () => { tracker.shakes += 1; } } },
++    cache: { audio: { exists: () => false } }, sound: { play() {} }
++  };
++  return scene;
++}
++
++test("every effect, including the 7 new ones, restores scale, angle and position and leaks nothing", () => {
++  assert.ok(EFFECT_LIBRARY.length >= 33);
++  for (const effect of EFFECT_LIBRARY) {
++    const scene = makeScene();
++    const director = new EffectDirector(scene, { quality: "high" });
++    const view = makeObject(scene.tracker);
++    assert.equal(director.play(effect.id, { x: 100, y: 100, view }), true, effect.id);
++    assert.equal(director.live, 0, `${effect.id} leaked budget`);
++    assert.equal(view.scaleX, 1, `${effect.id} scaleX`);
++    assert.equal(view.scaleY, 1, `${effect.id} scaleY`);
++    assert.ok(Math.abs(view.angle) < 1e-9, `${effect.id} angle`);
++    assert.ok(Math.abs(view.x - 100) < 1e-9 && Math.abs(view.y - 100) < 1e-9, `${effect.id} position`);
++    assert.equal(view.tinted ?? false, false, `${effect.id} tint`);
++  }
++});
++
++test("wobble swings within ±12 degrees and returns exactly to the original angle", () => {
++  const scene = makeScene({ defer: true });
++  const director = new EffectDirector(scene);
++  const view = makeObject(scene.tracker, { angle: 5 });
++  director.play({ id: "t", trigger: "hit", sound: null, layers: [{ type: "wobble", amp: 12, cycles: 3, life: 420 }] }, { x: 1, y: 1, view });
++  const seen = [];
++  for (const v of [0.04, 0.12, 0.2, 0.38, 0.6, 0.85]) { scene.tracker.steppers[0].step(v); seen.push(view.angle - 5); }
++  assert.ok(Math.max(...seen.map(Math.abs)) <= 12 + 1e-9);
++  assert.ok(Math.max(...seen.map(Math.abs)) > 3, "it actually wobbles");
++  scene.tracker.steppers[0].finish();
++  assert.equal(view.angle, 5);
++  assert.equal(view.getData("fxWobbling"), false);
++});
++
++test("hop rises 18px in place and lands on the exact starting point, even if the game moves the view meanwhile", () => {
++  const scene = makeScene({ defer: true });
++  const director = new EffectDirector(scene);
++  const view = makeObject(scene.tracker);
++  director.play({ id: "t", trigger: "hit", sound: null, layers: [{ type: "hop", height: 18, life: 260 }] }, { x: 1, y: 1, view });
++  scene.tracker.steppers[0].step(0.5);
++  assert.ok(Math.abs(view.y - 82) < 1e-9, `peak should be 18px up, got ${view.y}`);
++  view.x += 7; // اللعبة تحرّك الكائن أفقياً أثناء القفزة
++  scene.tracker.steppers[0].finish();
++  assert.ok(Math.abs(view.y - 100) < 1e-9);
++  assert.equal(view.x, 107, "hop must not touch x");
++});
++
++test("jitter shakes horizontally and cancels out completely", () => {
++  const scene = makeScene({ defer: true });
++  const director = new EffectDirector(scene);
++  const view = makeObject(scene.tracker);
++  director.play({ id: "t", trigger: "hit", sound: null, layers: [{ type: "jitter", px: 3, life: 320 }] }, { x: 1, y: 1, view });
++  const xs = new Set();
++  for (const v of [0.05, 0.2, 0.35, 0.5, 0.65]) { scene.tracker.steppers[0].step(v); xs.add(Math.round(view.x - 100)); }
++  assert.ok(xs.size > 1 && [...xs].every((d) => Math.abs(d) <= 3), `offsets ${[...xs]}`);
++  scene.tracker.steppers[0].finish();
++  assert.ok(Math.abs(view.x - 100) < 1e-9);
++});
++
++test("speedLines draws radiating lines and cleans up", () => {
++  const scene = makeScene({ defer: true });
++  const director = new EffectDirector(scene);
++  director.play({ id: "t", trigger: "hit", sound: null, layers: [{ type: "speedLines", count: 10, color: 0xffffff, inner: 14, outer: 74, life: 240, width: 3 }] }, { x: 50, y: 50 });
++  assert.equal(director.live, 1);
++  scene.tracker.steppers[0].step(0.3);
++  assert.ok(scene.tracker.clears >= 1);
++  scene.tracker.steppers[0].finish();
++  assert.equal(director.live, 0);
++  assert.equal(scene.tracker.objects[0].active, false);
++});
++
++test("reduced motion disables wobble, hop, jitter, speed lines and shake", () => {
++  const scene = makeScene({ defer: true });
++  const director = new EffectDirector(scene, { reducedMotion: true });
++  const view = makeObject(scene.tracker);
++  const before = scene.tracker.created;
++  director.play({ id: "t", trigger: "hit", sound: null, layers: [
++    { type: "wobble", amp: 12, cycles: 3, life: 420 }, { type: "hop", height: 18, life: 260 },
++    { type: "jitter", px: 3, life: 300 }, { type: "speedLines", count: 8, color: 1, inner: 1, outer: 9, life: 200, width: 2 },
++    { type: "shake", ms: 100, intensity: 0.01 }
++  ] }, { x: 1, y: 1, view });
++  assert.equal(scene.tracker.steppers.length, 0);
++  assert.equal(scene.tracker.created, before);
++  assert.equal(scene.tracker.shakes, 0);
++});
++
++test("detachPart flies in an arc with spin, fades to alpha 0 and is destroyed", () => {
++  const scene = makeScene({ defer: true });
++  const director = new EffectDirector(scene);
++  assert.equal(director.detachPart({ x: 200, y: 300, shape: "shard", color: 0x999999, vx: 100, vy: -250, gravity: 600, spin: 6, life: 900 }), true);
++  assert.equal(director.live, 1);
++  const part = scene.tracker.objects[0];
++  scene.tracker.steppers[0].step(0.2);
++  const early = { x: part.x, y: part.y, r: part.rotation };
++  scene.tracker.steppers[0].step(0.5);
++  assert.ok(part.x > early.x, "moves forward");
++  assert.ok(part.rotation > early.r, "keeps spinning");
++  assert.ok(part.y < 300 + 1, "rises first (arc)");
++  scene.tracker.steppers[0].step(0.9);
++  assert.ok(part.alpha < 1 && part.alpha > 0, "fading");
++  scene.tracker.steppers[0].finish();
++  assert.equal(part.active, false);
++  assert.equal(director.live, 0);
++});
++
++test("detachPart mirrors for facing -1, respects the budget and rejects bad input", () => {
++  const scene = makeScene({ defer: true });
++  const director = new EffectDirector(scene, { quality: "low" });
++  director.detachPart({ x: 100, y: 100, shape: "shard", vx: 100, vy: -100, gravity: 0, life: 1000, facing: -1 });
++  scene.tracker.steppers[0].step(0.5);
++  assert.ok(scene.tracker.objects[0].x < 100);
++  for (let i = 0; i < 60; i += 1) director.detachPart({ x: 1, y: 1 });
++  assert.ok(director.live <= 28);
++  assert.equal(director.detachPart({ x: Number.NaN, y: 1 }), false);
++});
++
++test("floatingText pops with Back.easeOut, rises, fades, truncates and is destroyed", () => {
++  const scene = makeScene({ defer: true });
++  const director = new EffectDirector(scene);
++  assert.equal(director.floatingText("+1234567890123456", { x: 10, y: 200 }), true);
++  const label = scene.tracker.texts[0];
++  assert.equal(label.label.length, 12);
++  assert.equal(label.scaleX, 0.4);
++  assert.equal(director.live, 1);
++  scene.tracker.steppers[0].finish();            // مرحلة القفز والتكبير
++  assert.ok(label.y < 200 && label.scaleX > 1);
++  assert.equal(scene.tracker.steppers.length, 2); // ثم مرحلة التلاشي
++  scene.tracker.steppers[1].finish();
++  assert.equal(label.active, false);
++  assert.equal(director.live, 0);
++  assert.equal(makeScene({ textApi: false }) && new EffectDirector(makeScene({ textApi: false })).floatingText("x", { x: 1, y: 1 }), false);
++});
++
++test("electric shock regenerates its bolts every 50ms while flickering white and blue", () => {
++  const scene = makeScene({ defer: true });
++  const director = new EffectDirector(scene);
++  const view = makeObject(scene.tracker);
++  director.play(getEffect("electric-shock"), { x: 100, y: 100, view });
++  const boltStepper = scene.tracker.steppers.find((s) => s);
++  const clearsAtStart = scene.tracker.clears;
++  for (const v of [0.05, 0.15, 0.3, 0.5, 0.7, 0.9]) scene.tracker.steppers.forEach((s) => s.step(v));
++  assert.ok(scene.tracker.clears - clearsAtStart >= 4, `bolts were redrawn ${scene.tracker.clears - clearsAtStart} times`);
++  const flicker = scene.tracker.events.find((e) => e.cfg.loop && e.cfg.delay === 45);
++  assert.ok(flicker, "flicker timer exists");
++  for (let i = 0; i < 4; i += 1) flicker.cfg.callback();
++  assert.ok(view.tintHistory.includes(0xffffff) && view.tintHistory.includes(0x6fe3ff));
++  assert.ok(boltStepper);
++  scene.tracker.steppers.forEach((s) => s.finish());
++  assert.equal(director.live, 0);
++  assert.ok(Math.abs(view.x - 100) < 1e-9, "jitter cancelled");
++});
+diff --git a/web/tests/effect-library.test.mjs b/web/tests/effect-library.test.mjs
+index 80249e0f..ad447477 100644
+--- a/web/tests/effect-library.test.mjs
++++ b/web/tests/effect-library.test.mjs
+@@ -10,11 +10,11 @@ import { effectsForTrigger, resolveAssignedEffectIds, validateEffectSelection }
+ 
+ const PUBLIC = path.resolve("public");
+ const manifest = JSON.parse(fs.readFileSync("game/data/effect-sound-assets.json", "utf8"));
+-const LAYER_TYPES = new Set(["burst", "rise", "ring", "flash", "bolt", "tint", "shake", "squash", "orbit", "slash"]);
++const LAYER_TYPES = new Set(["burst", "rise", "ring", "flash", "bolt", "tint", "shake", "squash", "orbit", "slash", "wobble", "hop", "jitter", "speedLines"]);
+ const ARABIC = /[\u0600-\u06FF]/;
+ 
+ test("the library ships a meaningful set of effects with unique ids", () => {
+-  assert.ok(EFFECT_LIBRARY.length >= 20);
++  assert.ok(EFFECT_LIBRARY.length >= 33);
+   assert.equal(new Set(EFFECT_LIBRARY.map((e) => e.id)).size, EFFECT_LIBRARY.length);
+   for (const id of ["electric-shock", "freeze", "burn", "explosion", "poison", "lightning-strike"]) assert.ok(isKnownEffectId(id), id);
+ });
+@@ -118,3 +118,47 @@ test("the Studio exposes the picker and the library without touching gameplay st
+   assert.match(picker, /operation: "set-effects"/);
+   assert.doesNotMatch(picker, /combat|monsterProfile/);
+ });
++
++test("the seven Game Juice effects exist with the requested specs", () => {
++  const layer = (id, type) => getEffect(id).layers.find((l) => l.type === type);
++  const spec = {
++    "jolt-bounce": "hit", "comic-stars": "hit", "speed-dust": "hit", "cannon-swell": "fire",
++    "heavy-landing": "spawn", "bubble-pop-death": "death", "rage-steam": "aura"
++  };
++  for (const [id, trigger] of Object.entries(spec)) {
++    assert.ok(getEffect(id), id);
++    assert.equal(getEffect(id).trigger, trigger, id);
++  }
++  assert.deepEqual([layer("jolt-bounce", "squash").sx, layer("jolt-bounce", "squash").sy], [1.35, 0.65]);
++  assert.equal(layer("jolt-bounce", "tint").fill, true);
++  assert.ok(layer("jolt-bounce", "ring"));
++  assert.equal(layer("comic-stars", "burst").shape, "star");
++  assert.equal(layer("comic-stars", "burst").spin, true);
++  assert.ok(layer("comic-stars", "burst").gravity > 0 && layer("comic-stars", "flash"));
++  assert.equal(layer("speed-dust", "burst").shape, "puff");
++  assert.ok(layer("speed-dust", "burst").gravity < 0, "dust drifts upward");
++  assert.deepEqual([layer("cannon-swell", "squash").sx, layer("cannon-swell", "squash").sy], [1.3, 0.75]);
++  assert.ok(layer("cannon-swell", "ring") && layer("cannon-swell", "burst"));
++  assert.equal(layer("heavy-landing", "squash").from, true);
++  assert.ok(layer("heavy-landing", "ring") && layer("heavy-landing", "burst").shape === "puff" && layer("heavy-landing", "shake"));
++  assert.equal(layer("bubble-pop-death", "burst").shape, "bubble");
++  assert.equal(layer("bubble-pop-death", "burst").gravity, -90);
++  assert.ok(layer("bubble-pop-death", "ring"));
++  assert.equal(layer("rage-steam", "rise").shape, "puff");
++  assert.ok(layer("rage-steam", "tint"));
++});
++
++test("electric shock is the composite: regenerating bolts, jitter and white/blue flicker", () => {
++  const effect = getEffect("electric-shock");
++  assert.equal(effect.layers.find((l) => l.type === "bolt").regenerateMs, 50);
++  assert.ok(effect.layers.find((l) => l.type === "jitter"));
++  assert.deepEqual(effect.layers.find((l) => l.type === "tint").flickerColors, [0xffffff, 0x6fe3ff]);
++});
++
++test("effects never stop the simulation clock: no hit-stop layer exists", () => {
++  for (const effect of EFFECT_LIBRARY) for (const layer of effect.layers) assert.notEqual(layer.type, "hitstop");
++  for (const file of ["EffectDirector.mjs", "AmbientFX.mjs", "effectLibrary.mjs"]) {
++    const src = fs.readFileSync(`game/vfx/effects/${file}`, "utf8");
++    assert.doesNotMatch(src, /time\.timeScale|tweens\.timeScale|physics\.world\.timeScale|simulationRandom/, file);
++  }
++});
+-- 
+2.43.0
+

@@ -12,7 +12,9 @@ const PLANT_RULES = Object.freeze({
   pineapple: PHASE_ONE_PLANTS.pineapple,
   hazelnut: PHASE_ONE_PLANTS.hazelnut,
   mango: PHASE_ONE_PLANTS.mango,
-  "snow-thrower": PHASE_ONE_PLANTS.snowThrower
+  "snow-thrower": PHASE_ONE_PLANTS.snowThrower,
+  "electric-mushroom": PHASE_ONE_PLANTS["electric-mushroom"],
+  "fire-pepper": PHASE_ONE_PLANTS["fire-pepper"]
 });
 
 function validEnergy(value) {
@@ -26,12 +28,20 @@ export function resolvePlantPlacement({
   col,
   row,
   columns,
-  rows
+  rows,
+  customConfig = null
 } = {}) {
   if (!validEnergy(energy) || !Array.isArray(plants)) {
     return { ok: false, reason: "INVALID_PLACEMENT_STATE" };
   }
-  const config = PLANT_RULES[type];
+  const config = PLANT_RULES[type] || (
+    Number.isFinite(customConfig?.plantingEnergyCost) &&
+    customConfig.plantingEnergyCost >= 0 &&
+    Number.isFinite(customConfig?.hp) &&
+    customConfig.hp > 0
+      ? customConfig
+      : null
+  );
   if (!config) return { ok: false, reason: "UNKNOWN_PLANT_TYPE" };
   if (
     !Number.isInteger(col) || !Number.isInteger(row) ||
@@ -67,7 +77,8 @@ export function resolvePlantUproot({ energy, plant } = {}) {
   if (!validEnergy(energy) || !plant || plant.alive !== true) {
     return { ok: false, reason: "INVALID_UPROOT_STATE" };
   }
-  const configuredCost = PLANT_RULES[plant.type]?.plantingEnergyCost;
+  const configuredCost = PLANT_RULES[plant.type]?.plantingEnergyCost ??
+    (Number.isFinite(plant.energyCost) && plant.energyCost >= 0 ? plant.energyCost : null);
   if (!Number.isFinite(configuredCost)) {
     return { ok: false, reason: "UNKNOWN_PLANT_TYPE" };
   }
@@ -176,6 +187,7 @@ export function selectLaneBlocker({ plants, row, monsterLocalX, maxOvershoot = 0
   for (const candidate of plants) {
     if (
       !candidate?.plant?.alive ||
+      candidate.plant.type !== "radish" ||
       candidate.plant.row !== row ||
       !Number.isFinite(candidate.localX) ||
       candidate.localX - monsterLocalX > maxOvershoot
@@ -218,15 +230,6 @@ export function selectFarmerMeleeTarget({ monsters, row, farmerX, reach } = {}) 
   return target;
 }
 
-export function selectDragonFireballTarget(plants) {
-  if (!Array.isArray(plants)) throw new TypeError("INVALID_DRAGON_TARGET_LIST");
-  let weakest = null;
-  for (const plant of plants) {
-    if (!plant?.alive || !Number.isFinite(plant.hp)) continue;
-    if (!weakest || plant.hp < weakest.hp) weakest = plant;
-  }
-  return weakest;
-}
 
 export function advanceCooldown(remainingMs, deltaMs) {
   if (!Number.isFinite(remainingMs) || !Number.isFinite(deltaMs) || deltaMs < 0) {
@@ -249,7 +252,7 @@ export function resolveBiteAttack({ cooldownMs, deltaMs, intervalMs } = {}) {
   });
 }
 
-export function resolveDustSkitterMotionStep({
+export function resolveMonsterMovementEffectsStep({
   isJumping,
   jumpCooldownMs,
   jumpElapsedMs,
@@ -276,7 +279,7 @@ export function resolveDustSkitterMotionStep({
     (enableJump && (jumpSpeedMultiplier <= 0 || visualScale < 0)) ||
     burstDurationMs < 0 || burstSpeedMultiplier <= 0 ||
     (isJumping && (!Number.isFinite(jumpDurationMs) || jumpDurationMs <= 0))
-  ) throw new RangeError("INVALID_DUST_SKITTER_STEP");
+  ) throw new RangeError("INVALID_MONSTER_MOVEMENT_EFFECTS_STEP");
 
   let jumping = isJumping;
   let jumpElapsed = jumpElapsedMs;
@@ -296,7 +299,7 @@ export function resolveDustSkitterMotionStep({
     jumpCooldown = advanceCooldown(jumpCooldown, deltaMs);
     if (!jumping && jumpCooldown <= 0) {
       if (!Number.isFinite(nextJumpDurationMs) || nextJumpDurationMs <= 0) {
-        throw new RangeError("MISSING_DUST_SKITTER_JUMP_DURATION");
+        throw new RangeError("MISSING_MONSTER_JUMP_DURATION");
       }
       jumping = true;
       jumpElapsed = 0;
@@ -313,7 +316,7 @@ export function resolveDustSkitterMotionStep({
         jumping = false;
         jumpElapsed = 0;
         if (!Number.isFinite(nextJumpResetCooldownMs) || nextJumpResetCooldownMs < 0) {
-          throw new RangeError("MISSING_DUST_SKITTER_JUMP_RESET");
+          throw new RangeError("MISSING_MONSTER_JUMP_RESET");
         }
         jumpCooldown = nextJumpResetCooldownMs;
         jumpLanded = true;
@@ -327,7 +330,7 @@ export function resolveDustSkitterMotionStep({
   let burstStarted = false;
   if (burstCooldown <= 0 && burstRemaining <= 0) {
     if (!Number.isFinite(nextBurstCooldownMs) || nextBurstCooldownMs < 0) {
-      throw new RangeError("MISSING_DUST_SKITTER_BURST_RESET");
+      throw new RangeError("MISSING_MONSTER_BURST_RESET");
     }
     burstRemaining = burstDurationMs;
     burstCooldown = nextBurstCooldownMs;
@@ -354,19 +357,12 @@ export function resolveDustSkitterMotionStep({
 }
 
 export function resolveMonsterArchetype(wave, spawnIndex) {
-  if (
-    !Number.isInteger(wave) || wave < 1 || wave > PHASE_ONE_WAVE_SIZES.length ||
-    !Number.isInteger(spawnIndex) || spawnIndex < 0 ||
-    spawnIndex >= PHASE_ONE_WAVE_SIZES.reduce((sum, count) => sum + count, 0)
-  ) throw new RangeError("INVALID_MONSTER_SPAWN_INDEX");
-
-  // Stage 1 teaches one enemy at a time. The first three waves contain
-  // only the baseline cave brute; wave 4 demonstrates one fast scout, and
-  // wave 5 introduces one armoured stonehide. Alpha brutes are reserved
-  // for a later campaign stage.
-  if (wave === 5 && spawnIndex === PHASE_ONE_WAVE_SIZES[4] - 1) return "stonehide";
-  if (wave === 4 && spawnIndex === PHASE_ONE_WAVE_SIZES[3] - 1) return "dust-skitter";
-  return "cave-brute";
+  if (!Number.isInteger(wave) || wave < 1 || wave > PHASE_ONE_WAVE_SIZES.length ||
+      !Number.isInteger(spawnIndex) || spawnIndex < 0 ||
+      spawnIndex >= PHASE_ONE_WAVE_SIZES.reduce((sum, count) => sum + count, 0)) {
+    throw new RangeError("INVALID_MONSTER_SPAWN_INDEX");
+  }
+  return "monster-01";
 }
 
 export function resolveWaveSpawnStep({
@@ -376,12 +372,13 @@ export function resolveWaveSpawnStep({
   spawnedThisWave,
   intermissionMs,
   spawnTimerMs,
+  spawnIntervalMs,
   deltaMs
 } = {}) {
   if (
-    !Number.isInteger(totalWaves) || totalWaves !== PHASE_ONE_WAVE_SIZES.length ||
+    !Number.isInteger(totalWaves) || totalWaves < 1 || totalWaves > 10 ||
     !Number.isInteger(wave) || wave < 1 || wave > totalWaves ||
-    !Number.isInteger(waveSize) || waveSize !== PHASE_ONE_WAVE_SIZES[wave - 1] ||
+    !Number.isInteger(waveSize) || waveSize < 0 || waveSize > 500 ||
     !Number.isInteger(spawnedThisWave) || spawnedThisWave < 0 || spawnedThisWave > waveSize ||
     !Number.isFinite(intermissionMs) || intermissionMs < 0 ||
     !Number.isFinite(spawnTimerMs) ||
@@ -400,7 +397,7 @@ export function resolveWaveSpawnStep({
     if (nextSpawnTimerMs <= 0) {
       shouldSpawn = true;
       nextSpawnedThisWave += 1;
-      nextSpawnTimerMs = getMonsterSpawnIntervalMs(wave);
+      nextSpawnTimerMs = Number.isFinite(spawnIntervalMs) ? Math.max(100, spawnIntervalMs) : getMonsterSpawnIntervalMs(wave);
     }
   }
 

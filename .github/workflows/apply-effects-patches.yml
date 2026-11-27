@@ -1,0 +1,33 @@
+name: Validate Game Juice and Ambient VFX
+
+on:
+  push:
+    branches:
+      - feat/effects-game-juice-integration
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  effects-regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Validate VFX module syntax
+        working-directory: web
+        run: |
+          node --check game/vfx/effects/EffectDirector.mjs
+          node --check game/vfx/effects/effectLibrary.mjs
+          node --check game/vfx/effects/effectPreview.mjs
+          node --check game/vfx/effects/AmbientFX.mjs
+          node --check game/scenes/BattleScene.js
+      - name: Run effects regression tests
+        working-directory: web
+        run: node --test tests/effect-library.test.mjs tests/effect-director.test.mjs tests/effect-juice.test.mjs tests/effect-ambient.test.mjs

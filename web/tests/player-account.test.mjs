@@ -16,11 +16,14 @@ const battle = readFileSync(resolve(here, "../game/scenes/BattleScene.js"), "utf
 const styles = readFileSync(resolve(here, "../app/globals.css"), "utf8");
 
 
-test("player account screen provides sign-in and account creation", () => {
+test("player account screen permits existing-account sign-in but hides new registration", () => {
   assert.match(accountPage, /signInPlayer/);
-  assert.match(accountPage, /signUpPlayer/);
-  assert.match(accountPage, /restoreOrInitializeCloudProgress/);
+  assert.doesNotMatch(accountPage, /signUpPlayer|Create account|إنشاء حساب/);
+  assert.doesNotMatch(accountPage, /restoreOrInitializeCloudProgress/);
+  assert.match(accountPage, /Game progress is not currently saved/);
   assert.match(accountPage, /type="password"/);
+  assert.match(accountRoute, /PLAYER_REGISTRATION_PAUSED/);
+  assert.match(accountRoute, /status: 410/);
   assert.match(home, /href="\/account"/);
   assert.match(stages, /href="\/account"/);
 });
@@ -44,17 +47,23 @@ test("cloud progress is read-only for clients until trusted game results exist",
   assert.doesNotMatch(progressRoute, /resolution=merge-duplicates/);
 });
 
-test("local saves remain active and client balances are never uploaded to cloud", () => {
+test("client-local currency and unlocks are disabled until server verification exists", () => {
   const lockdown = readFileSync(resolve(here, "../supabase/migrations/004_lock_unverified_player_progress.sql"), "utf8");
   assert.match(lockdown, /revoke insert, update on public\.player_progress from anon, authenticated/i);
   assert.match(lockdown, /coins_verified boolean not null default false/i);
   assert.match(lockdown, /progress_verified boolean not null default false/i);
   assert.match(lockdown, /COIN_BALANCE_NOT_VERIFIED/);
+  const rules = readFileSync(resolve(here, "../game/rules/phaseOneRules.mjs"), "utf8");
+  assert.match(rules, /export function loadSavedCoins\(_storage\) \{\s*return 0;/);
+  assert.match(rules, /export function saveCoins\(_storage, _value\) \{\s*return false;/);
+  assert.match(rules, /export function loadUnlockedStage\(_storage\) \{\s*return 1;/);
+  assert.match(rules, /export function unlockNextStage\(_storage, _completedStage\) \{\s*return false;/);
+  assert.match(rules, /export function unlockPlantReward\(_storage, _completedStage\) \{\s*return false;/);
   assert.match(client, /restoreOrInitializeCloudProgress/);
   assert.match(client, /progress_verified !== true/);
   assert.match(client, /cloud-progress-unverified/);
   assert.match(client, /coins_verified === true/);
-  assert.match(client, /Do not initialize a cloud row from browser-controlled local values/);
+  assert.match(client, /Legacy cloud stages and balances were previously writable by clients/);
   assert.match(client, /coins_verified === true/);
   assert.doesNotMatch(client, /saveCloudProgress/);
   assert.doesNotMatch(battle, /syncPlayerProgress/);
@@ -68,26 +77,27 @@ test("menus and account controls use high-contrast text and visible focus states
 });
 
 
-test("playing as a guest never requires authentication and keeps local progress", () => {
+test("playing as a guest never requires authentication and is restricted to unverified playtest progress", () => {
   assert.match(home, /href="\/stages"/);
   assert.match(home, /اختياري|Optional/);
-  assert.match(accountPage, /Continue as Guest/);
+  assert.match(accountPage, /Continue Playing/);
   assert.match(accountPage, /اللعب كضيف/);
   assert.match(client, /export function readLocalPlayerProgress/);
-  assert.match(battle, /saveCoins\(window\.localStorage/);
+  assert.match(battle, /Local combat is a playtest sandbox/);
+  assert.doesNotMatch(battle, /saveCoins\(window\.localStorage/);
+  assert.doesNotMatch(battle, /unlockNextStage\(window\.localStorage/);
   assert.match(accountRoute, /cloudAvailable: false/);
 });
 
 
-test("Google OAuth uses server-side PKCE and protects the callback with state", async () => {
+test("Google OAuth is fail-closed while registration and secure cloud saves are paused", async () => {
   const start = readFileSync(resolve(here, "../app/api/player/account/google/route.js"), "utf8");
   const callback = readFileSync(resolve(here, "../app/api/player/account/google/callback/route.js"), "utf8");
-  assert.match(accountPage, /Continue with Google|المتابعة باستخدام Google/);
-  assert.match(start, /code_challenge_method/);
-  assert.match(start, /httpOnly: true/);
-  assert.match(callback, /timingSafeEqual/);
-  assert.match(callback, /grant_type=pkce/);
-  assert.match(callback, /farm_player_access/);
+  assert.doesNotMatch(accountPage, /Continue with Google|المتابعة باستخدام Google|google-signin-button/);
+  assert.match(start, /registration_paused/);
+  assert.match(callback, /registration_paused/);
+  assert.doesNotMatch(start, /auth\/v1\/authorize/);
+  assert.doesNotMatch(callback, /grant_type=pkce/);
 });
 
 test("player data migration provisions private profile, settings, achievement and inventory tables", () => {
@@ -101,11 +111,13 @@ test("player data migration provisions private profile, settings, achievement an
 });
 
 
-test("Google OAuth CSRF state is preserved in the app callback URL, not sent as Supabase authorize state", async () => {
+test("disabled Google OAuth endpoints never begin or complete an authorization flow", async () => {
   const start = readFileSync(resolve(here, "../app/api/player/account/google/route.js"), "utf8");
-  assert.match(start, /callback\.searchParams\.set\("state", state\)/);
-  assert.match(start, /redirect_to/);
-  assert.doesNotMatch(start, /authorizeUrl\.searchParams\.set\("state"/);
+  const callback = readFileSync(resolve(here, "../app/api/player/account/google/callback/route.js"), "utf8");
+  assert.match(start, /NextResponse\.redirect/);
+  assert.match(callback, /NextResponse\.redirect/);
+  assert.match(start, /registration_paused/);
+  assert.match(callback, /registration_paused/);
 });
 
 test("plant catalog includes implemented starters and a locked upcoming roster", () => {

@@ -1,21 +1,45 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useLocale } from "../app/LocaleProvider";
+import { detectBrowserVFXQuality, getGameRenderResolution } from "./vfx/core/VFXConfig.mjs";
 
 export default function PhaserGame() {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const hostRef = useRef(null);
   const [attempt, setAttempt] = useState(0);
   const [status, setStatus] = useState("loading");
   const [errorMessage, setErrorMessage] = useState("");
+  const [isPortraitPhone, setIsPortraitPhone] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [fullscreenAvailable, setFullscreenAvailable] = useState(false);
+
+  useEffect(() => {
+    const updateFullscreen = () => setIsFullscreen(Boolean(document.fullscreenElement));
+    document.addEventListener("fullscreenchange", updateFullscreen);
+    return () => document.removeEventListener("fullscreenchange", updateFullscreen);
+  }, []);
+
+  useEffect(() => {
+    const updateOrientation = () => {
+      setIsPortraitPhone(
+        window.matchMedia("(max-width: 700px) and (orientation: portrait)").matches
+      );
+    };
+    updateOrientation();
+    setFullscreenAvailable(typeof hostRef.current?.requestFullscreen === "function");
+    window.addEventListener("resize", updateOrientation);
+    window.addEventListener("orientationchange", updateOrientation);
+    return () => {
+      window.removeEventListener("resize", updateOrientation);
+      window.removeEventListener("orientationchange", updateOrientation);
+    };
+  }, []);
 
   useEffect(() => {
     let game = null;
     let cancelled = false;
-
-    setStatus("loading");
-    setErrorMessage("");
 
     const showError = (error) => {
       if (cancelled) return;
@@ -42,6 +66,10 @@ export default function PhaserGame() {
           parent: hostRef.current,
           width: 1120,
           height: 680,
+          resolution: getGameRenderResolution(
+            window.devicePixelRatio || 1,
+            detectBrowserVFXQuality()
+          ),
           backgroundColor: "#a8c978",
           scale: {
             mode: Scale.FIT,
@@ -75,6 +103,29 @@ export default function PhaserGame() {
 
   return (
     <div className="phaser-host" ref={hostRef} aria-label={t("Farm Vs Monsters playable battle")}>
+      {isPortraitPhone && (
+        <div className="game-orientation-prompt" role="status" aria-live="polite">
+          <span className="game-orientation-icon" aria-hidden="true">↻</span>
+          <strong>{locale === "ar" ? "أدر جهازك إلى الوضع الأفقي" : "Rotate your device to landscape"}</strong>
+          <span>{locale === "ar" ? "اللعبة مصممة للعب الأفقي حتى تبقى ساحة المعركة والأزرار واضحة." : "The battlefield is designed for landscape play so the arena and controls remain clear."}</span>
+        </div>
+      )}
+      {fullscreenAvailable && (
+        <button
+          type="button"
+          className="game-fullscreen-button"
+          onClick={async () => {
+            try {
+              if (document.fullscreenElement) await document.exitFullscreen();
+              else await hostRef.current?.requestFullscreen?.();
+            } catch {
+              // Fullscreen is optional; the responsive game remains playable without it.
+            }
+          }}
+        >
+          {locale === "ar" ? (isFullscreen ? "إنهاء ملء الشاشة" : "ملء الشاشة") : (isFullscreen ? "Exit full screen" : "Full screen")}
+        </button>
+      )}
       {status === "loading" && (
         <div className="game-status" role="status" aria-live="polite">
           <span className="game-status-mark" aria-hidden="true">✦</span>
@@ -86,10 +137,14 @@ export default function PhaserGame() {
         <div className="game-status game-status-error" role="alert">
           <strong>{t("The battle could not be started")}</strong>
           <span>{errorMessage || t("The game engine failed to initialize.")}</span>
-          <button type="button" className="game-retry-button" onClick={() => setAttempt((value) => value + 1)}>
+          <button type="button" className="game-retry-button" onClick={() => {
+            setErrorMessage("");
+            setStatus("loading");
+            setAttempt((value) => value + 1);
+          }}>
             {t("Try Again")}
           </button>
-          <a href="/" className="game-back-link">{t("Return to Main Menu")}</a>
+          <Link href="/" className="game-back-link">{t("Return to Main Menu")}</Link>
         </div>
       )}
     </div>

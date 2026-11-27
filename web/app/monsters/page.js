@@ -1,96 +1,120 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { useLocale, LanguageToggle } from "../LocaleProvider";
 import CatalogThumb from "../components/CatalogThumb";
-
 import { STAGE_ONE_MONSTERS, FUTURE_MONSTERS, MONSTER_ROSTER_TOTAL } from "../../game/data/monsterRoster.mjs";
 import { loadDiscoveredMonsterIds } from "../../game/rules/phaseOneRules.mjs";
+import { subscribeToBrowserStorage } from "../../game/hooks/browserStorage.mjs";
+
+function getDiscoveredSnapshot() {
+  try {
+    return JSON.stringify(loadDiscoveredMonsterIds(window.localStorage));
+  } catch {
+    return "[]";
+  }
+}
 
 export default function MonstersPage() {
   const { locale } = useLocale();
   const ar = locale === "ar";
-  const [discoveredIds, setDiscoveredIds] = useState([]);
-  useEffect(() => {
-    try { setDiscoveredIds(loadDiscoveredMonsterIds(window.localStorage)); } catch { setDiscoveredIds([]); }
-  }, []);
+  const discoveredSnapshot = useSyncExternalStore(subscribeToBrowserStorage, getDiscoveredSnapshot, () => "[]");
+  const discoveredIds = JSON.parse(discoveredSnapshot);
   const discoveredCount = STAGE_ONE_MONSTERS.filter((monster) => discoveredIds.includes(monster.id)).length;
+  const progress = MONSTER_ROSTER_TOTAL ? Math.round((discoveredCount / MONSTER_ROSTER_TOTAL) * 100) : 0;
 
   return (
-    <main className="info-shell">
-      <section className="info-card codex-bestiary-page">
-        <div className="stages-top">
-          <span className="eyebrow">{ar ? "موسوعة المخلوقات المكتشفة" : "YOUR ENEMY BESTIARY"}</span>
-          <LanguageToggle />
+    <main className="monster-codex">
+      <header className="monster-codex-topbar">
+        <Link href="/" className="monster-codex-back">{ar ? "العودة للقائمة" : "Back to menu"}</Link>
+        <span className="monster-codex-brand">FARM <i>VS</i> MONSTERS</span>
+        <LanguageToggle />
+      </header>
+
+      <section className="monster-codex-hero">
+        <div className="monster-codex-heading">
+          <span className="monster-codex-kicker">{ar ? "أرشيف المواجهات · سجل المخلوقات" : "ENCOUNTER ARCHIVE · CREATURE INDEX"}</span>
+          <h1>{ar ? "موسوعة الوحوش" : "Monster Bestiary"}</h1>
+          <p>{ar
+            ? "اكتشف خصوم المزرعة وسجّل ظهورهم في المعارك. تظهر تفاصيل الوحش بعد مواجهته، بينما تبقى الكائنات المجهولة مخفية."
+            : "Record the creatures threatening the farm. A monster's profile is revealed after your first encounter; unknown creatures remain hidden."}</p>
         </div>
-        <h1>{ar ? "موسوعة الوحوش" : "Enemy Bestiary"}</h1>
-        <p className="collection-intro">
-          {ar
-            ? "تُسجّل الموسوعة كل نوع تراه في المعركة. ابدأ باكتشاف الوحوش واحداً تلو الآخر؛ أما الأنواع غير المكتشفة فتبقى ظلالاً مجهولة حتى تواجهها."
-            : "The bestiary records each enemy type when it first enters battle. Discover the creatures one by one; unseen enemies remain mysterious silhouettes until encountered."}
-        </p>
-        <div className="collection-summary">
-          <span>{ar ? "مكتشفة" : "DISCOVERED"}: <strong>{discoveredCount}/{STAGE_ONE_MONSTERS.length}</strong></span>
-          <span>{ar ? "لم تكتشف بعد" : "UNKNOWN"}: <strong>{STAGE_ONE_MONSTERS.length - discoveredCount}</strong></span>
-          <span>{ar ? "إجمالي الخانات" : "TOTAL ENTRIES"}: <strong>{MONSTER_ROSTER_TOTAL}</strong></span>
+        <div className="monster-codex-total">
+          <strong>{String(discoveredCount).padStart(2, "0")}<small> / {MONSTER_ROSTER_TOTAL}</small></strong>
+          <span>{ar ? "مخلوقات مكتشفة" : "CREATURES FOUND"}</span>
         </div>
-        <h2 className="collection-section-title">{ar ? "سجل الاكتشافات" : "DISCOVERY RECORD"}</h2>
-        <div className="collection-grid">
-          {STAGE_ONE_MONSTERS.map((monster) => {
+      </section>
+
+      <section className="monster-codex-progress" aria-label={ar ? "تقدم الاكتشاف" : "Discovery progress"}>
+        <div className="monster-codex-progress-label">
+          <span>{ar ? "تقدم الموسوعة" : "CODEX COMPLETION"}</span>
+          <strong>{progress}%</strong>
+        </div>
+        <div className="monster-codex-progress-track"><span style={{ width: progress + "%" }} /></div>
+        <div className="monster-codex-stats">
+          <span><i className="is-found" />{ar ? "مكتشف" : "Discovered"} <b>{discoveredCount}</b></span>
+          <span><i className="is-hidden" />{ar ? "مجهول" : "Unknown"} <b>{STAGE_ONE_MONSTERS.length - discoveredCount}</b></span>
+          <span><i className="is-planned" />{ar ? "قيد التصميم" : "In design"} <b>{FUTURE_MONSTERS.length}</b></span>
+        </div>
+      </section>
+
+      <section className="monster-codex-section">
+        <div className="monster-codex-section-heading">
+          <div><span>{ar ? "01 / سجل المواجهات" : "01 / FIELD RECORD"}</span><h2>{ar ? "الوحوش التي واجهتها" : "Encountered creatures"}</h2></div>
+          <b>{discoveredCount} / {STAGE_ONE_MONSTERS.length}</b>
+        </div>
+        <div className="monster-codex-grid">
+          {STAGE_ONE_MONSTERS.map((monster, index) => {
             const discovered = discoveredIds.includes(monster.id);
-            return discovered ? (
-              <article className="collection-card is-active codex-discovered-enemy" key={monster.id}>
-                <CatalogThumb id={monster.icon} label={ar ? monster.nameAr : monster.name} className="monster-thumb" />
-                <h2>{ar ? monster.nameAr : monster.name}</h2>
-                <span className="collection-status">{ar ? "✓ تم اكتشافه" : "✓ DISCOVERED"}</span>
-                <p><strong>{ar ? monster.roleAr : monster.role}</strong></p>
-                <p>{ar ? monster.descriptionAr : monster.description}</p>
-                <div className="collection-meta">
-                  <span>{ar ? monster.statsAr : monster.stats}</span>
-                  {monster.spawnNote && <span>{ar ? monster.spawnNoteAr : monster.spawnNote}</span>}
+            return (
+              <article className={"monster-entry" + (discovered ? " is-discovered" : " is-unknown")} key={monster.id}>
+                <div className="monster-entry-art">
+                  <span className="monster-entry-index">{String(index + 1).padStart(2, "0")}</span>
+                  {discovered
+                    ? <CatalogThumb id={monster.icon} label={ar ? monster.nameAr : monster.name} className="monster-entry-thumb" />
+                    : <div className="monster-entry-silhouette" aria-label={ar ? "وحش غير مكتشف" : "Undiscovered monster"}>?</div>}
                 </div>
-              </article>
-            ) : (
-              <article className="collection-card is-locked codex-unknown-enemy" key={monster.id}>
-                <div className="catalog-thumb monster-thumb codex-enemy-silhouette" aria-label={ar ? "وحش لم تكتشفه بعد" : "Undiscovered enemy"}><span>?</span><b>🔒</b></div>
-                <h2>{ar ? "هوية مجهولة" : "Unknown Creature"}</h2>
-                <span className="collection-status">{ar ? "لم تتم مواجهته" : "NOT ENCOUNTERED"}</span>
-                <p>{ar ? "واجه المزيد من الوحوش في المعركة لكشف هويته." : "Encounter this creature in battle to reveal its identity."}</p>
+                <div className="monster-entry-copy">
+                  <span className="monster-entry-status">{discovered
+                    ? (ar ? "✓ تم الاكتشاف" : "✓ DISCOVERED")
+                    : (ar ? "مجهول · لم تتم مواجهته" : "UNKNOWN · NOT ENCOUNTERED")}</span>
+                  <h3>{discovered ? (ar ? monster.nameAr : monster.name) : (ar ? "هوية مجهولة" : "Unknown creature")}</h3>
+                  <p>{discovered
+                    ? (ar ? monster.descriptionAr : monster.description)
+                    : (ar ? "واجه هذا الوحش في المعركة لكشف ملفه." : "Encounter this monster in battle to reveal its profile.")}</p>
+                  {discovered && <div className="monster-entry-tags">
+                    <span>{ar ? monster.roleAr : monster.role}</span>
+                    <span>{ar ? monster.statsAr : monster.stats}</span>
+                  </div>}
+                </div>
               </article>
             );
           })}
         </div>
-        <h2 className="collection-section-title">{ar ? "مخلوقات قادمة" : "Future Creatures"}</h2>
-        <p className="collection-intro">
-          {ar
-            ? "هذه الخانات تحجز مكان الأنواع القادمة في خطة اللعبة. لم نعتمد أسماءها أو قدراتها أو صورها بعد، ولن تظهر في المعركة حتى يكتمل تنفيذها واختبارها."
-            : "These entries reserve space for future roster additions. Their names, abilities, and artwork are not approved yet, and they will not appear in battle until implemented and tested."}
-        </p>
-        <div className="collection-grid">
-          {FUTURE_MONSTERS.map((monster) => (
-            <article className="collection-card is-locked" key={monster.id}>
-              <div className="catalog-thumb monster-thumb is-planned" role="img" aria-label={ar ? "وحش قيد التصميم" : "Monster in design"}>
-                <span aria-hidden="true" style={{fontSize: "2.2rem"}}>🔒</span>
-              </div>
-              <h2>{ar ? monster.nameAr : monster.name}</h2>
-              <span className="collection-status">{ar ? "قيد التصميم · غير قابل للعب" : "IN DESIGN · NOT PLAYABLE"}</span>
-              <p>{ar ? "لم تُحدد الشخصية أو آلياتها بعد. هذه خانة تنظيمية فقط ضمن قائمة المئة." : "Character concept and gameplay are not defined yet. This is a roster placeholder only."}</p>
-            </article>
+      </section>
+
+      <section className="monster-codex-section monster-future-section">
+        <div className="monster-codex-section-heading">
+          <div><span>{ar ? "02 / قائمة العالم القادمة" : "02 / EXPANDING WORLD"}</span><h2>{ar ? "مخلوقات قادمة" : "Creatures yet to come"}</h2></div>
+          <b>{FUTURE_MONSTERS.length} {ar ? "خانة" : "SLOTS"}</b>
+        </div>
+        <p className="monster-future-note">{ar
+          ? "هذه خانات مستقبلية ضمن خطة الموسوعة. لن تُعرض كشخصيات قابلة للعب أو كأعداء في المراحل قبل اكتمال تصميمها واعتمادها."
+          : "Future roster slots only. These are not playable or active enemies until their designs and gameplay are approved."}</p>
+        <div className="monster-future-grid">
+          {FUTURE_MONSTERS.map((monster, index) => (
+            <div className="monster-future-slot" key={monster.id} title={ar ? monster.nameAr : monster.name}>
+              <span>{String(index + 2).padStart(2, "0")}</span><i>?</i>
+            </div>
           ))}
         </div>
-        <h2 className="collection-section-title">{ar ? "زعيم المرحلة" : "Stage boss"}</h2>
-        <div className="collection-card">
-          <CatalogThumb id="dragon" label={ar ? "التنين الشرير" : "The Evil Dragon"} className="monster-thumb boss-thumb" />
-          <h2>{ar ? "التنين الشرير" : "The Evil Dragon"}</h2>
-          <p>{ar ? "زعيم مستقل عن عدد الوحوش العادية. يظهر في الموجة الخامسة، ويجب هزيمته بعد أتباعه لتحرير الأميرة." : "A separate boss, not included in the ordinary monster count. It appears in Wave 5 and must be defeated after its followers to rescue the princess."}</p>
-          <span className="collection-status">{ar ? "زعيم المرحلة الأولى" : "STAGE ONE BOSS"}</span>
-        </div>
-        <nav className="info-nav collection-back">
-          <Link className="secondary-link" href="/">{ar ? "القائمة الرئيسية" : "Main Menu"}</Link>
-          <Link className="secondary-link" href="/plants">{ar ? "قائمة النباتات" : "Plant Collection"}</Link>
-        </nav>
       </section>
+
+      <nav className="monster-codex-nav">
+        <Link href="/plants">{ar ? "موسوعة النباتات" : "Plant encyclopedia"} <span>←</span></Link>
+        <Link href="/stage/1/select">{ar ? "اختيار النباتات" : "Choose plants"} <span>←</span></Link>
+      </nav>
     </main>
   );
 }

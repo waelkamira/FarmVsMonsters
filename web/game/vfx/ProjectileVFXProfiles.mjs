@@ -5,7 +5,8 @@ export const PROJECTILE_VFX_PROFILES = Object.freeze({
   pineapple: Object.freeze({ texture: "pineapple-level-1-bomb", scale: 0.34, trail: "pineapple-trail", impact: "pineapple-impact", tint: 0xffc45c }),
   hazelnut: Object.freeze({ texture: "hazelnut-level-1-bomb", scale: 0.32, trail: "hazelnut-trail", impact: "hazelnut-impact", tint: 0xb9824b }),
   mango: Object.freeze({ texture: "mango-level-1-bomb", scale: 0.34, trail: "mango-trail", impact: "mango-impact", tint: 0xffd45b }),
-  "snow-thrower": Object.freeze({ texture: "snow-thrower-bomb-level-1", scale: 0.34, trail: "snow-trail", impact: "snow-freeze-impact", tint: 0xbcecff })
+  "snow-thrower": Object.freeze({ texture: "snow-thrower-bomb-level-1", scale: 0.34, trail: "snow-trail", impact: "snow-freeze-impact", tint: 0xbcecff }),
+  "electric-mushroom": Object.freeze({ texture: null, scale: 0.3, trail: "electric-trail", impact: "electric-impact", tint: 0x65d9ff })
 });
 
 export function getProjectileVFXProfile(plantType) {

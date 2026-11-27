@@ -1,86 +1,397 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-25T22:01:24.044Z",
-  "assetCount": 70,
-  "totalBytes": 15434457,
+  "generatedAt": "2026-11-26T17:18:46.178Z",
+  "assetCount": 145,
+  "totalBytes": 21538357,
   "groups": {
     "audio": [
       {
+        "key": "audio-effects-bubble-pop-death",
+        "url": "/assets/audio/effects/bubble-pop-death.ogg",
+        "type": "audio",
+        "group": "audio",
+        "bytes": 6527,
+        "sha256": "ed78b776461881bcac500bb4c6791c11b4040eefbab608795ec618aa6d7ed4ca"
+      },
+      {
+        "key": "audio-effects-burn",
+        "url": "/assets/audio/effects/burn.ogg",
+        "type": "audio",
+        "group": "audio",
+        "bytes": 9496,
+        "sha256": "c5af6decd39f03b92621e00a89eb236cc1e3082b7e44e6f55e5cf609fe01413c"
+      },
+      {
+        "key": "audio-effects-cannon-swell",
+        "url": "/assets/audio/effects/cannon-swell.ogg",
+        "type": "audio",
+        "group": "audio",
+        "bytes": 5605,
+        "sha256": "0b50b26dfaa87d3aa1fc7c2a2ada1b351eb8a936ae6be6ed254a53246fba692c"
+      },
+      {
+        "key": "audio-effects-charge-glow",
+        "url": "/assets/audio/effects/charge-glow.ogg",
+        "type": "audio",
+        "group": "audio",
+        "bytes": 6447,
+        "sha256": "d3dd43a8c595c1edd85e59848520b6df57bd9e27cd58c339c0094caaccd9a3c3"
+      },
+      {
+        "key": "audio-effects-chew-crumbs",
+        "url": "/assets/audio/effects/chew-crumbs.ogg",
+        "type": "audio",
+        "group": "audio",
+        "bytes": 5903,
+        "sha256": "cfeda80d8a45c24b41fc95a6ec9de21d7fc8d715b885de4049d5ef81c10fb3ba"
+      },
+      {
+        "key": "audio-effects-coin-pop",
+        "url": "/assets/audio/effects/coin-pop.ogg",
+        "type": "audio",
+        "group": "audio",
+        "bytes": 6134,
+        "sha256": "9415a5c4b3390b1df733339ac02efba283d8697501feffa1f433403fa625ae0a"
+      },
+      {
+        "key": "audio-effects-comic-stars",
+        "url": "/assets/audio/effects/comic-stars.ogg",
+        "type": "audio",
+        "group": "audio",
+        "bytes": 5498,
+        "sha256": "d8bea7ae0e4aa889db3d9a6309567faa63cf0baebb723a44b99344e5774539d8"
+      },
+      {
+        "key": "audio-effects-dirt-pop",
+        "url": "/assets/audio/effects/dirt-pop.ogg",
+        "type": "audio",
+        "group": "audio",
+        "bytes": 5498,
+        "sha256": "15431080fbe116bf8450086f85b9f3f6daeb0e1c3def4732005f5446749c4cf7"
+      },
+      {
+        "key": "audio-effects-electric-shock",
+        "url": "/assets/audio/effects/electric-shock.ogg",
+        "type": "audio",
+        "group": "audio",
+        "bytes": 6917,
+        "sha256": "58ce9db4216f3295caaeb7817e3dae433eeef32b2e30c8c62a4731d3ddda610f"
+      },
+      {
+        "key": "audio-effects-explosion",
+        "url": "/assets/audio/effects/explosion.ogg",
+        "type": "audio",
+        "group": "audio",
+        "bytes": 7464,
+        "sha256": "0c1566e9e596c7a70f97c7105fc34b04439f193c49ac44da84f20e7a6f04edbb"
+      },
+      {
+        "key": "audio-effects-fire-aura",
+        "url": "/assets/audio/effects/fire-aura.ogg",
+        "type": "audio",
+        "group": "audio",
+        "bytes": 8932,
+        "sha256": "3bd4a8df664704e5acf7804dd5b355e7a45a30c9cd63a82d83b407dc584eab29"
+      },
+      {
+        "key": "audio-effects-freeze",
+        "url": "/assets/audio/effects/freeze.ogg",
+        "type": "audio",
+        "group": "audio",
+        "bytes": 6325,
+        "sha256": "72fdedf9df5e88619a75393b58babf99826e7bdb04bd7bebeba0175f829a047f"
+      },
+      {
+        "key": "audio-effects-frost-aura",
+        "url": "/assets/audio/effects/frost-aura.ogg",
+        "type": "audio",
+        "group": "audio",
+        "bytes": 5063,
+        "sha256": "d6f3e39870138e289a55cafba80f2625c6b4cde280a278da7a24b0d0b45ca732"
+      },
+      {
+        "key": "audio-effects-glow-pulse",
+        "url": "/assets/audio/effects/glow-pulse.ogg",
+        "type": "audio",
+        "group": "audio",
+        "bytes": 4949,
+        "sha256": "a22ffe05d100f8bcaf5d6d80e2990cd301fef5f4155f52455c9ef34551ad81e7"
+      },
+      {
+        "key": "audio-effects-heavy-landing",
+        "url": "/assets/audio/effects/heavy-landing.ogg",
+        "type": "audio",
+        "group": "audio",
+        "bytes": 6202,
+        "sha256": "237058bfc56f67d7dfc86c642d4acb94278ef6fed4a46fd958f3dee5a5745810"
+      },
+      {
+        "key": "audio-effects-heavy-smash",
+        "url": "/assets/audio/effects/heavy-smash.ogg",
+        "type": "audio",
+        "group": "audio",
+        "bytes": 5148,
+        "sha256": "a15a8daeff156340d5d0e90be661df28c4c407fd745d2acc03347e6dba43b637"
+      },
+      {
+        "key": "audio-effects-jolt-bounce",
+        "url": "/assets/audio/effects/jolt-bounce.ogg",
+        "type": "audio",
+        "group": "audio",
+        "bytes": 4779,
+        "sha256": "dbf09ab2b9f020901acd9a81d9a4b0a07d8bac3b35ebb3bfb68e92d03b90e047"
+      },
+      {
+        "key": "audio-effects-juice-splat",
+        "url": "/assets/audio/effects/juice-splat.ogg",
+        "type": "audio",
+        "group": "audio",
+        "bytes": 5089,
+        "sha256": "1627e570ddb3938acbc415221cd76c4e978b12c0ac46d7a2fd5602465266df8b"
+      },
+      {
+        "key": "audio-effects-leaf-burst",
+        "url": "/assets/audio/effects/leaf-burst.ogg",
+        "type": "audio",
+        "group": "audio",
+        "bytes": 6969,
+        "sha256": "0a8bb6fbdc809e0c0b8f4e6367bf28b6b4298aa3a23e5c1ad9d7a982db88e293"
+      },
+      {
+        "key": "audio-effects-lightning-strike",
+        "url": "/assets/audio/effects/lightning-strike.ogg",
+        "type": "audio",
+        "group": "audio",
+        "bytes": 8551,
+        "sha256": "07905bf776a988cf217e855699fa6504f59a5de52c42bca9b01585a71dd71aef"
+      },
+      {
+        "key": "audio-effects-magic-sparkle",
+        "url": "/assets/audio/effects/magic-sparkle.ogg",
+        "type": "audio",
+        "group": "audio",
+        "bytes": 5504,
+        "sha256": "3944330852bb5c5f8ca67ec463e744c27577aadd4146a141b48b095cf4f1eed5"
+      },
+      {
+        "key": "audio-effects-magic-summon",
+        "url": "/assets/audio/effects/magic-summon.ogg",
+        "type": "audio",
+        "group": "audio",
+        "bytes": 8341,
+        "sha256": "2570637c2567f1664b3501ba72405091d39711d46078ea7bdb7b129baf1fcaaa"
+      },
+      {
+        "key": "audio-effects-muzzle-flare",
+        "url": "/assets/audio/effects/muzzle-flare.ogg",
+        "type": "audio",
+        "group": "audio",
+        "bytes": 4830,
+        "sha256": "49d407e1814a40d0de54fad89117d9b1605b39628e986886a4391234c486d133"
+      },
+      {
+        "key": "audio-effects-poison",
+        "url": "/assets/audio/effects/poison.ogg",
+        "type": "audio",
+        "group": "audio",
+        "bytes": 6757,
+        "sha256": "0d7f3bbf66fdf7f6efeeeda80efa6b7c67e0f6f50cbdc0ae7540be2cf083945e"
+      },
+      {
+        "key": "audio-effects-poof-vanish",
+        "url": "/assets/audio/effects/poof-vanish.ogg",
+        "type": "audio",
+        "group": "audio",
+        "bytes": 5620,
+        "sha256": "7af2658812af8eab95bc6e738181a20e95f29d8833b27ee88a05936ff809ff94"
+      },
+      {
+        "key": "audio-effects-rage-steam",
+        "url": "/assets/audio/effects/rage-steam.ogg",
+        "type": "audio",
+        "group": "audio",
+        "bytes": 8295,
+        "sha256": "8bb285810f7372a79cfd7d48673f50b38e34f3653ced982b7c2dc7cd63dc319f"
+      },
+      {
+        "key": "audio-effects-recoil-pop",
+        "url": "/assets/audio/effects/recoil-pop.ogg",
+        "type": "audio",
+        "group": "audio",
+        "bytes": 4158,
+        "sha256": "00beb3f857a19072741d50df24e423ac631a1e2af81acf92a4a59a91aaf108e7"
+      },
+      {
+        "key": "audio-effects-slash",
+        "url": "/assets/audio/effects/slash.ogg",
+        "type": "audio",
+        "group": "audio",
+        "bytes": 5355,
+        "sha256": "bc53a46d2130f169ade9bad09e75294836b8f14ac595576615edf1fb3e4b1cca"
+      },
+      {
+        "key": "audio-effects-smoke-puff",
+        "url": "/assets/audio/effects/smoke-puff.ogg",
+        "type": "audio",
+        "group": "audio",
+        "bytes": 6253,
+        "sha256": "306023864a31b72c905a7617e6edaef1e6540b6abf424440ab14a0d80498884d"
+      },
+      {
+        "key": "audio-effects-speed-dust",
+        "url": "/assets/audio/effects/speed-dust.ogg",
+        "type": "audio",
+        "group": "audio",
+        "bytes": 5513,
+        "sha256": "379fbe3ddaca886e5712eb6f2f6c824ab5d67de1f1ce4c516b7bf52956cf1e9c"
+      },
+      {
+        "key": "audio-effects-stone-shatter",
+        "url": "/assets/audio/effects/stone-shatter.ogg",
+        "type": "audio",
+        "group": "audio",
+        "bytes": 5952,
+        "sha256": "4dfb349a3642be1dad9f0e8a2f923153e83d059dd943502e089e90f53230e51e"
+      },
+      {
+        "key": "audio-effects-stun-stars",
+        "url": "/assets/audio/effects/stun-stars.ogg",
+        "type": "audio",
+        "group": "audio",
+        "bytes": 5129,
+        "sha256": "36fec69dd620b0315459c3d8d287eabce7683f23f412c6aa084a4982352897b7"
+      },
+      {
+        "key": "audio-effects-white-flash",
+        "url": "/assets/audio/effects/white-flash.ogg",
+        "type": "audio",
+        "group": "audio",
+        "bytes": 4113,
+        "sha256": "c9b69159f07b46a6dc8958e52a47a942ae17b911f16b84734333db2b1b51fad3"
+      },
+      {
         "key": "sfx-coin-collect",
         "url": "/assets/audio/sfx/coin-collect.ogg",
-        "type": "audio"
+        "type": "audio",
+        "group": "audio",
+        "bytes": 25394,
+        "sha256": "8a91f969e932df709df80ee124d86a51389eed9b67f22e5e716bc2bbf60d8dab"
       },
       {
         "key": "sfx-defeat",
         "url": "/assets/audio/sfx/defeat.ogg",
-        "type": "audio"
+        "type": "audio",
+        "group": "audio",
+        "bytes": 9215,
+        "sha256": "eba17ecb2a426bfd4a8a6acff5f8a86202b6424a77af0fd842e37809a1ab6d81"
       },
       {
         "key": "sfx-grass-step-01",
         "url": "/assets/audio/sfx/grass-step-01.ogg",
-        "type": "audio"
+        "type": "audio",
+        "group": "audio",
+        "bytes": 8290,
+        "sha256": "9d49497777405d78d7cf7f2888e28277f3a23192300cfd1d79d54876b20f479f"
       },
       {
         "key": "sfx-grass-step-02",
         "url": "/assets/audio/sfx/grass-step-02.ogg",
-        "type": "audio"
+        "type": "audio",
+        "group": "audio",
+        "bytes": 8313,
+        "sha256": "fb28781bd22b2eefdc14077f1adf5c94d7fe9c3a130194633b55f3e0d39d9f04"
       },
       {
         "key": "sfx-monster-bite",
         "url": "/assets/audio/sfx/monster-bite.ogg",
-        "type": "audio"
+        "type": "audio",
+        "group": "audio",
+        "bytes": 20870,
+        "sha256": "480ee82b690136ea9db6966a3c3033356b8274752795c4e37afd6b6defcfacff"
       },
       {
         "key": "sfx-monster-defeat",
         "url": "/assets/audio/sfx/monster-defeat.ogg",
-        "type": "audio"
+        "type": "audio",
+        "group": "audio",
+        "bytes": 11617,
+        "sha256": "b33a8f14068aec24ec69ba85e5e87fdc41228975f6a1a3e44a6e7d6fc3d9f8d8"
       },
       {
         "key": "sfx-monster-hit",
         "url": "/assets/audio/sfx/monster-hit.ogg",
-        "type": "audio"
+        "type": "audio",
+        "group": "audio",
+        "bytes": 8800,
+        "sha256": "486988aa2d6440ffc4c62a0e8ccf3c23673ba84424bd4723378d451b7255eb5c"
       },
       {
         "key": "sfx-monster-jump",
         "url": "/assets/audio/sfx/monster-jump.ogg",
-        "type": "audio"
+        "type": "audio",
+        "group": "audio",
+        "bytes": 6872,
+        "sha256": "d28d1b07397de1cd7db2058facae0930372f31d6d945f08303ba996b37ebf06d"
       },
       {
         "key": "sfx-monster-land",
         "url": "/assets/audio/sfx/monster-land.ogg",
-        "type": "audio"
+        "type": "audio",
+        "group": "audio",
+        "bytes": 6575,
+        "sha256": "1723a9fd25103ed41af06054814e84e65f4a772bac86ab2dc927da93d9592ff5"
       },
       {
         "key": "sfx-plant-dig",
         "url": "/assets/audio/sfx/plant-dig.ogg",
-        "type": "audio"
+        "type": "audio",
+        "group": "audio",
+        "bytes": 9370,
+        "sha256": "d00c2b3c9fff07e376145c8c8c45c90e5084ec192f6ce0387db233f7b86f1486"
       },
       {
         "key": "sfx-plant-rustle",
         "url": "/assets/audio/sfx/plant-rustle.ogg",
-        "type": "audio"
+        "type": "audio",
+        "group": "audio",
+        "bytes": 16508,
+        "sha256": "ddb93a3671233f95da0e0b10367f082f7eb42fa6caaddcf776410aa8833c747d"
       },
       {
         "key": "sfx-thorn-impact",
         "url": "/assets/audio/sfx/thorn-impact.ogg",
-        "type": "audio"
+        "type": "audio",
+        "group": "audio",
+        "bytes": 5827,
+        "sha256": "f0e982611e97512fee5f777986b67e8b435434b601f94992ec044f7e89fb5acb"
       },
       {
         "key": "sfx-thorn-launch",
         "url": "/assets/audio/sfx/thorn-launch.ogg",
-        "type": "audio"
+        "type": "audio",
+        "group": "audio",
+        "bytes": 15532,
+        "sha256": "4cd96dc630bed9840c15f1dd2306da2cc56a4da26a5d3f1a03c5a7265ac5e54f"
       },
       {
         "key": "sfx-victory",
         "url": "/assets/audio/sfx/victory.ogg",
-        "type": "audio"
+        "type": "audio",
+        "group": "audio",
+        "bytes": 14169,
+        "sha256": "33b17a9a9a2397c62b285c52c33a907fdffb476909c99e42dde603f6a7a8b12c"
       }
     ],
     "backgrounds": [
       {
         "key": "backgrounds-farm-battlefield",
         "url": "/assets/backgrounds/farm-battlefield.jpeg",
-        "type": "image"
+        "type": "image",
+        "group": "backgrounds",
+        "bytes": 56081,
+        "sha256": "f8fdb783dcbf3a1bfb026dd1242fa2530203d3cc43270c061fc48ff9f21acc85",
+        "width": 1080,
+        "height": 599
       }
     ],
     "characters/farmer": [
@@ -88,344 +399,1337 @@
         "key": "farmer-attack",
         "url": "/assets/characters/farmer/farmer-attack.png",
         "type": "spritesheet",
+        "group": "characters/farmer",
+        "bytes": 460124,
+        "sha256": "b1d80b9b176c0a3c9f31c9f9a85726e80e09b2887f5f9957e61dc445b8a08cc8",
         "frameConfig": {
           "frameWidth": 180,
           "frameHeight": 360
-        }
+        },
+        "width": 1080,
+        "height": 360
       },
       {
         "key": "farmer-collect",
         "url": "/assets/characters/farmer/farmer-collect.png",
         "type": "spritesheet",
+        "group": "characters/farmer",
+        "bytes": 598589,
+        "sha256": "765f23dc9b38ac4188a1cbfc6d2ecd9f4b0cde34c45d4b0d02fa339d3acd7762",
         "frameConfig": {
           "frameWidth": 180,
           "frameHeight": 360
-        }
+        },
+        "width": 1080,
+        "height": 360
       },
       {
         "key": "farmer-death",
         "url": "/assets/characters/farmer/farmer-death.png",
         "type": "spritesheet",
+        "group": "characters/farmer",
+        "bytes": 388574,
+        "sha256": "9e34a0636dffe7fa156bd259df5a4e8cdf6353b97e36e9edf51125714ca9aa39",
         "frameConfig": {
           "frameWidth": 152,
           "frameHeight": 430
-        }
+        },
+        "width": 914,
+        "height": 430
       },
       {
         "key": "farmer-hit",
         "url": "/assets/characters/farmer/farmer-hit.png",
         "type": "spritesheet",
+        "group": "characters/farmer",
+        "bytes": 475771,
+        "sha256": "a6647eb6f551925e3eb124c0b05d7692d6c6c717ef77c3c719aebfb3b634e558",
         "frameConfig": {
           "frameWidth": 152,
           "frameHeight": 430
-        }
+        },
+        "width": 914,
+        "height": 430
       },
       {
         "key": "farmer-idle",
         "url": "/assets/characters/farmer/farmer-idle.png",
         "type": "spritesheet",
+        "group": "characters/farmer",
+        "bytes": 492063,
+        "sha256": "e8d4018b0c7a59a90d7b3ca9e7feb41a5be9a5b79fc2342016e3a6445a32bcf0",
         "frameConfig": {
           "frameWidth": 540,
           "frameHeight": 360
-        }
+        },
+        "width": 1080,
+        "height": 720
       },
       {
         "key": "farmer-jump",
         "url": "/assets/characters/farmer/farmer-jump.png",
         "type": "spritesheet",
+        "group": "characters/farmer",
+        "bytes": 602627,
+        "sha256": "cb782d549e1f08e24005a0922e1acac8c60965e3f7fc6db1101a043338159f36",
         "frameConfig": {
           "frameWidth": 216,
           "frameHeight": 720
-        }
+        },
+        "width": 1080,
+        "height": 720
       },
       {
         "key": "farmer-plant",
         "url": "/assets/characters/farmer/farmer-plant.png",
         "type": "spritesheet",
+        "group": "characters/farmer",
+        "bytes": 632940,
+        "sha256": "3d6c93f5069f0942377cd600f4367c01de7d53042f33fca04d0e434cad90f3dc",
         "frameConfig": {
           "frameWidth": 360,
           "frameHeight": 430
-        }
+        },
+        "width": 2160,
+        "height": 430
       },
       {
         "key": "farmer-run",
         "url": "/assets/characters/farmer/farmer-run.png",
         "type": "spritesheet",
+        "group": "characters/farmer",
+        "bytes": 702835,
+        "sha256": "9442fed03ac27f9d600904835a004802332f612737d04adefb28bd0163d8fc99",
         "frameConfig": {
           "frameWidth": 360,
           "frameHeight": 430
-        }
+        },
+        "width": 2160,
+        "height": 430
       },
       {
         "key": "farmer-uproot",
         "url": "/assets/characters/farmer/farmer-uproot.png",
         "type": "spritesheet",
+        "group": "characters/farmer",
+        "bytes": 632940,
+        "sha256": "3d6c93f5069f0942377cd600f4367c01de7d53042f33fca04d0e434cad90f3dc",
         "frameConfig": {
           "frameWidth": 360,
           "frameHeight": 430
-        }
+        },
+        "width": 2160,
+        "height": 430
       },
       {
         "key": "farmer-walk",
         "url": "/assets/characters/farmer/farmer-walk.png",
         "type": "spritesheet",
+        "group": "characters/farmer",
+        "bytes": 931791,
+        "sha256": "b82e48c2277d0299042f9ef0a7c95afa5084845e690b3462168af96bbb9689f3",
         "frameConfig": {
           "frameWidth": 360,
           "frameHeight": 430
-        }
+        },
+        "width": 2880,
+        "height": 430
+      }
+    ],
+    "characters/monsters": [
+      {
+        "key": "monster-01",
+        "url": "/assets/characters/monsters/01/01.png",
+        "type": "image",
+        "group": "characters/monsters",
+        "bytes": 850606,
+        "sha256": "c07ab241d0076edfff5f0b847f2a3aaaa1286ace5eecda0039e36c0cae47f18e",
+        "width": 1080,
+        "height": 806
       }
     ],
     "items/currency": [
       {
         "key": "items-currency-gold-coin-sprite",
         "url": "/assets/items/currency/gold-coin-sprite.png",
-        "type": "image"
+        "type": "image",
+        "group": "items/currency",
+        "bytes": 259271,
+        "sha256": "94967937bc837d54cde6b3f85afe455decc9cefbc6ce4cccc8e6978303e7c45f",
+        "width": 353,
+        "height": 707
       },
       {
         "key": "gold-coin",
         "url": "/assets/items/currency/gold-coin.png",
         "type": "spritesheet",
+        "group": "items/currency",
+        "bytes": 345442,
+        "sha256": "15c0f5cda17a24582250fe1770b0a5acb219f20cea486781459d2d7a6d3e9e14",
         "frameConfig": {
           "frameWidth": 170,
           "frameHeight": 170
-        }
+        },
+        "width": 500,
+        "height": 500
       }
     ],
     "items/ui": [
       {
         "key": "items-ui-cute-farm-house-health-icon",
         "url": "/assets/items/ui/Cute farm-house health icon.png",
-        "type": "image"
+        "type": "image",
+        "group": "items/ui",
+        "bytes": 47344,
+        "sha256": "5ef72c4f300cb775642cfb2054aaefebc9a2b054398357fbec6fbe039dfe24b1",
+        "width": 147,
+        "height": 138
       },
       {
         "key": "items-ui-cute-monster-wave-indicator-icon",
         "url": "/assets/items/ui/Cute monster-wave indicator icon.png",
-        "type": "image"
+        "type": "image",
+        "group": "items/ui",
+        "bytes": 53586,
+        "sha256": "356e2c3bda8f5e1cde07be3aba196a959f01b635f67d788ee7642d9126db1e78",
+        "width": 172,
+        "height": 139
       },
       {
         "key": "items-ui-decorative-fantasy-leaves--mushrooms-and-golden-ornaments-as-one-grouped-asset",
         "url": "/assets/items/ui/Decorative fantasy leaves, mushrooms and golden ornaments as one grouped asset.png",
-        "type": "image"
+        "type": "image",
+        "group": "items/ui",
+        "bytes": 57280,
+        "sha256": "a0bed848ed25324e89391cbec5ddedd41e14f81292fd083c02f7ea2ddaa8e89f",
+        "width": 205,
+        "height": 130
       },
       {
         "key": "items-ui-empty-wooden-wave-number-badge",
         "url": "/assets/items/ui/Empty wooden wave-number badge.png",
-        "type": "image"
+        "type": "image",
+        "group": "items/ui",
+        "bytes": 56219,
+        "sha256": "af859477b95c726f098a12f2649afd375cc202410a06c8c71ec6c2007e820adf",
+        "width": 215,
+        "height": 134
       },
       {
         "key": "items-ui-golden-orange-progress-fill-segment",
         "url": "/assets/items/ui/Golden-orange progress fill segment.png",
-        "type": "image"
+        "type": "image",
+        "group": "items/ui",
+        "bytes": 228738,
+        "sha256": "c81b78df27fab2773462cefab10d241aa49c75729e20f959582f33360aa5612a",
+        "width": 1041,
+        "height": 216
       },
       {
         "key": "items-ui-mushroom-currency-counter-frame",
         "url": "/assets/items/ui/Mushroom currency counter frame.png",
-        "type": "image"
+        "type": "image",
+        "group": "items/ui",
+        "bytes": 36537,
+        "sha256": "beec0efcc064d702e9ca038eb2325fd4f2be8533864106b1853a7cf2a7b1e423",
+        "width": 215,
+        "height": 84
       },
       {
         "key": "items-ui-round-wooden-pause-button-with-pause-symbol",
         "url": "/assets/items/ui/Round wooden pause button with pause symbol.png",
-        "type": "image"
+        "type": "image",
+        "group": "items/ui",
+        "bytes": 68434,
+        "sha256": "c825bb10bb43ac41e41b4148eb18de68bb9899129b26c1c3da12d2357e844352",
+        "width": 230,
+        "height": 171
       },
       {
         "key": "items-ui-round-wooden-settings-button-with-golden-gear",
         "url": "/assets/items/ui/Round wooden settings button with golden gear.png",
-        "type": "image"
+        "type": "image",
+        "group": "items/ui",
+        "bytes": 62555,
+        "sha256": "8a616a59839e8b87aa2675e83be7440cc7ba682febbf6651e62cad7670685163",
+        "width": 176,
+        "height": 176
       },
       {
         "key": "items-ui-round-wooden-speed-button-with-fast-forward-symbol",
         "url": "/assets/items/ui/Round wooden speed button with fast-forward symbol.png",
-        "type": "image"
+        "type": "image",
+        "group": "items/ui",
+        "bytes": 74907,
+        "sha256": "06d3bd365c65d104aeed88296282670a0dfedc7a7f9e00c10f245ed30aab3a29",
+        "width": 217,
+        "height": 176
       },
       {
         "key": "items-ui-small-wave-progress-marker",
         "url": "/assets/items/ui/Small wave progress marker.png",
-        "type": "image"
+        "type": "image",
+        "group": "items/ui",
+        "bytes": 29914,
+        "sha256": "dd520e4a598da6b6f07b6dad45bb87d59ceae6714f685287aa2d2dddbe867c2e",
+        "width": 100,
+        "height": 146
       },
       {
         "key": "items-ui-wooden-attack-wave-progress-bar-frame",
         "url": "/assets/items/ui/Wooden attack-wave progress bar frame.png",
-        "type": "image"
+        "type": "image",
+        "group": "items/ui",
+        "bytes": 162336,
+        "sha256": "884e6d5d97e00f6f799d19dfbb1a5039ab8eb2b352390e43000a2f4fd9720b6f",
+        "width": 1041,
+        "height": 153
       },
       {
         "key": "items-ui-background",
         "url": "/assets/items/ui/background.jpeg",
-        "type": "image"
+        "type": "image",
+        "group": "items/ui",
+        "bytes": 73910,
+        "sha256": "3f80ad055aa9b4307a826a329bec11918619cef7a3a01702fe0dc11a568deb76",
+        "width": 1080,
+        "height": 602
       },
       {
         "key": "items-ui-logo",
         "url": "/assets/items/ui/logo.png",
-        "type": "image"
+        "type": "image",
+        "group": "items/ui",
+        "bytes": 1181343,
+        "sha256": "ee4d4ba27c0d0bbc167d0526a8be495e27151a935302697de84222eaf53db1d5",
+        "width": 1080,
+        "height": 720
       },
       {
         "key": "items-ui-start-button",
         "url": "/assets/items/ui/start-button.png",
-        "type": "image"
+        "type": "image",
+        "group": "items/ui",
+        "bytes": 368438,
+        "sha256": "c92de916430d6453c6c99438d9d91516e591af53b71b3434f4fbf36f2d833e0a",
+        "width": 1080,
+        "height": 602
       },
       {
         "key": "items-ui-ui-inventory-wood-fram",
         "url": "/assets/items/ui/ui-inventory-wood-fram.png",
-        "type": "image"
+        "type": "image",
+        "group": "items/ui",
+        "bytes": 78544,
+        "sha256": "002fab49c1cbfc19a495692bce7d269224476ebd45f113a37e12ff5b2266ae7a",
+        "width": 355,
+        "height": 386
       },
       {
         "key": "items-ui-ui-monster-card",
         "url": "/assets/items/ui/ui-monster-card.png",
-        "type": "image"
+        "type": "image",
+        "group": "items/ui",
+        "bytes": 135054,
+        "sha256": "62b0d3efb88f21d298fd266ada60436fbdd7c15f95c8931eb7dd35f83905a161",
+        "width": 271,
+        "height": 271
       },
       {
         "key": "items-ui-ui-mushroom-card",
         "url": "/assets/items/ui/ui-mushroom-card.png",
-        "type": "image"
+        "type": "image",
+        "group": "items/ui",
+        "bytes": 123366,
+        "sha256": "24fa14b665fd04e2207dc429bcfbc6437df8948436e7cb29745b8be0484d5d66",
+        "width": 277,
+        "height": 286
       },
       {
         "key": "items-ui-ui-seed-card-fram",
         "url": "/assets/items/ui/ui-seed-card-fram.png",
-        "type": "image"
+        "type": "image",
+        "group": "items/ui",
+        "bytes": 18717,
+        "sha256": "38950cca947b3a8f4d3c6f0378a1fe078dbc944326d39d5a68e7fbc2bb63f04b",
+        "width": 157,
+        "height": 175
       },
       {
         "key": "items-ui-ui-seed-card-locked",
         "url": "/assets/items/ui/ui-seed-card-locked.png",
-        "type": "image"
+        "type": "image",
+        "group": "items/ui",
+        "bytes": 22739,
+        "sha256": "15992da8e609d277a491474aa48def24800982fad7b995f8069df2442c5a8e00",
+        "width": 133,
+        "height": 173
       },
       {
         "key": "items-ui-ui-seed-card",
         "url": "/assets/items/ui/ui-seed-card.png",
-        "type": "image"
+        "type": "image",
+        "group": "items/ui",
+        "bytes": 112485,
+        "sha256": "880f4dcc8a433b3c97924b59bfb9ba66dfcca3fb98c13e6037f381ab8527343c",
+        "width": 270,
+        "height": 281
       },
       {
         "key": "items-ui-ui-seed-slot-empty",
         "url": "/assets/items/ui/ui-seed-slot-empty.png",
-        "type": "image"
+        "type": "image",
+        "group": "items/ui",
+        "bytes": 18102,
+        "sha256": "d60ae6ec308eb027e414a848a56372d8ecdf4614c4cbf1576a15eaacd0fa1f91",
+        "width": 165,
+        "height": 203
+      }
+    ],
+    "monsters": [
+      {
+        "key": "monsters-01-c07ab241d0076edfff5f0b847f2a3aaaa1286ace5eecda0039e36c0cae47f18e",
+        "url": "/assets/monsters/01-c07ab241d0076edfff5f0b847f2a3aaaa1286ace5eecda0039e36c0cae47f18e.png",
+        "type": "image",
+        "group": "monsters",
+        "bytes": 850606,
+        "sha256": "c07ab241d0076edfff5f0b847f2a3aaaa1286ace5eecda0039e36c0cae47f18e",
+        "width": 1080,
+        "height": 806
       }
     ],
     "plant-icons": [
       {
         "key": "plant-icons-double-radish",
         "url": "/assets/plant-icons/double-radish.svg",
-        "type": "svg"
+        "type": "svg",
+        "group": "plant-icons",
+        "bytes": 752,
+        "sha256": "5d02ffcec5b3333c6ec7538dc331921e3050410c0a91b5663e1796209f600dd7",
+        "width": 64,
+        "height": 64
       },
       {
         "key": "plant-icons-explosive-berry",
         "url": "/assets/plant-icons/explosive-berry.svg",
-        "type": "svg"
-      },
-      {
-        "key": "plant-icons-fire-pepper",
-        "url": "/assets/plant-icons/fire-pepper.svg",
-        "type": "svg"
+        "type": "svg",
+        "group": "plant-icons",
+        "bytes": 667,
+        "sha256": "9653f388e1acd17f44ecde87da87ae4d179e5ec30719a36d131e16c7f065a4f6",
+        "width": 64,
+        "height": 64
       },
       {
         "key": "plant-icons-ice-bloom",
         "url": "/assets/plant-icons/ice-bloom.svg",
-        "type": "svg"
+        "type": "svg",
+        "group": "plant-icons",
+        "bytes": 637,
+        "sha256": "bbb6538343cf51b25ea09bb9838a7856c7c430a13f2dd30adb77a649e388190e",
+        "width": 64,
+        "height": 64
       },
       {
         "key": "plant-icons-mushroom",
         "url": "/assets/plant-icons/mushroom.svg",
-        "type": "svg"
+        "type": "svg",
+        "group": "plant-icons",
+        "bytes": 250,
+        "sha256": "4d344ec462b1d20f2df49dc4672d22a0bf9dd4ce9c9b5f0e7fabaf5ddb842938",
+        "width": 64,
+        "height": 64
       },
       {
         "key": "plant-icons-pea-shooter",
         "url": "/assets/plant-icons/pea-shooter.svg",
-        "type": "svg"
+        "type": "svg",
+        "group": "plant-icons",
+        "bytes": 620,
+        "sha256": "95ce448cf1f486859b564ba7cb478e75c0a8da0e996a1a060f191bd0725e972e",
+        "width": 64,
+        "height": 64
       },
       {
         "key": "plant-icons-pumpkin-guard",
         "url": "/assets/plant-icons/pumpkin-guard.svg",
-        "type": "svg"
+        "type": "svg",
+        "group": "plant-icons",
+        "bytes": 661,
+        "sha256": "bf0a9327b39593bb566001647a9a6898f1e555288afb924c86d55d41a146c045",
+        "width": 64,
+        "height": 64
       },
       {
         "key": "plant-icons-radish",
         "url": "/assets/plant-icons/radish.svg",
-        "type": "svg"
+        "type": "svg",
+        "group": "plant-icons",
+        "bytes": 245,
+        "sha256": "5fce716a8e754487c9acb0dfdc222a0c823ccbf410543c951c7fa771d01ff14c",
+        "width": 64,
+        "height": 64
       },
       {
         "key": "plant-icons-sunflower",
         "url": "/assets/plant-icons/sunflower.svg",
-        "type": "svg"
+        "type": "svg",
+        "group": "plant-icons",
+        "bytes": 965,
+        "sha256": "5a17f568061b4a3ce9bfb898b9aca68c23f9b4030d69aebec129b85083e61b03",
+        "width": 64,
+        "height": 64
       },
       {
         "key": "plant-icons-thorn-wall",
         "url": "/assets/plant-icons/thorn-wall.svg",
-        "type": "svg"
+        "type": "svg",
+        "group": "plant-icons",
+        "bytes": 500,
+        "sha256": "567d7c2c19dce9ef5116bb65d0b0735db6223a5eed8e654f4ffd1d144606559d",
+        "width": 64,
+        "height": 64
       }
     ],
     "plants": [
       {
         "key": "plants-snow-thrower-bomb-level-1",
         "url": "/assets/plants/Snow-thrower-bomb-level-1.png",
-        "type": "image"
+        "type": "image",
+        "group": "plants",
+        "bytes": 42516,
+        "sha256": "a97e7d6df5f33783a4e9a0b1191b54782e7bc88a8f495ab8cf337fbb3d21c1eb",
+        "width": 142,
+        "height": 174
       },
       {
         "key": "plants-snow-thrower-level-1",
         "url": "/assets/plants/Snow-thrower-level-1.png",
-        "type": "image"
+        "type": "image",
+        "group": "plants",
+        "bytes": 922038,
+        "sha256": "6997411f7bc36323cfdac000402672f006f00e7b0f1aaf05dfd5491eae66e0ae",
+        "width": 1080,
+        "height": 869
+      },
+      {
+        "key": "plants-bamboo-level-1",
+        "url": "/assets/plants/bamboo-level-1.png",
+        "type": "image",
+        "group": "plants",
+        "bytes": 1534772,
+        "sha256": "f80b2cc0e83b411718cef691bc7eabefc0b29b324567a4c352f2ef6c8a45bcc9",
+        "width": 1254,
+        "height": 1254
+      },
+      {
+        "key": "plants-bamboo-throwing-level-1",
+        "url": "/assets/plants/bamboo-throwing-level-1.png",
+        "type": "image",
+        "group": "plants",
+        "bytes": 1056574,
+        "sha256": "b9829bedb4d8d65e3c98ec2b51a72ae60023aae30b504870b716974ea343c225",
+        "width": 1024,
+        "height": 1024
+      },
+      {
+        "key": "plants-corn_monster",
+        "url": "/assets/plants/corn_monster.png",
+        "type": "spritesheet",
+        "group": "plants",
+        "bytes": 546346,
+        "sha256": "503fb2ea388dcc390f2158a6415dc9495334a9a89d61818a85d8063fc200b577",
+        "frameConfig": {
+          "frameWidth": 150,
+          "frameHeight": 150,
+          "margin": 0,
+          "spacing": 0
+        },
+        "spriteSheet": true,
+        "frameCount": 24,
+        "rows": 1,
+        "columns": 24,
+        "sourceFormat": "phaser-atlas",
+        "atlasMetadataPath": "/assets/plants/corn_monster.json",
+        "atlasClips": {
+          "idle": {
+            "startFrame": 0,
+            "endFrame": 7
+          },
+          "attack": {
+            "startFrame": 8,
+            "endFrame": 17
+          },
+          "hurt": {
+            "startFrame": 18,
+            "endFrame": 23
+          }
+        },
+        "width": 3600,
+        "height": 150
       },
       {
         "key": "plants-hazelnut-level-1-bomb",
         "url": "/assets/plants/hazelnut-level-1-bomb.png",
-        "type": "image"
+        "type": "image",
+        "group": "plants",
+        "bytes": 12727,
+        "sha256": "4aa90bd07adc316ec99df8259f3d820332d512b7214d7fd42bae5ad966145614",
+        "width": 97,
+        "height": 94
       },
       {
         "key": "hazelnut-level-1",
         "url": "/assets/plants/hazelnut-level-1.png",
         "type": "spritesheet",
+        "group": "plants",
+        "bytes": 1115104,
+        "sha256": "bb4f13c4fb621a1bc6df25f56d49d234017af56b32cdf7fbf86bca35aabec307",
         "frameConfig": {
           "frameWidth": 341,
           "frameHeight": 341,
           "margin": 0,
           "spacing": 0
-        }
+        },
+        "width": 1024,
+        "height": 1024
       },
       {
         "key": "plants-mango-level-1-bomb",
         "url": "/assets/plants/mango-level-1-bomb.png",
-        "type": "image"
+        "type": "image",
+        "group": "plants",
+        "bytes": 13603,
+        "sha256": "1c03b4cd9d7ed56f49662e0b43b5bea6ccf5ca87b998c688577e1e99fe68d21c",
+        "width": 163,
+        "height": 90
       },
       {
         "key": "plants-mango-level-1",
         "url": "/assets/plants/mango-level-1.png",
-        "type": "image"
+        "type": "image",
+        "group": "plants",
+        "bytes": 555859,
+        "sha256": "86222bcaf66e1504d625d4cb61f6ff6472176eef5039fa6beeed62e45102a49c",
+        "width": 1080,
+        "height": 806
       },
       {
         "key": "plants-mushroom",
         "url": "/assets/plants/mushroom.png",
-        "type": "image"
+        "type": "image",
+        "group": "plants",
+        "bytes": 198036,
+        "sha256": "b7b663d22535a851018b6831c009615490187a5da06e33c31cee11da850158fa",
+        "width": 353,
+        "height": 400
+      },
+      {
+        "key": "plants-pepper-flamethrower-level-1",
+        "url": "/assets/plants/pepper-flamethrower-level-1.png",
+        "type": "image",
+        "group": "plants",
+        "bytes": 956469,
+        "sha256": "82106b186c2dc11a460efe8a9ad268302f28ce86deb1321ffd6e989f68a20834",
+        "width": 1024,
+        "height": 1024
       },
       {
         "key": "plants-pineapple-level-1-bomb",
         "url": "/assets/plants/pineapple-level-1-bomb.png",
-        "type": "image"
+        "type": "image",
+        "group": "plants",
+        "bytes": 17728,
+        "sha256": "7048ba180547511daf0373977b3f2719f9fe2b1cab34c2c79b474f63fc003427",
+        "width": 168,
+        "height": 103
       },
       {
         "key": "pineapple-level-1",
         "url": "/assets/plants/pineapple-level-1.png",
         "type": "spritesheet",
+        "group": "plants",
+        "bytes": 1910895,
+        "sha256": "f04f8c2359dbe73dbde055fdade1651af6cb4d5a227bec1d64302649b9bc822f",
         "frameConfig": {
           "frameWidth": 418,
           "frameHeight": 418,
           "margin": 0,
           "spacing": 0
-        }
+        },
+        "width": 1254,
+        "height": 1254
       },
       {
         "key": "plants-pumpkin",
         "url": "/assets/plants/pumpkin.png",
-        "type": "image"
+        "type": "image",
+        "group": "plants",
+        "bytes": 255083,
+        "sha256": "8556d9594e3ef6e40aa60dfa8e4aa37798cea4844d18f6d38a88523fe9621523",
+        "width": 500,
+        "height": 500
       },
       {
         "key": "plants-radish-level-1-bomb",
         "url": "/assets/plants/radish-level-1-bomb.png",
-        "type": "image"
+        "type": "image",
+        "group": "plants",
+        "bytes": 5292,
+        "sha256": "eed33cde592cba25c165b1d53a277b765c129083e8a2984063c31876c6ce27de",
+        "width": 70,
+        "height": 63
       },
       {
         "key": "plants-radish-level-1",
         "url": "/assets/plants/radish-level-1.png",
-        "type": "image"
+        "type": "image",
+        "group": "plants",
+        "bytes": 622722,
+        "sha256": "e346e54712f6b219411977f1b6804f2a422de4712aff0d033fbab32f057d310b",
+        "width": 908,
+        "height": 1079
+      }
+    ],
+    "projectiles": [
+      {
+        "key": "projectiles-plants-bamboo-throwing-level-1-projectile-cbedc31ec96279864eaf335cd3f9594a067d085445f913348b6a7475e97fc27c",
+        "url": "/assets/projectiles/plants/bamboo-throwing-level-1-projectile-cbedc31ec96279864eaf335cd3f9594a067d085445f913348b6a7475e97fc27c.png",
+        "type": "image",
+        "group": "projectiles",
+        "bytes": 13948,
+        "sha256": "cbedc31ec96279864eaf335cd3f9594a067d085445f913348b6a7475e97fc27c",
+        "width": 121,
+        "height": 45
+      },
+      {
+        "key": "projectiles-plants-bamboo-throwing-level-1-projectile",
+        "url": "/assets/projectiles/plants/bamboo-throwing-level-1-projectile.png",
+        "type": "image",
+        "group": "projectiles",
+        "bytes": 9230,
+        "sha256": "251662e3c0caa6c03a8264cfee2e9cc28af6bd632c485ce4cb6c0e71faf13610",
+        "width": 106,
+        "height": 82
+      },
+      {
+        "key": "projectiles-plants-pepper-flamethrower-level-1-projectile-30572f40a67eec42f4ceec6b79ed9017a0313f2a524dcf916a2226301990a207",
+        "url": "/assets/projectiles/plants/pepper-flamethrower-level-1-projectile-30572f40a67eec42f4ceec6b79ed9017a0313f2a524dcf916a2226301990a207.png",
+        "type": "image",
+        "group": "projectiles",
+        "bytes": 50714,
+        "sha256": "30572f40a67eec42f4ceec6b79ed9017a0313f2a524dcf916a2226301990a207",
+        "width": 213,
+        "height": 114
+      },
+      {
+        "key": "projectiles-plants-radish-level-1-projectile-eed33cde592cba25c165b1d53a277b765c129083e8a2984063c31876c6ce27de",
+        "url": "/assets/projectiles/plants/radish-level-1-projectile-eed33cde592cba25c165b1d53a277b765c129083e8a2984063c31876c6ce27de.png",
+        "type": "image",
+        "group": "projectiles",
+        "bytes": 5292,
+        "sha256": "eed33cde592cba25c165b1d53a277b765c129083e8a2984063c31876c6ce27de",
+        "width": 70,
+        "height": 63
+      }
+    ],
+    "vfx-icons": [
+      {
+        "key": "vfx-icons-bubble-pop-death",
+        "url": "/assets/vfx-icons/bubble-pop-death.svg",
+        "type": "svg",
+        "group": "vfx-icons",
+        "bytes": 765,
+        "sha256": "75380c54569ed21c07f5f048922f47b86407a1b3c0a69b70c24ef8bacf34947a",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "key": "vfx-icons-burn",
+        "url": "/assets/vfx-icons/burn.svg",
+        "type": "svg",
+        "group": "vfx-icons",
+        "bytes": 656,
+        "sha256": "25da6add918efe1ae7a52f47155c03db209de3336aa4bb671c0e162171bdc0f4",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "key": "vfx-icons-cannon-swell",
+        "url": "/assets/vfx-icons/cannon-swell.svg",
+        "type": "svg",
+        "group": "vfx-icons",
+        "bytes": 799,
+        "sha256": "6e63f5f4ed4061f3a93a70c0cbde356ccb51f18fa913bb22b72ae52b65087ac2",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "key": "vfx-icons-charge-glow",
+        "url": "/assets/vfx-icons/charge-glow.svg",
+        "type": "svg",
+        "group": "vfx-icons",
+        "bytes": 733,
+        "sha256": "b67eccb1deb6a8f862587eeced31964fb1231d6adae87414036d3e6bf8667a33",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "key": "vfx-icons-chew-crumbs",
+        "url": "/assets/vfx-icons/chew-crumbs.svg",
+        "type": "svg",
+        "group": "vfx-icons",
+        "bytes": 724,
+        "sha256": "512da68d0f3c1415dd8d548640eeb1026906ae80ea5416fd55ebf979cb3d6f17",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "key": "vfx-icons-coin-pop",
+        "url": "/assets/vfx-icons/coin-pop.svg",
+        "type": "svg",
+        "group": "vfx-icons",
+        "bytes": 770,
+        "sha256": "2768b6263d6fe2e658b791d9f59c3fe92ff2c55a0457759d2b5905ee1e64a702",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "key": "vfx-icons-comic-stars",
+        "url": "/assets/vfx-icons/comic-stars.svg",
+        "type": "svg",
+        "group": "vfx-icons",
+        "bytes": 1382,
+        "sha256": "7ccbfb2dd7ed2c3c81d40e872c585a32983703839998121b40049c4a7690c938",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "key": "vfx-icons-dirt-pop",
+        "url": "/assets/vfx-icons/dirt-pop.svg",
+        "type": "svg",
+        "group": "vfx-icons",
+        "bytes": 745,
+        "sha256": "80920503450831b7439b5b70805d5ebbbfa0596885e63c7d82f7e6c2a03f5bdf",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "key": "vfx-icons-electric-shock",
+        "url": "/assets/vfx-icons/electric-shock.svg",
+        "type": "svg",
+        "group": "vfx-icons",
+        "bytes": 591,
+        "sha256": "4e5fcfa0e071cb6d2090c972ffa06ee6549c0edb78c9f7e94cbb811a33681926",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "key": "vfx-icons-explosion",
+        "url": "/assets/vfx-icons/explosion.svg",
+        "type": "svg",
+        "group": "vfx-icons",
+        "bytes": 922,
+        "sha256": "c7c2cd5e46dc49b1da76795fc42e0346cb3e1895576eada36c85a682427b7310",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "key": "vfx-icons-fire-aura",
+        "url": "/assets/vfx-icons/fire-aura.svg",
+        "type": "svg",
+        "group": "vfx-icons",
+        "bytes": 771,
+        "sha256": "e04cda8d520585f7704a34d4e504d013895b3864fd5e1512a5b23d3cf4610b30",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "key": "vfx-icons-freeze",
+        "url": "/assets/vfx-icons/freeze.svg",
+        "type": "svg",
+        "group": "vfx-icons",
+        "bytes": 710,
+        "sha256": "67eee030dc61155ace0144a933c811ddd0b0d0c9c69ede5f889830ff533abb90",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "key": "vfx-icons-frost-aura",
+        "url": "/assets/vfx-icons/frost-aura.svg",
+        "type": "svg",
+        "group": "vfx-icons",
+        "bytes": 708,
+        "sha256": "18cb16f56bf273a03aa3f4106190566a31601aecc42c5a67057e02e1b5903cbb",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "key": "vfx-icons-glow-pulse",
+        "url": "/assets/vfx-icons/glow-pulse.svg",
+        "type": "svg",
+        "group": "vfx-icons",
+        "bytes": 662,
+        "sha256": "0eeda60fcdb787b20304ceda56cf66a1859a6e01c8b1604605ee364b5a144a8e",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "key": "vfx-icons-heavy-landing",
+        "url": "/assets/vfx-icons/heavy-landing.svg",
+        "type": "svg",
+        "group": "vfx-icons",
+        "bytes": 966,
+        "sha256": "7d1dee60f5219378d633caf6dcfe11f74ffd2107e05ed2e54b847c9274082d4f",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "key": "vfx-icons-heavy-smash",
+        "url": "/assets/vfx-icons/heavy-smash.svg",
+        "type": "svg",
+        "group": "vfx-icons",
+        "bytes": 839,
+        "sha256": "8af14bcd31808d110c55351e5a055c514f432a57cebb4f2e587dbb7cada1ba74",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "key": "vfx-icons-jolt-bounce",
+        "url": "/assets/vfx-icons/jolt-bounce.svg",
+        "type": "svg",
+        "group": "vfx-icons",
+        "bytes": 867,
+        "sha256": "0f9a8628afadc4ed1cedfff440b9a08330c3bbb9543f120448a11cde802b984c",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "key": "vfx-icons-juice-splat",
+        "url": "/assets/vfx-icons/juice-splat.svg",
+        "type": "svg",
+        "group": "vfx-icons",
+        "bytes": 762,
+        "sha256": "82ae7a7881f400c99f857900bfd2abe183b2fd8b7c71aef98979edd800cc3de9",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "key": "vfx-icons-leaf-burst",
+        "url": "/assets/vfx-icons/leaf-burst.svg",
+        "type": "svg",
+        "group": "vfx-icons",
+        "bytes": 870,
+        "sha256": "7a68cba1eab2d4142503ccc73eb980fc3767dd561a752e1bc9141e4182ab5a12",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "key": "vfx-icons-lightning-strike",
+        "url": "/assets/vfx-icons/lightning-strike.svg",
+        "type": "svg",
+        "group": "vfx-icons",
+        "bytes": 815,
+        "sha256": "20908cb8f7c2190d4b72ce4137b15e3787b98e702c635284668289b792640841",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "key": "vfx-icons-magic-sparkle",
+        "url": "/assets/vfx-icons/magic-sparkle.svg",
+        "type": "svg",
+        "group": "vfx-icons",
+        "bytes": 919,
+        "sha256": "02e75336f59b2a37bd60ecbf473d4edcb4bd9a9d6432aaaa1f4de0cb853db616",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "key": "vfx-icons-magic-summon",
+        "url": "/assets/vfx-icons/magic-summon.svg",
+        "type": "svg",
+        "group": "vfx-icons",
+        "bytes": 819,
+        "sha256": "363db2820d8404c3657966c13bb94c5956c2cc05ee2a1ae2a8593388baeb98f1",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "key": "vfx-icons-muzzle-flare",
+        "url": "/assets/vfx-icons/muzzle-flare.svg",
+        "type": "svg",
+        "group": "vfx-icons",
+        "bytes": 783,
+        "sha256": "474476d98a94eba70393cd880d634ce8b464cabe18b3f41ed5bf04b6187cb426",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "key": "vfx-icons-poison",
+        "url": "/assets/vfx-icons/poison.svg",
+        "type": "svg",
+        "group": "vfx-icons",
+        "bytes": 719,
+        "sha256": "610989cf2c63152b701382b5a07296c65c1f2458180a6fe1deeca94cf9e8947f",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "key": "vfx-icons-poof-vanish",
+        "url": "/assets/vfx-icons/poof-vanish.svg",
+        "type": "svg",
+        "group": "vfx-icons",
+        "bytes": 998,
+        "sha256": "815883ace9f29c6f00fab8d5b205c4ad7e9a443be743111395ae01e0fa0ea67f",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "key": "vfx-icons-rage-steam",
+        "url": "/assets/vfx-icons/rage-steam.svg",
+        "type": "svg",
+        "group": "vfx-icons",
+        "bytes": 887,
+        "sha256": "0a0dc1f9db03e3204f7a95dee0e67dd5d820ebfbd63d147ff63d6324696afdc5",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "key": "vfx-icons-recoil-pop",
+        "url": "/assets/vfx-icons/recoil-pop.svg",
+        "type": "svg",
+        "group": "vfx-icons",
+        "bytes": 696,
+        "sha256": "33cf37eeda7872981e20a838cfdd780b858c9c71b4d8852d7d6a7a52dbb7af52",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "key": "vfx-icons-slash",
+        "url": "/assets/vfx-icons/slash.svg",
+        "type": "svg",
+        "group": "vfx-icons",
+        "bytes": 721,
+        "sha256": "5168bed0087cb4bbfeed38302a19f5278f32d218c9489ca6ff01be5713396401",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "key": "vfx-icons-smoke-puff",
+        "url": "/assets/vfx-icons/smoke-puff.svg",
+        "type": "svg",
+        "group": "vfx-icons",
+        "bytes": 829,
+        "sha256": "2876373404705aadd5ea82dfbdb60c4a2644b9193ccfbb035683f9323e3150bd",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "key": "vfx-icons-speed-dust",
+        "url": "/assets/vfx-icons/speed-dust.svg",
+        "type": "svg",
+        "group": "vfx-icons",
+        "bytes": 776,
+        "sha256": "c67c01f60410f7c16178436de57aa4c3247bb4a1e22913046951b20dc50bfe42",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "key": "vfx-icons-stone-shatter",
+        "url": "/assets/vfx-icons/stone-shatter.svg",
+        "type": "svg",
+        "group": "vfx-icons",
+        "bytes": 667,
+        "sha256": "441b9b2ff7afc823c21af07a64065775dcb542bbf370ed993c900a7cdc7c6c41",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "key": "vfx-icons-stun-stars",
+        "url": "/assets/vfx-icons/stun-stars.svg",
+        "type": "svg",
+        "group": "vfx-icons",
+        "bytes": 1073,
+        "sha256": "906085b01e1e339ec930944e9c4489b5859eb0995721951f6edd77e32899f8e7",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "key": "vfx-icons-white-flash",
+        "url": "/assets/vfx-icons/white-flash.svg",
+        "type": "svg",
+        "group": "vfx-icons",
+        "bytes": 692,
+        "sha256": "232281f74676ed12256e1ae5cf4721c29bdb9b1c56eeba7c368bb2ab6f761033",
+        "width": 64,
+        "height": 64
       }
     ]
   },
   "assets": [
+    {
+      "key": "audio-effects-bubble-pop-death",
+      "url": "/assets/audio/effects/bubble-pop-death.ogg",
+      "type": "audio",
+      "group": "audio",
+      "bytes": 6527,
+      "sha256": "ed78b776461881bcac500bb4c6791c11b4040eefbab608795ec618aa6d7ed4ca"
+    },
+    {
+      "key": "audio-effects-burn",
+      "url": "/assets/audio/effects/burn.ogg",
+      "type": "audio",
+      "group": "audio",
+      "bytes": 9496,
+      "sha256": "c5af6decd39f03b92621e00a89eb236cc1e3082b7e44e6f55e5cf609fe01413c"
+    },
+    {
+      "key": "audio-effects-cannon-swell",
+      "url": "/assets/audio/effects/cannon-swell.ogg",
+      "type": "audio",
+      "group": "audio",
+      "bytes": 5605,
+      "sha256": "0b50b26dfaa87d3aa1fc7c2a2ada1b351eb8a936ae6be6ed254a53246fba692c"
+    },
+    {
+      "key": "audio-effects-charge-glow",
+      "url": "/assets/audio/effects/charge-glow.ogg",
+      "type": "audio",
+      "group": "audio",
+      "bytes": 6447,
+      "sha256": "d3dd43a8c595c1edd85e59848520b6df57bd9e27cd58c339c0094caaccd9a3c3"
+    },
+    {
+      "key": "audio-effects-chew-crumbs",
+      "url": "/assets/audio/effects/chew-crumbs.ogg",
+      "type": "audio",
+      "group": "audio",
+      "bytes": 5903,
+      "sha256": "cfeda80d8a45c24b41fc95a6ec9de21d7fc8d715b885de4049d5ef81c10fb3ba"
+    },
+    {
+      "key": "audio-effects-coin-pop",
+      "url": "/assets/audio/effects/coin-pop.ogg",
+      "type": "audio",
+      "group": "audio",
+      "bytes": 6134,
+      "sha256": "9415a5c4b3390b1df733339ac02efba283d8697501feffa1f433403fa625ae0a"
+    },
+    {
+      "key": "audio-effects-comic-stars",
+      "url": "/assets/audio/effects/comic-stars.ogg",
+      "type": "audio",
+      "group": "audio",
+      "bytes": 5498,
+      "sha256": "d8bea7ae0e4aa889db3d9a6309567faa63cf0baebb723a44b99344e5774539d8"
+    },
+    {
+      "key": "audio-effects-dirt-pop",
+      "url": "/assets/audio/effects/dirt-pop.ogg",
+      "type": "audio",
+      "group": "audio",
+      "bytes": 5498,
+      "sha256": "15431080fbe116bf8450086f85b9f3f6daeb0e1c3def4732005f5446749c4cf7"
+    },
+    {
+      "key": "audio-effects-electric-shock",
+      "url": "/assets/audio/effects/electric-shock.ogg",
+      "type": "audio",
+      "group": "audio",
+      "bytes": 6917,
+      "sha256": "58ce9db4216f3295caaeb7817e3dae433eeef32b2e30c8c62a4731d3ddda610f"
+    },
+    {
+      "key": "audio-effects-explosion",
+      "url": "/assets/audio/effects/explosion.ogg",
+      "type": "audio",
+      "group": "audio",
+      "bytes": 7464,
+      "sha256": "0c1566e9e596c7a70f97c7105fc34b04439f193c49ac44da84f20e7a6f04edbb"
+    },
+    {
+      "key": "audio-effects-fire-aura",
+      "url": "/assets/audio/effects/fire-aura.ogg",
+      "type": "audio",
+      "group": "audio",
+      "bytes": 8932,
+      "sha256": "3bd4a8df664704e5acf7804dd5b355e7a45a30c9cd63a82d83b407dc584eab29"
+    },
+    {
+      "key": "audio-effects-freeze",
+      "url": "/assets/audio/effects/freeze.ogg",
+      "type": "audio",
+      "group": "audio",
+      "bytes": 6325,
+      "sha256": "72fdedf9df5e88619a75393b58babf99826e7bdb04bd7bebeba0175f829a047f"
+    },
+    {
+      "key": "audio-effects-frost-aura",
+      "url": "/assets/audio/effects/frost-aura.ogg",
+      "type": "audio",
+      "group": "audio",
+      "bytes": 5063,
+      "sha256": "d6f3e39870138e289a55cafba80f2625c6b4cde280a278da7a24b0d0b45ca732"
+    },
+    {
+      "key": "audio-effects-glow-pulse",
+      "url": "/assets/audio/effects/glow-pulse.ogg",
+      "type": "audio",
+      "group": "audio",
+      "bytes": 4949,
+      "sha256": "a22ffe05d100f8bcaf5d6d80e2990cd301fef5f4155f52455c9ef34551ad81e7"
+    },
+    {
+      "key": "audio-effects-heavy-landing",
+      "url": "/assets/audio/effects/heavy-landing.ogg",
+      "type": "audio",
+      "group": "audio",
+      "bytes": 6202,
+      "sha256": "237058bfc56f67d7dfc86c642d4acb94278ef6fed4a46fd958f3dee5a5745810"
+    },
+    {
+      "key": "audio-effects-heavy-smash",
+      "url": "/assets/audio/effects/heavy-smash.ogg",
+      "type": "audio",
+      "group": "audio",
+      "bytes": 5148,
+      "sha256": "a15a8daeff156340d5d0e90be661df28c4c407fd745d2acc03347e6dba43b637"
+    },
+    {
+      "key": "audio-effects-jolt-bounce",
+      "url": "/assets/audio/effects/jolt-bounce.ogg",
+      "type": "audio",
+      "group": "audio",
+      "bytes": 4779,
+      "sha256": "dbf09ab2b9f020901acd9a81d9a4b0a07d8bac3b35ebb3bfb68e92d03b90e047"
+    },
+    {
+      "key": "audio-effects-juice-splat",
+      "url": "/assets/audio/effects/juice-splat.ogg",
+      "type": "audio",
+      "group": "audio",
+      "bytes": 5089,
+      "sha256": "1627e570ddb3938acbc415221cd76c4e978b12c0ac46d7a2fd5602465266df8b"
+    },
+    {
+      "key": "audio-effects-leaf-burst",
+      "url": "/assets/audio/effects/leaf-burst.ogg",
+      "type": "audio",
+      "group": "audio",
+      "bytes": 6969,
+      "sha256": "0a8bb6fbdc809e0c0b8f4e6367bf28b6b4298aa3a23e5c1ad9d7a982db88e293"
+    },
+    {
+      "key": "audio-effects-lightning-strike",
+      "url": "/assets/audio/effects/lightning-strike.ogg",
+      "type": "audio",
+      "group": "audio",
+      "bytes": 8551,
+      "sha256": "07905bf776a988cf217e855699fa6504f59a5de52c42bca9b01585a71dd71aef"
+    },
+    {
+      "key": "audio-effects-magic-sparkle",
+      "url": "/assets/audio/effects/magic-sparkle.ogg",
+      "type": "audio",
+      "group": "audio",
+      "bytes": 5504,
+      "sha256": "3944330852bb5c5f8ca67ec463e744c27577aadd4146a141b48b095cf4f1eed5"
+    },
+    {
+      "key": "audio-effects-magic-summon",
+      "url": "/assets/audio/effects/magic-summon.ogg",
+      "type": "audio",
+      "group": "audio",
+      "bytes": 8341,
+      "sha256": "2570637c2567f1664b3501ba72405091d39711d46078ea7bdb7b129baf1fcaaa"
+    },
+    {
+      "key": "audio-effects-muzzle-flare",
+      "url": "/assets/audio/effects/muzzle-flare.ogg",
+      "type": "audio",
+      "group": "audio",
+      "bytes": 4830,
+      "sha256": "49d407e1814a40d0de54fad89117d9b1605b39628e986886a4391234c486d133"
+    },
+    {
+      "key": "audio-effects-poison",
+      "url": "/assets/audio/effects/poison.ogg",
+      "type": "audio",
+      "group": "audio",
+      "bytes": 6757,
+      "sha256": "0d7f3bbf66fdf7f6efeeeda80efa6b7c67e0f6f50cbdc0ae7540be2cf083945e"
+    },
+    {
+      "key": "audio-effects-poof-vanish",
+      "url": "/assets/audio/effects/poof-vanish.ogg",
+      "type": "audio",
+      "group": "audio",
+      "bytes": 5620,
+      "sha256": "7af2658812af8eab95bc6e738181a20e95f29d8833b27ee88a05936ff809ff94"
+    },
+    {
+      "key": "audio-effects-rage-steam",
+      "url": "/assets/audio/effects/rage-steam.ogg",
+      "type": "audio",
+      "group": "audio",
+      "bytes": 8295,
+      "sha256": "8bb285810f7372a79cfd7d48673f50b38e34f3653ced982b7c2dc7cd63dc319f"
+    },
+    {
+      "key": "audio-effects-recoil-pop",
+      "url": "/assets/audio/effects/recoil-pop.ogg",
+      "type": "audio",
+      "group": "audio",
+      "bytes": 4158,
+      "sha256": "00beb3f857a19072741d50df24e423ac631a1e2af81acf92a4a59a91aaf108e7"
+    },
+    {
+      "key": "audio-effects-slash",
+      "url": "/assets/audio/effects/slash.ogg",
+      "type": "audio",
+      "group": "audio",
+      "bytes": 5355,
+      "sha256": "bc53a46d2130f169ade9bad09e75294836b8f14ac595576615edf1fb3e4b1cca"
+    },
+    {
+      "key": "audio-effects-smoke-puff",
+      "url": "/assets/audio/effects/smoke-puff.ogg",
+      "type": "audio",
+      "group": "audio",
+      "bytes": 6253,
+      "sha256": "306023864a31b72c905a7617e6edaef1e6540b6abf424440ab14a0d80498884d"
+    },
+    {
+      "key": "audio-effects-speed-dust",
+      "url": "/assets/audio/effects/speed-dust.ogg",
+      "type": "audio",
+      "group": "audio",
+      "bytes": 5513,
+      "sha256": "379fbe3ddaca886e5712eb6f2f6c824ab5d67de1f1ce4c516b7bf52956cf1e9c"
+    },
+    {
+      "key": "audio-effects-stone-shatter",
+      "url": "/assets/audio/effects/stone-shatter.ogg",
+      "type": "audio",
+      "group": "audio",
+      "bytes": 5952,
+      "sha256": "4dfb349a3642be1dad9f0e8a2f923153e83d059dd943502e089e90f53230e51e"
+    },
+    {
+      "key": "audio-effects-stun-stars",
+      "url": "/assets/audio/effects/stun-stars.ogg",
+      "type": "audio",
+      "group": "audio",
+      "bytes": 5129,
+      "sha256": "36fec69dd620b0315459c3d8d287eabce7683f23f412c6aa084a4982352897b7"
+    },
+    {
+      "key": "audio-effects-white-flash",
+      "url": "/assets/audio/effects/white-flash.ogg",
+      "type": "audio",
+      "group": "audio",
+      "bytes": 4113,
+      "sha256": "c9b69159f07b46a6dc8958e52a47a942ae17b911f16b84734333db2b1b51fad3"
+    },
     {
       "key": "sfx-coin-collect",
       "url": "/assets/audio/sfx/coin-collect.ogg",
@@ -689,6 +1993,16 @@
       "height": 430
     },
     {
+      "key": "monster-01",
+      "url": "/assets/characters/monsters/01/01.png",
+      "type": "image",
+      "group": "characters/monsters",
+      "bytes": 850606,
+      "sha256": "c07ab241d0076edfff5f0b847f2a3aaaa1286ace5eecda0039e36c0cae47f18e",
+      "width": 1080,
+      "height": 806
+    },
+    {
       "key": "items-currency-gold-coin-sprite",
       "url": "/assets/items/currency/gold-coin-sprite.png",
       "type": "image",
@@ -923,6 +2237,16 @@
       "height": 203
     },
     {
+      "key": "monsters-01-c07ab241d0076edfff5f0b847f2a3aaaa1286ace5eecda0039e36c0cae47f18e",
+      "url": "/assets/monsters/01-c07ab241d0076edfff5f0b847f2a3aaaa1286ace5eecda0039e36c0cae47f18e.png",
+      "type": "image",
+      "group": "monsters",
+      "bytes": 850606,
+      "sha256": "c07ab241d0076edfff5f0b847f2a3aaaa1286ace5eecda0039e36c0cae47f18e",
+      "width": 1080,
+      "height": 806
+    },
+    {
       "key": "plant-icons-double-radish",
       "url": "/assets/plant-icons/double-radish.svg",
       "type": "svg",
@@ -943,16 +2267,6 @@
       "height": 64
     },
     {
-      "key": "plant-icons-fire-pepper",
-      "url": "/assets/plant-icons/fire-pepper.svg",
-      "type": "svg",
-      "group": "plant-icons",
-      "bytes": 601,
-      "sha256": "8aaf828a0d35c4dc508033e64119b291756bd0c156f0b2ea414f2fa859e95c62",
-      "width": 64,
-      "height": 64
-    },
-    {
       "key": "plant-icons-ice-bloom",
       "url": "/assets/plant-icons/ice-bloom.svg",
       "type": "svg",
@@ -967,8 +2281,8 @@
       "url": "/assets/plant-icons/mushroom.svg",
       "type": "svg",
       "group": "plant-icons",
-      "bytes": 254,
-      "sha256": "07efd6be932567a7570962021eec7a75e5e7adac749df535432a056e8e4c12d7",
+      "bytes": 250,
+      "sha256": "4d344ec462b1d20f2df49dc4672d22a0bf9dd4ce9c9b5f0e7fabaf5ddb842938",
       "width": 64,
       "height": 64
     },
@@ -997,8 +2311,8 @@
       "url": "/assets/plant-icons/radish.svg",
       "type": "svg",
       "group": "plant-icons",
-      "bytes": 249,
-      "sha256": "89c2c3283650aac0148f705dc3193843f3f3736a1d2cbd82ecc614c36a9c8388",
+      "bytes": 245,
+      "sha256": "5fce716a8e754487c9acb0dfdc222a0c823ccbf410543c951c7fa771d01ff14c",
       "width": 64,
       "height": 64
     },
@@ -1041,6 +2355,62 @@
       "sha256": "6997411f7bc36323cfdac000402672f006f00e7b0f1aaf05dfd5491eae66e0ae",
       "width": 1080,
       "height": 869
+    },
+    {
+      "key": "plants-bamboo-level-1",
+      "url": "/assets/plants/bamboo-level-1.png",
+      "type": "image",
+      "group": "plants",
+      "bytes": 1534772,
+      "sha256": "f80b2cc0e83b411718cef691bc7eabefc0b29b324567a4c352f2ef6c8a45bcc9",
+      "width": 1254,
+      "height": 1254
+    },
+    {
+      "key": "plants-bamboo-throwing-level-1",
+      "url": "/assets/plants/bamboo-throwing-level-1.png",
+      "type": "image",
+      "group": "plants",
+      "bytes": 1056574,
+      "sha256": "b9829bedb4d8d65e3c98ec2b51a72ae60023aae30b504870b716974ea343c225",
+      "width": 1024,
+      "height": 1024
+    },
+    {
+      "key": "plants-corn_monster",
+      "url": "/assets/plants/corn_monster.png",
+      "type": "spritesheet",
+      "group": "plants",
+      "bytes": 546346,
+      "sha256": "503fb2ea388dcc390f2158a6415dc9495334a9a89d61818a85d8063fc200b577",
+      "frameConfig": {
+        "frameWidth": 150,
+        "frameHeight": 150,
+        "margin": 0,
+        "spacing": 0
+      },
+      "spriteSheet": true,
+      "frameCount": 24,
+      "rows": 1,
+      "columns": 24,
+      "sourceFormat": "phaser-atlas",
+      "atlasMetadataPath": "/assets/plants/corn_monster.json",
+      "atlasClips": {
+        "idle": {
+          "startFrame": 0,
+          "endFrame": 7
+        },
+        "attack": {
+          "startFrame": 8,
+          "endFrame": 17
+        },
+        "hurt": {
+          "startFrame": 18,
+          "endFrame": 23
+        }
+      },
+      "width": 3600,
+      "height": 150
     },
     {
       "key": "plants-hazelnut-level-1-bomb",
@@ -1099,6 +2469,16 @@
       "height": 400
     },
     {
+      "key": "plants-pepper-flamethrower-level-1",
+      "url": "/assets/plants/pepper-flamethrower-level-1.png",
+      "type": "image",
+      "group": "plants",
+      "bytes": 956469,
+      "sha256": "82106b186c2dc11a460efe8a9ad268302f28ce86deb1321ffd6e989f68a20834",
+      "width": 1024,
+      "height": 1024
+    },
+    {
       "key": "plants-pineapple-level-1-bomb",
       "url": "/assets/plants/pineapple-level-1-bomb.png",
       "type": "image",
@@ -1153,6 +2533,376 @@
       "sha256": "e346e54712f6b219411977f1b6804f2a422de4712aff0d033fbab32f057d310b",
       "width": 908,
       "height": 1079
+    },
+    {
+      "key": "projectiles-plants-bamboo-throwing-level-1-projectile-cbedc31ec96279864eaf335cd3f9594a067d085445f913348b6a7475e97fc27c",
+      "url": "/assets/projectiles/plants/bamboo-throwing-level-1-projectile-cbedc31ec96279864eaf335cd3f9594a067d085445f913348b6a7475e97fc27c.png",
+      "type": "image",
+      "group": "projectiles",
+      "bytes": 13948,
+      "sha256": "cbedc31ec96279864eaf335cd3f9594a067d085445f913348b6a7475e97fc27c",
+      "width": 121,
+      "height": 45
+    },
+    {
+      "key": "projectiles-plants-bamboo-throwing-level-1-projectile",
+      "url": "/assets/projectiles/plants/bamboo-throwing-level-1-projectile.png",
+      "type": "image",
+      "group": "projectiles",
+      "bytes": 9230,
+      "sha256": "251662e3c0caa6c03a8264cfee2e9cc28af6bd632c485ce4cb6c0e71faf13610",
+      "width": 106,
+      "height": 82
+    },
+    {
+      "key": "projectiles-plants-pepper-flamethrower-level-1-projectile-30572f40a67eec42f4ceec6b79ed9017a0313f2a524dcf916a2226301990a207",
+      "url": "/assets/projectiles/plants/pepper-flamethrower-level-1-projectile-30572f40a67eec42f4ceec6b79ed9017a0313f2a524dcf916a2226301990a207.png",
+      "type": "image",
+      "group": "projectiles",
+      "bytes": 50714,
+      "sha256": "30572f40a67eec42f4ceec6b79ed9017a0313f2a524dcf916a2226301990a207",
+      "width": 213,
+      "height": 114
+    },
+    {
+      "key": "projectiles-plants-radish-level-1-projectile-eed33cde592cba25c165b1d53a277b765c129083e8a2984063c31876c6ce27de",
+      "url": "/assets/projectiles/plants/radish-level-1-projectile-eed33cde592cba25c165b1d53a277b765c129083e8a2984063c31876c6ce27de.png",
+      "type": "image",
+      "group": "projectiles",
+      "bytes": 5292,
+      "sha256": "eed33cde592cba25c165b1d53a277b765c129083e8a2984063c31876c6ce27de",
+      "width": 70,
+      "height": 63
+    },
+    {
+      "key": "vfx-icons-bubble-pop-death",
+      "url": "/assets/vfx-icons/bubble-pop-death.svg",
+      "type": "svg",
+      "group": "vfx-icons",
+      "bytes": 765,
+      "sha256": "75380c54569ed21c07f5f048922f47b86407a1b3c0a69b70c24ef8bacf34947a",
+      "width": 64,
+      "height": 64
+    },
+    {
+      "key": "vfx-icons-burn",
+      "url": "/assets/vfx-icons/burn.svg",
+      "type": "svg",
+      "group": "vfx-icons",
+      "bytes": 656,
+      "sha256": "25da6add918efe1ae7a52f47155c03db209de3336aa4bb671c0e162171bdc0f4",
+      "width": 64,
+      "height": 64
+    },
+    {
+      "key": "vfx-icons-cannon-swell",
+      "url": "/assets/vfx-icons/cannon-swell.svg",
+      "type": "svg",
+      "group": "vfx-icons",
+      "bytes": 799,
+      "sha256": "6e63f5f4ed4061f3a93a70c0cbde356ccb51f18fa913bb22b72ae52b65087ac2",
+      "width": 64,
+      "height": 64
+    },
+    {
+      "key": "vfx-icons-charge-glow",
+      "url": "/assets/vfx-icons/charge-glow.svg",
+      "type": "svg",
+      "group": "vfx-icons",
+      "bytes": 733,
+      "sha256": "b67eccb1deb6a8f862587eeced31964fb1231d6adae87414036d3e6bf8667a33",
+      "width": 64,
+      "height": 64
+    },
+    {
+      "key": "vfx-icons-chew-crumbs",
+      "url": "/assets/vfx-icons/chew-crumbs.svg",
+      "type": "svg",
+      "group": "vfx-icons",
+      "bytes": 724,
+      "sha256": "512da68d0f3c1415dd8d548640eeb1026906ae80ea5416fd55ebf979cb3d6f17",
+      "width": 64,
+      "height": 64
+    },
+    {
+      "key": "vfx-icons-coin-pop",
+      "url": "/assets/vfx-icons/coin-pop.svg",
+      "type": "svg",
+      "group": "vfx-icons",
+      "bytes": 770,
+      "sha256": "2768b6263d6fe2e658b791d9f59c3fe92ff2c55a0457759d2b5905ee1e64a702",
+      "width": 64,
+      "height": 64
+    },
+    {
+      "key": "vfx-icons-comic-stars",
+      "url": "/assets/vfx-icons/comic-stars.svg",
+      "type": "svg",
+      "group": "vfx-icons",
+      "bytes": 1382,
+      "sha256": "7ccbfb2dd7ed2c3c81d40e872c585a32983703839998121b40049c4a7690c938",
+      "width": 64,
+      "height": 64
+    },
+    {
+      "key": "vfx-icons-dirt-pop",
+      "url": "/assets/vfx-icons/dirt-pop.svg",
+      "type": "svg",
+      "group": "vfx-icons",
+      "bytes": 745,
+      "sha256": "80920503450831b7439b5b70805d5ebbbfa0596885e63c7d82f7e6c2a03f5bdf",
+      "width": 64,
+      "height": 64
+    },
+    {
+      "key": "vfx-icons-electric-shock",
+      "url": "/assets/vfx-icons/electric-shock.svg",
+      "type": "svg",
+      "group": "vfx-icons",
+      "bytes": 591,
+      "sha256": "4e5fcfa0e071cb6d2090c972ffa06ee6549c0edb78c9f7e94cbb811a33681926",
+      "width": 64,
+      "height": 64
+    },
+    {
+      "key": "vfx-icons-explosion",
+      "url": "/assets/vfx-icons/explosion.svg",
+      "type": "svg",
+      "group": "vfx-icons",
+      "bytes": 922,
+      "sha256": "c7c2cd5e46dc49b1da76795fc42e0346cb3e1895576eada36c85a682427b7310",
+      "width": 64,
+      "height": 64
+    },
+    {
+      "key": "vfx-icons-fire-aura",
+      "url": "/assets/vfx-icons/fire-aura.svg",
+      "type": "svg",
+      "group": "vfx-icons",
+      "bytes": 771,
+      "sha256": "e04cda8d520585f7704a34d4e504d013895b3864fd5e1512a5b23d3cf4610b30",
+      "width": 64,
+      "height": 64
+    },
+    {
+      "key": "vfx-icons-freeze",
+      "url": "/assets/vfx-icons/freeze.svg",
+      "type": "svg",
+      "group": "vfx-icons",
+      "bytes": 710,
+      "sha256": "67eee030dc61155ace0144a933c811ddd0b0d0c9c69ede5f889830ff533abb90",
+      "width": 64,
+      "height": 64
+    },
+    {
+      "key": "vfx-icons-frost-aura",
+      "url": "/assets/vfx-icons/frost-aura.svg",
+      "type": "svg",
+      "group": "vfx-icons",
+      "bytes": 708,
+      "sha256": "18cb16f56bf273a03aa3f4106190566a31601aecc42c5a67057e02e1b5903cbb",
+      "width": 64,
+      "height": 64
+    },
+    {
+      "key": "vfx-icons-glow-pulse",
+      "url": "/assets/vfx-icons/glow-pulse.svg",
+      "type": "svg",
+      "group": "vfx-icons",
+      "bytes": 662,
+      "sha256": "0eeda60fcdb787b20304ceda56cf66a1859a6e01c8b1604605ee364b5a144a8e",
+      "width": 64,
+      "height": 64
+    },
+    {
+      "key": "vfx-icons-heavy-landing",
+      "url": "/assets/vfx-icons/heavy-landing.svg",
+      "type": "svg",
+      "group": "vfx-icons",
+      "bytes": 966,
+      "sha256": "7d1dee60f5219378d633caf6dcfe11f74ffd2107e05ed2e54b847c9274082d4f",
+      "width": 64,
+      "height": 64
+    },
+    {
+      "key": "vfx-icons-heavy-smash",
+      "url": "/assets/vfx-icons/heavy-smash.svg",
+      "type": "svg",
+      "group": "vfx-icons",
+      "bytes": 839,
+      "sha256": "8af14bcd31808d110c55351e5a055c514f432a57cebb4f2e587dbb7cada1ba74",
+      "width": 64,
+      "height": 64
+    },
+    {
+      "key": "vfx-icons-jolt-bounce",
+      "url": "/assets/vfx-icons/jolt-bounce.svg",
+      "type": "svg",
+      "group": "vfx-icons",
+      "bytes": 867,
+      "sha256": "0f9a8628afadc4ed1cedfff440b9a08330c3bbb9543f120448a11cde802b984c",
+      "width": 64,
+      "height": 64
+    },
+    {
+      "key": "vfx-icons-juice-splat",
+      "url": "/assets/vfx-icons/juice-splat.svg",
+      "type": "svg",
+      "group": "vfx-icons",
+      "bytes": 762,
+      "sha256": "82ae7a7881f400c99f857900bfd2abe183b2fd8b7c71aef98979edd800cc3de9",
+      "width": 64,
+      "height": 64
+    },
+    {
+      "key": "vfx-icons-leaf-burst",
+      "url": "/assets/vfx-icons/leaf-burst.svg",
+      "type": "svg",
+      "group": "vfx-icons",
+      "bytes": 870,
+      "sha256": "7a68cba1eab2d4142503ccc73eb980fc3767dd561a752e1bc9141e4182ab5a12",
+      "width": 64,
+      "height": 64
+    },
+    {
+      "key": "vfx-icons-lightning-strike",
+      "url": "/assets/vfx-icons/lightning-strike.svg",
+      "type": "svg",
+      "group": "vfx-icons",
+      "bytes": 815,
+      "sha256": "20908cb8f7c2190d4b72ce4137b15e3787b98e702c635284668289b792640841",
+      "width": 64,
+      "height": 64
+    },
+    {
+      "key": "vfx-icons-magic-sparkle",
+      "url": "/assets/vfx-icons/magic-sparkle.svg",
+      "type": "svg",
+      "group": "vfx-icons",
+      "bytes": 919,
+      "sha256": "02e75336f59b2a37bd60ecbf473d4edcb4bd9a9d6432aaaa1f4de0cb853db616",
+      "width": 64,
+      "height": 64
+    },
+    {
+      "key": "vfx-icons-magic-summon",
+      "url": "/assets/vfx-icons/magic-summon.svg",
+      "type": "svg",
+      "group": "vfx-icons",
+      "bytes": 819,
+      "sha256": "363db2820d8404c3657966c13bb94c5956c2cc05ee2a1ae2a8593388baeb98f1",
+      "width": 64,
+      "height": 64
+    },
+    {
+      "key": "vfx-icons-muzzle-flare",
+      "url": "/assets/vfx-icons/muzzle-flare.svg",
+      "type": "svg",
+      "group": "vfx-icons",
+      "bytes": 783,
+      "sha256": "474476d98a94eba70393cd880d634ce8b464cabe18b3f41ed5bf04b6187cb426",
+      "width": 64,
+      "height": 64
+    },
+    {
+      "key": "vfx-icons-poison",
+      "url": "/assets/vfx-icons/poison.svg",
+      "type": "svg",
+      "group": "vfx-icons",
+      "bytes": 719,
+      "sha256": "610989cf2c63152b701382b5a07296c65c1f2458180a6fe1deeca94cf9e8947f",
+      "width": 64,
+      "height": 64
+    },
+    {
+      "key": "vfx-icons-poof-vanish",
+      "url": "/assets/vfx-icons/poof-vanish.svg",
+      "type": "svg",
+      "group": "vfx-icons",
+      "bytes": 998,
+      "sha256": "815883ace9f29c6f00fab8d5b205c4ad7e9a443be743111395ae01e0fa0ea67f",
+      "width": 64,
+      "height": 64
+    },
+    {
+      "key": "vfx-icons-rage-steam",
+      "url": "/assets/vfx-icons/rage-steam.svg",
+      "type": "svg",
+      "group": "vfx-icons",
+      "bytes": 887,
+      "sha256": "0a0dc1f9db03e3204f7a95dee0e67dd5d820ebfbd63d147ff63d6324696afdc5",
+      "width": 64,
+      "height": 64
+    },
+    {
+      "key": "vfx-icons-recoil-pop",
+      "url": "/assets/vfx-icons/recoil-pop.svg",
+      "type": "svg",
+      "group": "vfx-icons",
+      "bytes": 696,
+      "sha256": "33cf37eeda7872981e20a838cfdd780b858c9c71b4d8852d7d6a7a52dbb7af52",
+      "width": 64,
+      "height": 64
+    },
+    {
+      "key": "vfx-icons-slash",
+      "url": "/assets/vfx-icons/slash.svg",
+      "type": "svg",
+      "group": "vfx-icons",
+      "bytes": 721,
+      "sha256": "5168bed0087cb4bbfeed38302a19f5278f32d218c9489ca6ff01be5713396401",
+      "width": 64,
+      "height": 64
+    },
+    {
+      "key": "vfx-icons-smoke-puff",
+      "url": "/assets/vfx-icons/smoke-puff.svg",
+      "type": "svg",
+      "group": "vfx-icons",
+      "bytes": 829,
+      "sha256": "2876373404705aadd5ea82dfbdb60c4a2644b9193ccfbb035683f9323e3150bd",
+      "width": 64,
+      "height": 64
+    },
+    {
+      "key": "vfx-icons-speed-dust",
+      "url": "/assets/vfx-icons/speed-dust.svg",
+      "type": "svg",
+      "group": "vfx-icons",
+      "bytes": 776,
+      "sha256": "c67c01f60410f7c16178436de57aa4c3247bb4a1e22913046951b20dc50bfe42",
+      "width": 64,
+      "height": 64
+    },
+    {
+      "key": "vfx-icons-stone-shatter",
+      "url": "/assets/vfx-icons/stone-shatter.svg",
+      "type": "svg",
+      "group": "vfx-icons",
+      "bytes": 667,
+      "sha256": "441b9b2ff7afc823c21af07a64065775dcb542bbf370ed993c900a7cdc7c6c41",
+      "width": 64,
+      "height": 64
+    },
+    {
+      "key": "vfx-icons-stun-stars",
+      "url": "/assets/vfx-icons/stun-stars.svg",
+      "type": "svg",
+      "group": "vfx-icons",
+      "bytes": 1073,
+      "sha256": "906085b01e1e339ec930944e9c4489b5859eb0995721951f6edd77e32899f8e7",
+      "width": 64,
+      "height": 64
+    },
+    {
+      "key": "vfx-icons-white-flash",
+      "url": "/assets/vfx-icons/white-flash.svg",
+      "type": "svg",
+      "group": "vfx-icons",
+      "bytes": 692,
+      "sha256": "232281f74676ed12256e1ae5cf4721c29bdb9b1c56eeba7c368bb2ab6f761033",
+      "width": 64,
+      "height": 64
     }
   ]
 }

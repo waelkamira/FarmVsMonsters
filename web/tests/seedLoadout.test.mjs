@@ -20,7 +20,7 @@ test("default loadout includes unlocked seeds but never exceeds the packet tray 
 
 test("saved loadouts discard locked, unknown and duplicate plant IDs", () => {
   assert.deepEqual(
-    normalizeSeedLoadout(["radish", "radish", "dragon", "pumpkin"], ["radish", "mushroom", "pumpkin"]),
+    normalizeSeedLoadout(["radish", "radish", "unknown-enemy", "pumpkin"], ["radish", "mushroom", "pumpkin"]),
     ["radish", "mushroom", "pumpkin"]
   );
 });
