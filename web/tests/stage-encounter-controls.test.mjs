@@ -55,7 +55,7 @@ test("stage seed selection respects only enabled plants for a configured stage",
  assert.match(selection,/router\.push\("\/game\?stage=" \+ stageNumber \+ \(studioPlaytest \? "&studioPlaytest=1" : ""\)\)/);
  assert.match(selection,/setStagePlantsConfigured\(useStageRoster\)/);
  assert.match(selection,/farmVsMonsters\.selectedPlants\.stage\.\" \+ activeStage/);
- assert.match(selection,/window\.localStorage\.setItem\("farmVsMonsters\.selectedPlants\.stage\." \+ activeStage, savedSelection\)/);
+ assert.match(selection,/window\.localStorage\.setItem\("farmVsMonsters\.selectedPlants\.stage\." \+ stageNumber, savedSelection\)/);
  assert.match(selection,/selectedPlants\.length < minimumSeeds/);
 });
 
@@ -248,7 +248,7 @@ test("stage playtest is restricted to the configured visible roster instead of e
  const battle=read("game/scenes/BattleScene.js");
  assert.match(selection,/const useStageRoster = stageRosterConfigured && \(publishedStage \|\| isStudioPlaytest\)/);
  assert.match(selection,/const nextPlants = useStageRoster/);
- assert.match(selection,/stageUnlockedIds\.filter\(entry => entry\.unlocked !== false\)/);
+ assert.match(selection,/visibleStageEntries\.filter\(entry => entry\.unlocked !== false\)/);
  assert.match(battle,/const stageAllowedTypes = this\.stagePlantRosterConfigured/);
  assert.match(battle,/entry\.unlocked !== false/);
  assert.match(battle,/selectedTypes = this\.stagePlantRosterConfigured[\s\S]*?this\.stagePlantEntries\.map/);
