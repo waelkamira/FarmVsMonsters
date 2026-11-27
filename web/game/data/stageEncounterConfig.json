@@ -35,8 +35,8 @@
         {
           "id": "pepper-flamethrower-level-1",
           "count": 1,
-          "visible": true,
-          "enabled": true,
+          "visible": false,
+          "enabled": false,
           "unlocked": true
         },
         {
@@ -55,7 +55,7 @@
         }
       ],
       "background": "/assets/backgrounds/farm-battlefield-clean.svg",
-      "published": true,
+      "published": false,
       "monstersConfigured": true,
       "plantsConfigured": true
     }
