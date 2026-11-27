@@ -41,7 +41,7 @@
         }
       ],
       "background": "/assets/backgrounds/farm-battlefield-clean.svg",
-      "published": false,
+      "published": true,
       "monstersConfigured": true,
       "plantsConfigured": true
     }
