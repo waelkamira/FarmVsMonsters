@@ -42,6 +42,9 @@ test("Studio stage save validates references and asset deletion checks stage dep
   const stageRoute=readFileSync(new URL("../app/api/studio/stage-encounters/route.js",import.meta.url),"utf8");
   const assetRoute=readFileSync(new URL("../app/api/studio/assets/route.js",import.meta.url),"utf8");
   assert.match(stageRoute,/validateStageMonsterReferences\(config,await readMonsterAssets\(\)\)/);
+  assert.ok(stageRoute.includes('PUBLISHED_MONSTER_CATALOG_PATH="web/public/assets/studio-monster-catalog.json"'));
+  assert.ok(stageRoute.includes("catalog.monsters"));
+  assert.ok(stageRoute.includes("assets.set(asset.id.trim().toLowerCase(),asset)"));
   assert.match(stageRoute,/status:409/);
   assert.match(assetRoute,/stageReferenceConflict\(id,await localStageEncounterConfig\(\)\)/);
   assert.match(assetRoute,/getStageAssetReferences\(config,id\)/);
