@@ -53,7 +53,7 @@ export async function getLocalGitStatus({ cwd = process.cwd(), env = process.env
       optionalGit(root, ["rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{upstream}"])
     ]);
 
-    const statusLines = porcelain ? porcelain.split("\\n").filter(Boolean) : [];
+    const statusLines = porcelain ? porcelain.split(String.fromCharCode(10)).filter(Boolean) : [];
     const changedFiles = statusLines.slice(0, MAX_CHANGED_FILES).map((line) => ({
       status: line.slice(0, 2),
       path: line.slice(3)
