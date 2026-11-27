@@ -16,6 +16,10 @@ on:
       - "web/tests/**"
       - "web/package.json"
       - "web/package-lock.json"
+      - "web/scripts/**"
+      - "web/public/assets/**"
+      - "web/game/data/studioAssetRegistry.json"
+      - "web/game/data/stageEncounterConfig.json"
       - ".github/workflows/studio-validation.yml"
 
 permissions:
@@ -43,6 +47,8 @@ jobs:
           cache-dependency-path: web/package-lock.json
       - name: Install dependencies
         run: npm ci
+      - name: Rebuild asset manifest from the reconciled working tree
+        run: node scripts/build-asset-manifest.mjs
       - name: Run unit tests
         run: npm test
       - name: Run ESLint
