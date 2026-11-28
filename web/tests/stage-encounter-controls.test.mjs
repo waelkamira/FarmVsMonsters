@@ -228,7 +228,7 @@ test("Studio reads drafts from the working branch while players read the release
  assert.match(api,/plants:stage\.plants\.filter\(plant=>plant\.visible!==false&&plant\.enabled!==false\)/);
 });
 
-test("stage editing remains a local draft and routes publication through a dedicated review gate",()=>{
+test("stage editing remains a local draft and publishes directly after the dedicated review gate",()=>{
  const api=read("app/api/studio/stage-encounters/route.js");
  const manager=read("app/studio/StageRosterManager.jsx");
  const release=read("app/api/studio/stage-release/route.js");
@@ -239,9 +239,14 @@ test("stage editing remains a local draft and routes publication through a dedic
  assert.match(manager,/حفظ مسودة محلية/);
  assert.match(api,/await writeLocal\(config\)/);
  assert.match(release,/confirmedTested!==true\|\|body\.confirmedReport!==true/);
- assert.match(release,/refs\/heads\//);
- assert.match(release,/\/pulls/);
- assert.match(review,/لا تنشئ الطلب قبل حفظ المسودة ولعب المرحلة بنفسك/);
+ assert.match(release,/confirmedTested!==true\|\|body\.confirmedReport!==true/);
+ assert.match(release,/method:"PUT"/);
+ assert.match(release,/branch:RELEASE_BRANCH/);
+ assert.match(release,/body\.expectedReleaseSha/);
+ assert.match(release,/release\.sha!==body\.expectedReleaseSha/);
+ assert.doesNotMatch(release,/refs\/heads\//);
+ assert.doesNotMatch(release,/\/pulls/);
+ assert.match(review,/بعد حفظ المسودة ولعب المرحلة بنفسك/);
  assert.match(reviewPage,/<Suspense/);
  assert.match(review,/لقد لعبت المرحلة بنفسي/);
  assert.match(review,/راجعت كل البيانات والتغييرات أعلاه/);
