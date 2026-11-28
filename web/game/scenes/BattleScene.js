@@ -5625,6 +5625,11 @@ const reportBattleSceneError = (phase, error) => {
 const originalBattleScenePreload = BattleScene.prototype.preload;
 BattleScene.prototype.preload = function (...args) {
   try {
+    this.load.on("loaderror", function (file) {
+      const detail = { key: file && file.key ? file.key : "unknown", url: file && file.url ? file.url : "unknown" };
+      console.warn("[FarmVsMonsters] Asset failed to load", detail);
+      if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("farm-battle-asset-error", { detail: detail }));
+    });
     return originalBattleScenePreload.apply(this, args);
   } catch (error) {
     reportBattleSceneError("preload", error);
