@@ -5,6 +5,7 @@ import "./review.css";
 export default function StageReleaseReviewPage(){
  const params=useSearchParams();
  const stage=String(Math.max(1,Math.min(100,Number(params.get("stage"))||1)));
+ const kind=params.get("kind")==="monster"?"monsters":"plants";
  const [data,setData]=useState(null),[loading,setLoading]=useState(true),[error,setError]=useState(""),[tested,setTested]=useState(false),[reviewed,setReviewed]=useState(false),[busy,setBusy]=useState(false),[result,setResult]=useState(null);
  const load=useCallback(async()=>{setLoading(true);setError("");try{const r=await fetch("/api/studio/stage-release?stage="+stage,{cache:"no-store",credentials:"same-origin"});const d=await r.json();if(!r.ok)throw Error(d.error||"تعذر تحميل تقرير الإصدار");setData(d);}catch(e){setError(e.message);}finally{setLoading(false);}},[stage]);
  useEffect(()=>{let active=true;Promise.resolve().then(()=>{if(active)load();});return()=>{active=false;};},[load]);
@@ -36,7 +37,7 @@ export default function StageReleaseReviewPage(){
  },[data,published,draft]);
  async function createRelease(){setBusy(true);setError("");try{const r=await fetch("/api/studio/stage-release",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"same-origin",body:JSON.stringify({stage:Number(stage),confirmedTested:tested,confirmedReport:reviewed})});const d=await r.json();if(!r.ok)throw Error(d.error||"تعذر إنشاء طلب الإصدار");setResult(d);}catch(e){setError(e.message);}finally{setBusy(false);}}
  return <main className="stage-review" dir="rtl">
-  <header><div><small>FARM VS MONSTERS · RELEASE GATE</small><h1>مراجعة ونشر المرحلة {stage}</h1><p>هذه الصفحة هي بوابة انتقال التعديلات من جهازك إلى نسخة اللاعبين.</p></div><Link href={"/studio/stages/plants"}>العودة لإدارة المرحلة</Link></header>
+  <header><div><small>FARM VS MONSTERS · RELEASE GATE</small><h1>مراجعة ونشر المرحلة {stage}</h1><p>هذه الصفحة هي بوابة انتقال التعديلات من جهازك إلى نسخة اللاعبين.</p></div><Link href={"/studio/stages/"+kind}>العودة لإدارة المرحلة</Link></header>
   <section className="stage-review-warning" role="alert"><b>تحذير قبل النشر</b><p>لا تنشئ طلب الإصدار إلا بعد أن تحفظ التعديلات، وتجرب المرحلة كاملة داخل اللعبة، وتتأكد بنفسك أن النباتات والوحوش والموجات والخلفية والتأثيرات تعمل جيداً. أي خلل يصل إلى نسخة اللاعبين بعد اعتماد الإصدار.</p></section>
   {loading?<p>جارٍ تجهيز تقرير المقارنة…</p>:error&&!data?<p className="stage-review-error">{error}</p>:<>
    <section className="stage-review-stats"><article><small>النباتات المضافة</small><strong>{plants.length}</strong><span>{visiblePlants.length} ظاهرة · {plants.length-visiblePlants.length} مخفية</span></article><article><small>النباتات المفتوحة</small><strong>{visiblePlants.filter(x=>x.unlocked!==false).length}</strong><span>{visiblePlants.filter(x=>x.unlocked===false).length} مقفولة</span></article><article><small>الوحوش المفعلة</small><strong>{activeMonsters.length}</strong><span>{activeMonsters.reduce((n,x)=>n+(Number(x.count)||0),0)} إجمالي الظهور</span></article><article><small>حالة النسخة المنشورة</small><strong>{published.published?"منشورة":"غير منشورة"}</strong><span>الفرع: {data.releaseBranch}</span></article></section>
