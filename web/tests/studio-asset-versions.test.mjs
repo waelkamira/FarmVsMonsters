@@ -15,6 +15,8 @@ test("preserves the previous metadata and immutable asset path when editing", ()
   assert.equal(updated.versions.length, 1);
   assert.equal(updated.versions[0].versionNumber, 1);
   assert.equal(updated.versions[0].path, "/assets/plants/radish-old.png");
+  const withThumb = createStudioAssetRevision({ ...existing, thumbnailPath: "/assets/thumbnails/radish-old.png" }, { ...existing, thumbnailPath: "/assets/thumbnails/radish-new.png" });
+  assert.equal(withThumb.versions[0].thumbnailPath, "/assets/thumbnails/radish-old.png");
   assert.equal(updated.versions[0].combat.projectile.path, "/assets/projectiles/radish-old.png");
 });
 
