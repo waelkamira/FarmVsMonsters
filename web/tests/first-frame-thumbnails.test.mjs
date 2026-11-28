@@ -10,6 +10,7 @@ const thumbnailGenerator = read("../game/studio/firstFrameThumbnail.mjs");
 const assetRoute = read("../app/api/studio/assets/route.js");
 const catalog = read("../app/components/CatalogThumb.js");
 const game = read("../app/game/page.js");
+const stageSelect = read("../app/stage/1/select/page.js");
 const detail = read("../app/studio/assets/[id]/page.js");
 const studio = read("../app/studio/page.js");
 const roster = read("../app/studio/StageRosterManager.jsx");
@@ -50,6 +51,8 @@ test("pre-battle seed packet cards use first-frame thumbnails for all built-in s
   }
   assert.match(game, /<SpriteThumbnail src=\{plant\.image\}/);
   assert.match(game, /image: asset\.thumbnailPath \|\| asset\.path/);
+  assert.match(stageSelect, /image: plant\.thumbnailPath \|\| plant\.path/);
+  assert.match(stageSelect, /spriteSheet: plant\.thumbnailPath \? false/);
   assert.match(styles, /\.seed-choice-art-media\.is-sprite-sheet\s*\{[^}]*background-repeat:no-repeat;[^}]*background-position:left top;/s);
 });
 
