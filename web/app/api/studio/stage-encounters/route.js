@@ -1,4 +1,5 @@
 import {NextResponse} from "next/server";
+import bundledStageConfig from "../../../../game/data/stageEncounterConfig.json";
 import {mkdir,readFile,writeFile} from "node:fs/promises";
 import path from "node:path";
 import {verifyStudioSession} from "../../../../game/studio/signedSession.mjs";
@@ -94,11 +95,15 @@ export async function GET(req){
  try{
   const driver=getStorageDriver();
   const isStudio=authorized(req);
-  // Studio edits and previews read the working branch; anonymous players read
-  // only the release branch. This prevents a successful draft preview from
-  // being mistaken for a published player release.
+  // Studio edits and previews read the durable working branch. Anonymous
+  // players receive the published snapshot bundled with this deployment:
+  // public gameplay must not depend on a private GitHub token at runtime.
+  // The committed JSON is the release source for a deployment; publishing a
+  // new stage updates it through the reviewed Git workflow.
   const result=driver==="github"
-   ?await readGithub(isStudio?workingBranch():releaseBranch())
+   ?(isStudio
+      ?await readGithub(workingBranch())
+      :{config:normalizeConfig(bundledStageConfig),sha:null})
    :{config:await readLocal(),sha:null};
   if(isStudio){
    return NextResponse.json({...result.config,sha:result.sha,storage:driver,sourceBranch:driver==="github"?workingBranch():"local"},{headers:{"Cache-Control":"no-store"}});
