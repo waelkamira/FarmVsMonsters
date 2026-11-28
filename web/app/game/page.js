@@ -72,6 +72,7 @@ export default function GamePage() {
   const [studioSession, setStudioSession] = useState({ checked: false, authenticated: false });
   const [stageEncounter, setStageEncounter] = useState(null);
   const [stageEncounterReady, setStageEncounterReady] = useState(false);
+  const [stageAssetRecords, setStageAssetRecords] = useState([]);
   useEffect(() => {
     let active = true;
     setStageEncounterReady(false);
@@ -159,12 +160,14 @@ export default function GamePage() {
       const current = currentValue ?? initialStageSelection;
       if (current.includes(id)) return current.filter((item) => item !== id);
       if (current.length >= MAX_SEED_PACKETS) return current;
-      return stageRosterConfigured\n        ? normalizeStageSeedLoadout([...current, id], selectionUnlocked)\n        : normalizeSeedLoadout([...current, id], selectionUnlocked);
+      return stageRosterConfigured
+        ? normalizeStageSeedLoadout([...current, id], selectionUnlocked)\n        : normalizeSeedLoadout([...current, id], selectionUnlocked);
     });
   }
 
   function enterBattle() {
-    const safeLoadout = stageRosterConfigured\n      ? normalizeStageSeedLoadout(activeSelected, selectionUnlocked)\n      : normalizeSeedLoadout(activeSelected, selectionUnlocked);
+    const safeLoadout = stageRosterConfigured
+      ? normalizeStageSeedLoadout(activeSelected, selectionUnlocked)\n      : normalizeSeedLoadout(activeSelected, selectionUnlocked);
     try {
       const storageKey = stageRosterConfigured
         ? "farmVsMonsters.selectedPlants.stage." + (stageParam === null ? 1 : Number(stageParam))
