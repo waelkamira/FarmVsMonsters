@@ -246,7 +246,7 @@ test("BattleScene adds lightweight contact shadows beneath built-in and Studio p
   assert.match(src, /addGroundContactShadow\(plant, 48, 15, 0\.19\)/);
   assert.match(src, /addGroundContactShadow\(plant, 44 \* perspectiveScale, 13 \* perspectiveScale, 0\.2\)/);
   assert.match(src, /addGroundContactShadow\(this\.caveman, 92, 20, 0\.18\)/);
-  assert.match(src, /const shadow = this\.add\.ellipse\(0, -1, width, height, 0x20180f, alpha\)/);
+  assert.match(src, /const shadow = this\.add\.ellipse\(0, 3, width \* 0\.78, height \* 0\.45, 0x20180f, alpha \* 0\.55\)/);
   assert.match(src, /view\.add\(shadow\)/);
   assert.match(src, /catch \{\s+return null;\s+\}\s+\}/);
 });
