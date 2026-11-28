@@ -232,7 +232,8 @@ test("stage editing remains a local draft and routes publication through a dedic
  const api=read("app/api/studio/stage-encounters/route.js");
  const manager=read("app/studio/StageRosterManager.jsx");
  const release=read("app/api/studio/stage-release/route.js");
- const review=read("app/studio/stages/review/page.js");
+ const review=read("app/studio/stages/review/StageReleaseReviewClient.jsx");
+ const reviewPage=read("app/studio/stages/review/page.js");
  assert.match(manager,/مراجعة ونشر المرحلة/);
  assert.doesNotMatch(manager,/onClick=\{publishStage\}/);
  assert.match(manager,/حفظ مسودة محلية/);
@@ -241,6 +242,7 @@ test("stage editing remains a local draft and routes publication through a dedic
  assert.match(release,/refs\/heads\//);
  assert.match(release,/\/pulls/);
  assert.match(review,/لا تنشئ طلب الإصدار إلا بعد/);
+ assert.match(reviewPage,/<Suspense/);
  assert.match(review,/أؤكد أنني شغّلت المرحلة ولعبتها بنفسي/);
  assert.match(review,/أؤكد أنني راجعت تقرير المحتويات والتغييرات/);
 });
