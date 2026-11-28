@@ -2,6 +2,7 @@ import { Scene } from "phaser";
 import { translate } from "../../app/LocaleProvider";
 import { readBrowserLocale, readStorageValue, writeStorageValue } from "../services/browserStorage.mjs";
 import { getPauseMenuControlIndex, isPauseMenuActivationKey } from "../services/pauseMenuNavigation.mjs";
+import { claimPauseSceneTransition } from "../services/pauseSceneLifecycle.mjs";
 
 const AUDIO_CHANNELS = [
   { key: "musicVolume", label: "Background music", initial: 70 },
@@ -26,6 +27,8 @@ export default class PauseScene extends Scene {
   }
 
   create() {
+    // Reset the transition lock whenever Phaser launches this scene again.
+    this.pauseTransitioning = false;
     this.languageChangeHandler = () => this.drawCurrentMenu();
     window.addEventListener("farm-language-change", this.languageChangeHandler);
     this.events.once("shutdown", () => window.removeEventListener("farm-language-change", this.languageChangeHandler));
@@ -227,13 +230,14 @@ export default class PauseScene extends Scene {
 
   resumeBattle() {
     const battle = this.scene.get("BattleScene");
-    if (!battle || !battle.isPaused || battle.gameOver) return;
+    if (!battle || !battle.isPaused || battle.gameOver || !claimPauseSceneTransition(this)) return;
     this.scene.stop();
     this.scene.resume("BattleScene");
     battle.resumeFromPause();
   }
 
   restartBattle() {
+    if (!claimPauseSceneTransition(this)) return;
     const battle = this.scene.get("BattleScene");
     if (battle && battle.scene.isActive()) battle.scene.stop();
     this.scene.start("BattleScene");
