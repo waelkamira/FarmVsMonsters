@@ -31,8 +31,8 @@ test("stage review report resolves configured assets against real Studio catalog
  assert.match(page,/new Map\(\(data\?\.plantCatalog\?\.plants\|\|\[\]\)\.map/);
  assert.match(page,/new Map\(\(data\?\.monsterCatalog\?\.monsters\|\|\[\]\)\.map/);
  assert.match(page,/asset\.combat/);
- assert.match(page,/asset\.animationProfile/);
- assert.match(page,/asset\.effects/);
+ assert.match(page,/meta\.animationProfile/);
+ assert.match(page,/meta\.effects/);
  assert.match(page,/spawnIntervalMs/);
  assert.match(page,/attackIntervalMultiplier/);
  assert.match(page,/reportGeneratedAt/);
