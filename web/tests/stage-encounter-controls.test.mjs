@@ -235,6 +235,8 @@ test("stage editing remains a local draft and publishes directly after the dedic
  const review=read("app/studio/stages/review/StageReleaseReviewClient.jsx");
  const reviewPage=read("app/studio/stages/review/page.js");
  assert.match(manager,/مراجعة ونشر المرحلة/);
+ assert.match(manager,/نشر المرحلة الآن/);
+ assert.doesNotMatch(manager,/إنشاء طلب إصدار ثم اعتماده/);
  assert.doesNotMatch(manager,/onClick=\{publishStage\}/);
  assert.match(manager,/حفظ مسودة محلية/);
  assert.match(api,/await writeLocal\(config\)/);
