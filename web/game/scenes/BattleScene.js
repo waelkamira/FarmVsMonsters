@@ -2737,9 +2737,19 @@ export default class BattleScene extends Scene {
         rowCount < 1 || columnCount < 1 || rowCount * columnCount > 100) return false;
     const frames = getSpriteFrameRectangles(source.width, source.height, rowCount, columnCount);
     for (const frame of frames) {
-      if (!texture.has(String(frame.index))) {
-        texture.add(String(frame.index), 0, frame.x, frame.y, frame.width, frame.height);
+      const name = String(frame.index);
+      const existing = texture.get(name);
+      // Image textures can already contain a numeric/default frame spanning the
+      // complete sheet. Never trust its name alone: replace it unless its crop
+      // exactly matches the expected cell, otherwise Phaser renders all cells
+      // on top of one another instead of a single animation frame.
+      if (existing && (existing.cutX !== frame.x || existing.cutY !== frame.y ||
+          existing.cutWidth !== frame.width || existing.cutHeight !== frame.height)) {
+        texture.remove(name);
       }
+      if (!texture.has(name)) texture.add(name, 0, frame.x, frame.y, frame.width, frame.height);
+      const registered = texture.get(name);
+      if (!registered || registered.cutWidth !== frame.width || registered.cutHeight !== frame.height) return false;
     }
     return true;
   }
