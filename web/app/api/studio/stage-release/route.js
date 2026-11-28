@@ -15,7 +15,11 @@ const headers=token=>({Authorization:"Bearer "+token,Accept:"application/vnd.git
 async function github(token,url,options={}){
  const response=await fetch(url,{...options,headers:{...headers(token),...(options.headers||{})},cache:"no-store"});
  const data=await response.json().catch(()=>({}));
- if(!response.ok)throw new Error(data.message||"GitHub request failed ("+response.status+").");
+ if(!response.ok){
+  const error=new Error(data.message||"GitHub request failed ("+response.status+").");
+  error.status=response.status;
+  throw error;
+ }
  return data;
 }
 function normalize(value){
@@ -69,11 +73,11 @@ export async function GET(req){
 }
 export async function POST(req){
  if(!authorized(req))return NextResponse.json({error:"Unauthorized."},{status:401});
- if(!canWriteStudioStorage())return NextResponse.json({error:"إعداد طلب الإصدار متاح من بيئة التطوير المحلية فقط."},{status:403});
+ if(!canWriteStudioStorage())return NextResponse.json({error:"النشر المباشر متاح من بيئة التطوير المحلية فقط."},{status:403});
  try{
   const body=await req.json();
   const stageId=String(Math.max(1,Math.min(100,Math.floor(Number(body.stage)||1))));
-  if(body.confirmedTested!==true||body.confirmedReport!==true)return NextResponse.json({error:"يجب تأكيد تجربة المرحلة ومراجعة التقرير قبل إنشاء طلب الإصدار."},{status:400});
+  if(body.confirmedTested!==true||body.confirmedReport!==true)return NextResponse.json({error:"يجب تأكيد تجربة المرحلة ومراجعة التقرير قبل النشر المباشر."},{status:400});
   const token=process.env.STUDIO_GITHUB_TOKEN;
   if(!token)throw new Error("STUDIO_GITHUB_TOKEN is not configured.");
   const draft=await localConfig();
@@ -81,22 +85,46 @@ export async function POST(req){
   if(!stage)return NextResponse.json({error:"المرحلة غير موجودة في المسودة المحلية."},{status:404});
   const plants=(stage.plants||[]).filter(p=>p.visible!==false&&p.enabled!==false);
   const monsters=(stage.monsters||[]).filter(m=>m.enabled!==false);
-  if(!plants.length)return NextResponse.json({error:"لا يمكن إصدار مرحلة بلا نباتات ظاهرة للاعب."},{status:409});
-  if(!monsters.length)return NextResponse.json({error:"لا يمكن إصدار مرحلة بلا وحوش مفعلة."},{status:409});
+  if(!plants.length)return NextResponse.json({error:"لا يمكن نشر مرحلة بلا نباتات ظاهرة للاعب."},{status:409});
+  if(!monsters.length)return NextResponse.json({error:"لا يمكن نشر مرحلة بلا وحوش مفعلة."},{status:409});
   const plantCatalog=await readJson("public/assets/studio-plant-catalog.json",{plants:[]});
   const monsterCatalog=await readJson("public/assets/studio-monster-catalog.json",{monsters:[]});
   const plantIds=new Set(["radish","radish-level-1","mushroom","energy-mushroom","pumpkin","pumpkin-level-1","pineapple","pineapple-level-1","hazelnut","hazelnut-level-1","mango","mango-level-1","snow-thrower","snow-thrower-level-1","electric-mushroom","electric-mushroom-level-1",...(plantCatalog.plants||[]).map(x=>String(x.id||"").toLowerCase())]);
   const monsterIds=new Set((monsterCatalog.monsters||[]).map(x=>String(x.id||"").toLowerCase()));
   const missingPlants=plants.map(x=>x.id).filter(id=>!plantIds.has(id));
   const missingMonsters=monsters.map(x=>x.id).filter(id=>!monsterIds.has(id));
-  if(missingPlants.length||missingMonsters.length)return NextResponse.json({error:"بعض أصول المرحلة لم تُنشر بعد في كتالوج الإنتاج. انشر الأصول أولاً ثم أعد المراجعة.",missingPlants,missingMonsters},{status:409});
-  const branch="release/stage-"+stageId+"-"+Date.now();
-  const baseRef=await github(token,"https://api.github.com/repos/"+REPOSITORY+"/git/ref/heads/"+encodeURIComponent(RELEASE_BRANCH));
-  await github(token,"https://api.github.com/repos/"+REPOSITORY+"/git/refs",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({ref:"refs/heads/"+branch,sha:baseRef.object.sha})});
-  const release=await publishedConfig(token,branch);
+  if(missingPlants.length||missingMonsters.length)return NextResponse.json({error:"بعض أصول المرحلة غير موجودة في كتالوج الإنتاج. انشر الأصول أولاً ثم أعد المحاولة.",missingPlants,missingMonsters},{status:409});
+
+  // Refuse to publish if the production snapshot changed after the user reviewed it.
+  if(typeof body.expectedReleaseSha!=="string"||!body.expectedReleaseSha){
+   return NextResponse.json({error:"انتهت صلاحية تقرير المراجعة. أعد تحميل التقرير قبل النشر."},{status:409});
+  }
+  const release=await publishedConfig(token);
+  if(release.sha!==body.expectedReleaseSha){
+   return NextResponse.json({error:"تغيرت نسخة المرحلة المنشورة منذ إنشاء التقرير. أعد تحميل التقرير وراجع الفروقات قبل النشر."},{status:409});
+  }
+  // Merge this stage into the reviewed production config, preserving every other stage.
   const merged={...release.config,stages:{...release.config.stages,[stageId]:{...stage,published:true}}};
-  await github(token,"https://api.github.com/repos/"+REPOSITORY+"/contents/"+CONFIG_PATH,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:"Prepare Stage "+stageId+" release",content:Buffer.from(JSON.stringify(merged,null,2)+"\n","utf8").toString("base64"),sha:release.sha,branch})});
-  const pr=await github(token,"https://api.github.com/repos/"+REPOSITORY+"/pulls",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({title:"Release Stage "+stageId+" to players",head:branch,base:RELEASE_BRANCH,body:"## Stage release review\n\n- Stage: "+stageId+"\n- Draft was tested in the local Studio playtest before submission.\n- Plant and monster references were checked against production catalogs.\n- This PR is the final release gate; players receive the stage only after this PR is reviewed, merged, and the production deployment is ready.\n\nPlease inspect the complete stage configuration diff before merging."})});
-  return NextResponse.json({success:true,pullRequest:pr.html_url,number:pr.number,branch,stage:stageId,message:"تم إنشاء طلب إصدار المرحلة. لن تظهر للاعبين قبل مراجعة الطلب ودمجه واكتمال نشر الإنتاج."});
- }catch(error){return NextResponse.json({error:error.message||"تعذر إنشاء طلب إصدار المرحلة."},{status:502});}
+  const committed=await github(token,"https://api.github.com/repos/"+REPOSITORY+"/contents/"+CONFIG_PATH,{
+   method:"PUT",
+   headers:{"Content-Type":"application/json"},
+   body:JSON.stringify({
+    message:"Publish Stage "+stageId+" from Studio",
+    content:Buffer.from(JSON.stringify(merged,null,2)+"\n","utf8").toString("base64"),
+    sha:release.sha,
+    branch:RELEASE_BRANCH
+   })
+  });
+  return NextResponse.json({
+   success:true,
+   stage:stageId,
+   branch:RELEASE_BRANCH,
+   commit:committed.commit?.sha||null,
+   message:"تم نشر المرحلة مباشرة إلى "+RELEASE_BRANCH+". سيبدأ تحديث نسخة اللاعبين تلقائياً بعد اكتمال نشر الإنتاج."
+  });
+ }catch(error){
+  const status=error.status===409||error.status===422?409:502;
+  const message=status===409?"تغيرت نسخة الإنتاج أثناء النشر أو لا توجد تغييرات جديدة. حدّث التقرير ثم أعد المحاولة.":(error.message||"تعذر نشر المرحلة مباشرة.");
+  return NextResponse.json({error:message},{status});
+ }
 }

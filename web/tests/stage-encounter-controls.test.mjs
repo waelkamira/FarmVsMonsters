@@ -228,20 +228,27 @@ test("Studio reads drafts from the working branch while players read the release
  assert.match(api,/plants:stage\.plants\.filter\(plant=>plant\.visible!==false&&plant\.enabled!==false\)/);
 });
 
-test("stage editing remains a local draft and routes publication through a dedicated review gate",()=>{
+test("stage editing remains a local draft and publishes directly after the dedicated review gate",()=>{
  const api=read("app/api/studio/stage-encounters/route.js");
  const manager=read("app/studio/StageRosterManager.jsx");
  const release=read("app/api/studio/stage-release/route.js");
  const review=read("app/studio/stages/review/StageReleaseReviewClient.jsx");
  const reviewPage=read("app/studio/stages/review/page.js");
  assert.match(manager,/مراجعة ونشر المرحلة/);
+ assert.match(manager,/نشر المرحلة الآن/);
+ assert.doesNotMatch(manager,/إنشاء طلب إصدار ثم اعتماده/);
  assert.doesNotMatch(manager,/onClick=\{publishStage\}/);
  assert.match(manager,/حفظ مسودة محلية/);
  assert.match(api,/await writeLocal\(config\)/);
  assert.match(release,/confirmedTested!==true\|\|body\.confirmedReport!==true/);
- assert.match(release,/refs\/heads\//);
- assert.match(release,/\/pulls/);
- assert.match(review,/لا تنشئ الطلب قبل حفظ المسودة ولعب المرحلة بنفسك/);
+ assert.match(release,/confirmedTested!==true\|\|body\.confirmedReport!==true/);
+ assert.match(release,/method:"PUT"/);
+ assert.match(release,/branch:RELEASE_BRANCH/);
+ assert.match(release,/body\.expectedReleaseSha/);
+ assert.match(release,/release\.sha!==body\.expectedReleaseSha/);
+ assert.doesNotMatch(release,/refs\/heads\//);
+ assert.doesNotMatch(release,/\/pulls/);
+ assert.match(review,/لا تضغط زر النشر إلا بعد حفظ التعديلات ولعب المرحلة بنفسك/);
  assert.match(reviewPage,/<Suspense/);
  assert.match(review,/لقد لعبت المرحلة بنفسي/);
  assert.match(review,/راجعت كل البيانات والتغييرات أعلاه/);
@@ -309,7 +316,7 @@ test("monster bite handling grounds the sprite without reading jumpOffset before
 });
 
 
-test("stage release API verifies production catalog references before opening a release PR",()=>{
+test("stage release API verifies production catalog references before direct publication",()=>{
  const release=read("app/api/studio/stage-release/route.js");
  assert.match(release,/studio-plant-catalog\.json/);
  assert.match(release,/studio-monster-catalog\.json/);

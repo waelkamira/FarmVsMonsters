@@ -7,12 +7,13 @@ import {resolve,dirname} from "node:path";
 const root=resolve(dirname(fileURLToPath(import.meta.url)),"..");
 const read=path=>readFileSync(resolve(root,path),"utf8");
 
-test("stage release review uses a high-contrast light visual system",()=>{
+test("stage release review matches the dark olive and gold Studio visual system",()=>{
  const css=read("app/studio/stages/review/review.css");
  const page=read("app/studio/stages/review/StageReleaseReviewClient.jsx");
- assert.match(css,/--sr-ink:#17251c/);
- assert.match(css,/background:radial-gradient[\s\S]*var\(--sr-bg\)/);
- assert.match(css,/--sr-ink:#17251c/);
+ assert.match(css,/--sr-ink:#f5e8c9/);
+ assert.match(css,/--sr-muted:#c4b58f/);
+ assert.match(css,/--sr-gold:#e8bd65/);
+ assert.match(css,/background:radial-gradient[\s\S]*linear-gradient\(145deg,#17140d,#241b12 58%,#14130d\)/);
  assert.match(css,/\.sr-detail-grid/);
  assert.match(css,/\.sr-asset-card/);
  assert.match(page,/<main className="stage-review"/);
@@ -41,8 +42,8 @@ test("stage review report resolves configured assets against real Studio catalog
 
 test("stage release review keeps the playtest and explicit release confirmations",()=>{
  const page=read("app/studio/stages/review/StageReleaseReviewClient.jsx");
- assert.match(page,/لا تنشئ الطلب قبل حفظ المسودة ولعب المرحلة بنفسك/);
+ assert.match(page,/لا تضغط زر النشر إلا بعد حفظ التعديلات ولعب المرحلة بنفسك/);
  assert.match(page,/أؤكد|لقد لعبت المرحلة بنفسي/);
  assert.match(page,/راجعت كل البيانات والتغييرات أعلاه/);
- assert.match(page,/confirmedTested:tested,confirmedReport:reviewed/);
+ assert.match(page,/confirmedTested:tested,confirmedReport:reviewed,expectedReleaseSha:data\?\.releaseSha/);
 });
