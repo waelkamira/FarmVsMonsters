@@ -161,13 +161,15 @@ export default function GamePage() {
       if (current.includes(id)) return current.filter((item) => item !== id);
       if (current.length >= MAX_SEED_PACKETS) return current;
       return stageRosterConfigured
-        ? normalizeStageSeedLoadout([...current, id], selectionUnlocked)\n        : normalizeSeedLoadout([...current, id], selectionUnlocked);
+        ? normalizeStageSeedLoadout([...current, id], selectionUnlocked)
+        : normalizeSeedLoadout([...current, id], selectionUnlocked);
     });
   }
 
   function enterBattle() {
     const safeLoadout = stageRosterConfigured
-      ? normalizeStageSeedLoadout(activeSelected, selectionUnlocked)\n      : normalizeSeedLoadout(activeSelected, selectionUnlocked);
+      ? normalizeStageSeedLoadout(activeSelected, selectionUnlocked)
+      : normalizeSeedLoadout(activeSelected, selectionUnlocked);
     try {
       const storageKey = stageRosterConfigured
         ? "farmVsMonsters.selectedPlants.stage." + (stageParam === null ? 1 : Number(stageParam))
