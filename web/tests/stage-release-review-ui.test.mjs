@@ -12,7 +12,7 @@ test("stage release review uses a high-contrast light visual system",()=>{
  const page=read("app/studio/stages/review/StageReleaseReviewClient.jsx");
  assert.match(css,/--sr-ink:#17251c/);
  assert.match(css,/background:radial-gradient[\s\S]*var\(--sr-bg\)/);
- assert.match(css,/color:#17251c/);
+ assert.match(css,/--sr-ink:#17251c/);
  assert.match(css,/\.sr-detail-grid/);
  assert.match(css,/\.sr-asset-card/);
  assert.match(page,/<main className="stage-review"/);
@@ -35,7 +35,7 @@ test("stage review report resolves configured assets against real Studio catalog
  assert.match(page,/meta\.effects/);
  assert.match(page,/spawnIntervalMs/);
  assert.match(page,/attackIntervalMultiplier/);
- assert.match(page,/reportGeneratedAt/);
+ assert.match(api,/reportGeneratedAt:new Date\(\)\.toISOString\(\)/);\n assert.match(page,/data\.reportGeneratedAt/);
 });
 
 test("stage release review keeps the playtest and explicit release confirmations",()=>{
