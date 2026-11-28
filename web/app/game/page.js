@@ -138,6 +138,16 @@ export default function GamePage() {
     ? stagePackets.filter((plant) => stageUnlocked.includes(plant.id)).map((plant) => plant.id).slice(0, MAX_SEED_PACKETS)
     : selected;
   const activeSelected = selectedOverride ?? initialStageSelection;
+  useEffect(() => {
+    if (!stageRosterConfigured || !stageEncounterReady) return;
+    try {
+      const key = "farmVsMonsters.selectedPlants.stage." + (stageParam === null ? 1 : Number(stageParam));
+      const saved = window.localStorage.getItem(key);
+      setSelectedOverride(saved ? normalizeStageSeedLoadout(JSON.parse(saved), selectionUnlocked) : null);
+    } catch {
+      setSelectedOverride(null);
+    }
+  }, [stageRosterConfigured, stageEncounterReady, stageEncounter, stageParam]);
   const [battleStarted, setBattleStarted] = useState(false);
   const showBattle = battleStarted || (isStagePlaytest && (!studioPlaytestRequested || authorizedStudioPlaytest));
   const [saveError, setSaveError] = useState(false);
