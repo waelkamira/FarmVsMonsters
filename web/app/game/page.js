@@ -74,18 +74,13 @@ export default function GamePage() {
   const [stageEncounterReady, setStageEncounterReady] = useState(false);
   useEffect(() => {
     let active = true;
-    if (!isStagePlaytest) {
-      setStageEncounter(null);
-      setStageEncounterReady(true);
-      return () => { active = false; };
-    }
     setStageEncounterReady(false);
     Promise.all([
       fetch("/api/studio/stage-encounters", { cache: "no-store" }).then((response) => response.ok ? response.json() : null),
       fetch("/api/studio/assets", { cache: "no-store" }).then((response) => response.ok ? response.json() : null).catch(() => null)
     ]).then(([config, assets]) => {
       if (!active) return;
-      setStageEncounter(config?.stages?.[String(Number(stageParam))] || null);
+      setStageEncounter(config?.stages?.[String(stageParam === null ? 1 : Number(stageParam))] || null);
       setStageAssetRecords(Array.isArray(assets?.assets) ? assets.assets : []);
       setStageEncounterReady(true);
     }).catch(() => {
@@ -110,7 +105,7 @@ export default function GamePage() {
   const blockStudioPlaytest = studioPlaytestRequested && (!studioSession.checked || !studioSession.authenticated);
   const { unlocked, selected, ready } = JSON.parse(loadoutSnapshot);
   const [selectedOverride, setSelectedOverride] = useState(null);
-  const stageRosterConfigured = isStagePlaytest && stageEncounter?.plantsConfigured === true;
+  const stageRosterConfigured = stageEncounter?.plantsConfigured === true;
   const stagePlantEntries = (stageEncounter?.plants || []).filter((entry) => entry.enabled !== false && entry.visible !== false);
   const stagePlantIds = stageRosterConfigured
     ? [...new Set(stagePlantEntries.map((entry) => STAGE_PLANT_ALIASES[entry.id] || entry.id))]
@@ -162,7 +157,7 @@ export default function GamePage() {
     const safeLoadout = stageRosterConfigured\n      ? normalizeStageSeedLoadout(activeSelected, selectionUnlocked)\n      : normalizeSeedLoadout(activeSelected, selectionUnlocked);
     try {
       const storageKey = stageRosterConfigured
-        ? "farmVsMonsters.selectedPlants.stage." + Number(stageParam)
+        ? "farmVsMonsters.selectedPlants.stage." + (stageParam === null ? 1 : Number(stageParam))
         : SEED_LOADOUT_STORAGE_KEY;
       window.localStorage.setItem(storageKey, JSON.stringify(safeLoadout));
       setSaveError(false);
