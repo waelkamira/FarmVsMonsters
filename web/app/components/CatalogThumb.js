@@ -18,6 +18,7 @@ const LOCAL_PLANT_ICONS = {
   "explosive-berry": "/assets/plant-icons/explosive-berry.svg"
 };
 const SPRITE_SHEET_PLANTS = new Set(["radish", "mango", "pineapple", "hazelnut", "snow-thrower", "electric-mushroom"]);
+const SPRITE_SHEET_MONSTERS = new Set(["monster-01"]);
 const LOCAL_MONSTER_ICONS = {
   "monster-01": "/assets/characters/monsters/01/01.png",
 };
@@ -52,6 +53,8 @@ export default function CatalogThumb({ id, label, className = "" }) {
       <span className="catalog-thumb-glow" />
       {SPRITE_SHEET_PLANTS.has(id) && localIcon ? (
         <SpriteThumbnail src={localIcon} rows={3} columns={3} frameCount={9} alt="" className="catalog-thumb-art" decorative />
+      ) : SPRITE_SHEET_MONSTERS.has(id) && localIcon ? (
+        <SpriteThumbnail src={localIcon} rows={3} columns={4} frameCount={12} alt="" className="catalog-thumb-art" decorative />
       ) : (
         <img
           src={localIcon || `${TWEMOJI}/${safeCode}.png`}
