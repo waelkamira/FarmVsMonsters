@@ -12,19 +12,19 @@
         "speedMultiplier": 1,
         "idle": {
           "startFrame": 0,
-          "endFrame": 0,
+          "endFrame": 11,
           "fps": 6,
           "loop": true
         },
         "move": {
           "startFrame": 0,
-          "endFrame": 8,
+          "endFrame": 11,
           "fps": 10,
           "loop": true
         },
         "attack": {
           "startFrame": 0,
-          "endFrame": 8,
+          "endFrame": 11,
           "fps": 12,
           "loop": false
         }
@@ -44,7 +44,8 @@
       },
       "flipX": true,
       "effects": [],
-      "publishedAt": "2026-11-25T20:16:45.839Z"
+      "publishedAt": "2026-11-25T20:16:45.839Z",
+      "frameCount": 12
     }
   ]
 }
