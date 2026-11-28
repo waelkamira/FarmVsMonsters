@@ -5,10 +5,14 @@ import { readFileSync } from "node:fs";
 const page = readFileSync(new URL("../app/game/page.js", import.meta.url), "utf8");
 
 test("stage seed picker uses only visible plants assigned to the selected stage", () => {
-  assert.match(page, /fetch\("\/api\/studio\/stage-encounters"/);\n  assert.match(page, /fetch\("\/assets\/studio-plant-catalog\.json"/);\n  assert.match(page, /setStageAssetRecords\(Array\.isArray\(assets\?\.plants\) \? assets\.plants : \[\]\)/);
+  assert.match(page, /fetch\("\/api\/studio\/stage-encounters"/);
+  assert.match(page, /fetch\("\/assets\/studio-plant-catalog\.json"/);
+  assert.match(page, /setStageAssetRecords\(Array\.isArray\(assets\?\.plants\) \? assets\.plants : \[\]\)/);
   assert.match(page, /stageEncounter\?\.plantsConfigured === true/);
   assert.match(page, /filter\(\(entry\) => entry\.enabled !== false && entry\.visible !== false\)/);
-  assert.match(page, /PLANT_PACKETS\.filter\(\(plant\) => stagePlantIds\.includes\(plant\.id\)\)/);\n  assert.match(page, /stageAssetRecords\.find\(\(item\) => item\.id === entry\.id\)/);\n  assert.doesNotMatch(page, /fetch\("\/api\/studio\/assets"/);
+  assert.match(page, /PLANT_PACKETS\.filter\(\(plant\) => stagePlantIds\.includes\(plant\.id\)\)/);
+  assert.match(page, /stageAssetRecords\.find\(\(item\) => item\.id === entry\.id\)/);
+  assert.doesNotMatch(page, /fetch\("\/api\/studio\/assets"/);
 });
 
 test("stage seed picker treats every added plant as unlocked unless explicitly locked", () => {
