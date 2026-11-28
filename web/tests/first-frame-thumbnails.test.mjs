@@ -58,6 +58,8 @@ test("Studio asset detail uses first-frame thumbnails without changing the anima
   assert.match(detail, /asset\.type !== "audio" && asset\.spriteSheet === true && mediaFrameCount > 1/);
   assert.match(studio, /studio-live-preview-sprite/);
   assert.match(studio, /setAnimationPlaying/);
+  assert.match(studio, /createFirstFrameThumbnail\(file,uploadRows,uploadColumns\)/);
+  assert.match(studio, /a\.thumbnailUrl\?/);
   assert.match(roster, /stage-roster-first-frame/);
   assert.match(roster, /backgroundPosition:"left top"/);
   assert.match(roster, /asset\?\.thumbnailUrl/);
@@ -121,6 +123,15 @@ test("Studio roster thumbnails fall back from the preview proxy to the original 
   assert.deepEqual(resolveThumbnailSources({path:"/assets/plants/static.png"}), {
     primarySrc:"/assets/plants/static.png",
     fallbackSrc:""
+  });
+  assert.deepEqual(resolveThumbnailSources({
+    thumbnailPath:"/assets/thumbnails/plant.png",
+    thumbnailUrl:"/api/studio/assets?preview=%2Fassets%2Fthumbnails%2Fplant.png",
+    previewUrl:"/api/studio/assets?preview=%2Fassets%2Fplants%2Fplant-sheet.png",
+    path:"/assets/plants/plant-sheet.png"
+  }), {
+    primarySrc:"/api/studio/assets?preview=%2Fassets%2Fthumbnails%2Fplant.png",
+    fallbackSrc:"/api/studio/assets?preview=%2Fassets%2Fplants%2Fplant-sheet.png"
   });
   assert.deepEqual(resolvePlantSpriteMetadata({}, {
     rows:3, columns:4, frameCount:12, spriteSheet:true
