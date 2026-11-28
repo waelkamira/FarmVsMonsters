@@ -137,6 +137,7 @@ export default function GamePage() {
     ? stagePlantEntries.filter((entry) => entry.unlocked !== false).map((entry) => STAGE_PLANT_ALIASES[entry.id] || entry.id)
     : unlocked;
   const selectionUnlocked = stageRosterConfigured ? stageUnlocked : unlocked;
+  const selectionUnlockedKey = selectionUnlocked.join("|");
   const initialStageSelection = stageRosterConfigured
     ? stagePackets.filter((plant) => stageUnlocked.includes(plant.id)).map((plant) => plant.id).slice(0, MAX_SEED_PACKETS)
     : selected;
@@ -147,12 +148,12 @@ export default function GamePage() {
       try {
         const key = "farmVsMonsters.selectedPlants.stage." + (stageParam === null ? 1 : Number(stageParam));
         const saved = window.localStorage.getItem(key);
-        setSelectedOverride(saved ? normalizeStageSeedLoadout(JSON.parse(saved), selectionUnlocked) : null);
+        setSelectedOverride(saved ? normalizeStageSeedLoadout(JSON.parse(saved), selectionUnlockedKey.split("|").filter(Boolean)) : null);
       } catch {
         setSelectedOverride(null);
       }
     });
-  }, [stageRosterConfigured, stageEncounterReady, stageEncounter, stageParam, selectionUnlocked]);
+  }, [stageRosterConfigured, stageEncounterReady, stageEncounter, stageParam, selectionUnlockedKey]);
   const [battleStarted, setBattleStarted] = useState(false);
   const showBattle = battleStarted || (isStagePlaytest && (!studioPlaytestRequested || authorizedStudioPlaytest));
   const [saveError, setSaveError] = useState(false);
