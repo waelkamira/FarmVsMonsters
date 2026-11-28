@@ -363,7 +363,10 @@ function createSpeedControl() {
  */
 export function createBattleHudButtons(scene, translateFn) {
   scene.translate = translateFn;
-  const methods = [
+  // Do not infer public method names from Function.name: production minifiers
+  // are allowed to rename local functions (for example to "e"), which would
+  // otherwise leave BattleScene without createAudioControls at runtime.
+  const methods = {
     createAudioControls,
     createAudioVolumeSlider,
     openAudioMenu,
@@ -374,8 +377,10 @@ export function createBattleHudButtons(scene, translateFn) {
     createCollectionMenuControl,
     createInventoryControl,
     createQuickCollectionButtons
-  ];
-  for (const method of methods) scene[method.name] = method.bind(scene);
+  };
+  for (const [name, method] of Object.entries(methods)) {
+    scene[name] = method.bind(scene);
+  }
   scene.createAudioControls();
   scene.createPauseControl();
   scene.createSettingsControl();
