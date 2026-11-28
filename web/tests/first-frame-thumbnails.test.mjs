@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { resolvePlantSpriteMetadata, resolveSpriteThumbnailGrid, resolveThumbnailSources } from "../game/studio/spriteSheetGrid.mjs";
+import { getFirstFrameBounds } from "../game/studio/firstFrameThumbnail.mjs";
 
 const read = (path) => readFileSync(new URL(path, import.meta.url), "utf8");
 const thumbnail = read("../app/components/SpriteThumbnail.jsx");
@@ -29,6 +30,8 @@ test("shared thumbnail renderer crops multi-frame sheets to frame zero and prese
   assert.deepEqual(resolveSpriteThumbnailGrid(9, 3, 3), { rows: 3, columns: 3 });
   assert.deepEqual(resolveSpriteThumbnailGrid(1, 1, 1), { rows: 1, columns: 1 });
   assert.deepEqual(resolveSpriteThumbnailGrid(81, 9, 9), { rows: 9, columns: 9 });
+  assert.deepEqual(getFirstFrameBounds(1200, 900, 3, 4), { x: 0, y: 0, width: 300, height: 300 });
+  assert.throws(() => getFirstFrameBounds(2, 2, 3, 4), /Invalid sprite sheet dimensions/);
 });
 
 test("plant encyclopedia maps every current built-in plant sheet to its real art and first frame", () => {
@@ -57,7 +60,8 @@ test("Studio asset detail uses first-frame thumbnails without changing the anima
   assert.match(studio, /setAnimationPlaying/);
   assert.match(roster, /stage-roster-first-frame/);
   assert.match(roster, /backgroundPosition:"left top"/);
-  assert.match(roster, /asset\?\.thumbnailUrl\|\|asset\?\.thumbnailPath/);
+  assert.match(roster, /asset\?\.thumbnailUrl/);
+  assert.match(roster, /asset\?\.thumbnailPath/);
 });
 
 test("battlefield Radish cells register the actual sheet grid before selecting frame zero", () => {
