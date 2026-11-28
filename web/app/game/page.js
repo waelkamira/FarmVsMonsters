@@ -25,6 +25,12 @@ const PLANT_PACKETS = [
 ];
 
 const LOADOUT_SERVER_SNAPSHOT = JSON.stringify({ ready: false, unlocked: ["radish", "mushroom"], selected: ["radish", "mushroom"] });
+const STAGE_PLANT_ALIASES = Object.freeze({
+  "radish-level-1": "radish", "energy-mushroom": "mushroom",
+  "pumpkin-level-1": "pumpkin", "pineapple-level-1": "pineapple",
+  "hazelnut-level-1": "hazelnut", "mango-level-1": "mango",
+  "snow-thrower-level-1": "snow-thrower", "electric-mushroom-level-1": "electric-mushroom"
+});
 
 function subscribeToLocation(callback) {
   window.addEventListener("popstate", callback);
@@ -59,6 +65,31 @@ export default function GamePage() {
   const isStagePlaytest = stageParam !== null && Number.isInteger(Number(stageParam)) && Number(stageParam) >= 1;
   const studioPlaytestRequested = new URLSearchParams(locationSearch).get("studioPlaytest") === "1";
   const [studioSession, setStudioSession] = useState({ checked: false, authenticated: false });
+  const [stageEncounter, setStageEncounter] = useState(null);
+  const [stageEncounterReady, setStageEncounterReady] = useState(false);
+  useEffect(() => {
+    let active = true;
+    if (!isStagePlaytest) {
+      setStageEncounter(null);
+      setStageEncounterReady(true);
+      return () => { active = false; };
+    }
+    setStageEncounterReady(false);
+    fetch("/api/studio/stage-encounters", { cache: "no-store" })
+      .then((response) => response.ok ? response.json() : null)
+      .then((config) => {
+        if (!active) return;
+        setStageEncounter(config?.stages?.[String(Number(stageParam))] || null);
+        setStageEncounterReady(true);
+      })
+      .catch(() => {
+        if (active) {
+          setStageEncounter(null);
+          setStageEncounterReady(true);
+        }
+      });
+    return () => { active = false; };
+  }, [isStagePlaytest, stageParam]);
   useEffect(() => {
     let active = true;
     if (!studioPlaytestRequested) return () => { active = false; };
@@ -79,12 +110,12 @@ export default function GamePage() {
 
 
   function togglePacket(id) {
-    if (!unlocked.includes(id) || id === "radish" || id === "mushroom") return;
+    if (!selectionUnlocked.includes(id) || (!stageRosterConfigured && (id === "radish" || id === "mushroom"))) return;
     setSelectedOverride((currentValue) => {
       const current = currentValue ?? selected;
       if (current.includes(id)) return current.filter((item) => item !== id);
       if (current.length >= MAX_SEED_PACKETS) return current;
-      return normalizeSeedLoadout([...current, id], unlocked);
+      return normalizeSeedLoadout([...current, id], selectionUnlocked);
     });
   }
 
@@ -106,7 +137,7 @@ export default function GamePage() {
       <div className="seed-selection-heading">
         <span className="seed-selection-eyebrow">{t("BEFORE THE BATTLE")}</span>
         <h1 id="seed-selection-title">{t("Choose your seed packets")}</h1>
-        <p>{t("Build your battle loadout. You can bring up to six plants, and your two starter packets must stay selected.")}</p>
+        <p>{stageRosterConfigured ? (arabic ? "اختر من نباتات هذه المرحلة فقط. كل نبات أضفته مفتوح تلقائياً، وتظهر علامة القفل فقط على ما أغلقته من الاستديو." : "Choose from this stage’s plants only. Added plants are unlocked by default; a lock appears only on plants you locked in Studio.") : t("Build your battle loadout. You can bring up to six plants, and your two starter packets must stay selected.")}</p>
       </div>
 
       <div className="seed-selection-status">
@@ -118,7 +149,7 @@ export default function GamePage() {
         {PLANT_PACKETS.map((plant) => {
           const isUnlocked = unlocked.includes(plant.id);
           const isSelected = activeSelected.includes(plant.id);
-          const isRequired = plant.id === "radish" || plant.id === "mushroom";
+          const isRequired = !stageRosterConfigured && (plant.id === "radish" || plant.id === "mushroom");
           return <button
             type="button"
             key={plant.id}
@@ -134,7 +165,7 @@ export default function GamePage() {
             <small>{arabic ? plant.roleAr : plant.roleEn}</small>
             <span className="seed-choice-cost">🍄 {plant.cost}</span>
             {isRequired && <span className="seed-required-label">{t("STARTER")}</span>}
-            {!isUnlocked && <span className="seed-locked-label">{t("Unlock through campaign")}</span>}
+            {!isUnlocked && <span className="seed-locked-label">{stageRosterConfigured ? (arabic ? "مقفولة في إعدادات المرحلة" : "Locked in stage settings") : t("Unlock through campaign")}</span>}
           </button>;
         })}
       </div>
