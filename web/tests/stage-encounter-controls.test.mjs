@@ -171,12 +171,10 @@ test("stage publication controls player-visible plants, per-stage unlocks and ba
  assert.match(api,/if\(isStudio\)/);
  assert.match(api,/filter\(\(\[,stage\]\)=>stage\.published===true\)/);
  assert.match(api,/plants:stage\.plants\.filter\(plant=>plant\.visible!==false&&plant\.enabled!==false\)/);
- assert.match(manager,/async function publishStage\(\)/);
- assert.match(manager,/published:true/);
- assert.match(manager,/published:false/);
+ assert.doesNotMatch(manager,/async function publishStage\(\)/);
  assert.match(manager,/حفظ مسودة محلية/);
- assert.match(manager,/تفعيل محلياً/);
- assert.match(manager,/لا يغيّر تجربة الإنتاج/);
+ assert.match(manager,/مراجعة ونشر المرحلة/);
+ assert.doesNotMatch(manager,/تفعيل محلياً/);
  assert.match(manager,/إظهار للاعب/);
  assert.match(manager,/إبقاء النبتة مقفولة/);
  assert.match(manager,/خلفية المرحلة/);
@@ -230,17 +228,23 @@ test("Studio reads drafts from the working branch while players read the release
  assert.match(api,/plants:stage\.plants\.filter\(plant=>plant\.visible!==false&&plant\.enabled!==false\)/);
 });
 
-test("stage saves and local activation write only the local stage config",()=>{
+test("stage editing remains a local draft and routes publication through a dedicated review gate",()=>{
  const api=read("app/api/studio/stage-encounters/route.js");
  const manager=read("app/studio/StageRosterManager.jsx");
- assert.match(manager,/body:JSON\.stringify\(\{action:"publish",stage,config:next,sha\}\)/);
- assert.match(api,/const publishAction=body\.action==="publish"/);
- assert.match(api,/if\(!canWriteStudioStorage\(\)\)return NextResponse\.json/);
- assert.match(api,/await writeLocal\(config\)/);
- assert.doesNotMatch(api,/writeGithub\(/);
- assert.match(manager,/Production differs · Read only/);
+ const release=read("app/api/studio/stage-release/route.js");
+ const review=read("app/studio/stages/review/StageReleaseReviewClient.jsx");
+ const reviewPage=read("app/studio/stages/review/page.js");
+ assert.match(manager,/مراجعة ونشر المرحلة/);
+ assert.doesNotMatch(manager,/onClick=\{publishStage\}/);
  assert.match(manager,/حفظ مسودة محلية/);
- assert.match(manager,/تفعيل محلياً/);
+ assert.match(api,/await writeLocal\(config\)/);
+ assert.match(release,/confirmedTested!==true\|\|body\.confirmedReport!==true/);
+ assert.match(release,/refs\/heads\//);
+ assert.match(release,/\/pulls/);
+ assert.match(review,/لا تنشئ طلب الإصدار إلا بعد/);
+ assert.match(reviewPage,/<Suspense/);
+ assert.match(review,/أؤكد أنني شغّلت المرحلة ولعبتها بنفسي/);
+ assert.match(review,/أؤكد أنني راجعت تقرير المحتويات والتغييرات/);
 });
 
 
@@ -255,14 +259,13 @@ test("stage playtest is restricted to the configured visible roster instead of e
  assert.match(battle,/const stageAllowedTypes = this\.stagePlantRosterConfigured[\s\S]*?this\.stagePlantEntries\.filter\(entry => entry\.unlocked !== false\)\.map/);
 });
 
-test("local stage activation refuses visible plants absent from the local catalog",()=>{
+test("stage draft saves are separate from release catalog validation",()=>{
  const api=read("app/api/studio/stage-encounters/route.js");
- assert.match(api,/PUBLISHED_PLANT_CATALOG_PATH="web\/public\/assets\/studio-plant-catalog\.json"/);
- assert.match(api,/async function readAvailablePlantIds\(driver\)/);
- assert.match(api,/const availablePlants=await readAvailablePlantIds\(driver\)/);
- assert.match(api,/لا يمكن نشر المرحلة لأن بعض النباتات ليست في الكتالوج المحلي بعد/);
- assert.match(api,/unavailablePlants/);
- assert.match(api,/asset\.type==="plant"&&asset\.status==="testing"/);
+ const release=read("app/api/studio/stage-release/route.js");
+ assert.match(api,/await writeLocal\(config\)/);
+ assert.doesNotMatch(api,/publishAction/);
+ assert.match(release,/studio-plant-catalog\.json/);
+ assert.match(release,/missingPlants/);
 });
 
 
@@ -278,10 +281,12 @@ test("stage preview and player battle use the same stage-specific seed loadout a
  assert.doesNotMatch(battle,/stagePlantEntries\.filter\(entry => this\.isStudioPlaytest \|\| entry\.unlocked !== false\)/);
 });
 
-test("local stage activation accepts plants prepared for local testing",()=>{
- const route=read("app/api/studio/stage-encounters/route.js");
- assert.match(route,/readAvailablePlantIds\(driver\)/);
- assert.match(route,/asset\.type==="plant"&&asset\.status==="testing"/);
+test("release submission requires production-ready plant and monster catalog entries",()=>{
+ const route=read("app/api/studio/stage-release/route.js");
+ assert.match(route,/studio-plant-catalog\.json/);
+ assert.match(route,/studio-monster-catalog\.json/);
+ assert.match(route,/missingPlants/);
+ assert.match(route,/missingMonsters/);
 });
 
 
@@ -301,4 +306,15 @@ test("monster bite handling grounds the sprite without reading jumpOffset before
  const biteBranch=battle.slice(biteStart,jumpOffsetDeclaration);
  assert.match(biteBranch,/monster\.monster01Sprite\.y = 0/);
  assert.doesNotMatch(biteBranch,/jumpOffset/);
+});
+
+
+test("stage release API verifies production catalog references before opening a release PR",()=>{
+ const release=read("app/api/studio/stage-release/route.js");
+ assert.match(release,/studio-plant-catalog\.json/);
+ assert.match(release,/studio-monster-catalog\.json/);
+ assert.match(release,/missingPlants/);
+ assert.match(release,/missingMonsters/);
+ assert.match(release,/published:true/);
+ assert.match(release,/confirmedTested/);
 });
