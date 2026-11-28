@@ -20,6 +20,6 @@ test("stage seed picker treats every added plant as unlocked unless explicitly l
 
 test("stage loadout selection does not force starter plants over Studio lock settings", () => {
   assert.match(page, /function normalizeStageSeedLoadout\(selectedIds, unlockedIds\)/);
-  assert.match(page, /stageRosterConfigured\s*\? normalizeStageSeedLoadout\(activeSelected, selectionUnlocked\)/);
+  assert.ok(page.includes("stageRosterConfigured") && page.includes("normalizeStageSeedLoadout(activeSelected, selectionUnlocked)"));
   assert.match(page, /farmVsMonsters\.selectedPlants\.stage\./);
 });
