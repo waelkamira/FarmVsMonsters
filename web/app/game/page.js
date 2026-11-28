@@ -80,19 +80,21 @@ export default function GamePage() {
       return () => { active = false; };
     }
     setStageEncounterReady(false);
-    fetch("/api/studio/stage-encounters", { cache: "no-store" })
-      .then((response) => response.ok ? response.json() : null)
-      .then((config) => {
-        if (!active) return;
-        setStageEncounter(config?.stages?.[String(Number(stageParam))] || null);
+    Promise.all([
+      fetch("/api/studio/stage-encounters", { cache: "no-store" }).then((response) => response.ok ? response.json() : null),
+      fetch("/api/studio/assets", { cache: "no-store" }).then((response) => response.ok ? response.json() : null).catch(() => null)
+    ]).then(([config, assets]) => {
+      if (!active) return;
+      setStageEncounter(config?.stages?.[String(Number(stageParam))] || null);
+      setStageAssetRecords(Array.isArray(assets?.assets) ? assets.assets : []);
+      setStageEncounterReady(true);
+    }).catch(() => {
+      if (active) {
+        setStageEncounter(null);
+        setStageAssetRecords([]);
         setStageEncounterReady(true);
-      })
-      .catch(() => {
-        if (active) {
-          setStageEncounter(null);
-          setStageEncounterReady(true);
-        }
-      });
+      }
+    });
     return () => { active = false; };
   }, [isStagePlaytest, stageParam]);
   useEffect(() => {
@@ -113,7 +115,26 @@ export default function GamePage() {
   const stagePlantIds = stageRosterConfigured
     ? [...new Set(stagePlantEntries.map((entry) => STAGE_PLANT_ALIASES[entry.id] || entry.id))]
     : [];
-  const stagePackets = stageRosterConfigured ? PLANT_PACKETS.filter((plant) => stagePlantIds.includes(plant.id)) : PLANT_PACKETS;
+  const stagePackets = stageRosterConfigured
+    ? [
+        ...PLANT_PACKETS.filter((plant) => stagePlantIds.includes(plant.id)),
+        ...stagePlantEntries
+          .filter((entry) => !PLANT_PACKETS.some((plant) => plant.id === (STAGE_PLANT_ALIASES[entry.id] || entry.id)))
+          .map((entry) => {
+            const asset = stageAssetRecords.find((item) => item.id === entry.id && item.type === "plant");
+            return asset ? {
+              id: entry.id,
+              image: asset.previewUrl || asset.path || "",
+              en: asset.name || entry.id,
+              ar: asset.name || entry.id,
+              cost: Math.max(0, Number(asset.combat?.energyCost) || 0),
+              roleEn: "Stage plant",
+              roleAr: "نبتة المرحلة"
+            } : null;
+          })
+          .filter(Boolean)
+      ]
+    : PLANT_PACKETS;
   const stageUnlocked = stageRosterConfigured
     ? stagePlantEntries.filter((entry) => entry.unlocked !== false).map((entry) => STAGE_PLANT_ALIASES[entry.id] || entry.id)
     : unlocked;
