@@ -230,17 +230,21 @@ test("Studio reads drafts from the working branch while players read the release
  assert.match(api,/plants:stage\.plants\.filter\(plant=>plant\.visible!==false&&plant\.enabled!==false\)/);
 });
 
-test("stage saves and local activation write only the local stage config",()=>{
+test("stage editing remains a local draft and routes publication through a dedicated review gate",()=>{
  const api=read("app/api/studio/stage-encounters/route.js");
  const manager=read("app/studio/StageRosterManager.jsx");
- assert.match(manager,/body:JSON\.stringify\(\{action:"publish",stage,config:next,sha\}\)/);
- assert.match(api,/const publishAction=body\.action==="publish"/);
- assert.match(api,/if\(!canWriteStudioStorage\(\)\)return NextResponse\.json/);
- assert.match(api,/await writeLocal\(config\)/);
- assert.doesNotMatch(api,/writeGithub\(/);
- assert.match(manager,/Production differs · Read only/);
+ const release=read("app/api/studio/stage-release/route.js");
+ const review=read("app/studio/stages/review/page.js");
+ assert.match(manager,/مراجعة ونشر المرحلة/);
+ assert.doesNotMatch(manager,/onClick=\{publishStage\}/);
  assert.match(manager,/حفظ مسودة محلية/);
- assert.match(manager,/تفعيل محلياً/);
+ assert.match(api,/await writeLocal\(config\)/);
+ assert.match(release,/confirmedTested!==true\|\|body\.confirmedReport!==true/);
+ assert.match(release,/refs\/heads\//);
+ assert.match(release,/\/pulls/);
+ assert.match(review,/لا تنشئ طلب الإصدار إلا بعد/);
+ assert.match(review,/أؤكد أنني شغّلت المرحلة ولعبتها بنفسي/);
+ assert.match(review,/أؤكد أنني راجعت تقرير المحتويات والتغييرات/);
 });
 
 
@@ -301,4 +305,15 @@ test("monster bite handling grounds the sprite without reading jumpOffset before
  const biteBranch=battle.slice(biteStart,jumpOffsetDeclaration);
  assert.match(biteBranch,/monster\.monster01Sprite\.y = 0/);
  assert.doesNotMatch(biteBranch,/jumpOffset/);
+});
+
+
+test("stage release API verifies production catalog references before opening a release PR",()=>{
+ const release=read("app/api/studio/stage-release/route.js");
+ assert.match(release,/studio-plant-catalog\.json/);
+ assert.match(release,/studio-monster-catalog\.json/);
+ assert.match(release,/missingPlants/);
+ assert.match(release,/missingMonsters/);
+ assert.match(release,/published:true/);
+ assert.match(release,/confirmedTested/);
 });
