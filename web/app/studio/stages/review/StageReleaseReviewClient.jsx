@@ -56,7 +56,9 @@ function AssetCard({entry,asset,kind,index}){
    <Detail label="سرعة المقذوف" value={fmt(combat.projectileSpeed)}/>
    <Detail label="إنتاج الطاقة" value={combat.energyAmount?fmt(combat.energyAmount)+" / "+fmt(combat.energyIntervalMs," ms"):"—"}/>
   </div>}
-  <footer className="sr-asset-foot"><span>الأنيميشن: {states.length?states.join("، "):"غير محدد"}</span><span>المؤثرات: {effects.length}</span><span>الملف: {meta.path||"غير مرتبط"}</span></footer>
+  <footer className="sr-asset-foot"><span>الأنيميشن: {states.length?states.join("، "):"غير محدد"}</span><span>المؤثرات: {effects.length?effects.map((effect,i)=>typeof effect==="string"?effect:(effect.name||effect.id||effect.type||"تأثير "+(i+1))).join("، "):"لا توجد مؤثرات مسجلة"}</span><span>الملف: {meta.path||"غير مرتبط"}</span></footer>
+  <details className="sr-raw"><summary>عرض سجل الأصل الكامل وبيانات الحركة والتأثيرات</summary><pre>{JSON.stringify(meta,null,2)}</pre></details>
+  <details className="sr-raw"><summary>عرض إعداد هذا العنصر داخل المرحلة</summary><pre>{JSON.stringify(entry,null,2)}</pre></details>
  </article>;
 }
 export default function StageReleaseReviewPage(){
