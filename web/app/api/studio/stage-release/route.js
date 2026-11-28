@@ -29,6 +29,7 @@ function normalize(value){
  }
  return {version:1,stages};
 }
+const canonicalAssetId=id=>String(id||"").toLowerCase().replace(/-level-\d+$/,"");
 async function readJson(relativePath,fallback){
  try{return JSON.parse(await readFile(path.join(process.cwd(),relativePath),"utf8"));}
  catch(error){if(fallback!==undefined)return fallback;throw error;}
@@ -49,15 +50,19 @@ export async function GET(req){
    readJson("public/assets/studio-plant-catalog.json",{version:1,plants:[]}),
    readJson("public/assets/studio-monster-catalog.json",{version:1,monsters:[]})
   ]);
-  const plantIds=new Set((plantCatalog.plants||[]).map(x=>x.id));
-  const monsterIds=new Set((monsterCatalog.monsters||[]).map(x=>x.id));
   const stage=draft.stages[stageId]||null;
   const publishedStage=release.config.stages[stageId]||null;
+  const stagePlantIds=new Set((stage?.plants||[]).map(x=>canonicalAssetId(x.id)));
+  const stageMonsterIds=new Set((stage?.monsters||[]).map(x=>canonicalAssetId(x.id)));
+  const plantRecords=(plantCatalog.plants||[]).filter(x=>stagePlantIds.has(canonicalAssetId(x.id)));
+  const monsterRecords=(monsterCatalog.monsters||[]).filter(x=>stageMonsterIds.has(canonicalAssetId(x.id)));
+  const plantIds=new Set((plantCatalog.plants||[]).map(x=>canonicalAssetId(x.id)));
+  const monsterIds=new Set((monsterCatalog.monsters||[]).map(x=>canonicalAssetId(x.id)));
   return NextResponse.json({
    stage:stageId,draft:stage,published:publishedStage,releaseSha:release.sha,releaseBranch:RELEASE_BRANCH,
-   plantCatalog:{version:plantCatalog.version||1,plants:(plantCatalog.plants||[]).filter(x=>stage?.plants?.some(p=>p.id===x.id))},
-   monsterCatalog:{version:monsterCatalog.version||1,monsters:(monsterCatalog.monsters||[]).filter(x=>stage?.monsters?.some(m=>m.id===x.id))},
-   catalogCoverage:{plants:stage?.plants?.map(x=>({id:x.id,found:plantIds.has(x.id)}))||[],monsters:stage?.monsters?.map(x=>({id:x.id,found:monsterIds.has(x.id)}))||[]},
+   plantCatalog:{version:plantCatalog.version||1,plants:plantRecords},
+   monsterCatalog:{version:monsterCatalog.version||1,monsters:monsterRecords},
+   catalogCoverage:{plants:stage?.plants?.map(x=>({id:x.id,found:plantIds.has(canonicalAssetId(x.id))}))||[],monsters:stage?.monsters?.map(x=>({id:x.id,found:monsterIds.has(canonicalAssetId(x.id))}))||[]},
    reportGeneratedAt:new Date().toISOString()
   },{headers:{"Cache-Control":"no-store"}});
  }catch(error){return NextResponse.json({error:error.message||"Could not load release comparison."},{status:502});}
