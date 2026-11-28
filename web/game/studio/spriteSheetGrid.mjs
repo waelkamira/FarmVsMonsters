@@ -80,5 +80,5 @@ export function resolveThumbnailSources(asset = {}) {
   const primarySrc = thumbnailSrc || sourceSrc;
   const fallbackSrc = thumbnailSrc && sourceSrc && sourceSrc !== primarySrc ? sourceSrc :
     asset.path && asset.path !== primarySrc ? String(asset.path) : "";
-  return { primarySrc, fallbackSrc, isDedicatedThumbnail: Boolean(thumbnailSrc) };
+  return { primarySrc, fallbackSrc };
 }
