@@ -5609,3 +5609,35 @@ export default class BattleScene extends Scene {
     }
   }
 }
+
+// Surface Phaser scene lifecycle exceptions in the React host instead of leaving
+// users with a blank battlefield and no actionable error message.
+const reportBattleSceneError = (phase, error) => {
+  const message = error instanceof Error ? error.message : String(error || "Unknown Phaser scene error");
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("farm-battle-scene-error", {
+      detail: { phase, message: message.slice(0, 240) }
+    }));
+  }
+  console.error("[FarmVsMonsters] BattleScene " + phase + " failed:", error);
+};
+
+const originalBattleSceneCreate = BattleScene.prototype.create;
+BattleScene.prototype.create = function (...args) {
+  try {
+    return originalBattleSceneCreate.apply(this, args);
+  } catch (error) {
+    reportBattleSceneError("create", error);
+    throw error;
+  }
+};
+
+const originalBattleSceneUpdate = BattleScene.prototype.update;
+BattleScene.prototype.update = function (...args) {
+  try {
+    return originalBattleSceneUpdate?.apply(this, args);
+  } catch (error) {
+    reportBattleSceneError("update", error);
+    throw error;
+  }
+};
