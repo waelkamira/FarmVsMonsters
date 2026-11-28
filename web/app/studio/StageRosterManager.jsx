@@ -19,6 +19,7 @@ const BUILTIN_IMAGES={
  monster:{"monster-01":"/assets/characters/monsters/01/01.png"}
  };
 const BUILTIN_SHEETS=new Set(["radish","pineapple","hazelnut","mango","snow-thrower"]);
+const BUILTIN_MONSTER_SHEETS=new Set(["monster-01"]);
 const makeKey=()=> "entry-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,7);
 function assetImage(asset,kind){if(asset?.id==="electric-mushroom"&&/Electric-mushroom-level-1\.png/i.test(asset?.path||""))return asset?.previewUrl||"";return asset?.previewUrl||asset?.path||BUILTIN_IMAGES[kind]?.[asset?.id]||"";}
 function AssetImage({asset,kind,large=false}) {
