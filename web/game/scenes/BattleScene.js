@@ -243,11 +243,16 @@ export default class BattleScene extends Scene {
     queueStudioCatalog("studio-published-catalog");
     queueStudioCatalog("studio-test-catalog");
     this.load.json("studio-published-catalog", "/assets/studio-plant-catalog.json");
-    this.load.json("studio-test-catalog", "/api/studio/assets?catalog=testing");
     queueStudioMonsterCatalog("studio-published-monster-catalog");
     queueStudioMonsterCatalog("studio-test-monster-catalog");
     this.load.json("studio-published-monster-catalog", "/assets/studio-monster-catalog.json");
-    this.load.json("studio-test-monster-catalog", "/api/studio/assets?catalog=testing-monsters");
+    // Draft catalogs are private Studio data. Public gameplay must not request
+    // these endpoints: production intentionally exposes only published assets.
+    const studioDraftPreview = new URLSearchParams(window.location.search).get("studioPlaytest") === "1";
+    if (studioDraftPreview) {
+      this.load.json("studio-test-catalog", "/api/studio/assets?catalog=testing");
+      this.load.json("studio-test-monster-catalog", "/api/studio/assets?catalog=testing-monsters");
+    }
     this.load.once("filecomplete-json-stage-encounter-config", () => {
       const requestedStage = Number(new URLSearchParams(window.location.search).get("stage"));
       const stageNumber = Number.isInteger(requestedStage) ? Math.max(1, Math.min(100, requestedStage)) : 1;
