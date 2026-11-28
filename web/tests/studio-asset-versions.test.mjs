@@ -25,6 +25,11 @@ test("restores an older version as a new draft revision without deleting history
   const restored = restoreStudioAssetRevision(current, 1, "2026-11-21T12:00:00.000Z");
   assert.equal(restored.name, "Radish v1");
   assert.equal(restored.path, "/assets/plants/radish-v1.png");
+  const thumbVersion = restoreStudioAssetRevision({
+    ...current,
+    versions: [{ versionNumber: 1, name: "Radish", filename: "radish.png", path: "/assets/plants/radish-v1.png", thumbnailPath: "/assets/thumbnails/radish-v1.png", rows: 3, columns: 3, spriteSheet: true }]
+  }, 1, "2026-11-21T12:00:00.000Z");
+  assert.equal(thumbVersion.thumbnailPath, "/assets/thumbnails/radish-v1.png");
   assert.equal(restored.revision, 4);
   assert.equal(restored.status, "draft");
   assert.equal(restored.restoredFromVersion, 1);
