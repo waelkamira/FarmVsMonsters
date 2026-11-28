@@ -27,3 +27,9 @@ test("stage loadout selection does not force starter plants over Studio lock set
   assert.ok(page.includes("stageRosterConfigured") && page.includes("normalizeStageSeedLoadout(activeSelected, selectionUnlocked)"));
   assert.match(page, /farmVsMonsters\.selectedPlants\.stage\./);
 });
+
+
+test("seed picker does not render fallback or stale list before stage roster resolves", () => {
+  assert.match(page, /\{!stageEncounterReady \? <p>\{arabic \? "جارٍ تحميل نباتات المرحلة…"/);
+  assert.doesNotMatch(page, /stageRosterConfigured && !stageEncounterReady \?/);
+});

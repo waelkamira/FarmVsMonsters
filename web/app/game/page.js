@@ -203,7 +203,7 @@ export default function GamePage() {
       </div>
 
       <div className="seed-packet-grid">
-        {stageRosterConfigured && !stageEncounterReady ? <p>{arabic ? "جارٍ تحميل نباتات المرحلة…" : "Loading stage plants…"}</p> : (stageRosterConfigured ? stagePackets : PLANT_PACKETS).map((plant) => {
+        {!stageEncounterReady ? <p>{arabic ? "جارٍ تحميل نباتات المرحلة…" : "Loading stage plants…"}</p> : (stageRosterConfigured ? stagePackets : PLANT_PACKETS).map((plant) => {
           const isUnlocked = selectionUnlocked.includes(plant.id);
           const isSelected = activeSelected.includes(plant.id);
           const isRequired = !stageRosterConfigured && (plant.id === "radish" || plant.id === "mushroom");
