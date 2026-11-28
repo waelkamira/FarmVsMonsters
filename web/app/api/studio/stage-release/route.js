@@ -29,10 +29,12 @@ function normalize(value){
  }
  return {version:1,stages};
 }
-async function localConfig(){
- const file=path.join(process.cwd(),"game/data/stageEncounterConfig.json");
- return normalize(JSON.parse(await readFile(file,"utf8")));
+const canonicalAssetId=id=>String(id||"").toLowerCase().replace(/-level-\d+$/,"");
+async function readJson(relativePath,fallback){
+ try{return JSON.parse(await readFile(path.join(process.cwd(),relativePath),"utf8"));}
+ catch(error){if(fallback!==undefined)return fallback;throw error;}
 }
+async function localConfig(){return normalize(await readJson("game/data/stageEncounterConfig.json"));}
 async function publishedConfig(token,branch=RELEASE_BRANCH){
  const data=await github(token,"https://api.github.com/repos/"+REPOSITORY+"/contents/"+CONFIG_PATH+"?ref="+encodeURIComponent(branch));
  return {config:normalize(JSON.parse(Buffer.from(data.content||"","base64").toString("utf8"))),sha:data.sha};
@@ -43,8 +45,26 @@ export async function GET(req){
   const token=process.env.STUDIO_GITHUB_TOKEN;
   if(!token)throw new Error("STUDIO_GITHUB_TOKEN is not configured.");
   const stageId=String(Math.max(1,Math.min(100,Math.floor(Number(new URL(req.url).searchParams.get("stage"))||1))));
-  const [draft,release]=await Promise.all([localConfig(),publishedConfig(token)]);
-  return NextResponse.json({stage:stageId,draft:draft.stages[stageId]||null,published:release.config.stages[stageId]||null,releaseSha:release.sha,releaseBranch:RELEASE_BRANCH},{headers:{"Cache-Control":"no-store"}});
+  const [draft,release,plantCatalog,monsterCatalog]=await Promise.all([
+   localConfig(),publishedConfig(token),
+   readJson("public/assets/studio-plant-catalog.json",{version:1,plants:[]}),
+   readJson("public/assets/studio-monster-catalog.json",{version:1,monsters:[]})
+  ]);
+  const stage=draft.stages[stageId]||null;
+  const publishedStage=release.config.stages[stageId]||null;
+  const stagePlantIds=new Set((stage?.plants||[]).map(x=>canonicalAssetId(x.id)));
+  const stageMonsterIds=new Set((stage?.monsters||[]).map(x=>canonicalAssetId(x.id)));
+  const plantRecords=(plantCatalog.plants||[]).filter(x=>stagePlantIds.has(canonicalAssetId(x.id)));
+  const monsterRecords=(monsterCatalog.monsters||[]).filter(x=>stageMonsterIds.has(canonicalAssetId(x.id)));
+  const plantIds=new Set((plantCatalog.plants||[]).map(x=>canonicalAssetId(x.id)));
+  const monsterIds=new Set((monsterCatalog.monsters||[]).map(x=>canonicalAssetId(x.id)));
+  return NextResponse.json({
+   stage:stageId,draft:stage,published:publishedStage,releaseSha:release.sha,releaseBranch:RELEASE_BRANCH,
+   plantCatalog:{version:plantCatalog.version||1,plants:plantRecords},
+   monsterCatalog:{version:monsterCatalog.version||1,monsters:monsterRecords},
+   catalogCoverage:{plants:stage?.plants?.map(x=>({id:x.id,found:plantIds.has(canonicalAssetId(x.id))}))||[],monsters:stage?.monsters?.map(x=>({id:x.id,found:monsterIds.has(canonicalAssetId(x.id))}))||[]},
+   reportGeneratedAt:new Date().toISOString()
+  },{headers:{"Cache-Control":"no-store"}});
  }catch(error){return NextResponse.json({error:error.message||"Could not load release comparison."},{status:502});}
 }
 export async function POST(req){
@@ -63,8 +83,8 @@ export async function POST(req){
   const monsters=(stage.monsters||[]).filter(m=>m.enabled!==false);
   if(!plants.length)return NextResponse.json({error:"لا يمكن إصدار مرحلة بلا نباتات ظاهرة للاعب."},{status:409});
   if(!monsters.length)return NextResponse.json({error:"لا يمكن إصدار مرحلة بلا وحوش مفعلة."},{status:409});
-  const plantCatalog=JSON.parse(await readFile(path.join(process.cwd(),"public/assets/studio-plant-catalog.json"),"utf8").catch(()=>"{\"plants\":[]}"));
-  const monsterCatalog=JSON.parse(await readFile(path.join(process.cwd(),"public/assets/studio-monster-catalog.json"),"utf8").catch(()=>"{\"monsters\":[]}"));
+  const plantCatalog=await readJson("public/assets/studio-plant-catalog.json",{plants:[]});
+  const monsterCatalog=await readJson("public/assets/studio-monster-catalog.json",{monsters:[]});
   const plantIds=new Set(["radish","radish-level-1","mushroom","energy-mushroom","pumpkin","pumpkin-level-1","pineapple","pineapple-level-1","hazelnut","hazelnut-level-1","mango","mango-level-1","snow-thrower","snow-thrower-level-1","electric-mushroom","electric-mushroom-level-1",...(plantCatalog.plants||[]).map(x=>String(x.id||"").toLowerCase())]);
   const monsterIds=new Set((monsterCatalog.monsters||[]).map(x=>String(x.id||"").toLowerCase()));
   const missingPlants=plants.map(x=>x.id).filter(id=>!plantIds.has(id));
@@ -76,7 +96,7 @@ export async function POST(req){
   const release=await publishedConfig(token,branch);
   const merged={...release.config,stages:{...release.config.stages,[stageId]:{...stage,published:true}}};
   await github(token,"https://api.github.com/repos/"+REPOSITORY+"/contents/"+CONFIG_PATH,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:"Prepare Stage "+stageId+" release",content:Buffer.from(JSON.stringify(merged,null,2)+"\n","utf8").toString("base64"),sha:release.sha,branch})});
-  const pr=await github(token,"https://api.github.com/repos/"+REPOSITORY+"/pulls",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({title:"Release Stage "+stageId+" to players",head:branch,base:RELEASE_BRANCH,body:"## Stage release review\\n\\n- Stage: "+stageId+"\\n- Draft was tested in the local Studio playtest before submission.\\n- Plant and monster references were checked against production catalogs.\\n- This PR is the final release gate; players receive the stage only after this PR is reviewed, merged, and the production deployment is ready.\\n\\nPlease inspect the complete stage configuration diff before merging."})});
+  const pr=await github(token,"https://api.github.com/repos/"+REPOSITORY+"/pulls",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({title:"Release Stage "+stageId+" to players",head:branch,base:RELEASE_BRANCH,body:"## Stage release review\n\n- Stage: "+stageId+"\n- Draft was tested in the local Studio playtest before submission.\n- Plant and monster references were checked against production catalogs.\n- This PR is the final release gate; players receive the stage only after this PR is reviewed, merged, and the production deployment is ready.\n\nPlease inspect the complete stage configuration diff before merging."})});
   return NextResponse.json({success:true,pullRequest:pr.html_url,number:pr.number,branch,stage:stageId,message:"تم إنشاء طلب إصدار المرحلة. لن تظهر للاعبين قبل مراجعة الطلب ودمجه واكتمال نشر الإنتاج."});
  }catch(error){return NextResponse.json({error:error.message||"تعذر إنشاء طلب إصدار المرحلة."},{status:502});}
 }

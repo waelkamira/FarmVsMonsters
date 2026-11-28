@@ -241,10 +241,10 @@ test("stage editing remains a local draft and routes publication through a dedic
  assert.match(release,/confirmedTested!==true\|\|body\.confirmedReport!==true/);
  assert.match(release,/refs\/heads\//);
  assert.match(release,/\/pulls/);
- assert.match(review,/لا تنشئ طلب الإصدار إلا بعد/);
+ assert.match(review,/لا تنشئ الطلب قبل حفظ المسودة ولعب المرحلة بنفسك/);
  assert.match(reviewPage,/<Suspense/);
- assert.match(review,/أؤكد أنني شغّلت المرحلة ولعبتها بنفسي/);
- assert.match(review,/أؤكد أنني راجعت تقرير المحتويات والتغييرات/);
+ assert.match(review,/لقد لعبت المرحلة بنفسي/);
+ assert.match(review,/راجعت كل البيانات والتغييرات أعلاه/);
 });
 
 
