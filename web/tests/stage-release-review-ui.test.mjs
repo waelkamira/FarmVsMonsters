@@ -28,8 +28,8 @@ test("stage review report resolves configured assets against real Studio catalog
  assert.match(api,/plantCatalog:\{version:plantCatalog\.version/);
  assert.match(api,/monsterCatalog:\{version:monsterCatalog\.version/);
  assert.match(api,/catalogCoverage/);
- assert.match(page,/new Map\(\(data\?\.plantCatalog\?\.plants\|\|\[\]\)\.map/);
- assert.match(page,/new Map\(\(data\?\.monsterCatalog\?\.monsters\|\|\[\]\)\.map/);
+ assert.match(page,/new Map\(\(data\?\.plantCatalog\?\.plants\|\|\[\]\)\.flatMap/);
+ assert.match(page,/new Map\(\(data\?\.monsterCatalog\?\.monsters\|\|\[\]\)\.flatMap/);
  assert.match(page,/asset\.combat/);
  assert.match(page,/meta\.animationProfile/);
  assert.match(page,/meta\.effects/);
