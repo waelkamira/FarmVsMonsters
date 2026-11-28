@@ -75,7 +75,9 @@ export default function GamePage() {
   const [stageAssetRecords, setStageAssetRecords] = useState([]);
   useEffect(() => {
     let active = true;
-    setStageEncounterReady(false);
+    Promise.resolve().then(() => {
+      if (active) setStageEncounterReady(false);
+    });
     Promise.all([
       fetch("/api/studio/stage-encounters", { cache: "no-store" }).then((response) => response.ok ? response.json() : null),
       fetch("/api/studio/assets", { cache: "no-store" }).then((response) => response.ok ? response.json() : null).catch(() => null)
@@ -141,14 +143,16 @@ export default function GamePage() {
   const activeSelected = selectedOverride ?? initialStageSelection;
   useEffect(() => {
     if (!stageRosterConfigured || !stageEncounterReady) return;
-    try {
-      const key = "farmVsMonsters.selectedPlants.stage." + (stageParam === null ? 1 : Number(stageParam));
-      const saved = window.localStorage.getItem(key);
-      setSelectedOverride(saved ? normalizeStageSeedLoadout(JSON.parse(saved), selectionUnlocked) : null);
-    } catch {
-      setSelectedOverride(null);
-    }
-  }, [stageRosterConfigured, stageEncounterReady, stageEncounter, stageParam]);
+    Promise.resolve().then(() => {
+      try {
+        const key = "farmVsMonsters.selectedPlants.stage." + (stageParam === null ? 1 : Number(stageParam));
+        const saved = window.localStorage.getItem(key);
+        setSelectedOverride(saved ? normalizeStageSeedLoadout(JSON.parse(saved), selectionUnlocked) : null);
+      } catch {
+        setSelectedOverride(null);
+      }
+    });
+  }, [stageRosterConfigured, stageEncounterReady, stageEncounter, stageParam, selectionUnlocked]);
   const [battleStarted, setBattleStarted] = useState(false);
   const showBattle = battleStarted || (isStagePlaytest && (!studioPlaytestRequested || authorizedStudioPlaytest));
   const [saveError, setSaveError] = useState(false);
