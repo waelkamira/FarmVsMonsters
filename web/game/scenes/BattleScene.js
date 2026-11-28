@@ -2678,7 +2678,7 @@ export default class BattleScene extends Scene {
     try {
       // One lightweight, flattened contact ellipse per actor. It is inserted
       // before the artwork so it follows lane sorting without covering the sprite.
-      const shadow = this.add.ellipse(0, -1, width, height, 0x20180f, alpha);
+      const shadow = this.add.ellipse(0, 3, width * 0.78, height * 0.45, 0x20180f, alpha * 0.55);
       view.add(shadow);
       return shadow;
     } catch {
