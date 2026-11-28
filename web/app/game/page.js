@@ -122,7 +122,10 @@ export default function GamePage() {
             const asset = stageAssetRecords.find((item) => item.id === entry.id);
             return asset ? {
               id: entry.id,
-              image: asset.previewUrl || asset.path || "",
+              image: asset.thumbnailPath || asset.path || "",
+              rows: asset.thumbnailPath ? 1 : (asset.rows || 1),
+              columns: asset.thumbnailPath ? 1 : (asset.columns || 1),
+              frameCount: asset.thumbnailPath ? 1 : (asset.frameCount || (Number(asset.rows || 1) * Number(asset.columns || 1))),
               en: asset.name || entry.id,
               ar: asset.name || entry.id,
               cost: Math.max(0, Number(asset.combat?.energyCost) || 0),
