@@ -95,8 +95,15 @@ export async function POST(req){
   const missingMonsters=monsters.map(x=>x.id).filter(id=>!monsterIds.has(id));
   if(missingPlants.length||missingMonsters.length)return NextResponse.json({error:"بعض أصول المرحلة غير موجودة في كتالوج الإنتاج. انشر الأصول أولاً ثم أعد المحاولة.",missingPlants,missingMonsters},{status:409});
 
-  // Merge this stage into the latest production config so publishing never overwrites other stages.
+  // Refuse to publish if the production snapshot changed after the user reviewed it.
+  if(typeof body.expectedReleaseSha!=="string"||!body.expectedReleaseSha){
+   return NextResponse.json({error:"انتهت صلاحية تقرير المراجعة. أعد تحميل التقرير قبل النشر."},{status:409});
+  }
   const release=await publishedConfig(token);
+  if(release.sha!==body.expectedReleaseSha){
+   return NextResponse.json({error:"تغيرت نسخة المرحلة المنشورة منذ إنشاء التقرير. أعد تحميل التقرير وراجع الفروقات قبل النشر."},{status:409});
+  }
+  // Merge this stage into the reviewed production config, preserving every other stage.
   const merged={...release.config,stages:{...release.config.stages,[stageId]:{...stage,published:true}}};
   const committed=await github(token,"https://api.github.com/repos/"+REPOSITORY+"/contents/"+CONFIG_PATH,{
    method:"PUT",
