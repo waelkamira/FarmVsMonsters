@@ -35,7 +35,8 @@ test("stage review report resolves configured assets against real Studio catalog
  assert.match(page,/meta\.effects/);
  assert.match(page,/spawnIntervalMs/);
  assert.match(page,/attackIntervalMultiplier/);
- assert.match(api,/reportGeneratedAt:new Date\(\)\.toISOString\(\)/);\n assert.match(page,/data\.reportGeneratedAt/);
+ assert.match(api,/reportGeneratedAt:new Date\(\)\.toISOString\(\)/);
+ assert.match(page,/data\.reportGeneratedAt/);
 });
 
 test("stage release review keeps the playtest and explicit release confirmations",()=>{
