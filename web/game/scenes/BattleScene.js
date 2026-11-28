@@ -243,11 +243,16 @@ export default class BattleScene extends Scene {
     queueStudioCatalog("studio-published-catalog");
     queueStudioCatalog("studio-test-catalog");
     this.load.json("studio-published-catalog", "/assets/studio-plant-catalog.json");
-    this.load.json("studio-test-catalog", "/api/studio/assets?catalog=testing");
     queueStudioMonsterCatalog("studio-published-monster-catalog");
     queueStudioMonsterCatalog("studio-test-monster-catalog");
     this.load.json("studio-published-monster-catalog", "/assets/studio-monster-catalog.json");
-    this.load.json("studio-test-monster-catalog", "/api/studio/assets?catalog=testing-monsters");
+    // Draft catalogs are private Studio data. Public gameplay must not request
+    // these endpoints: production intentionally exposes only published assets.
+    const studioDraftPreview = new URLSearchParams(window.location.search).get("studioPlaytest") === "1";
+    if (studioDraftPreview) {
+      this.load.json("studio-test-catalog", "/api/studio/assets?catalog=testing");
+      this.load.json("studio-test-monster-catalog", "/api/studio/assets?catalog=testing-monsters");
+    }
     this.load.once("filecomplete-json-stage-encounter-config", () => {
       const requestedStage = Number(new URLSearchParams(window.location.search).get("stage"));
       const stageNumber = Number.isInteger(requestedStage) ? Math.max(1, Math.min(100, requestedStage)) : 1;
@@ -484,8 +489,16 @@ export default class BattleScene extends Scene {
         if (!this.anims.exists(animationKey)) {
           this.anims.create({
             key: animationKey,
-            frames: this.anims.generateFrameNumbers(monster.textureKey, { start: clip.startFrame, end: clip.endFrame })
-              .map((frame, index) => ({ ...frame, ...(clip.frameDurationsMs ? { duration: clip.frameDurationsMs[index] } : {}) })),
+            // Use explicit frame names. This avoids Phaser deriving an index from the
+            // texture's frame-name list (which also contains the full-sheet base frame).
+            frames: Array.from(
+              { length: clip.endFrame - clip.startFrame + 1 },
+              (_, index) => ({
+                key: monster.textureKey,
+                frame: String(clip.startFrame + index),
+                ...(clip.frameDurationsMs ? { duration: clip.frameDurationsMs[index] } : {})
+              })
+            ),
             frameRate: clip.fps,
             repeat: clip.loop ? -1 : 0
           });
@@ -2738,7 +2751,7 @@ export default class BattleScene extends Scene {
     const frames = getSpriteFrameRectangles(source.width, source.height, rowCount, columnCount);
     for (const frame of frames) {
       const name = String(frame.index);
-      const existing = texture.get(name);
+      const existing = texture.has(name) ? texture.get(name) : null;
       // Image textures can already contain a numeric/default frame spanning the
       // complete sheet. Never trust its name alone: replace it unless its crop
       // exactly matches the expected cell, otherwise Phaser renders all cells
@@ -2749,7 +2762,8 @@ export default class BattleScene extends Scene {
       }
       if (!texture.has(name)) texture.add(name, 0, frame.x, frame.y, frame.width, frame.height);
       const registered = texture.get(name);
-      if (!registered || registered.cutWidth !== frame.width || registered.cutHeight !== frame.height) return false;
+      if (!registered || registered.cutX !== frame.x || registered.cutY !== frame.y ||
+          registered.cutWidth !== frame.width || registered.cutHeight !== frame.height) return false;
     }
     return true;
   }
@@ -4135,7 +4149,9 @@ export default class BattleScene extends Scene {
       view.add(monster01Sprite);
       monster01Sprite.setTint(tierTint);
       if (studioMonster) {
-        monster01Sprite.setFlipX(!studioMonster.flipX);
+        // Match Studio plants and skeletal monsters: flipX=true means mirror the authored art.
+        // Monster 01 advances from right to left, so its catalog flag must face it left.
+        monster01Sprite.setFlipX(Boolean(studioMonster.flipX));
         const idleKey = "studio-monster-" + studioMonster.id + "-idle";
         if (this.anims.exists(idleKey)) monster01Sprite.play(idleKey);
         monster01Sprite.on("animationcomplete", (animation) => {
@@ -5598,3 +5614,64 @@ export default class BattleScene extends Scene {
     }
   }
 }
+
+// Surface Phaser scene lifecycle exceptions in the React host instead of leaving
+// users with a blank battlefield and no actionable error message.
+const reportBattleSceneError = (phase, error) => {
+  const message = error instanceof Error ? error.message : String(error || "Unknown Phaser scene error");
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("farm-battle-scene-error", {
+      detail: { phase, message: message.slice(0, 240) }
+    }));
+  }
+  console.error("[FarmVsMonsters] BattleScene " + phase + " failed:", error);
+};
+
+const originalBattleScenePreload = BattleScene.prototype.preload;
+BattleScene.prototype.preload = function (...args) {
+  try {
+    this.load.on("loaderror", function (file) {
+      const detail = { key: file && file.key ? file.key : "unknown", url: file && file.url ? file.url : "unknown" };
+      console.warn("[FarmVsMonsters] Asset failed to load", detail);
+      if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("farm-battle-asset-error", { detail: detail }));
+    });
+    return originalBattleScenePreload.apply(this, args);
+  } catch (error) {
+    reportBattleSceneError("preload", error);
+    throw error;
+  }
+};
+
+const originalBattleSceneCreate = BattleScene.prototype.create;
+BattleScene.prototype.create = function (...args) {
+  try {
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("farm-battle-scene-start", { detail: { phase: "create" } }));
+    }
+    const result = originalBattleSceneCreate.apply(this, args);
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("farm-battle-scene-ready", {
+        detail: {
+          stage: this.stageNumber || 1,
+          farmerCreated: Boolean(this.caveman || this.cavemanContainer || this.farmer),
+          monsterRosterCount: Array.isArray(this.stageMonsterEntries) ? this.stageMonsterEntries.length : 0,
+          monsterRosterConfigured: Boolean(this.stageMonsterRosterConfigured)
+        }
+      }));
+    }
+    return result;
+  } catch (error) {
+    reportBattleSceneError("create", error);
+    throw error;
+  }
+};
+
+const originalBattleSceneUpdate = BattleScene.prototype.update;
+BattleScene.prototype.update = function (...args) {
+  try {
+    return originalBattleSceneUpdate?.apply(this, args);
+  } catch (error) {
+    reportBattleSceneError("update", error);
+    throw error;
+  }
+};

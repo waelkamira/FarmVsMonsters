@@ -224,7 +224,10 @@ test("Studio reads drafts from the working branch while players read the release
  const api=read("app/api/studio/stage-encounters/route.js");
  assert.match(api,/const workingBranch=\(\)=>process\.env\.STUDIO_GITHUB_BRANCH\|\|"studio\/assets"/);
  assert.match(api,/const releaseBranch=\(\)=>process\.env\.STUDIO_PUBLISH_BRANCH\|\|"main"/);
- assert.match(api,/readGithub\(isStudio\?workingBranch\(\):releaseBranch\(\)\)/);
+ assert.match(api,/const result=driver==="github"/);
+ assert.match(api,/isStudio\s*\?await readGithub\(workingBranch\(\)\)/);
+ assert.match(api,/config:normalizeConfig\(bundledStageConfig\)/);
+ assert.doesNotMatch(api,/readGithub\(isStudio\?workingBranch\(\):releaseBranch\(\)\)/);
  assert.match(api,/plants:stage\.plants\.filter\(plant=>plant\.visible!==false&&plant\.enabled!==false\)/);
 });
 

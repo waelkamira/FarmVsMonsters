@@ -76,3 +76,16 @@ test("battlefield fallback does not paint a full-screen green background wash", 
   assert.doesNotMatch(drawField[1], /fillGradientStyle\(0xb9d98a|fillRect\(0, 0, 1120, 680\)/);
   assert.match(drawField[1], /fillRoundedRect\(185, 115, 690, 500/);
 });
+
+
+test("battle HUD installs stable named scene methods without relying on minifier-sensitive Function.name", () => {
+  const hud = readFileSync(new URL("../game/scenes/BattleHudButtons.js", import.meta.url), "utf8");
+  assert.match(hud, /const methods = \{[\s\S]*?createAudioControls,[\s\S]*?createQuickCollectionButtons[\s\S]*?\};/);
+  assert.match(hud, /for \(const \[name, method\] of Object\.entries\(methods\)\)\s*\{\s*scene\[name\] = method\.bind\(scene\);/);
+  assert.doesNotMatch(hud, /scene\[method\.name\]/);
+  assert.match(hud, /scene\.createAudioControls\(\)/);
+});
+
+test("sprite-sheet frame registration does not request missing Phaser frames", () => {
+  assert.match(scene, /const existing = texture\.has\(name\) \? texture\.get\(name\) : null/);
+});

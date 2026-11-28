@@ -40,6 +40,7 @@ export default function PhaserGame() {
   useEffect(() => {
     let game = null;
     let cancelled = false;
+    let sceneStartupTimer = null;
 
     const showError = (error) => {
       if (cancelled) return;
@@ -51,6 +52,24 @@ export default function PhaserGame() {
         game = null;
       }
     };
+
+    const handleBattleSceneError = (event) => {
+      if (cancelled) return;
+      if (sceneStartupTimer) window.clearTimeout(sceneStartupTimer);
+      const phase = event.detail?.phase || "runtime";
+      const message = event.detail?.message || "Unknown Phaser scene error";
+      setErrorMessage("BattleScene " + phase + ": " + message);
+      setStatus("error");
+    };
+    const handleBattleSceneReady = (event) => {
+      if (cancelled) return;
+      if (sceneStartupTimer) window.clearTimeout(sceneStartupTimer);
+      console.info("[FarmVsMonsters] Battle scene ready", event.detail || {});
+      setErrorMessage("");
+      setStatus("ready");
+    };
+    window.addEventListener("farm-battle-scene-error", handleBattleSceneError);
+    window.addEventListener("farm-battle-scene-ready", handleBattleSceneReady);
 
     Promise.all([
       import("phaser"),
@@ -82,11 +101,11 @@ export default function PhaserGame() {
           scene: [sceneModule.default, pauseModule.default]
         });
 
-        const markReady = () => {
-          if (!cancelled) setStatus("ready");
-        };
-        if (game.isBooted) markReady();
-        else game.events.once("ready", markReady);
+        sceneStartupTimer = window.setTimeout(() => {
+          if (cancelled) return;
+          setErrorMessage("Phaser initialized, but BattleScene did not finish create() within 20 seconds. Check browser console and failed network requests.");
+          setStatus("error");
+        }, 20000);
       } catch (error) {
         showError(error);
       }
@@ -94,6 +113,9 @@ export default function PhaserGame() {
 
     return () => {
       cancelled = true;
+      window.removeEventListener("farm-battle-scene-error", handleBattleSceneError);
+      window.removeEventListener("farm-battle-scene-ready", handleBattleSceneReady);
+      if (sceneStartupTimer) window.clearTimeout(sceneStartupTimer);
       if (game) {
         game.destroy(true);
         game = null;
