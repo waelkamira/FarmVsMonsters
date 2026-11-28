@@ -53,6 +53,9 @@ test("shared paths are retained while unshared deletion paths are included in th
   const plan = createProductionAssetDeletionPlan({ registry: { assets: [asset, other] }, assetId: "oak", stageConfig: { stages: {} } });
   assert.ok(plan.candidatePaths.includes(asset.path));
   assert.ok(!plan.removablePaths.includes(asset.path));
+  const withThumbnail = publishedAsset({ thumbnailPath: "/assets/thumbnails/oak-thumb.png" });
+  const thumbnailPlan = createProductionAssetDeletionPlan({ registry: { assets: [withThumbnail] }, assetId: "oak", stageConfig: { stages: {} } });
+  assert.ok(thumbnailPlan.removablePaths.includes("/assets/thumbnails/oak-thumb.png"));
 });
 
 test("local deletion is idempotent and records a tombstone without requiring GitHub credentials", () => {
