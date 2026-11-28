@@ -171,12 +171,10 @@ test("stage publication controls player-visible plants, per-stage unlocks and ba
  assert.match(api,/if\(isStudio\)/);
  assert.match(api,/filter\(\(\[,stage\]\)=>stage\.published===true\)/);
  assert.match(api,/plants:stage\.plants\.filter\(plant=>plant\.visible!==false&&plant\.enabled!==false\)/);
- assert.match(manager,/async function publishStage\(\)/);
- assert.match(manager,/published:true/);
- assert.match(manager,/published:false/);
+ assert.doesNotMatch(manager,/async function publishStage\(\)/);
  assert.match(manager,/حفظ مسودة محلية/);
- assert.match(manager,/تفعيل محلياً/);
- assert.match(manager,/لا يغيّر تجربة الإنتاج/);
+ assert.match(manager,/مراجعة ونشر المرحلة/);
+ assert.doesNotMatch(manager,/تفعيل محلياً/);
  assert.match(manager,/إظهار للاعب/);
  assert.match(manager,/إبقاء النبتة مقفولة/);
  assert.match(manager,/خلفية المرحلة/);
@@ -259,14 +257,13 @@ test("stage playtest is restricted to the configured visible roster instead of e
  assert.match(battle,/const stageAllowedTypes = this\.stagePlantRosterConfigured[\s\S]*?this\.stagePlantEntries\.filter\(entry => entry\.unlocked !== false\)\.map/);
 });
 
-test("local stage activation refuses visible plants absent from the local catalog",()=>{
+test("stage draft saves are separate from release catalog validation",()=>{
  const api=read("app/api/studio/stage-encounters/route.js");
- assert.match(api,/PUBLISHED_PLANT_CATALOG_PATH="web\/public\/assets\/studio-plant-catalog\.json"/);
- assert.match(api,/async function readAvailablePlantIds\(driver\)/);
- assert.match(api,/const availablePlants=await readAvailablePlantIds\(driver\)/);
- assert.match(api,/لا يمكن نشر المرحلة لأن بعض النباتات ليست في الكتالوج المحلي بعد/);
- assert.match(api,/unavailablePlants/);
- assert.match(api,/asset\.type==="plant"&&asset\.status==="testing"/);
+ const release=read("app/api/studio/stage-release/route.js");
+ assert.match(api,/await writeLocal\(config\)/);
+ assert.doesNotMatch(api,/publishAction/);
+ assert.match(release,/studio-plant-catalog\.json/);
+ assert.match(release,/missingPlants/);
 });
 
 
@@ -282,10 +279,12 @@ test("stage preview and player battle use the same stage-specific seed loadout a
  assert.doesNotMatch(battle,/stagePlantEntries\.filter\(entry => this\.isStudioPlaytest \|\| entry\.unlocked !== false\)/);
 });
 
-test("local stage activation accepts plants prepared for local testing",()=>{
- const route=read("app/api/studio/stage-encounters/route.js");
- assert.match(route,/readAvailablePlantIds\(driver\)/);
- assert.match(route,/asset\.type==="plant"&&asset\.status==="testing"/);
+test("release submission requires production-ready plant and monster catalog entries",()=>{
+ const route=read("app/api/studio/stage-release/route.js");
+ assert.match(route,/studio-plant-catalog\.json/);
+ assert.match(route,/studio-monster-catalog\.json/);
+ assert.match(route,/missingPlants/);
+ assert.match(route,/missingMonsters/);
 });
 
 
