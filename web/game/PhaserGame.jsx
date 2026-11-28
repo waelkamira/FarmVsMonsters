@@ -52,6 +52,15 @@ export default function PhaserGame() {
       }
     };
 
+    const handleBattleSceneError = (event) => {
+      if (cancelled) return;
+      const phase = event.detail?.phase || "runtime";
+      const message = event.detail?.message || "Unknown Phaser scene error";
+      setErrorMessage("BattleScene " + phase + ": " + message);
+      setStatus("error");
+    };
+    window.addEventListener("farm-battle-scene-error", handleBattleSceneError);
+
     Promise.all([
       import("phaser"),
       import("./scenes/BattleScene"),
@@ -94,6 +103,7 @@ export default function PhaserGame() {
 
     return () => {
       cancelled = true;
+      window.removeEventListener("farm-battle-scene-error", handleBattleSceneError);
       if (game) {
         game.destroy(true);
         game = null;
