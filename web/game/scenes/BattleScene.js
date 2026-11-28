@@ -2746,7 +2746,7 @@ export default class BattleScene extends Scene {
     const frames = getSpriteFrameRectangles(source.width, source.height, rowCount, columnCount);
     for (const frame of frames) {
       const name = String(frame.index);
-      const existing = texture.get(name);
+      const existing = texture.has(name) ? texture.get(name) : null;
       // Image textures can already contain a numeric/default frame spanning the
       // complete sheet. Never trust its name alone: replace it unless its crop
       // exactly matches the expected cell, otherwise Phaser renders all cells
