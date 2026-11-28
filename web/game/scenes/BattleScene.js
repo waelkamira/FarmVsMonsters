@@ -5635,7 +5635,21 @@ BattleScene.prototype.preload = function (...args) {
 const originalBattleSceneCreate = BattleScene.prototype.create;
 BattleScene.prototype.create = function (...args) {
   try {
-    return originalBattleSceneCreate.apply(this, args);
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("farm-battle-scene-start", { detail: { phase: "create" } }));
+    }
+    const result = originalBattleSceneCreate.apply(this, args);
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("farm-battle-scene-ready", {
+        detail: {
+          stage: this.stageNumber || 1,
+          farmerCreated: Boolean(this.caveman || this.cavemanContainer || this.farmer),
+          monsterRosterCount: Array.isArray(this.stageMonsterEntries) ? this.stageMonsterEntries.length : 0,
+          monsterRosterConfigured: Boolean(this.stageMonsterRosterConfigured)
+        }
+      }));
+    }
+    return result;
   } catch (error) {
     reportBattleSceneError("create", error);
     throw error;
