@@ -5,6 +5,8 @@ import { resolvePlantSpriteMetadata, resolveSpriteThumbnailGrid, resolveThumbnai
 
 const read = (path) => readFileSync(new URL(path, import.meta.url), "utf8");
 const thumbnail = read("../app/components/SpriteThumbnail.jsx");
+const thumbnailGenerator = read("../game/studio/firstFrameThumbnail.mjs");
+const assetRoute = read("../app/api/studio/assets/route.js");
 const catalog = read("../app/components/CatalogThumb.js");
 const game = read("../app/game/page.js");
 const detail = read("../app/studio/assets/[id]/page.js");
@@ -18,6 +20,11 @@ const assetManifest = JSON.parse(read("../public/assets/asset-manifest.json"));
 test("shared thumbnail renderer crops multi-frame sheets to frame zero and preserves one-frame images", () => {
   assert.match(thumbnail, /if \(!isSpriteSheet\) \{\s*return <img/);
   assert.match(thumbnail, /backgroundPosition: "left top"/);
+  assert.match(thumbnail, /thumbnailSrc/);
+  assert.match(thumbnailGenerator, /drawImage\(bitmap, 0, 0, frameWidth, frameHeight/);
+  assert.match(assetRoute, /thumbnailFile=form\.get\("thumbnailFile"\)/);
+  assert.match(assetRoute, /thumbnailPath:asset\.thumbnailPath/);
+  assert.match(assetRoute, /if\(!safeAssetPath\(asset\.thumbnailPath\)\)/);
   assert.match(thumbnail, /backgroundSize: `\$\{grid\.columns \* 100\}% \$\{grid\.rows \* 100\}%`/);
   assert.deepEqual(resolveSpriteThumbnailGrid(9, 3, 3), { rows: 3, columns: 3 });
   assert.deepEqual(resolveSpriteThumbnailGrid(1, 1, 1), { rows: 1, columns: 1 });
@@ -29,6 +36,8 @@ test("plant encyclopedia maps every current built-in plant sheet to its real art
     assert.ok(catalog.includes(`"${id}"`), `missing catalog thumbnail mapping for ${id}`);
   }
   assert.match(catalog, /<SpriteThumbnail src=\{localIcon\} rows=\{3\} columns=\{3\} frameCount=\{9\}/);
+  assert.match(catalog, /SPRITE_SHEET_MONSTERS/);
+  assert.match(catalog, /rows=\{3\} columns=\{4\} frameCount=\{12\}/);
   assert.doesNotMatch(styles, /catalog-thumb-sprite-sheet/);
 });
 
@@ -37,16 +46,18 @@ test("pre-battle seed packet cards use first-frame thumbnails for all built-in s
     assert.match(game, new RegExp(`id: "${id}".{0,180}frameCount: 9`));
   }
   assert.match(game, /<SpriteThumbnail src=\{plant\.image\}/);
+  assert.match(game, /image: asset\.thumbnailPath \|\| asset\.path/);
   assert.match(styles, /\.seed-choice-art-media\.is-sprite-sheet\s*\{[^}]*background-repeat:no-repeat;[^}]*background-position:left top;/s);
 });
 
 test("Studio asset detail uses first-frame thumbnails without changing the animated editing preview", () => {
-  assert.match(detail, /<SpriteThumbnail src=\{mediaUrl\}/);
+  assert.match(detail, /<SpriteThumbnail src=\{mediaUrl\} thumbnailSrc=\{asset\.thumbnailUrl\}/);
   assert.match(detail, /asset\.type !== "audio" && asset\.spriteSheet === true && mediaFrameCount > 1/);
   assert.match(studio, /studio-live-preview-sprite/);
   assert.match(studio, /setAnimationPlaying/);
   assert.match(roster, /stage-roster-first-frame/);
   assert.match(roster, /backgroundPosition:"left top"/);
+  assert.match(roster, /asset\?\.thumbnailUrl\|\|asset\?\.thumbnailPath/);
 });
 
 test("battlefield Radish cells register the actual sheet grid before selecting frame zero", () => {
