@@ -19,6 +19,7 @@ const BUILTIN_IMAGES={
  monster:{"monster-01":"/assets/characters/monsters/01/01.png"}
  };
 const BUILTIN_SHEETS=new Set(["radish","pineapple","hazelnut","mango","snow-thrower"]);
+const BUILTIN_MONSTER_SHEETS=new Set(["monster-01"]);
 const makeKey=()=> "entry-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,7);
 function assetImage(asset,kind){if(asset?.id==="electric-mushroom"&&/Electric-mushroom-level-1\.png/i.test(asset?.path||""))return asset?.previewUrl||"";return asset?.previewUrl||asset?.path||BUILTIN_IMAGES[kind]?.[asset?.id]||"";}
 function AssetImage({asset,kind,large=false}) {
@@ -30,7 +31,7 @@ function AssetImage({asset,kind,large=false}) {
  const frameCount=Math.max(1,Number(asset?.frameCount)||((Number(asset?.rows)||1)*(Number(asset?.columns)||1)));
  // Any multi-frame plant/monster artwork is a sprite sheet for thumbnail purposes,
  // even when older registry entries are missing the explicit spriteSheet flag.
- const spriteSheet=frameCount>1;
+ const spriteSheet=frameCount>1&&(!asset?.thumbnailUrl&&!asset?.thumbnailPath||src!==primarySrc);
  const fallbackGrid=BUILTIN_SHEETS.has(asset?.id)?{rows:3,columns:3}:{rows:1,columns:1};
  const {rows,columns}=resolveSpriteThumbnailGrid(
   frameCount,
@@ -56,8 +57,8 @@ export default function StageRosterManager({kind}){
  const [busy,setBusy]=useState(false),[loading,setLoading]=useState(true),[message,setMessage]=useState(""),[storage,setStorage]=useState("local");
  const stageSettings=config.stages?.[String(stage)]||{};
  const entries=stageSettings[isMonster?"monsters":"plants"]||[];
- const selectable=useMemo(()=>[...BUILT_INS[kind].map(([id,name])=>({id,name,type:kind,builtin:true,...(BUILTIN_SHEETS.has(id)?{spriteSheet:true,rows:3,columns:3,frameCount:9}:{})})),...assets.filter(a=>a.type===kind&&a.status!=="archived"&&(a.status==="published"||a.status==="testing"))].filter((item,index,all)=>all.findIndex(other=>other.id===item.id)===index),[assets,kind]);
- const assetById=useMemo(()=>new Map([...BUILT_INS[kind].map(([id,name])=>[id,{id,name,type:kind,builtin:true,...(BUILTIN_SHEETS.has(id)?{spriteSheet:true,rows:3,columns:3,frameCount:9}:{})}]),...assets.filter(a=>a.type===kind)]),[assets,kind]);
+ const selectable=useMemo(()=>[...BUILT_INS[kind].map(([id,name])=>({id,name,type:kind,builtin:true,...(BUILTIN_SHEETS.has(id)?{spriteSheet:true,rows:3,columns:3,frameCount:9}:BUILTIN_MONSTER_SHEETS.has(id)?{spriteSheet:true,rows:3,columns:4,frameCount:12}:{})})),...assets.filter(a=>a.type===kind&&a.status!=="archived"&&(a.status==="published"||a.status==="testing"))].filter((item,index,all)=>all.findIndex(other=>other.id===item.id)===index),[assets,kind]);
+ const assetById=useMemo(()=>new Map([...BUILT_INS[kind].map(([id,name])=>[id,{id,name,type:kind,builtin:true,...(BUILTIN_SHEETS.has(id)?{spriteSheet:true,rows:3,columns:3,frameCount:9}:BUILTIN_MONSTER_SHEETS.has(id)?{spriteSheet:true,rows:3,columns:4,frameCount:12}:{})}]),...assets.filter(a=>a.type===kind)]),[assets,kind]);
  const load=useCallback(async()=>{
   try{
    const [a,c]=await Promise.all([

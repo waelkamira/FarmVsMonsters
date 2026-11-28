@@ -36,7 +36,7 @@ function authorized(req){return verifyStudioSession(process.env.STUDIO_SESSION_S
 function ext(type){return {"image/png":".png","image/webp":".webp","image/gif":".gif","audio/mpeg":".mp3","audio/wav":".wav","audio/ogg":".ogg","audio/mp4":".m4a"}[type]||"";}
 function getRigPartAssets(assets,asset){const bones=Array.isArray(asset?.rigProfile?.bones)?asset.rigProfile.bones:[];const ids=[...new Set(bones.map(bone=>bone?.part?.assetId).filter(Boolean))];return ids.map(id=>assets.find(item=>item.id===id));}
 function getRigPartFrameCount(part){if(!part?.spriteSheet)return 1;const capacity=Math.max(1,Number(part.rows||1)*Number(part.columns||1));const count=Number(part.frameCount)||capacity;return Math.max(1,Math.min(capacity,Number.isInteger(count)?count:capacity));}
-function serializeRigParts(assets,asset){const github=getStudioStorageDriver()==="github";return getRigPartAssets(assets,asset).filter(part=>part&&["item","plant","monster","effect"].includes(part.type)&&part.status!=="archived"&&safeAssetPath(part.path)).map(part=>({id:part.id,name:part.name,type:part.type,path:github?"/api/studio/assets?preview="+encodeURIComponent(part.path):part.path,rows:part.spriteSheet?(part.rows||1):1,columns:part.spriteSheet?(part.columns||1):1,frameCount:getRigPartFrameCount(part),spriteSheet:Boolean(part.spriteSheet)}));}
+function serializeRigParts(assets,asset){const github=getStudioStorageDriver()==="github";return getRigPartAssets(assets,asset).filter(part=>part&&["item","plant","monster","effect"].includes(part.type)&&part.status!=="archived"&&safeAssetPath(part.path)).map(part=>({id:part.id,name:part.name,type:part.type,path:github?"/api/studio/assets?preview="+encodeURIComponent(part.path):part.path,thumbnailPath:part.thumbnailPath||null,thumbnailUrl:part.thumbnailPath?(github?"/api/studio/assets?preview="+encodeURIComponent(part.thumbnailPath):part.thumbnailPath):null,rows:part.spriteSheet?(part.rows||1):1,columns:part.spriteSheet?(part.columns||1):1,frameCount:getRigPartFrameCount(part),spriteSheet:Boolean(part.spriteSheet)}));}
 function githubHeaders(token){return {Authorization:"Bearer "+token,Accept:"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28"};}
 function githubUrl(filePath){return "https://api.github.com/repos/"+(process.env.STUDIO_GITHUB_REPOSITORY||"waelkamira/FarmVsMonsters")+"/contents/"+filePath;}
 async function githubGetDocument(filePath,token,branch){const response=await fetch(githubUrl(filePath)+"?ref="+encodeURIComponent(branch),{headers:githubHeaders(token)});if(response.status===404)return null;if(!response.ok)throw Error("GitHub read failed ("+response.status+").");const data=await response.json();return {content:Buffer.from(data.content||"","base64").toString("utf8"),sha:data.sha};}
@@ -97,7 +97,7 @@ async function githubFindLatestReleasePullRequest(token,baseBranch,marker){
 }
 function releaseAssetFingerprint(asset){
  const identity={
-  id:asset?.id,type:asset?.type,revision:asset?.revision||1,path:asset?.path,
+  id:asset?.id,type:asset?.type,revision:asset?.revision||1,path:asset?.path,thumbnailPath:asset?.thumbnailPath,
   filename:asset?.filename,rows:asset?.rows,columns:asset?.columns,frameCount:asset?.frameCount,
   spriteSheet:asset?.spriteSheet,animationProfile:asset?.animationProfile,rigProfile:asset?.rigProfile,
   combat:asset?.combat,monsterProfile:asset?.monsterProfile,flipX:asset?.flipX,
@@ -218,7 +218,8 @@ function stageReferenceConflict(id,config){
 async function localRegistry(){try{return JSON.parse(await readFile(path.join(process.cwd(),"game/data/studioAssetRegistry.json"),"utf8"));}catch(error){if(error.code==="ENOENT")return {version:1,assets:[]};throw error;}}
 async function saveLocalRegistry(registry){const target=path.join(process.cwd(),"game/data/studioAssetRegistry.json");await mkdir(path.dirname(target),{recursive:true});const temporary=target+".tmp-"+process.pid+"-"+Date.now();try{await writeFile(temporary,JSON.stringify(registry,null,2)+String.fromCharCode(10),{encoding:"utf8",flag:"wx"});await rename(temporary,target);}catch(error){try{await unlink(temporary);}catch{}throw error;}}
 function isRetiredEnemyAsset(asset){return /hyena|dragon/i.test(JSON.stringify(asset||{}));}
-function addPreviewUrls(registry){const driver=getStudioStorageDriver(),github=driver==="github";const assets=(registry.assets||[]).filter(asset=>!isRetiredEnemyAsset(asset));return {...registry,storage:driver,assets:assets.map(asset=>({...asset,previewUrl:github?"/api/studio/assets?preview="+encodeURIComponent(asset.path):asset.path,...(asset.stateAnimations?{stateAnimations:Object.fromEntries(Object.entries(asset.stateAnimations).map(([stateId,state])=>[stateId,{...state,previewUrl:github?"/api/studio/assets?preview="+encodeURIComponent(state.path):state.path}]))}:{}),rigParts:serializeRigParts(assets,asset),...(asset.combat?.projectile?{combat:{...asset.combat,projectile:{...asset.combat.projectile,frameCount:asset.combat.projectile.frameCount??1,rows:asset.combat.projectile.rows??1,columns:asset.combat.projectile.columns??1,previewUrl:github?"/api/studio/assets?preview="+encodeURIComponent(asset.combat.projectile.path):asset.combat.projectile.path}}}:{})}))};}
+function addStatePreviewUrls(asset){const github=getStudioStorageDriver()==="github";return {...asset,thumbnailUrl:asset.thumbnailPath?(github?"/api/studio/assets?preview="+encodeURIComponent(asset.thumbnailPath):asset.thumbnailPath):null};}
+function addPreviewUrls(registry){const driver=getStudioStorageDriver(),github=driver==="github";const assets=(registry.assets||[]).filter(asset=>!isRetiredEnemyAsset(asset));return {...registry,storage:driver,assets:assets.map(asset=>({...asset,previewUrl:github?"/api/studio/assets?preview="+encodeURIComponent(asset.path):asset.path,thumbnailUrl:asset.thumbnailPath?(github?"/api/studio/assets?preview="+encodeURIComponent(asset.thumbnailPath):asset.thumbnailPath):null,...(asset.stateAnimations?{stateAnimations:Object.fromEntries(Object.entries(asset.stateAnimations).map(([stateId,state])=>[stateId,{...state,previewUrl:github?"/api/studio/assets?preview="+encodeURIComponent(state.path):state.path}]))}:{}),rigParts:serializeRigParts(assets,asset),...(asset.combat?.projectile?{combat:{...asset.combat,projectile:{...asset.combat.projectile,frameCount:asset.combat.projectile.frameCount??1,rows:asset.combat.projectile.rows??1,columns:asset.combat.projectile.columns??1,previewUrl:github?"/api/studio/assets?preview="+encodeURIComponent(asset.combat.projectile.path):asset.combat.projectile.path}}}:{})}))};}
 function readCombatForm(form,projectile,existing){
  const previous=existing?.combat;
  return createStudioPlantCombatProfile({
@@ -364,6 +365,8 @@ export async function POST(req){
  if(!config||!STUDIO_ID_PATTERN.test(id)||id.length>64)return NextResponse.json({error:"Invalid category or ID. Use a lowercase slug up to 64 characters."},{status:400});
 
  const hasFile=Boolean(file&&typeof file.arrayBuffer==="function"&&file.size>0);
+ const thumbnailFile=form.get("thumbnailFile");
+ const hasThumbnail=Boolean(thumbnailFile&&typeof thumbnailFile.arrayBuffer==="function"&&thumbnailFile.size>0);
  const hasProjectile=Boolean(projectileFile&&typeof projectileFile.arrayBuffer==="function"&&projectileFile.size>0);
  const hasStateAnimation=Boolean(stateAnimationFile&&typeof stateAnimationFile.arrayBuffer==="function"&&stateAnimationFile.size>0);
  const removeProjectile=String(form.get("removeProjectile")||"false")==="true";
@@ -388,6 +391,8 @@ export async function POST(req){
  if(!existing&&replace)return NextResponse.json({error:"الأصل المطلوب تعديله غير موجود في المكتبة."},{status:404});
  if(existing&&existing.type!==type)return NextResponse.json({error:"لا يمكن تغيير فئة الأصل أثناء التعديل."},{status:409});
  if(!hasFile&&(!replace||!existing))return NextResponse.json({error:"Choose a file for a new asset."},{status:400});
+ if(hasFile&&(type==="plant"||type==="monster")&&!hasThumbnail)return NextResponse.json({error:"يجب إنشاء صورة مصغّرة من الإطار الأول قبل حفظ النبتة أو الوحش."},{status:400});
+ if(hasThumbnail&&(type!=="plant"&&type!=="monster"||thumbnailFile.type!=="image/png"||thumbnailFile.size>2*1024*1024))return NextResponse.json({error:"الصورة المصغّرة يجب أن تكون PNG ثابتة بحجم لا يتجاوز 2 MB."},{status:415});
  if(hasFile&&(file.size>STUDIO_MAX_UPLOAD_BYTES||!config.accepts.includes(file.type)))return NextResponse.json({error:"Choose a supported file up to 8 MB."},{status:415});
  if(hasStateAnimation){
   const preliminary=validateCharacterStateAnimation({stateId,path:"/assets/validation.png",rows:stateRows,columns:stateColumns,frameCount:stateFrameCount,fps:stateFps});
@@ -466,9 +471,13 @@ export async function POST(req){
  if(!extension)return NextResponse.json({error:"Unknown file extension."},{status:415});
  const bytes=hasFile?Buffer.from(await file.arrayBuffer()):null;
  if(hasFile){const signature=validateStudioAssetBytes(file.type,bytes);if(!signature.valid)return NextResponse.json({error:signature.reason},{status:415});}
+ const thumbnailBytes=hasThumbnail?Buffer.from(await thumbnailFile.arrayBuffer()):null;
+ if(hasThumbnail){const signature=validateStudioAssetBytes("image/png",thumbnailBytes);if(!signature.valid)return NextResponse.json({error:"ملف الصورة المصغّرة غير صالح: "+signature.reason},{status:415});}
  const stateAnimationBytes=hasStateAnimation?Buffer.from(await stateAnimationFile.arrayBuffer()):null;
  if(hasStateAnimation){const signature=validateStudioAssetBytes(stateAnimationFile.type,stateAnimationBytes);if(!signature.valid)return NextResponse.json({error:signature.reason},{status:415});}
  const relative=hasFile?createImmutableAssetPath(config.folder,id,extension,bytes):(existing?.path||"").replace(/^\/assets\//,"");
+ const thumbnailRelative=hasThumbnail?createImmutableAssetPath("thumbnails",id,".png",thumbnailBytes):null;
+ const thumbnailPath=thumbnailRelative?"/assets/"+thumbnailRelative:(existing?.thumbnailPath||null);
  const stateExtension=hasStateAnimation?ext(stateAnimationFile.type):null;
  const stateRelative=hasStateAnimation?createImmutableAssetPath(config.folder+"/states",id+"-"+stateId,stateExtension,stateAnimationBytes):null;
  const statePath=stateRelative?"/assets/"+stateRelative:null;
@@ -476,11 +485,12 @@ export async function POST(req){
  const stateAnimations=hasStateAnimation?{...(existing?.stateAnimations||{}),[stateId]:{stateId,path:statePath,rows:stateRows,columns:stateColumns,frameCount:stateFrameCount,fps:stateFps,loop:stateLoop,spriteSheet:true,updatedAt:new Date().toISOString()}}:(existing?.stateAnimations||{});
  if(hasStateAnimation){const validation=validateCharacterStateAnimation({stateId,path:statePath,rows:stateRows,columns:stateColumns,frameCount:stateFrameCount,fps:stateFps,loop:stateLoop});if(!validation.valid)return NextResponse.json({error:validation.errors.join(" ")},{status:400});}
  const now=new Date().toISOString();
- const record=createStudioAssetRevision(existing,{...(existing||{}),id,type,name:String(form.get("name")||id).trim().slice(0,80),filename:hasFile?id+extension:existing.filename,path:hasFile?"/assets/"+relative:existing.path,rows,columns,frameCount:config.spriteSheet?frameCount:1,spriteSheet:config.spriteSheet,status:"draft",releaseRequest:null,publishedAt:null,testingAt:null,archivedAt:null,restoredFromVersion:null,createdAt:existing?.createdAt||now,updatedAt:now,...(type==="plant"?{combat:combatProfile}:{}),...(type==="monster"?{monsterProfile}:{}),flipX:form.get("flipX")==="true",...(existing?.effects?.length?{effects:existing.effects}:{}),...(Object.keys(stateAnimations).length?{stateAnimations}:{}),...(config.spriteSheet&&(type==="plant"||type==="monster")?{animationProfile,rigProfile}:{})});
+ const record=createStudioAssetRevision(existing,{...(existing||{}),id,type,name:String(form.get("name")||id).trim().slice(0,80),filename:hasFile?id+extension:existing.filename,path:hasFile?"/assets/"+relative:existing.path,thumbnailPath,rows,columns,frameCount:config.spriteSheet?frameCount:1,spriteSheet:config.spriteSheet,status:"draft",releaseRequest:null,publishedAt:null,testingAt:null,archivedAt:null,restoredFromVersion:null,createdAt:existing?.createdAt||now,updatedAt:now,...(type==="plant"?{combat:combatProfile}:{}),...(type==="monster"?{monsterProfile}:{}),flipX:form.get("flipX")==="true",...(existing?.effects?.length?{effects:existing.effects}:{}),...(Object.keys(stateAnimations).length?{stateAnimations}:{}),...(config.spriteSheet&&(type==="plant"||type==="monster")?{animationProfile,rigProfile}:{})});
  if(hasFile)delete record.assetAvailability;
  const next={...old,version:1,assets:existing?old.assets.map((a,i)=>i===index?record:a):[...old.assets,record]};
  try{
   if(hasFile){const target=path.join(process.cwd(),"public/assets",relative);await mkdir(path.dirname(target),{recursive:true});await writeFile(target,bytes);}
+  if(thumbnailBytes){const thumbnailTarget=path.join(process.cwd(),"public",thumbnailPath.replace(/^\//,""));await mkdir(path.dirname(thumbnailTarget),{recursive:true});await writeFile(thumbnailTarget,thumbnailBytes);}
   if(hasStateAnimation){const stateTarget=path.join(process.cwd(),"public/assets",stateRelative);await mkdir(path.dirname(stateTarget),{recursive:true});await writeFile(stateTarget,stateAnimationBytes);}
   if(hasProjectile){const pTarget=path.join(process.cwd(),"public",record.combat.projectile.path.replace(/^\//,""));await mkdir(path.dirname(pTarget),{recursive:true});await writeFile(pTarget,projectileBytes);}
   await saveLocalRegistry(next);
@@ -610,6 +620,7 @@ export async function PATCH(req){
   if(asset.type!=="plant"&&asset.type!=="monster")return NextResponse.json({error:"هذه العملية متاحة للنباتات والوحوش فقط."},{status:409});
   if(asset.status!=="testing")return NextResponse.json({error:"يجب تجهيز الأصل للاختبار والتحقق منه داخل اللعبة أولاً."},{status:409});
   if(!safeAssetPath(asset.path))return NextResponse.json({error:"Invalid asset path."},{status:400});
+  if(!safeAssetPath(asset.thumbnailPath))return NextResponse.json({error:"لا يمكن نشر النبتة أو الوحش قبل إنشاء صورة مصغّرة PNG من الإطار الأول. افتح تعديل الأصل وارفع ملفه مجدداً لتوليدها تلقائياً."},{status:409});
   if(asset.releaseRequest?.number&&asset.releaseRequest?.fingerprint===releaseAssetFingerprint(asset)){
    let previous;
    try{previous=await githubGetPullRequest(asset.releaseRequest.number,token);}catch(error){return NextResponse.json({error:error.message||"تعذر التحقق من طلب النشر الحالي."},{status:502});}
@@ -651,8 +662,8 @@ export async function PATCH(req){
   const catalog=catalogDocument?JSON.parse(catalogDocument.content):(isMonster?{version:1,monsters:[]}:{version:1,plants:[]});
   const publishedAt=new Date().toISOString();
   const publishedRecord=isMonster
-   ?{id:asset.id,name:asset.name,path:asset.path,rows:asset.rows,columns:asset.columns,spriteSheet:asset.spriteSheet,animationProfile:asset.animationProfile||null,rigProfile:asset.rigProfile||null,rigParts:rigPartAssets.map(part=>({id:part.id,name:part.name,path:part.path,rows:part.spriteSheet?(part.rows||1):1,columns:part.spriteSheet?(part.columns||1):1,frameCount:getRigPartFrameCount(part),spriteSheet:Boolean(part.spriteSheet)})),monsterProfile:asset.monsterProfile,flipX:Boolean(asset.flipX),effects:Array.isArray(asset.effects)?asset.effects:[],stateAnimations:asset.stateAnimations||{},publishedAt}
-   :{id:asset.id,name:asset.name,path:asset.path,rows:asset.rows,columns:asset.columns,spriteSheet:asset.spriteSheet,animationProfile:asset.animationProfile||null,rigProfile:asset.rigProfile||null,rigParts:rigPartAssets.map(part=>({id:part.id,name:part.name,path:part.path,rows:part.spriteSheet?(part.rows||1):1,columns:part.spriteSheet?(part.columns||1):1,frameCount:getRigPartFrameCount(part),spriteSheet:Boolean(part.spriteSheet)})),combat:asset.combat,flipX:Boolean(asset.flipX),effects:Array.isArray(asset.effects)?asset.effects:[],stateAnimations:asset.stateAnimations||{},publishedAt};
+   ?{id:asset.id,name:asset.name,path:asset.path,thumbnailPath:asset.thumbnailPath,rows:asset.rows,columns:asset.columns,spriteSheet:asset.spriteSheet,animationProfile:asset.animationProfile||null,rigProfile:asset.rigProfile||null,rigParts:rigPartAssets.map(part=>({id:part.id,name:part.name,path:part.path,thumbnailPath:part.thumbnailPath||null,rows:part.spriteSheet?(part.rows||1):1,columns:part.spriteSheet?(part.columns||1):1,frameCount:getRigPartFrameCount(part),spriteSheet:Boolean(part.spriteSheet)})),monsterProfile:asset.monsterProfile,flipX:Boolean(asset.flipX),effects:Array.isArray(asset.effects)?asset.effects:[],stateAnimations:asset.stateAnimations||{},publishedAt}
+   :{id:asset.id,name:asset.name,path:asset.path,thumbnailPath:asset.thumbnailPath,rows:asset.rows,columns:asset.columns,spriteSheet:asset.spriteSheet,animationProfile:asset.animationProfile||null,rigProfile:asset.rigProfile||null,rigParts:rigPartAssets.map(part=>({id:part.id,name:part.name,path:part.path,thumbnailPath:part.thumbnailPath||null,rows:part.spriteSheet?(part.rows||1):1,columns:part.spriteSheet?(part.columns||1):1,frameCount:getRigPartFrameCount(part),spriteSheet:Boolean(part.spriteSheet)})),combat:asset.combat,flipX:Boolean(asset.flipX),effects:Array.isArray(asset.effects)?asset.effects:[],stateAnimations:asset.stateAnimations||{},publishedAt};
   const collectionKey=isMonster?"monsters":"plants";
   const collection=Array.isArray(catalog[collectionKey])?catalog[collectionKey]:[];
   const existingIndex=collection.findIndex(item=>item.id===id);

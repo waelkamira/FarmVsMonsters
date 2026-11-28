@@ -2,6 +2,7 @@ import { resolveSpriteThumbnailGrid } from "../../game/studio/spriteSheetGrid.mj
 
 export default function SpriteThumbnail({
   src,
+  thumbnailSrc,
   rows = 1,
   columns = 1,
   frameCount,
@@ -11,7 +12,11 @@ export default function SpriteThumbnail({
   loading = "lazy",
   onError
 }) {
-  if (!src) return null;
+  const imageSrc = thumbnailSrc || src;
+  if (!imageSrc) return null;
+  if (thumbnailSrc) {
+    return <img className={className} src={thumbnailSrc} alt={decorative ? "" : alt} aria-hidden={decorative ? true : undefined} loading={loading} onError={onError} />;
+  }
   const count = Math.max(1, Number(frameCount) || (Number(rows) || 1) * (Number(columns) || 1));
   const isSpriteSheet = count > 1;
   if (!isSpriteSheet) {

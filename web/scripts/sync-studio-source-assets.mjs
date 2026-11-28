@@ -24,7 +24,7 @@ function git(args, cwd = repoRoot, allowFailure = false) {
 
 function fingerprint(asset) {
   const identity = {
-    id: asset?.id, type: asset?.type, revision: asset?.revision || 1, path: asset?.path,
+    id: asset?.id, type: asset?.type, revision: asset?.revision || 1, path: asset?.path, thumbnailPath: asset?.thumbnailPath,
     filename: asset?.filename, rows: asset?.rows, columns: asset?.columns, frameCount: asset?.frameCount,
     spriteSheet: asset?.spriteSheet, animationProfile: asset?.animationProfile, rigProfile: asset?.rigProfile,
     combat: asset?.combat, monsterProfile: asset?.monsterProfile, flipX: asset?.flipX,
@@ -62,7 +62,7 @@ function collectClosure(registry, roots) {
 
 function validateDeclaredPaths(asset) {
   const declared = [
-    asset.path, asset.atlasMetadataPath, asset.atlas?.jsonPath, asset.audio?.path,
+    asset.path, asset.thumbnailPath, asset.atlasMetadataPath, asset.atlas?.jsonPath, asset.audio?.path,
     asset.combat?.projectile?.path,
     ...Object.values(asset.stateAnimations || {}).map((state) => state?.path)
   ].filter((value) => value !== undefined && value !== null && value !== "");

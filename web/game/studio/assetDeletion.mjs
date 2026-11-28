@@ -14,6 +14,7 @@ function manifestEntries(manifest) {
 export function assetOwnedPaths(asset) {
   return [...new Set(snapshotsFor(asset).flatMap((snapshot) => [
     snapshot?.path,
+    snapshot?.thumbnailPath,
     snapshot?.atlasMetadataPath,
     snapshot?.atlas?.jsonPath,
     snapshot?.audio?.path,
@@ -26,6 +27,7 @@ export function assetPathStillUsed(assets, assetPath) {
   return (Array.isArray(assets) ? assets : []).some((asset) =>
     snapshotsFor(asset).some((snapshot) => [
       snapshot?.path,
+      snapshot?.thumbnailPath,
       snapshot?.atlasMetadataPath,
       snapshot?.atlas?.jsonPath,
       snapshot?.audio?.path,

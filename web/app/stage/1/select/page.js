@@ -80,11 +80,11 @@ export default function StageOneSeedSelectionPage() {
           : plant.combat?.mode === "energy" ? "منتج للطاقة"
           : plant.combat?.mode === "contact" ? "مدافع بضرر تلامسي" : "مهاجم قريب",
         cost: plant.combat?.energyCost ?? 60,
-        image: plant.path,
-        spriteSheet: Boolean(plant.spriteSheet),
-        rows: Number(plant.rows)||1,
-        columns: Number(plant.columns)||1,
-        frameCount: Number(plant.frameCount)||((Number(plant.rows)||1)*(Number(plant.columns)||1)),
+        image: plant.thumbnailPath || plant.path,
+        spriteSheet: plant.thumbnailPath ? false : Boolean(plant.spriteSheet),
+        rows: plant.thumbnailPath ? 1 : (Number(plant.rows)||1),
+        columns: plant.thumbnailPath ? 1 : (Number(plant.columns)||1),
+        frameCount: plant.thumbnailPath ? 1 : (Number(plant.frameCount)||((Number(plant.rows)||1)*(Number(plant.columns)||1))),
         studio: true,
         testing: testing.some((candidate) => candidate.id === plant.id)
       }));
