@@ -246,7 +246,7 @@ test("stage editing remains a local draft and publishes directly after the dedic
  assert.match(release,/release\.sha!==body\.expectedReleaseSha/);
  assert.doesNotMatch(release,/refs\/heads\//);
  assert.doesNotMatch(release,/\/pulls/);
- assert.match(review,/بعد حفظ المسودة ولعب المرحلة بنفسك/);
+ assert.match(review,/لا تضغط زر النشر إلا بعد حفظ التعديلات ولعب المرحلة بنفسك/);
  assert.match(reviewPage,/<Suspense/);
  assert.match(review,/لقد لعبت المرحلة بنفسي/);
  assert.match(review,/راجعت كل البيانات والتغييرات أعلاه/);
@@ -314,7 +314,7 @@ test("monster bite handling grounds the sprite without reading jumpOffset before
 });
 
 
-test("stage release API verifies production catalog references before opening a release PR",()=>{
+test("stage release API verifies production catalog references before direct publication",()=>{
  const release=read("app/api/studio/stage-release/route.js");
  assert.match(release,/studio-plant-catalog\.json/);
  assert.match(release,/studio-monster-catalog\.json/);
