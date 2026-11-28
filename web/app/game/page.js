@@ -80,11 +80,11 @@ export default function GamePage() {
     });
     Promise.all([
       fetch("/api/studio/stage-encounters", { cache: "no-store" }).then((response) => response.ok ? response.json() : null),
-      fetch("/api/studio/assets", { cache: "no-store" }).then((response) => response.ok ? response.json() : null).catch(() => null)
+      fetch("/assets/studio-plant-catalog.json", { cache: "no-store" }).then((response) => response.ok ? response.json() : null).catch(() => null)
     ]).then(([config, assets]) => {
       if (!active) return;
       setStageEncounter(config?.stages?.[String(stageParam === null ? 1 : Number(stageParam))] || null);
-      setStageAssetRecords(Array.isArray(assets?.assets) ? assets.assets : []);
+      setStageAssetRecords(Array.isArray(assets?.plants) ? assets.plants : []);
       setStageEncounterReady(true);
     }).catch(() => {
       if (active) {
@@ -119,7 +119,7 @@ export default function GamePage() {
         ...stagePlantEntries
           .filter((entry) => !PLANT_PACKETS.some((plant) => plant.id === (STAGE_PLANT_ALIASES[entry.id] || entry.id)))
           .map((entry) => {
-            const asset = stageAssetRecords.find((item) => item.id === entry.id && item.type === "plant");
+            const asset = stageAssetRecords.find((item) => item.id === entry.id);
             return asset ? {
               id: entry.id,
               image: asset.previewUrl || asset.path || "",
