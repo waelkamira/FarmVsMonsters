@@ -4376,7 +4376,8 @@ export default class BattleScene extends Scene {
         monster.x = bitePosition.x;
         monster.y = bitePosition.y;
         monster.view.setPosition(bitePosition.x, bitePosition.y);
-        if (monster.monster01Sprite?.active) monster.monster01Sprite.y = jumpOffset;
+        // Eating cancels any in-progress jump; keep the sprite grounded while biting.
+        if (monster.monster01Sprite?.active) monster.monster01Sprite.y = 0;
         monster.replayMoveElapsedMs += delta;
         const movementTick = Math.floor(this.combatClockMs);
         if (enteringBiteRange || monster.replayLastBlockerCol !== blocker.col || monster.replayMoveElapsedMs >= 500) {

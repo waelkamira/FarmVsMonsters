@@ -291,3 +291,14 @@ test("a configured stage unlock flag bypasses campaign progression only for plan
  assert.match(battle,/if \(!this\.stagePlantRosterConfigured && !this\.isStudioPlaytest && !PLAYTEST_ALL_PLANTS/);
  assert.match(battle,/stagePlantEntries\.filter\(entry => entry\.unlocked !== false\)/);
 });
+
+test("monster bite handling grounds the sprite without reading jumpOffset before initialization",()=>{
+ const battle=read("game/scenes/BattleScene.js");
+ const biteStart=battle.indexOf("if (withinBiteRange) {");
+ const jumpOffsetDeclaration=battle.indexOf("let jumpOffset = 0;",biteStart);
+ assert.notEqual(biteStart,-1);
+ assert.notEqual(jumpOffsetDeclaration,-1);
+ const biteBranch=battle.slice(biteStart,jumpOffsetDeclaration);
+ assert.match(biteBranch,/monster\.monster01Sprite\.y = 0/);
+ assert.doesNotMatch(biteBranch,/jumpOffset/);
+});
