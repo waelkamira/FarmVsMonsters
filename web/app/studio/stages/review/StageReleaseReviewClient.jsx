@@ -7,8 +7,8 @@ export default function StageReleaseReviewPage(){
  const stage=String(Math.max(1,Math.min(100,Number(params.get("stage"))||1)));
  const [data,setData]=useState(null),[loading,setLoading]=useState(true),[error,setError]=useState(""),[tested,setTested]=useState(false),[reviewed,setReviewed]=useState(false),[busy,setBusy]=useState(false),[result,setResult]=useState(null);
  const load=useCallback(async()=>{setLoading(true);setError("");try{const r=await fetch("/api/studio/stage-release?stage="+stage,{cache:"no-store",credentials:"same-origin"});const d=await r.json();if(!r.ok)throw Error(d.error||"تعذر تحميل تقرير الإصدار");setData(d);}catch(e){setError(e.message);}finally{setLoading(false);}},[stage]);
- useEffect(()=>{load();},[load]);
- const draft=data?.draft||{},published=data?.published||{};
+ useEffect(()=>{let active=true;Promise.resolve().then(()=>{if(active)load();});return()=>{active=false;};},[load]);
+ const draft=useMemo(()=>data?.draft||{},[data]),published=useMemo(()=>data?.published||{},[data]);
  const plants=draft.plants||[],monsters=draft.monsters||[];
  const visiblePlants=plants.filter(x=>x.visible!==false&&x.enabled!==false),activeMonsters=monsters.filter(x=>x.enabled!==false);
  const changes=useMemo(()=>{
