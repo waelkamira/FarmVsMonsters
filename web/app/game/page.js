@@ -25,6 +25,12 @@ const PLANT_PACKETS = [
 ];
 
 const LOADOUT_SERVER_SNAPSHOT = JSON.stringify({ ready: false, unlocked: ["radish", "mushroom"], selected: ["radish", "mushroom"] });
+const STAGE_PLANT_ALIASES = Object.freeze({
+  "radish-level-1": "radish", "energy-mushroom": "mushroom",
+  "pumpkin-level-1": "pumpkin", "pineapple-level-1": "pineapple",
+  "hazelnut-level-1": "hazelnut", "mango-level-1": "mango",
+  "snow-thrower-level-1": "snow-thrower", "electric-mushroom-level-1": "electric-mushroom"
+});
 
 function subscribeToLocation(callback) {
   window.addEventListener("popstate", callback);
@@ -33,6 +39,11 @@ function subscribeToLocation(callback) {
 
 function getLocationSearchSnapshot() {
   return window.location.search;
+}
+
+function normalizeStageSeedLoadout(selectedIds, unlockedIds) {
+  const allowed = new Set(Array.isArray(unlockedIds) ? unlockedIds : []);
+  return [...new Set((Array.isArray(selectedIds) ? selectedIds : []).filter((id) => allowed.has(id)))].slice(0, MAX_SEED_PACKETS);
 }
 
 function getLoadoutSnapshot() {
@@ -59,6 +70,31 @@ export default function GamePage() {
   const isStagePlaytest = stageParam !== null && Number.isInteger(Number(stageParam)) && Number(stageParam) >= 1;
   const studioPlaytestRequested = new URLSearchParams(locationSearch).get("studioPlaytest") === "1";
   const [studioSession, setStudioSession] = useState({ checked: false, authenticated: false });
+  const [stageEncounter, setStageEncounter] = useState(null);
+  const [stageEncounterReady, setStageEncounterReady] = useState(false);
+  const [stageAssetRecords, setStageAssetRecords] = useState([]);
+  useEffect(() => {
+    let active = true;
+    Promise.resolve().then(() => {
+      if (active) setStageEncounterReady(false);
+    });
+    Promise.all([
+      fetch("/api/studio/stage-encounters", { cache: "no-store" }).then((response) => response.ok ? response.json() : null),
+      fetch("/assets/studio-plant-catalog.json", { cache: "no-store" }).then((response) => response.ok ? response.json() : null).catch(() => null)
+    ]).then(([config, assets]) => {
+      if (!active) return;
+      setStageEncounter(config?.stages?.[String(stageParam === null ? 1 : Number(stageParam))] || null);
+      setStageAssetRecords(Array.isArray(assets?.plants) ? assets.plants : []);
+      setStageEncounterReady(true);
+    }).catch(() => {
+      if (active) {
+        setStageEncounter(null);
+        setStageAssetRecords([]);
+        setStageEncounterReady(true);
+      }
+    });
+    return () => { active = false; };
+  }, [isStagePlaytest, stageParam]);
   useEffect(() => {
     let active = true;
     if (!studioPlaytestRequested) return () => { active = false; };
@@ -72,26 +108,78 @@ export default function GamePage() {
   const blockStudioPlaytest = studioPlaytestRequested && (!studioSession.checked || !studioSession.authenticated);
   const { unlocked, selected, ready } = JSON.parse(loadoutSnapshot);
   const [selectedOverride, setSelectedOverride] = useState(null);
-  const activeSelected = selectedOverride ?? selected;
+  const stageRosterConfigured = stageEncounter?.plantsConfigured === true;
+  const stagePlantEntries = (stageEncounter?.plants || []).filter((entry) => entry.enabled !== false && entry.visible !== false);
+  const stagePlantIds = stageRosterConfigured
+    ? [...new Set(stagePlantEntries.map((entry) => STAGE_PLANT_ALIASES[entry.id] || entry.id))]
+    : [];
+  const stagePackets = stageRosterConfigured
+    ? [
+        ...PLANT_PACKETS.filter((plant) => stagePlantIds.includes(plant.id)),
+        ...stagePlantEntries
+          .filter((entry) => !PLANT_PACKETS.some((plant) => plant.id === (STAGE_PLANT_ALIASES[entry.id] || entry.id)))
+          .map((entry) => {
+            const asset = stageAssetRecords.find((item) => item.id === entry.id);
+            return asset ? {
+              id: entry.id,
+              image: asset.previewUrl || asset.path || "",
+              en: asset.name || entry.id,
+              ar: asset.name || entry.id,
+              cost: Math.max(0, Number(asset.combat?.energyCost) || 0),
+              roleEn: "Stage plant",
+              roleAr: "نبتة المرحلة"
+            } : null;
+          })
+          .filter(Boolean)
+      ]
+    : PLANT_PACKETS;
+  const stageUnlocked = stageRosterConfigured
+    ? stagePlantEntries.filter((entry) => entry.unlocked !== false).map((entry) => STAGE_PLANT_ALIASES[entry.id] || entry.id)
+    : unlocked;
+  const selectionUnlocked = stageRosterConfigured ? stageUnlocked : unlocked;
+  const selectionUnlockedKey = selectionUnlocked.join("|");
+  const initialStageSelection = stageRosterConfigured
+    ? stagePackets.filter((plant) => stageUnlocked.includes(plant.id)).map((plant) => plant.id).slice(0, MAX_SEED_PACKETS)
+    : selected;
+  const activeSelected = selectedOverride ?? initialStageSelection;
+  useEffect(() => {
+    if (!stageRosterConfigured || !stageEncounterReady) return;
+    Promise.resolve().then(() => {
+      try {
+        const key = "farmVsMonsters.selectedPlants.stage." + (stageParam === null ? 1 : Number(stageParam));
+        const saved = window.localStorage.getItem(key);
+        setSelectedOverride(saved ? normalizeStageSeedLoadout(JSON.parse(saved), selectionUnlockedKey.split("|").filter(Boolean)) : null);
+      } catch {
+        setSelectedOverride(null);
+      }
+    });
+  }, [stageRosterConfigured, stageEncounterReady, stageEncounter, stageParam, selectionUnlockedKey]);
   const [battleStarted, setBattleStarted] = useState(false);
   const showBattle = battleStarted || (isStagePlaytest && (!studioPlaytestRequested || authorizedStudioPlaytest));
   const [saveError, setSaveError] = useState(false);
 
 
   function togglePacket(id) {
-    if (!unlocked.includes(id) || id === "radish" || id === "mushroom") return;
+    if (!selectionUnlocked.includes(id) || (!stageRosterConfigured && (id === "radish" || id === "mushroom"))) return;
     setSelectedOverride((currentValue) => {
-      const current = currentValue ?? selected;
+      const current = currentValue ?? initialStageSelection;
       if (current.includes(id)) return current.filter((item) => item !== id);
       if (current.length >= MAX_SEED_PACKETS) return current;
-      return normalizeSeedLoadout([...current, id], unlocked);
+      return stageRosterConfigured
+        ? normalizeStageSeedLoadout([...current, id], selectionUnlocked)
+        : normalizeSeedLoadout([...current, id], selectionUnlocked);
     });
   }
 
   function enterBattle() {
-    const safeLoadout = normalizeSeedLoadout(activeSelected, unlocked);
+    const safeLoadout = stageRosterConfigured
+      ? normalizeStageSeedLoadout(activeSelected, selectionUnlocked)
+      : normalizeSeedLoadout(activeSelected, selectionUnlocked);
     try {
-      window.localStorage.setItem(SEED_LOADOUT_STORAGE_KEY, JSON.stringify(safeLoadout));
+      const storageKey = stageRosterConfigured
+        ? "farmVsMonsters.selectedPlants.stage." + (stageParam === null ? 1 : Number(stageParam))
+        : SEED_LOADOUT_STORAGE_KEY;
+      window.localStorage.setItem(storageKey, JSON.stringify(safeLoadout));
       setSaveError(false);
     } catch {
       setSaveError(true);
@@ -106,7 +194,7 @@ export default function GamePage() {
       <div className="seed-selection-heading">
         <span className="seed-selection-eyebrow">{t("BEFORE THE BATTLE")}</span>
         <h1 id="seed-selection-title">{t("Choose your seed packets")}</h1>
-        <p>{t("Build your battle loadout. You can bring up to six plants, and your two starter packets must stay selected.")}</p>
+        <p>{stageRosterConfigured ? (arabic ? "اختر من نباتات هذه المرحلة فقط. كل نبات أضفته مفتوح تلقائياً، وتظهر علامة القفل فقط على ما أغلقته من الاستديو." : "Choose from this stage’s plants only. Added plants are unlocked by default; a lock appears only on plants you locked in Studio.") : t("Build your battle loadout. You can bring up to six plants, and your two starter packets must stay selected.")}</p>
       </div>
 
       <div className="seed-selection-status">
@@ -115,10 +203,10 @@ export default function GamePage() {
       </div>
 
       <div className="seed-packet-grid">
-        {PLANT_PACKETS.map((plant) => {
-          const isUnlocked = unlocked.includes(plant.id);
+        {stageRosterConfigured && !stageEncounterReady ? <p>{arabic ? "جارٍ تحميل نباتات المرحلة…" : "Loading stage plants…"}</p> : (stageRosterConfigured ? stagePackets : PLANT_PACKETS).map((plant) => {
+          const isUnlocked = selectionUnlocked.includes(plant.id);
           const isSelected = activeSelected.includes(plant.id);
-          const isRequired = plant.id === "radish" || plant.id === "mushroom";
+          const isRequired = !stageRosterConfigured && (plant.id === "radish" || plant.id === "mushroom");
           return <button
             type="button"
             key={plant.id}
@@ -134,7 +222,7 @@ export default function GamePage() {
             <small>{arabic ? plant.roleAr : plant.roleEn}</small>
             <span className="seed-choice-cost">🍄 {plant.cost}</span>
             {isRequired && <span className="seed-required-label">{t("STARTER")}</span>}
-            {!isUnlocked && <span className="seed-locked-label">{t("Unlock through campaign")}</span>}
+            {!isUnlocked && <span className="seed-locked-label">{stageRosterConfigured ? (arabic ? "مقفولة في إعدادات المرحلة" : "Locked in stage settings") : t("Unlock through campaign")}</span>}
           </button>;
         })}
       </div>
