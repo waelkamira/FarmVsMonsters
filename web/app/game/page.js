@@ -41,6 +41,11 @@ function getLocationSearchSnapshot() {
   return window.location.search;
 }
 
+function normalizeStageSeedLoadout(selectedIds, unlockedIds) {
+  const allowed = new Set(Array.isArray(unlockedIds) ? unlockedIds : []);
+  return [...new Set((Array.isArray(selectedIds) ? selectedIds : []).filter((id) => allowed.has(id)))].slice(0, MAX_SEED_PACKETS);
+}
+
 function getLoadoutSnapshot() {
   let unlocked = ["radish", "mushroom"];
   try {
@@ -128,12 +133,12 @@ export default function GamePage() {
       const current = currentValue ?? initialStageSelection;
       if (current.includes(id)) return current.filter((item) => item !== id);
       if (current.length >= MAX_SEED_PACKETS) return current;
-      return normalizeSeedLoadout([...current, id], selectionUnlocked);
+      return stageRosterConfigured\n        ? normalizeStageSeedLoadout([...current, id], selectionUnlocked)\n        : normalizeSeedLoadout([...current, id], selectionUnlocked);
     });
   }
 
   function enterBattle() {
-    const safeLoadout = normalizeSeedLoadout(activeSelected, selectionUnlocked);
+    const safeLoadout = stageRosterConfigured\n      ? normalizeStageSeedLoadout(activeSelected, selectionUnlocked)\n      : normalizeSeedLoadout(activeSelected, selectionUnlocked);
     try {
       const storageKey = stageRosterConfigured
         ? "farmVsMonsters.selectedPlants.stage." + Number(stageParam)
