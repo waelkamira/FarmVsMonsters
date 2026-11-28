@@ -4135,7 +4135,9 @@ export default class BattleScene extends Scene {
       view.add(monster01Sprite);
       monster01Sprite.setTint(tierTint);
       if (studioMonster) {
-        monster01Sprite.setFlipX(!studioMonster.flipX);
+        // Match Studio plants and skeletal monsters: flipX=true means mirror the authored art.
+        // Monster 01 advances from right to left, so its catalog flag must face it left.
+        monster01Sprite.setFlipX(Boolean(studioMonster.flipX));
         const idleKey = "studio-monster-" + studioMonster.id + "-idle";
         if (this.anims.exists(idleKey)) monster01Sprite.play(idleKey);
         monster01Sprite.on("animationcomplete", (animation) => {
