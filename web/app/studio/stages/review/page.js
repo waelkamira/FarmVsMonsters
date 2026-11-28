@@ -12,7 +12,29 @@ export default function StageReleaseReviewPage(){
  const draft=data?.draft||{},published=data?.published||{};
  const plants=draft.plants||[],monsters=draft.monsters||[];
  const visiblePlants=plants.filter(x=>x.visible!==false&&x.enabled!==false),activeMonsters=monsters.filter(x=>x.enabled!==false);
- const changes=useMemo(()=>{const a=JSON.stringify(draft||{}),b=JSON.stringify(published||{});return a===b?[]:["تم تغيير إعدادات المرحلة مقارنة بالنسخة المنشورة."]},[draft,published]);
+ const changes=useMemo(()=>{
+  const rows=[];
+  if(!data?.published){rows.push("هذه مرحلة جديدة وغير موجودة في إصدار اللاعبين الحالي.");}
+  const beforePlants=new Map((published.plants||[]).map(x=>[x.id,x]));
+  const afterPlants=new Map((draft.plants||[]).map(x=>[x.id,x]));
+  for(const [id,item] of afterPlants){const prev=beforePlants.get(id);if(!prev)rows.push("إضافة نبتة: "+id+" (عدد "+(item.count||1)+").");else{
+   if((prev.count||1)!==(item.count||1))rows.push("تغيير عدد "+id+" من "+(prev.count||1)+" إلى "+(item.count||1)+".");
+   if((prev.visible!==false&&prev.enabled!==false)!==(item.visible!==false&&item.enabled!==false))rows.push((item.visible===false||item.enabled===false?"إخفاء":"إظهار")+" النبتة "+id+".");
+   if((prev.unlocked!==false)!==(item.unlocked!==false))rows.push((item.unlocked===false?"قفل":"فتح")+" النبتة "+id+".");
+  }}
+  for(const id of beforePlants.keys())if(!afterPlants.has(id))rows.push("إزالة نبتة من المرحلة: "+id+".");
+  const keyOf=(x,i)=>String(x.key||x.id+"-wave-"+(x.wave||1)+"-"+i);
+  const beforeMonsters=new Map((published.monsters||[]).map((x,i)=>[keyOf(x,i),x]));
+  const afterMonsters=new Map((draft.monsters||[]).map((x,i)=>[keyOf(x,i),x]));
+  for(const [key,item] of afterMonsters){const prev=beforeMonsters.get(key);if(!prev)rows.push("إضافة ظهور وحش: "+item.id+"، الموجة "+(item.wave||1)+"، العدد "+(item.count||1)+".");else{
+   for(const field of ["count","wave","spawnIntervalMs","firstSpawnDelayMs","hpMultiplier","speedMultiplier","damageMultiplier","attackIntervalMultiplier","enabled"])if((prev[field]??null)!==(item[field]??null))rows.push("تعديل "+field+" للوحش "+item.id+" في الموجة "+(item.wave||1)+": "+String(prev[field])+" ← "+String(item[field])+".");
+  }}
+  for(const key of beforeMonsters.keys())if(!afterMonsters.has(key))rows.push("إزالة ظهور وحش: "+(beforeMonsters.get(key).id||key)+".");
+  if((published.background||"")!==(draft.background||""))rows.push("تغيير خلفية المرحلة.");
+  if((published.plantsConfigured===true)!==(draft.plantsConfigured===true))rows.push("تغيير حالة إعداد قائمة النباتات.");
+  if((published.monstersConfigured===true)!==(draft.monstersConfigured===true))rows.push("تغيير حالة إعداد موجات الوحوش.");
+  return rows;
+ },[data,published,draft]);
  async function createRelease(){setBusy(true);setError("");try{const r=await fetch("/api/studio/stage-release",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"same-origin",body:JSON.stringify({stage:Number(stage),confirmedTested:tested,confirmedReport:reviewed})});const d=await r.json();if(!r.ok)throw Error(d.error||"تعذر إنشاء طلب الإصدار");setResult(d);}catch(e){setError(e.message);}finally{setBusy(false);}}
  return <main className="stage-review" dir="rtl">
   <header><div><small>FARM VS MONSTERS · RELEASE GATE</small><h1>مراجعة ونشر المرحلة {stage}</h1><p>هذه الصفحة هي بوابة انتقال التعديلات من جهازك إلى نسخة اللاعبين.</p></div><Link href={"/studio/stages/plants"}>العودة لإدارة المرحلة</Link></header>
