@@ -42,7 +42,7 @@ test("stage review report resolves configured assets against real Studio catalog
 
 test("stage release review keeps the playtest and explicit release confirmations",()=>{
  const page=read("app/studio/stages/review/StageReleaseReviewClient.jsx");
- assert.match(page,/بعد حفظ المسودة ولعب المرحلة بنفسك/);
+ assert.match(page,/لا تضغط زر النشر إلا بعد حفظ التعديلات ولعب المرحلة بنفسك/);
  assert.match(page,/أؤكد|لقد لعبت المرحلة بنفسي/);
  assert.match(page,/راجعت كل البيانات والتغييرات أعلاه/);
  assert.match(page,/confirmedTested:tested,confirmedReport:reviewed,expectedReleaseSha:data\?\.releaseSha/);
