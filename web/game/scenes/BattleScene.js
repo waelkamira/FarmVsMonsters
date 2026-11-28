@@ -484,8 +484,16 @@ export default class BattleScene extends Scene {
         if (!this.anims.exists(animationKey)) {
           this.anims.create({
             key: animationKey,
-            frames: this.anims.generateFrameNumbers(monster.textureKey, { start: clip.startFrame, end: clip.endFrame })
-              .map((frame, index) => ({ ...frame, ...(clip.frameDurationsMs ? { duration: clip.frameDurationsMs[index] } : {}) })),
+            // Use explicit frame names. This avoids Phaser deriving an index from the
+            // texture's frame-name list (which also contains the full-sheet base frame).
+            frames: Array.from(
+              { length: clip.endFrame - clip.startFrame + 1 },
+              (_, index) => ({
+                key: monster.textureKey,
+                frame: String(clip.startFrame + index),
+                ...(clip.frameDurationsMs ? { duration: clip.frameDurationsMs[index] } : {})
+              })
+            ),
             frameRate: clip.fps,
             repeat: clip.loop ? -1 : 0
           });
@@ -2749,7 +2757,8 @@ export default class BattleScene extends Scene {
       }
       if (!texture.has(name)) texture.add(name, 0, frame.x, frame.y, frame.width, frame.height);
       const registered = texture.get(name);
-      if (!registered || registered.cutWidth !== frame.width || registered.cutHeight !== frame.height) return false;
+      if (!registered || registered.cutX !== frame.x || registered.cutY !== frame.y ||
+          registered.cutWidth !== frame.width || registered.cutHeight !== frame.height) return false;
     }
     return true;
   }
