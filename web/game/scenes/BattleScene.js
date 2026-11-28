@@ -5622,6 +5622,16 @@ const reportBattleSceneError = (phase, error) => {
   console.error("[FarmVsMonsters] BattleScene " + phase + " failed:", error);
 };
 
+const originalBattleScenePreload = BattleScene.prototype.preload;
+BattleScene.prototype.preload = function (...args) {
+  try {
+    return originalBattleScenePreload.apply(this, args);
+  } catch (error) {
+    reportBattleSceneError("preload", error);
+    throw error;
+  }
+};
+
 const originalBattleSceneCreate = BattleScene.prototype.create;
 BattleScene.prototype.create = function (...args) {
   try {
