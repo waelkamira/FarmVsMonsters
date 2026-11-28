@@ -33,8 +33,8 @@ async function localConfig(){
  const file=path.join(process.cwd(),"game/data/stageEncounterConfig.json");
  return normalize(JSON.parse(await readFile(file,"utf8")));
 }
-async function publishedConfig(token){
- const data=await github(token,"https://api.github.com/repos/"+REPOSITORY+"/contents/"+CONFIG_PATH+"?ref="+encodeURIComponent(RELEASE_BRANCH));
+async function publishedConfig(token,branch=RELEASE_BRANCH){
+ const data=await github(token,"https://api.github.com/repos/"+REPOSITORY+"/contents/"+CONFIG_PATH+"?ref="+encodeURIComponent(branch));
  return {config:normalize(JSON.parse(Buffer.from(data.content||"","base64").toString("utf8"))),sha:data.sha};
 }
 export async function GET(req){
@@ -70,11 +70,11 @@ export async function POST(req){
   const missingPlants=plants.map(x=>x.id).filter(id=>!plantIds.has(id));
   const missingMonsters=monsters.map(x=>x.id).filter(id=>!monsterIds.has(id));
   if(missingPlants.length||missingMonsters.length)return NextResponse.json({error:"بعض أصول المرحلة لم تُنشر بعد في كتالوج الإنتاج. انشر الأصول أولاً ثم أعد المراجعة.",missingPlants,missingMonsters},{status:409});
-  const release=await publishedConfig(token);
-  const merged={...release.config,stages:{...release.config.stages,[stageId]:{...stage,published:true}}};
   const branch="release/stage-"+stageId+"-"+Date.now();
   const baseRef=await github(token,"https://api.github.com/repos/"+REPOSITORY+"/git/ref/heads/"+encodeURIComponent(RELEASE_BRANCH));
   await github(token,"https://api.github.com/repos/"+REPOSITORY+"/git/refs",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({ref:"refs/heads/"+branch,sha:baseRef.object.sha})});
+  const release=await publishedConfig(token,branch);
+  const merged={...release.config,stages:{...release.config.stages,[stageId]:{...stage,published:true}}};
   await github(token,"https://api.github.com/repos/"+REPOSITORY+"/contents/"+CONFIG_PATH,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:"Prepare Stage "+stageId+" release",content:Buffer.from(JSON.stringify(merged,null,2)+"\n","utf8").toString("base64"),sha:release.sha,branch})});
   const pr=await github(token,"https://api.github.com/repos/"+REPOSITORY+"/pulls",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({title:"Release Stage "+stageId+" to players",head:branch,base:RELEASE_BRANCH,body:"## Stage release review\\n\\n- Stage: "+stageId+"\\n- Draft was tested in the local Studio playtest before submission.\\n- Plant and monster references were checked against production catalogs.\\n- This PR is the final release gate; players receive the stage only after this PR is reviewed, merged, and the production deployment is ready.\\n\\nPlease inspect the complete stage configuration diff before merging."})});
   return NextResponse.json({success:true,pullRequest:pr.html_url,number:pr.number,branch,stage:stageId,message:"تم إنشاء طلب إصدار المرحلة. لن تظهر للاعبين قبل مراجعة الطلب ودمجه واكتمال نشر الإنتاج."});
