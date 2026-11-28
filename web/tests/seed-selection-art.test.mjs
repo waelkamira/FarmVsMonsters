@@ -26,6 +26,8 @@ test("sprite-sheet card viewport is clipped to the top-left frame", () => {
 test("seed cards crop the top-left first frame and retain full images for one-frame plants", () => {
   assert.match(selectionPage, /backgroundPosition:"left top"/);
   assert.ok(selectionPage.includes('backgroundSize:(Math.max(1,Number(plant.columns)||1)*100)+"% "+(Math.max(1,Number(plant.rows)||1)*100)+"%"'));
-  assert.match(selectionPage, /frameCount: Number\(plant\.frameCount\)\|\|/);
+  assert.match(selectionPage, /frameCount: plant\.thumbnailPath \? 1 : \(Number\(plant\.frameCount\)\|\|/);
+  assert.match(selectionPage, /image: plant\.thumbnailPath \|\| plant\.path/);
+  assert.match(selectionPage, /spriteSheet: plant\.thumbnailPath \? false/);
   assert.match(selectionPage, /spriteSheet: true, rows: 3, columns: 3, frameCount: 9/);
 });
